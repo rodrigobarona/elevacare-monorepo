@@ -1,6 +1,6 @@
 # Eleva.care v3 Identity And RBAC Spec
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -24,7 +24,7 @@ It should guide:
 
 ## Identity Provider
 
-WorkOS is the planned identity, organization, RBAC, and Vault provider.
+**WorkOS** (EU region) is the locked identity, organization, RBAC, and Vault provider.
 
 WorkOS should be responsible for:
 
@@ -251,15 +251,52 @@ The system must log:
 - access to sensitive user/customer data
 - expert approval and status changes
 
+## Tenancy Enforcement — Neon RLS
+
+Identity + RBAC is one enforcement layer. The second, non-bypassable layer is **Neon Row-Level Security** (see ADR-003).
+
+- `packages/db` exports `withOrgContext(orgId, fn)`.
+- Every query runs inside `withOrgContext`, which opens a transaction, runs `SET LOCAL eleva.org_id = ...`, then executes `fn`.
+- Every tenant-scoped table has an RLS policy keyed on `current_setting('eleva.org_id')`.
+- Two Neon projects: `eleva_v3_main` (application) + `eleva_v3_audit` (immutable audit stream).
+- Integration test: insert as org A, select as org B → zero rows.
+
+## Vault Usage (WorkOS Vault)
+
+`packages/encryption` wraps WorkOS Vault. Used for:
+
+- Google/Microsoft OAuth tokens (for `packages/calendar`)
+- TOConline OAuth tokens (Tier 1 invoicing — `packages/accounting/eleva-platform`)
+- Expert integration credentials for Tier 2 invoicing (`packages/accounting/expert-apps`)
+- Encrypted-at-rest references for transcripts, reports, session notes, uploaded documents
+
+CI rule: no `process.env.ENCRYPTION_KEY`, no `crypto.createCipheriv('aes-256-gcm', …)` outside `packages/encryption`.
+
+## Guest Activation Flow
+
+- Patient books for the first time → Eleva creates a "guest user" identity in WorkOS tied to the booking email
+- Activation email sent post-booking; patient sets password / connects social
+- Once activated, all historical bookings attach to the activated account (same email match)
+- Guest accounts can be reactivated if the patient returns and confirms email
+- Audit rows capture guest creation + activation events
+
+## Closed Decisions
+
+- WorkOS is the identity provider (locked)
+- Organization-per-user default for solo experts and patients (matches MVP blueprint)
+- Neon RLS is the non-bypassable tenancy layer (ADR-003)
+- Calendar OAuth is Eleva-owned (ADR-004) — not WorkOS Pipes
+
 ## Open Questions
 
-- exact guest-to-account activation UX
-- final role catalog versus capability catalog
-- whether some permissions live fully in WorkOS or are partially mirrored in Eleva
-- exact organization switching UX
+- final role catalog vs capability catalog (generated from `infra/workos/rbac-config.json`)
+- exact organization switching UX when a user has multiple memberships
 
 ## Related Docs
 
 - [`master-architecture.md`](./master-architecture.md)
 - [`domain-model.md`](./domain-model.md)
 - [`compliance-data-governance.md`](./compliance-data-governance.md)
+- [`organization-and-clinic-model.md`](./organization-and-clinic-model.md)
+- [`vendor-decision-matrix.md`](./vendor-decision-matrix.md)
+- [`adrs/README.md`](./adrs/README.md) (ADR-003 Tenancy & RLS)

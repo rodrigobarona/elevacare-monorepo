@@ -74,11 +74,23 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 
 ### Authoritative starting decisions
 
-- Eleva v3 is an EU-first digital health platform with strong compliance and privacy boundaries.
-- The first authenticated web product should be one app with strong RBAC and route-group separation.
-- The public marketing/discovery surface and the authenticated product surface should be separate apps.
-- The monorepo should be built with `pnpm` workspaces and Turborepo.
-- `Eleva Diary` should join the same monorepo, but only after shared backend and contract layers are stable.
+- Eleva v3 is an **EU-first**, Portugal-first-at-launch digital health platform with strong compliance and privacy boundaries.
+- The first authenticated web product is **one app** (`apps/app`) with strong RBAC and route-group separation.
+- The public marketing/discovery surface (`apps/web`) and the authenticated product surface (`apps/app`) are **separate apps**.
+- The monorepo uses **pnpm + Turborepo** (bun allowed as a task runner only; `bun install` banned).
+- **Neon Postgres with RLS** + `withOrgContext()` is the non-bypassable tenancy layer, across two Neon projects (`eleva_v3_main` + `eleva_v3_audit`).
+- **WorkOS** (EU) owns auth, organizations, and Vault.
+- **Stripe** Connect Express + Dynamic Payment Methods + Entitlements + **Embedded Components everywhere** + single `/api/stripe/webhook` per env. No Customer Portal redirect. Multibanco reference vouchers excluded.
+- **Hybrid monetization**: solo experts = commission (15% → 8% on Top Expert tier); clinics/orgs = per-seat SaaS (Starter/Growth/Enterprise), no commission on clinic-member bookings. Three-party revenue demoted to phase-2 opt-in.
+- **Two-tier invoicing** in `packages/accounting`: Tier 1 (Eleva→Expert/Clinic) via TOConline; Tier 2 (Expert→Patient) via cal.com-style adapter registry.
+- **Notifications two-lane**: Lane 1 transactional (Vercel Workflows + Resend + Twilio EU + Neon inbox + Expo push) and Lane 2 marketing (Resend Automations, PHI-free). Novu retired.
+- **Vercel Workflows DevKit** for durable orchestration; QStash for periodic cron only; Upstash Redis for ephemeral coordination.
+- **Vercel Flags SDK + Edge Config** for feature flags (via `packages/flags`).
+- **Vercel AI Gateway** exclusive for AI pipelines (via `packages/ai`).
+- **Daily.co** (EU) for video + transcripts (Eleva-owned records).
+- **Eleva-owned Google/Microsoft calendar OAuth** in `packages/calendar`, not WorkOS Pipes.
+- **GA4 on `apps/web`, PostHog on `apps/app`** (split, no overlap).
+- `Eleva Diary` joins the monorepo in M7, after v1 contracts of `auth` + `db` + `api` + `notifications`.
 
 ### Inputs this handbook is grounded in
 

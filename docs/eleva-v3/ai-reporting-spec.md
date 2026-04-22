@@ -1,6 +1,6 @@
 # Eleva.care v3 AI And Reporting Spec
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -111,13 +111,18 @@ Eleva should own:
 
 ## Role Of Vercel AI Gateway
 
-Vercel AI Gateway should be the planned abstraction for:
+**Locked decision** (ADR-009): **Vercel AI Gateway is the exclusive model router** for Eleva AI pipelines. `packages/ai` owns all gateway interactions, prompt contracts, and pipeline definitions.
 
-- model routing
-- provider management
-- observability and future flexibility
+CI rule: no direct LLM provider SDKs (OpenAI, Anthropic, Mistral, etc.) outside `packages/ai`.
 
-Eleva should define stable internal prompt/output contracts rather than scattering ad hoc calls through the codebase.
+Responsibilities:
+
+- model routing with provider fallback
+- cost tracking per prompt contract (surfaced in admin dashboard per expert/clinic for AI credit attribution)
+- observability via Sentry tags + BetterStack logs (with redaction)
+- prompt contract versioning
+
+Eleva defines stable internal prompt/output contracts — ad hoc calls are banned.
 
 ## Prompt Contracts
 
@@ -200,12 +205,36 @@ Later phases may add:
 - more advanced extraction pipelines
 - organization-level reporting analytics
 
+## Retention (Locked Defaults — ADR-009)
+
+- transcripts — 2 years from session
+- AI drafts (unpublished) — 90 days
+- published reports — 10 years (ERS-aligned)
+
+All subject to accountant + legal review before GA.
+
+## Workflow Integration
+
+The AI pipeline runs as Vercel Workflow DevKit step graphs (ADR-007):
+
+- `transcriptReady` — Daily transcript webhook → store Eleva record (encrypted via Vault) → enqueue draft
+- `aiReportDraft` — call Vercel AI Gateway → persist draft as `report.status = 'draft'` → notify expert for review (Lane 1 `report_available_for_review` notification)
+- `aiReportPublication` — expert approves → `report.status = 'published'` → `report_available` Lane 1 notification with secure signed link
+
+Feature flag: `ff.ai_reports_beta` for staged rollout.
+
+## Closed Decisions
+
+- Vercel AI Gateway is the sole model router (ADR-009)
+- No direct LLM provider SDKs outside `packages/ai`
+- Transcripts are Eleva-owned records encrypted via WorkOS Vault
+- Human-in-the-loop is mandatory for any patient-visible report
+
 ## Open Questions
 
-- which exact report types launch first
-- whether customer-facing summaries are launch-critical
-- whether transcript storage needs additional retention variants
-- whether some session types should disable AI by default
+- which exact report types launch first (probably "session summary" + "follow-up suggestions")
+- whether customer-facing summaries require separate consent beyond session consent
+- whether some session types should disable AI by default (e.g., high-sensitivity categories)
 
 ## Related Docs
 
@@ -213,3 +242,7 @@ Later phases may add:
 - [`crm-spec.md`](./crm-spec.md)
 - [`compliance-data-governance.md`](./compliance-data-governance.md)
 - [`ops-observability-spec.md`](./ops-observability-spec.md)
+- [`workflow-orchestration-spec.md`](./workflow-orchestration-spec.md)
+- [`notifications-spec.md`](./notifications-spec.md)
+- [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
+- [`adrs/README.md`](./adrs/README.md) (ADR-009 AI & Transcripts)

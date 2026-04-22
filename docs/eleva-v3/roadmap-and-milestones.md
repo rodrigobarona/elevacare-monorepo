@@ -202,40 +202,61 @@ Exit criteria:
 
 ## Milestone 7: Mobile Integration
 
+**Trigger for M7**: `packages/auth`, `packages/db`, `apps/api`, and `packages/notifications` have shipped v1 contracts.
+
 Goal:
 
 - connect `Eleva Diary` into the shared platform
 
 Should include:
 
-- monorepo integration for mobile
-- shared auth/contracts
-- diary sync/share model
-- patient visibility controls
+- monorepo integration for mobile (`apps/diary-mobile` + `packages/mobile`)
+- shared auth / API contracts / validation schemas
+- diary sync/share model (three visibility states: private / synced to account / shared with specific expert)
+- explicit per-expert time-bounded sharing with audit trail
+- Expo push via Lane 1 `sendNotification`
+- `diary_share_visible_to_expert` event wired
+- `ff.diary_share` for staged rollout
 
 Exit criteria:
 
 - mobile and web share the same user/account model
-- expert visibility obeys share rules
+- expert visibility obeys share rules (revoked = no access immediately)
+- audit row written on every share/revoke and every expert access of shared diary data
 
-## Milestone 8: Hardening And Launch
+## Milestone 8: Hardening And Launch (PT launch gate)
 
 Goal:
 
-- move from functional platform to reliable launch candidate
+- move from functional platform to production Portugal-first launch
 
 Should include:
 
-- operational runbooks
-- security hardening
+- operational runbooks + `/admin/*` tooling (payments, payouts, subscriptions, accounting, webhooks, workflows, audit)
+- security hardening (BotID on booking/signup/webhook; Upstash Redis rate limits on auth/booking/webhook/AI; secure headers via `src/proxy.ts` composing CSP, HSTS, Permissions-Policy)
 - support playbooks
-- launch readiness verification
+- launch readiness verification per `launch-readiness-checklist.md`
+
+**PT launch gate (ADR-012)**:
+
+- ERS documentation published at `apps/docs/compliance/portugal/`
+- DSAR workflow (`dsarExport`) verified with 10-minute completion target
+- Vault crypto-shredding (`vaultCryptoShredder`) test passing
+- Consent banner live (GA4 marketing + PostHog product + Resend marketing consent)
+- Daily, Neon, Resend, WorkOS, Sentry, BetterStack EU regions confirmed contractually
+- **Tier 1 TOConline** production invoicing tested end-to-end with 1 pilot solo expert + 1 pilot clinic
+- Monthly **Stripe ↔ TOConline reconciliation job** running green
+- **Tier 2 invoicing** with at least 2 adapters (TOConline expert-side + Moloni) production-tested
+- Manual/SAF-T export verified end-to-end
+- Become-Partner admin verification workflow enforces invoicing choice
+- Status page enabled on BetterStack; on-call rotation set
 
 Exit criteria:
 
 - launch checklist passes
 - critical observability and runbooks exist
 - rollback path is defined
+- 7-day SLO report ≥ 99.9% availability
 
 ## Parallelization Guidance
 

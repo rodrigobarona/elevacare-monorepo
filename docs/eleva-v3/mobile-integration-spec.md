@@ -1,6 +1,6 @@
 # Eleva Diary Mobile Integration Spec
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -16,14 +16,18 @@ It should guide:
 
 ## Decision Summary
 
-`Eleva Diary` should be part of the same monorepo as Eleva.care v3.
+`Eleva Diary` is part of the same monorepo as Eleva.care v3 (see ADR-010).
 
-It should not be merged as the very first bootstrap dependency, but it should be brought in early enough to prevent:
+**Concrete merge trigger**: bring `apps/diary-mobile` + `packages/mobile` into the repo once **all four** of these have shipped v1 contracts:
 
-- API drift
-- inconsistent auth/account models
-- duplicated validation and business logic
-- inconsistent privacy and consent behavior
+- `packages/auth`
+- `packages/db`
+- `apps/api`
+- `packages/notifications`
+
+This sits in milestone M7 of the roadmap.
+
+Merging before that = API drift, inconsistent auth/account models, duplicated validation, inconsistent privacy/consent behavior. Merging after that = stable contracts, shared types, same identity model, same consent boundary.
 
 ## Product Role
 
@@ -186,14 +190,15 @@ This is better than:
 
 ## Notification Integration
 
-The mobile app should reuse the platform notification model for:
+The mobile app reuses the platform notification Lane 1 model via **Expo push** (see notifications-spec):
 
 - reminders to complete diary entries
 - session-related tracking prompts
 - follow-up plans
 - rebooking nudges
+- `diary_share_visible_to_expert` when a share is granted
 
-Notification preferences should remain part of the shared Eleva preference model, not a separate mobile-only preference system.
+Notification preferences are part of the shared Eleva preference model (`notification_preferences`), not a separate mobile-only system. Quiet hours and per-kind consent honored.
 
 ## Compliance And Data Governance
 
@@ -215,16 +220,40 @@ If diary data is used for AI summaries or reports, that must be explicitly gover
 - expose diary data to experts automatically
 - create mobile-only business rules that cannot be understood in the web dashboard
 
+## Sharing Model (Locked — ADR-010)
+
+Three visibility states per entry (or per range):
+
+1. **Private** (default) — only the patient sees it
+2. **Synced to Eleva account** — available in patient dashboard but not shared with any expert
+3. **Shared with a specific expert** — explicit consent grant, time-bounded, revocable, audited
+
+Never blanket "all experts" sharing.
+
+Consent grants: `diary_share(patient_id, expert_id, start_date, end_date, granted_at, revoked_at, audit_ref)`.
+
+Rollout: behind `ff.diary_share`.
+
+## Closed Decisions
+
+- Merge trigger locked: M7, after v1 contracts of `auth` + `db` + `api` + `notifications`
+- Push via Expo through Lane 1 `sendNotification`
+- Consent-gated sharing, never default-on
+- AI pipeline respects share windows strictly (ADR-009)
+
 ## Open Questions
 
 - what exact diary templates launch first
-- whether offline-first support is required at launch
-- what the first mobile notification set should be
+- whether offline-first is required at M7 or follow-up
 - whether diary attachments are launch-critical
-- whether patients can share historical ranges or only live/shared collections
+- final default for "synced to account" vs "private" on new entries
 
 ## Related Docs
 
 - [`master-architecture.md`](./master-architecture.md)
 - [`monorepo-structure.md`](./monorepo-structure.md)
 - [`domain-model.md`](./domain-model.md)
+- [`notifications-spec.md`](./notifications-spec.md)
+- [`ai-reporting-spec.md`](./ai-reporting-spec.md)
+- [`compliance-data-governance.md`](./compliance-data-governance.md)
+- [`adrs/README.md`](./adrs/README.md) (ADR-010 Mobile Sync Model)

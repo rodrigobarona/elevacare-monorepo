@@ -1,6 +1,6 @@
 # Eleva.care v3 Scheduling And Booking Spec
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -99,10 +99,22 @@ Examples:
 
 Represents an external calendar account.
 
-Initial supported providers should likely be:
+Supported providers at launch:
 
 - Google Calendar
 - Microsoft Outlook calendar
+
+**OAuth ownership**: Eleva owns the OAuth flows, token refresh, event read/write, and webhook/Pub-Sub subscription in `packages/calendar`. Tokens are stored in WorkOS Vault via `packages/encryption`. **WorkOS Pipes is not used** for calendar sync (see ADR-004).
+
+### Expert Practice Location
+
+Each expert profile carries practice-location metadata that scopes which bookings are legally valid:
+
+- `country` — country of licensed practice
+- `license_scope` — clinic / coach / tutor / etc.
+- `worldwide_mode_flag` — when set, non-clinical sessions (coaching, chat, tutoring) are bookable from any country regardless of clinical license scope
+
+Clinical event types enforce `country` match between expert practice and patient location at booking time. Non-clinical event types with `worldwide_mode_flag` skip that check.
 
 ### Busy Calendars
 
@@ -274,19 +286,23 @@ The system should support:
 
 ## Reminder Model
 
-The system should support reminders for:
+The system supports reminders for:
 
-- booking confirmation
+- booking confirmation (immediate)
 - 24h before session
-- 1h before session
-- follow-up or rebooking prompts
-- expert-defined future reminders like "book again in 2 months"
+- 1h before session (optional per user)
+- day-of session prompt
+- follow-up / rebooking prompts
+- expert-defined future reminders (e.g., "book again in 2 months")
 
-Channels may include:
+Channels (all via `sendNotification` Lane 1 — see [`notifications-spec.md`](./notifications-spec.md)):
 
-- email
-- SMS later or at launch depending on final product decision
-- in-app notifications
+- **email** (Resend)
+- **SMS** (Twilio EU) — **launch-critical for PT**, gated by per-user consent and quiet hours
+- **in-app** (Neon inbox, always fans out)
+- **push** (Expo, when mobile ships — M7)
+
+Reminder orchestration runs as a Vercel Workflow DevKit `preAppointmentReminders` step graph (ADR-007).
 
 ## Timezone Rules
 
@@ -336,14 +352,21 @@ Sensitive session-adjacent content should not leak through reminder payloads or 
 
 ## Open Questions
 
-- should some event types require manual expert confirmation by default
-- when should organization-owned schedules override expert-owned schedules
-- is SMS launch-critical or phase 2
-- what are the final reminder defaults
+- should some event types require manual expert confirmation by default (likely opt-in per event type)
+- when should organization-owned schedules override expert-owned schedules (phase-2 collective scheduling)
 - how should packs interact with scheduling priority and booking eligibility
+
+## Closed Decisions
+
+- **SMS is launch-critical** for PT (see ADR-012 + notifications-spec)
+- **Calendar OAuth ownership = Eleva** (see ADR-004), not WorkOS Pipes
+- **Final reminder defaults**: 24h email+SMS, 1h email (SMS opt-in)
 
 ## Related Docs
 
 - [`domain-model.md`](./domain-model.md)
 - [`payments-payouts-spec.md`](./payments-payouts-spec.md)
 - [`mobile-integration-spec.md`](./mobile-integration-spec.md)
+- [`notifications-spec.md`](./notifications-spec.md)
+- [`workflow-orchestration-spec.md`](./workflow-orchestration-spec.md)
+- [`adrs/README.md`](./adrs/README.md) (ADR-004 Scheduling & Calendar OAuth)
