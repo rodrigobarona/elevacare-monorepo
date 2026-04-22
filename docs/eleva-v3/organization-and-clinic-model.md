@@ -1,6 +1,6 @@
 # Eleva.care v3 Organization And Clinic Model
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -128,42 +128,105 @@ These do not need to be fully implemented in MVP, but the organization structure
 
 ## Organization And Marketplace Relationship
 
-The platform should decide explicitly how organizations appear publicly.
+The platform decides explicitly how organizations appear publicly.
 
-Examples:
+v3 decisions:
 
-- only individual expert listings at first
-- optional clinic listings later
-- organization-branded booking flows later
+- individual expert listings at launch
+- optional clinic listings behind a flag (phase 2)
+- organization-branded booking flows (phase 2)
 
-## Organization And Billing Relationship
+## Monetization Model (Locked — Hybrid)
 
-The model should support future:
+Grounded in [Doctolib's EU health-marketplace precedent](https://businessmodelcanvastemplate.com/blogs/how-it-works/doctolib-how-it-works) (~€139/user/mo subscription, 85% subscription revenue, 340K+ practitioners) plus [MarketplaceBeat monetization guidance](https://marketplacebeat.com/articles/marketplace-monetization-models) and [Monetizely clinic SaaS research](https://www.getmonetizely.com/articles/which-pricing-metric-fits-clinics-saas-best-per-seat-per-transaction-or-per-outcome) (3+ tiers → 26% higher ARPA).
 
-- organization-owned subscriptions
-- seat-based billing
-- organization payout destinations
-- organization-specific commercial terms
+### Solo experts — commission-based
+
+- default 15% platform fee per booking
+- reduced to 8% on paid Top Expert tier (€29/mo) via Stripe Entitlements
+- zero-cost entry; no forced subscription
+- Eleva issues a per-booking platform-fee invoice (Tier 1, series `ELEVA-FEE-{YYYY}`)
+
+### Clinics / Organizations — per-seat SaaS, no booking commission
+
+Three tiers (Stripe Subscriptions + Stripe Tax PT/NIF, TOConline series `ELEVA-SAAS-{YYYY}`):
+
+| Tier | Base | Per-seat | Seat range |
+|---|---|---|---|
+| Clinic Starter | €99/mo | €39/mo | 1–5 |
+| Clinic Growth | €199/mo | €29/mo | 6–20 |
+| Clinic Enterprise | custom | custom | 20+ |
+
+Rules:
+
+- clinic's Stripe Connect account receives **100%** of member bookings
+- internal clinic↔expert distribution is the clinic's own bookkeeping (Eleva exposes data, doesn't automate)
+- seat count auto-syncs when experts join/leave the clinic (`customer.subscription.updated`)
+- overage behavior: Starter hard-capped at 5, Growth at 20, Enterprise unlimited
+- billed via Stripe Subscriptions; invoice issued by Eleva via TOConline monthly
+
+Add-ons (drive ARPA):
+
+- AI report credit bundles
+- premium Daily video minutes
+- extra CRM seats
+- SAF-T export automation
+
+### Primary commercial entity: `clinic_subscription`
+
+Replaces the three-party `clinic_memberships + commission_rule + application_fee_breakdown` model for the default clinic path:
+
+```text
+clinic_subscription(
+  id,
+  org_id,
+  tier,                   -- 'starter' | 'growth' | 'enterprise'
+  seat_count,
+  active_expert_ids,      -- references to expert memberships
+  stripe_subscription_id,
+  status,                 -- 'active' | 'past_due' | 'canceled' | 'trialing'
+  current_period_end
+)
+```
+
+Seat management rules:
+
+- expert added to clinic membership → seat count auto-incremented → Stripe quantity syncs
+- expert removed / suspended → seat count auto-decremented
+- downgrade with grace period (7 days) before proration
+
+### Three-party revenue (phase-2 opt-in)
+
+- gated behind `ff.three_party_revenue` (default off)
+- shipped only for clinics that negotiate a commission overlay on top of SaaS
+- entities `clinic_memberships`, `commission_rule`, `application_fee_breakdown` exist only for this flag path
+- default clinic flow does not touch these entities
+
+### Clinic → Expert invoicing — clinic's own bookkeeping
+
+Not automated by Eleva. Eleva exposes booking + fee split data via exports and admin views. Clinics issue clinic↔expert invoices on their own systems. Revisiting requires a new ADR.
 
 ## Academy Compatibility
 
-The organization model should also be able to support future education/academy contexts without introducing a second tenant system.
-
-That means:
+The organization model supports future education/academy contexts without introducing a second tenant system:
 
 - reuse organization and membership foundations
 - add academy-specific roles and capabilities later
+- clinic SaaS tier model likely adapts to academy tier model (e.g. "Academy Pro" per-seat)
 
 ## Open Questions
 
-- exact organization type taxonomy
-- whether clinic public pages are phase 1 or later
-- whether org admins can see customer records across all experts by default
-- when organization-owned scheduling enters scope
+- whether clinic public pages are M3 or phase 2
+- whether org admins can see customer records across all experts by default (consent boundary question)
+- Clinic Enterprise per-deal pricing framework
+- when organization-owned collective/round-robin scheduling enters scope (currently phase 2)
 
 ## Related Docs
 
 - [`identity-rbac-spec.md`](./identity-rbac-spec.md)
 - [`payments-payouts-spec.md`](./payments-payouts-spec.md)
+- [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
 - [`academy-strategy-spec.md`](./academy-strategy-spec.md)
 - [`domain-model.md`](./domain-model.md)
+- [`vendor-decision-matrix.md`](./vendor-decision-matrix.md)
+- [`adrs/README.md`](./adrs/README.md) (ADR-005 Payments & Monetization)

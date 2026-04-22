@@ -1,6 +1,6 @@
 # Eleva.care v3 Compliance And Data Governance
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -142,9 +142,25 @@ AI pipelines must explicitly define:
 
 Sensitive data should not be casually copied into generalized logs or debugging systems.
 
+## Tenancy Isolation (Neon RLS)
+
+**Locked decision**: Neon Postgres with Row-Level Security on every tenant-scoped table, enforced via the `withOrgContext()` helper in `packages/db`.
+
+Structure:
+
+- **two Neon projects**: `eleva_v3_main` (application data) and `eleva_v3_audit` (immutable audit stream)
+- every tenant-scoped table has an `org_id` column with an RLS policy keyed on `current_setting('eleva.org_id')`
+- `withOrgContext(orgId, fn)` runs `SET LOCAL eleva.org_id = ...` inside a transaction before executing `fn`
+- application code never passes raw `orgId` to queries — it passes through `withOrgContext` and the query uses RLS-filtered views
+
+CI guard:
+
+- integration test inserts as org A, selects as org B → must return zero rows
+- lint rule blocks raw `db.select(...)` calls outside `withOrgContext`
+
 ## Vendor Governance
 
-Every major vendor should be evaluated for:
+Every major vendor is evaluated for:
 
 - data residency
 - DPA/contract posture
@@ -152,18 +168,24 @@ Every major vendor should be evaluated for:
 - role in the data flow
 - whether it handles sensitive Eleva data directly
 
-Current planned vendor areas include:
+### EU residency per vendor (locked)
 
-- WorkOS
-- Neon
-- Stripe
-- Daily
-- Resend
-- PostHog
-- Sentry
-- BetterStack
-- Upstash
-- Vercel AI Gateway and downstream model providers
+| Vendor | Region | Role | Handles PHI-adjacent? |
+|---|---|---|---|
+| WorkOS | EU | auth, orgs, Vault | yes (OAuth tokens, encrypted refs) |
+| Neon | EU | database | yes (all domain data + audit stream) |
+| Stripe | EU entity (Ireland) | payments, payouts, subscriptions | no (payment metadata only) |
+| Daily.co | EU | video + transcript source | yes (transcript metadata, we store content ourselves) |
+| Resend | EU | transactional email + Automations | no (PHI-free payloads enforced by Lane 2 schema) |
+| Twilio | EU subaccount | SMS | no (minimum-necessary bodies) |
+| PostHog | EU / privacy-first | product analytics (apps/app) | no |
+| GA4 | — | marketing analytics (apps/web) | no (opt-in only) |
+| Sentry | EU | error tracking | scrubbed; never full PHI |
+| BetterStack | EU | logs + uptime | scrubbed; redaction policy enforced |
+| Upstash | EU | Redis + QStash | no (ephemeral coordination) |
+| Vercel AI Gateway | model-dependent | AI routing | yes (transcript summarization, AI reports; governed by ADR-009) |
+| TOConline | PT (AT-certified) | invoicing (Tier 1 + Tier 2 adapter) | invoicing metadata only |
+| Moloni / InvoiceXpress / Vendus / Primavera | PT | Tier 2 adapters | invoicing metadata only, per-expert opt-in |
 
 ## Recommended Sensitive Data Boundaries
 
@@ -178,18 +200,46 @@ The team should explicitly define storage and access rules for:
 
 These should not all be treated identically.
 
+## Portugal-First Launch Requirements
+
+v3 launches Portugal-first. The following are launch requirements, not phase-2:
+
+- **ERS Portugal** compliance: Eleva is positioned as a digital health platform (not direct provider); required documentation published at `apps/docs/compliance/portugal/`; audit-trail exports on demand.
+- **Stripe Tax PT** + **NIF collection** on checkout (customer) and expert/clinic profile (invoicing).
+- **TOConline Tier 1 invoicing** operational (series `ELEVA-FEE-{YYYY}` for solo commission, series `ELEVA-SAAS-{YYYY}` for clinic SaaS) with pilot expert/clinic green end-to-end.
+- **MB WAY** enabled at checkout via Stripe Dynamic Payment Methods. Multibanco reference vouchers excluded.
+- **Consent banner** wired to GA4 (marketing) + PostHog (product) + Resend marketing consent.
+- **DSAR workflow** verified (`dsarExport` Vercel Workflow: export all user data → Vercel Blob → time-limited signed URL → admin-notified; 10-minute target for completion).
+- **Vault crypto-shredding** on org deletion, verified by integration test.
+- **Daily/Neon/Resend/WorkOS EU regions** confirmed contractually before production traffic.
+
+## Retention And Deletion (locked defaults)
+
+| Artifact | Retention | Deletion mechanism |
+|---|---|---|
+| Session notes | 10 years (ERS-aligned) | soft-delete + 30-day scrubber + Vault crypto-shred on org deletion |
+| Reports (published) | 10 years | same |
+| Reports (AI drafts not approved) | 90 days | auto-purge via `softDeleteScrubber` workflow |
+| Transcripts | 2 years from session | auto-purge |
+| Uploaded documents | 10 years | soft-delete + Vault crypto-shred on org deletion |
+| Diary entries | user-controlled; default 5 years | user-driven export + delete; DSAR |
+| Audit logs | 10 years, append-only | no user-facing deletion; immutable project |
+| Operational logs (Sentry, BetterStack) | 90 days | vendor-side retention policy |
+
+All retention periods subject to accountant + legal review before GA; current values are defaults, not final.
+
 ## Operational Rules
 
 - Do not place sensitive content in URLs.
-- Do not include unnecessary sensitive content in notifications.
+- Do not include unnecessary sensitive content in notifications (Lane 1 uses secure signed links; Lane 2 is PHI-free by schema).
 - Do not log sensitive content to generic logging or analytics tools.
-- Minimize access in both UI and backend service layers.
+- Minimize access in both UI and backend service layers; enforce via Neon RLS + WorkOS RBAC + app permission gates.
+- Correlation IDs propagate through audit rows for every mutating action.
 
 ## Open Questions
 
-- final retention periods per artifact type
+- final retention periods per artifact type (legal review pending)
 - final export scope for diary and transcript data
-- exact vendor-by-vendor residency and DPA position
 - final expert visibility defaults for tracked mobile data
 
 ## Related Docs

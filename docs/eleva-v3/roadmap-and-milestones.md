@@ -1,6 +1,6 @@
 # Eleva.care v3 Roadmap And Milestones
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -48,22 +48,25 @@ Goal:
 
 Should include:
 
-- `pnpm` workspace
-- Turborepo
-- `apps/web`
-- `apps/app`
-- `apps/api`
-- `apps/docs`
-- `apps/email`
-- core packages
-- CI baseline
+- **First task — migrate from current scaffold**:
+  - `bun.lock` → `pnpm-lock.yaml`
+  - pin `"packageManager": "pnpm@<version>"`
+  - rename `@workspace/*` → `@eleva/*`
+  - preserve shadcn `components.json`
+  - enable Turborepo remote cache via Vercel
+  - CI guard: no `bun.lock` at repo root; no `bun install` permitted
+- `pnpm` workspace + Turborepo
+- `apps/web` (migrated), `apps/app` (new), `apps/api` (new), `apps/docs` (new), `apps/email` (new)
+- core packages: `config`, `auth`, `db`, `ui`, `compliance`, `scheduling`, `calendar`, `billing`, `accounting`, `crm`, `notifications`, `workflows`, `flags`, `audit`, `encryption`, `ai`
+- CI baseline: lint, typecheck, Vitest, Playwright smoke, i18n parity
+- package-boundary lint (`eslint-plugin-import no-restricted-paths`)
 
 Exit criteria:
 
-- repo boots cleanly
+- repo boots cleanly on pnpm
 - packages compile and link correctly
 - auth/db/config/ui package boundaries exist
-- dev onboarding is documented
+- dev onboarding documented in `docs/eleva-v3/contribution-workflow.md`
 
 ## Milestone 2: Identity, Tenancy, And Compliance Core
 
@@ -115,19 +118,50 @@ Goal:
 
 Should include:
 
-- event types
-- schedules and availability
-- calendar connections
-- slot reservation
-- booking flow
-- payment flow
-- pack/subscription baseline
+- **Scheduling / Calendar**:
+  - event types, schedules and availability
+  - multi-calendar per expert (busy vs destination calendars)
+  - slot reservation (Redis-backed atomic `reserveSlot`)
+  - booking flow with online / in-person (address object) / phone modes
+  - per-event language + country-license + optional worldwide-mode
+  - Eleva-owned Google + Microsoft OAuth in `packages/calendar` (not WorkOS Pipes)
+- **Stripe setup**:
+  - staging + production accounts, API version pinned ≥ 2023-08-16
+  - **Connect Express** platform for experts and clinics
+  - **Dynamic Payment Methods** enabled per Dashboard (PT: card + MB WAY + wallets; other EU: regional methods)
+  - NIF collection + Stripe Tax PT
+  - **single `/api/stripe/webhook` endpoint** with `stripe_event_log` idempotency
+  - **no hardcoded `payment_method_types`**, no Multibanco vouchers
+- **Stripe Embedded Components wired**:
+  - Payment Element
+  - Connect Onboarding / Payouts / Balances / Account Management / Documents / Tax / Notification Banner
+  - Identity embedded modal
+  - `/api/stripe/account-session` endpoint minting permissioned AccountSessions
+  - appearance theme mapped to Eleva design tokens
+  - CSP allows Stripe iframe hosts
+- **Twilio EU** subaccount provisioning + Lane 1 SMS templates (booking confirmation, 24h reminder, day-of prompt, cancellation)
+- **Tier 1 invoicing (TOConline)**:
+  - OAuth app registered sandbox + prod
+  - `ELEVA-FEE-{YYYY}` series for per-booking solo commission
+  - `ELEVA-SAAS-{YYYY}` series for clinic SaaS
+  - IVA matrix accountant-reviewed and signed off
+  - `issuePlatformFeeInvoice` + `issueClinicSaasInvoice` Vercel Workflow steps
+  - Neon `platform_fee_invoices` + `clinic_saas_invoices` idempotency tables
+- **Tier 2 invoicing registry scaffold**:
+  - adapter interface + P1 seed (TOConline expert-side, Moloni, Manual/SAF-T)
+  - Become-Partner onboarding "Invoicing setup" step
+  - admin verification in Become-Partner queue
+- pack/subscription baseline (expert Top Expert tier, clinic Starter/Growth/Enterprise)
+- `ff.mbway_enabled`, `ff.toconline_invoicing_enabled`, `ff.clinic_subscription_tiers`, `ff.expert_invoicing_apps_enabled` wired via `packages/flags`
 
 Exit criteria:
 
-- a user can search, book, and pay
-- scheduling conflicts are handled correctly
-- booking/payment flows are observable
+- a user can search, book, and pay inline via Payment Element with Dynamic Payment Methods
+- scheduling conflicts handled correctly (100 concurrent reservations → one winner)
+- booking/payment flows observable (Sentry + BetterStack + audit)
+- expert completes Connect Onboarding + Identity inline (no redirect)
+- Tier 1 platform-fee invoice fires end-to-end with a pilot expert
+- Tier 2 seed adapters connect + issue a test invoice
 
 ## Milestone 5: Patient Portal, CRM, And Reports
 

@@ -1,6 +1,6 @@
 # Eleva.care v3 Monorepo Structure
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -21,34 +21,67 @@ It answers:
 - Avoid duplicating domain logic inside apps.
 - Make future app splitting possible without forcing it now.
 
+## Package Manager And Tooling
+
+- **pnpm + Turborepo** is the single installer and lockfile source of truth.
+- Pin `"packageManager": "pnpm@<version>"` in root `package.json`.
+- Bun is allowed as a task/script runner (`bun run`, `bun test`) but **`bun install` is banned** to prevent lockfile drift between local dev and Vercel CI.
+- CI asserts no `bun.lock` exists at repo root.
+- Turborepo remote cache enabled via Vercel.
+
+## Migration From Current Scaffold (Phase 1 first task)
+
+The repo currently ships a shadcn monorepo template on Bun:
+
+- [apps/web](../../apps/web)
+- [packages/ui](../../packages/ui)
+- [packages/eslint-config](../../packages/eslint-config)
+- [packages/typescript-config](../../packages/typescript-config)
+- `bun.lock` + `"packageManager": "bun@1.3.5"`
+
+Phase 1 first milestone:
+
+1. Replace `bun.lock` with `pnpm-lock.yaml`; pin `"packageManager": "pnpm@<version>"`.
+2. Keep the shadcn `components.json` configuration intact.
+3. Rename workspace packages from `@workspace/*` → `@eleva/*`.
+4. Keep `apps/web` as the public marketing + marketplace app; scaffold `apps/app` + `apps/api` + `apps/docs` + `apps/email` alongside it.
+5. Enable Turborepo remote cache.
+6. Add `eslint-plugin-import` boundary rules (see "Ownership Rules" below).
+
 ## Top-Level Layout
 
 ```text
 .
 ├── apps/
-│   ├── web/
-│   ├── app/
-│   ├── api/
-│   ├── docs/
-│   ├── email/
-│   ├── jobs/                # later
-│   ├── diary-mobile/        # later
-│   └── storybook/           # later
+│   ├── web/                  # public marketing + marketplace + SEO
+│   ├── app/                  # authenticated product (experts, patients, org admins, Eleva operators)
+│   ├── api/                  # webhooks + backend integration endpoints
+│   ├── docs/                 # Fumadocs product + compliance docs
+│   ├── email/                # React Email templates + preview
+│   ├── jobs/                 # later — only if api becomes too coupled
+│   ├── diary-mobile/         # later — Expo RN patient companion app
+│   └── storybook/            # later — UI verification
 ├── packages/
-│   ├── config/
-│   ├── auth/
-│   ├── db/
-│   ├── ui/
-│   ├── compliance/
-│   ├── scheduling/
-│   ├── billing/
-│   ├── crm/
-│   ├── notifications/
-│   ├── ai/
-│   ├── mobile/             # later
-│   ├── analytics/          # later
-│   ├── observability/      # later
-│   ├── content/            # later
+│   ├── config/               # env validation, URL helpers, shared constants
+│   ├── auth/                 # WorkOS, session, RBAC, org resolution
+│   ├── db/                   # Drizzle schema, migrations, withOrgContext()
+│   ├── ui/                   # shared shadcn-based design system
+│   ├── compliance/           # consent, audit events, retention/export
+│   ├── scheduling/           # event types, schedules, availability, slot logic
+│   ├── calendar/             # Google + Microsoft OAuth and sync
+│   ├── billing/              # Stripe Connect, Subscriptions, Entitlements, Embedded Components
+│   ├── accounting/           # two-tier invoicing (Tier 1 TOConline, Tier 2 adapter registry)
+│   ├── crm/                  # contacts, lifecycle state, segmentation
+│   ├── notifications/        # Lane 1 (Workflows + Resend + Twilio + inbox) and Lane 2 (Resend Automations)
+│   ├── ai/                   # Vercel AI Gateway client, prompt contracts, transcript and report pipelines
+│   ├── workflows/            # Vercel Workflows DevKit step definitions and shared primitives
+│   ├── flags/                # Vercel Flags SDK + Edge Config boundary
+│   ├── audit/                # audit log writers, correlation ID propagation
+│   ├── encryption/           # WorkOS Vault helpers, crypto-shredding
+│   ├── mobile/               # later — mobile-safe client contracts, sync/share DTOs
+│   ├── analytics/            # later — PostHog and GA4 wrappers
+│   ├── observability/        # later — Sentry and BetterStack wrappers
+│   ├── content/              # later — typed content loaders for docs/blog/LLMs.txt
 │   ├── eslint-config/
 │   └── typescript-config/
 └── docs/
@@ -233,18 +266,68 @@ Owns:
 - availabilities
 - slot computation
 - reservation logic
-- calendar abstractions
+
+Does not own:
+
+- calendar OAuth or sync — those live in `packages/calendar`
+
+### `packages/calendar`
+
+Owns:
+
+- Google + Microsoft OAuth flows, token refresh
+- event read/write with idempotent client-supplied IDs
+- webhook subscription + external-change reconciliation
+- busy-calendar vs destination-calendar distinctions (cal.com-inspired)
+
+Tokens stored via `packages/encryption` → WorkOS Vault. Never env-based.
 
 ### `packages/billing`
 
 Owns:
 
-- Stripe product and price mapping
-- packs
-- subscriptions
-- commission logic
-- payouts
-- invoice/payment states
+- Stripe Connect Express (onboarding + payouts)
+- Stripe Subscriptions (Top Expert tier, clinic SaaS tiers)
+- Stripe Entitlements (plan gating)
+- Stripe Embedded Components wrappers (`packages/billing/stripe-embedded`)
+- `AccountSession` minting (`/api/stripe/account-session`)
+- single webhook dispatcher (`packages/billing/webhook`)
+- commission logic (solo experts)
+- invoice/payment/payout state machine
+
+Does not own:
+
+- invoice issuance to external fiscal systems — that lives in `packages/accounting`
+
+### `packages/accounting`
+
+Owns:
+
+- Tier 1 (Eleva → Expert/Clinic) invoicing via TOConline adapter
+- Tier 2 (Expert → Patient) adapter registry (cal.com-style app-store pattern)
+- shared `ExpertInvoicingAdapter` interface
+- per-expert credential store (Neon `expert_integration_credentials` + WorkOS Vault)
+- IVA/VAT matrix logic
+- reconciliation helpers (Stripe ↔ TOConline)
+
+Directory shape:
+
+```text
+packages/accounting/
+├── src/
+│   ├── core/                 # IVA rules, invoice types, credential store
+│   ├── eleva-platform/       # Tier 1 — TOConline-only
+│   └── expert-apps/
+│       └── adapters/
+│           ├── toconline/
+│           ├── moloni/
+│           ├── invoicexpress/
+│           ├── vendus/
+│           ├── primavera/
+│           └── manual/
+```
+
+CI rule: no direct `toconline-sdk` / `moloni-sdk` / etc. imports outside this package.
 
 ### `packages/crm`
 
@@ -259,19 +342,66 @@ Owns:
 
 Owns:
 
-- notification domain model
-- email/SMS/in-app contracts
+- Lane 1 — transactional multi-channel (`sendNotification`)
+  - Vercel Workflows orchestration
+  - Resend transactional, Twilio EU SMS, Neon in-app inbox, Expo push (later)
+  - preference model, quiet hours, locale
+- Lane 2 — marketing lifecycle (`triggerAutomation`)
+  - Resend Automations trigger
+  - consent-gated Neon → Resend contact sync
 - template payload schemas
-- preference and channel rules
+
+CI rules: no direct `resend` / `twilio` / `expo-server-sdk` imports outside this package.
+
+### `packages/workflows`
+
+Owns:
+
+- Vercel Workflows DevKit step definitions (shared helpers, typed context, correlation-ID propagation)
+- dead-letter and admin-retry surfaces
+
+Apps compose workflow triggers; step logic lives here or in the owning domain package (`packages/billing`, `packages/accounting`, etc.).
+
+### `packages/flags`
+
+Owns:
+
+- Vercel Flags SDK boundary
+- Edge Config + PostHog adapter wiring
+- flag catalog (`ff.<area>.<feature>`)
+- kill-switch helpers
+
+CI rule: no direct `@vercel/flags` or PostHog flag SDK imports outside this package.
+
+### `packages/audit`
+
+Owns:
+
+- `withAudit` decorator for mutating server actions
+- audit event writers targeting `eleva_v3_audit` Neon project
+- correlation-ID `AsyncLocalStorage` propagation
+
+### `packages/encryption`
+
+Owns:
+
+- WorkOS Vault primitives (`vaultPut`, `vaultGet`)
+- domain helpers (`encryptRecord`, `encryptOAuthToken`)
+- crypto-shredding on org deletion
+
+CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere.
 
 ### `packages/ai`
 
 Owns:
 
-- Vercel AI Gateway integration
-- prompt contracts
-- transcript summarization
-- AI report drafting flows
+- Vercel AI Gateway client (sole model router)
+- prompt contracts (versioned)
+- transcript summarization pipeline
+- AI report drafting pipeline
+- consent and retention enforcement for AI artifacts
+
+CI rule: no direct LLM provider SDKs outside this package.
 
 ### `packages/mobile` later
 
@@ -286,7 +416,8 @@ Owns:
 
 Owns:
 
-- PostHog and analytics wrappers
+- PostHog wrapper (product analytics on `apps/app`)
+- GA4 wrapper (marketing on `apps/web`)
 - Sentry and BetterStack wrappers
 - instrumentation helpers
 
@@ -327,19 +458,41 @@ Each package must have:
 
 ## Evolution Path
 
-### Initial state
+### Initial state (after Phase 1 migration)
 
-- `apps/web`
+Apps:
+
+- `apps/web` (migrated from existing scaffold)
 - `apps/app`
 - `apps/api`
 - `apps/docs`
 - `apps/email`
-- core packages
+
+Packages:
+
+- `packages/config`
+- `packages/auth`
+- `packages/db`
+- `packages/ui` (migrated + renamed)
+- `packages/compliance`
+- `packages/scheduling`
+- `packages/calendar`
+- `packages/billing`
+- `packages/accounting`
+- `packages/crm`
+- `packages/notifications`
+- `packages/workflows`
+- `packages/flags`
+- `packages/audit`
+- `packages/encryption`
+- `packages/ai`
+- `packages/eslint-config` (migrated + renamed)
+- `packages/typescript-config` (migrated + renamed)
 
 ### Near-term expansion
 
 - `packages/mobile`
-- `apps/diary-mobile`
+- `apps/diary-mobile` (once `packages/auth`, `packages/db`, `apps/api`, `packages/notifications` have shipped v1 contracts)
 - `packages/analytics`
 - `packages/observability`
 
