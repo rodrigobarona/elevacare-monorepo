@@ -51,7 +51,12 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
 32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
 33. [`contribution-workflow.md`](./contribution-workflow.md)
-34. [`adrs/README.md`](./adrs/README.md)
+34. [`decision-log.md`](./decision-log.md)
+35. [`owner-map.md`](./owner-map.md)
+36. [`environment-matrix.md`](./environment-matrix.md)
+37. [`service-level-objectives.md`](./service-level-objectives.md)
+38. [`support-escalation-matrix.md`](./support-escalation-matrix.md)
+39. [`adrs/README.md`](./adrs/README.md)
 
 **Brand, marketing, and design** should also use [`brand-book/README.md`](./brand-book/README.md) (and its appendices) so voice, visual identity, and partner boundaries stay consistent with the Eleva.care product reference.
 
@@ -126,6 +131,11 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md): staged rollout guidance for risky features
 - [`release-versioning-strategy.md`](./release-versioning-strategy.md): release discipline, rollout control, and versioning expectations
 - [`contribution-workflow.md`](./contribution-workflow.md): how contributors should work from handbook to implementation
+- [`decision-log.md`](./decision-log.md): lightweight running log of active and provisional decisions
+- [`owner-map.md`](./owner-map.md): role-based ownership map for workstreams and docs
+- [`environment-matrix.md`](./environment-matrix.md): intended local/staging/production environment model
+- [`service-level-objectives.md`](./service-level-objectives.md): reliability expectations for key journeys
+- [`support-escalation-matrix.md`](./support-escalation-matrix.md): support severity and escalation structure
 
 ### Decision records
 
@@ -158,11 +168,11 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 
 The team should add these next as implementation begins:
 
-- `decision-log.md`
-- `owner-map.md`
-- `environment-matrix.md`
-- `service-level-objectives.md`
-- `support-escalation-matrix.md`
+- `on-call-handbook.md`
+- `incident-review-template.md`
+- `qa-manual-test-suite.md`
+- `analytics-event-taxonomy.md`
+- `customer-support-macros.md`
 
 ## Rules For Maintaining This Folder
 
