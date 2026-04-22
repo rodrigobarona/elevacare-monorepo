@@ -1,0 +1,232 @@
+---
+description: >
+  Healthcare Compliance (GDPR, HIPAA, SOC 2) -- Apply when working with health records, patient data, PHI,
+  audit logging, data encryption, data deletion, consent management, breach notification, data subject rights,
+  or any compliance-related code. Triggers on terms: GDPR, HIPAA, PHI, audit, encryption, data deletion,
+  consent, health records, patient data, data subject, breach, compliance, vault, RLS, retention.
+---
+
+# Healthcare Compliance Rules
+
+Eleva Care stores and processes health records for users in Portugal (EU) and expanding to the US. All code touching health data MUST comply with these regulations.
+
+## GDPR (EU -- Eleva Care operates in Portugal)
+
+### Data Subject Rights (Articles 15-22)
+
+| Right | Article | Implementation |
+|-------|---------|----------------|
+| Access | Art 15 | API endpoint to export user's health data |
+| Rectification | Art 16 | Allow users to update personal/health info |
+| Erasure | Art 17 | Cascade delete with audit trail preservation |
+| Portability | Art 20 | Export data in machine-readable format (JSON) |
+| Restriction | Art 18 | Flag records as restricted processing |
+| Object | Art 21 | Opt-out mechanism for non-essential processing |
+
+### Lawful Basis for Health Data (Article 9)
+
+Health data is a **special category**. Must use one of:
+- **Explicit consent** (Art 9.2.a) -- informed, specific, freely given
+- **Healthcare provision** (Art 9.2.h) -- processing by health professionals
+
+### Data Protection Impact Assessment (DPIA)
+
+Required for health data processing. Document:
+- Purpose and necessity of processing
+- Risks to data subjects
+- Mitigation measures (RLS, encryption, audit logging)
+
+### Cross-Border Transfers
+
+EU-US transfers require:
+- EU-US Data Privacy Framework certification, OR
+- Standard Contractual Clauses (SCCs)
+- Document transfer mechanisms for all third-party services
+
+### Breach Notification (Articles 33-34)
+
+- **72 hours** to notify Portuguese DPA (CNPD)
+- **Without undue delay** to affected data subjects
+- Document all breaches regardless of notification requirement
+
+### Consent Management
+
+```typescript
+// Record consent with timestamp and purpose
+await db.insert(consents).values({
+  userId: user.id,
+  purpose: 'health_data_processing',
+  lawfulBasis: 'explicit_consent',
+  consentedAt: new Date(),
+  version: CURRENT_CONSENT_VERSION,
+});
+
+// Validate consent before processing
+const hasConsent = await db.select()
+  .from(consents)
+  .where(and(
+    eq(consents.userId, userId),
+    eq(consents.purpose, 'health_data_processing'),
+    isNull(consents.revokedAt),
+  ));
+```
+
+## HIPAA (US Market Expansion)
+
+### PHI (Protected Health Information)
+
+18 identifiers that make data PHI: names, dates, phone numbers, email, SSN, medical record numbers, account numbers, device IDs, URLs, IP addresses, biometric identifiers, photos, and any unique identifier linked to health information.
+
+### Minimum Necessary Principle
+
+Only access/transmit the minimum PHI needed:
+
+```typescript
+// ✅ Select only needed fields
+const record = await orgDb
+  .select({ id: records.id, status: records.status })
+  .from(records)
+  .where(eq(records.id, recordId));
+
+// ❌ Never select all fields when you only need a few
+const record = await orgDb.select().from(records);
+```
+
+### Access Controls
+
+- Role-based access via WorkOS RBAC (JWT claims)
+- RLS enforcement at the database level
+- Audit logging for all PHI access
+
+### Encryption at Rest
+
+Use WorkOS Vault for sensitive fields:
+
+```typescript
+import { encryptField, decryptField } from '@/lib/integrations/workos/vault';
+
+// Encrypt before storing
+const encryptedDiagnosis = await encryptField(diagnosis);
+await orgDb.insert(healthRecords).values({
+  ...data,
+  diagnosis: encryptedDiagnosis,
+});
+
+// Decrypt when reading
+const decrypted = await decryptField(record.diagnosis);
+```
+
+### BAA Requirements
+
+All third-party services handling PHI must have Business Associate Agreements:
+- Neon (database) -- BAA required
+- WorkOS (auth) -- BAA required
+- Stripe (payments with health metadata) -- BAA required
+- Novu (notifications with health context) -- evaluate PHI in payloads
+
+### Breach Notification
+
+- **60 days** to HHS for 500+ individuals affected
+- **Without undue delay** to affected individuals
+- Media notification if 500+ in a state/jurisdiction
+
+### Retention
+
+- **6-year retention** for HIPAA-covered records
+- Implement automated retention policies
+
+## SOC 2 Type II Controls
+
+### Security
+- Access controls via WorkOS RBAC + RLS
+- Encryption at rest (Vault) and in transit (TLS 1.3)
+- Vulnerability management and dependency scanning
+
+### Availability
+- Uptime monitoring via Sentry and Vercel
+- Incident response procedures documented
+
+### Confidentiality
+- Data classification (PHI, PII, public)
+- Encryption for all classified data
+- Access logging for sensitive resources
+
+### Processing Integrity
+- Input validation with Zod schemas
+- Error handling that prevents data corruption
+- Idempotent operations (Novu transactionId, Stripe idempotency keys)
+
+## Existing Infrastructure Patterns
+
+### RLS Enforcement
+
+All health data queries MUST use org-scoped database:
+
+```typescript
+import { getOrgScopedDb } from '@/lib/integrations/neon/rls-client';
+
+// ✅ ALWAYS use org-scoped DB for health data
+const orgDb = await getOrgScopedDb(orgId);
+const records = await orgDb.select().from(healthRecords);
+
+// ❌ NEVER use raw db for health data queries
+const records = await db.select().from(healthRecords);
+```
+
+### WorkOS Vault Encryption (DEK/KEK Envelope)
+
+```typescript
+import { encryptField, decryptField } from '@/lib/integrations/workos/vault';
+
+// Sensitive fields MUST be encrypted before storage
+const encrypted = await encryptField(sensitiveData);
+// Decrypt only when needed, in authorized contexts
+const decrypted = await decryptField(encrypted);
+```
+
+### Audit Logging
+
+All PHI access MUST be logged:
+
+```typescript
+import { logAuditEvent } from '@/lib/utils/server/audit';
+
+await logAuditEvent({
+  action: 'health_record.accessed',
+  actorId: user.id,
+  targetId: recordId,
+  metadata: { orgId, reason: 'patient_request' },
+});
+```
+
+Audit logs are stored in `AuditLogsTable` with RLS protection and are immutable.
+
+### Security Error Detection
+
+```typescript
+import { SECURITY_ERRORS } from '@/lib/constants/security';
+// Used to detect and flag security-relevant errors
+```
+
+## Key Rules
+
+1. **NEVER** store unencrypted PHI outside of RLS-protected, Vault-encrypted columns
+2. **ALWAYS** log access to medical records, appointments, and health data via `logAuditEvent()`
+3. **ALWAYS** use `getOrgScopedDb()` for health data queries (never raw `db`)
+4. **NEVER** expose PHI in client-side logs, error messages, or URLs
+5. **ALWAYS** validate consent before processing health data
+6. **ALWAYS** include `orgId` in data isolation checks
+7. **NEVER** include PHI in Novu notification payloads unless encrypted
+8. **ALWAYS** use `transactionId` for notification idempotency
+9. **NEVER** log PHI to console or Sentry (use sanitized identifiers)
+10. **ALWAYS** document data processing purposes and lawful basis
+
+## Related Agent Skills
+
+When working on compliance-related code, consider invoking these skills:
+- `security-compliance` -- SOC 2 controls, security audit readiness
+- `gdpr-dsgvo-expert` -- EU GDPR data subject rights, consent, DPAs
+- `healthcare-compliance` -- healthcare regulatory patterns, HIPAA workflows
+- `hipaa-compliance-guard` -- PHI handling, minimum necessary, breach notification
+- `data-retention-archiving-planner` -- retention policies, right to erasure
+- `security-review` -- security audit, vulnerability assessment

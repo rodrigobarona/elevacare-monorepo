@@ -1,0 +1,1 @@
+ALTER TABLE "slot_reservations" ADD CONSTRAINT "slot_reservations_active_slot_unique" UNIQUE("event_id","start_time","guest_email");

@@ -1,0 +1,6 @@
+{
+  "title": "Earnings",
+  "icon": "DollarSign",
+  "defaultOpen": true,
+  "pages": ["payouts", "pricing"]
+}

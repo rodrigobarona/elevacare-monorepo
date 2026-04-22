@@ -1,0 +1,153 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/**
+ * Only fumadocs-ui needs explicit @source since node_modules is gitignored.
+ * Tailwind CSS v4 auto-detects your project source files.
+ *
+ * @see https://fumadocs.vercel.app/docs/ui/theme
+ */
+@source '../../../../node_modules/fumadocs-ui/dist/**/*.js';
+
+/**
+ * Help Center Layout Overrides
+ *
+ * Adjustments to make Fumadocs work within our marketing layout:
+ * - Sidebar and ToC sticky positioning adjusted for fixed header
+ * - Content area respects the max-width container
+ *
+ * CRITICAL: The parent container must NOT have overflow:hidden
+ * as it breaks sticky positioning.
+ *
+ * Fumadocs uses CSS grid with named areas: sidebar, header, toc, content
+ * Key CSS variables we override:
+ * - --fd-docs-height: Total available height for docs
+ * - --fd-docs-row-1/2/3: Top offset for sticky elements
+ */
+
+/**
+ * Shared header height variables for consistent sticky positioning.
+ * These values should match the actual header component heights.
+ * @see src/components/shared/navigation/Header.tsx
+ */
+@theme {
+  --header-height-desktop: 96px;
+  --header-height-mobile: 80px;
+}
+
+/* Override Fumadocs CSS variables for our header offset */
+#eleva-care-help {
+  /* Height available for docs content (full viewport, sticky elements handle their own offset) */
+  --fd-docs-height: 100vh;
+  /* Top offset for sticky elements - accounts for fixed header */
+  --fd-docs-row-1: var(--header-height-desktop);
+  --fd-docs-row-2: var(--header-height-desktop);
+  --fd-docs-row-3: var(--header-height-desktop);
+}
+
+@media (max-width: 1023px) {
+  #eleva-care-help {
+    /* Smaller header on mobile */
+    --fd-docs-row-1: var(--header-height-mobile);
+    --fd-docs-row-2: var(--header-height-mobile);
+    --fd-docs-row-3: var(--header-height-mobile);
+  }
+}
+
+/* Ensure Fumadocs grid layout works within our container */
+#eleva-care-help main > div {
+  max-width: 100%;
+}
+
+/**
+ * Eleva Care Brand Theme for Fumadocs
+ *
+ * Colors aligned with Eleva Care brand:
+ * - Primary: #006D77 (Deep Teal)
+ * - Primary Light: #83C5BE (Sage Green)
+ * - Neutral: #FCFDFD, #F7F9F9, #333333
+ *
+ * Note: #E29578 (Soft Coral) is a brand accent color used elsewhere.
+ * For Fumadocs, --color-fd-secondary uses #F7F9F9 (neutral gray) for
+ * subtle backgrounds, keeping the UI clean and professional.
+ */
+@theme {
+  /* Clean white background - matches marketing site */
+  --color-fd-background: #fcfdfd;
+  --color-fd-foreground: #333333;
+
+  /* Subtle muted colors */
+  --color-fd-muted: #f7f9f9;
+  --color-fd-muted-foreground: #666666;
+
+  /* Popover/dropdown styling */
+  --color-fd-popover: #ffffff;
+  --color-fd-popover-foreground: #333333;
+
+  /* Cards - very subtle */
+  --color-fd-card: #f7f9f9;
+  --color-fd-card-foreground: #333333;
+
+  /* Borders - minimal */
+  --color-fd-border: #e5e5e5;
+
+  /* Primary - Eleva Teal */
+  --color-fd-primary: #006d77;
+  --color-fd-primary-foreground: #ffffff;
+
+  /* Secondary - Neutral Gray (used for subtle backgrounds) */
+  --color-fd-secondary: #f7f9f9;
+  --color-fd-secondary-foreground: #333333;
+
+  /* Accent - subtle teal tint */
+  --color-fd-accent: rgba(0, 109, 119, 0.08);
+  --color-fd-accent-foreground: #006d77;
+
+  /* Focus ring */
+  --color-fd-ring: #83c5be;
+}
+
+/* Dark theme - scoped to help container to avoid conflicts with other pages */
+.dark #eleva-care-help {
+  --color-fd-background: #1a1a1a;
+  --color-fd-foreground: #e5e5e5;
+  --color-fd-muted: #262626;
+  --color-fd-muted-foreground: #a3a3a3;
+  --color-fd-popover: #1f1f1f;
+  --color-fd-popover-foreground: #e5e5e5;
+  --color-fd-card: #262626;
+  --color-fd-card-foreground: #e5e5e5;
+  --color-fd-border: #333333;
+  --color-fd-primary: #83c5be;
+  --color-fd-primary-foreground: #1a1a1a;
+  --color-fd-secondary: #262626;
+  --color-fd-secondary-foreground: #e5e5e5;
+  --color-fd-accent: rgba(131, 197, 190, 0.15);
+  --color-fd-accent-foreground: #83c5be;
+  --color-fd-ring: #006d77;
+}
+
+/* Minimal sidebar styling */
+#eleva-care-help aside {
+  background: transparent;
+}
+
+/* Clean sidebar links - scoped to sidebar to avoid conflicts with other data-active elements */
+#eleva-care-help aside [data-active='true'] {
+  color: var(--color-fd-primary);
+  font-weight: 500;
+}
+
+/**
+ * Hide the floating sidebar panel - we have a static sidebar
+ *
+ * This panel (data-sidebar-panel) contains collapse/search buttons
+ * that appear when the sidebar is in collapsed/floating mode.
+ * Since we set collapsible: false, this panel is never needed.
+ *
+ * Scoped to help container to avoid affecting other Fumadocs instances.
+ */
+#eleva-care-help div[data-sidebar-panel] {
+  display: none;
+}

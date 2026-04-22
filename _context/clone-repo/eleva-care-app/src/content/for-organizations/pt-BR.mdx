@@ -1,0 +1,248 @@
+export const metadata = {
+  title: 'Para Organizações | Tecnologia Eleva Care para Sua Empresa',
+  description:
+    'Potencialize seus serviços de saúde feminina com a tecnologia Eleva Care. Clínicas, empresas e organizações de saúde usam nossa plataforma para prestar cuidados digitais, acessar nossa rede de especialistas e escalar seus serviços.',
+  og: {
+    title: 'Para Organizações | Tecnologia Eleva Care para Sua Empresa',
+    description:
+      'Potencialize seus serviços de saúde feminina com a plataforma tecnológica Eleva Care. Para clínicas, empresas e organizações de saúde.',
+    siteName: 'Eleva Care',
+  },
+};
+
+import { ArrowRight, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+
+import BenefitsSection from '@/components/sections/for-organizations/BenefitsSection';
+import FinalCTASection from '@/components/sections/for-organizations/FinalCTASection';
+import HeroSection from '@/components/sections/for-organizations/HeroSection';
+import HowItWorksSection from '@/components/sections/for-organizations/HowItWorksSection';
+import PricingPreviewSection from '@/components/sections/for-organizations/PricingPreviewSection';
+import WhoCanJoinSection from '@/components/sections/for-organizations/WhoCanJoinSection';
+
+<HeroSection
+  badge={{
+    text: 'Para Clínicas, Empresas e Organizações',
+    icon: <Sparkles className="mr-2 inline h-4 w-4" />,
+  }}
+  title="Potencialize Seus Serviços com"
+  subtitle="Tecnologia Eleva Care"
+  description="Utilize a plataforma tecnológica da Eleva Care para prestar serviços digitais de saúde feminina através da sua organização. Acesse nossa rede de especialistas independentes, ou integre sua própria equipe—tudo apoiado por nossa infraestrutura segura e comprovada."
+  cta={{
+    text: 'Colaborar Conosco',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+  secondaryCta={{
+    text: 'Agendar uma Demo',
+    href: '/contact?demo=true',
+  }}
+  features="Clínicas, centros de bem-estar, empresas e organizações de saúde confiam em nós para potencializar seus serviços digitais de saúde feminina."
+/>
+
+<BenefitsSection
+  title="Por Que as Organizações Escolhem a Eleva Care"
+  benefits={[
+    {
+      icon: 'zap',
+      title: 'Tecnologia Pronta para Usar',
+      description:
+        'Pule a fase de desenvolvimento. Nossa plataforma comprovada inclui agenda, videoconsultas seguras, pagamentos e gestão de clientes—pronta para sua organização.',
+    },
+    {
+      icon: 'users',
+      title: 'Acesse Nossa Rede de Especialistas',
+      description:
+        'Ofereça aos seus clientes acesso à nossa rede de profissionais de saúde independentes e licenciados, ou integre sua própria equipe na plataforma.',
+    },
+    {
+      icon: 'building',
+      title: 'Mantenha Sua Marca',
+      description:
+        'Opções de marca branca permitem oferecer serviços potencializados pela Eleva Care sob a marca da sua organização. Seus clientes, seus relacionamentos.',
+    },
+    {
+      icon: 'dollar',
+      title: 'Modelo de Negócio Flexível',
+      description:
+        'Assinaturas de espaço de trabalho com preços transparentes. Escale para cima ou para baixo conforme as necessidades da sua organização.',
+    },
+    {
+      icon: 'chart',
+      title: 'Analytics Empresariais',
+      description:
+        'Acompanhe utilização, resultados e ROI com dashboards completos. Tome decisões baseadas em dados para seus programas de saúde.',
+    },
+    {
+      icon: 'headphones',
+      title: 'Suporte Dedicado para Partners',
+      description:
+        'Assistência na integração, suporte técnico e um gerente de conta dedicado para garantir seu sucesso.',
+    },
+  ]}
+/>
+
+<WhoCanJoinSection
+  title="Quem Usa a Eleva Care para Organizações?"
+  subtitle="Clínicas, empresas e organizações de saúde usam nossa plataforma tecnológica para potencializar seus serviços de saúde feminina."
+  partnerTypes={[
+    {
+      icon: 'stethoscope',
+      title: 'Práticas Médicas',
+      examples: [
+        'Clínicas de Ginecologia',
+        'Centros de Saúde Feminina',
+        'Práticas de Cuidados Primários',
+        'Grupos Médicos Especializados',
+      ],
+    },
+    {
+      icon: 'heartPulse',
+      title: 'Centros de Bem-estar',
+      examples: [
+        'Centros de Saúde Integrativa',
+        'Espaços de Bem-estar Holístico',
+        'Clínicas de Bem-estar Feminino',
+        'Centros Mente-Corpo',
+      ],
+    },
+    {
+      icon: 'apple',
+      title: 'Nutrição e Dieta',
+      examples: [
+        'Clínicas de Nutrição',
+        'Práticas de Nutricionistas',
+        'Centros de Nutrição Pré-natal',
+        'Grupos de Saúde Metabólica',
+      ],
+    },
+    {
+      icon: 'brain',
+      title: 'Saúde Mental',
+      examples: [
+        'Práticas de Terapia',
+        'Centros de Aconselhamento',
+        'Saúde Mental Perinatal',
+        'Grupos de Psicologia Feminina',
+      ],
+    },
+    {
+      icon: 'dumbbell',
+      title: 'Fitness e Movimento',
+      examples: [
+        'Estúdios de Saúde Pélvica',
+        'Fitness Pré/Pós-natal',
+        'Práticas de Fisioterapia',
+        'Estúdios de Pilates e Yoga',
+      ],
+    },
+    {
+      icon: 'activity',
+      title: 'Práticas de Coaching',
+      examples: [
+        'Coaching de Saúde',
+        'Apoio Pós-parto',
+        'Coaching de Fertilidade',
+        'Bem-estar na Menopausa',
+      ],
+    },
+  ]}
+/>
+
+<HowItWorksSection
+  title="Como Funciona a Parceria"
+  subtitle="Processo simples de integração para colocar sua prática ao vivo na nossa plataforma"
+  steps={[
+    {
+      title: 'Candidate-se e Obtenha Aprovação',
+      description:
+        'Complete nossa candidatura de parceria. Revisamos as credenciais da sua prática, serviços e alinhamento com nossa missão. A maioria das candidaturas é aprovada em 5 dias úteis.',
+    },
+    {
+      title: 'Configure Seu Perfil de Partner',
+      description:
+        'Crie o perfil da sua organização com branding, serviços e informações da equipa. Configure preços, disponibilidade e políticas de prática através do nosso painel.',
+    },
+    {
+      title: 'Integre Seus Especialistas',
+      description:
+        'Convide seus profissionais de saúde para se juntarem à sua organização parceira. Eles mantêm seus perfis individuais enquanto fazem parte da sua rede de prática.',
+    },
+    {
+      title: 'Lance e Cresça',
+      description:
+        'Entre ao vivo na plataforma Eleva Care. Comece a receber reservas, gerenciar consultas e expandir sua base de clientes. Acesse análises para acompanhar o desempenho.',
+    },
+  ]}
+  cta={{
+    text: 'Inicie Sua Candidatura de Parceria',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+/>
+
+<PricingPreviewSection
+  title="Preços de Parceria"
+  subtitle="Escolha o plano que se adequa ao tamanho e necessidades da sua prática"
+  note="Todos os planos incluem: Acesso à plataforma, processamento de pagamentos, painel de análises e suporte para partners. Partilha de receitas aplica-se às reservas de especialistas."
+  tiers={[
+    {
+      name: 'Inicial',
+      price: '€99/mês',
+      description: 'Perfeito para práticas pequenas a começar',
+      features: [
+        'Até 3 perfis de especialistas',
+        'Análises e relatórios básicos',
+        'Gestão de agendamento e calendário',
+        'Plataforma de consulta por vídeo',
+        'Suporte por e-mail',
+        'Branding de prática',
+      ],
+    },
+    {
+      name: 'Profissional',
+      price: '€199/mês',
+      description: 'Ideal para práticas em crescimento e centros de bem-estar',
+      recommended: true,
+      features: [
+        'Até 10 perfis de especialistas',
+        'Análises e insights avançados',
+        'Ferramentas de gestão de clientes',
+        'Páginas de reserva personalizáveis',
+        'Suporte prioritário',
+        'Suporte de marketing',
+        'Painel de gestão de equipa',
+      ],
+    },
+    {
+      name: 'Enterprise',
+      price: 'Personalizado',
+      description: 'Para organizações grandes com necessidades específicas',
+      features: [
+        'Perfis de especialistas ilimitados',
+        'Opções de marca branca',
+        'Acesso API',
+        'Gestor de conta dedicado',
+        'Suporte prioritário 24/7',
+        'Integrações personalizadas',
+        'Relatórios e exportações avançadas',
+      ],
+    },
+  ]}
+/>
+
+<FinalCTASection
+  title="Pronta para Potencializar Sua Organização com a Eleva Care?"
+  description="Junte-se às organizações que já usam a tecnologia Eleva Care para prestar serviços digitais de saúde feminina. Nossa plataforma, sua marca, melhores resultados para seus clientes."
+  cta={{
+    text: 'Começar',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+  support={{
+    text: 'Quer ver como funciona?',
+    linkText: 'Agende uma demo com nossa equipe.',
+    linkHref: '/contact?demo=true',
+  }}
+/>

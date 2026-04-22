@@ -1,0 +1,228 @@
+export const metadata = {
+  title: 'About Eleva Care | Our Mission, Vision & Team',
+  description:
+    "Learn about Eleva Care's mission to transform women's healthcare through innovation and compassion. Meet our team of healthcare experts dedicated to empowering women.",
+  og: {
+    title: 'About Eleva Care | Our Mission, Vision & Team',
+    description:
+      "Learn about Eleva Care's mission to transform women's healthcare through innovation and compassion. Meet our team of healthcare experts.",
+    siteName: 'Eleva Care',
+  },
+};
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
+
+import AdvisorsSection from '@/components/sections/about/AdvisorsSection';
+import BeliefsSection from '@/components/sections/about/BeliefsSection';
+import ClinicalExpertsSection from '@/components/sections/about/ClinicalExpertsSection';
+import JoinNetworkSection from '@/components/sections/about/JoinNetworkSection';
+import MissionSection from '@/components/sections/about/MissionSection';
+import TeamSection from '@/components/sections/about/TeamSection';
+import HeadlineSection from '@/components/shared/text/HeadlineSection';
+import TextBlock from '@/components/shared/text/TextBlock';
+
+<HeadlineSection
+  id="transforming-women-healthcare"
+  headingLevel="h1"
+  title="Transforming women's health with compassion and proven care"
+  description="We're here to make it easier to find the right help, at the right moment. Eleva Care connects you with licensed care experts through a secure, trusted technology platform."
+/>
+
+<MissionSection
+  title="Our Mission"
+  description={[
+    {
+      paragraph:
+        'We believe every woman deserves access to knowledgeable, compassionate care. Our platform helps you find independent, licensed experts you can trust—so you feel supported at every step.',
+    },
+    {
+      paragraph:
+        'We provide the technology that makes care simpler to access. Your chosen expert provides your medical care. Together, we help you move forward with confidence.',
+    },
+  ]}
+  statsTitle="The numbers"
+  stats={[
+    { label: 'Platform Satisfaction', value: '95%' },
+    { label: 'Platform Support', value: '24/7' },
+  ]}
+/>
+
+<HeadlineSection
+  id="our-vision"
+  label="Our Vision"
+  title="Bridging science and care—so support feels personal"
+  description="We bring trusted expertise closer to you—making specialized care easier to access across every life stage."
+/>
+
+<BeliefsSection
+  id="our-beliefs"
+  title="Our Beliefs"
+  beliefs={[
+    {
+      title: 'Quality Healthcare Access',
+      description:
+        'Every woman deserves access to quality healthcare, regardless of location or circumstances.',
+    },
+    {
+      title: 'Knowledge is Power',
+      description: 'Clear, evidence-based information helps you make confident health decisions.',
+    },
+    {
+      title: 'Collaborative Care',
+      description: 'Better outcomes happen when people work together with trusted professionals.',
+    },
+    {
+      title: 'Lifelong Journey',
+      description:
+        "Women's health is a lifelong journey with changing needs—and we meet you where you are.",
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="our-team"
+  label="Meet our team"
+  title="Led by healthcare innovators and compassionate experts"
+  description="Our team brings together women’s health, technology, and patient care—to help you feel supported, informed, and cared for."
+/>
+
+<TeamSection
+  description={[
+    {
+      paragraph:
+        'Eleva Care grew from a simple idea: expert care should be easier to reach. Our founders and advisors saw the gaps women face—and built a better way to connect you with trusted professionals.',
+    },
+    {
+      paragraph:
+        'Today, Eleva Care operates a secure digital platform that connects women with independent, licensed care experts. We provide the technology; your chosen expert provides your care.',
+    },
+  ]}
+  ctaText="Read our story"
+  ctaLink="/history"
+  title="Our Leadership"
+  leadership={[
+    {
+      name: 'Patricia Mota, PT, PhD',
+      flags: '🇵🇹 🇪🇸 🇺🇸',
+      role: 'Co-Founder / Chief Executive Officer',
+      image: '/img/about/team/team-patricia-mota.jpg',
+    },
+    {
+      name: 'Rodrigo Barona',
+      flags: '🇪🇸 🇵🇹 🇺🇸',
+      role: 'Co-Founder / Chief Technical Officer',
+      image: '/img/about/team/team-rodrigo-barona.jpg',
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="board-of-advisors"
+  label="Guided by industry experts"
+  title="Board of Advisors"
+  description="Our advisory board brings together leaders in women’s health, innovation, and clinical research."
+/>
+
+<AdvisorsSection
+  title="Healthcare Innovation"
+  healthcareAdvisors={[
+    {
+      name: 'Kari Bø, PT, PhD',
+      flags: '🇳🇴',
+      role: 'Board Advisor Pelvic Floor Health',
+      quote:
+        'Evidence-based pelvic-floor muscle training not only prevents and treats dysfunction—it empowers women to live confidently and fully at every stage of life.',
+      image: '/img/about/team/team-kari-bo.jpg',
+    },
+        {
+      name: 'Ruben Barakat, PhD',
+      flags: '🇦🇷 🇪🇸',
+      role: 'Board Advisor Exercise Science',
+      quote:
+        "Evidence shows that personalized exercise during pregnancy can transform women's health outcomes.",
+      image: '/img/about/team/team-ruben-barakat.jpg',
+    },
+        {
+      name: 'Alexandre Delgado, PT, PhD',
+      flags: '🇧🇷',
+      role: 'Board Advisor Obstetric Physical Therapy',
+      quote:
+        'Evidence-based physical therapy transforms the pregnancy and birth experience, empowering women through every stage.',
+      image: '/img/about/team/team-alexandre-delgado.jpg',
+    },
+    {
+      name: 'Cristine Homsi Jorge, PT, PhD',
+      flags: '🇧🇷',
+      role: "Board Advisor Women's Health",
+      quote:
+        'Clinical research and education empower women to make informed decisions about their healthcare journey',
+      image: '/img/about/team/team-cristine-homsi-jorge.jpg',
+    },
+ {
+      name: 'Annelie Gutke, PT, PhD',
+      flags: '🇸🇪',
+      role: "Board Advisor Women's Health",
+      quote:
+        'Understanding pain mechanisms transforms how we care for women during pregnancy and beyond.',
+      image: '/img/about/team/team-annelie-gutke.jpg',
+    },
+       {
+      name: 'Joana Goulão Barros, MD, PhD',
+      flags: '🇵🇹',
+      role: 'Board Advisor Women\'s Lifecycle Care',
+      quote:
+        'Seamless, team-based care across every life stage—from adolescence through pregnancy, childbirth, and menopause—ensures women receive the personalized support they need to thrive.',
+      image: '/img/about/team/team-joana-barros.jpg',
+    },
+    {
+      name: 'Patricia Driusso, PT, PhD',
+      flags: '🇧🇷',
+      role: "Board Advisor Women's Health",
+      quote:
+        'Clinical research advances rehabilitation treatments while empowering women through evidence-based education.',
+      image: '/img/about/team/team-patricia-driusso.jpg',
+    },
+
+    {
+      name: 'Jenny Bagwell, PT, PhD, DPT',
+      flags: '🇺🇸',
+      role: 'Board Advisor Biomechanics & Perinatal Health',
+      quote:
+        'Understanding movement patterns during and after pregnancy helps optimize care and improve long-term outcomes for women.',
+      image: '/img/about/team/team-jenny-bagwell-california-usa.jpg',
+    },
+
+]}
+/>
+
+<HeadlineSection
+  id="join-our-network"
+  label="Join our network"
+  title="Transform women's healthcare with us"
+  description="Join a community of dedicated care professionals making quality care accessible to women everywhere."
+/>
+
+<JoinNetworkSection
+  title="Why Join Eleva"
+  benefits={[
+    {
+      title: 'Independent Practice',
+      description:
+        'Work on your terms with a flexible, secure platform. Set your own schedule, rates, and practice policies.',
+    },
+    {
+      title: 'Secure Technology Platform',
+      description:
+        'Use our booking, scheduling, payments, and encrypted notes—so you can focus on care. We provide the technology; you provide the medical care.',
+    },
+    {
+      title: 'Professional Network',
+      description:
+        'Connect with peers across specialties for collaboration, education, and support.',
+    },
+  ]}
+  applyUrl="mailto:patimota@gmail.com?subject=Application%20for%20Eleva%20Care&body=Hello%20Patrícia,%20I%20would%20like%20to%20apply%20for%20Eleva%20Care."
+  applyButtonText="Apply to Join"
+/>

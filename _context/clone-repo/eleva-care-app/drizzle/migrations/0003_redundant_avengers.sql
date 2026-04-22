@@ -1,0 +1,1 @@
+ALTER TABLE "profiles" ADD COLUMN "practitioner_agreement_metadata" jsonb;

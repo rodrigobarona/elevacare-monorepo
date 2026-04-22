@@ -1,0 +1,10 @@
+# Bun configuration
+# https://bun.sh/docs/runtime/bunfig
+
+# Note: Tests are run via Vitest (`bun run test`), not Bun's native test runner
+# See vitest.config.mts for test configuration
+
+[install]
+# Use exact versions for reproducible builds
+exact = true
+

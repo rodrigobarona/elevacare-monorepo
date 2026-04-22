@@ -1,0 +1,18 @@
+{
+  "title": "Workspace Portal",
+  "description": "Resources for managing your workspace on Eleva Care platform.",
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "getting-started/setup",
+    "getting-started/branding",
+    "---Team Management---",
+    "team/experts",
+    "team/invitations",
+    "---Pricing & Revenue---",
+    "pricing/plans",
+    "pricing/revenue",
+    "---Analytics---",
+    "analytics/dashboard"
+  ]
+}

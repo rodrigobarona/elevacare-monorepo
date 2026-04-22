@@ -1,0 +1,206 @@
+---
+description: API Routes and Webhook Security Patterns
+globs: ['src/app/api/**/*.ts']
+---
+
+# API Routes and Webhook Security Patterns
+
+## Webhook Signature Verification
+
+All webhook endpoints MUST verify signatures before processing payloads.
+
+### Stripe Webhooks
+
+```typescript
+import { stripe } from '@/lib/stripe';
+
+export async function POST(req: Request) {
+  const sig = req.headers.get('stripe-signature')!;
+  const body = await req.text();
+
+  const event = stripe.webhooks.constructEvent(
+    body,
+    sig,
+    process.env.STRIPE_WEBHOOK_SECRET!
+  );
+
+  // Process verified event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      await handleCheckoutComplete(event.data.object);
+      break;
+  }
+
+  return new Response('OK');
+}
+```
+
+### QStash Cron Jobs (Upstash)
+
+All QStash-scheduled cron jobs use the official `verifySignatureAppRouter` wrapper from `@upstash/qstash/nextjs`. This performs cryptographic HMAC signature verification using `QSTASH_CURRENT_SIGNING_KEY` and `QSTASH_NEXT_SIGNING_KEY` (for key rotation).
+
+**Pattern: `verifySignatureAppRouter` wrapper (all QStash crons)**
+
+Used by: `appointment-reminders`, `appointment-reminders-1hr`, `cleanup-blocked-dates`, `process-tasks`, `send-payment-reminders`, `process-expert-transfers`, `cleanup-expired-reservations`, `check-upcoming-payouts`, `process-pending-payouts`.
+
+```typescript
+import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
+import type { NextRequest } from 'next/server';
+
+async function handler(request: NextRequest) {
+  // Request is already verified at this point — signature checked by wrapper
+  // Business logic here
+  return Response.json({ success: true });
+}
+
+export const POST = verifySignatureAppRouter(handler);
+```
+
+**Important:** QStash must call these endpoints directly (not via a proxy). The handler is a plain `async function` (not exported); only the wrapped `POST` is exported.
+
+### Vercel Native Cron (`CRON_SECRET` Bearer token)
+
+Used by `keep-alive` which is triggered by Vercel's built-in cron scheduler (not QStash):
+
+```typescript
+export async function GET(request: Request) {
+  const authHeader = request.headers.get('authorization');
+  if (!process.env.CRON_SECRET || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  // Process verified cron job
+}
+```
+
+**Note:** Vercel crons use GET and the `CRON_SECRET` env var is set automatically by Vercel. Do not mix this pattern with QStash crons.
+
+### QStash Schedule Management
+
+```typescript
+import { scheduleRecurringJob, deleteSchedule } from '@/lib/integrations/qstash/client';
+
+// Schedule a cron job
+const scheduleId = await scheduleRecurringJob(
+  `${baseUrl}/api/cron/my-job`,
+  { cron: '0 */6 * * *', retries: 3 },
+  { key: 'value' }
+);
+
+// Delete a schedule
+await deleteSchedule(scheduleId);
+```
+
+**No-op client pattern:** When `QSTASH_TOKEN` is missing, the client falls back to a no-op implementation that logs warnings instead of throwing errors, allowing graceful degradation.
+
+### Novu Webhooks
+
+```typescript
+import crypto from 'crypto';
+
+export async function POST(request: NextRequest) {
+  const rawBody = await request.text();
+  const signature = request.headers.get('x-novu-signature');
+
+  if (!signature) {
+    return Response.json({ error: 'Missing signature' }, { status: 401 });
+  }
+
+  const expectedSig = crypto
+    .createHmac('sha256', process.env.NOVU_SECRET_KEY!)
+    .update(rawBody)
+    .digest('hex');
+
+  if (signature !== expectedSig) {
+    return Response.json({ error: 'Invalid signature' }, { status: 401 });
+  }
+
+  // Process verified webhook
+}
+```
+
+## API Route Authentication
+
+All non-public API routes MUST verify authentication:
+
+```typescript
+import { withAuth } from '@workos-inc/authkit-nextjs';
+
+export async function GET() {
+  const { user } = await withAuth();
+  if (!user) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Process authenticated request
+}
+```
+
+## Rate Limiting
+
+Apply rate limiting to public-facing API routes:
+
+```typescript
+import { Ratelimit } from '@upstash/ratelimit';
+import { redis } from '@/lib/redis';
+
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '10 s'),
+});
+
+export async function POST(request: NextRequest) {
+  const ip = request.headers.get('x-forwarded-for') ?? 'anonymous';
+  const { success } = await ratelimit.limit(ip);
+
+  if (!success) {
+    return Response.json({ error: 'Rate limited' }, { status: 429 });
+  }
+
+  // Process request
+}
+```
+
+## Environment Variables
+
+```bash
+# Stripe
+STRIPE_WEBHOOK_SECRET="whsec_..."
+
+# QStash (Upstash) — used by verifySignatureAppRouter
+QSTASH_TOKEN="..."
+QSTASH_CURRENT_SIGNING_KEY="sig_..."
+QSTASH_NEXT_SIGNING_KEY="sig_..."
+
+# Vercel Cron — auto-set by Vercel, used by keep-alive
+CRON_SECRET="..."
+
+# Novu
+NOVU_SECRET_KEY="..."
+```
+
+## Error Response Pattern
+
+```typescript
+return Response.json(
+  {
+    error: 'Descriptive error type',
+    message: 'Human-readable message',
+    timestamp: new Date().toISOString(),
+  },
+  {
+    status: 401,
+    headers: {
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+    },
+  }
+);
+```
+
+## Related Agent Skills
+
+When working on API routes and webhooks, consider invoking these skills:
+- `stripe-best-practices` / `stripe-integration` -- Stripe webhook patterns, idempotency
+- `security-review` -- API security audit, vulnerability assessment
+- `upstash-qstash` -- QStash scheduling, signature validation, cron patterns

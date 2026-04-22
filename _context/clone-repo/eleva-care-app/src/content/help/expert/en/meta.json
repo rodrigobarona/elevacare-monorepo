@@ -1,0 +1,17 @@
+{
+  "title": "Expert Resources",
+  "description": "Everything healthcare professionals need to know about providing services on Eleva Care.",
+  "pages": [
+    "index",
+    "---Getting Started---",
+    "getting-started/profile",
+    "getting-started/services",
+    "getting-started/availability",
+    "---Earnings---",
+    "earnings/payouts",
+    "earnings/pricing",
+    "---Top Expert Program---",
+    "top-expert/requirements",
+    "top-expert/benefits"
+  ]
+}

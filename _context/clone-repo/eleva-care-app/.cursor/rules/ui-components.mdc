@@ -1,0 +1,227 @@
+---
+description: UI and Component Patterns
+globs: ['src/components/**/*.tsx', 'src/app/**/*.tsx']
+---
+
+# UI and Component Patterns
+
+## Component Organization
+
+```
+components/
+├── ui/               # Shadcn/ui components (buttons, inputs, cards, dialogs)
+├── features/         # Feature-specific components (appointments, booking, forms)
+├── layout/           # Layout components (header, footer, sidebar)
+├── sections/         # Page sections (home, about)
+├── shared/           # Shared utilities (navigation, loading, i18n)
+├── integrations/     # Third-party integrations (Stripe, Novu, PostHog)
+├── icons/            # Icon library
+└── providers/        # React context providers
+```
+
+**Import Examples:**
+
+```typescript
+// UI components
+// Feature components
+import { AppointmentCard } from '@/components/features/appointments';
+// Layout components
+import { Footer, Header } from '@/components/layout';
+import { AlertDialog, Button } from '@/components/ui';
+```
+
+## Component Structure
+
+````typescript
+// components/organisms/UserProfile.tsx
+
+/**
+ * UserProfile displays user information
+ *
+ * @example
+ * ```tsx
+ * <UserProfile user={user} onEdit={handleEdit} />
+ * ```
+ */
+export function UserProfile({ user, onEdit }: UserProfileProps) {
+  return (
+    <Card>
+      <Avatar src={user.avatar} />
+      <Text>{user.name}</Text>
+      <Button onClick={onEdit}>Edit</Button>
+    </Card>
+  );
+}
+
+interface UserProfileProps {
+  user: User;
+  onEdit?: () => void;
+}
+````
+
+## Styling (TailwindCSS v4 + Shadcn/ui)
+
+> **Note:** This project uses Tailwind CSS v4 (`^4.1.18`). Use CSS-first configuration via `@theme` blocks in CSS files. The `tailwind.config.ts` file is only for backward compatibility.
+
+```typescript
+import { cn } from '@/lib/utils';
+
+export function Button({ variant = 'default', className, ...props }: ButtonProps) {
+  return (
+    <button
+      className={cn(
+        'inline-flex items-center justify-center rounded-md text-sm font-medium',
+        variant === 'default' && 'bg-primary text-primary-foreground hover:bg-primary/90',
+        variant === 'ghost' && 'hover:bg-accent hover:text-accent-foreground',
+        className
+      )}
+      {...props}
+    />
+  );
+}
+```
+
+## Forms
+
+```typescript
+'use client';
+
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const formSchema = z.object({
+  email: z.string().email(),
+  name: z.string().min(2),
+});
+
+export function UserForm() {
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: { email: '', name: '' },
+  });
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    await createUser(data);
+  }
+
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <Input {...form.register('name')} />
+      {form.formState.errors.name && <p>{form.formState.errors.name.message}</p>}
+
+      <Input {...form.register('email')} />
+      {form.formState.errors.email && <p>{form.formState.errors.email.message}</p>}
+
+      <Button type="submit">Submit</Button>
+    </form>
+  );
+}
+```
+
+## Responsive Design
+
+```typescript
+// Mobile-first approach
+<div className="
+  px-4           // Mobile
+  md:px-6        // Tablet
+  lg:px-8        // Desktop
+  flex-col       // Mobile
+  md:flex-row    // Tablet+
+">
+```
+
+## Accessibility (WCAG 2.1 AA)
+
+1. **Use semantic HTML:**
+
+```tsx
+<button> not <div onClick>
+<nav>, <main>, <footer>
+<h1>, <h2>, <h3> in order
+```
+
+2. **Add ARIA labels:**
+
+```tsx
+<button aria-label="Close modal">
+  <X />
+</button>
+
+// Live regions for dynamic content
+<div aria-live="polite" role="status">
+  {statusMessage}
+</div>
+```
+
+3. **Keyboard navigation:**
+
+```tsx
+onKeyDown={(e) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    handleAction();
+  }
+}}
+```
+
+4. **Focus management:**
+
+```tsx
+// Trap focus in modals, return focus on close
+// Use Radix UI Dialog/AlertDialog which handles this automatically
+import { Dialog } from '@/components/ui/dialog';
+```
+
+5. **Color contrast:** Minimum 4.5:1 for normal text, 3:1 for large text
+6. **Motion:** Respect `prefers-reduced-motion` for animations
+7. **Screen readers:** Test with VoiceOver (macOS) or NVDA (Windows)
+
+## Rich Text Editor (TipTap)
+
+When working with rich text editing, use TipTap with `immediatelyRender: false` for SSR safety. See the `tiptap` agent skill for detailed patterns.
+
+## Performance
+
+```typescript
+// Dynamic imports
+import dynamic from 'next/dynamic';
+
+const HeavyComponent = dynamic(() => import('@/components/HeavyComponent'), {
+  loading: () => <Skeleton />,
+  ssr: false,
+});
+
+// Optimized images
+import Image from 'next/image';
+
+<Image src="/image.jpg" width={500} height={300} alt="Description" loading="lazy" />;
+```
+
+## Internationalization
+
+```typescript
+import { useTranslations } from 'next-intl';
+
+export function Welcome() {
+  const t = useTranslations('Welcome');
+
+  return (
+    <div>
+      <h1>{t('title')}</h1>
+      <p>{t('description')}</p>
+    </div>
+  );
+}
+```
+
+## Related Agent Skills
+
+When working on UI components, consider invoking these skills:
+- `shadcn-ui` -- Shadcn/ui component patterns and customization
+- `tailwind-theme-builder` -- Tailwind theme tokens and design system
+- `accessibility` -- WCAG compliance, screen readers, keyboard navigation
+- `frontend-design` -- high-quality UI design patterns
+- `web-design-guidelines` -- UX best practices audit
+- `performance` -- bundle size, lazy loading, image optimization
+- `tiptap` -- rich text editor integration (SSR-safe, Markdown, forms)

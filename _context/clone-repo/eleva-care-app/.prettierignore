@@ -1,0 +1,15 @@
+# Prettier has unstable formatting for these files (reformats differently on each run)
+# This is a known issue with certain edge cases in markdown and TypeScript
+docs/04-development/server-client-composition.md
+docs/archived/deprecated-features/role-based-authorization.md
+docs/performance/dns-prefetch-preconnect-validation.md
+lib/googleCalendarClient.ts
+
+# Standard ignores
+node_modules/
+.next/
+dist/
+build/
+coverage/
+pnpm-lock.yaml
+

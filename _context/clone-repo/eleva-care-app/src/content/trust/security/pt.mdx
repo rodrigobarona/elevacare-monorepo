@@ -1,0 +1,122 @@
+---
+title: 'Segurança e Conformidade | Eleva Care'
+description: 'Saiba mais sobre as medidas de segurança, certificações e compromisso da Eleva Care para proteger os seus dados de saúde com conformidade GDPR, LGPD e HIPAA.'
+---
+
+export const metadata = {
+  title: 'Segurança e Conformidade | Eleva Care',
+  description:
+    'Saiba mais sobre as medidas de segurança, certificações e compromisso da Eleva Care para proteger os seus dados de saúde com conformidade GDPR, LGPD e HIPAA.',
+};
+
+# Segurança
+
+_Última atualização: 31 de dezembro de 2025_
+
+> **Resumo Rápido**
+>
+> - **Sobre o que é esta página:** Como a Eleva.care protege os seus dados na nossa plataforma digital de saúde.
+> - **A Eleva.care opera a plataforma tecnológica; especialistas independentes e licenciados prestam os seus cuidados de saúde.**
+> - **Os seus dados estão encriptados** (AES‑256 em repouso, TLS 1.3 em trânsito) e armazenados na UE por padrão.
+> - **Cumprimos o RGPD, LGPD e mantemos infraestrutura preparada para HIPAA** com fornecedores verificados.
+> - **Questões?** Contacte `security@eleva.care` ou `dpo@eleva.care`.
+
+Levamos a segurança a sério. Abaixo segue um resumo claro e direto de como protegemos os seus dados e operamos uma plataforma digital de saúde segura.
+
+## 1) Conformidade como base
+
+- Conformidade com RGPD e LGPD como empresa sediada em Portugal
+- Base de dados preparada para HIPAA (Neon.tech) com BAA celebrado
+- Fornecedores com certificações sólidas: Clerk, Stripe, Vercel, Neon (SOC 2 Type II), Stripe (PCI DSS L1)
+- Práticas alinhadas com ISO 27001 em desenvolvimento e operações
+- Detalhes e lista completa de subprocessadores no nosso [Acordo de Processamento de Dados](/pt/trust/dpa)
+
+## 2) Salvaguardas técnicas
+
+- Encriptação em repouso (AES‑256‑GCM) e em trânsito (TLS 1.3, HSTS, PFS)
+- Residência de dados na UE por padrão (DB em Frankfurt; email, edge, cache, analytics e notificações na UE)
+- Rede: WAF, mitigação DDoS, rate limiting rigoroso, gateway de API seguro
+- Base de dados: pgAudit, apenas SSL, políticas ao nível de linhas, backups automatizados
+- Pagamentos: processados pelo Stripe; não armazenamos cartões; suporte a 3DS
+
+### Cabeçalhos de segurança e CSP
+
+Aplicamos cabeçalhos alinhados à OWASP:
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+X-Frame-Options: DENY  # ou frame-ancestors 'none' na CSP
+Content-Security-Policy: default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.app https://*.stripe.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' data: https://res.cloudinary.com;
+  font-src 'self' https://fonts.gstatic.com;
+  connect-src 'self' https://api.stripe.com https://*.posthog.com https://*.upstash.io;
+  frame-src https://*.stripe.com https://*.google.com;
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+```
+
+Notas:
+
+- Ajustamos as origens por ambiente e minimizamos permissões.
+- Preferimos frame-ancestors na CSP ao invés de X-Frame-Options quando suportado.
+
+## 3) Contas e acessos
+
+- Autenticação com Clerk, SSO, opções sem palavra‑passe, sessões seguras
+- MFA (SMS, TOTP, fallback por email); obrigatório para administradores
+- Controlo de acesso baseado em funções com menor privilégio e revisões periódicas
+
+## 4) Desenvolvimento e operações seguras
+
+- Branches protegidas, revisões por pares, SAST/DAST/SCA (Snyk/Dependabot)
+- Deploys imutáveis, sem downtime, rollback, lançamentos faseados
+- Monitorização contínua, deteção de anomalias, rastreio de erros, objetivo de 99.9% de uptime
+- Registos de auditoria abrangentes; retenção conforme RGPD/LGPD/HIPAA
+
+## 5) Resposta a incidentes
+
+- Monitorização 24/7, runbooks documentados, notificações regulatórias (RGPD 72h, LGPD ANPD)
+- Revisões pós‑incidente e comunicação a utilizadores
+- A Eleva.care mantém procedimentos internos para segurança da plataforma, resposta a incidentes e gestão de risco relacionados com a operação da plataforma digital de saúde
+
+## 6) Pessoas e terceiros
+
+- Revisões trimestrais de acessos, VPN para produção, MFA, verificação de antecedentes, formação anual
+- Revisões de segurança de fornecedores, DPAs com processadores; acessos monitorizados e registados
+
+## 7) Vulnerabilidades e investigação
+
+- Pentests regulares e scanning automatizado; SLAs: Críticas 24‑48h, Altas 7 dias, Médias 30 dias, Baixas 90 dias
+- Divulgação responsável: `security@eleva.care` ou advisory no GitHub; PGP mediante pedido
+- Evite scanning automatizado sem permissão, acesso a dados alheios, divulgação prematura, engenharia social ou interrupções
+
+## 8) Privacidade de dados
+
+- Recolhemos o mínimo necessário e retemos apenas o tempo necessário
+- Pode aceder, retificar, apagar, limitar, portar ou opor‑se; contacte `privacy@eleva.care` ou `dpo@eleva.care`
+- Consulte a nossa [Política de Privacidade](/pt/legal/privacy)
+
+## 9) Resiliência
+
+- Backups automáticos com recuperação point‑in‑time e geo‑redundância
+- RTO < 4h para sistemas críticos; RPO < 15m para DB; exercícios trimestrais de restauração
+- Alta disponibilidade com desenho multi‑região, replicação e edge caching global
+
+## 10) Fale connosco
+
+- Segurança: `security@eleva.care`
+- DPO: `dpo@eleva.care`
+- Suporte: `support@eleva.care`
+
+---
+
+Em caso de divergência entre versões linguísticas, prevalece a versão em português.
+
+**Responsável pelo Tratamento:** BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC/NIF 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Email `support@eleva.care`, Telefone `+351 931 897 950`.
+
+Melhoramos continuamente o nosso programa de segurança e atualizamos esta página conforme evolui.

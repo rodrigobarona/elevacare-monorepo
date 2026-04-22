@@ -1,0 +1,7 @@
+{
+  "title": "Começar",
+  "icon": "Rocket",
+  "defaultOpen": true,
+  "pages": ["profile", "services", "availability"]
+}
+

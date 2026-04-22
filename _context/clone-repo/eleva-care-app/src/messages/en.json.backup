@@ -1,0 +1,992 @@
+{
+  "common": {
+    "loading": "Loading content..."
+  },
+  "language": "English",
+  "Header": {
+    "findExpert": "Find an Expert",
+    "mission": "Our Mission"
+  },
+  "metadata": {
+    "title": "Connect with Expert Women's Health Specialists | Eleva Care",
+    "description": "Eleva Care: Find and book trusted women's health experts for pregnancy, postpartum, menopause, and sexual health. A trusted platform connecting you with independent care experts.",
+    "og": {
+      "title": "Connect with Expert Women's Health Specialists | Eleva Care",
+      "description": "Eleva Care: Find and book trusted women's health experts for pregnancy, postpartum, menopause, and sexual health. A trusted platform connecting you with independent care experts.",
+      "siteName": "Eleva Care"
+    },
+    "about": {
+      "title": "About Eleva Care | Our Mission, Vision & Team",
+      "description": "Learn about Eleva Care's mission to transform women's healthcare through innovation and compassion. Meet our team of healthcare experts dedicated to empowering women.",
+      "og": {
+        "title": "About Eleva Care | Our Mission, Vision & Team",
+        "description": "Learn about Eleva Care's mission to transform women's healthcare through innovation and compassion. Meet our team of healthcare experts.",
+        "siteName": "Eleva Care"
+      }
+    },
+    "become-expert": {
+      "title": "Become an Expert | Share Your Knowledge | Eleva Care",
+      "description": "Join our community of healthcare professionals, coaches, and consultants. Set your own rates, manage your schedule, and help people achieve their goals.",
+      "og": {
+        "title": "Become an Expert | Share Your Knowledge | Eleva Care",
+        "description": "Join our community of healthcare professionals, coaches, and consultants. Set your own rates and earn on your schedule.",
+        "siteName": "Eleva Care"
+      }
+    },
+    "trust": {
+      "title": "Trust Center | Eleva Care",
+      "description": "Learn about Eleva Care's security practices, data protection measures, and compliance certifications.",
+      "og": {
+        "title": "Trust Center | Eleva Care",
+        "description": "Learn about Eleva Care's security practices, data protection measures, and compliance certifications.",
+        "siteName": "Eleva Care"
+      },
+      "documents": {
+        "security": {
+          "title": "Security & Compliance | Eleva Care",
+          "description": "Learn about Eleva Care's security measures, certifications, and commitment to protecting your healthcare data with GDPR, LGPD, and HIPAA compliance.",
+          "og": {
+            "title": "Security & Compliance | Eleva Care",
+            "description": "Learn about Eleva Care's security measures, certifications, and commitment to protecting your healthcare data with GDPR, LGPD, and HIPAA compliance.",
+            "siteName": "Eleva Care"
+          }
+        },
+        "dpa": {
+          "title": "Data Processing Agreement | Eleva Care",
+          "description": "Review Eleva Care's data processing agreement outlining how we handle and protect your healthcare data.",
+          "og": {
+            "title": "Data Processing Agreement | Eleva Care",
+            "description": "Review Eleva Care's data processing agreement outlining how we handle and protect your healthcare data.",
+            "siteName": "Eleva Care"
+          }
+        }
+      }
+    },
+    "legal": {
+      "title": "Legal Documentation | Eleva Care",
+      "description": "Important information about Eleva Care's terms of service, privacy policies, and other legal documents.",
+      "og": {
+        "title": "Legal Documentation | Eleva Care",
+        "description": "Important information about Eleva Care's terms of service, privacy policies, and other legal documents.",
+        "siteName": "Eleva Care"
+      },
+      "documents": {
+        "terms": {
+          "title": "Terms of Service | Eleva Care",
+          "description": "Read Eleva Care's terms of service and understand your rights and obligations when using our healthcare platform.",
+          "og": {
+            "title": "Terms of Service | Eleva Care",
+            "description": "Read Eleva Care's terms of service and understand your rights and obligations when using our healthcare platform.",
+            "siteName": "Eleva Care"
+          }
+        },
+        "privacy": {
+          "title": "Privacy Policy | Eleva Care",
+          "description": "Learn how Eleva Care protects your personal health information and privacy rights in accordance with healthcare regulations.",
+          "og": {
+            "title": "Privacy Policy | Eleva Care",
+            "description": "Learn how Eleva Care protects your personal health information and privacy rights in accordance with healthcare regulations.",
+            "siteName": "Eleva Care"
+          }
+        },
+        "cookie": {
+          "title": "Cookie Policy | Eleva Care",
+          "description": "Understand how Eleva Care uses cookies to enhance your browsing experience and protect your privacy.",
+          "og": {
+            "title": "Cookie Policy | Eleva Care",
+            "description": "Understand how Eleva Care uses cookies to enhance your browsing experience and protect your privacy.",
+            "siteName": "Eleva Care"
+          }
+        },
+        "payment-policies": {
+          "title": "Payment Policies | Eleva Care",
+          "description": "Understand Eleva Care's payment terms, refund policies, and billing procedures for healthcare services.",
+          "og": {
+            "title": "Payment Policies | Eleva Care",
+            "description": "Understand Eleva Care's payment terms, refund policies, and billing procedures for healthcare services.",
+            "siteName": "Eleva Care"
+          }
+        },
+        "expert-agreement": {
+          "title": "Expert Agreement | Eleva Care",
+          "description": "Review Eleva Care's expert agreement outlining the terms and conditions for independent experts using our platform.",
+          "og": {
+            "title": "Expert Agreement | Eleva Care",
+            "description": "Review Eleva Care's expert agreement outlining the terms and conditions for independent experts using our platform.",
+            "siteName": "Eleva Care"
+          }
+        }
+      }
+    },
+    "history": {
+      "title": "Our Story | The Journey Behind Eleva Care",
+      "description": "Discover the passion and purpose that drives Eleva Care's mission to transform women's healthcare. A letter from our founder about why we started this journey.",
+      "og": {
+        "title": "Our Story | The Journey Behind Eleva Care",
+        "description": "Discover the passion and purpose that drives Eleva Care's mission to transform women's healthcare. A letter from our founder about why we started this journey.",
+        "siteName": "Eleva Care"
+      }
+    }
+  },
+  "NotFound": {
+    "title": "Page Not Found",
+    "description": "The page you are looking for does not exist. Please check the URL or try a different page.",
+    "goHome": "Go Home"
+  },
+  "Error": {
+    "title": "An error occurred",
+    "description": "The page you are looking for does not exist. Please check the URL or try a different page.",
+    "retry": "Retry"
+  },
+  "Legal": {
+    "title": "Legal Documentation",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "metaTitle": "Legal Documentation | Eleva Care",
+    "metaDescription": "Important information about Eleva Care's terms of service, privacy policies, and other legal documents."
+  },
+  "hero": {
+    "title": "World-Class Women's Health Experts, *on-demand.*",
+    "subtitle": "Book Leading Women's Health Specialists - On Your Schedule.",
+    "disclaimer": "We connect you with independent, licensed health experts.",
+    "disclaimerLink": "Learn more",
+    "cta1": "Not sure if we can help? Take the Quiz",
+    "cta2": "Find an Expert",
+    "cta2Help": "Make your appointment",
+    "cta2Help2": "in less than 3 minutes."
+  },
+  "podcast": {
+    "title": "Elevating Women's Health with Patrícia Mota, PT, PhD",
+    "subtitle": "The podcast",
+    "description": "Empower your health journey with \"Elevating Women's Health\" by Eleva Care. Our expert hosts break down cutting-edge research in women's health each week, translating complex studies into actionable insights. From reproductive wellness to mental health, we cover it all.",
+    "cta": "Listen Now"
+  },
+  "services": {
+    "title": "How we support you",
+    "subtitle": "Expert-led care, tailored to you",
+    "description": "Access personalized care from top women’s health professionals. We connect you with the expertise you need—from online consultations to local resources—designed around your unique journey.",
+    "items": [
+      {
+        "icon": "Baby",
+        "title": "Pregnancy & Postpartum",
+        "description": "Compassionate, evidence-based support through pregnancy and early motherhood.",
+        "items": [
+          "**Physical Therapy:** Prepare for birth, manage pain, regain strength, address diastasis recti, and receive targeted pelvic floor interventions to prevent and treat dysfunction.",
+          "**OB/GYN Care:** Receive expert care throughout your pregnancy journey and postpartum recovery.",
+          "**Nutritional Guidance:** Optimize your diet for a healthy pregnancy and postpartum journey.",
+          "**Mental Health Support:** Navigate the emotional and mental challenges of motherhood with compassionate guidance.",
+          "**Exercise:** Explore the benefits of therapeutic exercise during pregnancy and postpartum, designed to support your changing body and promote a healthy recovery."
+        ],
+        "image": "/img/Pregnant-Woman-Flowers.jpg",
+        "cta": "Learn more"
+      },
+      {
+        "icon": "Droplets",
+        "title": "Pelvic Health",
+        "description": "Specialized care for pelvic floor health across every stage of life.",
+        "items": [
+          "**Pelvic Physical Therapy:** Specialized treatment for incontinence, pelvic organ prolapse, and pelvic pain, including pain during intercourse.",
+          "**Specialized OB/GYN Care:** Expert diagnosis and treatment for a range of pelvic health issues, including prolapse, endometriosis, and sexual dysfunction. ",
+          "**Mental Health Support:** Counseling and therapy to address the psychological aspects of pelvic health concerns."
+        ],
+        "image": "/img/Woman-Working-Out-Living-Room.jpg",
+        "cta": "Learn more"
+      },
+      {
+        "icon": "Flower2",
+        "title": "Through Every Stage",
+        "description": "Holistic support from adolescence through menopause—and beyond.",
+        "items": [
+          "**Teen Health:** Navigate puberty, menstruation, and early womanhood with confidence and support.",
+          "**Menopause Management:** Address hormonal changes, manage symptoms, and prioritize your well-being ",
+          "**Mental Wellness:** Access therapy and support to manage stress, anxiety, depression, and other mental health concerns.",
+          "**Fitness & Nutrition:** Discover personalized exercise plans and nutritional guidance tailored to your individual needs.",
+          "**Physical Therapy:** Manage pain, prevent injury, and optimize your physical performance, with specialized expertise in pelvic floor health for active women and female athletes."
+        ],
+        "image": "/img/Smiling-Women-Photo.jpg",
+        "cta": "Learn more"
+      },
+      {
+        "icon": "Ribbon",
+        "title": "Empowering Your Cancer Journey",
+        "description": "Specialized support for breast and gynecologic cancers—from diagnosis to survivorship.",
+        "items": [
+          "**Physical Therapy:** Optimize your recovery with pre-surgical preparation, post-treatment rehabilitation, lymphedema management, and targeted exercise programs designed for each phase of your cancer journey.",
+          "**Pain Management:** Access evidence-based techniques for managing treatment-related pain, including manual therapy, therapeutic exercise, and scar tissue management.",
+          "**Exercise Support:** Receive personalized exercise prescriptions that adapt to your treatment phase, helping maintain strength, manage fatigue, and support your recovery journey.",
+          "**Mental Health Care:** Navigate the emotional challenges of diagnosis and treatment with professional support focused on building resilience and managing anxiety.",
+          "**Lymphedema Care:** Benefit from specialized prevention strategies and treatment including manual lymphatic drainage, compression therapy, and self-management education.",
+          "**Collaborative Approach:** Our collaborative approach ensures coordinated care with your oncology team, supporting your physical and emotional well-being throughout treatment and recovery.",
+          "Our collaborative approach ensures coordinated care with your oncology team, supporting your physical and emotional well-being throughout treatment and recovery."
+        ],
+        "image": "/img/cancer-journey.jpg",
+        "cta": "Learn more"
+      }
+    ]
+  },
+  "approach": {
+    "title": "At Eleva Care, we believe:",
+    "items": [
+      "Every woman deserves access to **quality healthcare**.",
+      "**Knowledge is power** in healthcare decisions.",
+      "**Collaboration** leads to better health outcomes.",
+      "Women's health is a lifelong, **evolving journey**.",
+      "**Pelvic health** is essential to overall well-being."
+    ],
+    "description": "At Eleva Care, we believe in a collaborative approach to care. Our team of experts work together to provide you with comprehensive and personalized support, ensuring that every aspect of your health is addressed.",
+    "cta": "Our Mission"
+  },
+  "mission": {
+    "title": "Our Mission",
+    "subtitle": "Transforming women's health care through innovation and compassion",
+    "description": "At Eleva Care, we are dedicated to empowering women of all ages to take control of their health and well-being. Our mission is to provide a supportive and inclusive platform that connects individuals with expert-led resources, evidence-based information, and a collaborative community of care experts.",
+    "vision": {
+      "title": "Our Vision",
+      "description": "To bridge the gap between scientific research and practical application, delivering accessible and personalized women's health care solutions throughout every life stage."
+    },
+    "cta": "Join Us",
+    "stats": [
+      { "value": "10K+", "label": "Women Helped" },
+      { "value": "50+", "label": "Experts" },
+      { "value": "95%", "label": "Client Satisfaction" },
+      { "value": "24/7", "label": "Support Available" }
+    ],
+    "beliefs": {
+      "title": "At Eleva Care, we believe:",
+      "items": [
+        "Every woman deserves access to quality healthcare.",
+        "Knowledge is power in healthcare decisions.",
+        "Collaboration leads to better health outcomes.",
+        "Women's health is a lifelong, evolving journey.",
+        "Pelvic health is essential to overall well-being."
+      ]
+    }
+  },
+  "team": {
+    "title": "Meet Our Team",
+    "subtitle": "Founded by passionate experts in women's health",
+    "description": "Eleva Care is led by a team of dedicated professionals who bring together years of experience in women's health, technology, and expert-led care. Our founders and key team members are committed to revolutionizing the way women access and experience healthcare.",
+    "members": [
+      {
+        "name": "Patricia Mota, PT, PhD",
+        "role": "Co-Founder & CEO",
+        "image": "/img/team/team-patricia-mota-2.jpeg",
+        "quote": "Our mission is to elevate women's healthcare by making it more accessible, innovative, and empowering for all women."
+      },
+      {
+        "name": "Cristine Homsi Jorge, PT, PhD",
+        "role": "Board Advisor (Women's Health)",
+        "image": "/img/team/team-cristine-homsi-jorge.jpg",
+        "quote": "Clinical research and education empower women to make informed decisions about their healthcare journey."
+      },
+      {
+        "name": "Alexandre Delgado, PT, PhD",
+        "role": "Board Advisor (Obstetric Physical Therapy)",
+        "image": "/img/team/team-alexandre-delgado-br.png",
+        "quote": "Evidence-based physical therapy transforms the pregnancy and birth experience, empowering women through every stage."
+      },
+      {
+        "name": "Patricia Driusso, PT, PhD",
+        "role": "Board Advisor (Women's Health)",
+        "image": "/img/team/team-patricia-driusso.jpg",
+        "quote": "Clinical research advances rehabilitation treatments while empowering women through evidence-based education."
+      },
+      {
+        "name": "Annelie Gutke, PT, PhD",
+        "role": "Board Advisor (Women's Health)",
+        "image": "/img/team/team-annelie-gutke.jpg",
+        "quote": "Understanding pain mechanisms transforms how we care for women during pregnancy and beyond."
+      },
+      {
+        "name": "Ruben Barakat, PhD",
+        "role": "Board Advisor (Exercise Science)",
+        "image": "/img/team/team-ruben-barakat.jpg",
+        "quote": "Evidence shows that personalized exercise during pregnancy can transform women's health outcomes."
+      },
+      {
+        "name": "Jessica Margarido, PT",
+        "role": "Oncology Rehabilitation",
+        "image": "/img/team/team-jessica-margarido.jpg",
+        "quote": "Evidence-based rehabilitation restores function and quality of life throughout cancer care."
+      },
+      {
+        "name": "Joana Goulão Barros, MD, PhD",
+        "role": "Obstetrics & Gynecology",
+        "image": "/img/team/team-joana-barros.jpg",
+        "quote": "Integrating medical expertise with specialized rehabilitation creates the highest standard of prenatal care."
+      },
+      {
+        "name": "Rodrigo Barona",
+        "role": "Co-Founder",
+        "image": "/img/team/team-rodrigo-barona.jpg",
+        "quote": "We are transforming women's healthcare by combining clinical expertise with innovative technology."
+      }
+    ]
+  },
+  "newsletter": {
+    "title": "Femme Focus",
+    "subtitle": "An Eleva Care Publication",
+    "description": "Your monthly spotlight on women's health insights, expert advice, and empowering stories to nurture every stage of your wellness journey.",
+    "placeholder": "Enter your email",
+    "cta": "Subscribe",
+    "privacy": "We respect your privacy. Unsubscribe at any time."
+  },
+  "social": {
+    "title": "Follow Us",
+    "linkedin": "LinkedIn",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "twitter": "Twitter",
+    "scholar": "Google Scholar"
+  },
+  "status": {
+    "allSystemsNormal": "All systems normal",
+    "partialOutage": "Partial outage",
+    "degradedPerformance": "Degraded performance",
+    "unableToFetch": "Unable to fetch status",
+    "noMonitorsConfigured": "No monitors configured",
+    "ariaLabel": "System Status: {status}"
+  },
+  "footer": {
+    "cta": {
+      "title": "Join Our Network",
+      "heading": "Discover Your Personalized Care Journey Today",
+      "description": "Take our quick health assessment or schedule your consultation.",
+      "quiz": "Take the Quiz",
+      "book": "Book a Session"
+    },
+    "tagline": "Empowering women's health through expert care and innovation.",
+    "nav": {
+      "services": {
+        "title": "Services",
+        "pregnancy": "Pregnancy Care",
+        "postpartum": "Postpartum Support",
+        "menopause": "Menopause Care"
+      },
+      "company": {
+        "title": "Company",
+        "about": "About Us",
+        "join": "Join Us",
+        "dashboard": "Expert Dashboard"
+      },
+      "support": {
+        "title": "Support",
+        "help": "Help Center",
+        "community": "Community",
+        "contact": "Contact"
+      },
+      "trust": {
+        "title": "Trust & Security",
+        "security": "Security",
+        "dpa": "Data Processing"
+      },
+      "legal": {
+        "title": "Legal",
+        "terms": "Terms of Service",
+        "privacy": "Privacy Policy",
+        "cookie": "Cookie Policy",
+        "preferences": "Cookies Preferences",
+        "paymentPolicies": "Payment Policies",
+        "expertAgreement": "Expert Agreement"
+      }
+    },
+    "copyright": "All rights reserved.",
+    "social": {
+      "instagram": "Follow us on Instagram",
+      "twitter": "Follow us on Twitter",
+      "linkedin": "Follow us on LinkedIn"
+    },
+    "platformDisclaimer": {
+      "title": "We're a healthcare technology platform",
+      "description": "We help you connect with independent, licensed care experts. We provide the technology; your chosen expert provides your care."
+    },
+    "compliance": {
+      "gdpr": "GDPR Compliant",
+      "lgpd": "LGPD Compliant",
+      "encryption": "AES-256 Encrypted",
+      "euData": "EU Data Residency",
+      "hipaa": "HIPAA-Ready Infrastructure",
+      "secureEmail": "Secure Email (TLS 1.3)",
+      "iso27001": "ISO 27001-Aligned",
+      "soc2": "SOC 2 Infrastructure",
+      "ccpa": "CCPA Compliant"
+    }
+  },
+  "experts": {
+    "title": "Independent Experts",
+    "subtitle": "Connect with Leading Specialists",
+    "description": "Find and book trusted experts specializing in physiotherapy and women's health. Our platform connects you with qualified care experts ready to support your unique health and wellness journey.",
+    "disclaimerLink": "Learn more about our platform",
+    "topExpertBadge": "Featured",
+    "topExpertDisclaimer": "Experts on Eleva Care are independent professionals who self-certify their credentials.",
+    "sessionLabel": "Session",
+    "expertImageAlt": "Profile photo of {name}",
+    "verifiedBadgeAlt": "Self-Certified Expert"
+  },
+  "platformDisclaimer": {
+    "modal": {
+      "title": "About the Eleva Care platform",
+      "description": "A friendly note on how Eleva Care works and what to do in an emergency."
+    },
+    "emergency": {
+      "title": "⚠️ Not for medical emergencies",
+      "description": "If you’re experiencing a medical emergency, please don’t use Eleva Care. Contact emergency services:",
+      "eu": "EU",
+      "usa": "USA"
+    },
+    "platform": {
+      "title": "How Eleva Care works",
+      "description": "Eleva Care is a trusted platform that connects you with independent, licensed care experts. We don't provide medical services; your chosen expert provides your care.",
+      "weAre": "What we provide",
+      "weAreList": {
+        "marketplace": "A trusted platform",
+        "technology": "Booking, scheduling, and payment processing tools",
+        "secure": "Encrypted storage for expert clinical notes"
+      },
+      "weAreNot": "What we don't provide",
+      "weAreNotList": {
+        "provider": "Medical care, diagnoses, or treatment",
+        "employer": "Employment or supervision of experts",
+        "responsible": "Medical liability (your expert is responsible for your care)"
+      },
+      "footer": "Experts on Eleva Care are independent professionals who self‑certify their credentials and are solely responsible for the care they provide. For full details, please read our",
+      "termsLink": "Terms and Conditions"
+    }
+  },
+  "cookie": {
+    "title": "Cookie Preferences",
+    "message": "We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. By clicking \"Accept\", you consent to our use of cookies.",
+    "buttonText": "Accept All",
+    "declineButtonText": "Decline All",
+    "manageButtonText": "Manage Preferences",
+    "privacyPolicyText": "Cookie Policy",
+    "manageTitle": "Cookie Preferences",
+    "manageMessage": "Manage your cookie preferences below. Essential cookies are always enabled as they are necessary for the website to function properly.",
+    "manageEssentialTitle": "Essential",
+    "manageEssentialSubtitle": "Required for the website to function properly",
+    "manageEssentialStatus": "Status: Always enabled",
+    "manageEssentialStatusButtonText": "Always On",
+    "manageAnalyticsTitle": "Analytics",
+    "manageAnalyticsSubtitle": "Help us understand how visitors interact with our website",
+    "manageSocialTitle": "Social",
+    "manageSocialSubtitle": "Enable social media features and sharing",
+    "manageAdvertTitle": "Advertising",
+    "manageAdvertSubtitle": "Personalize advertisements and measure their performance",
+    "manageCookiesStatus": "Status: {status} on {date}",
+    "manageCookiesStatusConsented": "Consented",
+    "manageCookiesStatusDeclined": "Declined",
+    "manageCancelButtonText": "Cancel",
+    "manageSaveButtonText": "Save Preferences"
+  },
+  "Payments": {
+    "collision": {
+      "title": "Appointment Conflict - Full Refund Processed",
+      "subject": "Appointment Booking - Time Slot No Longer Available",
+      "greeting": "Hi {clientName},",
+      "conflictMessage": "We regret to inform you that your appointment with {expertName} scheduled for {appointmentDateTime} is no longer available as the time slot has been booked by another client.",
+      "latePaymentExplanation": "Since this was a delayed Multibanco payment and the slot is no longer available, we have processed a full refund of €{refundAmount} (100% of the original amount). We believe in treating our customers fairly, so no processing fees are charged.",
+      "apologyAndInvitation": "We apologize for the inconvenience and invite you to book a new appointment at your convenience.",
+      "signature": "Thanks,",
+      "minimumNoticeViolation": "The appointment time no longer meets the expert's minimum notice requirement of {minimumNoticeHours} hours.",
+      "refundDetails": {
+        "originalAmount": "Original amount: €{amount}",
+        "refundAmount": "Refund amount: €{amount} (100% - Full refund)",
+        "processingFee": "Processing fee: €{amount} (No fee charged)"
+      }
+    },
+    "checkout": {
+      "multibancoNotice": "⚠️ **Multibanco Payment Notice:** If you choose Multibanco as your payment method, your appointment slot will be reserved for 24 hours while we wait for payment confirmation. After 24 hours, if payment is not received, we cannot guarantee the appointment will still be available. For immediate confirmation, please use a credit/debit card. [View Payment Policies]({paymentPoliciesUrl})",
+      "termsOfService": "By proceeding with payment, you agree to our [Terms of Service]({termsUrl}) and [Payment Policies]({paymentPoliciesUrl})."
+    }
+  },
+  "notifications": {
+    "welcome": {
+      "subject": "Welcome to Eleva Care, {userName}!",
+      "body": "Hi {userName}! Welcome to Eleva Care. We're excited to help you on your healthcare journey.",
+      "email": {
+        "subject": "Welcome to Eleva Care!",
+        "title": "Welcome to Eleva Care!",
+        "greeting": "Hi {firstName},",
+        "body": "Thank you for joining our healthcare platform. We're excited to help you on your wellness journey.",
+        "nextStepsTitle": "Next Steps:",
+        "nextSteps": [
+          "Complete your profile",
+          "Browse available experts",
+          "Book your first consultation"
+        ],
+        "cta": "Complete Your Profile"
+      }
+    },
+    "accountVerification": {
+      "subject": "Please verify your account",
+      "body": "To get the most out of Eleva Care, please verify your account."
+    },
+    "paymentSuccess": {
+      "subject": "Payment successful!",
+      "body": "Your payment of {amount} for {planName} has been processed successfully."
+    },
+    "paymentFailed": {
+      "subject": "Payment failed",
+      "body": "We couldn't process your payment of {amount}. Please check your payment method and try again."
+    },
+    "securityAlert": {
+      "subject": "Security Alert",
+      "body": "{message}"
+    },
+    "marketplacePaymentReceived": {
+      "subject": "Payment Received: €{amount}",
+      "body": "You've received a payment of €{amount} from {clientName} for your session on {sessionDate}. Transfer will be processed according to your payout schedule.",
+      "email": {
+        "subject": "Payment Received - €{amount}",
+        "title": "Payment Received!",
+        "greeting": "Great news! You've received a payment for your services.",
+        "detailsTitle": "Payment Details:",
+        "amount": "Amount: €{amount}",
+        "client": "Client: {clientName}",
+        "sessionDate": "Session Date: {sessionDate}",
+        "transactionId": "Transaction ID: {transactionId}",
+        "footer": "This payment will be transferred to your account according to your payout schedule.",
+        "cta": "View Payment Details"
+      }
+    },
+    "marketplacePayoutProcessed": {
+      "subject": "Payout Processed: €{amount}",
+      "body": "Your payout of €{amount} has been processed and sent to your bank account. Expected arrival: {expectedArrival}.",
+      "email": {
+        "subject": "Payout Processed - €{amount}",
+        "title": "Payout Processed",
+        "body": "Your earnings have been transferred to your bank account.",
+        "detailsTitle": "Payout Details:",
+        "amount": "Amount: €{amount}",
+        "payoutId": "Payout ID: {payoutId}",
+        "expectedArrival": "Expected Arrival: {expectedArrival}",
+        "bankAccount": "Bank Account: {bankAccount}",
+        "cta": "View Payout History"
+      }
+    },
+    "appointmentReminder": {
+      "subject": "Reminder: Your appointment is {timeUntilAppointment}",
+      "body": "Your {appointmentType} with {expertName} is {timeUntilAppointment} on {appointmentDate} at {appointmentTime}.",
+      "email": {
+        "subject": "Reminder: Your Eleva Care Appointment is {timeUntilAppointment}",
+        "title": "Appointment Reminder",
+        "greeting": "Hi {userName},",
+        "body": "This is a friendly reminder that your {appointmentType} with {expertName} is {timeUntilAppointment}, on {appointmentDate} at {appointmentTime}.",
+        "cta": "Join your meeting",
+        "footer": "Please ensure you are in a quiet place with a stable internet connection."
+      }
+    },
+    "appointmentCancelled": {
+      "subject": "Appointment Cancelled: {appointmentType}",
+      "body": "Your appointment with {expertName} on {appointmentDate} has been cancelled.",
+      "email": {
+        "subject": "Your Eleva Care Appointment Has Been Cancelled",
+        "title": "Appointment Cancelled",
+        "greeting": "Hi {userName},",
+        "body": "Your {appointmentType} with {expertName} scheduled for {appointmentDate} at {appointmentTime} has been cancelled.",
+        "apology": "We apologize for any inconvenience. You can book a new appointment anytime.",
+        "cta": "Book New Appointment"
+      }
+    },
+    "expertPayoutSetup": {
+      "subject": "Complete your payout setup",
+      "body": "Hi {expertName}, please complete your Stripe Connect setup to start receiving payments from clients.",
+      "email": {
+        "subject": "Complete Your Eleva Care Payout Account Setup",
+        "title": "Complete Your Payout Setup",
+        "greeting": "Hi {expertName},",
+        "body": "To start receiving payments from your clients, you need to complete your payout account setup.",
+        "requirement": "This is required to receive payments for your sessions.",
+        "cta": "Complete Payout Setup",
+        "support": "Need help? Contact Support"
+      }
+    },
+    "newBookingExpert": {
+      "subject": "New Booking: {appointmentType}",
+      "body": "You have a new booking from {clientName} for {appointmentDate} at {appointmentTime}.",
+      "email": {
+        "subject": "New Booking: {appointmentType} with {clientName}",
+        "title": "New Booking Alert!",
+        "greeting": "Hi {expertName},",
+        "body": "You have a new booking!",
+        "detailsTitle": "Booking Details:",
+        "service": "Service: {appointmentType}",
+        "client": "Client: {clientName}",
+        "date": "Date: {appointmentDate}",
+        "time": "Time: {appointmentTime}",
+        "cta": "View Booking Details"
+      }
+    },
+    "recentLogin": {
+      "subject": "New login detected",
+      "body": "We detected a new login to your account from {location} at {timestamp}."
+    },
+    "expertOnboardingComplete": {
+      "subject": "Expert setup complete!",
+      "body": "Congratulations {expertName}! Your expert profile is now live. You can start receiving bookings from clients.",
+      "email": {
+        "subject": "Welcome to the Eleva Care Expert Network!",
+        "title": "Congratulations, {expertName}!",
+        "greeting": "Your expert profile is now active on Eleva Care.",
+        "body": "Your expert profile is now active on Eleva Care.",
+        "specialization": "Specialization: {specialization}",
+        "nextStepsTitle": "You can now:",
+        "nextSteps": [
+          "Receive client bookings",
+          "Manage your availability",
+          "Track your earnings",
+          "Build your client base"
+        ],
+        "cta": "Go to Dashboard"
+      }
+    },
+    "multibancoBookingPending": {
+      "subject": "Booking Confirmed - Payment Required via Multibanco",
+      "email": {
+        "preview": "Your booking is confirmed - Payment Required via Multibanco",
+        "title": "Booking Confirmed - Payment Required",
+        "greeting": "Hi {customerName},",
+        "bookingConfirmedText": "Your booking has been confirmed and your appointment slot is reserved.",
+        "paymentRequired": "Payment Required via Multibanco",
+        "paymentInstructions": "To complete your booking, please pay using Multibanco with the details below:",
+        "entity": "Entity",
+        "reference": "Reference",
+        "amount": "Amount",
+        "expiresAt": "Payment must be completed by",
+        "appointmentDetails": "Appointment Details",
+        "service": "Service",
+        "expert": "Expert",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "minutes": "minutes",
+        "customerNotes": "Your Notes",
+        "paymentMethods": "How to Pay with Multibanco:",
+        "method1": "1. Online Banking: Log into your bank account and select \"Payments\" or \"Multibanco\"",
+        "method2": "2. ATM: Insert your card, select \"Other Operations\" → \"Payments\" → \"Public Services\"",
+        "method3": "3. Enter the Entity and Reference numbers above, confirm the amount",
+        "viewVoucher": "View Payment Voucher",
+        "meetingAccess": "Meeting Access",
+        "meetingAccessText": "Once your payment is confirmed, you will receive another email with your meeting link and access details.",
+        "important": "Important",
+        "importantText": "Your appointment slot is reserved for 7 days. If payment is not received by the expiry date above, your reservation will be cancelled.",
+        "questions": "Questions?",
+        "questionsText": "If you have any questions about your booking or payment, please contact our support team.",
+        "thankYou": "Thank you for choosing Eleva Care!",
+        "team": "The Eleva Care Team"
+      }
+    },
+    "multibancoPaymentReminder": {
+      "subject": {
+        "gentle": "Friendly Reminder: Complete Your Multibanco Payment",
+        "urgent": "URGENT: Payment Required - Only 1 Day Left!"
+      },
+      "email": {
+        "preview": {
+          "gentle": "Friendly Reminder: Complete Your Multibanco Payment",
+          "urgent": "URGENT: Payment Required - Only 1 Day Left!"
+        },
+        "title": {
+          "gentle": "💙 Friendly Reminder: Complete Your Payment",
+          "urgent": "⚠️ URGENT: Payment Required - Final Reminder"
+        },
+        "greeting": "Hi {customerName},",
+        "reminderNotice": "Just a friendly reminder that you have a Multibanco payment pending for your upcoming appointment.",
+        "timeRemaining": "You still have plenty of time to complete your payment.",
+        "urgentNotice": "This is your FINAL REMINDER to complete your Multibanco payment.",
+        "expiryWarning": "Your reservation will expire in less than 24 hours if payment is not received.",
+        "paymentRequired": "Complete Your Multibanco Payment",
+        "instructions": {
+          "gentle": "You can pay anytime using the Multibanco details below:",
+          "urgent": "Use the Multibanco details below to complete your payment immediately:"
+        },
+        "entity": "Entity",
+        "reference": "Reference",
+        "amount": "Amount",
+        "expiresAt": "Payment expires at",
+        "appointmentDetails": "Your Reserved Appointment",
+        "service": "Service",
+        "expert": "Expert",
+        "date": "Date",
+        "time": "Time",
+        "duration": "Duration",
+        "minutes": "minutes",
+        "customerNotes": "Your Original Notes",
+        "paymentMethods": {
+          "gentle": "Payment Options (Choose Any):",
+          "urgent": "How to Pay (Choose Any):"
+        },
+        "method1": {
+          "gentle": "1. 🏧 ATM: Most convenient - available 24/7",
+          "urgent": "1. 🏧 ATM: Insert card → \"Other Operations\" → \"Payments\" → \"Public Services\""
+        },
+        "method2": {
+          "gentle": "2. 💻 Online Banking: Quick and secure from home",
+          "urgent": "2. 💻 Online Banking: Login → \"Payments\" → \"Multibanco\" → Enter details"
+        },
+        "method3": {
+          "gentle": "3. 📱 MB WAY: If supported by your bank",
+          "urgent": "3. 📱 MB WAY: If supported by your bank"
+        },
+        "viewVoucher": "🎫 View Payment Voucher",
+        "noWorries": "No rush!",
+        "noWorriesText": "You have several days left to complete your payment. We just wanted to make sure you didn't forget!",
+        "consequences": "What happens if you don't pay?",
+        "consequencesText": "Your appointment slot will be automatically released and made available to other customers. You would need to rebook completely.",
+        "support": {
+          "gentle": "Questions?",
+          "urgent": "Need Help?"
+        },
+        "supportText": {
+          "gentle": "Feel free to contact us if you have any questions about the payment process.",
+          "urgent": "Contact our support team immediately if you need assistance with your payment."
+        },
+        "thankYou": {
+          "gentle": "Thank you for choosing Eleva Care!",
+          "urgent": "Don't let your appointment slip away!"
+        },
+        "team": "The Eleva Care Team",
+        "daysRemaining": "You have {daysRemaining} days remaining to complete your payment."
+      }
+    },
+    "appointmentConfirmation": {
+      "subject": "Your Eleva Care appointment has been confirmed",
+      "email": {
+        "preview": "Your Eleva.care appointment has been confirmed",
+        "appointmentConfirmed": "Your appointment has been confirmed",
+        "dearExpert": "Hi {expertName},",
+        "newAppointmentWith": "You have a new appointment with {clientName} for {eventTitle}. We've added this to your calendar.",
+        "appointmentDetails": "Appointment Details:",
+        "type": "Type:",
+        "client": "Client:",
+        "date": "Date:",
+        "time": "Time:",
+        "timezone": "Timezone:",
+        "duration": "Duration:",
+        "videoMeeting": "Video Meeting: A Google Meet link is provided below",
+        "clientNotes": "Client Notes:",
+        "joinGoogleMeet": "Join Google Meet",
+        "clickToJoin": "Click the button above to join the meeting at the scheduled time",
+        "addedToGoogleCalendar": "This appointment has been added to your Google Calendar with the following reminders:",
+        "calendarReminders": "Calendar Reminders:",
+        "emailReminder1Hour": "Email reminder 1 hour before",
+        "emailReminder15Min": "Email reminder 15 minutes before",
+        "popupReminder5Min": "Popup reminder 5 minutes before",
+        "thankYou": "Thank you for using Eleva.care.",
+        "bestRegards": "Thanks,",
+        "team": "The Eleva.care Team",
+        "allRightsReserved": "All rights reserved."
+      }
+    },
+    "expertSetupStep": {
+      "subject": "Expert Setup: {stepName} Complete",
+      "body": "Hi {expertName}, you've successfully completed the {stepName} step in your expert setup process."
+    },
+    "expertSetupProgress": {
+      "subject": "Expert Setup Progress: {setupProgress}% Complete",
+      "body": "Hi {expertName}, your expert setup is {setupProgress}% complete. You've completed {completedSteps} and have {remainingSteps} remaining steps.",
+      "email": {
+        "subject": "Your Expert Setup Progress - {setupProgress}% Complete",
+        "title": "Setup Progress Update",
+        "greeting": "Hi {expertName},",
+        "body": "Great progress on your expert setup! You're {setupProgress}% complete.",
+        "nextStep": "Next step: {nextStep}",
+        "cta": "Continue Setup"
+      }
+    },
+    "expertIdentityVerification": {
+      "subject": "Identity Verification: {status}",
+      "body": "Hi {expertName}, your identity verification status has been updated: {status}. {message}",
+      "email": {
+        "subject": "Identity Verification Update - {status}",
+        "title": "Identity Verification Update",
+        "greeting": "Hi {expertName},",
+        "body": "Your identity verification status has been updated.",
+        "status": "Status: {status}",
+        "message": "{message}",
+        "cta": "View Details"
+      }
+    },
+    "expertGoogleAccount": {
+      "subject": "Google Account: {status}",
+      "body": "Hi {expertName}, your Google account connection status: {status}. {message}"
+    },
+    "general": {
+      "subject": "{title} - Eleva Care"
+    },
+    "expertNotification": {
+      "subject": "{notificationTitle} - Eleva Care"
+    }
+  },
+  "profilePublish": {
+    "status": {
+      "published": "Profile Published",
+      "notPublished": "Profile Not Published"
+    },
+    "publishDialog": {
+      "title": "Publish Your Expert Profile",
+      "description": "Publishing your profile will make it visible to clients searching for experts. Your profile, services, and availability will be public.",
+      "agreementRequired": "Agreement Required",
+      "agreementText": "I have read and agree to the",
+      "expertAgreement": "Expert Agreement",
+      "agreementIncludes": "including professional conduct standards, liability terms, and platform obligations",
+      "disclaimer": "By publishing your profile, you acknowledge that you are a licensed care expert and agree to comply with all applicable laws and regulations."
+    },
+    "unpublishDialog": {
+      "title": "Unpublish Your Expert Profile",
+      "description": "Unpublishing your profile will hide it from clients. You will not appear in search results and clients won't be able to book your services until you publish again."
+    },
+    "incompleteDialog": {
+      "title": "Complete All Steps First",
+      "description": "Your profile cannot be published until all required steps are completed. Please complete the following steps:"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "publish": "Publish Profile",
+      "unpublish": "Unpublish Profile"
+    }
+  },
+  "account": {
+    "billing": {
+      "title": "Billing",
+      "subtitle": "Expert Payment Settings",
+      "description": "Connect your Stripe account to receive payments for your expert services. Eleva takes a 15% service fee, and the remaining 85% will be transferred directly to your account.",
+      "legalDisclaimer": "By connecting your payment account, you agree to our",
+      "paymentPolicies": "Payment Policies",
+      "refundPolicy": "Refund Policy",
+      "and": "and",
+      "learnMore": "Learn more about fees, refunds, and payout schedules in our Payment Policies.",
+      "accountStatus": {
+        "title": "Account Status",
+        "setup": "Account Setup",
+        "payments": "Payments Enabled",
+        "payouts": "Payouts Enabled",
+        "complete": "Complete",
+        "incomplete": "Incomplete",
+        "yes": "Yes",
+        "no": "No"
+      },
+      "buttons": {
+        "connect": "Connect with Stripe",
+        "connecting": "Connecting...",
+        "dashboard": "View Stripe Dashboard",
+        "completeSetup": "Complete Stripe Setup",
+        "loading": "Loading..."
+      }
+    },
+    "identity": {
+      "title": "Identity Verification",
+      "subtitle": "Identity Verification Status",
+      "description": "Verify your identity to unlock additional features and build trust with your clients",
+      "privacyNotice": "We use Stripe Identity for secure verification. Your data is processed according to our",
+      "privacyPolicy": "Privacy Policy",
+      "dataProcessing": "Data Processing Agreement",
+      "securityInfo": "Your identity information is encrypted and stored securely in accordance with GDPR, LGPD, and HIPAA standards.",
+      "dataUsage": "Identity verification data is only used for:",
+      "dataUsageItems": {
+        "fraud": "Fraud prevention and security",
+        "compliance": "Regulatory compliance",
+        "trust": "Building trust with clients",
+        "payments": "Payment account verification"
+      },
+      "status": {
+        "unverified": "Not Verified",
+        "pending": "Pending",
+        "verified": "Verified",
+        "rejected": "Rejected"
+      },
+      "buttons": {
+        "start": "Start Verification",
+        "starting": "Starting...",
+        "checkStatus": "Check Status",
+        "checking": "Checking...",
+        "resume": "Resume Verification",
+        "tryAgain": "Try Again"
+      }
+    }
+  },
+  "become-expert": {
+    "hero": {
+      "badge": "Start Your Expert Journey",
+      "title": "Share Your Expertise,",
+      "subtitle": "Earn on Your Schedule",
+      "description": "Join our community of healthcare professionals, coaches, and consultants. Set your own rates, manage your schedule, and help people achieve their goals.",
+      "cta": "Get Started",
+      "signin": "Already an Expert? Sign In",
+      "features": "Free to join • No hidden fees • Get paid directly"
+    },
+    "benefits": {
+      "title": "Why Join Eleva Care?",
+      "rates": {
+        "title": "Set Your Own Rates",
+        "description": "You decide how much you charge. Keep 80% of your earnings, with transparent fees."
+      },
+      "scheduling": {
+        "title": "Flexible Scheduling",
+        "description": "Integrate with your Google Calendar. Set your availability and let clients book when it works for you."
+      },
+      "clients": {
+        "title": "Grow Your Client Base",
+        "description": "Get discovered by clients actively searching for your expertise. No cold outreach needed."
+      },
+      "virtual": {
+        "title": "Virtual Consultations",
+        "description": "Meet clients anywhere with integrated Google Meet. No need for third-party tools."
+      },
+      "payments": {
+        "title": "Secure Payments",
+        "description": "Get paid automatically through Stripe. Direct deposit to your bank account."
+      },
+      "marketing": {
+        "title": "Built-in Marketing",
+        "description": "Get featured in search results, email reminders, and our expert directory."
+      }
+    },
+    "how": {
+      "title": "How It Works",
+      "step1": {
+        "title": "Create Your Profile",
+        "description": "Tell us about your expertise, credentials, and what makes you unique. Upload a professional photo and set your hourly rate."
+      },
+      "step2": {
+        "title": "Set Your Availability",
+        "description": "Connect your Google Calendar and set your working hours. Our smart booking system handles the rest."
+      },
+      "step3": {
+        "title": "Verify Your Identity",
+        "description": "Complete a quick identity verification for client trust and secure payments. Takes less than 5 minutes."
+      },
+      "step4": {
+        "title": "Start Consulting",
+        "description": "Once approved, clients can book you immediately. Get notified, meet virtually, and get paid automatically."
+      },
+      "cta": "Start Your Journey"
+    },
+    "requirements": {
+      "title": "What You Need to Get Started",
+      "credentials": {
+        "title": "Professional Credentials",
+        "description": "Valid certifications, licenses, or proven expertise in your field"
+      },
+      "internet": {
+        "title": "Reliable Internet",
+        "description": "Stable connection for video consultations"
+      },
+      "communication": {
+        "title": "Communication Skills",
+        "description": "Ability to clearly explain concepts and answer questions"
+      },
+      "passion": {
+        "title": "Passion for Helping",
+        "description": "Genuine desire to help others achieve their goals"
+      }
+    },
+    "cta": {
+      "title": "Ready to Share Your Expertise?",
+      "description": "Join thousands of experts earning on their own terms. Set up takes less than 15 minutes.",
+      "button": "Get Started Now",
+      "questions": "Questions?",
+      "contact": "Contact our team"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "title": "Ganhos",
+  "icon": "DollarSign",
+  "defaultOpen": true,
+  "pages": ["payouts", "pricing"]
+}
+

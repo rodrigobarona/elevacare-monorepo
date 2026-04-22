@@ -1,0 +1,213 @@
+---
+title: Gerir Disponibilidade
+description: Configure os seus horários de trabalho, sincronização de calendário e definições de marcação.
+---
+
+# Gerir Disponibilidade
+
+A sua disponibilidade determina quando os pacientes podem marcar consultas. Configure a sua agenda para equilibrar o acesso dos pacientes com as suas necessidades de vida pessoal.
+
+## Agenda Semanal
+
+Defina a sua disponibilidade semanal recorrente:
+
+<Steps>
+  <Step>
+    ### Aceder a Definições de Disponibilidade
+
+    Vá a **Dashboard de Especialista** → **Disponibilidade**.
+  </Step>
+  <Step>
+    ### Definir Horários
+
+    Clique em cada dia para adicionar horários disponíveis com horas de início e fim.
+  </Step>
+  <Step>
+    ### Guardar Agenda
+
+    Guarde a sua agenda para a ativar.
+  </Step>
+</Steps>
+
+**Exemplo de Agenda:**
+
+| Dia | Disponibilidade |
+|-----|-----------------|
+| Segunda | 9:00 - 13:00, 14:00 - 18:00 |
+| Terça | 9:00 - 13:00 |
+| Quarta | 14:00 - 20:00 |
+| Quinta | 9:00 - 13:00, 14:00 - 18:00 |
+| Sexta | 9:00 - 12:00 |
+| Sábado | Indisponível |
+| Domingo | Indisponível |
+
+<Callout type="info">
+  Os pacientes veem sempre os horários das consultas no seu fuso horário local, mas o seu dashboard mostra o seu fuso horário.
+</Callout>
+
+## Integração de Calendário
+
+### Sincronização Google Calendar
+
+Conecte o seu Google Calendar para sincronização bidirecional:
+
+<Steps>
+  <Step>
+    ### Conectar
+
+    Vá a **Integrações** → **Google Calendar** e clique em **Conectar**.
+  </Step>
+  <Step>
+    ### Autorizar
+
+    Conceda acesso à Eleva Care para ler o seu calendário.
+  </Step>
+  <Step>
+    ### Selecionar Calendários
+
+    Escolha quais calendários sincronizar para bloqueio de disponibilidade.
+  </Step>
+</Steps>
+
+### Como Funciona a Sincronização
+
+| Direção | O Que Sincroniza |
+|---------|------------------|
+| Google → Eleva | Eventos bloqueiam automaticamente a sua disponibilidade |
+| Eleva → Google | Novas marcações aparecem no seu calendário |
+
+<Callout type="info">
+  **Nota de Privacidade**: Apenas lemos horários de eventos e estado livre/ocupado. Não acedemos a detalhes de eventos ou participantes do seu calendário pessoal.
+</Callout>
+
+## Definições de Marcação
+
+<Tabs items={['Aviso Mínimo', 'Tempo de Buffer', 'Marcação Antecipada']}>
+  <Tab value="Aviso Mínimo">
+    **Com quanta antecedência devem os pacientes marcar?**
+
+    | Definição | Caso de Uso |
+    |-----------|-------------|
+    | 1 hora | Flexibilidade máxima, marcações de última hora |
+    | 24 horas | Standard — tempo para preparar |
+    | 48 horas | Mais tempo de preparação |
+    | 1 semana | Consultas complexas |
+  </Tab>
+  <Tab value="Tempo de Buffer">
+    **Adicione tempo entre consultas:**
+
+    - **Antes**: Tempo para preparar para o próximo paciente
+    - **Depois**: Tempo para notas e pausas
+
+    **Recomendação**: 15 minutos de buffer antes e depois garante que nunca está apressado.
+  </Tab>
+  <Tab value="Marcação Antecipada">
+    **Com quanta antecedência podem os pacientes marcar?**
+
+    | Definição | Melhor Para |
+    |-----------|-------------|
+    | 1 semana | Disponibilidade limitada |
+    | 2 semanas | Definição standard |
+    | 1 mês | Disponibilidade estendida |
+    | 3 meses | Flexibilidade máxima |
+  </Tab>
+</Tabs>
+
+## Exceções de Data
+
+<Accordions>
+  <Accordion title="Bloquear Datas Específicas">
+    Para férias ou dias de folga:
+
+    1. Vá a **Disponibilidade** → **Exceções de Data**
+    2. Clique em **Adicionar Exceção**
+    3. Selecione a(s) data(s)
+    4. Marque como **Indisponível**
+    5. Guarde
+  </Accordion>
+  <Accordion title="Adicionar Disponibilidade Extra">
+    Para ocasiões especiais:
+
+    1. Adicione uma exceção de data
+    2. Defina horários personalizados para esse dia
+    3. Isto substitui a sua agenda semanal para essa data específica
+  </Accordion>
+</Accordions>
+
+## Gerir Marcações Existentes
+
+<Tabs items={['Cancelar', 'Reagendar']}>
+  <Tab value="Cancelar">
+    **Quando Precisa de Cancelar**
+
+    1. Vá a **Marcações**
+    2. Selecione a marcação
+    3. Clique em **Cancelar**
+    4. Forneça um motivo
+    5. O paciente é automaticamente reembolsado
+
+    <Callout type="warning">
+      Cancelar consultas afeta a sua pontuação de fiabilidade e pode impactar a elegibilidade para Top Expert.
+    </Callout>
+  </Tab>
+  <Tab value="Reagendar">
+    **Para Reagendar**
+
+    1. Contacte o paciente através da plataforma
+    2. Acordem um novo horário
+    3. Cancele a marcação original
+    4. O paciente marca o novo horário
+  </Tab>
+</Tabs>
+
+## Boas Práticas
+
+<Accordions>
+  <Accordion title="Consistência">
+    - Defina horários regulares em que os pacientes possam confiar
+    - Atualize a disponibilidade com pelo menos 2 semanas de antecedência
+    - Comunique alterações prontamente
+  </Accordion>
+  <Accordion title="Agendamento Realista">
+    - Não se sobrecarregue
+    - Inclua tempo para pausas e notas
+    - Considere diferentes tipos de consulta
+  </Accordion>
+  <Accordion title="Consciência de Fuso Horário">
+    - Considere a sua base de pacientes alvo
+    - Ofereça horários noturnos para pacientes que trabalham
+    - Lembre-se das diferenças horárias para pacientes internacionais
+  </Accordion>
+</Accordions>
+
+## Resolução de Problemas
+
+<Accordions>
+  <Accordion title="Marcações Não Aparecem">
+    - Verifique o estado da sincronização do calendário
+    - Verifique as definições de fuso horário
+    - Assegure que o serviço está ativo
+    - Verifique os requisitos de aviso mínimo
+  </Accordion>
+  <Accordion title="Marcações Duplas">
+    - Ative a sincronização Google Calendar
+    - Adicione tempo de buffer entre marcações
+    - Reveja as definições de disponibilidade
+  </Accordion>
+  <Accordion title="Problemas de Sincronização">
+    1. Desconecte o Google Calendar
+    2. Reconecte com nova autorização
+    3. Verifique as definições de intervalo de sincronização
+  </Accordion>
+</Accordions>
+
+---
+
+<Cards>
+  <Card title="Compreender Ganhos" href="/help/expert/earnings/payouts">
+    Saiba sobre processamento de pagamentos
+  </Card>
+  <Card title="Tornar-se Top Expert" href="/help/expert/top-expert/requirements">
+    Veja o que é necessário para ganhar o estatuto Top Expert
+  </Card>
+</Cards>

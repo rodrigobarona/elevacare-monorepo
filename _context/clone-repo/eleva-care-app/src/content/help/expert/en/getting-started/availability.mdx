@@ -1,0 +1,228 @@
+---
+title: Managing Availability
+description: Configure your working hours, calendar sync, and appointment settings.
+---
+
+# Managing Availability
+
+Your availability determines when patients can book appointments. Set up your schedule to balance patient access with your work-life needs.
+
+## Weekly Schedule
+
+Define your recurring weekly availability:
+
+<Steps>
+  <Step>
+    ### Access Availability Settings
+
+    Go to **Expert Dashboard** → **Availability**.
+
+  </Step>
+  <Step>
+    ### Set Time Slots
+
+    Click on each day to add available time slots with start and end times.
+
+  </Step>
+  <Step>
+    ### Save Schedule
+
+    Save your schedule to make it active.
+
+  </Step>
+</Steps>
+
+**Example Schedule:**
+
+| Day       | Availability                |
+| --------- | --------------------------- |
+| Monday    | 9:00 - 13:00, 14:00 - 18:00 |
+| Tuesday   | 9:00 - 13:00                |
+| Wednesday | 14:00 - 20:00               |
+| Thursday  | 9:00 - 13:00, 14:00 - 18:00 |
+| Friday    | 9:00 - 12:00                |
+| Saturday  | Unavailable                 |
+| Sunday    | Unavailable                 |
+
+<Callout type="info">
+  Patients always see appointment times in their local timezone, but your dashboard shows your
+  timezone.
+</Callout>
+
+## Calendar Integration
+
+### Google Calendar Sync
+
+Connect your Google Calendar for two-way sync:
+
+<Steps>
+  <Step>
+    ### Connect
+
+    Go to **Integrations** → **Google Calendar** and click **Connect**.
+
+  </Step>
+  <Step>
+    ### Authorize
+
+    Grant Eleva Care access to read your calendar.
+
+  </Step>
+  <Step>
+    ### Select Calendars
+
+    Choose which calendars to sync for availability blocking.
+
+  </Step>
+</Steps>
+
+### How Sync Works
+
+| Direction      | What Syncs                                   |
+| -------------- | -------------------------------------------- |
+| Google → Eleva | Events block your availability automatically |
+| Eleva → Google | New bookings appear in your calendar         |
+
+<Callout type="info">
+  **Privacy Note**: We only read event times and free/busy status. We don't access event details or
+  attendees from your personal calendar.
+</Callout>
+
+## Appointment Settings
+
+<Tabs items={['Minimum Notice', 'Buffer Time', 'Advance Booking']}>
+  <Tab value="Minimum Notice">
+    **How far in advance must patients book?**
+
+    | Setting | Use Case |
+    |---------|----------|
+    | 1 hour | Maximum flexibility, last-minute bookings |
+    | 24 hours | Standard — time to prepare |
+    | 48 hours | More preparation time |
+    | 1 week | Complex consultations |
+
+  </Tab>
+  <Tab value="Buffer Time">
+    **Add time between appointments:**
+
+    - **Before**: Time to prepare for the next patient
+    - **After**: Time for notes and breaks
+
+    **Recommendation**: 15-minute buffer before and after ensures you're never rushed.
+
+  </Tab>
+  <Tab value="Advance Booking">
+    **How far ahead can patients book?**
+
+    | Setting | Best For |
+    |---------|----------|
+    | 1 week | Limited availability |
+    | 2 weeks | Standard setting |
+    | 1 month | Extended availability |
+    | 3 months | Maximum flexibility |
+
+  </Tab>
+</Tabs>
+
+## Date Overrides
+
+<Accordions>
+  <Accordion title="Blocking Specific Dates">
+    For vacations or days off:
+
+    1. Go to **Availability** → **Date Overrides**
+    2. Click **Add Override**
+    3. Select the date(s)
+    4. Mark as **Unavailable**
+    5. Save
+
+  </Accordion>
+  <Accordion title="Adding Extra Availability">
+    For special occasions:
+
+    1. Add a date override
+    2. Set custom hours for that day
+    3. This overrides your weekly schedule for that specific date
+
+  </Accordion>
+</Accordions>
+
+## Managing Existing Bookings
+
+<Tabs items={['Canceling', 'Rescheduling']}>
+  <Tab value="Canceling">
+    **When You Need to Cancel**
+
+    1. Go to **Appointments**
+    2. Select the appointment
+    3. Click **Cancel**
+    4. Provide a reason
+    5. Patient is automatically refunded
+
+    <Callout type="warning">
+      Canceling appointments affects your reliability score and may impact Top Expert eligibility.
+    </Callout>
+
+  </Tab>
+  <Tab value="Rescheduling">
+    **To Reschedule**
+
+    1. Contact the patient through the platform
+    2. Agree on a new time
+    3. Cancel the original appointment
+    4. Patient books the new time slot
+
+  </Tab>
+</Tabs>
+
+## Best Practices
+
+<Accordions>
+  <Accordion title="Consistency">
+    - Set regular hours patients can rely on
+    - Update availability at least 2 weeks in advance
+    - Communicate changes promptly
+  </Accordion>
+  <Accordion title="Realistic Scheduling">
+    - Don't overbook yourself
+    - Include time for breaks and notes
+    - Account for different consultation types
+  </Accordion>
+  <Accordion title="Time Zone Awareness">
+    - Consider your target patient base
+    - Offer evening slots for working patients
+    - Remember time differences for international patients
+  </Accordion>
+</Accordions>
+
+## Troubleshooting
+
+<Accordions>
+  <Accordion title="Appointments Not Showing">
+    - Check calendar sync status
+    - Verify timezone settings
+    - Ensure service is active
+    - Check minimum notice requirements
+  </Accordion>
+  <Accordion title="Double Bookings">
+    - Enable Google Calendar sync
+    - Add buffer time between appointments
+    - Review availability settings
+  </Accordion>
+  <Accordion title="Sync Issues">
+    1. Disconnect Google Calendar
+    2. Reconnect with fresh authorization
+    3. Check sync interval settings
+  </Accordion>
+</Accordions>
+
+---
+
+<Cards>
+  <Card title="Understand Earnings" href="/help/expert/earnings/payouts">
+    Learn about payment processing
+  </Card>
+  <Card title="Become a Top Expert" href="/help/expert/top-expert/requirements">
+    See what it takes to earn Top Expert status
+  </Card>
+</Cards>

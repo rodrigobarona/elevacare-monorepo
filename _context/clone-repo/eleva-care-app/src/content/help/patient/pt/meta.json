@@ -1,0 +1,12 @@
+{
+  "title": "Centro de Ajuda ao Paciente",
+  "description": "Tudo o que precisa de saber sobre marcar consultas, gerir a sua conta e aproveitar ao máximo a Eleva Care.",
+  "pages": [
+    "index",
+    "booking",
+    "payments",
+    "reviews",
+    "faq"
+  ]
+}
+

@@ -1,0 +1,946 @@
+
+🚀 WorkOS RBAC Configuration Script
+
+Total Permissions: 121
+Total Roles: 6
+
+
+
+═══════════════════════════════════════════════════════════════════
+                    WORKOS DASHBOARD SETUP GUIDE                    
+═══════════════════════════════════════════════════════════════════
+
+📌 IMPORTANT: WorkOS RBAC configuration must be done in the Dashboard
+   Go to: https://dashboard.workos.com → RBAC
+
+─────────────────────────────────────────────────────────────────────
+STEP 1: CREATE PERMISSIONS (121 total)
+─────────────────────────────────────────────────────────────────────
+
+Go to RBAC → Permissions → Create Permission
+
+Copy-paste each permission below:
+
+Slug: appointments:view_own
+Name: View own appointments
+Description: Allows users to view their own booked appointments
+---
+Slug: appointments:view_incoming
+Name: View incoming appointments
+Description: Allows experts to view appointments booked with them
+---
+Slug: appointments:create
+Name: Create appointments
+Description: Allows users to book new appointments
+---
+Slug: appointments:manage_own
+Name: Manage own appointments
+Description: Allows users to manage their own bookings
+---
+Slug: appointments:cancel_own
+Name: Cancel own appointments
+Description: Allows users to cancel their own appointments within policy
+---
+Slug: appointments:reschedule_own
+Name: Reschedule own appointments
+Description: Allows users to reschedule their own appointments
+---
+Slug: appointments:view_calendar
+Name: View calendar
+Description: Access calendar view of appointments
+---
+Slug: appointments:confirm
+Name: Confirm appointments
+Description: Allows experts to confirm incoming appointments
+---
+Slug: appointments:complete
+Name: Complete appointments
+Description: Allows experts to mark appointments as completed
+---
+Slug: sessions:view_own
+Name: View own sessions
+Description: View session notes and summaries
+---
+Slug: sessions:view_history
+Name: View session history
+Description: View complete session history
+---
+Slug: patients:view_own
+Name: View own patients
+Description: View list of patients you've worked with
+---
+Slug: patients:view_all
+Name: View all workspace patients
+Description: View all patients in the workspace (workspace admin)
+---
+Slug: patients:view_history
+Name: View patient history
+Description: View patient's appointment history
+---
+Slug: patients:send_notes
+Name: Send session notes
+Description: Share session notes with patients
+---
+Slug: patients:manage_records
+Name: Manage patient records
+Description: Create and update patient records
+---
+Slug: patients:view_insights
+Name: View patient insights
+Description: View patient analytics and demographics
+---
+Slug: patients:export
+Name: Export patient data
+Description: Export patient data for reporting
+---
+Slug: events:create
+Name: Create event types
+Description: Create new bookable event types
+---
+Slug: events:view_own
+Name: View own events
+Description: View your own event types
+---
+Slug: events:edit_own
+Name: Edit own events
+Description: Edit your own event types
+---
+Slug: events:delete_own
+Name: Delete own events
+Description: Delete your own event types
+---
+Slug: events:toggle_active
+Name: Toggle event status
+Description: Activate or deactivate event types
+---
+Slug: availability:view_own
+Name: View own availability
+Description: View your availability schedules
+---
+Slug: availability:create
+Name: Create schedules
+Description: Create new availability schedules
+---
+Slug: availability:edit_own
+Name: Edit schedules
+Description: Edit your availability schedules
+---
+Slug: availability:delete_own
+Name: Delete schedules
+Description: Delete your availability schedules
+---
+Slug: availability:set_limits
+Name: Set booking limits
+Description: Set buffer times and maximum bookings
+---
+Slug: calendars:connect
+Name: Connect calendars
+Description: Connect external calendar providers (Google, Outlook)
+---
+Slug: calendars:view_own
+Name: View connected calendars
+Description: View your connected calendars
+---
+Slug: calendars:edit_own
+Name: Edit calendar settings
+Description: Edit calendar integration settings
+---
+Slug: calendars:disconnect
+Name: Disconnect calendars
+Description: Disconnect external calendars
+---
+Slug: reviews:create
+Name: Create reviews
+Description: Leave reviews after completed sessions
+---
+Slug: reviews:view_own
+Name: View own reviews
+Description: View reviews you've written
+---
+Slug: reviews:view_about_me
+Name: View reviews about me
+Description: View reviews written about you
+---
+Slug: reviews:edit_own
+Name: Edit own reviews
+Description: Edit your reviews (within 30 days)
+---
+Slug: reviews:delete_own
+Name: Delete own reviews
+Description: Delete your reviews (within 7 days)
+---
+Slug: reviews:respond
+Name: Respond to reviews
+Description: Respond to reviews about you
+---
+Slug: profile:view_own
+Name: View own profile
+Description: View your patient profile
+---
+Slug: profile:edit_own
+Name: Edit own profile
+Description: Edit your patient profile
+---
+Slug: profile:view_expert
+Name: View expert profile
+Description: View your expert public profile
+---
+Slug: profile:edit_expert
+Name: Edit expert profile
+Description: Edit your expert public profile
+---
+Slug: profile:preview
+Name: Preview profile
+Description: Preview how patients see your profile
+---
+Slug: profile:manage_link
+Name: Manage booking link
+Description: Manage your booking link settings
+---
+Slug: experts:browse
+Name: Browse experts
+Description: Browse expert directory
+---
+Slug: experts:view_profiles
+Name: View expert profiles
+Description: View expert public profiles
+---
+Slug: experts:view_applications
+Name: View expert applications
+Description: View expert applications (admin only)
+---
+Slug: experts:approve
+Name: Approve applications
+Description: Approve expert applications (admin only)
+---
+Slug: experts:reject
+Name: Reject applications
+Description: Reject expert applications (admin only)
+---
+Slug: experts:suspend
+Name: Suspend experts
+Description: Suspend expert accounts (admin only)
+---
+Slug: experts:verify
+Name: Verify credentials
+Description: Verify expert credentials (admin only)
+---
+Slug: analytics:view
+Name: View analytics
+Description: Access analytics dashboard (Top tier)
+---
+Slug: analytics:revenue
+Name: View revenue analytics
+Description: View detailed revenue analytics
+---
+Slug: analytics:patients
+Name: View patient analytics
+Description: View patient demographics and insights
+---
+Slug: analytics:performance
+Name: View performance metrics
+Description: View booking trends and conversion
+---
+Slug: analytics:export
+Name: Export analytics
+Description: Export analytics data
+---
+Slug: analytics:platform_growth
+Name: View platform growth
+Description: View platform-wide user growth (admin)
+---
+Slug: analytics:platform_revenue
+Name: View platform revenue
+Description: View platform revenue metrics (admin)
+---
+Slug: analytics:platform_engagement
+Name: View platform engagement
+Description: View engagement metrics (admin)
+---
+Slug: analytics:platform_churn
+Name: View platform churn
+Description: View retention and churn data (admin)
+---
+Slug: analytics:platform_export
+Name: Export platform data
+Description: Export platform-wide analytics (admin)
+---
+Slug: branding:customize
+Name: Customize branding
+Description: Customize profile branding (Top tier)
+---
+Slug: branding:upload_logo
+Name: Upload logo
+Description: Upload custom logo (Top tier)
+---
+Slug: branding:custom_colors
+Name: Custom colors
+Description: Set custom brand colors (Top tier)
+---
+Slug: billing:view_own
+Name: View own billing
+Description: View personal payment history and invoices
+---
+Slug: billing:view_earnings
+Name: View earnings
+Description: View earnings and commission details
+---
+Slug: billing:view_payouts
+Name: View payouts
+Description: View payout history
+---
+Slug: billing:view_subscription
+Name: View subscription
+Description: View current subscription plan
+---
+Slug: billing:manage_subscription
+Name: Manage subscription
+Description: Upgrade or downgrade subscription
+---
+Slug: billing:methods_manage
+Name: Manage payment methods
+Description: Add or remove payment methods
+---
+Slug: billing:manage_clinic_sub
+Name: Manage workspace subscription
+Description: Manage workspace subscription (workspace admin)
+---
+Slug: billing:view_clinic_billing
+Name: View workspace billing
+Description: View workspace billing history (workspace admin)
+---
+Slug: settings:view_own
+Name: View own settings
+Description: View personal settings
+---
+Slug: settings:edit_own
+Name: Edit own settings
+Description: Edit account, notifications, integrations
+---
+Slug: settings:security
+Name: Security settings
+Description: Manage 2FA, sessions, security
+---
+Slug: settings:view_platform
+Name: View platform settings
+Description: View platform configuration (admin)
+---
+Slug: settings:edit_platform
+Name: Edit platform settings
+Description: Edit platform configuration (admin)
+---
+Slug: settings:manage_features
+Name: Manage feature flags
+Description: Enable/disable features (admin)
+---
+Slug: settings:manage_integrations
+Name: Manage integrations
+Description: Manage API keys, webhooks (admin)
+---
+Slug: dashboard:view_expert
+Name: View expert dashboard
+Description: Access expert dashboard
+---
+Slug: dashboard:view_patient
+Name: View patient dashboard
+Description: Access patient dashboard
+---
+Slug: partner:view_dashboard
+Name: View workspace dashboard
+Description: View workspace overview (read-only for members)
+---
+Slug: partner:manage_settings
+Name: Manage workspace settings
+Description: Manage workspace configuration (admin)
+---
+Slug: partner:manage_branding
+Name: Manage workspace branding
+Description: Manage workspace logo, colors (admin)
+---
+Slug: partner:view_analytics
+Name: View workspace analytics
+Description: View workspace-wide analytics (admin)
+---
+Slug: partner:view_patients
+Name: View workspace patients
+Description: View shared workspace patients
+---
+Slug: partner:export_data
+Name: Export workspace data
+Description: Export workspace data (admin)
+---
+Slug: team:view_members
+Name: View team members
+Description: View workspace team members
+---
+Slug: team:invite_members
+Name: Invite team members
+Description: Invite new team members (admin)
+---
+Slug: team:remove_members
+Name: Remove team members
+Description: Remove team members (admin)
+---
+Slug: team:manage_roles
+Name: Manage team roles
+Description: Assign and change member roles (admin)
+---
+Slug: team:view_performance
+Name: View team performance
+Description: View team member performance (admin)
+---
+Slug: schedule:manage_clinic
+Name: Manage workspace schedule
+Description: Manage multi-practitioner schedule (admin)
+---
+Slug: schedule:manage_rooms
+Name: Manage rooms
+Description: Manage workspace rooms/locations (admin)
+---
+Slug: schedule:view_capacity
+Name: View capacity planning
+Description: View capacity planning (admin)
+---
+Slug: revenue:view_overview
+Name: View revenue overview
+Description: View workspace revenue overview (admin)
+---
+Slug: revenue:view_splits
+Name: View commission splits
+Description: View commission splits (admin)
+---
+Slug: revenue:manage_payouts
+Name: Manage payouts
+Description: Manage payout schedules (admin)
+---
+Slug: revenue:export_financial
+Name: Export financial data
+Description: Export financial reports (admin)
+---
+Slug: users:view_all
+Name: View all users
+Description: View all platform users
+---
+Slug: users:create
+Name: Create users
+Description: Create new users
+---
+Slug: users:edit
+Name: Edit users
+Description: Edit any user account
+---
+Slug: users:delete
+Name: Delete users
+Description: Soft delete user accounts
+---
+Slug: users:manage_roles
+Name: Manage user roles
+Description: Assign and change user roles
+---
+Slug: users:impersonate
+Name: Impersonate users
+Description: Sign in as user for support
+---
+Slug: organizations:view_all
+Name: View all organizations
+Description: View all organizations
+---
+Slug: organizations:create
+Name: Create organizations
+Description: Create new organizations
+---
+Slug: organizations:edit
+Name: Edit organizations
+Description: Edit organization details
+---
+Slug: organizations:delete
+Name: Delete organizations
+Description: Delete organizations
+---
+Slug: organizations:manage_settings
+Name: Manage org settings
+Description: Manage organization settings
+---
+Slug: payments:view_all
+Name: View all payments
+Description: View all platform transactions
+---
+Slug: payments:view_transfers
+Name: View transfers
+Description: View payout transfers
+---
+Slug: payments:manage_disputes
+Name: Manage disputes
+Description: Manage payment disputes
+---
+Slug: payments:process_refunds
+Name: Process refunds
+Description: Issue refunds
+---
+Slug: payments:retry_failed
+Name: Retry failed payments
+Description: Retry failed payment attempts
+---
+Slug: moderation:view_flags
+Name: View flagged content
+Description: View content flagged by users
+---
+Slug: moderation:review_content
+Name: Review content
+Description: Review flagged content
+---
+Slug: moderation:remove_content
+Name: Remove content
+Description: Remove inappropriate content
+---
+Slug: moderation:ban_users
+Name: Ban users
+Description: Ban users from platform
+---
+Slug: audit:view_logs
+Name: View audit logs
+Description: View platform audit logs
+---
+Slug: audit:export_logs
+Name: Export audit logs
+Description: Export audit logs for compliance
+---
+
+─────────────────────────────────────────────────────────────────────
+STEP 2: CREATE ROLES (6 total)
+─────────────────────────────────────────────────────────────────────
+
+Go to RBAC → Roles → Create Role
+
+
+=== PATIENT ===
+Slug: patient
+Name: Patient
+Description: Basic patient role for booking appointments and accessing healthcare journey
+
+Permissions to assign (16):
+  ✓ appointments:view_own
+  ✓ appointments:create
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ sessions:view_own
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ billing:view_own
+  ✓ billing:methods_manage
+  ✓ dashboard:view_patient
+
+=== EXPERT COMMUNITY ===
+Slug: expert_community
+Name: Expert Community
+Description: Standard expert tier with core expert features (20% monthly or 12% annual commission)
+
+Permissions to assign (52):
+  ✓ appointments:view_own
+  ✓ appointments:create
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ sessions:view_own
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ billing:view_own
+  ✓ billing:methods_manage
+  ✓ dashboard:view_patient
+  ✓ dashboard:view_expert
+  ✓ appointments:view_incoming
+  ✓ appointments:manage_own
+  ✓ appointments:view_calendar
+  ✓ appointments:confirm
+  ✓ appointments:complete
+  ✓ patients:view_own
+  ✓ patients:view_history
+  ✓ patients:send_notes
+  ✓ events:create
+  ✓ events:view_own
+  ✓ events:edit_own
+  ✓ events:delete_own
+  ✓ events:toggle_active
+  ✓ availability:view_own
+  ✓ availability:create
+  ✓ availability:edit_own
+  ✓ availability:delete_own
+  ✓ availability:set_limits
+  ✓ calendars:connect
+  ✓ calendars:view_own
+  ✓ calendars:edit_own
+  ✓ calendars:disconnect
+  ✓ profile:view_expert
+  ✓ profile:edit_expert
+  ✓ profile:preview
+  ✓ profile:manage_link
+  ✓ billing:view_earnings
+  ✓ billing:view_payouts
+  ✓ billing:view_subscription
+  ✓ billing:manage_subscription
+  ✓ reviews:view_about_me
+  ✓ reviews:respond
+  ✓ settings:view_own
+  ✓ settings:edit_own
+  ✓ settings:security
+
+=== EXPERT TOP ===-> Dez 03
+Slug: expert_top
+Name: Expert Top
+Description: Premium expert tier with advanced analytics and branding (18% monthly or 8% annual commission)
+
+Permissions to assign (60):
+  ✓ appointments:view_own
+  ✓ appointments:create
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ sessions:view_own
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ billing:view_own
+  ✓ billing:methods_manage
+  ✓ dashboard:view_patient
+  ✓ dashboard:view_expert
+  ✓ appointments:view_incoming
+  ✓ appointments:manage_own
+  ✓ appointments:view_calendar
+  ✓ appointments:confirm
+  ✓ appointments:complete
+  ✓ patients:view_own
+  ✓ patients:view_history
+  ✓ patients:send_notes
+  ✓ events:create
+  ✓ events:view_own
+  ✓ events:edit_own
+  ✓ events:delete_own
+  ✓ events:toggle_active
+  ✓ availability:view_own
+  ✓ availability:create
+  ✓ availability:edit_own
+  ✓ availability:delete_own
+  ✓ availability:set_limits
+  ✓ calendars:connect
+  ✓ calendars:view_own
+  ✓ calendars:edit_own
+  ✓ calendars:disconnect
+  ✓ profile:view_expert
+  ✓ profile:edit_expert
+  ✓ profile:preview
+  ✓ profile:manage_link
+  ✓ billing:view_earnings
+  ✓ billing:view_payouts
+  ✓ billing:view_subscription
+  ✓ billing:manage_subscription
+  ✓ reviews:view_about_me
+  ✓ reviews:respond
+  ✓ settings:view_own
+  ✓ settings:edit_own
+  ✓ settings:security
+  ✓ analytics:view
+  ✓ analytics:revenue
+  ✓ analytics:patients
+  ✓ analytics:performance
+  ✓ analytics:export
+  ✓ branding:customize
+  ✓ branding:upload_logo
+  ✓ branding:custom_colors
+
+=== PARTNER MEMBER ===
+Slug: partner_member
+Name: Workspace Member
+Description: Expert who is a member of a workspace (read-only workspace access)
+
+Permissions to assign (55):
+  ✓ appointments:view_own
+  ✓ appointments:create
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ sessions:view_own
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ billing:view_own
+  ✓ billing:methods_manage
+  ✓ dashboard:view_patient
+  ✓ dashboard:view_expert
+  ✓ appointments:view_incoming
+  ✓ appointments:manage_own
+  ✓ appointments:view_calendar
+  ✓ appointments:confirm
+  ✓ appointments:complete
+  ✓ patients:view_own
+  ✓ patients:view_history
+  ✓ patients:send_notes
+  ✓ events:create
+  ✓ events:view_own
+  ✓ events:edit_own
+  ✓ events:delete_own
+  ✓ events:toggle_active
+  ✓ availability:view_own
+  ✓ availability:create
+  ✓ availability:edit_own
+  ✓ availability:delete_own
+  ✓ availability:set_limits
+  ✓ calendars:connect
+  ✓ calendars:view_own
+  ✓ calendars:edit_own
+  ✓ calendars:disconnect
+  ✓ profile:view_expert
+  ✓ profile:edit_expert
+  ✓ profile:preview
+  ✓ profile:manage_link
+  ✓ billing:view_earnings
+  ✓ billing:view_payouts
+  ✓ billing:view_subscription
+  ✓ billing:manage_subscription
+  ✓ reviews:view_about_me
+  ✓ reviews:respond
+  ✓ settings:view_own
+  ✓ settings:edit_own
+  ✓ settings:security
+  ✓ partner:view_dashboard
+  ✓ partner:view_patients
+  ✓ team:view_members
+
+=== PARTNER ADMIN ===
+Slug: partner_admin
+Name: Workspace Admin
+Description: Administrator of a workspace with full management access
+
+Permissions to assign (76):
+  ✓ appointments:view_own
+  ✓ appointments:create
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ sessions:view_own
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ billing:view_own
+  ✓ billing:methods_manage
+  ✓ dashboard:view_patient
+  ✓ dashboard:view_expert
+  ✓ appointments:view_incoming
+  ✓ appointments:manage_own
+  ✓ appointments:view_calendar
+  ✓ appointments:confirm
+  ✓ appointments:complete
+  ✓ patients:view_own
+  ✓ patients:view_history
+  ✓ patients:send_notes
+  ✓ events:create
+  ✓ events:view_own
+  ✓ events:edit_own
+  ✓ events:delete_own
+  ✓ events:toggle_active
+  ✓ availability:view_own
+  ✓ availability:create
+  ✓ availability:edit_own
+  ✓ availability:delete_own
+  ✓ availability:set_limits
+  ✓ calendars:connect
+  ✓ calendars:view_own
+  ✓ calendars:edit_own
+  ✓ calendars:disconnect
+  ✓ profile:view_expert
+  ✓ profile:edit_expert
+  ✓ profile:preview
+  ✓ profile:manage_link
+  ✓ billing:view_earnings
+  ✓ billing:view_payouts
+  ✓ billing:view_subscription
+  ✓ billing:manage_subscription
+  ✓ reviews:view_about_me
+  ✓ reviews:respond
+  ✓ settings:view_own
+  ✓ settings:edit_own
+  ✓ settings:security
+  ✓ partner:view_dashboard
+  ✓ partner:view_patients
+  ✓ team:view_members
+  ✓ partner:manage_settings
+  ✓ partner:manage_branding
+  ✓ partner:view_analytics
+  ✓ partner:export_data
+  ✓ team:invite_members
+  ✓ team:remove_members
+  ✓ team:manage_roles
+  ✓ team:view_performance
+  ✓ schedule:manage_clinic
+  ✓ schedule:manage_rooms
+  ✓ schedule:view_capacity
+  ✓ patients:view_all
+  ✓ patients:manage_records
+  ✓ patients:view_insights
+  ✓ patients:export
+  ✓ revenue:view_overview
+  ✓ revenue:view_splits
+  ✓ revenue:manage_payouts
+  ✓ revenue:export_financial
+  ✓ billing:manage_clinic_sub
+  ✓ billing:view_clinic_billing
+
+=== PLATFORM ADMIN ===
+Slug: superadmin
+Name: Platform Admin
+Description: Platform administrator with full system access (Eleva Care team only)
+
+Permissions to assign (121):
+  ✓ appointments:view_own
+  ✓ appointments:view_incoming
+  ✓ appointments:create
+  ✓ appointments:manage_own
+  ✓ appointments:cancel_own
+  ✓ appointments:reschedule_own
+  ✓ appointments:view_calendar
+  ✓ appointments:confirm
+  ✓ appointments:complete
+  ✓ sessions:view_own
+  ✓ sessions:view_history
+  ✓ patients:view_own
+  ✓ patients:view_all
+  ✓ patients:view_history
+  ✓ patients:send_notes
+  ✓ patients:manage_records
+  ✓ patients:view_insights
+  ✓ patients:export
+  ✓ events:create
+  ✓ events:view_own
+  ✓ events:edit_own
+  ✓ events:delete_own
+  ✓ events:toggle_active
+  ✓ availability:view_own
+  ✓ availability:create
+  ✓ availability:edit_own
+  ✓ availability:delete_own
+  ✓ availability:set_limits
+  ✓ calendars:connect
+  ✓ calendars:view_own
+  ✓ calendars:edit_own
+  ✓ calendars:disconnect
+  ✓ reviews:create
+  ✓ reviews:view_own
+  ✓ reviews:view_about_me
+  ✓ reviews:edit_own
+  ✓ reviews:delete_own
+  ✓ reviews:respond
+  ✓ profile:view_own
+  ✓ profile:edit_own
+  ✓ profile:view_expert
+  ✓ profile:edit_expert
+  ✓ profile:preview
+  ✓ profile:manage_link
+  ✓ experts:browse
+  ✓ experts:view_profiles
+  ✓ experts:view_applications
+  ✓ experts:approve
+  ✓ experts:reject
+  ✓ experts:suspend
+  ✓ experts:verify
+  ✓ analytics:view
+  ✓ analytics:revenue
+  ✓ analytics:patients
+  ✓ analytics:performance
+  ✓ analytics:export
+  ✓ analytics:platform_growth
+  ✓ analytics:platform_revenue
+  ✓ analytics:platform_engagement
+  ✓ analytics:platform_churn
+  ✓ analytics:platform_export
+  ✓ branding:customize
+  ✓ branding:upload_logo
+  ✓ branding:custom_colors
+  ✓ billing:view_own
+  ✓ billing:view_earnings
+  ✓ billing:view_payouts
+  ✓ billing:view_subscription
+  ✓ billing:manage_subscription
+  ✓ billing:methods_manage
+  ✓ billing:manage_clinic_sub
+  ✓ billing:view_clinic_billing
+  ✓ settings:view_own
+  ✓ settings:edit_own
+  ✓ settings:security
+  ✓ settings:view_platform
+  ✓ settings:edit_platform
+  ✓ settings:manage_features
+  ✓ settings:manage_integrations
+  ✓ dashboard:view_expert
+  ✓ dashboard:view_patient
+  ✓ partner:view_dashboard
+  ✓ partner:manage_settings
+  ✓ partner:manage_branding
+  ✓ partner:view_analytics
+  ✓ partner:view_patients
+  ✓ partner:export_data
+  ✓ team:view_members
+  ✓ team:invite_members
+  ✓ team:remove_members
+  ✓ team:manage_roles
+  ✓ team:view_performance
+  ✓ schedule:manage_clinic
+  ✓ schedule:manage_rooms
+  ✓ schedule:view_capacity
+  ✓ revenue:view_overview
+  ✓ revenue:view_splits
+  ✓ revenue:manage_payouts
+  ✓ revenue:export_financial
+  ✓ users:view_all
+  ✓ users:create
+  ✓ users:edit
+  ✓ users:delete
+  ✓ users:manage_roles
+  ✓ users:impersonate
+  ✓ organizations:view_all
+  ✓ organizations:create
+  ✓ organizations:edit
+  ✓ organizations:delete
+  ✓ organizations:manage_settings
+  ✓ payments:view_all
+  ✓ payments:view_transfers
+  ✓ payments:manage_disputes
+  ✓ payments:process_refunds
+  ✓ payments:retry_failed
+  ✓ moderation:view_flags
+  ✓ moderation:review_content
+  ✓ moderation:remove_content
+  ✓ moderation:ban_users
+  ✓ audit:view_logs
+  ✓ audit:export_logs
+
+─────────────────────────────────────────────────────────────────────
+STEP 3: SET DEFAULT ROLE
+─────────────────────────────────────────────────────────────────────
+
+Go to RBAC → Configuration → Default Role
+Select: patient
+
+═══════════════════════════════════════════════════════════════════
+

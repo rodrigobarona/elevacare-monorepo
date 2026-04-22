@@ -1,0 +1,230 @@
+---
+title: Criar Serviços
+description: Defina as suas ofertas de consulta com descrições claras e preços apropriados.
+---
+
+# Criar Serviços
+
+Serviços são as consultas que oferece aos pacientes. Cada serviço tem a sua própria descrição, duração e preço.
+
+## Componentes do Serviço
+
+<Tabs items={['Obrigatório', 'Opcional']}>
+  <Tab value="Obrigatório">
+    **Campos Obrigatórios**
+
+    | Campo | Descrição |
+    |-------|-----------|
+    | Título | Nome claro e descritivo (ex: "Consulta Inicial de Saúde Pélvica") |
+    | Descrição | O que os pacientes podem esperar deste serviço |
+    | Duração | Duração da consulta (30, 45, 60 ou 90 minutos) |
+    | Preço | A sua tarifa para este serviço |
+    | Categoria | Categoria principal do serviço |
+  </Tab>
+  <Tab value="Opcional">
+    **Campos Opcionais**
+
+    - Instruções de preparação para pacientes
+    - Informação de seguimento
+    - Materiais ou formulários necessários
+    - Disponibilidade vídeo vs. presencial
+  </Tab>
+</Tabs>
+
+## Tipos de Serviços
+
+<Accordions>
+  <Accordion title="Consultas Iniciais">
+    Primeiras marcações para novos pacientes:
+
+    - Duração mais longa (tipicamente 60-90 minutos)
+    - Avaliação completa
+    - Planeamento de tratamento
+    - Preço mais elevado
+
+    **Exemplo:**
+    > **Avaliação Inicial de Pavimento Pélvico**
+    > 60 minutos | €120
+    >
+    > Avaliação completa incluindo histórico de saúde, avaliação de sintomas e recomendações personalizadas de tratamento.
+  </Accordion>
+  <Accordion title="Sessões de Seguimento">
+    Marcações contínuas para pacientes estabelecidos:
+
+    - Duração mais curta (30-45 minutos)
+    - Revisão de progresso
+    - Continuação do tratamento
+    - Preço mais baixo
+
+    **Exemplo:**
+    > **Sessão de Seguimento Pavimento Pélvico**
+    > 45 minutos | €80
+    >
+    > Continue o seu plano de tratamento com exercícios, avaliação de progresso e ajustes conforme necessário.
+  </Accordion>
+  <Accordion title="Serviços Especializados">
+    Serviços direcionados para necessidades específicas:
+
+    - Sessão de preparação para gravidez
+    - Avaliação de recuperação pós-parto
+    - Consulta de sintomas de menopausa
+    - Preparação pré-cirúrgica
+  </Accordion>
+</Accordions>
+
+## Criar o Seu Primeiro Serviço
+
+<Steps>
+  <Step>
+    ### Navegar para Serviços
+
+    Vá a **Dashboard de Especialista** → **Serviços** → **Criar Serviço**.
+  </Step>
+  <Step>
+    ### Informação Básica
+
+    Introduza um título claro e descritivo, selecione a categoria principal, escolha a duração e defina o preço.
+  </Step>
+  <Step>
+    ### Escrever Descrição
+
+    Responda: O que acontece durante esta consulta? Para quem é? Que resultados podem os pacientes esperar? O que devem preparar?
+  </Step>
+  <Step>
+    ### Configurar Opções
+
+    Ative consulta por vídeo, opções presenciais, tempo de buffer e requisitos de aviso prévio.
+  </Step>
+  <Step>
+    ### Publicar
+
+    Clique em **Guardar e Publicar** para tornar o seu serviço disponível para marcação.
+  </Step>
+</Steps>
+
+<Callout type="info">
+  Use pontos na sua descrição para a tornar fácil de ler. Os pacientes frequentemente passam os olhos antes de marcar.
+</Callout>
+
+## Definir Preços dos Serviços
+
+### Fatores a Considerar
+
+| Fator | Descrição |
+|-------|-----------|
+| Expertise | As suas credenciais e nível de experiência |
+| Mercado | Tarifas locais e preços da concorrência |
+| Duração | Duração e complexidade da sessão |
+| Taxas da Plataforma | 8-15% dependendo do seu plano |
+
+### Orientações de Preços
+
+| Tipo de Serviço | Intervalo Típico |
+|-----------------|------------------|
+| Consulta Inicial (60 min) | €80 - €150 |
+| Seguimento (45 min) | €60 - €100 |
+| Sessão Especializada (60 min) | €100 - €180 |
+| Check-In Rápido (30 min) | €40 - €70 |
+
+### Taxas da Plataforma
+
+| Plano | Comissão |
+|-------|----------|
+| Só Comissão (Community) | 20% |
+| Subscrição (Community) | 12% |
+| Só Comissão (Top Expert) | 15% |
+| Subscrição (Top Expert) | 8% |
+
+**Exemplo**: Se cobra €100 e está no plano de subscrição 12%, recebe €88.
+
+## Limites de Serviços
+
+<Tabs items={['Community', 'Top Expert']}>
+  <Tab value="Community">
+    **Community Experts**
+
+    - Até 5 serviços ativos
+    - Opções básicas de personalização
+  </Tab>
+  <Tab value="Top Expert">
+    **Top Experts**
+
+    - Serviços ilimitados
+    - Personalização avançada
+    - Ofertas de pacotes (em breve)
+  </Tab>
+</Tabs>
+
+## Gerir Serviços
+
+<Accordions>
+  <Accordion title="Editar Serviços">
+    1. Vá a **Serviços**
+    2. Clique no serviço
+    3. Clique em **Editar**
+    4. Faça alterações e **Guarde**
+
+    <Callout type="warning">
+      Alterações a serviços existentes não afetam marcações já feitas.
+    </Callout>
+  </Accordion>
+  <Accordion title="Desativar Serviços">
+    Para ocultar temporariamente um serviço:
+
+    1. Vá ao serviço
+    2. Desative **Ativo**
+    3. O serviço não aparecerá para novas marcações
+  </Accordion>
+  <Accordion title="Eliminar Serviços">
+    Para remover permanentemente um serviço:
+
+    1. Assegure que não há marcações pendentes
+    2. Clique em **Eliminar Serviço**
+    3. Confirme a eliminação
+  </Accordion>
+</Accordions>
+
+## Boas Práticas
+
+<Tabs items={['Nomenclatura', 'Descrições', 'Preços']}>
+  <Tab value="Nomenclatura">
+    **Nomenclatura Clara**
+
+    **Bom:**
+    - "Consulta Inicial de Pavimento Pélvico"
+    - "Avaliação de Recuperação Pós-Parto"
+    - "Gestão de Sintomas de Menopausa"
+
+    **Evitar:**
+    - "Consulta 1"
+    - "Sessão"
+    - "Reunião"
+  </Tab>
+  <Tab value="Descrições">
+    **Descrições Detalhadas**
+
+    Inclua:
+    - O que vai cobrir
+    - Quem deve marcar isto
+    - O que esperar
+    - Preparação necessária
+  </Tab>
+  <Tab value="Preços">
+    **Preços Competitivos**
+
+    - Pesquise especialistas semelhantes
+    - Considere o seu nível de experiência
+    - Comece moderado, ajuste baseado na procura
+  </Tab>
+</Tabs>
+
+---
+
+<Cards>
+  <Card title="Definir Disponibilidade" href="/help/expert/getting-started/availability">
+    Configure quando está disponível para marcações
+  </Card>
+  <Card title="Compreender Ganhos" href="/help/expert/earnings/payouts">
+    Saiba sobre taxas e processamento de pagamentos
+  </Card>
+</Cards>

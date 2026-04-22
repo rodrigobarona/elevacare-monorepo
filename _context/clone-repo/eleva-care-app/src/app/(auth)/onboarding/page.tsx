@@ -1,0 +1,84 @@
+/**
+ * Onboarding Page
+ *
+ * Smart routing based on user organization type (Airbnb-style pattern):
+ * - patient_personal → Redirect to /dashboard (fast, frictionless)
+ * - expert_individual → Redirect to /setup (guided expert onboarding)
+ * - No organization → Auto-create patient_personal org and redirect to /dashboard
+ *
+ * This mirrors Airbnb's approach:
+ * - Most users (patients) get instant access to the platform
+ * - Experts ("hosts") get guided through their setup process
+ */
+import {
+  autoCreateUserOrganization,
+  getUserOrganizationType,
+} from '@/lib/integrations/workos/auto-organization';
+import { withAuth } from '@workos-inc/authkit-nextjs';
+import { redirect } from 'next/navigation';
+
+export default async function OnboardingPage() {
+  // Ensure user is authenticated
+  const { user } = await withAuth({ ensureSignedIn: true });
+
+  if (!user) {
+    console.log('❌ No user in onboarding - redirecting to login');
+    redirect('/login');
+  }
+
+  console.log('🎯 Onboarding page accessed');
+  console.log('User ID:', user.id);
+  console.log('User email:', user.email);
+
+  try {
+    // Check user's organization type
+    const orgType = await getUserOrganizationType(user.id);
+    console.log('🏢 Organization type:', orgType || 'None');
+
+    // If no organization exists, auto-create patient_personal (fallback)
+    if (!orgType) {
+      console.log('🏢 No organization found - auto-creating patient organization');
+      const result = await autoCreateUserOrganization({
+        workosUserId: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        orgType: 'patient_personal',
+      });
+
+      if (result.success) {
+        console.log('✅ Fallback patient organization created:', result.organizationId);
+      } else {
+        console.error('❌ Failed to create fallback organization:', result.error);
+      }
+
+      redirect('/dashboard');
+      return;
+    }
+
+    // Route based on organization type
+    if (orgType === 'expert_individual' || orgType === 'clinic') {
+      // Expert flow - guided onboarding
+      console.log('🎓 Expert user detected - redirecting to setup');
+      redirect('/setup');
+    } else {
+      // Patient flow - direct to dashboard
+      console.log('👤 Patient user detected - redirecting to dashboard');
+      redirect('/dashboard');
+    }
+  } catch (error) {
+    console.error('❌ Error in onboarding:', error);
+    // Fallback: redirect to dashboard on error
+    redirect('/dashboard');
+  }
+
+  // Loading state (rarely seen due to redirects)
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold">Setting up your account...</h1>
+        <p className="mt-2 text-gray-600">Please wait</p>
+      </div>
+    </div>
+  );
+}

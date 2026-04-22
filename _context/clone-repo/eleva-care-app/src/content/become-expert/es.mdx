@@ -1,0 +1,275 @@
+export const metadata = {
+  title: "Únete como Especialista | Eleva Care",
+  description: "Únete a Eleva Care como profesional de la salud independiente. Establece tus propias tarifas, gestiona tu agenda y presta atención a través de nuestra plataforma segura.",
+  og: {
+    title: "Únete como Especialista | Eleva Care",
+    description: "Únete a Eleva Care como profesional de la salud independiente y licenciado. Establece tus tarifas y presta atención a través de nuestra plataforma segura.",
+    siteName: "Eleva Care"
+  }
+};
+
+import HeroSection from '@/components/sections/become-expert/HeroSection';
+import BenefitsSection from '@/components/sections/become-expert/BenefitsSection';
+import ExpertPricingSection from '@/components/sections/become-expert/ExpertPricingSection';
+import HowItWorksSection from '@/components/sections/become-expert/HowItWorksSection';
+import RequirementsSection from '@/components/sections/become-expert/RequirementsSection';
+import FinalCTASection from '@/components/sections/become-expert/FinalCTASection';
+import { Sparkles, TrendingUp } from 'lucide-react';
+
+<HeroSection
+  badge="Para Profesionales de la Salud Independientes"
+  title="Presta Atención,"
+  subtitle="En Tus Propios Términos"
+  description="Únete a Eleva Care como profesional de la salud independiente y licenciado. Mantienes tu autonomía clínica completa mientras nosotros proporcionamos la plataforma tecnológica segura—agenda, videoconsultas, pagos y gestión de clientes."
+  ctaButton="Comenzar"
+  signInButton="Iniciar Sesión"
+  features="✓ Independencia total  ✓ Conserva el 80% de ganancias  ✓ Plataforma segura y conforme con RGPD"
+/>
+
+<BenefitsSection
+  title="¿Por Qué Unirte a Eleva Care?"
+  benefits={[
+    {
+      icon: 'shield',
+      title: 'Independencia Clínica Total',
+      description: 'Eres un profesional independiente con autonomía clínica completa. Tú decides cómo atender a tus clientes—Eleva.care solo proporciona la plataforma tecnológica.',
+    },
+    {
+      icon: 'dollar',
+      title: 'Establece tus Propias Tarifas',
+      description: 'Tú decides cuánto vale tu tiempo. Conserva el 80% de tus ganancias y recibe pagos semanales mediante procesamiento seguro.',
+    },
+    {
+      icon: 'calendar',
+      title: 'Horario Flexible',
+      description: 'Controla completamente tu calendario. Trabaja tanto o tan poco como quieras, cuando quieras.',
+    },
+    {
+      icon: 'video',
+      title: 'Videoconsultas Seguras',
+      description: 'Realiza sesiones desde cualquier lugar en nuestra plataforma cifrada y conforme con RGPD. Solo necesitas un ordenador y conexión a internet.',
+    },
+    {
+      icon: 'users',
+      title: 'Alcanza Más Clientes',
+      description: 'Sé descubierto por clientes que buscan servicios de salud femenina a través de nuestra plataforma. Enfócate en la atención, no en marketing.',
+    },
+    {
+      icon: 'trending',
+      title: 'Herramientas Profesionales',
+      description: 'Gestión de clientes, facturación automática, páginas de reserva y analíticas—todo lo que necesitas para gestionar tu práctica independiente.',
+    },
+  ]}
+/>
+
+<HowItWorksSection
+  title="Cómo Funciona"
+  steps={[
+    {
+      title: 'Crea tu Perfil',
+      description: 'Comparte tu experiencia, credenciales y disponibilidad. Dile a los clientes qué te hace único.',
+    },
+    {
+      title: 'Establece tus Servicios y Tarifas',
+      description: 'Define tus ofertas y precios. Tienes control completo sobre tu negocio.',
+    },
+    {
+      title: 'Sé Descubierto',
+      description: 'Los clientes te encuentran a través de búsquedas y recomendaciones. Comienza a recibir solicitudes de reserva.',
+    },
+    {
+      title: 'Proporciona tu Servicio',
+      description: 'Realiza sesiones, ayuda a los clientes a alcanzar sus objetivos y construye tu reputación a través de reseñas.',
+    },
+  ]}
+  ctaButton="Comienza tu Viaje"
+/>
+
+
+<ExpertPricingSection
+  title="Precios Flexibles para Cada Experto"
+  subtitle="Elige el plan que se adapte a tu práctica. Todos los planes incluyen pagos seguros, gestión de calendarios y herramientas de comunicación con clientes."
+  communityTier={{
+    tierName: 'Experto Comunitario',
+    tierIcon: <Sparkles className="h-6 w-6" />,
+    tierColor: 'primary',
+    description: 'Perfecto para profesionales que están comenzando o construyendo su práctica',
+    plans: [
+      {
+        name: 'Pago por uso',
+        price: '$0',
+        priceDetail: '/mes',
+        commission: '20%',
+        description: 'Comienza a ganar inmediatamente sin costos iniciales',
+        features: [
+          'Lista hasta 5 servicios',
+          'Integración básica de calendario',
+          'Analíticas estándar',
+          'Pagos semanales',
+          'Soporte por email',
+          'Sin tarifas de suscripción',
+          'Cancela en cualquier momento',
+        ],
+        cta: {
+          text: 'Comenzar Gratis',
+          href: '/register?expert=true&plan=community-paygo',
+        },
+      },
+      {
+        name: 'Plan Mensual',
+        price: '$49',
+        priceDetail: '/mes',
+        commission: '12%',
+        badge: 'Comisión Reducida',
+        recommended: true,
+        description: 'Comisión reducida con facturación mensual predecible',
+        features: [
+          'Todo en Pago por uso',
+          'Comisión reducida del 12% (ahorra 8%)',
+          'Incorporación prioritaria',
+          'Revisiones trimestrales del negocio',
+          'Cambia de plan en cualquier momento',
+        ],
+        cta: {
+          text: 'Elegir Mensual',
+          href: '/register?expert=true&plan=community-monthly',
+        },
+      },
+      {
+        name: 'Plan Anual',
+        price: '$470',
+        priceDetail: '/año',
+        commission: '12%',
+        badge: 'Mejor Valor',
+        savingsText: '💰 Ahorra $118 (¡2 meses gratis!)',
+        description: 'Máximo ahorro con compromiso anual',
+        features: [
+          'Todo en Plan Mensual',
+          'Comisión reducida del 12% (ahorra 8%)',
+          'Ahorra $118 vs facturación mensual',
+          'Descuento por compromiso anual',
+          'Soporte prioritario',
+        ],
+        cta: {
+          text: 'Ahorrar con Anual',
+          href: '/register?expert=true&plan=community-annual',
+        },
+      },
+    ],
+  }}
+  topTier={{
+    tierName: 'Experto Top',
+    tierBadge: 'Basado en Rendimiento',
+    tierIcon: <TrendingUp className="h-6 w-6" />,
+    tierColor: 'amber',
+    description: 'Nivel premium para expertos establecidos con historial comprobado',
+    requirements: [
+      '⭐ Calificación promedio de 4.8+',
+      '📅 25+ citas completadas en 90 días',
+      '💯 Menos del 5% de tasa de cancelación',
+      '📊 Tasa de respuesta del 90%+ en 24 horas',
+      '🎖️ 3+ meses como Experto Comunitario',
+      '✨ Perfil de experto completo con portafolio',
+    ],
+    plans: [
+      {
+        name: 'Pago por uso',
+        price: '$0',
+        priceDetail: '/mes',
+        commission: '15%',
+        description: 'Funciones premium con precios solo por comisión',
+        features: [
+          'Servicios ilimitados',
+          'Analíticas e insights avanzados',
+          'Pagos diarios',
+          'Soporte prioritario',
+          'Insignia de Experto Top',
+          'Ubicación destacada',
+          'Sin tarifas de suscripción',
+        ],
+        cta: {
+          text: 'Solicitar Experto Top',
+          href: '/register?expert=true&plan=top-paygo',
+        },
+      },
+      {
+        name: 'Plan Mensual',
+        price: '$177',
+        priceDetail: '/mes',
+        commission: '8%',
+        badge: 'Líder de la Industria',
+        recommended: true,
+        description: 'Tasa de comisión líder en la industria con facturación mensual',
+        features: [
+          'Todo en Pago por uso',
+          'Comisión líder del 8%',
+          'Opciones de marca personalizada',
+          'Capacidades de sesiones grupales',
+          'Mensajería directa',
+          'Soporte de cuenta dedicado',
+        ],
+        cta: {
+          text: 'Elegir Mensual',
+          href: '/register?expert=true&plan=top-monthly',
+        },
+      },
+      {
+        name: 'Plan Anual',
+        price: '$1,696',
+        priceDetail: '/año',
+        commission: '8%',
+        badge: 'Valor Máximo',
+        savingsText: '💰 Ahorra $428 (¡2 meses gratis!)',
+        description: 'Mejor valor para los mejores comprometidos',
+        features: [
+          'Todo en Plan Mensual',
+          'Comisión líder del 8%',
+          'Ahorra $428 vs facturación mensual',
+          'Beneficios VIP anuales',
+          'Analíticas premium',
+          'Gerente de cuenta dedicado',
+        ],
+        cta: {
+          text: 'Ahorrar con Anual',
+          href: '/register?expert=true&plan=top-annual',
+        },
+      },
+    ],
+  }}
+  note="Cancela o cambia de plan en cualquier momento. No se requieren contratos a largo plazo. Todos los planes incluyen soporte de plataforma, procesamiento seguro de pagos y herramientas de gestión de clientes."
+/>
+
+
+<RequirementsSection
+  title="Requisitos para Unirte"
+  requirements={[
+    {
+      icon: 'badge',
+      title: 'Licencia Profesional Válida',
+      description: 'Licencia o certificación activa en tu campo de la salud. Autocertificas tus credenciales y eres responsable de tu estatus profesional.',
+    },
+    {
+      icon: 'shield',
+      title: 'Seguro de Responsabilidad Profesional',
+      description: 'Cobertura de responsabilidad civil profesional o mala praxis adecuada para tu área de práctica.',
+    },
+    {
+      icon: 'globe',
+      title: 'Internet y Equipo Fiable',
+      description: 'Conexión a internet estable y entorno adecuado para videoconsultas profesionales.',
+    },
+    {
+      icon: 'heart',
+      title: 'Compromiso con la Calidad',
+      description: 'Dedicación a prácticas basadas en evidencia y a ofrecer una atención excelente a tus clientes.',
+    },
+  ]}
+/>
+
+<FinalCTASection
+  title="¿Listo para Unirte como Especialista Independiente?"
+  description="Únete a nuestra red de profesionales de la salud independientes y licenciados. Tú prestas la atención; nosotros proporcionamos la plataforma tecnológica segura para apoyar tu práctica."
+  button="Crear tu Perfil de Especialista"
+  questions="¿Tienes preguntas?"
+  contact="Contáctanos"
+/>

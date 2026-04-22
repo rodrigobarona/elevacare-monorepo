@@ -1,0 +1,279 @@
+---
+description: Novu Notification Integration Patterns
+globs: ['src/config/novu*.ts', 'src/lib/integrations/novu/**/*.ts', 'src/lib/notifications/**/*.ts', 'src/components/integrations/novu/**/*.tsx', 'src/components/notifications/**/*.tsx', 'src/hooks/use-secure-novu.ts', 'src/app/api/webhooks/novu/**/*.ts', 'src/app/api/novu/**/*.ts']
+---
+
+# Novu Notification Integration Patterns
+
+## Architecture Overview
+
+Eleva Care uses three Novu packages:
+
+| Package | Purpose | Where Used |
+|---------|---------|------------|
+| `@novu/framework` | Workflow definitions (server) | `src/config/novu.ts` |
+| `@novu/api` | Trigger notifications (server) | `src/lib/integrations/novu/client.ts` |
+| `@novu/react` | Inbox component (client) | `src/components/integrations/novu/` |
+
+## Workflow Definitions (`@novu/framework`)
+
+Define workflows in `src/config/novu.ts`:
+
+```typescript
+import { workflow } from '@novu/framework';
+import { z } from 'zod';
+
+export const appointmentWorkflow = workflow(
+  'appointment-notifications',
+  async ({ payload, step }) => {
+    // In-app notification step
+    await step.inApp('appointment-created', async () => ({
+      subject: `New appointment scheduled`,
+      body: `Your appointment with ${payload.expertName} is confirmed.`,
+      data: { appointmentId: payload.appointmentId },
+    }));
+
+    // Email notification step (using React Email)
+    await step.email('appointment-email', async () => ({
+      subject: `Appointment Confirmation`,
+      body: elevaEmailService.renderAppointmentConfirmation({
+        userName: payload.userName,
+        expertName: payload.expertName,
+        locale: payload.locale,
+      }),
+    }));
+  },
+  {
+    payloadSchema: z.object({
+      appointmentId: z.string(),
+      userName: z.string(),
+      expertName: z.string(),
+      locale: z.string().optional().default('en'),
+    }),
+  }
+);
+```
+
+### Known Issue: Zod v4 Incompatibility
+
+`@novu/framework` internally uses Zod v3. This project uses Zod v4. The workaround:
+
+```typescript
+// @ts-nocheck at the top of src/config/novu.ts
+// Cast payloads when needed:
+const typedPayload = payload as unknown as MyPayloadType;
+```
+
+Track this until `@novu/framework` adds Zod v4 support.
+
+## Triggering Notifications (`@novu/api`)
+
+```typescript
+import { triggerWorkflow } from '@/lib/integrations/novu/client';
+
+// Basic trigger
+await triggerWorkflow('appointment-notifications', {
+  subscriberId: userId,
+  payload: {
+    appointmentId: booking.id,
+    userName: user.name,
+    expertName: expert.name,
+    locale: user.locale || 'en',
+  },
+  transactionId: `appointment-${booking.id}`,  // Idempotency key
+});
+```
+
+### Idempotency with `transactionId`
+
+Always provide `transactionId` to prevent duplicate notifications:
+
+```typescript
+// ✅ Use deterministic IDs based on the event
+transactionId: `booking-confirmed-${bookingId}`
+transactionId: `payment-${paymentIntentId}`
+transactionId: `payout-${payoutId}-${expertId}`
+
+// ❌ Never use random IDs for transactionId
+transactionId: crypto.randomUUID()  // Defeats idempotency
+```
+
+## Inbox Component (`@novu/react`)
+
+### Secure HMAC Authentication
+
+The Inbox component requires HMAC subscriber hash for security:
+
+```typescript
+'use client';
+
+import { Inbox } from '@novu/react';
+import { useSecureNovu } from '@/hooks/use-secure-novu';
+
+export function SecureNovuInbox() {
+  const { subscriberId, subscriberHash, isLoading } = useSecureNovu();
+
+  if (isLoading || !subscriberId) return <Skeleton />;
+
+  return (
+    <Inbox
+      applicationIdentifier={process.env.NEXT_PUBLIC_NOVU_APP_ID!}
+      subscriberId={subscriberId}
+      subscriberHash={subscriberHash}
+    />
+  );
+}
+```
+
+### HMAC Hash Generation (Server-Side)
+
+```typescript
+import crypto from 'crypto';
+
+export function generateSubscriberHash(subscriberId: string): string {
+  return crypto
+    .createHmac('sha256', process.env.NOVU_SECRET_KEY!)
+    .update(subscriberId)
+    .digest('hex');
+}
+```
+
+**NEVER** generate HMAC hashes on the client side. Always use a server endpoint or server action.
+
+## Bridge Endpoint
+
+The Novu bridge connects your local workflows to the Novu cloud.
+
+**Status:** The bridge endpoint (`src/app/api/novu/route.ts`) is not yet created. Only `src/app/api/novu/subscriber-hash/route.ts` exists for HMAC hash generation. When creating the bridge, register all workflows from `src/config/novu.ts`:
+
+```typescript
+// src/app/api/novu/route.ts (to be created)
+import { serve } from '@novu/framework/next';
+import {
+  userLifecycleWorkflow,
+  securityAuthWorkflow,
+  paymentWorkflow,
+  expertManagementWorkflow,
+} from '@/config/novu';
+
+export const { GET, POST, OPTIONS } = serve({
+  workflows: [
+    userLifecycleWorkflow,
+    securityAuthWorkflow,
+    paymentWorkflow,
+    expertManagementWorkflow,
+  ],
+});
+```
+
+## Subscriber Management
+
+Create or update subscribers when users register:
+
+```typescript
+import { createSubscriber, updateSubscriber } from '@/lib/integrations/novu/client';
+
+// On user creation
+await createSubscriber({
+  subscriberId: user.id,
+  email: user.email,
+  firstName: user.firstName,
+  lastName: user.lastName,
+  locale: user.locale,
+  data: { role: user.role, orgId: user.organizationId },
+});
+```
+
+## React Email Rendering in Workflows
+
+Use the email service to render React Email templates within Novu workflows:
+
+```typescript
+import { elevaEmailService } from '@/lib/integrations/novu/email-service';
+import { render } from '@react-email/render';
+
+await step.email('payment-email', async () => ({
+  subject: 'Payment Confirmation',
+  body: await render(
+    React.createElement(PaymentConfirmationTemplate, {
+      amount: payload.amount,
+      currency: payload.currency,
+      locale: payload.locale,
+    })
+  ),
+}));
+```
+
+## Stripe/WorkOS Webhook-to-Novu Bridging
+
+Trigger Novu notifications from webhook handlers:
+
+```typescript
+// In Stripe webhook handler
+case 'checkout.session.completed': {
+  const session = event.data.object;
+  await triggerWorkflow('payment-notifications', {
+    subscriberId: session.metadata.userId,
+    payload: {
+      eventType: 'payment-success',
+      amount: session.amount_total,
+      currency: session.currency,
+      locale: session.metadata.locale || 'en',
+    },
+    transactionId: `payment-${session.payment_intent}`,
+  });
+  break;
+}
+```
+
+## i18n Locale Passing
+
+Always pass `locale` in notification payloads:
+
+```typescript
+await triggerWorkflow('appointment-notifications', {
+  subscriberId: userId,
+  payload: {
+    locale: user.locale || 'en',  // Always include locale
+    // ... other fields
+  },
+});
+```
+
+The workflow can then use locale for:
+- Selecting translated content
+- Rendering React Email templates with correct locale
+- Setting in-app notification language
+
+## Environment Variables
+
+```bash
+# Server-side
+NOVU_SECRET_KEY="nv_..."           # API secret key (new format)
+NOVU_API_KEY="..."                  # Legacy API key (fallback)
+NOVU_BASE_URL="https://eu.api.novu.co"  # EU region (optional)
+
+# Client-side
+NEXT_PUBLIC_NOVU_APP_ID="..."       # Application identifier
+NEXT_PUBLIC_NOVU_BASE_URL="..."     # API base URL for client
+NEXT_PUBLIC_NOVU_SOCKET_URL="..."   # WebSocket URL for real-time
+```
+
+## Checklist
+
+Before committing Novu changes:
+
+- [ ] Workflow has `payloadSchema` with Zod validation
+- [ ] Triggers include `transactionId` for idempotency
+- [ ] `locale` is passed in all payloads
+- [ ] HMAC subscriber hash is generated server-side
+- [ ] React Email templates use brand constants
+- [ ] Bridge endpoint exports all active workflows
+- [ ] Webhook handlers use `transactionId` from event IDs
+
+## Related Agent Skills
+
+When working on notifications, consider invoking these skills:
+- `email-best-practices` -- email deliverability, compliance patterns
+- `react-email` -- React Email template rendering and testing
+- `stripe-integration` -- Stripe webhook-to-notification bridging

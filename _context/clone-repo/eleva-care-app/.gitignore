@@ -1,0 +1,58 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+.bun
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# temp/scratch files
+@.scratchpad*
+*.tsbuildinfo
+
+# backup files
+.backup/
+*.bak
+
+# local env files
+.env
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+next-env.d.ts
+/cal.com
+_backup_.env
+_backup_env
+
+# next-video
+videos/*
+!videos/*.json
+!videos/*.js
+!videos/*.ts
+public/_next-video
+/.source
+/.source

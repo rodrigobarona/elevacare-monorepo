@@ -1,0 +1,377 @@
+---
+description: Next.js 16 Core Development Rules
+globs: ['src/app/**/*.{ts,tsx}', 'src/components/**/*.{ts,tsx}', 'src/lib/**/*.{ts,tsx}', 'src/hooks/**/*.{ts,tsx}', 'src/types/**/*.ts', 'src/config/**/*.ts', 'src/proxy.ts', 'src/instrumentation.ts']
+alwaysApply: true
+---
+
+# Next.js 16 Core Development Rules
+
+## Quick Reference
+
+**Async Params (Required):**
+
+```typescript
+// ✅ Correct
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+}
+```
+
+**Cache Invalidation:**
+
+- `updateTag()` - Immediate updates (user sees changes right away)
+- `revalidateTag()` - Background updates (stale-while-revalidate)
+- `refresh()` - Client refresh without page reload
+
+## Server Components & Data Fetching
+
+```typescript
+// Default async params pattern
+export default async function Page({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { id } = await params;
+  const { q } = await searchParams;
+
+  // Parallel fetching
+  const [user, posts] = await Promise.all([getUser(id), getPosts(id)]);
+
+  return <UserProfile user={user} posts={posts} />;
+}
+
+// Sequential with Suspense
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const user = await getUser(id); // Fast fetch first
+
+  return (
+    <>
+      <UserHeader user={user} />
+      <Suspense fallback={<Loading />}>
+        <SlowContent userId={id} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+## Caching Patterns
+
+**NOTE:** `cacheComponents` is disabled because next-intl does not yet support it
+(blocked on `next/root-params` -- tracking: https://github.com/amannn/next-intl/issues/1493).
+Use `unstable_cache` with tags as the bridge pattern until `cacheComponents` is available.
+
+### Current Pattern (working today)
+
+```typescript
+import { unstable_cache } from 'next/cache';
+
+// Tag-based caching with unstable_cache
+async function getExpertProfile(userId: string) {
+  return unstable_cache(
+    async () => {
+      return db.select().from(profiles).where(eq(profiles.userId, userId));
+    },
+    [`expert-profile-${userId}`],
+    { revalidate: 300, tags: ['experts', `expert-${userId}`] }
+  )();
+}
+
+// User-scoped data
+async function getUserSchedule(userId: string) {
+  return unstable_cache(
+    async () => {
+      return db.select().from(schedules).where(eq(schedules.userId, userId));
+    },
+    [`user-schedule-${userId}`],
+    { revalidate: 60, tags: ['schedules', `user-schedule-${userId}`] }
+  )();
+}
+
+// Fetch with caching
+const staticData = await fetch('https://...', { cache: 'force-cache' });
+const dynamicData = await fetch('https://...', { cache: 'no-store' });
+const revalidated = await fetch('https://...', { next: { revalidate: 60 } });
+```
+
+### Future Pattern (when cacheComponents is enabled)
+
+```typescript
+import { cacheLife, cacheTag } from 'next/cache';
+
+async function getExpertProfile(userId: string) {
+  'use cache';
+  cacheLife({ expire: 300 });
+  cacheTag('experts', `expert-${userId}`);
+  return db.select().from(profiles).where(eq(profiles.userId, userId));
+}
+```
+
+## Server Actions
+
+```typescript
+'use server';
+
+import { refresh, revalidateTag, updateTag } from 'next/cache';
+import { redirect } from 'next/navigation';
+
+// Immediate update (read-your-writes)
+export async function createPost(data: FormData) {
+  const post = await db.posts.create({ data });
+
+  updateTag('posts');
+  updateTag(`post-${post.id}`);
+
+  redirect(`/posts/${post.id}`);
+}
+
+// Background update (stale-while-revalidate)
+export async function updateArticle(id: string, data: any) {
+  await db.articles.update(id, data);
+  revalidateTag(`article-${id}`, 'max');
+}
+
+// Client refresh
+export async function markAsRead(id: string) {
+  await db.notifications.markAsRead(id);
+  refresh();
+}
+```
+
+## Proxy (Middleware) - Next.js 16 Breaking Change
+
+**IMPORTANT:** In Next.js 16, `middleware` has been renamed to `proxy`:
+
+```typescript
+// proxy.ts (root level, NOT middleware.ts)
+import { authkit } from '@workos-inc/authkit-nextjs';
+import createMiddleware from 'next-intl/middleware';
+import { NextRequest, NextResponse } from 'next/server';
+
+// ✅ Next.js 16: Use 'proxy' export + WorkOS AuthKit + next-intl
+export default async function proxy(request: NextRequest) {
+  const { user, role, permissions } = await authkit();
+
+  // JWT-based RBAC (zero database queries)
+  if (request.nextUrl.pathname.startsWith('/admin') && role !== 'admin') {
+    return NextResponse.redirect(new URL('/', request.url));
+  }
+
+  // i18n routing via next-intl
+  const intlMiddleware = createMiddleware(routing);
+  return intlMiddleware(request);
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon\\.ico|robots\\.txt|.*\\..*|\\.well-known).*)'],
+};
+```
+
+**Migration from Next.js 15:**
+
+```bash
+# Automatic migration
+npx @next/codemod@latest middleware-to-proxy .
+
+# Manual migration
+mv middleware.ts proxy.ts
+# Then rename export function from 'middleware' to 'proxy'
+```
+
+**Key Changes:**
+
+- File: `middleware.ts` → `proxy.ts`
+- Function: `export function middleware()` → `export function proxy()`
+- Config: `skipMiddlewareUrlNormalize` → `skipProxyUrlNormalize`
+
+**Why the change?**
+Next.js 16 renamed this to better reflect its purpose: intercepting and modifying requests at the network boundary before they reach your application routes.
+
+## Client Components
+
+```typescript
+'use client';
+
+import { useState, useOptimistic } from 'react';
+
+export function LikeButton({ postId, initialLikes }: { postId: string; initialLikes: number }) {
+  const [optimisticLikes, addOptimisticLike] = useOptimistic(initialLikes, (state, amount: number) => state + amount);
+
+  async function handleLike() {
+    addOptimisticLike(1); // Optimistic update
+    await likePost(postId); // Server action
+  }
+
+  return <button onClick={handleLike}>Likes: {optimisticLikes}</button>;
+}
+```
+
+## Error Handling
+
+```typescript
+// app/error.tsx
+'use client';
+
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  return (
+    <div>
+      <h2>Error: {error.message}</h2>
+      {error.digest && <p>ID: {error.digest}</p>}
+      <button onClick={reset}>Try again</button>
+    </div>
+  );
+}
+
+// app/not-found.tsx
+export default function NotFound() {
+  return <h2>404 - Not Found</h2>;
+}
+
+// Server action error handling
+'use server';
+
+export async function handleAction(data: FormData) {
+  try {
+    const result = await processData(data);
+    updateTag('data');
+    return { success: true, data: result };
+  } catch (error) {
+    return { error: true, message: error.message };
+  }
+}
+```
+
+## Route Segment Config
+
+```typescript
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
+// Revalidate every 60 seconds
+export const revalidate = 60;
+
+// Override fetch caching
+export const fetchCache = 'force-cache'; // or 'force-no-store'
+```
+
+## Performance Checklist
+
+Before committing:
+
+- [ ] Using async params (`params: Promise<...>`)
+- [ ] Used `unstable_cache` with tags for cacheable queries (future: `'use cache'` + `cacheTag`)
+- [ ] Chose correct cache invalidation (`updateTag` / `revalidateTag` / `refresh`)
+- [ ] Implemented Suspense for slow operations
+- [ ] Used parallel fetching with `Promise.all()`
+- [ ] Used Server Components by default
+- [ ] Added `'use client'` only when necessary
+- [ ] Using `proxy.ts` (NOT `middleware.ts`) with `export function proxy()`
+
+## Internationalization (next-intl)
+
+```typescript
+// ALWAYS import navigation from @/lib/i18n/navigation (NOT from next/link)
+import { Link, redirect, usePathname, useRouter } from '@/lib/i18n/navigation';
+
+// Route structure: app/[locale]/...
+// localePrefix: 'as-needed' (default locale has no prefix)
+
+// Server Component: use getTranslations
+import { getTranslations } from 'next-intl/server';
+
+export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Common' });
+  return <h1>{t('title')}</h1>;
+}
+
+// Client Component: use useTranslations
+'use client';
+import { useTranslations } from 'next-intl';
+
+export function MyComponent() {
+  const t = useTranslations('Common');
+  return <p>{t('description')}</p>;
+}
+```
+
+**Key rules:**
+- Import `Link`, `redirect`, `usePathname` from `@/lib/i18n/navigation`, NEVER from `next/link` or `next/navigation`
+- Use ICU message syntax for plurals and variables in `src/messages/*.json`
+- The `[locale]` segment is handled by `next-intl` middleware in `proxy.ts`
+
+## Common Mistakes
+
+**❌ Forgetting to await params**
+
+```typescript
+const { id } = params; // Error: params is a Promise
+```
+
+**✅ Correct**
+
+```typescript
+const { id } = await params;
+```
+
+**❌ Wrong cache invalidation**
+
+```typescript
+revalidatePath('/posts'); // User sees stale data
+```
+
+**✅ Correct for immediate updates**
+
+```typescript
+updateTag('posts'); // User sees changes immediately
+```
+
+**❌ Using old middleware naming (Next.js 15)**
+
+```typescript
+// middleware.ts - WRONG in Next.js 16
+export default function middleware(request: NextRequest) {
+  // ...
+}
+```
+
+**✅ Correct for Next.js 16**
+
+```typescript
+// proxy.ts - CORRECT in Next.js 16
+export default function proxy(request: NextRequest) {
+  // ...
+}
+```
+
+## Tech Stack
+
+- **Framework:** Next.js 16 with App Router
+- **Runtime:** Bun 1.3+ (with Node.js compatibility)
+- **Language:** TypeScript
+- **Styling:** TailwindCSS + Shadcn/ui
+- **Database:** Neon.tech (Postgres) + Drizzle ORM
+- **Auth:** WorkOS AuthKit
+- **Payments:** Stripe
+- **Caching:** Next.js 16 `unstable_cache` with tags + Redis (future: `'use cache'` when next-intl supports `cacheComponents`)
+- **Package Manager:** Bun (never npm/yarn/pnpm)
+
+## Key Principles
+
+1. **Server-first:** Use Server Components by default
+2. **Type-safe:** TypeScript everywhere, Zod for validation
+3. **Performant:** Proper caching, streaming, parallel fetching
+4. **Secure:** Validate inputs, use Server Actions, handle errors
+5. **Documented:** JSDoc comments with examples
+
+## Related Agent Skills
+
+When working on Next.js core patterns, consider invoking these skills:
+- `vercel-react-best-practices` -- React performance patterns, composition, memoization
+- `workos-authkit-nextjs` -- WorkOS authentication integration patterns
+- `next-intl-app-router` -- i18n routing, translations, locale management
+- `posthog-instrumentation` -- analytics and feature flags integration

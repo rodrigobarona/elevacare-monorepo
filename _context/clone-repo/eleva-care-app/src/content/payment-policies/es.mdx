@@ -1,0 +1,130 @@
+export const metadata = {
+  "title": "Políticas de Pago | Eleva Care",
+  "description": "Comprenda los términos de pago, políticas de reembolso y procedimientos de facturación de Eleva Care para servicios de salud.",
+  "og": {
+    "title": "Políticas de Pago | Eleva Care",
+    "description": "Comprenda los términos de pago, políticas de reembolso y procedimientos de facturación de Eleva Care para servicios de salud.",
+    "siteName": "Eleva Care"
+  }
+};
+
+# Políticas de Pago
+
+_Fecha de vigencia: 31 de diciembre de 2025_
+
+> **Resumen Rápido**
+>
+> - **De qué trata esta página:** Cómo funcionan los pagos, reembolsos y facturación en Eleva.care.
+> - **Eleva.care opera la plataforma digital de salud; especialistas independientes y licenciados prestan su atención.**
+> - **Precio incluido:** el precio mostrado incluye todo—85% va al especialista, 15% tarifa de plataforma.
+> - **Métodos de pago:** tarjeta de crédito/débito (instantáneo) o Multibanco (solo Portugal, plazo de 7 días).
+> - **Reembolsos:** 100% de reembolso para conflictos de agenda; solicite dentro de 7 días.
+> - **¿Preguntas?** Contacte `support@eleva.care`.
+
+Aquí explicamos cómo funcionan los pagos en Eleva.care en lenguaje claro.
+
+## 1) Qué está pagando
+
+- Eleva.care es una plataforma digital de salud. Los pagos son para servicios de salud prestados por especialistas independientes y licenciados a través de la plataforma Eleva.care.
+- El precio mostrado incluye todo (sin cargos ocultos):
+  - El especialista recibe el 85% del precio de la cita
+  - Eleva.care retiene el 15% como tarifa de plataforma (tecnología, infraestructura, soporte, marketing, tarifas Stripe)
+
+Ejemplo €100: Especialista €85, Tarifa de plataforma €15.
+
+## 2) Métodos de pago
+
+- Tarjetas (Visa, Mastercard, Amex)
+- Multibanco (Portugal)
+
+## 3) Reglas de Multibanco (cuando paga con 8 días o más de antelación)
+
+- No disponible para citas que ocurren en 7 días o menos
+- Si su cita es en 8 días o más, reservamos su horario por 7 días mientras paga
+- Tiene 7 días completos para completar el pago
+- Enviaremos recordatorios en el día 3 y día 6 con instrucciones (cajero, banca en línea, MB WAY)
+
+Pagos Multibanco tardíos (después de 7 días): **reembolso del 100% para cualquier conflicto**
+
+Hemos simplificado nuestra política para ser más favorable al cliente:
+
+- **Si el especialista bloqueó la fecha** después de su reserva: **reembolso del 100%**
+- **Si el horario fue reservado por otro cliente**: **reembolso del 100%**
+- **Si se violaron los requisitos de aviso mínimo**: **reembolso del 100%**
+
+### Nuestro Enfoque Centrado en el Cliente
+
+**¿Por qué reembolso del 100% para todos los conflictos?**
+
+- Creemos que los pagos tardíos no deben penalizar a los clientes cuando surgen conflictos
+- Aunque el pago se retrasó, si la cita no puede proceder, merece un reembolso completo
+- Eleva Care absorbe los costos de procesamiento de pagos para mantener la confianza
+- Esta política demuestra nuestro compromiso con el trato justo
+
+## 4) Reembolsos por conflictos (Multibanco tardío)
+
+- **Todos los conflictos**: reembolso completo del 100% (sin tarifas de procesamiento)
+  - Especialista bloqueó la fecha
+  - Horario ya reservado por otro cliente
+  - Requisitos de aviso mínimo no cumplidos
+- Plazo de reembolso: normalmente 5–10 días hábiles (vía Stripe)
+- Le notificaremos por correo electrónico con el motivo específico
+
+Si hubo un error del sistema o caso especial, contacte con soporte dentro de 48 h con su referencia; revisamos en 2 días hábiles.
+
+## 5) Elegir método de pago
+
+- Tarjeta (instantáneo):
+  - Mejor para citas en ≤8 días, última hora, o si necesita confirmación inmediata
+- Multibanco (ventana de 7 días):
+  - Mejor para citas con 8+ días, preferencia local PT, cómodo con pago diferido
+
+## 6) Pagos a especialistas (Stripe Connect)
+
+- Los especialistas son independientes y se pagan vía Stripe Connect tras citas exitosas
+- Distribución estándar: 85% especialista / 15% plataforma
+- El tiempo de transferencia depende de la configuración del especialista y del banco
+
+## 7) Moneda y precios
+
+- Precios en EUR; el procesador puede aplicar conversión para tarjetas internacionales
+- Precios se fijan al reservar; no hay cargos extra tras la confirmación
+- Impuestos/tasas incluidos en el precio mostrado
+
+## 8) Seguridad y fraude
+
+- No almacenamos números de tarjeta; Stripe procesa pagos (cumple PCI DSS)
+- Usamos cifrado y detección de fraude; transacciones sospechosas pueden retrasarse/rechazarse
+- Puede requerirse verificación adicional en pagos de alto valor
+
+## 9) Contracargos y disputas
+
+- Si el titular abre una disputa (chargeback), seguimos el proceso de Stripe y aportamos pruebas (registros de reserva, comunicaciones, políticas). Mientras la disputa esté abierta, los pagos al especialista vinculados pueden retrasarse.
+- La red de tarjetas determina el resultado. Si se resuelve a su favor, se liberan los fondos; de lo contrario, se revierte el cargo según las reglas de la red.
+- Fraude/contracargos repetidos pueden derivar en restricciones temporales o revisión de cuenta.
+
+## 10) Autenticación Reforzada de Cliente (3DS/PSD2)
+
+- Donde sea requerido (p. ej., EEE), usamos 3D Secure para cumplir con PSD2.
+- Si 3DS es desafiado y falla, el pago no puede completarse; puede reintentar con otra tarjeta o método.
+
+## 11) Pagos fallidos
+
+- Los fallos cancelan la reserva automáticamente; notificamos por email
+- Reintente creando un nuevo pago; múltiples fallos pueden restringir temporalmente
+
+## 12) Soporte y reembolsos
+
+- Pagos: `support@eleva.care` (objetivo de respuesta en 24 h)
+- Reembolsos: solicítelos dentro de 7 días del pago; emergencias médicas caso por caso; cancelaciones según nuestros Términos
+
+## 13) Actualizaciones y cumplimiento
+
+- Podemos actualizar estas políticas; seguir usando implica aceptación
+- Cumplimos con la protección al consumidor PT, PSD2 UE, RGPD y términos de Stripe
+
+---
+
+En caso de divergencia entre versiones lingüísticas, prevalecerá la versión en portugués.
+
+Si tiene dudas sobre pagos, escriba a `support@eleva.care`.

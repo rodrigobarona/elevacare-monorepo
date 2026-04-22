@@ -1,0 +1,256 @@
+---
+description: Server Actions Patterns
+globs: ['src/server/**/*.ts']
+---
+
+# Server Actions Patterns
+
+## `'use server'` Directive
+
+In Next.js 16, `'use server'` is **not** about "running on the server" -- all code outside `'use client'` files already runs server-side. The directive specifically marks exported functions as **Server Actions**: RPC endpoints callable from client components via `<form action={...}>` or direct invocation.
+
+**Add `'use server'`** when the file exports functions called from client components.
+**Omit `'use server'`** when exports are only called from other server code (API routes, webhooks, other server functions). Adding it unnecessarily exposes functions as client-callable endpoints.
+
+```
+src/server/actions/
+├── events.ts              # 'use server' -- called from EventForm.tsx (client)
+├── schedule.ts            # 'use server' -- called from ScheduleForm.tsx (client)
+├── subscriptions.ts       # 'use server' -- called from SubscriptionDashboard.tsx (client)
+├── user-sync.ts           # NO directive -- only called from API routes
+├── billing.ts             # NO directive -- only called from API routes
+├── experts.ts             # NO directive -- only called from API routes
+└── commissions.ts         # NO directive -- only called from webhooks
+```
+
+## Authentication
+
+All server actions MUST verify authentication first:
+
+```typescript
+'use server';
+
+import { withAuth } from '@workos-inc/authkit-nextjs';
+
+export async function myAction(data: FormData) {
+  const { user, organizationId } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+
+  // Process authenticated action
+}
+```
+
+## Input Validation with Zod
+
+Always validate inputs before processing:
+
+```typescript
+'use server';
+
+import { z } from 'zod';
+import { withAuth } from '@workos-inc/authkit-nextjs';
+
+const UpdateProfileSchema = z.object({
+  name: z.string().min(2).max(100),
+  bio: z.string().max(500).optional(),
+  specialties: z.array(z.string()).max(10),
+});
+
+export async function updateProfile(data: FormData) {
+  const { user } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+
+  const validated = UpdateProfileSchema.parse({
+    name: data.get('name'),
+    bio: data.get('bio'),
+    specialties: data.getAll('specialties'),
+  });
+
+  await db.update(profiles)
+    .set(validated)
+    .where(eq(profiles.userId, user.id));
+
+  updateTag('profile', `profile-${user.id}`);
+}
+```
+
+## Cache Invalidation
+
+Use tag-based invalidation with `updateTag` / `revalidateTag`. These work with `unstable_cache` tags today and will work with `cacheTag` when `cacheComponents` is enabled (blocked on next-intl [#1493](https://github.com/amannn/next-intl/issues/1493)).
+
+### Tag Naming Convention
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Entity (collection) | `'{entity}'` | `'experts'`, `'events'`, `'subscriptions'` |
+| Instance | `'{entity}-{id}'` | `'expert-abc123'`, `'event-xyz'` |
+| User-scoped | `'user-{entity}-{userId}'` | `'user-events-abc123'`, `'user-schedule-abc123'` |
+| Composite | `'{domain}-{scope}'` | `'expert-setup'`, `'expert-profile'` |
+
+### Invalidation Strategies
+
+```typescript
+import { updateTag, revalidateTag, refresh } from 'next/cache';
+
+// updateTag() -- Immediate (read-your-own-writes)
+export async function createEvent(data: FormData) {
+  const { user } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+
+  const event = await db.insert(events).values(validated);
+  updateTag('events');
+  updateTag(`event-${event.id}`);
+  updateTag(`user-events-${user.id}`);
+  redirect(`/events/${event.slug}`);
+}
+
+// revalidateTag() -- Background (stale-while-revalidate)
+export async function updateArticle(id: string) {
+  await db.update(articles).set(data).where(eq(articles.id, id));
+  revalidateTag(`article-${id}`);
+}
+
+// refresh() -- Client-side refresh without page reload
+export async function markAsRead(id: string) {
+  await db.update(notifications).set({ read: true }).where(eq(notifications.id, id));
+  refresh();
+}
+```
+
+### Data Fetching Side (tags must match)
+
+For tag-based invalidation to work, queries must be wrapped in `unstable_cache` with matching tags:
+
+```typescript
+import { unstable_cache } from 'next/cache';
+
+async function getExpertEvents(userId: string) {
+  return unstable_cache(
+    async () => db.select().from(events).where(eq(events.userId, userId)),
+    [`user-events-${userId}`],
+    { revalidate: 300, tags: ['events', `user-events-${userId}`] }
+  )();
+}
+```
+
+**Legacy pattern:** `revalidatePath('/path')` still works for path-level invalidation but is less granular. Prefer tag-based invalidation for new code.
+
+## Error Handling
+
+Return structured results instead of throwing in form actions:
+
+```typescript
+'use server';
+
+type ActionResult<T = void> = 
+  | { success: true; data: T }
+  | { success: false; error: string };
+
+export async function createBooking(data: FormData): Promise<ActionResult<{ id: string }>> {
+  try {
+    const { user } = await withAuth();
+    if (!user) return { success: false, error: 'Unauthorized' };
+
+    const validated = BookingSchema.safeParse({
+      expertId: data.get('expertId'),
+      date: data.get('date'),
+    });
+
+    if (!validated.success) {
+      return { success: false, error: validated.error.issues[0].message };
+    }
+
+    const booking = await db.insert(bookings).values({
+      ...validated.data,
+      userId: user.id,
+    });
+
+    updateTag('bookings');
+    return { success: true, data: { id: booking.id } };
+  } catch (error) {
+    Sentry.captureException(error);
+    return { success: false, error: 'An unexpected error occurred' };
+  }
+}
+```
+
+## Data Access with RLS
+
+For health data, always use org-scoped database:
+
+```typescript
+import { getOrgScopedDb } from '@/lib/integrations/neon/rls-client';
+
+export async function getHealthRecords() {
+  const { user, organizationId } = await withAuth();
+  if (!user || !organizationId) throw new Error('Unauthorized');
+
+  const orgDb = await getOrgScopedDb();
+  return orgDb.select().from(healthRecords);
+}
+```
+
+## Optimistic Updates Pattern
+
+Pair server actions with `useOptimistic` on the client:
+
+```typescript
+// Server action
+'use server';
+export async function toggleLike(postId: string) {
+  const { user } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+  await db.insert(likes).values({ postId, userId: user.id });
+  updateTag(`post-${postId}`);
+}
+
+// Client component
+'use client';
+import { useOptimistic } from 'react';
+
+export function LikeButton({ postId, liked }: { postId: string; liked: boolean }) {
+  const [optimisticLiked, setOptimisticLiked] = useOptimistic(liked);
+
+  async function handleLike() {
+    setOptimisticLiked(!optimisticLiked);
+    await toggleLike(postId);
+  }
+
+  return <button onClick={handleLike}>{optimisticLiked ? '❤️' : '🤍'}</button>;
+}
+```
+
+## File Organization
+
+```
+src/server/
+├── actions/              # Server actions (mutations)
+│   ├── appointments.ts
+│   ├── bookings.ts
+│   ├── profiles.ts
+│   └── payments.ts
+├── queries/              # Data fetching (reads)
+│   ├── experts.ts
+│   └── appointments.ts
+└── utils/                # Shared server utilities
+```
+
+## Checklist
+
+Before committing server actions:
+
+- [ ] Authentication verified with `withAuth()`
+- [ ] Inputs validated with Zod schema
+- [ ] Tag-based cache invalidation (`updateTag` / `revalidateTag` / `refresh`) with matching `unstable_cache` tags on the query side
+- [ ] Health data uses `getOrgScopedDb()` (not raw `db`)
+- [ ] PHI access logged via `logAuditEvent()`
+- [ ] Errors caught and reported to Sentry
+- [ ] Structured return type (not throwing in form actions)
+
+## Related Agent Skills
+
+When working on server actions, consider invoking these skills:
+- `stripe-integration` -- payment processing in server actions
+- `workos-authkit-nextjs` -- authentication patterns
+- `neon-drizzle` -- database queries and mutations
+- `security-review` -- security audit of server-side code

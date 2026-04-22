@@ -1,0 +1,6 @@
+{
+  "title": "Analytics",
+  "icon": "ChartColumn",
+  "defaultOpen": true,
+  "pages": ["dashboard"]
+}

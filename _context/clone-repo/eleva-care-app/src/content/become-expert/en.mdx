@@ -1,0 +1,289 @@
+export const metadata = {
+  title: 'Become an Expert | Join Our Platform | Eleva Care',
+  description:
+    'Join Eleva Care as an independent healthcare professional. Set your own rates, manage your schedule, and deliver care on your terms through our secure platform.',
+  og: {
+    title: 'Become an Expert | Join Our Platform | Eleva Care',
+    description:
+      'Join Eleva Care as an independent, licensed healthcare professional. Set your own rates and deliver care through our secure platform.',
+    siteName: 'Eleva Care',
+  },
+};
+
+import BenefitsSection from '@/components/sections/become-expert/BenefitsSection';
+import ExpertPricingSection from '@/components/sections/become-expert/ExpertPricingSection';
+import FinalCTASection from '@/components/sections/become-expert/FinalCTASection';
+import HeroSection from '@/components/sections/become-expert/HeroSection';
+import HowItWorksSection from '@/components/sections/become-expert/HowItWorksSection';
+import RequirementsSection from '@/components/sections/become-expert/RequirementsSection';
+import { Sparkles, TrendingUp } from 'lucide-react';
+
+<HeroSection
+  badge="For Independent Healthcare Professionals"
+  title="Deliver Care,"
+  subtitle="On Your Terms"
+  description="Join Eleva Care as an independent, licensed healthcare professional. You maintain full clinical autonomy while we provide the secure platform technology—scheduling, video consultations, payments, and client management."
+  ctaButton="Get Started"
+  signInButton="Sign In"
+  features="✓ You remain fully independent  ✓ Keep 80% of earnings  ✓ Secure, GDPR-compliant platform"
+/>
+
+<BenefitsSection
+  title="Why Join Eleva Care?"
+  benefits={[
+    {
+      icon: 'shield',
+      title: 'Full Clinical Independence',
+      description:
+        'You remain an independent professional with full clinical autonomy. You decide how to care for your clients—Eleva.care simply provides the platform technology.',
+    },
+    {
+      icon: 'dollar',
+      title: 'Set Your Own Rates',
+      description:
+        'You decide what your time is worth. Keep 80% of your earnings and get paid weekly through secure payment processing.',
+    },
+    {
+      icon: 'calendar',
+      title: 'Flexible Scheduling',
+      description:
+        'Control your calendar completely. Work as much or as little as you want, whenever you want.',
+    },
+    {
+      icon: 'video',
+      title: 'Secure Video Consultations',
+      description:
+        'Conduct sessions from anywhere on our encrypted, GDPR-compliant platform. All you need is a computer and internet connection.',
+    },
+    {
+      icon: 'users',
+      title: 'Reach More Clients',
+      description:
+        "Get discovered by clients seeking women's health services through our platform. Focus on care, not marketing.",
+    },
+    {
+      icon: 'trending',
+      title: 'Professional Tools',
+      description:
+        'Client management, automated invoicing, booking pages, and analytics—everything you need to run your independent practice.',
+    },
+  ]}
+/>
+
+<HowItWorksSection
+  title="How It Works"
+  steps={[
+    {
+      title: 'Create Your Profile',
+      description:
+        'Share your expertise, credentials, and availability. Tell clients what makes you unique.',
+    },
+    {
+      title: 'Set Your Services & Rates',
+      description:
+        'Define your offerings and pricing. You have complete control over your business.',
+    },
+    {
+      title: 'Get Discovered',
+      description:
+        'Clients find you through search and recommendations. Start receiving booking requests.',
+    },
+    {
+      title: 'Provide Your Service',
+      description:
+        'Conduct sessions, help clients achieve their goals, and build your reputation through reviews.',
+    },
+  ]}
+  ctaButton="Start Your Journey"
+/>
+
+<ExpertPricingSection
+  title="Flexible Pricing for Every Expert"
+  subtitle="Choose the plan that fits your practice. All plans include secure payments, calendar management, and client communication tools."
+  communityTier={{
+    tierName: 'Community Expert',
+    tierIcon: <Sparkles className="h-6 w-6" />,
+    tierColor: 'primary',
+    description: 'Perfect for professionals getting started or building their practice',
+    plans: [
+      {
+        name: 'Pay-as-you-go',
+        price: '$0',
+        priceDetail: '/month',
+        commission: '20%',
+        description: 'Start earning immediately with no upfront costs',
+        features: [
+          'List up to 5 services',
+          'Basic calendar integration',
+          'Standard analytics',
+          'Weekly payouts',
+          'Email support',
+          'No subscription fees',
+          'Cancel anytime',
+        ],
+        cta: {
+          text: 'Get Started Free',
+          href: '/register?expert=true&plan=community-paygo',
+        },
+      },
+      {
+        name: 'Monthly Plan',
+        price: '$49',
+        priceDetail: '/month',
+        commission: '12%',
+        badge: 'Lower Commission',
+        recommended: true,
+        description: 'Reduced commission with predictable monthly billing',
+        features: [
+          'Everything in Pay-as-you-go',
+          'Reduced 12% commission (save 8%)',
+          'Priority onboarding',
+          'Quarterly business reviews',
+          'Cancel or switch plans anytime',
+        ],
+        cta: {
+          text: 'Choose Monthly',
+          href: '/register?expert=true&plan=community-monthly',
+        },
+      },
+      {
+        name: 'Annual Plan',
+        price: '$470',
+        priceDetail: '/year',
+        commission: '12%',
+        badge: 'Best Value',
+        savingsText: '💰 Save $118 (2 months free!)',
+        description: 'Maximum savings with annual commitment',
+        features: [
+          'Everything in Monthly',
+          'Reduced 12% commission (save 8%)',
+          'Save $118 vs monthly billing',
+          'Annual commitment discount',
+          'Priority support',
+        ],
+        cta: {
+          text: 'Save with Annual',
+          href: '/register?expert=true&plan=community-annual',
+        },
+      },
+    ],
+  }}
+  topTier={{
+    tierName: 'Top Expert',
+    tierBadge: 'Performance-Based',
+    tierIcon: <TrendingUp className="h-6 w-6" />,
+    tierColor: 'amber',
+    description: 'Premium tier for established experts with proven track records',
+    requirements: [
+      '⭐ 4.8+ average rating',
+      '📅 25+ completed appointments in 90 days',
+      '💯 Less than 5% cancellation rate',
+      '📊 90%+ response rate within 24 hours',
+      '🎖️ 3+ months as Community Expert',
+      '✨ Complete expert profile with portfolio',
+    ],
+    plans: [
+      {
+        name: 'Pay-as-you-go',
+        price: '$0',
+        priceDetail: '/month',
+        commission: '15%',
+        description: 'Premium features with commission-only pricing',
+        features: [
+          'Unlimited services',
+          'Advanced analytics & insights',
+          'Daily payouts',
+          'Priority support',
+          'Top Expert badge',
+          'Featured placement',
+          'No subscription fees',
+        ],
+        cta: {
+          text: 'Apply for Top Expert',
+          href: '/register?expert=true&plan=top-paygo',
+        },
+      },
+      {
+        name: 'Monthly Plan',
+        price: '$177',
+        priceDetail: '/month',
+        commission: '8%',
+        badge: 'Industry-Leading',
+        recommended: true,
+        description: 'Industry-leading commission rate with monthly billing',
+        features: [
+          'Everything in Pay-as-you-go',
+          'Industry-leading 8% commission',
+          'Custom branding options',
+          'Group session capabilities',
+          'Direct messaging',
+          'Dedicated account support',
+        ],
+        cta: {
+          text: 'Choose Monthly',
+          href: '/register?expert=true&plan=top-monthly',
+        },
+      },
+      {
+        name: 'Annual Plan',
+        price: '$1,696',
+        priceDetail: '/year',
+        commission: '8%',
+        badge: 'Maximum Value',
+        savingsText: '💰 Save $428 (2 months free!)',
+        description: 'Best value for the committed top performers',
+        features: [
+          'Everything in Monthly',
+          'Industry-leading 8% commission',
+          'Save $428 vs monthly billing',
+          'Annual VIP perks',
+          'Premium analytics',
+          'Dedicated account manager',
+        ],
+        cta: {
+          text: 'Save with Annual',
+          href: '/register?expert=true&plan=top-annual',
+        },
+      },
+    ],
+  }}
+  note="Cancel or switch plans anytime. No long-term contracts required. All plans include platform support, secure payment processing, and client management tools."
+/>
+
+<RequirementsSection
+  title="What You Need to Join"
+  requirements={[
+    {
+      icon: 'badge',
+      title: 'Valid Professional License',
+      description:
+        'Active license or certification in your healthcare field. You self-certify your credentials and remain responsible for your professional status.',
+    },
+    {
+      icon: 'shield',
+      title: 'Professional Liability Insurance',
+      description:
+        'Appropriate malpractice or professional indemnity coverage for your practice area.',
+    },
+    {
+      icon: 'globe',
+      title: 'Reliable Internet & Equipment',
+      description:
+        'Stable internet connection and suitable environment for professional video consultations.',
+    },
+    {
+      icon: 'heart',
+      title: 'Commitment to Quality Care',
+      description:
+        'Dedication to evidence-based practices and delivering excellent care to your clients.',
+    },
+  ]}
+/>
+
+<FinalCTASection
+  title="Ready to Join as an Independent Expert?"
+  description="Join our network of independent, licensed healthcare professionals. You deliver the care; we provide the secure platform technology to support your practice."
+  button="Create Your Expert Profile"
+  questions="Have questions?"
+  contact="Contact us"
+/>

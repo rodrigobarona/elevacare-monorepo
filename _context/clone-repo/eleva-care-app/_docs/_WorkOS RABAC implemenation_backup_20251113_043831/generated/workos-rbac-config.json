@@ -1,0 +1,1073 @@
+{
+  "permissions": [
+    {
+      "slug": "appointments:view_own",
+      "name": "View Own Appointments",
+      "description": "View own appointments",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:view_incoming",
+      "name": "View Incoming Appointments",
+      "description": "View appointments booked with you",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:create",
+      "name": "Create Appointments",
+      "description": "Book new appointments",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:manage_own",
+      "name": "Manage Own Appointments",
+      "description": "Manage own bookings",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:cancel_own",
+      "name": "Cancel Own Appointments",
+      "description": "Cancel own appointments (within policy)",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:reschedule_own",
+      "name": "Reschedule Own Appointments",
+      "description": "Reschedule own appointments",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:view_calendar",
+      "name": "View Calendar",
+      "description": "View calendar view",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:confirm",
+      "name": "Confirm Appointments",
+      "description": "Confirm appointments",
+      "category": "Appointments"
+    },
+    {
+      "slug": "appointments:complete",
+      "name": "Complete Appointments",
+      "description": "Mark appointments as completed",
+      "category": "Appointments"
+    },
+    {
+      "slug": "sessions:view_own",
+      "name": "View Own Sessions",
+      "description": "View own session notes",
+      "category": "Sessions"
+    },
+    {
+      "slug": "sessions:view_history",
+      "name": "View Session History",
+      "description": "View session history",
+      "category": "Sessions"
+    },
+    {
+      "slug": "patients:view_own",
+      "name": "View Own Patients",
+      "description": "View own patients",
+      "category": "Patients"
+    },
+    {
+      "slug": "patients:view_all",
+      "name": "View All Patients",
+      "description": "View all clinic patients",
+      "category": "Patients"
+    },
+    {
+      "slug": "patients:view_history",
+      "name": "View Patient History",
+      "description": "View patient appointment history",
+      "category": "Patients"
+    },
+    {
+      "slug": "patients:send_notes",
+      "name": "Send Patient Notes",
+      "description": "Share session notes with patients",
+      "category": "Patients"
+    },
+    {
+      "slug": "patients:manage_records",
+      "name": "Manage Patient Records",
+      "description": "Manage patient records",
+      "category": "Patients"
+    },
+    {
+      "slug": "patients:view_insights",
+      "name": "View Patient Insights",
+      "description": "View patient analytics",
+      "category": "Patients"
+    },
+    {
+      "slug": "events:create",
+      "name": "Create Events",
+      "description": "Create event types",
+      "category": "Events"
+    },
+    {
+      "slug": "events:view_own",
+      "name": "View Own Events",
+      "description": "View own events",
+      "category": "Events"
+    },
+    {
+      "slug": "events:edit_own",
+      "name": "Edit Own Events",
+      "description": "Edit own events",
+      "category": "Events"
+    },
+    {
+      "slug": "events:delete_own",
+      "name": "Delete Own Events",
+      "description": "Delete own events",
+      "category": "Events"
+    },
+    {
+      "slug": "events:toggle_active",
+      "name": "Toggle Event Active Status",
+      "description": "Activate/deactivate events",
+      "category": "Events"
+    },
+    {
+      "slug": "availability:view_own",
+      "name": "View Own Availability",
+      "description": "View own availability",
+      "category": "Availability"
+    },
+    {
+      "slug": "availability:create",
+      "name": "Create Availability",
+      "description": "Create schedules",
+      "category": "Availability"
+    },
+    {
+      "slug": "availability:edit_own",
+      "name": "Edit Own Availability",
+      "description": "Edit schedules",
+      "category": "Availability"
+    },
+    {
+      "slug": "availability:delete_own",
+      "name": "Delete Own Availability",
+      "description": "Delete schedules",
+      "category": "Availability"
+    },
+    {
+      "slug": "availability:set_limits",
+      "name": "Set Availability Limits",
+      "description": "Set buffer times and max bookings",
+      "category": "Availability"
+    },
+    {
+      "slug": "calendars:connect",
+      "name": "Connect Calendars",
+      "description": "Connect external calendars",
+      "category": "Calendars"
+    },
+    {
+      "slug": "calendars:view_own",
+      "name": "View Own Calendars",
+      "description": "View connected calendars",
+      "category": "Calendars"
+    },
+    {
+      "slug": "calendars:edit_own",
+      "name": "Edit Own Calendars",
+      "description": "Edit calendar settings",
+      "category": "Calendars"
+    },
+    {
+      "slug": "calendars:disconnect",
+      "name": "Disconnect Calendars",
+      "description": "Disconnect calendars",
+      "category": "Calendars"
+    },
+    {
+      "slug": "reviews:create",
+      "name": "Create Reviews",
+      "description": "Leave reviews after sessions",
+      "category": "Reviews"
+    },
+    {
+      "slug": "reviews:view_own",
+      "name": "View Own Reviews",
+      "description": "View own reviews",
+      "category": "Reviews"
+    },
+    {
+      "slug": "reviews:view_about_me",
+      "name": "View Reviews About Me",
+      "description": "View reviews about me",
+      "category": "Reviews"
+    },
+    {
+      "slug": "reviews:edit_own",
+      "name": "Edit Own Reviews",
+      "description": "Edit own reviews (within 30 days)",
+      "category": "Reviews"
+    },
+    {
+      "slug": "reviews:delete_own",
+      "name": "Delete Own Reviews",
+      "description": "Delete own reviews (within 7 days)",
+      "category": "Reviews"
+    },
+    {
+      "slug": "reviews:respond",
+      "name": "Respond to Reviews",
+      "description": "Respond to reviews",
+      "category": "Reviews"
+    },
+    {
+      "slug": "profile:view_own",
+      "name": "View Own Profile",
+      "description": "View own profile",
+      "category": "Profile"
+    },
+    {
+      "slug": "profile:edit_own",
+      "name": "Edit Own Profile",
+      "description": "Edit own profile",
+      "category": "Profile"
+    },
+    {
+      "slug": "profile:view_expert",
+      "name": "View Expert Profile",
+      "description": "View expert profile",
+      "category": "Profile"
+    },
+    {
+      "slug": "profile:edit_expert",
+      "name": "Edit Expert Profile",
+      "description": "Edit expert profile",
+      "category": "Profile"
+    },
+    {
+      "slug": "profile:preview",
+      "name": "Preview Profile",
+      "description": "Preview public profile",
+      "category": "Profile"
+    },
+    {
+      "slug": "profile:manage_link",
+      "name": "Manage Booking Link",
+      "description": "Manage booking link",
+      "category": "Profile"
+    },
+    {
+      "slug": "experts:browse",
+      "name": "Browse Experts",
+      "description": "Browse expert directory",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:view_profiles",
+      "name": "View Expert Profiles",
+      "description": "View expert profiles",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:view_applications",
+      "name": "View Expert Applications",
+      "description": "View expert applications",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:approve",
+      "name": "Approve Expert Applications",
+      "description": "Approve expert applications",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:reject",
+      "name": "Reject Expert Applications",
+      "description": "Reject expert applications",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:suspend",
+      "name": "Suspend Experts",
+      "description": "Suspend expert accounts",
+      "category": "Experts"
+    },
+    {
+      "slug": "experts:verify",
+      "name": "Verify Expert Credentials",
+      "description": "Verify expert credentials",
+      "category": "Experts"
+    },
+    {
+      "slug": "analytics:view",
+      "name": "View Analytics",
+      "description": "Access analytics dashboard",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:revenue",
+      "name": "View Revenue Analytics",
+      "description": "View revenue analytics",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:patients",
+      "name": "View Patient Analytics",
+      "description": "View patient insights",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:performance",
+      "name": "View Performance Analytics",
+      "description": "View performance metrics",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:export",
+      "name": "Export Analytics",
+      "description": "Export analytics data",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:platform_growth",
+      "name": "View Platform Growth",
+      "description": "View platform growth",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:platform_revenue",
+      "name": "View Platform Revenue",
+      "description": "View platform revenue",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:platform_engagement",
+      "name": "View Platform Engagement",
+      "description": "View platform engagement",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:platform_churn",
+      "name": "View Platform Churn",
+      "description": "View platform churn",
+      "category": "Analytics"
+    },
+    {
+      "slug": "analytics:platform_export",
+      "name": "Export Platform Analytics",
+      "description": "Export platform data",
+      "category": "Analytics"
+    },
+    {
+      "slug": "branding:customize",
+      "name": "Customize Branding",
+      "description": "Customize branding",
+      "category": "Branding"
+    },
+    {
+      "slug": "branding:upload_logo",
+      "name": "Upload Logo",
+      "description": "Upload custom logo",
+      "category": "Branding"
+    },
+    {
+      "slug": "branding:custom_colors",
+      "name": "Customize Colors",
+      "description": "Set custom colors",
+      "category": "Branding"
+    },
+    {
+      "slug": "billing:view_own",
+      "name": "View Own Billing",
+      "description": "View own billing",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:view_earnings",
+      "name": "View Earnings",
+      "description": "View earnings",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:view_payouts",
+      "name": "View Payouts",
+      "description": "View payouts",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:view_subscription",
+      "name": "View Subscription",
+      "description": "View subscription",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:manage_subscription",
+      "name": "Manage Subscription",
+      "description": "Manage subscription",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:methods_manage",
+      "name": "Manage Payment Methods",
+      "description": "Manage payment methods",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:manage_clinic_sub",
+      "name": "Manage Clinic Subscription",
+      "description": "Manage clinic subscription",
+      "category": "Billing"
+    },
+    {
+      "slug": "billing:view_clinic_billing",
+      "name": "View Clinic Billing",
+      "description": "View clinic billing",
+      "category": "Billing"
+    },
+    {
+      "slug": "settings:view_own",
+      "name": "View Own Settings",
+      "description": "View own settings",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:edit_own",
+      "name": "Edit Own Settings",
+      "description": "Edit own settings",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:security",
+      "name": "Manage Security Settings",
+      "description": "Manage security (2FA, sessions)",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:view_platform",
+      "name": "View Platform Settings",
+      "description": "View platform settings",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:edit_platform",
+      "name": "Edit Platform Settings",
+      "description": "Edit platform settings",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:manage_features",
+      "name": "Manage Feature Flags",
+      "description": "Manage feature flags",
+      "category": "Settings"
+    },
+    {
+      "slug": "settings:manage_integrations",
+      "name": "Manage Integrations",
+      "description": "Manage integrations (API, webhooks)",
+      "category": "Settings"
+    },
+    {
+      "slug": "dashboard:view_expert",
+      "name": "View Expert Dashboard",
+      "description": "Access expert dashboard",
+      "category": "Dashboard"
+    },
+    {
+      "slug": "dashboard:view_patient",
+      "name": "View Patient Dashboard",
+      "description": "Access patient dashboard",
+      "category": "Dashboard"
+    },
+    {
+      "slug": "users:view_all",
+      "name": "View All Users",
+      "description": "View all users",
+      "category": "Users"
+    },
+    {
+      "slug": "users:create",
+      "name": "Create Users",
+      "description": "Create users",
+      "category": "Users"
+    },
+    {
+      "slug": "users:edit",
+      "name": "Edit Users",
+      "description": "Edit users",
+      "category": "Users"
+    },
+    {
+      "slug": "users:delete",
+      "name": "Delete Users",
+      "description": "Delete users (soft delete)",
+      "category": "Users"
+    },
+    {
+      "slug": "users:manage_roles",
+      "name": "Manage User Roles",
+      "description": "Manage user roles",
+      "category": "Users"
+    },
+    {
+      "slug": "users:impersonate",
+      "name": "Impersonate Users",
+      "description": "Impersonate users (support)",
+      "category": "Users"
+    },
+    {
+      "slug": "organizations:view_all",
+      "name": "View All Organizations",
+      "description": "View all organizations",
+      "category": "Organizations"
+    },
+    {
+      "slug": "organizations:create",
+      "name": "Create Organizations",
+      "description": "Create organizations",
+      "category": "Organizations"
+    },
+    {
+      "slug": "organizations:edit",
+      "name": "Edit Organizations",
+      "description": "Edit organizations",
+      "category": "Organizations"
+    },
+    {
+      "slug": "organizations:delete",
+      "name": "Delete Organizations",
+      "description": "Delete organizations",
+      "category": "Organizations"
+    },
+    {
+      "slug": "organizations:manage_settings",
+      "name": "Manage Organization Settings",
+      "description": "Manage organization settings",
+      "category": "Organizations"
+    },
+    {
+      "slug": "payments:view_all",
+      "name": "View All Payments",
+      "description": "View all transactions",
+      "category": "Payments"
+    },
+    {
+      "slug": "payments:view_transfers",
+      "name": "View Payment Transfers",
+      "description": "View transfers",
+      "category": "Payments"
+    },
+    {
+      "slug": "payments:manage_disputes",
+      "name": "Manage Payment Disputes",
+      "description": "Manage disputes",
+      "category": "Payments"
+    },
+    {
+      "slug": "payments:process_refunds",
+      "name": "Process Refunds",
+      "description": "Process refunds",
+      "category": "Payments"
+    },
+    {
+      "slug": "payments:retry_failed",
+      "name": "Retry Failed Payments",
+      "description": "Retry failed payments",
+      "category": "Payments"
+    },
+    {
+      "slug": "categories:create",
+      "name": "Create Categories",
+      "description": "Create categories",
+      "category": "Categories"
+    },
+    {
+      "slug": "categories:edit",
+      "name": "Edit Categories",
+      "description": "Edit categories",
+      "category": "Categories"
+    },
+    {
+      "slug": "categories:delete",
+      "name": "Delete Categories",
+      "description": "Delete categories",
+      "category": "Categories"
+    },
+    {
+      "slug": "categories:manage_tags",
+      "name": "Manage Tags",
+      "description": "Manage tags",
+      "category": "Categories"
+    },
+    {
+      "slug": "moderation:view_flags",
+      "name": "View Flagged Content",
+      "description": "View flagged content",
+      "category": "Moderation"
+    },
+    {
+      "slug": "moderation:review_content",
+      "name": "Review Flagged Content",
+      "description": "Review content",
+      "category": "Moderation"
+    },
+    {
+      "slug": "moderation:remove_content",
+      "name": "Remove Content",
+      "description": "Remove content",
+      "category": "Moderation"
+    },
+    {
+      "slug": "moderation:ban_users",
+      "name": "Ban Users",
+      "description": "Ban users",
+      "category": "Moderation"
+    },
+    {
+      "slug": "audit:view_logs",
+      "name": "View Audit Logs",
+      "description": "View audit logs",
+      "category": "Audit"
+    },
+    {
+      "slug": "audit:export_logs",
+      "name": "Export Audit Logs",
+      "description": "Export audit logs",
+      "category": "Audit"
+    },
+    {
+      "slug": "audit:view_reports",
+      "name": "View Audit Reports",
+      "description": "View reports",
+      "category": "Audit"
+    },
+    {
+      "slug": "audit:generate_reports",
+      "name": "Generate Audit Reports",
+      "description": "Generate reports",
+      "category": "Audit"
+    },
+    {
+      "slug": "support:view_tickets",
+      "name": "View Support Tickets",
+      "description": "View tickets",
+      "category": "Support"
+    },
+    {
+      "slug": "support:respond_tickets",
+      "name": "Respond to Tickets",
+      "description": "Respond to tickets",
+      "category": "Support"
+    },
+    {
+      "slug": "support:escalate",
+      "name": "Escalate Tickets",
+      "description": "Escalate tickets",
+      "category": "Support"
+    },
+    {
+      "slug": "support:close_tickets",
+      "name": "Close Tickets",
+      "description": "Close tickets",
+      "category": "Support"
+    },
+    {
+      "slug": "clinic:view_dashboard",
+      "name": "View Clinic Dashboard",
+      "description": "View clinic overview",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:view_patients",
+      "name": "View Clinic Patients",
+      "description": "View shared clinic patients",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:view_schedule",
+      "name": "View Clinic Schedule",
+      "description": "View clinic schedule",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:manage_settings",
+      "name": "Manage Clinic Settings",
+      "description": "Manage clinic settings",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:manage_branding",
+      "name": "Manage Clinic Branding",
+      "description": "Manage clinic branding",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:view_analytics",
+      "name": "View Clinic Analytics",
+      "description": "View clinic analytics",
+      "category": "Clinic"
+    },
+    {
+      "slug": "clinic:export_data",
+      "name": "Export Clinic Data",
+      "description": "Export clinic data",
+      "category": "Clinic"
+    },
+    {
+      "slug": "team:view_members",
+      "name": "View Team Members",
+      "description": "View team members",
+      "category": "Team"
+    },
+    {
+      "slug": "team:invite_members",
+      "name": "Invite Team Members",
+      "description": "Invite members",
+      "category": "Team"
+    },
+    {
+      "slug": "team:remove_members",
+      "name": "Remove Team Members",
+      "description": "Remove members",
+      "category": "Team"
+    },
+    {
+      "slug": "team:manage_roles",
+      "name": "Manage Team Roles",
+      "description": "Manage roles",
+      "category": "Team"
+    },
+    {
+      "slug": "team:view_performance",
+      "name": "View Team Performance",
+      "description": "View performance",
+      "category": "Team"
+    },
+    {
+      "slug": "schedule:manage_clinic",
+      "name": "Manage Clinic Schedule",
+      "description": "Manage clinic schedule",
+      "category": "Schedule"
+    },
+    {
+      "slug": "schedule:manage_rooms",
+      "name": "Manage Rooms",
+      "description": "Manage rooms",
+      "category": "Schedule"
+    },
+    {
+      "slug": "schedule:view_capacity",
+      "name": "View Capacity Planning",
+      "description": "View capacity planning",
+      "category": "Schedule"
+    },
+    {
+      "slug": "revenue:view_overview",
+      "name": "View Revenue Overview",
+      "description": "View revenue overview",
+      "category": "Revenue"
+    },
+    {
+      "slug": "revenue:view_splits",
+      "name": "View Commission Splits",
+      "description": "View commission splits",
+      "category": "Revenue"
+    },
+    {
+      "slug": "revenue:manage_payouts",
+      "name": "Manage Payouts",
+      "description": "Manage payouts",
+      "category": "Revenue"
+    },
+    {
+      "slug": "revenue:view_invoices",
+      "name": "View Invoices",
+      "description": "View invoices",
+      "category": "Revenue"
+    },
+    {
+      "slug": "revenue:export_financial",
+      "name": "Export Financial Data",
+      "description": "Export financial data",
+      "category": "Revenue"
+    }
+  ],
+  "roles": [
+    {
+      "slug": "patient",
+      "name": "Patient",
+      "description": "Basic user/patient role for booking appointments and accessing their healthcare journey",
+      "priority": 10,
+      "permissions": [
+        "appointments:view_own",
+        "appointments:create",
+        "appointments:cancel_own",
+        "appointments:reschedule_own",
+        "sessions:view_own",
+        "reviews:create",
+        "reviews:view_own",
+        "reviews:edit_own",
+        "reviews:delete_own",
+        "experts:browse",
+        "experts:view_profiles",
+        "profile:view_own",
+        "profile:edit_own",
+        "billing:view_own",
+        "billing:methods_manage",
+        "dashboard:view_patient"
+      ]
+    },
+    {
+      "slug": "expert_community",
+      "name": "Expert Community",
+      "description": "Standard expert tier with core expert features. Pays 20% commission (monthly) or 12% (annual)",
+      "priority": 70,
+      "inheritsFrom": "patient",
+      "permissions": [
+        "dashboard:view_expert",
+        "appointments:view_incoming",
+        "appointments:manage_own",
+        "appointments:view_calendar",
+        "appointments:confirm",
+        "appointments:complete",
+        "patients:view_own",
+        "patients:view_history",
+        "patients:send_notes",
+        "events:create",
+        "events:view_own",
+        "events:edit_own",
+        "events:delete_own",
+        "events:toggle_active",
+        "availability:view_own",
+        "availability:create",
+        "availability:edit_own",
+        "availability:delete_own",
+        "availability:set_limits",
+        "calendars:connect",
+        "calendars:view_own",
+        "calendars:edit_own",
+        "calendars:disconnect",
+        "profile:view_expert",
+        "profile:edit_expert",
+        "profile:preview",
+        "profile:manage_link",
+        "billing:view_earnings",
+        "billing:view_payouts",
+        "billing:view_subscription",
+        "billing:manage_subscription",
+        "reviews:view_about_me",
+        "reviews:respond",
+        "settings:view_own",
+        "settings:edit_own",
+        "settings:security"
+      ]
+    },
+    {
+      "slug": "expert_top",
+      "name": "Expert Top",
+      "description": "Premium expert tier with advanced features. Pays 18% commission (monthly) or 8% (annual)",
+      "priority": 80,
+      "inheritsFrom": "expert_community",
+      "permissions": [
+        "analytics:view",
+        "analytics:revenue",
+        "analytics:patients",
+        "analytics:performance",
+        "analytics:export",
+        "branding:customize",
+        "branding:upload_logo",
+        "branding:custom_colors"
+      ]
+    },
+    {
+      "slug": "clinic_member",
+      "name": "Clinic Member",
+      "description": "Expert who is a member of a clinic organization (not admin). Can manage their own practice + view shared clinic resources",
+      "priority": 60,
+      "inheritsFrom": "expert_community",
+      "permissions": [
+        "clinic:view_dashboard",
+        "clinic:view_patients",
+        "clinic:view_schedule",
+        "team:view_members"
+      ]
+    },
+    {
+      "slug": "clinic_admin",
+      "name": "Clinic Admin",
+      "description": "Administrator of a clinic organization. Can manage team, patients, schedule, and clinic settings",
+      "priority": 90,
+      "inheritsFrom": "clinic_member",
+      "permissions": [
+        "clinic:manage_settings",
+        "clinic:manage_branding",
+        "clinic:view_analytics",
+        "clinic:export_data",
+        "team:invite_members",
+        "team:remove_members",
+        "team:manage_roles",
+        "team:view_performance",
+        "schedule:manage_clinic",
+        "schedule:manage_rooms",
+        "schedule:view_capacity",
+        "patients:view_all",
+        "patients:manage_records",
+        "patients:view_insights",
+        "revenue:view_overview",
+        "revenue:view_splits",
+        "revenue:manage_payouts",
+        "revenue:view_invoices",
+        "revenue:export_financial",
+        "billing:manage_clinic_sub",
+        "billing:view_clinic_billing"
+      ]
+    },
+    {
+      "slug": "superadmin",
+      "name": "Platform Admin",
+      "description": "Platform-level administrator with full system access. For Eleva Care team only",
+      "priority": 100,
+      "permissions": [
+        "appointments:view_own",
+        "appointments:view_incoming",
+        "appointments:create",
+        "appointments:manage_own",
+        "appointments:cancel_own",
+        "appointments:reschedule_own",
+        "appointments:view_calendar",
+        "appointments:confirm",
+        "appointments:complete",
+        "sessions:view_own",
+        "sessions:view_history",
+        "patients:view_own",
+        "patients:view_all",
+        "patients:view_history",
+        "patients:send_notes",
+        "patients:manage_records",
+        "patients:view_insights",
+        "events:create",
+        "events:view_own",
+        "events:edit_own",
+        "events:delete_own",
+        "events:toggle_active",
+        "availability:view_own",
+        "availability:create",
+        "availability:edit_own",
+        "availability:delete_own",
+        "availability:set_limits",
+        "calendars:connect",
+        "calendars:view_own",
+        "calendars:edit_own",
+        "calendars:disconnect",
+        "reviews:create",
+        "reviews:view_own",
+        "reviews:view_about_me",
+        "reviews:edit_own",
+        "reviews:delete_own",
+        "reviews:respond",
+        "profile:view_own",
+        "profile:edit_own",
+        "profile:view_expert",
+        "profile:edit_expert",
+        "profile:preview",
+        "profile:manage_link",
+        "experts:browse",
+        "experts:view_profiles",
+        "experts:view_applications",
+        "experts:approve",
+        "experts:reject",
+        "experts:suspend",
+        "experts:verify",
+        "analytics:view",
+        "analytics:revenue",
+        "analytics:patients",
+        "analytics:performance",
+        "analytics:export",
+        "analytics:platform_growth",
+        "analytics:platform_revenue",
+        "analytics:platform_engagement",
+        "analytics:platform_churn",
+        "analytics:platform_export",
+        "branding:customize",
+        "branding:upload_logo",
+        "branding:custom_colors",
+        "billing:view_own",
+        "billing:view_earnings",
+        "billing:view_payouts",
+        "billing:view_subscription",
+        "billing:manage_subscription",
+        "billing:methods_manage",
+        "billing:manage_clinic_sub",
+        "billing:view_clinic_billing",
+        "settings:view_own",
+        "settings:edit_own",
+        "settings:security",
+        "settings:view_platform",
+        "settings:edit_platform",
+        "settings:manage_features",
+        "settings:manage_integrations",
+        "dashboard:view_expert",
+        "dashboard:view_patient",
+        "users:view_all",
+        "users:create",
+        "users:edit",
+        "users:delete",
+        "users:manage_roles",
+        "users:impersonate",
+        "organizations:view_all",
+        "organizations:create",
+        "organizations:edit",
+        "organizations:delete",
+        "organizations:manage_settings",
+        "payments:view_all",
+        "payments:view_transfers",
+        "payments:manage_disputes",
+        "payments:process_refunds",
+        "payments:retry_failed",
+        "categories:create",
+        "categories:edit",
+        "categories:delete",
+        "categories:manage_tags",
+        "moderation:view_flags",
+        "moderation:review_content",
+        "moderation:remove_content",
+        "moderation:ban_users",
+        "audit:view_logs",
+        "audit:export_logs",
+        "audit:view_reports",
+        "audit:generate_reports",
+        "support:view_tickets",
+        "support:respond_tickets",
+        "support:escalate",
+        "support:close_tickets",
+        "clinic:view_dashboard",
+        "clinic:view_patients",
+        "clinic:view_schedule",
+        "clinic:manage_settings",
+        "clinic:manage_branding",
+        "clinic:view_analytics",
+        "clinic:export_data",
+        "team:view_members",
+        "team:invite_members",
+        "team:remove_members",
+        "team:manage_roles",
+        "team:view_performance",
+        "schedule:manage_clinic",
+        "schedule:manage_rooms",
+        "schedule:view_capacity",
+        "revenue:view_overview",
+        "revenue:view_splits",
+        "revenue:manage_payouts",
+        "revenue:view_invoices",
+        "revenue:export_financial"
+      ]
+    }
+  ],
+  "metadata": {
+    "version": "1.0",
+    "lastUpdated": "2025-11-13T00:48:50.720Z",
+    "totalPermissions": 132,
+    "totalRoles": 6
+  }
+}

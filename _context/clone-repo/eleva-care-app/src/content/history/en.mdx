@@ -1,0 +1,141 @@
+export const metadata = {
+  title: "Our Story | The Journey Behind Eleva Care",
+  description: "Discover the passion and purpose that drives Eleva Care's mission to transform women's healthcare. A letter from our founder about why we started this journey.",
+  og: {
+    title: "Our Story | The Journey Behind Eleva Care",
+    description: "Discover the passion and purpose that drives Eleva Care's mission to transform women's healthcare. A letter from our founder about why we started this journey.",
+    siteName: "Eleva Care"
+  }
+};
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import SmoothLink from '@/components/shared/navigation/SmoothLink';
+import { Link } from '@/lib/i18n/navigation';
+import Image from 'next/image';
+
+<div className="max-w-4xl mx-auto">
+
+{/* Header updated to match home sections pattern */}
+
+<header className="mb-16 pt-12 sm:pt-16">
+  <div className="text-center">
+    <h2 className="mt-16 font-mono text-xs/5 font-normal uppercase tracking-widest text-eleva-neutral-900/70 data-dark:text-eleva-neutral-900/60">
+      {'A Letter from Our Founder'}
+    </h2>
+    <h1 className="mt-2 text-pretty font-serif text-4xl font-light tracking-tighter text-eleva-primary data-dark:text-eleva-neutral-100 sm:text-6xl">
+      {'The Story Behind Eleva Care'}
+    </h1>
+    <div className="mx-auto mt-6 max-w-2xl text-balance text-base font-light text-eleva-neutral-900 lg:text-xl">
+      {"How a physiotherapist became a pioneer in evidence-based women's health."}
+    </div>
+  </div>
+</header>
+
+{/* Author info */}
+
+<div className="mb-12 mt-10 flex items-center justify-center gap-3">
+
+  <div className="flex aspect-square size-12 items-center justify-center rounded-full bg-linear-to-br from-pink-400 to-purple-500">
+    <span className="text-lg font-semibold text-white">P</span>
+  </div>
+  <div className="text-center">
+    <div className="font-medium text-gray-900">Patrícia Mota</div>
+    <div className="text-sm text-gray-600">Founder, Physiotherapist and PhD in Biomechanics</div>
+  </div>
+</div>
+
+{/* Team photo */}
+
+<div className="mb-16 mt-12">
+  <Image
+    src="/img/about/team-photo.png"
+    alt="Patrícia and Rodrigo - Founders of Eleva Care"
+    width={900}
+    height={600}
+    className="mx-auto rounded-2xl shadow-lg"
+    loading="lazy"
+    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+  />
+</div>
+
+{/* Main content with blog-style formatting */}
+
+<div className="prose prose-lg prose-gray max-w-none">
+
+## Hello!
+
+Hi! I'm Patrícia Mota, a physical therapist, and I'd like to share with you how Eleva Care was born.
+
+Movement has been part of my life since I was a child—first through rhythmic gymnastics, then through synchronized swimming. When I became a physical therapist, I worked mainly with musculoskeletal and orthopedic conditions. That's when I faced a challenge: when my patients became pregnant, I didn't feel prepared to answer their questions. I'll admit, it bothered me not to have clear answers for people who trusted me.
+
+## The Academic Journey
+
+This feeling led me to pursue a PhD in Biomechanics with Professor Kari Bø, studying how abdominal muscles adapt during pregnancy and after childbirth. Meanwhile, I became a mother of three and personally experienced many of the issues I was researching.
+
+I realized something important: **although strong scientific evidence exists, there's a huge gap between the knowledge being produced and what actually reaches people**.
+
+## The Problem I Discovered
+
+On one hand, we already have a lot of evidence about effective strategies for women's health, but this knowledge often remains "trapped" in scientific articles that are hard to access and understand for those outside the field. It takes time for information to be translated into clinical practice—and even longer to reach the general public.
+
+At the same time, we see daily on social media countless promises of quick fixes for complex women's health issues—from "getting your pre-pregnancy body back" in record time to miracle exercises for urinary incontinence. The most concerning part is that these so-called "solutions" are often nothing more than clever marketing, with no scientific foundation.
+
+**What worries me isn't just misinformation itself, but how it can pull women away from approaches that truly work**—those based on solid science and clinical experience. Symptoms like incontinence, pelvic pain, sexual dysfunction, or musculoskeletal changes have proven solutions that often don't reach the women who need them.
+
+## The Moment of Inspiration
+
+Over the last two years, while working on a research project in California with Jenny Bagwell, I missed my patients deeply. That distance made me think: why not create a way to deliver high-quality information and specialized care to women everywhere, regardless of where they live?
+
+That's when Rodrigo, my husband, brought all these pieces together and created the Eleva Care platform. Maybe we're reinventing the wheel a little bit, after all.
+
+## Our Mission
+
+We want to build a bridge between cutting-edge science and the people who need it, but in a truly accessible way—world-class women's health care, available whenever and wherever it's needed.
+
+Our vision is simple: a secure digital platform that connects any woman with independent, licensed women's health specialists, adapting to her time and location—not the other way around.
+
+## The Team I'm Proud Of
+
+When I shared this idea with colleagues I admire, the response was warm and immediate. Today, we have a group of advisors who fill me with pride and gratitude. They are extraordinarily experienced professionals, true leaders in their fields.
+
+More than that, they're people I deeply care for, who have already contributed so much to what Eleva Care is today. Their generosity in sharing knowledge, experience, and vision has been essential to our growth.
+
+At the same time, we're growing a network of independent professionals I trust completely—people who share the same values and the same passion for evidence-based care.
+
+Eleva Care is taking its first steps, already offering online consultations. We're learning and growing every day. If you connect with this vision—whether as a professional who wants to collaborate or as someone seeking evidence-based care—our door is open. We want every woman who reaches out to us to know she'll receive guidance grounded in the best scientific evidence available and in the clinical experience of specialized professionals.
+
+Share this vision with your aunts, uncles, cousins, friends, and family members who are looking for information on women's health. Help us spread knowledge in a way that is both accessible and high-quality.
+
+---
+
+_With dedication to science and genuine care,_
+
+**Patrícia Mota**  
+_Founder, Eleva Care_  
+_Physiotherapist and PhD in Biomechanics_
+
+</div>
+
+{/* Call to action */}
+
+<div className="mt-16 rounded-3xl bg-linear-to-br from-pink-50 to-purple-50 py-16 text-center">
+  <h3 className="mx-auto max-w-xs font-mono text-xs/5 font-normal uppercase tracking-widest text-eleva-neutral-900/70">
+    {'Ready for evidence-based care?'}
+  </h3>
+  <p className="mx-auto mt-2 max-w-3xl text-pretty font-serif text-4xl font-light tracking-tighter text-eleva-neutral-900 sm:text-5xl">
+    {'Join thousands of women who trust our experts'}
+  </p>
+  <p className="mx-auto mt-6 max-w-xl text-sm/6 text-eleva-neutral-900/60">
+    {'Find specialists at Eleva Care who truly understand your health journey.'}
+  </p>
+  <div className="mt-8 flex justify-center gap-4">
+    <SmoothLink href="/#experts">
+      <Button size="lg" className="rounded-full">
+        {'Book Your Appointment'}
+      </Button>
+    </SmoothLink>
+  </div>
+</div>
+
+</div>

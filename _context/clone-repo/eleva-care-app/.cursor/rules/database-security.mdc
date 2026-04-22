@@ -1,0 +1,252 @@
+---
+description: Database and Security Patterns
+globs: ['drizzle/**/*.ts', 'src/lib/auth/**/*.ts', 'src/lib/stripe/**/*.ts', 'src/server/**/*.ts', 'src/lib/redis/**/*.ts']
+---
+
+# Database and Security Patterns
+
+## Database (Drizzle ORM + Neon.tech)
+
+```typescript
+import { db } from '@/drizzle/db';
+import { and, desc, eq } from 'drizzle-orm';
+
+// Optimized query with select
+const users = await db
+  .select({
+    id: users.id,
+    name: users.name,
+    email: users.email,
+  })
+  .from(users)
+  .where(eq(users.status, 'active'))
+  .limit(20);
+
+// Pagination
+const page = 1;
+const pageSize = 20;
+const offset = (page - 1) * pageSize;
+
+const [items, total] = await Promise.all([
+  db.users.findMany({
+    take: pageSize,
+    skip: offset,
+    orderBy: { createdAt: 'desc' },
+  }),
+  db.users.count(),
+]);
+```
+
+### Row-Level Security (RLS)
+
+All health data queries MUST use org-scoped database connections:
+
+```typescript
+import { getOrgScopedDb } from '@/lib/integrations/neon/rls-client';
+
+// ALWAYS use org-scoped DB for health data
+// getOrgScopedDb() takes no arguments -- it calls withAuth() internally
+const orgDb = await getOrgScopedDb();
+const records = await orgDb.select().from(healthRecords);
+
+// NEVER use raw db for health data
+// ❌ const records = await db.select().from(healthRecords);
+```
+
+## Auth (WorkOS AuthKit)
+
+```typescript
+import { authkit } from '@workos-inc/authkit-nextjs';
+import { withAuth } from '@workos-inc/authkit-nextjs';
+
+// Server Components: use authkit()
+export default async function Page() {
+  const { user, organizationId } = await authkit();
+  if (!user) redirect('/sign-in');
+
+  return <ProfileView user={user} />;
+}
+
+// Server Actions: use withAuth() wrapper
+export async function updateProfile(data: FormData) {
+  'use server';
+  const { user } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+  // ...
+}
+
+// JWT-based RBAC (zero database queries)
+export default async function proxy(request: NextRequest) {
+  const { user, role, permissions } = await authkit();
+  // Check roles/permissions from JWT claims
+}
+```
+
+## Payments (Stripe)
+
+```typescript
+import { stripe } from '@/lib/stripe';
+
+// Create Checkout Session (preferred over PaymentIntent for most flows)
+export async function createCheckoutSession(priceId: string) {
+  'use server';
+  const { user } = await withAuth();
+  if (!user) throw new Error('Unauthorized');
+
+  const session = await stripe.checkout.sessions.create({
+    mode: 'payment',
+    line_items: [{ price: priceId, quantity: 1 }],
+    success_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/cancel`,
+    metadata: { userId: user.id },
+  });
+
+  redirect(session.url!);
+}
+
+// Handle webhook with signature verification
+export async function POST(req: Request) {
+  const sig = req.headers.get('stripe-signature')!;
+  const body = await req.text();
+
+  const event = stripe.webhooks.constructEvent(
+    body,
+    sig,
+    process.env.STRIPE_WEBHOOK_SECRET!
+  );
+
+  switch (event.type) {
+    case 'checkout.session.completed':
+      await handleCheckoutComplete(event.data.object);
+      break;
+    case 'payment_intent.succeeded':
+      await handlePaymentSuccess(event.data.object);
+      break;
+  }
+
+  return new Response('OK');
+}
+```
+
+## Security Best Practices
+
+1. **Always validate inputs** with Zod:
+
+```typescript
+import { z } from 'zod';
+
+const CreatePostSchema = z.object({
+  title: z.string().min(1).max(100),
+  content: z.string().min(1),
+});
+
+export async function createPost(data: FormData) {
+  'use server';
+
+  const validated = CreatePostSchema.parse({
+    title: data.get('title'),
+    content: data.get('content'),
+  });
+
+  // Process validated data
+}
+```
+
+2. **Use environment variables** for secrets:
+
+```typescript
+// ✅ Good
+const apiKey = process.env.API_KEY!;
+
+// ❌ Never hardcode
+const apiKey = 'sk_test_abc123';
+```
+
+3. **Implement rate limiting** on API routes
+4. **Use HTTPS** for all external API calls
+5. **Sanitize user input** before rendering
+6. **Encrypt sensitive fields** with WorkOS Vault:
+
+```typescript
+import { encryptField, decryptField } from '@/lib/integrations/workos/vault';
+
+// Encrypt before storing
+const encrypted = await encryptField(sensitiveData);
+await db.insert(records).values({ data: encrypted });
+
+// Decrypt when reading
+const decrypted = await decryptField(record.data);
+```
+
+7. **Log all PHI access** via audit logging:
+
+```typescript
+import { logAuditEvent } from '@/lib/utils/server/audit';
+
+await logAuditEvent({
+  action: 'health_record.accessed',
+  actorId: user.id,
+  targetId: recordId,
+  metadata: { orgId },
+});
+```
+
+## Drizzle Query Cache (Upstash Redis)
+
+Strategy: **Explicit** (`global: false`). Only queries with `.$withCache()` are cached.
+
+```typescript
+// READ: Add .$withCache() to high-value, read-heavy queries
+const user = await db.query.UsersTable.findFirst({
+  where: eq(UsersTable.workosUserId, workosUserId),
+}).$withCache({ tag: `user-${workosUserId}`, config: { ex: 300 } });
+
+// INVALIDATE: After mutations, bust relevant cache tags
+import { invalidateCache } from '@/drizzle/db';
+await invalidateCache([`user-${workosUserId}`, `user-full-${workosUserId}`]);
+```
+
+**DO cache** (high read frequency, low mutation rate):
+- User lookups (`user-{id}`, 5 min TTL)
+- Expert profiles (`expert-profile-{id}`, 2 min TTL)
+- Categories (`categories`, 1 hour TTL)
+- Scheduling settings (`schedule-{id}`, 1 min TTL)
+
+**DO NOT cache** (must stay real-time):
+- Anything inside `getOrgScopedDb()` transactions (RLS context)
+- Webhook handlers
+- Cron jobs
+- Payment intent creation
+- Admin panel queries
+
+## Application-Level Caching (Redis)
+
+```typescript
+import { redisManager } from '@/lib/redis';
+import { cache } from 'react';
+
+// Layer 1: React cache (request-level)
+// Layer 2: Redis (distributed) -- for non-DB data (form state, idempotency, rate limiting)
+const _getDataImpl = async (id: string) => {
+  const cached = await redisManager.get(`data:${id}`);
+  if (cached) return JSON.parse(cached);
+
+  const data = await fetchData(id);
+  await redisManager.set(`data:${id}`, JSON.stringify(data), 300);
+
+  return data;
+};
+
+export const getData = cache(_getDataImpl);
+```
+
+## Related Agent Skills
+
+When working on database and security patterns, consider invoking these skills:
+- `workos` / `workos-authkit-nextjs` -- authentication and RBAC patterns
+- `neon-drizzle` / `neon-postgres` -- database schema, migrations, RLS
+- `stripe-integration` / `stripe-best-practices` -- payment flows, webhook handling
+- `redis-js` -- caching patterns with Upstash Redis
+- `security-review` -- security audit and vulnerability assessment
+- `hipaa-compliance-guard` -- HIPAA PHI handling requirements
+- `gdpr-dsgvo-expert` -- GDPR data protection requirements

@@ -1,0 +1,392 @@
+name: 🗄️ Neon Preview Branch with Tests
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+
+# Required permissions for commenting on PRs
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+jobs:
+  setup:
+    name: 🏗️ Setup
+    outputs:
+      branch: ${{ steps.branch_name.outputs.current_branch }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Get branch name
+        id: branch_name
+        uses: tj-actions/branch-names@v8
+
+  create_neon_branch:
+    name: 🗄️ Create Neon Branch
+    outputs:
+      db_url: ${{ steps.create_neon_branch.outputs.db_url }}
+      db_url_with_pooler: ${{ steps.create_neon_branch.outputs.db_url_with_pooler }}
+      branch_id: ${{ steps.create_neon_branch.outputs.branch_id }}
+    needs: setup
+    if: |
+      github.event_name == 'pull_request' && (
+      github.event.action == 'synchronize'
+      || github.event.action == 'opened'
+      || github.event.action == 'reopened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔍 Debug Neon Configuration
+        id: sanitize_branch_name
+        env:
+          NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID }}
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_DATABASE_USERNAME: ${{ secrets.NEON_DATABASE_USERNAME }}
+          NEON_DATABASE_NAME: ${{ vars.NEON_DATABASE_NAME }}
+          RAW_BRANCH_NAME: ${{ needs.setup.outputs.branch }}
+          PR_NUMBER: ${{ github.event.number }}
+        run: |
+          echo "🔍 Checking Neon Configuration..."
+
+          # Check required environment variables
+          if [ -n "$NEON_PROJECT_ID" ]; then
+            echo "✅ Project ID set: YES"
+          else
+            echo "❌ Project ID set: NO (Required: Set NEON_PROJECT_ID in repository variables)"
+          fi
+
+          if [ -n "$NEON_API_KEY" ]; then
+            echo "✅ API Key set: YES"
+          else
+            echo "❌ API Key set: NO (Required: Set NEON_API_KEY in repository secrets)"
+          fi
+
+          # Check optional variables
+          if [ -n "$NEON_DATABASE_USERNAME" ]; then
+            echo "✅ Database Username set: YES"
+          else
+            echo "⚠️  Database Username set: NO (Optional: Will use 'elevadb_owner' as default)"
+          fi
+
+          if [ -n "$NEON_DATABASE_NAME" ]; then
+            echo "✅ Database Name set: YES ($NEON_DATABASE_NAME)"
+          else
+            echo "⚠️  Database Name set: NO (Optional: Will use 'elevadb' as default)"
+          fi
+
+          echo ""
+          echo "🌿 Branch Information:"
+
+          # Sanitize branch name deterministically and safely
+          sanitized_branch=$(echo "$RAW_BRANCH_NAME" | \
+            tr '[:upper:]' '[:lower:]' | \
+            sed -E 's/[^a-z0-9-]/-/g' | \
+            sed -E 's/--+/-/g' | \
+            sed -E 's/^-+|-+$//g')
+
+          # Calculate prefix length: "preview/pr-${PR_NUMBER}-" (preview/pr- = 11 chars + PR number + dash)
+          prefix_length=$((11 + ${#PR_NUMBER} + 1))
+          max_branch_length=$((63 - prefix_length))
+
+          # Cap sanitized branch to fit within 63-char limit accounting for prefix
+          if [ ${#sanitized_branch} -gt $max_branch_length ]; then
+            sanitized_branch=$(echo "$sanitized_branch" | cut -c1-$max_branch_length | sed -E 's/-+$//')
+          fi
+
+          # Create safe preview branch name (total length <= 63 chars)
+          preview_branch="preview/pr-${PR_NUMBER}-${sanitized_branch}"
+
+          echo "Raw branch name: $RAW_BRANCH_NAME"
+          echo "Sanitized branch slug: $sanitized_branch"
+          echo "Preview branch name: $preview_branch"
+          echo "Preview branch length: ${#preview_branch}"
+
+          # Export sanitized name for downstream steps (both ENV and OUTPUT)
+          echo "SANITIZED_BRANCH_NAME=$sanitized_branch" >> $GITHUB_ENV
+          echo "PREVIEW_BRANCH_NAME=$preview_branch" >> $GITHUB_ENV
+          echo "sanitized_branch_name=$sanitized_branch" >> $GITHUB_OUTPUT
+          echo "preview_branch_name=$preview_branch" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "📋 Configuration Summary:"
+          echo "- Project ID: $([ -n "$NEON_PROJECT_ID" ] && echo "✅ Set" || echo "❌ Missing")"
+          echo "- API Key: $([ -n "$NEON_API_KEY" ] && echo "✅ Set" || echo "❌ Missing")"
+          echo "- Username: $([ -n "$NEON_DATABASE_USERNAME" ] && echo "✅ Set" || echo "⚠️  Using default")"
+          echo "- Database: $([ -n "$NEON_DATABASE_NAME" ] && echo "✅ Set ($NEON_DATABASE_NAME)" || echo "⚠️  Using default (elevadb)")"
+
+      - name: 🧹 Clean up existing branch if it exists
+        id: cleanup_existing_branch
+        continue-on-error: true
+        run: |
+          echo "Checking if branch already exists..."
+          if command -v neonctl &> /dev/null; then
+            # Try to delete existing branch (will fail silently if it doesn't exist)
+            neonctl branches delete "$PREVIEW_BRANCH_NAME" --project-id "${{ vars.NEON_PROJECT_ID }}" || echo "Branch doesn't exist or couldn't be deleted (this is fine)"
+          else
+            echo "neonctl not available, skipping cleanup"
+          fi
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          PREVIEW_BRANCH_NAME: ${{ env.PREVIEW_BRANCH_NAME }}
+
+      - name: 🗄️ Create Neon Branch
+        id: create_neon_branch
+        uses: neondatabase/create-branch-action@v5
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch_name: ${{ env.PREVIEW_BRANCH_NAME }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+          username: ${{ secrets.NEON_DATABASE_USERNAME || 'elevadb_owner' }}
+          database: ${{ vars.NEON_DATABASE_NAME || 'elevadb' }}
+        continue-on-error: true
+        timeout-minutes: 5
+
+      - name: 🔍 Debug branch creation result
+        run: |
+          echo "Branch creation result: ${{ steps.create_neon_branch.outcome }}"
+          echo "Branch ID: ${{ steps.create_neon_branch.outputs.branch_id }}"
+          echo "DB URL: ${{ steps.create_neon_branch.outputs.db_url }}"
+
+          if [ "${{ steps.create_neon_branch.outcome }}" != "success" ]; then
+            echo "Branch creation failed, but continuing with existing branch if available"
+            # Try to get existing branch info
+            if command -v neonctl &> /dev/null; then
+              echo "Attempting to get existing branch info..."
+              neonctl branches list --project-id "${{ vars.NEON_PROJECT_ID }}" | grep "${{ env.PREVIEW_BRANCH_NAME }}" || echo "Could not find existing branch"
+            fi
+          fi
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+
+      - name: ✅ Validate branch creation outputs
+        id: validate_outputs
+        run: |
+          echo "🔍 Validating Neon branch creation outputs..."
+
+          BRANCH_ID="${{ steps.create_neon_branch.outputs.branch_id }}"
+          DB_URL="${{ steps.create_neon_branch.outputs.db_url }}"
+          DB_URL_POOLER="${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
+
+          if [ -z "$BRANCH_ID" ] || [ -z "$DB_URL" ] || [ -z "$DB_URL_POOLER" ]; then
+            echo "❌ ERROR: Branch creation succeeded but outputs are missing!"
+            echo "Branch ID: ${BRANCH_ID:-[empty]}"
+            echo "DB URL: ${DB_URL:-[empty]}"
+            echo "DB URL with pooler: ${DB_URL_POOLER:-[empty]}"
+            echo ""
+            echo "This usually means the Neon action didn't complete successfully."
+            exit 1
+          fi
+
+          echo "✅ All outputs are present:"
+          echo "Branch ID: $BRANCH_ID"
+          echo "DB URL: ${DB_URL:0:50}..."
+          echo "DB URL with pooler: ${DB_URL_POOLER:0:50}..."
+
+      - name: 🎉 Comment on PR with branch info
+        if: steps.validate_outputs.outcome == 'success'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branchId = '${{ steps.create_neon_branch.outputs.branch_id }}';
+            const wasCreated = '${{ steps.create_neon_branch.outcome }}' === 'success';
+            const status = wasCreated ? 'Created' : 'Found existing';
+
+            const comment = `## 🗄️ Neon Preview Branch ${status}
+
+            **Branch ID**: \`${branchId}\`
+            **Branch Name**: \`${{ env.PREVIEW_BRANCH_NAME }}\`
+
+            🧪 Tests will run against this preview database to ensure database operations work correctly.
+
+            > **Note**: This database will be automatically deleted when the PR is closed.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  migrate_preview_db:
+    name: 🚀 Migrate Preview Database
+    needs: [setup, create_neon_branch]
+    runs-on: ubuntu-latest
+    if: needs.create_neon_branch.result == 'success' && needs.create_neon_branch.outputs.branch_id != '' && needs.create_neon_branch.outputs.db_url_with_pooler != ''
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3'
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Validate Database URL
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "❌ DATABASE_URL is empty or not set"
+            echo "This usually means the Neon branch creation failed or didn't provide a database URL"
+            exit 1
+          fi
+          echo "✅ DATABASE_URL is set"
+        env:
+          DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+
+      - name: 🗄️ Generate and run migrations
+        run: |
+          echo "🔍 Checking DATABASE_URL before migration..."
+          if [ -z "$DATABASE_URL" ]; then
+            echo "❌ ERROR: DATABASE_URL is empty at migration time!"
+            echo "Branch ID: ${{ needs.create_neon_branch.outputs.branch_id }}"
+            echo "DB URL output: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}"
+            exit 1
+          fi
+          echo "✅ DATABASE_URL is set: ${DATABASE_URL:0:30}..."
+          echo "📝 Generating migrations..."
+          bun run db:generate
+          echo "🚀 Running migrations..."
+          bun run db:migrate
+        env:
+          DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+
+      - name: 🌱 Seed preview database
+        run: |
+          # Run any seeding scripts for preview environment
+          # bun run db:seed
+          echo "Database migrated and ready for testing"
+        env:
+          DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+
+  test_with_preview_db:
+    name: 🧪 Test Against Preview Database
+    needs: [setup, create_neon_branch, migrate_preview_db]
+    runs-on: ubuntu-latest
+    if: needs.migrate_preview_db.result == 'success' || (needs.create_neon_branch.outputs.branch_id != '' && needs.migrate_preview_db.result != 'cancelled')
+    strategy:
+      matrix:
+        test-type: [integration, webhook-integration]
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3'
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🧪 Run integration tests with real database
+        if: matrix.test-type == 'integration'
+        run: bun run test:integration --coverage
+        env:
+          DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+          NODE_ENV: test
+          # Test environment variables
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_TEST_SECRET_KEY }}
+
+      - name: 🪝 Run webhook integration tests
+        if: matrix.test-type == 'webhook-integration'
+        run: |
+          # Run a subset of webhook tests that can work with real database
+          bun run test tests/api/webhooks/ --testPathIgnorePatterns="mocked" --coverage
+        env:
+          DATABASE_URL: ${{ needs.create_neon_branch.outputs.db_url_with_pooler }}
+          NODE_ENV: test
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_TEST_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_TEST_WEBHOOK_SECRET }}
+          CLERK_SECRET_KEY: ${{ secrets.CLERK_TEST_SECRET_KEY }}
+
+      - name: 📊 Upload test coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: preview-db-${{ matrix.test-type }}
+          name: Preview DB Tests - ${{ matrix.test-type }}
+
+  comment_test_results:
+    name: 💬 Comment Test Results
+    needs: [setup, create_neon_branch, test_with_preview_db]
+    runs-on: ubuntu-latest
+    if: always() && needs.create_neon_branch.outputs.branch_id != ''
+    steps:
+      - name: 💬 Update PR with test results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const testResults = '${{ needs.test_with_preview_db.result }}';
+            const branchCreationResult = '${{ needs.create_neon_branch.result }}';
+            const emoji = testResults === 'success' ? '✅' : '❌';
+            const status = testResults === 'success' ? 'PASSED' : 'FAILED';
+            const branchStatus = branchCreationResult === 'success' ? 'created' : 'found existing';
+
+            const comment = `## 🧪 Preview Database Test Results
+
+            ${emoji} **Tests ${status}** against preview database
+
+            **Branch**: \`${{ needs.create_neon_branch.outputs.branch_id }}\` (${branchStatus})
+            **Status**: ${status}
+
+            ${testResults === 'success' ? 
+              '🎉 All integration and webhook tests passed with real database connections!' :
+              '⚠️ Some tests failed. Please check the workflow logs for details.'}
+
+            [View detailed results](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  delete_neon_branch:
+    name: 🗑️ Delete Neon Branch
+    needs: setup
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🗑️ Delete Neon Branch
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ vars.NEON_PROJECT_ID }}
+          branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: 💬 Confirm deletion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const comment = `## 🗑️ Preview Branch Cleaned Up
+
+            The preview database branch \`preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}\` has been deleted.
+
+            Thanks for your contribution! 🙏`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

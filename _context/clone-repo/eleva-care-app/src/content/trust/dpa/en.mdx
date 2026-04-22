@@ -1,0 +1,109 @@
+---
+title: "Data Processing Agreement | Eleva Care"
+description: "Review Eleva Care's data processing agreement outlining how we handle and protect your healthcare data."
+---
+
+export const metadata = {
+  title: "Data Processing Agreement | Eleva Care",
+  description: "Review Eleva Care's data processing agreement outlining how we handle and protect your healthcare data."
+};
+
+# Data Processing Agreement (DPA)
+
+_Effective Date: December 31, 2025_
+
+> **Quick Summary**
+>
+> - **What this page is about:** How Eleva.care processes personal data on behalf of users and experts.
+> - **Eleva.care operates the digital health platform; independent, licensed experts provide clinical care.**
+> - **For platform data** (accounts, bookings, payments): Eleva.care is the Data Controller.
+> - **For clinical notes/files** created by experts: the expert is the Controller; Eleva.care stores them securely.
+> - **Your data stays in the EU** by default, protected by encryption and strict access controls.
+> - **Questions?** Contact `dpo@eleva.care`.
+
+This DPA explains how Eleva.care handles personal data—clearly and simply.
+
+Eleva.care is a digital health platform that enables the provision of remote healthcare services by independent professionals. Eleva.care does not deliver clinical care. Eleva.care's regulatory status under applicable Portuguese and EU health regulations (e.g., registration as a telemedicine platform) is distinct from its GDPR data protection roles, and Eleva.care will comply with applicable health regulations.
+
+## 1) Who does what
+
+- Eleva.care is a digital health platform that enables remote healthcare services by independent, licensed professionals. Eleva.care does not provide clinical care.
+- Two roles:
+  - Controller (platform operations: accounts, bookings, payments, analytics, support)
+  - Processor (clinical notes/files that experts create: we store securely on their instructions)
+
+## 2) When we are Controller (platform)
+
+- We use trusted processors to run the platform:
+  - Database/infra & delivery: Neon (EU), Vercel (EU regions), Upstash (EU), Resend (IE), Novu (EU endpoint)
+  - Identity/SSO: Clerk (EU options), Google SSO
+  - Payments: Stripe (PCI DSS L1)
+  - Analytics: PostHog (EU hosting option)
+- We require DPAs/SCCs, security controls, and EU data residency where available.
+
+## 3) When we are Processor (for experts)
+
+- Experts are Controllers of clinical data; we are their Processor.
+- We act only on documented instructions, keep data encrypted (at rest and in transit), and maintain RBAC and audit logs.
+- Subprocessors for clinical data storage (EU): Neon (DB Frankfurt), Vercel (hosting EU), Upstash (cache EU). We notify before changes.
+
+## 4) Security at a glance
+
+- TLS 1.3 in transit; AES‑256‑GCM at rest (clinical data)
+- Least privilege/RBAC; MFA available; audit logging; encrypted backups; DR plans
+- 24‑hour breach notice SLA to Controllers for clinical data
+
+## 5) International transfers
+
+- We prioritize EU data residency. Where non‑EU vendors provide EU hosting, we rely on SCCs + supplementary measures (encryption, key controls, access logging, challenge overbroad requests).
+
+## 6) Retention and deletion
+
+- Platform data: kept only as long as needed or required by law
+- Clinical data: retention is set by the expert (e.g., 10 years under PT rules). On instruction/termination, we export and delete following a short grace period and backup window.
+
+## 7) Data subject rights
+
+- Platform (Controller): We handle access, correction, deletion, portability, restriction, and objection requests.
+- Clinical (Processor): We provide tools so experts can fulfill patient requests.
+
+## 8) Expert responsibilities (as Controller)
+
+- Obtain informed consent where needed; ensure lawful basis (e.g., GDPR Art. 9(2)(h))
+- Set retention; respond to rights requests; maintain accuracy; carry malpractice insurance
+
+## 9) Our responsibilities (as Processor)
+
+- Follow instructions; keep data secure; assist with rights requests and DPIAs; notify breaches without undue delay; return/delete data on request; limit transfers; keep confidentiality
+
+## 10) Liability
+
+- Eleva.care: responsible for platform operation, security, and organizational/technical/administrative compliance of the digital health platform as described.
+- Experts: liable for clinical decisions, patient outcomes, and compliance as Controllers of clinical data.
+
+## 11) Updates, law, and disputes
+
+- We may update this DPA with notice for material changes
+- Governing law: Portugal; venue: courts of Portugal
+
+---
+
+## 12) Subprocessors and change notifications
+
+We rely on carefully vetted subprocessors to operate the platform. Each subprocessor is bound by a DPA and receives only the minimum data required.
+
+| Provider | Purpose                     | Data                                             | Region/Hosting             | Safeguards                                               |
+| -------- | --------------------------- | ------------------------------------------------ | -------------------------- | -------------------------------------------------------- |
+| Neon     | Primary database            | Platform data; clinical data at rest (encrypted) | EU (Frankfurt)             | DPA, SCCs (if applicable), encryption at rest/in transit |
+| Vercel   | Application hosting / edge  | Platform metadata, logs                          | EU regions where available | DPA, SCCs (if applicable)                                |
+| Upstash  | Caching/queue               | Non-clinical cache data                          | EU                         | DPA, SCCs (if applicable)                                |
+| Resend   | Transactional email         | Email metadata and content                       | IE/EU                      | DPA, SCCs (if applicable)                                |
+| Novu     | Notifications orchestration | Notification payload metadata                    | EU endpoint                | DPA, SCCs (if applicable)                                |
+| Clerk    | Identity/SSO                | Auth and profile metadata                        | EU options                 | DPA, SCCs (if applicable)                                |
+| Stripe   | Payments                    | Payment metadata (no card PAN stored by us)      | EU/EEA                     | PCI DSS L1, DPA, SCCs                                    |
+
+Change notifications: we will update this list and provide notice at least 30 days before adding or replacing a subprocessor (except where immediate change is required for security, compliance, or continuity). Controllers may object on reasonable, documented grounds. We will work in good faith to mitigate or, if unresolved, allow service termination for the affected processing without penalty.
+
+In case of divergence between language versions, the Portuguese version shall prevail.
+
+Contact (DPO): `dpo@eleva.care` · Operator: BÚZIOS E TARTARUGAS – LDA (Eleva.care), NIPC/VAT 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Support `support@eleva.care`.

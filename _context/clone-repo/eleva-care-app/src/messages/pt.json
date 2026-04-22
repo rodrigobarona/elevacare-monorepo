@@ -1,0 +1,609 @@
+{
+  "common": {
+    "loading": "Carregando conteúdo...",
+    "selectLanguage": "Selecionar idioma"
+  },
+  "metadata": {
+    "title": "Conecte-se com Especialistas Especialistas em Saúde da Mulher | Eleva Care",
+    "description": "Eleva Care: Encontre e reserve especialistas de confiança em saúde da mulher para gravidez, pós-parto, menopausa e saúde sexual. Uma plataforma confiável que conecta você com especialistas de atenção independentes.",
+    "og": {
+      "title": "Conecte-se com Especialistas Especialistas em Saúde da Mulher | Eleva Care",
+      "description": "Encontre e reserve especialistas de confiança em saúde da mulher para gravidez, pós-parto, menopausa e saúde sexual.",
+      "siteName": "Eleva Care"
+    }
+  },
+  "Header": {
+    "findExpert": "Encontrar um Especialista",
+    "mission": "A nossa Missão"
+  },
+  "NotFound": {
+    "title": "Página não encontrada",
+    "description": "A página que estás a procura não existe. Por favor, verifica a URL ou tenta com uma página diferente.",
+    "goHome": "Voltar para a página inicial"
+  },
+  "Error": {
+    "title": "Ocorreu um erro",
+    "description": "A página que estás a procura não existe. Por favor, verifica a URL ou tenta com uma página diferente.",
+    "retry": "Tentar novamente"
+  },
+  "hero": {
+    "title": "Especialistas em Saúde Feminina , *quando precisar.*",
+    "subtitle": "Marque uma consulta com Especialistas em Saúde da Mulher - À Sua Conveniência.",
+    "disclaimer": "Conectamos com especialistas de saúde independentes e licenciados.",
+    "disclaimerLink": "Saiba mais",
+    "cta1": "Como a podemos ajudar? Faça o quiz",
+    "cta2": "Encontrar um Especialista",
+    "cta2Help": "Marque a sua consulta",
+    "cta2Help2": "em menos de 3 minutos."
+  },
+  "services": {
+    "title": "Como a apoiamos",
+    "subtitle": "Cuidado liderado por especialistas, feito para si",
+    "description": "Aceda a cuidados personalizados com profissionais em saúde feminina. Ligamo-la à experiência de que precisa—de consultas online a recursos locais—adaptada à sua própria jornada.",
+    "itemCount": "4",
+    "item0": {
+      "icon": "Baby",
+      "title": "Gravidez e Pós-Parto",
+      "description": "Acompanhamento próximo e baseado em evidência durante a gravidez e o pós‑parto.",
+      "subitemCount": "5",
+      "subitem0": "**Fisioterapia:** Prepare-se para o parto, controle a dor, recupere a força, trate a diástase abdominal e intervenções focadas no pavimento pélvico para prevenir e tratar disfunções.",
+      "subitem1": "**Cuidados Obstétricos e Ginecológicos:** Tratamento especializado durante a gravidez e recuperação pós-parto.",
+      "subitem2": "**Orientação Nutricional:** Otimize a sua alimentação para uma gravidez e pós-parto saudáveis.",
+      "subitem3": "**Apoio em Saúde Mental:** Apoio emocional para os desafios da maternidade.",
+      "subitem4": "**Exercício:** Benefícios do exercício terapêutico para gravidez e pós-parto, adaptado às mudanças do corpo e recuperação saudável.",
+      "image": "/img/Pregnant-Woman-Flowers.jpg",
+      "cta": "Saber mais"
+    },
+    "item1": {
+      "icon": "Droplets",
+      "title": "Saúde Pélvica",
+      "description": "Cuidado especializado do pavimento pélvico em todas as fases da vida.",
+      "subitemCount": "3",
+      "subitem0": "**Fisioterapia Pélvica:** Tratamento especializado para incontinência, prolapso de órgãos pélvicos e dor pélvica, incluindo dor durante o sexo.",
+      "subitem1": "**Cuidados Obstétricos e Ginecológicos Especializados:** Diagnóstico e tratamento para uma gama de problemas de saúde pélvica como prolapso, endometriose e disfunção sexual.",
+      "subitem2": "**Apoio em Saúde Mental:** Consultoria e terapia para enfrentar os aspetos psicológicos de preocupações com a saúde pélvica.",
+      "image": "/img/Woman-Working-Out-Living-Room.jpg",
+      "cta": "Saber mais"
+    },
+    "item2": {
+      "icon": "Flower2",
+      "title": "Em Todas as Fases",
+      "description": "Apoio holístico da adolescência à menopausa—e além.",
+      "subitemCount": "5",
+      "subitem0": "**Saúde Adolescente:** Enfrente a puberdade, menstruação e primeiros anos da vida adulta feminina com confiança e apoio.",
+      "subitem1": "**Gestão da Menopausa:** Acompanhe as mudanças hormonais, controle sintomas e priorize o seu bem-estar.",
+      "subitem2": "**Bem-Estar Mental:** Acesso a terapia para gerir o stress, ansiedade, depressão e outras preocupações de saúde mental.",
+      "subitem3": "**Exercício e Nutrição:** Descubra planos de exercício e guias nutricionais personalizados.",
+      "subitem4": "**Fisioterapia:** Gestão de dor, prevenção de lesões e otimização do desempenho físico, com especialização em saúde do pavimento pélvico para atletas e mulheres ativas.",
+      "image": "/img/Smiling-Women-Photo.jpg",
+      "cta": "Saber mais"
+    },
+    "item3": {
+      "icon": "Ribbon",
+      "title": "Empoderando a sua Jornada Contra o Cancro",
+      "description": "Apoio especializado em cancro da mama e ginecológico—do diagnóstico à sobrevivência.",
+      "subitemCount": "6",
+      "subitem0": "**Fisioterapia:** Otimize a sua recuperação com preparação pré-cirúrgica, reabilitação pós-tratamento, gestão do linfedema e programas de exercícios específicos concebidos para cada fase da sua jornada contra o cancro.",
+      "subitem1": "**Gestão da Dor:** Aceda a técnicas baseadas em evidências para gerir a dor relacionada com o tratamento, incluindo terapia manual, exercício terapêutico e gestão do tecido cicatricial.",
+      "subitem2": "**Apoio ao Exercício:** Receba prescrições de exercícios personalizados que se adaptam à sua fase de tratamento, ajudando a manter a força, gerir a fadiga e apoiar o seu processo de recuperação.",
+      "subitem3": "**Cuidados de Saúde Mental:** Navegue pelos desafios emocionais do diagnóstico e tratamento com apoio profissional focado no desenvolvimento de resiliência e gestão da ansiedade.",
+      "subitem4": "**Cuidados do Linfedema:** Beneficie de estratégias especializadas de prevenção e tratamento, incluindo drenagem linfática manual, terapia de compressão e educação para autogestão.",
+      "subitem5": "**Abordagem Colaborativa:** A nossa abordagem colaborativa assegura cuidados coordenados com a sua equipa de oncologia, apoiando o seu bem-estar físico e emocional durante o tratamento e recuperação.",
+      "image": "/img/cancer-journey.jpg",
+      "cta": "Saber mais"
+    }
+  },
+  "approach": {
+    "title": "Na Eleva Care, acreditamos que:",
+    "itemCount": "5",
+    "item0": "Toda mulher merece acesso a **cuidados de saúde de qualidade**.",
+    "item1": "**O conhecimento é poder** nas decisões sobre a saúde.",
+    "item2": "**A colaboração** traz melhores resultados de saúde.",
+    "item3": "A saúde feminina é uma **jornada em constante evolução**.",
+    "item4": "**A saúde pélvica** é fundamental para o bem-estar geral.",
+    "description": "Na Eleva Care, acreditamos em uma abordagem colaborativa. O nosso time de especialistas trabalha em conjunto para oferecer um apoio abrangente e personalizado, garantindo que todos os aspetos da sua saúde sejam atendidos.",
+    "cta": "Saiba mais"
+  },
+  "status": {
+    "allSystemsNormal": "Todos os sistemas normais",
+    "partialOutage": "Interrupção parcial",
+    "degradedPerformance": "Desempenho degradado",
+    "unableToFetch": "Não foi possível obter o estado",
+    "noMonitorsConfigured": "Nenhum monitor configurado",
+    "ariaLabel": "Estado do Sistema: {status}"
+  },
+  "footer": {
+    "cta": {
+      "title": "Junte-se à Nossa Rede",
+      "heading": "Descubra Sua Jornada de Cuidado Personalizado Hoje",
+      "description": "Faça nossa avaliação rápida de saúde ou agende sua consulta.",
+      "quiz": "Fazer o Questionário",
+      "book": "Agendar uma Sessão"
+    },
+    "tagline": "Capacitando a saúde das mulheres através de cuidados especializados e inovação.",
+    "nav": {
+      "services": {
+        "title": "Serviços",
+        "pregnancy": "Cuidados na Gravidez",
+        "postpartum": "Suporte Pós-parto",
+        "menopause": "Cuidados na Menopausa"
+      },
+      "company": {
+        "title": "Empresa",
+        "about": "Sobre Nós",
+        "clinicalExcellence": "Excelência Clínica",
+        "becomeExpert": "Seja Especialista",
+        "becomePartner": "Para Organizações",
+        "join": "Junte-se a Nós",
+        "dashboard": "Painel de Especialistas"
+      },
+      "support": {
+        "title": "Suporte",
+        "help": "Central de Ajuda",
+        "community": "Comunidade",
+        "contact": "Contato",
+        "reportBug": "Reportar um Erro"
+      },
+      "trust": {
+        "title": "Confiança e Segurança",
+        "security": "Segurança",
+        "dpa": "Processamento de Dados"
+      },
+      "legal": {
+        "title": "Legal",
+        "terms": "Termos de Serviço",
+        "privacy": "Política de Privacidade",
+        "cookie": "Política de Cookies",
+        "preferences": "Preferências de Cookies",
+        "paymentPolicies": "Políticas de Pagamento",
+        "expertAgreement": "Acordo de Especialistas"
+      }
+    },
+    "copyright": "Todos os direitos reservados.",
+    "social": {
+      "instagram": "Siga-nos no Instagram",
+      "twitter": "Siga-nos no Twitter",
+      "linkedin": "Siga-nos no LinkedIn"
+    },
+    "platformDisclaimer": {
+      "title": "Somos uma plataforma digital de saúde",
+      "description": "A Eleva.care permite a prestação de serviços de saúde remotos (teleconsultas) por profissionais independentes e licenciados. Nós fornecemos a tecnologia; o(a) profissional que escolhe presta os seus cuidados."
+    },
+    "compliance": {
+      "gdpr": "Conforme com o RGPD",
+      "lgpd": "Conforme com a LGPD",
+      "encryption": "Encriptação AES-256",
+      "euData": "Dados Armazenados na UE",
+      "hipaa": "Infraestrutura Preparada para HIPAA",
+      "secureEmail": "Email Seguro (TLS 1.3)",
+      "iso27001": "Alinhado com ISO 27001",
+      "soc2": "Infraestrutura SOC 2",
+      "ccpa": "Conforme com o CCPA"
+    }
+  },
+  "experts": {
+    "title": "Especialistas Independentes",
+    "subtitle": "Conecte-se com os Melhores Especialistas",
+    "description": "Encontre e marque especialistas confiáveis em fisioterapia e saúde da mulher. A nossa plataforma conecta-o com especialistas qualificados prontos para apoiar a sua jornada única de saúde e bem-estar.",
+    "disclaimerLink": "Saiba mais sobre a nossa plataforma",
+    "topExpertBadge": "Destacado",
+    "topExpertDisclaimer": "Os especialistas na Eleva Care são profissionais independentes que auto-declaram as suas credenciais e estatuto profissional. A Eleva.care pode solicitar documentação e efetuar verificações razoáveis quando necessário para integridade da plataforma, conformidade regulamentar ou gestão de risco.",
+    "sessionLabel": "Sessão",
+    "expertImageAlt": "Foto de perfil de {name}",
+    "verifiedBadgeAlt": "Especialista Auto-Certificado"
+  },
+  "platformDisclaimer": {
+    "modal": {
+      "title": "Sobre a plataforma Eleva Care",
+      "description": "Uma nota simpática sobre como a Eleva Care funciona e o que fazer numa emergência."
+    },
+    "emergency": {
+      "title": "⚠️ Não é para emergências médicas",
+      "description": "Se estiver a viver uma emergência médica, por favor não use a Eleva Care. Contacte os serviços de emergência:",
+      "eu": "UE",
+      "usa": "EUA"
+    },
+    "platform": {
+      "title": "Como a Eleva Care funciona",
+      "description": "A Eleva Care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos por profissionais independentes e licenciados. A Eleva.care não presta cuidados clínicos; o(a) especialista que escolhe presta os seus cuidados.",
+      "weAre": "O que fornecemos",
+      "weAreList": {
+        "platform": "Uma plataforma digital de saúde confiável",
+        "technology": "Marcação, agendamento e pagamentos",
+        "secure": "Armazenamento encriptado de notas clínicas"
+      },
+      "weAreNot": "O que não fornecemos",
+      "weAreNotList": {
+        "provider": "Cuidados médicos, diagnósticos ou tratamentos",
+        "employer": "Emprego ou supervisão de especialistas",
+        "responsible": "Responsabilidade médica (o(a) seu/sua especialista é responsável pelos cuidados)"
+      },
+      "footer": "Os especialistas na Eleva Care são profissionais independentes que auto-declaram as suas credenciais e estatuto profissional. A Eleva.care pode solicitar documentação e efetuar verificações razoáveis quando necessário para integridade da plataforma, conformidade regulamentar ou gestão de risco. Os especialistas permanecem exclusivamente responsáveis pelos cuidados clínicos que prestam. Para mais detalhes, leia os nossos",
+      "termsLink": "Termos e Condições"
+    }
+  },
+  "cookie": {
+    "title": "Preferências de Cookies",
+    "message": "Utilizamos cookies para melhorar sua experiência, analisar o tráfego do site e para fins de marketing. Ao clicar em \"Aceitar\", você consente com o uso de cookies.",
+    "buttonText": "Aceitar Todos",
+    "declineButtonText": "Recusar Todos",
+    "manageButtonText": "Gerenciar Preferências",
+    "privacyPolicyText": "Política de Cookies",
+    "manageTitle": "Preferências de Cookies",
+    "manageMessage": "Gerencie suas preferências de cookies abaixo. Cookies essenciais estão sempre ativados, pois são necessários para o funcionamento do site.",
+    "manageEssentialTitle": "Essenciais",
+    "manageEssentialSubtitle": "Necessários para o funcionamento do site",
+    "manageEssentialStatus": "Status: Sempre ativados",
+    "manageEssentialStatusButtonText": "Sempre Ativados",
+    "manageAnalyticsTitle": "Analíticos",
+    "manageAnalyticsSubtitle": "Nos ajudam a entender como os visitantes interagem com nosso site",
+    "manageSocialTitle": "Sociais",
+    "manageSocialSubtitle": "Habilitam recursos de mídia social e compartilhamento",
+    "manageAdvertTitle": "Publicidade",
+    "manageAdvertSubtitle": "Personalizam anúncios e medem seu desempenho",
+    "manageCookiesStatus": "Status: {status} em {date}",
+    "manageCookiesStatusConsented": "Consentido",
+    "manageCookiesStatusDeclined": "Recusado",
+    "manageCancelButtonText": "Cancelar",
+    "manageSaveButtonText": "Salvar Preferências"
+  },
+  "Payments": {
+    "checkout": {
+      "multibancoNotice": "⚠️ **Aviso de Pagamento Multibanco:** Se escolher Multibanco como método de pagamento, o seu horário de consulta será reservado por 24 horas enquanto aguardamos confirmação do pagamento. Após 24 horas, se o pagamento não for recebido, não podemos garantir que a consulta ainda estará disponível. Para confirmação imediata, use um cartão de crédito/débito. [Ver Políticas de Pagamento]({paymentPoliciesUrl})",
+      "termsOfService": "Ao prosseguir com o pagamento, concorda com os nossos [Termos de Serviço]({termsUrl}) e [Políticas de Pagamento]({paymentPoliciesUrl})."
+    }
+  },
+  "notifications": {
+    "welcome": {
+      "subject": "Bem-vindo à Eleva Care, {userName}!",
+      "body": "Olá {userName}! Bem-vindo à Eleva Care. Estamos entusiasmados em ajudá-lo na sua jornada de saúde.",
+      "email": {
+        "subject": "Bem-vindo à Eleva Care!",
+        "title": "Bem-vindo à Eleva Care!",
+        "greeting": "Olá {firstName},",
+        "body": "Obrigado por se juntar à nossa plataforma de saúde. Estamos entusiasmados em ajudá-lo na sua jornada de bem-estar.",
+        "nextStepsTitle": "Próximos Passos:",
+        "nextSteps": [
+          "Complete o seu perfil",
+          "Navegue pelos especialistas disponíveis",
+          "Marque a sua primeira consulta"
+        ],
+        "cta": "Complete o Seu Perfil"
+      }
+    },
+    "platformPaymentReceived": {
+      "subject": "Pagamento Recebido: €{amount}",
+      "body": "Recebeu um pagamento de €{amount} de {clientName} pela sua sessão em {sessionDate}. A transferência será processada de acordo com o seu cronograma de pagamento.",
+      "email": {
+        "subject": "Pagamento Recebido - €{amount}",
+        "title": "Pagamento Recebido!",
+        "greeting": "Excelentes notícias! Recebeu um pagamento pelos seus serviços.",
+        "detailsTitle": "Detalhes do Pagamento:",
+        "amount": "Valor: €{amount}",
+        "client": "Cliente: {clientName}",
+        "sessionDate": "Data da Sessão: {sessionDate}",
+        "transactionId": "ID da Transação: {transactionId}",
+        "footer": "Este pagamento será transferido para a sua conta de acordo com o seu cronograma de pagamento.",
+        "cta": "Ver Detalhes do Pagamento"
+      }
+    },
+    "platformPayoutProcessed": {
+      "subject": "Pagamento Processado: €{amount}",
+      "body": "O seu pagamento de €{amount} foi processado e enviado para a sua conta bancária. Chegada esperada: {expectedArrival}.",
+      "email": {
+        "subject": "Pagamento Processado - €{amount}",
+        "title": "Pagamento Processado",
+        "body": "Os seus ganhos foram transferidos para a sua conta bancária.",
+        "detailsTitle": "Detalhes do Pagamento:",
+        "amount": "Valor: €{amount}",
+        "payoutId": "ID do Pagamento: {payoutId}",
+        "expectedArrival": "Chegada Esperada: {expectedArrival}",
+        "bankAccount": "Conta Bancária: {bankAccount}",
+        "cta": "Ver Histórico de Pagamentos"
+      }
+    },
+    "appointmentReminder": {
+      "subject": "Lembrete: A sua consulta é {timeUntilAppointment}",
+      "body": "A sua {appointmentType} com {expertName} é {timeUntilAppointment} no dia {appointmentDate} às {appointmentTime}.",
+      "email": {
+        "subject": "Lembrete: A sua consulta da Eleva Care é {timeUntilAppointment}",
+        "title": "Lembrete de Consulta",
+        "greeting": "Olá {userName},",
+        "body": "Este é um lembrete amigável de que a sua {appointmentType} com {expertName} é {timeUntilAppointment}, no dia {appointmentDate} às {appointmentTime}.",
+        "cta": "Aceda à sua consulta",
+        "footer": "Por favor, certifique-se de que está num local sossegado com uma ligação estável à internet."
+      }
+    },
+    "appointmentCancelled": {
+      "subject": "Consulta Cancelada: {appointmentType}",
+      "body": "A sua consulta com {expertName} no dia {appointmentDate} foi cancelada.",
+      "email": {
+        "subject": "A Sua Consulta da Eleva Care Foi Cancelada",
+        "title": "Consulta Cancelada",
+        "greeting": "Olá {userName},",
+        "body": "A sua {appointmentType} com {expertName} marcada para {appointmentDate} às {appointmentTime} foi cancelada.",
+        "apology": "Pedimos desculpa por qualquer inconveniente. Pode marcar uma nova consulta a qualquer momento.",
+        "cta": "Marcar Nova Consulta"
+      }
+    },
+    "expertPayoutSetup": {
+      "subject": "Complete a configuração do seu pagamento",
+      "body": "Olá {expertName}, por favor complete a configuração do Stripe Connect para começar a receber pagamentos dos clientes.",
+      "email": {
+        "subject": "Complete a Configuração da Sua Conta de Pagamento da Eleva Care",
+        "title": "Complete a Configuração do Seu Pagamento",
+        "greeting": "Olá {expertName},",
+        "body": "Para começar a receber pagamentos dos seus clientes, precisa de completar a configuração da sua conta de pagamento.",
+        "requirement": "Isto é necessário para receber pagamentos pelas suas sessões.",
+        "cta": "Completar Configuração de Pagamento",
+        "support": "Precisa de ajuda? Contacte o Suporte"
+      }
+    },
+    "newBookingExpert": {
+      "subject": "Nova Marcação: {appointmentType}",
+      "body": "Tem uma nova marcação de {clientName} para {appointmentDate} às {appointmentTime}.",
+      "email": {
+        "subject": "Nova Marcação: {appointmentType} com {clientName}",
+        "title": "Alerta de Nova Marcação!",
+        "greeting": "Olá {expertName},",
+        "body": "Tem uma nova marcação!",
+        "detailsTitle": "Detalhes da Marcação:",
+        "service": "Serviço: {appointmentType}",
+        "client": "Cliente: {clientName}",
+        "date": "Data: {appointmentDate}",
+        "time": "Hora: {appointmentTime}",
+        "cta": "Ver Detalhes da Marcação"
+      }
+    },
+    "expertOnboardingComplete": {
+      "subject": "Configuração de especialista concluída!",
+      "body": "Parabéns {expertName}! O seu perfil de especialista está agora ativo. Pode começar a receber marcações de clientes.",
+      "email": {
+        "subject": "Bem-vindo à Rede de Especialistas da Eleva Care!",
+        "title": "Parabéns, {expertName}!",
+        "greeting": "O seu perfil de especialista está agora ativo na Eleva Care.",
+        "body": "O seu perfil de especialista está agora ativo na Eleva Care.",
+        "specialization": "Especialização: {specialization}",
+        "nextStepsTitle": "Agora pode:",
+        "nextSteps": [
+          "Receber marcações de clientes",
+          "Gerir a sua disponibilidade",
+          "Acompanhar os seus ganhos",
+          "Construir a sua base de clientes"
+        ],
+        "cta": "Ir para o Painel"
+      }
+    },
+    "multibancoBookingPending": {
+      "subject": "Marcação Confirmada - Pagamento Requerido via Multibanco",
+      "email": {
+        "preview": "A sua marcação está confirmada - Pagamento Requerido via Multibanco",
+        "title": "Marcação Confirmada - Pagamento Requerido",
+        "greeting": "Olá {customerName},",
+        "bookingConfirmedText": "A sua marcação foi confirmada e o seu horário de consulta está reservado.",
+        "paymentRequired": "Pagamento Requerido via Multibanco",
+        "paymentInstructions": "Para completar a sua marcação, por favor pague usando Multibanco com os detalhes abaixo:",
+        "entity": "Entidade",
+        "reference": "Referência",
+        "amount": "Valor",
+        "expiresAt": "O pagamento deve ser concluído até",
+        "appointmentDetails": "Detalhes da Consulta",
+        "service": "Serviço",
+        "expert": "Especialista",
+        "date": "Data",
+        "time": "Hora",
+        "duration": "Duração",
+        "minutes": "minutos",
+        "customerNotes": "As Suas Notas",
+        "paymentMethods": "Como Pagar com Multibanco:",
+        "method1": "1. Homebanking: Aceda à sua conta bancária e selecione \"Pagamentos\" ou \"Multibanco\"",
+        "method2": "2. ATM: Insira o seu cartão, selecione \"Outras Operações\" → \"Pagamentos\" → \"Serviços Públicos\"",
+        "method3": "3. Introduza os números da Entidade e Referência acima, confirme o valor",
+        "viewVoucher": "Ver Comprovativo de Pagamento",
+        "meetingAccess": "Acesso à Reunião",
+        "meetingAccessText": "Quando o seu pagamento for confirmado, receberá outro email com o link da reunião e detalhes de acesso.",
+        "important": "Importante",
+        "importantText": "O seu horário de consulta está reservado por 7 dias. Se o pagamento não for recebido até à data de expiração acima, a sua reserva será cancelada.",
+        "questions": "Dúvidas?",
+        "questionsText": "Se tiver alguma dúvida sobre a sua marcação ou pagamento, por favor contacte a nossa equipa de apoio.",
+        "thankYou": "Obrigado por escolher a Eleva Care!",
+        "team": "A Equipa Eleva Care"
+      }
+    },
+    "multibancoPaymentReminder": {
+      "subject": {
+        "gentle": "Lembrete Amigável: Complete o Seu Pagamento Multibanco",
+        "urgent": "URGENTE: Pagamento Requerido - Apenas 1 Dia Restante!"
+      },
+      "email": {
+        "preview": {
+          "gentle": "Lembrete Amigável: Complete o Seu Pagamento Multibanco",
+          "urgent": "URGENTE: Pagamento Requerido - Apenas 1 Dia Restante!"
+        },
+        "title": {
+          "gentle": "💙 Lembrete Amigável: Complete o Seu Pagamento",
+          "urgent": "⚠️ URGENTE: Pagamento Requerido - Lembrete Final"
+        },
+        "greeting": "Olá {customerName},",
+        "reminderNotice": "Apenas um lembrete amigável de que tem um pagamento Multibanco pendente para a sua próxima consulta.",
+        "timeRemaining": "Ainda tem bastante tempo para completar o seu pagamento.",
+        "urgentNotice": "Este é o seu LEMBRETE FINAL para completar o seu pagamento Multibanco.",
+        "expiryWarning": "A sua reserva expirará em menos de 24 horas se o pagamento não for recebido.",
+        "paymentRequired": "Complete o Seu Pagamento Multibanco",
+        "instructions": {
+          "gentle": "Pode pagar a qualquer momento usando os detalhes Multibanco abaixo:",
+          "urgent": "Use os detalhes Multibanco abaixo para completar o seu pagamento imediatamente:"
+        },
+        "entity": "Entidade",
+        "reference": "Referência",
+        "amount": "Valor",
+        "expiresAt": "O pagamento expira em",
+        "appointmentDetails": "A Sua Consulta Reservada",
+        "service": "Serviço",
+        "expert": "Especialista",
+        "date": "Data",
+        "time": "Hora",
+        "duration": "Duração",
+        "minutes": "minutos",
+        "customerNotes": "As Suas Notas Originais",
+        "paymentMethods": {
+          "gentle": "Opções de Pagamento (Escolha Qualquer Uma):",
+          "urgent": "Como Pagar (Escolha Qualquer Uma):"
+        },
+        "method1": {
+          "gentle": "1. 🏧 ATM: Mais conveniente - disponível 24/7",
+          "urgent": "1. 🏧 ATM: Insira o cartão → \"Outras Operações\" → \"Pagamentos\" → \"Serviços Públicos\""
+        },
+        "method2": {
+          "gentle": "2. 💻 Homebanking: Rápido e seguro a partir de casa",
+          "urgent": "2. 💻 Homebanking: Aceda → \"Pagamentos\" → \"Multibanco\" → Introduza os detalhes"
+        },
+        "method3": {
+          "gentle": "3. 📱 MB WAY: Se suportado pelo seu banco",
+          "urgent": "3. 📱 MB WAY: Se suportado pelo seu banco"
+        },
+        "viewVoucher": "🎫 Ver Comprovativo de Pagamento",
+        "noWorries": "Sem pressa!",
+        "noWorriesText": "Ainda tem vários dias para completar o seu pagamento. Apenas queríamos ter a certeza de que não se esqueceu!",
+        "consequences": "O que acontece se não pagar?",
+        "consequencesText": "O seu horário de consulta será automaticamente libertado e ficará disponível para outros clientes. Teria de remarcar completamente.",
+        "support": {
+          "gentle": "Dúvidas?",
+          "urgent": "Precisa de Ajuda?"
+        },
+        "supportText": {
+          "gentle": "Sinta-se à vontade para nos contactar se tiver alguma dúvida sobre o processo de pagamento.",
+          "urgent": "Contacte a nossa equipa de apoio imediatamente se precisar de assistência com o seu pagamento."
+        },
+        "thankYou": {
+          "gentle": "Obrigado por escolher a Eleva Care!",
+          "urgent": "Não deixe a sua consulta escapar!"
+        },
+        "team": "A Equipa Eleva Care",
+        "daysRemaining": "Tem {daysRemaining} dias restantes para completar o seu pagamento."
+      }
+    },
+    "appointmentConfirmation": {
+      "subject": "A sua consulta na Eleva Care foi confirmada",
+      "email": {
+        "preview": "Sua consulta na Eleva.care foi confirmada",
+        "appointmentConfirmed": "Sua consulta foi confirmada",
+        "dearExpert": "Olá {expertName},",
+        "newAppointmentWith": "Você tem uma nova consulta com {clientName} para {eventTitle}. Adicionamos isso ao seu calendário.",
+        "appointmentDetails": "Detalhes da Consulta:",
+        "type": "Tipo:",
+        "client": "Cliente:",
+        "date": "Data:",
+        "time": "Hora:",
+        "timezone": "Fuso Horário:",
+        "duration": "Duração:",
+        "videoMeeting": "Reunião por Vídeo: Um link do Google Meet é fornecido abaixo",
+        "clientNotes": "Notas do Cliente:",
+        "joinGoogleMeet": "Entrar no Google Meet",
+        "clickToJoin": "Clique no botão acima para entrar na reunião no horário agendado",
+        "addedToGoogleCalendar": "Esta consulta foi adicionada ao seu Google Calendar com os seguintes lembretes:",
+        "calendarReminders": "Lembretes de Calendário:",
+        "emailReminder1Hour": "Lembrete por e-mail 1 hora antes",
+        "emailReminder15Min": "Lembrete por e-mail 15 minutos antes",
+        "popupReminder5Min": "Lembrete pop-up 5 minutos antes",
+        "thankYou": "Obrigado por usar a Eleva.care.",
+        "bestRegards": "Obrigado,",
+        "team": "A Equipa Eleva.care",
+        "allRightsReserved": "Todos os direitos reservados."
+      }
+    },
+    "general": {
+      "subject": "{title} - Eleva Care"
+    },
+    "expertNotification": {
+      "subject": "{notificationTitle} - Eleva Care"
+    }
+  },
+  "profilePublish": {
+    "status": {
+      "published": "Perfil Publicado",
+      "notPublished": "Perfil Não Publicado"
+    },
+    "publishDialog": {
+      "title": "Publicar o Seu Perfil de Especialista",
+      "description": "Publicar o seu perfil tornará visível para clientes que procuram especialistas. O seu perfil, serviços e disponibilidade serão públicos.",
+      "agreementRequired": "Acordo Necessário",
+      "agreementText": "Li e aceito o",
+      "expertAgreement": "Acordo de Especialistas",
+      "agreementIncludes": "incluindo padrões de conduta profissional, termos de responsabilidade e obrigações da plataforma",
+      "disclaimer": "Ao publicar o seu perfil, confirma que é um especialista licenciado e concorda em cumprir todas as leis e regulamentos aplicáveis."
+    },
+    "unpublishDialog": {
+      "title": "Despublicar o Seu Perfil de Especialista",
+      "description": "Despublicar o seu perfil irá ocultá-lo dos clientes. Não aparecerá nos resultados de pesquisa e os clientes não poderão reservar os seus serviços até que publique novamente."
+    },
+    "incompleteDialog": {
+      "title": "Complete Todas as Etapas Primeiro",
+      "description": "O seu perfil não pode ser publicado até que todas as etapas necessárias sejam concluídas. Complete as seguintes etapas:"
+    },
+    "buttons": {
+      "cancel": "Cancelar",
+      "publish": "Publicar Perfil",
+      "unpublish": "Despublicar Perfil"
+    }
+  },
+  "account": {
+    "billing": {
+      "title": "Faturação",
+      "subtitle": "Definições de Pagamento de Especialista",
+      "description": "Ligue a sua conta Stripe para receber pagamentos pelos seus serviços de especialista. A Eleva cobra uma taxa de serviço de 15% e os restantes 85% serão transferidos diretamente para a sua conta.",
+      "legalDisclaimer": "Ao ligar a sua conta de pagamento, concorda com as nossas",
+      "paymentPolicies": "Políticas de Pagamento",
+      "refundPolicy": "Política de Reembolso",
+      "and": "e",
+      "learnMore": "Saiba mais sobre taxas, reembolsos e cronogramas de pagamento nas nossas Políticas de Pagamento.",
+      "accountStatus": {
+        "title": "Estado da Conta",
+        "setup": "Configuração da Conta",
+        "payments": "Pagamentos Ativados",
+        "payouts": "Transferências Ativadas",
+        "complete": "Completo",
+        "incomplete": "Incompleto",
+        "yes": "Sim",
+        "no": "Não"
+      },
+      "buttons": {
+        "connect": "Ligar com Stripe",
+        "connecting": "A ligar...",
+        "dashboard": "Ver Painel Stripe",
+        "completeSetup": "Completar Configuração Stripe",
+        "loading": "A carregar..."
+      }
+    },
+    "identity": {
+      "title": "Verificação de Identidade",
+      "subtitle": "Estado da Verificação de Identidade",
+      "description": "Verifique a sua identidade para desbloquear recursos adicionais e construir confiança com os seus clientes",
+      "privacyNotice": "Usamos o Stripe Identity para verificação segura. Os seus dados são processados de acordo com a nossa",
+      "privacyPolicy": "Política de Privacidade",
+      "dataProcessing": "Acordo de Processamento de Dados",
+      "securityInfo": "As suas informações de identidade são encriptadas e armazenadas com segurança de acordo com os padrões GDPR, LGPD e HIPAA.",
+      "dataUsage": "Os dados de verificação de identidade são usados apenas para:",
+      "dataUsageItems": {
+        "fraud": "Prevenção de fraude e segurança",
+        "compliance": "Conformidade regulatória",
+        "trust": "Construir confiança com clientes",
+        "payments": "Verificação de conta de pagamento"
+      },
+      "status": {
+        "unverified": "Não Verificado",
+        "pending": "Pendente",
+        "verified": "Verificado",
+        "rejected": "Rejeitado"
+      },
+      "buttons": {
+        "start": "Iniciar Verificação",
+        "starting": "A iniciar...",
+        "checkStatus": "Verificar Estado",
+        "checking": "A verificar...",
+        "resume": "Retomar Verificação",
+        "tryAgain": "Tentar Novamente"
+      }
+    }
+  }
+}

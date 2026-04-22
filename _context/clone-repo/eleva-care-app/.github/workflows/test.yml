@@ -1,0 +1,446 @@
+name: 🧪 Test Suite
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Required permissions for creating issues on failure and code scanning
+permissions:
+  contents: read
+  issues: write
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 1
+  NODE_NO_WARNINGS: 1
+
+jobs:
+  setup:
+    name: 🏗️ Setup
+    runs-on: ubuntu-latest
+    outputs:
+      node-version: ${{ steps.setup.outputs.node-version }}
+      bun-version: ${{ steps.bun-version.outputs.version }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        id: setup
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          # No cache in setup job - it's only used for version detection
+
+      - name: 📦 Get Bun version
+        id: bun-version
+        run: echo "version=$(bun --version)" >> $GITHUB_OUTPUT
+
+  lint:
+    name: 🔍 Lint & Format Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔍 Run ESLint
+        run: bun run lint
+
+      - name: 💄 Check Prettier formatting
+        run: bun run format:check
+
+  type-check:
+    name: 📝 Type Check
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 📝 Run TypeScript check
+        run: bunx tsc --noEmit
+
+  unit-tests:
+    name: 🧪 Unit Tests (Vitest)
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🧪 Run unit tests (Shard ${{ matrix.shard }})
+        run: bun run test -- --shard=${{ matrix.shard }}/3 --coverage
+
+      - name: 📊 Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: unit-tests-shard-${{ matrix.shard }}
+          name: Unit Tests Shard ${{ matrix.shard }}
+
+  webhook-tests:
+    name: 🪝 Webhook Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        webhook: [stripe, stripe-identity, stripe-connect]
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🪝 Run webhook tests - ${{ matrix.webhook }}
+        run: bun run test -- tests/api/webhooks/${{ matrix.webhook }}.test.ts --coverage
+        env:
+          # Test environment variables
+          STRIPE_SECRET_KEY: sk_test_fake_key_for_testing
+          STRIPE_WEBHOOK_SECRET: whsec_test_fake_secret
+          STRIPE_IDENTITY_WEBHOOK_SECRET: whsec_test_fake_identity_secret
+          STRIPE_CONNECT_WEBHOOK_SECRET: whsec_test_fake_connect_secret
+          WORKOS_API_KEY: sk_test_fake_workos_key
+          NODE_ENV: test
+
+      - name: 📊 Upload webhook coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: webhook-${{ matrix.webhook }}
+          name: Webhook Tests - ${{ matrix.webhook }}
+
+  integration-tests:
+    name: 🔗 Integration Tests
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🗄️ Setup test database
+        run: |
+          bun run db:generate
+          bunx drizzle-kit push --force
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+      - name: 🔗 Run integration tests
+        run: bun run test:integration -- --coverage
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          NODE_ENV: test
+
+      - name: 📊 Upload integration coverage
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          flags: integration-tests
+          name: Integration Tests
+
+  e2e-tests:
+    name: 🎭 E2E Tests (Playwright)
+    runs-on: ubuntu-latest
+    needs: [setup, build-test]
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🎭 Install Playwright Browsers
+        run: bunx playwright install --with-deps chromium
+
+      - name: 🎭 Run Playwright tests
+        run: bun run test:e2e --project=chromium
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000
+          CI: true
+          # Build environment variables
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          WORKOS_API_KEY: sk_test_fake_workos_key
+          WORKOS_CLIENT_ID: client_fake_id
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          UPSTASH_REDIS_REST_URL: https://fake-redis.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: fake_token_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+        continue-on-error: true
+
+      - name: 📊 Upload Playwright Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  build-test:
+    name: 🏗️ Build Test
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Build application
+        run: bun run build
+        env:
+          # Build-time environment variables
+          SKIP_ENV_VALIDATION: true
+          NEXT_SKIP_TYPESCRIPT_CHECK: true
+          NODE_ENV: production
+          # Database connection (required for build-time route evaluation)
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          # WorkOS keys (required for auth)
+          WORKOS_API_KEY: sk_test_fake_workos_key
+          WORKOS_CLIENT_ID: client_fake_id
+          # Stripe keys (required for payment routes) - TEST PLACEHOLDER KEYS FOR CI ONLY
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          # Other required keys
+          UPSTASH_REDIS_REST_URL: https://fake-redis.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: fake_token_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          # QStash keys (required for cron route signature verification at build time)
+          QSTASH_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ
+          QSTASH_CURRENT_SIGNING_KEY: fake_signing_key_for_build_min_32_chars_long_12345678
+          QSTASH_NEXT_SIGNING_KEY: fake_next_signing_key_for_build_min_32_chars_long_12345678
+
+      - name: 🧪 Test built application starts
+        run: |
+          timeout 30s bun run start &
+          sleep 20
+          curl -f http://localhost:3000/api/healthcheck || exit 1
+        env:
+          NODE_ENV: production
+          # Runtime environment variables
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+          WORKOS_API_KEY: sk_test_fake_workos_key
+          WORKOS_CLIENT_ID: client_fake_id
+          STRIPE_SECRET_KEY: sk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: pk_test_placeholder_for_ci_only_not_a_real_stripe_key_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          UPSTASH_REDIS_REST_URL: https://fake-redis.upstash.io
+          UPSTASH_REDIS_REST_TOKEN: fake_token_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+          # QStash keys (required for cron routes)
+          QSTASH_TOKEN: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ
+          QSTASH_CURRENT_SIGNING_KEY: fake_signing_key_for_build_min_32_chars_long_12345678
+          QSTASH_NEXT_SIGNING_KEY: fake_next_signing_key_for_build_min_32_chars_long_12345678
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.3' # Bun for package installation; Vercel uses Node.js 24.x runtime
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.setup.outputs.node-version }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🔒 Run security audit
+        run: bun audit || echo "⚠️ Security vulnerabilities found - please review and update dependencies"
+        continue-on-error: true
+
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+
+      - name: 🔍 Run CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        continue-on-error: true # Allow to fail on fork PRs with restricted permissions
+
+  test-summary:
+    name: 📋 Test Summary
+    runs-on: ubuntu-latest
+    needs:
+      [
+        lint,
+        type-check,
+        unit-tests,
+        webhook-tests,
+        integration-tests,
+        e2e-tests,
+        build-test,
+        security-scan,
+      ]
+    if: always()
+    steps:
+      - name: 📊 Generate test summary
+        run: |
+          echo "# 🧪 Test Suite Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Format | ${{ needs.lint.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Type Check | ${{ needs.type-check.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests (Vitest) | ${{ needs.unit-tests.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Webhook Tests | ${{ needs.webhook-tests.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.integration-tests.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests (Playwright) | ${{ needs.e2e-tests.result == 'success' && '✅ Pass' || '⚠️ Check' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Test | ${{ needs.build-test.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Pass' || '❌ Fail' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🔧 Testing Stack" >> $GITHUB_STEP_SUMMARY
+          echo "- **Runtime**: Bun (package manager) + Node.js 24.x (Vercel runtime)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Unit/Integration Tests**: Vitest" >> $GITHUB_STEP_SUMMARY
+          echo "- **E2E Tests**: Playwright (cross-browser testing)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Coverage**: V8 via @vitest/coverage-v8" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 🪝 Webhook Test Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "- Stripe Main Webhook: Payment processing, meeting creation, refunds" >> $GITHUB_STEP_SUMMARY
+          echo "- Stripe Identity: Expert verification, onboarding progression" >> $GITHUB_STEP_SUMMARY
+          echo "- Stripe Connect: Payment account setup, verification status" >> $GITHUB_STEP_SUMMARY
+
+  notify-failure:
+    name: 🚨 Notify on Failure
+    runs-on: ubuntu-latest
+    needs:
+      [lint, type-check, unit-tests, webhook-tests, integration-tests, build-test, security-scan]
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      - name: 🚨 Create issue on main branch failure
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Main Branch Test Failure',
+              body: `
+              ## Test Suite Failed on Main Branch
+              
+              **Commit**: ${{ github.sha }}
+              **Workflow**: ${{ github.workflow }}
+              **Run ID**: ${{ github.run_id }}
+              
+              Please investigate and fix the failing tests immediately.
+              
+              [View Workflow Run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+              `,
+              labels: ['bug', 'urgent', 'ci-failure']
+            });
+            console.log('Created issue:', issue.data.html_url);

@@ -1,0 +1,242 @@
+---
+description: ERS Portugal Content Compliance Rules for Digital Health Platform
+globs:
+  [
+    'src/content/**/*.mdx',
+    'src/messages/**/*.json',
+    'src/components/**/*.tsx',
+    'src/emails/**/*.tsx',
+  ]
+---
+
+# ERS Portugal Content Compliance
+
+This rule ensures all user-facing content aligns with Portuguese health regulatory requirements (ERS - Entidade Reguladora da Saúde) for digital health platforms providing telemedicine services.
+
+## Core Principle
+
+Eleva.care operates as a **digital health platform** (plataforma digital de saúde) that enables remote healthcare services by independent professionals. The platform does NOT provide clinical care itself.
+
+## Required Platform Identity
+
+**Always use:**
+
+```
+EN: "digital health platform"
+ES: "plataforma digital de salud"
+PT: "plataforma digital de saúde"
+PT-BR: "plataforma digital de saúde"
+```
+
+**Never use:**
+
+- "marketplace" / "mercado de saúde" / "marketplace de salud"
+- "healthcare marketplace"
+- "we are not a healthcare provider" (as standalone identity)
+- "not a clinic" / "no somos clínica" / "não somos clínica"
+- "only a technology platform"
+- "limited to technology only"
+
+## Canonical Platform Description
+
+Use this structure consistently across all locales:
+
+```
+EN: "Eleva.care is a digital health platform that enables the delivery of remote
+    healthcare services (teleconsultations / telemedicine) by independent,
+    licensed professionals."
+
+ES: "Eleva.care es una plataforma digital de salud que permite la prestación de
+    servicios de salud remotos (teleconsultas / telemedicina) por profesionales
+    independientes y licenciados."
+
+PT: "A Eleva.care é uma plataforma digital de saúde que permite a prestação de
+    serviços de saúde remotos (teleconsultas / telemedicina) por profissionais
+    independentes e licenciados."
+
+PT-BR: "A Eleva.care é uma plataforma digital de saúde que permite a prestação de
+       serviços de saúde remotos (teleconsultas / telemedicina) por profissionais
+       independentes e licenciados."
+```
+
+## Responsibility Separation
+
+### Platform Responsibilities (Eleva.care)
+
+Always acknowledge organizational, technical, and administrative duties:
+
+```
+EN: "Eleva.care assumes organizational, technical, and administrative responsibility
+    for operating the digital health platform, in accordance with applicable
+    Portuguese and EU regulations."
+
+ES: "Eleva.care asume responsabilidad organizativa, técnica y administrativa por
+    la operación de la plataforma digital de salud, de conformidad con la
+    legislación portuguesa y de la Unión Europea aplicable."
+
+PT: "A Eleva.care assume responsabilidade organizacional, técnica e administrativa
+    pela operação da plataforma digital de saúde, em conformidade com a legislação
+    portuguesa e da União Europeia aplicável."
+```
+
+### Expert Responsibilities (Clinical)
+
+Experts are solely responsible for clinical care:
+
+```
+EN: "Experts are solely responsible for clinical decisions, patient outcomes, and
+    maintaining required insurance."
+
+ES: "Los especialistas son exclusivamente responsables de las decisiones clínicas,
+    resultados de los pacientes y de mantener el seguro requerido."
+
+PT: "Os especialistas são exclusivamente responsáveis pelas decisões clínicas,
+    resultados dos pacientes e por manter o seguro exigido."
+```
+
+## Clinical Non-Interference
+
+Always clarify that Eleva does NOT interfere with clinical judgment:
+
+```
+EN: "Eleva.care does not provide clinical care or medical treatment. We do not
+    employ experts and do not interfere with or supervise their clinical judgment."
+
+ES: "Eleva.care no presta atención clínica ni tratamiento médico. No empleamos
+    especialistas y no interferimos ni supervisamos su juicio clínico."
+
+PT: "A Eleva.care não presta cuidados clínicos nem tratamento médico. Não
+    empregamos especialistas e não interferimos nem supervisionamos o seu
+    julgamento clínico."
+```
+
+## Credential Verification Language
+
+Use balanced language showing diligence without overstating:
+
+**✅ CORRECT:**
+
+```
+EN: "Experts self-declare their credentials and professional status. Eleva.care
+    may request documentation and perform reasonable checks where required for
+    platform integrity, regulatory compliance, or risk management."
+
+ES: "Los especialistas autodeclaran sus credenciales y estatus profesional.
+    Eleva.care puede solicitar documentación y realizar verificaciones razonables
+    cuando sea necesario para la integridad de la plataforma, el cumplimiento
+    normativo o la gestión de riesgos."
+
+PT: "Os especialistas auto-declaram as suas credenciais e estatuto profissional.
+    A Eleva.care pode solicitar documentação e efetuar verificações razoáveis
+    quando necessário para integridade da plataforma, conformidade regulamentar
+    ou gestão de risco."
+```
+
+**❌ NEVER USE:**
+
+- "All experts are verified" (overstates verification)
+- "We verify all credentials" (implies active verification)
+- "We don't verify credentials" (no diligence shown)
+- "Fully vetted professionals"
+
+## Evidence-Based Care Claims
+
+When discussing clinical protocols or evidence:
+
+**✅ CORRECT:**
+
+```
+"The platform supports evidence-based practices aligned with international
+guidelines and peer-reviewed research. Experts maintain clinical independence
+and follow escalation pathways when appropriate."
+```
+
+**❌ NEVER USE:**
+
+- "We follow clinical protocols" (implies clinical supervision)
+- "Our clinical team reviews" (implies clinical control)
+- "We ensure quality of care" (implies clinical responsibility)
+
+## Governing Law & Language Precedence
+
+All legal documents must include:
+
+```
+EN: "These Terms are governed by Portuguese law. Courts in Portugal have
+    jurisdiction over disputes."
+
+    "In case of divergence between language versions, the Portuguese version
+    shall prevail."
+
+PT-BR: "Em caso de divergência entre versões linguísticas, prevalece a versão
+       em português de Portugal." (Note: specifically "de Portugal" for PT-BR)
+```
+
+**Never reference local laws (Brazilian/Spanish) for clinical matters.**
+
+## Red Flags Checklist
+
+Before committing content changes, verify:
+
+- [ ] No "marketplace" terminology
+- [ ] No standalone "not a healthcare provider" identity claims
+- [ ] No absolute verification claims ("all experts verified")
+- [ ] No clinical supervision language ("we follow protocols", "we ensure care")
+- [ ] Platform responsibilities acknowledged (organizational, technical, administrative)
+- [ ] Expert clinical responsibilities clearly stated
+- [ ] Portuguese law governance included in legal docs
+- [ ] Language precedence disclaimer present (PT version prevails)
+- [ ] No local law references for clinical matters (no Brazilian/Spanish law)
+
+## File-Specific Guidelines
+
+### Legal MDX Files (`src/content/terms/`, `src/content/expert-agreement/`, etc.)
+
+- Must include Definitions section with canonical terms
+- Must include Portuguese law governance clause
+- Must include language precedence disclaimer
+- Must maintain parallel structure across all 4 locales
+
+### Messages JSON (`src/messages/*.json`)
+
+- Platform disclaimers must use "digital health platform"
+- Expert disclaimers must mention "self-certify" + "may request documentation"
+- Notification keys should use "platform" not "marketplace"
+
+### Marketing Content (`src/content/about/`, `src/content/evidence-based-care/`)
+
+- Avoid overstating verification or clinical oversight
+- Use "platform supports" not "we follow" for clinical references
+- Emphasize expert independence and clinical autonomy
+
+### Email Templates (`src/emails/`)
+
+- No marketplace terminology in payment/payout emails
+- Platform framing consistent with legal documents
+
+## Quick Reference Table
+
+| Concept        | EN                                        | PT                                        | ES                                         |
+| -------------- | ----------------------------------------- | ----------------------------------------- | ------------------------------------------ |
+| Platform       | digital health platform                   | plataforma digital de saúde               | plataforma digital de salud                |
+| Service        | teleconsultations / telemedicine          | teleconsultas / telemedicina              | teleconsultas / telemedicina               |
+| Experts        | independent, licensed professionals       | profissionais independentes e licenciados | profesionales independientes y licenciados |
+| Clinical Care  | does not provide clinical care            | não presta cuidados clínicos              | no presta atención clínica                 |
+| Responsibility | organizational, technical, administrative | organizacional, técnica, administrativa   | organizativa, técnica, administrativa      |
+| Law            | Portuguese law governs                    | lei portuguesa rege                       | ley portuguesa rige                        |
+
+## Reference Documentation
+
+For detailed guidance, see:
+
+- `_docs/ERS_portugal/translation-reference.md` - Canonical phrase tables
+- `_docs/ERS_portugal/readline.md` - Before/after examples
+- `_docs/ERS_portugal/alinhamento.md` - Alignment analysis
+- `_docs/ERS_portugal/ers-memo.md` - ERS explanatory memo template
+- `_docs/ERS_portugal/email-ers.md` - ERS official guidance email
+
+## Related Agent Skills
+
+When working on ERS-compliant content, consider invoking these skills:
+- `email-best-practices` -- email deliverability, compliance, content standards
+- `react-email` -- React Email template patterns for ERS-compliant emails

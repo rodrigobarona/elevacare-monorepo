@@ -1,0 +1,587 @@
+{
+  "used": [
+    {
+      "path": "features/admin/UserRoleManager.tsx",
+      "name": "UserRoleManager.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/appointments/AppointmentCard.tsx",
+      "name": "AppointmentCard.tsx",
+      "references": 2
+    },
+    {
+      "path": "features/appointments/RecordDialog.tsx",
+      "name": "RecordDialog.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/appointments/RecordEditor.tsx",
+      "name": "RecordEditor.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/booking/BookingLayout.tsx",
+      "name": "BookingLayout.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/booking/BookingLoadingSkeleton.tsx",
+      "name": "BookingLoadingSkeleton.tsx",
+      "references": 2
+    },
+    {
+      "path": "features/booking/CopyEventButton.tsx",
+      "name": "CopyEventButton.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/booking/EventBookingList.tsx",
+      "name": "EventBookingList.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/booking/EventsList.tsx",
+      "name": "EventsList.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/booking/NextAvailableTimeClient.tsx",
+      "name": "NextAvailableTimeClient.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/categories/CategoryList.tsx",
+      "name": "CategoryList.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/expert-setup/ExpertSetupBanner.tsx",
+      "name": "ExpertSetupBanner.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/expert-setup/ExpertSetupChecklist.tsx",
+      "name": "ExpertSetupChecklist.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/expert-setup/SetupCompletePublishCard.tsx",
+      "name": "SetupCompletePublishCard.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/AccountForm.tsx",
+      "name": "AccountForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/EventForm.tsx",
+      "name": "EventForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/EventFormWrapper.tsx",
+      "name": "EventFormWrapper.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/ExpertForm.tsx",
+      "name": "ExpertForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/MeetingForm.tsx",
+      "name": "MeetingForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/ScheduleForm.tsx",
+      "name": "ScheduleForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/forms/SchedulingSettingsForm.tsx",
+      "name": "SchedulingSettingsForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/profile/ProfilePageLoadingSkeleton.tsx",
+      "name": "ProfilePageLoadingSkeleton.tsx",
+      "references": 2
+    },
+    {
+      "path": "features/profile/ProfilePublishToggle.tsx",
+      "name": "ProfilePublishToggle.tsx",
+      "references": 1
+    },
+    {
+      "path": "features/profile/SecurityPreferencesForm.tsx",
+      "name": "SecurityPreferencesForm.tsx",
+      "references": 1
+    },
+    {
+      "path": "icons/icons.tsx",
+      "name": "icons.tsx",
+      "references": 1
+    },
+    {
+      "path": "integrations/novu/SecureNovuInbox.tsx",
+      "name": "SecureNovuInbox.tsx",
+      "references": 2
+    },
+    {
+      "path": "layout/footer/Footer.tsx",
+      "name": "Footer.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/header/Header.tsx",
+      "name": "Header.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/AppBreadcrumb.tsx",
+      "name": "AppBreadcrumb.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/AppSidebar.tsx",
+      "name": "AppSidebar.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/NavMain.tsx",
+      "name": "NavMain.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/NavSecondary.tsx",
+      "name": "NavSecondary.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/NavUser.tsx",
+      "name": "NavUser.tsx",
+      "references": 1
+    },
+    {
+      "path": "layout/sidebar/sidebar.tsx",
+      "name": "sidebar.tsx",
+      "references": 1
+    },
+    {
+      "path": "providers/SmoothScrollProvider.tsx",
+      "name": "SmoothScrollProvider.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/about/AdvisorsSection.tsx",
+      "name": "AdvisorsSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/about/BeliefsSection.tsx",
+      "name": "BeliefsSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/about/JoinNetworkSection.tsx",
+      "name": "JoinNetworkSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/about/MissionSection.tsx",
+      "name": "MissionSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/about/TeamSection.tsx",
+      "name": "TeamSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/home/ApproachSection.tsx",
+      "name": "ApproachSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/home/ExpertsSection.tsx",
+      "name": "ExpertsSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/home/Hero.tsx",
+      "name": "Hero.tsx",
+      "references": 1
+    },
+    {
+      "path": "sections/home/Services.tsx",
+      "name": "Services.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/animation/FadeInSection.tsx",
+      "name": "FadeInSection.tsx",
+      "references": 5
+    },
+    {
+      "path": "shared/AuthorizationProvider.tsx",
+      "name": "AuthorizationProvider.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/blocked-dates/BlockedDates.tsx",
+      "name": "BlockedDates.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/CookiePreferencesButton.tsx",
+      "name": "CookiePreferencesButton.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/data-table/DataTable.tsx",
+      "name": "DataTable.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/ErrorBoundaryWrapper.tsx",
+      "name": "ErrorBoundaryWrapper.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/i18n/LocaleSwitcher.tsx",
+      "name": "LocaleSwitcher.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/loading/HomePageSkeletons.tsx",
+      "name": "HomePageSkeletons.tsx",
+      "references": 2
+    },
+    {
+      "path": "shared/loading/LoadingSpinner.tsx",
+      "name": "LoadingSpinner.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/media/VideoPlayer.tsx",
+      "name": "VideoPlayer.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/navigation/SmoothLink.tsx",
+      "name": "SmoothLink.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/PlatformDisclaimer.tsx",
+      "name": "PlatformDisclaimer.tsx",
+      "references": 2
+    },
+    {
+      "path": "shared/rich-text/RichTextEditor.tsx",
+      "name": "RichTextEditor.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/ServerStatus.tsx",
+      "name": "ServerStatus.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/shell.tsx",
+      "name": "shell.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/text/HeadlineSection.tsx",
+      "name": "HeadlineSection.tsx",
+      "references": 1
+    },
+    {
+      "path": "shared/text/TextBlock.tsx",
+      "name": "TextBlock.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/accordion.tsx",
+      "name": "accordion.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/alert-dialog.tsx",
+      "name": "alert-dialog.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/alert.tsx",
+      "name": "alert.tsx",
+      "references": 3
+    },
+    {
+      "path": "ui/avatar.tsx",
+      "name": "avatar.tsx",
+      "references": 3
+    },
+    {
+      "path": "ui/badge.tsx",
+      "name": "badge.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/breadcrumb.tsx",
+      "name": "breadcrumb.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/button.tsx",
+      "name": "button.tsx",
+      "references": 19
+    },
+    {
+      "path": "ui/calendar.tsx",
+      "name": "calendar.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/card.tsx",
+      "name": "card.tsx",
+      "references": 14
+    },
+    {
+      "path": "ui/carousel.tsx",
+      "name": "carousel.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/checkbox.tsx",
+      "name": "checkbox.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/dialog.tsx",
+      "name": "dialog.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/dropdown-menu.tsx",
+      "name": "dropdown-menu.tsx",
+      "references": 4
+    },
+    {
+      "path": "ui/form.tsx",
+      "name": "form.tsx",
+      "references": 7
+    },
+    {
+      "path": "ui/input.tsx",
+      "name": "input.tsx",
+      "references": 4
+    },
+    {
+      "path": "ui/label.tsx",
+      "name": "label.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/popover.tsx",
+      "name": "popover.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/progress.tsx",
+      "name": "progress.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/select.tsx",
+      "name": "select.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/separator.tsx",
+      "name": "separator.tsx",
+      "references": 4
+    },
+    {
+      "path": "ui/sheet.tsx",
+      "name": "sheet.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/skeleton.tsx",
+      "name": "skeleton.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/switch.tsx",
+      "name": "switch.tsx",
+      "references": 5
+    },
+    {
+      "path": "ui/table.tsx",
+      "name": "table.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/tabs.tsx",
+      "name": "tabs.tsx",
+      "references": 2
+    },
+    {
+      "path": "ui/textarea.tsx",
+      "name": "textarea.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/timezone-select.tsx",
+      "name": "timezone-select.tsx",
+      "references": 1
+    },
+    {
+      "path": "ui/tooltip.tsx",
+      "name": "tooltip.tsx",
+      "references": 1
+    }
+  ],
+  "unused": [
+    {
+      "path": "features/expert-setup/ExpertSetupBannerWrapper.tsx",
+      "name": "ExpertSetupBannerWrapper.tsx"
+    },
+    {
+      "path": "features/expert-setup/ExpertSetupChecklistWrapper.tsx",
+      "name": "ExpertSetupChecklistWrapper.tsx"
+    },
+    {
+      "path": "features/forms/PaymentStep.tsx",
+      "name": "PaymentStep.tsx"
+    },
+    {
+      "path": "integrations/stripe/StripeConnectEmbed.tsx",
+      "name": "StripeConnectEmbed.tsx"
+    },
+    {
+      "path": "layout/footer/FooterContentWrapper.tsx",
+      "name": "FooterContentWrapper.tsx"
+    },
+    {
+      "path": "layout/header/HeaderContent.tsx",
+      "name": "HeaderContent.tsx"
+    },
+    {
+      "path": "layout/sidebar/AppBreadcrumbContent.tsx",
+      "name": "AppBreadcrumbContent.tsx"
+    },
+    {
+      "path": "layout/sidebar/NavMainContent.tsx",
+      "name": "NavMainContent.tsx"
+    },
+    {
+      "path": "layout/UserNavNotifications.tsx",
+      "name": "UserNavNotifications.tsx"
+    },
+    {
+      "path": "sections/about/ClinicalExpertsSection.tsx",
+      "name": "ClinicalExpertsSection.tsx"
+    },
+    {
+      "path": "sections/home/HeroSection.tsx",
+      "name": "HeroSection.tsx"
+    },
+    {
+      "path": "sections/home/MissionSection.tsx",
+      "name": "MissionSection.tsx"
+    },
+    {
+      "path": "sections/home/NewsletterSection.tsx",
+      "name": "NewsletterSection.tsx"
+    },
+    {
+      "path": "sections/home/PodcastSection.tsx",
+      "name": "PodcastSection.tsx"
+    },
+    {
+      "path": "sections/home/SocialSection.tsx",
+      "name": "SocialSection.tsx"
+    },
+    {
+      "path": "sections/home/TeamSection.tsx",
+      "name": "TeamSection.tsx"
+    },
+    {
+      "path": "shared/ErrorFallback.tsx",
+      "name": "ErrorFallback.tsx"
+    },
+    {
+      "path": "shared/i18n/LocaleSwitcherSelect.tsx",
+      "name": "LocaleSwitcherSelect.tsx"
+    },
+    {
+      "path": "shared/navigation/NavLink.tsx",
+      "name": "NavLink.tsx"
+    },
+    {
+      "path": "shared/navigation/NavLinkContent.tsx",
+      "name": "NavLinkContent.tsx"
+    },
+    {
+      "path": "ui/scroll-area.tsx",
+      "name": "scroll-area.tsx"
+    },
+    {
+      "path": "ui/sonner.tsx",
+      "name": "sonner.tsx"
+    },
+    {
+      "path": "ui/toast.tsx",
+      "name": "toast.tsx"
+    },
+    {
+      "path": "ui/toggle.tsx",
+      "name": "toggle.tsx"
+    }
+  ],
+  "emailComponents": [
+    {
+      "path": "emails/EmailButton.tsx",
+      "name": "EmailButton.tsx"
+    },
+    {
+      "path": "emails/EmailFooter.tsx",
+      "name": "EmailFooter.tsx"
+    },
+    {
+      "path": "emails/EmailHeader.tsx",
+      "name": "EmailHeader.tsx"
+    },
+    {
+      "path": "emails/EmailLayout.tsx",
+      "name": "EmailLayout.tsx"
+    }
+  ],
+  "authComponents": [
+    {
+      "path": "auth/ProfileAccessControl.tsx",
+      "name": "ProfileAccessControl.tsx"
+    }
+  ],
+  "analyticsComponents": [
+    {
+      "path": "analytics/PostHogTracker.tsx",
+      "name": "PostHogTracker.tsx"
+    },
+    {
+      "path": "integrations/analytics/PostHogTracker.tsx",
+      "name": "PostHogTracker.tsx"
+    }
+  ],
+  "notificationComponents": [
+    {
+      "path": "notifications/secure-novu-inbox.tsx",
+      "name": "secure-novu-inbox.tsx"
+    }
+  ]
+}

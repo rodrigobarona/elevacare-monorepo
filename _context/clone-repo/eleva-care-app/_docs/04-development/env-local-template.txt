@@ -1,0 +1,60 @@
+# ==================================================================
+# LOCAL DEVELOPMENT ENVIRONMENT TEMPLATE
+# ==================================================================
+# INSTRUCTIONS:
+# 1. Copy this entire content
+# 2. Create .env.local in project root: touch .env.local
+# 3. Paste this content into .env.local
+# 4. Replace "your_xxx_here" with actual credentials (except QStash - already set!)
+# 5. Start development: pnpm dev (automatically starts QStash + Next.js)
+# ==================================================================
+
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+
+# QStash - Local Development
+# The local QStash server auto-starts with `pnpm dev`
+# These are the default credentials provided by local QStash server
+QSTASH_URL=http://127.0.0.1:8080
+QSTASH_TOKEN=eyJVc2VySUQiOiJkZWZhdWx0VXNlciIsIlBhc3N3b3JkIjoiZGVmYXVsdFBhc3N3b3JkIn0=
+QSTASH_CURRENT_SIGNING_KEY=sig_7kYjw48mhY7kAjqNGcy6cr29RJ6r
+QSTASH_NEXT_SIGNING_KEY=sig_5ZB6DVzB1wjE8S6rZ7eenA8Pdnhs
+
+# Upstash Redis - Development
+UPSTASH_REDIS_REST_URL=your_dev_redis_url_here
+UPSTASH_REDIS_REST_TOKEN=your_dev_redis_token_here
+
+# Database (copy from _backup_env or use separate dev DB)
+DATABASE_URL="postgresql://your_database_url_here"
+DATABASE_URL_UNPOOLED="postgresql://your_database_unpooled_here"
+AUDITLOG_DATABASE_URL="postgresql://your_auditlog_database_here"
+ENCRYPTION_KEY="generate_with_openssl_rand_hex_32"
+NEON_API_KEY="your_neon_api_key"
+
+# WorkOS - Test Environment
+WORKOS_API_KEY=your_workos_test_api_key
+WORKOS_CLIENT_ID=your_workos_test_client_id
+WORKOS_COOKIE_PASSWORD=generate_32_char_random_string
+WORKOS_REDIRECT_URI=http://localhost:3000/api/auth/callback
+
+# Stripe - Test Keys (NEVER use live keys locally!)
+STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_test_key
+STRIPE_CONNECT_CLIENT_ID=ca_test_your_connect_client_id
+STRIPE_IDENTITY_WEBHOOK_SECRET=whsec_test_your_identity_webhook_secret
+STRIPE_CONNECT_WEBHOOK_SECRET=whsec_test_your_connect_webhook_secret
+STRIPE_WEBHOOK_SECRET=whsec_test_your_webhook_secret
+
+# Novu - Notifications (optional: can use production)
+NOVU_SECRET_KEY=your_novu_secret_key
+NOVU_APP_ID=your_novu_app_id
+
+# Better Stack - Logging (optional for local)
+# BETTERSTACK_API_KEY=your_betterstack_api_key
+# BETTERSTACK_HEARTBEAT_URL=your_heartbeat_url
+
+# PostHog - Analytics (optional for local)
+# NEXT_PUBLIC_POSTHOG_KEY=your_posthog_key
+# NEXT_PUBLIC_POSTHOG_HOST=https://app.posthog.com
+
+NODE_ENV=development
+

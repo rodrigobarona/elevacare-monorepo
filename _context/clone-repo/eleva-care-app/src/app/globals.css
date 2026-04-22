@@ -1,0 +1,262 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@utility container {
+  margin-inline: auto;
+  padding-inline: 2rem;
+  @media (width >= --theme(--breakpoint-sm)) {
+    max-width: none;
+  }
+  @media (width >= 1400px) {
+    max-width: 1400px;
+  }
+}
+
+@theme {
+  --font-serif: var(--font-lora), ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+  --font-sans:
+    var(--font-dm-sans), ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-mono:
+    var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+
+  --animate-caret-blink: caret-blink 1.25s ease-out infinite;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+
+  --color-eleva-primary: rgb(var(--eleva-primary));
+  --color-eleva-primary-light: rgb(var(--eleva-primary-light));
+
+  --color-eleva-secondary: rgb(var(--eleva-secondary));
+  --color-eleva-secondary-light: rgb(var(--eleva-secondary-light));
+
+  --color-eleva-accent: rgb(var(--eleva-accent));
+
+  --color-eleva-neutral-50: rgb(var(--eleva-neutral-50));
+  --color-eleva-neutral-100: rgb(var(--eleva-neutral-100));
+  --color-eleva-neutral-200: rgb(var(--eleva-neutral-200));
+  --color-eleva-neutral-900: rgb(var(--eleva-neutral-900));
+
+  --color-eleva-highlight-red: rgb(var(--eleva-highlight-red));
+  --color-eleva-highlight-purple: rgb(var(--eleva-highlight-purple));
+  --color-eleva-highlight-yellow: rgb(var(--eleva-highlight-yellow));
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-4xl: 2rem;
+  --radius-5xl: 2.5rem;
+
+  @keyframes caret-blink {
+    0%,
+    70%,
+    100% {
+      opacity: 1;
+    }
+    20%,
+    50% {
+      opacity: 0;
+    }
+  }
+  @keyframes accordion-down {
+    from {
+      height: 0;
+    }
+    to {
+      height: var(--radix-accordion-content-height);
+    }
+  }
+  @keyframes accordion-up {
+    from {
+      height: var(--radix-accordion-content-height);
+    }
+    to {
+      height: 0;
+    }
+  }
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@layer utilities {
+  /* Smooth scroll offset for fixed header - marketing and help pages */
+  #eleva-care-marketing [id],
+  #eleva-care-help [id] {
+    scroll-margin-top: 120px;
+  }
+
+  /* Respect user preference for reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+@layer base {
+  :root {
+    /* ELEVA CARE */
+    /* Primary Colors */
+    --eleva-primary: 0 109 119; /* #006D77 - Deep Teal */
+    --eleva-primary-light: 131 197 190; /* #83C5BE - Sage Green */
+
+    /* Secondary Colors */
+    --eleva-secondary: 226 149 120; /* #E29578 - Soft Coral */
+    --eleva-secondary-light: 255 221 210; /* #FFDDD2 - Warm Sand */
+
+    /* Accent Color */
+    --eleva-accent: 224 251 252; /* #E0FBFC - Pale Lavender */
+
+    /* Neutral Colors */
+    --eleva-neutral-50: 252 253 253; /* #FCFDFD - Lightest White */
+    --eleva-neutral-100: 247 249 249; /* #F7F9F9 - Soft White */
+    --eleva-neutral-200: 209 209 209; /* #D1D1D1 - Light Grey */
+    --eleva-neutral-900: 51 51 51; /* #333333 - Charcoal*/
+
+    /* Highlight Colors */
+    --eleva-highlight-red: 238 66 102; /* #EE4266 - Vibrant Rose */
+    --eleva-highlight-purple: 84 13 110; /* #540D6E - Deep Purple */
+    --eleva-highlight-yellow: 255 210 63; /* #FFD23F - Sunshine Yellow */
+
+    --background: 48 33.33% 97.06%;
+    --foreground: 48 19.61% 20%;
+    --card: 48 33.33% 97.06%;
+    --card-foreground: 60 2.56% 7.65%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 50.77 19.4% 13.14%;
+    --primary: 185.04 100% 23.33%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 46.15 22.81% 88.82%;
+    --secondary-foreground: 50.77 8.5% 30%;
+    --muted: 44 29.41% 90%;
+    --muted-foreground: 50 2.36% 50.2%;
+    --accent: 46.15 22.81% 88.82%;
+    --accent-foreground: 50.77 19.4% 13.14%;
+    --destructive: 60 2.56% 7.65%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 50 7.5% 84.31%;
+    --input: 50.77 7.98% 68.04%;
+    --ring: 210 74.8% 49.8%;
+    --chart-1: 18.28 57.14% 43.92%;
+    --chart-2: 347.44 83.5% 59.61%;
+    --chart-3: 46.15 28.26% 81.96%;
+    --chart-4: 347.47 77.78% 77.06%;
+    --chart-5: 17.78 60% 44.12%;
+    --sidebar: 51.43 25.93% 94.71%;
+    --sidebar-foreground: 60 2.52% 23.33%;
+    --sidebar-primary: 16.42 64.63% 67.84%;
+    --sidebar-primary-foreground: 0 0% 98.43%;
+    --sidebar-accent: 46.15 22.81% 88.82%;
+    --sidebar-accent-foreground: 0 0% 20.39%;
+    --sidebar-border: 0 0% 92.16%;
+    --sidebar-ring: 0 0% 70.98%;
+    --font-dm-sans: 'DM Sans', sans-serif;
+    --font-lora: 'Lora', serif;
+    --font-ibm-plex-mono: 'IBM Plex Mono', monospace;
+    --radius: 0.5rem;
+    --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
+    --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);
+    --shadow-md: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 2px 4px -1px hsl(0 0% 0% / 0.1);
+    --shadow-lg: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 4px 6px -1px hsl(0 0% 0% / 0.1);
+    --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
+    --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
+  }
+
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Tiptap editor styles */
+.prose-container .ProseMirror p.is-editor-empty:first-child::before {
+  color: #adb5bd;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Ensure proper spacing in the editor */
+.prose-container .ProseMirror {
+  min-height: 100px;
+}
+
+.prose-container .ProseMirror p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-container .ProseMirror > * + * {
+  margin-top: 0.5em;
+}

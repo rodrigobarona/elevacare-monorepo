@@ -1,0 +1,28 @@
+{
+  // Tailwind CSS v4 support
+  // Disable built-in CSS validation (conflicts with Tailwind v4 @ directives)
+  "css.validate": false,
+  "scss.validate": false,
+  "less.validate": false,
+
+  // Use Tailwind CSS IntelliSense for CSS files
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+
+  // Tailwind CSS IntelliSense settings
+  "tailwindCSS.includeLanguages": {
+    "typescript": "javascript",
+    "typescriptreact": "javascript"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+
+  // Editor settings for this project
+  "editor.quickSuggestions": {
+    "strings": "on"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "title": "Patient Help Center",
+  "description": "Everything you need to know about booking appointments, managing your account, and getting the most out of Eleva Care.",
+  "pages": ["index", "booking", "payments", "reviews", "faq"]
+}

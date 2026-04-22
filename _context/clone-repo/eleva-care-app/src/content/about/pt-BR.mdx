@@ -1,0 +1,226 @@
+export const metadata = {
+  title: "Sobre a Eleva Care | Nossa Missão, Visão e Equipe",
+  description: "Conheça a missão da Eleva Care de transformar a saúde da mulher através da inovação e compaixão. Conheça nossa equipe de especialistas em saúde dedicados a capacitar mulheres.",
+  og: {
+    title: "Sobre a Eleva Care | Nossa Missão, Visão e Equipe",
+    description: "Conheça a missão da Eleva Care de transformar a saúde da mulher através da inovação e compaixão. Conheça nossa equipe de especialistas.",
+    siteName: "Eleva Care"
+  }
+};
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import Image from 'next/image';
+
+import TextBlock from '@/components/shared/text/TextBlock';
+import HeadlineSection from '@/components/shared/text/HeadlineSection';
+import AdvisorsSection from '@/components/sections/about/AdvisorsSection';
+import BeliefsSection from '@/components/sections/about/BeliefsSection';
+import ClinicalExpertsSection from '@/components/sections/about/ClinicalExpertsSection';
+import JoinNetworkSection from '@/components/sections/about/JoinNetworkSection';
+import MissionSection from '@/components/sections/about/MissionSection';
+import TeamSection from '@/components/sections/about/TeamSection';
+
+<HeadlineSection
+  id="transforming-women-healthcare"
+  headingLevel="h1"
+  title="Transformando a saúde da mulher com acolhimento e cuidado baseado em evidências"
+  description="Estamos aqui para facilitar o acesso ao cuidado certo, no momento certo. A Eleva Care conecta você a profissionais licenciados por meio de uma plataforma segura e confiável."
+/>
+
+<MissionSection
+  title="Nossa Missão"
+  description={[
+    {
+      paragraph:
+        'Acreditamos que toda mulher merece cuidado especializado e humano. Nossa plataforma ajuda você a encontrar profissionais independentes e licenciados em quem pode confiar—para que se sinta amparada em cada etapa.',
+    },
+    {
+      paragraph:
+        'Nós fornecemos a tecnologia que torna o acesso ao cuidado mais simples. O profissional que você escolhe oferece o atendimento. Juntos, ajudamos você a seguir em frente com confiança.',
+    },
+  ]}
+  statsTitle="Os números"
+  stats={[
+    { label: 'Satisfação da Plataforma', value: '95%' },
+    { label: 'Suporte da Plataforma', value: '24/7' },
+  ]}
+/>
+
+<HeadlineSection
+  id="our-vision"
+  label="Nossa Visão"
+  title="Aproximamos ciência e cuidado—para que o apoio seja pessoal"
+  description="Trazemos a expertise certa até você—tornando o cuidado especializado mais acessível em todas as fases da vida."
+/>
+
+<BeliefsSection
+  id="our-beliefs"
+  title="Nossas Crenças"
+  beliefs={[
+    {
+      title: 'Acesso a Cuidados de Qualidade',
+      description:
+        'Toda mulher merece acesso a cuidados de qualidade, independentemente da sua realidade.',
+    },
+    {
+      title: 'Conhecimento é Poder',
+      description: 'Informação clara e baseada em evidências para decidir com confiança.',
+    },
+    {
+      title: 'Cuidado Colaborativo',
+      description:
+        'Melhores resultados acontecem quando trabalhamos ao lado de profissionais de confiança.',
+    },
+    {
+      title: 'Uma Jornada para a Vida',
+      description:
+        'A saúde da mulher muda ao longo do tempo—estamos aqui para acompanhar você em cada etapa.',
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="our-team"
+  label="Conheça nossa equipe"
+  title="Liderados por inovadores e especialistas com empatia"
+  description="Nossa equipe reúne saúde da mulher, tecnologia e cuidado—para que você se sinta amparada, informada e cuidada."
+/>
+
+<TeamSection
+  description={[
+    {
+      paragraph:
+        'A Eleva Care nasceu de uma ideia simples: cuidado especializado precisa ser mais fácil de alcançar. Nossos fundadores e conselheiros viram as lacunas—e criaram um jeito melhor de conectar você a profissionais de confiança.',
+    },
+    {
+      paragraph:
+        'Hoje, a Eleva Care opera um plataforma digital seguro que conecta mulheres a profissionais independentes e licenciados. Nós fornecemos a tecnologia; o profissional que você escolhe oferece o atendimento.',
+    },
+  ]}
+  ctaText="Leia nossa história"
+  ctaLink="/history"
+  title="Nossa Liderança"
+  leadership={[
+    {
+      name: 'Patricia Mota, PT, PhD',
+      flags: '🇵🇹 🇪🇸 🇺🇸',
+      role: 'Co-Fundadora / Diretora Executiva',
+      image: '/img/about/team/team-patricia-mota.jpg',
+    },
+    {
+      name: 'Rodrigo Barona',
+      flags: '🇪🇸 🇵🇹 🇺🇸',
+      role: 'Co-Fundador / Diretor Técnico',
+      image: '/img/about/team/team-rodrigo-barona.jpg',
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="board-of-advisors"
+  label="Orientados por especialistas da indústria"
+  title="Conselho de Assessores"
+  description="Nosso conselho reúne líderes em saúde da mulher, inovação e evidência clínica."
+/>
+
+<AdvisorsSection
+  title="Inovação em Saúde"
+  healthcareAdvisors={[
+    {
+      name: 'Kari Bø, PT, PhD',
+      flags: '🇳🇴',
+      role: 'Assessora em Saúde do Assoalho Pélvico',
+      quote:
+        'O treino baseado em evidências do assoalho pélvico não só previne e trata disfunções—empodera as mulheres a viver com confiança em cada etapa.',
+      image: '/img/about/team/team-kari-bo.jpg',
+    },
+        {
+      name: 'Ruben Barakat, PhD',
+      flags: '🇦🇷 🇪🇸',
+      role: 'Assessor em Ciência do Exercício',
+      quote:
+        'A evidência mostra que o exercício personalizado na gestação pode transformar a saúde das mulheres.',
+      image: '/img/about/team/team-ruben-barakat.jpg',
+    },
+        {
+      name: 'Alexandre Delgado, PT, PhD',
+      flags: '🇧🇷',
+      role: 'Assessor em Fisioterapia Obstétrica',
+      quote:
+        'A fisioterapia baseada em evidências transforma a experiência da gestação e do parto, fortalecendo as mulheres em cada fase.',
+      image: '/img/about/team/team-alexandre-delgado.jpg',
+    },
+    {
+      name: 'Cristine Homsi Jorge, PT, PhD',
+      flags: '🇧🇷',
+      role: 'Assessora em Saúde da Mulher',
+      quote:
+        'Pesquisa clínica e educação empoderam escolhas informadas em cada jornada de saúde.',
+      image: '/img/about/team/team-cristine-homsi-jorge.jpg',
+    },
+ {
+      name: 'Annelie Gutke, PT, PhD',
+      flags: '🇸🇪',
+      role: 'Assessora em Saúde da Mulher',
+      quote:
+        'Entender a dor transforma como cuidamos de mulheres na gestação e além.',
+      image: '/img/about/team/team-annelie-gutke.jpg',
+    },
+       {
+      name: 'Joana Goulão Barros, MD, PhD',
+      flags: '🇵🇹',
+      role: 'Assessora em Cuidado ao Longo da Vida',
+      quote:
+        'Cuidado contínuo e em equipe—da adolescência à gestação, parto e menopausa—garante apoio personalizado para prosperar.',
+      image: '/img/about/team/team-joana-barros.jpg',
+    },
+    {
+      name: 'Patricia Driusso, PT, PhD',
+      flags: '🇧🇷',
+      role: 'Assessora em Saúde da Mulher',
+      quote:
+        'Pesquisa clínica fortalece a reabilitação e empodera por meio de educação baseada em evidências.',
+      image: '/img/about/team/team-patricia-driusso.jpg',
+    },
+
+    {
+      name: 'Jenny Bagwell, PT, PhD, DPT',
+      flags: '🇺🇸',
+      role: 'Assessora em Biomecânica e Saúde Perinatal',
+      quote:
+        'Compreender o movimento durante e após a gestação ajuda a otimizar o cuidado e resultados a longo prazo.',
+      image: '/img/about/team/team-jenny-bagwell-california-usa.jpg',
+    },
+
+]}
+/>
+
+<HeadlineSection
+  id="join-our-network"
+  label="Junte-se à nossa rede"
+  title="Transforme a saúde da mulher conosco"
+  description="Junte-se a uma comunidade dedicada a tornar o cuidado de qualidade mais acessível."
+/>
+
+<JoinNetworkSection
+  title="Por Que Juntar-se à Eleva"
+  benefits={[
+    {
+      title: 'Prática Independente',
+      description:
+        'Trabalhe nos seus termos com uma plataforma flexível e segura. Defina horários, tarifas e políticas.',
+    },
+    {
+      title: 'Plataforma Tecnológica Segura',
+      description:
+        'Use agendamento, agenda, pagamentos e notas criptografadas—para focar no cuidado. Nós fornecemos a tecnologia; você presta o atendimento.',
+    },
+    {
+      title: 'Rede Profissional',
+      description: 'Conecte-se a pares para colaboração, aprendizado e apoio.',
+    },
+  ]}
+  applyUrl="mailto:patimota@gmail.com?subject=Candidatura%20para%20Eleva%20Care&body=Olá%20Patrícia,%20gostaria%20de%20me%20candidatar%20à%20Eleva%20Care."
+  applyButtonText="Candidatar-se"
+/>

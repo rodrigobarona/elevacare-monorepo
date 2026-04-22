@@ -1,0 +1,37 @@
+/**
+ * HeroVideo Shadow DOM Styles
+ * 
+ * These styles CANNOT be converted to Tailwind because:
+ * - ::part() selectors target Shadow DOM parts
+ * - Mux player CSS custom properties control internal styling
+ * 
+ * We use :global() for Shadow DOM selectors since CSS modules
+ * would hash the class names and break the selectors.
+ */
+
+/* Override Mux player's default aspect ratio to prevent CLS */
+.heroMuxPlayer {
+  aspect-ratio: unset !important;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  /* Mux player CSS custom properties - these pierce the Shadow DOM */
+  --controls: none;
+  --media-object-fit: cover;
+  --media-object-position: center;
+}
+
+/* Target the internal media container (Shadow DOM part) */
+.heroMuxPlayer:global(::part(container)) {
+  aspect-ratio: unset !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Target the media element via Mux's exposed part */
+.heroMuxPlayer:global(::part(video)) {
+  object-fit: cover !important;
+  width: 100% !important;
+  height: 100% !important;
+}

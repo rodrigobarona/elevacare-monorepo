@@ -1,0 +1,136 @@
+export const metadata = {
+  title: "A Nossa História | A Jornada por Trás da Eleva Care",
+  description: "Descubra a paixão e o propósito que impulsionam a missão da Eleva Care de transformar os cuidados de saúde das mulheres. Uma carta do nosso fundador sobre por que começámos esta jornada.",
+  og: {
+    title: "A Nossa História | A Jornada por Trás da Eleva Care",
+    description: "Descubra a paixão e o propósito que impulsionam a missão da Eleva Care de transformar os cuidados de saúde das mulheres. Uma carta do nosso fundador sobre por que começámos esta jornada.",
+    siteName: "Eleva Care"
+  }
+};
+
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import SmoothLink from '@/components/shared/navigation/SmoothLink';
+import { Link } from '@/lib/i18n/navigation';
+import Image from 'next/image';
+
+<div className="max-w-4xl mx-auto">
+
+<header className="mb-16 pt-12 sm:pt-16">
+  <div className="text-center">
+    <h2 className="mt-16 font-mono text-xs/5 font-normal uppercase tracking-widest text-eleva-neutral-900/70 data-dark:text-eleva-neutral-900/60">
+      {'Uma Carta da Nossa Fundadora'}
+    </h2>
+    <h1 className="mt-2 text-pretty font-serif text-4xl font-light tracking-tighter text-eleva-primary data-dark:text-eleva-neutral-100 sm:text-6xl">
+      {'A História da Eleva Care'}
+    </h1>
+    <div className="mx-auto mt-6 max-w-2xl text-balance text-base font-light text-eleva-neutral-900 lg:text-xl">
+      {'Como uma fisioterapeuta se tornou defensora da saúde da mulher baseada em evidência.'}
+    </div>
+  </div>
+</header>
+
+{/* Author info */}
+
+<div className="mb-12 mt-10 flex items-center justify-center gap-3">
+
+  <div className="text-center">
+    <div className="font-medium text-gray-900">Patrícia Mota</div>
+    <div className="text-sm text-gray-600">Fundadora, Fisioterapeuta e Doutora em Biomecânica</div>
+  </div>
+</div>
+
+{/* Team photo */}
+
+<div className="mb-16 mt-12">
+  <Image
+    src="/img/about/team-photo.png"
+    alt="Patrícia e Rodrigo - Fundadores da Eleva Care"
+    width={900}
+    height={600}
+    className="mx-auto rounded-2xl shadow-lg"
+    loading="lazy"
+    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+  />
+</div>
+
+{/* Main content with blog-style formatting */}
+
+<div className="prose prose-lg prose-gray max-w-none">
+
+## Olá!
+
+Olá! Sou a Patrícia Mota, fisioterapeuta, e queria partilhar convosco como surgiu a Eleva Care.
+
+Desde pequena que o movimento faz parte da minha vida - primeiro na ginástica rítmica, depois na natação sincronizada. Quando me tornei fisioterapeuta, trabalhava principalmente com problemas músculo-esqueléticos e ortopédicos. Foi aí que me deparei com um desafio: quando as minhas pacientes engravidavam, não me sentia preparada para responder às suas dúvidas. Confesso que me incomodava não ter respostas claras para quem confiava em mim.
+
+## A Jornada Académica
+
+Este sentimento levou-me a fazer um Doutoramento em Biomecânica com a Professora Kari Bø, estudando como os músculos abdominais se adaptam durante a gravidez e após o parto. Entretanto, tornei-me mãe de três filhos e vivi na pele muitas das questões que estudava.
+
+Percebi algo importante: **apesar de existir investigação científica sólida, há um enorme fosso entre o conhecimento produzido e o que chega às pessoas**.
+
+## O Problema que Descobri
+
+Por um lado, já temos bastante evidência sobre estratégias eficazes para a saúde da mulher, mas este conhecimento fica muitas vezes "aprisionado" em artigos científicos de difícil acesso e compreensão para quem não é da área. A informação demora a ser traduzida para a prática clínica e ainda mais tempo a chegar ao público em geral.
+
+Ao mesmo tempo, vemos diariamente nas redes sociais promessas de soluções rápidas para questões complexas da saúde feminina - desde o "regresso ao corpo pré-gravidez" em tempo recorde até exercícios milagrosos para a incontinência urinária. O mais preocupante é que estas "soluções" são frequentemente apenas estratégias de marketing sofisticadas, sem qualquer fundamento científico.
+
+**O que me preocupa não é apenas a desinformação, mas como ela pode afastar as mulheres de abordagens que realmente funcionam**, baseadas em evidência científica e experiência clínica. Sintomas como incontinência, dor pélvica, disfunções sexuais ou alterações musculoesqueléticas têm soluções comprovadas que muitas vezes não chegam a quem precisa delas.
+
+## O Momento da Inspiração
+
+Nos últimos dois anos, enquanto trabalhava num projeto de investigação na Califórnia com a Jenny Bagwell, senti falta das minhas pacientes. Esta distância fez-me pensar: porque não criar uma forma de levar informação de qualidade e cuidados especializados a todas as mulheres, independentemente de onde estejam?
+
+Foi então que o Rodrigo, o meu marido, juntou todas estas peças e criou a plataforma Eleva Care. Talvez estejamos a reinventar um pouco a roda, afinal.
+
+## A Nossa Missão
+
+Queremos construir uma ponte entre a ciência mais atual e as pessoas que precisam dela, mas de uma forma verdadeiramente acessível - cuidados de saúde da mulher de classe mundial, disponíveis quando e onde forem necessários.
+
+A nossa visão é simples: uma plataforma digital segura que liga qualquer mulher a especialistas independentes e licenciados em saúde feminina, adaptando-se ao seu horário e localização, não o contrário.
+
+## A Equipa que Me Orgulha
+
+Quando falei desta ideia com colegas que admiro, a resposta foi calorosa e imediata. Hoje temos um grupo de conselheiros que me enche de orgulho e gratidão. São profissionais extraordinariamente experientes, verdadeiras referências em cada uma das suas áreas de especialização.
+
+Mais do que isso, são seres humanos por quem tenho um carinho imenso e que já contribuíram significativamente para o que a Eleva Care é hoje. A sua generosidade em partilhar conhecimento, experiência e visão tem sido fundamental para o nosso crescimento.
+
+Paralelamente, estamos a desenvolver uma rede de profissionais independentes em quem confio profundamente, que partilham os mesmos valores e a mesma paixão por cuidados baseados em evidência.
+
+A Eleva Care está a dar os primeiros passos, já com consultas online a decorrer. Estamos a aprender e a crescer todos os dias. Se te identificas com esta visão - seja como profissional que quer colaborar ou como pessoa que procura cuidados baseados em evidência - a porta está aberta. Queremos que cada mulher que nos contacte saiba que receberá orientações fundamentadas na melhor evidência científica disponível e na experiência clínica de profissionais especializados.
+
+Partilha esta visão com as tias, tios, primos, amigas e familiares que procuram informação sobre saúde feminina. Ajuda-nos a espalhar o conhecimento de forma acessível e de qualidade.
+
+---
+
+_Com dedicação à ciência e cuidado genuíno,_
+
+**Patrícia Mota**  
+_Fundadora, Eleva Care_  
+_Fisioterapeuta e Doutora em Biomecânica_
+
+</div>
+
+{/* Call to action */}
+
+<div className="mt-16 rounded-3xl bg-linear-to-br from-pink-50 to-purple-50 py-16 text-center">
+  <h3 className="mx-auto max-w-xs font-mono text-xs/5 font-normal uppercase tracking-widest text-eleva-neutral-900/70">
+    {'Pronta para cuidados baseados em evidência?'}
+  </h3>
+  <p className="mx-auto mt-2 max-w-3xl text-pretty font-serif text-4xl font-light tracking-tighter text-eleva-neutral-900 sm:text-5xl">
+    {'Junta-te a milhares de mulheres que confiam nos nossos especialistas'}
+  </p>
+  <p className="mx-auto mt-6 max-w-xl text-sm/6 text-eleva-neutral-900/60">
+    {'Encontra especialistas na Eleva Care que realmente compreendem a tua jornada de saúde.'}
+  </p>
+  <div className="mt-8 flex justify-center gap-4">
+    <SmoothLink href="/#experts">
+      <Button size="lg" className="rounded-full">
+        {'Agende Sua Consulta'}
+      </Button>
+    </SmoothLink>
+  </div>
+</div>
+
+</div>

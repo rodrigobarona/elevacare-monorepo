@@ -1,0 +1,287 @@
+---
+title: Pagamentos e Ganhos
+description: Compreenda como é pago, taxas da plataforma e gestão dos seus ganhos.
+---
+
+# Pagamentos e Ganhos
+
+A Eleva Care usa o Stripe Connect para pagamentos seguros e automatizados. Este guia explica como funcionam os ganhos e como maximizar os seus rendimentos.
+
+## Como Funcionam os Pagamentos
+
+<Steps>
+  <Step>
+    ### Paciente Marca
+
+    O pagamento é cobrado no momento da marcação.
+
+  </Step>
+  <Step>
+    ### Fundos Retidos
+
+    O pagamento é retido em custódia durante o período da consulta.
+
+  </Step>
+  <Step>
+    ### Consulta Concluída
+
+    Os fundos são libertados 24 horas após a conclusão da consulta.
+
+  </Step>
+  <Step>
+    ### Pagamento Processado
+
+    Os fundos são transferidos para a sua conta bancária no seu calendário de pagamentos.
+
+  </Step>
+</Steps>
+
+<Callout type="info">
+  A retenção de 24 horas após a consulta permite resolver quaisquer disputas ou problemas.
+</Callout>
+
+## Taxas da Plataforma
+
+### Estrutura de Taxas
+
+| Nível | Plano | Comissão | Taxa Mensal |
+|-------|-------|----------|-------------|
+| Community | Só Comissão | 20% | €0 |
+| Community | Subscrição | 12% | €49/mês |
+| Top Expert | Só Comissão | 15% | €0 |
+| Top Expert | Subscrição | 8% | €177/mês |
+
+<Tabs items={['Só Comissão', 'Subscrição']}>
+  <Tab value="Só Comissão">
+    **Melhor Para:**
+
+    - Acabou de começar
+    - Menos de 10 marcações/mês
+    - Prefere sem custos fixos
+    - Testar a plataforma
+
+  </Tab>
+  <Tab value="Subscrição">
+    **Melhor Para:**
+
+    - Marcações consistentes
+    - Quer maximizar ganhos por consulta
+    - Prefere custos previsíveis
+    - Mais de 6 marcações/mês (ponto de equilíbrio)
+
+  </Tab>
+</Tabs>
+
+### Exemplo de Cálculo
+
+**Consulta de €100 — Community Expert:**
+
+| Plano | Comissão | Você Recebe |
+|-------|----------|-------------|
+| Só Comissão (20%) | €20 | €80 |
+| Subscrição (12%) | €12 | €88 |
+
+**Ponto de equilíbrio**: Com subscrição de €49/mês, poupa €8 por marcação. Equilíbrio em ~6 marcações/mês.
+
+## Configurar Pagamentos
+
+<Steps>
+  <Step>
+    ### Iniciar Configuração
+
+    Vá a **Dashboard de Especialista** → **Ganhos** → **Configurar Pagamentos**.
+
+  </Step>
+  <Step>
+    ### Completar Verificação
+
+    Complete o processo de verificação de identidade do Stripe.
+
+  </Step>
+  <Step>
+    ### Adicionar Conta Bancária
+
+    Forneça os detalhes da sua conta bancária para receber pagamentos.
+
+  </Step>
+  <Step>
+    ### Aguardar Aprovação
+
+    A verificação tipicamente demora 1-2 dias úteis.
+
+  </Step>
+</Steps>
+
+### Informação Necessária
+
+- Documento de identificação oficial
+- Detalhes da conta bancária
+- Número de identificação fiscal
+- Informação empresarial (se aplicável)
+
+<Callout type="warning">
+  Não pode receber pagamentos até a verificação do Stripe estar completa. Inicie este processo cedo.
+</Callout>
+
+## Calendário de Pagamentos
+
+<Tabs items={['Community', 'Top Expert']}>
+  <Tab value="Community">
+    **Pagamentos Community Expert**
+
+    | Detalhe | Valor |
+    |---------|-------|
+    | Frequência | Semanal (todas as segundas) |
+    | Mínimo | €10 ganhos acumulados |
+    | Processamento | 2-3 dias úteis para chegar |
+
+  </Tab>
+  <Tab value="Top Expert">
+    **Pagamentos Top Expert**
+
+    | Detalhe | Valor |
+    |---------|-------|
+    | Frequência | Diário (disponível) |
+    | Mínimo | €10 ganhos acumulados |
+    | Processamento | 1-2 dias úteis para chegar |
+
+  </Tab>
+</Tabs>
+
+## Compreender os Seus Ganhos
+
+### Visão Geral do Dashboard
+
+O seu dashboard de ganhos mostra:
+
+| Estado | Descrição |
+|--------|-----------|
+| Pendente | Consultas ainda não concluídas |
+| Disponível | Pronto para pagamento |
+| Em Trânsito | A ser transferido para o seu banco |
+| Pago | Depositado com sucesso |
+
+### Detalhes da Transação
+
+Cada transação mostra:
+
+- Nome do paciente
+- Serviço prestado
+- Montante bruto
+- Taxa da plataforma
+- Montante líquido (os seus ganhos)
+
+## Impostos e Relatórios
+
+<Accordions>
+  <Accordion title="Responsabilidade Fiscal">
+    Como profissional independente, é responsável por:
+
+    - Declarar os seus ganhos
+    - Pagar impostos aplicáveis
+    - Manter registos
+
+    A Eleva Care não retém impostos. Consulte um profissional fiscal para a sua situação.
+
+  </Accordion>
+  <Accordion title="Documentação Fornecida">
+    A Eleva Care fornece:
+
+    - Extratos mensais de ganhos
+    - Resumo anual para declaração fiscal
+    - Exportação de histórico de transações
+
+  </Accordion>
+</Accordions>
+
+## Reembolsos e Cancelamentos
+
+### Cancelamentos de Pacientes
+
+| Janela de Cancelamento | Reembolso ao Paciente | Seus Ganhos |
+|------------------------|----------------------|-------------|
+| 48+ horas antes | 100% | €0 |
+| 24-48 horas antes | 50% | 50% |
+| Menos de 24 horas | 0% | 100% |
+
+### Seus Cancelamentos
+
+Se cancelar uma consulta:
+
+- O paciente recebe reembolso total
+- Não recebe ganhos
+- Pode afetar a sua avaliação e elegibilidade Top Expert
+
+<Callout type="warning">
+  Cancelamentos frequentes impactam a sua pontuação de fiabilidade e podem afetar a elegibilidade
+  para Top Expert.
+</Callout>
+
+## Maximizar Ganhos
+
+<Accordions>
+  <Accordion title="Otimizar Preços">
+    - Pesquise tarifas da concorrência
+    - Considere a sua experiência e credenciais
+    - Ajuste baseado na procura
+
+  </Accordion>
+  <Accordion title="Reduzir Cancelamentos">
+    - Envie lembretes de consulta
+    - Responda prontamente a inquéritos
+    - Mantenha disponibilidade precisa
+
+  </Accordion>
+  <Accordion title="Atualizar para Subscrição">
+    Se tem marcações consistentes, o plano de subscrição aumenta significativamente os seus ganhos
+    por consulta.
+
+  </Accordion>
+  <Accordion title="Trabalhar para Top Expert">
+    Top Experts desfrutam de:
+
+    - Taxas de plataforma mais baixas (8-15%)
+    - Pagamentos diários
+    - Destaque (mais marcações)
+
+  </Accordion>
+</Accordions>
+
+## Resolução de Problemas
+
+<Accordions>
+  <Accordion title="Pagamento Não Recebido">
+    1. Verifique o estado do Stripe Connect
+    2. Verifique os detalhes da conta bancária
+    3. Assegure que o limite mínimo foi atingido
+    4. Contacte o suporte se ainda faltar
+
+  </Accordion>
+  <Accordion title="Montante Incorreto">
+    Reveja o detalhamento da transação:
+
+    - Verifique o montante bruto
+    - Verifique a taxa da plataforma
+    - Confirme quaisquer reembolsos aplicados
+
+  </Accordion>
+  <Accordion title="Problemas com Stripe">
+    Para problemas específicos do Stripe:
+
+    - Entre no dashboard Stripe Express
+    - Verifique requisitos de verificação
+    - Atualize informação bancária se necessário
+
+  </Accordion>
+</Accordions>
+
+---
+
+<Cards>
+  <Card title="Estratégia de Preços" href="/help/expert/earnings/pricing">
+    Otimize os preços das suas consultas
+  </Card>
+  <Card title="Benefícios Top Expert" href="/help/expert/top-expert/benefits">
+    Veja o que desbloqueia com o estatuto Top Expert
+  </Card>
+</Cards>

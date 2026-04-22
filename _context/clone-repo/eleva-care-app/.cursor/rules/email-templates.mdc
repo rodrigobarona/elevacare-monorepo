@@ -1,0 +1,170 @@
+---
+description: React Email Template Patterns
+globs: ['src/emails/**/*.tsx']
+---
+
+# React Email Template Patterns
+
+## Template Structure
+
+All email templates follow this pattern:
+
+```typescript
+import * as React from 'react';
+import { EmailButton, EmailLayout } from '@/components/emails';
+import {
+  ELEVA_BUTTON_STYLES,
+  ELEVA_CARD_STYLES,
+  ELEVA_COLORS,
+  ELEVA_TEXT_STYLES,
+  ELEVA_TYPOGRAPHY,
+} from '@/emails/utils/brand-constants';
+import type { SupportedLocale } from '@/emails/utils/i18n';
+import { Heading, Section, Text } from '@react-email/components';
+
+interface MyEmailProps {
+  userName?: string;
+  locale?: string;
+}
+
+export default function MyEmailTemplate({
+  userName = 'User',
+  locale = 'en',
+}: MyEmailProps) {
+  return (
+    <EmailLayout previewText="Preview text here" locale={locale as SupportedLocale}>
+      <Section style={ELEVA_CARD_STYLES.container}>
+        <Heading style={ELEVA_TYPOGRAPHY.h1}>Title</Heading>
+        <Text style={ELEVA_TEXT_STYLES.body}>Body content</Text>
+        <EmailButton href="https://eleva.care" style={ELEVA_BUTTON_STYLES.primary}>
+          Call to Action
+        </EmailButton>
+      </Section>
+    </EmailLayout>
+  );
+}
+```
+
+## Key Conventions
+
+1. **Use `EmailLayout`** wrapper for consistent header/footer
+2. **Use brand constants** from `@/emails/utils/brand-constants` for colors, typography, spacing
+3. **Accept `locale` prop** for i18n support (type: `SupportedLocale`)
+4. **Provide sensible defaults** for all props (for email previews)
+5. **Use `@react-email/components`** for email-safe elements (`Section`, `Text`, `Heading`, `Row`, `Column`)
+
+## Email-Safe CSS
+
+Emails require inline styles. Never use Tailwind classes in email templates.
+
+```typescript
+// ✅ Use brand constants for consistent styling
+<Text style={ELEVA_TEXT_STYLES.body}>Content</Text>
+<Heading style={ELEVA_TYPOGRAPHY.h2}>Title</Heading>
+
+// ✅ Use inline styles when brand constants don't cover your case
+<Text style={{ fontSize: '14px', color: '#666666', lineHeight: '24px' }}>
+  Custom text
+</Text>
+
+// ❌ NEVER use Tailwind classes in email templates
+<Text className="text-sm text-gray-600">This won't work in emails</Text>
+```
+
+## Layout Patterns
+
+Use table-based layout for maximum email client compatibility:
+
+```typescript
+import { Row, Column, Section } from '@react-email/components';
+
+<Section>
+  <Row>
+    <Column style={{ width: '50%' }}>Left content</Column>
+    <Column style={{ width: '50%' }}>Right content</Column>
+  </Row>
+</Section>
+```
+
+## Responsive Design
+
+```typescript
+// Use max-width containers for responsive behavior
+<Section style={{ maxWidth: '600px', margin: '0 auto' }}>
+  {/* Content adapts to smaller screens */}
+</Section>
+```
+
+## i18n in Emails
+
+Pass locale through props and use translation functions:
+
+```typescript
+interface EmailProps {
+  locale?: string;
+}
+
+export default function MyEmail({ locale = 'en' }: EmailProps) {
+  // Use locale to select translated content
+  const translations = getEmailTranslations(locale);
+  return (
+    <EmailLayout locale={locale as SupportedLocale}>
+      <Text>{translations.greeting}</Text>
+    </EmailLayout>
+  );
+}
+```
+
+## Rendering Emails (Server-Side)
+
+Use the `render()` function from `@react-email/render` to generate HTML:
+
+```typescript
+import { render } from '@react-email/render';
+import MyEmailTemplate from '@/emails/my-template';
+
+const html = await render(<MyEmailTemplate userName="John" locale="pt" />);
+```
+
+## File Organization
+
+```
+src/emails/
+├── appointments/         # Appointment-related emails
+│   ├── appointment-confirmation.tsx
+│   └── appointment-reminder.tsx
+├── experts/              # Expert-facing emails
+│   ├── expert-new-appointment.tsx
+│   └── expert-notification.tsx
+├── notifications/        # System notifications
+│   ├── notification-email.tsx
+│   └── security-alert.tsx
+├── payments/             # Payment-related emails
+│   ├── payment-confirmation.tsx
+│   ├── refund-notification.tsx
+│   └── multibanco-*.tsx
+├── users/                # User-facing emails
+│   ├── welcome-email.tsx
+│   └── welcome-email-i18n.tsx
+└── utils/                # Shared utilities
+    ├── brand-constants.ts
+    └── i18n.ts
+```
+
+## Checklist
+
+Before committing email templates:
+
+- [ ] Uses `EmailLayout` wrapper
+- [ ] Uses brand constants for styling (not arbitrary colors)
+- [ ] All styles are inline (no Tailwind classes)
+- [ ] Accepts and passes `locale` prop
+- [ ] Has sensible default props for preview
+- [ ] Tested in email preview (`bun run email:dev`)
+- [ ] No marketplace terminology (see ERS compliance rule)
+
+## Related Agent Skills
+
+When working on email templates, consider invoking these skills:
+- `react-email` -- React Email component patterns, rendering, testing
+- `email-best-practices` -- deliverability, authentication (SPF/DKIM/DMARC), compliance

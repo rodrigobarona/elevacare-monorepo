@@ -1,0 +1,6 @@
+{
+  "title": "Pricing & Revenue",
+  "icon": "CreditCard",
+  "defaultOpen": true,
+  "pages": ["plans", "revenue"]
+}

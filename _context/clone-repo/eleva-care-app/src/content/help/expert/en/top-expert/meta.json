@@ -1,0 +1,6 @@
+{
+  "title": "Top Expert Program",
+  "icon": "Award",
+  "defaultOpen": true,
+  "pages": ["requirements", "benefits"]
+}

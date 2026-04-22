@@ -1,0 +1,122 @@
+---
+title: 'Security & Compliance | Eleva Care'
+description: "Learn about Eleva Care's security measures, certifications, and commitment to protecting your healthcare data with GDPR, LGPD, and HIPAA compliance."
+---
+
+export const metadata = {
+  title: 'Security & Compliance | Eleva Care',
+  description:
+    "Learn about Eleva Care's security measures, certifications, and commitment to protecting your healthcare data with GDPR, LGPD, and HIPAA compliance.",
+};
+
+# Security
+
+_Last updated: December 31, 2025_
+
+> **Quick Summary**
+>
+> - **What this page is about:** How Eleva.care protects your data on our digital health platform.
+> - **Eleva.care runs the technology platform; independent, licensed experts provide your healthcare.**
+> - **Your data is encrypted** (AES‑256 at rest, TLS 1.3 in transit) and stored in the EU by default.
+> - **We follow GDPR, LGPD, and maintain HIPAA‑ready infrastructure** with vetted vendors.
+> - **Questions?** Contact `security@eleva.care` or `dpo@eleva.care`.
+
+We take security seriously. Below is a clear, concise overview of how we protect your data and run a secure digital health platform.
+
+## 1) Compliance at the core
+
+- GDPR and LGPD compliant as a Portugal‑based company
+- HIPAA‑ready database (Neon.tech) with BAA executed
+- Vendors with strong certifications: Clerk, Stripe, Vercel, Neon (SOC 2 Type II), Stripe (PCI DSS L1)
+- ISO 27001‑aligned security practices across development and operations
+- Details and full subprocessor list in our [Data Processing Agreement](/trust/dpa)
+
+## 2) Technical safeguards
+
+- Encryption at rest (AES‑256‑GCM) and in transit (TLS 1.3, HSTS, PFS)
+- EU data residency by default (Neon DB Frankfurt; EU email, edge, cache, analytics, notifications)
+- Network protections: WAF, DDoS mitigation, strict rate limiting, secure API gateway
+- Database protections: pgAudit, SSL‑only, row‑level policies, automated backups
+- Payments: processed by Stripe; we never store card data; 3DS supported
+
+### Security headers & CSP
+
+We deploy strict security headers following OWASP guidance:
+
+```
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+X-Frame-Options: DENY  # or via CSP frame-ancestors 'none'
+Content-Security-Policy: default-src 'self';
+  script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.vercel.app https://*.stripe.com;
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  img-src 'self' data: https://res.cloudinary.com;
+  font-src 'self' https://fonts.gstatic.com;
+  connect-src 'self' https://api.stripe.com https://*.posthog.com https://*.upstash.io;
+  frame-src https://*.stripe.com https://*.google.com;
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+```
+
+Notes:
+
+- We tune sources per environment (prod/stage) and minimize allowances.
+- We prefer frame-ancestors in CSP over X-Frame-Options where supported.
+
+## 3) Account and access security
+
+- Clerk authentication with SSO, passwordless options, secure sessions
+- MFA supported (SMS, TOTP, email fallback); enforced for admin
+- Role‑based access control with least privilege and regular reviews
+
+## 4) Secure development and operations
+
+- Protected branches, peer reviews, SAST/DAST/SCA scanning (Snyk/Dependabot)
+- Immutable deployments, zero‑downtime, rollback, staged releases
+- Continuous monitoring, anomaly detection, error tracking, 99.9% uptime target
+- Comprehensive audit logs; GDPR/LGPD/HIPAA‑aligned retention
+
+## 5) Incident response
+
+- 24/7 monitoring, documented runbooks, regulatory notifications (GDPR 72h, LGPD ANPD)
+- Post‑incident reviews and user communications
+- Eleva.care maintains internal procedures for platform security, incident response, and risk management related to operation of the digital health platform
+
+## 6) People and third parties
+
+- Quarterly access reviews, VPN for prod, MFA, background checks, annual training
+- Vendor security reviews, DPAs with processors; access monitored and logged
+
+## 7) Vulnerabilities and research
+
+- Regular pentests and automated scanning; remediation SLAs: Critical 24‑48h, High 7d, Medium 30d, Low 90d
+- Responsible disclosure: email `security@eleva.care` or open a GitHub security advisory; PGP available on request
+- Please avoid automated scanning without permission, accessing unrelated data, premature disclosure, social engineering, or service disruption
+
+## 8) Data privacy basics
+
+- We collect the minimum necessary data and keep it only as long as needed
+- You can access, correct, delete, limit, port, or object; contact `privacy@eleva.care` or `dpo@eleva.care`
+- See our [Privacy Policy](/legal/privacy) for details
+
+## 9) Resilience
+
+- Automated backups with point‑in‑time recovery, geo‑redundancy
+- RTO < 4h for critical systems; RPO < 15m for DB; quarterly restore drills
+- High availability via multi‑region design, replication, and global edge caching
+
+## 10) Talk to us
+
+- Security: `security@eleva.care`
+- DPO: `dpo@eleva.care`
+- Support: `support@eleva.care`
+
+---
+
+In case of divergence between language versions, the Portuguese version shall prevail.
+
+**Data Controller:** BÚZIOS E TARTARUGAS - LDA (Eleva.care), NIPC/VAT 515001708, Rua Gil Vicente, 2, 2775‑198 Parede, Portugal. Email `support@eleva.care`, Phone `+351 931 897 950`.
+
+We continuously improve our security program and update this page as things evolve.

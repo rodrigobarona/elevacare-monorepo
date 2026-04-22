@@ -1,0 +1,289 @@
+---
+description: Bun Runtime Configuration and Best Practices (Hybrid Approach)
+globs:
+  ['package.json', 'bunfig.toml', 'scripts/**/*.{ts,js}', '.github/workflows/*.yml', 'vercel.json']
+alwaysApply: false
+---
+
+# Bun Runtime Rules (Hybrid Approach)
+
+## Overview
+
+This project uses a **hybrid runtime approach**:
+
+- **🐰 Bun** for local development (fast installs, native TypeScript, excellent DX)
+- **🟢 Node.js 24.x** for Vercel production (stability, full npm compatibility)
+
+This provides the best of both worlds: fast local development with stable production deployments.
+
+## Quick Reference
+
+**Package Management (Bun):**
+
+```bash
+bun install          # Install dependencies
+bun add <pkg>        # Add dependency
+bun add -d <pkg>     # Add dev dependency
+bun remove <pkg>     # Remove dependency
+bunx <pkg>           # Execute package (like npx)
+```
+
+**Script Execution:**
+
+```bash
+bun run <script>     # Run package.json script
+bun <file.ts>        # Run TypeScript directly
+bun --bun next dev   # Force Bun runtime for local dev
+```
+
+## Script Patterns
+
+### Development (Uses Bun)
+
+```json
+{
+  "scripts": {
+    "dev": "bun run dev:next",
+    "dev:next": "bun --bun next dev --port 3000",
+    "dev:only": "bun --bun next dev --port 3000"
+  }
+}
+```
+
+### Production (Uses Node.js)
+
+```json
+{
+  "scripts": {
+    "build": "next build",
+    "start": "next start",
+    "build:bun": "bun --bun next build"
+  }
+}
+```
+
+### TypeScript Execution (Uses Bun)
+
+Run TypeScript files directly without tsx:
+
+```json
+{
+  "scripts": {
+    "postbuild": "bun scripts/utilities/update-qstash-schedules.ts",
+    "qstash:update": "bun scripts/utilities/update-qstash-schedules.ts"
+  }
+}
+```
+
+### Package Execution
+
+Use `bunx` instead of `npx`:
+
+```json
+{
+  "scripts": {
+    "qstash:dev": "bunx @upstash/qstash-cli@latest dev",
+    "novu:sync": "bunx novu@latest sync ..."
+  }
+}
+```
+
+## Configuration
+
+### package.json
+
+```json
+{
+  "engines": {
+    "node": "24.x"
+  }
+}
+```
+
+Note: `engines.node` is set for Vercel production. Bun is used locally regardless.
+
+### vercel.json
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [...]
+}
+```
+
+**Important:** Do NOT add `bunVersion` - Vercel uses Node.js for stability.
+
+### bunfig.toml (Optional)
+
+```toml
+[install]
+frozenLockfile = false
+
+[install.lockfile]
+save = true
+```
+
+## GitHub Actions
+
+Use `oven-sh/setup-bun@v2` for fast installs:
+
+```yaml
+- name: 📦 Setup Bun
+  uses: oven-sh/setup-bun@v2
+  with:
+    bun-version: latest
+
+- name: 📦 Install dependencies
+  run: bun install --frozen-lockfile
+```
+
+## Runtime-Aware Code
+
+### Crypto Operations
+
+Use the unified crypto utility for HMAC operations:
+
+```typescript
+// ✅ Correct - Use runtime-aware utility
+import { createHmacSha256, generateVerificationToken } from '@/lib/utils/crypto';
+
+const signature = createHmacSha256(key, data);
+const token = generateVerificationToken(key);
+```
+
+```typescript
+// ❌ Wrong - Don't use Bun.CryptoHasher directly
+const hasher = new Bun.CryptoHasher('sha256', key);
+```
+
+### Runtime Detection
+
+```typescript
+import { getRuntimeInfo, isBunRuntime } from '@/lib/utils/crypto';
+
+if (isBunRuntime) {
+  // Bun-specific code (local dev)
+} else {
+  // Node.js code (Vercel production)
+}
+
+const { runtime, version } = getRuntimeInfo();
+// { runtime: 'node', version: '24.0.0' } on Vercel
+// { runtime: 'bun', version: '1.3.4' } locally
+```
+
+## Common Mistakes
+
+**❌ Adding bunVersion to vercel.json:**
+
+```json
+{
+  "bunVersion": "1.x"
+}
+```
+
+**✅ Correct - Let Vercel use Node.js:**
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json"
+}
+```
+
+**❌ Using Bun-specific APIs directly:**
+
+```typescript
+const hasher = new Bun.CryptoHasher('sha256', key);
+```
+
+**✅ Correct - Use runtime-aware utilities:**
+
+```typescript
+import { createHmacSha256 } from '@/lib/utils/crypto';
+
+const signature = createHmacSha256(key, data);
+```
+
+**❌ Using nested npm overrides (not supported by Bun):**
+
+```json
+"overrides": {
+  "botid": { "next": "$next" }
+}
+```
+
+**✅ Correct - Use flat overrides only:**
+
+```json
+"overrides": {
+  "react": "19.2.3"
+}
+```
+
+**❌ Using pnpm/npm/yarn:**
+
+```json
+"dev": "pnpm run dev:next"
+```
+
+**✅ Correct - Use bun:**
+
+```json
+"dev": "bun run dev:next"
+```
+
+**❌ Using tsx for TypeScript:**
+
+```json
+"script": "tsx scripts/file.ts"
+```
+
+**✅ Correct - Bun runs TypeScript natively:**
+
+```json
+"script": "bun scripts/file.ts"
+```
+
+## Dependencies to Keep (Not Bun-replaceable)
+
+These are serverless-optimized and should NOT be replaced:
+
+| Package                    | Reason                          |
+| -------------------------- | ------------------------------- |
+| `@neondatabase/serverless` | HTTP-based for Vercel Functions |
+| `@upstash/redis`           | REST API for serverless         |
+| `@vercel/blob`             | Vercel-specific storage         |
+| `drizzle-orm`              | ORM layer (driver-agnostic)     |
+
+## Performance Tips
+
+1. **Local Dev**: Use `bun --bun` flag for Next.js dev server
+2. **Native TypeScript**: No transpilation needed for scripts
+3. **Fast Installs**: `bun install` is 4x faster than pnpm
+4. **Hot Reloading**: Bun's file watcher is faster
+
+## Lockfile
+
+- Bun 1.3+ uses `bun.lock` (text-based, human-readable)
+- Keep `bun.lock` in version control
+- Vercel uses `bun.lock` for dependency resolution, Node.js for runtime
+
+## Testing
+
+The project uses **Vitest** (not Bun's built-in test runner):
+
+```bash
+# ✅ Correct - Uses Vitest via package.json script
+bun run test
+
+# ❌ Wrong - Uses Bun's built-in runner (won't work with vi.hoisted)
+bun test
+```
+
+## Tech Stack Integration
+
+- **Local Runtime**: Bun 1.3.4
+- **Vercel Runtime**: Node.js 24.x
+- **Framework**: Next.js 16 with App Router
+- **Test Runner**: Vitest (run via `bun run test`)
+- **CI/CD**: GitHub Actions with `oven-sh/setup-bun@v2`

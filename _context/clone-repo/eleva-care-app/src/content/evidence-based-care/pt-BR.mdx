@@ -1,0 +1,307 @@
+export const metadata = {
+  title: 'Cuidados Baseados em Evidência | Excelência Clínica na Saúde Feminina | Eleva Care',
+  description:
+    'Descubra como a Eleva Care oferece cuidados de saúde feminina baseados em evidência através de telesaúde. Apoiado por investigação rigorosa, validado por mais de 38 meta-análises e comprovado em dezenas de milhares de pacientes.',
+  og: {
+    title: 'Cuidados Baseados em Evidência | Excelência Clínica | Eleva Care',
+    description:
+      'Telesaúde para a saúde feminina: segura, eficaz e cientificamente comprovada. Evidência de mais de 44.894 pacientes em ensaios clínicos.',
+    siteName: 'Eleva Care',
+  },
+};
+
+import {
+  ClinicalAreasSection,
+  FAQSection,
+  FinalCTASection,
+  HeroSection,
+  KeyNumbersSection,
+  ResearchTeamSection,
+  SafetyQualitySection,
+} from '@/components/sections/evidence-based-care';
+import HeadlineSection from '@/components/shared/text/HeadlineSection';
+import TextBlock from '@/components/shared/text/TextBlock';
+import { Separator } from '@/components/ui/separator';
+
+<HeroSection
+  badge="Excelência Clínica"
+  title="Cuidados baseados em evidência,"
+  subtitle="comprovados pela ciência"
+  description="Telesaúde para a saúde feminina: segura, eficaz, mais rápida e mais privada. Profissionais independentes e devidamente licenciados prestam cuidados através da nossa plataforma digital de saúde—apoiados por dezenas de milhares de pacientes em pesquisa publicada."
+  ctaPrimary={{
+    text: 'Marcar Consulta',
+    href: '/experts',
+  }}
+  ctaSecondary={{
+    text: 'Saber Mais',
+    href: '/about',
+  }}
+/>
+
+{/* Resumo Rápido para Consumidores */}
+
+<TextBlock className="bg-muted/50 rounded-xl p-6 mb-12">
+
+**O que isso significa para você:**
+
+- **A telesaúde funciona** — Pesquisas mostram que consultas por vídeo são tão eficazes quanto visitas presenciais para muitas necessidades de saúde feminina.
+- **Você está em boas mãos** — Profissionais de saúde independentes e licenciados prestam seus cuidados; a Eleva.care fornece a plataforma segura.
+- **Sua segurança em primeiro lugar** — Os especialistas recomendarão cuidados presenciais sempre que for clinicamente necessário.
+- **Privacidade garantida** — Todas as consultas acontecem em uma plataforma criptografada e em conformidade com a LGPD.
+
+</TextBlock>
+
+<KeyNumbersSection
+  title="Evidência Clínica que Importa"
+  subtitle="Os cuidados baseados em evidência são apoiados por pesquisa rigorosa e validados em contextos reais"
+  stats={[
+    {
+      icon: 'award',
+      value: '38+',
+      label: 'Meta-análises',
+      description: 'Revisões sistemáticas validando a eficácia da telesaúde em especialidades',
+    },
+    {
+      icon: 'users',
+      value: '44.894+',
+      label: 'Pacientes Estudados',
+      description: 'Em ensaios de telesaúde materna mostrando resultados semelhantes ou melhores',
+    },
+    {
+      icon: 'trending',
+      value: '98%+',
+      label: 'Taxa de Sucesso',
+      description: 'Em intervenções de telemedicina com alta aceitação do paciente',
+    },
+    {
+      icon: 'heart',
+      value: '60%+',
+      label: 'Melhoria de Sintomas',
+      description: 'Em intervenções de saúde mental perinatal via telesaúde',
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="how-we-use-evidence"
+  label="Nossa Abordagem"
+  title="Como a Eleva.care apoia a medicina baseada em evidência"
+  description="A plataforma facilita o acesso a serviços de telesaúde alinhados com diretrizes clínicas internacionais e pesquisa revisada por pares. Os especialistas independentes mantêm plena autonomia clínica sobre os cuidados ao paciente."
+/>
+
+<TextBlock>
+  Na Eleva.care, acreditamos que todas as mulheres merecem acesso à melhor ciência disponível. Por
+  isso, nossa plataforma apoia práticas baseadas em evidência alinhadas com diretrizes
+  internacionais e pesquisa revisada por pares.
+</TextBlock>
+
+<TextBlock>
+  Os profissionais de saúde independentes e licenciados na Eleva.care mantêm plena autonomia
+  clínica. Aplicam protocolos baseados em evidência aos seus cuidados e recomendam sempre serviços
+  presenciais quando clinicamente indicado.
+</TextBlock>
+
+<Separator className="my-12" />
+
+<ClinicalAreasSection
+  title="Evidência por Área Clínica"
+  subtitle="A investigação abrangente demonstra a eficácia da telesaúde em todos os aspetos da saúde feminina"
+  areas={[
+    {
+      id: 'prenatal',
+      title: 'Cuidados Pré-natais e Antenatais',
+      description:
+        'Os horários pré-natais com menos visitas que substituem algumas visitas por telesaúde mostram resultados de gravidez e neonatais semelhantes e frequentemente maior satisfação do paciente. A telesaúde pode reduzir com segurança as visitas presenciais de rotina para gravidezes de baixo risco e melhorar a conveniência sem prejudicar os resultados.',
+      keyFinding:
+        'Resultados de gravidez semelhantes com maior satisfação do paciente e melhor acesso aos cuidados',
+      research: [
+        {
+          title:
+            'Estratégias de telesaúde para a prestação de cuidados de saúde materna: Uma revisão rápida',
+          authors: 'Cantor AG, Jungbauer RM, Totten AM, et al.',
+          year: '2022',
+          doi: '10.7326/M22-0737',
+        },
+      ],
+    },
+    {
+      id: 'mental-health',
+      title: 'Saúde Mental Perinatal e Materna',
+      description:
+        'As intervenções psicológicas digitais e de telesaúde (TCC, intervenções guiadas pela internet, terapia telefónica ou baseada em aplicações) reduzem os sintomas depressivos na gravidez e pós-parto em muitos ensaios e meta-análises—especialmente quando são específicas e apoiadas.',
+      keyFinding:
+        'Redução significativa de depressão, ansiedade e angústia com alta aceitação do paciente',
+      research: [
+        {
+          title:
+            'Intervenções de telemedicina relacionadas com a saúde mental para grávidas e novas mães: uma revisão sistemática da literatura',
+          authors: 'Stentzel U, Grabe HJ, Schmidt S, et al.',
+          year: '2023',
+          doi: '10.1186/s12888-023-04790-0',
+        },
+        {
+          title:
+            'Eficácia das intervenções psicológicas digitais na redução da depressão perinatal',
+          authors: 'Chen C, et al.',
+          year: '2023',
+          doi: 'PMC10212734',
+        },
+      ],
+    },
+    {
+      id: 'reproductive-health',
+      title: 'Saúde Sexual e Reprodutiva',
+      description:
+        'Os modelos de telemedicina para aconselhamento contraceptivo e aborto medicamentoso mostraram alta eficácia e segurança—incluindo coortes muito grandes para aborto de telemedicina sem teste com taxas de sucesso ≈98–99% e muito poucos eventos adversos graves. A telemedicina melhora o acesso, encurta os tempos de espera e é altamente aceitável para os pacientes.',
+      keyFinding:
+        'Taxas de sucesso de 98-99% com muito poucos eventos adversos e alta aceitação do paciente',
+      research: [
+        {
+          title:
+            'Eficácia, segurança e aceitabilidade do aborto médico sem teste fornecido por telemedicina: um estudo de coorte nacional',
+          authors: 'Aiken ARA, Lohr PA, Lord J, Ghosh N, Starling J',
+          year: '2021',
+          doi: '10.1111/1471-0528.16668',
+        },
+        {
+          title:
+            'Segurança e eficácia dos abortos medicamentosos por telesaúde nos EUA durante a pandemia de COVID-19',
+          authors: 'Upadhyay UD, Koenig LR, Meckstroth KR',
+          year: '2021',
+          doi: '10.1001/jamanetworkopen.2021.22320',
+        },
+      ],
+    },
+    {
+      id: 'chronic-conditions',
+      title: 'Condições Crónicas e Estilo de Vida',
+      description:
+        'As intervenções de telesaúde e estilo de vida digital (coaching de dieta/exercício, monitorização remota) podem ser clinicamente eficazes e económicas em muitas implementações. Alguns ensaios grandes mostram benefício clínico significativo; os resultados económicos melhoram quando os programas são direcionados e escalados eficientemente.',
+      keyFinding:
+        'Tão eficaz ou mais eficaz que os cuidados habituais quando implementado adequadamente',
+      research: [
+        {
+          title:
+            'A eficácia clínica da telesaúde: Uma revisão sistemática de meta-análises de 2010 a 2019',
+          authors: 'Snoswell CL, Chelberg G, De Guzman KR, et al.',
+          year: '2023',
+          doi: '10.1177/1357633X211022907',
+        },
+      ],
+    },
+  ]}
+/>
+
+<SafetyQualitySection
+  title="Segurança e Qualidade: Como a Eleva Care te Protege"
+  subtitle="A tua segurança e privacidade são as nossas principais prioridades. Cada aspeto da nossa plataforma está desenhado pensando na tua segurança."
+  features={[
+    {
+      icon: 'user-check',
+      title: 'Profissionais de Saúde Licenciados',
+      description:
+        'As teleconsultas são realizadas por clínicos independentes devidamente licenciados que cumprem nossos requisitos de integração. Você pode revisar suas credenciais e antecedentes profissionais no perfil.',
+    },
+    {
+      icon: 'lock',
+      title: 'Plataforma Segura e Encriptada',
+      description:
+        'Plataformas de vídeo e mensagens seguras e encriptadas que cumprem os requisitos de privacidade GDPR, LGPD e preparados para HIPAA com encriptação AES-256.',
+    },
+    {
+      icon: 'file-check',
+      title: 'Protocolos Clínicos Baseados em Evidência',
+      description:
+        'A plataforma apoia práticas baseadas em evidência alinhadas com diretrizes internacionais e pesquisa revisada por pares. Os especialistas mantêm independência clínica e seguem vias de escalada quando apropriado.',
+    },
+    {
+      icon: 'shield',
+      title: 'Vias de Cuidados Integradas',
+      description:
+        'Manutenção de registos integrada e vias de referência para especialistas presenciais ou serviços de emergência quando indicado para cuidados abrangentes.',
+    },
+  ]}
+/>
+
+<FAQSection
+  title="Perguntas Comuns sobre Telesaúde"
+  subtitle="Respostas baseadas em evidência para te ajudar a tomar decisões informadas sobre os teus cuidados"
+  faqs={[
+    {
+      id: 'faq-1',
+      question: 'Uma consulta por vídeo é tão boa quanto cuidados presenciais?',
+      answer:
+        'Para muitas consultas—sim. A evidência mostra resultados clínicos semelhantes para muitos serviços de telesaúde; mas algumas consultas (procedimentos, certos exames físicos) ainda requerem cuidados cara a cara. A investigação de 38 meta-análises descobriu que a telesaúde é tão eficaz ou mais eficaz que os cuidados habituais presenciais em muitas especialidades.',
+    },
+    {
+      id: 'faq-2',
+      question: 'A telesaúde é segura para a gravidez e bebés?',
+      answer:
+        'Para gravidezes de baixo risco e quando combinada com verificações presenciais específicas, os cuidados pré-natais aumentados por telesaúde têm resultados maternos e neonatais semelhantes em ensaios. Uma revisão de 44.894 pacientes em 28 RCTs descobriu resultados semelhantes ou por vezes melhores. O teu médico recomendará consultas presenciais quando clinicamente necessário.',
+    },
+    {
+      id: 'faq-3',
+      question: 'E quanto aos cuidados de saúde mental após o parto?',
+      answer:
+        'As terapias psicológicas digitais e de telesaúde (TCC, terapias guiadas pela internet) reduzem os sintomas de depressão perinatal em muitos estudos e aumentam o acesso. Pesquisas mostram que ~60% dos RCTs relataram melhorias significativas. A plataforma facilita o acesso a triagem imediata e opções de teleterapia baseadas em evidência através de especialistas independentes.',
+    },
+    {
+      id: 'faq-4',
+      question: 'Os serviços de medicamentos por telemedicina são seguros?',
+      answer:
+        'Estudos de coortes grandes mostram que os serviços de medicamentos de telemedicina são altamente eficazes e seguros quando implementados com rastreio e acompanhamento apropriados. Estudos de ~52.000 pacientes descobriram taxas de sucesso ≥98% com muito poucos eventos adversos graves. Os especialistas na plataforma seguem protocolos comprovados em estudos grandes.',
+    },
+    {
+      id: 'faq-5',
+      question: 'Quando devo ver alguém pessoalmente?',
+      answer:
+        'Os cuidados presenciais são recomendados para: sinais físicos agudos que requerem exame (sangramento abundante, dor severa, sinais de pré-eclâmpsia), procedimentos que requerem cuidados práticos (inserção de DIU, cirurgias, alguns exames), e casos onde a avaliação remota não pode descartar com segurança patologia urgente. A plataforma fornece caminhos claros para cuidados presenciais imediatos quando necessário.',
+    },
+  ]}
+/>
+
+<ReferencesSection
+  references={[
+    {
+      title: 'Telehealth strategies for the delivery of maternal health care: A rapid review',
+      authors: 'Cantor AG, Jungbauer RM, Totten AM, et al.',
+      year: '2022',
+      doi: '10.7326/M22-0737',
+    },
+    {
+      title:
+        'Mental health-related telemedicine interventions for pregnant women and new mothers: a systematic literature review',
+      authors: 'Stentzel U, Grabe HJ, Schmidt S, et al.',
+      year: '2023',
+      doi: '10.1186/s12888-023-04790-0',
+    },
+    {
+      title:
+        'Effectiveness of digital psychological interventions in reducing perinatal depression',
+      authors: 'Chen C, et al.',
+      year: '2023',
+      doi: 'PMC10212734',
+    },
+    {
+      title:
+        'Effectiveness, safety and acceptability of no-test medical abortion provided via telemedicine: a national cohort study',
+      authors: 'Aiken ARA, Lohr PA, Lord J, Ghosh N, Starling J',
+      year: '2021',
+      doi: '10.1111/1471-0528.16668',
+    },
+    {
+      title:
+        'Safety and Efficacy of Telehealth Medication Abortions in the US During the COVID-19 Pandemic',
+      authors: 'Upadhyay UD, Koenig LR, Meckstroth KR',
+      year: '2021',
+      doi: '10.1001/jamanetworkopen.2021.22320',
+    },
+    {
+      title:
+        'The clinical effectiveness of telehealth: A systematic review of meta-analyses from 2010 to 2019',
+      authors: 'Snoswell CL, Chelberg G, De Guzman KR, et al.',
+      year: '2023',
+      doi: '10.1177/1357633X211022907',
+    },
+  ]}
+/>

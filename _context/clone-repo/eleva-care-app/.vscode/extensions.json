@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    // Tailwind CSS IntelliSense - required for Tailwind v4 support
+    "bradlc.vscode-tailwindcss",
+    // ESLint
+    "dbaeumer.vscode-eslint",
+    // Prettier
+    "esbenp.prettier-vscode",
+    // TypeScript support
+    "ms-vscode.vscode-typescript-next",
+    // MDX support (for Fumadocs)
+    "unifiedjs.vscode-mdx"
+  ]
+}
+

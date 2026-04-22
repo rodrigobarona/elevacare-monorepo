@@ -1,0 +1,55 @@
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@/drizzle/*": ["./drizzle/*"],
+      "content-collections": ["./.content-collections/generated"],
+      "fumadocs-mdx:collections/*": ["./.source/*"]
+    },
+    "target": "ES2017",
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "typeRoots": ["./node_modules/@types", "./src/types"],
+    "allowArbitraryExtensions": true
+  },
+  "include": [
+    "video.d.ts",
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "**/*.json",
+    ".next/dev/types/**/*.ts",
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "tests/**/*",
+    "vitest.config.mts",
+    "playwright.config.ts",
+    "scripts/**/*"
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  }
+}

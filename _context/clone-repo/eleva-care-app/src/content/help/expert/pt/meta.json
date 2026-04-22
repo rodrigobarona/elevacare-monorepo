@@ -1,0 +1,18 @@
+{
+  "title": "Recursos para Especialistas",
+  "description": "Tudo o que os profissionais de saúde precisam de saber sobre prestar serviços na Eleva Care.",
+  "pages": [
+    "index",
+    "---Começar---",
+    "getting-started/profile",
+    "getting-started/services",
+    "getting-started/availability",
+    "---Ganhos---",
+    "earnings/payouts",
+    "earnings/pricing",
+    "---Programa Top Expert---",
+    "top-expert/requirements",
+    "top-expert/benefits"
+  ]
+}
+

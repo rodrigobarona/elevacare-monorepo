@@ -1,0 +1,269 @@
+export const metadata = {
+  title: 'For Organizations | Eleva Care Technology for Your Business',
+  description:
+    "Power your women's health services with Eleva Care technology. Clinics, employers, and healthcare organizations use our platform to deliver digital care, access our expert network, and scale their services.",
+  og: {
+    title: 'For Organizations | Eleva Care Technology for Your Business',
+    description:
+      "Power your women's health services with Eleva Care platform technology. For clinics, employers, and healthcare organizations.",
+    siteName: 'Eleva Care',
+  },
+};
+
+import { Button } from '@/components/ui/button';
+import { ArrowRight, Sparkles } from 'lucide-react';
+import Link from 'next/link';
+
+import BenefitsSection from '@/components/sections/for-organizations/BenefitsSection';
+import FinalCTASection from '@/components/sections/for-organizations/FinalCTASection';
+import HeroSection from '@/components/sections/for-organizations/HeroSection';
+import HowItWorksSection from '@/components/sections/for-organizations/HowItWorksSection';
+import PartnerPricingSection from '@/components/sections/for-organizations/PartnerPricingSection';
+import PricingPreviewSection from '@/components/sections/for-organizations/PricingPreviewSection';
+import WhoCanJoinSection from '@/components/sections/for-organizations/WhoCanJoinSection';
+
+<HeroSection
+  badge={{
+    text: 'For Clinics, Employers & Organizations',
+    icon: <Sparkles className="mr-2 inline h-4 w-4" />,
+  }}
+  title="Power Your Services with"
+  subtitle="Eleva Care Technology"
+  description="Use Eleva Care's platform technology to deliver digital women's health services through your organization. Access our network of independent experts, or onboard your own team—all powered by our secure, proven infrastructure."
+  cta={{
+    text: 'Partner with Us',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+  secondaryCta={{
+    text: 'Schedule a Demo',
+    href: '/contact?demo=true',
+  }}
+  features="Trusted by clinics, wellness centers, employers, and healthcare organizations to power their digital women's health services."
+/>
+
+<BenefitsSection
+  title="Why Organizations Choose Eleva Care"
+  benefits={[
+    {
+      icon: 'zap',
+      title: 'Ready-to-Use Technology',
+      description:
+        'Skip the build phase. Our proven platform includes scheduling, secure video consultations, payments, and client management—ready for your organization.',
+    },
+    {
+      icon: 'users',
+      title: 'Access Our Expert Network',
+      description:
+        'Offer your clients access to our network of independent, licensed healthcare professionals, or onboard your own team to the platform.',
+    },
+    {
+      icon: 'building',
+      title: 'Keep Your Brand',
+      description:
+        "White-label options let you offer Eleva Care-powered services under your organization's brand. Your clients, your relationships.",
+    },
+    {
+      icon: 'dollar',
+      title: 'Flexible Business Model',
+      description:
+        "Workspace subscriptions with transparent pricing. Scale up or down based on your organization's needs.",
+    },
+    {
+      icon: 'chart',
+      title: 'Enterprise Analytics',
+      description:
+        'Track utilization, outcomes, and ROI with comprehensive dashboards. Make data-driven decisions for your health programs.',
+    },
+    {
+      icon: 'headphones',
+      title: 'Dedicated Partner Support',
+      description:
+        'Onboarding assistance, technical support, and a dedicated account manager to ensure your success.',
+    },
+  ]}
+/>
+
+<WhoCanJoinSection
+  title="Who Uses Eleva Care for Organizations?"
+  subtitle="Clinics, employers, and healthcare organizations use our platform technology to power their women's health services."
+  partnerTypes={[
+    {
+      icon: 'stethoscope',
+      title: 'Medical Practices',
+      examples: [
+        'OB/GYN Clinics',
+        "Women's Health Centers",
+        'Primary Care Practices',
+        'Specialty Medical Groups',
+      ],
+    },
+    {
+      icon: 'heartPulse',
+      title: 'Wellness Centers',
+      examples: [
+        'Integrative Health Centers',
+        'Holistic Wellness Spaces',
+        "Women's Wellness Clinics",
+        'Mind-Body Centers',
+      ],
+    },
+    {
+      icon: 'apple',
+      title: 'Nutrition & Diet',
+      examples: [
+        'Nutrition Clinics',
+        'Dietitian Practices',
+        'Prenatal Nutrition Centers',
+        'Metabolic Health Groups',
+      ],
+    },
+    {
+      icon: 'brain',
+      title: 'Mental Health',
+      examples: [
+        'Therapy Practices',
+        'Counseling Centers',
+        'Perinatal Mental Health',
+        "Women's Psychology Groups",
+      ],
+    },
+    {
+      icon: 'dumbbell',
+      title: 'Fitness & Movement',
+      examples: [
+        'Pelvic Health Studios',
+        'Pre/Postnatal Fitness',
+        'Physical Therapy Practices',
+        'Pilates & Yoga Studios',
+      ],
+    },
+    {
+      icon: 'activity',
+      title: 'Coaching Practices',
+      examples: [
+        'Health Coaching',
+        'Postpartum Support',
+        'Fertility Coaching',
+        'Menopause Wellness',
+      ],
+    },
+  ]}
+/>
+
+<HowItWorksSection
+  title="How Partnership Works"
+  subtitle="Simple onboarding process to get your practice live on our platform"
+  steps={[
+    {
+      title: 'Apply & Get Approved',
+      description:
+        'Complete our partnership application. We review your practice credentials, services, and alignment with our mission. Most applications are approved within 5 business days.',
+    },
+    {
+      title: 'Setup Your Partner Profile',
+      description:
+        'Create your organization profile with branding, services, and team information. Configure pricing, availability, and practice policies through our dashboard.',
+    },
+    {
+      title: 'Onboard Your Experts',
+      description:
+        'Invite your healthcare professionals to join your partner organization. They maintain their individual profiles while being part of your practice network.',
+    },
+    {
+      title: 'Launch & Grow',
+      description:
+        'Go live on the Eleva Care platform. Start receiving bookings, managing appointments, and growing your client base. Access analytics to track performance.',
+    },
+  ]}
+  cta={{
+    text: 'Start Your Partnership Application',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+/>
+
+<PartnerPricingSection
+  title="Partnership Pricing"
+  subtitle="Choose the plan that fits your practice size and needs"
+  description="All plans include platform access, payment processing, analytics dashboard, and dedicated partner support. Revenue sharing on expert bookings (8-15% platform commission)."
+  tiers={[
+    {
+      name: 'Starter',
+      price: '€99',
+      priceDetail: '/month',
+      description: 'Perfect for small practices and wellness centers getting started',
+      features: [
+        'Up to 3 expert profiles',
+        'Basic analytics & reporting',
+        'Scheduling & calendar management',
+        'Video consultation platform',
+        'Email support',
+        'Practice branding',
+        'Client management tools',
+        'Payment processing included',
+      ],
+      cta: {
+        text: 'Start with Starter',
+        href: '/contact?partner=true&plan=starter',
+      },
+    },
+    {
+      name: 'Professional',
+      price: '€199',
+      priceDetail: '/month',
+      description: 'Ideal for growing practices and established wellness centers',
+      recommended: true,
+      features: [
+        'Up to 10 expert profiles',
+        'Advanced analytics & insights',
+        'Customizable booking pages',
+        'Priority support',
+        'Marketing support & resources',
+        'Team management dashboard',
+        'Multi-location support',
+        'Custom domain integration',
+      ],
+      cta: {
+        text: 'Go Professional',
+        href: '/contact?partner=true&plan=professional',
+      },
+    },
+    {
+      name: 'Enterprise',
+      price: 'Custom',
+      priceDetail: '',
+      description: 'For large organizations with specific needs and unlimited growth',
+      features: [
+        'Unlimited expert profiles',
+        'White-label options',
+        'API access & webhooks',
+        'Dedicated account manager',
+        '24/7 priority support',
+        'Custom integrations',
+        'Advanced reporting & exports',
+        'Custom SLA & compliance',
+      ],
+      cta: {
+        text: 'Contact Sales',
+        href: '/contact?partner=true&plan=enterprise',
+      },
+    },
+  ]}
+  note="Volume discounts available for organizations with 20+ experts. Contact us for custom pricing."
+/>
+
+<FinalCTASection
+  title="Ready to Power Your Organization with Eleva Care?"
+  description="Join the organizations already using Eleva Care technology to deliver digital women's health services. Our platform, your brand, better outcomes for your clients."
+  cta={{
+    text: 'Get Started',
+    href: '/contact?partner=true',
+    icon: <ArrowRight className="ml-2 h-5 w-5" />,
+  }}
+  support={{
+    text: 'Want to see how it works?',
+    linkText: 'Schedule a demo with our team.',
+    linkHref: '/contact?demo=true',
+  }}
+/>

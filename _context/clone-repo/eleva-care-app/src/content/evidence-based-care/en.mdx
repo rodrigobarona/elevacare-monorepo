@@ -1,0 +1,305 @@
+export const metadata = {
+  title: "Evidence-Based Care | Clinical Excellence in Women's Health | Eleva Care",
+  description:
+    "Discover how Eleva Care delivers evidence-based women's health care through telehealth. Backed by rigorous research, validated by 38+ meta-analyses, and proven in tens of thousands of patients.",
+  og: {
+    title: 'Evidence-Based Care | Clinical Excellence | Eleva Care',
+    description:
+      "Telehealth for women's health: safe, effective, and scientifically proven. Evidence from 44,894+ patients in clinical trials.",
+    siteName: 'Eleva Care',
+  },
+};
+
+import {
+  ClinicalAreasSection,
+  FAQSection,
+  FinalCTASection,
+  HeroSection,
+  KeyNumbersSection,
+  ResearchTeamSection,
+  SafetyQualitySection,
+} from '@/components/sections/evidence-based-care';
+import HeadlineSection from '@/components/shared/text/HeadlineSection';
+import TextBlock from '@/components/shared/text/TextBlock';
+import { Separator } from '@/components/ui/separator';
+
+<HeroSection
+  badge="Clinical Excellence"
+  title="Evidence-based care,"
+  subtitle="proven by science"
+  description="Telehealth for women's health: safe, effective, faster, and more private. Independent, licensed experts deliver care through our digital health platform—backed by tens of thousands of patients in published research."
+  ctaPrimary={{
+    text: 'Book a Consultation',
+    href: '/experts',
+  }}
+  ctaSecondary={{
+    text: 'Learn About Us',
+    href: '/about',
+  }}
+/>
+
+{/* Quick Summary for Consumers */}
+
+<TextBlock className="bg-muted/50 rounded-xl p-6 mb-12">
+
+**What this means for you:**
+
+- **Telehealth works** — Research shows video consultations are as effective as in‑person visits for many women's health needs.
+- **You're in good hands** — Independent, licensed healthcare professionals deliver your care; Eleva.care provides the secure platform.
+- **Your safety comes first** — Experts will recommend in‑person care whenever it's clinically needed.
+- **Privacy guaranteed** — All consultations happen on an encrypted, GDPR‑compliant platform.
+
+</TextBlock>
+
+<KeyNumbersSection
+  title="Clinical Evidence That Matters"
+  subtitle="Evidence-based care is backed by rigorous research and validated in real-world settings"
+  stats={[
+    {
+      icon: 'award',
+      value: '38+',
+      label: 'Meta-Analyses',
+      description: 'Systematic reviews validating telehealth effectiveness across specialties',
+    },
+    {
+      icon: 'users',
+      value: '44,894+',
+      label: 'Patients Studied',
+      description: 'In maternity telehealth trials showing similar or better outcomes',
+    },
+    {
+      icon: 'trending',
+      value: '98%+',
+      label: 'Success Rate',
+      description: 'In telemedicine interventions with high patient acceptability',
+    },
+    {
+      icon: 'heart',
+      value: '60%+',
+      label: 'Symptom Improvement',
+      description: 'In perinatal mental health interventions via telehealth',
+    },
+  ]}
+/>
+
+<HeadlineSection
+  id="how-we-use-evidence"
+  label="Our Approach"
+  title="How Eleva.care supports evidence-based medicine"
+  description="The platform facilitates access to telehealth services aligned with international clinical guidelines and peer‑reviewed research. Independent experts maintain full clinical autonomy over patient care."
+/>
+
+<TextBlock>
+  At Eleva.care, we believe every woman deserves access to the best available science. That's why
+  our platform supports evidence‑based practices aligned with international guidelines and
+  peer‑reviewed research.
+</TextBlock>
+
+<TextBlock>
+  Independent, licensed healthcare professionals on Eleva.care maintain full clinical autonomy. They
+  apply evidence‑based protocols to your care and will always recommend in‑person services when
+  clinically indicated.
+</TextBlock>
+
+<Separator className="my-12" />
+
+<ClinicalAreasSection
+  title="Evidence by Clinical Area"
+  subtitle="Comprehensive research demonstrates telehealth effectiveness across all aspects of women's health"
+  areas={[
+    {
+      id: 'prenatal',
+      title: 'Antenatal & Prenatal Care',
+      description:
+        'Reduced-visit prenatal schedules that replace some visits with telehealth show similar pregnancy and neonatal outcomes and often higher patient satisfaction. Telehealth can safely reduce routine in-person visits for low-risk pregnancies and improve convenience without harming outcomes.',
+      keyFinding:
+        'Similar pregnancy outcomes with higher patient satisfaction and improved access to care',
+      research: [
+        {
+          title: 'Telehealth strategies for the delivery of maternal health care: A rapid review',
+          authors: 'Cantor AG, Jungbauer RM, Totten AM, et al.',
+          year: '2022',
+          doi: '10.7326/M22-0737',
+        },
+      ],
+    },
+    {
+      id: 'mental-health',
+      title: 'Perinatal & Maternal Mental Health',
+      description:
+        'Digital and telehealth psychological interventions (CBT, guided internet interventions, phone or app-based therapy) reduce depressive symptoms in pregnancy and postpartum in many trials and meta-analyses—especially when targeted and supported.',
+      keyFinding:
+        'Significant reduction in depression, anxiety, and distress with high patient acceptance',
+      research: [
+        {
+          title:
+            'Mental health-related telemedicine interventions for pregnant women and new mothers: a systematic literature review',
+          authors: 'Stentzel U, Grabe HJ, Schmidt S, et al.',
+          year: '2023',
+          doi: '10.1186/s12888-023-04790-0',
+        },
+        {
+          title:
+            'Effectiveness of digital psychological interventions in reducing perinatal depression',
+          authors: 'Chen C, et al.',
+          year: '2023',
+          doi: 'PMC10212734',
+        },
+      ],
+    },
+    {
+      id: 'reproductive-health',
+      title: 'Sexual & Reproductive Health',
+      description:
+        'Telemedicine models for contraceptive counselling and medication abortion have shown high effectiveness and safety—including very large cohorts for no-test telemedicine abortion with success rates ≈98–99% and very low serious adverse events. Telemedicine improves access, shortens wait times, and is highly acceptable to patients.',
+      keyFinding:
+        '98-99% success rates with very low adverse events and high patient acceptability',
+      research: [
+        {
+          title:
+            'Effectiveness, safety and acceptability of no-test medical abortion provided via telemedicine: a national cohort study',
+          authors: 'Aiken ARA, Lohr PA, Lord J, Ghosh N, Starling J',
+          year: '2021',
+          doi: '10.1111/1471-0528.16668',
+        },
+        {
+          title:
+            'Safety and Efficacy of Telehealth Medication Abortions in the US During the COVID-19 Pandemic',
+          authors: 'Upadhyay UD, Koenig LR, Meckstroth KR',
+          year: '2021',
+          doi: '10.1001/jamanetworkopen.2021.22320',
+        },
+      ],
+    },
+    {
+      id: 'chronic-conditions',
+      title: 'Chronic Conditions & Lifestyle',
+      description:
+        'Telehealth and digital lifestyle interventions (diet/exercise coaching, remote monitoring) can be clinically effective and cost-saving in many implementations. Some large trials show meaningful clinical benefit; economic results improve when programs are targeted and scaled efficiently.',
+      keyFinding: 'As effective or more effective than usual care when implemented properly',
+      research: [
+        {
+          title:
+            'The clinical effectiveness of telehealth: A systematic review of meta-analyses from 2010 to 2019',
+          authors: 'Snoswell CL, Chelberg G, De Guzman KR, et al.',
+          year: '2023',
+          doi: '10.1177/1357633X211022907',
+        },
+      ],
+    },
+  ]}
+/>
+
+<SafetyQualitySection
+  title="Safety & Quality: How Eleva Care Protects You"
+  subtitle="Your safety and privacy are our top priorities. Every aspect of our platform is designed with your security in mind."
+  features={[
+    {
+      icon: 'user-check',
+      title: 'Licensed Healthcare Professionals',
+      description:
+        'Teleconsultations are delivered by independent, duly licensed clinicians who meet our onboarding requirements. You can review their credentials and professional background in their profile.',
+    },
+    {
+      icon: 'lock',
+      title: 'Secure & Encrypted Platform',
+      description:
+        'Secure, encrypted video and messaging platforms that meet GDPR, LGPD, and HIPAA-ready privacy law requirements with AES-256 encryption.',
+    },
+    {
+      icon: 'file-check',
+      title: 'Evidence-Based Clinical Protocols',
+      description:
+        'The platform supports evidence-based practices aligned with international guidelines and peer-reviewed research. Experts maintain clinical independence and follow escalation pathways when appropriate.',
+    },
+    {
+      icon: 'shield',
+      title: 'Integrated Care Pathways',
+      description:
+        'Integrated recordkeeping and referral pathways to in-person specialists or emergency services when indicated for comprehensive care.',
+    },
+  ]}
+/>
+
+<FAQSection
+  title="Common Questions About Telehealth"
+  subtitle="Evidence-based answers to help you make informed decisions about your care"
+  faqs={[
+    {
+      id: 'faq-1',
+      question: 'Is a video visit as good as in-person care?',
+      answer:
+        'For many visits—yes. Evidence shows similar clinical outcomes for many telehealth services; but some visits (procedures, certain physical exams) still require face-to-face care. Research from 38 meta-analyses found telehealth is as effective or more effective than usual in-person care across many specialties.',
+    },
+    {
+      id: 'faq-2',
+      question: 'Is telehealth safe for pregnancy & babies?',
+      answer:
+        'For low-risk pregnancies and when combined with targeted in-person checks, telehealth-augmented prenatal care has similar maternal and neonatal outcomes in trials. A review of 44,894 patients across 28 RCTs found similar or sometimes better outcomes. Your clinician will recommend in-person visits when clinically necessary.',
+    },
+    {
+      id: 'faq-3',
+      question: 'What about mental health care after birth?',
+      answer:
+        'Digital and telehealth psychological therapies (CBT, guided internet therapies) reduce perinatal depression symptoms in many studies and increase access. Research shows ~60% of RCTs reported significant improvements. The platform facilitates access to immediate triage and evidence-based teletherapy options through independent experts.',
+    },
+    {
+      id: 'faq-4',
+      question: 'Are medication services safe by telemedicine?',
+      answer:
+        'Large cohort studies show telemedicine medication services are highly effective and safe when implemented with appropriate screening and follow-up. Studies of ~52,000 patients found success rates ≥98% with very low serious adverse events. Experts on the platform follow protocols proven in large studies.',
+    },
+    {
+      id: 'faq-5',
+      question: 'When should I see someone in person?',
+      answer:
+        'In-person care is recommended for: acute physical signs requiring examination (heavy bleeding, severe pain, preeclampsia signs), procedures requiring hands-on care (IUD insertion, surgeries, some scans), and cases where remote assessment cannot safely rule out urgent pathology. The platform provides clear pathways to immediate in-person care when needed.',
+    },
+  ]}
+/>
+
+<ReferencesSection
+  references={[
+    {
+      title: 'Telehealth strategies for the delivery of maternal health care: A rapid review',
+      authors: 'Cantor AG, Jungbauer RM, Totten AM, et al.',
+      year: '2022',
+      doi: '10.7326/M22-0737',
+    },
+    {
+      title:
+        'Mental health-related telemedicine interventions for pregnant women and new mothers: a systematic literature review',
+      authors: 'Stentzel U, Grabe HJ, Schmidt S, et al.',
+      year: '2023',
+      doi: '10.1186/s12888-023-04790-0',
+    },
+    {
+      title:
+        'Effectiveness of digital psychological interventions in reducing perinatal depression',
+      authors: 'Chen C, et al.',
+      year: '2023',
+      doi: 'PMC10212734',
+    },
+    {
+      title:
+        'Effectiveness, safety and acceptability of no-test medical abortion provided via telemedicine: a national cohort study',
+      authors: 'Aiken ARA, Lohr PA, Lord J, Ghosh N, Starling J',
+      year: '2021',
+      doi: '10.1111/1471-0528.16668',
+    },
+    {
+      title:
+        'Safety and Efficacy of Telehealth Medication Abortions in the US During the COVID-19 Pandemic',
+      authors: 'Upadhyay UD, Koenig LR, Meckstroth KR',
+      year: '2021',
+      doi: '10.1001/jamanetworkopen.2021.22320',
+    },
+    {
+      title:
+        'The clinical effectiveness of telehealth: A systematic review of meta-analyses from 2010 to 2019',
+      authors: 'Snoswell CL, Chelberg G, De Guzman KR, et al.',
+      year: '2023',
+      doi: '10.1177/1357633X211022907',
+    },
+  ]}
+/>

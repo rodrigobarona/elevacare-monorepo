@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "regions": ["fra1"],
+  "crons": [
+    {
+      "path": "/api/cron/keep-alive",
+      "schedule": "0 6 * * *"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/:locale(en|es|pt|pt-BR)/docs",
+      "destination": "/:locale/help",
+      "permanent": true
+    },
+    {
+      "source": "/:locale(en|es|pt|pt-BR)/docs/:path*",
+      "destination": "/:locale/help/:path*",
+      "permanent": true
+    }
+  ]
+}

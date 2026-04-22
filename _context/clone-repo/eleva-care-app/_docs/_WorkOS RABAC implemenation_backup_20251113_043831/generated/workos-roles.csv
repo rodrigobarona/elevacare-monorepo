@@ -1,0 +1,7 @@
+Slug,Name,Description,Priority,Inherits From,Total Permissions
+"patient","Patient","Basic user/patient role for booking appointments and accessing their healthcare journey",10,"",16
+"expert_community","Expert Community","Standard expert tier with core expert features. Pays 20% commission (monthly) or 12% (annual)",70,"patient",52
+"expert_top","Expert Top","Premium expert tier with advanced features. Pays 18% commission (monthly) or 8% (annual)",80,"expert_community",60
+"clinic_member","Clinic Member","Expert who is a member of a clinic organization (not admin). Can manage their own practice + view shared clinic resources",60,"expert_community",56
+"clinic_admin","Clinic Admin","Administrator of a clinic organization. Can manage team, patients, schedule, and clinic settings",90,"clinic_member",77
+"superadmin","Platform Admin","Platform-level administrator with full system access. For Eleva Care team only",100,"",132
