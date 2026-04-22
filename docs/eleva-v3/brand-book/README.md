@@ -14,6 +14,9 @@
 | [Gap analysis](./GAP-ANALYSIS.md) | What the first pass missed and how recovery addresses it |
 | [Messaging framework](./messaging-framework.md) | Message map, audiences, proof points |
 | [Art direction](./art-direction.md) | Photography, layout, motion, campaign guardrails |
+| [Email system](./email-system.md) | Email-safe tokens, header/footer/button variants, cross-client rules |
+| [OG image system](./og-image-system.md) | Social preview image types, gradients, campaign rules |
+| [Voice — localized samples](./voice-localized-samples.md) | EN / ES / PT / PT-BR hero, taglines, disclaimers |
 | [Asset inventory](./assets-inventory.md) | Full lineage: packaged paths + MVP source paths |
 | [Usage examples](./usage-examples.md) | Web, product, email, partners |
 

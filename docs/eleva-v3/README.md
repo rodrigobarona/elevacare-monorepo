@@ -46,7 +46,12 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 26. [`integration-runbooks.md`](./integration-runbooks.md)
 27. [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 28. [`testing-strategy.md`](./testing-strategy.md)
-29. [`adrs/README.md`](./adrs/README.md)
+29. [`roadmap-and-milestones.md`](./roadmap-and-milestones.md)
+30. [`dependency-map.md`](./dependency-map.md)
+31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
+32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
+33. [`contribution-workflow.md`](./contribution-workflow.md)
+34. [`adrs/README.md`](./adrs/README.md)
 
 **Brand, marketing, and design** should also use [`brand-book/README.md`](./brand-book/README.md) (and its appendices) so voice, visual identity, and partner boundaries stay consistent with the Eleva.care product reference.
 
@@ -116,6 +121,11 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`integration-runbooks.md`](./integration-runbooks.md): provider failure handling and investigation paths
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md): schema ownership, migration discipline, and rollout safety rules
 - [`testing-strategy.md`](./testing-strategy.md): test layering, critical-flow coverage, and validation priorities
+- [`roadmap-and-milestones.md`](./roadmap-and-milestones.md): milestone-based delivery sequencing and exit criteria
+- [`dependency-map.md`](./dependency-map.md): high-level dependency structure across workstreams
+- [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md): staged rollout guidance for risky features
+- [`release-versioning-strategy.md`](./release-versioning-strategy.md): release discipline, rollout control, and versioning expectations
+- [`contribution-workflow.md`](./contribution-workflow.md): how contributors should work from handbook to implementation
 
 ### Decision records
 
@@ -128,6 +138,9 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`brand-book/previews/`](./brand-book/previews/): quick visual review boards (logos, color, imagery, app reference)
 - [`brand-book/messaging-framework.md`](./brand-book/messaging-framework.md): message map and audience-specific guidance
 - [`brand-book/art-direction.md`](./brand-book/art-direction.md): art direction and photography standards
+- [`brand-book/email-system.md`](./brand-book/email-system.md): email-safe tokens and reference components
+- [`brand-book/og-image-system.md`](./brand-book/og-image-system.md): dynamic OG image rules for social previews
+- [`brand-book/voice-localized-samples.md`](./brand-book/voice-localized-samples.md): canonical hero and disclaimer lines across EN / ES / PT / PT-BR
 - [`brand-book/GAP-ANALYSIS.md`](./brand-book/GAP-ANALYSIS.md): gap analysis for the first documentation-only pass vs recovery
 - [`brand-book/assets-inventory.md`](./brand-book/assets-inventory.md): full asset lineage (pack + MVP source paths)
 - [`brand-book/usage-examples.md`](./brand-book/usage-examples.md): patterns for web, product, email, and partners
@@ -145,11 +158,11 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 
 The team should add these next as implementation begins:
 
-- `roadmap-and-milestones.md`
-- `dependency-map.md`
-- `feature-flag-rollout-plan.md`
-- `release-versioning-strategy.md`
-- `contribution-workflow.md`
+- `decision-log.md`
+- `owner-map.md`
+- `environment-matrix.md`
+- `service-level-objectives.md`
+- `support-escalation-matrix.md`
 
 ## Rules For Maintaining This Folder
 

@@ -20,6 +20,9 @@ Files here are **copies** of what ships in that tree; refresh when the MVP updat
 | [`product/`](./product/) | In-product trust SVGs (e.g. expert verified) |
 | [`derived/`](./derived/) | **Derived exports** — not design masters; see below |
 | [`palette/`](./palette/) | JSON + CSS snippet of Eleva RGB tokens from `globals.css` |
+| [`tokens/`](./tokens/) | Email brand constants (TS) mirrored from MVP `src/emails/utils/brand-constants.ts` |
+| [`email-components/`](./email-components/) | Reference `EmailLayout`, `EmailHeader`, `EmailFooter`, `EmailButton` |
+| [`og/`](./og/) | `og-image-components.tsx` copy for dynamic social image templates |
 
 ## Derived exports (read this)
 

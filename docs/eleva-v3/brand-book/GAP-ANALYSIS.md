@@ -23,6 +23,9 @@ This file records what the first “Markdown-only” pass delivered versus what 
 | No machine-readable palette export in brand-book | [`assets/palette/eleva-palette-tokens.json`](./assets/palette/eleva-palette-tokens.json), [`eleva-css-variables-snippet.css`](./assets/palette/eleva-css-variables-snippet.css) |
 | Limited “at a glance” visual review in docs | [`previews/`](./previews/) boards (logos, color, imagery, application) |
 | Weaker separate messaging and art-direction docs | [`messaging-framework.md`](./messaging-framework.md), [`art-direction.md`](./art-direction.md) |
+| No capture of the email-specific brand system | [`email-system.md`](./email-system.md), [`assets/tokens/email-brand-constants.ts`](./assets/tokens/email-brand-constants.ts), [`assets/email-components/`](./assets/email-components/) |
+| No capture of the dynamic OG image system | [`og-image-system.md`](./og-image-system.md), [`assets/og/og-image-components.tsx`](./assets/og/og-image-components.tsx) |
+| No localized voice reference (EN-only) | [`voice-localized-samples.md`](./voice-localized-samples.md) |
 
 ## Still a design-team gap (not faked in repo)
 
