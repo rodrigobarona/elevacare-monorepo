@@ -137,12 +137,26 @@ Each entry should include:
 - Summary: Daily.co EU region for video sessions and transcripts. Transcripts are Eleva-owned records encrypted at rest via WorkOS Vault references. Transcript content never leaks into notifications, analytics, or AI-gateway logs.
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-009
 
-### 2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes
+### 2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes (reaffirmed)
 
 - Owner: platform
 - Status: active
-- Summary: `packages/calendar` owns Google + Microsoft OAuth, token refresh, event read/write, and webhook subscription. Tokens stored in WorkOS Vault. WorkOS Pipes is explicitly not used for calendar sync.
+- Summary: `packages/calendar` owns Google + Microsoft OAuth, token refresh, event read/write, and webhook subscription. Tokens stored in WorkOS Vault. WorkOS Pipes is explicitly not used for calendar sync. Re-evaluated: keeping Eleva-owned protects booking-critical flows that need idempotent event creation with client-supplied IDs, multi-calendar busy/destination modeling, real-time freebusy, explicit token-expiry surfacing, and Pub/Sub cache invalidation — none of which Pipes exposes with the fidelity we need. WorkOS Pipes remains valid for identity-side integrations (SCIM, directory sync, SSO federation).
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-004
+
+### 2026-04-22: DNS management — Vercel Domains for `eleva.care`
+
+- Owner: platform
+- Status: active
+- Summary: Vercel manages the entire DNS for `eleva.care` (A/AAAA/CNAME/MX/TXT including SPF/DKIM/DMARC/BIMI). Locked subdomain split: `eleva.care` → `apps/web`, `app.eleva.care` → `apps/app`, `api.eleva.care` → `apps/api` (all webhooks + server callbacks), `docs.eleva.care` → `apps/docs`, `status.eleva.care` → BetterStack, `sessions.eleva.care` → Daily.co branded CNAME, `*.preview.eleva.care` wildcard for PR previews. Staging mirrors this with `staging-` prefix. Wildcard SSL on `*.eleva.care`.
+- Reference: [`environment-matrix.md`](./environment-matrix.md), [`monorepo-structure.md`](./monorepo-structure.md)
+
+### 2026-04-22: RBAC backbone — WorkOS `admin`/`member` defaults + capability bundles
+
+- Owner: platform
+- Status: active
+- Summary: Eleva uses WorkOS's default `admin` and `member` roles as **org-seniority** (not product labels). Product labels are derived from `(org_type, workos_role)` plus capability bundles loaded from `infra/workos/rbac-config.json`. Patient = `admin` of personal org; solo expert = `admin` of solo org; clinic admin = `admin` of clinic org; expert-in-clinic = `member` of clinic org; Eleva staff = `admin` of a single internal `eleva-operator` org with cross-org capability grants.
+- Reference: [`identity-rbac-spec.md`](./identity-rbac-spec.md), ADR-003
 
 ### 2026-04-22: Launch market — Portugal-first
 

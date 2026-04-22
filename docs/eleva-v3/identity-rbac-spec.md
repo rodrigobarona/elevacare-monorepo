@@ -76,43 +76,41 @@ Contains:
 - timestamps
 - scope where needed
 
-## Role Strategy
+## Role Strategy (Locked)
 
-The platform should not rely only on a small set of role labels.
-It should use:
+The platform uses a two-layer model:
 
-- role groupings for navigation and operational clarity
-- permission grants for actual access decisions
+- **WorkOS org-seniority roles** (`admin`, `member`) — the default pair WorkOS provisions on every org. These are **seniority inside an org**, not product labels.
+- **Eleva permission/capability grants** (from `infra/workos/rbac-config.json`) — bundles of capabilities driving actual authorization decisions.
 
-### Human-readable role buckets
+The **Eleva product label** (patient, expert, clinic admin, operator) is derived from the tuple `(org_type, workos_role)` plus capability bundles.
 
-Examples:
+### Role catalog (what each user actually looks like)
 
-- patient
-- expert
-- org_admin
-- eleva_admin
-- eleva_operator
+|Eleva product label|WorkOS role|Org type|Provisioning|
+|---|---|---|---|
+|**Patient**|`admin`|Personal org (org-of-one, auto-provisioned on signup)|every user owns their own personal org; patient is `admin` of it|
+|**Expert (solo)**|`admin`|Solo-expert org|dedicated solo org created on Become-Partner approval|
+|**Expert (clinic member)**|`member`|Clinic org|clinic admin invites expert into the clinic org|
+|**Clinic admin**|`admin`|Clinic org|clinic founder or elevated by existing clinic admin|
+|**Eleva operator (staff)**|`admin`|Single internal `eleva-operator` org|Eleva staff accounts only; platform-wide capability bundle|
 
-These are useful for:
+Notes:
 
-- navigation
-- onboarding branching
-- dashboard defaults
+- A single human can hold memberships across multiple orgs (e.g., same person = patient in their personal org + expert in a clinic org). Organization-switching UX makes the current context explicit.
+- An expert is **either** solo (`admin` of a solo-expert org) **or** clinic member (`member` of a clinic org). Never both simultaneously — clean org switching rule.
+- Eleva platform staff are never `admin` of a customer's org. They operate from the `eleva-operator` org with cross-org capability grants.
 
-### Permission/capability layer
+### Permission bundles (examples)
 
-Examples:
+Assigned via `infra/workos/rbac-config.json` and loaded into JWT claims:
 
-- view_own_dashboard
-- manage_schedule
-- publish_event_type
-- access_shared_patient_data
-- approve_payout
-- manage_org_billing
-- moderate_reviews
+- `patient_capabilities`: `appointments:view_own`, `sessions:view_own`, `billing:view_own`, `diary:share`
+- `expert_capabilities`: `events:manage`, `schedule:manage`, `bookings:manage_own`, `reports:manage_own`, `payouts:view_own`
+- `clinic_admin_capabilities`: expert_capabilities + `members:manage`, `billing:manage_org`, `subscriptions:manage_org`
+- `eleva_operator_capabilities`: `experts:approve`, `experts:reject`, `users:view_all`, `payments:view_all`, `payouts:approve`, `audit:view_all`, `workflows:retry`, `accounting:reconcile`
 
-This layer should drive the actual authorization logic.
+The capability bundle is what actually drives access — WorkOS `admin`/`member` is the backbone it hangs on.
 
 ## Recommended Enforcement Layers
 
@@ -283,9 +281,12 @@ CI rule: no `process.env.ENCRYPTION_KEY`, no `crypto.createCipheriv('aes-256-gcm
 ## Closed Decisions
 
 - WorkOS is the identity provider (locked)
+- **Role backbone = WorkOS defaults `admin` / `member`**; Eleva product labels derived from `(org_type, role)` + capability bundles (see Role Catalog above)
 - Organization-per-user default for solo experts and patients (matches MVP blueprint)
+- Eleva operators live in a single internal `eleva-operator` org with cross-org capability grants
 - Neon RLS is the non-bypassable tenancy layer (ADR-003)
 - Calendar OAuth is Eleva-owned (ADR-004) — not WorkOS Pipes
+- WorkOS Pipes is reserved for identity-side integrations (SCIM provisioning, directory sync, SSO federation) — not booking-critical data planes like calendar sync
 
 ## Open Questions
 

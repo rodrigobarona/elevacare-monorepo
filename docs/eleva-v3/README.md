@@ -47,6 +47,7 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 27. [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 28. [`testing-strategy.md`](./testing-strategy.md)
 29. [`roadmap-and-milestones.md`](./roadmap-and-milestones.md)
+29a. [`implementation-sprints.md`](./implementation-sprints.md)
 30. [`dependency-map.md`](./dependency-map.md)
 31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
 32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
@@ -139,6 +140,7 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md): schema ownership, migration discipline, and rollout safety rules
 - [`testing-strategy.md`](./testing-strategy.md): test layering, critical-flow coverage, and validation priorities
 - [`roadmap-and-milestones.md`](./roadmap-and-milestones.md): milestone-based delivery sequencing and exit criteria
+- [`implementation-sprints.md`](./implementation-sprints.md): tactical 8-week weekly sprint plan with two-track parallelization, MCP/CLI usage, and Context7 pulls per sprint
 - [`dependency-map.md`](./dependency-map.md): high-level dependency structure across workstreams
 - [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md): staged rollout guidance for risky features
 - [`release-versioning-strategy.md`](./release-versioning-strategy.md): release discipline, rollout control, and versioning expectations

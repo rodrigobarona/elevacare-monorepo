@@ -29,6 +29,47 @@ It answers:
 - CI asserts no `bun.lock` exists at repo root.
 - Turborepo remote cache enabled via Vercel.
 
+## Next.js 16 Conventions (applied in every Next app)
+
+- **`src/proxy.ts`** replaces the legacy `middleware.ts` (Next 16 rename). Entry file is `proxy.ts` and exports the default handler + optional `config.matcher`.
+- **next-intl** continues to use `createMiddleware(i18nConfig)`, but it is imported and composed inside `src/proxy.ts` together with auth and secure-headers wrappers.
+- The proxy file must stay thin (ideally under 50 LOC). Each concern is a composable wrapper exported from its owning package:
+  - `createMiddleware` from `next-intl/middleware` (i18n)
+  - `withAuth` from `@eleva/auth/proxy`
+  - `withHeaders` from `@eleva/observability/proxy` (CSP + HSTS + correlation-ID)
+
+Example shape:
+
+```ts
+import createIntl from 'next-intl/middleware';
+import { i18nConfig } from '@eleva/config/i18n';
+import { withAuth } from '@eleva/auth/proxy';
+import { withHeaders } from '@eleva/observability/proxy';
+
+const intl = createIntl(i18nConfig);
+
+export default withHeaders(withAuth(intl));
+
+export const config = {
+  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+};
+```
+
+An ESLint rule enforces that `src/proxy.ts` does not contain inline business logic — only composition.
+
+## Vercel Platform Integration
+
+- **Vercel CLI** is linked at repo root (see [.vercel/repo.json](../../.vercel/repo.json)). Each app is a separate Vercel project:
+  - `elevacare-marketing` → `apps/web`
+  - `elevacare-app` → `apps/app`
+  - `elevacare-api` → `apps/api`
+  - `elevacare-docs` → `apps/docs`
+  - `elevacare-email` → `apps/email`
+- **Vercel Marketplace integrations** provide env vars via project link (Neon, Upstash Redis, Upstash QStash, Resend, Sentry, BetterStack). Use `vercel env pull .env.local` per app instead of hand-writing secrets.
+- **Vercel MCP** is used during implementation to inspect project info, deployments, env vars, and Edge Config.
+- **Turborepo remote cache** is served by Vercel.
+- **Vercel manages DNS** for `eleva.care`. Subdomains, DNS records (A/AAAA/CNAME/MX/TXT for SPF/DKIM/DMARC/BIMI), and wildcard SSL are controlled via Vercel Domains. Full subdomain and URL matrix in [`environment-matrix.md`](./environment-matrix.md). Locked split: `eleva.care` → `apps/web`, `app.eleva.care` → `apps/app`, `api.eleva.care` → `apps/api` (all webhooks + server callbacks), `docs.eleva.care` → `apps/docs`, `status.eleva.care` → BetterStack status page, `sessions.eleva.care` → Daily.co branded CNAME, `*.preview.eleva.care` → Vercel preview wildcard.
+
 ## Migration From Current Scaffold (Phase 1 first task)
 
 The repo currently ships a shadcn monorepo template on Bun:
