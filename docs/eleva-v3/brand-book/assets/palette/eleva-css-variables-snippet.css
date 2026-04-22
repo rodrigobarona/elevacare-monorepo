@@ -1,0 +1,24 @@
+/**
+ * Eleva core RGB tokens (snippet) — from MVP globals.css
+ * Source: _context/clone-repo/eleva-care-app/src/app/globals.css
+ * Paste into a prototype or static page; the MVP uses Tailwind @theme to expose these.
+ */
+:root {
+  /* Primary */
+  --eleva-primary: 0 109 119; /* #006D77 - Deep Teal */
+  --eleva-primary-light: 131 197 190; /* #83C5BE - Sage Green */
+  /* Secondary */
+  --eleva-secondary: 226 149 120; /* #E29578 - Soft Coral */
+  --eleva-secondary-light: 255 221 210; /* #FFDDD2 - Warm Sand */
+  /* Accent */
+  --eleva-accent: 224 251 252; /* #E0FBFC */
+  /* Neutrals */
+  --eleva-neutral-50: 252 253 253;
+  --eleva-neutral-100: 247 249 249;
+  --eleva-neutral-200: 209 209 209;
+  --eleva-neutral-900: 51 51 51;
+  /* Highlights (use sparingly) */
+  --eleva-highlight-red: 238 66 102;
+  --eleva-highlight-purple: 84 13 110;
+  --eleva-highlight-yellow: 255 210 63;
+}

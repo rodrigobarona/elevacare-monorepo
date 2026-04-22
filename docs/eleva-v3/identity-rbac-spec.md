@@ -1,0 +1,265 @@
+# Eleva.care v3 Identity And RBAC Spec
+
+Status: Living
+
+## Purpose
+
+This document defines the identity, tenancy, and authorization model for Eleva.care v3.
+
+It should guide:
+
+- WorkOS integration
+- account lifecycle design
+- organization and membership modeling
+- RBAC implementation
+- route and API authorization rules
+
+## Identity Principles
+
+- One human should map to one canonical Eleva user identity.
+- Authorization should be capability-based, not hardcoded to page names.
+- Organizations and memberships should be explicit.
+- Guest access should be a transitional state, not a separate permanent identity system.
+- RBAC must be enforced at multiple layers, not only in the UI.
+
+## Identity Provider
+
+WorkOS is the planned identity, organization, RBAC, and Vault provider.
+
+WorkOS should be responsible for:
+
+- authentication
+- social/enterprise identity where needed
+- organization membership primitives
+- role/permission claims where appropriate
+- secure session handling
+
+Eleva should remain responsible for:
+
+- application-specific user profile data
+- expert/patient/org lifecycle state
+- domain-specific authorization checks
+- data ownership and visibility rules
+
+## Core Identity Model
+
+### User
+
+Represents one human identity.
+
+Examples:
+
+- patient
+- expert
+- organization admin
+- Eleva operator
+
+### Organization
+
+Represents the main tenant boundary.
+
+Examples:
+
+- personal patient organization
+- expert organization
+- clinic organization
+- team/company organization
+
+### Membership
+
+Represents the relationship between a user and an organization.
+
+Contains:
+
+- role assignment
+- status
+- timestamps
+- scope where needed
+
+## Role Strategy
+
+The platform should not rely only on a small set of role labels.
+It should use:
+
+- role groupings for navigation and operational clarity
+- permission grants for actual access decisions
+
+### Human-readable role buckets
+
+Examples:
+
+- patient
+- expert
+- org_admin
+- eleva_admin
+- eleva_operator
+
+These are useful for:
+
+- navigation
+- onboarding branching
+- dashboard defaults
+
+### Permission/capability layer
+
+Examples:
+
+- view_own_dashboard
+- manage_schedule
+- publish_event_type
+- access_shared_patient_data
+- approve_payout
+- manage_org_billing
+- moderate_reviews
+
+This layer should drive the actual authorization logic.
+
+## Recommended Enforcement Layers
+
+Authorization should be enforced in at least four layers:
+
+1. request/route layer
+2. page/layout layer
+3. server action / API handler layer
+4. data access layer
+
+The UI should never be the only protection.
+
+## Account Lifecycles
+
+### Patient/customer lifecycle
+
+Suggested progression:
+
+- guest booking
+- invited or provisional account
+- activated account
+- full dashboard access
+
+### Expert lifecycle
+
+Suggested progression:
+
+- application started
+- profile incomplete
+- compliance/review pending
+- approved
+- payout-ready
+- published/marketplace-ready
+
+### Organization lifecycle
+
+Suggested progression:
+
+- created
+- configured
+- billing ready
+- member-enabled
+- operational
+
+## Guest User Model
+
+The system should support first-time bookings without forcing a full account creation before conversion.
+
+But the backend model should still preserve a clean path from:
+
+- guest interaction
+- to account activation
+- to full patient/customer identity
+
+Recommendation:
+
+Treat guest status as an onboarding state linked to the canonical user path, not as an entirely separate actor type.
+
+## Workspace Model
+
+The first authenticated product is one web app with route groups.
+
+That means route access should be shaped by:
+
+- authentication state
+- current organization context
+- membership
+- capabilities
+
+The route groups may look like:
+
+- `(patient)`
+- `(expert)`
+- `(org)`
+- `(admin)`
+
+But access decisions should be based on permissions and organization context, not only folder names.
+
+## Organization Context
+
+The application should explicitly resolve a current organization/workspace context.
+
+This matters because a user may:
+
+- belong to multiple organizations
+- be an expert in one context and a patient in another
+- switch between personal and organization workspaces
+
+## Sensitive Data Access
+
+Some permissions must be treated as higher-risk:
+
+- access transcripts
+- access shared diary data
+- access uploaded documents
+- approve payouts
+- export data
+- manage permissions or memberships
+
+These actions should always be auditable.
+
+## Admin Versus Operator
+
+Do not assume every internal Eleva staff role should have the same power.
+
+The model should distinguish between:
+
+- internal support/operator permissions
+- higher-trust administrative permissions
+
+Examples of high-trust actions:
+
+- payout approval
+- audit export
+- permission changes
+- deletion-sensitive operations
+
+## Future Academy Compatibility
+
+The identity model must support future learning/academy roles without requiring a new identity system.
+
+That means:
+
+- reuse the same user
+- reuse organization/membership concepts where possible
+- add academy-specific permissions and profile extensions when needed
+
+## Audit Requirements
+
+The system must log:
+
+- sign-in/sign-out relevant events where appropriate
+- membership changes
+- permission changes
+- organization switches when security-sensitive
+- access to sensitive user/customer data
+- expert approval and status changes
+
+## Open Questions
+
+- exact guest-to-account activation UX
+- final role catalog versus capability catalog
+- whether some permissions live fully in WorkOS or are partially mirrored in Eleva
+- exact organization switching UX
+
+## Related Docs
+
+- [`master-architecture.md`](./master-architecture.md)
+- [`domain-model.md`](./domain-model.md)
+- [`compliance-data-governance.md`](./compliance-data-governance.md)

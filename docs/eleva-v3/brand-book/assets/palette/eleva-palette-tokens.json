@@ -1,0 +1,82 @@
+{
+  "name": "Eleva Care (MVP) brand colors",
+  "source": "_context/clone-repo/eleva-care-app/src/app/globals.css :root",
+  "generated": "2025-04-22",
+  "tokens": [
+    {
+      "id": "eleva-primary",
+      "label": "Deep Teal",
+      "hex": "#006D77",
+      "rgb": { "r": 0, "g": 109, "b": 119 }
+    },
+    {
+      "id": "eleva-primary-light",
+      "label": "Sage Green",
+      "hex": "#83C5BE",
+      "rgb": { "r": 131, "g": 197, "b": 190 }
+    },
+    {
+      "id": "eleva-secondary",
+      "label": "Soft Coral",
+      "hex": "#E29578",
+      "rgb": { "r": 226, "g": 149, "b": 120 }
+    },
+    {
+      "id": "eleva-secondary-light",
+      "label": "Warm Sand",
+      "hex": "#FFDDD2",
+      "rgb": { "r": 255, "g": 221, "b": 210 }
+    },
+    {
+      "id": "eleva-accent",
+      "label": "Pale Cool (accent)",
+      "hex": "#E0FBFC",
+      "rgb": { "r": 224, "g": 251, "b": 252 }
+    },
+    {
+      "id": "eleva-neutral-50",
+      "label": "Lightest white",
+      "hex": "#FCFDFD",
+      "rgb": { "r": 252, "g": 253, "b": 253 }
+    },
+    {
+      "id": "eleva-neutral-100",
+      "label": "Soft white",
+      "hex": "#F7F9F9",
+      "rgb": { "r": 247, "g": 249, "b": 249 }
+    },
+    {
+      "id": "eleva-neutral-200",
+      "label": "Light grey",
+      "hex": "#D1D1D1",
+      "rgb": { "r": 209, "g": 209, "b": 209 }
+    },
+    {
+      "id": "eleva-neutral-900",
+      "label": "Charcoal",
+      "hex": "#333333",
+      "rgb": { "r": 51, "g": 51, "b": 51 }
+    },
+    {
+      "id": "eleva-highlight-red",
+      "label": "Vibrant Rose (accent / energy)",
+      "hex": "#EE4266",
+      "rgb": { "r": 238, "g": 66, "b": 102 }
+    },
+    {
+      "id": "eleva-highlight-purple",
+      "label": "Deep Purple (accent)",
+      "hex": "#540D6E",
+      "rgb": { "r": 84, "g": 13, "b": 110 }
+    },
+    {
+      "id": "eleva-highlight-yellow",
+      "label": "Sunshine Yellow (accent)",
+      "hex": "#FFD23F",
+      "rgb": { "r": 255, "g": 210, "b": 63 }
+    }
+  ],
+  "notes": [
+    "HSL-based shadcn semantic colors (--background, --primary, etc.) are also in globals.css; they are app-theme bindings, not separate Eleva marketing primaries."
+  ]
+}

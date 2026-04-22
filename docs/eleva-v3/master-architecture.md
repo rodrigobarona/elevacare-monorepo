@@ -380,9 +380,16 @@ This document depends on:
 
 - [`monorepo-structure.md`](./monorepo-structure.md)
 - [`domain-model.md`](./domain-model.md)
+- [`identity-rbac-spec.md`](./identity-rbac-spec.md)
 - [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
 - [`payments-payouts-spec.md`](./payments-payouts-spec.md)
+- [`notifications-spec.md`](./notifications-spec.md)
+- [`crm-spec.md`](./crm-spec.md)
+- [`ai-reporting-spec.md`](./ai-reporting-spec.md)
+- [`compliance-data-governance.md`](./compliance-data-governance.md)
+- [`content-seo-spec.md`](./content-seo-spec.md)
 - [`mobile-integration-spec.md`](./mobile-integration-spec.md)
+- [`ops-observability-spec.md`](./ops-observability-spec.md)
 - [`adrs/README.md`](./adrs/README.md)
 
 ## Change Control
