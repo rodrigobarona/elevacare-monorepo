@@ -48,17 +48,47 @@ inside each app directory to confirm the expected env vars are populated.
 
 ## 3. DNS on `eleva.care`
 
-Vercel DNS owns the zone (per ADR-012). Configure per
-[environment-matrix.md](../environment-matrix.md):
+**Important**: `eleva.care` already serves the production MVP. During v3
+development (S0 through S7) **v3 traffic must live under `dev.eleva.care`**
+to avoid colliding with live users. Full swap to the apex
+`eleva.care` happens in Sprint 8 as part of the launch cutover.
 
-- `A/AAAA @` → gateway (elevacare-marketing) production
-- `CNAME api` → elevacare-api production (for `api.eleva.care`)
-- `CNAME staging` → gateway staging
-- `CNAME email` → elevacare-email production
+### Sprints 0-7 — dev subdomain
+
+Vercel DNS owns the zone. Add these records alongside the existing MVP
+records (do not touch `@`/`www` until S8):
+
+- `CNAME dev` → v3 gateway (elevacare-marketing on the v3 branch / preview)
+- `CNAME api.dev` → elevacare-api (v3 API subdomain during dev)
+- `CNAME docs.dev` → not needed (served under `dev.eleva.care/docs` via rewrite)
+- `CNAME email.dev` → elevacare-email (internal preview)
+- wildcard `*.preview.dev.eleva.care` → per-PR previews
+- `APP_URL=https://dev.eleva.care` (or the elevacare-app Vercel URL for
+  previews), `DOCS_URL=https://dev.eleva.care` — set in Vercel project env
+
+Update Stripe / WorkOS / Daily / Google OAuth redirect URIs to include
+both `dev.eleva.care` (for v3 dev) and `eleva.care` (for MVP prod) until
+the S8 cutover retires the MVP.
+
+### Sprint 8 cutover (launch)
+
+Swap v3 to apex per ADR-012:
+
+- Flip `A/AAAA @` → v3 gateway
+- `CNAME api` → elevacare-api
+- `CNAME staging` → v3 staging gateway
+- `CNAME email` → elevacare-email
 - `CNAME status` → BetterStack status page
 - `CNAME sessions` → Daily.co branded rooms (Sprint 5)
 - wildcard `*.eleva.care` for per-PR `*.preview.eleva.care`
-- SPF / DKIM / DMARC / BIMI (Sprint 4 deliverable; DNS zone must exist now)
+- SPF / DKIM / DMARC / BIMI (Sprint 4 deliverable; records should be in
+  place before the swap so email deliverability does not regress)
+- `dev.eleva.care` → retire or keep as a permanent dev/staging alias
+
+### Preview deploys (any sprint)
+
+Every PR gets a Vercel preview URL on `*.vercel.app`; optionally wire
+`*.preview.dev.eleva.care` for branded preview links.
 
 ## 4. Internal URL hygiene
 
@@ -73,10 +103,12 @@ The 301 approach is preferred and is tracked as a Sprint 7 hardening item.
 
 ## 5. Verification
 
-Once the above is complete, the S0 exit-gate checks should pass:
+Once the above is complete, the S0 exit-gate checks should pass (using
+the dev subdomain until the S8 cutover):
 
-- `eleva.care/patient` serves the `apps/app` placeholder via rewrite
-- `eleva.care/docs` serves the `apps/docs` placeholder via rewrite
-- `api.eleva.care/health` returns `{ status: 'ok' }`
+- `dev.eleva.care/patient` serves the `apps/app` placeholder via rewrite
+- `dev.eleva.care/docs` serves the `apps/docs` placeholder via rewrite
+- `api.dev.eleva.care/health` returns `{ status: 'ok' }`
 - `vercel env pull` populates expected vars in each app
 - Internal Vercel project URLs return `noindex` or 301 to canonical
+- `eleva.care` (production MVP) is untouched
