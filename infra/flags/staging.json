@@ -1,0 +1,12 @@
+{
+  "ff.clinic_subscription_tiers": true,
+  "ff.three_party_revenue": false,
+  "ff.sms_enabled": true,
+  "ff.mbway_enabled": true,
+  "ff.ai_reports_beta": true,
+  "ff.diary_share": true,
+  "ff.toconline_invoicing_enabled": true,
+  "ff.expert_invoicing_apps_enabled": true,
+  "ff.invoicing.toconline": true,
+  "ff.invoicing.moloni": false
+}

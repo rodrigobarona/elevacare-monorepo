@@ -6,16 +6,35 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/main/index.ts",
+    "./schema/audit": "./src/schema/audit/index.ts",
+    "./context": "./src/context.ts",
+    "./client": "./src/client.ts",
+    "./rls": "./src/rls/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:generate:audit": "drizzle-kit generate --config drizzle.config.audit.ts",
+    "db:push": "drizzle-kit push --config drizzle.config.ts",
+    "db:push:audit": "drizzle-kit push --config drizzle.config.audit.ts",
+    "db:studio": "drizzle-kit studio --config drizzle.config.ts",
+    "db:rls": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyAllRls())\""
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@neondatabase/serverless": "^1.1.0",
+    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

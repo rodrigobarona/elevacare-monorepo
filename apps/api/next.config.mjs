@@ -5,6 +5,14 @@ const nextConfig = {
   // the gateway. Session cookies share the .eleva.care scope; CORS handles
   // cross-origin calls from the gateway / app zones.
   assetPrefix: process.env.API_ASSET_PREFIX || undefined,
-};
+  transpilePackages: [
+    "@eleva/audit",
+    "@eleva/config",
+    "@eleva/db",
+    "@eleva/encryption",
+    "@eleva/observability",
+    "@eleva/workflows",
+  ],
+}
 
-export default nextConfig;
+export default nextConfig

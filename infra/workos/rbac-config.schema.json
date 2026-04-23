@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Eleva RBAC Config",
+  "type": "object",
+  "required": ["version", "capabilities", "roles"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "number" },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "displayName"],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z_]+:[a-z_]+$"
+          },
+          "displayName": { "type": "string" }
+        },
+        "additionalProperties": false
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["slug", "displayName", "capabilities"],
+        "properties": {
+          "slug": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "displayName": { "type": "string" },
+          "capabilities": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
