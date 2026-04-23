@@ -60,6 +60,21 @@ This document defines how the team should contribute changes to Eleva v3 in a wa
   [`implementation-sprints.md`](./implementation-sprints.md) "Global
   Rules Applied Every Sprint" and "Definition of Done (Per Sprint)".
 
+### PR size (CodeRabbit 150-file cap)
+
+CodeRabbit Pro skips review when a PR changes more than **150 files**.
+Keep sprint PRs under this limit:
+
+- Reduce counted files via `.coderabbit.yaml` → `reviews.path_filters`
+  (excludes lockfiles, `.next/`, `dist/`, `coverage/`, `.turbo/`,
+  generated types, Husky shims, Cursor state, `_context/`).
+- If a sprint's scope genuinely exceeds 150 reviewable files, **split
+  the PR** along sub-step boundaries (S1.1, S1.2 … ) so each land
+  gets its own review. Track the split in the sprint's plan.
+- The S0 foundation-migration PR was the known exception — 158 files
+  (scaffolding 4 apps + 16 empty packages in one go). Post-S0 sprint
+  PRs should not repeat this.
+
 ### Branch-protection summary
 
 On `main`:
