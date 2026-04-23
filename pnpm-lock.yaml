@@ -225,6 +225,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:^
+        version: link:../../packages/config
+      '@eleva/observability':
+        specifier: workspace:^
+        version: link:../../packages/observability
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -234,6 +240,9 @@ importers:
       next:
         specifier: 16.1.6
         version: 16.1.6(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
+      next-intl:
+        specifier: ^4.9.1
+        version: 4.9.1(next@16.1.6(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)
       next-themes:
         specifier: ^0.4.6
         version: 0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
