@@ -1,0 +1,58 @@
+language: en
+tone_instructions: >-
+  Be concise and actionable. Focus on correctness, security, and Eleva v3
+  architectural boundaries. Skip nit-picking.
+
+early_access: false
+
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  poem: false
+  review_status: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  changed_files_summary: true
+  sequence_diagrams: false
+  path_instructions:
+    - path: apps/**/src/proxy.ts
+      instructions: >-
+        Per docs/eleva-v3/implementation-sprints.md this file must stay
+        under ~50 LOC. Flag any cross-cutting concern that belongs in an
+        @eleva/* package (auth, observability, flags) instead of inline.
+    - path: packages/db/**
+      instructions: >-
+        Every tenant-scoped table must have an org_id column + RLS
+        policy using current_setting('eleva.org_id') (ADR-003). Flag any
+        query missing withOrgContext(). Flag direct postgres client
+        imports outside @eleva/db.
+    - path: packages/billing/**
+      instructions: >-
+        Stripe SDK is the only place stripe / @stripe/stripe-js /
+        @stripe/connect-js may be imported (ADR-005). Flag hardcoded
+        payment_method_types; Dynamic Payment Methods only.
+    - path: packages/ai/**
+      instructions: >-
+        AI calls must go through Vercel AI Gateway (ADR-009). Flag
+        direct provider-SDK imports (@ai-sdk/anthropic, openai, etc.).
+    - path: packages/notifications/**
+      instructions: >-
+        Resend and Twilio may only be imported here (ADR-006). Lane 1
+        sends are idempotent (idempotencyKey required). No PHI in log
+        payloads.
+    - path: packages/workflows/**
+      instructions: >-
+        Vercel Workflows DevKit only (ADR-007). Every step is
+        idempotent; QStash is cron-only.
+    - path: "**/*.md"
+      instructions: >-
+        Docs change reviews: flag any silent contradiction with an
+        existing ADR. Ensure decision-log.md entries accompany
+        material changes.
+
+chat:
+  auto_reply: true
