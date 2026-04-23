@@ -1,0 +1,21 @@
+name: CodeRabbit AI Review
+
+# CodeRabbit runs via the GitHub App and does not need a self-hosted workflow;
+# this file exists only to enable the branch-protection "coderabbit" status
+# check to be wired up before the App is fully configured.
+#
+# Once the CodeRabbit GitHub App is installed on the repo, .coderabbit.yaml at
+# repo root drives review behavior. See docs/eleva-v3/contribution-workflow.md
+# for the author-must-acknowledge rule.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  coderabbit-noop:
+    name: CodeRabbit (no-op placeholder)
+    runs-on: ubuntu-latest
+    steps:
+      - name: CodeRabbit handles this via the GitHub App
+        run: echo "CodeRabbit comments are posted by the installed GitHub App."
