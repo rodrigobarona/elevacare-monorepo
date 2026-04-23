@@ -1,0 +1,35 @@
+{
+  "remoteName": "origin",
+  "projects": [
+    {
+      "id": "prj_ywMY9fUToIkntbwy1PijRxDvxt6r",
+      "name": "elevacare-marketing",
+      "directory": "apps/web",
+      "orgId": "team_yanzjMN2piGzEixYRNcC7G6r"
+    },
+    {
+      "id": "prj_SfRR8hTaKdWlwOKfbLLukOo4OpTD",
+      "name": "elevacare-app",
+      "directory": "apps/app",
+      "orgId": "team_yanzjMN2piGzEixYRNcC7G6r"
+    },
+    {
+      "id": "prj_ybwFebwFsECK1ewAPIdScdF5lrra",
+      "name": "elevacare-api",
+      "directory": "apps/api",
+      "orgId": "team_yanzjMN2piGzEixYRNcC7G6r"
+    },
+    {
+      "id": "prj_lSgjNpWQVwwjhjuo2b5tj6KSvFlz",
+      "name": "elevacare-docs",
+      "directory": "apps/docs",
+      "orgId": "team_yanzjMN2piGzEixYRNcC7G6r"
+    },
+    {
+      "id": "prj_fvFWrRUphYG08qWDYTgPBlcIxYfQ",
+      "name": "elevacare-email",
+      "directory": "apps/email",
+      "orgId": "team_yanzjMN2piGzEixYRNcC7G6r"
+    }
+  ]
+}

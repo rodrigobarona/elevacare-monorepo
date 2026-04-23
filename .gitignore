@@ -26,8 +26,11 @@ coverage
 # Turbo
 .turbo
 
-# Vercel
-.vercel
+# Vercel (keep .vercel/repo.json and README.txt for monorepo linking;
+# ignore per-project secrets in .vercel/project.json).
+.vercel/*
+!.vercel/repo.json
+!.vercel/README.txt
 
 # Build Outputs
 .next/
