@@ -50,20 +50,32 @@ Examples:
 - coaching call
 - tutoring session
 
-Fields should include:
+Fields include:
 
-- title
-- description
-- duration
-- price
-- language support
-- session mode
-- booking window
-- minimum notice
-- buffers
-- cancellation rules
-- reschedule rules
-- active/published state
+- `title` (localized per PT/EN/ES)
+- `description` (localized)
+- `slug` — URL segment, lowercase `[a-z0-9-]`, case-insensitive unique per expert (e.g., `first-consultation`, `coaching-call-30`)
+- `duration`
+- `price`
+- `language_support`
+- `session_mode` (`online` / `in_person` / `phone`)
+- `event_location` (for in-person)
+- `booking_window`
+- `minimum_notice`
+- `buffers` (before / after)
+- `cancellation_rules`
+- `reschedule_rules`
+- `worldwide_mode` (for coaching / chat / non-clinical sessions)
+- `active` / `published` state
+
+### Public URL shape (multi-zone gateway — ADR-014)
+
+- Expert profile: `eleva.care/[username]`
+- Clinic profile: `eleva.care/[clinicslug]` (shared namespace with experts — see [identity-rbac-spec.md](./identity-rbac-spec.md))
+- Event-specific booking: `eleva.care/[username]/[event-slug]`
+- Locale prefix via next-intl `localePrefix: 'as-needed'`: EN at root, PT/ES prefixed (`eleva.care/pt/patimota/first-consultation`).
+
+The gateway (`apps/web`) resolves `[username]` against the shared experts+clinics namespace, then `[event-slug]` against that entity's published event types. Reserved first-segment paths are blocked at signup (see reserved-slugs list in identity spec).
 
 ### Schedule
 

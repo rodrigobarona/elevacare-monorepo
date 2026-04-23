@@ -142,9 +142,9 @@ AI pipelines must explicitly define:
 
 Sensitive data should not be casually copied into generalized logs or debugging systems.
 
-## Tenancy Isolation (Neon RLS)
+## Tenancy Isolation (Neon RLS + Audit Outbox)
 
-**Locked decision**: Neon Postgres with Row-Level Security on every tenant-scoped table, enforced via the `withOrgContext()` helper in `packages/db`.
+**Locked decision** (ADR-003): Neon Postgres with Row-Level Security on every tenant-scoped table, enforced via the `withOrgContext()` helper in `packages/db`. Audit events flow through an in-DB outbox in `eleva_v3_main` drained asynchronously to `eleva_v3_audit`.
 
 Structure:
 
@@ -153,10 +153,40 @@ Structure:
 - `withOrgContext(orgId, fn)` runs `SET LOCAL eleva.org_id = ...` inside a transaction before executing `fn`
 - application code never passes raw `orgId` to queries — it passes through `withOrgContext` and the query uses RLS-filtered views
 
-CI guard:
+### Audit outbox pattern (preserves transactional integrity across the two projects)
 
-- integration test inserts as org A, selects as org B → must return zero rows
+- Every mutating server action is wrapped by `withAudit(action, entity, fn)` from `@eleva/audit`.
+- The wrapper writes the domain mutation **and** an `audit_outbox` row in the same `eleva_v3_main` transaction — atomic commit, no half-state.
+- `auditOutboxDrainer` Vercel Workflow copies outbox rows to `eleva_v3_audit.audit_events` with at-least-once delivery (idempotent on pre-generated `audit_id` UUID); sets outbox row `status = shipped`.
+- Shipped rows kept for 90 days for reconciliation, then purged.
+- Drainer downtime buffers in outbox; domain writes are never blocked by audit DB unavailability.
+
+### RLS on audit stream
+
+- `INSERT` allowed by drainer credentials only.
+- `SELECT` filtered by `org_id` match or capability `audit:view_all` (Eleva operators).
+- `UPDATE` / `DELETE` not granted to any runtime role; Neon-level DBA action required and itself auditable.
+
+### CI guards
+
+- integration test: insert as org A, select as org B → must return zero rows
 - lint rule blocks raw `db.select(...)` calls outside `withOrgContext`
+- boundary rule rejects server actions that write to domain tables without `withAudit`
+
+### Hash-chain option (ISO 27001 / SOC 2)
+
+Optional `prev_hash` + `row_hash` on audit rows (Sprint 7 hardening) lets an offline verifier detect tampering without requiring a separate WORM storage product.
+
+### Compliance-control mapping
+
+|Framework|Control|How this design satisfies it|
+|---|---|---|
+|GDPR|Art. 30 records of processing|append-only tenant-scoped trail; DSAR export workflow reads from `eleva_v3_audit`|
+|GDPR|Art. 17 erasure|Vault crypto-shredding removes domain data; audit retains operational record with PII redacted if needed|
+|HIPAA (future US)|164.312(b) audit controls|physically separate audit DB + drainer + append-only; Neon BAA signed before US onboarding|
+|HIPAA|164.312(c) integrity|hash-chain option + restricted-credential write path|
+|ISO 27001|A.12.4 logging + monitoring|append-only stream + hash-chain option + BetterStack heartbeats|
+|SOC 2|CC7.3 monitoring|correlation IDs + Sentry + BetterStack across every `withAudit`-wrapped mutation|
 
 ## Vendor Governance
 
@@ -170,22 +200,22 @@ Every major vendor is evaluated for:
 
 ### EU residency per vendor (locked)
 
-| Vendor | Region | Role | Handles PHI-adjacent? |
+|Vendor|Region|Role|Handles PHI-adjacent?|
 |---|---|---|---|
-| WorkOS | EU | auth, orgs, Vault | yes (OAuth tokens, encrypted refs) |
-| Neon | EU | database | yes (all domain data + audit stream) |
-| Stripe | EU entity (Ireland) | payments, payouts, subscriptions | no (payment metadata only) |
-| Daily.co | EU | video + transcript source | yes (transcript metadata, we store content ourselves) |
-| Resend | EU | transactional email + Automations | no (PHI-free payloads enforced by Lane 2 schema) |
-| Twilio | EU subaccount | SMS | no (minimum-necessary bodies) |
-| PostHog | EU / privacy-first | product analytics (apps/app) | no |
-| GA4 | — | marketing analytics (apps/web) | no (opt-in only) |
-| Sentry | EU | error tracking | scrubbed; never full PHI |
-| BetterStack | EU | logs + uptime | scrubbed; redaction policy enforced |
-| Upstash | EU | Redis + QStash | no (ephemeral coordination) |
-| Vercel AI Gateway | model-dependent | AI routing | yes (transcript summarization, AI reports; governed by ADR-009) |
-| TOConline | PT (AT-certified) | invoicing (Tier 1 + Tier 2 adapter) | invoicing metadata only |
-| Moloni / InvoiceXpress / Vendus / Primavera | PT | Tier 2 adapters | invoicing metadata only, per-expert opt-in |
+|WorkOS|EU|auth, orgs, Vault|yes (OAuth tokens, encrypted refs)|
+|Neon|EU|database|yes (all domain data + audit stream)|
+|Stripe|EU entity (Ireland)|payments, payouts, subscriptions|no (payment metadata only)|
+|Daily.co|EU|video + transcript source|yes (transcript metadata, we store content ourselves)|
+|Resend|EU|transactional email + Automations|no (PHI-free payloads enforced by Lane 2 schema)|
+|Twilio|EU subaccount|SMS|no (minimum-necessary bodies)|
+|PostHog|EU / privacy-first|product analytics (apps/app)|no|
+|GA4|—|marketing analytics (apps/web)|no (opt-in only)|
+|Sentry|EU|error tracking|scrubbed; never full PHI|
+|BetterStack|EU|logs + uptime|scrubbed; redaction policy enforced|
+|Upstash|EU|Redis + QStash|no (ephemeral coordination)|
+|Vercel AI Gateway|model-dependent|AI routing|yes (transcript summarization, AI reports; governed by ADR-009)|
+|TOConline|PT (AT-certified)|invoicing (Tier 1 + Tier 2 adapter)|invoicing metadata only|
+|Moloni / InvoiceXpress / Vendus / Primavera|PT|Tier 2 adapters|invoicing metadata only, per-expert opt-in|
 
 ## Recommended Sensitive Data Boundaries
 
@@ -215,16 +245,16 @@ v3 launches Portugal-first. The following are launch requirements, not phase-2:
 
 ## Retention And Deletion (locked defaults)
 
-| Artifact | Retention | Deletion mechanism |
+|Artifact|Retention|Deletion mechanism|
 |---|---|---|
-| Session notes | 10 years (ERS-aligned) | soft-delete + 30-day scrubber + Vault crypto-shred on org deletion |
-| Reports (published) | 10 years | same |
-| Reports (AI drafts not approved) | 90 days | auto-purge via `softDeleteScrubber` workflow |
-| Transcripts | 2 years from session | auto-purge |
-| Uploaded documents | 10 years | soft-delete + Vault crypto-shred on org deletion |
-| Diary entries | user-controlled; default 5 years | user-driven export + delete; DSAR |
-| Audit logs | 10 years, append-only | no user-facing deletion; immutable project |
-| Operational logs (Sentry, BetterStack) | 90 days | vendor-side retention policy |
+|Session notes|10 years (ERS-aligned)|soft-delete + 30-day scrubber + Vault crypto-shred on org deletion|
+|Reports (published)|10 years|same|
+|Reports (AI drafts not approved)|90 days|auto-purge via `softDeleteScrubber` workflow|
+|Transcripts|2 years from session|auto-purge|
+|Uploaded documents|10 years|soft-delete + Vault crypto-shred on org deletion|
+|Diary entries|user-controlled; default 5 years|user-driven export + delete; DSAR|
+|Audit logs|10 years, append-only|no user-facing deletion; immutable project|
+|Operational logs (Sentry, BetterStack)|90 days|vendor-side retention policy|
 
 All retention periods subject to accountant + legal review before GA; current values are defaults, not final.
 

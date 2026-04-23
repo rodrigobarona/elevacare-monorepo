@@ -1,6 +1,6 @@
 # Eleva.care v3 Search And Discovery Spec
 
-Status: Living
+Status: Authoritative
 
 ## Purpose
 
@@ -63,14 +63,21 @@ Should support:
 - visible trust markers
 - next availability cues
 
-### Expert profile pages
+### Expert and clinic profile pages
 
-Should support:
+Public profile URL is **root-namespaced** on the canonical domain (ADR-014):
+
+- `eleva.care/[username]` for experts
+- `eleva.care/[clinic-slug]` for clinics — shared namespace with experts, collision prevented by a single unique constraint and a reserved-paths list (see [identity-rbac-spec.md](./identity-rbac-spec.md))
+- Locale prefix via next-intl `localePrefix: 'as-needed'`: EN at root, PT/ES prefixed
+
+Profile pages support:
 
 - expert story and credibility
-- specialty/language/location visibility
+- specialty / language / practice-country visibility
 - pricing and event types
-- next action to book
+- next action to book → `eleva.care/[username]/[event-slug]`
+- clinic profiles additionally list published experts in the clinic
 
 ## Filter Model
 

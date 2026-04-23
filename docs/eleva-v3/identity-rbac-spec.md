@@ -108,7 +108,7 @@ Assigned via `infra/workos/rbac-config.json` and loaded into JWT claims:
 - `patient_capabilities`: `appointments:view_own`, `sessions:view_own`, `billing:view_own`, `diary:share`
 - `expert_capabilities`: `events:manage`, `schedule:manage`, `bookings:manage_own`, `reports:manage_own`, `payouts:view_own`
 - `clinic_admin_capabilities`: expert_capabilities + `members:manage`, `billing:manage_org`, `subscriptions:manage_org`
-- `eleva_operator_capabilities`: `experts:approve`, `experts:reject`, `users:view_all`, `payments:view_all`, `payouts:approve`, `audit:view_all`, `workflows:retry`, `accounting:reconcile`
+- `eleva_operator_capabilities`: `experts:approve`, `experts:reject`, `users:view_all`, `payments:view_all`, `payouts:approve`, `audit:view_all`, `workflows:retry`, `accounting:reconcile`, `usernames:reserve`, `usernames:rename`
 
 The capability bundle is what actually drives access — WorkOS `admin`/`member` is the backbone it hangs on.
 
@@ -248,6 +248,57 @@ The system must log:
 - organization switches when security-sensitive
 - access to sensitive user/customer data
 - expert approval and status changes
+
+## Usernames And Public Slugs (Locked — ADR-014)
+
+Eleva's public surface uses **username-first URLs** on a single canonical domain (`eleva.care/[username]`, cal.com style). This requires disciplined username governance.
+
+### Format rules
+
+- 3–30 characters
+- lowercase `[a-z0-9-]` only
+- no leading or trailing hyphen
+- no consecutive hyphens
+- normalized to lowercase on input; case-insensitive uniqueness constraint in Drizzle
+
+### Shared namespace across experts and clinics
+
+Experts and clinics share the root namespace — `eleva.care/patimota` (expert) and `eleva.care/clinicamota` (clinic) live in the same flat space. Benefits: shorter URLs, one mental model, no `/c/` or `/clinic/` prefix clutter.
+
+Collision prevention:
+
+- Single unique constraint across both `expert_profiles.username` and `clinic_profiles.slug` (enforced via a shared reserved-slugs table or a DB CHECK + trigger).
+- Signup validates the requested name is available across both entity types.
+- Admin tooling allows renaming in case of dispute (audited).
+
+### Reserved path list
+
+Maintained in [`@eleva/config/reserved-usernames.ts`](../../packages/config/src/reserved-usernames.ts) (created in Sprint 1) and enforced at:
+
+1. signup / become-partner form validation
+2. Drizzle DB CHECK constraint (never allow reserved names to be stored)
+3. admin tooling reservation workflow
+
+Reserved set covers every first-segment path the gateway owns:
+
+- multi-zone prefixes: `app`, `api`, `docs`
+- locale codes: `pt`, `es`, `en`, `br`
+- marketing + marketplace: `about`, `legal`, `privacy`, `terms`, `blog`, `experts`, `categories`, `become-partner`, `clinics`, `partners`, `careers`, `pricing`
+- help: `help`, `support`, `faq`
+- auth + system: `auth`, `signin`, `signup`, `login`, `logout`, `callback`, `settings`, `admin`, `patient`, `expert`, `org`, `dashboard`
+- infra: `_next`, `_vercel`, `vercel`
+- safe-keeping for future: `academy`, `courses`, `teams`
+- branded subresources: `www`, `mail`, `status`, `sessions`, `email`
+
+Adding any new first-segment path to the gateway (e.g., `/community`, `/events`) requires adding the slug to the reserved list **before** the route ships.
+
+### Event-type slugs
+
+Each expert's event types carry a `slug` field (`first-consultation`, `couples-therapy`, `coaching-call-30`), case-insensitive unique **per expert**. The full booking URL is:
+
+- `eleva.care/[username]/[event-slug]` (EN default)
+- `eleva.care/pt/[username]/[event-slug]` (PT)
+- `eleva.care/es/[username]/[event-slug]` (ES)
 
 ## Tenancy Enforcement — Neon RLS
 
