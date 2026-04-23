@@ -60,15 +60,71 @@ An ESLint rule enforces that `src/proxy.ts` does not contain inline business log
 ## Vercel Platform Integration
 
 - **Vercel CLI** is linked at repo root (see [.vercel/repo.json](../../.vercel/repo.json)). Each app is a separate Vercel project:
-  - `elevacare-marketing` → `apps/web`
-  - `elevacare-app` → `apps/app`
-  - `elevacare-api` → `apps/api`
-  - `elevacare-docs` → `apps/docs`
-  - `elevacare-email` → `apps/email`
+  - `elevacare-marketing` → `apps/web` (gateway app, owns `eleva.care` root domain)
+  - `elevacare-app` → `apps/app` (served under `eleva.care/app/*` via multi-zone rewrite)
+  - `elevacare-api` → `apps/api` (served under `eleva.care/api/*` via multi-zone rewrite)
+  - `elevacare-docs` → `apps/docs` (served under `eleva.care/docs/*` via multi-zone rewrite)
+  - `elevacare-email` → `apps/email` (internal-only preview tool at `email.eleva.care`)
 - **Vercel Marketplace integrations** provide env vars via project link (Neon, Upstash Redis, Upstash QStash, Resend, Sentry, BetterStack). Use `vercel env pull .env.local` per app instead of hand-writing secrets.
 - **Vercel MCP** is used during implementation to inspect project info, deployments, env vars, and Edge Config.
 - **Turborepo remote cache** is served by Vercel.
-- **Vercel manages DNS** for `eleva.care`. Subdomains, DNS records (A/AAAA/CNAME/MX/TXT for SPF/DKIM/DMARC/BIMI), and wildcard SSL are controlled via Vercel Domains. Full subdomain and URL matrix in [`environment-matrix.md`](./environment-matrix.md). Locked split: `eleva.care` → `apps/web`, `app.eleva.care` → `apps/app`, `api.eleva.care` → `apps/api` (all webhooks + server callbacks), `docs.eleva.care` → `apps/docs`, `status.eleva.care` → BetterStack status page, `sessions.eleva.care` → Daily.co branded CNAME, `*.preview.eleva.care` → Vercel preview wildcard.
+- **Vercel manages DNS** for `eleva.care`. DNS records (A/AAAA/CNAME/MX/TXT for SPF/DKIM/DMARC/BIMI), wildcard SSL, per-PR preview wildcards are all controlled via Vercel Domains.
+
+## Multi-Zone Gateway Model (ADR-014)
+
+One canonical public domain: `eleva.care`. The gateway app owns the root and rewrites path prefixes to sub-app Vercel projects. See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and the reference blueprint at [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md).
+
+### basePath convention
+
+| App | Vercel project | `basePath` | Serves |
+| --- | -------------- | ---------- | ------ |
+| `apps/web` (gateway) | `elevacare-marketing` | `/` | marketing + marketplace + public expert profiles + public clinic profiles + booking funnel + proxy/rewrite rules |
+| `apps/app` | `elevacare-app` | `/app` | authenticated product (patient, expert, clinic admin, operator); own session-aware `/app/api/*` routes |
+| `apps/api` | `elevacare-api` | `/api` | external-facing webhooks (Stripe, Daily, Resend), OAuth callbacks (Google, Microsoft, TOConline, Moloni, WorkOS), server ops API |
+| `apps/docs` | `elevacare-docs` | `/docs` | Fumadocs product + ERS PT compliance docs |
+| `apps/email` | `elevacare-email` | — | internal React Email preview; `email.eleva.care`, not rewritten |
+
+### Rewrite configuration
+
+Lives in the gateway's `next.config.mjs`. Resolved `afterFiles` (only when the gateway has no local route for the path):
+
+```js
+const apiUrl = process.env.API_URL || 'http://localhost:3002';
+const appUrl = process.env.APP_URL || 'http://localhost:3001';
+const docsUrl = process.env.DOCS_URL || 'http://localhost:3003';
+
+export default {
+  async rewrites() {
+    return {
+      afterFiles: [
+        { source: '/api/:path*', destination: `${apiUrl}/api/:path*` },
+        { source: '/app', destination: `${appUrl}/app` },
+        { source: '/app/:path*', destination: `${appUrl}/app/:path*` },
+        { source: '/docs', destination: `${docsUrl}/docs` },
+        { source: '/docs/:path*', destination: `${docsUrl}/docs/:path*` },
+      ],
+    };
+  },
+};
+```
+
+Each sub-app declares its matching `basePath` in its own `next.config.mjs` so file-system routing aligns with the public prefix.
+
+### Internal-subdomain canonicalization
+
+Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) either 301-redirect to the canonical `eleva.care/...` URL or serve `noindex` + `robots.txt` disallow. Only `eleva.care` is indexed. Full URL matrix in [`environment-matrix.md`](./environment-matrix.md).
+
+### Proxy composition
+
+The gateway's `src/proxy.ts` stays under ~50 LOC and composes (in strict priority order):
+
+1. Pass-through for paths handled by `afterFiles` rewrites (`/api/`, `/app/`, `/docs/`)
+2. Auth callback paths forwarded to the app zone
+3. next-intl `createMiddleware(i18nConfig)` with `localePrefix: 'as-needed'` (EN served at root, `pt` / `es` prefixed)
+4. Username-first public routes (`/[username]`, `/[username]/[event-slug]`) pass through with i18n handling
+5. Session-aware root redirect (`/` with session → `/app/patient` or role-appropriate home)
+
+Business logic lives in owning packages (`@eleva/auth/proxy`, `@eleva/observability/proxy`, etc.).
 
 ## Migration From Current Scaffold (Phase 1 first task)
 
