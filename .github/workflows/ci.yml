@@ -111,8 +111,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
+  test:
+    name: Test (vitest)
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
   # Placeholder jobs — activated as owning packages come online per sprint.
-  # vitest: S1+
-  # playwright-smoke: S1+ (apps/app shell)
-  # rls-isolation: S1 (packages/db tenant tests)
-  # i18n-parity: S1 (packages/config next-intl message parity)
+  # playwright-smoke: S1-B (apps/app shell)
+  # rls-isolation:   S1-A (packages/db tenant tests; uses ephemeral Neon branch)
+  # i18n-parity:     S1-B (apps/app messages/* parity)

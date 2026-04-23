@@ -10,7 +10,12 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@workos-inc/node": "^8.0.3"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

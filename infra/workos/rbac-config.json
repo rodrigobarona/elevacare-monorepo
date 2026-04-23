@@ -1,0 +1,102 @@
+{
+  "$schema": "./rbac-config.schema.json",
+  "version": 1,
+  "capabilities": [
+    { "slug": "appointments:view_own", "displayName": "View own appointments" },
+    { "slug": "sessions:view_own", "displayName": "View own sessions" },
+    { "slug": "billing:view_own", "displayName": "View own billing" },
+    { "slug": "diary:share", "displayName": "Share diary with an expert" },
+
+    { "slug": "events:manage", "displayName": "Manage event types" },
+    {
+      "slug": "schedule:manage",
+      "displayName": "Manage availability schedule"
+    },
+    { "slug": "bookings:manage_own", "displayName": "Manage own bookings" },
+    {
+      "slug": "reports:manage_own",
+      "displayName": "Author and publish reports"
+    },
+    { "slug": "payouts:view_own", "displayName": "View own payouts" },
+
+    {
+      "slug": "members:manage",
+      "displayName": "Invite / remove clinic members"
+    },
+    { "slug": "billing:manage_org", "displayName": "Manage org billing" },
+    {
+      "slug": "subscriptions:manage_org",
+      "displayName": "Manage org subscriptions"
+    },
+
+    { "slug": "experts:approve", "displayName": "Approve expert applications" },
+    { "slug": "experts:reject", "displayName": "Reject expert applications" },
+    { "slug": "users:view_all", "displayName": "View all users" },
+    { "slug": "payments:view_all", "displayName": "View all payments" },
+    { "slug": "payouts:approve", "displayName": "Approve payouts" },
+    {
+      "slug": "audit:view_all",
+      "displayName": "View cross-tenant audit stream"
+    },
+    { "slug": "workflows:retry", "displayName": "Retry failed workflow steps" },
+    {
+      "slug": "accounting:reconcile",
+      "displayName": "Run accounting reconciliation"
+    },
+    { "slug": "usernames:reserve", "displayName": "Reserve public usernames" },
+    { "slug": "usernames:rename", "displayName": "Rename public usernames" }
+  ],
+  "roles": [
+    {
+      "slug": "patient_capabilities",
+      "displayName": "Patient capability bundle",
+      "capabilities": [
+        "appointments:view_own",
+        "sessions:view_own",
+        "billing:view_own",
+        "diary:share"
+      ]
+    },
+    {
+      "slug": "expert_capabilities",
+      "displayName": "Expert capability bundle",
+      "capabilities": [
+        "events:manage",
+        "schedule:manage",
+        "bookings:manage_own",
+        "reports:manage_own",
+        "payouts:view_own"
+      ]
+    },
+    {
+      "slug": "clinic_admin_capabilities",
+      "displayName": "Clinic admin capability bundle",
+      "capabilities": [
+        "events:manage",
+        "schedule:manage",
+        "bookings:manage_own",
+        "reports:manage_own",
+        "payouts:view_own",
+        "members:manage",
+        "billing:manage_org",
+        "subscriptions:manage_org"
+      ]
+    },
+    {
+      "slug": "eleva_operator_capabilities",
+      "displayName": "Eleva operator capability bundle",
+      "capabilities": [
+        "experts:approve",
+        "experts:reject",
+        "users:view_all",
+        "payments:view_all",
+        "payouts:approve",
+        "audit:view_all",
+        "workflows:retry",
+        "accounting:reconcile",
+        "usernames:reserve",
+        "usernames:rename"
+      ]
+    }
+  ]
+}

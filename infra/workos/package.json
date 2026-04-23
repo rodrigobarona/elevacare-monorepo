@@ -1,0 +1,23 @@
+{
+  "name": "@eleva/infra-workos",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "rbac:generate": "tsx --env-file=../../.env.local rbac-generate.ts"
+  },
+  "dependencies": {
+    "@workos-inc/node": "^9.1.0"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/node": "^25.1.0",
+    "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
