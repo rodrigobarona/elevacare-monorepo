@@ -11,11 +11,11 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@workspace/ui/components",
-    "utils": "@workspace/ui/lib/utils",
-    "hooks": "@workspace/ui/hooks",
-    "lib": "@workspace/ui/lib",
-    "ui": "@workspace/ui/components"
+    "components": "@eleva/ui/components",
+    "utils": "@eleva/ui/lib/utils",
+    "hooks": "@eleva/ui/hooks",
+    "lib": "@eleva/ui/lib",
+    "ui": "@eleva/ui/components"
   },
   "rtl": false,
   "menuColor": "default-translucent",
