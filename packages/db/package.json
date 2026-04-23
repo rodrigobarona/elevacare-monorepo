@@ -22,7 +22,8 @@
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "db:push:audit": "drizzle-kit push --config drizzle.config.audit.ts",
     "db:studio": "drizzle-kit studio --config drizzle.config.ts",
-    "db:rls": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyAllRls())\""
+    "db:rls": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyAllRls())\"",
+    "db:seed:demo": "tsx --env-file=../../.env.local src/seed/run-demo.ts"
   },
   "dependencies": {
     "@eleva/config": "workspace:*",

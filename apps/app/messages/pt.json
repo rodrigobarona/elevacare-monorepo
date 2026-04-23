@@ -1,0 +1,30 @@
+{
+  "nav.dashboard": "Painel",
+  "nav.patient": "Paciente",
+  "nav.expert": "Especialista",
+  "nav.org": "Organização",
+  "nav.admin": "Administração",
+  "nav.settings": "Definições",
+  "nav.logout": "Terminar sessão",
+
+  "auth.signin.title": "Iniciar sessão na Eleva",
+  "auth.signin.cta": "Continuar com a WorkOS",
+  "auth.signup.title": "Crie a sua conta Eleva",
+  "auth.signup.cta": "Continuar com a WorkOS",
+
+  "dashboard.patient.welcome": "Bem-vindo(a), {name}",
+  "dashboard.patient.subtitle": "As suas próximas consultas e relatórios ficam aqui.",
+  "dashboard.expert.welcome": "Olá, {name}",
+  "dashboard.expert.subtitle": "A sua agenda, reservas e relatórios ficam aqui.",
+  "dashboard.org.welcome": "Clínica: {name}",
+  "dashboard.org.subtitle": "Gira membros, faturação e horários.",
+  "dashboard.admin.welcome": "Consola do operador Eleva",
+  "dashboard.admin.subtitle": "Aprovações, pagamentos e auditoria.",
+
+  "settings.profile.title": "Perfil",
+  "settings.profile.email": "E-mail",
+  "settings.profile.language": "Idioma",
+  "settings.profile.save": "Guardar",
+
+  "errors.unauthorized": "Não tem acesso a esta página."
+}
