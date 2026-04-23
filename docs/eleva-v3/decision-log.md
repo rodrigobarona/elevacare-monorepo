@@ -144,12 +144,19 @@ Each entry should include:
 - Summary: `packages/calendar` owns Google + Microsoft OAuth, token refresh, event read/write, and webhook subscription. Tokens stored in WorkOS Vault. WorkOS Pipes is explicitly not used for calendar sync. Re-evaluated: keeping Eleva-owned protects booking-critical flows that need idempotent event creation with client-supplied IDs, multi-calendar busy/destination modeling, real-time freebusy, explicit token-expiry surfacing, and Pub/Sub cache invalidation — none of which Pipes exposes with the fidelity we need. WorkOS Pipes remains valid for identity-side integrations (SCIM, directory sync, SSO federation).
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-004
 
-### 2026-04-22: Public surface architecture — multi-zone rewrites, single canonical domain
+### 2026-04-22 (revision): Public surface — app at root + API on subdomain + docs at `/docs`
 
 - Owner: platform
-- Status: active
-- Summary: `eleva.care` is the only public domain. Gateway app `apps/web` owns the root and rewrites `/app/*`, `/api/*`, `/docs/*` to sibling Vercel projects via multi-zone. Sub-apps declare matching `basePath`. Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical. Third-party-hosted surfaces (`status.eleva.care` BetterStack, `sessions.eleva.care` Daily) stay as subdomains. Single-domain cookies on `.eleva.care` eliminate CORS and cross-subdomain auth friction.
-- Reference: [`adrs/ADR-014-multi-zone-rewrites.md`](./adrs/ADR-014-multi-zone-rewrites.md), [`environment-matrix.md`](./environment-matrix.md), [`monorepo-structure.md`](./monorepo-structure.md), [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md)
+- Status: active (supersedes the earlier 2026-04-22 multi-zone entry below)
+- Summary: Revised the multi-zone model to match vercel.com / resend.com / linear.app conventions. Authenticated routes live at the `eleva.care` **root** (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway to `apps/app`, which runs without a `basePath`. APIs (external webhooks, OAuth callbacks, session-aware endpoints like Stripe AccountSession) live on the dedicated **`api.eleva.care`** subdomain — separation of concerns, no `/api` path collisions with the product. Docs stay at `eleva.care/docs/*` for SEO authority (zone rewrite to `apps/docs`, `basePath: '/docs'`). Context-sensitive root: `/` with session 302-redirects to role home; `/` without session serves marketing; `/home` is the always-marketing escape hatch. Cookies scoped to `.eleva.care` keep gateway/app same-origin; CORS + credentials handle cross-origin calls to `api.eleva.care`. Reserved-paths list expanded (add `patient`/`expert`/`org`/`admin`/`settings`/`callback`/`logout`/`home`); `app` and `api` removed from the reserved list. ADR-014 revised in place.
+- Reference: [`adrs/ADR-014-multi-zone-rewrites.md`](./adrs/ADR-014-multi-zone-rewrites.md), [`environment-matrix.md`](./environment-matrix.md), [`monorepo-structure.md`](./monorepo-structure.md), [`identity-rbac-spec.md`](./identity-rbac-spec.md), [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md)
+
+### 2026-04-22 (superseded): Public surface architecture — multi-zone rewrites, single canonical domain
+
+- Owner: platform
+- Status: superseded (see revision above, same day)
+- Summary: Original multi-zone entry proposed `/app/*`, `/api/*`, `/docs/*` all as zone-rewrite prefixes under `eleva.care`. Revised on the same day to move APIs to `api.eleva.care` subdomain and drop the `/app` prefix so authenticated routes live at the root. Original text preserved below for historical reference.
+- Original text: `eleva.care` is the only public domain. Gateway app `apps/web` owns the root and rewrites `/app/*`, `/api/*`, `/docs/*` to sibling Vercel projects via multi-zone. Sub-apps declare matching `basePath`. Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical. Third-party-hosted surfaces (`status.eleva.care` BetterStack, `sessions.eleva.care` Daily) stay as subdomains. Single-domain cookies on `.eleva.care` eliminate CORS and cross-subdomain auth friction.
 
 ### 2026-04-22: Short URLs — cal.com style, username-first, `as-needed` locale
 

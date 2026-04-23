@@ -169,9 +169,9 @@ Backend (Track A):
 
 Frontend (Track B):
 
-- `apps/app` shell with route groups `(expert)`, `(patient)`, `(org)`, `(admin)`, `(settings)`; `basePath: '/app'`.
-- Gateway `apps/web/src/proxy.ts` composing `createMiddleware(i18nConfig)` → `withAuth` → `withHeaders`, plus the multi-zone passthrough priorities (let `/api/`, `/app/`, `/docs/` rewrites handle themselves).
-- Sign-in / sign-up under `app/(auth)/[locale]/`; canonical URLs `eleva.care/signin`, `eleva.care/signup`, `eleva.care/callback` forwarded to app zone by the proxy.
+- `apps/app` shell with route groups `(expert)`, `(patient)`, `(org)`, `(admin)`, `(settings)`; **no `basePath`** (runs at its own internal root; gateway rewrites specific paths).
+- Gateway `apps/web/src/proxy.ts` composing `createMiddleware(i18nConfig)` → passthrough for `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`, `/docs` → `/home` always marketing → context-sensitive root (session → redirect to role home, no session → marketing) → i18n fallback.
+- Sign-in / sign-up under `apps/app/(auth)/[locale]/`; canonical URLs `eleva.care/signin`, `eleva.care/signup`, `eleva.care/callback` rewritten to app zone by the gateway.
 - Sidebar nav gated by permissions.
 - next-intl scaffold with `pt`, `en`, `es` locale files; ELEVA_LOCALE cookie; country detection (PT→pt, BR→pt, ES→es, default en); EN served at the root.
 - `next-themes` dark mode (already installed in [apps/web](../../apps/web)).
@@ -282,10 +282,10 @@ Governed by: [payments-payouts-spec.md](./payments-payouts-spec.md), [notificati
 
 Backend (Track A):
 
-- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to canonical `eleva.care/api/stripe/webhook` and `staging.eleva.care/api/stripe/webhook` (multi-zone rewritten to the api zone).
+- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to `api.eleva.care/stripe/webhook` and `api.staging.eleva.care/stripe/webhook` — subdomain, not rewritten.
 - Drizzle schema: `stripe_event_log`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
-- `@eleva/billing/webhook`: single `/api/stripe/webhook` in `apps/api` (zone `/api`). Verifies signature → writes `stripe_event_log` for idempotency → dispatches by `event.type` to the right Vercel Workflow. Subscribed events locked per handbook.
-- **Stripe AccountSession endpoint** lives in the app zone at `eleva.care/app/api/stripe/account-session` (session-aware; needs WorkOS session cookie on `.eleva.care` scope).
+- `@eleva/billing/webhook`: single `/stripe/webhook` route in `apps/api`. Verifies signature → writes `stripe_event_log` for idempotency → dispatches by `event.type` to the right Vercel Workflow. Subscribed events locked per handbook.
+- **Stripe AccountSession endpoint** lives on the API subdomain at `api.eleva.care/stripe/account-session` (session-aware; reads WorkOS session cookie scoped on `.eleva.care`; CORS allows `https://eleva.care` with credentials). App zone calls it with `credentials: 'include'`.
 - `@eleva/workflows`:
   - `paymentSucceeded` → `bookingConfirmation` → entitlement write → Lane 1 fan-out
   - `paymentFailed` → release slot → notify
@@ -422,7 +422,7 @@ Security:
 
 - Vercel BotID on booking, signup, webhook, become-partner form, AI report endpoints.
 - Upstash Redis rate limits on auth (5/min/IP), booking reservation (30/min/user), AI report draft (10/day/expert), invoice retry (3/hour).
-- Secure headers composed in every app's `src/proxy.ts` via `withHeaders`: strict CSP (Stripe + Daily + Resend + Twilio + Vercel hosts), HSTS, Permissions-Policy, X-Frame-Options, Referrer-Policy.
+- Secure headers composed in every app's `src/proxy.ts` via `withHeaders`: strict CSP with explicit `connect-src 'self' https://api.eleva.care https://js.stripe.com https://api.stripe.com https://m.stripe.com` (allows the app zone's cross-origin calls to the API subdomain); `frame-src https://js.stripe.com https://connect-js.stripe.com https://*.stripe.com https://*.daily.co`; HSTS; Permissions-Policy; X-Frame-Options; Referrer-Policy.
 - Stripe webhook signature verification strict + replay window.
 - WorkOS JWT verification centralized in `@eleva/auth`.
 
