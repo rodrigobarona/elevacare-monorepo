@@ -1,2 +1,1 @@
-// @eleva/config — scaffolded in Sprint 0. Implementation lands in later sprints.
-export {};
+export { env, resetEnvCache, type BaseEnv } from './env.js';
