@@ -61,8 +61,8 @@ An ESLint rule enforces that `src/proxy.ts` does not contain inline business log
 
 - **Vercel CLI** is linked at repo root (see [.vercel/repo.json](../../.vercel/repo.json)). Each app is a separate Vercel project:
   - `elevacare-marketing` → `apps/web` (gateway app, owns `eleva.care` root domain)
-  - `elevacare-app` → `apps/app` (served under `eleva.care/app/*` via multi-zone rewrite)
-  - `elevacare-api` → `apps/api` (served under `eleva.care/api/*` via multi-zone rewrite)
+  - `elevacare-app` → `apps/app` (authenticated product, routes rewritten from gateway at root: `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`)
+  - `elevacare-api` → `apps/api` (served on the dedicated `api.eleva.care` subdomain; not rewritten from the gateway)
   - `elevacare-docs` → `apps/docs` (served under `eleva.care/docs/*` via multi-zone rewrite)
   - `elevacare-email` → `apps/email` (internal-only preview tool at `email.eleva.care`)
 - **Vercel Marketplace integrations** provide env vars via project link (Neon, Upstash Redis, Upstash QStash, Resend, Sentry, BetterStack). Use `vercel env pull .env.local` per app instead of hand-writing secrets.
@@ -70,26 +70,30 @@ An ESLint rule enforces that `src/proxy.ts` does not contain inline business log
 - **Turborepo remote cache** is served by Vercel.
 - **Vercel manages DNS** for `eleva.care`. DNS records (A/AAAA/CNAME/MX/TXT for SPF/DKIM/DMARC/BIMI), wildcard SSL, per-PR preview wildcards are all controlled via Vercel Domains.
 
-## Multi-Zone Gateway Model (ADR-014)
+## Multi-Zone Gateway Model (ADR-014 — revised 2026-04-22)
 
-One canonical public domain: `eleva.care`. The gateway app owns the root and rewrites path prefixes to sub-app Vercel projects. See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and the reference blueprint at [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md).
+Two design goals:
+
+1. Human-facing surfaces on one canonical domain: `eleva.care` (matches vercel.com / resend.com convention).
+2. Server-facing APIs on a dedicated subdomain: `api.eleva.care` (clean separation of concerns; no `/api` prefix clutter on the product URL space).
+
+See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and the reference blueprint at [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md).
 
 ### basePath convention
 
-| App | Vercel project | `basePath` | Serves |
-| --- | -------------- | ---------- | ------ |
-| `apps/web` (gateway) | `elevacare-marketing` | `/` | marketing + marketplace + public expert profiles + public clinic profiles + booking funnel + proxy/rewrite rules |
-| `apps/app` | `elevacare-app` | `/app` | authenticated product (patient, expert, clinic admin, operator); own session-aware `/app/api/*` routes |
-| `apps/api` | `elevacare-api` | `/api` | external-facing webhooks (Stripe, Daily, Resend), OAuth callbacks (Google, Microsoft, TOConline, Moloni, WorkOS), server ops API |
+| App | Vercel project | `basePath` | Where it serves |
+| --- | -------------- | ---------- | --------------- |
+| `apps/web` (gateway) | `elevacare-marketing` | `/` | marketing + marketplace + public profiles + booking funnel + context-sensitive root + proxy/rewrite rules |
+| `apps/app` | `elevacare-app` | `/` (no basePath) | authenticated product at root (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway |
+| `apps/api` | `elevacare-api` | `/` (no basePath) | all APIs on `api.eleva.care` subdomain — not rewritten from the gateway |
 | `apps/docs` | `elevacare-docs` | `/docs` | Fumadocs product + ERS PT compliance docs |
-| `apps/email` | `elevacare-email` | — | internal React Email preview; `email.eleva.care`, not rewritten |
+| `apps/email` | `elevacare-email` | — | internal React Email preview; `email.eleva.care`; not public |
 
 ### Rewrite configuration
 
 Lives in the gateway's `next.config.mjs`. Resolved `afterFiles` (only when the gateway has no local route for the path):
 
 ```js
-const apiUrl = process.env.API_URL || 'http://localhost:3002';
 const appUrl = process.env.APP_URL || 'http://localhost:3001';
 const docsUrl = process.env.DOCS_URL || 'http://localhost:3003';
 
@@ -97,32 +101,55 @@ export default {
   async rewrites() {
     return {
       afterFiles: [
-        { source: '/api/:path*', destination: `${apiUrl}/api/:path*` },
-        { source: '/app', destination: `${appUrl}/app` },
-        { source: '/app/:path*', destination: `${appUrl}/app/:path*` },
+        // Authenticated product at root (no /app prefix)
+        { source: '/patient', destination: `${appUrl}/patient` },
+        { source: '/patient/:path*', destination: `${appUrl}/patient/:path*` },
+        { source: '/expert', destination: `${appUrl}/expert` },
+        { source: '/expert/:path*', destination: `${appUrl}/expert/:path*` },
+        { source: '/org', destination: `${appUrl}/org` },
+        { source: '/org/:path*', destination: `${appUrl}/org/:path*` },
+        { source: '/admin', destination: `${appUrl}/admin` },
+        { source: '/admin/:path*', destination: `${appUrl}/admin/:path*` },
+        { source: '/settings', destination: `${appUrl}/settings` },
+        { source: '/settings/:path*', destination: `${appUrl}/settings/:path*` },
+        { source: '/callback', destination: `${appUrl}/callback` },
+        { source: '/logout', destination: `${appUrl}/logout` },
+
+        // Docs
         { source: '/docs', destination: `${docsUrl}/docs` },
         { source: '/docs/:path*', destination: `${docsUrl}/docs/:path*` },
+
+        // API lives on api.eleva.care — separate subdomain, not rewritten.
       ],
     };
   },
 };
 ```
 
-Each sub-app declares its matching `basePath` in its own `next.config.mjs` so file-system routing aligns with the public prefix.
+- `apps/app` runs at its own internal root (no `basePath`); file-system routes live at `/patient/page.tsx`, `/expert/page.tsx`, etc.
+- `apps/docs` keeps `basePath: '/docs'`.
+- `apps/api` is served on `api.eleva.care` as a separate Vercel project.
+
+### Why API on subdomain
+
+- Human-facing URLs are clean (`eleva.care/patient`, not `eleva.care/api/...`).
+- Hard boundary for server-only surfaces: webhooks, OAuth callbacks, session-aware endpoints.
+- `.eleva.care` cookie scope + CORS make session-aware calls from gateway/app work cross-origin with credentials.
+- Matches resend.com's `api.resend.com` pattern.
 
 ### Internal-subdomain canonicalization
 
-Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) either 301-redirect to the canonical `eleva.care/...` URL or serve `noindex` + `robots.txt` disallow. Only `eleva.care` is indexed. Full URL matrix in [`environment-matrix.md`](./environment-matrix.md).
+Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) either 301-redirect to the canonical `eleva.care/...` URL or serve `X-Robots-Tag: noindex` + `robots.txt` disallow. Only `eleva.care` (HTML) and `api.eleva.care` (non-indexed JSON) are publicly addressable.
 
 ### Proxy composition
 
-The gateway's `src/proxy.ts` stays under ~50 LOC and composes (in strict priority order):
+The gateway's `src/proxy.ts` stays under ~50 LOC and composes in strict priority order:
 
-1. Pass-through for paths handled by `afterFiles` rewrites (`/api/`, `/app/`, `/docs/`)
-2. Auth callback paths forwarded to the app zone
-3. next-intl `createMiddleware(i18nConfig)` with `localePrefix: 'as-needed'` (EN served at root, `pt` / `es` prefixed)
-4. Username-first public routes (`/[username]`, `/[username]/[event-slug]`) pass through with i18n handling
-5. Session-aware root redirect (`/` with session → `/app/patient` or role-appropriate home)
+1. Pass-through for paths handled by `afterFiles` rewrites: `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`, `/docs`.
+2. `/home` → always served by the gateway as marketing (escape hatch for logged-in users).
+3. Username-first public routes (`/[username]`, `/[username]/[event-slug]`) passed through next-intl.
+4. **Context-sensitive root**: `/` with a valid session → 302 redirect to role home (`/patient` | `/expert` | `/org` | `/admin`). `/` without session → marketing home via `createMiddleware(i18nConfig)`.
+5. Fallback: next-intl for any other marketing path.
 
 Business logic lives in owning packages (`@eleva/auth/proxy`, `@eleva/observability/proxy`, etc.).
 

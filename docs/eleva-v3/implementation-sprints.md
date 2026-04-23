@@ -113,15 +113,19 @@ Deliverables:
 
 - Migrate `bun.lock` → `pnpm-lock.yaml`; pin `"packageManager": "pnpm@9.15.x"`. CI guard blocks `bun.lock` at root.
 - Rename `@workspace/*` → `@eleva/*` across [package.json](../../package.json), [packages/ui/package.json](../../packages/ui/package.json), [packages/eslint-config](../../packages/eslint-config), [packages/typescript-config](../../packages/typescript-config), and all import sites.
-- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`. Each with `src/proxy.ts` placeholder composing intl + headers. Each sub-app sets `basePath` in its `next.config.mjs`: `'/app'`, `'/api'`, `'/docs'` respectively.
-- **Multi-zone rewrites** in gateway [apps/web/next.config.mjs](../../apps/web/next.config.mjs) resolved `afterFiles`, destination URLs from env (`APP_URL`, `API_URL`, `DOCS_URL`).
+- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`. Each with `src/proxy.ts` placeholder composing intl + headers. `basePath` config:
+  - `apps/app` → **no `basePath`** (runs at internal root; gateway rewrites `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` to it)
+  - `apps/api` → **no `basePath`** (served on `api.eleva.care` subdomain; not rewritten)
+  - `apps/docs` → `basePath: '/docs'`
+- **Multi-zone rewrites** in gateway [apps/web/next.config.mjs](../../apps/web/next.config.mjs) resolved `afterFiles`, destination URLs from env (`APP_URL`, `DOCS_URL`). API is **not** rewritten — lives on its own subdomain.
 - Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json). Gateway stays `elevacare-marketing`.
 - **Vercel DNS for `eleva.care`** per locked canonical mapping (ADR-014 + [environment-matrix.md](./environment-matrix.md)):
-  - production: `eleva.care` gateway; `/app/*`, `/api/*`, `/docs/*` rewritten via multi-zone; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
-  - staging: `staging.eleva.care` gateway with same rewrite pattern
+  - production: `eleva.care` gateway; `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` rewritten to `apps/app`; `/docs/*` rewritten to `apps/docs`; `api.eleva.care` points at `elevacare-api` Vercel project; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
+  - staging: `staging.eleva.care` gateway with same rewrite pattern; `api.staging.eleva.care` for staging API
   - internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical
   - wildcard SSL `*.eleva.care` via Vercel
   - per-PR previews on `*.preview.eleva.care` wildcard
+- **CORS on `api.eleva.care`**: `Access-Control-Allow-Origin: https://eleva.care` (exact match), `Access-Control-Allow-Credentials: true`, preflight support for POST/PATCH/DELETE/OPTIONS, allowed headers include `authorization`, `content-type`, `x-correlation-id`.
 - Link Vercel Marketplace integrations (staging + production environments): **Neon** (two projects: `eleva_v3_main`, `eleva_v3_audit`), **Upstash Redis**, **Upstash QStash**, **Resend**, **Sentry**, **BetterStack**. Confirm env vars populate via `vercel env pull` in each app.
 - Scaffold new packages as empty skeletons exporting `{}`: `config`, `auth`, `db`, `compliance`, `scheduling`, `calendar`, `billing`, `accounting`, `crm`, `notifications`, `workflows`, `flags`, `audit`, `encryption`, `ai`.
 - Drop Eleva CSS tokens into [packages/ui/src/styles/globals.css](../../packages/ui/src/styles/globals.css) from [brand-book/assets/palette/eleva-css-variables-snippet.css](./brand-book/assets/palette/eleva-css-variables-snippet.css). One file. No further design work.
@@ -136,7 +140,7 @@ Deliverables:
 - Husky + lint-staged + commitlint.
 - `.env.example` seeded with every planned secret placeholder.
 
-Exit: empty-change PR goes green in <5 min; all four new Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app; `eleva.care/app`, `eleva.care/api`, `eleva.care/docs` return their respective placeholder pages via multi-zone rewrite; internal Vercel URLs return 301 or `noindex`; CodeRabbit posts a review on a dry-run PR.
+Exit: empty-change PR goes green in <5 min; all four new Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app; `eleva.care/patient`, `/expert`, `/org`, `/admin` return placeholder pages via gateway rewrite to `apps/app`; `eleva.care/docs` returns Fumadocs placeholder via rewrite; `api.eleva.care/health` returns JSON healthcheck from `apps/api`; `eleva.care/home` returns marketing placeholder; `eleva.care/` without session returns marketing; `/` with test session 302s to `/patient`; internal Vercel URLs return 301 or `noindex`; CORS preflight from `eleva.care` to `api.eleva.care` succeeds; CodeRabbit posts a review on a dry-run PR.
 
 MCPs: Vercel MCP (project creation + marketplace linking + DNS + Edge Config), Neon MCP (two projects).
 

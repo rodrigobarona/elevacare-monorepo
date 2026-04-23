@@ -279,16 +279,19 @@ Maintained in [`@eleva/config/reserved-usernames.ts`](../../packages/config/src/
 2. Drizzle DB CHECK constraint (never allow reserved names to be stored)
 3. admin tooling reservation workflow
 
-Reserved set covers every first-segment path the gateway owns:
+Reserved set covers every first-segment path the gateway owns (revised per ADR-014 — API moved to `api.eleva.care` subdomain, authenticated routes at root with no `/app` prefix):
 
-- multi-zone prefixes: `app`, `api`, `docs`
+- authenticated routes at root: `patient`, `expert`, `org`, `admin`, `settings`, `callback`, `logout`
+- zone-rewrite prefixes: `docs`
 - locale codes: `pt`, `es`, `en`, `br`
-- marketing + marketplace: `about`, `legal`, `privacy`, `terms`, `blog`, `experts`, `categories`, `become-partner`, `clinics`, `partners`, `careers`, `pricing`
+- marketing + marketplace: `home`, `about`, `legal`, `privacy`, `terms`, `blog`, `experts`, `categories`, `become-partner`, `clinics`, `partners`, `careers`, `pricing`
 - help: `help`, `support`, `faq`
-- auth + system: `auth`, `signin`, `signup`, `login`, `logout`, `callback`, `settings`, `admin`, `patient`, `expert`, `org`, `dashboard`
-- infra: `_next`, `_vercel`, `vercel`
+- auth + system: `auth`, `signin`, `signup`, `login`, `dashboard`
+- infra: `_next`, `_vercel`, `vercel`, `favicon.ico`, `robots.txt`, `sitemap.xml`
 - safe-keeping for future: `academy`, `courses`, `teams`
 - branded subresources: `www`, `mail`, `status`, `sessions`, `email`
+
+**Explicitly NOT reserved any more** (removed per ADR-014 revision): `app`, `api`. Both are gone from the gateway's top-level path space.
 
 Adding any new first-segment path to the gateway (e.g., `/community`, `/events`) requires adding the slug to the reserved list **before** the route ships.
 
