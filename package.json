@@ -4,15 +4,21 @@
   "private": true,
   "scripts": {
     "preinstall": "npx only-allow pnpm",
+    "prepare": "husky",
     "build": "turbo build",
     "dev": "turbo dev",
     "lint": "turbo lint",
     "format": "turbo format",
-    "typecheck": "turbo typecheck"
+    "typecheck": "turbo typecheck",
+    "commitlint": "commitlint --edit"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.5.0",
+    "@commitlint/config-conventional": "^20.5.0",
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "only-allow": "^1.2.1",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
