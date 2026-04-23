@@ -5,6 +5,14 @@ node_modules
 .pnp
 .pnp.js
 
+# Banned lockfiles (ADR-002: pnpm-only)
+bun.lock
+yarn.lock
+package-lock.json
+
+# Local agent plan artifacts
+.cursor/plans/
+
 # Local env files
 .env
 .env.local
