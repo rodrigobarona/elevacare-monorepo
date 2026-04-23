@@ -54,12 +54,18 @@ Composition rule: `src/proxy.ts` must stay under ~50 LOC. Every concern (intl, a
 
 ## Global Rules Applied Every Sprint
 
-- Branch per feature, PR into `main`. CI green gates merge: lint, typecheck, Vitest, Playwright smoke, boundary lint (`no-restricted-paths`), i18n parity, RLS isolation test.
+- Branch per feature, PR into `main`.
+- **CI green gates merge** (branch-protection required checks): lint, typecheck, Vitest, Playwright smoke, boundary lint (`no-restricted-paths`), i18n parity, RLS isolation test, **CodeRabbit AI review**.
+- **Every PR requires at least one CodeRabbit review.** `.coderabbit.yaml` at repo root drives the default config; author must acknowledge or address each CodeRabbit comment (reply or fix) before merge. Bot's aggregate status check must be green.
+- **Multi-zone discipline**: gateway (`apps/web`) owns `eleva.care`, carries rewrites and `src/proxy.ts`; sub-apps declare `basePath` (`/app`, `/api`, `/docs`) matching their zone prefix. No public subdomain additions without an ADR.
+- **Single canonical URL rule**: every public URL, webhook, and OAuth callback lives under `eleva.care/...`. Internal Vercel project URLs serve `noindex` or 301-redirect to canonical. See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md).
 - Every mutating server action wrapped in `withAudit(action, entity, fn)` from `@eleva/audit`.
 - Every tenant query wrapped in `withOrgContext(orgId, fn)` from `@eleva/db`.
+- **Audit outbox rule**: `withAudit` writes domain rows + `audit_outbox` row in the same main-DB transaction; `auditOutboxDrainer` Vercel Workflow ships to `eleva_v3_audit` (ADR-003 audit pipeline).
 - Every flag read through `@eleva/flags`. Banned direct `@vercel/flags` / `posthog-js` flag calls.
 - No direct `stripe` / `resend` / `twilio` / `@workos-inc/node` / `@daily-co/daily-js` / `toconline-sdk` imports outside the owning package. CI verifies.
 - Every new permission added to `infra/workos/rbac-config.json`; `pnpm rbac:generate` regenerated.
+- **Username + slug rule**: every route segment the gateway adds goes into [`@eleva/config/reserved-usernames.ts`](../../packages/config/src/reserved-usernames.ts) before the route ships. CI check compares route manifest against the reserved list and fails on drift.
 - Every sprint ends with a Vercel preview URL + a recorded end-to-end test on staging with a pilot expert account.
 
 ## Parallelization With Two Tracks
@@ -107,24 +113,32 @@ Deliverables:
 
 - Migrate `bun.lock` → `pnpm-lock.yaml`; pin `"packageManager": "pnpm@9.15.x"`. CI guard blocks `bun.lock` at root.
 - Rename `@workspace/*` → `@eleva/*` across [package.json](../../package.json), [packages/ui/package.json](../../packages/ui/package.json), [packages/eslint-config](../../packages/eslint-config), [packages/typescript-config](../../packages/typescript-config), and all import sites.
-- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`. Each with `src/proxy.ts` placeholder composing intl + headers.
-- Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json).
-- **Vercel DNS for `eleva.care`**: configure locked subdomain map per [environment-matrix.md](./environment-matrix.md):
-  - production: `eleva.care` → `apps/web`, `app.eleva.care` → `apps/app`, `api.eleva.care` → `apps/api`, `docs.eleva.care` → `apps/docs`, `email.eleva.care` → `apps/email`, `status.eleva.care` → BetterStack status page, `sessions.eleva.care` → Daily.co CNAME, wildcard `*.preview.eleva.care` for PR previews
-  - staging: same pattern prefixed with `staging-`
-  - wildcard SSL on `*.eleva.care` via Vercel
+- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`. Each with `src/proxy.ts` placeholder composing intl + headers. Each sub-app sets `basePath` in its `next.config.mjs`: `'/app'`, `'/api'`, `'/docs'` respectively.
+- **Multi-zone rewrites** in gateway [apps/web/next.config.mjs](../../apps/web/next.config.mjs) resolved `afterFiles`, destination URLs from env (`APP_URL`, `API_URL`, `DOCS_URL`).
+- Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json). Gateway stays `elevacare-marketing`.
+- **Vercel DNS for `eleva.care`** per locked canonical mapping (ADR-014 + [environment-matrix.md](./environment-matrix.md)):
+  - production: `eleva.care` gateway; `/app/*`, `/api/*`, `/docs/*` rewritten via multi-zone; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
+  - staging: `staging.eleva.care` gateway with same rewrite pattern
+  - internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical
+  - wildcard SSL `*.eleva.care` via Vercel
+  - per-PR previews on `*.preview.eleva.care` wildcard
 - Link Vercel Marketplace integrations (staging + production environments): **Neon** (two projects: `eleva_v3_main`, `eleva_v3_audit`), **Upstash Redis**, **Upstash QStash**, **Resend**, **Sentry**, **BetterStack**. Confirm env vars populate via `vercel env pull` in each app.
 - Scaffold new packages as empty skeletons exporting `{}`: `config`, `auth`, `db`, `compliance`, `scheduling`, `calendar`, `billing`, `accounting`, `crm`, `notifications`, `workflows`, `flags`, `audit`, `encryption`, `ai`.
 - Drop Eleva CSS tokens into [packages/ui/src/styles/globals.css](../../packages/ui/src/styles/globals.css) from [brand-book/assets/palette/eleva-css-variables-snippet.css](./brand-book/assets/palette/eleva-css-variables-snippet.css). One file. No further design work.
 - `eslint-plugin-import` `no-restricted-paths` boundary rules per handbook.
 - Turborepo remote cache via Vercel.
-- GitHub Actions: install + lint + typecheck + build + Vitest + Playwright smoke in parallel; remote Turbo cache via Vercel.
+- **GitHub Actions**: install + lint + typecheck + build + Vitest + Playwright smoke in parallel; remote Turbo cache via Vercel.
+- **CodeRabbit AI integration**:
+  - add `.coderabbit.yaml` at repo root with default review config
+  - enable CodeRabbit GitHub app on the repo
+  - configure GitHub branch protection on `main` to require the `coderabbit` status check + all CI checks above before merge
+  - document the "author must acknowledge each CodeRabbit comment before merge" rule in [contribution-workflow.md](./contribution-workflow.md)
 - Husky + lint-staged + commitlint.
 - `.env.example` seeded with every planned secret placeholder.
 
-Exit: empty-change PR goes green in <5 min; all 4 new Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app.
+Exit: empty-change PR goes green in <5 min; all four new Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app; `eleva.care/app`, `eleva.care/api`, `eleva.care/docs` return their respective placeholder pages via multi-zone rewrite; internal Vercel URLs return 301 or `noindex`; CodeRabbit posts a review on a dry-run PR.
 
-MCPs: Vercel MCP (project creation + marketplace linking), Neon MCP (two projects).
+MCPs: Vercel MCP (project creation + marketplace linking + DNS + Edge Config), Neon MCP (two projects).
 
 ---
 
@@ -136,34 +150,38 @@ Governed by: [identity-rbac-spec.md](./identity-rbac-spec.md), [compliance-data-
 
 Backend (Track A):
 
-- `@eleva/auth`: WorkOS AuthKit integration, session helpers, `requirePermission`, `withPermission`, `usePermission`, `PermissionGate`, `withAuth(handler)` proxy wrapper.
-- Org-per-user provisioning on first sign-in (non-blocking sync).
-- `@eleva/db`: Neon pooled `@neondatabase/serverless` client, Drizzle schema skeleton, `withOrgContext()`. Initial tables: `users`, `organizations`, `memberships`, `roles`, `permissions`, `audit_events`.
-- RLS policies on every tenant table using `current_setting('eleva.org_id')`.
+- `@eleva/auth`: WorkOS AuthKit integration, session helpers, `requirePermission`, `withPermission`, `usePermission`, `PermissionGate`, `withAuth(handler)` proxy wrapper. Session cookie scoped to `.eleva.care` so every zone shares it.
+- Org-per-user provisioning on first sign-in (non-blocking sync). Personal org for every patient; solo-expert org on Become-Partner approval; clinic admin `admin` vs clinic member `member` per [identity-rbac-spec.md](./identity-rbac-spec.md).
+- `@eleva/db`: Neon pooled `@neondatabase/serverless` client, Drizzle schema skeleton, `withOrgContext()`. Initial tables: `users`, `organizations`, `memberships`, `roles`, `permissions`, `audit_outbox` (in main), `audit_events` (in audit project).
+- RLS policies on every tenant table using `current_setting('eleva.org_id')`. Separate RLS policies on `eleva_v3_audit.audit_events` (INSERT via drainer credentials; SELECT filtered by org_id OR `audit:view_all`; UPDATE/DELETE revoked).
 - Integration test: insert as orgA, select as orgB → zero rows.
 - `@eleva/encryption`: `vaultPut`, `vaultGet`, `encryptOAuthToken`, `encryptRecord`.
-- `@eleva/audit`: `withAudit` decorator writing to `eleva_v3_audit` project.
-- `@eleva/observability`: Sentry init, correlation-ID `AsyncLocalStorage`, BetterStack heartbeat helper, `withHeaders(handler)` proxy wrapper composing CSP + HSTS + correlation-ID header.
-- `@eleva/flags`: Vercel Flags SDK + Edge Config wiring, flag catalog.
-- `@eleva/config`: env validation with Zod; `i18nConfig` exported (shared by `apps/web` and `apps/app` `src/proxy.ts`).
+- `@eleva/audit`: `withAudit(action, entity, fn)` decorator writes domain row + `audit_outbox` row in the same main-DB transaction.
+- `@eleva/workflows`: scaffold `auditOutboxDrainer` Vercel Workflow (reads new outbox rows → writes to `eleva_v3_audit` with idempotent `audit_id` → marks outbox `shipped`). Heartbeat to BetterStack.
+- `@eleva/observability`: Sentry init, correlation-ID `AsyncLocalStorage`, BetterStack heartbeat helper, `withHeaders(handler)` proxy wrapper composing CSP (allows Stripe + Daily + Resend + Twilio hosts) + HSTS + correlation-ID header.
+- `@eleva/flags`: Vercel Flags SDK + Edge Config wiring, flag catalog seeded per [feature-flag-rollout-plan.md](./feature-flag-rollout-plan.md).
+- `@eleva/config`: env validation with Zod; `i18nConfig` exported with `localePrefix: 'as-needed'` (EN default no prefix; `pt`/`es` prefixed); reserved usernames set in `reserved-usernames.ts`.
+- Drizzle CHECK + unique constraint on `expert_profiles.username` and `clinic_profiles.slug` enforcing format rules and rejecting reserved slugs.
 
 Frontend (Track B):
 
-- `apps/app` shell with route groups `(expert)`, `(patient)`, `(org)`, `(admin)`, `(settings)`.
-- `src/proxy.ts` composing `createMiddleware(i18nConfig)` → `withAuth` → `withHeaders`.
-- Sign-in / sign-up under `app/(auth)/[locale]/`.
+- `apps/app` shell with route groups `(expert)`, `(patient)`, `(org)`, `(admin)`, `(settings)`; `basePath: '/app'`.
+- Gateway `apps/web/src/proxy.ts` composing `createMiddleware(i18nConfig)` → `withAuth` → `withHeaders`, plus the multi-zone passthrough priorities (let `/api/`, `/app/`, `/docs/` rewrites handle themselves).
+- Sign-in / sign-up under `app/(auth)/[locale]/`; canonical URLs `eleva.care/signin`, `eleva.care/signup`, `eleva.care/callback` forwarded to app zone by the proxy.
 - Sidebar nav gated by permissions.
-- next-intl scaffold with `pt`, `en`, `es` locale files; ELEVA_LOCALE cookie; country detection (PT→pt, BR→pt, ES→es, default en).
+- next-intl scaffold with `pt`, `en`, `es` locale files; ELEVA_LOCALE cookie; country detection (PT→pt, BR→pt, ES→es, default en); EN served at the root.
 - `next-themes` dark mode (already installed in [apps/web](../../apps/web)).
 
 Exit:
 
-- new user lands in a freshly provisioned org with `user` role
+- new user lands in a freshly provisioned personal org as `admin` (WorkOS default); product label = patient
 - role change in WorkOS reflects in JWT after refresh
-- switching locale persists
-- RLS isolation test green
+- switching locale persists; EN shows no prefix, PT/ES prefixed
+- RLS isolation test green (org A insert, org B select → zero rows)
+- audit outbox drainer ships test events from `eleva_v3_main.audit_outbox` to `eleva_v3_audit.audit_events` at-least-once
 - forced error shows up in Sentry with correct correlation ID
-- `src/proxy.ts` remains under 50 LOC in both `apps/web` and `apps/app`
+- `src/proxy.ts` remains under 50 LOC in `apps/web`; sub-app proxies are thin auth/header wrappers
+- signup form rejects reserved usernames; DB rejects reserved slugs at the constraint level
 
 MCPs: WorkOS CLI (create app, import `rbac-config.json`), Neon MCP (migration branches), Vercel MCP (verify env vars on both apps).
 
@@ -187,19 +205,22 @@ Backend (Track A):
 
 Frontend (Track B):
 
-- `apps/web` marketing pages: `/`, `/about`, `/legal/*`, `/experts`, `/experts/[category]`, `/experts/[username]`.
+- `apps/web` marketing pages: `/`, `/about`, `/legal/*`, `/experts`, `/experts/[category]`.
+- **Public profile route (cal.com style)**: `apps/web/app/[[...locale]]/[username]/page.tsx` resolves against both `expert_profiles.username` and `clinic_profiles.slug` (shared root namespace); returns 404 if name is reserved or not found.
+- **Resolution order**: expert first, then clinic (or both; expert gets precedence on tie, audited if rename ever happens).
 - Expert explorer search with filters: category, language, country, session mode (online/in-person/phone), price range, next availability. Intro.co-inspired card UI using shadcn `Card`, `Badge`, `Avatar`.
 - Expert public profile: languages, practice countries, event types, ratings placeholder.
-- Public `become-partner` application form (`apps/web/[locale]/become-partner`) with file uploads.
-- Admin `become-partner` queue at `/admin/become-partner` with approve/reject/verify.
+- Public `become-partner` application form (`apps/web/[locale]/become-partner`) with file uploads; username picker validates format + reserved list + availability against both entity tables.
+- Clinic signup form mirrors the username picker; clinic slug competes in the same namespace.
+- Admin `become-partner` queue at `/app/admin/become-partner` (app zone) with approve/reject/verify; includes username rename tooling gated by `usernames:rename`.
 - Expert onboarding wizard in `apps/app/(expert)/onboarding`:
   1. Profile + fiscal info (NIF, practice location, license scope, worldwide-mode flag)
   2. Stripe Connect Onboarding embedded
   3. Stripe Identity embedded modal
   4. **Invoicing setup step (forced choice)**: auto-connect TOConline/Moloni OR manual acknowledgment
   5. First event type + schedule (teaser)
-- Expert workspace shell with `<ConnectNotificationBanner>` at the top; `<ConnectPayouts>`/`<ConnectBalances>`/`<ConnectAccountManagement>`/`<ConnectTaxSettings>` on `/expert/finance`.
-- CSP updated via `@eleva/observability/withHeaders` for Stripe iframe hosts.
+- Expert workspace shell with `<ConnectNotificationBanner>` at the top; `<ConnectPayouts>`/`<ConnectBalances>`/`<ConnectAccountManagement>`/`<ConnectTaxSettings>` on `/app/expert/finance`.
+- CSP updated via `@eleva/observability/withHeaders` for Stripe iframe hosts (`js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com`).
 - Appearance API mapped to Eleva design tokens.
 
 Exit:
@@ -223,17 +244,17 @@ Governed by: [scheduling-booking-spec.md](./scheduling-booking-spec.md), [calend
 
 Backend (Track A):
 
-- Drizzle schema: `event_types`, `schedules`, `availability_rules`, `date_overrides`, `connected_calendars`, `calendar_busy_sources`, `calendar_destination`, `slot_reservations`, `bookings`, `sessions`, `event_locations` (in-person), `expert_practice_location`.
-- `@eleva/scheduling`: `getValidTimesFromSchedule`, atomic `reserveSlot` (Upstash Redis SET NX + DB tx), booking rules (buffers, notice, booking window), per-event language + country-license validation.
+- Drizzle schema: `event_types` (with `slug` field, case-insensitive unique per expert), `schedules`, `availability_rules`, `date_overrides`, `connected_calendars`, `calendar_busy_sources`, `calendar_destination`, `slot_reservations`, `bookings`, `sessions`, `event_locations` (in-person), `expert_practice_location`.
+- `@eleva/scheduling`: `getValidTimesFromSchedule`, atomic `reserveSlot` (Upstash Redis SET NX + DB tx), booking rules (buffers, notice, booking window), per-event language + country-license validation, `worldwide_mode_flag` bypass for non-clinical sessions.
 - `@eleva/calendar`: Google + Microsoft OAuth flows, token refresh, idempotent `events.insert` with client-supplied ID + 409 fallback. Tokens in WorkOS Vault via `@eleva/encryption`. Pub/Sub watch for external changes.
 - `@eleva/workflows`: `slotReservationExpiry`, `calendarEventCreate`/`Update`/`Delete`, `calendarTokenRefresh`, `calendarSyncReconciliation`.
 
 Frontend (Track B):
 
-- Expert: event-type CRUD (title, description, duration, price, language, session mode + location, booking window, notice, buffers, cancellation rules, active/published), localized per locale.
+- Expert: event-type CRUD with `slug` field UI (lowercase `[a-z0-9-]`, 3–50 chars, unique-per-expert validator) including title, description, duration, price, language, session mode + location, booking window, notice, buffers, cancellation rules, active/published; localized per locale.
 - Expert: schedule CRUD with weekly availability rules + date overrides.
 - Expert: connected calendars UI (connect Google/MS, pick busy sources, pick destination calendar — cal.com pattern).
-- Patient: booking funnel under `apps/web/[locale]/e/[username]/[event]`: slot picker with timezone-aware display → reservation (5-minute TTL lock) → payment placeholder (filled Sprint 4).
+- Patient: **booking funnel on gateway at `eleva.care/[username]/[event-slug]`** (cal.com pattern). Route `apps/web/app/[[...locale]]/[username]/[event]/page.tsx` resolves the event type against the expert's/clinic's published slugs. Slot picker with timezone-aware display → reservation (5-minute TTL lock) → payment placeholder (filled Sprint 4).
 - In-person event-location display with localized address.
 
 Exit:
@@ -257,9 +278,10 @@ Governed by: [payments-payouts-spec.md](./payments-payouts-spec.md), [notificati
 
 Backend (Track A):
 
-- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately.
+- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to canonical `eleva.care/api/stripe/webhook` and `staging.eleva.care/api/stripe/webhook` (multi-zone rewritten to the api zone).
 - Drizzle schema: `stripe_event_log`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
-- `@eleva/billing/webhook`: single `/api/stripe/webhook` in `apps/api` per env. Verifies signature → writes `stripe_event_log` for idempotency → dispatches by `event.type` to the right Vercel Workflow. Subscribed events locked per handbook.
+- `@eleva/billing/webhook`: single `/api/stripe/webhook` in `apps/api` (zone `/api`). Verifies signature → writes `stripe_event_log` for idempotency → dispatches by `event.type` to the right Vercel Workflow. Subscribed events locked per handbook.
+- **Stripe AccountSession endpoint** lives in the app zone at `eleva.care/app/api/stripe/account-session` (session-aware; needs WorkOS session cookie on `.eleva.care` scope).
 - `@eleva/workflows`:
   - `paymentSucceeded` → `bookingConfirmation` → entitlement write → Lane 1 fan-out
   - `paymentFailed` → release slot → notify

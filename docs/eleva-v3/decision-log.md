@@ -144,6 +144,34 @@ Each entry should include:
 - Summary: `packages/calendar` owns Google + Microsoft OAuth, token refresh, event read/write, and webhook subscription. Tokens stored in WorkOS Vault. WorkOS Pipes is explicitly not used for calendar sync. Re-evaluated: keeping Eleva-owned protects booking-critical flows that need idempotent event creation with client-supplied IDs, multi-calendar busy/destination modeling, real-time freebusy, explicit token-expiry surfacing, and Pub/Sub cache invalidation — none of which Pipes exposes with the fidelity we need. WorkOS Pipes remains valid for identity-side integrations (SCIM, directory sync, SSO federation).
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-004
 
+### 2026-04-22: Public surface architecture — multi-zone rewrites, single canonical domain
+
+- Owner: platform
+- Status: active
+- Summary: `eleva.care` is the only public domain. Gateway app `apps/web` owns the root and rewrites `/app/*`, `/api/*`, `/docs/*` to sibling Vercel projects via multi-zone. Sub-apps declare matching `basePath`. Internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical. Third-party-hosted surfaces (`status.eleva.care` BetterStack, `sessions.eleva.care` Daily) stay as subdomains. Single-domain cookies on `.eleva.care` eliminate CORS and cross-subdomain auth friction.
+- Reference: [`adrs/ADR-014-multi-zone-rewrites.md`](./adrs/ADR-014-multi-zone-rewrites.md), [`environment-matrix.md`](./environment-matrix.md), [`monorepo-structure.md`](./monorepo-structure.md), [`_context/blueprints/multi-zone-monorepo.md`](../../_context/blueprints/multi-zone-monorepo.md)
+
+### 2026-04-22: Short URLs — cal.com style, username-first, `as-needed` locale
+
+- Owner: product/platform
+- Status: active
+- Summary: Public profile URLs at `eleva.care/[username]` (experts and clinics share the root namespace), booking URLs at `eleva.care/[username]/[event-slug]`. Locale prefix `as-needed`: EN at root, PT/ES prefixed. Drop the `/e/` segment. Reserved-paths list in `@eleva/config/reserved-usernames.ts` (Sprint 1) enforced at signup, DB CHECK constraint, and admin tooling. Username format: 3-30 chars, lowercase `[a-z0-9-]`, no leading/trailing/consecutive hyphens. Event slugs case-insensitive unique per expert. Collision prevention across expert/clinic namespaces via shared unique constraint and reserved list.
+- Reference: [`identity-rbac-spec.md`](./identity-rbac-spec.md), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md), [`search-and-discovery-spec.md`](./search-and-discovery-spec.md)
+
+### 2026-04-22: PR review gate — CodeRabbit AI required before merge
+
+- Owner: platform
+- Status: active
+- Summary: `.coderabbit.yaml` at repo root drives default review config. GitHub branch protection on `main` requires the `coderabbit` status check in addition to lint/typecheck/Vitest/Playwright smoke/boundary lint/i18n parity/RLS isolation test. PR author must acknowledge or address every CodeRabbit comment (reply or fix) before merge. Documented in [`contribution-workflow.md`](./contribution-workflow.md).
+- Reference: [`implementation-sprints.md`](./implementation-sprints.md) Global Rules + Sprint 0
+
+### 2026-04-22: Audit write pipeline — transactional outbox between Neon main and audit projects
+
+- Owner: platform/security
+- Status: active
+- Summary: Two Neon projects stay (`eleva_v3_main` + `eleva_v3_audit`). `withAudit(action, entity, fn)` writes domain rows **and** `main.audit_outbox` row in the same main-DB transaction — atomic commit preserves transactional integrity across the physically separated audit store. `auditOutboxDrainer` Vercel Workflow (ADR-007) copies outbox rows to `eleva_v3_audit.audit_events` with at-least-once delivery (idempotent on pre-generated `audit_id` UUID); marks outbox row `shipped`. Shipped rows purged after 90 days. Audit DB RLS: INSERT via drainer credentials only; SELECT filtered by `org_id` OR `audit:view_all` capability; UPDATE/DELETE revoked. Hash-chain option (prev_hash + row_hash) additive in Sprint 7 for ISO 27001 / SOC 2 integrity evidence. Compliance-control mapping (GDPR Art. 30/17, HIPAA 164.312(b)/(c), ISO 27001 A.12.4, SOC 2 CC7.3) recorded in compliance spec.
+- Reference: [`adrs/ADR-003-tenancy-and-rls.md`](./adrs/ADR-003-tenancy-and-rls.md), [`compliance-data-governance.md`](./compliance-data-governance.md)
+
 ### 2026-04-22: DNS management — Vercel Domains for `eleva.care`
 
 - Owner: platform

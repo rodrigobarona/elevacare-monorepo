@@ -53,6 +53,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-011-observability.md`](./ADR-011-observability.md) — Sentry + BetterStack (EU); correlation-ID propagation; redaction policy
 - [`ADR-012-portugal-first-launch.md`](./ADR-012-portugal-first-launch.md) — PT-first launch with ERS, Stripe Tax PT/NIF, MB WAY, TOConline; ES deferred to phase 2
 - [`ADR-013-accounting-integration.md`](./ADR-013-accounting-integration.md) — Two-tier invoicing; Tier 1 TOConline; Tier 2 adapter registry (TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T)
+- [`ADR-014-multi-zone-rewrites.md`](./ADR-014-multi-zone-rewrites.md) — Single canonical public domain (`eleva.care`) with Vercel multi-zone rewrites; gateway app owns root; sub-apps served under `/app`, `/api`, `/docs` prefixes; internal Vercel URLs redirected/noindexed
 
 ## ADR Template
 
