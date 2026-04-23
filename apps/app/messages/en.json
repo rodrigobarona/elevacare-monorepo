@@ -1,0 +1,30 @@
+{
+  "nav.dashboard": "Dashboard",
+  "nav.patient": "Patient",
+  "nav.expert": "Expert",
+  "nav.org": "Organisation",
+  "nav.admin": "Admin",
+  "nav.settings": "Settings",
+  "nav.logout": "Sign out",
+
+  "auth.signin.title": "Sign in to Eleva",
+  "auth.signin.cta": "Continue with WorkOS",
+  "auth.signup.title": "Create your Eleva account",
+  "auth.signup.cta": "Continue with WorkOS",
+
+  "dashboard.patient.welcome": "Welcome, {name}",
+  "dashboard.patient.subtitle": "Your upcoming appointments and reports live here.",
+  "dashboard.expert.welcome": "Hello, {name}",
+  "dashboard.expert.subtitle": "Your schedule, bookings, and reports live here.",
+  "dashboard.org.welcome": "Clinic: {name}",
+  "dashboard.org.subtitle": "Manage members, billing, and schedules.",
+  "dashboard.admin.welcome": "Eleva operator console",
+  "dashboard.admin.subtitle": "Approvals, payouts, and audit.",
+
+  "settings.profile.title": "Profile",
+  "settings.profile.email": "Email",
+  "settings.profile.language": "Language",
+  "settings.profile.save": "Save",
+
+  "errors.unauthorized": "You do not have access to this page."
+}
