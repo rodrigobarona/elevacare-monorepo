@@ -8,6 +8,23 @@
 @source "../**/*.{ts,tsx}";
 
 :root {
+    /* Eleva brand tokens — source of truth:
+     * docs/eleva-v3/brand-book/assets/palette/eleva-css-variables-snippet.css
+     * Values are "R G B" for use with rgb(var(--eleva-*) / <alpha>).
+     */
+    --eleva-primary: 0 109 119;
+    --eleva-primary-light: 131 197 190;
+    --eleva-secondary: 226 149 120;
+    --eleva-secondary-light: 255 221 210;
+    --eleva-accent: 224 251 252;
+    --eleva-neutral-50: 252 253 253;
+    --eleva-neutral-100: 247 249 249;
+    --eleva-neutral-200: 209 209 209;
+    --eleva-neutral-900: 51 51 51;
+    --eleva-highlight-red: 238 66 102;
+    --eleva-highlight-purple: 84 13 110;
+    --eleva-highlight-yellow: 255 210 63;
+
     --background: oklch(1 0 0);
     --foreground: oklch(0.148 0.004 228.8);
     --card: oklch(1 0 0);
@@ -117,6 +134,20 @@
     --color-sidebar-ring: var(--sidebar-ring);
     --font-sans: var(--font-sans);
     --font-heading: var(--font-heading);
+
+    /* Eleva brand colors exposed as Tailwind utilities (bg-eleva-primary, text-eleva-coral, etc.) */
+    --color-eleva-primary: rgb(var(--eleva-primary));
+    --color-eleva-primary-light: rgb(var(--eleva-primary-light));
+    --color-eleva-secondary: rgb(var(--eleva-secondary));
+    --color-eleva-secondary-light: rgb(var(--eleva-secondary-light));
+    --color-eleva-accent: rgb(var(--eleva-accent));
+    --color-eleva-neutral-50: rgb(var(--eleva-neutral-50));
+    --color-eleva-neutral-100: rgb(var(--eleva-neutral-100));
+    --color-eleva-neutral-200: rgb(var(--eleva-neutral-200));
+    --color-eleva-neutral-900: rgb(var(--eleva-neutral-900));
+    --color-eleva-highlight-red: rgb(var(--eleva-highlight-red));
+    --color-eleva-highlight-purple: rgb(var(--eleva-highlight-purple));
+    --color-eleva-highlight-yellow: rgb(var(--eleva-highlight-yellow));
 }
 
 @layer base {
