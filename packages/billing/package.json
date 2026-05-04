@@ -6,16 +6,38 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./server": "./src/server/index.ts",
+    "./embedded": "./src/embedded/index.ts",
+    "./uploads": "./src/uploads.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@eleva/encryption": "workspace:*",
+    "@stripe/connect-js": "^3.3.39",
+    "@stripe/react-connect-js": "^3.3.36",
+    "@vercel/blob": "^2.3.3",
+    "stripe": "^22.1.0"
+  },
+  "peerDependencies": {
+    "react": "19.x"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
+    "@types/react": "^19.2.10",
     "eslint": "^9.39.2",
+    "react": "^19.2.4",
     "typescript": "^5.9.3"
   }
 }

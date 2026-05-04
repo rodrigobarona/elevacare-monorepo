@@ -59,12 +59,21 @@ describe("seedDemo", () => {
     })
 
     vi.doMock("../client", () => ({
-      db: () => ({ insert, select }),
+      db: () => ({ insert, select, update: vi.fn() }),
     }))
     vi.doMock("../schema/main", () => ({
       users: { id: {}, workosUserId: {} },
       organizations: { id: {}, workosOrgId: {} },
       memberships: { id: {}, userId: {}, orgId: {} },
+      expertProfiles: {
+        id: {},
+        username: {},
+        userId: {},
+        orgId: {},
+        displayName: {},
+        status: {},
+      },
+      clinicProfiles: { id: {}, slug: {}, orgId: {}, displayName: {} },
     }))
     vi.doMock("drizzle-orm", async () => {
       const actual =
@@ -76,7 +85,7 @@ describe("seedDemo", () => {
     return { seedDemo, insert, select }
   }
 
-  it("seeds three personas with user + org + membership rows each", async () => {
+  it("seeds three personas with user + org + membership rows each plus profile rows", async () => {
     const { seedDemo, insert } = await setup()
     const results = await seedDemo()
     expect(results).toHaveLength(3)
@@ -85,8 +94,9 @@ describe("seedDemo", () => {
       "pat.mota@example.test",
       "patient.demo@example.test",
     ])
-    // Three personas * (user + org + membership) = 9 inserts.
-    expect(insert).toHaveBeenCalledTimes(9)
+    // Three personas * (user + org + membership) = 9 inserts plus
+    // one expert_profiles row (Patricia) + one clinic_profiles row.
+    expect(insert).toHaveBeenCalledTimes(11)
   })
 
   it("is idempotent when all rows already exist", async () => {

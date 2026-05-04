@@ -61,28 +61,35 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 # ADR-XXX: Decision Title
 
 ## Status
+
 Accepted
 
 ## Date
+
 YYYY-MM-DD
 
 ## Context
+
 Why this decision matters and what constraints exist.
 
 ## Decision
+
 What we decided.
 
 ## Alternatives Considered
 
 ### Option A
+
 - Pros
 - Cons
 
 ### Option B
+
 - Pros
 - Cons
 
 ## Consequences
+
 - Positive consequence
 - Tradeoff
 - Operational implication

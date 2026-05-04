@@ -70,7 +70,37 @@ const s1aSchema = z.object({
   QSTASH_NEXT_SIGNING_KEY: stringOptional,
 })
 
-export const envSchema = baseSchema.merge(s1aSchema)
+// S2 extension: payments + accounting + uploads.
+// Same gracefully-optional posture as s1aSchema. Runtime consumers
+// (Stripe SDK boot, accounting adapter init) call the require* helpers
+// below to assert presence at their own boot time.
+const s2Schema = z.object({
+  STRIPE_ACCOUNT_ID: stringOptional,
+  STRIPE_SECRET_KEY: stringOptional,
+  STRIPE_PUBLISHABLE_KEY: stringOptional,
+  STRIPE_WEBHOOK_SECRET: stringOptional,
+  STRIPE_CONNECT_CLIENT_ID: stringOptional,
+  /**
+   * Stripe API version pin. We enforce >= 2023-08-16 (the floor for
+   * Connect Embedded Components per payments-payouts-spec.md). Newer
+   * versions are accepted; older ones throw at boot.
+   */
+  STRIPE_API_VERSION: stringOptional,
+
+  TOCONLINE_CLIENT_ID: stringOptional,
+  TOCONLINE_CLIENT_SECRET: stringOptional,
+  TOCONLINE_OAUTH_URL: urlOptional,
+  TOCONLINE_API_URL: urlOptional,
+  TOCONLINE_URI_REDIRECT: urlOptional,
+  TOCONLINE_SERIES_PREFIX: stringOptional,
+
+  MOLONI_CLIENT_ID: stringOptional,
+  MOLONI_CLIENT_SECRET: stringOptional,
+
+  BLOB_READ_WRITE_TOKEN: stringOptional,
+})
+
+export const envSchema = baseSchema.merge(s1aSchema).merge(s2Schema)
 
 export type Env = z.infer<typeof envSchema>
 export type BaseEnv = Env
@@ -133,4 +163,77 @@ export function requireAuditDbEnv(): Required<Pick<Env, "AUDIT_DATABASE_URL">> {
     throw new Error("@eleva/db boot: missing AUDIT_DATABASE_URL")
   }
   return { AUDIT_DATABASE_URL: e.AUDIT_DATABASE_URL }
+}
+
+export interface RequiredStripeEnv {
+  STRIPE_SECRET_KEY: string
+  STRIPE_PUBLISHABLE_KEY: string
+  STRIPE_CONNECT_CLIENT_ID: string
+  STRIPE_API_VERSION: string
+}
+
+/**
+ * Asserts the Stripe environment is configured. Used by
+ * `@eleva/billing/server` at SDK boot. Webhook secret is required by
+ * the API webhook route specifically (S4) and validated there.
+ */
+export function requireStripeEnv(): RequiredStripeEnv {
+  const e = env()
+  const missing: string[] = []
+  if (!e.STRIPE_SECRET_KEY) missing.push("STRIPE_SECRET_KEY")
+  if (!e.STRIPE_PUBLISHABLE_KEY) missing.push("STRIPE_PUBLISHABLE_KEY")
+  if (!e.STRIPE_CONNECT_CLIENT_ID) missing.push("STRIPE_CONNECT_CLIENT_ID")
+  if (missing.length > 0) {
+    throw new Error(
+      `@eleva/billing boot: missing env vars: ${missing.join(", ")}`
+    )
+  }
+  return {
+    STRIPE_SECRET_KEY: e.STRIPE_SECRET_KEY!,
+    STRIPE_PUBLISHABLE_KEY: e.STRIPE_PUBLISHABLE_KEY!,
+    STRIPE_CONNECT_CLIENT_ID: e.STRIPE_CONNECT_CLIENT_ID!,
+    STRIPE_API_VERSION: e.STRIPE_API_VERSION || "2023-08-16",
+  }
+}
+
+export interface RequiredToconlineEnv {
+  TOCONLINE_CLIENT_ID: string
+  TOCONLINE_CLIENT_SECRET: string
+  TOCONLINE_OAUTH_URL: string
+  TOCONLINE_API_URL: string
+  TOCONLINE_URI_REDIRECT: string
+  TOCONLINE_SERIES_PREFIX: string
+}
+
+export function requireToconlineEnv(): RequiredToconlineEnv {
+  const e = env()
+  const missing: string[] = []
+  if (!e.TOCONLINE_CLIENT_ID) missing.push("TOCONLINE_CLIENT_ID")
+  if (!e.TOCONLINE_CLIENT_SECRET) missing.push("TOCONLINE_CLIENT_SECRET")
+  if (!e.TOCONLINE_OAUTH_URL) missing.push("TOCONLINE_OAUTH_URL")
+  if (!e.TOCONLINE_API_URL) missing.push("TOCONLINE_API_URL")
+  if (!e.TOCONLINE_URI_REDIRECT) missing.push("TOCONLINE_URI_REDIRECT")
+  if (missing.length > 0) {
+    throw new Error(
+      `@eleva/accounting toconline boot: missing env vars: ${missing.join(", ")}`
+    )
+  }
+  return {
+    TOCONLINE_CLIENT_ID: e.TOCONLINE_CLIENT_ID!,
+    TOCONLINE_CLIENT_SECRET: e.TOCONLINE_CLIENT_SECRET!,
+    TOCONLINE_OAUTH_URL: e.TOCONLINE_OAUTH_URL!,
+    TOCONLINE_API_URL: e.TOCONLINE_API_URL!,
+    TOCONLINE_URI_REDIRECT: e.TOCONLINE_URI_REDIRECT!,
+    TOCONLINE_SERIES_PREFIX: e.TOCONLINE_SERIES_PREFIX || "ELEVA",
+  }
+}
+
+export function requireBlobEnv(): { BLOB_READ_WRITE_TOKEN: string } {
+  const e = env()
+  if (!e.BLOB_READ_WRITE_TOKEN) {
+    throw new Error(
+      "@eleva/billing/uploads boot: missing BLOB_READ_WRITE_TOKEN"
+    )
+  }
+  return { BLOB_READ_WRITE_TOKEN: e.BLOB_READ_WRITE_TOKEN }
 }

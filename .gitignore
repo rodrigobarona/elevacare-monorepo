@@ -45,3 +45,4 @@ npm-debug.log*
 # Misc
 .DS_Store
 *.pem
+_context/Postman OAuth2 Credentials.json

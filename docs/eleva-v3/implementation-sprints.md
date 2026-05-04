@@ -36,18 +36,18 @@ Locked for every app in this repo:
 - **next-intl** still exports `createMiddleware(config)`; we invoke it inside `src/proxy.ts` and re-export. Example shape in [apps/web/src/proxy.ts](../../apps/web/src/proxy.ts) and [apps/app/src/proxy.ts](../../apps/app/src/proxy.ts):
 
 ```ts
-import createIntl from 'next-intl/middleware';
-import { i18nConfig } from '@eleva/config/i18n';
-import { withAuth } from '@eleva/auth/proxy';
-import { withHeaders } from '@eleva/observability/proxy';
+import createIntl from "next-intl/middleware"
+import { i18nConfig } from "@eleva/config/i18n"
+import { withAuth } from "@eleva/auth/proxy"
+import { withHeaders } from "@eleva/observability/proxy"
 
-const intl = createIntl(i18nConfig);
+const intl = createIntl(i18nConfig)
 
-export default withHeaders(withAuth(intl));
+export default withHeaders(withAuth(intl))
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
-};
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+}
 ```
 
 Composition rule: `src/proxy.ts` must stay under ~50 LOC. Every concern (intl, auth, CSP/secure-headers, correlation-ID) is a thin composable wrapper exported from its owning package. ESLint rule enforces.
@@ -70,17 +70,17 @@ Composition rule: `src/proxy.ts` must stay under ~50 LOC. Every concern (intl, a
 
 ## Parallelization With Two Tracks
 
-| Sprint | Track A (backend-heavy)                       | Track B (frontend-heavy)                     |
-| ------ | --------------------------------------------- | -------------------------------------------- |
-| S0     | scaffold migration + CI                       | (shared)                                     |
-| S1     | auth + db + RLS + Vault                       | app shell + i18n                             |
-| S2     | Become-Partner + Stripe Connect               | public web + explorer + onboarding wizard    |
-| S3     | scheduling + calendar OAuth                   | event-type CRUD + booking funnel             |
-| S4     | webhooks + workflows + notifications          | Payment Element + inbox + receipts           |
-| S5     | AI + transcript + consent                     | session detail + CRM + patient portal        |
-| S6     | Tier 1 + Tier 2 invoicing + clinic lifecycle  | clinic workspace + admin                     |
-| S7     | security + observability + rate limits        | i18n polish + perf                           |
-| S8     | launch workflows (DSAR, crypto-shred)         | status page + cutover tooling                |
+| Sprint | Track A (backend-heavy)                      | Track B (frontend-heavy)                  |
+| ------ | -------------------------------------------- | ----------------------------------------- |
+| S0     | scaffold migration + CI                      | (shared)                                  |
+| S1     | auth + db + RLS + Vault                      | app shell + i18n                          |
+| S2     | Become-Partner + Stripe Connect              | public web + explorer + onboarding wizard |
+| S3     | scheduling + calendar OAuth                  | event-type CRUD + booking funnel          |
+| S4     | webhooks + workflows + notifications         | Payment Element + inbox + receipts        |
+| S5     | AI + transcript + consent                    | session detail + CRM + patient portal     |
+| S6     | Tier 1 + Tier 2 invoicing + clinic lifecycle | clinic workspace + admin                  |
+| S7     | security + observability + rate limits       | i18n polish + perf                        |
+| S8     | launch workflows (DSAR, crypto-shred)        | status page + cutover tooling             |
 
 ## Phase Map
 

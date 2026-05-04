@@ -179,14 +179,14 @@ Optional `prev_hash` + `row_hash` on audit rows (Sprint 7 hardening) lets an off
 
 ### Compliance-control mapping
 
-|Framework|Control|How this design satisfies it|
-|---|---|---|
-|GDPR|Art. 30 records of processing|append-only tenant-scoped trail; DSAR export workflow reads from `eleva_v3_audit`|
-|GDPR|Art. 17 erasure|Vault crypto-shredding removes domain data; audit retains operational record with PII redacted if needed|
-|HIPAA (future US)|164.312(b) audit controls|physically separate audit DB + drainer + append-only; Neon BAA signed before US onboarding|
-|HIPAA|164.312(c) integrity|hash-chain option + restricted-credential write path|
-|ISO 27001|A.12.4 logging + monitoring|append-only stream + hash-chain option + BetterStack heartbeats|
-|SOC 2|CC7.3 monitoring|correlation IDs + Sentry + BetterStack across every `withAudit`-wrapped mutation|
+| Framework         | Control                       | How this design satisfies it                                                                             |
+| ----------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------- |
+| GDPR              | Art. 30 records of processing | append-only tenant-scoped trail; DSAR export workflow reads from `eleva_v3_audit`                        |
+| GDPR              | Art. 17 erasure               | Vault crypto-shredding removes domain data; audit retains operational record with PII redacted if needed |
+| HIPAA (future US) | 164.312(b) audit controls     | physically separate audit DB + drainer + append-only; Neon BAA signed before US onboarding               |
+| HIPAA             | 164.312(c) integrity          | hash-chain option + restricted-credential write path                                                     |
+| ISO 27001         | A.12.4 logging + monitoring   | append-only stream + hash-chain option + BetterStack heartbeats                                          |
+| SOC 2             | CC7.3 monitoring              | correlation IDs + Sentry + BetterStack across every `withAudit`-wrapped mutation                         |
 
 ## Vendor Governance
 
@@ -200,22 +200,22 @@ Every major vendor is evaluated for:
 
 ### EU residency per vendor (locked)
 
-|Vendor|Region|Role|Handles PHI-adjacent?|
-|---|---|---|---|
-|WorkOS|EU|auth, orgs, Vault|yes (OAuth tokens, encrypted refs)|
-|Neon|EU|database|yes (all domain data + audit stream)|
-|Stripe|EU entity (Ireland)|payments, payouts, subscriptions|no (payment metadata only)|
-|Daily.co|EU|video + transcript source|yes (transcript metadata, we store content ourselves)|
-|Resend|EU|transactional email + Automations|no (PHI-free payloads enforced by Lane 2 schema)|
-|Twilio|EU subaccount|SMS|no (minimum-necessary bodies)|
-|PostHog|EU / privacy-first|product analytics (apps/app)|no|
-|GA4|—|marketing analytics (apps/web)|no (opt-in only)|
-|Sentry|EU|error tracking|scrubbed; never full PHI|
-|BetterStack|EU|logs + uptime|scrubbed; redaction policy enforced|
-|Upstash|EU|Redis + QStash|no (ephemeral coordination)|
-|Vercel AI Gateway|model-dependent|AI routing|yes (transcript summarization, AI reports; governed by ADR-009)|
-|TOConline|PT (AT-certified)|invoicing (Tier 1 + Tier 2 adapter)|invoicing metadata only|
-|Moloni / InvoiceXpress / Vendus / Primavera|PT|Tier 2 adapters|invoicing metadata only, per-expert opt-in|
+| Vendor                                      | Region              | Role                                | Handles PHI-adjacent?                                           |
+| ------------------------------------------- | ------------------- | ----------------------------------- | --------------------------------------------------------------- |
+| WorkOS                                      | EU                  | auth, orgs, Vault                   | yes (OAuth tokens, encrypted refs)                              |
+| Neon                                        | EU                  | database                            | yes (all domain data + audit stream)                            |
+| Stripe                                      | EU entity (Ireland) | payments, payouts, subscriptions    | no (payment metadata only)                                      |
+| Daily.co                                    | EU                  | video + transcript source           | yes (transcript metadata, we store content ourselves)           |
+| Resend                                      | EU                  | transactional email + Automations   | no (PHI-free payloads enforced by Lane 2 schema)                |
+| Twilio                                      | EU subaccount       | SMS                                 | no (minimum-necessary bodies)                                   |
+| PostHog                                     | EU / privacy-first  | product analytics (apps/app)        | no                                                              |
+| GA4                                         | —                   | marketing analytics (apps/web)      | no (opt-in only)                                                |
+| Sentry                                      | EU                  | error tracking                      | scrubbed; never full PHI                                        |
+| BetterStack                                 | EU                  | logs + uptime                       | scrubbed; redaction policy enforced                             |
+| Upstash                                     | EU                  | Redis + QStash                      | no (ephemeral coordination)                                     |
+| Vercel AI Gateway                           | model-dependent     | AI routing                          | yes (transcript summarization, AI reports; governed by ADR-009) |
+| TOConline                                   | PT (AT-certified)   | invoicing (Tier 1 + Tier 2 adapter) | invoicing metadata only                                         |
+| Moloni / InvoiceXpress / Vendus / Primavera | PT                  | Tier 2 adapters                     | invoicing metadata only, per-expert opt-in                      |
 
 ## Recommended Sensitive Data Boundaries
 
@@ -245,16 +245,16 @@ v3 launches Portugal-first. The following are launch requirements, not phase-2:
 
 ## Retention And Deletion (locked defaults)
 
-|Artifact|Retention|Deletion mechanism|
-|---|---|---|
-|Session notes|10 years (ERS-aligned)|soft-delete + 30-day scrubber + Vault crypto-shred on org deletion|
-|Reports (published)|10 years|same|
-|Reports (AI drafts not approved)|90 days|auto-purge via `softDeleteScrubber` workflow|
-|Transcripts|2 years from session|auto-purge|
-|Uploaded documents|10 years|soft-delete + Vault crypto-shred on org deletion|
-|Diary entries|user-controlled; default 5 years|user-driven export + delete; DSAR|
-|Audit logs|10 years, append-only|no user-facing deletion; immutable project|
-|Operational logs (Sentry, BetterStack)|90 days|vendor-side retention policy|
+| Artifact                               | Retention                        | Deletion mechanism                                                 |
+| -------------------------------------- | -------------------------------- | ------------------------------------------------------------------ |
+| Session notes                          | 10 years (ERS-aligned)           | soft-delete + 30-day scrubber + Vault crypto-shred on org deletion |
+| Reports (published)                    | 10 years                         | same                                                               |
+| Reports (AI drafts not approved)       | 90 days                          | auto-purge via `softDeleteScrubber` workflow                       |
+| Transcripts                            | 2 years from session             | auto-purge                                                         |
+| Uploaded documents                     | 10 years                         | soft-delete + Vault crypto-shred on org deletion                   |
+| Diary entries                          | user-controlled; default 5 years | user-driven export + delete; DSAR                                  |
+| Audit logs                             | 10 years, append-only            | no user-facing deletion; immutable project                         |
+| Operational logs (Sentry, BetterStack) | 90 days                          | vendor-side retention policy                                       |
 
 All retention periods subject to accountant + legal review before GA; current values are defaults, not final.
 
