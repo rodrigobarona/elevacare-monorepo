@@ -8,3 +8,18 @@ export {
 export * as main from "./schema/main/index"
 export * as audit from "./schema/audit/index"
 export * as rls from "./rls/index"
+export type { SessionMode } from "./schema/main/expert-profiles"
+export {
+  findExpertByUsername,
+  findClinicBySlug,
+  listCategories,
+  listExperts,
+  checkPublicSlugAvailability,
+  type PublicExpertCard,
+  type PublicExpertProfile,
+  type PublicClinicProfile,
+  type PublicCategory,
+  type ListExpertsFilters,
+  type ListExpertsResult,
+  type SlugAvailability,
+} from "./queries/public"

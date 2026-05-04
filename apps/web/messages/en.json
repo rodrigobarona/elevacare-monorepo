@@ -1,8 +1,309 @@
 {
-  "site.name": "Eleva.care",
-  "site.tagline": "Care, close to you.",
-  "nav.home": "Home",
-  "nav.experts": "Find an expert",
-  "nav.signin": "Sign in",
-  "nav.signup": "Get started"
+  "site": {
+    "name": "Eleva.care",
+    "tagline": "Care, close to you."
+  },
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "experts": "Find an expert",
+    "becomePartner": "Become a partner",
+    "signin": "Sign in",
+    "signup": "Get started",
+    "menu": "Menu",
+    "skipToContent": "Skip to main content"
+  },
+  "footer": {
+    "tagline": "Care, close to you.",
+    "explore": "Explore",
+    "company": "Company",
+    "legal": "Legal",
+    "links": {
+      "experts": "Find an expert",
+      "categories": "Categories",
+      "becomePartner": "Become a partner",
+      "about": "About Eleva.care",
+      "contact": "Contact",
+      "privacy": "Privacy policy",
+      "terms": "Terms of service",
+      "cookies": "Cookie policy"
+    },
+    "copyright": "© {year} Eleva.care. All rights reserved.",
+    "registeredIn": "ERS-registered digital health platform."
+  },
+  "locale": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "switchLabel": "Change language"
+  },
+  "common": {
+    "loading": "Loading…",
+    "search": "Search",
+    "clear": "Clear",
+    "apply": "Apply",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "continue": "Continue",
+    "save": "Save",
+    "remove": "Remove",
+    "showMore": "Show more",
+    "showLess": "Show less",
+    "optional": "optional",
+    "required": "required",
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "network": "We could not reach our server. Check your connection."
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Eleva.care · Health that meets you",
+      "title": "Care, close to you.",
+      "subtitle": "Connect with licensed psychologists, nutritionists, and health experts trusted across Portugal — online, on your schedule, in your language.",
+      "ctaPrimary": "Find an expert",
+      "ctaSecondary": "Become a partner",
+      "trustEN": "Built for Portugal · ERS-registered",
+      "trustOnline": "100% online sessions"
+    },
+    "valueProps": {
+      "title": "Why Eleva.care",
+      "items": {
+        "trust": {
+          "title": "Verified experts",
+          "body": "Every expert on Eleva.care is licensed, identity-verified, and chosen for the quality of their practice."
+        },
+        "languages": {
+          "title": "Care in your language",
+          "body": "Sessions in Portuguese, English, and Spanish — pick the language you’re most comfortable with."
+        },
+        "instant": {
+          "title": "Book in minutes",
+          "body": "Pick a time, pay securely, and get a confirmation. Reschedule any time before your session."
+        }
+      }
+    },
+    "categories": {
+      "title": "Find the right kind of support",
+      "subtitle": "Explore the areas of expertise our partners specialize in.",
+      "viewAll": "View all categories"
+    },
+    "becomePartner": {
+      "title": "Are you a healthcare professional?",
+      "body": "Join our marketplace to reach patients across Portugal and beyond. Free to apply.",
+      "cta": "Apply to become a partner"
+    }
+  },
+  "about": {
+    "title": "About Eleva.care",
+    "lead": "We connect women and families to trusted health expertise — in their language, on their schedule.",
+    "missionTitle": "Our mission",
+    "missionBody": "We believe quality care should be accessible everywhere. Eleva.care brings together licensed psychologists, nutritionists, physiotherapists and other health experts in a single, trustworthy marketplace built around real consent, clear pricing, and Portuguese health regulations.",
+    "valuesTitle": "What we stand for",
+    "values": {
+      "trust": {
+        "title": "Trust over scale",
+        "body": "We verify every expert, audit our processes, and refuse to grow at the expense of safety."
+      },
+      "language": {
+        "title": "Care in your language",
+        "body": "Multilingual experts and a tri-lingual platform from day one — Portuguese, English, Spanish."
+      },
+      "compliance": {
+        "title": "Built for Portuguese healthcare",
+        "body": "ERS-registered, GDPR-aligned, and integrated with TOConline and Moloni for compliant invoicing."
+      }
+    }
+  },
+  "legal": {
+    "title": "Legal",
+    "lead": "Our terms, privacy, and cookie policies in plain language.",
+    "lastUpdated": "Last updated {date}",
+    "documents": {
+      "privacy": {
+        "title": "Privacy policy",
+        "summary": "How we collect, store, and protect your personal data."
+      },
+      "terms": {
+        "title": "Terms of service",
+        "summary": "The rules that apply when you use Eleva.care."
+      },
+      "cookies": {
+        "title": "Cookie policy",
+        "summary": "What we store on your device and why."
+      }
+    },
+    "placeholderTitle": "Coming online soon",
+    "placeholderBody": "Our legal team is finalising this page. In the meantime, please reach out to legal@eleva.care for any specific question."
+  },
+  "marketplace": {
+    "title": "Find an expert",
+    "subtitle": "Search verified experts by specialty, language, or country of practice.",
+    "search": {
+      "placeholder": "Search by name or topic…",
+      "filters": "Filters",
+      "filtersOpen": "Open filters",
+      "filtersClear": "Clear filters",
+      "results": "{count, plural, =0 {No experts found} one {# expert} other {# experts}}",
+      "noResults": {
+        "title": "No experts match your filters",
+        "body": "Try removing a filter or searching for a different specialty."
+      }
+    },
+    "filters": {
+      "category": "Specialty",
+      "language": "Language",
+      "country": "Country of practice",
+      "sessionMode": "Session type",
+      "anyCategory": "Any specialty",
+      "anyLanguage": "Any language",
+      "anyCountry": "Any country",
+      "anySessionMode": "Any session type"
+    },
+    "sessionMode": {
+      "online": "Online",
+      "in_person": "In person",
+      "phone": "Phone"
+    },
+    "card": {
+      "topExpert": "Top expert",
+      "languagesLabel": "Speaks",
+      "countriesLabel": "Practices in",
+      "viewProfile": "View profile"
+    },
+    "categories": {
+      "heading": "Browse by specialty",
+      "viewAll": "All experts"
+    }
+  },
+  "category": {
+    "breadcrumbHome": "Home",
+    "breadcrumbExperts": "Experts",
+    "expertCount": "{count, plural, =0 {No experts yet} one {1 expert} other {# experts}}",
+    "noExperts": {
+      "title": "No experts yet in this specialty",
+      "body": "We are reviewing applications. Check back soon or browse other specialties."
+    }
+  },
+  "profile": {
+    "expert": {
+      "topExpertBadge": "Top expert",
+      "languagesLabel": "Languages",
+      "countriesLabel": "Practice countries",
+      "sessionModesLabel": "Session types",
+      "aboutLabel": "About",
+      "bookCta": "Book a session",
+      "comingSoonNotice": "Booking opens once availability is published."
+    },
+    "clinic": {
+      "websiteLabel": "Website",
+      "countryLabel": "Country",
+      "expertsLabel": "Our experts"
+    },
+    "notFound": {
+      "title": "Profile not found",
+      "body": "This page is either reserved or no longer available.",
+      "back": "Back to experts"
+    }
+  },
+  "becomePartner": {
+    "hero": {
+      "title": "Apply to join Eleva.care",
+      "subtitle": "Reach patients across Portugal and beyond. Tell us about your practice — we usually review applications within 3 business days."
+    },
+    "steps": {
+      "account": "Account",
+      "fiscal": "Practice",
+      "categories": "Specialties",
+      "documents": "Documents",
+      "review": "Review"
+    },
+    "stepLabel": "Step {current} of {total}",
+    "account": {
+      "title": "Your public profile",
+      "subtitle": "This is what patients will see on Eleva.care.",
+      "type": {
+        "label": "I am applying as",
+        "soloExpert": "An individual expert",
+        "clinicAdmin": "A clinic administrator"
+      },
+      "displayName": "Display name",
+      "displayNamePlaceholder": "e.g. Dr. Ana Silva",
+      "username": "Public URL",
+      "usernameHelper": "Lowercase letters, numbers, and hyphens. 3–30 characters.",
+      "bio": "Short bio",
+      "bioPlaceholder": "Tell patients about your approach in 2–3 sentences.",
+      "bioHelper": "{count}/600 characters"
+    },
+    "fiscal": {
+      "title": "Practice & fiscal information",
+      "subtitle": "We use this to verify your license and prepare invoicing.",
+      "nif": "NIF (Portuguese tax ID)",
+      "nifHelper": "Required for Portugal-based experts.",
+      "licenseNumber": "License number",
+      "licenseNumberPlaceholder": "e.g. OPP 12345",
+      "licenseScope": "License scope",
+      "licenseScopePlaceholder": "What does your license authorise you to do?",
+      "languages": "Languages you offer",
+      "languagesHelper": "Pick at least one language.",
+      "countries": "Countries where you practice",
+      "countriesHelper": "Pick at least one country."
+    },
+    "categories": {
+      "title": "Specialties",
+      "subtitle": "Pick the specialties patients can find you under (up to 3).",
+      "limitHelper": "Selected {selected} of {max}",
+      "empty": "No categories available right now."
+    },
+    "documents": {
+      "title": "Supporting documents",
+      "subtitle": "Upload your license and any supporting credentials. PDFs and images up to 10 MB each.",
+      "kinds": {
+        "license": "Professional license",
+        "id": "ID document",
+        "cv": "Curriculum vitae",
+        "professional_insurance": "Professional insurance"
+      },
+      "uploadCta": "Choose file",
+      "uploading": "Uploading…",
+      "uploaded": "Uploaded",
+      "remove": "Remove",
+      "errors": {
+        "tooLarge": "File too large. Max 10 MB.",
+        "wrongType": "Only PDF, JPEG, PNG, or WebP accepted.",
+        "uploadFailed": "Upload failed. Please retry.",
+        "missingLicense": "A professional license is required to apply."
+      }
+    },
+    "review": {
+      "title": "Review and submit",
+      "subtitle": "Confirm your details below. You will receive an email when our team has reviewed your application.",
+      "consentLabel": "I confirm the information is accurate and consent to Eleva.care contacting me about this application.",
+      "submitCta": "Submit application",
+      "submitting": "Submitting…"
+    },
+    "username": {
+      "checking": "Checking availability…",
+      "available": "{username} is available",
+      "unavailable": {
+        "format-invalid": "Use 3–30 lowercase letters, numbers, or hyphens.",
+        "reserved": "{username} is reserved.",
+        "expert-taken": "{username} is already taken by another expert.",
+        "clinic-taken": "{username} is already taken by a clinic.",
+        "pending-application": "{username} is pending approval on another application."
+      }
+    },
+    "errors": {
+      "validation": "Please review the highlighted fields.",
+      "submit": "We could not submit your application. Please try again.",
+      "auth": "Sign in to submit an application."
+    },
+    "success": {
+      "title": "Application received",
+      "body": "Thank you. Our team will review your application and email you within 3 business days.",
+      "back": "Back to home"
+    }
+  }
 }

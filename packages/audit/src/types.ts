@@ -4,13 +4,17 @@
  * CodeRabbit + tsc catch typos at withAudit call sites.
  */
 
-// Entities covered so far (S1). Each subsequent sprint appends here.
+// Entities covered so far. Each subsequent sprint appends here.
 export type AuditEntity =
   | "user"
   | "organization"
   | "membership"
   | "role"
   | "permission"
+  // S2 — Become-Partner + expert lifecycle
+  | "become_partner_application"
+  | "expert_profile"
+  | "expert_integration_credential"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -24,6 +28,13 @@ export type AuditAction =
   | "invited"
   | "accepted"
   | "removed"
+  // S2 — Become-Partner + expert lifecycle
+  | "submitted"
+  | "approved"
+  | "rejected"
+  | "claimed"
+  | "connected"
+  | "disconnected"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

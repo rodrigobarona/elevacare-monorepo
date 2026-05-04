@@ -1,8 +1,309 @@
 {
-  "site.name": "Eleva.care",
-  "site.tagline": "Cuidado, perto de si.",
-  "nav.home": "Início",
-  "nav.experts": "Encontre um especialista",
-  "nav.signin": "Iniciar sessão",
-  "nav.signup": "Começar"
+  "site": {
+    "name": "Eleva.care",
+    "tagline": "Cuidado, perto de si."
+  },
+  "nav": {
+    "home": "Início",
+    "about": "Sobre",
+    "experts": "Encontre um especialista",
+    "becomePartner": "Torne-se parceiro",
+    "signin": "Iniciar sessão",
+    "signup": "Começar",
+    "menu": "Menu",
+    "skipToContent": "Saltar para o conteúdo principal"
+  },
+  "footer": {
+    "tagline": "Cuidado, perto de si.",
+    "explore": "Explorar",
+    "company": "Empresa",
+    "legal": "Legal",
+    "links": {
+      "experts": "Encontrar especialistas",
+      "categories": "Categorias",
+      "becomePartner": "Tornar-se parceiro",
+      "about": "Sobre a Eleva.care",
+      "contact": "Contacto",
+      "privacy": "Política de privacidade",
+      "terms": "Termos de serviço",
+      "cookies": "Política de cookies"
+    },
+    "copyright": "© {year} Eleva.care. Todos os direitos reservados.",
+    "registeredIn": "Plataforma de saúde digital registada na ERS."
+  },
+  "locale": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "switchLabel": "Mudar idioma"
+  },
+  "common": {
+    "loading": "A carregar…",
+    "search": "Pesquisar",
+    "clear": "Limpar",
+    "apply": "Aplicar",
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "next": "Seguinte",
+    "submit": "Submeter",
+    "continue": "Continuar",
+    "save": "Guardar",
+    "remove": "Remover",
+    "showMore": "Ver mais",
+    "showLess": "Ver menos",
+    "optional": "opcional",
+    "required": "obrigatório",
+    "errors": {
+      "generic": "Algo correu mal. Tente novamente.",
+      "network": "Não conseguimos contactar o servidor. Verifique a sua ligação."
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Eleva.care · Saúde que vai ao seu encontro",
+      "title": "Cuidado, perto de si.",
+      "subtitle": "Encontre psicólogos, nutricionistas e especialistas de saúde de confiança em Portugal — online, à sua hora, na sua língua.",
+      "ctaPrimary": "Encontrar especialista",
+      "ctaSecondary": "Tornar-se parceiro",
+      "trustEN": "Feito para Portugal · Registada na ERS",
+      "trustOnline": "Sessões 100% online"
+    },
+    "valueProps": {
+      "title": "Porquê Eleva.care",
+      "items": {
+        "trust": {
+          "title": "Especialistas verificados",
+          "body": "Cada especialista é licenciado, tem identidade verificada e foi escolhido pela qualidade do seu trabalho."
+        },
+        "languages": {
+          "title": "Cuidado na sua língua",
+          "body": "Sessões em português, inglês e espanhol — escolha o idioma com que se sente mais à vontade."
+        },
+        "instant": {
+          "title": "Marque em minutos",
+          "body": "Escolha um horário, pague em segurança e receba a confirmação. Pode reagendar antes da sessão."
+        }
+      }
+    },
+    "categories": {
+      "title": "Encontre o tipo de apoio certo",
+      "subtitle": "Explore as áreas de especialização dos nossos parceiros.",
+      "viewAll": "Ver todas as categorias"
+    },
+    "becomePartner": {
+      "title": "É profissional de saúde?",
+      "body": "Junte-se ao nosso marketplace para chegar a pacientes em Portugal e além. A candidatura é gratuita.",
+      "cta": "Candidatar-se"
+    }
+  },
+  "about": {
+    "title": "Sobre a Eleva.care",
+    "lead": "Ligamos pessoas e famílias a especialistas de saúde de confiança — na sua língua, ao seu ritmo.",
+    "missionTitle": "A nossa missão",
+    "missionBody": "Acreditamos que o cuidado de qualidade deve estar acessível em qualquer lugar. A Eleva.care reúne psicólogos, nutricionistas, fisioterapeutas e outros especialistas num marketplace único, construído sobre consentimento real, preços claros e o cumprimento da regulação portuguesa.",
+    "valuesTitle": "Aquilo em que acreditamos",
+    "values": {
+      "trust": {
+        "title": "Confiança antes de escala",
+        "body": "Verificamos cada especialista, auditamos os processos e recusamos crescer à custa da segurança."
+      },
+      "language": {
+        "title": "Cuidado na sua língua",
+        "body": "Especialistas multilingues e plataforma trilingue desde o primeiro dia — português, inglês, espanhol."
+      },
+      "compliance": {
+        "title": "Pensada para a saúde portuguesa",
+        "body": "Registada na ERS, alinhada com o RGPD e integrada com TOConline e Moloni para faturação compliant."
+      }
+    }
+  },
+  "legal": {
+    "title": "Legal",
+    "lead": "Os nossos termos, privacidade e política de cookies em linguagem clara.",
+    "lastUpdated": "Última atualização: {date}",
+    "documents": {
+      "privacy": {
+        "title": "Política de privacidade",
+        "summary": "Como recolhemos, guardamos e protegemos os seus dados pessoais."
+      },
+      "terms": {
+        "title": "Termos de serviço",
+        "summary": "As regras que se aplicam quando usa a Eleva.care."
+      },
+      "cookies": {
+        "title": "Política de cookies",
+        "summary": "O que guardamos no seu dispositivo e porquê."
+      }
+    },
+    "placeholderTitle": "Em breve online",
+    "placeholderBody": "A nossa equipa jurídica está a finalizar esta página. Entretanto, contacte legal@eleva.care para qualquer questão específica."
+  },
+  "marketplace": {
+    "title": "Encontrar especialista",
+    "subtitle": "Pesquise especialistas verificados por especialidade, idioma ou país de prática.",
+    "search": {
+      "placeholder": "Pesquisar por nome ou tema…",
+      "filters": "Filtros",
+      "filtersOpen": "Abrir filtros",
+      "filtersClear": "Limpar filtros",
+      "results": "{count, plural, =0 {Nenhum especialista encontrado} one {# especialista} other {# especialistas}}",
+      "noResults": {
+        "title": "Nenhum especialista corresponde aos seus filtros",
+        "body": "Tente remover um filtro ou pesquisar uma especialidade diferente."
+      }
+    },
+    "filters": {
+      "category": "Especialidade",
+      "language": "Idioma",
+      "country": "País de prática",
+      "sessionMode": "Tipo de sessão",
+      "anyCategory": "Qualquer especialidade",
+      "anyLanguage": "Qualquer idioma",
+      "anyCountry": "Qualquer país",
+      "anySessionMode": "Qualquer tipo"
+    },
+    "sessionMode": {
+      "online": "Online",
+      "in_person": "Presencial",
+      "phone": "Telefone"
+    },
+    "card": {
+      "topExpert": "Top expert",
+      "languagesLabel": "Fala",
+      "countriesLabel": "Pratica em",
+      "viewProfile": "Ver perfil"
+    },
+    "categories": {
+      "heading": "Procurar por especialidade",
+      "viewAll": "Todos os especialistas"
+    }
+  },
+  "category": {
+    "breadcrumbHome": "Início",
+    "breadcrumbExperts": "Especialistas",
+    "expertCount": "{count, plural, =0 {Sem especialistas} one {1 especialista} other {# especialistas}}",
+    "noExperts": {
+      "title": "Ainda sem especialistas nesta especialidade",
+      "body": "Estamos a rever candidaturas. Volte em breve ou explore outras especialidades."
+    }
+  },
+  "profile": {
+    "expert": {
+      "topExpertBadge": "Top expert",
+      "languagesLabel": "Idiomas",
+      "countriesLabel": "Países de prática",
+      "sessionModesLabel": "Tipos de sessão",
+      "aboutLabel": "Sobre",
+      "bookCta": "Marcar sessão",
+      "comingSoonNotice": "A marcação abre assim que a disponibilidade for publicada."
+    },
+    "clinic": {
+      "websiteLabel": "Website",
+      "countryLabel": "País",
+      "expertsLabel": "Os nossos especialistas"
+    },
+    "notFound": {
+      "title": "Perfil não encontrado",
+      "body": "Esta página é reservada ou já não está disponível.",
+      "back": "Voltar a especialistas"
+    }
+  },
+  "becomePartner": {
+    "hero": {
+      "title": "Candidate-se a fazer parte da Eleva.care",
+      "subtitle": "Chegue a pacientes em Portugal e além. Conte-nos sobre a sua prática — habitualmente revemos candidaturas em 3 dias úteis."
+    },
+    "steps": {
+      "account": "Conta",
+      "fiscal": "Prática",
+      "categories": "Especialidades",
+      "documents": "Documentos",
+      "review": "Revisão"
+    },
+    "stepLabel": "Passo {current} de {total}",
+    "account": {
+      "title": "O seu perfil público",
+      "subtitle": "É isto que os pacientes verão na Eleva.care.",
+      "type": {
+        "label": "Estou a candidatar-me como",
+        "soloExpert": "Especialista individual",
+        "clinicAdmin": "Administrador de clínica"
+      },
+      "displayName": "Nome a apresentar",
+      "displayNamePlaceholder": "ex. Dra. Ana Silva",
+      "username": "URL pública",
+      "usernameHelper": "Letras minúsculas, números e hífenes. 3–30 caracteres.",
+      "bio": "Biografia curta",
+      "bioPlaceholder": "Descreva a sua abordagem em 2–3 frases.",
+      "bioHelper": "{count}/600 caracteres"
+    },
+    "fiscal": {
+      "title": "Prática e informação fiscal",
+      "subtitle": "Usamos esta informação para verificar a sua licença e preparar a faturação.",
+      "nif": "NIF",
+      "nifHelper": "Obrigatório para especialistas em Portugal.",
+      "licenseNumber": "Número da cédula profissional",
+      "licenseNumberPlaceholder": "ex. OPP 12345",
+      "licenseScope": "Âmbito da licença",
+      "licenseScopePlaceholder": "Que actos a sua licença autoriza?",
+      "languages": "Idiomas oferecidos",
+      "languagesHelper": "Escolha pelo menos um idioma.",
+      "countries": "Países onde pratica",
+      "countriesHelper": "Escolha pelo menos um país."
+    },
+    "categories": {
+      "title": "Especialidades",
+      "subtitle": "Escolha as especialidades em que os pacientes podem encontrá-lo (até 3).",
+      "limitHelper": "{selected} de {max} selecionadas",
+      "empty": "Sem categorias disponíveis de momento."
+    },
+    "documents": {
+      "title": "Documentos de suporte",
+      "subtitle": "Carregue a sua cédula e quaisquer credenciais de suporte. PDF ou imagens até 10 MB cada.",
+      "kinds": {
+        "license": "Cédula profissional",
+        "id": "Documento de identificação",
+        "cv": "Currículo",
+        "professional_insurance": "Seguro profissional"
+      },
+      "uploadCta": "Escolher ficheiro",
+      "uploading": "A carregar…",
+      "uploaded": "Carregado",
+      "remove": "Remover",
+      "errors": {
+        "tooLarge": "Ficheiro demasiado grande. Máx. 10 MB.",
+        "wrongType": "Apenas PDF, JPEG, PNG ou WebP.",
+        "uploadFailed": "Falha ao carregar. Tente de novo.",
+        "missingLicense": "É necessária a cédula profissional para se candidatar."
+      }
+    },
+    "review": {
+      "title": "Rever e submeter",
+      "subtitle": "Confirme os dados abaixo. Receberá um e-mail quando a nossa equipa rever a sua candidatura.",
+      "consentLabel": "Confirmo que a informação é correta e autorizo a Eleva.care a contactar-me sobre esta candidatura.",
+      "submitCta": "Submeter candidatura",
+      "submitting": "A submeter…"
+    },
+    "username": {
+      "checking": "A verificar disponibilidade…",
+      "available": "{username} está disponível",
+      "unavailable": {
+        "format-invalid": "Use 3–30 letras minúsculas, números ou hífenes.",
+        "reserved": "{username} é reservado.",
+        "expert-taken": "{username} já está em uso por outro especialista.",
+        "clinic-taken": "{username} já está em uso por uma clínica.",
+        "pending-application": "{username} está em revisão noutra candidatura."
+      }
+    },
+    "errors": {
+      "validation": "Reveja os campos destacados.",
+      "submit": "Não foi possível submeter a candidatura. Tente novamente.",
+      "auth": "Inicie sessão para submeter uma candidatura."
+    },
+    "success": {
+      "title": "Candidatura recebida",
+      "body": "Obrigado. A nossa equipa revê a sua candidatura e responde por e-mail em 3 dias úteis.",
+      "back": "Voltar ao início"
+    }
+  }
 }

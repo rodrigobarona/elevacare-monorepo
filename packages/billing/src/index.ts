@@ -6,9 +6,12 @@
  * `@stripe/react-connect-js` directly — boundary lint enforces.
  *
  * Sub-entrypoints:
- *   - "@eleva/billing/server"   — server-only (Stripe SDK, AccountSession)
- *   - "@eleva/billing/embedded" — client React wrappers for Connect
- *   - "@eleva/billing/uploads"  — Vercel Blob helper for application docs
+ *   - "@eleva/billing/server"          — server-only (Stripe SDK, AccountSession)
+ *   - "@eleva/billing/embedded"        — client React wrappers for Connect
+ *   - "@eleva/billing/uploads"         — Vercel Blob server `put`/`del` helpers
+ *   - "@eleva/billing/uploads-handler" — server-side `handleUpload` wrapper
+ *                                        for client-driven uploads (Route Handler)
+ *   - "@eleva/billing/uploads-client"  — `"use client"` re-export of `upload()`
  */
 
 export type {

@@ -9,7 +9,9 @@
     ".": "./src/index.ts",
     "./server": "./src/server/index.ts",
     "./embedded": "./src/embedded/index.ts",
-    "./uploads": "./src/uploads.ts"
+    "./uploads": "./src/uploads.ts",
+    "./uploads-handler": "./src/uploads-handler.ts",
+    "./uploads-client": "./src/uploads-client.ts"
   },
   "scripts": {
     "lint": "eslint .",
