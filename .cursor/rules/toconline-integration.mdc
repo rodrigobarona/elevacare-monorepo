@@ -1,0 +1,257 @@
+---
+description: TOConline ERP API integration patterns for Portuguese invoicing compliance
+globs: ['packages/accounting/**', 'apps/app/**/accounting/**', 'apps/app/**/billing/**', 'apps/api/**/invoic*/**']
+---
+
+# TOConline Integration Patterns
+
+## Package Boundaries
+
+All TOConline API calls MUST live inside `packages/accounting/src/eleva-platform/`. Never call `api33.toconline.pt` directly from `apps/` — always import from `@eleva/accounting`.
+
+```
+packages/accounting/
+├── src/
+│   ├── core/                 # IVA rules, invoice types, credential store
+│   ├── eleva-platform/       # Tier 1 — TOConline client (Eleva's own invoices)
+│   └── expert-apps/
+│       └── adapters/
+│           ├── toconline/    # Tier 2 — expert-side TOConline adapter
+│           ├── moloni/       # Tier 2 — Moloni adapter
+│           └── manual/       # Tier 2 — Manual/SAF-T export
+```
+
+Tier 2 adapters implement `ExpertInvoicingAdapter`:
+
+```typescript
+interface ExpertInvoicingAdapter {
+  connect(credentials: OAuthCredentials): Promise<void>;
+  issueInvoice(data: ExpertInvoiceData): Promise<InvoiceResult>;
+  status(invoiceId: string): Promise<InvoiceStatus>;
+  disconnect(): Promise<void>;
+}
+```
+
+## API Base URLs
+
+```
+Production API:   https://api33.toconline.pt
+Production OAuth: https://app33.toconline.pt/oauth
+```
+
+**Do NOT use** `api.toconline.pt` — that is incorrect. The correct host is `api33.toconline.pt`.
+
+## Authentication — OAuth 2.0 Authorization Code + PKCE
+
+TOConline uses **Authorization Code** flow with PKCE (S256), **not** client credentials.
+
+```typescript
+const TOCONLINE_AUTH_URL = `${process.env.TOCONLINE_OAUTH_URL}/auth`;
+const TOCONLINE_TOKEN_URL = `${process.env.TOCONLINE_OAUTH_URL}/token`;
+```
+
+- Scope: `commercial`
+- PKCE challenge: S256
+- Client auth: body params (not Basic header)
+- Store tokens via WorkOS Vault (`packages/encryption`)
+
+## Environment Variables
+
+```bash
+TOCONLINE_API_URL=https://api33.toconline.pt
+TOCONLINE_OAUTH_URL=https://app33.toconline.pt/oauth
+TOCONLINE_CLIENT_ID=
+TOCONLINE_CLIENT_SECRET=
+TOCONLINE_REDIRECT_URI=
+TOCONLINE_SERIES_PREFIX=ELEVA
+```
+
+## API Format: v1 vs Legacy
+
+| Style | URL pattern | Body format | Use for |
+|-------|-------------|-------------|---------|
+| **v1** | `/api/v1/{resource}` | Flat JSON | Sales/purchase documents, receipts, payments |
+| **Legacy** | `/api/{resource}` | JSON:API `{ data: { type, attributes } }` | Customers, suppliers, addresses, contacts, products, services |
+
+Always prefer v1 endpoints for sales documents:
+
+```typescript
+// v1 — flat JSON, single call creates header + lines
+POST /api/v1/commercial_sales_documents
+{ "document_type": "FT", "finalize": 1, "lines": [...] }
+
+// Legacy — JSON:API, requires separate header + line + finalize calls
+POST /api/commercial_sales_documents          // header
+POST /api/commercial_sales_document_lines     // each line
+PATCH /api/commercial_sales_documents         // finalize (status: 1)
+```
+
+## Document Series
+
+The `ELEVA` series prefix is already configured in TOConline. Retrieve the series ID at startup:
+
+```typescript
+GET /api/commercial_document_series?filter[prefix]=ELEVA&filter[document_type]=FT
+```
+
+Invoice numbers follow: `ELEVA FT {YYYY}/{N}` (e.g. `ELEVA FT 2026/1`).
+
+## Customer Upsert Pattern
+
+Before creating an invoice, ensure the expert exists as a customer:
+
+```typescript
+// 1. Search by NIF
+const existing = await toconline.get('/api/customers', {
+  params: { 'filter[tax_registration_number]': expertNif }
+});
+
+// 2. Create if not found
+if (!existing.data.length) {
+  await toconline.post('/api/customers', {
+    data: {
+      type: 'customers',
+      attributes: {
+        tax_registration_number: expertNif,
+        business_name: expertBusinessName,
+        email: expertEmail,
+      }
+    }
+  });
+}
+```
+
+## Platform Fee Invoice (v1 — Single Call)
+
+```typescript
+const invoice = await toconline.post('/api/v1/commercial_sales_documents', {
+  document_type: 'FT',
+  finalize: 1,
+  date: new Date().toISOString().split('T')[0],
+  customer_tax_registration_number: expert.fiscalNif,
+  customer_business_name: expert.fiscalBusinessName,
+  customer_address_detail: expert.fiscalAddress,
+  customer_postcode: expert.fiscalPostcode,
+  customer_city: expert.fiscalCity,
+  customer_country: expert.fiscalCountry,
+  due_date: dueDate,
+  payment_mechanism: 'TB',
+  vat_included_prices: true,
+  currency_iso_code: 'EUR',
+  notes: `Servico de plataforma Eleva Care - ${bookingDescription}`,
+  external_reference: stripeSessionId,
+  lines: [{
+    item_type: 'Service',
+    description: 'Servico de plataforma Eleva Care',
+    quantity: 1,
+    unit_price: platformFeeEuros,
+    tax_code: vatConfig.code,
+    tax_percentage: vatConfig.rate,
+  }],
+});
+```
+
+Set `finalize: 1` to create and finalize in one call. The response includes the assigned document number and ATCUD.
+
+## VAT Matrix
+
+```typescript
+function getVatConfig(country: string, hasValidVies: boolean) {
+  if (country === 'PT') {
+    return { rate: 23, code: 'NOR' };
+  }
+
+  const euCountries = [
+    'AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR',
+    'DE','GR','HU','IE','IT','LV','LT','LU','MT','NL',
+    'PL','RO','SK','SI','ES','SE',
+  ];
+
+  if (euCountries.includes(country) && hasValidVies) {
+    return {
+      rate: 0,
+      code: 'ISE',
+      exemptionId: 7,  // M07
+      note: 'IVA - Autoliquidacao (Art. 6 RITI)',
+    };
+  }
+
+  if (euCountries.includes(country) && !hasValidVies) {
+    return { rate: 23, code: 'NOR' };
+  }
+
+  return {
+    rate: 0,
+    code: 'ISE',
+    exemptionId: 99,  // M99
+    note: 'IVA - Nao sujeito (Art. 6 CIVA)',
+  };
+}
+```
+
+## Idempotency
+
+Track invoice status in Neon (`packages/db`) to prevent duplicates:
+
+- `platform_fee_invoices` — PK on `booking_id`; Tier 1 solo-expert commissions
+- `clinic_saas_invoices` — PK on `subscription_period`; Tier 1 clinic SaaS
+- `expert_integration_credentials` — per-expert adapter OAuth tokens (vault-encrypted)
+
+Always check the table before calling TOConline. If a record exists with status `finalized`, skip.
+
+## Feature Flags
+
+Via `packages/flags`:
+
+- `ff.toconline_invoicing_enabled` — master toggle for Tier 1
+- `ff.expert_invoicing_apps_enabled` — master toggle for Tier 2
+- `ff.invoicing.{provider}` — per-adapter toggle (e.g. `ff.invoicing.toconline`, `ff.invoicing.moloni`)
+
+Staged rollout: staging -> 1 pilot -> all PT -> default on for PT.
+
+## Workflow Triggers
+
+Via `packages/workflows` (Vercel Workflow):
+
+- `issuePlatformFeeInvoice` — triggered after Stripe `checkout.session.completed`
+- `issueClinicSaasInvoice` — triggered on Stripe subscription period boundary
+- `issueExpertServiceInvoice` — dispatches to expert's selected adapter
+
+## Reconciliation
+
+Monthly QStash cron aggregates Stripe application fees vs TOConline invoice totals. Mismatches surface to `/admin/accounting` in `apps/app`.
+
+## PDF Download
+
+```typescript
+GET /api/url_for_print/{documentId}?filter[type]=Document
+```
+
+## Error Handling
+
+| HTTP status | Meaning | Action |
+|-------------|---------|--------|
+| `401` | Expired/invalid token | Refresh OAuth token |
+| `422` | Validation error | Log and surface to admin |
+| `404` | Resource not found | Create customer first |
+| `409` | Duplicate | Check idempotency table |
+
+Retry with exponential backoff (max 3 attempts). After exhaustion, set invoice status to `error` and alert via Sentry (`packages/observability`).
+
+## Related
+
+- [ADR-013 — Accounting Integration](docs/eleva-v3/adrs/ADR-013-accounting-integration.md)
+- [TOConline API Reference](docs/eleva-v3/toconline-api-reference.md)
+- `@eleva/billing` (`packages/billing/`) — Stripe Connect, webhooks, payouts
+- `@eleva/db` (`packages/db/`) — Neon idempotency tables
+- `@eleva/encryption` (`packages/encryption/`) — WorkOS Vault for OAuth tokens
+- `@eleva/flags` (`packages/flags/`) — feature flag toggles
+- `@eleva/workflows` (`packages/workflows/`) — Vercel Workflow triggers
+- `@eleva/observability` (`packages/observability/`) — Sentry spans
+
+## Related Agent Skills
+
+When working on TOConline integration, consider invoking these skills:
+- `toconline-integration` — full API reference, endpoint catalogue, auth setup
+- `stripe-best-practices` — Stripe Connect patterns, webhook handling
+- `postgres-drizzle` — Neon schema and migrations for invoice tables
