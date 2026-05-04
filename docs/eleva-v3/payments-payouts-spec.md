@@ -63,11 +63,11 @@ Eleva is a two-sided marketplace platform. The commercial model is **segment-dif
 
 Three tiers:
 
-| Tier | Base | Per-seat | Seat range | Notes |
-|---|---|---|---|---|
-| **Clinic Starter** | €99/mo | €39/mo | 1–5 | small independent practices |
-| **Clinic Growth** | €199/mo | €29/mo | 6–20 | mid clinics |
-| **Clinic Enterprise** | custom | custom | 20+ | multi-location, SLA, CSM |
+| Tier                  | Base    | Per-seat | Seat range | Notes                       |
+| --------------------- | ------- | -------- | ---------- | --------------------------- |
+| **Clinic Starter**    | €99/mo  | €39/mo   | 1–5        | small independent practices |
+| **Clinic Growth**     | €199/mo | €29/mo   | 6–20       | mid clinics                 |
+| **Clinic Enterprise** | custom  | custom   | 20+        | multi-location, SLA, CSM    |
 
 Rules:
 
@@ -176,18 +176,18 @@ Starter / Growth / Enterprise per the tier table above.
 
 All Stripe surfaces render inline in Eleva's app. No popups, no Stripe-hosted pages in user flows.
 
-| Surface | Component | Location |
-|---|---|---|
-| Patient checkout | Payment Element | booking page |
-| Expert Connect onboarding | `<ConnectAccountOnboarding>` | expert onboarding wizard |
-| Expert KYC / Identity | Stripe Identity embedded modal | inline from Connect onboarding |
-| Expert payouts + balances | `<ConnectPayouts>`, `<ConnectBalances>` | `/expert/finance` |
-| Expert account management | `<ConnectAccountManagement>`, `<ConnectDocuments>` | `/expert/finance/account` |
-| Expert tax | `<ConnectTaxSettings>`, `<ConnectTaxRegistrations>`, `<ConnectTaxThresholdMonitoring>` | `/expert/finance/tax` |
-| Platform action-needed | `<ConnectNotificationBanner>` | top of expert/clinic workspace |
-| Expert SaaS subscription management | custom Eleva UI + Payment Element + Billing API | `/expert/billing` |
-| Clinic SaaS subscription + seat management | custom Eleva UI + Payment Element + Billing API | `/org/billing` |
-| Patient payment-method update | Payment Element in save-card mode | patient account |
+| Surface                                    | Component                                                                              | Location                       |
+| ------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------ |
+| Patient checkout                           | Payment Element                                                                        | booking page                   |
+| Expert Connect onboarding                  | `<ConnectAccountOnboarding>`                                                           | expert onboarding wizard       |
+| Expert KYC / Identity                      | Stripe Identity embedded modal                                                         | inline from Connect onboarding |
+| Expert payouts + balances                  | `<ConnectPayouts>`, `<ConnectBalances>`                                                | `/expert/finance`              |
+| Expert account management                  | `<ConnectAccountManagement>`, `<ConnectDocuments>`                                     | `/expert/finance/account`      |
+| Expert tax                                 | `<ConnectTaxSettings>`, `<ConnectTaxRegistrations>`, `<ConnectTaxThresholdMonitoring>` | `/expert/finance/tax`          |
+| Platform action-needed                     | `<ConnectNotificationBanner>`                                                          | top of expert/clinic workspace |
+| Expert SaaS subscription management        | custom Eleva UI + Payment Element + Billing API                                        | `/expert/billing`              |
+| Clinic SaaS subscription + seat management | custom Eleva UI + Payment Element + Billing API                                        | `/org/billing`                 |
+| Patient payment-method update              | Payment Element in save-card mode                                                      | patient account                |
 
 Architecture:
 
@@ -299,12 +299,12 @@ Two variants:
 
 #### IVA / VAT matrix (requires accountant sign-off before Tier 1 coding)
 
-| Recipient location | NIF status | IVA treatment |
-|---|---|---|
-| Portugal | valid NIF, B2B | 23% IVA charged |
-| EU (intra-EU) | valid VIES NIF | reverse charge (0% IVA, note on invoice) |
-| EU (intra-EU) | no valid VIES NIF | 23% IVA (or OSS depending on volume) |
-| Non-EU | — | zero-rated, outside scope |
+| Recipient location | NIF status        | IVA treatment                            |
+| ------------------ | ----------------- | ---------------------------------------- |
+| Portugal           | valid NIF, B2B    | 23% IVA charged                          |
+| EU (intra-EU)      | valid VIES NIF    | reverse charge (0% IVA, note on invoice) |
+| EU (intra-EU)      | no valid VIES NIF | 23% IVA (or OSS depending on volume)     |
+| Non-EU             | —                 | zero-rated, outside scope                |
 
 VIES validation:
 
@@ -325,7 +325,7 @@ VIES validation:
 
 ### Tier 2 — Expert → Patient (expert's legal obligation, optionally automated)
 
-**Legal clarity**: the expert is the vendor; the patient is the customer; the expert must issue the invoice using their own certified software under their own NIF. Eleva does not issue this invoice on Eleva's fiscal software. Eleva can *automate the issuance on the expert's own fiscal software* if the expert connects it.
+**Legal clarity**: the expert is the vendor; the patient is the customer; the expert must issue the invoice using their own certified software under their own NIF. Eleva does not issue this invoice on Eleva's fiscal software. Eleva can _automate the issuance on the expert's own fiscal software_ if the expert connects it.
 
 #### Adapter registry
 
@@ -337,15 +337,15 @@ VIES validation:
 
 #### Seed adapter priority
 
-| Adapter | Market | Priority |
-|---|---|---|
-| **TOConline** (expert-side) | PT | **P1** |
-| **Moloni** | PT | **P1** |
-| **Manual / SAF-T** | any | **P1** (mandatory fallback) |
-| InvoiceXpress | PT | P2 |
-| Vendus | PT | P2 |
-| Primavera Cloud | PT enterprise | P3 |
-| Holded, FacturaDirecta | ES | Phase 2 |
+| Adapter                     | Market        | Priority                    |
+| --------------------------- | ------------- | --------------------------- |
+| **TOConline** (expert-side) | PT            | **P1**                      |
+| **Moloni**                  | PT            | **P1**                      |
+| **Manual / SAF-T**          | any           | **P1** (mandatory fallback) |
+| InvoiceXpress               | PT            | P2                          |
+| Vendus                      | PT            | P2                          |
+| Primavera Cloud             | PT enterprise | P3                          |
+| Holded, FacturaDirecta      | ES            | Phase 2                     |
 
 #### Expert onboarding forces a choice
 

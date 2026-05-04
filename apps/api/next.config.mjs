@@ -7,6 +7,8 @@ const nextConfig = {
   assetPrefix: process.env.API_ASSET_PREFIX || undefined,
   transpilePackages: [
     "@eleva/audit",
+    "@eleva/auth",
+    "@eleva/billing",
     "@eleva/config",
     "@eleva/db",
     "@eleva/encryption",

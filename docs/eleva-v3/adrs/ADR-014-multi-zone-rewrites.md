@@ -18,7 +18,7 @@ Accepted
 Eleva v3 ships multiple distinct surfaces (public marketing + marketplace, authenticated product, external-facing API/webhooks, documentation). Re-evaluated with three realities in mind:
 
 1. The public marketing + the authenticated product serve the same brand; users move between them constantly. Cross-subdomain navigation ("am I still on Eleva?") fragments trust and SEO authority.
-2. A proven pattern exists in the eulabel.eu monorepo (see [_context/clone-repo/](_context/clone-repo/)) and is documented end-to-end in [_context/blueprints/multi-zone-monorepo.md](_context/blueprints/multi-zone-monorepo.md). It is vercel.com's own pattern.
+2. A proven pattern exists in the eulabel.eu monorepo (see [\_context/clone-repo/](_context/clone-repo/)) and is documented end-to-end in [\_context/blueprints/multi-zone-monorepo.md](_context/blueprints/multi-zone-monorepo.md). It is vercel.com's own pattern.
 3. Vercel manages DNS for `eleva.care` (ADR-012), so rewrites, wildcard SSL, and per-PR preview wildcards are first-class operations.
 4. APIs (external webhooks, OAuth callbacks, session-aware endpoints) benefit from **separation of concerns**: they're dev-only surfaces, never browsed by humans, and a clean subdomain is easier to reason about than fighting path-prefix collisions with the product's user-facing URLs.
 
@@ -34,13 +34,13 @@ Adopt the **multi-zone rewrite** architecture with three rules:
 
 ### Zone map
 
-| App | Vercel project | basePath | Where it serves | Public URL examples |
-| --- | -------------- | -------- | --------------- | -------------------- |
-| Gateway (marketing + marketplace + public profiles + booking + auth root routing) | `elevacare-marketing` | `/` | `eleva.care/` root | `eleva.care/`, `eleva.care/home`, `eleva.care/about`, `eleva.care/legal/*`, `eleva.care/experts`, `eleva.care/become-partner`, `eleva.care/clinics`, `eleva.care/[username]`, `eleva.care/[username]/[event-slug]` |
-| Authenticated product | `elevacare-app` | `/` (no basePath) | `eleva.care/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` — rewritten individually from gateway | `eleva.care/patient`, `eleva.care/expert/finance`, `eleva.care/org/billing`, `eleva.care/admin/become-partner` |
-| Docs | `elevacare-docs` | `/docs` | `eleva.care/docs/*` via multi-zone rewrite | `eleva.care/docs/compliance/portugal` |
-| API + webhooks + OAuth callbacks + session-aware server endpoints | `elevacare-api` | `/` (no basePath) | `api.eleva.care/*` — separate subdomain, NOT rewritten | `api.eleva.care/stripe/webhook`, `api.eleva.care/stripe/account-session`, `api.eleva.care/daily/transcripts`, `api.eleva.care/calendar/oauth/google/callback` |
-| Email preview tool (internal only) | `elevacare-email` | `/` | `email.eleva.care` internal subdomain; not exposed publicly | dev-only |
+| App                                                                               | Vercel project        | basePath          | Where it serves                                                                                                              | Public URL examples                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------- | --------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Gateway (marketing + marketplace + public profiles + booking + auth root routing) | `elevacare-marketing` | `/`               | `eleva.care/` root                                                                                                           | `eleva.care/`, `eleva.care/home`, `eleva.care/about`, `eleva.care/legal/*`, `eleva.care/experts`, `eleva.care/become-partner`, `eleva.care/clinics`, `eleva.care/[username]`, `eleva.care/[username]/[event-slug]` |
+| Authenticated product                                                             | `elevacare-app`       | `/` (no basePath) | `eleva.care/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` — rewritten individually from gateway | `eleva.care/patient`, `eleva.care/expert/finance`, `eleva.care/org/billing`, `eleva.care/admin/become-partner`                                                                                                     |
+| Docs                                                                              | `elevacare-docs`      | `/docs`           | `eleva.care/docs/*` via multi-zone rewrite                                                                                   | `eleva.care/docs/compliance/portugal`                                                                                                                                                                              |
+| API + webhooks + OAuth callbacks + session-aware server endpoints                 | `elevacare-api`       | `/` (no basePath) | `api.eleva.care/*` — separate subdomain, NOT rewritten                                                                       | `api.eleva.care/stripe/webhook`, `api.eleva.care/stripe/account-session`, `api.eleva.care/daily/transcripts`, `api.eleva.care/calendar/oauth/google/callback`                                                      |
+| Email preview tool (internal only)                                                | `elevacare-email`     | `/`               | `email.eleva.care` internal subdomain; not exposed publicly                                                                  | dev-only                                                                                                                                                                                                           |
 
 Third-party-hosted subdomains (not Vercel projects):
 
@@ -59,38 +59,41 @@ Third-party-hosted subdomains (not Vercel projects):
 Lives in the gateway's `next.config.mjs`:
 
 ```js
-const appUrl = process.env.APP_URL || 'http://localhost:3001';
-const docsUrl = process.env.DOCS_URL || 'http://localhost:3003';
+const appUrl = process.env.APP_URL || "http://localhost:3001"
+const docsUrl = process.env.DOCS_URL || "http://localhost:3003"
 
 const nextConfig = {
   async rewrites() {
     return {
       afterFiles: [
         // Authenticated product at root (no /app prefix).
-        { source: '/patient', destination: `${appUrl}/patient` },
-        { source: '/patient/:path*', destination: `${appUrl}/patient/:path*` },
-        { source: '/expert', destination: `${appUrl}/expert` },
-        { source: '/expert/:path*', destination: `${appUrl}/expert/:path*` },
-        { source: '/org', destination: `${appUrl}/org` },
-        { source: '/org/:path*', destination: `${appUrl}/org/:path*` },
-        { source: '/admin', destination: `${appUrl}/admin` },
-        { source: '/admin/:path*', destination: `${appUrl}/admin/:path*` },
-        { source: '/settings', destination: `${appUrl}/settings` },
-        { source: '/settings/:path*', destination: `${appUrl}/settings/:path*` },
-        { source: '/callback', destination: `${appUrl}/callback` },
-        { source: '/logout', destination: `${appUrl}/logout` },
+        { source: "/patient", destination: `${appUrl}/patient` },
+        { source: "/patient/:path*", destination: `${appUrl}/patient/:path*` },
+        { source: "/expert", destination: `${appUrl}/expert` },
+        { source: "/expert/:path*", destination: `${appUrl}/expert/:path*` },
+        { source: "/org", destination: `${appUrl}/org` },
+        { source: "/org/:path*", destination: `${appUrl}/org/:path*` },
+        { source: "/admin", destination: `${appUrl}/admin` },
+        { source: "/admin/:path*", destination: `${appUrl}/admin/:path*` },
+        { source: "/settings", destination: `${appUrl}/settings` },
+        {
+          source: "/settings/:path*",
+          destination: `${appUrl}/settings/:path*`,
+        },
+        { source: "/callback", destination: `${appUrl}/callback` },
+        { source: "/logout", destination: `${appUrl}/logout` },
 
         // Docs zone.
-        { source: '/docs', destination: `${docsUrl}/docs` },
-        { source: '/docs/:path*', destination: `${docsUrl}/docs/:path*` },
+        { source: "/docs", destination: `${docsUrl}/docs` },
+        { source: "/docs/:path*", destination: `${docsUrl}/docs/:path*` },
 
         // API lives on api.eleva.care (separate subdomain). Not rewritten here.
       ],
-    };
+    }
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
 ```
 
 Notes:
@@ -110,7 +113,7 @@ Fixed priority ladder — first rule that matches wins:
 4. **Context-sensitive root**: `/` with a valid WorkOS session → 302 redirect to role home (`/patient` | `/expert` | `/org` | `/admin`). `/` without session → marketing home via `createMiddleware(i18nConfig)`.
 5. **Fallback**: i18n for any other marketing path.
 
-Proxy file stays under ~50 LOC. Business logic lives in owning packages (`@eleva/auth/proxy`, `@eleva/observability/proxy`, etc.). See [_context/blueprints/multi-zone-monorepo.md](../../../_context/blueprints/multi-zone-monorepo.md) for the reference pattern.
+Proxy file stays under ~50 LOC. Business logic lives in owning packages (`@eleva/auth/proxy`, `@eleva/observability/proxy`, etc.). See [\_context/blueprints/multi-zone-monorepo.md](../../../_context/blueprints/multi-zone-monorepo.md) for the reference pattern.
 
 ### Cookie scope
 
@@ -139,10 +142,10 @@ Gateway CSP:
 
 ### Context-sensitive root behavior
 
-| State | `eleva.care/` | `eleva.care/home` |
-| ----- | ------------- | ----------------- |
-| Unauthenticated | marketing home (apps/web) | marketing home (same content) |
-| Authenticated | **302 redirect** to role home (`/patient`, `/expert`, `/org`, or `/admin` based on JWT claim) | marketing home (always; escape hatch) |
+| State           | `eleva.care/`                                                                                 | `eleva.care/home`                     |
+| --------------- | --------------------------------------------------------------------------------------------- | ------------------------------------- |
+| Unauthenticated | marketing home (apps/web)                                                                     | marketing home (same content)         |
+| Authenticated   | **302 redirect** to role home (`/patient`, `/expert`, `/org`, or `/admin` based on JWT claim) | marketing home (always; escape hatch) |
 
 Redirect (not rewrite) on authenticated `/` because bookmarkability matters (Vercel/Resend/Linear pattern). URL bar changes to the role home on visit.
 
@@ -211,48 +214,54 @@ Maintained in [`@eleva/config/reserved-usernames.ts`](../../../packages/config/s
 Gateway `src/proxy.ts` remains small:
 
 ```ts
-import createMiddleware from 'next-intl/middleware';
-import { NextResponse, type NextRequest } from 'next/server';
-import { i18nConfig } from '@eleva/config/i18n';
-import { hasSession, readRoleHome } from '@eleva/auth/proxy';
+import createMiddleware from "next-intl/middleware"
+import { NextResponse, type NextRequest } from "next/server"
+import { i18nConfig } from "@eleva/config/i18n"
+import { hasSession, readRoleHome } from "@eleva/auth/proxy"
 
-const intl = createMiddleware(i18nConfig);
+const intl = createMiddleware(i18nConfig)
 
 const REWRITE_PREFIXES = [
-  '/patient', '/expert', '/org', '/admin', '/settings',
-  '/callback', '/logout', '/docs',
-];
+  "/patient",
+  "/expert",
+  "/org",
+  "/admin",
+  "/settings",
+  "/callback",
+  "/logout",
+  "/docs",
+]
 
 const startsWithAny = (p: string, list: string[]) =>
-  list.some((x) => p === x || p.startsWith(x + '/'));
+  list.some((x) => p === x || p.startsWith(x + "/"))
 
 export default function proxy(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname } = req.nextUrl
 
   // 1. Multi-zone rewrites handled by next.config
-  if (startsWithAny(pathname, REWRITE_PREFIXES)) return NextResponse.next();
+  if (startsWithAny(pathname, REWRITE_PREFIXES)) return NextResponse.next()
 
   // 2. /home always marketing (even for logged-in users)
-  if (pathname === '/home' || pathname.startsWith('/home/')) return intl(req);
+  if (pathname === "/home" || pathname.startsWith("/home/")) return intl(req)
 
   // 3. Authenticated /root → role home
-  if (pathname === '/' && hasSession(req)) {
-    const roleHome = readRoleHome(req); // e.g. '/patient'
-    return NextResponse.redirect(new URL(roleHome, req.url));
+  if (pathname === "/" && hasSession(req)) {
+    const roleHome = readRoleHome(req) // e.g. '/patient'
+    return NextResponse.redirect(new URL(roleHome, req.url))
   }
 
   // 4. Fallback: marketing + public profile routes via i18n
-  return intl(req);
+  return intl(req)
 }
 
 export const config = {
-  matcher: ['/((?!_next|_vercel|.*\\..*).*)'],
-};
+  matcher: ["/((?!_next|_vercel|.*\\..*).*)"],
+}
 ```
 
 ## Related Docs
 
-- [_context/blueprints/multi-zone-monorepo.md](../../../_context/blueprints/multi-zone-monorepo.md) — reference blueprint
+- [\_context/blueprints/multi-zone-monorepo.md](../../../_context/blueprints/multi-zone-monorepo.md) — reference blueprint
 - [ADR-001-app-topology.md](./ADR-001-app-topology.md) — one authenticated product app; multi-zone serves that app
 - [ADR-003-tenancy-and-rls.md](./ADR-003-tenancy-and-rls.md) — audit outbox pattern (writes from any zone)
 - [ADR-008-feature-flags.md](./ADR-008-feature-flags.md) — Edge Config kill-switches

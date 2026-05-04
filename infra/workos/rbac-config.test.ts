@@ -15,10 +15,13 @@ async function load(): Promise<RbacConfig> {
 }
 
 describe("rbac-config.json", () => {
-  it("capability slugs follow area:action shape", async () => {
+  it("capability slugs follow area[:subarea]:action shape", async () => {
     const config = await load()
+    // Two- or three-segment colon-delimited slugs of lowercase
+    // [a-z_]+. Three-segment is reserved for entity:subentity:action
+    // patterns like 'expert:profile:edit'.
     for (const cap of config.capabilities) {
-      expect(cap.slug).toMatch(/^[a-z_]+:[a-z_]+$/)
+      expect(cap.slug).toMatch(/^[a-z_]+:[a-z_]+(:[a-z_]+)?$/)
       expect(cap.displayName.length).toBeGreaterThan(0)
     }
   })

@@ -46,6 +46,9 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "bookings:manage_own",
     "reports:manage_own",
     "payouts:view_own",
+    "expert:onboard",
+    "expert:profile:edit",
+    "expert:invoicing:manage",
   ],
   clinic_admin: [
     "events:manage",
@@ -53,6 +56,9 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "bookings:manage_own",
     "reports:manage_own",
     "payouts:view_own",
+    "expert:onboard",
+    "expert:profile:edit",
+    "expert:invoicing:manage",
     "members:manage",
     "billing:manage_org",
     "subscriptions:manage_org",
@@ -60,6 +66,8 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
   eleva_operator: [
     "experts:approve",
     "experts:reject",
+    "applications:review",
+    "applications:claim",
     "users:view_all",
     "payments:view_all",
     "payouts:approve",

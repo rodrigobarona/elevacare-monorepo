@@ -15,9 +15,11 @@ import * as main from "../schema/main"
  * records \u2014 that lands in S1-B.1 sign-up flow. The seed only populates
  * Eleva DB for local UI rendering + integration tests.
  *
- * expert_profiles + clinic_profiles tables ship in S2 \u2014 this seed
- * writes only the rows S1 tables know about (users, organizations,
- * memberships).
+ * S2 update: this seed now also writes a minimum expert_profiles +
+ * clinic_profiles row so /[username] resolution and the explorer
+ * have something to render. Categories must be seeded separately via
+ * `pnpm --filter=@eleva/db db:seed:categories` before the listing
+ * insert can resolve a category slug.
  */
 
 interface SeedPersona {
@@ -124,11 +126,90 @@ async function upsertPersona(persona: SeedPersona) {
   return { userId, orgId }
 }
 
+async function upsertExpertProfile(args: {
+  userId: string
+  orgId: string
+  username: string
+  displayName: string
+}) {
+  const client = db()
+  const [existing] = await client
+    .select({ id: main.expertProfiles.id })
+    .from(main.expertProfiles)
+    .where(eq(main.expertProfiles.username, args.username))
+    .limit(1)
+  if (existing) return existing.id
+
+  const [inserted] = await client
+    .insert(main.expertProfiles)
+    .values({
+      orgId: args.orgId,
+      userId: args.userId,
+      username: args.username,
+      displayName: args.displayName,
+      headline: "Available for consultations on Eleva.",
+      bio: "Demo seed profile. Replace with real bio in production.",
+      languages: ["en", "pt"],
+      practiceCountries: ["PT"],
+      sessionModes: ["online"],
+      status: "active",
+    })
+    .returning({ id: main.expertProfiles.id })
+  return inserted!.id
+}
+
+async function upsertClinicProfile(args: {
+  orgId: string
+  slug: string
+  displayName: string
+}) {
+  const client = db()
+  const [existing] = await client
+    .select({ id: main.clinicProfiles.id })
+    .from(main.clinicProfiles)
+    .where(eq(main.clinicProfiles.slug, args.slug))
+    .limit(1)
+  if (existing) return existing.id
+
+  const [inserted] = await client
+    .insert(main.clinicProfiles)
+    .values({
+      orgId: args.orgId,
+      slug: args.slug,
+      displayName: args.displayName,
+      description:
+        "Demo seed clinic. Replace with real description in production.",
+      countryCode: "PT",
+    })
+    .returning({ id: main.clinicProfiles.id })
+  return inserted!.id
+}
+
 export async function seedDemo() {
   const results: Array<{ email: string; userId: string; orgId: string }> = []
   for (const persona of SEEDS) {
     const { userId, orgId } = await upsertPersona(persona)
     results.push({ email: persona.email, userId, orgId })
   }
+
+  const solo = results.find((r) => r.email === "pat.mota@example.test")
+  if (solo) {
+    await upsertExpertProfile({
+      userId: solo.userId,
+      orgId: solo.orgId,
+      username: "patimota",
+      displayName: "Patricia Mota",
+    })
+  }
+
+  const clinic = results.find((r) => r.email === "clinic.admin@example.test")
+  if (clinic) {
+    await upsertClinicProfile({
+      orgId: clinic.orgId,
+      slug: "clinicamota",
+      displayName: "Clinica Mota",
+    })
+  }
+
   return results
 }

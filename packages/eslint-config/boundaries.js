@@ -10,7 +10,9 @@
  * - S1: `@workos-inc/node` outside `@eleva/auth`
  * - S1: `@vercel/flags` / `flags` outside `@eleva/flags`
  * - S1: `@neondatabase/serverless` outside `@eleva/db`
- * - S2: `stripe`, `@stripe/stripe-js`, `@stripe/connect-js` outside `@eleva/billing`
+ * - S2: `stripe`, `@stripe/stripe-js`, `@stripe/connect-js`,
+ *        `@stripe/react-connect-js`, `@vercel/blob` outside
+ *        `@eleva/billing`
  * - S2: `toconline-sdk`, `moloni` outside `@eleva/accounting`
  * - S3: `googleapis` / `@microsoft/microsoft-graph-client` outside `@eleva/calendar`
  * - S3: `@upstash/redis` outside `@eleva/scheduling` / `@eleva/workflows`
@@ -22,15 +24,22 @@
  *
  * Each addition above must also land in docs/eleva-v3/implementation-sprints.md
  * under "Global Rules Applied Every Sprint".
+ *
+ * Boundaries are enforced via no-restricted-imports per consumer
+ * (apps/* eslint.config.js), since ESLint's flat-config currently
+ * does not support package-aware allowlists. The approach: app
+ * configs ban the SDK imports globally; the owning packages (which
+ * have their OWN local eslint configs without boundariesConfig) are
+ * the only places those imports compile.
  */
 
 /** @type {import("eslint").Linter.Config[]} */
 export const boundariesConfig = [
   {
-    files: ['**/src/proxy.ts'],
+    files: ["**/src/proxy.ts"],
     rules: {
-      'max-lines': [
-        'error',
+      "max-lines": [
+        "error",
         {
           max: 50,
           skipBlankLines: true,
@@ -41,17 +50,42 @@ export const boundariesConfig = [
   },
   {
     rules: {
-      'no-restricted-imports': [
-        'error',
+      "no-restricted-imports": [
+        "error",
         {
           paths: [
-            // Sprint 0: empty. Package ownership is declared as packages land.
+            {
+              name: "stripe",
+              message:
+                "Import Stripe through @eleva/billing/server (boundary lint).",
+            },
+            {
+              name: "@stripe/connect-js",
+              message:
+                "Use @eleva/billing/embedded.ElevaConnectProvider (boundary lint).",
+            },
+            {
+              name: "@stripe/react-connect-js",
+              message:
+                "Use re-exports from @eleva/billing/embedded (boundary lint).",
+            },
+            {
+              name: "@stripe/stripe-js",
+              message:
+                "Stripe.js access goes through @eleva/billing/embedded (boundary lint).",
+            },
+            {
+              name: "@vercel/blob",
+              message: "Use @eleva/billing/uploads helpers (boundary lint).",
+            },
           ],
           patterns: [
-            // Sprint 0: empty. Populate per sprint.
+            // Sprint 2: per-adapter SDKs land in @eleva/accounting.
+            // No standalone npm packages today (TOConline + Moloni use
+            // raw fetch); patterns ready when a community SDK appears.
           ],
         },
       ],
     },
   },
-];
+]

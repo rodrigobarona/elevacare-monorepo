@@ -84,21 +84,21 @@ For each flag, record in `packages/flags/catalog.ts`:
 
 ## Seed Flags
 
-| Flag | Purpose | Default | Scope | Owner |
-|---|---|---|---|---|
-| `ff.clinic_subscription_tiers` | Enable the clinic per-seat SaaS monetization path (default clinic monetization) | **on** | global | commercial |
-| `ff.three_party_revenue` | Enable commission overlay on top of clinic SaaS (phase-2 opt-in) | off | org | commercial |
-| `ff.sms_enabled` | Global SMS channel toggle (Twilio) | on (PT) / off (other markets) | cohort by country | platform |
-| `ff.mbway_enabled` | MB WAY cohort toggle at checkout (safety valve over Dashboard-enabled method) | on (PT) | cohort by country | payments |
-| `ff.ai_reports_beta` | Gate AI-assisted post-session report drafting | off | org | product |
-| `ff.diary_share` | Gate patient→expert diary sharing | off | org | product |
-| `ff.toconline_invoicing_enabled` | Tier 1 — Eleva→Expert/Clinic invoice automation via TOConline | staged rollout | global | payments |
-| `ff.expert_invoicing_apps_enabled` | Tier 2 — Expert→Patient invoice registry globally enabled | off at launch, on by M8 | global | payments |
-| `ff.invoicing.toconline` | Tier 2 TOConline expert-side adapter | off | per-expert install | payments |
-| `ff.invoicing.moloni` | Tier 2 Moloni adapter | off | per-expert install | payments |
-| `ff.invoicing.invoicexpress` | Tier 2 InvoiceXpress adapter | off (P2) | per-expert install | payments |
-| `ff.invoicing.vendus` | Tier 2 Vendus adapter | off (P2) | per-expert install | payments |
-| `ff.invoicing.primavera` | Tier 2 Primavera Cloud adapter | off (P3) | per-expert install | payments |
+| Flag                               | Purpose                                                                         | Default                       | Scope              | Owner      |
+| ---------------------------------- | ------------------------------------------------------------------------------- | ----------------------------- | ------------------ | ---------- |
+| `ff.clinic_subscription_tiers`     | Enable the clinic per-seat SaaS monetization path (default clinic monetization) | **on**                        | global             | commercial |
+| `ff.three_party_revenue`           | Enable commission overlay on top of clinic SaaS (phase-2 opt-in)                | off                           | org                | commercial |
+| `ff.sms_enabled`                   | Global SMS channel toggle (Twilio)                                              | on (PT) / off (other markets) | cohort by country  | platform   |
+| `ff.mbway_enabled`                 | MB WAY cohort toggle at checkout (safety valve over Dashboard-enabled method)   | on (PT)                       | cohort by country  | payments   |
+| `ff.ai_reports_beta`               | Gate AI-assisted post-session report drafting                                   | off                           | org                | product    |
+| `ff.diary_share`                   | Gate patient→expert diary sharing                                               | off                           | org                | product    |
+| `ff.toconline_invoicing_enabled`   | Tier 1 — Eleva→Expert/Clinic invoice automation via TOConline                   | staged rollout                | global             | payments   |
+| `ff.expert_invoicing_apps_enabled` | Tier 2 — Expert→Patient invoice registry globally enabled                       | off at launch, on by M8       | global             | payments   |
+| `ff.invoicing.toconline`           | Tier 2 TOConline expert-side adapter                                            | off                           | per-expert install | payments   |
+| `ff.invoicing.moloni`              | Tier 2 Moloni adapter                                                           | off                           | per-expert install | payments   |
+| `ff.invoicing.invoicexpress`       | Tier 2 InvoiceXpress adapter                                                    | off (P2)                      | per-expert install | payments   |
+| `ff.invoicing.vendus`              | Tier 2 Vendus adapter                                                           | off (P2)                      | per-expert install | payments   |
+| `ff.invoicing.primavera`           | Tier 2 Primavera Cloud adapter                                                  | off (P3)                      | per-expert install | payments   |
 
 ## Kill-Switch Behavior
 

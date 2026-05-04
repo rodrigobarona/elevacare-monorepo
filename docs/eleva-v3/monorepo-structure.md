@@ -41,18 +41,18 @@ It answers:
 Example shape:
 
 ```ts
-import createIntl from 'next-intl/middleware';
-import { i18nConfig } from '@eleva/config/i18n';
-import { withAuth } from '@eleva/auth/proxy';
-import { withHeaders } from '@eleva/observability/proxy';
+import createIntl from "next-intl/middleware"
+import { i18nConfig } from "@eleva/config/i18n"
+import { withAuth } from "@eleva/auth/proxy"
+import { withHeaders } from "@eleva/observability/proxy"
 
-const intl = createIntl(i18nConfig);
+const intl = createIntl(i18nConfig)
 
-export default withHeaders(withAuth(intl));
+export default withHeaders(withAuth(intl))
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
-};
+  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+}
 ```
 
 An ESLint rule enforces that `src/proxy.ts` does not contain inline business logic — only composition.
@@ -81,49 +81,52 @@ See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and the reference blueprint
 
 ### basePath convention
 
-| App | Vercel project | `basePath` | Where it serves |
-| --- | -------------- | ---------- | --------------- |
-| `apps/web` (gateway) | `elevacare-marketing` | `/` | marketing + marketplace + public profiles + booking funnel + context-sensitive root + proxy/rewrite rules |
-| `apps/app` | `elevacare-app` | `/` (no basePath) | authenticated product at root (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway |
-| `apps/api` | `elevacare-api` | `/` (no basePath) | all APIs on `api.eleva.care` subdomain — not rewritten from the gateway |
-| `apps/docs` | `elevacare-docs` | `/docs` | Fumadocs product + ERS PT compliance docs |
-| `apps/email` | `elevacare-email` | — | internal React Email preview; `email.eleva.care`; not public |
+| App                  | Vercel project        | `basePath`        | Where it serves                                                                                                                                        |
+| -------------------- | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/web` (gateway) | `elevacare-marketing` | `/`               | marketing + marketplace + public profiles + booking funnel + context-sensitive root + proxy/rewrite rules                                              |
+| `apps/app`           | `elevacare-app`       | `/` (no basePath) | authenticated product at root (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway |
+| `apps/api`           | `elevacare-api`       | `/` (no basePath) | all APIs on `api.eleva.care` subdomain — not rewritten from the gateway                                                                                |
+| `apps/docs`          | `elevacare-docs`      | `/docs`           | Fumadocs product + ERS PT compliance docs                                                                                                              |
+| `apps/email`         | `elevacare-email`     | —                 | internal React Email preview; `email.eleva.care`; not public                                                                                           |
 
 ### Rewrite configuration
 
 Lives in the gateway's `next.config.mjs`. Resolved `afterFiles` (only when the gateway has no local route for the path):
 
 ```js
-const appUrl = process.env.APP_URL || 'http://localhost:3001';
-const docsUrl = process.env.DOCS_URL || 'http://localhost:3003';
+const appUrl = process.env.APP_URL || "http://localhost:3001"
+const docsUrl = process.env.DOCS_URL || "http://localhost:3003"
 
 export default {
   async rewrites() {
     return {
       afterFiles: [
         // Authenticated product at root (no /app prefix)
-        { source: '/patient', destination: `${appUrl}/patient` },
-        { source: '/patient/:path*', destination: `${appUrl}/patient/:path*` },
-        { source: '/expert', destination: `${appUrl}/expert` },
-        { source: '/expert/:path*', destination: `${appUrl}/expert/:path*` },
-        { source: '/org', destination: `${appUrl}/org` },
-        { source: '/org/:path*', destination: `${appUrl}/org/:path*` },
-        { source: '/admin', destination: `${appUrl}/admin` },
-        { source: '/admin/:path*', destination: `${appUrl}/admin/:path*` },
-        { source: '/settings', destination: `${appUrl}/settings` },
-        { source: '/settings/:path*', destination: `${appUrl}/settings/:path*` },
-        { source: '/callback', destination: `${appUrl}/callback` },
-        { source: '/logout', destination: `${appUrl}/logout` },
+        { source: "/patient", destination: `${appUrl}/patient` },
+        { source: "/patient/:path*", destination: `${appUrl}/patient/:path*` },
+        { source: "/expert", destination: `${appUrl}/expert` },
+        { source: "/expert/:path*", destination: `${appUrl}/expert/:path*` },
+        { source: "/org", destination: `${appUrl}/org` },
+        { source: "/org/:path*", destination: `${appUrl}/org/:path*` },
+        { source: "/admin", destination: `${appUrl}/admin` },
+        { source: "/admin/:path*", destination: `${appUrl}/admin/:path*` },
+        { source: "/settings", destination: `${appUrl}/settings` },
+        {
+          source: "/settings/:path*",
+          destination: `${appUrl}/settings/:path*`,
+        },
+        { source: "/callback", destination: `${appUrl}/callback` },
+        { source: "/logout", destination: `${appUrl}/logout` },
 
         // Docs
-        { source: '/docs', destination: `${docsUrl}/docs` },
-        { source: '/docs/:path*', destination: `${docsUrl}/docs/:path*` },
+        { source: "/docs", destination: `${docsUrl}/docs` },
+        { source: "/docs/:path*", destination: `${docsUrl}/docs/:path*` },
 
         // API lives on api.eleva.care — separate subdomain, not rewritten.
       ],
-    };
+    }
   },
-};
+}
 ```
 
 - `apps/app` runs at its own internal root (no `basePath`); file-system routes live at `/patient/page.tsx`, `/expert/page.tsx`, etc.

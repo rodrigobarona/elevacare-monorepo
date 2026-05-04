@@ -18,6 +18,11 @@ export const TENANT_TABLES = [
   "organizations",
   "memberships",
   "audit_outbox",
+  "expert_profiles",
+  "expert_listings",
+  "clinic_profiles",
+  "expert_integration_credentials",
+  "become_partner_applications",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
@@ -28,9 +33,23 @@ export type TenantTable = (typeof TENANT_TABLES)[number]
  */
 const ORG_SELF_TABLES = new Set<string>(["organizations"])
 
+/**
+ * Tables that scope by a non-standard tenant column. The applicant's
+ * personal org owns the row at submission time; admin reads happen
+ * via withPlatformAdminContext (the same escape hatch
+ * audit_events uses).
+ */
+const APPLICANT_ORG_TABLES = new Set<string>(["become_partner_applications"])
+
 function tenantPredicate(table: string): string {
   if (ORG_SELF_TABLES.has(table)) {
     return `id::text = current_setting('eleva.org_id', true)`
+  }
+  if (APPLICANT_ORG_TABLES.has(table)) {
+    return (
+      `applicant_org_id::text = current_setting('eleva.org_id', true) ` +
+      `OR current_setting('eleva.platform_admin', true) = 'true'`
+    )
   }
   return `org_id::text = current_setting('eleva.org_id', true)`
 }

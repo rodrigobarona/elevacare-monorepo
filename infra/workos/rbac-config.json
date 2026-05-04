@@ -18,6 +18,18 @@
       "displayName": "Author and publish reports"
     },
     { "slug": "payouts:view_own", "displayName": "View own payouts" },
+    {
+      "slug": "expert:onboard",
+      "displayName": "Run own expert onboarding wizard"
+    },
+    {
+      "slug": "expert:profile:edit",
+      "displayName": "Edit own expert profile"
+    },
+    {
+      "slug": "expert:invoicing:manage",
+      "displayName": "Manage own invoicing adapter (TOConline / Moloni / manual)"
+    },
 
     {
       "slug": "members:manage",
@@ -31,6 +43,14 @@
 
     { "slug": "experts:approve", "displayName": "Approve expert applications" },
     { "slug": "experts:reject", "displayName": "Reject expert applications" },
+    {
+      "slug": "applications:review",
+      "displayName": "Review Become-Partner applications queue"
+    },
+    {
+      "slug": "applications:claim",
+      "displayName": "Claim a Become-Partner application for review"
+    },
     { "slug": "users:view_all", "displayName": "View all users" },
     { "slug": "payments:view_all", "displayName": "View all payments" },
     { "slug": "payouts:approve", "displayName": "Approve payouts" },
@@ -65,7 +85,10 @@
         "schedule:manage",
         "bookings:manage_own",
         "reports:manage_own",
-        "payouts:view_own"
+        "payouts:view_own",
+        "expert:onboard",
+        "expert:profile:edit",
+        "expert:invoicing:manage"
       ]
     },
     {
@@ -77,6 +100,9 @@
         "bookings:manage_own",
         "reports:manage_own",
         "payouts:view_own",
+        "expert:onboard",
+        "expert:profile:edit",
+        "expert:invoicing:manage",
         "members:manage",
         "billing:manage_org",
         "subscriptions:manage_org"
@@ -88,6 +114,8 @@
       "capabilities": [
         "experts:approve",
         "experts:reject",
+        "applications:review",
+        "applications:claim",
         "users:view_all",
         "payments:view_all",
         "payouts:approve",
