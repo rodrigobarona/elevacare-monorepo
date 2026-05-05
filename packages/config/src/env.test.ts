@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
-import { env, resetEnvCache, requireAuthEnv, requireDbEnv } from "./env"
+import {
+  env,
+  resetEnvCache,
+  requireAuthEnv,
+  requireCronSecret,
+  requireDbEnv,
+} from "./env"
 
 const ORIGINAL = process.env
 
@@ -76,5 +82,27 @@ describe("requireAuthEnv / requireDbEnv", () => {
   it("requireDbEnv returns the URL when present", () => {
     process.env.DATABASE_URL = "postgres://user:pass@host/db"
     expect(requireDbEnv().DATABASE_URL).toBe("postgres://user:pass@host/db")
+  })
+})
+
+describe("requireCronSecret", () => {
+  beforeEach(() => {
+    process.env = { ...ORIGINAL }
+    resetEnvCache()
+  })
+
+  afterEach(() => {
+    process.env = ORIGINAL
+    resetEnvCache()
+  })
+
+  it("throws when CRON_SECRET is unset (fail closed)", () => {
+    delete process.env.CRON_SECRET
+    expect(() => requireCronSecret()).toThrow(/CRON_SECRET/)
+  })
+
+  it("returns the secret when present", () => {
+    process.env.CRON_SECRET = "shhhh"
+    expect(requireCronSecret().CRON_SECRET).toBe("shhhh")
   })
 })

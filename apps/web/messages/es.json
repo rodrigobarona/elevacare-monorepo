@@ -1,8 +1,311 @@
 {
-  "site.name": "Eleva.care",
-  "site.tagline": "El cuidado, cerca de ti.",
-  "nav.home": "Inicio",
-  "nav.experts": "Encuentra un experto",
-  "nav.signin": "Iniciar sesión",
-  "nav.signup": "Empezar"
+  "site": {
+    "name": "Eleva.care",
+    "tagline": "El cuidado, cerca de ti."
+  },
+  "nav": {
+    "home": "Inicio",
+    "about": "Sobre",
+    "experts": "Encuentra un experto",
+    "becomePartner": "Hazte partner",
+    "signin": "Iniciar sesión",
+    "signup": "Empezar",
+    "menu": "Menú",
+    "skipToContent": "Saltar al contenido principal"
+  },
+  "footer": {
+    "tagline": "El cuidado, cerca de ti.",
+    "explore": "Explorar",
+    "company": "Empresa",
+    "legal": "Legal",
+    "links": {
+      "experts": "Encontrar expertos",
+      "categories": "Categorías",
+      "becomePartner": "Hazte partner",
+      "about": "Sobre Eleva.care",
+      "contact": "Contacto",
+      "privacy": "Política de privacidad",
+      "terms": "Términos de servicio",
+      "cookies": "Política de cookies"
+    },
+    "copyright": "© {year} Eleva.care. Todos los derechos reservados.",
+    "registeredIn": "Plataforma de salud digital registrada en la ERS."
+  },
+  "locale": {
+    "en": "English",
+    "pt": "Português",
+    "es": "Español",
+    "switchLabel": "Cambiar idioma"
+  },
+  "common": {
+    "loading": "Cargando…",
+    "search": "Buscar",
+    "clear": "Borrar",
+    "apply": "Aplicar",
+    "cancel": "Cancelar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "continue": "Continuar",
+    "save": "Guardar",
+    "remove": "Eliminar",
+    "showMore": "Ver más",
+    "showLess": "Ver menos",
+    "optional": "opcional",
+    "required": "obligatorio",
+    "errors": {
+      "generic": "Algo salió mal. Inténtalo de nuevo.",
+      "network": "No pudimos contactar con el servidor. Comprueba tu conexión."
+    }
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Eleva.care · Salud que viene a ti",
+      "title": "El cuidado, cerca de ti.",
+      "subtitle": "Conecta con psicólogos, nutricionistas y expertos de salud de confianza en Portugal — online, a tu hora, en tu idioma.",
+      "ctaPrimary": "Encontrar experto",
+      "ctaSecondary": "Hazte partner",
+      "trustEN": "Hecho para Portugal · Registrada en la ERS",
+      "trustOnline": "Sesiones 100% online"
+    },
+    "valueProps": {
+      "title": "Por qué Eleva.care",
+      "items": {
+        "trust": {
+          "title": "Expertos verificados",
+          "body": "Cada experto está licenciado, con identidad verificada, y elegido por la calidad de su práctica."
+        },
+        "languages": {
+          "title": "Cuidado en tu idioma",
+          "body": "Sesiones en portugués, inglés y español — elige el idioma con el que te sientas más cómodo."
+        },
+        "instant": {
+          "title": "Reserva en minutos",
+          "body": "Elige hora, paga de forma segura y recibe la confirmación. Puedes reprogramar antes de la sesión."
+        }
+      }
+    },
+    "categories": {
+      "title": "Encuentra el tipo de apoyo adecuado",
+      "subtitle": "Explora las áreas en las que se especializan nuestros partners.",
+      "viewAll": "Ver todas las categorías"
+    },
+    "becomePartner": {
+      "title": "¿Eres profesional de la salud?",
+      "body": "Únete a nuestro marketplace y llega a pacientes en Portugal y más allá. Solicitarlo es gratis.",
+      "cta": "Postular como partner"
+    }
+  },
+  "about": {
+    "title": "Sobre Eleva.care",
+    "lead": "Conectamos a personas y familias con expertos de salud de confianza — en su idioma, a su ritmo.",
+    "missionTitle": "Nuestra misión",
+    "missionBody": "Creemos que la atención de calidad debe ser accesible en todas partes. Eleva.care reúne a psicólogos, nutricionistas, fisioterapeutas y otros expertos en salud en un único marketplace de confianza, construido alrededor del consentimiento real, precios claros y la regulación sanitaria portuguesa.",
+    "valuesTitle": "Aquello en lo que creemos",
+    "values": {
+      "trust": {
+        "title": "Confianza antes que escala",
+        "body": "Verificamos a cada experto, auditamos nuestros procesos y nos negamos a crecer a costa de la seguridad."
+      },
+      "language": {
+        "title": "Cuidado en tu idioma",
+        "body": "Expertos multilingües y plataforma trilingüe desde el primer día — portugués, inglés, español."
+      },
+      "compliance": {
+        "title": "Pensada para la sanidad portuguesa",
+        "body": "Registrada en la ERS, alineada con el RGPD e integrada con TOConline y Moloni para una facturación conforme."
+      }
+    }
+  },
+  "legal": {
+    "title": "Legal",
+    "lead": "Nuestros términos, privacidad y política de cookies en lenguaje claro.",
+    "lastUpdated": "Última actualización: {date}",
+    "documents": {
+      "privacy": {
+        "title": "Política de privacidad",
+        "summary": "Cómo recogemos, almacenamos y protegemos tus datos personales."
+      },
+      "terms": {
+        "title": "Términos de servicio",
+        "summary": "Las reglas que se aplican cuando usas Eleva.care."
+      },
+      "cookies": {
+        "title": "Política de cookies",
+        "summary": "Lo que guardamos en tu dispositivo y por qué."
+      }
+    },
+    "placeholderTitle": "Próximamente online",
+    "placeholderBody": "Nuestro equipo legal está finalizando esta página. Mientras tanto, escribe a legal@eleva.care para cualquier consulta específica."
+  },
+  "marketplace": {
+    "title": "Encontrar experto",
+    "subtitle": "Busca expertos verificados por especialidad, idioma o país de práctica.",
+    "search": {
+      "placeholder": "Buscar por nombre o tema…",
+      "filters": "Filtros",
+      "filtersOpen": "Abrir filtros",
+      "filtersClear": "Borrar filtros",
+      "results": "{count, plural, =0 {Sin resultados} one {# experto} other {# expertos}}",
+      "noResults": {
+        "title": "No hay expertos que coincidan con tus filtros",
+        "body": "Prueba a quitar un filtro o buscar otra especialidad."
+      }
+    },
+    "filters": {
+      "category": "Especialidad",
+      "language": "Idioma",
+      "country": "País de práctica",
+      "sessionMode": "Tipo de sesión",
+      "anyCategory": "Cualquier especialidad",
+      "anyLanguage": "Cualquier idioma",
+      "anyCountry": "Cualquier país",
+      "anySessionMode": "Cualquier tipo"
+    },
+    "sessionMode": {
+      "online": "Online",
+      "in_person": "Presencial",
+      "phone": "Teléfono"
+    },
+    "card": {
+      "topExpert": "Top expert",
+      "languagesLabel": "Habla",
+      "countriesLabel": "Practica en",
+      "viewProfile": "Ver perfil"
+    },
+    "categories": {
+      "heading": "Buscar por especialidad",
+      "viewAll": "Todos los expertos"
+    }
+  },
+  "category": {
+    "breadcrumbHome": "Inicio",
+    "breadcrumbExperts": "Expertos",
+    "expertCount": "{count, plural, =0 {Sin expertos} one {1 experto} other {# expertos}}",
+    "noExperts": {
+      "title": "Aún no hay expertos en esta especialidad",
+      "body": "Estamos revisando solicitudes. Vuelve pronto o explora otras especialidades."
+    }
+  },
+  "profile": {
+    "expert": {
+      "topExpertBadge": "Top expert",
+      "languagesLabel": "Idiomas",
+      "countriesLabel": "Países de práctica",
+      "sessionModesLabel": "Tipos de sesión",
+      "aboutLabel": "Sobre",
+      "bookCta": "Reservar sesión",
+      "comingSoonNotice": "La reserva se abre cuando se publica disponibilidad."
+    },
+    "clinic": {
+      "websiteLabel": "Sitio web",
+      "countryLabel": "País",
+      "expertsLabel": "Nuestros expertos"
+    },
+    "notFound": {
+      "title": "Perfil no encontrado",
+      "body": "Esta página está reservada o ya no está disponible.",
+      "back": "Volver a expertos"
+    }
+  },
+  "becomePartner": {
+    "hero": {
+      "title": "Postula para unirte a Eleva.care",
+      "subtitle": "Llega a pacientes en Portugal y más allá. Cuéntanos sobre tu práctica — solemos revisar las solicitudes en 3 días hábiles."
+    },
+    "steps": {
+      "account": "Cuenta",
+      "fiscal": "Práctica",
+      "categories": "Especialidades",
+      "documents": "Documentos",
+      "review": "Revisar"
+    },
+    "stepLabel": "Paso {current} de {total}",
+    "account": {
+      "title": "Tu perfil público",
+      "subtitle": "Esto es lo que verán los pacientes en Eleva.care.",
+      "type": {
+        "label": "Postulo como",
+        "soloExpert": "Experto individual",
+        "clinicAdmin": "Administrador de clínica"
+      },
+      "displayName": "Nombre visible",
+      "displayNamePlaceholder": "p. ej. Dra. Ana Silva",
+      "username": "URL pública",
+      "usernameHelper": "Minúsculas, números y guiones. 3–30 caracteres.",
+      "bio": "Biografía corta",
+      "bioPlaceholder": "Describe tu enfoque en 2–3 frases.",
+      "bioHelper": "{count}/600 caracteres"
+    },
+    "fiscal": {
+      "title": "Práctica e información fiscal",
+      "subtitle": "Lo usamos para verificar tu licencia y preparar la facturación.",
+      "nif": "NIF",
+      "nifHelper": "Obligatorio para expertos en Portugal.",
+      "licenseNumber": "Número de licencia",
+      "licenseNumberPlaceholder": "p. ej. OPP 12345",
+      "licenseScope": "Alcance de la licencia",
+      "licenseScopePlaceholder": "¿Qué actos autoriza tu licencia?",
+      "languages": "Idiomas que ofreces",
+      "languagesHelper": "Elige al menos un idioma.",
+      "countries": "Países donde practicas",
+      "countriesHelper": "Elige al menos un país."
+    },
+    "categories": {
+      "title": "Especialidades",
+      "subtitle": "Elige las especialidades bajo las que los pacientes pueden encontrarte (hasta 3).",
+      "limitHelper": "{selected} de {max} seleccionadas",
+      "empty": "No hay categorías disponibles ahora mismo."
+    },
+    "documents": {
+      "title": "Documentos de soporte",
+      "subtitle": "Sube tu licencia y cualquier credencial de soporte. PDF o imágenes hasta 10 MB cada uno.",
+      "kinds": {
+        "license": "Licencia profesional",
+        "id": "Documento de identidad",
+        "cv": "Currículum",
+        "professional_insurance": "Seguro profesional"
+      },
+      "uploadCta": "Elegir archivo",
+      "uploading": "Subiendo…",
+      "uploaded": "Subido",
+      "remove": "Eliminar",
+      "errors": {
+        "tooLarge": "Archivo demasiado grande. Máx. 10 MB.",
+        "wrongType": "Solo PDF, JPEG, PNG o WebP.",
+        "uploadFailed": "Error al subir. Inténtalo de nuevo.",
+        "missingLicense": "Se requiere licencia profesional para postular."
+      }
+    },
+    "review": {
+      "title": "Revisar y enviar",
+      "subtitle": "Confirma los datos a continuación. Recibirás un email cuando nuestro equipo revise tu solicitud.",
+      "consentLabel": "Confirmo que la información es correcta y autorizo a Eleva.care a contactarme sobre esta solicitud.",
+      "submitCta": "Enviar solicitud",
+      "submitting": "Enviando…"
+    },
+    "username": {
+      "checking": "Comprobando disponibilidad…",
+      "available": "{username} está disponible",
+      "unavailable": {
+        "format-invalid": "Usa 3–30 letras minúsculas, números o guiones.",
+        "reserved": "{username} está reservado.",
+        "expert-taken": "{username} ya está en uso por otro experto.",
+        "clinic-taken": "{username} ya está en uso por una clínica.",
+        "pending-application": "{username} está pendiente en otra solicitud."
+      }
+    },
+    "errors": {
+      "validation": "Revisa los campos destacados.",
+      "submit": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
+      "auth": "Inicia sesión para enviar una solicitud.",
+      "username": "Ese nombre de usuario ya está en uso. Elige otro.",
+      "duplicateApplication": "Ya existe una solicitud activa para esta cuenta."
+    },
+    "success": {
+      "title": "Solicitud recibida",
+      "body": "Gracias. Nuestro equipo revisará tu solicitud y te responderá por email en 3 días hábiles.",
+      "back": "Volver al inicio"
+    }
+  }
 }

@@ -78,6 +78,11 @@ export const boundariesConfig = [
               name: "@vercel/blob",
               message: "Use @eleva/billing/uploads helpers (boundary lint).",
             },
+            {
+              name: "@vercel/blob/client",
+              message:
+                "Use @eleva/billing/uploads-client (browser) or @eleva/billing/uploads-handler (route handler) (boundary lint).",
+            },
           ],
           patterns: [
             // Sprint 2: per-adapter SDKs land in @eleva/accounting.
