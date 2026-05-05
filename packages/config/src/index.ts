@@ -8,6 +8,7 @@ export {
   requireStripeEnv,
   requireToconlineEnv,
   requireBlobEnv,
+  requireCronSecret,
   type BaseEnv,
   type Env,
   type RequiredStripeEnv,

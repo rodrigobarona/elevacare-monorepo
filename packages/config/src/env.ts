@@ -68,6 +68,13 @@ const s1aSchema = z.object({
   QSTASH_TOKEN: stringOptional,
   QSTASH_CURRENT_SIGNING_KEY: stringOptional,
   QSTASH_NEXT_SIGNING_KEY: stringOptional,
+
+  // Vercel Cron shared secret. Set automatically when a cron is
+  // declared in vercel.json/vercel.ts; Vercel attaches it as
+  // `Authorization: Bearer ${CRON_SECRET}` on every cron invocation.
+  // Cron route handlers MUST validate strict equality before doing
+  // any work.
+  CRON_SECRET: stringOptional,
 })
 
 // S2 extension: payments + accounting + uploads.
@@ -236,4 +243,18 @@ export function requireBlobEnv(): { BLOB_READ_WRITE_TOKEN: string } {
     )
   }
   return { BLOB_READ_WRITE_TOKEN: e.BLOB_READ_WRITE_TOKEN }
+}
+
+/**
+ * Asserts the Vercel Cron shared secret is set. Cron route handlers
+ * call this before validating the inbound `Authorization: Bearer ...`
+ * header so an unset secret is a hard 5xx (fail closed) rather than a
+ * silent allow.
+ */
+export function requireCronSecret(): { CRON_SECRET: string } {
+  const e = env()
+  if (!e.CRON_SECRET) {
+    throw new Error("cron boot: missing CRON_SECRET")
+  }
+  return { CRON_SECRET: e.CRON_SECRET }
 }

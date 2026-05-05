@@ -23,3 +23,4 @@ export {
   type ListExpertsResult,
   type SlugAvailability,
 } from "./queries/public"
+export { pingMainDb, pingAuditDb, type PingResult } from "./ping"
