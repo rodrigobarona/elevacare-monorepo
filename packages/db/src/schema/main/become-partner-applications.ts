@@ -58,6 +58,12 @@ export interface ApplicationDocument {
   name: string
   /** Vercel Blob public URL. */
   url: string
+  /**
+   * Vercel Blob pathname (host-independent). Persisted alongside `url`
+   * so admin tooling can re-fetch / delete the blob even if the public
+   * URL host rotates.
+   */
+  pathname: string
   /** SHA-256 hash for integrity / dedupe. */
   hash?: string
   /** Bytes. */

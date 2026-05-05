@@ -122,6 +122,7 @@ export async function submitApplicationAction(
               kind: d.kind,
               name: d.name,
               url: d.url,
+              pathname: d.pathname,
               size: d.size,
               contentType: d.contentType,
               uploadedAt: d.uploadedAt,

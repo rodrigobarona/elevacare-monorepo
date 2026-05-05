@@ -26,6 +26,8 @@ import {
   CardTitle,
 } from "@eleva/ui/components/card"
 
+import { pickCategoryName, safeListCategories } from "@/lib/marketplace-helpers"
+
 interface PageProps {
   params: Promise<{ locale: string; username: string }>
 }
@@ -88,12 +90,26 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   if (resolved.kind === "expert") {
-    return <ExpertProfile expert={resolved.expert} />
+    // Build a slug -> localized name lookup so the profile badges can
+    // render human-readable category labels instead of raw slugs. The
+    // helper is `cache()`-wrapped, so other consumers in the same
+    // request share this DB roundtrip.
+    const cats = await safeListCategories()
+    const nameBySlug = new Map(
+      cats.map((c) => [c.slug, pickCategoryName(c, locale).name])
+    )
+    return <ExpertProfile expert={resolved.expert} nameBySlug={nameBySlug} />
   }
   return <ClinicProfile clinic={resolved.clinic} />
 }
 
-async function ExpertProfile({ expert }: { expert: PublicExpertProfile }) {
+async function ExpertProfile({
+  expert,
+  nameBySlug,
+}: {
+  expert: PublicExpertProfile
+  nameBySlug: ReadonlyMap<string, string>
+}) {
   const t = await getTranslations()
   return (
     <article className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:py-16">
@@ -126,7 +142,7 @@ async function ExpertProfile({ expert }: { expert: PublicExpertProfile }) {
             <div className="mt-4 flex flex-wrap gap-1.5">
               {expert.categorySlugs.map((slug) => (
                 <Badge key={slug} variant="outline" className="text-xs">
-                  {slug}
+                  {nameBySlug.get(slug) ?? slug}
                 </Badge>
               ))}
             </div>

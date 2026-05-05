@@ -43,6 +43,19 @@ function useFormField() {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
   const { getFieldState } = useFormContext()
+  // Hooks must run unconditionally on every render. We pass through
+  // whatever react-hook-form gives us (an undefined name subscribes to
+  // the entire form, which is harmless) and validate context shape
+  // BELOW before consuming the values. This avoids the
+  // `react-hooks/rules-of-hooks` pitfall where the throws above would
+  // shorten the hook list when misused.
+  const formState = useFormState({
+    name: fieldContext?.name as string | undefined,
+  })
+  const fieldState = getFieldState(
+    (fieldContext?.name ?? "") as string,
+    formState
+  )
 
   // The default-context casts (`{} as ...`) above mean React.useContext
   // never returns undefined here, but the cast also makes truthy-checks
@@ -54,9 +67,6 @@ function useFormField() {
   if (!itemContext?.id) {
     throw new Error("useFormField should be used within <FormItem>")
   }
-
-  const formState = useFormState({ name: fieldContext.name })
-  const fieldState = getFieldState(fieldContext.name, formState)
 
   const { id } = itemContext
 
