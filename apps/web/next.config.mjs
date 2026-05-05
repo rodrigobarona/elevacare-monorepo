@@ -13,7 +13,7 @@
  */
 import createNextIntlPlugin from "next-intl/plugin"
 
-const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 const APP_URL = process.env.APP_URL || "http://localhost:3001"
 const DOCS_URL = process.env.DOCS_URL || "http://localhost:3003"

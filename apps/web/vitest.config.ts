@@ -8,13 +8,10 @@ import sharedConfig from "../../vitest.shared"
 const root = dirname(fileURLToPath(import.meta.url))
 
 /**
- * Mirror the `@/*` alias from tsconfig.json. Next.js's compiler tries
- * both `./*` and `./src/*` (in that order); we replicate the same
- * behaviour at vitest resolve time so tests don't have to care which
- * root a module lives under. We additionally require the candidate to
- * be a regular file — `existsSync` returns true for directories, so a
- * bare `@/lib` would otherwise resolve to `apps/web/lib/` and break
- * vite's module loader.
+ * Mirror the `@/*` alias from tsconfig.json (`"@/*": ["./*"]`).
+ * Candidates must be regular files — `existsSync` returns true for
+ * directories, so a bare `@/lib` would otherwise resolve to
+ * `apps/web/lib/` and break vite's module loader.
  */
 function tsconfigAtAliasPlugin(): Plugin {
   return {
@@ -25,15 +22,13 @@ function tsconfigAtAliasPlugin(): Plugin {
       if (!m) return null
       const tail = m[1]!
       const exts = ["", ".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx"]
-      for (const base of [root, resolve(root, "src")]) {
-        for (const ext of exts) {
-          const candidate = `${resolve(base, tail)}${ext}`
-          if (!existsSync(candidate)) continue
-          try {
-            if (statSync(candidate).isFile()) return candidate
-          } catch {
-            // ignore unreadable entries
-          }
+      for (const ext of exts) {
+        const candidate = `${resolve(root, tail)}${ext}`
+        if (!existsSync(candidate)) continue
+        try {
+          if (statSync(candidate).isFile()) return candidate
+        } catch {
+          // ignore unreadable entries
         }
       }
       return null

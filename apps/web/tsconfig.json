@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*", "./src/*"],
+      "@/*": ["./*"],
       "@eleva/ui/*": ["../../packages/ui/src/*"]
     },
     "plugins": [
@@ -15,7 +15,6 @@
   "include": [
     "next-env.d.ts",
     "next.config.mjs",
-    "src/**/*",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
