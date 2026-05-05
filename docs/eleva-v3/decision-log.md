@@ -200,6 +200,13 @@ Each entry should include:
 - Summary: v3 launches Portugal-first. Launch requirements: PT/EN/ES locales, MB WAY + Stripe Tax PT, NIF collection, TOConline Tier 1 invoicing with pilot expert green, consent banner, ERS PT compliance docs published at `apps/docs/compliance/portugal/`, Daily/Neon/Resend/WorkOS EU regions confirmed, DSAR workflow tested, Vault crypto-shredding test passing, Tier 2 invoicing registry with ≥2 adapters (TOConline expert-side + Moloni) production-tested, Become-Partner admin verification enforcing invoicing choice.
 - Reference: [`compliance-data-governance.md`](./compliance-data-governance.md), [`roadmap-and-milestones.md`](./roadmap-and-milestones.md), ADR-012
 
+### 2026-05-05: Onboarding, admin verification, and expert finance platform
+
+- Owner: platform/product
+- Status: active
+- Summary: Expert onboarding is a multi-step wizard (Profile, Stripe Connect, Identity Verification, Invoicing Setup, First Event Type). Admin Become-Partner flow provisions org + expert profile + Stripe Connect account on approval. Finance surface exposes invoicing status and Stripe payout/balance dashboards. API layer (`apps/api`) handles OAuth callbacks, adapter status, and Stripe Identity session creation with CORS, RLS, and capability checks. Invoicing choice is enforced at onboarding via the Tier 2 adapter registry (`packages/accounting`). Multi-step wizard is the sole onboarding entry point; admin approval is required before an expert can onboard; API surface requires CORS for cross-origin `app.eleva.care` to `api.eleva.care` calls.
+- Reference: [`adrs/ADR-005-payments-and-monetization.md`](./adrs/ADR-005-payments-and-monetization.md), [`adrs/ADR-013-accounting-integration.md`](./adrs/ADR-013-accounting-integration.md), [`payments-payouts-spec.md`](./payments-payouts-spec.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

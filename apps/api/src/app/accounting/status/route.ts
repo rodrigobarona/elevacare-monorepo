@@ -107,9 +107,10 @@ export async function GET(request: Request) {
           metadata: cred.metadata ?? undefined,
         })
       } catch (err) {
+        console.error("[accounting/status] Adapter status check failed:", err)
         adapterStatus = {
           status: "error",
-          message: err instanceof Error ? err.message : "Unknown error",
+          message: "provider_error",
         }
       }
     }

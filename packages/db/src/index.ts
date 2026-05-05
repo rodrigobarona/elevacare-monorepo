@@ -8,7 +8,11 @@ export {
 export * as main from "./schema/main/index"
 export * as audit from "./schema/audit/index"
 export * as rls from "./rls/index"
-export type { SessionMode } from "./schema/main/expert-profiles"
+export type {
+  SessionMode,
+  StripeIdentityStatus,
+  InvoicingSetupStatus,
+} from "./schema/main/expert-profiles"
 export {
   findExpertByUsername,
   findClinicBySlug,
@@ -23,7 +27,7 @@ export {
   type ListExpertsResult,
   type SlugAvailability,
 } from "./queries/public"
-export { pingMainDb, pingAuditDb, type PingResult } from "./ping"
+export { pingMainDb, pingAuditDb } from "./ping"
 export {
   listApplications,
   getApplicationById,

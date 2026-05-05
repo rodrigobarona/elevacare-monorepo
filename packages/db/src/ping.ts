@@ -19,26 +19,14 @@ import { requireAuditDbEnv, requireDbEnv } from "@eleva/config/env"
  * report the failure as 5xx and Sentry can capture it.
  */
 
-export interface PingResult {
-  ok: number
-}
-
-function readOk(rows: unknown): number {
-  if (!Array.isArray(rows) || rows.length === 0) return 0
-  const first = rows[0] as { ok?: unknown }
-  return Number(first?.ok ?? 0)
-}
-
-export async function pingMainDb(): Promise<PingResult> {
+export async function pingMainDb(): Promise<void> {
   const { DATABASE_URL } = requireDbEnv()
   const sql = neon(DATABASE_URL)
-  const rows = await sql`SELECT 1 as ok`
-  return { ok: readOk(rows) }
+  await sql`SELECT 1`
 }
 
-export async function pingAuditDb(): Promise<PingResult> {
+export async function pingAuditDb(): Promise<void> {
   const { AUDIT_DATABASE_URL } = requireAuditDbEnv()
   const sql = neon(AUDIT_DATABASE_URL)
-  const rows = await sql`SELECT 1 as ok`
-  return { ok: readOk(rows) }
+  await sql`SELECT 1`
 }

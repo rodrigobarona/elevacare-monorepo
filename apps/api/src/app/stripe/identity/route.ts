@@ -1,8 +1,7 @@
-import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
-import { db, main } from "@eleva/db"
+import { getExpertProfileByUserId } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 
 /**
@@ -42,15 +41,7 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const [expert] = await db()
-    .select({
-      id: main.expertProfiles.id,
-      orgId: main.expertProfiles.orgId,
-      stripeAccountId: main.expertProfiles.stripeAccountId,
-    })
-    .from(main.expertProfiles)
-    .where(eq(main.expertProfiles.userId, session.user.id))
-    .limit(1)
+  const expert = await getExpertProfileByUserId(session.user.id)
 
   if (!expert) {
     return NextResponse.json(

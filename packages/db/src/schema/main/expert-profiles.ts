@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   check,
+  customType,
   index,
   jsonb,
   pgEnum,
@@ -20,6 +21,12 @@ import {
 } from "./shared"
 import { organizations } from "./organizations"
 import { users } from "./users"
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return "tsvector"
+  },
+})
 
 /**
  * Expert public profile.
@@ -159,6 +166,14 @@ export const expertProfiles = pgTable(
     /** Free-form metadata for marketing surfaces. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
 
+    /**
+     * Auto-maintained by Postgres GENERATED ALWAYS AS ... STORED.
+     * Weighted: A=display_name, B=headline, C=bio.
+     * Uses eleva_fts_simple (unaccent, no stemming) so locale-specific
+     * tsqueries match all word forms at query time.
+     */
+    searchVector: tsvector("search_vector"),
+
     status: expertStatusEnum("status").notNull().default("draft"),
 
     createdAt: createdAt(),
@@ -170,6 +185,7 @@ export const expertProfiles = pgTable(
     orgIdx: index("expert_profiles_org_idx").on(t.orgId),
     userIdx: index("expert_profiles_user_idx").on(t.userId),
     statusIdx: index("expert_profiles_status_idx").on(t.status),
+    searchIdx: index("expert_profiles_search_idx").using("gin", t.searchVector),
     usernameFormatChk: check(
       "expert_profiles_username_format",
       sql`username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND username NOT LIKE '%--%'`

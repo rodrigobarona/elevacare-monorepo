@@ -15,6 +15,8 @@ export interface MarketplaceParams {
   country?: string
   sessionMode?: SessionMode
   search?: string
+  /** User locale for FTS stemming (pt/en/es). Set by the caller, not from URL. */
+  locale?: string
   page?: number
 }
 
@@ -82,6 +84,7 @@ export function buildExpertFilters(
     countries: params.country ? [params.country] : undefined,
     sessionModes: params.sessionMode ? [params.sessionMode] : undefined,
     search: params.search,
+    locale: params.locale,
     page: params.page,
     ...overrides,
   }

@@ -11,12 +11,12 @@ export function corsHeaders(
     "Access-Control-Allow-Methods": methods,
     "Access-Control-Allow-Headers":
       "authorization, content-type, x-correlation-id",
-    "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "600",
     Vary: "Origin",
   }
   if (allowOrigin) {
     headers["Access-Control-Allow-Origin"] = allowOrigin
+    headers["Access-Control-Allow-Credentials"] = "true"
   }
   return headers
 }
@@ -47,7 +47,9 @@ export function matchAllowedOrigin(origin: string): string | null {
 
 export function safeUrl(value: string): URL | null {
   try {
-    return new URL(value)
+    const url = new URL(value)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null
+    return url
   } catch {
     return null
   }

@@ -37,10 +37,13 @@ export default async function ExpertsPage({ params, searchParams }: PageProps) {
   setRequestLocale(locale)
   const search = await searchParams
 
+  const parsed = parseSearchParams(search)
+  parsed.locale = locale
+
   const [t, categoriesRaw, expertsResult] = await Promise.all([
     getTranslations(),
     safeListCategories(),
-    safeListExperts(buildExpertFilters(parseSearchParams(search))),
+    safeListExperts(buildExpertFilters(parsed)),
   ])
 
   const categories: { slug: string; name: string }[] = categoriesRaw.map((c) =>

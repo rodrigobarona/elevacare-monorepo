@@ -214,6 +214,7 @@ export interface ApproveApplicationResult {
   orgId: string
   userId: string
   username: string
+  applicantEmail: string | null
 }
 
 export async function approveApplication(
@@ -308,11 +309,18 @@ export async function approveApplication(
       })
       .where(eq(main.becomePartnerApplications.id, id))
 
+    const userRows = await tx
+      .select({ email: main.users.email })
+      .from(main.users)
+      .where(eq(main.users.id, app.applicantUserId))
+      .limit(1)
+
     return {
       expertProfileId: profile.id,
       orgId: org.id,
       userId: app.applicantUserId,
       username: app.usernameRequested,
+      applicantEmail: userRows[0]?.email ?? null,
     }
   })
 }

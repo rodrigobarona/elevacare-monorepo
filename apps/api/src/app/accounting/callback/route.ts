@@ -1,7 +1,11 @@
 import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
-import { getAdapter, type ConnectInput } from "@eleva/accounting"
+import {
+  getAdapter,
+  InvoicingProviderSlug,
+  type ConnectInput,
+} from "@eleva/accounting"
 import {
   main,
   withOrgContext,
@@ -59,16 +63,22 @@ export async function GET(request: Request) {
     )
   }
 
-  const [providerSlug, expertProfileId, codeVerifier] = parts as [
+  const [rawProvider, expertProfileId, codeVerifier] = parts as [
     string,
     string,
     string,
   ]
 
-  try {
-    const adapter = getAdapter(
-      providerSlug as "toconline" | "moloni" | "manual"
+  const parsed = InvoicingProviderSlug.safeParse(rawProvider)
+  if (!parsed.success) {
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=invalid_provider", appUrl)
     )
+  }
+  const providerSlug = parsed.data
+
+  try {
+    const adapter = getAdapter(providerSlug)
 
     const expert = await withPlatformAdminContext(async (tx: Tx) => {
       const [row] = await tx
@@ -104,7 +114,7 @@ export async function GET(request: Request) {
         .values({
           orgId: expert.orgId,
           expertProfileId: expert.id,
-          provider: providerSlug as "toconline" | "moloni",
+          provider: providerSlug,
           vaultRef: result.vaultRef,
           metadata: result.metadata ?? {},
           status: "active",
@@ -129,7 +139,7 @@ export async function GET(request: Request) {
       await tx
         .update(main.expertProfiles)
         .set({
-          invoicingProvider: providerSlug as "toconline" | "moloni",
+          invoicingProvider: providerSlug,
           invoicingSetupStatus: "connected",
           updatedAt: new Date(),
         })

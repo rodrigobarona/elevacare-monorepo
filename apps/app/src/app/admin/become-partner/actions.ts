@@ -54,14 +54,14 @@ export async function approveApplicationAction(
     const session = await requireSession("experts:approve")
     const result = await approveApplication(id, session.user.id)
 
-    const email = session.user.email
+    const email = result.applicantEmail
     if (!email) {
       revalidatePath("/admin/become-partner")
       return {
         ok: true,
         data: result,
         warning:
-          "Stripe Connect provisioning skipped: reviewer has no email on file.",
+          "Stripe Connect provisioning skipped: applicant has no email on file.",
       }
     }
 
@@ -78,8 +78,6 @@ export async function approveApplicationAction(
         stripeAccountId: connectAccount.id,
       })
     } catch (stripeErr) {
-      const msg =
-        stripeErr instanceof Error ? stripeErr.message : String(stripeErr)
       console.error(
         "[admin] Stripe Connect creation failed (approval persisted)",
         stripeErr
@@ -88,7 +86,7 @@ export async function approveApplicationAction(
       return {
         ok: true,
         data: result,
-        warning: `Stripe Connect provisioning failed: ${msg}`,
+        warning: "stripe_connect_provision_failed",
       }
     }
 

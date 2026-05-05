@@ -14,6 +14,7 @@ import { StepConnect } from "./step-connect"
 import { StepIdentity } from "./step-identity"
 import { StepInvoicing } from "./step-invoicing"
 import { StepSchedule } from "./step-schedule"
+import type { StripeIdentityStatus, InvoicingSetupStatus } from "@eleva/db"
 
 const STEP_LABELS: Record<string, string> = {
   profile: "Profile & Fiscal Info",
@@ -33,9 +34,9 @@ export interface OnboardingProfile {
   worldwideMode: boolean
   sessionModes: string[]
   stripeAccountId: string | null
-  stripeIdentityStatus: string
+  stripeIdentityStatus: StripeIdentityStatus
   invoicingProvider: string | null
-  invoicingSetupStatus: string
+  invoicingSetupStatus: InvoicingSetupStatus
 }
 
 interface Props {
@@ -69,7 +70,7 @@ export function OnboardingWizard({
   return (
     <div className="space-y-6">
       {/* Stepper indicator */}
-      <nav className="flex gap-2">
+      <nav aria-label="Onboarding steps" className="flex gap-2">
         {steps.map((step, i) => {
           const done = completedSteps.includes(step)
           const isActive = step === activeStep
@@ -131,13 +132,14 @@ export function OnboardingWizard({
       </Card>
 
       {/* Skip/advance helper */}
-      {completedSteps.includes(activeStep) && (
-        <div className="flex justify-end">
-          <Button variant="outline" size="sm" onClick={handleStepDone}>
-            Next step &rarr;
-          </Button>
-        </div>
-      )}
+      {completedSteps.includes(activeStep) &&
+        steps.indexOf(activeStep) < steps.length - 1 && (
+          <div className="flex justify-end">
+            <Button variant="outline" size="sm" onClick={handleStepDone}>
+              Next step &rarr;
+            </Button>
+          </div>
+        )}
     </div>
   )
 }

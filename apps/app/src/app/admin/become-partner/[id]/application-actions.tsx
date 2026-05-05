@@ -43,9 +43,11 @@ export function ApplicationActions({ applicationId, status }: Props) {
     setError(null)
     try {
       const result = await approveApplicationAction(applicationId)
-      if (!result.ok) setError(result.error)
-      else {
-        if (result.warning) setError(result.warning)
+      if (!result.ok) {
+        setError(result.error)
+      } else if (result.warning) {
+        setError(result.warning)
+      } else {
         router.refresh()
       }
     } catch {
