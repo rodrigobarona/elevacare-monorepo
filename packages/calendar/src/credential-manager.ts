@@ -28,16 +28,7 @@ export async function storeCalendarConnection(
   accountEmail: string,
   tokens: OAuthTokens
 ): Promise<string> {
-  const vaultRef = await encryptOAuthToken({
-    provider: PROVIDER_MAP[provider],
-    userId: expertProfileId,
-    orgId,
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-    expiresAt: tokens.expiresAt,
-  })
-
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const connectedCalendarId = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .insert(connectedCalendars)
       .values({
@@ -45,14 +36,45 @@ export async function storeCalendarConnection(
         expertProfileId,
         provider,
         accountEmail,
-        credentialVaultRef: vaultRef,
-        status: "connected",
+        credentialVaultRef: "pending",
+        status: "connecting",
         tokenExpiresAt: tokens.expiresAt,
       })
       .returning({ id: connectedCalendars.id })
 
     return row!.id
   })
+
+  let vaultRef: VaultRef
+  try {
+    vaultRef = await encryptOAuthToken({
+      provider: PROVIDER_MAP[provider],
+      userId: connectedCalendarId,
+      orgId,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAt: tokens.expiresAt,
+    })
+  } catch (err) {
+    await withOrgContext(orgId, async (tx: Tx) => {
+      await tx
+        .delete(connectedCalendars)
+        .where(eq(connectedCalendars.id, connectedCalendarId))
+    })
+    throw err
+  }
+
+  await withOrgContext(orgId, async (tx: Tx) => {
+    await tx
+      .update(connectedCalendars)
+      .set({
+        credentialVaultRef: vaultRef,
+        status: "connected",
+      })
+      .where(eq(connectedCalendars.id, connectedCalendarId))
+  })
+
+  return connectedCalendarId
 }
 
 /**
@@ -123,12 +145,13 @@ export async function getAccessToken(
 }
 
 /**
- * Disconnect a calendar — revoke vault secrets and mark as disconnected.
+ * Disconnect a calendar — mark as disconnected first, then revoke vault
+ * secrets best-effort.
  */
 export async function disconnectCalendar(
   orgId: string,
   connectedCalendarId: string
-): Promise<void> {
+): Promise<{ status: "disconnected" | "not_found" }> {
   const cal = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({ credentialVaultRef: connectedCalendars.credentialVaultRef })
@@ -138,13 +161,20 @@ export async function disconnectCalendar(
     return row
   })
 
-  if (cal) {
+  if (!cal) return { status: "not_found" }
+
+  await withOrgContext(orgId, async (tx: Tx) => {
+    await tx
+      .update(connectedCalendars)
+      .set({ status: "disconnected", updatedAt: new Date() })
+      .where(eq(connectedCalendars.id, connectedCalendarId))
+  })
+
+  try {
     await revokeOAuthToken(cal.credentialVaultRef as VaultRef)
-    await withOrgContext(orgId, async (tx: Tx) => {
-      await tx
-        .update(connectedCalendars)
-        .set({ status: "disconnected", updatedAt: new Date() })
-        .where(eq(connectedCalendars.id, connectedCalendarId))
-    })
+  } catch {
+    // best-effort revocation
   }
+
+  return { status: "disconnected" }
 }

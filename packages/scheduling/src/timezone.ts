@@ -72,15 +72,24 @@ export function getUtcOffsetMinutes(date: Date, timezone: string): number {
   const local = getDateParts(date, timezone)
   const utc = getDateParts(date, "UTC")
 
-  const localMinutes = local.day * 1440 + local.hour * 60 + local.minute
-  const utcMinutes = utc.day * 1440 + utc.hour * 60 + utc.minute
+  const localEpoch = Date.UTC(
+    local.year,
+    local.month - 1,
+    local.day,
+    local.hour,
+    local.minute,
+    local.second
+  )
+  const utcEpoch = Date.UTC(
+    utc.year,
+    utc.month - 1,
+    utc.day,
+    utc.hour,
+    utc.minute,
+    utc.second
+  )
 
-  let diff = localMinutes - utcMinutes
-
-  if (diff > 720) diff -= 1440
-  if (diff < -720) diff += 1440
-
-  return diff
+  return Math.round((localEpoch - utcEpoch) / 60_000)
 }
 
 /**

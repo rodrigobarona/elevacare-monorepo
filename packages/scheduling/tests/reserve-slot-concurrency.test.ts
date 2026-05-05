@@ -2,14 +2,14 @@ import { describe, it, expect, vi, beforeEach } from "vitest"
 import type { Redis } from "@upstash/redis"
 import type { ReserveSlotResult } from "../src/types"
 
+let insertCounter = 0
+
 /**
  * Mock @eleva/db/context — withOrgContext simply executes the callback
  * with a mock transaction that reports no conflicts and returns a
  * generated reservation ID.
  */
 vi.mock("@eleva/db/context", () => {
-  let insertCounter = 0
-
   const mockTx = {
     select: () => ({
       from: () => ({
@@ -105,6 +105,7 @@ describe("reserveSlot — concurrent reservation race", () => {
 
   beforeEach(() => {
     redis = createMockRedis()
+    insertCounter = 0
     vi.clearAllMocks()
   })
 

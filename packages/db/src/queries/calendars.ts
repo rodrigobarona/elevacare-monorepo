@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { withOrgContext, type Tx } from "../context"
 import {
   connectedCalendars,
@@ -22,9 +22,23 @@ export async function listConnectedCalendars(
 export async function replaceBusySources(
   orgId: string,
   connectedCalendarId: string,
-  sources: { externalCalendarId: string; displayName: string }[]
+  sources: { externalCalendarId: string; displayName: string }[],
+  expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
+    const [owner] = await tx
+      .select({ id: connectedCalendars.id })
+      .from(connectedCalendars)
+      .where(
+        and(
+          eq(connectedCalendars.id, connectedCalendarId),
+          eq(connectedCalendars.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+
+    if (!owner) throw new Error("unauthorized-calendar")
+
     await tx
       .delete(calendarBusySources)
       .where(eq(calendarBusySources.connectedCalendarId, connectedCalendarId))
@@ -50,6 +64,19 @@ export async function replaceDestinationCalendar(
   displayName: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
+    const [owner] = await tx
+      .select({ id: connectedCalendars.id })
+      .from(connectedCalendars)
+      .where(
+        and(
+          eq(connectedCalendars.id, connectedCalendarId),
+          eq(connectedCalendars.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+
+    if (!owner) throw new Error("unauthorized-calendar")
+
     await tx
       .delete(calendarDestinations)
       .where(eq(calendarDestinations.expertProfileId, expertProfileId))

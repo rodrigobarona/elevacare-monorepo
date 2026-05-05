@@ -21,7 +21,7 @@ export default async function EditEventTypePage(props: {
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) redirect("/expert/onboarding")
 
-  const eventType = await getEventType(profile.orgId, id)
+  const eventType = await getEventType(profile.orgId, id, profile.id)
   if (!eventType) notFound()
 
   const t = await getTranslations("eventTypes")

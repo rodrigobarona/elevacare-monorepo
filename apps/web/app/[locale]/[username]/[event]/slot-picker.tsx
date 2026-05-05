@@ -78,24 +78,37 @@ export function SlotPicker({
   )
 
   React.useEffect(() => {
+    let stale = false
+    setSelectedSlot(null)
+
     async function load() {
       setLoading(true)
       setError(null)
-      const range = getWeekRange(weekOffset)
-      const result = await loadSlots(
-        username,
-        eventSlug,
-        range.start.toISOString(),
-        range.end.toISOString()
-      )
-      if (result.ok) {
-        setSlots(result.slots)
-      } else {
-        setError(result.error)
+      try {
+        const range = getWeekRange(weekOffset)
+        const result = await loadSlots(
+          username,
+          eventSlug,
+          range.start.toISOString(),
+          range.end.toISOString()
+        )
+        if (stale) return
+        if (result.ok) {
+          setSlots(result.slots)
+        } else {
+          setError(result.error)
+        }
+      } catch {
+        if (!stale) setError("load-failed")
+      } finally {
+        if (!stale) setLoading(false)
       }
-      setLoading(false)
     }
     load()
+
+    return () => {
+      stale = true
+    }
   }, [username, eventSlug, weekOffset])
 
   async function handleReserve() {

@@ -126,7 +126,8 @@ export async function updateEventTypeAction(
     await updateEventType(
       profile.orgId,
       eventTypeId,
-      updates as Parameters<typeof updateEventType>[2]
+      updates as Parameters<typeof updateEventType>[2],
+      profile.id
     )
 
     revalidatePath("/expert/event-types")
@@ -149,7 +150,7 @@ export async function togglePublishAction(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    await updateEventType(profile.orgId, eventTypeId, { published })
+    await updateEventType(profile.orgId, eventTypeId, { published }, profile.id)
     revalidatePath("/expert/event-types")
     return { ok: true }
   } catch {
@@ -165,7 +166,7 @@ export async function deleteEventTypeAction(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    await deleteEventType(profile.orgId, eventTypeId)
+    await deleteEventType(profile.orgId, eventTypeId, profile.id)
     revalidatePath("/expert/event-types")
     return { ok: true }
   } catch {

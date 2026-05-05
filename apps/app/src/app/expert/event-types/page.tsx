@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
-import { getTranslations } from "next-intl/server"
+import { getTranslations, getLocale } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId, listExpertEventTypes } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
@@ -28,6 +28,7 @@ export default async function EventTypesPage() {
 
   const eventTypes = await listExpertEventTypes(profile.orgId, profile.id)
   const t = await getTranslations("eventTypes")
+  const locale = await getLocale()
 
   return (
     <AppShell session={session}>
@@ -62,16 +63,18 @@ export default async function EventTypesPage() {
                 <Card key={et.id}>
                   <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                     <div className="space-y-1">
-                      <CardTitle className="text-base">{etTitle.en}</CardTitle>
+                      <CardTitle className="text-base">
+                        {etTitle[locale as keyof typeof etTitle] ?? etTitle.en}
+                      </CardTitle>
                       <p className="text-sm text-muted-foreground">
                         /{profile.username}/{et.slug}
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
                       {et.published ? (
-                        <Badge>Published</Badge>
+                        <Badge>{t("status.published")}</Badge>
                       ) : (
-                        <Badge variant="secondary">Draft</Badge>
+                        <Badge variant="secondary">{t("status.draft")}</Badge>
                       )}
                       <EventTypeActions
                         eventTypeId={et.id}
@@ -83,8 +86,10 @@ export default async function EventTypesPage() {
                     <div className="flex flex-wrap gap-x-6 gap-y-1 text-sm text-muted-foreground">
                       <span>{et.durationMinutes} min</span>
                       <span>
-                        {(et.priceAmount / 100).toFixed(2)}{" "}
-                        {et.currency.toUpperCase()}
+                        {new Intl.NumberFormat(locale, {
+                          style: "currency",
+                          currency: et.currency.toUpperCase(),
+                        }).format(et.priceAmount / 100)}
                       </span>
                       <span className="capitalize">
                         {et.sessionMode.replace("_", " ")}

@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -84,6 +85,7 @@ export function ScheduleEditor({
   initialRules,
   initialOverrides,
 }: Props) {
+  const router = useRouter()
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
@@ -113,6 +115,11 @@ export function ScheduleEditor({
     for (let i = 0; i < 7; i++) {
       const day = days[i]!
       if (day.enabled) {
+        if (day.startTime >= day.endTime) {
+          setError(`${DAYS[i]}: start time must be before end time`)
+          setPending(false)
+          return
+        }
         rules.push({
           dayOfWeek: i,
           startTime: day.startTime,
@@ -121,35 +128,61 @@ export function ScheduleEditor({
       }
     }
 
-    const result = await saveScheduleAction({ timezone, rules })
-    if (result.ok) {
-      setSuccess(true)
-    } else {
-      setError(result.error)
+    try {
+      const result = await saveScheduleAction({ timezone, rules })
+      if (result.ok) {
+        setSuccess(true)
+      } else {
+        setError(result.error)
+      }
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   async function handleAddOverride() {
     if (!newDate) return
     setPending(true)
-    const result = await addDateOverrideAction({
-      overrideDate: newDate,
-      startTime: newBlocked ? undefined : newStart,
-      endTime: newBlocked ? undefined : newEnd,
-      isBlocked: newBlocked,
-    })
-    if (result.ok) {
-      setNewDate("")
+    setError(null)
+
+    if (!newBlocked && newStart >= newEnd) {
+      setError("Override start time must be before end time")
+      setPending(false)
+      return
     }
-    setPending(false)
+
+    try {
+      const result = await addDateOverrideAction({
+        overrideDate: newDate,
+        startTime: newBlocked ? undefined : newStart,
+        endTime: newBlocked ? undefined : newEnd,
+        isBlocked: newBlocked,
+        timezone,
+      })
+      if (result.ok) {
+        setNewDate("")
+        router.refresh()
+      } else {
+        setError(result.error)
+      }
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleRemoveOverride(id: string) {
     setPending(true)
-    await removeDateOverrideAction(id)
-    setOverrides((prev) => prev.filter((o) => o.id !== id))
-    setPending(false)
+    setError(null)
+    try {
+      const result = await removeDateOverrideAction(id)
+      if (result.ok) {
+        setOverrides((prev) => prev.filter((o) => o.id !== id))
+      } else {
+        setError(result.error)
+      }
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

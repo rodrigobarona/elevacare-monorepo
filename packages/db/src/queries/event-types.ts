@@ -27,13 +27,20 @@ export async function listExpertEventTypes(
 
 export async function getEventType(
   orgId: string,
-  eventTypeId: string
+  eventTypeId: string,
+  expertProfileId: string
 ): Promise<EventType | undefined> {
   return withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select()
       .from(eventTypes)
-      .where(and(eq(eventTypes.id, eventTypeId), isNull(eventTypes.deletedAt)))
+      .where(
+        and(
+          eq(eventTypes.id, eventTypeId),
+          eq(eventTypes.expertProfileId, expertProfileId),
+          isNull(eventTypes.deletedAt)
+        )
+      )
       .limit(1)
     return row
   })
@@ -79,13 +86,20 @@ export async function updateEventType(
       | "position"
       | "scheduleId"
     >
-  >
+  >,
+  expertProfileId: string
 ): Promise<EventType | undefined> {
   return withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .update(eventTypes)
       .set({ ...data, updatedAt: new Date() })
-      .where(and(eq(eventTypes.id, eventTypeId), isNull(eventTypes.deletedAt)))
+      .where(
+        and(
+          eq(eventTypes.id, eventTypeId),
+          eq(eventTypes.expertProfileId, expertProfileId),
+          isNull(eventTypes.deletedAt)
+        )
+      )
       .returning()
     return row
   })
@@ -93,13 +107,19 @@ export async function updateEventType(
 
 export async function deleteEventType(
   orgId: string,
-  eventTypeId: string
+  eventTypeId: string,
+  expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
     await tx
       .update(eventTypes)
       .set({ deletedAt: new Date(), active: false, published: false })
-      .where(eq(eventTypes.id, eventTypeId))
+      .where(
+        and(
+          eq(eventTypes.id, eventTypeId),
+          eq(eventTypes.expertProfileId, expertProfileId)
+        )
+      )
   })
 }
 
@@ -125,6 +145,8 @@ export async function findPublicEventType(
       | "sessionMode"
       | "bookingWindowDays"
       | "minimumNoticeMinutes"
+      | "bufferBeforeMinutes"
+      | "bufferAfterMinutes"
       | "worldwideMode"
     >
   | undefined
@@ -143,6 +165,8 @@ export async function findPublicEventType(
         sessionMode: eventTypes.sessionMode,
         bookingWindowDays: eventTypes.bookingWindowDays,
         minimumNoticeMinutes: eventTypes.minimumNoticeMinutes,
+        bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
+        bufferAfterMinutes: eventTypes.bufferAfterMinutes,
         worldwideMode: eventTypes.worldwideMode,
       })
       .from(eventTypes)

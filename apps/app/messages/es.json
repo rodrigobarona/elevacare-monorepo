@@ -49,6 +49,8 @@
   "eventTypes.editDescription": "Actualiza los detalles y reglas de reserva de este tipo de evento.",
   "eventTypes.empty": "Aún no has creado ningún tipo de evento.",
   "eventTypes.createFirst": "Crea tu primer tipo de evento",
+  "eventTypes.status.published": "Publicado",
+  "eventTypes.status.draft": "Borrador",
 
   "schedule.title": "Horario",
   "schedule.description": "Define tu disponibilidad semanal y excepciones de fechas.",

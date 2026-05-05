@@ -1,4 +1,3 @@
-import { sql } from "drizzle-orm"
 import {
   boolean,
   index,
@@ -8,7 +7,6 @@ import {
   timestamp,
   uniqueIndex,
   uuid,
-  varchar,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organizations } from "./organizations"

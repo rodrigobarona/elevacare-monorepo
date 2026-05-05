@@ -10,6 +10,19 @@ function slotKey(expertProfileId: string, startsAtIso: string): string {
   return `slot:${expertProfileId}:${startsAtIso}`
 }
 
+async function compareAndDelete(
+  redis: Redis,
+  key: string,
+  expectedValue: string
+): Promise<void> {
+  const script = `if redis.call("GET", KEYS[1]) == ARGV[1] then return redis.call("DEL", KEYS[1]) else return 0 end`
+  try {
+    await redis.eval(script, [key], [expectedValue])
+  } catch {
+    // best-effort cleanup
+  }
+}
+
 /**
  * Atomic slot reservation. Uses Upstash Redis SET NX as a distributed
  * lock to prevent concurrent double-booking, then writes the
@@ -75,7 +88,7 @@ export async function reserveSlot(
 
     return { success: true, reservationId }
   } catch (err) {
-    await redis.del(key)
+    await compareAndDelete(redis, key, holdToken)
 
     if (err instanceof ConflictError) {
       return { success: false, error: "conflict" }
@@ -99,6 +112,7 @@ export async function releaseReservation(
         expertProfileId: slotReservations.expertProfileId,
         startsAt: slotReservations.startsAt,
         status: slotReservations.status,
+        holdToken: slotReservations.holdToken,
       })
       .from(slotReservations)
       .where(eq(slotReservations.id, reservationId))
@@ -112,7 +126,7 @@ export async function releaseReservation(
       .where(eq(slotReservations.id, reservationId))
 
     const key = slotKey(row.expertProfileId, row.startsAt.toISOString())
-    await redis.del(key)
+    await compareAndDelete(redis, key, row.holdToken)
   })
 }
 
@@ -140,6 +154,7 @@ export async function convertReservation(
       .select({
         expertProfileId: slotReservations.expertProfileId,
         startsAt: slotReservations.startsAt,
+        holdToken: slotReservations.holdToken,
       })
       .from(slotReservations)
       .where(eq(slotReservations.id, reservationId))
@@ -147,7 +162,7 @@ export async function convertReservation(
 
     if (row) {
       const key = slotKey(row.expertProfileId, row.startsAt.toISOString())
-      await redis.del(key)
+      await compareAndDelete(redis, key, row.holdToken)
     }
   })
 }
@@ -158,6 +173,7 @@ async function checkConflicts(
   startsAt: Date,
   endsAt: Date
 ): Promise<boolean> {
+  const now = new Date()
   const [activeReservation] = await tx
     .select({ id: slotReservations.id })
     .from(slotReservations)
@@ -165,6 +181,7 @@ async function checkConflicts(
       and(
         eq(slotReservations.expertProfileId, expertProfileId),
         eq(slotReservations.status, "active"),
+        sql`${slotReservations.expiresAt} > ${now}`,
         sql`${slotReservations.startsAt} < ${endsAt}`,
         sql`${slotReservations.endsAt} > ${startsAt}`
       )

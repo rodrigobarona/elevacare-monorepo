@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, sql, isNull, asc } from "drizzle-orm"
+import { and, eq, gt, lt, isNull, asc, notInArray } from "drizzle-orm"
 import { withPlatformAdminContext, type Tx } from "../context"
 import {
   schedules,
@@ -92,9 +92,9 @@ export async function listExpertBusyBookings(
       .where(
         and(
           eq(bookings.expertProfileId, expertProfileId),
-          sql`${bookings.status} NOT IN ('cancelled', 'no_show')`,
-          gte(bookings.startsAt, rangeStart),
-          lte(bookings.endsAt, rangeEnd)
+          notInArray(bookings.status, ["cancelled", "no_show"]),
+          lt(bookings.startsAt, rangeEnd),
+          gt(bookings.endsAt, rangeStart)
         )
       )
 

@@ -22,15 +22,21 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
 
   async function handleTogglePublish() {
     setPending(true)
-    await togglePublishAction(eventTypeId, !published)
-    setPending(false)
+    try {
+      await togglePublishAction(eventTypeId, !published)
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleDelete() {
     if (!confirm("Are you sure you want to delete this event type?")) return
     setPending(true)
-    await deleteEventTypeAction(eventTypeId)
-    setPending(false)
+    try {
+      await deleteEventTypeAction(eventTypeId)
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

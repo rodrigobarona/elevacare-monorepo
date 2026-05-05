@@ -1,8 +1,10 @@
 "use client"
 
 import * as React from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
+import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import {
   Card,
   CardContent,
@@ -28,26 +30,52 @@ const PROVIDER_LABEL: Record<string, string> = {
 }
 
 export function CalendarManager({ calendars }: Props) {
+  const router = useRouter()
   const [pending, setPending] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   async function handleConnect(provider: "google" | "microsoft") {
     setPending(true)
-    const result = await startCalendarOAuth(provider)
-    if (result.ok) {
-      window.location.href = result.authorizationUrl
+    setError(null)
+    try {
+      const result = await startCalendarOAuth(provider)
+      if (result.ok) {
+        window.location.href = result.authorizationUrl
+        return
+      }
+      setError(result.error)
+    } catch {
+      setError("connection-failed")
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   async function handleDisconnect(id: string) {
     if (!confirm("Disconnect this calendar?")) return
     setPending(true)
-    await disconnectCalendarAction(id)
-    setPending(false)
+    setError(null)
+    try {
+      const result = await disconnectCalendarAction(id)
+      if (result.ok) {
+        router.refresh()
+      } else {
+        setError(result.error)
+      }
+    } catch {
+      setError("disconnect-failed")
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
     <div className="space-y-4">
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
       {calendars.length > 0 && (
         <div className="space-y-3">
           {calendars.map((cal) => (

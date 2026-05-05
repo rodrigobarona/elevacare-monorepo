@@ -67,6 +67,48 @@ describe("validateBookingRules", () => {
 
     expect(result).toBeNull()
   })
+
+  it("accepts slot starting exactly at now (boundary)", () => {
+    const result = validateBookingRules({
+      eventType: {
+        bookingWindowDays: null,
+        minimumNoticeMinutes: 0,
+        cancellationWindowHours: null,
+        rescheduleWindowHours: null,
+      },
+      slotStart: now,
+      now,
+    })
+    expect(result).toBe("past_slot")
+  })
+
+  it("accepts slot at exact minimum notice boundary", () => {
+    const result = validateBookingRules({
+      eventType: {
+        bookingWindowDays: null,
+        minimumNoticeMinutes: 60,
+        cancellationWindowHours: null,
+        rescheduleWindowHours: null,
+      },
+      slotStart: new Date(now.getTime() + 60 * 60_000),
+      now,
+    })
+    expect(result).toBeNull()
+  })
+
+  it("accepts slot at exact booking window boundary", () => {
+    const result = validateBookingRules({
+      eventType: {
+        bookingWindowDays: 7,
+        minimumNoticeMinutes: 0,
+        cancellationWindowHours: null,
+        rescheduleWindowHours: null,
+      },
+      slotStart: new Date(now.getTime() + 7 * 24 * 3_600_000),
+      now,
+    })
+    expect(result).toBeNull()
+  })
 })
 
 describe("canCancel", () => {
@@ -85,6 +127,12 @@ describe("canCancel", () => {
     const startsAt = new Date("2026-06-15T14:00:00Z")
     expect(canCancel(12, startsAt, now)).toBe(false)
   })
+
+  it("handles exact boundary (hours equal to window)", () => {
+    const now = new Date("2026-06-15T10:00:00Z")
+    const startsAt = new Date("2026-06-15T22:00:00Z")
+    expect(canCancel(12, startsAt, now)).toBe(true)
+  })
 })
 
 describe("canReschedule", () => {
@@ -102,5 +150,11 @@ describe("canReschedule", () => {
     const now = new Date("2026-06-15T10:00:00Z")
     const startsAt = new Date("2026-06-15T18:00:00Z")
     expect(canReschedule(24, startsAt, now)).toBe(false)
+  })
+
+  it("handles exact boundary (hours equal to window)", () => {
+    const now = new Date("2026-06-15T10:00:00Z")
+    const startsAt = new Date("2026-06-16T10:00:00Z")
+    expect(canReschedule(24, startsAt, now)).toBe(true)
   })
 })

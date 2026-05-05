@@ -24,6 +24,7 @@ export interface DateOverrideInput {
   startTime?: string
   endTime?: string
   isBlocked: boolean
+  timezone: string
 }
 
 export async function saveScheduleAction(params: {
@@ -55,7 +56,8 @@ export async function saveScheduleAction(params: {
 
     revalidatePath("/expert/schedule")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("[saveScheduleAction]", err)
     return { ok: false, error: "save-failed" }
   }
 }
@@ -71,7 +73,7 @@ export async function addDateOverrideAction(
     const schedule = await getOrCreateDefaultSchedule(
       profile.orgId,
       profile.id,
-      "Europe/Lisbon"
+      data.timezone
     )
 
     await upsertDateOverride(profile.orgId, schedule.id, {
@@ -84,7 +86,8 @@ export async function addDateOverrideAction(
 
     revalidatePath("/expert/schedule")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("[addDateOverrideAction]", err)
     return { ok: false, error: "save-failed" }
   }
 }
@@ -100,7 +103,8 @@ export async function removeDateOverrideAction(
     await deleteDateOverride(profile.orgId, overrideId)
     revalidatePath("/expert/schedule")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("[removeDateOverrideAction]", err)
     return { ok: false, error: "delete-failed" }
   }
 }

@@ -15,6 +15,8 @@ import { isReserved } from "@eleva/config/reserved-usernames"
 import { withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
 
+type ArrayCastSuffix = "text[]" | "session_mode[]"
+
 /**
  * Build `column && ARRAY[$1, $2, ...]::cast` so each element is a
  * properly-bound scalar parameter. Drizzle's sql`` unwraps JS arrays
@@ -24,8 +26,12 @@ import * as main from "../schema/main"
 function pgArrayOverlap(
   column: PgColumn,
   values: string[],
-  castSuffix: string = "text[]"
+  castSuffix: ArrayCastSuffix = "text[]"
 ): SQL {
+  const ALLOWED_SUFFIXES: Set<string> = new Set(["text[]", "session_mode[]"])
+  if (!ALLOWED_SUFFIXES.has(castSuffix)) {
+    throw new Error(`Disallowed array cast suffix: ${castSuffix}`)
+  }
   const elems = sql.join(
     values.map((v) => sql`${v}`),
     sql`, `

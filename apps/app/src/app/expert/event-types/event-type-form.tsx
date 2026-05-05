@@ -119,14 +119,16 @@ export function EventTypeForm({ mode, eventTypeId, defaultValues }: Props) {
     const formData: EventTypeFormData = {
       slug: slug || autoSlug(title.en),
       title,
-      description: description.en ? description : undefined,
+      description: Object.values(description).some(Boolean)
+        ? description
+        : undefined,
       durationMinutes: Number(duration) || 60,
       priceAmount: Math.round((Number(price) || 0) * 100),
       currency,
       languages,
       sessionMode: sessionMode as "online" | "in_person" | "phone",
       bookingWindowDays: bookingWindow ? Number(bookingWindow) : null,
-      minimumNoticeMinutes: Number(minimumNotice) || 60,
+      minimumNoticeMinutes: minimumNotice === "" ? 60 : Number(minimumNotice),
       bufferBeforeMinutes: Number(bufferBefore) || 0,
       bufferAfterMinutes: Number(bufferAfter) || 0,
       cancellationWindowHours: cancellationWindow

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { requireSession } from "@eleva/auth/server"
 import {
   getExpertProfileByUserId,
+  listConnectedCalendars,
   replaceBusySources,
   replaceDestinationCalendar,
 } from "@eleva/db"
@@ -16,6 +17,15 @@ import {
 } from "@eleva/calendar"
 
 type ActionResult = { ok: true; data?: unknown } | { ok: false; error: string }
+
+async function verifyCalendarOwnership(
+  orgId: string,
+  expertProfileId: string,
+  connectedCalendarId: string
+): Promise<boolean> {
+  const calendars = await listConnectedCalendars(orgId, expertProfileId)
+  return calendars.some((c) => c.id === connectedCalendarId)
+}
 
 export async function startCalendarOAuth(
   provider: CalendarProvider
@@ -46,8 +56,10 @@ export async function completeCalendarOAuth(
 
     const calendars = await adapter.listCalendars(tokens.accessToken)
     const primaryCalendar = calendars.find((c) => c.primary)
-    const accountEmail =
-      primaryCalendar?.name ?? calendars[0]?.name ?? session.user.email
+    const primaryId = primaryCalendar?.id ?? ""
+    const accountEmail = primaryId.includes("@")
+      ? primaryId
+      : session.user.email
 
     await storeCalendarConnection(
       profile.orgId,
@@ -72,6 +84,13 @@ export async function disconnectCalendarAction(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
+    const owned = await verifyCalendarOwnership(
+      profile.orgId,
+      profile.id,
+      connectedCalendarId
+    )
+    if (!owned) return { ok: false, error: "unauthorized-calendar" }
+
     await disconnectCalendar(profile.orgId, connectedCalendarId)
     revalidatePath("/expert/calendars")
     return { ok: true }
@@ -90,6 +109,13 @@ export async function loadSubCalendars(
     const session = await requireSession("events:manage")
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
+
+    const owned = await verifyCalendarOwnership(
+      profile.orgId,
+      profile.id,
+      connectedCalendarId
+    )
+    if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
     const { accessToken, provider } = await getAccessToken(
       profile.orgId,
@@ -120,7 +146,19 @@ export async function saveBusySources(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    await replaceBusySources(profile.orgId, connectedCalendarId, sources)
+    const owned = await verifyCalendarOwnership(
+      profile.orgId,
+      profile.id,
+      connectedCalendarId
+    )
+    if (!owned) return { ok: false, error: "unauthorized-calendar" }
+
+    await replaceBusySources(
+      profile.orgId,
+      connectedCalendarId,
+      sources,
+      profile.id
+    )
     revalidatePath("/expert/calendars")
     return { ok: true }
   } catch {
@@ -137,6 +175,13 @@ export async function saveDestinationCalendar(
     const session = await requireSession("events:manage")
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
+
+    const owned = await verifyCalendarOwnership(
+      profile.orgId,
+      profile.id,
+      connectedCalendarId
+    )
+    if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
     await replaceDestinationCalendar(
       profile.orgId,

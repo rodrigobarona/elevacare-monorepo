@@ -49,6 +49,8 @@
   "eventTypes.editDescription": "Update this event type's details and booking rules.",
   "eventTypes.empty": "You haven't created any event types yet.",
   "eventTypes.createFirst": "Create your first event type",
+  "eventTypes.status.published": "Published",
+  "eventTypes.status.draft": "Draft",
 
   "schedule.title": "Schedule",
   "schedule.description": "Set your weekly availability and date overrides.",

@@ -40,6 +40,13 @@ export async function loadSlots(
     const rangeStart = new Date(rangeStartIso)
     const rangeEnd = new Date(rangeEndIso)
 
+    if (
+      Number.isNaN(rangeStart.getTime()) ||
+      Number.isNaN(rangeEnd.getTime())
+    ) {
+      return { ok: false, error: "invalid-date-range" }
+    }
+
     const existingBookings = await listExpertBusyBookings(
       expert.id,
       rangeStart,
@@ -51,8 +58,8 @@ export async function loadSlots(
         durationMinutes: eventType.durationMinutes,
         bookingWindowDays: eventType.bookingWindowDays,
         minimumNoticeMinutes: eventType.minimumNoticeMinutes,
-        bufferBeforeMinutes: 0,
-        bufferAfterMinutes: 0,
+        bufferBeforeMinutes: eventType.bufferBeforeMinutes,
+        bufferAfterMinutes: eventType.bufferAfterMinutes,
       },
       schedule: { timezone: schedule.timezone },
       rules,
@@ -70,7 +77,8 @@ export async function loadSlots(
         end: s.end.toISOString(),
       })),
     }
-  } catch {
+  } catch (err) {
+    console.error("[loadSlots]", err)
     return { ok: false, error: "load-failed" }
   }
 }
@@ -121,7 +129,9 @@ export async function reserveSlotAction(
       expertProfileId: expert.id,
       orgId: expert.orgId,
       startsAt: new Date(slotStartIso),
-      endsAt: new Date(slotEndIso),
+      endsAt: new Date(
+        new Date(slotStartIso).getTime() + eventType.durationMinutes * 60_000
+      ),
       holdToken,
       ttlSeconds,
     })
@@ -136,7 +146,8 @@ export async function reserveSlotAction(
       holdToken,
       expiresAt: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
     }
-  } catch {
+  } catch (err) {
+    console.error("[reserveSlotAction]", err)
     return { ok: false, error: "reserve-failed" }
   }
 }
