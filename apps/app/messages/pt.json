@@ -26,5 +26,8 @@
   "settings.profile.language": "Idioma",
   "settings.profile.save": "Guardar",
 
+  "nav.finance": "Finanças",
+  "nav.adminApplications": "Candidaturas",
+
   "errors.unauthorized": "Não tem acesso a esta página."
 }

@@ -24,3 +24,16 @@ export {
   type SlugAvailability,
 } from "./queries/public"
 export { pingMainDb, pingAuditDb, type PingResult } from "./ping"
+export {
+  listApplications,
+  getApplicationById,
+  claimApplication,
+  rejectApplication,
+  approveApplication,
+  getExpertProfileByUserId,
+  updateExpertProfile,
+  type AdminApplicationRow,
+  type ListApplicationsFilters,
+  type ListApplicationsResult,
+  type ApproveApplicationResult,
+} from "./queries/admin"

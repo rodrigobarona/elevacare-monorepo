@@ -1,0 +1,137 @@
+import { eq } from "drizzle-orm"
+import { NextResponse } from "next/server"
+import { getSession } from "@eleva/auth"
+import { getAdapter, type ConnectInput } from "@eleva/accounting"
+import { db, main, withOrgContext, type Tx } from "@eleva/db"
+
+/**
+ * GET /accounting/callback
+ *
+ * OAuth redirect target for invoicing provider flows (TOConline, Moloni).
+ * The provider sends `?code=...&state=...` after the expert authorizes.
+ *
+ * State encodes: `<provider>:<expertProfileId>:<codeVerifier>`
+ *
+ * On success, exchanges code for tokens via the adapter's `connect()`
+ * method and persists the vault ref + metadata in
+ * `expert_integration_credentials`.
+ */
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+export async function GET(request: Request) {
+  const session = await getSession()
+  if (!session) {
+    return NextResponse.redirect(new URL("/signin", request.url))
+  }
+
+  const url = new URL(request.url)
+  const code = url.searchParams.get("code")
+  const state = url.searchParams.get("state")
+  const error = url.searchParams.get("error")
+
+  if (error) {
+    console.error("[accounting/callback] Provider error:", error)
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=provider_denied", request.url)
+    )
+  }
+
+  if (!code || !state) {
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=missing_params", request.url)
+    )
+  }
+
+  const parts = state.split(":")
+  if (parts.length < 3) {
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=invalid_state", request.url)
+    )
+  }
+
+  const [providerSlug, expertProfileId, codeVerifier] = parts as [
+    string,
+    string,
+    string,
+  ]
+
+  try {
+    const adapter = getAdapter(
+      providerSlug as "toconline" | "moloni" | "manual"
+    )
+
+    const [expert] = await db()
+      .select({
+        id: main.expertProfiles.id,
+        orgId: main.expertProfiles.orgId,
+        userId: main.expertProfiles.userId,
+      })
+      .from(main.expertProfiles)
+      .where(eq(main.expertProfiles.id, expertProfileId))
+      .limit(1)
+
+    if (!expert || expert.userId !== session.user.id) {
+      return NextResponse.redirect(
+        new URL("/expert/onboarding?invoicing_error=not_found", request.url)
+      )
+    }
+
+    const connectInput: ConnectInput = {
+      expertProfileId: expert.id,
+      orgId: expert.orgId,
+      userId: expert.userId,
+      payload: { code, codeVerifier },
+    }
+
+    const result = await adapter.connect(connectInput)
+
+    await withOrgContext(expert.orgId, async (tx: Tx) => {
+      await tx
+        .insert(main.expertIntegrationCredentials)
+        .values({
+          orgId: expert.orgId,
+          expertProfileId: expert.id,
+          provider: providerSlug as "toconline" | "moloni",
+          vaultRef: result.vaultRef,
+          metadata: result.metadata ?? {},
+          status: "active",
+          connectedAt: new Date(),
+          expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
+        })
+        .onConflictDoUpdate({
+          target: [
+            main.expertIntegrationCredentials.expertProfileId,
+            main.expertIntegrationCredentials.provider,
+          ],
+          set: {
+            vaultRef: result.vaultRef,
+            metadata: result.metadata ?? {},
+            status: "active",
+            connectedAt: new Date(),
+            expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
+            updatedAt: new Date(),
+          },
+        })
+
+      await tx
+        .update(main.expertProfiles)
+        .set({
+          invoicingProvider: providerSlug as "toconline" | "moloni",
+          invoicingSetupStatus: "connected",
+          updatedAt: new Date(),
+        })
+        .where(eq(main.expertProfiles.id, expert.id))
+    })
+
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_connected=true", request.url)
+    )
+  } catch (err) {
+    console.error("[accounting/callback] Connect failed:", err)
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=connect_failed", request.url)
+    )
+  }
+}

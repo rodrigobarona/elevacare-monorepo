@@ -26,5 +26,8 @@
   "settings.profile.language": "Idioma",
   "settings.profile.save": "Guardar",
 
+  "nav.finance": "Finanzas",
+  "nav.adminApplications": "Solicitudes",
+
   "errors.unauthorized": "No tienes acceso a esta página."
 }

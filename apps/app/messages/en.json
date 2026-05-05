@@ -26,5 +26,8 @@
   "settings.profile.language": "Language",
   "settings.profile.save": "Save",
 
+  "nav.finance": "Finance",
+  "nav.adminApplications": "Applications",
+
   "errors.unauthorized": "You do not have access to this page."
 }

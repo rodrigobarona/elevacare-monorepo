@@ -12,11 +12,16 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/accounting": "workspace:^",
+    "@eleva/audit": "workspace:^",
     "@eleva/auth": "workspace:^",
+    "@eleva/billing": "workspace:^",
     "@eleva/config": "workspace:^",
+    "@eleva/db": "workspace:^",
     "@eleva/flags": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
+    "@stripe/stripe-js": "^9.4.0",
     "@workos-inc/authkit-nextjs": "^2.9.0",
     "next": "^16.2.3",
     "next-intl": "^4.9.1",
