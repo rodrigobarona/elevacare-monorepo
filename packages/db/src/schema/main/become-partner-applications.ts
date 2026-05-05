@@ -63,7 +63,7 @@ export interface ApplicationDocument {
    * so admin tooling can re-fetch / delete the blob even if the public
    * URL host rotates.
    */
-  pathname: string
+  pathname?: string
   /** SHA-256 hash for integrity / dedupe. */
   hash?: string
   /** Bytes. */

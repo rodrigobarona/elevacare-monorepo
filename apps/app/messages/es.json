@@ -26,5 +26,15 @@
   "settings.profile.language": "Idioma",
   "settings.profile.save": "Guardar",
 
+  "nav.finance": "Finanzas",
+  "nav.adminApplications": "Solicitudes",
+
+  "finance.title": "Finanzas",
+  "finance.description": "Gestiona tus pagos, saldos y configuración fiscal.",
+  "finance.balance": "Saldo",
+  "finance.payouts": "Pagos",
+  "finance.accountDetails": "Datos de Cuenta",
+  "finance.taxSettings": "Configuración Fiscal",
+
   "errors.unauthorized": "No tienes acceso a esta página."
 }

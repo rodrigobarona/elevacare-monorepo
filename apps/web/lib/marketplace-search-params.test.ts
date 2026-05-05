@@ -89,6 +89,7 @@ describe("buildExpertFilters", () => {
       countries: ["PT"],
       sessionModes: ["online"],
       search: "ana",
+      locale: undefined,
       page: 2,
     })
   })
@@ -99,6 +100,7 @@ describe("buildExpertFilters", () => {
     expect(out.countries).toBeUndefined()
     expect(out.sessionModes).toBeUndefined()
     expect(out.categorySlug).toBeUndefined()
+    expect(out.locale).toBeUndefined()
   })
 
   it("applies overrides on top of derived filters", () => {
@@ -108,5 +110,16 @@ describe("buildExpertFilters", () => {
     )
     expect(out.categorySlug).toBe("forced")
     expect(out.pageSize).toBe(12)
+  })
+
+  it("passes locale through to ListExpertsFilters", () => {
+    const out = buildExpertFilters({ locale: "pt", search: "ana" })
+    expect(out.locale).toBe("pt")
+    expect(out.search).toBe("ana")
+  })
+
+  it("allows locale override via overrides param", () => {
+    const out = buildExpertFilters({ locale: "pt" }, { locale: "es" })
+    expect(out.locale).toBe("es")
   })
 })

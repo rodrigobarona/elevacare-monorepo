@@ -27,6 +27,12 @@ const NAV: Array<{
     matchPrefix: "/expert",
   },
   {
+    href: "/expert/finance",
+    labelKey: "nav.finance",
+    needs: "payouts:view_own",
+    matchPrefix: "/expert/finance",
+  },
+  {
     href: "/org",
     labelKey: "nav.org",
     needs: "members:manage",
@@ -37,6 +43,12 @@ const NAV: Array<{
     labelKey: "nav.admin",
     needs: "audit:view_all",
     matchPrefix: "/admin",
+  },
+  {
+    href: "/admin/become-partner",
+    labelKey: "nav.adminApplications",
+    needs: "applications:review",
+    matchPrefix: "/admin/become-partner",
   },
   {
     href: "/settings",

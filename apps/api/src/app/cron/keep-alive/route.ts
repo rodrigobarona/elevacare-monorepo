@@ -5,17 +5,15 @@ import { requireCronSecret } from "@eleva/config/env"
 import { heartbeat } from "@eleva/observability"
 
 /**
- * Keep-alive cron for the Neon main + audit databases.
+ * Daily liveness check for the Neon main + audit databases.
  *
- * Why it exists: Neon's serverless compute autosuspends after a few
- * minutes of inactivity. On preview branches and low-traffic prod
- * windows the first request after suspend pays a 1-3s cold-start.
- * A single daily ping is enough to keep the compute warm without
- * any meaningful cost (Neon doesn't bill cold compute).
+ * This is a smoke test, NOT a keep-warm mechanism. Neon autosuspend
+ * triggers after ~5 minutes of inactivity; a once-daily ping does
+ * not prevent cold starts. To eliminate cold starts on paid plans,
+ * disable Neon autosuspend in the project settings instead.
  *
- * Triggered by Vercel Cron (apps/api/vercel.json), which delivers
- * `Authorization: Bearer ${CRON_SECRET}` on every invocation. The
- * handler:
+ * Triggered daily at 06:00 UTC by Vercel Cron (apps/api/vercel.json),
+ * which delivers `Authorization: Bearer ${CRON_SECRET}`. The handler:
  *   1. Validates the bearer token (strict equality, fail-closed if
  *      CRON_SECRET is unset).
  *   2. Issues `SELECT 1` against both DATABASE_URL and
@@ -23,8 +21,8 @@ import { heartbeat } from "@eleva/observability"
  *      driver. Today both URLs share one Neon endpoint, so this is
  *      mildly redundant; pinging both keeps the cron correct if/when
  *      audit moves to its own compute.
- *   3. Optionally pings BetterStack via @eleva/observability
- *      `heartbeat()` so the on-call dashboard surfaces missed runs.
+ *   3. Pings BetterStack via @eleva/observability `heartbeat()` so
+ *      the on-call dashboard surfaces missed runs.
  *
  * Returns 200 when both pings succeed, 500 when either fails. The
  * detail body is intentionally small (no stack traces) — anyone with

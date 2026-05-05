@@ -50,7 +50,9 @@ export default async function CategoryPage({
   }
 
   const t = await getTranslations()
-  const baseFilters = buildExpertFilters(parseSearchParams(search), {
+  const parsed = parseSearchParams(search)
+  parsed.locale = locale
+  const baseFilters = buildExpertFilters(parsed, {
     categorySlug: cat.slug,
   })
   const expertsResult = await safeListExperts(baseFilters)

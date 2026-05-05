@@ -100,7 +100,7 @@ export async function submitApplicationAction(
     const applicationId = await withAudit(
       {
         orgId: session.orgId,
-        actorUserId: session.user.workosUserId,
+        actorUserId: session.user.id,
       },
       async (tx, ctx) => {
         const inserted = await tx

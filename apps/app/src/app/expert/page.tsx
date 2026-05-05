@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
+import { getExpertProfileByUserId } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
+
+export const dynamic = "force-dynamic"
 
 export default async function ExpertDashboardPage() {
   const session = await getSession()
@@ -9,6 +12,12 @@ export default async function ExpertDashboardPage() {
   if (!session.capabilities.includes("events:manage")) {
     redirect("/")
   }
+
+  const profile = await getExpertProfileByUserId(session.user.id)
+  if (!profile || profile.status === "draft" || profile.status === "approved") {
+    redirect("/expert/onboarding")
+  }
+
   const t = await getTranslations()
   return (
     <AppShell session={session}>

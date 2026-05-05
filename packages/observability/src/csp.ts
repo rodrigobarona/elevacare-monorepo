@@ -12,8 +12,8 @@ export const CSP_ALLOWLIST = {
     "https://js.stripe.com",
     "https://connect-js.stripe.com",
     "https://cdn.sentry-cdn.com",
-    // Next.js 16 inlines scripts with a nonce; allow when set.
     "'unsafe-inline'",
+    ...(process.env.NODE_ENV === "development" ? ["'unsafe-eval'"] : []),
   ],
   connectSrc: [
     "'self'",

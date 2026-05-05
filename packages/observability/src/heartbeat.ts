@@ -15,7 +15,7 @@ export async function heartbeat(name: string): Promise<void> {
   if (!url) return // not configured in dev/test
   const endpoint = `${url.replace(/\/$/, "")}/${encodeURIComponent(name)}`
   try {
-    await fetch(endpoint, { method: "POST" })
+    await fetch(endpoint, { method: "POST", signal: AbortSignal.timeout(5000) })
   } catch {
     // Swallow \u2014 the heartbeat itself should not page.
   }

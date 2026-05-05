@@ -12,10 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/accounting": "workspace:^",
     "@eleva/auth": "workspace:*",
     "@eleva/billing": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@eleva/encryption": "workspace:^",
     "@eleva/observability": "workspace:*",
     "@eleva/workflows": "workspace:*",
     "drizzle-orm": "^0.45.2",

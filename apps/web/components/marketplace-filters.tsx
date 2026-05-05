@@ -1,13 +1,14 @@
 "use client"
 
-import { useTransition } from "react"
+import { useCallback, useEffect, useRef, useState, useTransition } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { X } from "lucide-react"
+import { Search, X } from "lucide-react"
 
 import { usePathname, useRouter } from "@/i18n/navigation"
 
 import { Button } from "@eleva/ui/components/button"
+import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 import {
   Select,
@@ -28,6 +29,7 @@ export interface CategoryOption {
 }
 
 const ANY_VALUE = "__any__"
+const SEARCH_DEBOUNCE_MS = 300
 
 export function MarketplaceFilters({
   categories,
@@ -45,6 +47,24 @@ export function MarketplaceFilters({
   const params = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
+  const currentQ = params.get("q") ?? ""
+  const [searchValue, setSearchValue] = useState(currentQ)
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(null)
+
+  useEffect(() => {
+    setSearchValue(params.get("q") ?? "")
+  }, [params])
+
+  const navigate = useCallback(
+    (next: URLSearchParams) => {
+      next.delete("page")
+      const search = next.toString()
+      const target = `${basePath ?? pathname}${search ? `?${search}` : ""}`
+      startTransition(() => router.replace(target))
+    },
+    [basePath, pathname, router, startTransition]
+  )
+
   const current = {
     category: params.get("category") ?? ANY_VALUE,
     language: params.get("language") ?? ANY_VALUE,
@@ -57,7 +77,7 @@ export function MarketplaceFilters({
     current.language !== ANY_VALUE ||
     current.country !== ANY_VALUE ||
     current.sessionMode !== ANY_VALUE ||
-    (params.get("q") ?? "").length > 0
+    currentQ.length > 0
 
   function update(
     key: "category" | "language" | "country" | "session",
@@ -69,125 +89,155 @@ export function MarketplaceFilters({
     } else {
       next.set(key, value)
     }
-    next.delete("page")
-    const search = next.toString()
-    const target = `${basePath ?? pathname}${search ? `?${search}` : ""}`
-    startTransition(() => router.replace(target))
+    navigate(next)
+  }
+
+  function handleSearchChange(value: string) {
+    setSearchValue(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      const next = new URLSearchParams(params.toString())
+      const trimmed = value.trim()
+      if (trimmed.length >= 2) {
+        next.set("q", trimmed)
+      } else {
+        next.delete("q")
+      }
+      navigate(next)
+    }, SEARCH_DEBOUNCE_MS)
   }
 
   function clearAll() {
+    setSearchValue("")
     const target = basePath ?? pathname
     startTransition(() => router.replace(target))
   }
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {showCategoryFilter ? (
-        <FilterField label={t("marketplace.filters.category")}>
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder={t("marketplace.search.placeholder")}
+          value={searchValue}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          disabled={isPending}
+          className="pl-9"
+          aria-label={t("marketplace.search.placeholder")}
+        />
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {showCategoryFilter ? (
+          <FilterField label={t("marketplace.filters.category")}>
+            <Select
+              value={current.category}
+              onValueChange={(v) => update("category", v)}
+              disabled={isPending}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue
+                  placeholder={t("marketplace.filters.anyCategory")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ANY_VALUE}>
+                  {t("marketplace.filters.anyCategory")}
+                </SelectItem>
+                {categories.map((c) => (
+                  <SelectItem key={c.slug} value={c.slug}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </FilterField>
+        ) : null}
+
+        <FilterField label={t("marketplace.filters.language")}>
           <Select
-            value={current.category}
-            onValueChange={(v) => update("category", v)}
+            value={current.language}
+            onValueChange={(v) => update("language", v)}
             disabled={isPending}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder={t("marketplace.filters.anyCategory")} />
+              <SelectValue placeholder={t("marketplace.filters.anyLanguage")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={ANY_VALUE}>
-                {t("marketplace.filters.anyCategory")}
+                {t("marketplace.filters.anyLanguage")}
               </SelectItem>
-              {categories.map((c) => (
-                <SelectItem key={c.slug} value={c.slug}>
-                  {c.name}
+              {LANGUAGE_OPTIONS.map((l) => (
+                <SelectItem key={l.value} value={l.value}>
+                  {t(`locale.${l.labelKey}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </FilterField>
-      ) : null}
 
-      <FilterField label={t("marketplace.filters.language")}>
-        <Select
-          value={current.language}
-          onValueChange={(v) => update("language", v)}
-          disabled={isPending}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("marketplace.filters.anyLanguage")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_VALUE}>
-              {t("marketplace.filters.anyLanguage")}
-            </SelectItem>
-            {LANGUAGE_OPTIONS.map((l) => (
-              <SelectItem key={l.value} value={l.value}>
-                {t(`locale.${l.labelKey}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FilterField>
-
-      <FilterField label={t("marketplace.filters.country")}>
-        <Select
-          value={current.country}
-          onValueChange={(v) => update("country", v)}
-          disabled={isPending}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder={t("marketplace.filters.anyCountry")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_VALUE}>
-              {t("marketplace.filters.anyCountry")}
-            </SelectItem>
-            {COUNTRY_OPTIONS.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FilterField>
-
-      <FilterField label={t("marketplace.filters.sessionMode")}>
-        <Select
-          value={current.sessionMode}
-          onValueChange={(v) => update("session", v)}
-          disabled={isPending}
-        >
-          <SelectTrigger className="w-full">
-            <SelectValue
-              placeholder={t("marketplace.filters.anySessionMode")}
-            />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ANY_VALUE}>
-              {t("marketplace.filters.anySessionMode")}
-            </SelectItem>
-            {SESSION_MODE_OPTIONS.map((mode) => (
-              <SelectItem key={mode} value={mode}>
-                {t(`marketplace.sessionMode.${mode}`)}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </FilterField>
-
-      {hasActive ? (
-        <div className="sm:col-span-2 lg:col-span-4">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={clearAll}
+        <FilterField label={t("marketplace.filters.country")}>
+          <Select
+            value={current.country}
+            onValueChange={(v) => update("country", v)}
             disabled={isPending}
           >
-            <X className="size-4" />
-            {t("marketplace.search.filtersClear")}
-          </Button>
-        </div>
-      ) : null}
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder={t("marketplace.filters.anyCountry")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ANY_VALUE}>
+                {t("marketplace.filters.anyCountry")}
+              </SelectItem>
+              {COUNTRY_OPTIONS.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+
+        <FilterField label={t("marketplace.filters.sessionMode")}>
+          <Select
+            value={current.sessionMode}
+            onValueChange={(v) => update("session", v)}
+            disabled={isPending}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue
+                placeholder={t("marketplace.filters.anySessionMode")}
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ANY_VALUE}>
+                {t("marketplace.filters.anySessionMode")}
+              </SelectItem>
+              {SESSION_MODE_OPTIONS.map((mode) => (
+                <SelectItem key={mode} value={mode}>
+                  {t(`marketplace.sessionMode.${mode}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </FilterField>
+
+        {hasActive ? (
+          <div className="sm:col-span-2 lg:col-span-4">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={clearAll}
+              disabled={isPending}
+            >
+              <X className="size-4" />
+              {t("marketplace.search.filtersClear")}
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

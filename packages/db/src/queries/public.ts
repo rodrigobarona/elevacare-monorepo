@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, inArray, isNull, or, sql } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm"
 import { isReserved } from "@eleva/config/reserved-usernames"
 
 import { withPlatformAdminContext } from "../context"
@@ -65,8 +65,10 @@ export interface ListExpertsFilters {
   countries?: string[]
   /** Restrict to experts offering at least one of these session modes. */
   sessionModes?: main.SessionMode[]
-  /** Free-text search on displayName/headline/bio (case-insensitive). */
+  /** Free-text search via PostgreSQL FTS + trigram fallback. */
   search?: string
+  /** User locale for language-aware stemming (pt/en/es). */
+  locale?: string
   /** Pagination — defaults to (page=1, pageSize=24). */
   page?: number
   pageSize?: number
@@ -204,15 +206,25 @@ export async function listCategories(): Promise<PublicCategory[]> {
 }
 
 /**
+ * The stored tsvector uses eleva_fts_simple (unaccent + no stemming).
+ * Query-side must use the same config so tokens match. Locale-specific
+ * configs (eleva_fts_pt/en/es) exist in the DB for future use if we
+ * switch to per-locale tsvector columns with stemming.
+ */
+const FTS_QUERY_CONFIG = "eleva_fts_simple"
+
+/**
  * List active experts with optional filters. Returns a paginated set
- * sorted by displayName for stable cursoring (we add ranking signals
- * in S3 once availability is wired).
+ * sorted by relevance when searching, otherwise by displayName.
  */
 export async function listExperts(
   filters: ListExpertsFilters = {}
 ): Promise<ListExpertsResult> {
   const page = Math.max(1, Math.floor(filters.page ?? 1))
   const pageSize = Math.min(50, Math.max(1, Math.floor(filters.pageSize ?? 24)))
+
+  const hasSearch = !!(filters.search && filters.search.trim().length >= 2)
+  const searchTerm = hasSearch ? filters.search!.trim() : ""
 
   return withPlatformAdminContext(async (tx) => {
     const conditions = [
@@ -238,14 +250,11 @@ export async function listExperts(
       )
     }
 
-    if (filters.search && filters.search.trim().length >= 2) {
-      const q = `%${filters.search.trim()}%`
-      const searchClause = or(
-        ilike(main.expertProfiles.displayName, q),
-        ilike(main.expertProfiles.headline, q),
-        ilike(main.expertProfiles.bio, q)
-      )
-      if (searchClause) conditions.push(searchClause)
+    if (hasSearch) {
+      const ftsMatch = sql`${main.expertProfiles.searchVector} @@ websearch_to_tsquery(${FTS_QUERY_CONFIG}::regconfig, ${searchTerm})`
+      const trigramMatch = sql`similarity(${main.expertProfiles.displayName}, ${searchTerm}) > 0.3`
+      const searchClause = or(ftsMatch, trigramMatch)
+      conditions.push(searchClause!)
     }
 
     if (filters.categorySlug) {
@@ -268,6 +277,12 @@ export async function listExperts(
       .where(where)
     const count = countRows[0]?.count ?? 0
 
+    const orderClause = hasSearch
+      ? desc(
+          sql`ts_rank(${main.expertProfiles.searchVector}, websearch_to_tsquery(${FTS_QUERY_CONFIG}::regconfig, ${searchTerm}))`
+        )
+      : asc(main.expertProfiles.displayName)
+
     const rows = await tx
       .select({
         id: main.expertProfiles.id,
@@ -283,7 +298,7 @@ export async function listExperts(
       })
       .from(main.expertProfiles)
       .where(where)
-      .orderBy(asc(main.expertProfiles.displayName))
+      .orderBy(orderClause)
       .limit(pageSize)
       .offset((page - 1) * pageSize)
 

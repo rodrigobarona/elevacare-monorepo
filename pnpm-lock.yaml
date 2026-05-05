@@ -53,6 +53,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@eleva/accounting':
+        specifier: workspace:^
+        version: link:../../packages/accounting
       '@eleva/auth':
         specifier: workspace:*
         version: link:../../packages/auth
@@ -65,6 +68,9 @@ importers:
       '@eleva/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@eleva/encryption':
+        specifier: workspace:^
+        version: link:../../packages/encryption
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -108,12 +114,24 @@ importers:
 
   apps/app:
     dependencies:
+      '@eleva/accounting':
+        specifier: workspace:^
+        version: link:../../packages/accounting
+      '@eleva/audit':
+        specifier: workspace:^
+        version: link:../../packages/audit
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
+      '@eleva/billing':
+        specifier: workspace:^
+        version: link:../../packages/billing
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/db':
+        specifier: workspace:^
+        version: link:../../packages/db
       '@eleva/flags':
         specifier: workspace:^
         version: link:../../packages/flags
@@ -123,6 +141,9 @@ importers:
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@stripe/stripe-js':
+        specifier: ^9.4.0
+        version: 9.4.0
       '@workos-inc/authkit-nextjs':
         specifier: ^2.9.0
         version: 2.17.0(next@16.2.4(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -3488,6 +3509,10 @@ packages:
       '@stripe/connect-js': '>=3.3.39'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
+
+  '@stripe/stripe-js@9.4.0':
+    resolution: {integrity: sha512-zXG86DnoLU5nH2U18tX5ApTE3IAm+txoiPm4YFyEtRS0K5y7ZDH9M8e1Le/cZyI6wvW3BkJn2daZe2FqZOrSSg==}
+    engines: {node: '>=12.16'}
 
   '@swc/core-darwin-arm64@1.15.30':
     resolution: {integrity: sha512-VvpP+vq08HmGYewMWvrdsxh9s2lthz/808zXm8Yu5kaqeR8Yia2b0eYXleHQ3VAjoStUDk6LzTheBW9KXYQdMA==}
@@ -9314,6 +9339,8 @@ snapshots:
       '@stripe/connect-js': 3.3.39
       react: 19.2.5
       react-dom: 19.2.5(react@19.2.5)
+
+  '@stripe/stripe-js@9.4.0': {}
 
   '@swc/core-darwin-arm64@1.15.30':
     optional: true
