@@ -24,7 +24,7 @@ import { env } from "@eleva/config/env"
  *
  * On success, exchanges code for tokens via the adapter's `connect()`
  * method and persists the vault ref + metadata in
- * `expert_integration_credentials`.
+ * `expert_integrations` (category = 'invoicing').
  */
 
 export const dynamic = "force-dynamic"
@@ -110,26 +110,28 @@ export async function GET(request: Request) {
 
     await withOrgContext(expert.orgId, async (tx: Tx) => {
       await tx
-        .insert(main.expertIntegrationCredentials)
+        .insert(main.expertIntegrations)
         .values({
           orgId: expert.orgId,
           expertProfileId: expert.id,
-          provider: providerSlug,
+          category: "invoicing",
+          slug: providerSlug,
+          connectType: "oauth",
           vaultRef: result.vaultRef,
           metadata: result.metadata ?? {},
-          status: "active",
+          status: "connected",
           connectedAt: new Date(),
           expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
         })
         .onConflictDoUpdate({
           target: [
-            main.expertIntegrationCredentials.expertProfileId,
-            main.expertIntegrationCredentials.provider,
+            main.expertIntegrations.expertProfileId,
+            main.expertIntegrations.slug,
           ],
           set: {
             vaultRef: result.vaultRef,
             metadata: result.metadata ?? {},
-            status: "active",
+            status: "connected",
             connectedAt: new Date(),
             expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
             updatedAt: new Date(),

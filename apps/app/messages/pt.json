@@ -39,6 +39,7 @@
   "nav.eventTypes": "Tipos de Evento",
   "nav.schedule": "Horário",
   "nav.calendars": "Calendários",
+  "nav.integrations": "Integrações",
 
   "eventTypes.title": "Tipos de Evento",
   "eventTypes.description": "Defina os serviços que os pacientes podem reservar consigo.",
@@ -61,6 +62,7 @@
   "schedule.blocked": "Bloqueado",
   "schedule.save": "Guardar horário",
 
+  "calendars.backToIntegrations": "Integrações",
   "calendars.title": "Calendários Conectados",
   "calendars.description": "Conecte o seu calendário Google ou Microsoft para evitar reservas duplas.",
   "calendars.connectTitle": "Conectar um calendário",
@@ -78,6 +80,23 @@
   "calendars.status.connected": "Conectado",
   "calendars.status.disconnected": "Desconectado",
   "calendars.status.error": "Erro",
+  "calendars.status.expired": "Expirado",
+
+  "integrations.title": "Integrações",
+  "integrations.description": "Conecte calendários, ferramentas de faturação e outros serviços à sua prática Eleva.",
+  "integrations.category.calendar": "Calendários",
+  "integrations.category.invoicing": "Faturação",
+  "integrations.category.crm": "CRM",
+  "integrations.category.video": "Vídeo",
+  "integrations.category.other": "Outros",
+  "integrations.status.connecting": "A conectar",
+  "integrations.status.connected": "Conectado",
+  "integrations.status.disconnected": "Desconectado",
+  "integrations.status.error": "Erro",
+  "integrations.status.expired": "Expirado",
+  "integrations.configureCalendars": "Configurar calendários",
+  "integrations.connectViaPipes": "Conecte através das definições da sua conta para ativar esta integração.",
+  "integrations.availableIn": "Disponível em: {countries}",
 
   "errors.unauthorized": "Não tem acesso a esta página."
 }

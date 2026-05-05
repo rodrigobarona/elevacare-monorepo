@@ -39,6 +39,7 @@
   "nav.eventTypes": "Event Types",
   "nav.schedule": "Schedule",
   "nav.calendars": "Calendars",
+  "nav.integrations": "Integrations",
 
   "eventTypes.title": "Event Types",
   "eventTypes.description": "Define the services patients can book with you.",
@@ -61,6 +62,7 @@
   "schedule.blocked": "Blocked",
   "schedule.save": "Save schedule",
 
+  "calendars.backToIntegrations": "Integrations",
   "calendars.title": "Connected Calendars",
   "calendars.description": "Connect your Google or Microsoft calendar to avoid double bookings.",
   "calendars.connectTitle": "Connect a calendar",
@@ -78,6 +80,23 @@
   "calendars.status.connected": "Connected",
   "calendars.status.disconnected": "Disconnected",
   "calendars.status.error": "Error",
+  "calendars.status.expired": "Expired",
+
+  "integrations.title": "Integrations",
+  "integrations.description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
+  "integrations.category.calendar": "Calendars",
+  "integrations.category.invoicing": "Invoicing",
+  "integrations.category.crm": "CRM",
+  "integrations.category.video": "Video",
+  "integrations.category.other": "Other",
+  "integrations.status.connecting": "Connecting",
+  "integrations.status.connected": "Connected",
+  "integrations.status.disconnected": "Disconnected",
+  "integrations.status.error": "Error",
+  "integrations.status.expired": "Expired",
+  "integrations.configureCalendars": "Configure calendars",
+  "integrations.connectViaPipes": "Connect via your account settings to enable this integration.",
+  "integrations.availableIn": "Available in: {countries}",
 
   "errors.unauthorized": "You do not have access to this page."
 }

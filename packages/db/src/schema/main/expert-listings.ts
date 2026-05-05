@@ -1,4 +1,12 @@
-import { integer, index, pgTable, uniqueIndex, uuid } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+import {
+  integer,
+  index,
+  pgPolicy,
+  pgTable,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn } from "./shared"
 import { expertCategories } from "./expert-categories"
 import { expertProfiles } from "./expert-profiles"
@@ -31,6 +39,10 @@ export const expertListings = pgTable(
     ).on(t.expertProfileId, t.categoryId),
     categoryIdx: index("expert_listings_category_idx").on(t.categoryId),
     expertIdx: index("expert_listings_expert_idx").on(t.expertProfileId),
+    tenantPolicy: pgPolicy("expert_listings_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

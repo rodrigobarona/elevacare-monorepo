@@ -3,6 +3,7 @@ import {
   index,
   integer,
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -96,6 +97,10 @@ export const slotReservations = pgTable(
     expiresActiveIdx: index("slot_reservations_expires_active_idx")
       .on(t.expiresAt)
       .where(sql`status = 'active'`),
+    tenantPolicy: pgPolicy("slot_reservations_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 
@@ -174,6 +179,10 @@ export const bookings = pgTable(
     stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
+    tenantPolicy: pgPolicy("bookings_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 
@@ -234,6 +243,10 @@ export const sessions = pgTable(
     expertIdx: index("sessions_expert_idx").on(t.expertProfileId),
     patientIdx: index("sessions_patient_idx").on(t.patientUserId),
     timeIdx: index("sessions_time_idx").on(t.startsAt),
+    tenantPolicy: pgPolicy("sessions_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

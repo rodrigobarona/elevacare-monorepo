@@ -1,6 +1,6 @@
 {
-  "id": "1c67ec54-43f1-4bd9-8611-27f97f7300ff",
-  "prevId": "99e64f2f-0851-4221-a3a6-4afcefc4df2b",
+  "id": "99e64f2f-0851-4221-a3a6-4afcefc4df2b",
+  "prevId": "aeedfb5b-5cf4-4cab-b0ea-d4a41e952a50",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1153,6 +1153,441 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.calendar_busy_sources": {
+      "name": "calendar_busy_sources",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connected_calendar_id": {
+          "name": "connected_calendar_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_calendar_id": {
+          "name": "external_calendar_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "enabled": {
+          "name": "enabled",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "calendar_busy_sources_org_idx": {
+          "name": "calendar_busy_sources_org_idx",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "calendar_busy_sources_connected_idx": {
+          "name": "calendar_busy_sources_connected_idx",
+          "columns": [
+            {
+              "expression": "connected_calendar_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "calendar_busy_sources_unique_idx": {
+          "name": "calendar_busy_sources_unique_idx",
+          "columns": [
+            {
+              "expression": "connected_calendar_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "external_calendar_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "calendar_busy_sources_org_id_organizations_id_fk": {
+          "name": "calendar_busy_sources_org_id_organizations_id_fk",
+          "tableFrom": "calendar_busy_sources",
+          "tableTo": "organizations",
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "calendar_busy_sources_connected_calendar_id_connected_calendars_id_fk": {
+          "name": "calendar_busy_sources_connected_calendar_id_connected_calendars_id_fk",
+          "tableFrom": "calendar_busy_sources",
+          "tableTo": "connected_calendars",
+          "columnsFrom": ["connected_calendar_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "calendar_busy_sources_tenant_isolation": {
+          "name": "calendar_busy_sources_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["public"],
+          "using": "org_id::text = current_setting('eleva.org_id', true)",
+          "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.calendar_destinations": {
+      "name": "calendar_destinations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expert_profile_id": {
+          "name": "expert_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "connected_calendar_id": {
+          "name": "connected_calendar_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_calendar_id": {
+          "name": "external_calendar_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "calendar_destinations_org_idx": {
+          "name": "calendar_destinations_org_idx",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "calendar_destinations_expert_idx": {
+          "name": "calendar_destinations_expert_idx",
+          "columns": [
+            {
+              "expression": "expert_profile_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "calendar_destinations_org_id_organizations_id_fk": {
+          "name": "calendar_destinations_org_id_organizations_id_fk",
+          "tableFrom": "calendar_destinations",
+          "tableTo": "organizations",
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "calendar_destinations_expert_profile_id_expert_profiles_id_fk": {
+          "name": "calendar_destinations_expert_profile_id_expert_profiles_id_fk",
+          "tableFrom": "calendar_destinations",
+          "tableTo": "expert_profiles",
+          "columnsFrom": ["expert_profile_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "calendar_destinations_connected_calendar_id_connected_calendars_id_fk": {
+          "name": "calendar_destinations_connected_calendar_id_connected_calendars_id_fk",
+          "tableFrom": "calendar_destinations",
+          "tableTo": "connected_calendars",
+          "columnsFrom": ["connected_calendar_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "calendar_destinations_tenant_isolation": {
+          "name": "calendar_destinations_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["public"],
+          "using": "org_id::text = current_setting('eleva.org_id', true)",
+          "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.connected_calendars": {
+      "name": "connected_calendars",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expert_profile_id": {
+          "name": "expert_profile_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "workos_user_id": {
+          "name": "workos_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "calendar_provider",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_email": {
+          "name": "account_email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "calendar_connection_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'connected'"
+        },
+        "last_sync_at": {
+          "name": "last_sync_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "connected_calendars_org_idx": {
+          "name": "connected_calendars_org_idx",
+          "columns": [
+            {
+              "expression": "org_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "connected_calendars_expert_idx": {
+          "name": "connected_calendars_expert_idx",
+          "columns": [
+            {
+              "expression": "expert_profile_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "connected_calendars_expert_provider_email_idx": {
+          "name": "connected_calendars_expert_provider_email_idx",
+          "columns": [
+            {
+              "expression": "expert_profile_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "provider",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "account_email",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "connected_calendars_org_id_organizations_id_fk": {
+          "name": "connected_calendars_org_id_organizations_id_fk",
+          "tableFrom": "connected_calendars",
+          "tableTo": "organizations",
+          "columnsFrom": ["org_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "connected_calendars_expert_profile_id_expert_profiles_id_fk": {
+          "name": "connected_calendars_expert_profile_id_expert_profiles_id_fk",
+          "tableFrom": "connected_calendars",
+          "tableTo": "expert_profiles",
+          "columnsFrom": ["expert_profile_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "connected_calendars_tenant_isolation": {
+          "name": "connected_calendars_tenant_isolation",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": ["public"],
+          "using": "org_id::text = current_setting('eleva.org_id', true)",
+          "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.clinic_profiles": {
       "name": "clinic_profiles",
       "schema": "",
@@ -1995,146 +2430,8 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.calendar_busy_sources": {
-      "name": "calendar_busy_sources",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expert_integration_id": {
-          "name": "expert_integration_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "external_calendar_id": {
-          "name": "external_calendar_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "enabled": {
-          "name": "enabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "calendar_busy_sources_org_idx": {
-          "name": "calendar_busy_sources_org_idx",
-          "columns": [
-            {
-              "expression": "org_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "calendar_busy_sources_integration_idx": {
-          "name": "calendar_busy_sources_integration_idx",
-          "columns": [
-            {
-              "expression": "expert_integration_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "calendar_busy_sources_unique_idx": {
-          "name": "calendar_busy_sources_unique_idx",
-          "columns": [
-            {
-              "expression": "expert_integration_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "external_calendar_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "calendar_busy_sources_org_id_organizations_id_fk": {
-          "name": "calendar_busy_sources_org_id_organizations_id_fk",
-          "tableFrom": "calendar_busy_sources",
-          "tableTo": "organizations",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "calendar_busy_sources_expert_integration_id_expert_integrations_id_fk": {
-          "name": "calendar_busy_sources_expert_integration_id_expert_integrations_id_fk",
-          "tableFrom": "calendar_busy_sources",
-          "tableTo": "expert_integrations",
-          "columnsFrom": ["expert_integration_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "calendar_busy_sources_tenant_isolation": {
-          "name": "calendar_busy_sources_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": ["public"],
-          "using": "org_id::text = current_setting('eleva.org_id', true)",
-          "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.calendar_destinations": {
-      "name": "calendar_destinations",
+    "public.expert_integration_credentials": {
+      "name": "expert_integration_credentials",
       "schema": "",
       "columns": {
         "id": {
@@ -2156,175 +2453,18 @@
           "primaryKey": false,
           "notNull": true
         },
-        "expert_integration_id": {
-          "name": "expert_integration_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "external_calendar_id": {
-          "name": "external_calendar_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "display_name": {
-          "name": "display_name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "calendar_destinations_org_idx": {
-          "name": "calendar_destinations_org_idx",
-          "columns": [
-            {
-              "expression": "org_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "calendar_destinations_expert_idx": {
-          "name": "calendar_destinations_expert_idx",
-          "columns": [
-            {
-              "expression": "expert_profile_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "calendar_destinations_org_id_organizations_id_fk": {
-          "name": "calendar_destinations_org_id_organizations_id_fk",
-          "tableFrom": "calendar_destinations",
-          "tableTo": "organizations",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "calendar_destinations_expert_profile_id_expert_profiles_id_fk": {
-          "name": "calendar_destinations_expert_profile_id_expert_profiles_id_fk",
-          "tableFrom": "calendar_destinations",
-          "tableTo": "expert_profiles",
-          "columnsFrom": ["expert_profile_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "calendar_destinations_expert_integration_id_expert_integrations_id_fk": {
-          "name": "calendar_destinations_expert_integration_id_expert_integrations_id_fk",
-          "tableFrom": "calendar_destinations",
-          "tableTo": "expert_integrations",
-          "columnsFrom": ["expert_integration_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {
-        "calendar_destinations_tenant_isolation": {
-          "name": "calendar_destinations_tenant_isolation",
-          "as": "PERMISSIVE",
-          "for": "ALL",
-          "to": ["public"],
-          "using": "org_id::text = current_setting('eleva.org_id', true)",
-          "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
-        }
-      },
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.expert_integrations": {
-      "name": "expert_integrations",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "org_id": {
-          "name": "org_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "expert_profile_id": {
-          "name": "expert_profile_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "category": {
-          "name": "category",
-          "type": "integration_category",
+        "provider": {
+          "name": "provider",
+          "type": "invoicing_provider",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
-        },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "connect_type": {
-          "name": "connect_type",
-          "type": "integration_connect_type",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "workos_user_id": {
-          "name": "workos_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         },
         "vault_ref": {
           "name": "vault_ref",
           "type": "varchar(255)",
           "primaryKey": false,
-          "notNull": false
-        },
-        "account_identifier": {
-          "name": "account_identifier",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
+          "notNull": true
         },
         "metadata": {
           "name": "metadata",
@@ -2334,11 +2474,11 @@
         },
         "status": {
           "name": "status",
-          "type": "integration_status",
+          "type": "credential_status",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'connecting'"
+          "default": "'pending'"
         },
         "connected_at": {
           "name": "connected_at",
@@ -2348,12 +2488,6 @@
         },
         "expires_at": {
           "name": "expires_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "last_sync_at": {
-          "name": "last_sync_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": false
@@ -2392,53 +2526,8 @@
         }
       },
       "indexes": {
-        "expert_integrations_org_idx": {
-          "name": "expert_integrations_org_idx",
-          "columns": [
-            {
-              "expression": "org_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "expert_integrations_expert_idx": {
-          "name": "expert_integrations_expert_idx",
-          "columns": [
-            {
-              "expression": "expert_profile_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "expert_integrations_category_idx": {
-          "name": "expert_integrations_category_idx",
-          "columns": [
-            {
-              "expression": "category",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "expert_integrations_expert_slug_idx": {
-          "name": "expert_integrations_expert_slug_idx",
+        "expert_integration_credentials_expert_provider_unique": {
+          "name": "expert_integration_credentials_expert_provider_unique",
           "columns": [
             {
               "expression": "expert_profile_id",
@@ -2447,7 +2536,7 @@
               "nulls": "last"
             },
             {
-              "expression": "slug",
+              "expression": "provider",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2458,8 +2547,23 @@
           "method": "btree",
           "with": {}
         },
-        "expert_integrations_status_idx": {
-          "name": "expert_integrations_status_idx",
+        "expert_integration_credentials_expert_idx": {
+          "name": "expert_integration_credentials_expert_idx",
+          "columns": [
+            {
+              "expression": "expert_profile_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "expert_integration_credentials_status_idx": {
+          "name": "expert_integration_credentials_status_idx",
           "columns": [
             {
               "expression": "status",
@@ -2475,18 +2579,9 @@
         }
       },
       "foreignKeys": {
-        "expert_integrations_org_id_organizations_id_fk": {
-          "name": "expert_integrations_org_id_organizations_id_fk",
-          "tableFrom": "expert_integrations",
-          "tableTo": "organizations",
-          "columnsFrom": ["org_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "expert_integrations_expert_profile_id_expert_profiles_id_fk": {
-          "name": "expert_integrations_expert_profile_id_expert_profiles_id_fk",
-          "tableFrom": "expert_integrations",
+        "expert_integration_credentials_expert_profile_id_expert_profiles_id_fk": {
+          "name": "expert_integration_credentials_expert_profile_id_expert_profiles_id_fk",
+          "tableFrom": "expert_integration_credentials",
           "tableTo": "expert_profiles",
           "columnsFrom": ["expert_profile_id"],
           "columnsTo": ["id"],
@@ -2497,8 +2592,8 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {
-        "expert_integrations_tenant_isolation": {
-          "name": "expert_integrations_tenant_isolation",
+        "expert_integration_credentials_tenant_isolation": {
+          "name": "expert_integration_credentials_tenant_isolation",
           "as": "PERMISSIVE",
           "for": "ALL",
           "to": ["public"],
@@ -2506,16 +2601,7 @@
           "withCheck": "org_id::text = current_setting('eleva.org_id', true)"
         }
       },
-      "checkConstraints": {
-        "expert_integrations_pipes_check": {
-          "name": "expert_integrations_pipes_check",
-          "value": "connect_type != 'pipes' OR workos_user_id IS NOT NULL"
-        },
-        "expert_integrations_oauth_check": {
-          "name": "expert_integrations_oauth_check",
-          "value": "connect_type != 'oauth' OR vault_ref IS NOT NULL"
-        }
-      },
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.expert_listings": {
@@ -3886,20 +3972,20 @@
       "schema": "public",
       "values": ["active", "expired", "converted", "released"]
     },
-    "public.integration_category": {
-      "name": "integration_category",
+    "public.calendar_connection_status": {
+      "name": "calendar_connection_status",
       "schema": "public",
-      "values": ["calendar", "invoicing", "crm", "video", "other"]
+      "values": ["connecting", "connected", "disconnected", "error"]
     },
-    "public.integration_connect_type": {
-      "name": "integration_connect_type",
+    "public.calendar_provider": {
+      "name": "calendar_provider",
       "schema": "public",
-      "values": ["pipes", "oauth", "api_key", "manual"]
+      "values": ["google", "microsoft"]
     },
-    "public.integration_status": {
-      "name": "integration_status",
+    "public.credential_status": {
+      "name": "credential_status",
       "schema": "public",
-      "values": ["connecting", "connected", "disconnected", "error", "expired"]
+      "values": ["pending", "active", "expired", "revoked"]
     },
     "public.expert_status": {
       "name": "expert_status",

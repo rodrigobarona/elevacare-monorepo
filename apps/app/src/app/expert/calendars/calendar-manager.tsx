@@ -19,24 +19,20 @@ import {
   saveDestinationCalendar,
 } from "./actions"
 
-interface ConnectedCal {
+interface CalendarIntegration {
   id: string
-  provider: "google" | "microsoft"
-  accountEmail: string
+  slug: string
+  providerLabel: string
+  accountIdentifier: string | null
   status: string
 }
 
 interface Props {
-  calendars: ConnectedCal[]
+  integrations: CalendarIntegration[]
   pipesWidgetToken: string
 }
 
-const PROVIDER_LABEL: Record<string, string> = {
-  google: "Google Calendar",
-  microsoft: "Microsoft Calendar",
-}
-
-export function CalendarManager({ calendars, pipesWidgetToken }: Props) {
+export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
   const router = useRouter()
   const t = useTranslations("calendars")
   const [pending, setPending] = React.useState(false)
@@ -86,23 +82,21 @@ export function CalendarManager({ calendars, pipesWidgetToken }: Props) {
         </CardContent>
       </Card>
 
-      {calendars.length > 0 && (
+      {integrations.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>{t("connectedTitle")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {calendars.map((cal) => (
+            {integrations.map((cal) => (
               <div
                 key={cal.id}
                 className="flex items-center justify-between rounded-lg border p-3"
               >
                 <div className="space-y-0.5">
-                  <p className="text-sm font-medium">
-                    {PROVIDER_LABEL[cal.provider] ?? cal.provider}
-                  </p>
+                  <p className="text-sm font-medium">{cal.providerLabel}</p>
                   <p className="text-xs text-muted-foreground">
-                    {cal.accountEmail}
+                    {cal.accountIdentifier ?? ""}
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

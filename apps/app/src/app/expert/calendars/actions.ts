@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { requireSession } from "@eleva/auth/server"
 import {
   getExpertProfileByUserId,
-  listConnectedCalendars,
+  listCalendarIntegrations,
   replaceBusySources,
   replaceDestinationCalendar,
 } from "@eleva/db"
@@ -16,17 +16,22 @@ import {
 
 type ActionResult = { ok: true; data?: unknown } | { ok: false; error: string }
 
+const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
+  "google-calendar": "google",
+  "microsoft-calendar": "microsoft",
+}
+
 async function verifyCalendarOwnership(
   orgId: string,
   expertProfileId: string,
-  connectedCalendarId: string
+  integrationId: string
 ): Promise<boolean> {
-  const calendars = await listConnectedCalendars(orgId, expertProfileId)
-  return calendars.some((c) => c.id === connectedCalendarId)
+  const integrations = await listCalendarIntegrations(orgId, expertProfileId)
+  return integrations.some((i) => i.id === integrationId)
 }
 
 export async function disconnectCalendarAction(
-  connectedCalendarId: string
+  integrationId: string
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
@@ -36,27 +41,28 @@ export async function disconnectCalendarAction(
     const owned = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
-      connectedCalendarId
+      integrationId
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
     const { db } = await import("@eleva/db")
-    const { connectedCalendars } = await import("@eleva/db/schema")
+    const { expertIntegrations } = await import("@eleva/db/schema")
     const { eq } = await import("drizzle-orm")
     const mainDb = db()
     await mainDb
-      .update(connectedCalendars)
+      .update(expertIntegrations)
       .set({ status: "disconnected", updatedAt: new Date() })
-      .where(eq(connectedCalendars.id, connectedCalendarId))
+      .where(eq(expertIntegrations.id, integrationId))
 
     revalidatePath("/expert/calendars")
+    revalidatePath("/expert/integrations")
     return { ok: true }
   } catch {
     return { ok: false, error: "disconnect-failed" }
   }
 }
 
-export async function loadSubCalendars(connectedCalendarId: string): Promise<
+export async function loadSubCalendars(integrationId: string): Promise<
   | {
       ok: true
       calendars: {
@@ -76,19 +82,25 @@ export async function loadSubCalendars(connectedCalendarId: string): Promise<
     const owned = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
-      connectedCalendarId
+      integrationId
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
-    const calendars = await listConnectedCalendars(profile.orgId, profile.id)
-    const connCal = calendars.find((c) => c.id === connectedCalendarId)
-    if (!connCal) return { ok: false, error: "calendar-not-found" }
+    const integrations = await listCalendarIntegrations(
+      profile.orgId,
+      profile.id
+    )
+    const integration = integrations.find((i) => i.id === integrationId)
+    if (!integration) return { ok: false, error: "calendar-not-found" }
+
+    const provider = SLUG_TO_PROVIDER[integration.slug]
+    if (!provider) return { ok: false, error: "unknown-provider" }
 
     const accessToken = await getCalendarToken(
       session.user.workosUserId,
-      connCal.provider
+      provider
     )
-    const adapter = getAdapter(connCal.provider)
+    const adapter = getAdapter(provider)
     const subCalendars = await adapter.listCalendars(accessToken)
 
     return {
@@ -106,7 +118,7 @@ export async function loadSubCalendars(connectedCalendarId: string): Promise<
 }
 
 export async function saveBusySources(
-  connectedCalendarId: string,
+  integrationId: string,
   sources: { externalCalendarId: string; displayName: string }[]
 ): Promise<ActionResult> {
   try {
@@ -117,16 +129,11 @@ export async function saveBusySources(
     const owned = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
-      connectedCalendarId
+      integrationId
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
-    await replaceBusySources(
-      profile.orgId,
-      connectedCalendarId,
-      sources,
-      profile.id
-    )
+    await replaceBusySources(profile.orgId, integrationId, sources, profile.id)
     revalidatePath("/expert/calendars")
     return { ok: true }
   } catch {
@@ -135,7 +142,7 @@ export async function saveBusySources(
 }
 
 export async function saveDestinationCalendar(
-  connectedCalendarId: string,
+  integrationId: string,
   externalCalendarId: string,
   displayName: string
 ): Promise<ActionResult> {
@@ -147,14 +154,14 @@ export async function saveDestinationCalendar(
     const owned = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
-      connectedCalendarId
+      integrationId
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
     await replaceDestinationCalendar(
       profile.orgId,
       profile.id,
-      connectedCalendarId,
+      integrationId,
       externalCalendarId,
       displayName
     )

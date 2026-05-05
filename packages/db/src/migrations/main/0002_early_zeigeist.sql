@@ -27,6 +27,7 @@ CREATE TABLE "bookings" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "bookings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "sessions" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -46,6 +47,7 @@ CREATE TABLE "sessions" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "sessions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "slot_reservations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -60,6 +62,7 @@ CREATE TABLE "slot_reservations" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "slot_reservations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "calendar_busy_sources" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -70,6 +73,7 @@ CREATE TABLE "calendar_busy_sources" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "calendar_busy_sources" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "calendar_destinations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -81,6 +85,7 @@ CREATE TABLE "calendar_destinations" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "calendar_destinations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "connected_calendars" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -94,6 +99,7 @@ CREATE TABLE "connected_calendars" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "connected_calendars" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "event_locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -110,6 +116,7 @@ CREATE TABLE "event_locations" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "event_locations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "expert_practice_locations" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -126,6 +133,7 @@ CREATE TABLE "expert_practice_locations" (
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "expert_practice_locations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "event_types" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -156,6 +164,7 @@ CREATE TABLE "event_types" (
 	CONSTRAINT "event_types_slug_format" CHECK (slug ~ '^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])?$' AND slug NOT LIKE '%--%')
 );
 --> statement-breakpoint
+ALTER TABLE "event_types" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "availability_rules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -168,6 +177,7 @@ CREATE TABLE "availability_rules" (
 	CONSTRAINT "availability_rules_time_order" CHECK (start_time < end_time)
 );
 --> statement-breakpoint
+ALTER TABLE "availability_rules" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "date_overrides" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -180,6 +190,7 @@ CREATE TABLE "date_overrides" (
 	CONSTRAINT "date_overrides_blocked_nulls" CHECK ((is_blocked = true AND start_time IS NULL AND end_time IS NULL) OR (is_blocked = false AND start_time IS NOT NULL AND end_time IS NOT NULL AND start_time < end_time))
 );
 --> statement-breakpoint
+ALTER TABLE "date_overrides" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "schedules" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"org_id" uuid NOT NULL,
@@ -192,8 +203,17 @@ CREATE TABLE "schedules" (
 	"deleted_at" timestamp with time zone
 );
 --> statement-breakpoint
+ALTER TABLE "schedules" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "audit_outbox" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "become_partner_applications" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "clinic_profiles" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "expert_integration_credentials" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "expert_listings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "expert_profiles" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "organizations" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+ALTER TABLE "memberships" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "expert_profiles" ADD COLUMN "timezone" varchar(64);--> statement-breakpoint
-ALTER TABLE "expert_profiles" ADD COLUMN "search_vector" "tsvector";--> statement-breakpoint
+ALTER TABLE "expert_profiles" ADD COLUMN "search_vector" "tsvector" GENERATED ALWAYS AS (setweight(to_tsvector('eleva_fts_simple', coalesce(display_name, '')), 'A') || setweight(to_tsvector('eleva_fts_simple', coalesce(headline, '')), 'B') || setweight(to_tsvector('eleva_fts_simple', coalesce(bio, '')), 'C')) STORED;--> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_org_id_organizations_id_fk" FOREIGN KEY ("org_id") REFERENCES "public"."organizations"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_event_type_id_event_types_id_fk" FOREIGN KEY ("event_type_id") REFERENCES "public"."event_types"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_expert_profile_id_expert_profiles_id_fk" FOREIGN KEY ("expert_profile_id") REFERENCES "public"."expert_profiles"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -269,4 +289,25 @@ CREATE UNIQUE INDEX "date_overrides_schedule_date_idx" ON "date_overrides" USING
 CREATE INDEX "schedules_org_idx" ON "schedules" USING btree ("org_id");--> statement-breakpoint
 CREATE INDEX "schedules_expert_idx" ON "schedules" USING btree ("expert_profile_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "schedules_expert_default_idx" ON "schedules" USING btree ("expert_profile_id","is_default") WHERE is_default = true AND deleted_at IS NULL;--> statement-breakpoint
-CREATE INDEX "expert_profiles_search_idx" ON "expert_profiles" USING gin ("search_vector");
+CREATE INDEX "expert_profiles_search_idx" ON "expert_profiles" USING gin ("search_vector");--> statement-breakpoint
+CREATE INDEX "expert_profiles_name_trgm_idx" ON "expert_profiles" USING gin (display_name gin_trgm_ops);--> statement-breakpoint
+CREATE POLICY "audit_outbox_tenant_isolation" ON "audit_outbox" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "become_partner_applications_tenant_isolation" ON "become_partner_applications" AS PERMISSIVE FOR ALL TO public USING (applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true') WITH CHECK (applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');--> statement-breakpoint
+CREATE POLICY "clinic_profiles_tenant_isolation" ON "clinic_profiles" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "expert_integration_credentials_tenant_isolation" ON "expert_integration_credentials" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "expert_listings_tenant_isolation" ON "expert_listings" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "expert_profiles_tenant_isolation" ON "expert_profiles" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "organizations_tenant_isolation" ON "organizations" AS PERMISSIVE FOR ALL TO public USING (id::text = current_setting('eleva.org_id', true)) WITH CHECK (id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "memberships_tenant_isolation" ON "memberships" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "bookings_tenant_isolation" ON "bookings" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "sessions_tenant_isolation" ON "sessions" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "slot_reservations_tenant_isolation" ON "slot_reservations" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "calendar_busy_sources_tenant_isolation" ON "calendar_busy_sources" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "calendar_destinations_tenant_isolation" ON "calendar_destinations" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "connected_calendars_tenant_isolation" ON "connected_calendars" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "event_locations_tenant_isolation" ON "event_locations" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "expert_practice_locations_tenant_isolation" ON "expert_practice_locations" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "event_types_tenant_isolation" ON "event_types" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "availability_rules_tenant_isolation" ON "availability_rules" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "date_overrides_tenant_isolation" ON "date_overrides" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));--> statement-breakpoint
+CREATE POLICY "schedules_tenant_isolation" ON "schedules" AS PERMISSIVE FOR ALL TO public USING (org_id::text = current_setting('eleva.org_id', true)) WITH CHECK (org_id::text = current_setting('eleva.org_id', true));

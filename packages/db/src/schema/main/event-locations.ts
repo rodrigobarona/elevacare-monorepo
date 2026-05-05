@@ -4,6 +4,7 @@ import {
   doublePrecision,
   index,
   jsonb,
+  pgPolicy,
   pgTable,
   text,
   uniqueIndex,
@@ -58,6 +59,10 @@ export const expertPracticeLocations = pgTable(
     primaryIdx: uniqueIndex("expert_practice_locations_primary_idx")
       .on(t.expertProfileId)
       .where(sql`is_primary = true`),
+    tenantPolicy: pgPolicy("expert_practice_locations_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 
@@ -93,6 +98,10 @@ export const eventLocations = pgTable(
   (t) => ({
     orgIdx: index("event_locations_org_idx").on(t.orgId),
     eventTypeIdx: index("event_locations_event_type_idx").on(t.eventTypeId),
+    tenantPolicy: pgPolicy("event_locations_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

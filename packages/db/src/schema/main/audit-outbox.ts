@@ -3,6 +3,7 @@ import {
   integer,
   jsonb,
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -51,6 +52,10 @@ export const auditOutbox = pgTable(
   },
   (t) => ({
     auditIdIdx: uniqueIndex("audit_outbox_audit_id_idx").on(t.auditId),
+    tenantPolicy: pgPolicy("audit_outbox_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

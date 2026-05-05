@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   check,
   index,
+  pgPolicy,
   pgTable,
   text,
   uniqueIndex,
@@ -58,6 +59,10 @@ export const clinicProfiles = pgTable(
       "clinic_profiles_slug_format",
       sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND slug NOT LIKE '%--%'`
     ),
+    tenantPolicy: pgPolicy("clinic_profiles_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

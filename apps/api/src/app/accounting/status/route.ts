@@ -82,15 +82,13 @@ export async function GET(request: Request) {
     const cred = await withOrgContext(expert.orgId, async (tx: Tx) => {
       const [row] = await tx
         .select()
-        .from(main.expertIntegrationCredentials)
+        .from(main.expertIntegrations)
         .where(
           and(
-            eq(main.expertIntegrationCredentials.expertProfileId, expert.id),
-            eq(
-              main.expertIntegrationCredentials.provider,
-              expert.invoicingProvider!
-            ),
-            isNull(main.expertIntegrationCredentials.deletedAt)
+            eq(main.expertIntegrations.expertProfileId, expert.id),
+            eq(main.expertIntegrations.slug, expert.invoicingProvider!),
+            eq(main.expertIntegrations.category, "invoicing"),
+            isNull(main.expertIntegrations.deletedAt)
           )
         )
         .limit(1)
@@ -103,7 +101,7 @@ export async function GET(request: Request) {
           expert.invoicingProvider as InvoicingProviderSlug
         )
         adapterStatus = await adapter.status({
-          vaultRef: cred.vaultRef,
+          vaultRef: cred.vaultRef!,
           metadata: cred.metadata ?? undefined,
         })
       } catch (err) {

@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  pgPolicy,
   pgTable,
   smallint,
   text,
@@ -58,6 +59,10 @@ export const schedules = pgTable(
     defaultIdx: uniqueIndex("schedules_expert_default_idx")
       .on(t.expertProfileId, t.isDefault)
       .where(sql`is_default = true AND deleted_at IS NULL`),
+    tenantPolicy: pgPolicy("schedules_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 
@@ -91,6 +96,10 @@ export const availabilityRules = pgTable(
       sql`day_of_week >= 0 AND day_of_week <= 6`
     ),
     timeChk: check("availability_rules_time_order", sql`start_time < end_time`),
+    tenantPolicy: pgPolicy("availability_rules_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 
@@ -128,6 +137,10 @@ export const dateOverrides = pgTable(
       "date_overrides_blocked_nulls",
       sql`(is_blocked = true AND start_time IS NULL AND end_time IS NULL) OR (is_blocked = false AND start_time IS NOT NULL AND end_time IS NOT NULL AND start_time < end_time)`
     ),
+    tenantPolicy: pgPolicy("date_overrides_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

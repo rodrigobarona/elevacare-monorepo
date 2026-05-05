@@ -19,15 +19,15 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1778259600000,
-      "tag": "0002_expert_fts_search",
+      "when": 1778021700253,
+      "tag": "0002_early_zeigeist",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1778019828810,
-      "tag": "0003_slow_khan",
+      "when": 1778023289033,
+      "tag": "0003_milky_enchantress",
       "breakpoints": true
     }
   ]

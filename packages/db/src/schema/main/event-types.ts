@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  pgPolicy,
   pgTable,
   text,
   uniqueIndex,
@@ -93,6 +94,10 @@ export const eventTypes = pgTable(
       "event_types_slug_format",
       sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])?$' AND slug NOT LIKE '%--%'`
     ),
+    tenantPolicy: pgPolicy("event_types_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

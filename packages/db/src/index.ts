@@ -66,7 +66,8 @@ export {
   type BookingScheduleData,
 } from "./queries/booking-public"
 export {
-  listConnectedCalendars,
+  listCalendarIntegrations,
+  listExpertIntegrations,
   replaceBusySources,
   replaceDestinationCalendar,
 } from "./queries/calendars"

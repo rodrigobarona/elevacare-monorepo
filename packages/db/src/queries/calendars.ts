@@ -1,38 +1,72 @@
 import { and, eq } from "drizzle-orm"
 import { withOrgContext, type Tx } from "../context"
 import {
-  connectedCalendars,
+  expertIntegrations,
   calendarBusySources,
   calendarDestinations,
-  type ConnectedCalendar,
+  type ExpertIntegration,
 } from "../schema/main/index"
 
-export async function listConnectedCalendars(
+/**
+ * List calendar integrations for an expert.
+ * Filters `expert_integrations` by `category = 'calendar'`.
+ */
+export async function listCalendarIntegrations(
   orgId: string,
   expertProfileId: string
-): Promise<ConnectedCalendar[]> {
+): Promise<ExpertIntegration[]> {
   return withOrgContext(orgId, async (tx: Tx) => {
     return tx
       .select()
-      .from(connectedCalendars)
-      .where(eq(connectedCalendars.expertProfileId, expertProfileId))
+      .from(expertIntegrations)
+      .where(
+        and(
+          eq(expertIntegrations.expertProfileId, expertProfileId),
+          eq(expertIntegrations.category, "calendar")
+        )
+      )
+  })
+}
+
+/**
+ * List all integrations for an expert, optionally filtered by category.
+ */
+export async function listExpertIntegrations(
+  orgId: string,
+  expertProfileId: string,
+  category?: string
+): Promise<ExpertIntegration[]> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const conditions = [eq(expertIntegrations.expertProfileId, expertProfileId)]
+    if (category) {
+      conditions.push(
+        eq(
+          expertIntegrations.category,
+          category as ExpertIntegration["category"]
+        )
+      )
+    }
+    return tx
+      .select()
+      .from(expertIntegrations)
+      .where(and(...conditions))
   })
 }
 
 export async function replaceBusySources(
   orgId: string,
-  connectedCalendarId: string,
+  integrationId: string,
   sources: { externalCalendarId: string; displayName: string }[],
   expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
     const [owner] = await tx
-      .select({ id: connectedCalendars.id })
-      .from(connectedCalendars)
+      .select({ id: expertIntegrations.id })
+      .from(expertIntegrations)
       .where(
         and(
-          eq(connectedCalendars.id, connectedCalendarId),
-          eq(connectedCalendars.expertProfileId, expertProfileId)
+          eq(expertIntegrations.id, integrationId),
+          eq(expertIntegrations.expertProfileId, expertProfileId)
         )
       )
       .limit(1)
@@ -41,13 +75,13 @@ export async function replaceBusySources(
 
     await tx
       .delete(calendarBusySources)
-      .where(eq(calendarBusySources.connectedCalendarId, connectedCalendarId))
+      .where(eq(calendarBusySources.expertIntegrationId, integrationId))
 
     if (sources.length > 0) {
       await tx.insert(calendarBusySources).values(
         sources.map((s) => ({
           orgId,
-          connectedCalendarId,
+          expertIntegrationId: integrationId,
           externalCalendarId: s.externalCalendarId,
           displayName: s.displayName,
         }))
@@ -59,18 +93,18 @@ export async function replaceBusySources(
 export async function replaceDestinationCalendar(
   orgId: string,
   expertProfileId: string,
-  connectedCalendarId: string,
+  integrationId: string,
   externalCalendarId: string,
   displayName: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
     const [owner] = await tx
-      .select({ id: connectedCalendars.id })
-      .from(connectedCalendars)
+      .select({ id: expertIntegrations.id })
+      .from(expertIntegrations)
       .where(
         and(
-          eq(connectedCalendars.id, connectedCalendarId),
-          eq(connectedCalendars.expertProfileId, expertProfileId)
+          eq(expertIntegrations.id, integrationId),
+          eq(expertIntegrations.expertProfileId, expertProfileId)
         )
       )
       .limit(1)
@@ -84,7 +118,7 @@ export async function replaceDestinationCalendar(
     await tx.insert(calendarDestinations).values({
       orgId,
       expertProfileId,
-      connectedCalendarId,
+      expertIntegrationId: integrationId,
       externalCalendarId,
       displayName,
     })

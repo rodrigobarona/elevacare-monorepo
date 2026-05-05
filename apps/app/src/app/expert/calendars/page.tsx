@@ -1,12 +1,18 @@
+import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
-import { getExpertProfileByUserId, listConnectedCalendars } from "@eleva/db"
+import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
 import { WorkOS } from "@workos-inc/node"
 import { AppShell } from "@/components/app-shell"
 import { CalendarManager } from "./calendar-manager"
 
 export const dynamic = "force-dynamic"
+
+const SLUG_LABEL: Record<string, string> = {
+  "google-calendar": "Google Calendar",
+  "microsoft-calendar": "Microsoft Calendar",
+}
 
 export default async function CalendarsPage() {
   const session = await getSession()
@@ -16,13 +22,14 @@ export default async function CalendarsPage() {
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) redirect("/expert/onboarding")
 
-  const calendars = (
-    await listConnectedCalendars(profile.orgId, profile.id)
-  ).map((c) => ({
-    id: c.id,
-    provider: c.provider,
-    accountEmail: c.accountEmail,
-    status: c.status,
+  const integrations = (
+    await listCalendarIntegrations(profile.orgId, profile.id)
+  ).map((i) => ({
+    id: i.id,
+    slug: i.slug,
+    providerLabel: SLUG_LABEL[i.slug] ?? i.slug,
+    accountIdentifier: i.accountIdentifier,
+    status: i.status,
   }))
 
   const workos = new WorkOS(process.env.WORKOS_API_KEY!)
@@ -36,12 +43,23 @@ export default async function CalendarsPage() {
   return (
     <AppShell session={session}>
       <div className="mx-auto max-w-2xl space-y-6">
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Link href="/expert/integrations" className="hover:underline">
+            {t("backToIntegrations")}
+          </Link>
+          <span>/</span>
+          <span>{t("title")}</span>
+        </div>
+
         <header className="space-y-1">
           <h1 className="text-2xl font-medium">{t("title")}</h1>
           <p className="text-sm text-muted-foreground">{t("description")}</p>
         </header>
 
-        <CalendarManager calendars={calendars} pipesWidgetToken={widgetToken} />
+        <CalendarManager
+          integrations={integrations}
+          pipesWidgetToken={widgetToken}
+        />
       </div>
     </AppShell>
   )

@@ -5,8 +5,20 @@ import { captureException } from "@eleva/observability"
 import {
   getCalendarToken,
   getAdapter,
+  type CalendarProvider,
   type CalendarEventInput,
 } from "@eleva/calendar"
+
+const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
+  "google-calendar": "google",
+  "microsoft-calendar": "microsoft",
+}
+
+function resolveProvider(slug: string): CalendarProvider {
+  const provider = SLUG_TO_PROVIDER[slug]
+  if (!provider) throw new Error(`Unknown calendar slug: ${slug}`)
+  return provider
+}
 
 /**
  * Create a calendar event in the expert's destination calendar when a
@@ -43,7 +55,7 @@ export async function calendarEventCreate(params: {
     const destination = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          connectedCalendarId: main.calendarDestinations.connectedCalendarId,
+          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
           externalCalendarId: main.calendarDestinations.externalCalendarId,
         })
         .from(main.calendarDestinations)
@@ -56,30 +68,31 @@ export async function calendarEventCreate(params: {
 
     if (!destination) return { calendarEventId: null }
 
-    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+    const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          workosUserId: main.connectedCalendars.workosUserId,
-          provider: main.connectedCalendars.provider,
+          workosUserId: main.expertIntegrations.workosUserId,
+          slug: main.expertIntegrations.slug,
         })
-        .from(main.connectedCalendars)
+        .from(main.expertIntegrations)
         .where(
           and(
-            eq(main.connectedCalendars.id, destination.connectedCalendarId),
-            eq(main.connectedCalendars.status, "connected")
+            eq(main.expertIntegrations.id, destination.expertIntegrationId),
+            eq(main.expertIntegrations.status, "connected")
           )
         )
         .limit(1)
       return row
     })
 
-    if (!connCal) return { calendarEventId: null }
+    if (!integration?.workosUserId) return { calendarEventId: null }
 
+    const provider = resolveProvider(integration.slug)
     const accessToken = await getCalendarToken(
-      connCal.workosUserId,
-      connCal.provider
+      integration.workosUserId,
+      provider
     )
-    const adapter = getAdapter(connCal.provider)
+    const adapter = getAdapter(provider)
 
     const eventInput: CalendarEventInput = {
       calendarId: destination.externalCalendarId,
@@ -139,7 +152,7 @@ export async function calendarEventUpdate(params: {
     const destination = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          connectedCalendarId: main.calendarDestinations.connectedCalendarId,
+          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
           externalCalendarId: main.calendarDestinations.externalCalendarId,
         })
         .from(main.calendarDestinations)
@@ -152,30 +165,31 @@ export async function calendarEventUpdate(params: {
 
     if (!destination) return
 
-    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+    const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          workosUserId: main.connectedCalendars.workosUserId,
-          provider: main.connectedCalendars.provider,
+          workosUserId: main.expertIntegrations.workosUserId,
+          slug: main.expertIntegrations.slug,
         })
-        .from(main.connectedCalendars)
+        .from(main.expertIntegrations)
         .where(
           and(
-            eq(main.connectedCalendars.id, destination.connectedCalendarId),
-            eq(main.connectedCalendars.status, "connected")
+            eq(main.expertIntegrations.id, destination.expertIntegrationId),
+            eq(main.expertIntegrations.status, "connected")
           )
         )
         .limit(1)
       return row
     })
 
-    if (!connCal) return
+    if (!integration?.workosUserId) return
 
+    const provider = resolveProvider(integration.slug)
     const accessToken = await getCalendarToken(
-      connCal.workosUserId,
-      connCal.provider
+      integration.workosUserId,
+      provider
     )
-    const adapter = getAdapter(connCal.provider)
+    const adapter = getAdapter(provider)
 
     await adapter.updateEvent(
       accessToken,
@@ -218,7 +232,7 @@ export async function calendarEventDelete(params: {
     const destination = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          connectedCalendarId: main.calendarDestinations.connectedCalendarId,
+          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
           externalCalendarId: main.calendarDestinations.externalCalendarId,
         })
         .from(main.calendarDestinations)
@@ -231,30 +245,31 @@ export async function calendarEventDelete(params: {
 
     if (!destination) return
 
-    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+    const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
         .select({
-          workosUserId: main.connectedCalendars.workosUserId,
-          provider: main.connectedCalendars.provider,
+          workosUserId: main.expertIntegrations.workosUserId,
+          slug: main.expertIntegrations.slug,
         })
-        .from(main.connectedCalendars)
+        .from(main.expertIntegrations)
         .where(
           and(
-            eq(main.connectedCalendars.id, destination.connectedCalendarId),
-            eq(main.connectedCalendars.status, "connected")
+            eq(main.expertIntegrations.id, destination.expertIntegrationId),
+            eq(main.expertIntegrations.status, "connected")
           )
         )
         .limit(1)
       return row
     })
 
-    if (!connCal) return
+    if (!integration?.workosUserId) return
 
+    const provider = resolveProvider(integration.slug)
     const accessToken = await getCalendarToken(
-      connCal.workosUserId,
-      connCal.provider
+      integration.workosUserId,
+      provider
     )
-    const adapter = getAdapter(connCal.provider)
+    const adapter = getAdapter(provider)
 
     await adapter.deleteEvent(
       accessToken,

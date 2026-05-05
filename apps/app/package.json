@@ -20,6 +20,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/db": "workspace:^",
     "@eleva/flags": "workspace:^",
+    "@eleva/integrations": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@stripe/stripe-js": "^9.4.0",

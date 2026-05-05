@@ -3,6 +3,7 @@ import {
   index,
   jsonb,
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -179,6 +180,10 @@ export const becomePartnerApplications = pgTable(
     )
       .on(t.applicantUserId)
       .where(sql`status IN ('submitted', 'under_review')`),
+    tenantPolicy: pgPolicy("become_partner_applications_tenant_isolation", {
+      using: sql`applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+    }),
   })
 )
 

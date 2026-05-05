@@ -39,6 +39,32 @@ export const AdapterManifest = z.object({
 })
 export type AdapterManifest = z.infer<typeof AdapterManifest>
 
+/**
+ * Map an accounting AdapterManifest to the shared IntegrationManifest
+ * shape used by the unified integration registry.
+ */
+export function toIntegrationManifest(manifest: AdapterManifest): {
+  slug: string
+  category: "invoicing"
+  displayName: string
+  icon: string
+  publisher: string
+  countries: string[]
+  connectType: "oauth" | "api_key" | "manual"
+  description: { en: string; pt: string; es: string }
+} {
+  return {
+    slug: manifest.slug,
+    category: "invoicing",
+    displayName: manifest.displayName,
+    icon: "file-text",
+    publisher: manifest.displayName,
+    countries: manifest.countries,
+    connectType: manifest.installType,
+    description: manifest.description,
+  }
+}
+
 /** Result of `connect()` after the OAuth callback (or manual ack). */
 export const ConnectResult = z.object({
   /**
