@@ -31,22 +31,63 @@ const usernameSchema = z
     }
   })
 
-export const documentSchema = z.object({
-  kind: z.enum(ALLOWED_DOC_KINDS),
-  name: z.string().min(1).max(160),
-  url: z.string().url().max(800),
-  pathname: z.string().min(1).max(400),
-  contentType: z
-    .string()
-    .min(1)
-    .max(120)
-    .regex(/^(application\/pdf|image\/(jpeg|png|webp))$/),
-  size: z
-    .number()
-    .int()
-    .nonnegative()
-    .max(10 * 1024 * 1024),
-})
+const BLOB_HOST_PATTERN = /^[a-z0-9-]+\.public\.blob\.vercel-storage\.com$/
+
+export const documentSchema = z
+  .object({
+    kind: z.enum(ALLOWED_DOC_KINDS),
+    name: z.string().min(1).max(160),
+    url: z
+      .string()
+      .url()
+      .max(800)
+      .superRefine((value, ctx) => {
+        let parsed: URL
+        try {
+          parsed = new URL(value)
+        } catch {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "invalid-url",
+          })
+          return
+        }
+        if (parsed.protocol !== "https:") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "invalid-protocol",
+          })
+        }
+        if (!BLOB_HOST_PATTERN.test(parsed.hostname)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "invalid-host",
+          })
+        }
+      }),
+    pathname: z.string().min(1).max(400),
+    contentType: z
+      .string()
+      .min(1)
+      .max(120)
+      .regex(/^(application\/pdf|image\/(jpeg|png|webp))$/),
+    size: z
+      .number()
+      .int()
+      .nonnegative()
+      .max(10 * 1024 * 1024),
+    uploadedAt: z.string().datetime(),
+  })
+  .superRefine((doc, ctx) => {
+    const expectedPrefix = `become-partner/${doc.kind}/`
+    if (!doc.pathname.startsWith(expectedPrefix)) {
+      ctx.addIssue({
+        path: ["pathname"],
+        code: z.ZodIssueCode.custom,
+        message: "invalid-pathname",
+      })
+    }
+  })
 
 export type ApplicationDocumentInput = z.infer<typeof documentSchema>
 

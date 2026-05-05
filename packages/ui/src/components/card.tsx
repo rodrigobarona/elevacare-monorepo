@@ -28,9 +28,21 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+type CardTitleProps<T extends React.ElementType = "h3"> = {
+  as?: T
+} & Omit<React.ComponentPropsWithoutRef<T>, "as">
+
+function CardTitle<T extends React.ElementType = "h3">({
+  as,
+  className,
+  ...props
+}: CardTitleProps<T>) {
+  // Default to <h3> so card headings appear in the a11y tree. Page-level
+  // <h1> sits above; sections nest <h2>; cards inside sections nest <h3>.
+  // Override via `as` when consumers need a different level.
+  const Tag = (as ?? "h3") as React.ElementType
   return (
-    <div
+    <Tag
       data-slot="card-title"
       className={cn("leading-none font-semibold", className)}
       {...props}

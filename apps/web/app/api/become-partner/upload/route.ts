@@ -9,24 +9,18 @@
 import { handleApplicationDocumentUpload } from "@eleva/billing/uploads-handler"
 import { getSession } from "@eleva/auth"
 
-const ALLOWED_KINDS = new Set(["license", "id", "cv", "professional_insurance"])
-
 export async function POST(request: Request): Promise<Response> {
-  const session = await getSession()
-  if (!session) {
-    return Response.json(
-      { error: "unauthorized" },
-      {
-        status: 401,
-        headers: { "Cache-Control": "no-store" },
-      }
-    )
-  }
-
   try {
     return await handleApplicationDocumentUpload({
       request,
-      authorize: (pathname) => {
+      // Auth runs INSIDE authorize so Vercel Blob's signed
+      // server-to-server completion callback (which carries no user
+      // session) is not 401'd by a top-of-route gate.
+      authorize: async (pathname) => {
+        const session = await getSession()
+        if (!session) {
+          throw new Error("unauthorized")
+        }
         // Pathname shape: become-partner/<kind>/<filename>
         const match = pathname.match(
           /^become-partner\/(license|id|cv|professional_insurance)\/[^/]+$/
@@ -35,11 +29,8 @@ export async function POST(request: Request): Promise<Response> {
           throw new Error("invalid-pathname")
         }
         const kind = match[1]!
-        if (!ALLOWED_KINDS.has(kind)) {
-          throw new Error("invalid-kind")
-        }
         return {
-          applicantUserId: session.user.workosUserId,
+          applicantUserId: session.user.id,
           kind,
         }
       },

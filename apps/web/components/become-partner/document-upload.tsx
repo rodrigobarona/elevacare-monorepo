@@ -38,6 +38,17 @@ export function DocumentUploadList({
   documents,
   onChange,
 }: DocumentUploadListProps) {
+  // Snapshot the latest documents in a ref so the per-slot callbacks
+  // always read the most recent list when invoked. `onChange` is a
+  // value setter (not React's setState updater) so we cannot rely on
+  // a functional update form to merge upload results. Reading from a
+  // ref keeps callbacks correct even if React batches multiple uploads
+  // before re-render.
+  const latestDocsRef = React.useRef(documents)
+  React.useEffect(() => {
+    latestDocsRef.current = documents
+  }, [documents])
+
   return (
     <div className="grid gap-4">
       {ALLOWED_DOC_KINDS.map((kind) => (
@@ -45,10 +56,19 @@ export function DocumentUploadList({
           key={kind}
           kind={kind}
           existing={documents.find((d) => d.kind === kind)}
-          onUploaded={(doc) =>
-            onChange([...documents.filter((d) => d.kind !== kind), doc])
-          }
-          onRemove={() => onChange(documents.filter((d) => d.kind !== kind))}
+          onUploaded={(doc) => {
+            const next = [
+              ...latestDocsRef.current.filter((d) => d.kind !== kind),
+              doc,
+            ]
+            latestDocsRef.current = next
+            onChange(next)
+          }}
+          onRemove={() => {
+            const next = latestDocsRef.current.filter((d) => d.kind !== kind)
+            latestDocsRef.current = next
+            onChange(next)
+          }}
         />
       ))}
     </div>
@@ -69,6 +89,7 @@ function DocumentSlot({
   onRemove,
 }: DocumentSlotProps) {
   const t = useTranslations("becomePartner.documents")
+  const tCommon = useTranslations()
   const inputRef = React.useRef<HTMLInputElement | null>(null)
   const [progress, setProgress] = React.useState<number>(0)
   // We split UI state into a "transient" interaction tracked in this
@@ -93,11 +114,13 @@ function DocumentSlot({
     if (!ALLOWED_MIME.has(file.type)) {
       setInteraction("error")
       setErrorMessage(t("errors.wrongType"))
+      resetInputValue()
       return
     }
     if (file.size > MAX_BYTES) {
       setInteraction("error")
       setErrorMessage(t("errors.tooLarge"))
+      resetInputValue()
       return
     }
 
@@ -117,13 +140,20 @@ function DocumentSlot({
         pathname: uploaded.pathname,
         contentType: uploaded.contentType,
         size: uploaded.size,
+        uploadedAt: uploaded.uploadedAt,
       })
       setInteraction(null)
     } catch (err) {
       console.error("upload failed", err)
       setInteraction("error")
       setErrorMessage(t("errors.uploadFailed"))
+    } finally {
+      resetInputValue()
     }
+  }
+
+  function resetInputValue() {
+    if (inputRef.current) inputRef.current.value = ""
   }
 
   return (
@@ -133,7 +163,7 @@ function DocumentSlot({
           {t(`kinds.${kind}`)}
           {kind !== "license" ? (
             <span className="ml-2 text-xs font-normal text-muted-foreground">
-              · optional
+              · {tCommon("common.optional")}
             </span>
           ) : null}
         </CardTitle>

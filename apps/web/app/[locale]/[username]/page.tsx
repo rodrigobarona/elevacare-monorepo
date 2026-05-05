@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { notFound } from "next/navigation"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
@@ -46,13 +47,23 @@ async function resolveProfile(username: string): Promise<ResolvedProfile> {
   return null
 }
 
+const getResolvedProfile = cache(
+  async (username: string): Promise<ResolvedProfile> => {
+    try {
+      return await resolveProfile(username)
+    } catch {
+      return null
+    }
+  }
+)
+
 export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { username } = await params
   if (isReserved(username)) return { robots: "noindex" }
 
-  const resolved = await safeResolve(username)
+  const resolved = await getResolvedProfile(username)
   if (!resolved) return {}
 
   if (resolved.kind === "expert") {
@@ -71,7 +82,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const { locale, username } = await params
   setRequestLocale(locale)
 
-  const resolved = await safeResolve(username)
+  const resolved = await getResolvedProfile(username)
   if (!resolved) {
     notFound()
   }
@@ -211,15 +222,23 @@ async function ClinicProfile({ clinic }: { clinic: PublicClinicProfile }) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <a
-                href={clinic.websiteUrl}
-                rel="nofollow noopener noreferrer"
-                target="_blank"
-                className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-              >
-                {clinic.websiteUrl.replace(/^https?:\/\//, "")}
-                <ExternalLink className="size-3.5" />
-              </a>
+              {(() => {
+                const safe = safeHttpUrl(clinic.websiteUrl)
+                const label = clinic.websiteUrl.replace(/^https?:\/\//, "")
+                return safe ? (
+                  <a
+                    href={safe}
+                    rel="nofollow noopener noreferrer"
+                    target="_blank"
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                  >
+                    {label}
+                    <ExternalLink className="size-3.5" />
+                  </a>
+                ) : (
+                  <span className="text-sm text-muted-foreground">{label}</span>
+                )
+              })()}
             </CardContent>
           </Card>
         ) : null}
@@ -258,9 +277,11 @@ function initials(name: string): string {
   return parts.map((p) => p[0]?.toUpperCase()).join("") || "EL"
 }
 
-async function safeResolve(username: string): Promise<ResolvedProfile> {
+function safeHttpUrl(value: string): string | null {
   try {
-    return await resolveProfile(username)
+    const url = new URL(value)
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null
+    return url.toString()
   } catch {
     return null
   }

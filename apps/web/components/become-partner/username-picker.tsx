@@ -51,9 +51,17 @@ export function UsernamePicker({
     kind: "idle",
   })
 
+  // Stash the latest callback in a ref so the effect below doesn't have
+  // to re-fire (and re-debounce) every time the parent passes a new
+  // function instance via re-render.
+  const availabilityCbRef = React.useRef(onAvailabilityChange)
+  React.useEffect(() => {
+    availabilityCbRef.current = onAvailabilityChange
+  }, [onAvailabilityChange])
+
   React.useEffect(() => {
     if (trimmed.length === 0 || formatErr) {
-      onAvailabilityChange?.(
+      availabilityCbRef.current?.(
         formatErr
           ? {
               username: trimmed,
@@ -82,7 +90,7 @@ export function UsernamePicker({
             reason: result.status.reason ?? "format-invalid",
           })
         }
-        onAvailabilityChange?.(result)
+        availabilityCbRef.current?.(result)
       } catch {
         if (cancelled) return
         setAsyncStatus({ kind: "idle" })
@@ -93,7 +101,7 @@ export function UsernamePicker({
       cancelled = true
       clearTimeout(handle)
     }
-  }, [trimmed, formatErr, onAvailabilityChange])
+  }, [trimmed, formatErr])
 
   const status: LocalState = (() => {
     if (trimmed.length === 0) return { state: "idle" }

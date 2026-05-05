@@ -23,12 +23,22 @@ const alertVariants = cva(
 function Alert({
   className,
   variant,
+  role,
+  "aria-live": ariaLive,
   ...props
 }: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+  // `destructive` is a hard error → assertive `role="alert"` so screen
+  // readers interrupt. `default`/`info` are advisory → polite
+  // `role="status"` so reading flow isn't interrupted. Consumers can
+  // still override via the `role`/`aria-live` props.
+  const isDestructive = variant === "destructive"
+  const computedRole = role ?? (isDestructive ? "alert" : "status")
+  const computedAriaLive = ariaLive ?? (isDestructive ? undefined : "polite")
   return (
     <div
       data-slot="alert"
-      role="alert"
+      role={computedRole}
+      aria-live={computedAriaLive}
       className={cn(alertVariants({ variant }), className)}
       {...props}
     />

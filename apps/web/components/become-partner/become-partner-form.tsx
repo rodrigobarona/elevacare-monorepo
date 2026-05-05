@@ -202,13 +202,12 @@ export function BecomePartnerForm({ categories }: BecomePartnerFormProps) {
 
     if (result.error === "auth") {
       setSubmitError(t("becomePartner.errors.auth"))
-    } else if (
-      result.error === "username-taken" ||
-      result.error === "duplicate-application"
-    ) {
+    } else if (result.error === "username-taken") {
       setStep("account")
       setStepErrors(["username"])
-      setSubmitError(t("becomePartner.errors.submit"))
+      setSubmitError(t("becomePartner.errors.username"))
+    } else if (result.error === "duplicate-application") {
+      setSubmitError(t("becomePartner.errors.duplicateApplication"))
     } else {
       setSubmitError(t("becomePartner.errors.submit"))
     }

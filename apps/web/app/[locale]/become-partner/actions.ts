@@ -124,7 +124,7 @@ export async function submitApplicationAction(
               url: d.url,
               size: d.size,
               contentType: d.contentType,
-              uploadedAt: new Date().toISOString(),
+              uploadedAt: d.uploadedAt,
             })),
             status: "submitted",
           })

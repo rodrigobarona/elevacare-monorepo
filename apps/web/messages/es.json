@@ -298,7 +298,9 @@
     "errors": {
       "validation": "Revisa los campos destacados.",
       "submit": "No pudimos enviar la solicitud. Inténtalo de nuevo.",
-      "auth": "Inicia sesión para enviar una solicitud."
+      "auth": "Inicia sesión para enviar una solicitud.",
+      "username": "Ese nombre de usuario ya está en uso. Elige otro.",
+      "duplicateApplication": "Ya existe una solicitud activa para esta cuenta."
     },
     "success": {
       "title": "Solicitud recibida",

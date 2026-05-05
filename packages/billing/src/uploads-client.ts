@@ -48,6 +48,8 @@ export interface UploadedApplicationDocumentClient {
   size: number
   kind: string
   name: string
+  /** ISO 8601 timestamp captured client-side when blobUpload resolved. */
+  uploadedAt: string
 }
 
 /**
@@ -58,7 +60,20 @@ export async function uploadApplicationDocumentClient(
   input: UploadApplicationDocumentClientInput
 ): Promise<UploadedApplicationDocumentClient> {
   const { kind, file } = input
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, "-").slice(0, 80)
+  // Preserve the file extension when truncating: a name like
+  // "very-long-medical-license-document-2024.pdf" must NOT collapse to
+  // "very-long-medical-license-document-2" without an extension. We
+  // split on the LAST `.`, sanitize both halves independently, and
+  // budget the truncation so the extension always survives.
+  const lastDot = file.name.lastIndexOf(".")
+  const rawBase = lastDot > 0 ? file.name.slice(0, lastDot) : file.name
+  const rawExt = lastDot > 0 ? file.name.slice(lastDot) : ""
+  const sanitize = (s: string) => s.replace(/[^a-zA-Z0-9._-]+/g, "-")
+  const ext = sanitize(rawExt).slice(0, 16)
+  // Reserve room for the extension and the joining dot already in `ext`.
+  const baseBudget = Math.max(1, 80 - ext.length)
+  const base = sanitize(rawBase).slice(0, baseBudget)
+  const safeName = `${base}${ext}`
   const pathname = `become-partner/${kind}/${safeName}`
 
   const result: BlobUploadResult = await blobUpload(pathname, file, {
@@ -72,6 +87,7 @@ export async function uploadApplicationDocumentClient(
         loaded: event.loaded,
       }),
   })
+  const uploadedAt = new Date().toISOString()
 
   return {
     url: result.url,
@@ -80,5 +96,6 @@ export async function uploadApplicationDocumentClient(
     size: file.size,
     kind,
     name: file.name,
+    uploadedAt,
   }
 }

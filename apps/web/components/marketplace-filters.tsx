@@ -1,9 +1,11 @@
 "use client"
 
 import { useTransition } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { X } from "lucide-react"
+
+import { usePathname, useRouter } from "@/i18n/navigation"
 
 import { Button } from "@eleva/ui/components/button"
 import { Label } from "@eleva/ui/components/label"
@@ -14,16 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@eleva/ui/components/select"
-
-const LANGUAGE_OPTIONS = [
-  { value: "pt", labelKey: "pt" },
-  { value: "en", labelKey: "en" },
-  { value: "es", labelKey: "es" },
-] as const
-
-const COUNTRY_OPTIONS = ["PT", "ES", "BR"] as const
-
-const SESSION_MODE_OPTIONS = ["online", "in_person", "phone"] as const
+import {
+  COUNTRY_CODES as COUNTRY_OPTIONS,
+  LANGUAGE_OPTIONS,
+  SESSION_MODES as SESSION_MODE_OPTIONS,
+} from "@/lib/marketplace-constants"
 
 export interface CategoryOption {
   slug: string
@@ -44,6 +41,7 @@ export function MarketplaceFilters({
 }) {
   const t = useTranslations()
   const router = useRouter()
+  const pathname = usePathname()
   const params = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
@@ -73,14 +71,12 @@ export function MarketplaceFilters({
     }
     next.delete("page")
     const search = next.toString()
-    const target = `${basePath ?? window.location.pathname}${
-      search ? `?${search}` : ""
-    }`
+    const target = `${basePath ?? pathname}${search ? `?${search}` : ""}`
     startTransition(() => router.replace(target))
   }
 
   function clearAll() {
-    const target = basePath ?? window.location.pathname
+    const target = basePath ?? pathname
     startTransition(() => router.replace(target))
   }
 

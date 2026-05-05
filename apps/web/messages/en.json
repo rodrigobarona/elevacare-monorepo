@@ -298,7 +298,9 @@
     "errors": {
       "validation": "Please review the highlighted fields.",
       "submit": "We could not submit your application. Please try again.",
-      "auth": "Sign in to submit an application."
+      "auth": "Sign in to submit an application.",
+      "username": "That username is taken. Please pick another.",
+      "duplicateApplication": "We already have an active application from this account."
     },
     "success": {
       "title": "Application received",

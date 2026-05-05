@@ -298,7 +298,9 @@
     "errors": {
       "validation": "Reveja os campos destacados.",
       "submit": "Não foi possível submeter a candidatura. Tente novamente.",
-      "auth": "Inicie sessão para submeter uma candidatura."
+      "auth": "Inicie sessão para submeter uma candidatura.",
+      "username": "Este nome de utilizador já está em uso. Escolha outro.",
+      "duplicateApplication": "Já temos uma candidatura ativa associada a esta conta."
     },
     "success": {
       "title": "Candidatura recebida",

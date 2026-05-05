@@ -3,10 +3,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { ChevronRight } from "lucide-react"
 
-import { listCategories, listExperts, type PublicCategory } from "@eleva/db"
 import { ExpertCard } from "@/components/expert-card"
 import { MarketplaceFilters } from "@/components/marketplace-filters"
 import { Link } from "@/i18n/navigation"
+import {
+  EmptyState,
+  safeListCategories,
+  safeListExperts,
+} from "@/lib/marketplace-helpers"
 import {
   parseSearchParams,
   buildExpertFilters,
@@ -137,31 +141,4 @@ async function Breadcrumb({ category }: { category: string }) {
       <span className="text-foreground">{category}</span>
     </nav>
   )
-}
-
-function EmptyState({ title, body }: { title: string; body: string }) {
-  return (
-    <div className="mx-auto max-w-md rounded-2xl border border-border/60 bg-card p-10 text-center">
-      <h2 className="font-heading text-lg font-semibold text-foreground">
-        {title}
-      </h2>
-      <p className="mt-2 text-sm text-muted-foreground">{body}</p>
-    </div>
-  )
-}
-
-async function safeListCategories(): Promise<PublicCategory[]> {
-  try {
-    return await listCategories()
-  } catch {
-    return []
-  }
-}
-
-async function safeListExperts(filters: Parameters<typeof listExperts>[0]) {
-  try {
-    return await listExperts(filters)
-  } catch {
-    return { experts: [], total: 0, page: 1, pageSize: 24 }
-  }
 }

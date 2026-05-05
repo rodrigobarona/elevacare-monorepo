@@ -1,8 +1,14 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
 
-import { listCategories, type PublicCategory } from "@eleva/db"
 import { BecomePartnerForm } from "@/components/become-partner/become-partner-form"
+import { safeListCategories } from "@/lib/marketplace-helpers"
+
+// Categories drive the form's first step and are admin-curated. We
+// always render against live data instead of baking a possibly-stale
+// list into the build artifact (which would also force the page to
+// suppress DB errors at build time, masking real outages).
+export const dynamic = "force-dynamic"
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -49,12 +55,4 @@ export default async function BecomePartnerPage({ params }: PageProps) {
       </section>
     </div>
   )
-}
-
-async function safeListCategories(): Promise<PublicCategory[]> {
-  try {
-    return await listCategories()
-  } catch {
-    return []
-  }
 }

@@ -6,6 +6,11 @@ import {
   type BecomePartnerSubmissionInput,
 } from "./schema"
 
+const VALID_DOC_URL =
+  "https://example.public.blob.vercel-storage.com/become-partner/license/license.pdf"
+
+const FIXED_UPLOADED_AT = "2026-05-04T10:00:00.000Z"
+
 function validSubmission(
   overrides: Partial<BecomePartnerSubmissionInput> = {}
 ): unknown {
@@ -24,10 +29,11 @@ function validSubmission(
       {
         kind: "license",
         name: "license.pdf",
-        url: "https://blob.vercel-storage.com/license.pdf",
-        pathname: "applications/license.pdf",
+        url: VALID_DOC_URL,
+        pathname: "become-partner/license/license.pdf",
         contentType: "application/pdf",
         size: 1024,
+        uploadedAt: FIXED_UPLOADED_AT,
       },
     ],
     consent: true,
@@ -36,55 +42,83 @@ function validSubmission(
 }
 
 describe("documentSchema", () => {
+  function validDoc(overrides: Record<string, unknown> = {}) {
+    return {
+      kind: "license",
+      name: "license.pdf",
+      url: VALID_DOC_URL,
+      pathname: "become-partner/license/license.pdf",
+      contentType: "application/pdf",
+      size: 100,
+      uploadedAt: FIXED_UPLOADED_AT,
+      ...overrides,
+    }
+  }
+
   it("accepts a well-formed document", () => {
-    expect(
-      documentSchema.parse({
-        kind: "license",
-        name: "license.pdf",
-        url: "https://example.com/license.pdf",
-        pathname: "x/license.pdf",
-        contentType: "application/pdf",
-        size: 100,
-      })
-    ).toBeDefined()
+    expect(documentSchema.parse(validDoc())).toBeDefined()
   })
 
   it("rejects oversized documents", () => {
     expect(() =>
-      documentSchema.parse({
-        kind: "license",
-        name: "license.pdf",
-        url: "https://example.com/license.pdf",
-        pathname: "x/license.pdf",
-        contentType: "application/pdf",
-        size: 11 * 1024 * 1024,
-      })
+      documentSchema.parse(validDoc({ size: 11 * 1024 * 1024 }))
     ).toThrow()
   })
 
   it("rejects unsupported MIME types", () => {
     expect(() =>
-      documentSchema.parse({
-        kind: "license",
-        name: "license.txt",
-        url: "https://example.com/license.txt",
-        pathname: "x/license.txt",
-        contentType: "text/plain",
-        size: 100,
-      })
+      documentSchema.parse(
+        validDoc({
+          name: "license.txt",
+          url: VALID_DOC_URL.replace(".pdf", ".txt"),
+          pathname: "become-partner/license/license.txt",
+          contentType: "text/plain",
+        })
+      )
     ).toThrow()
   })
 
   it("rejects unknown kinds", () => {
     expect(() =>
-      documentSchema.parse({
-        kind: "passport",
-        name: "x.pdf",
-        url: "https://example.com/x.pdf",
-        pathname: "x/x.pdf",
-        contentType: "application/pdf",
-        size: 100,
-      })
+      documentSchema.parse(
+        validDoc({
+          kind: "passport",
+          pathname: "become-partner/passport/x.pdf",
+        })
+      )
+    ).toThrow()
+  })
+
+  it("rejects URLs with non-blob hosts", () => {
+    expect(() =>
+      documentSchema.parse(
+        validDoc({ url: "https://example.com/become-partner/license/x.pdf" })
+      )
+    ).toThrow()
+  })
+
+  it("rejects http (insecure) URLs", () => {
+    expect(() =>
+      documentSchema.parse(
+        validDoc({
+          url: "http://example.public.blob.vercel-storage.com/become-partner/license/x.pdf",
+        })
+      )
+    ).toThrow()
+  })
+
+  it("rejects pathnames that do not match the kind prefix", () => {
+    expect(() =>
+      documentSchema.parse(
+        validDoc({ pathname: "become-partner/id/license.pdf" })
+      )
+    ).toThrow()
+  })
+
+  it("rejects missing or invalid uploadedAt", () => {
+    expect(() => documentSchema.parse(validDoc({ uploadedAt: "" }))).toThrow()
+    expect(() =>
+      documentSchema.parse(validDoc({ uploadedAt: "not-a-date" }))
     ).toThrow()
   })
 })
@@ -132,10 +166,11 @@ describe("becomePartnerSubmissionSchema", () => {
           {
             kind: "id",
             name: "id.pdf",
-            url: "https://example.com/id.pdf",
-            pathname: "x/id.pdf",
+            url: VALID_DOC_URL.replace("license/license.pdf", "id/id.pdf"),
+            pathname: "become-partner/id/id.pdf",
             contentType: "application/pdf",
             size: 100,
+            uploadedAt: FIXED_UPLOADED_AT,
           },
         ],
       })

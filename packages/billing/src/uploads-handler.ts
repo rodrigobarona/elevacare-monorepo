@@ -94,9 +94,36 @@ export async function handleApplicationDocumentUpload(
     },
     onUploadCompleted: async ({ blob, tokenPayload }) => {
       if (!input.onCompleted) return
-      const decoded = tokenPayload
-        ? (JSON.parse(tokenPayload) as ApplicationUploadTokenPayload)
-        : { applicantUserId: "", kind: "" }
+      if (!tokenPayload) {
+        console.error(
+          "[uploads-handler] onUploadCompleted received empty tokenPayload; skipping persistence"
+        )
+        return
+      }
+      let decoded: Partial<ApplicationUploadTokenPayload>
+      try {
+        decoded = JSON.parse(
+          tokenPayload
+        ) as Partial<ApplicationUploadTokenPayload>
+      } catch (err) {
+        console.error("[uploads-handler] failed to parse tokenPayload", err)
+        return
+      }
+      if (
+        typeof decoded.applicantUserId !== "string" ||
+        decoded.applicantUserId.length === 0 ||
+        typeof decoded.kind !== "string" ||
+        decoded.kind.length === 0
+      ) {
+        console.error(
+          "[uploads-handler] tokenPayload missing required fields; skipping persistence",
+          {
+            hasApplicantUserId: Boolean(decoded.applicantUserId),
+            hasKind: Boolean(decoded.kind),
+          }
+        )
+        return
+      }
       await input.onCompleted({
         applicantUserId: decoded.applicantUserId,
         kind: decoded.kind,

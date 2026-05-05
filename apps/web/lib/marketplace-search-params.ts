@@ -1,8 +1,13 @@
 import type { ListExpertsFilters, SessionMode } from "@eleva/db"
 
-const SESSION_MODES: readonly SessionMode[] = ["online", "in_person", "phone"]
-const LANGUAGE_CODES = new Set(["pt", "en", "es"])
-const COUNTRY_CODES = new Set(["PT", "ES", "BR"])
+import {
+  COUNTRY_CODES as COUNTRY_CODE_LIST,
+  LANGUAGE_CODES as LANGUAGE_CODE_LIST,
+  SESSION_MODES,
+} from "@/lib/marketplace-constants"
+
+const LANGUAGE_CODES = new Set<string>(LANGUAGE_CODE_LIST)
+const COUNTRY_CODES = new Set<string>(COUNTRY_CODE_LIST)
 
 export interface MarketplaceParams {
   category?: string

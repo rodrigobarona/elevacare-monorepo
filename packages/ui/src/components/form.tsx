@@ -43,12 +43,20 @@ function useFormField() {
   const fieldContext = React.useContext(FormFieldContext)
   const itemContext = React.useContext(FormItemContext)
   const { getFieldState } = useFormContext()
-  const formState = useFormState({ name: fieldContext.name })
-  const fieldState = getFieldState(fieldContext.name, formState)
 
-  if (!fieldContext) {
+  // The default-context casts (`{} as ...`) above mean React.useContext
+  // never returns undefined here, but the cast also makes truthy-checks
+  // dead. Validate the actual fields we care about so misuse fails loud
+  // instead of silently producing `undefined-form-item` ids.
+  if (!fieldContext?.name) {
     throw new Error("useFormField should be used within <FormField>")
   }
+  if (!itemContext?.id) {
+    throw new Error("useFormField should be used within <FormItem>")
+  }
+
+  const formState = useFormState({ name: fieldContext.name })
+  const fieldState = getFieldState(fieldContext.name, formState)
 
   const { id } = itemContext
 
