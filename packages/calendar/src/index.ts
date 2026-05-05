@@ -2,9 +2,9 @@ export { getAdapter } from "./registry"
 export { GoogleCalendarAdapter } from "./adapters/google"
 export { MicrosoftCalendarAdapter } from "./adapters/microsoft"
 export {
-  storeCalendarConnection,
-  getAccessToken,
-  disconnectCalendar,
+  getCalendarToken,
+  listConnectedProviders,
+  CalendarTokenError,
 } from "./credential-manager"
 export type {
   CalendarProvider,
@@ -13,6 +13,4 @@ export type {
   CalendarEventInput,
   CalendarListItem,
   FreeBusyInterval,
-  OAuthStartResult,
-  OAuthTokens,
 } from "./types"

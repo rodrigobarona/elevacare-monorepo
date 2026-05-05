@@ -1,95 +1,35 @@
-import { requireMicrosoftCalendarEnv } from "@eleva/config/env"
 import type {
   CalendarAdapter,
   CalendarEvent,
   CalendarEventInput,
   CalendarListItem,
   FreeBusyInterval,
-  OAuthStartResult,
-  OAuthTokens,
 } from "../types"
 
-const MS_AUTH_URL =
-  "https://login.microsoftonline.com/common/oauth2/v2.0/authorize"
-const MS_TOKEN_URL =
-  "https://login.microsoftonline.com/common/oauth2/v2.0/token"
 const GRAPH_API = "https://graph.microsoft.com/v1.0"
 
-const DEFAULT_SCOPES = ["Calendars.ReadWrite", "offline_access"]
+/**
+ * Convert a UTC Date to the wall-clock time in the target timezone,
+ * formatted as "YYYY-MM-DDTHH:mm:ss" for Microsoft Graph.
+ */
+function formatLocalDateTime(date: Date, timezone: string): string {
+  const fmt = new Intl.DateTimeFormat("en-CA", {
+    timeZone: timezone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  })
+  const parts = fmt.formatToParts(date)
+  const p = (type: string) => parts.find((x) => x.type === type)?.value ?? ""
+  return `${p("year")}-${p("month")}-${p("day")}T${p("hour")}:${p("minute")}:${p("second")}`
+}
 
 export class MicrosoftCalendarAdapter implements CalendarAdapter {
   readonly provider = "microsoft" as const
-
-  startOAuth(scopes?: string[]): OAuthStartResult {
-    const env = requireMicrosoftCalendarEnv()
-    const state = crypto.randomUUID()
-    const params = new URLSearchParams({
-      client_id: env.MICROSOFT_CALENDAR_CLIENT_ID,
-      redirect_uri: env.MICROSOFT_CALENDAR_REDIRECT_URI,
-      response_type: "code",
-      scope: (scopes ?? DEFAULT_SCOPES).join(" "),
-      state,
-    })
-    return {
-      authorizationUrl: `${MS_AUTH_URL}?${params.toString()}`,
-      state,
-    }
-  }
-
-  async exchangeCode(code: string): Promise<OAuthTokens> {
-    const env = requireMicrosoftCalendarEnv()
-    const res = await fetch(MS_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        code,
-        client_id: env.MICROSOFT_CALENDAR_CLIENT_ID,
-        client_secret: env.MICROSOFT_CALENDAR_CLIENT_SECRET,
-        redirect_uri: env.MICROSOFT_CALENDAR_REDIRECT_URI,
-        grant_type: "authorization_code",
-      }),
-    })
-    if (!res.ok) throw new Error(`Microsoft token exchange: ${res.status}`)
-    const data = (await res.json()) as {
-      access_token: string
-      refresh_token: string
-      expires_in: number
-      scope: string
-    }
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-      scope: data.scope,
-    }
-  }
-
-  async refreshTokens(refreshToken: string): Promise<OAuthTokens> {
-    const env = requireMicrosoftCalendarEnv()
-    const res = await fetch(MS_TOKEN_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        refresh_token: refreshToken,
-        client_id: env.MICROSOFT_CALENDAR_CLIENT_ID,
-        client_secret: env.MICROSOFT_CALENDAR_CLIENT_SECRET,
-        grant_type: "refresh_token",
-      }),
-    })
-    if (!res.ok) throw new Error(`Microsoft token refresh: ${res.status}`)
-    const data = (await res.json()) as {
-      access_token: string
-      refresh_token?: string
-      expires_in: number
-      scope: string
-    }
-    return {
-      accessToken: data.access_token,
-      refreshToken: data.refresh_token ?? refreshToken,
-      expiresAt: new Date(Date.now() + data.expires_in * 1000),
-      scope: data.scope,
-    }
-  }
 
   async listCalendars(accessToken: string): Promise<CalendarListItem[]> {
     const res = await fetch(`${GRAPH_API}/me/calendars`, {
@@ -102,6 +42,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
         name: string
         isDefaultCalendar?: boolean
         canEdit: boolean
+        owner?: { address: string; name?: string }
       }[]
     }
     return data.value.map((c) => ({
@@ -109,6 +50,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
       name: c.name,
       primary: c.isDefaultCalendar ?? false,
       accessRole: c.canEdit ? "writer" : "reader",
+      email: c.owner?.address,
     }))
   }
 
@@ -171,11 +113,11 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
         ? { contentType: "text", content: event.description }
         : undefined,
       start: {
-        dateTime: event.startTime.toISOString().replace("Z", ""),
+        dateTime: formatLocalDateTime(event.startTime, event.timezone),
         timeZone: event.timezone,
       },
       end: {
-        dateTime: event.endTime.toISOString().replace("Z", ""),
+        dateTime: formatLocalDateTime(event.endTime, event.timezone),
         timeZone: event.timezone,
       },
       attendees: event.attendees?.map((a) => ({
@@ -211,14 +153,14 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
     if (event.summary) body.subject = event.summary
     if (event.description !== undefined)
       body.body = { contentType: "text", content: event.description }
-    if (event.startTime)
+    if (event.startTime && event.timezone)
       body.start = {
-        dateTime: event.startTime.toISOString().replace("Z", ""),
+        dateTime: formatLocalDateTime(event.startTime, event.timezone),
         timeZone: event.timezone,
       }
-    if (event.endTime)
+    if (event.endTime && event.timezone)
       body.end = {
-        dateTime: event.endTime.toISOString().replace("Z", ""),
+        dateTime: formatLocalDateTime(event.endTime, event.timezone),
         timeZone: event.timezone,
       }
     if (event.location !== undefined)

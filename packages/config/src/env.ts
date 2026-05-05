@@ -107,20 +107,7 @@ const s2Schema = z.object({
   BLOB_READ_WRITE_TOKEN: stringOptional,
 })
 
-const s3Schema = z.object({
-  GOOGLE_CALENDAR_CLIENT_ID: stringOptional,
-  GOOGLE_CALENDAR_CLIENT_SECRET: stringOptional,
-  GOOGLE_CALENDAR_REDIRECT_URI: urlOptional,
-
-  MICROSOFT_CALENDAR_CLIENT_ID: stringOptional,
-  MICROSOFT_CALENDAR_CLIENT_SECRET: stringOptional,
-  MICROSOFT_CALENDAR_REDIRECT_URI: urlOptional,
-})
-
-export const envSchema = baseSchema
-  .merge(s1aSchema)
-  .merge(s2Schema)
-  .merge(s3Schema)
+export const envSchema = baseSchema.merge(s1aSchema).merge(s2Schema)
 
 export type Env = z.infer<typeof envSchema>
 export type BaseEnv = Env
@@ -270,57 +257,4 @@ export function requireCronSecret(): { CRON_SECRET: string } {
     throw new Error("cron boot: missing CRON_SECRET")
   }
   return { CRON_SECRET: e.CRON_SECRET }
-}
-
-export interface RequiredGoogleCalendarEnv {
-  GOOGLE_CALENDAR_CLIENT_ID: string
-  GOOGLE_CALENDAR_CLIENT_SECRET: string
-  GOOGLE_CALENDAR_REDIRECT_URI: string
-}
-
-export interface RequiredMicrosoftCalendarEnv {
-  MICROSOFT_CALENDAR_CLIENT_ID: string
-  MICROSOFT_CALENDAR_CLIENT_SECRET: string
-  MICROSOFT_CALENDAR_REDIRECT_URI: string
-}
-
-export function requireGoogleCalendarEnv(): RequiredGoogleCalendarEnv {
-  const e = env()
-  const missing: string[] = []
-  if (!e.GOOGLE_CALENDAR_CLIENT_ID) missing.push("GOOGLE_CALENDAR_CLIENT_ID")
-  if (!e.GOOGLE_CALENDAR_CLIENT_SECRET)
-    missing.push("GOOGLE_CALENDAR_CLIENT_SECRET")
-  if (!e.GOOGLE_CALENDAR_REDIRECT_URI)
-    missing.push("GOOGLE_CALENDAR_REDIRECT_URI")
-  if (missing.length > 0) {
-    throw new Error(
-      `@eleva/calendar google boot: missing env vars: ${missing.join(", ")}`
-    )
-  }
-  return {
-    GOOGLE_CALENDAR_CLIENT_ID: e.GOOGLE_CALENDAR_CLIENT_ID!,
-    GOOGLE_CALENDAR_CLIENT_SECRET: e.GOOGLE_CALENDAR_CLIENT_SECRET!,
-    GOOGLE_CALENDAR_REDIRECT_URI: e.GOOGLE_CALENDAR_REDIRECT_URI!,
-  }
-}
-
-export function requireMicrosoftCalendarEnv(): RequiredMicrosoftCalendarEnv {
-  const e = env()
-  const missing: string[] = []
-  if (!e.MICROSOFT_CALENDAR_CLIENT_ID)
-    missing.push("MICROSOFT_CALENDAR_CLIENT_ID")
-  if (!e.MICROSOFT_CALENDAR_CLIENT_SECRET)
-    missing.push("MICROSOFT_CALENDAR_CLIENT_SECRET")
-  if (!e.MICROSOFT_CALENDAR_REDIRECT_URI)
-    missing.push("MICROSOFT_CALENDAR_REDIRECT_URI")
-  if (missing.length > 0) {
-    throw new Error(
-      `@eleva/calendar microsoft boot: missing env vars: ${missing.join(", ")}`
-    )
-  }
-  return {
-    MICROSOFT_CALENDAR_CLIENT_ID: e.MICROSOFT_CALENDAR_CLIENT_ID!,
-    MICROSOFT_CALENDAR_CLIENT_SECRET: e.MICROSOFT_CALENDAR_CLIENT_SECRET!,
-    MICROSOFT_CALENDAR_REDIRECT_URI: e.MICROSOFT_CALENDAR_REDIRECT_URI!,
-  }
 }

@@ -57,15 +57,7 @@ interface Props {
   initialOverrides: OverrideRow[]
 }
 
-const COMMON_TIMEZONES = [
-  "Europe/Lisbon",
-  "Europe/Madrid",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "America/New_York",
-  "America/Sao_Paulo",
-]
+const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone")
 
 function rulesToDayMap(
   rules: AvailabilityRuleInput[]
@@ -89,7 +81,9 @@ export function ScheduleEditor({
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
-  const [timezone, setTimezone] = React.useState(initialTz)
+  const [timezone, setTimezone] = React.useState(
+    () => initialTz || Intl.DateTimeFormat().resolvedOptions().timeZone
+  )
   const [days, setDays] = React.useState(() => rulesToDayMap(initialRules))
   const [overrides, setOverrides] =
     React.useState<OverrideRow[]>(initialOverrides)
@@ -207,10 +201,10 @@ export function ScheduleEditor({
             <SelectTrigger className="max-w-xs">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              {COMMON_TIMEZONES.map((tz) => (
+            <SelectContent className="max-h-60">
+              {ALL_TIMEZONES.map((tz) => (
                 <SelectItem key={tz} value={tz}>
-                  {tz}
+                  {tz.replace(/_/g, " ")}
                 </SelectItem>
               ))}
             </SelectContent>

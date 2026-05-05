@@ -1,180 +1,93 @@
-import { eq } from "drizzle-orm"
-import { withOrgContext, type Tx } from "@eleva/db/context"
-import { connectedCalendars } from "@eleva/db/schema"
-import {
-  encryptOAuthToken,
-  decryptOAuthToken,
-  revokeOAuthToken,
-  type OAuthProvider,
-  type VaultRef,
-} from "@eleva/encryption"
-import type { OAuthTokens, CalendarProvider } from "./types"
-import { getAdapter } from "./registry"
+import { WorkOS } from "@workos-inc/node"
+import type { CalendarProvider } from "./types"
 
-const PROVIDER_MAP: Record<CalendarProvider, OAuthProvider> = {
+/**
+ * WorkOS Pipes provider slugs. Configure these in the WorkOS Dashboard:
+ *
+ * google-calendar scopes:
+ *   - calendar.calendarlist.readonly  (listCalendars)
+ *   - calendar.events.freebusy        (getFreeBusy)
+ *   - calendar.events.owned           (createEvent, updateEvent, deleteEvent)
+ *
+ * microsoft-outlook-calendar scopes:
+ *   - Calendars.ReadWrite
+ *   - offline_access
+ */
+const PIPES_SLUG: Record<CalendarProvider, string> = {
   google: "google-calendar",
-  microsoft: "microsoft-graph",
+  microsoft: "microsoft-outlook-calendar",
+}
+
+export class CalendarTokenError extends Error {
+  readonly code: string
+  constructor(code: string) {
+    super(`Calendar token error: ${code}`)
+    this.name = "CalendarTokenError"
+    this.code = code
+  }
+}
+
+let _workos: WorkOS | null = null
+
+function workos(): WorkOS {
+  if (!_workos) {
+    const key = process.env.WORKOS_API_KEY
+    if (!key) throw new Error("WORKOS_API_KEY is required for calendar Pipes")
+    _workos = new WorkOS(key)
+  }
+  return _workos
 }
 
 /**
- * Store OAuth tokens in WorkOS Vault and record the connected calendar
- * in the database. The vault ref is stored in the DB; plaintext tokens
- * never touch Neon.
+ * Get a fresh access token for a calendar provider via WorkOS Pipes.
+ * Pipes handles token storage, refresh, and expiry automatically.
+ *
+ * @param workosUserId - The WorkOS user ID (from session.user.workosUserId)
+ * @param provider - Calendar provider ("google" or "microsoft")
+ * @throws CalendarTokenError with code "needs_reauthorization" or "not_installed"
  */
-export async function storeCalendarConnection(
-  orgId: string,
-  expertProfileId: string,
-  provider: CalendarProvider,
-  accountEmail: string,
-  tokens: OAuthTokens
+export async function getCalendarToken(
+  workosUserId: string,
+  provider: CalendarProvider
 ): Promise<string> {
-  const connectedCalendarId = await withOrgContext(orgId, async (tx: Tx) => {
-    const [row] = await tx
-      .insert(connectedCalendars)
-      .values({
-        orgId,
-        expertProfileId,
-        provider,
-        accountEmail,
-        credentialVaultRef: "pending",
-        status: "connecting",
-        tokenExpiresAt: tokens.expiresAt,
-      })
-      .returning({ id: connectedCalendars.id })
-
-    return row!.id
+  const slug = PIPES_SLUG[provider]
+  const result = await workos().pipes.getAccessToken({
+    provider: slug,
+    userId: workosUserId,
   })
 
-  let vaultRef: VaultRef
-  try {
-    vaultRef = await encryptOAuthToken({
-      provider: PROVIDER_MAP[provider],
-      userId: connectedCalendarId,
-      orgId,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-    })
-  } catch (err) {
-    await withOrgContext(orgId, async (tx: Tx) => {
-      await tx
-        .delete(connectedCalendars)
-        .where(eq(connectedCalendars.id, connectedCalendarId))
-    })
-    throw err
+  if (!result.accessToken) {
+    throw new CalendarTokenError(result.error ?? "not_installed")
   }
 
-  await withOrgContext(orgId, async (tx: Tx) => {
-    await tx
-      .update(connectedCalendars)
-      .set({
-        credentialVaultRef: vaultRef,
-        status: "connected",
-      })
-      .where(eq(connectedCalendars.id, connectedCalendarId))
-  })
-
-  return connectedCalendarId
+  return result.accessToken.token
 }
 
 /**
- * Get a valid access token for a connected calendar. Refreshes the
- * token if it's expired or about to expire (5-minute buffer).
+ * Check which calendar providers a user has connected via Pipes.
  */
-export async function getAccessToken(
-  orgId: string,
-  connectedCalendarId: string
-): Promise<{ accessToken: string; provider: CalendarProvider }> {
-  const cal = await withOrgContext(orgId, async (tx: Tx) => {
-    const [row] = await tx
-      .select({
-        provider: connectedCalendars.provider,
-        credentialVaultRef: connectedCalendars.credentialVaultRef,
-        tokenExpiresAt: connectedCalendars.tokenExpiresAt,
+export async function listConnectedProviders(
+  workosUserId: string
+): Promise<{ provider: CalendarProvider; connected: boolean }[]> {
+  const providers: { provider: CalendarProvider; connected: boolean }[] = []
+
+  for (const [provider, slug] of Object.entries(PIPES_SLUG)) {
+    try {
+      const result = await workos().pipes.getAccessToken({
+        provider: slug,
+        userId: workosUserId,
       })
-      .from(connectedCalendars)
-      .where(eq(connectedCalendars.id, connectedCalendarId))
-      .limit(1)
-    return row
-  })
-
-  if (!cal)
-    throw new Error(`Connected calendar not found: ${connectedCalendarId}`)
-
-  const vaultRef = cal.credentialVaultRef as VaultRef
-  const decrypted = await decryptOAuthToken(vaultRef)
-  const bufferMs = 5 * 60 * 1000
-
-  if (
-    cal.tokenExpiresAt &&
-    cal.tokenExpiresAt.getTime() > Date.now() + bufferMs
-  ) {
-    return { accessToken: decrypted.accessToken, provider: cal.provider }
-  }
-
-  if (!decrypted.refreshToken) {
-    throw new Error(`No refresh token for calendar: ${connectedCalendarId}`)
-  }
-
-  const adapter = getAdapter(cal.provider)
-  const refreshed = await adapter.refreshTokens(decrypted.refreshToken)
-
-  await revokeOAuthToken(vaultRef)
-  const newVaultRef = await encryptOAuthToken({
-    provider: PROVIDER_MAP[cal.provider],
-    userId: connectedCalendarId,
-    orgId,
-    accessToken: refreshed.accessToken,
-    refreshToken: refreshed.refreshToken,
-    expiresAt: refreshed.expiresAt,
-  })
-
-  await withOrgContext(orgId, async (tx: Tx) => {
-    await tx
-      .update(connectedCalendars)
-      .set({
-        credentialVaultRef: newVaultRef,
-        tokenExpiresAt: refreshed.expiresAt,
-        status: "connected",
-        updatedAt: new Date(),
+      providers.push({
+        provider: provider as CalendarProvider,
+        connected: !!result.accessToken,
       })
-      .where(eq(connectedCalendars.id, connectedCalendarId))
-  })
-
-  return { accessToken: refreshed.accessToken, provider: cal.provider }
-}
-
-/**
- * Disconnect a calendar — mark as disconnected first, then revoke vault
- * secrets best-effort.
- */
-export async function disconnectCalendar(
-  orgId: string,
-  connectedCalendarId: string
-): Promise<{ status: "disconnected" | "not_found" }> {
-  const cal = await withOrgContext(orgId, async (tx: Tx) => {
-    const [row] = await tx
-      .select({ credentialVaultRef: connectedCalendars.credentialVaultRef })
-      .from(connectedCalendars)
-      .where(eq(connectedCalendars.id, connectedCalendarId))
-      .limit(1)
-    return row
-  })
-
-  if (!cal) return { status: "not_found" }
-
-  await withOrgContext(orgId, async (tx: Tx) => {
-    await tx
-      .update(connectedCalendars)
-      .set({ status: "disconnected", updatedAt: new Date() })
-      .where(eq(connectedCalendars.id, connectedCalendarId))
-  })
-
-  try {
-    await revokeOAuthToken(cal.credentialVaultRef as VaultRef)
-  } catch {
-    // best-effort revocation
+    } catch {
+      providers.push({
+        provider: provider as CalendarProvider,
+        connected: false,
+      })
+    }
   }
 
-  return { status: "disconnected" }
+  return providers
 }

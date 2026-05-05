@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import {
   boolean,
   doublePrecision,
@@ -5,6 +6,7 @@ import {
   jsonb,
   pgTable,
   text,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -53,6 +55,9 @@ export const expertPracticeLocations = pgTable(
     expertIdx: index("expert_practice_locations_expert_idx").on(
       t.expertProfileId
     ),
+    primaryIdx: uniqueIndex("expert_practice_locations_primary_idx")
+      .on(t.expertProfileId)
+      .where(sql`is_primary = true`),
   })
 )
 

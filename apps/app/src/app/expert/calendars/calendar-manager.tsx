@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -11,7 +12,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
-import { startCalendarOAuth, disconnectCalendarAction } from "./actions"
+import {
+  disconnectCalendarAction,
+  loadSubCalendars,
+  saveBusySources,
+  saveDestinationCalendar,
+} from "./actions"
 
 interface ConnectedCal {
   id: string
@@ -22,6 +28,7 @@ interface ConnectedCal {
 
 interface Props {
   calendars: ConnectedCal[]
+  pipesWidgetToken: string
 }
 
 const PROVIDER_LABEL: Record<string, string> = {
@@ -29,30 +36,13 @@ const PROVIDER_LABEL: Record<string, string> = {
   microsoft: "Microsoft Calendar",
 }
 
-export function CalendarManager({ calendars }: Props) {
+export function CalendarManager({ calendars, pipesWidgetToken }: Props) {
   const router = useRouter()
+  const t = useTranslations("calendars")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  async function handleConnect(provider: "google" | "microsoft") {
-    setPending(true)
-    setError(null)
-    try {
-      const result = await startCalendarOAuth(provider)
-      if (result.ok) {
-        window.location.href = result.authorizationUrl
-        return
-      }
-      setError(result.error)
-    } catch {
-      setError("connection-failed")
-    } finally {
-      setPending(false)
-    }
-  }
-
   async function handleDisconnect(id: string) {
-    if (!confirm("Disconnect this calendar?")) return
     setPending(true)
     setError(null)
     try {
@@ -70,22 +60,48 @@ export function CalendarManager({ calendars }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("connectTitle")}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-4 text-sm text-muted-foreground">
+            {t("connectDescription")}
+          </p>
+          <div
+            data-workos-pipes-widget
+            data-auth-token={pipesWidgetToken}
+            className="min-h-[200px]"
+          />
+          <p className="mt-3 text-xs text-muted-foreground">
+            {t("connectHint")}
+          </p>
+        </CardContent>
+      </Card>
+
       {calendars.length > 0 && (
-        <div className="space-y-3">
-          {calendars.map((cal) => (
-            <Card key={cal.id}>
-              <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("connectedTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {calendars.map((cal) => (
+              <div
+                key={cal.id}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
                 <div className="space-y-0.5">
-                  <CardTitle className="text-base">
+                  <p className="text-sm font-medium">
                     {PROVIDER_LABEL[cal.provider] ?? cal.provider}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground">
+                  </p>
+                  <p className="text-xs text-muted-foreground">
                     {cal.accountEmail}
                   </p>
                 </div>
@@ -95,7 +111,7 @@ export function CalendarManager({ calendars }: Props) {
                       cal.status === "connected" ? "default" : "secondary"
                     }
                   >
-                    {cal.status}
+                    {t(`status.${cal.status}`)}
                   </Badge>
                   <Button
                     variant="ghost"
@@ -103,31 +119,14 @@ export function CalendarManager({ calendars }: Props) {
                     onClick={() => handleDisconnect(cal.id)}
                     disabled={pending}
                   >
-                    Disconnect
+                    {t("disconnect")}
                   </Button>
                 </div>
-              </CardHeader>
-            </Card>
-          ))}
-        </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       )}
-
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={() => handleConnect("google")}
-          disabled={pending}
-        >
-          Connect Google Calendar
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => handleConnect("microsoft")}
-          disabled={pending}
-        >
-          Connect Microsoft Calendar
-        </Button>
-      </div>
     </div>
   )
 }

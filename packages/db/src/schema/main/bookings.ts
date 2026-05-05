@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -78,7 +79,7 @@ export const slotReservations = pgTable(
     status: slotReservationStatusEnum("status").notNull().default("active"),
 
     /** Set when this reservation converts into a booking. */
-    bookingId: uuid("booking_id"),
+    bookingId: uuid("booking_id").references(() => bookings.id),
 
     /** Opaque token identifying the user session holding this lock. */
     holdToken: varchar("hold_token", { length: 64 }).notNull(),
@@ -92,6 +93,9 @@ export const slotReservations = pgTable(
       .on(t.expertProfileId, t.startsAt)
       .where(sql`status = 'active'`),
     holdIdx: index("slot_reservations_hold_idx").on(t.holdToken),
+    expiresActiveIdx: index("slot_reservations_expires_active_idx")
+      .on(t.expiresAt)
+      .where(sql`status = 'active'`),
   })
 )
 
@@ -140,7 +144,9 @@ export const bookings = pgTable(
     }),
 
     /** Self-reference for rescheduled bookings. */
-    rescheduledFromId: uuid("rescheduled_from_id"),
+    rescheduledFromId: uuid("rescheduled_from_id").references(
+      (): any => bookings.id
+    ),
 
     cancellationReason: text("cancellation_reason"),
     cancelledAt: timestamp("cancelled_at", {
@@ -165,6 +171,9 @@ export const bookings = pgTable(
     patientIdx: index("bookings_patient_idx").on(t.patientUserId),
     statusIdx: index("bookings_status_idx").on(t.status),
     timeIdx: index("bookings_time_idx").on(t.expertProfileId, t.startsAt),
+    stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
+      .on(t.stripePaymentIntentId)
+      .where(sql`stripe_payment_intent_id IS NOT NULL`),
   })
 )
 

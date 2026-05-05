@@ -22,6 +22,13 @@
       "when": 1778259600000,
       "tag": "0002_expert_fts_search",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778019828810,
+      "tag": "0003_slow_khan",
+      "breakpoints": true
     }
   ]
 }

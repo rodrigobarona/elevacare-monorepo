@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { requireSession } from "@eleva/auth/server"
 import {
@@ -27,11 +28,56 @@ export interface DateOverrideInput {
   timezone: string
 }
 
+const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"))
+
+const timePattern = /^\d{2}:\d{2}$/
+
+const saveScheduleSchema = z.object({
+  timezone: z.string().refine((tz) => VALID_TIMEZONES.has(tz), {
+    message: "Invalid IANA timezone",
+  }),
+  rules: z.array(
+    z
+      .object({
+        dayOfWeek: z.number().int().min(0).max(6),
+        startTime: z.string().regex(timePattern, "Expected HH:MM"),
+        endTime: z.string().regex(timePattern, "Expected HH:MM"),
+      })
+      .refine((r) => r.startTime < r.endTime, {
+        message: "startTime must be before endTime",
+      })
+  ),
+})
+
+const dateOverrideSchema = z
+  .object({
+    overrideDate: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected YYYY-MM-DD"),
+    startTime: z.string().regex(timePattern).optional(),
+    endTime: z.string().regex(timePattern).optional(),
+    isBlocked: z.boolean(),
+    timezone: z.string().refine((tz) => VALID_TIMEZONES.has(tz), {
+      message: "Invalid IANA timezone",
+    }),
+  })
+  .refine(
+    (d) =>
+      d.isBlocked ||
+      (d.startTime !== undefined &&
+        d.endTime !== undefined &&
+        d.startTime < d.endTime),
+    { message: "Non-blocked overrides require ordered start/end times" }
+  )
+
 export async function saveScheduleAction(params: {
   timezone: string
   rules: AvailabilityRuleInput[]
 }): Promise<ActionResult> {
   try {
+    const parsed = saveScheduleSchema.safeParse(params)
+    if (!parsed.success) return { ok: false, error: "validation" }
+
     const session = await requireSession("events:manage")
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
@@ -39,14 +85,20 @@ export async function saveScheduleAction(params: {
     const schedule = await getOrCreateDefaultSchedule(
       profile.orgId,
       profile.id,
-      params.timezone
+      parsed.data.timezone
     )
 
-    await updateScheduleTimezone(profile.orgId, schedule.id, params.timezone)
+    await updateScheduleTimezone(
+      profile.orgId,
+      schedule.id,
+      profile.id,
+      parsed.data.timezone
+    )
     await replaceAvailabilityRules(
       profile.orgId,
       schedule.id,
-      params.rules.map((r) => ({
+      profile.id,
+      parsed.data.rules.map((r) => ({
         scheduleId: schedule.id,
         dayOfWeek: r.dayOfWeek,
         startTime: r.startTime,
@@ -66,6 +118,9 @@ export async function addDateOverrideAction(
   data: DateOverrideInput
 ): Promise<ActionResult> {
   try {
+    const parsed = dateOverrideSchema.safeParse(data)
+    if (!parsed.success) return { ok: false, error: "validation" }
+
     const session = await requireSession("events:manage")
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
@@ -73,15 +128,15 @@ export async function addDateOverrideAction(
     const schedule = await getOrCreateDefaultSchedule(
       profile.orgId,
       profile.id,
-      data.timezone
+      parsed.data.timezone
     )
 
-    await upsertDateOverride(profile.orgId, schedule.id, {
+    await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
       scheduleId: schedule.id,
-      overrideDate: data.overrideDate,
-      startTime: data.isBlocked ? null : (data.startTime ?? null),
-      endTime: data.isBlocked ? null : (data.endTime ?? null),
-      isBlocked: data.isBlocked,
+      overrideDate: parsed.data.overrideDate,
+      startTime: parsed.data.isBlocked ? null : (parsed.data.startTime ?? null),
+      endTime: parsed.data.isBlocked ? null : (parsed.data.endTime ?? null),
+      isBlocked: parsed.data.isBlocked,
     })
 
     revalidatePath("/expert/schedule")
@@ -100,7 +155,7 @@ export async function removeDateOverrideAction(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    await deleteDateOverride(profile.orgId, overrideId)
+    await deleteDateOverride(profile.orgId, overrideId, profile.id)
     revalidatePath("/expert/schedule")
     return { ok: true }
   } catch (err) {

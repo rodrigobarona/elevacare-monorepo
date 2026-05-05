@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { db, main } from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
 import {
-  getAccessToken,
+  getCalendarToken,
   getAdapter,
   type CalendarEventInput,
 } from "@eleva/calendar"
@@ -56,12 +56,30 @@ export async function calendarEventCreate(params: {
 
     if (!destination) return { calendarEventId: null }
 
-    const { accessToken, provider } = await getAccessToken(
-      orgId,
-      destination.connectedCalendarId
-    )
+    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+      const [row] = await tx
+        .select({
+          workosUserId: main.connectedCalendars.workosUserId,
+          provider: main.connectedCalendars.provider,
+        })
+        .from(main.connectedCalendars)
+        .where(
+          and(
+            eq(main.connectedCalendars.id, destination.connectedCalendarId),
+            eq(main.connectedCalendars.status, "connected")
+          )
+        )
+        .limit(1)
+      return row
+    })
 
-    const adapter = getAdapter(provider)
+    if (!connCal) return { calendarEventId: null }
+
+    const accessToken = await getCalendarToken(
+      connCal.workosUserId,
+      connCal.provider
+    )
+    const adapter = getAdapter(connCal.provider)
 
     const eventInput: CalendarEventInput = {
       calendarId: destination.externalCalendarId,
@@ -134,11 +152,30 @@ export async function calendarEventUpdate(params: {
 
     if (!destination) return
 
-    const { accessToken, provider } = await getAccessToken(
-      orgId,
-      destination.connectedCalendarId
+    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+      const [row] = await tx
+        .select({
+          workosUserId: main.connectedCalendars.workosUserId,
+          provider: main.connectedCalendars.provider,
+        })
+        .from(main.connectedCalendars)
+        .where(
+          and(
+            eq(main.connectedCalendars.id, destination.connectedCalendarId),
+            eq(main.connectedCalendars.status, "connected")
+          )
+        )
+        .limit(1)
+      return row
+    })
+
+    if (!connCal) return
+
+    const accessToken = await getCalendarToken(
+      connCal.workosUserId,
+      connCal.provider
     )
-    const adapter = getAdapter(provider)
+    const adapter = getAdapter(connCal.provider)
 
     await adapter.updateEvent(
       accessToken,
@@ -194,11 +231,30 @@ export async function calendarEventDelete(params: {
 
     if (!destination) return
 
-    const { accessToken, provider } = await getAccessToken(
-      orgId,
-      destination.connectedCalendarId
+    const connCal = await withOrgContext(orgId, async (tx: Tx) => {
+      const [row] = await tx
+        .select({
+          workosUserId: main.connectedCalendars.workosUserId,
+          provider: main.connectedCalendars.provider,
+        })
+        .from(main.connectedCalendars)
+        .where(
+          and(
+            eq(main.connectedCalendars.id, destination.connectedCalendarId),
+            eq(main.connectedCalendars.status, "connected")
+          )
+        )
+        .limit(1)
+      return row
+    })
+
+    if (!connCal) return
+
+    const accessToken = await getCalendarToken(
+      connCal.workosUserId,
+      connCal.provider
     )
-    const adapter = getAdapter(provider)
+    const adapter = getAdapter(connCal.provider)
 
     await adapter.deleteEvent(
       accessToken,

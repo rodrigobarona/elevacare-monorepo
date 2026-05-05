@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import {
@@ -20,15 +21,19 @@ export default async function SchedulePage() {
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) redirect("/expert/onboarding")
 
+  const h = await headers()
+  const geoTz = h.get("x-vercel-ip-timezone")
+  const fallbackTz = profile.timezone ?? geoTz ?? "UTC"
+
   const schedule = await getOrCreateDefaultSchedule(
     profile.orgId,
     profile.id,
-    "Europe/Lisbon"
+    fallbackTz
   )
 
   const [rules, overrides] = await Promise.all([
-    listAvailabilityRules(profile.orgId, schedule.id),
-    listDateOverrides(profile.orgId, schedule.id),
+    listAvailabilityRules(profile.orgId, schedule.id, profile.id),
+    listDateOverrides(profile.orgId, schedule.id, profile.id),
   ])
 
   const t = await getTranslations("schedule")

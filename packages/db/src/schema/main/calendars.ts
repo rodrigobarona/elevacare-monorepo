@@ -24,10 +24,12 @@ export const calendarConnectionStatusEnum = pgEnum(
 
 /**
  * Account-level calendar connection. One row per Google/Microsoft
- * account OAuth grant. Tokens are stored in WorkOS Vault; the DB
- * holds an opaque VaultRef string.
+ * account linked by an expert. OAuth credentials are managed by
+ * WorkOS Pipes; this table tracks the connection for busy-source
+ * and destination-calendar selection.
  *
- * ADR-004: Eleva owns calendar OAuth (not WorkOS Pipes).
+ * ADR-004 (amended 2026-05): WorkOS Pipes manages OAuth credential
+ * lifecycle; Eleva owns the CalendarAdapter for direct API calls.
  */
 export const connectedCalendars = pgTable(
   "connected_calendars",
@@ -40,19 +42,15 @@ export const connectedCalendars = pgTable(
       .notNull()
       .references(() => expertProfiles.id, { onDelete: "cascade" }),
 
+    /** WorkOS user ID for Pipes getAccessToken calls from workflow contexts. */
+    workosUserId: text("workos_user_id").notNull(),
+
     provider: calendarProviderEnum("provider").notNull(),
     accountEmail: text("account_email").notNull(),
 
-    /** Opaque vault:namespace:objectId ref holding the OAuth credential. */
-    credentialVaultRef: text("credential_vault_ref").notNull(),
-
     status: calendarConnectionStatusEnum("status")
       .notNull()
-      .default("connecting"),
-    tokenExpiresAt: timestamp("token_expires_at", {
-      withTimezone: true,
-      mode: "date",
-    }),
+      .default("connected"),
     lastSyncAt: timestamp("last_sync_at", {
       withTimezone: true,
       mode: "date",

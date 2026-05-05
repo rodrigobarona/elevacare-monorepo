@@ -1,22 +1,12 @@
 export type CalendarProvider = "google" | "microsoft"
 
-export interface OAuthStartResult {
-  authorizationUrl: string
-  state: string
-}
-
-export interface OAuthTokens {
-  accessToken: string
-  refreshToken: string
-  expiresAt: Date
-  scope: string
-}
-
 export interface CalendarListItem {
   id: string
   name: string
   primary: boolean
   accessRole: string
+  /** SMTP email address of the calendar owner (Microsoft Graph owner.address). */
+  email?: string
 }
 
 export interface FreeBusyInterval {
@@ -50,12 +40,13 @@ export interface CalendarEvent {
   status: string
 }
 
+/**
+ * Calendar API adapter. Each provider (Google, Microsoft) implements
+ * this interface for direct API calls. OAuth credential management is
+ * handled by WorkOS Pipes -- see ADR-004 (amended 2026-05).
+ */
 export interface CalendarAdapter {
   readonly provider: CalendarProvider
-
-  startOAuth(scopes?: string[]): OAuthStartResult
-  exchangeCode(code: string): Promise<OAuthTokens>
-  refreshTokens(refreshToken: string): Promise<OAuthTokens>
 
   listCalendars(accessToken: string): Promise<CalendarListItem[]>
   getFreeBusy(

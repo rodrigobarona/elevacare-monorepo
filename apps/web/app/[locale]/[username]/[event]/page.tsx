@@ -41,6 +41,7 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 }
 
 export default async function BookingPage(props: PageProps) {
+  const { headers } = await import("next/headers")
   const { locale, username, event: eventSlug } = await props.params
 
   const expert = await findExpertByUsername(username)
@@ -48,6 +49,9 @@ export default async function BookingPage(props: PageProps) {
 
   const eventType = await findPublicEventType(expert.id, eventSlug)
   if (!eventType) notFound()
+
+  const h = await headers()
+  const ssrTz = h.get("x-vercel-ip-timezone") ?? "UTC"
 
   const title = pickText(eventType.title as LocalizedText, locale)
   const description = eventType.description
@@ -99,7 +103,7 @@ export default async function BookingPage(props: PageProps) {
           username={username}
           eventSlug={eventSlug}
           durationMinutes={eventType.durationMinutes}
-          timezone="Europe/Lisbon"
+          timezone={ssrTz}
         />
       </section>
     </div>

@@ -163,6 +163,9 @@ export const expertProfiles = pgTable(
      */
     topExpertActive: boolean("top_expert_active").notNull().default(false),
 
+    /** IANA timezone (e.g. "Europe/Lisbon"). Null until set by expert. */
+    timezone: varchar("timezone", { length: 64 }),
+
     /** Free-form metadata for marketing surfaces. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
 

@@ -10,9 +10,7 @@ import {
 } from "@eleva/db"
 import {
   getAdapter,
-  storeCalendarConnection,
-  getAccessToken,
-  disconnectCalendar,
+  getCalendarToken,
   type CalendarProvider,
 } from "@eleva/calendar"
 
@@ -25,55 +23,6 @@ async function verifyCalendarOwnership(
 ): Promise<boolean> {
   const calendars = await listConnectedCalendars(orgId, expertProfileId)
   return calendars.some((c) => c.id === connectedCalendarId)
-}
-
-export async function startCalendarOAuth(
-  provider: CalendarProvider
-): Promise<
-  { ok: true; authorizationUrl: string } | { ok: false; error: string }
-> {
-  try {
-    await requireSession("events:manage")
-    const adapter = getAdapter(provider)
-    const result = adapter.startOAuth()
-    return { ok: true, authorizationUrl: result.authorizationUrl }
-  } catch {
-    return { ok: false, error: "oauth-start-failed" }
-  }
-}
-
-export async function completeCalendarOAuth(
-  provider: CalendarProvider,
-  code: string
-): Promise<ActionResult> {
-  try {
-    const session = await requireSession("events:manage")
-    const profile = await getExpertProfileByUserId(session.user.id)
-    if (!profile) return { ok: false, error: "no-profile" }
-
-    const adapter = getAdapter(provider)
-    const tokens = await adapter.exchangeCode(code)
-
-    const calendars = await adapter.listCalendars(tokens.accessToken)
-    const primaryCalendar = calendars.find((c) => c.primary)
-    const primaryId = primaryCalendar?.id ?? ""
-    const accountEmail = primaryId.includes("@")
-      ? primaryId
-      : session.user.email
-
-    await storeCalendarConnection(
-      profile.orgId,
-      profile.id,
-      provider,
-      accountEmail,
-      tokens
-    )
-
-    revalidatePath("/expert/calendars")
-    return { ok: true }
-  } catch {
-    return { ok: false, error: "oauth-exchange-failed" }
-  }
 }
 
 export async function disconnectCalendarAction(
@@ -91,7 +40,15 @@ export async function disconnectCalendarAction(
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
-    await disconnectCalendar(profile.orgId, connectedCalendarId)
+    const { db } = await import("@eleva/db")
+    const { connectedCalendars } = await import("@eleva/db/schema")
+    const { eq } = await import("drizzle-orm")
+    const mainDb = db()
+    await mainDb
+      .update(connectedCalendars)
+      .set({ status: "disconnected", updatedAt: new Date() })
+      .where(eq(connectedCalendars.id, connectedCalendarId))
+
     revalidatePath("/expert/calendars")
     return { ok: true }
   } catch {
@@ -99,10 +56,16 @@ export async function disconnectCalendarAction(
   }
 }
 
-export async function loadSubCalendars(
-  connectedCalendarId: string
-): Promise<
-  | { ok: true; calendars: { id: string; name: string; primary: boolean }[] }
+export async function loadSubCalendars(connectedCalendarId: string): Promise<
+  | {
+      ok: true
+      calendars: {
+        id: string
+        name: string
+        primary: boolean
+        email?: string
+      }[]
+    }
   | { ok: false; error: string }
 > {
   try {
@@ -117,19 +80,24 @@ export async function loadSubCalendars(
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
-    const { accessToken, provider } = await getAccessToken(
-      profile.orgId,
-      connectedCalendarId
+    const calendars = await listConnectedCalendars(profile.orgId, profile.id)
+    const connCal = calendars.find((c) => c.id === connectedCalendarId)
+    if (!connCal) return { ok: false, error: "calendar-not-found" }
+
+    const accessToken = await getCalendarToken(
+      session.user.workosUserId,
+      connCal.provider
     )
-    const adapter = getAdapter(provider)
-    const calendars = await adapter.listCalendars(accessToken)
+    const adapter = getAdapter(connCal.provider)
+    const subCalendars = await adapter.listCalendars(accessToken)
 
     return {
       ok: true,
-      calendars: calendars.map((c) => ({
+      calendars: subCalendars.map((c) => ({
         id: c.id,
         name: c.name,
         primary: c.primary,
+        email: c.email,
       })),
     }
   } catch {

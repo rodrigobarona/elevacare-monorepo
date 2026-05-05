@@ -63,12 +63,21 @@
 
   "calendars.title": "Calendarios Conectados",
   "calendars.description": "Conecta tu calendario de Google o Microsoft para evitar reservas dobles.",
+  "calendars.connectTitle": "Conectar un calendario",
+  "calendars.connectDescription": "Vincula tu cuenta de Google o Microsoft para que Eleva verifique tu disponibilidad y cree eventos de sesión.",
+  "calendars.connectHint": "Las credenciales de tu calendario son gestionadas de forma segura por WorkOS. Eleva nunca almacena tu contraseña.",
+  "calendars.connectedTitle": "Tus calendarios",
   "calendars.connectGoogle": "Conectar Google Calendar",
   "calendars.connectMicrosoft": "Conectar Microsoft Calendar",
   "calendars.busySources": "Fuentes de ocupación",
   "calendars.destination": "Calendario de destino",
   "calendars.disconnect": "Desconectar",
+  "calendars.disconnectConfirm": "¿Desconectar este calendario? Eleva dejará de verificar la disponibilidad y crear eventos.",
   "calendars.empty": "Ningún calendario conectado aún.",
+  "calendars.status.connecting": "Conectando",
+  "calendars.status.connected": "Conectado",
+  "calendars.status.disconnected": "Desconectado",
+  "calendars.status.error": "Error",
 
   "errors.unauthorized": "No tienes acceso a esta página."
 }

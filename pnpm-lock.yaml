@@ -528,18 +528,9 @@ importers:
 
   packages/calendar:
     dependencies:
-      '@eleva/config':
-        specifier: workspace:*
-        version: link:../config
-      '@eleva/db':
-        specifier: workspace:*
-        version: link:../db
-      '@eleva/encryption':
-        specifier: workspace:*
-        version: link:../encryption
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
+      '@workos-inc/node':
+        specifier: ^9.1.0
+        version: 9.1.0
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*

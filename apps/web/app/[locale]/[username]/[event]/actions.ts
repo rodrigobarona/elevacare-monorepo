@@ -99,6 +99,8 @@ export async function reserveSlotAction(
     const eventType = await findPublicEventType(expert.id, eventSlug)
     if (!eventType) return { ok: false, error: "event-not-found" }
 
+    const slotStart = new Date(slotStartIso)
+
     const ruleError = validateBookingRules({
       eventType: {
         bookingWindowDays: eventType.bookingWindowDays,
@@ -106,10 +108,48 @@ export async function reserveSlotAction(
         cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
-      slotStart: new Date(slotStartIso),
+      slotStart,
     })
 
     if (ruleError) return { ok: false, error: ruleError }
+
+    const { schedule, rules, overrides } = await getExpertScheduleForBooking(
+      expert.id
+    )
+    if (!schedule) return { ok: false, error: "no-schedule" }
+
+    const dayStart = new Date(slotStart)
+    dayStart.setUTCHours(0, 0, 0, 0)
+    const dayEnd = new Date(slotStart)
+    dayEnd.setUTCHours(23, 59, 59, 999)
+
+    const existingBookings = await listExpertBusyBookings(
+      expert.id,
+      dayStart,
+      dayEnd
+    )
+
+    const availableSlots = getAvailableSlots({
+      eventType: {
+        durationMinutes: eventType.durationMinutes,
+        bookingWindowDays: eventType.bookingWindowDays,
+        minimumNoticeMinutes: eventType.minimumNoticeMinutes,
+        bufferBeforeMinutes: eventType.bufferBeforeMinutes,
+        bufferAfterMinutes: eventType.bufferAfterMinutes,
+      },
+      schedule: { timezone: schedule.timezone },
+      rules,
+      overrides,
+      existingBookings,
+      externalBusyTimes: [],
+      rangeStart: dayStart,
+      rangeEnd: dayEnd,
+    })
+
+    const slotMatch = availableSlots.some(
+      (s) => s.start.getTime() === slotStart.getTime()
+    )
+    if (!slotMatch) return { ok: false, error: "slot-unavailable" }
 
     const e = env()
     if (!e.UPSTASH_REDIS_REST_URL || !e.UPSTASH_REDIS_REST_TOKEN) {

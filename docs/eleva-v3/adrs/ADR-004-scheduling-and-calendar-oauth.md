@@ -1,68 +1,82 @@
-# ADR-004: Scheduling Model + Eleva-Owned Calendar OAuth
+# ADR-004: Scheduling Model + Calendar OAuth via WorkOS Pipes
 
 ## Status
 
-Accepted
+Amended (2026-05)
 
 ## Date
 
-2026-04-22
+2026-04-22 (original), 2026-05-05 (amended)
 
 ## Context
 
 Eleva needs a scheduling engine inspired by cal.com's mental model (multiple calendar connections per expert, busy vs destination calendar split, per-event buffers, booking windows, notice, modes) plus a first-class in-person / phone / online distinction that cal.com doesn't strongly model.
 
-We also need Google and Microsoft calendar OAuth. WorkOS promotes "Pipes" for third-party data sync. Relying on WorkOS Pipes for calendar OAuth is tempting but couples Eleva's scheduling correctness to a vendor's sync product.
+We also need Google and Microsoft calendar OAuth. The original decision rejected WorkOS Pipes, characterizing it as a "higher-level sync abstraction." This was incorrect — Pipes is an OAuth credential management service that handles connect flows, token storage, and automatic token refresh, returning fresh access tokens on demand. It does not sync data, make API calls, or abstract provider APIs.
 
 ## Decision
 
-**Scheduling engine**:
+**Scheduling engine** (unchanged):
 
 - `packages/scheduling` owns event types, schedules, availability rules, blocked dates, slot computation, reservation logic (Redis-backed atomic `reserveSlot`).
 - Session modes: `online`, `in_person` (with explicit address/location object and localized display text), `phone`.
 - Per-event language, per-event country-license scope, optional worldwide-mode flag for coaching/chat sessions that aren't clinic-bound.
 - Multiple calendar connections per expert, separate "busy" vs "destination" calendar selection.
 
-**Calendar OAuth**:
+**Calendar OAuth** (amended — now uses WorkOS Pipes for credential management):
 
-- `packages/calendar` owns Google + Microsoft OAuth flows, token refresh, event read/write, webhook/Pub-Sub subscription, external-change reconciliation.
-- Tokens stored in WorkOS Vault via `packages/encryption`.
-- **WorkOS Pipes is explicitly not used** for calendar sync.
+- **WorkOS Pipes** manages the OAuth connect flow, token storage, token refresh, and token revocation for Google Calendar and Microsoft Outlook Calendar. Experts connect via the Pipes widget in the Eleva UI.
+- **`packages/calendar`** owns the `CalendarAdapter` interface for direct Google Calendar and Microsoft Graph API calls (listCalendars, getFreeBusy, createEvent, updateEvent, deleteEvent). These adapters receive an access token from Pipes and make API calls directly — they do not use any Pipes sync or abstraction layer.
+- `getCalendarToken(workosUserId, provider)` wraps `workos.pipes.getAccessToken()` and is the single entry point for obtaining calendar tokens.
+- The `calendarTokenRefresh` background workflow is deleted — Pipes handles refresh automatically.
+
+**Separation of concerns: AuthKit vs Pipes**:
+
+- **AuthKit** (social login connectors): All users authenticate via WorkOS AuthKit. Google social login is available for all users (patients and experts). This is identity-level authentication.
+- **Pipes** (calendar OAuth): Only experts who choose to connect their calendar use Pipes. This is an opt-in integration for scheduling features. The two systems are independent.
+
+## Amendment Rationale (2026-05)
+
+The original rejection of Pipes was based on six concerns. Re-evaluation shows all six are about **API usage patterns** that Pipes does not touch:
+
+1. **Idempotent event creation**: Still call Graph/Google directly with client-supplied IDs and 409 fallback. Pipes only provides the token.
+2. **Multi-calendar per expert**: Still call `listCalendars`, manage busy/destination selection in Eleva's database. Pipes doesn't model calendar selection.
+3. **Real-time freebusy**: Still call `getSchedule`/`freebusy` directly with the Pipes-provided token. No sync interval involved.
+4. **Token-expiry surfacing**: Pipes returns `{ error: "needs_reauthorization" }` — a clean, actionable signal that Eleva catches and surfaces to the expert.
+5. **Pub/Sub webhooks**: Still set up directly with the Pipes-provided token. Pipes doesn't abstract webhooks.
+6. **Vendor dependency**: WorkOS Vault was already on the critical path for every token operation. Pipes reduces vendor surface (one API call vs. encrypt/decrypt/refresh logic).
+
+Additionally, the original Eleva-owned OAuth implementation was **incomplete**:
+
+- `completeCalendarOAuth` was defined but never called — no callback route existed.
+- `startCalendarOAuth` discarded the CSRF state token.
+- The callback routes (`api.eleva.care/calendar/oauth/*/callback`) were not implemented.
+- `calendarTokenRefresh` workflow had no cron/scheduler wired up.
+
+Pipes replaces all of this unfinished plumbing with a production-ready, managed solution.
 
 ## Alternatives Considered
 
-### Option A — WorkOS Pipes for calendar sync
+### Option A — Eleva-owned OAuth (original decision, now superseded)
 
-Tempting because WorkOS Pipes handles OAuth flows and token refresh, and we already use WorkOS for identity so the DPA is consolidated. Re-evaluated and rejected on these concrete grounds:
+- Pros: full control over token refresh, direct debugging
+- Cons: significant implementation effort (~3-4 days estimated, actual implementation was incomplete after sprint 3), ongoing maintenance of OAuth plumbing, CSRF protection, callback routes, and token refresh scheduling
 
-- **Idempotent event creation with client-supplied IDs + 409 fallback** — how cal.com and Eleva MVP prevent duplicate calendar events when a Stripe webhook retries. Needs direct Google Calendar / Microsoft Graph API access. Pipes presents a higher-level sync abstraction that we cannot guarantee exposes this.
-- **Multi-calendar per expert is a product concept, not a sync concept** — cal.com pattern: expert picks which connected calendars are "busy sources" and which single calendar is the "destination". Pipes models generic sync, not this distinction. We would re-build it on top of Pipes anyway.
-- **Real-time busy detection at slot-compute time** — when a patient opens the booking page, we query freebusy live with a short cache. Pipes runs on a sync interval — either over-queries (wasteful) or under-queries (shows slots that external calendars have already blocked).
-- **Token-expiry surfacing** — on refresh failure we must fire a `calendar_disconnected` Lane 1 notification to the expert immediately. Pipes managing tokens opaquely breaks that signal chain.
-- **Pub/Sub watch for external changes** — Google Calendar pushes change notifications when someone edits outside Eleva; we need these to invalidate our cache and re-notify the expert if the change affects a booking. Pipes abstracts this away.
-- **Vendor dependency on the critical path** — if WorkOS changes Pipes behavior, Eleva's booking engine breaks. Owning the adapter means we absorb Google/Microsoft API churn ourselves, with debuggability.
-- **Precedent** — cal.com and Eleva MVP both own calendar OAuth. Every scheduling competitor with OAuth owns the integration. It is the defensible, debuggable choice.
+### Option B — WorkOS Pipes for credential management (current decision)
 
-Trade-off accepted: ~3-4 days of OAuth plumbing + token-refresh code in Sprint 3, plus ongoing maintenance of the adapter. Pays back the first time a webhook retries or a token expires, because we can debug it and own the user-facing behavior.
+- Pros: production-ready OAuth flows with zero custom plumbing, automatic token refresh, secure token storage, connect/disconnect widget, Eleva retains full control over API calls via CalendarAdapter interface
+- Cons: vendor dependency for token management (acceptable — WorkOS is already on the identity critical path)
 
-### Option B — Eleva-owned OAuth (chosen)
+## Scope Note
 
-- Pros: full control over token refresh, idempotent event creation with client-supplied IDs, 409 fallback, explicit webhook handling, real-time freebusy, first-class multi-calendar (busy vs destination) modeling, token-expiry events fire notifications, Pub/Sub cache invalidation
-- Cons: more code, but well-understood patterns (cal.com pattern documented)
-
-## Scope Note — Where WorkOS Pipes Is Still In Play
-
-WorkOS Pipes remains a valid tool for Eleva on **identity-side integrations**:
-
-- SCIM provisioning from enterprise clinics (phase 2)
-- Directory sync for team-managed calendars (if ever needed)
-- SSO federation
-
-It is specifically rejected for the calendar data plane because calendar correctness is on the booking critical path and has product-shaped requirements a generic sync product does not model.
+- **Pipes scope**: OAuth credential management only (connect, store, refresh, revoke tokens for Google Calendar and Microsoft Outlook Calendar).
+- **Eleva scope**: CalendarAdapter interface, direct API calls, busy/destination calendar model, idempotent event creation, webhook handling, freebusy queries.
+- WorkOS Pipes may also be used for future integrations (SCIM provisioning, directory sync) but those are separate decisions.
 
 ## Consequences
 
-- Booking flow can guarantee no double-write to destination calendar (idempotent event creation with client-supplied ID + 409 fallback).
-- Expert experience: can pick which calendars are "busy sources" vs the "destination calendar" where confirmed events land.
-- Token expiration self-heals via `calendarTokenRefresh` workflow; if refresh fails the expert is notified (`calendar_disconnected` Lane 1 notification).
+- Booking flow guarantees no double-write to destination calendar (idempotent event creation with client-supplied ID + 409 fallback) — this is an adapter-level concern, unaffected by Pipes.
+- Expert experience: connects calendar via Pipes widget, then picks busy sources and destination calendar in Eleva's post-connect setup flow.
+- Token expiration self-heals via Pipes' automatic refresh. If refresh fails, `getCalendarToken` throws `CalendarTokenError("needs_reauthorization")` which is surfaced to the expert.
+- No cron/scheduler needed for token refresh — Pipes handles this automatically.
 - Supports round-robin / collective / clinic scheduling in phase 2 without rewrite.

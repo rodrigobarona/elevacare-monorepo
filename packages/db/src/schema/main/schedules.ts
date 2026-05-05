@@ -124,6 +124,10 @@ export const dateOverrides = pgTable(
       t.scheduleId,
       t.overrideDate
     ),
+    blockedChk: check(
+      "date_overrides_blocked_nulls",
+      sql`(is_blocked = true AND start_time IS NULL AND end_time IS NULL) OR (is_blocked = false AND start_time IS NOT NULL AND end_time IS NOT NULL AND start_time < end_time)`
+    ),
   })
 )
 

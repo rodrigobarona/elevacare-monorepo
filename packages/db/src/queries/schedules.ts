@@ -5,7 +5,6 @@ import {
   availabilityRules,
   dateOverrides,
   type Schedule,
-  type NewSchedule,
   type AvailabilityRule,
   type NewAvailabilityRule,
   type DateOverride,
@@ -48,13 +47,20 @@ export async function getOrCreateDefaultSchedule(
 
 export async function getSchedule(
   orgId: string,
-  scheduleId: string
+  scheduleId: string,
+  expertProfileId: string
 ): Promise<Schedule | undefined> {
   return withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select()
       .from(schedules)
-      .where(and(eq(schedules.id, scheduleId), isNull(schedules.deletedAt)))
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
+        )
+      )
       .limit(1)
     return row
   })
@@ -63,38 +69,66 @@ export async function getSchedule(
 export async function updateScheduleTimezone(
   orgId: string,
   scheduleId: string,
+  expertProfileId: string,
   timezone: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
     await tx
       .update(schedules)
       .set({ timezone, updatedAt: new Date() })
-      .where(eq(schedules.id, scheduleId))
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
   })
 }
 
 export async function listAvailabilityRules(
   orgId: string,
-  scheduleId: string
+  scheduleId: string,
+  expertProfileId: string
 ): Promise<AvailabilityRule[]> {
   return withOrgContext(orgId, async (tx: Tx) => {
     return tx
       .select()
       .from(availabilityRules)
-      .where(eq(availabilityRules.scheduleId, scheduleId))
+      .innerJoin(schedules, eq(schedules.id, availabilityRules.scheduleId))
+      .where(
+        and(
+          eq(availabilityRules.scheduleId, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
       .orderBy(
         asc(availabilityRules.dayOfWeek),
         asc(availabilityRules.startTime)
       )
+      .then((rows) => rows.map((r) => r.availability_rules))
   })
 }
 
 export async function replaceAvailabilityRules(
   orgId: string,
   scheduleId: string,
+  expertProfileId: string,
   rules: Omit<NewAvailabilityRule, "id" | "orgId" | "createdAt">[]
 ): Promise<AvailabilityRule[]> {
   return withOrgContext(orgId, async (tx: Tx) => {
+    const [sched] = await tx
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+
+    if (!sched) throw new Error("unauthorized-schedule")
+
     await tx
       .delete(availabilityRules)
       .where(eq(availabilityRules.scheduleId, scheduleId))
@@ -110,23 +144,45 @@ export async function replaceAvailabilityRules(
 
 export async function listDateOverrides(
   orgId: string,
-  scheduleId: string
+  scheduleId: string,
+  expertProfileId: string
 ): Promise<DateOverride[]> {
   return withOrgContext(orgId, async (tx: Tx) => {
     return tx
       .select()
       .from(dateOverrides)
-      .where(eq(dateOverrides.scheduleId, scheduleId))
+      .innerJoin(schedules, eq(schedules.id, dateOverrides.scheduleId))
+      .where(
+        and(
+          eq(dateOverrides.scheduleId, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
       .orderBy(asc(dateOverrides.overrideDate))
+      .then((rows) => rows.map((r) => r.date_overrides))
   })
 }
 
 export async function upsertDateOverride(
   orgId: string,
   scheduleId: string,
+  expertProfileId: string,
   data: Omit<NewDateOverride, "id" | "orgId" | "createdAt">
 ): Promise<DateOverride> {
   return withOrgContext(orgId, async (tx: Tx) => {
+    const [sched] = await tx
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+
+    if (!sched) throw new Error("unauthorized-schedule")
+
     const [existing] = await tx
       .select()
       .from(dateOverrides)
@@ -161,9 +217,24 @@ export async function upsertDateOverride(
 
 export async function deleteDateOverride(
   orgId: string,
-  overrideId: string
+  overrideId: string,
+  expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({ id: dateOverrides.id })
+      .from(dateOverrides)
+      .innerJoin(schedules, eq(schedules.id, dateOverrides.scheduleId))
+      .where(
+        and(
+          eq(dateOverrides.id, overrideId),
+          eq(schedules.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+
+    if (!row) throw new Error("unauthorized-override")
+
     await tx.delete(dateOverrides).where(eq(dateOverrides.id, overrideId))
   })
 }
