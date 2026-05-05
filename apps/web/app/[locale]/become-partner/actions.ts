@@ -150,10 +150,19 @@ export async function submitApplicationAction(
     revalidatePath("/[locale]/become-partner", "page")
     return { ok: true, applicationId }
   } catch (err) {
-    // The partial unique index `become_partner_applications_one_pending`
-    // surfaces 23505 from Postgres when the applicant already has a
-    // submitted/under-review row. Surface that as a user-friendly error.
-    if (isPgUniqueViolation(err)) {
+    if (
+      isPgUniqueViolation(
+        err,
+        "become_partner_applications_username_requested_unique"
+      )
+    ) {
+      return {
+        ok: false,
+        error: "username-taken",
+        reason: "pending-application",
+      }
+    }
+    if (isPgUniqueViolation(err, "become_partner_applications_one_pending")) {
       return { ok: false, error: "duplicate-application" }
     }
     console.error("submitApplicationAction failed", err)
@@ -161,8 +170,10 @@ export async function submitApplicationAction(
   }
 }
 
-function isPgUniqueViolation(err: unknown): boolean {
+function isPgUniqueViolation(err: unknown, constraint?: string): boolean {
   if (typeof err !== "object" || err === null) return false
-  const code = (err as { code?: unknown }).code
-  return code === "23505"
+  const pg = err as { code?: unknown; constraint?: unknown }
+  if (pg.code !== "23505") return false
+  if (constraint !== undefined) return pg.constraint === constraint
+  return true
 }

@@ -1,0 +1,2 @@
+DROP INDEX "become_partner_applications_username_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX "become_partner_applications_username_requested_unique" ON "become_partner_applications" USING btree ("username_requested") WHERE status IN ('submitted', 'under_review');

@@ -51,11 +51,7 @@ async function resolveProfile(username: string): Promise<ResolvedProfile> {
 
 const getResolvedProfile = cache(
   async (username: string): Promise<ResolvedProfile> => {
-    try {
-      return await resolveProfile(username)
-    } catch {
-      return null
-    }
+    return resolveProfile(username)
   }
 )
 

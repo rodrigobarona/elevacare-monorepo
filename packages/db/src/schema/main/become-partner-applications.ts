@@ -159,9 +159,16 @@ export const becomePartnerApplications = pgTable(
       t.applicantUserId
     ),
     statusIdx: index("become_partner_applications_status_idx").on(t.status),
-    usernameIdx: index("become_partner_applications_username_idx").on(
-      t.usernameRequested
-    ),
+    /**
+     * At most one pending/under-review application may claim a given
+     * username. Terminal rows (approved/rejected) are excluded so the
+     * slug can be re-requested after rejection.
+     */
+    usernameRequestedUniqueIdx: uniqueIndex(
+      "become_partner_applications_username_requested_unique"
+    )
+      .on(t.usernameRequested)
+      .where(sql`status IN ('submitted', 'under_review')`),
     /**
      * One open application per applicant at a time. Approved/rejected
      * rows are kept for audit; only one row is allowed in a non-
