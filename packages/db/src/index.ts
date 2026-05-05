@@ -41,3 +41,33 @@ export {
   type ListApplicationsResult,
   type ApproveApplicationResult,
 } from "./queries/admin"
+export {
+  listExpertEventTypes,
+  getEventType,
+  createEventType,
+  updateEventType,
+  deleteEventType,
+  findPublicEventType,
+  listPublicEventTypes,
+} from "./queries/event-types"
+export {
+  getOrCreateDefaultSchedule,
+  getSchedule,
+  updateScheduleTimezone,
+  listAvailabilityRules,
+  replaceAvailabilityRules,
+  listDateOverrides,
+  upsertDateOverride,
+  deleteDateOverride,
+} from "./queries/schedules"
+export {
+  getExpertScheduleForBooking,
+  listExpertBusyBookings,
+  type BookingScheduleData,
+} from "./queries/booking-public"
+export {
+  listConnectedCalendars,
+  replaceBusySources,
+  replaceDestinationCalendar,
+} from "./queries/calendars"
+export type { LocalizedText } from "./schema/main/shared"

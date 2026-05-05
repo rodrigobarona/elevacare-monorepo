@@ -27,3 +27,13 @@ export const updatedAt = () =>
 
 export const deletedAt = () =>
   timestamp("deleted_at", { withTimezone: true, mode: "date" })
+
+/**
+ * JSONB shape for fields localized per Eleva's launch locale set.
+ * `en` is required (default locale); PT and ES are optional.
+ */
+export type LocalizedText = {
+  en: string
+  pt?: string
+  es?: string
+}

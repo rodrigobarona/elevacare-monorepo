@@ -79,7 +79,7 @@ importers:
         version: link:../../packages/workflows
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       next:
         specifier: ^16.2.3
         version: 16.2.4(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
@@ -126,6 +126,9 @@ importers:
       '@eleva/billing':
         specifier: workspace:^
         version: link:../../packages/billing
+      '@eleva/calendar':
+        specifier: workspace:^
+        version: link:../../packages/calendar
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
@@ -282,12 +285,18 @@ importers:
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
+      '@eleva/scheduling':
+        specifier: workspace:^
+        version: link:../../packages/scheduling
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
       '@hookform/resolvers':
         specifier: ^3.10.0
         version: 3.10.0(react-hook-form@7.75.0(react@19.2.5))
+      '@upstash/redis':
+        specifier: ^1.34.0
+        version: 1.38.0
       lucide-react:
         specifier: ^1.8.0
         version: 1.8.0(react@19.2.5)
@@ -416,7 +425,7 @@ importers:
         version: link:../observability
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -447,7 +456,7 @@ importers:
         version: 9.1.0
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       jose:
         specifier: ^5.10.0
         version: 5.10.0
@@ -518,6 +527,19 @@ importers:
         version: 5.9.3
 
   packages/calendar:
+    dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
+      '@eleva/db':
+        specifier: workspace:*
+        version: link:../db
+      '@eleva/encryption':
+        specifier: workspace:*
+        version: link:../encryption
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -594,7 +616,7 @@ importers:
         version: 1.1.0
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -760,6 +782,19 @@ importers:
         version: 5.9.3
 
   packages/scheduling:
+    dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
+      '@eleva/db':
+        specifier: workspace:*
+        version: link:../db
+      '@upstash/redis':
+        specifier: ^1.34.0
+        version: 1.38.0
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -773,6 +808,9 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(msw@2.13.4(@types/node@25.6.0)(typescript@5.9.3))(vite@8.0.9(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
 
   packages/typescript-config: {}
 
@@ -851,6 +889,9 @@ importers:
 
   packages/workflows:
     dependencies:
+      '@eleva/calendar':
+        specifier: workspace:*
+        version: link:../calendar
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
@@ -859,7 +900,7 @@ importers:
         version: link:../observability
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -3843,6 +3884,9 @@ packages:
   '@typescript-eslint/visitor-keys@8.59.0':
     resolution: {integrity: sha512-/uejZt4dSere1bx12WLlPfv8GktzcaDtuJ7s42/HEZ5zGj9oxRaD4bj7qwSunXkf+pbAhFt2zjpHYUiT5lHf0Q==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@upstash/redis@1.38.0':
+    resolution: {integrity: sha512-wu+dZBptlLy0+MCUEoHmzrY/TnmgDey3+c7EbIGwrLqAvkP8yi5MWZHYGIFtAygmL4Bkz2TdFu+eU0vFPncIcg==}
 
   '@vercel/blob@2.3.3':
     resolution: {integrity: sha512-MtD7VLo6hU07eHR7bmk5SIMD290q574UaNYTe46qeyRT+hWrCy26CoAqfd7PnIefVXvRehRZBzukxuTO9iGTVg==}
@@ -9665,6 +9709,10 @@ snapshots:
       '@typescript-eslint/types': 8.59.0
       eslint-visitor-keys: 5.0.1
 
+  '@upstash/redis@1.38.0':
+    dependencies:
+      uncrypto: 0.1.3
+
   '@vercel/blob@2.3.3':
     dependencies:
       async-retry: 1.3.3
@@ -10264,11 +10312,12 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.21.0
 
-  drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6):
+  drizzle-orm@0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0):
     optionalDependencies:
       '@neondatabase/serverless': 1.1.0
       '@opentelemetry/api': 1.9.1
       '@types/pg': 8.15.6
+      '@upstash/redis': 1.38.0
 
   dunder-proto@1.0.1:
     dependencies:

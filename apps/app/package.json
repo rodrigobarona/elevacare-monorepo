@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@eleva/accounting": "workspace:^",
+    "@eleva/calendar": "workspace:^",
     "@eleva/audit": "workspace:^",
     "@eleva/auth": "workspace:^",
     "@eleva/billing": "workspace:^",

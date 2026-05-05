@@ -36,5 +36,37 @@
   "finance.accountDetails": "Datos de Cuenta",
   "finance.taxSettings": "Configuración Fiscal",
 
+  "nav.eventTypes": "Tipos de Evento",
+  "nav.schedule": "Horario",
+  "nav.calendars": "Calendarios",
+
+  "eventTypes.title": "Tipos de Evento",
+  "eventTypes.description": "Define los servicios que los pacientes pueden reservar contigo.",
+  "eventTypes.create": "Nuevo tipo de evento",
+  "eventTypes.createTitle": "Crear Tipo de Evento",
+  "eventTypes.createDescription": "Define un nuevo servicio reservable para tus pacientes.",
+  "eventTypes.editTitle": "Editar Tipo de Evento",
+  "eventTypes.editDescription": "Actualiza los detalles y reglas de reserva de este tipo de evento.",
+  "eventTypes.empty": "Aún no has creado ningún tipo de evento.",
+  "eventTypes.createFirst": "Crea tu primer tipo de evento",
+
+  "schedule.title": "Horario",
+  "schedule.description": "Define tu disponibilidad semanal y excepciones de fechas.",
+  "schedule.timezone": "Zona horaria",
+  "schedule.weeklyHours": "Horas semanales",
+  "schedule.dateOverrides": "Excepciones de fechas",
+  "schedule.addOverride": "Añadir excepción",
+  "schedule.blocked": "Bloqueado",
+  "schedule.save": "Guardar horario",
+
+  "calendars.title": "Calendarios Conectados",
+  "calendars.description": "Conecta tu calendario de Google o Microsoft para evitar reservas dobles.",
+  "calendars.connectGoogle": "Conectar Google Calendar",
+  "calendars.connectMicrosoft": "Conectar Microsoft Calendar",
+  "calendars.busySources": "Fuentes de ocupación",
+  "calendars.destination": "Calendario de destino",
+  "calendars.disconnect": "Desconectar",
+  "calendars.empty": "Ningún calendario conectado aún.",
+
   "errors.unauthorized": "No tienes acceso a esta página."
 }

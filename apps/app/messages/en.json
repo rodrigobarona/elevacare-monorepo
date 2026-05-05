@@ -36,5 +36,37 @@
   "finance.accountDetails": "Account Details",
   "finance.taxSettings": "Tax Settings",
 
+  "nav.eventTypes": "Event Types",
+  "nav.schedule": "Schedule",
+  "nav.calendars": "Calendars",
+
+  "eventTypes.title": "Event Types",
+  "eventTypes.description": "Define the services patients can book with you.",
+  "eventTypes.create": "New event type",
+  "eventTypes.createTitle": "Create Event Type",
+  "eventTypes.createDescription": "Define a new bookable service for your patients.",
+  "eventTypes.editTitle": "Edit Event Type",
+  "eventTypes.editDescription": "Update this event type's details and booking rules.",
+  "eventTypes.empty": "You haven't created any event types yet.",
+  "eventTypes.createFirst": "Create your first event type",
+
+  "schedule.title": "Schedule",
+  "schedule.description": "Set your weekly availability and date overrides.",
+  "schedule.timezone": "Timezone",
+  "schedule.weeklyHours": "Weekly hours",
+  "schedule.dateOverrides": "Date overrides",
+  "schedule.addOverride": "Add override",
+  "schedule.blocked": "Blocked",
+  "schedule.save": "Save schedule",
+
+  "calendars.title": "Connected Calendars",
+  "calendars.description": "Connect your Google or Microsoft calendar to avoid double bookings.",
+  "calendars.connectGoogle": "Connect Google Calendar",
+  "calendars.connectMicrosoft": "Connect Microsoft Calendar",
+  "calendars.busySources": "Busy sources",
+  "calendars.destination": "Destination calendar",
+  "calendars.disconnect": "Disconnect",
+  "calendars.empty": "No calendars connected yet.",
+
   "errors.unauthorized": "You do not have access to this page."
 }

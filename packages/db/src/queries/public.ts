@@ -1,8 +1,37 @@
-import { and, asc, desc, eq, inArray, isNull, or, sql } from "drizzle-orm"
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  inArray,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from "drizzle-orm"
+import type { PgColumn } from "drizzle-orm/pg-core"
 import { isReserved } from "@eleva/config/reserved-usernames"
 
 import { withPlatformAdminContext } from "../context"
 import * as main from "../schema/main"
+
+/**
+ * Build `column && ARRAY[$1, $2, ...]::cast` so each element is a
+ * properly-bound scalar parameter. Drizzle's sql`` unwraps JS arrays
+ * into a single flattened param which PostgreSQL rejects as a
+ * malformed array literal when cast.
+ */
+function pgArrayOverlap(
+  column: PgColumn,
+  values: string[],
+  castSuffix: string = "text[]"
+): SQL {
+  const elems = sql.join(
+    values.map((v) => sql`${v}`),
+    sql`, `
+  )
+  return sql`${column} && ARRAY[${elems}]::${sql.raw(castSuffix)}`
+}
 
 /**
  * Public marketplace queries.
@@ -33,6 +62,8 @@ export interface PublicExpertCard {
 
 export interface PublicExpertProfile extends PublicExpertCard {
   id: string
+  /** Tenant ID — needed for booking funnel reservation context. */
+  orgId: string
   /** ISO-639-1 + ISO-3166-1 — we keep them denormalised for cards. */
   worldwideMode: boolean
 }
@@ -101,6 +132,7 @@ export async function findExpertByUsername(
     const rows = await tx
       .select({
         id: main.expertProfiles.id,
+        orgId: main.expertProfiles.orgId,
         username: main.expertProfiles.username,
         displayName: main.expertProfiles.displayName,
         headline: main.expertProfiles.headline,
@@ -234,19 +266,23 @@ export async function listExperts(
 
     if (filters.languages && filters.languages.length > 0) {
       conditions.push(
-        sql`${main.expertProfiles.languages} && ${filters.languages}::text[]`
+        pgArrayOverlap(main.expertProfiles.languages, filters.languages)
       )
     }
 
     if (filters.countries && filters.countries.length > 0) {
       conditions.push(
-        sql`${main.expertProfiles.practiceCountries} && ${filters.countries}::text[]`
+        pgArrayOverlap(main.expertProfiles.practiceCountries, filters.countries)
       )
     }
 
     if (filters.sessionModes && filters.sessionModes.length > 0) {
       conditions.push(
-        sql`${main.expertProfiles.sessionModes} && ${filters.sessionModes}::session_mode[]`
+        pgArrayOverlap(
+          main.expertProfiles.sessionModes,
+          filters.sessionModes,
+          "session_mode[]"
+        )
       )
     }
 

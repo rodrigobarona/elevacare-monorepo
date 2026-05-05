@@ -12,6 +12,12 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "@eleva/config": "workspace:*",
+    "@eleva/db": "workspace:*",
+    "@eleva/encryption": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",

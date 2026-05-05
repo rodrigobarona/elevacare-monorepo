@@ -23,6 +23,18 @@ export const TENANT_TABLES = [
   "clinic_profiles",
   "expert_integration_credentials",
   "become_partner_applications",
+  "schedules",
+  "availability_rules",
+  "date_overrides",
+  "event_types",
+  "connected_calendars",
+  "calendar_busy_sources",
+  "calendar_destinations",
+  "slot_reservations",
+  "bookings",
+  "sessions",
+  "expert_practice_locations",
+  "event_locations",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
