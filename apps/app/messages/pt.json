@@ -29,5 +29,12 @@
   "nav.finance": "Finanças",
   "nav.adminApplications": "Candidaturas",
 
+  "finance.title": "Finanças",
+  "finance.description": "Gira os seus pagamentos, saldos e definições fiscais.",
+  "finance.balance": "Saldo",
+  "finance.payouts": "Pagamentos",
+  "finance.accountDetails": "Detalhes da Conta",
+  "finance.taxSettings": "Definições Fiscais",
+
   "errors.unauthorized": "Não tem acesso a esta página."
 }

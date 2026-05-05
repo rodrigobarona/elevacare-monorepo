@@ -29,5 +29,12 @@
   "nav.finance": "Finance",
   "nav.adminApplications": "Applications",
 
+  "finance.title": "Finance",
+  "finance.description": "Manage your payouts, balances, and tax settings.",
+  "finance.balance": "Balance",
+  "finance.payouts": "Payouts",
+  "finance.accountDetails": "Account Details",
+  "finance.taxSettings": "Tax Settings",
+
   "errors.unauthorized": "You do not have access to this page."
 }

@@ -61,21 +61,26 @@ export function StepProfile({ profile, onDone }: Props) {
     setPending(true)
     setError(null)
 
-    const result = await saveProfileStep({
-      nif: nif.trim() || undefined,
-      licenseScope: licenseScope.trim() || undefined,
-      languages,
-      practiceCountries: countries,
-      worldwideMode,
-      sessionModes,
-    })
+    try {
+      const result = await saveProfileStep({
+        nif: nif.trim() || undefined,
+        licenseScope: licenseScope.trim() || undefined,
+        languages,
+        practiceCountries: countries,
+        worldwideMode,
+        sessionModes,
+      })
 
-    if (result.ok) {
-      onDone()
-    } else {
-      setError(result.error)
+      if (result.ok) {
+        onDone()
+      } else {
+        setError(result.error)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save profile")
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   return (

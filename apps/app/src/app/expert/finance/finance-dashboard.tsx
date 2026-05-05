@@ -1,5 +1,6 @@
 "use client"
 
+import { useTranslations } from "next-intl"
 import {
   ConnectPayouts,
   ConnectBalances,
@@ -15,12 +16,14 @@ import {
 import { Separator } from "@eleva/ui/components/separator"
 
 export function FinanceDashboard() {
+  const t = useTranslations("finance")
+
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Balance</CardTitle>
+            <CardTitle>{t("balance")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ConnectBalances />
@@ -29,7 +32,7 @@ export function FinanceDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Payouts</CardTitle>
+            <CardTitle>{t("payouts")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ConnectPayouts />
@@ -42,7 +45,7 @@ export function FinanceDashboard() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Account Details</CardTitle>
+            <CardTitle>{t("accountDetails")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ConnectAccountManagement />
@@ -51,7 +54,7 @@ export function FinanceDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Tax Settings</CardTitle>
+            <CardTitle>{t("taxSettings")}</CardTitle>
           </CardHeader>
           <CardContent>
             <ConnectTaxSettings />

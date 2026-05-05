@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { db, main } from "@eleva/db"
-import { env } from "@eleva/config/env"
+import { corsHeaders } from "@/lib/cors"
 
 /**
  * POST /stripe/identity
@@ -21,12 +21,12 @@ export const runtime = "nodejs"
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(request),
+    headers: corsHeaders(request, "POST, OPTIONS"),
   })
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const cors = corsHeaders(request)
+  const cors = corsHeaders(request, "POST, OPTIONS")
 
   const session = await getSession()
   if (!session) {
@@ -74,60 +74,13 @@ export async function POST(request: Request): Promise<Response> {
       { headers: cors }
     )
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+    console.error(
+      "[stripe/identity] Verification session creation failed:",
+      err
+    )
     return NextResponse.json(
-      { error: "stripe-error", message },
+      { error: "stripe-error" },
       { status: 502, headers: cors }
     )
-  }
-}
-
-function corsHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get("origin") ?? ""
-  const allowOrigin = matchAllowedOrigin(origin)
-
-  const headers: Record<string, string> = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "authorization, content-type, x-correlation-id",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Max-Age": "600",
-    Vary: "Origin",
-  }
-  if (allowOrigin) {
-    headers["Access-Control-Allow-Origin"] = allowOrigin
-  }
-  return headers
-}
-
-function matchAllowedOrigin(origin: string): string | null {
-  if (!origin) return null
-
-  const e = env()
-  const explicit = (e.APP_URL ?? "").replace(/\/$/, "")
-  if (explicit && origin === explicit) return origin
-
-  const url = safeUrl(origin)
-  if (!url) return null
-
-  if (
-    e.NODE_ENV === "development" &&
-    (url.hostname === "localhost" || url.hostname === "127.0.0.1")
-  ) {
-    return origin
-  }
-
-  if (url.hostname.endsWith(".preview.eleva.care")) {
-    return origin
-  }
-
-  return null
-}
-
-function safeUrl(value: string): URL | null {
-  try {
-    return new URL(value)
-  } catch {
-    return null
   }
 }

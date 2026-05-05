@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache"
 import { requireSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 
+const ALLOWED_SESSION_MODES = ["online", "in_person", "phone"] as const
+
 interface ProfileFormData {
   nif?: string
   licenseScope?: string
@@ -28,13 +30,20 @@ export async function saveProfileStep(
     const steps = Array.isArray(completedSteps) ? completedSteps : []
     if (!steps.includes("profile")) steps.push("profile")
 
+    const validSessionModes = (
+      Array.isArray(data.sessionModes) ? data.sessionModes : []
+    ).filter((m): m is (typeof ALLOWED_SESSION_MODES)[number] =>
+      (ALLOWED_SESSION_MODES as readonly string[]).includes(m)
+    )
+
     await updateExpertProfile(profile.id, profile.orgId, {
       nif: data.nif ?? null,
       licenseScope: data.licenseScope ?? null,
       languages: data.languages,
       practiceCountries: data.practiceCountries,
       worldwideMode: data.worldwideMode,
-      sessionModes: data.sessionModes as ["online"],
+      sessionModes:
+        validSessionModes.length > 0 ? validSessionModes : ["online"],
       metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
     })
 

@@ -14,10 +14,7 @@ export default async function ExpertDashboardPage() {
   }
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (
-    profile &&
-    (profile.status === "draft" || profile.status === "approved")
-  ) {
+  if (!profile || profile.status === "draft" || profile.status === "approved") {
     redirect("/expert/onboarding")
   }
 

@@ -27,19 +27,32 @@ export function ApplicationActions({ applicationId, status }: Props) {
   async function handleClaim() {
     setPending(true)
     setError(null)
-    const result = await claimApplicationAction(applicationId)
-    if (!result.ok) setError(result.error)
-    else router.refresh()
-    setPending(false)
+    try {
+      const result = await claimApplicationAction(applicationId)
+      if (!result.ok) setError(result.error)
+      else router.refresh()
+    } catch {
+      setError("claim-failed")
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleApprove() {
     setPending(true)
     setError(null)
-    const result = await approveApplicationAction(applicationId)
-    if (!result.ok) setError(result.error)
-    else router.refresh()
-    setPending(false)
+    try {
+      const result = await approveApplicationAction(applicationId)
+      if (!result.ok) setError(result.error)
+      else {
+        if (result.warning) setError(result.warning)
+        router.refresh()
+      }
+    } catch {
+      setError("approve-failed")
+    } finally {
+      setPending(false)
+    }
   }
 
   async function handleReject() {
@@ -49,10 +62,15 @@ export function ApplicationActions({ applicationId, status }: Props) {
     }
     setPending(true)
     setError(null)
-    const result = await rejectApplicationAction(applicationId, reason)
-    if (!result.ok) setError(result.error)
-    else router.refresh()
-    setPending(false)
+    try {
+      const result = await rejectApplicationAction(applicationId, reason)
+      if (!result.ok) setError(result.error)
+      else router.refresh()
+    } catch {
+      setError("reject-failed")
+    } finally {
+      setPending(false)
+    }
   }
 
   return (

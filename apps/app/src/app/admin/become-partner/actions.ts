@@ -12,7 +12,7 @@ import {
 import { createConnectAccount } from "@eleva/billing/server"
 
 type ActionResult =
-  | { ok: true; data?: ApproveApplicationResult }
+  | { ok: true; data?: ApproveApplicationResult; warning?: string }
   | { ok: false; error: string }
 
 export async function claimApplicationAction(
@@ -34,10 +34,10 @@ export async function rejectApplicationAction(
   reason: string
 ): Promise<ActionResult> {
   try {
+    const session = await requireSession("applications:review")
     if (!reason.trim()) {
       return { ok: false, error: "reason-required" }
     }
-    const session = await requireSession("applications:review")
     await rejectApplication(id, session.user.id, reason.trim())
     revalidatePath("/admin/become-partner")
     return { ok: true }
@@ -54,12 +54,23 @@ export async function approveApplicationAction(
     const session = await requireSession("experts:approve")
     const result = await approveApplication(id, session.user.id)
 
+    const email = session.user.email
+    if (!email) {
+      revalidatePath("/admin/become-partner")
+      return {
+        ok: true,
+        data: result,
+        warning:
+          "Stripe Connect provisioning skipped: reviewer has no email on file.",
+      }
+    }
+
     try {
       const connectAccount = await createConnectAccount(
         {
           expertProfileId: result.expertProfileId,
           orgId: result.orgId,
-          email: session.user.email,
+          email,
         },
         { idempotencyKey: `connect_${result.expertProfileId}` }
       )
@@ -67,10 +78,18 @@ export async function approveApplicationAction(
         stripeAccountId: connectAccount.id,
       })
     } catch (stripeErr) {
+      const msg =
+        stripeErr instanceof Error ? stripeErr.message : String(stripeErr)
       console.error(
         "[admin] Stripe Connect creation failed (approval persisted)",
         stripeErr
       )
+      revalidatePath("/admin/become-partner")
+      return {
+        ok: true,
+        data: result,
+        warning: `Stripe Connect provisioning failed: ${msg}`,
+      }
     }
 
     revalidatePath("/admin/become-partner")

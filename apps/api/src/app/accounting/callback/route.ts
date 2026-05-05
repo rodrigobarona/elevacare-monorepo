@@ -2,7 +2,13 @@ import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
 import { getAdapter, type ConnectInput } from "@eleva/accounting"
-import { db, main, withOrgContext, type Tx } from "@eleva/db"
+import {
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
+import { env } from "@eleva/config/env"
 
 /**
  * GET /accounting/callback
@@ -21,9 +27,11 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function GET(request: Request) {
+  const appUrl = env().APP_URL || request.url
+
   const session = await getSession()
   if (!session) {
-    return NextResponse.redirect(new URL("/signin", request.url))
+    return NextResponse.redirect(new URL("/signin", appUrl))
   }
 
   const url = new URL(request.url)
@@ -34,20 +42,20 @@ export async function GET(request: Request) {
   if (error) {
     console.error("[accounting/callback] Provider error:", error)
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=provider_denied", request.url)
+      new URL("/expert/onboarding?invoicing_error=provider_denied", appUrl)
     )
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=missing_params", request.url)
+      new URL("/expert/onboarding?invoicing_error=missing_params", appUrl)
     )
   }
 
   const parts = state.split(":")
   if (parts.length < 3) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=invalid_state", request.url)
+      new URL("/expert/onboarding?invoicing_error=invalid_state", appUrl)
     )
   }
 
@@ -62,19 +70,22 @@ export async function GET(request: Request) {
       providerSlug as "toconline" | "moloni" | "manual"
     )
 
-    const [expert] = await db()
-      .select({
-        id: main.expertProfiles.id,
-        orgId: main.expertProfiles.orgId,
-        userId: main.expertProfiles.userId,
-      })
-      .from(main.expertProfiles)
-      .where(eq(main.expertProfiles.id, expertProfileId))
-      .limit(1)
+    const expert = await withPlatformAdminContext(async (tx: Tx) => {
+      const [row] = await tx
+        .select({
+          id: main.expertProfiles.id,
+          orgId: main.expertProfiles.orgId,
+          userId: main.expertProfiles.userId,
+        })
+        .from(main.expertProfiles)
+        .where(eq(main.expertProfiles.id, expertProfileId))
+        .limit(1)
+      return row ?? null
+    })
 
     if (!expert || expert.userId !== session.user.id) {
       return NextResponse.redirect(
-        new URL("/expert/onboarding?invoicing_error=not_found", request.url)
+        new URL("/expert/onboarding?invoicing_error=not_found", appUrl)
       )
     }
 
@@ -126,12 +137,12 @@ export async function GET(request: Request) {
     })
 
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_connected=true", request.url)
+      new URL("/expert/onboarding?invoicing_connected=true", appUrl)
     )
   } catch (err) {
     console.error("[accounting/callback] Connect failed:", err)
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=connect_failed", request.url)
+      new URL("/expert/onboarding?invoicing_error=connect_failed", appUrl)
     )
   }
 }

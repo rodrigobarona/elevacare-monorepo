@@ -73,11 +73,14 @@ export function OnboardingWizard({
         {steps.map((step, i) => {
           const done = completedSteps.includes(step)
           const isActive = step === activeStep
+          const label = STEP_LABELS[step] ?? step
           return (
             <button
               key={step}
               type="button"
               onClick={() => setActiveStep(step)}
+              aria-label={`Step ${i + 1}: ${label}${done ? " (complete)" : ""}`}
+              aria-current={isActive ? "step" : undefined}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
                   ? "border-foreground bg-foreground text-background"
@@ -87,10 +90,8 @@ export function OnboardingWizard({
               }`}
             >
               <span className="tabular-nums">{i + 1}</span>
-              <span className="hidden sm:inline">
-                {STEP_LABELS[step] ?? step}
-              </span>
-              {done && <span aria-label="complete">&#10003;</span>}
+              <span className="hidden sm:inline">{label}</span>
+              {done && <span aria-hidden="true">&#10003;</span>}
             </button>
           )
         })}

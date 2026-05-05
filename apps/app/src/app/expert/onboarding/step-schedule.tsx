@@ -42,7 +42,7 @@ export function StepSchedule({ onDone }: Props) {
 
       <p className="text-sm text-muted-foreground">
         Create your first event type. You can add more event types and configure
-        your full schedule after onboarding is complete (Sprint 3).
+        your full schedule after onboarding is complete.
       </p>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -82,8 +82,8 @@ export function StepSchedule({ onDone }: Props) {
       </div>
 
       <p className="text-xs text-muted-foreground">
-        This is a preview of the event type editor. Full CRUD, availability
-        rules, and calendar integration come in Sprint 3.
+        This is a preview of the event type editor. Full scheduling,
+        availability rules, and calendar integration will be available soon.
       </p>
 
       <Button type="submit" disabled={pending}>

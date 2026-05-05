@@ -71,9 +71,19 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
         </div>
         <Button
           size="sm"
+          disabled={loading}
           onClick={async () => {
-            const r = await markStepComplete("identity")
-            if (r.ok) onDone()
+            setLoading(true)
+            setError(null)
+            try {
+              const r = await markStepComplete("identity")
+              if (r.ok) onDone()
+              else setError(r.error)
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Unknown error")
+            } finally {
+              setLoading(false)
+            }
           }}
         >
           Continue

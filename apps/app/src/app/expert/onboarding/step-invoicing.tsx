@@ -57,24 +57,28 @@ export function StepInvoicing({ profile, onDone }: Props) {
     setPending(true)
     setError(null)
 
-    if (slug === "toconline") {
-      const result = await saveInvoicingChoice(slug)
-      if (!result.ok) {
-        setError(result.error)
-        setPending(false)
+    try {
+      if (slug === "toconline") {
+        const result = await saveInvoicingChoice(slug)
+        if (!result.ok) {
+          setError(result.error)
+          return
+        }
+        window.location.href = `/expert/onboarding/toconline-redirect`
         return
       }
-      window.location.href = `/expert/onboarding/toconline-redirect`
-      return
-    }
 
-    const result = await saveInvoicingChoice(slug)
-    if (result.ok) {
-      onDone()
-    } else {
-      setError(result.error)
+      const result = await saveInvoicingChoice(slug)
+      if (result.ok) {
+        onDone()
+      } else {
+        setError(result.error)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save choice")
+    } finally {
+      setPending(false)
     }
-    setPending(false)
   }
 
   if (alreadyConnected) {

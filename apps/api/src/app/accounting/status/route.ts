@@ -2,8 +2,13 @@ import { and, eq, isNull } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
 import { getAdapter, type InvoicingProviderSlug } from "@eleva/accounting"
-import { db, main } from "@eleva/db"
-import { env } from "@eleva/config/env"
+import {
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
+import { corsHeaders } from "@/lib/cors"
 
 /**
  * GET /accounting/status
@@ -19,12 +24,12 @@ export const runtime = "nodejs"
 export async function OPTIONS(request: Request) {
   return new NextResponse(null, {
     status: 204,
-    headers: corsHeaders(request),
+    headers: corsHeaders(request, "GET, OPTIONS"),
   })
 }
 
 export async function GET(request: Request) {
-  const cors = corsHeaders(request)
+  const cors = corsHeaders(request, "GET, OPTIONS")
 
   const session = await getSession()
   if (!session) {
@@ -34,15 +39,19 @@ export async function GET(request: Request) {
     )
   }
 
-  const [expert] = await db()
-    .select({
-      id: main.expertProfiles.id,
-      invoicingProvider: main.expertProfiles.invoicingProvider,
-      invoicingSetupStatus: main.expertProfiles.invoicingSetupStatus,
-    })
-    .from(main.expertProfiles)
-    .where(eq(main.expertProfiles.userId, session.user.id))
-    .limit(1)
+  const expert = await withPlatformAdminContext(async (tx: Tx) => {
+    const [row] = await tx
+      .select({
+        id: main.expertProfiles.id,
+        orgId: main.expertProfiles.orgId,
+        invoicingProvider: main.expertProfiles.invoicingProvider,
+        invoicingSetupStatus: main.expertProfiles.invoicingSetupStatus,
+      })
+      .from(main.expertProfiles)
+      .where(eq(main.expertProfiles.userId, session.user.id))
+      .limit(1)
+    return row ?? null
+  })
 
   if (!expert) {
     return NextResponse.json(
@@ -70,20 +79,23 @@ export async function GET(request: Request) {
     expert.invoicingSetupStatus === "connected" &&
     expert.invoicingProvider !== "manual"
   ) {
-    const [cred] = await db()
-      .select()
-      .from(main.expertIntegrationCredentials)
-      .where(
-        and(
-          eq(main.expertIntegrationCredentials.expertProfileId, expert.id),
-          eq(
-            main.expertIntegrationCredentials.provider,
-            expert.invoicingProvider
-          ),
-          isNull(main.expertIntegrationCredentials.deletedAt)
+    const cred = await withOrgContext(expert.orgId, async (tx: Tx) => {
+      const [row] = await tx
+        .select()
+        .from(main.expertIntegrationCredentials)
+        .where(
+          and(
+            eq(main.expertIntegrationCredentials.expertProfileId, expert.id),
+            eq(
+              main.expertIntegrationCredentials.provider,
+              expert.invoicingProvider!
+            ),
+            isNull(main.expertIntegrationCredentials.deletedAt)
+          )
         )
-      )
-      .limit(1)
+        .limit(1)
+      return row ?? null
+    })
 
     if (cred) {
       try {
@@ -111,47 +123,4 @@ export async function GET(request: Request) {
     },
     { headers: cors }
   )
-}
-
-function corsHeaders(request: Request): Record<string, string> {
-  const origin = request.headers.get("origin") ?? ""
-  const allowOrigin = matchAllowedOrigin(origin)
-
-  const headers: Record<string, string> = {
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Allow-Headers":
-      "authorization, content-type, x-correlation-id",
-    "Access-Control-Allow-Credentials": "true",
-    "Access-Control-Max-Age": "600",
-    Vary: "Origin",
-  }
-  if (allowOrigin) {
-    headers["Access-Control-Allow-Origin"] = allowOrigin
-  }
-  return headers
-}
-
-function matchAllowedOrigin(origin: string): string | null {
-  if (!origin) return null
-  const e = env()
-  const explicit = (e.APP_URL ?? "").replace(/\/$/, "")
-  if (explicit && origin === explicit) return origin
-  const url = safeUrl(origin)
-  if (!url) return null
-  if (
-    e.NODE_ENV === "development" &&
-    (url.hostname === "localhost" || url.hostname === "127.0.0.1")
-  ) {
-    return origin
-  }
-  if (url.hostname.endsWith(".preview.eleva.care")) return origin
-  return null
-}
-
-function safeUrl(value: string): URL | null {
-  try {
-    return new URL(value)
-  } catch {
-    return null
-  }
 }

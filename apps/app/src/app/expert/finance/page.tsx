@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
@@ -17,14 +18,14 @@ export default async function FinancePage() {
     redirect("/expert/onboarding")
   }
 
+  const t = await getTranslations("finance")
+
   return (
     <AppShell session={session}>
       <div className="space-y-6">
         <header className="space-y-2">
-          <h1 className="text-2xl font-medium">Finance</h1>
-          <p className="text-sm text-muted-foreground">
-            Manage your payouts, balances, and tax settings.
-          </p>
+          <h1 className="text-2xl font-medium">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("description")}</p>
         </header>
 
         <FinanceDashboard />

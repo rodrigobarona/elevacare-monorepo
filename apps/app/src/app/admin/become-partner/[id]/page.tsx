@@ -57,24 +57,29 @@ export default async function ApplicationDetailPage({ params }: Props) {
           <CardHeader>
             <CardTitle>Applicant Info</CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-2">
-            <Field label="Email" value={app.applicantEmail ?? "—"} />
-            <Field
-              label="Display Name"
-              value={app.applicantDisplayName ?? "—"}
-            />
-            <Field label="NIF" value={app.nif ?? "—"} />
-            <Field label="License #" value={app.licenseNumber ?? "—"} />
-            <Field label="License Scope" value={app.licenseScope ?? "—"} />
-            <Field label="Languages" value={app.languages.join(", ") || "—"} />
-            <Field
-              label="Practice Countries"
-              value={app.practiceCountries.join(", ") || "—"}
-            />
-            <Field
-              label="Categories"
-              value={app.categorySlugs.join(", ") || "—"}
-            />
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-2">
+              <Field label="Email" value={app.applicantEmail ?? "—"} />
+              <Field
+                label="Display Name"
+                value={app.applicantDisplayName ?? "—"}
+              />
+              <Field label="NIF" value={app.nif ?? "—"} />
+              <Field label="License #" value={app.licenseNumber ?? "—"} />
+              <Field label="License Scope" value={app.licenseScope ?? "—"} />
+              <Field
+                label="Languages"
+                value={app.languages.join(", ") || "—"}
+              />
+              <Field
+                label="Practice Countries"
+                value={app.practiceCountries.join(", ") || "—"}
+              />
+              <Field
+                label="Categories"
+                value={app.categorySlugs.join(", ") || "—"}
+              />
+            </dl>
           </CardContent>
         </Card>
 

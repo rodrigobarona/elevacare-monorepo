@@ -14,6 +14,19 @@ import { AppShell } from "@/components/app-shell"
 
 export const dynamic = "force-dynamic"
 
+const VALID_STATUSES = [
+  "submitted",
+  "under_review",
+  "approved",
+  "rejected",
+] as const
+
+function isValidStatus(
+  value: string
+): value is ListApplicationsFilters["status"] & string {
+  return (VALID_STATUSES as readonly string[]).includes(value)
+}
+
 const STATUS_VARIANT: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
@@ -36,8 +49,12 @@ export default async function BecomePartnerQueuePage({ searchParams }: Props) {
   const params = await searchParams
   const filters: ListApplicationsFilters = { limit: 25, offset: 0 }
 
-  if (params.status && params.status !== "all") {
-    filters.status = params.status as ListApplicationsFilters["status"]
+  if (
+    params.status &&
+    params.status !== "all" &&
+    isValidStatus(params.status)
+  ) {
+    filters.status = params.status
   }
   if (params.page) {
     const p = Math.max(1, parseInt(params.page, 10) || 1)
