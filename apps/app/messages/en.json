@@ -52,6 +52,10 @@
   "eventTypes.createFirst": "Create your first event type",
   "eventTypes.status.published": "Published",
   "eventTypes.status.draft": "Draft",
+  "eventTypes.error.no-profile": "Your expert profile was not found.",
+  "eventTypes.error.toggle-failed": "Could not update the event type. Please try again.",
+  "eventTypes.error.delete-failed": "Could not delete the event type. Please try again.",
+  "eventTypes.error.generic": "Something went wrong. Please try again.",
 
   "schedule.title": "Schedule",
   "schedule.description": "Set your weekly availability and date overrides.",

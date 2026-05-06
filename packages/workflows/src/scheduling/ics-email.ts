@@ -123,20 +123,23 @@ export async function sendBookingIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send({
-    from: FROM_ADDRESS,
-    to: [payload.expertEmail],
-    subject: t.subject.newBooking(payload.patientName, formattedDate),
-    html,
-    headers: { "X-Entity-Ref-ID": `${payload.bookingId}:booking` },
-    attachments: [
-      {
-        content: Buffer.from(icsContent, "utf-8"),
-        filename: "invite.ics",
-        contentType: "text/calendar; charset=utf-8; method=REQUEST",
-      },
-    ],
-  })
+  await resend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: [payload.expertEmail],
+      subject: t.subject.newBooking(payload.patientName, formattedDate),
+      html,
+      headers: { "X-Entity-Ref-ID": `${payload.bookingId}:booking` },
+      attachments: [
+        {
+          content: Buffer.from(icsContent, "utf-8"),
+          filename: "invite.ics",
+          contentType: "text/calendar; charset=utf-8; method=REQUEST",
+        },
+      ],
+    },
+    { idempotencyKey: `${payload.bookingId}:booking` }
+  )
 }
 
 export async function sendRescheduleIcsEmail(
@@ -168,22 +171,27 @@ export async function sendRescheduleIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send({
-    from: FROM_ADDRESS,
-    to: [payload.expertEmail],
-    subject: t.subject.rescheduled(payload.patientName, formattedDate),
-    html,
-    headers: {
-      "X-Entity-Ref-ID": `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
-    },
-    attachments: [
-      {
-        content: Buffer.from(icsContent, "utf-8"),
-        filename: "invite.ics",
-        contentType: "text/calendar; charset=utf-8; method=REQUEST",
+  await resend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: [payload.expertEmail],
+      subject: t.subject.rescheduled(payload.patientName, formattedDate),
+      html,
+      headers: {
+        "X-Entity-Ref-ID": `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
       },
-    ],
-  })
+      attachments: [
+        {
+          content: Buffer.from(icsContent, "utf-8"),
+          filename: "invite.ics",
+          contentType: "text/calendar; charset=utf-8; method=REQUEST",
+        },
+      ],
+    },
+    {
+      idempotencyKey: `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
+    }
+  )
 }
 
 export async function sendCancellationIcsEmail(
@@ -207,18 +215,21 @@ export async function sendCancellationIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send({
-    from: FROM_ADDRESS,
-    to: [payload.expertEmail],
-    subject: t.subject.cancelled(payload.patientName, formattedDate),
-    html,
-    headers: { "X-Entity-Ref-ID": `${payload.bookingId}:cancel` },
-    attachments: [
-      {
-        content: Buffer.from(icsContent, "utf-8"),
-        filename: "cancel.ics",
-        contentType: "text/calendar; charset=utf-8; method=CANCEL",
-      },
-    ],
-  })
+  await resend().emails.send(
+    {
+      from: FROM_ADDRESS,
+      to: [payload.expertEmail],
+      subject: t.subject.cancelled(payload.patientName, formattedDate),
+      html,
+      headers: { "X-Entity-Ref-ID": `${payload.bookingId}:cancel` },
+      attachments: [
+        {
+          content: Buffer.from(icsContent, "utf-8"),
+          filename: "cancel.ics",
+          contentType: "text/calendar; charset=utf-8; method=CANCEL",
+        },
+      ],
+    },
+    { idempotencyKey: `${payload.bookingId}:cancel` }
+  )
 }

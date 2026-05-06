@@ -52,6 +52,10 @@
   "eventTypes.createFirst": "Crea tu primer tipo de evento",
   "eventTypes.status.published": "Publicado",
   "eventTypes.status.draft": "Borrador",
+  "eventTypes.error.no-profile": "No se encontró tu perfil de experto.",
+  "eventTypes.error.toggle-failed": "No se pudo actualizar el tipo de evento. Inténtalo de nuevo.",
+  "eventTypes.error.delete-failed": "No se pudo eliminar el tipo de evento. Inténtalo de nuevo.",
+  "eventTypes.error.generic": "Algo salió mal. Inténtalo de nuevo.",
 
   "schedule.title": "Horario",
   "schedule.description": "Define tu disponibilidad semanal y excepciones de fechas.",

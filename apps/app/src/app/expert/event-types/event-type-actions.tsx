@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -25,11 +26,21 @@ interface Props {
   published: boolean
 }
 
+const ERROR_KEYS = ["no-profile", "toggle-failed", "delete-failed"] as const
+
 export function EventTypeActions({ eventTypeId, published }: Props) {
   const router = useRouter()
+  const t = useTranslations("eventTypes")
   const [pending, setPending] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+
+  function friendlyError(code: string): string {
+    if ((ERROR_KEYS as readonly string[]).includes(code)) {
+      return t(`error.${code}` as Parameters<typeof t>[0])
+    }
+    return t("error.generic")
+  }
 
   async function handleTogglePublish() {
     setPending(true)
@@ -37,7 +48,7 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
     try {
       const result = await togglePublishAction(eventTypeId, !published)
       if (!result.ok) {
-        setError(result.error)
+        setError(friendlyError(result.error))
         return
       }
       router.refresh()
@@ -52,7 +63,7 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
     try {
       const result = await deleteEventTypeAction(eventTypeId)
       if (!result.ok) {
-        setError(result.error)
+        setError(friendlyError(result.error))
         return
       }
       setDeleteOpen(false)

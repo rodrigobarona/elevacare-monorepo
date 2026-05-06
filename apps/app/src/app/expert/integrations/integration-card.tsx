@@ -47,7 +47,9 @@ export function IntegrationCard({ manifest, status, integrationId }: Props) {
           </CardTitle>
           {status && (
             <Badge variant={STATUS_VARIANT[status] ?? "secondary"}>
-              {t(`status.${status}`, { defaultMessage: status })}
+              {status in STATUS_VARIANT
+                ? t(`status.${status}` as Parameters<typeof t>[0])
+                : status}
             </Badge>
           )}
         </div>
