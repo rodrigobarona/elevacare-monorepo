@@ -128,6 +128,22 @@ export function createUtcFromLocalTime(
   timezone: string
 ): Date {
   const [y, m, d] = dateStr.split("-").map(Number) as [number, number, number]
+
+  if (
+    !Number.isFinite(y) ||
+    !Number.isFinite(m) ||
+    !Number.isFinite(d) ||
+    m < 1 ||
+    m > 12 ||
+    d < 1 ||
+    d > 31
+  ) {
+    throw new RangeError(`Invalid date string: "${dateStr}"`)
+  }
+  if (!Number.isInteger(minutes) || minutes < 0 || minutes > 1439) {
+    throw new RangeError(`Minutes out of range: ${minutes}`)
+  }
+
   const hour = Math.floor(minutes / 60)
   const minute = minutes % 60
 
@@ -185,6 +201,8 @@ export function* iterateDays(
   const seen = new Set<string>()
   const ms = rangeStart.getTime()
   const end = rangeEnd.getTime()
+
+  if (end < ms) return
 
   for (let t = ms; t <= end; t += 3_600_000) {
     const dateStr = formatDateInTimezone(new Date(t), timezone)

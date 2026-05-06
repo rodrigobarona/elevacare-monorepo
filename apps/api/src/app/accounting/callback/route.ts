@@ -161,9 +161,10 @@ export async function GET(request: Request) {
     } catch (dbErr) {
       try {
         await adapter.disconnect({ vaultRef: result.vaultRef })
-      } catch {
+      } catch (disconnectErr) {
         console.error(
-          "[accounting/callback] Vault cleanup failed after DB error"
+          "[accounting/callback] Vault cleanup failed after DB error",
+          { vaultRef: result.vaultRef, error: disconnectErr }
         )
       }
       throw dbErr

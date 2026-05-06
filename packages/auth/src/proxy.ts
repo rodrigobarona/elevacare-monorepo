@@ -3,7 +3,11 @@ import {
   type NextFetchEvent,
   type NextRequest,
 } from "next/server"
-import { authkitProxy } from "@workos-inc/authkit-nextjs"
+import {
+  authkitProxy,
+  partitionAuthkitHeaders,
+  applyResponseHeaders,
+} from "@workos-inc/authkit-nextjs"
 
 /**
  * withAuth proxy wrapper. Composes WorkOS AuthKit's Next.js proxy
@@ -74,9 +78,11 @@ export function withAuth(
       return downstream
     }
 
-    // Merge auth-related headers from AuthKit onto the downstream response
-    // so the refreshed cookie, cache directives, and vary reach the browser.
     if (authResponse) {
+      const { responseHeaders } = partitionAuthkitHeaders(
+        req,
+        authResponse.headers
+      )
       const merged =
         downstream instanceof NextResponse
           ? downstream
@@ -84,26 +90,7 @@ export function withAuth(
               status: downstream.status,
               headers: downstream.headers,
             })
-
-      const HOP_BY_HOP = new Set([
-        "connection",
-        "keep-alive",
-        "transfer-encoding",
-        "te",
-        "trailer",
-        "upgrade",
-      ])
-
-      authResponse.headers.forEach((value: string, key: string) => {
-        const lk = key.toLowerCase()
-        if (HOP_BY_HOP.has(lk)) return
-        if (lk === "set-cookie" || lk === "vary") {
-          merged.headers.append(key, value)
-        } else {
-          merged.headers.set(key, value)
-        }
-      })
-      return merged
+      return applyResponseHeaders(merged, responseHeaders)
     }
     return downstream
   }

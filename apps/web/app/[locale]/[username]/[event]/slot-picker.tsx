@@ -108,6 +108,8 @@ export function SlotPicker({
   const [reservation, setReservation] = React.useState<{
     id: string
     expiresAt: string
+    start: string
+    end: string
   } | null>(null)
   const [tz, setTz] = React.useState(() => initialTz)
 
@@ -150,24 +152,23 @@ export function SlotPicker({
     return () => {
       stale = true
     }
-  }, [username, eventSlug, weekOffset])
+  }, [username, eventSlug, weekOffset, tz])
 
   async function handleReserve() {
-    if (!selectedSlot) return
+    const slot = selectedSlot
+    if (!slot) return
     setReserving(true)
     setError(null)
 
     try {
-      const result = await reserveSlotAction(
-        username,
-        eventSlug,
-        selectedSlot.start
-      )
+      const result = await reserveSlotAction(username, eventSlug, slot.start)
 
       if (result.ok) {
         setReservation({
           id: result.reservationId,
           expiresAt: result.expiresAt,
+          start: slot.start,
+          end: slot.end,
         })
       } else {
         setError(friendlyError(result.error))
@@ -191,9 +192,9 @@ export function SlotPicker({
           <div className="text-2xl">&#10003;</div>
           <h3 className="text-lg font-medium">{t("reservedTitle")}</h3>
           <p className="text-sm text-muted-foreground">
-            {formatTime(selectedSlot!.start, tz)} –{" "}
-            {formatTime(selectedSlot!.end, tz)},{" "}
-            {formatDate(new Date(selectedSlot!.start), tz)}
+            {formatTime(reservation.start, tz)} –{" "}
+            {formatTime(reservation.end, tz)},{" "}
+            {formatDate(new Date(reservation.start), tz)}
           </p>
           <p className="text-sm text-muted-foreground">
             {t("heldUntil", {

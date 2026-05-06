@@ -194,7 +194,7 @@ export async function reserveSlotAction(
     })
 
     if (!result.success) {
-      return { ok: false, error: result.error }
+      return { ok: false, error: result.error ?? "reserve-failed" }
     }
 
     return {

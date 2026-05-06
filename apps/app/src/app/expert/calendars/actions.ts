@@ -123,7 +123,29 @@ export async function saveBusySources(
     )
     if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
-    await replaceBusySources(profile.orgId, integrationId, sources, profile.id)
+    const provider = SLUG_TO_PROVIDER[integration.slug]
+    if (!provider) return { ok: false, error: "unknown-provider" }
+
+    const accessToken = await getCalendarToken(
+      session.user.workosUserId,
+      provider
+    )
+    const adapter = getAdapter(provider)
+    const providerCalendars = await adapter.listCalendars(accessToken)
+    const allowedIds = new Set(providerCalendars.map((c) => c.id))
+
+    if (sources.some((s) => !allowedIds.has(s.externalCalendarId))) {
+      return { ok: false, error: "unauthorized-calendar" }
+    }
+
+    const enriched = sources.map((s) => ({
+      externalCalendarId: s.externalCalendarId,
+      displayName:
+        providerCalendars.find((c) => c.id === s.externalCalendarId)?.name ??
+        s.displayName,
+    }))
+
+    await replaceBusySources(profile.orgId, integrationId, enriched, profile.id)
     revalidatePath("/expert/calendars")
     return { ok: true }
   } catch (err) {

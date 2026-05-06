@@ -215,6 +215,13 @@ Each entry should include:
 - Summary: Calendar OAuth credential management (token storage, refresh, revocation) is delegated to WorkOS Pipes. `packages/calendar` retains ownership of the Google/Microsoft API surface (event create/read/delete, freebusy, webhook subscriptions) but no longer manages raw tokens directly — instead it requests access tokens from WorkOS Pipes via the user's `workosUserId` and provider slug. This aligns with the ADR-004 amendment (2026-05) and the scheduling-booking-spec §Calendar Integration. The April decision's rationale about needing fidelity for booking-critical flows remains valid for the API layer; the change is purely about who stores/refreshes the OAuth credentials, not who calls the calendar APIs.
 - Reference: [`adrs/ADR-004-scheduling-and-calendar-oauth.md`](./adrs/ADR-004-scheduling-and-calendar-oauth.md) (amended 2026-05), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
 
+### 2026-05-06: Tech-debt backlog governance — PR #7 code review triage
+
+- Owner: platform
+- Status: active
+- Summary: Triaged 20+ findings from the PR #7 code review against [`tech-debt-backlog.md`](./tech-debt-backlog.md). Fixed 11 still-valid issues (auth proxy SDK primitives, slot-picker race conditions and missing deps, timezone input validation, calendar busy-source whitelist, email JSON-LD rendering, booking-context email guard, accounting error logging, reserve-slot error fallback). Deferred 5 items requiring infrastructure or schema migrations: (1) accounting callback PKCE server-side opaque state (Sprint 7+), (2) persist `expertIntegrationId`/`externalCalendarId` in sessions table (Sprint 7), (3) composite FK on `expert_integrations` child tables (Sprint 7), (4) ICS VTIMEZONE generation (Sprint 7+), (5) external busy-time cache for public booking funnel (Sprint 5+). Skipped 4 items already tracked or assessed: `scheduleId` composite FK (Item #5), WorkOS disconnect lifecycle (Item #12), `findPart` throw-vs-fallback (verify step catches mismatches), duplicate outside-diff comments. RLS policy updates (Items #2–4) and composite-FK changes (Items #5, #15–17) are planned for batched migrations per the schema-and-migration-rules policy.
+- Reference: [`tech-debt-backlog.md`](./tech-debt-backlog.md), [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

@@ -30,7 +30,15 @@ export function EmailLayout({
     <Html lang={locale}>
       <Head>
         {jsonLd && (
-          <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(jsonLd)
+                .replace(/<\/script/gi, "<\\/script")
+                .replace(/\u2028/g, "\\u2028")
+                .replace(/\u2029/g, "\\u2029"),
+            }}
+          />
         )}
       </Head>
       <Preview>{preview}</Preview>

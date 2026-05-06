@@ -74,6 +74,8 @@ async function loadBookingContext(
     return row
   })
 
+  if (!patientData?.email) return null
+
   const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
   const eventTypeName =
     data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
@@ -81,8 +83,8 @@ async function loadBookingContext(
   return {
     expertEmail: data.expertEmail,
     expertName: data.expertName,
-    patientName: patientData?.displayName ?? "Patient",
-    patientEmail: patientData?.email ?? "",
+    patientName: patientData.displayName ?? "Patient",
+    patientEmail: patientData.email,
     eventTypeName,
     bookingId,
     startsAt: data.startsAt,
