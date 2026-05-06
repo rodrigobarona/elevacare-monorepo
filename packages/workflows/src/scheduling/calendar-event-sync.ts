@@ -5,6 +5,8 @@ import { captureException } from "@eleva/observability"
 import {
   getCalendarToken,
   getAdapter,
+  CalendarNotFoundError,
+  CalendarAdapterError,
   type CalendarProvider,
   type CalendarEventInput,
 } from "@eleva/calendar"
@@ -421,11 +423,14 @@ export async function calendarEventDelete(params: {
         session.calendarEventId
       )
     } catch (deleteErr) {
-      const msg =
-        deleteErr instanceof Error ? deleteErr.message : String(deleteErr)
-      const statusMatch = /:\s*(\d{3})/.exec(msg)
-      const status = statusMatch ? Number(statusMatch[1]) : 0
-      if (status !== 404 && status !== 410) {
+      if (deleteErr instanceof CalendarNotFoundError) {
+        // Event already deleted externally -- safe to ignore.
+      } else if (
+        deleteErr instanceof CalendarAdapterError &&
+        deleteErr.statusCode === 410
+      ) {
+        // Gone -- event was already removed.
+      } else {
         throw deleteErr
       }
     }

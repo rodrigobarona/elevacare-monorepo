@@ -1,5 +1,8 @@
 import { WorkOS } from "@workos-inc/node"
 import type { CalendarProvider } from "./types"
+import { CalendarTokenError } from "./errors"
+
+export { CalendarTokenError }
 
 /**
  * WorkOS Pipes provider slugs. Configure these in the WorkOS Dashboard:
@@ -16,15 +19,6 @@ import type { CalendarProvider } from "./types"
 const PIPES_SLUG: Record<CalendarProvider, string> = {
   google: "google-calendar",
   microsoft: "microsoft-outlook-calendar",
-}
-
-export class CalendarTokenError extends Error {
-  readonly code: string
-  constructor(code: string) {
-    super(`Calendar token error: ${code}`)
-    this.name = "CalendarTokenError"
-    this.code = code
-  }
 }
 
 let _workos: WorkOS | null = null

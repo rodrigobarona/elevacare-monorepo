@@ -4,6 +4,7 @@ import {
   buildAuditRlsStatements,
   buildMainRlsStatements,
   TENANT_TABLES,
+  ADMIN_BYPASS_TABLES,
 } from "./policies"
 
 describe("buildMainRlsStatements", () => {
@@ -48,6 +49,51 @@ describe("buildMainRlsStatements", () => {
     )
     expect(bpaPolicy).toContain("applicant_org_id::text")
     expect(bpaPolicy).toContain("eleva.platform_admin")
+  })
+
+  it("includes platform_admin bypass for expert_profiles", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+    expect(policy).toContain(
+      "current_setting('eleva.platform_admin', true) = 'true'"
+    )
+  })
+
+  it("includes platform_admin bypass for memberships", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY memberships_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+    expect(policy).toContain(
+      "current_setting('eleva.platform_admin', true) = 'true'"
+    )
+  })
+
+  it("includes platform_admin bypass for organizations", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY organizations_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "current_setting('eleva.platform_admin', true) = 'true'"
+    )
+  })
+
+  it("does NOT include platform_admin bypass for non-bypass tables", () => {
+    const nonBypassTables = TENANT_TABLES.filter(
+      (t) => !ADMIN_BYPASS_TABLES.has(t)
+    )
+    for (const table of nonBypassTables) {
+      const policy = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
+      )
+      expect(policy).not.toContain("eleva.platform_admin")
+    }
   })
 })
 

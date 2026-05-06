@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession, getWidgetToken } from "@eleva/auth/server"
+import { getSession, getWidgetTokenFromSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
 import { CalendarManager } from "./calendar-manager"
@@ -33,10 +33,7 @@ export default async function CalendarsPage() {
 
   let widgetToken: string | null = null
   try {
-    widgetToken = await getWidgetToken(
-      session.user.workosUserId,
-      session.workosOrgId
-    )
+    widgetToken = await getWidgetTokenFromSession()
   } catch (err) {
     console.error("[calendars] Failed to get widget token:", err)
   }

@@ -5,8 +5,31 @@ import type {
   CalendarListItem,
   FreeBusyInterval,
 } from "../types"
+import {
+  CalendarTokenError,
+  CalendarAdapterError,
+  CalendarNotFoundError,
+} from "../errors"
 
 const GRAPH_API = "https://graph.microsoft.com/v1.0"
+
+async function throwMicrosoftError(
+  operation: string,
+  res: Response
+): Promise<never> {
+  if (res.status === 401 || res.status === 403) {
+    throw new CalendarTokenError("needs_reauthorization")
+  }
+  if (res.status === 404) {
+    throw new CalendarNotFoundError("microsoft", operation, "")
+  }
+  throw new CalendarAdapterError({
+    provider: "microsoft",
+    operation,
+    message: `Microsoft ${operation}: ${res.status}`,
+    statusCode: res.status,
+  })
+}
 
 /**
  * Convert a UTC Date to the wall-clock time in the target timezone,
@@ -35,7 +58,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
     const res = await fetch(`${GRAPH_API}/me/calendars`, {
       headers: { Authorization: `Bearer ${accessToken}` },
     })
-    if (!res.ok) throw new Error(`Microsoft listCalendars: ${res.status}`)
+    if (!res.ok) await throwMicrosoftError("listCalendars", res)
     const data = (await res.json()) as {
       value: {
         id: string
@@ -79,7 +102,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
         availabilityViewInterval: 15,
       }),
     })
-    if (!res.ok) throw new Error(`Microsoft getSchedule: ${res.status}`)
+    if (!res.ok) await throwMicrosoftError("getSchedule", res)
     const data = (await res.json()) as {
       value: {
         scheduleItems: {
@@ -139,7 +162,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
         body: JSON.stringify(body),
       }
     )
-    if (!res.ok) throw new Error(`Microsoft createEvent: ${res.status}`)
+    if (!res.ok) await throwMicrosoftError("createEvent", res)
     return this.parseEvent(event.calendarId, await res.json())
   }
 
@@ -177,7 +200,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
         body: JSON.stringify(body),
       }
     )
-    if (!res.ok) throw new Error(`Microsoft updateEvent: ${res.status}`)
+    if (!res.ok) await throwMicrosoftError("updateEvent", res)
     return this.parseEvent(calendarId, await res.json())
   }
 
@@ -194,7 +217,7 @@ export class MicrosoftCalendarAdapter implements CalendarAdapter {
       }
     )
     if (!res.ok && res.status !== 404) {
-      throw new Error(`Microsoft deleteEvent: ${res.status}`)
+      await throwMicrosoftError("deleteEvent", res)
     }
   }
 

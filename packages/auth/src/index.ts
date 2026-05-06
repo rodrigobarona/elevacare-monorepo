@@ -16,5 +16,10 @@ export {
 } from "./session"
 export { ensurePersonalOrg } from "./provisioning"
 export { withAuth, type WithAuthOptions } from "./proxy"
-export { getSession, requireSession, getWidgetToken } from "./server"
+export {
+  getSession,
+  requireSession,
+  getWidgetToken,
+  getWidgetTokenFromSession,
+} from "./server"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"

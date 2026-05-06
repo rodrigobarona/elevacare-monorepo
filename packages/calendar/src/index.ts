@@ -1,11 +1,14 @@
 export { getAdapter } from "./registry"
 export { GoogleCalendarAdapter } from "./adapters/google"
 export { MicrosoftCalendarAdapter } from "./adapters/microsoft"
+export { getCalendarToken, listConnectedProviders } from "./credential-manager"
 export {
-  getCalendarToken,
-  listConnectedProviders,
   CalendarTokenError,
-} from "./credential-manager"
+  CalendarAdapterError,
+  CalendarNotFoundError,
+  CalendarConflictError,
+  CalendarValidationError,
+} from "./errors"
 export { generateIcsRequest, generateIcsCancel } from "./ics-generator"
 export type {
   CalendarProvider,
