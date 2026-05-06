@@ -20,7 +20,7 @@ Deferred post-beta: Eleva Diary mobile (M7), Fumadocs full content site beyond P
 
 ## Environment and Tooling Context
 
-- **Vercel CLI is linked**: [.vercel/repo.json](../../.vercel/repo.json) points `apps/web` at the `elevacare-marketing` project. Additional Vercel projects will be created for `apps/app`, `apps/api`, `apps/docs`, `apps/email` during Sprint 0.
+- **Vercel CLI is linked**: [.vercel/repo.json](../../.vercel/repo.json) points `apps/web` at the `elevacare-web` project. Additional Vercel projects will be created for `apps/app`, `apps/api`, `apps/docs`, `apps/email` during Sprint 0.
 - **Vercel Marketplace integrations** supply env vars automatically on link: Neon, Upstash (Redis + QStash), Resend, Sentry, and others. Use `vercel env pull .env.local` per app instead of hand-writing secrets.
 - **Vercel MCP** available for fetching project info, deployments, env vars, and Edge Config reads during implementation.
 - **Stripe MCP** used for product/price/webhook/customer seeding across staging + production accounts.
@@ -118,7 +118,7 @@ Deliverables:
   - `apps/api` → **no `basePath`** (served on `api.eleva.care` subdomain; not rewritten)
   - `apps/docs` → `basePath: '/docs'`
 - **Multi-zone rewrites** in gateway [apps/web/next.config.mjs](../../apps/web/next.config.mjs) resolved `afterFiles`, destination URLs from env (`APP_URL`, `DOCS_URL`). API is **not** rewritten — lives on its own subdomain.
-- Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json). Gateway stays `elevacare-marketing`.
+- Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json). Gateway stays `elevacare-web`.
 - **Vercel DNS for `eleva.care`** per locked canonical mapping (ADR-014 + [environment-matrix.md](./environment-matrix.md)):
   - production: `eleva.care` gateway; `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` rewritten to `apps/app`; `/docs/*` rewritten to `apps/docs`; `api.eleva.care` points at `elevacare-api` Vercel project; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
   - staging: `staging.eleva.care` gateway with same rewrite pattern; `api.staging.eleva.care` for staging API
