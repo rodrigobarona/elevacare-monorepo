@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@workos-inc/node": "^9.1.0"
+    "@workos-inc/node": "^9.2.0"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

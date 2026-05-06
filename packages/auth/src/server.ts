@@ -1,12 +1,13 @@
 import { cache } from "react"
 import { cookies, headers } from "next/headers"
+import { WorkOS } from "@workos-inc/node"
 import { withAuth as authkitGetSession } from "@workos-inc/authkit-nextjs"
 import { resolveSessionFromWorkosUser } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
 /**
- * Server-side session loader. Wrap ping the AuthKit `withAuth()`
- * helper (confusingly named on their side \u2014 it reads the session from
+ * Server-side session loader. Wrapping the AuthKit `withAuth()`
+ * helper (confusingly named on their side — it reads the session from
  * the cookie). Memoised per-request via React.cache.
  */
 export const getSession = cache(async (): Promise<ElevaSession | null> => {
@@ -32,4 +33,28 @@ export async function requireSession(
     throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
   }
   return session
+}
+
+let _workos: WorkOS | null = null
+
+function getWorkOS(): WorkOS {
+  if (!_workos) {
+    const key = process.env.WORKOS_API_KEY
+    if (!key) throw new Error("WORKOS_API_KEY is required")
+    _workos = new WorkOS(key)
+  }
+  return _workos
+}
+
+/**
+ * Generate a WorkOS widget token for the given user + organization.
+ * Used by the Pipes connection widget on the integrations/calendars pages.
+ */
+export async function getWidgetToken(
+  userId: string,
+  organizationId: string
+): Promise<string> {
+  const workos = getWorkOS()
+  const response = await workos.widgets.createToken({ userId, organizationId })
+  return response.token
 }

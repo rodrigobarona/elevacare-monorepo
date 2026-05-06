@@ -53,6 +53,18 @@ export async function listExpertIntegrations(
   })
 }
 
+export async function disconnectIntegration(
+  orgId: string,
+  integrationId: string
+): Promise<void> {
+  await withOrgContext(orgId, async (tx: Tx) => {
+    await tx
+      .update(expertIntegrations)
+      .set({ status: "disconnected", updatedAt: new Date() })
+      .where(eq(expertIntegrations.id, integrationId))
+  })
+}
+
 export async function replaceBusySources(
   orgId: string,
   integrationId: string,

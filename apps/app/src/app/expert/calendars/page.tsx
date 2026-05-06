@@ -1,9 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
+import { getSession, getWidgetToken } from "@eleva/auth/server"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
-import { WorkOS } from "@workos-inc/node"
 import { AppShell } from "@/components/app-shell"
 import { CalendarManager } from "./calendar-manager"
 
@@ -32,11 +31,10 @@ export default async function CalendarsPage() {
     status: i.status,
   }))
 
-  const workos = new WorkOS(process.env.WORKOS_API_KEY!)
-  const widgetToken = await workos.widgets.getToken({
-    userId: session.user.workosUserId,
-    organizationId: session.workosOrgId,
-  })
+  const widgetToken = await getWidgetToken(
+    session.user.workosUserId,
+    session.workosOrgId
+  )
 
   const t = await getTranslations("calendars")
 

@@ -5,6 +5,7 @@ import { requireSession } from "@eleva/auth/server"
 import {
   getExpertProfileByUserId,
   listCalendarIntegrations,
+  disconnectIntegration,
   replaceBusySources,
   replaceDestinationCalendar,
 } from "@eleva/db"
@@ -45,14 +46,7 @@ export async function disconnectCalendarAction(
     )
     if (!owned) return { ok: false, error: "unauthorized-calendar" }
 
-    const { db } = await import("@eleva/db")
-    const { expertIntegrations } = await import("@eleva/db/schema")
-    const { eq } = await import("drizzle-orm")
-    const mainDb = db()
-    await mainDb
-      .update(expertIntegrations)
-      .set({ status: "disconnected", updatedAt: new Date() })
-      .where(eq(expertIntegrations.id, integrationId))
+    await disconnectIntegration(profile.orgId, integrationId)
 
     revalidatePath("/expert/calendars")
     revalidatePath("/expert/integrations")

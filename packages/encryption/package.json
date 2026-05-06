@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "@workos-inc/node": "^8.0.3"
+    "@workos-inc/node": "^9.2.0"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

@@ -60,7 +60,7 @@ export const eventTypes = pgTable(
     languages: text("languages")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
     sessionMode: sessionModeEnum("session_mode").notNull().default("online"),
 
     bookingWindowDays: integer("booking_window_days"),

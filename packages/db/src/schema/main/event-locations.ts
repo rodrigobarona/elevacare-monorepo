@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   doublePrecision,
+  foreignKey,
   index,
   jsonb,
   pgPolicy,
@@ -34,9 +35,7 @@ export const expertPracticeLocations = pgTable(
     orgId: orgIdColumn().references(() => organizations.id, {
       onDelete: "cascade",
     }),
-    expertProfileId: uuid("expert_profile_id")
-      .notNull()
-      .references(() => expertProfiles.id, { onDelete: "cascade" }),
+    expertProfileId: uuid("expert_profile_id").notNull(),
 
     name: varchar("name", { length: 200 }).notNull(),
     address: text("address").notNull(),
@@ -59,6 +58,11 @@ export const expertPracticeLocations = pgTable(
     primaryIdx: uniqueIndex("expert_practice_locations_primary_idx")
       .on(t.expertProfileId)
       .where(sql`is_primary = true`),
+    expertFk: foreignKey({
+      name: "practice_loc_expert_fk",
+      columns: [t.expertProfileId],
+      foreignColumns: [expertProfiles.id],
+    }).onDelete("cascade"),
     tenantPolicy: pgPolicy("expert_practice_locations_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,

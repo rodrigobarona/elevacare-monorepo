@@ -115,13 +115,13 @@ export const expertProfiles = pgTable(
     languages: text("languages")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** ISO-3166-1 alpha-2 codes (e.g., 'PT', 'ES', 'BR'). */
     practiceCountries: text("practice_countries")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** Free-form license scope (e.g., "OPP 12345"). Validated by admin. */
     licenseScope: text("license_scope"),
@@ -140,7 +140,7 @@ export const expertProfiles = pgTable(
     sessionModes: sessionModeEnum("session_modes")
       .array()
       .notNull()
-      .default(sql`ARRAY['online']::session_mode[]`),
+      .default(["online"]),
 
     /** Stripe Connect Express account ID. Set after createConnectAccount. */
     stripeAccountId: varchar("stripe_account_id", { length: 255 }),
@@ -198,7 +198,7 @@ export const expertProfiles = pgTable(
     searchIdx: index("expert_profiles_search_idx").using("gin", t.searchVector),
     trgmIdx: index("expert_profiles_name_trgm_idx").using(
       "gin",
-      sql`display_name gin_trgm_ops`
+      t.displayName.op("gin_trgm_ops")
     ),
     usernameFormatChk: check(
       "expert_profiles_username_format",

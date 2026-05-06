@@ -56,11 +56,11 @@ export async function getCalendarToken(
     userId: workosUserId,
   })
 
-  if (!result.accessToken) {
-    throw new CalendarTokenError(result.error ?? "not_installed")
+  if (result.active) {
+    return result.accessToken.accessToken
   }
 
-  return result.accessToken.token
+  throw new CalendarTokenError(result.error ?? "not_installed")
 }
 
 /**
@@ -79,7 +79,7 @@ export async function listConnectedProviders(
       })
       providers.push({
         provider: provider as CalendarProvider,
-        connected: !!result.accessToken,
+        connected: result.active,
       })
     } catch {
       providers.push({

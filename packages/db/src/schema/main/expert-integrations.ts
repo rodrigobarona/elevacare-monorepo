@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   check,
+  foreignKey,
   index,
   jsonb,
   pgEnum,
@@ -147,9 +148,7 @@ export const calendarBusySources = pgTable(
     orgId: orgIdColumn().references(() => organizations.id, {
       onDelete: "cascade",
     }),
-    expertIntegrationId: uuid("expert_integration_id")
-      .notNull()
-      .references(() => expertIntegrations.id, { onDelete: "cascade" }),
+    expertIntegrationId: uuid("expert_integration_id").notNull(),
 
     /** Provider-specific calendar ID (e.g., Google calendarId). */
     externalCalendarId: text("external_calendar_id").notNull(),
@@ -167,6 +166,11 @@ export const calendarBusySources = pgTable(
       t.expertIntegrationId,
       t.externalCalendarId
     ),
+    integrationFk: foreignKey({
+      name: "cal_busy_src_integration_fk",
+      columns: [t.expertIntegrationId],
+      foreignColumns: [expertIntegrations.id],
+    }).onDelete("cascade"),
     tenantPolicy: pgPolicy("calendar_busy_sources_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
@@ -189,9 +193,7 @@ export const calendarDestinations = pgTable(
     expertProfileId: uuid("expert_profile_id")
       .notNull()
       .references(() => expertProfiles.id, { onDelete: "cascade" }),
-    expertIntegrationId: uuid("expert_integration_id")
-      .notNull()
-      .references(() => expertIntegrations.id, { onDelete: "cascade" }),
+    expertIntegrationId: uuid("expert_integration_id").notNull(),
 
     externalCalendarId: text("external_calendar_id").notNull(),
     displayName: text("display_name").notNull(),
@@ -204,6 +206,11 @@ export const calendarDestinations = pgTable(
     expertIdx: uniqueIndex("calendar_destinations_expert_idx").on(
       t.expertProfileId
     ),
+    integrationFk: foreignKey({
+      name: "cal_dest_integration_fk",
+      columns: [t.expertIntegrationId],
+      foreignColumns: [expertIntegrations.id],
+    }).onDelete("cascade"),
     tenantPolicy: pgPolicy("calendar_destinations_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,

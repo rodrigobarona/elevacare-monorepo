@@ -3,10 +3,10 @@ import {
   type NextFetchEvent,
   type NextRequest,
 } from "next/server"
-import { authkitMiddleware } from "@workos-inc/authkit-nextjs"
+import { authkitProxy } from "@workos-inc/authkit-nextjs"
 
 /**
- * withAuth proxy wrapper. Composes WorkOS AuthKit's Next.js middleware
+ * withAuth proxy wrapper. Composes WorkOS AuthKit's Next.js proxy
  * which handles:
  *   - reading/refreshing the WorkOS session cookie (scope=.eleva.care)
  *   - redirecting unauthenticated users to /signin for protected paths
@@ -26,9 +26,9 @@ export type ProxyHandler = (
 ) => NextResponse | Response | Promise<NextResponse | Response>
 
 export interface WithAuthOptions {
-  /** Paths the WorkOS middleware should NOT gate. Defaults to the public surface. */
+  /** Paths the WorkOS proxy should NOT gate. Defaults to the public surface. */
   unauthenticatedPaths?: string[]
-  /** Whether AuthKit enforces auth at the middleware layer. */
+  /** Whether AuthKit enforces auth at the proxy layer. */
   enforce?: boolean
 }
 
@@ -45,7 +45,7 @@ export function withAuth(
   handler: ProxyHandler,
   options: WithAuthOptions = {}
 ): ProxyHandler {
-  const middleware = authkitMiddleware({
+  const proxy = authkitProxy({
     middlewareAuth: {
       enabled: options.enforce ?? true,
       unauthenticatedPaths:
@@ -54,7 +54,7 @@ export function withAuth(
   })
 
   return async (req, event) => {
-    const authResponse = await middleware(
+    const authResponse = await proxy(
       req,
       event ?? (undefined as unknown as NextFetchEvent)
     )
@@ -84,7 +84,7 @@ export function withAuth(
         downstream instanceof NextResponse
           ? downstream
           : NextResponse.next(downstream)
-      authResponse.headers.forEach((value, key) => {
+      authResponse.headers.forEach((value: string, key: string) => {
         if (key.toLowerCase() === "set-cookie")
           merged.headers.append(key, value)
       })

@@ -68,6 +68,7 @@ export {
 export {
   listCalendarIntegrations,
   listExpertIntegrations,
+  disconnectIntegration,
   replaceBusySources,
   replaceDestinationCalendar,
 } from "./queries/calendars"
