@@ -54,7 +54,7 @@ export const eventTypes = pgTable(
 
     durationMinutes: integer("duration_minutes").notNull().default(60),
     priceAmount: integer("price_amount").notNull().default(0),
-    currency: varchar("currency", { length: 3 }).notNull().default("eur"),
+    currency: varchar("currency", { length: 3 }).notNull().default("EUR"),
 
     /** ISO-639-1 codes this event type supports. */
     languages: text("languages")
@@ -98,6 +98,10 @@ export const eventTypes = pgTable(
       sql`duration_minutes > 0`
     ),
     priceChk: check("event_types_price_non_negative", sql`price_amount >= 0`),
+    currencyChk: check(
+      "event_types_currency_iso",
+      sql`currency = upper(currency) AND length(currency) = 3`
+    ),
     windowsChk: check(
       "event_types_windows_non_negative",
       sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (cancellation_window_hours IS NULL OR cancellation_window_hours >= 0) AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`

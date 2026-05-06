@@ -116,10 +116,9 @@ export const expertIntegrations = pgTable(
     orgIdx: index("expert_integrations_org_idx").on(t.orgId),
     expertIdx: index("expert_integrations_expert_idx").on(t.expertProfileId),
     categoryIdx: index("expert_integrations_category_idx").on(t.category),
-    expertSlugUnique: uniqueIndex("expert_integrations_expert_slug_idx").on(
-      t.expertProfileId,
-      t.slug
-    ),
+    expertSlugUnique: uniqueIndex("expert_integrations_expert_slug_idx")
+      .on(t.expertProfileId, t.slug)
+      .where(sql`deleted_at IS NULL`),
     statusIdx: index("expert_integrations_status_idx").on(t.status),
     pipesCheck: check(
       "expert_integrations_pipes_check",

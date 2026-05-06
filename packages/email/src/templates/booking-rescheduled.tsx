@@ -1,5 +1,6 @@
-import { Column, Row, Section, Text } from "react-email"
+import { Section, Text } from "react-email"
 import { EmailLayout } from "./layout"
+import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingRescheduledProps {
@@ -9,7 +10,7 @@ export interface BookingRescheduledProps {
   newDate: string
   sessionMode: string
   locale?: EmailLocale
-  jsonLd?: string
+  jsonLd?: Record<string, unknown>
 }
 
 export function BookingRescheduledEmail({
@@ -38,60 +39,20 @@ export function BookingRescheduledEmail({
         </Text>
 
         <Section className="bg-bg-2 rounded-lg p-5">
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.patient}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-fg m-0 text-[14px] font-medium">
-                {patientName}
-              </Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.service}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-fg m-0 text-[14px]">{eventTypeName}</Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.previous}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-danger m-0 text-[14px] line-through">
-                {previousDate}
-              </Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.newTime}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-success m-0 text-[14px] font-medium">
-                {newDate}
-              </Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">{t.labels.mode}</Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-fg m-0 text-[14px]">{sessionMode}</Text>
-            </Column>
-          </Row>
+          <DetailRow label={t.labels.patient} value={patientName} bold />
+          <DetailRow label={t.labels.service} value={eventTypeName} />
+          <DetailRow
+            label={t.labels.previous}
+            value={previousDate}
+            valueClassName="text-danger line-through"
+          />
+          <DetailRow
+            label={t.labels.newTime}
+            value={newDate}
+            bold
+            valueClassName="text-success"
+          />
+          <DetailRow label={t.labels.mode} value={sessionMode} />
         </Section>
       </Section>
 

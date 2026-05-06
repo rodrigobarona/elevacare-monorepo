@@ -15,12 +15,12 @@ Items identified during the 2026-05 code review that were intentionally deferred
 
 ## Data Integrity
 
-| #   | Location                                                           | Issue                                                                                                                            | Severity | Suggested Sprint                                                             |
-| --- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
-| 5   | `packages/db/src/schema/main/event-types.ts`                       | `scheduleId` FK lacks tenant-awareness (composite FK with `org_id`)                                                              | Medium   | Sprint 7 (requires careful migration with existing data)                     |
-| 6   | `packages/db/src/migrations/main/0003_milky_enchantress.sql`       | Migration drops `connected_calendars` and adds NOT NULL `expert_integration_id` without backfill — already applied to production | Low      | No action (document only; data issues addressed via forward migrations)      |
-| 7   | `packages/db/src/migrations/main/0005_adorable_lily_hollister.sql` | Drops DB-side defaults for array columns without backfilling NULLs — already applied                                             | Low      | No action (same as above)                                                    |
-| 8   | `packages/scheduling/src/reserve-slot.ts`                          | Redis lock key uses only `(expertProfileId, startsAtIso)` — overlapping holds with different times bypass lock layer             | Low      | Not needed (`checkConflicts` DB-level detection is the correctness boundary) |
+| #   | Location                                                           | Issue                                                                                                                                                                               | Severity | Suggested Sprint                                                             |
+| --- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------------------------------------- |
+| 5   | `packages/db/src/schema/main/event-types.ts`                       | `scheduleId` FK lacks tenant-awareness (composite FK with `org_id`)                                                                                                                 | Medium   | Sprint 7 (requires careful migration with existing data)                     |
+| 6   | `packages/db/src/migrations/main/0003_milky_enchantress.sql`       | Migration drops `connected_calendars` and adds NOT NULL `expert_integration_id` without backfill — already applied to production                                                    | Low      | No action (document only; data issues addressed via forward migrations)      |
+| 7   | `packages/db/src/migrations/main/0005_adorable_lily_hollister.sql` | Drops DB-side defaults for array columns without backfilling NULLs — already applied                                                                                                | Low      | No action (same as above)                                                    |
+| 8   | `packages/scheduling/src/reserve-slot.ts`                          | Redis lock key `(expertProfileId, startsAtIso)` is per-slot, not per-expert — concurrent holds for different times bypass the lock; DB `checkConflicts` is the correctness boundary | Low      | Not needed (`checkConflicts` DB-level detection is the correctness boundary) |
 
 ## DX / Refactoring
 
@@ -46,3 +46,8 @@ Items identified during the 2026-05 code review that were intentionally deferred
 - Item 5 (composite FK) requires data analysis to confirm all existing `scheduleId` references are tenant-correct before adding the constraint.
 - Items 6–7 are documentation-only; never modify already-applied migrations.
 - Item 9 (typed errors) is a prerequisite for better error handling in the calendar UI and monitoring.
+- Item 11 (`rulesToDayMap`) resolution plan:
+  1. **Data audit**: Query production for experts who have configured multiple availability windows per day in the legacy format.
+  2. **Schema migration**: Extend `rules` to support an array of `{ start, end }` windows per day instead of a single pair.
+  3. **Editor update**: Replace the single time-range picker per day with a multi-window list (add/remove entries).
+  4. **Test cases**: Verify `getAvailableSlots` correctly merges multiple non-overlapping windows, rejects overlapping windows, and maintains backward compatibility with single-window data.

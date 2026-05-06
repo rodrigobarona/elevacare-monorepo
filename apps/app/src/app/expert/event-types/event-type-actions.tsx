@@ -86,7 +86,7 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
             variant="ghost"
             size="sm"
             disabled={pending}
-            aria-label="Event type actions"
+            aria-label={t("actions.ariaLabel")}
           >
             &#x2022;&#x2022;&#x2022;
           </Button>
@@ -95,16 +95,16 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
           <DropdownMenuItem
             onSelect={() => router.push(`/expert/event-types/${eventTypeId}`)}
           >
-            Edit
+            {t("actions.edit")}
           </DropdownMenuItem>
           <DropdownMenuItem onSelect={handleTogglePublish}>
-            {published ? "Unpublish" : "Publish"}
+            {published ? t("actions.unpublish") : t("actions.publish")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onSelect={() => setDeleteOpen(true)}
             className="text-destructive"
           >
-            Delete
+            {t("actions.delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -112,20 +112,21 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete event type?</AlertDialogTitle>
+            <AlertDialogTitle>{t("actions.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              event type and all associated data.
+              {t("actions.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={pending}>
+              {t("actions.cancel")}
+            </AlertDialogCancel>
             <Button
               onClick={handleDeleteConfirm}
               disabled={pending}
               variant="destructive"
             >
-              {pending ? "Deleting..." : "Delete"}
+              {pending ? t("actions.deleting") : t("actions.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

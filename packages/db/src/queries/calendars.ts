@@ -57,13 +57,19 @@ export async function listExpertIntegrations(
 
 export async function disconnectIntegration(
   orgId: string,
-  integrationId: string
+  integrationId: string,
+  expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
     await tx
       .update(expertIntegrations)
       .set({ status: "disconnected", updatedAt: new Date() })
-      .where(eq(expertIntegrations.id, integrationId))
+      .where(
+        and(
+          eq(expertIntegrations.id, integrationId),
+          eq(expertIntegrations.expertProfileId, expertProfileId)
+        )
+      )
   })
 }
 

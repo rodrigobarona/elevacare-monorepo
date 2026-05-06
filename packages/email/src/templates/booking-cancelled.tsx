@@ -1,5 +1,6 @@
-import { Column, Row, Section, Text } from "react-email"
+import { Section, Text } from "react-email"
 import { EmailLayout } from "./layout"
+import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingCancelledProps {
@@ -7,7 +8,7 @@ export interface BookingCancelledProps {
   eventTypeName: string
   formattedDate: string
   locale?: EmailLocale
-  jsonLd?: string
+  jsonLd?: Record<string, unknown>
 }
 
 export function BookingCancelledEmail({
@@ -34,40 +35,13 @@ export function BookingCancelledEmail({
         </Text>
 
         <Section className="bg-bg-2 rounded-lg p-5">
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.patient}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-fg m-0 text-[14px] font-medium">
-                {patientName}
-              </Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.service}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-fg m-0 text-[14px]">{eventTypeName}</Text>
-            </Column>
-          </Row>
-          <Row className="mb-2">
-            <Column className="w-[110px] align-top">
-              <Text className="text-fg-3 m-0 text-[13px]">
-                {t.labels.wasScheduled}
-              </Text>
-            </Column>
-            <Column className="align-top">
-              <Text className="text-danger m-0 text-[14px]">
-                {formattedDate}
-              </Text>
-            </Column>
-          </Row>
+          <DetailRow label={t.labels.patient} value={patientName} bold />
+          <DetailRow label={t.labels.service} value={eventTypeName} />
+          <DetailRow
+            label={t.labels.wasScheduled}
+            value={formattedDate}
+            valueClassName="text-danger"
+          />
         </Section>
       </Section>
 

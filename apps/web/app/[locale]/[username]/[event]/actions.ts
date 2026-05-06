@@ -19,6 +19,18 @@ export interface SlotData {
   end: string
 }
 
+let _redis: Redis | null = null
+function getRedisClient(): Redis | null {
+  if (_redis) return _redis
+  const e = env()
+  if (!e.UPSTASH_REDIS_REST_URL || !e.UPSTASH_REDIS_REST_TOKEN) return null
+  _redis = new Redis({
+    url: e.UPSTASH_REDIS_REST_URL,
+    token: e.UPSTASH_REDIS_REST_TOKEN,
+  })
+  return _redis
+}
+
 export async function loadSlots(
   username: string,
   eventSlug: string,
@@ -125,10 +137,17 @@ export async function reserveSlotAction(
     const dayEnd = new Date(slotStart)
     dayEnd.setUTCHours(23, 59, 59, 999)
 
+    const bufferMs =
+      (eventType.durationMinutes + eventType.bufferAfterMinutes) * 60_000
+    const rangeEnd = new Date(dayEnd.getTime() + bufferMs)
+    const rangeStart = new Date(
+      dayStart.getTime() - eventType.bufferBeforeMinutes * 60_000
+    )
+
     const existingBookings = await listExpertBusyBookings(
       expert.id,
-      dayStart,
-      dayEnd
+      rangeStart,
+      rangeEnd
     )
 
     const availableSlots = getAvailableSlots({
@@ -144,8 +163,8 @@ export async function reserveSlotAction(
       overrides,
       existingBookings,
       externalBusyTimes: [],
-      rangeStart: dayStart,
-      rangeEnd: dayEnd,
+      rangeStart,
+      rangeEnd,
     })
 
     const slotMatch = availableSlots.some(
@@ -153,33 +172,29 @@ export async function reserveSlotAction(
     )
     if (!slotMatch) return { ok: false, error: "slot-unavailable" }
 
-    const e = env()
-    if (!e.UPSTASH_REDIS_REST_URL || !e.UPSTASH_REDIS_REST_TOKEN) {
+    const redis = getRedisClient()
+    if (!redis) {
       return { ok: false, error: "redis-not-configured" }
     }
 
-    const redis = new Redis({
-      url: e.UPSTASH_REDIS_REST_URL,
-      token: e.UPSTASH_REDIS_REST_TOKEN,
-    })
-
     const holdToken = crypto.randomUUID()
     const ttlSeconds = 300
+    const endsAt = new Date(
+      slotStart.getTime() + eventType.durationMinutes * 60_000
+    )
 
     const result = await reserveSlot(redis, {
       eventTypeId: eventType.id,
       expertProfileId: expert.id,
       orgId: expert.orgId,
-      startsAt: new Date(slotStartIso),
-      endsAt: new Date(
-        new Date(slotStartIso).getTime() + eventType.durationMinutes * 60_000
-      ),
+      startsAt: slotStart,
+      endsAt,
       holdToken,
       ttlSeconds,
     })
 
     if (!result.success) {
-      return { ok: false, error: result.error ?? "reservation-failed" }
+      return { ok: false, error: result.error }
     }
 
     return {

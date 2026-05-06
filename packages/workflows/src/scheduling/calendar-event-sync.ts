@@ -63,7 +63,10 @@ async function loadBookingContext(
 
   const patientData = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
-      .select({ displayName: main.users.displayName })
+      .select({
+        displayName: main.users.displayName,
+        email: main.users.email,
+      })
       .from(main.bookings)
       .innerJoin(main.users, eq(main.bookings.patientUserId, main.users.id))
       .where(eq(main.bookings.id, bookingId))
@@ -79,6 +82,7 @@ async function loadBookingContext(
     expertEmail: data.expertEmail,
     expertName: data.expertName,
     patientName: patientData?.displayName ?? "Patient",
+    patientEmail: patientData?.email ?? "",
     eventTypeName,
     bookingId,
     startsAt: data.startsAt,
@@ -244,8 +248,10 @@ export async function calendarEventUpdate(params: {
         .select({
           expertProfileId: main.sessions.expertProfileId,
           calendarEventId: main.sessions.calendarEventId,
+          bookingTimezone: main.bookings.timezone,
         })
         .from(main.sessions)
+        .innerJoin(main.bookings, eq(main.sessions.bookingId, main.bookings.id))
         .where(eq(main.sessions.id, sessionId))
         .limit(1)
       return row
@@ -313,7 +319,11 @@ export async function calendarEventUpdate(params: {
       accessToken,
       destination.externalCalendarId,
       session.calendarEventId,
-      { startTime: newStartTime, endTime: newEndTime, timezone: "UTC" }
+      {
+        startTime: newStartTime,
+        endTime: newEndTime,
+        timezone: session.bookingTimezone ?? "UTC",
+      }
     )
   } catch (err) {
     await captureException(err, {

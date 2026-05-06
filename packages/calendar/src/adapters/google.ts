@@ -5,9 +5,26 @@ import type {
   CalendarListItem,
   FreeBusyInterval,
 } from "../types"
+import { CalendarTokenError } from "../credential-manager"
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 const FETCH_TIMEOUT_MS = 10_000
+
+async function throwGoogleError(
+  operation: string,
+  res: Response
+): Promise<never> {
+  if (res.status === 401 || res.status === 403) {
+    throw new CalendarTokenError("needs_reauthorization")
+  }
+  let body: string
+  try {
+    body = await res.text()
+  } catch {
+    body = "(unreadable)"
+  }
+  throw new Error(`Google ${operation}: ${res.status} — ${body}`)
+}
 
 export class GoogleCalendarAdapter implements CalendarAdapter {
   readonly provider = "google" as const
@@ -29,7 +46,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         headers: { Authorization: `Bearer ${accessToken}` },
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       })
-      if (!res.ok) throw new Error(`Google listCalendars: ${res.status}`)
+      if (!res.ok) await throwGoogleError("listCalendars", res)
 
       const data = (await res.json()) as {
         items: {
@@ -76,11 +93,22 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         }),
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       })
-      if (!res.ok) throw new Error(`Google freeBusy: ${res.status}`)
+      if (!res.ok) await throwGoogleError("freeBusy", res)
       const data = (await res.json()) as {
-        calendars: Record<string, { busy: { start: string; end: string }[] }>
+        calendars: Record<
+          string,
+          {
+            busy: { start: string; end: string }[]
+            errors?: { domain: string; reason: string }[]
+          }
+        >
       }
-      for (const cal of Object.values(data.calendars)) {
+      for (const [calId, cal] of Object.entries(data.calendars)) {
+        if (cal.errors?.length) {
+          throw new Error(
+            `Google freeBusy error for calendar ${calId}: ${JSON.stringify(cal.errors)}`
+          )
+        }
         for (const b of cal.busy) {
           intervals.push({ start: new Date(b.start), end: new Date(b.end) })
         }
@@ -136,7 +164,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       )
       return existing
     }
-    if (!res.ok) throw new Error(`Google createEvent: ${res.status}`)
+    if (!res.ok) await throwGoogleError("createEvent", res)
     return this.parseEvent(event.calendarId, await res.json())
   }
 
@@ -146,6 +174,18 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     eventId: string,
     event: Partial<CalendarEventInput>
   ): Promise<CalendarEvent> {
+    if (
+      (event.startTime && !event.endTime) ||
+      (!event.startTime && event.endTime)
+    ) {
+      throw new Error(
+        "updateEvent requires both startTime and endTime, or neither"
+      )
+    }
+    if (event.startTime && event.endTime && event.startTime >= event.endTime) {
+      throw new Error("updateEvent: startTime must be before endTime")
+    }
+
     const body: Record<string, unknown> = {}
     if (event.summary !== undefined) body.summary = event.summary
     if (event.description !== undefined) body.description = event.description
@@ -173,7 +213,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     )
-    if (!res.ok) throw new Error(`Google updateEvent: ${res.status}`)
+    if (!res.ok) await throwGoogleError("updateEvent", res)
     return this.parseEvent(calendarId, await res.json())
   }
 
@@ -191,7 +231,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
     )
     if (!res.ok && res.status !== 410) {
-      throw new Error(`Google deleteEvent: ${res.status}`)
+      await throwGoogleError("deleteEvent", res)
     }
   }
 
@@ -207,7 +247,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     )
-    if (!res.ok) throw new Error(`Google getEvent: ${res.status}`)
+    if (!res.ok) await throwGoogleError("getEvent", res)
     return this.parseEvent(calendarId, await res.json())
   }
 
@@ -215,14 +255,46 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     calendarId: string,
     raw: Record<string, unknown>
   ): CalendarEvent {
-    const start = raw.start as { dateTime?: string; date?: string }
-    const end = raw.end as { dateTime?: string; date?: string }
+    const start = raw.start as
+      | { dateTime?: string; date?: string; timeZone?: string }
+      | undefined
+    const end = raw.end as
+      | { dateTime?: string; date?: string; timeZone?: string }
+      | undefined
+
+    if (!start || !end) {
+      throw new Error(`Google parseEvent: missing start/end in event ${raw.id}`)
+    }
+
+    let startTime: Date
+    let endTime: Date
+
+    if (start.dateTime) {
+      startTime = new Date(start.dateTime)
+    } else if (start.date) {
+      startTime = new Date(`${start.date}T00:00:00`)
+    } else {
+      throw new Error(
+        `Google parseEvent: no dateTime or date in start for event ${raw.id}`
+      )
+    }
+
+    if (end.dateTime) {
+      endTime = new Date(end.dateTime)
+    } else if (end.date) {
+      endTime = new Date(`${end.date}T00:00:00`)
+    } else {
+      throw new Error(
+        `Google parseEvent: no dateTime or date in end for event ${raw.id}`
+      )
+    }
+
     return {
       id: raw.id as string,
       calendarId,
       summary: (raw.summary as string) ?? "",
-      startTime: new Date((start.dateTime ?? start.date)!),
-      endTime: new Date((end.dateTime ?? end.date)!),
+      startTime,
+      endTime,
       status: (raw.status as string) ?? "confirmed",
     }
   }

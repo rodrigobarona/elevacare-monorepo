@@ -24,6 +24,7 @@ export interface IcsEmailPayload {
   expertEmail: string
   expertName: string
   patientName: string
+  patientEmail: string
   eventTypeName: string
   bookingId: string
   startsAt: Date
@@ -47,18 +48,24 @@ function buildIcsInput(payload: IcsEmailPayload): IcsEventInput {
     timezone: payload.timezone,
     location: payload.location,
     organizer: { name: "Eleva Care", email: "bookings@eleva.care" },
-    attendees: [{ name: payload.expertName, email: payload.expertEmail }],
+    attendees: [
+      { name: payload.expertName, email: payload.expertEmail },
+      { name: payload.patientName, email: payload.patientEmail },
+    ],
     sequence: payload.sequence ?? 0,
   }
 }
 
-function buildJsonLd(payload: IcsEmailPayload, status: string): string {
+function buildJsonLd(
+  payload: IcsEmailPayload,
+  status: string
+): Record<string, unknown> {
   const locationObj =
     payload.sessionMode === "in_person" && payload.location
       ? { "@type": "Place", name: payload.location }
       : { "@type": "VirtualLocation", url: "https://app.eleva.care" }
 
-  return JSON.stringify({
+  return {
     "@context": "http://schema.org",
     "@type": "EventReservation",
     reservationNumber: `BKG-${payload.bookingId.slice(0, 8)}`,
@@ -71,7 +78,7 @@ function buildJsonLd(payload: IcsEmailPayload, status: string): string {
       endDate: payload.endsAt.toISOString(),
       location: locationObj,
     },
-  })
+  }
 }
 
 const LOCALE_MAP: Record<EmailLocale, string> = {
@@ -123,10 +130,10 @@ export async function sendBookingIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send(
+  const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail],
+      to: [payload.expertEmail, payload.patientEmail],
       subject: t.subject.newBooking(payload.patientName, formattedDate),
       html,
       headers: { "X-Entity-Ref-ID": `${payload.bookingId}:booking` },
@@ -140,6 +147,11 @@ export async function sendBookingIcsEmail(
     },
     { idempotencyKey: `${payload.bookingId}:booking` }
   )
+  if (error) {
+    throw new Error(
+      `Booking email send failed [${payload.bookingId}]: ${error.message}`
+    )
+  }
 }
 
 export async function sendRescheduleIcsEmail(
@@ -171,10 +183,10 @@ export async function sendRescheduleIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send(
+  const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail],
+      to: [payload.expertEmail, payload.patientEmail],
       subject: t.subject.rescheduled(payload.patientName, formattedDate),
       html,
       headers: {
@@ -192,6 +204,11 @@ export async function sendRescheduleIcsEmail(
       idempotencyKey: `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
     }
   )
+  if (error) {
+    throw new Error(
+      `Reschedule email send failed [${payload.bookingId}, seq=${payload.sequence ?? 1}]: ${error.message}`
+    )
+  }
 }
 
 export async function sendCancellationIcsEmail(
@@ -215,10 +232,10 @@ export async function sendCancellationIcsEmail(
     jsonLd,
   })
 
-  await resend().emails.send(
+  const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail],
+      to: [payload.expertEmail, payload.patientEmail],
       subject: t.subject.cancelled(payload.patientName, formattedDate),
       html,
       headers: { "X-Entity-Ref-ID": `${payload.bookingId}:cancel` },
@@ -232,4 +249,9 @@ export async function sendCancellationIcsEmail(
     },
     { idempotencyKey: `${payload.bookingId}:cancel` }
   )
+  if (error) {
+    throw new Error(
+      `Cancellation email send failed [${payload.bookingId}]: ${error.message}`
+    )
+  }
 }

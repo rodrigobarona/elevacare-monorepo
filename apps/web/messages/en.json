@@ -209,6 +209,17 @@
     }
   },
   "slotPicker": {
+    "heading": "Select a time",
+    "reservedTitle": "Slot Reserved!",
+    "heldUntil": "Your slot is held until {time}. Complete payment to confirm your booking.",
+    "paymentComingSoon": "Payment integration coming soon.",
+    "previousWeek": "← Previous week",
+    "nextWeek": "Next week →",
+    "timesShownIn": "Times shown in {tz}",
+    "loading": "Loading available times...",
+    "noSlots": "No available slots this week. Try another week.",
+    "reserveSlot": "Reserve slot",
+    "reserving": "Reserving...",
     "errors": {
       "expert-not-found": "This expert could not be found. Please check the URL.",
       "event-not-found": "This event type is no longer available.",
@@ -218,6 +229,13 @@
       "slot_taken": "This slot was just booked by someone else. Please choose another.",
       "reserve-failed": "Could not reserve this slot. Please try again.",
       "conflict": "This time conflicts with an existing booking.",
+      "no-schedule": "This expert has no schedule configured.",
+      "slot-unavailable": "This slot is no longer available.",
+      "reservation-failed": "Could not reserve this slot. Please try again.",
+      "past_slot": "This time has already passed. Please choose a future slot.",
+      "insufficient_notice": "This slot is too soon. Please choose a later time.",
+      "outside_booking_window": "This slot is outside the booking window.",
+      "db_error": "A system error occurred. Please try again later.",
       "generic": "Something went wrong. Please try again."
     }
   },

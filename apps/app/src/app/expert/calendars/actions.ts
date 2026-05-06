@@ -47,7 +47,7 @@ export async function disconnectCalendarAction(
     )
     if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
-    await disconnectIntegration(profile.orgId, integrationId)
+    await disconnectIntegration(profile.orgId, integrationId, profile.id)
 
     revalidatePath("/expert/calendars")
     revalidatePath("/expert/integrations")

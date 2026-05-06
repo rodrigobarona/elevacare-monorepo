@@ -209,6 +209,17 @@
     }
   },
   "slotPicker": {
+    "heading": "Selecione um horário",
+    "reservedTitle": "Horário Reservado!",
+    "heldUntil": "O seu horário está reservado até {time}. Complete o pagamento para confirmar a sua marcação.",
+    "paymentComingSoon": "Integração de pagamento em breve.",
+    "previousWeek": "← Semana anterior",
+    "nextWeek": "Próxima semana →",
+    "timesShownIn": "Horários apresentados em {tz}",
+    "loading": "A carregar horários disponíveis...",
+    "noSlots": "Sem horários disponíveis esta semana. Experimente outra semana.",
+    "reserveSlot": "Reservar horário",
+    "reserving": "A reservar...",
     "errors": {
       "expert-not-found": "Este especialista não foi encontrado. Verifique o URL.",
       "event-not-found": "Este tipo de evento já não está disponível.",
@@ -218,6 +229,13 @@
       "slot_taken": "Este horário acabou de ser reservado por outra pessoa. Escolha outro.",
       "reserve-failed": "Não foi possível reservar este horário. Tente novamente.",
       "conflict": "Este horário conflita com uma reserva existente.",
+      "no-schedule": "Este especialista não tem horário configurado.",
+      "slot-unavailable": "Este horário já não está disponível.",
+      "reservation-failed": "Não foi possível reservar este horário. Tente novamente.",
+      "past_slot": "Este horário já passou. Selecione um horário futuro.",
+      "insufficient_notice": "Este horário é demasiado próximo. Escolha um horário mais tarde.",
+      "outside_booking_window": "Este horário está fora do período de marcação.",
+      "db_error": "Ocorreu um erro de sistema. Tente novamente mais tarde.",
       "generic": "Algo correu mal. Tente novamente."
     }
   },

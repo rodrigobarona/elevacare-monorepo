@@ -38,6 +38,11 @@ function escapeText(text: string): string {
     .replace(/\n/g, "\\n")
 }
 
+/** RFC 5545 §3.2: parameter values use DQUOTE-wrapped strings, no embedded DQUOTEs. */
+function quoteParamValue(text: string): string {
+  return `"${text.replace(/"/g, "")}"`
+}
+
 const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
@@ -100,7 +105,7 @@ function generateIcs(
     `SUMMARY:${escapeText(event.summary)}`,
     `STATUS:${status}`,
     `SEQUENCE:${event.sequence ?? 0}`,
-    `ORGANIZER;CN=${escapeText(event.organizer.name)}:mailto:${event.organizer.email}`,
+    `ORGANIZER;CN=${quoteParamValue(event.organizer.name)}:mailto:${event.organizer.email}`,
   ]
 
   if (event.description) {
@@ -114,7 +119,7 @@ function generateIcs(
   if (event.attendees) {
     for (const attendee of event.attendees) {
       lines.push(
-        `ATTENDEE;CN=${escapeText(attendee.name)};RSVP=TRUE:mailto:${attendee.email}`
+        `ATTENDEE;CN=${quoteParamValue(attendee.name)};RSVP=TRUE:mailto:${attendee.email}`
       )
     }
   }

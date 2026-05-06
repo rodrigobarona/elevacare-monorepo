@@ -32,14 +32,22 @@ function formatDate(date: Date, tz: string): string {
   })
 }
 
-function getWeekRange(weekOffset: number): { start: Date; end: Date } {
+function getWeekRange(
+  weekOffset: number,
+  tz: string
+): { start: Date; end: Date } {
   const now = new Date()
-  const startOfWeek = new Date(now)
-  startOfWeek.setDate(now.getDate() + weekOffset * 7)
+  const localNow = new Date(now.toLocaleString("en-US", { timeZone: tz }))
+  const dayOfWeek = localNow.getDay()
+  const startOfWeek = new Date(localNow)
+  startOfWeek.setDate(localNow.getDate() - dayOfWeek + weekOffset * 7)
   startOfWeek.setHours(0, 0, 0, 0)
-  const endOfWeek = new Date(startOfWeek)
-  endOfWeek.setDate(startOfWeek.getDate() + 7)
-  return { start: startOfWeek, end: endOfWeek }
+  const offsetMs =
+    startOfWeek.getTime() -
+    new Date(startOfWeek.toLocaleString("en-US", { timeZone: "UTC" })).getTime()
+  const utcStart = new Date(startOfWeek.getTime() - offsetMs)
+  const utcEnd = new Date(utcStart.getTime() + 7 * 24 * 60 * 60 * 1000)
+  return { start: utcStart, end: utcEnd }
 }
 
 function groupByDay(slots: SlotData[], tz: string): Map<string, SlotData[]> {
@@ -67,6 +75,13 @@ const ERROR_KEYS = [
   "slot_taken",
   "reserve-failed",
   "conflict",
+  "no-schedule",
+  "slot-unavailable",
+  "reservation-failed",
+  "past_slot",
+  "insufficient_notice",
+  "outside_booking_window",
+  "db_error",
 ] as const
 
 export function SlotPicker({
@@ -111,7 +126,7 @@ export function SlotPicker({
       setLoading(true)
       setError(null)
       try {
-        const range = getWeekRange(weekOffset)
+        const range = getWeekRange(weekOffset, tz)
         const result = await loadSlots(
           username,
           eventSlug,
@@ -174,23 +189,23 @@ export function SlotPicker({
       <Card>
         <CardContent className="space-y-4 py-8 text-center">
           <div className="text-2xl">&#10003;</div>
-          <h3 className="text-lg font-medium">Slot Reserved!</h3>
+          <h3 className="text-lg font-medium">{t("reservedTitle")}</h3>
           <p className="text-sm text-muted-foreground">
             {formatTime(selectedSlot!.start, tz)} –{" "}
             {formatTime(selectedSlot!.end, tz)},{" "}
             {formatDate(new Date(selectedSlot!.start), tz)}
           </p>
           <p className="text-sm text-muted-foreground">
-            Your slot is held until{" "}
-            {expiresAt.toLocaleTimeString(undefined, {
-              timeZone: tz,
-              hour: "2-digit",
-              minute: "2-digit",
+            {t("heldUntil", {
+              time: expiresAt.toLocaleTimeString(undefined, {
+                timeZone: tz,
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
             })}
-            . Complete payment to confirm your booking.
           </p>
           <p className="text-xs text-muted-foreground">
-            Payment integration coming in Sprint 4.
+            {t("paymentComingSoon")}
           </p>
         </CardContent>
       </Card>
@@ -212,11 +227,11 @@ export function SlotPicker({
           onClick={() => setWeekOffset((w) => w - 1)}
           disabled={weekOffset <= 0 || loading}
         >
-          ← Previous week
+          {t("previousWeek")}
         </Button>
         <span className="text-sm text-muted-foreground">
-          {formatDate(getWeekRange(weekOffset).start, tz)} –{" "}
-          {formatDate(getWeekRange(weekOffset).end, tz)}
+          {formatDate(getWeekRange(weekOffset, tz).start, tz)} –{" "}
+          {formatDate(getWeekRange(weekOffset, tz).end, tz)}
         </span>
         <Button
           variant="outline"
@@ -224,19 +239,21 @@ export function SlotPicker({
           onClick={() => setWeekOffset((w) => w + 1)}
           disabled={loading}
         >
-          Next week →
+          {t("nextWeek")}
         </Button>
       </div>
 
-      <p className="text-xs text-muted-foreground">Times shown in {tz}</p>
+      <p className="text-xs text-muted-foreground">
+        {t("timesShownIn", { tz })}
+      </p>
 
       {loading ? (
         <div className="py-12 text-center text-muted-foreground">
-          Loading available times...
+          {t("loading")}
         </div>
       ) : slots.length === 0 ? (
         <div className="py-12 text-center text-muted-foreground">
-          No available slots this week. Try another week.
+          {t("noSlots")}
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -283,7 +300,7 @@ export function SlotPicker({
             </p>
           </div>
           <Button onClick={handleReserve} disabled={reserving}>
-            {reserving ? "Reserving..." : "Reserve slot"}
+            {reserving ? t("reserving") : t("reserveSlot")}
           </Button>
         </div>
       )}

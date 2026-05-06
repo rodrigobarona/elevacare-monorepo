@@ -1,5 +1,6 @@
-import { Column, Row, Section, Text } from "react-email"
+import { Section, Text } from "react-email"
 import { EmailLayout } from "./layout"
+import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingConfirmedProps {
@@ -9,7 +10,7 @@ export interface BookingConfirmedProps {
   sessionMode: string
   location?: string
   locale?: EmailLocale
-  jsonLd?: string
+  jsonLd?: Record<string, unknown>
 }
 
 export function BookingConfirmedEmail({
@@ -52,31 +53,6 @@ export function BookingConfirmedEmail({
         </Text>
       </Section>
     </EmailLayout>
-  )
-}
-
-function DetailRow({
-  label,
-  value,
-  bold,
-}: {
-  label: string
-  value: string
-  bold?: boolean
-}) {
-  return (
-    <Row className="mb-2">
-      <Column className="w-[110px] align-top">
-        <Text className="text-fg-3 m-0 text-[13px]">{label}</Text>
-      </Column>
-      <Column className="align-top">
-        <Text
-          className={`text-fg m-0 text-[14px] ${bold ? "font-medium" : ""}`}
-        >
-          {value}
-        </Text>
-      </Column>
-    </Row>
   )
 }
 

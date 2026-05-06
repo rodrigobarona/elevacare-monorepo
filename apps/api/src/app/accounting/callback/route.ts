@@ -116,45 +116,58 @@ export async function GET(request: Request) {
 
     const result = await adapter.connect(connectInput)
 
-    await withOrgContext(expert.orgId, async (tx: Tx) => {
-      await tx
-        .insert(main.expertIntegrations)
-        .values({
-          orgId: expert.orgId,
-          expertProfileId: expert.id,
-          category: "invoicing",
-          slug: providerSlug,
-          connectType: "oauth",
-          vaultRef: result.vaultRef,
-          metadata: result.metadata ?? {},
-          status: "connected",
-          connectedAt: new Date(),
-          expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
-        })
-        .onConflictDoUpdate({
-          target: [
-            main.expertIntegrations.expertProfileId,
-            main.expertIntegrations.slug,
-          ],
-          set: {
+    try {
+      await withOrgContext(expert.orgId, async (tx: Tx) => {
+        await tx
+          .insert(main.expertIntegrations)
+          .values({
+            orgId: expert.orgId,
+            expertProfileId: expert.id,
+            category: "invoicing",
+            slug: providerSlug,
+            connectType: "oauth",
             vaultRef: result.vaultRef,
             metadata: result.metadata ?? {},
             status: "connected",
             connectedAt: new Date(),
             expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
-            updatedAt: new Date(),
-          },
-        })
+          })
+          .onConflictDoUpdate({
+            target: [
+              main.expertIntegrations.expertProfileId,
+              main.expertIntegrations.slug,
+            ],
+            set: {
+              vaultRef: result.vaultRef,
+              connectType: "oauth",
+              category: "invoicing",
+              metadata: result.metadata ?? {},
+              status: "connected",
+              connectedAt: new Date(),
+              expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
+              updatedAt: new Date(),
+            },
+          })
 
-      await tx
-        .update(main.expertProfiles)
-        .set({
-          invoicingProvider: providerSlug,
-          invoicingSetupStatus: "connected",
-          updatedAt: new Date(),
-        })
-        .where(eq(main.expertProfiles.id, expert.id))
-    })
+        await tx
+          .update(main.expertProfiles)
+          .set({
+            invoicingProvider: providerSlug,
+            invoicingSetupStatus: "connected",
+            updatedAt: new Date(),
+          })
+          .where(eq(main.expertProfiles.id, expert.id))
+      })
+    } catch (dbErr) {
+      try {
+        await adapter.disconnect({ vaultRef: result.vaultRef })
+      } catch {
+        console.error(
+          "[accounting/callback] Vault cleanup failed after DB error"
+        )
+      }
+      throw dbErr
+    }
 
     return NextResponse.redirect(
       new URL("/expert/onboarding?invoicing_connected=true", appUrl)

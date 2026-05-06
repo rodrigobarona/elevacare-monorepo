@@ -193,4 +193,9 @@ export function* iterateDays(
       yield dateStr
     }
   }
+
+  const endDateStr = formatDateInTimezone(rangeEnd, timezone)
+  if (!seen.has(endDateStr)) {
+    yield endDateStr
+  }
 }

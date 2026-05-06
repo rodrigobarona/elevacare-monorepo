@@ -1,6 +1,7 @@
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { getTranslations } from "next-intl/server"
 import { findExpertByUsername, findPublicEventType } from "@eleva/db"
 import {
   Card,
@@ -52,6 +53,7 @@ export default async function BookingPage(props: PageProps) {
 
   const h = await headers()
   const ssrTz = h.get("x-vercel-ip-timezone") ?? "UTC"
+  const t = await getTranslations("slotPicker")
 
   const title = pickText(eventType.title as LocalizedText, locale)
   const description = eventType.description
@@ -106,7 +108,7 @@ export default async function BookingPage(props: PageProps) {
       </Card>
 
       <section className="space-y-4">
-        <h2 className="text-xl font-medium">Select a time</h2>
+        <h2 className="text-xl font-medium">{t("heading")}</h2>
         <SlotPicker
           username={username}
           eventSlug={eventSlug}

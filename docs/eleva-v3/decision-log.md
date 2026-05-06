@@ -140,7 +140,7 @@ Each entry should include:
 ### 2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes (reaffirmed)
 
 - Owner: platform
-- Status: active
+- Status: superseded (see [2026-05-06: Calendar OAuth — WorkOS Pipes for credential management](#2026-05-06-calendar-oauth--workos-pipes-for-credential-management-supersedes-2026-04-22))
 - Summary: `packages/calendar` owns Google + Microsoft OAuth, token refresh, event read/write, and webhook subscription. Tokens stored in WorkOS Vault. WorkOS Pipes is explicitly not used for calendar sync. Re-evaluated: keeping Eleva-owned protects booking-critical flows that need idempotent event creation with client-supplied IDs, multi-calendar busy/destination modeling, real-time freebusy, explicit token-expiry surfacing, and Pub/Sub cache invalidation — none of which Pipes exposes with the fidelity we need. WorkOS Pipes remains valid for identity-side integrations (SCIM, directory sync, SSO federation).
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-004
 
@@ -210,7 +210,8 @@ Each entry should include:
 ### 2026-05-06: Calendar OAuth — WorkOS Pipes for credential management (supersedes 2026-04-22)
 
 - Owner: platform
-- Status: active (supersedes "Calendar OAuth ownership — Eleva, not WorkOS Pipes" entry from 2026-04-22)
+- Status: active
+- Supersedes: [2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes](#2026-04-22-calendar-oauth-ownership--eleva-not-workos-pipes-reaffirmed)
 - Summary: Calendar OAuth credential management (token storage, refresh, revocation) is delegated to WorkOS Pipes. `packages/calendar` retains ownership of the Google/Microsoft API surface (event create/read/delete, freebusy, webhook subscriptions) but no longer manages raw tokens directly — instead it requests access tokens from WorkOS Pipes via the user's `workosUserId` and provider slug. This aligns with the ADR-004 amendment (2026-05) and the scheduling-booking-spec §Calendar Integration. The April decision's rationale about needing fidelity for booking-critical flows remains valid for the API layer; the change is purely about who stores/refreshes the OAuth credentials, not who calls the calendar APIs.
 - Reference: [`adrs/ADR-004-scheduling-and-calendar-oauth.md`](./adrs/ADR-004-scheduling-and-calendar-oauth.md) (amended 2026-05), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
 

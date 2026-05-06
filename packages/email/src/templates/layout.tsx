@@ -15,7 +15,7 @@ interface LayoutProps {
   preview: string
   locale?: EmailLocale
   children: React.ReactNode
-  jsonLd?: string
+  jsonLd?: Record<string, unknown>
 }
 
 export function EmailLayout({
@@ -30,10 +30,7 @@ export function EmailLayout({
     <Html lang={locale}>
       <Head>
         {jsonLd && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: jsonLd }}
-          />
+          <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         )}
       </Head>
       <Preview>{preview}</Preview>

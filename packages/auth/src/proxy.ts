@@ -74,16 +74,34 @@ export function withAuth(
       return downstream
     }
 
-    // Merge any Set-Cookie / session-refresh headers from AuthKit onto the
-    // downstream response so the refreshed cookie reaches the browser.
+    // Merge auth-related headers from AuthKit onto the downstream response
+    // so the refreshed cookie, cache directives, and vary reach the browser.
     if (authResponse) {
       const merged =
         downstream instanceof NextResponse
           ? downstream
-          : NextResponse.next(downstream)
+          : new NextResponse(downstream.body, {
+              status: downstream.status,
+              headers: downstream.headers,
+            })
+
+      const HOP_BY_HOP = new Set([
+        "connection",
+        "keep-alive",
+        "transfer-encoding",
+        "te",
+        "trailer",
+        "upgrade",
+      ])
+
       authResponse.headers.forEach((value: string, key: string) => {
-        if (key.toLowerCase() === "set-cookie")
+        const lk = key.toLowerCase()
+        if (HOP_BY_HOP.has(lk)) return
+        if (lk === "set-cookie" || lk === "vary") {
           merged.headers.append(key, value)
+        } else {
+          merged.headers.set(key, value)
+        }
       })
       return merged
     }
