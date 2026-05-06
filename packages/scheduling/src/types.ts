@@ -46,11 +46,9 @@ export interface ReserveSlotInput {
   ttlSeconds?: number
 }
 
-export interface ReserveSlotResult {
-  success: boolean
-  reservationId?: string
-  error?: "slot_taken" | "conflict" | "db_error"
-}
+export type ReserveSlotResult =
+  | { success: true; reservationId: string }
+  | { success: false; error: "slot_taken" | "conflict" | "db_error" }
 
 export interface BookingRuleCheck {
   eventType: Pick<

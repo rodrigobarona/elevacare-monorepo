@@ -199,7 +199,7 @@ export async function reserveSlotAction(
 
     return {
       ok: true,
-      reservationId: result.reservationId!,
+      reservationId: result.reservationId,
       holdToken,
       expiresAt: new Date(Date.now() + ttlSeconds * 1000).toISOString(),
     }
