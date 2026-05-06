@@ -207,6 +207,13 @@ Each entry should include:
 - Summary: Expert onboarding is a multi-step wizard (Profile, Stripe Connect, Identity Verification, Invoicing Setup, First Event Type). Admin Become-Partner flow provisions org + expert profile + Stripe Connect account on approval. Finance surface exposes invoicing status and Stripe payout/balance dashboards. API layer (`apps/api`) handles OAuth callbacks, adapter status, and Stripe Identity session creation with CORS, RLS, and capability checks. Invoicing choice is enforced at onboarding via the Tier 2 adapter registry (`packages/accounting`). Multi-step wizard is the sole onboarding entry point; admin approval is required before an expert can onboard; API surface requires CORS for cross-origin `app.eleva.care` to `api.eleva.care` calls.
 - Reference: [`adrs/ADR-005-payments-and-monetization.md`](./adrs/ADR-005-payments-and-monetization.md), [`adrs/ADR-013-accounting-integration.md`](./adrs/ADR-013-accounting-integration.md), [`payments-payouts-spec.md`](./payments-payouts-spec.md)
 
+### 2026-05-06: Calendar OAuth — WorkOS Pipes for credential management (supersedes 2026-04-22)
+
+- Owner: platform
+- Status: active (supersedes "Calendar OAuth ownership — Eleva, not WorkOS Pipes" entry from 2026-04-22)
+- Summary: Calendar OAuth credential management (token storage, refresh, revocation) is delegated to WorkOS Pipes. `packages/calendar` retains ownership of the Google/Microsoft API surface (event create/read/delete, freebusy, webhook subscriptions) but no longer manages raw tokens directly — instead it requests access tokens from WorkOS Pipes via the user's `workosUserId` and provider slug. This aligns with the ADR-004 amendment (2026-05) and the scheduling-booking-spec §Calendar Integration. The April decision's rationale about needing fidelity for booking-critical flows remains valid for the API layer; the change is purely about who stores/refreshes the OAuth credentials, not who calls the calendar APIs.
+- Reference: [`adrs/ADR-004-scheduling-and-calendar-oauth.md`](./adrs/ADR-004-scheduling-and-calendar-oauth.md) (amended 2026-05), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

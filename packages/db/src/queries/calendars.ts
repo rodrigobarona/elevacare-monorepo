@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { withOrgContext, type Tx } from "../context"
 import {
   expertIntegrations,
@@ -22,7 +22,9 @@ export async function listCalendarIntegrations(
       .where(
         and(
           eq(expertIntegrations.expertProfileId, expertProfileId),
-          eq(expertIntegrations.category, "calendar")
+          eq(expertIntegrations.category, "calendar"),
+          eq(expertIntegrations.status, "connected"),
+          isNull(expertIntegrations.deletedAt)
         )
       )
   })

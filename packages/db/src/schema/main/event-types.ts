@@ -83,16 +83,24 @@ export const eventTypes = pgTable(
     deletedAt: deletedAt(),
   },
   (t) => ({
-    expertSlugIdx: uniqueIndex("event_types_expert_slug_idx").on(
-      t.expertProfileId,
-      t.slug
-    ),
+    expertSlugIdx: uniqueIndex("event_types_expert_slug_idx")
+      .on(t.expertProfileId, t.slug)
+      .where(sql`deleted_at IS NULL`),
     orgIdx: index("event_types_org_idx").on(t.orgId),
     expertIdx: index("event_types_expert_idx").on(t.expertProfileId),
     publishedIdx: index("event_types_published_idx").on(t.published, t.active),
     slugFormatChk: check(
       "event_types_slug_format",
       sql`slug ~ '^[a-z0-9](?:[a-z0-9-]{1,48}[a-z0-9])?$' AND slug NOT LIKE '%--%'`
+    ),
+    durationChk: check(
+      "event_types_duration_positive",
+      sql`duration_minutes > 0`
+    ),
+    priceChk: check("event_types_price_non_negative", sql`price_amount >= 0`),
+    windowsChk: check(
+      "event_types_windows_non_negative",
+      sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (cancellation_window_hours IS NULL OR cancellation_window_hours >= 0) AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`
     ),
     tenantPolicy: pgPolicy("event_types_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

@@ -208,6 +208,19 @@
       "back": "Volver a expertos"
     }
   },
+  "slotPicker": {
+    "errors": {
+      "expert-not-found": "No se encontró este especialista. Verifica la URL.",
+      "event-not-found": "Este tipo de evento ya no está disponible.",
+      "load-failed": "No se pudieron cargar los horarios disponibles. Inténtalo de nuevo.",
+      "invalid-date-range": "Rango de fechas no válido.",
+      "invalid-slot-start": "Horario no válido. Selecciona otro.",
+      "slot_taken": "Este horario acaba de ser reservado por otra persona. Elige otro.",
+      "reserve-failed": "No se pudo reservar este horario. Inténtalo de nuevo.",
+      "conflict": "Este horario entra en conflicto con una reserva existente.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
   "becomePartner": {
     "hero": {
       "title": "Postula para unirte a Eleva.care",

@@ -28,7 +28,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> =
 
 export function IntegrationCard({ manifest, status, integrationId }: Props) {
   const t = useTranslations("integrations")
-  const locale = useLocale() as "en" | "pt" | "es"
+  const rawLocale = useLocale()
+  const locale = (["en", "pt", "es"] as const).includes(
+    rawLocale as "en" | "pt" | "es"
+  )
+    ? (rawLocale as "en" | "pt" | "es")
+    : "en"
   const description = manifest.description[locale] ?? manifest.description.en
 
   const isConnected = status === "connected"

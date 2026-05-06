@@ -129,6 +129,10 @@ export const expertIntegrations = pgTable(
       "expert_integrations_oauth_check",
       sql`connect_type != 'oauth' OR vault_ref IS NOT NULL`
     ),
+    apiKeyCheck: check(
+      "expert_integrations_api_key_check",
+      sql`connect_type != 'api_key' OR vault_ref IS NOT NULL`
+    ),
     tenantPolicy: pgPolicy("expert_integrations_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,

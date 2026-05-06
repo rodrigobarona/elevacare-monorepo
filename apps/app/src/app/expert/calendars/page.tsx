@@ -31,10 +31,15 @@ export default async function CalendarsPage() {
     status: i.status,
   }))
 
-  const widgetToken = await getWidgetToken(
-    session.user.workosUserId,
-    session.workosOrgId
-  )
+  let widgetToken: string | null = null
+  try {
+    widgetToken = await getWidgetToken(
+      session.user.workosUserId,
+      session.workosOrgId
+    )
+  } catch (err) {
+    console.error("[calendars] Failed to get widget token:", err)
+  }
 
   const t = await getTranslations("calendars")
 

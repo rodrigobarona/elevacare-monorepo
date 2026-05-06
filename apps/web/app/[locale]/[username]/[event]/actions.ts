@@ -86,8 +86,7 @@ export async function loadSlots(
 export async function reserveSlotAction(
   username: string,
   eventSlug: string,
-  slotStartIso: string,
-  slotEndIso: string
+  slotStartIso: string
 ): Promise<
   | { ok: true; reservationId: string; holdToken: string; expiresAt: string }
   | { ok: false; error: string }

@@ -134,8 +134,7 @@ export async function saveBusySources(
 
 export async function saveDestinationCalendar(
   integrationId: string,
-  externalCalendarId: string,
-  displayName: string
+  externalCalendarId: string
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
@@ -149,12 +148,25 @@ export async function saveDestinationCalendar(
     )
     if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
+    const provider = SLUG_TO_PROVIDER[integration.slug]
+    if (!provider) return { ok: false, error: "unknown-provider" }
+
+    const accessToken = await getCalendarToken(
+      session.user.workosUserId,
+      provider
+    )
+    const adapter = getAdapter(provider)
+    const calendars = await adapter.listCalendars(accessToken)
+
+    const matched = calendars.find((c) => c.id === externalCalendarId)
+    if (!matched) return { ok: false, error: "unauthorized-calendar" }
+
     await replaceDestinationCalendar(
       profile.orgId,
       profile.id,
       integrationId,
       externalCalendarId,
-      displayName
+      matched.name
     )
     revalidatePath("/expert/calendars")
     return { ok: true }

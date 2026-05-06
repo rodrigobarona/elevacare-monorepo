@@ -13,20 +13,38 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   readonly provider = "google" as const
 
   async listCalendars(accessToken: string): Promise<CalendarListItem[]> {
-    const res = await fetch(`${GOOGLE_CALENDAR_API}/users/me/calendarList`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    })
-    if (!res.ok) throw new Error(`Google listCalendars: ${res.status}`)
-    const data = (await res.json()) as {
-      items: {
-        id: string
-        summary: string
-        primary?: boolean
-        accessRole: string
-      }[]
-    }
-    return data.items.map((c) => ({
+    const items: {
+      id: string
+      summary: string
+      primary?: boolean
+      accessRole: string
+    }[] = []
+    let pageToken: string | undefined
+
+    do {
+      const url = new URL(`${GOOGLE_CALENDAR_API}/users/me/calendarList`)
+      if (pageToken) url.searchParams.set("pageToken", pageToken)
+
+      const res = await fetch(url.toString(), {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      })
+      if (!res.ok) throw new Error(`Google listCalendars: ${res.status}`)
+
+      const data = (await res.json()) as {
+        items: {
+          id: string
+          summary: string
+          primary?: boolean
+          accessRole: string
+        }[]
+        nextPageToken?: string
+      }
+      items.push(...data.items)
+      pageToken = data.nextPageToken
+    } while (pageToken)
+
+    return items.map((c) => ({
       id: c.id,
       name: c.summary,
       primary: c.primary ?? false,
@@ -40,29 +58,35 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     timeMin: Date,
     timeMax: Date
   ): Promise<FreeBusyInterval[]> {
-    const res = await fetch(`${GOOGLE_CALENDAR_API}/freeBusy`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        timeMin: timeMin.toISOString(),
-        timeMax: timeMax.toISOString(),
-        items: calendarIds.map((id) => ({ id })),
-      }),
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-    })
-    if (!res.ok) throw new Error(`Google freeBusy: ${res.status}`)
-    const data = (await res.json()) as {
-      calendars: Record<string, { busy: { start: string; end: string }[] }>
-    }
+    const CHUNK_SIZE = 50
     const intervals: FreeBusyInterval[] = []
-    for (const cal of Object.values(data.calendars)) {
-      for (const b of cal.busy) {
-        intervals.push({ start: new Date(b.start), end: new Date(b.end) })
+
+    for (let i = 0; i < calendarIds.length; i += CHUNK_SIZE) {
+      const chunk = calendarIds.slice(i, i + CHUNK_SIZE)
+      const res = await fetch(`${GOOGLE_CALENDAR_API}/freeBusy`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          timeMin: timeMin.toISOString(),
+          timeMax: timeMax.toISOString(),
+          items: chunk.map((id) => ({ id })),
+        }),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      })
+      if (!res.ok) throw new Error(`Google freeBusy: ${res.status}`)
+      const data = (await res.json()) as {
+        calendars: Record<string, { busy: { start: string; end: string }[] }>
+      }
+      for (const cal of Object.values(data.calendars)) {
+        for (const b of cal.busy) {
+          intervals.push({ start: new Date(b.start), end: new Date(b.end) })
+        }
       }
     }
+
     return intervals
   }
 
@@ -70,8 +94,15 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     accessToken: string,
     event: CalendarEventInput
   ): Promise<CalendarEvent> {
+    const eventId = event.idempotencyId.replace(/-/g, "").toLowerCase()
+    if (!/^[0-9a-f]{32}$/.test(eventId)) {
+      throw new Error(
+        `Invalid idempotencyId: must be a UUID (got "${event.idempotencyId}")`
+      )
+    }
+
     const body: Record<string, unknown> = {
-      id: event.idempotencyId.replace(/-/g, ""),
+      id: eventId,
       summary: event.summary,
       description: event.description,
       start: {

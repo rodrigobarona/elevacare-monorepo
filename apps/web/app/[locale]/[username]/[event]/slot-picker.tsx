@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import { Card, CardContent } from "@eleva/ui/components/card"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -57,12 +58,32 @@ function groupByDay(slots: SlotData[], tz: string): Map<string, SlotData[]> {
   return groups
 }
 
+const ERROR_KEYS = [
+  "expert-not-found",
+  "event-not-found",
+  "load-failed",
+  "invalid-date-range",
+  "invalid-slot-start",
+  "slot_taken",
+  "reserve-failed",
+  "conflict",
+] as const
+
 export function SlotPicker({
   username,
   eventSlug,
   durationMinutes,
   timezone: initialTz,
 }: Props) {
+  const t = useTranslations("slotPicker")
+
+  function friendlyError(code: string): string {
+    if ((ERROR_KEYS as readonly string[]).includes(code)) {
+      return t(`errors.${code}` as Parameters<typeof t>[0])
+    }
+    return t("errors.generic")
+  }
+
   const [weekOffset, setWeekOffset] = React.useState(0)
   const [slots, setSlots] = React.useState<SlotData[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -73,9 +94,14 @@ export function SlotPicker({
     id: string
     expiresAt: string
   } | null>(null)
-  const [tz, setTz] = React.useState(
-    () => Intl.DateTimeFormat().resolvedOptions().timeZone ?? initialTz
-  )
+  const [tz, setTz] = React.useState(() => initialTz)
+
+  React.useEffect(() => {
+    const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    if (browserTz && browserTz !== initialTz) {
+      setTz(browserTz)
+    }
+  }, [initialTz])
 
   React.useEffect(() => {
     let stale = false
@@ -96,10 +122,10 @@ export function SlotPicker({
         if (result.ok) {
           setSlots(result.slots)
         } else {
-          setError(result.error)
+          setError(friendlyError(result.error))
         }
       } catch {
-        if (!stale) setError("load-failed")
+        if (!stale) setError(friendlyError("load-failed"))
       } finally {
         if (!stale) setLoading(false)
       }
@@ -120,8 +146,7 @@ export function SlotPicker({
       const result = await reserveSlotAction(
         username,
         eventSlug,
-        selectedSlot.start,
-        selectedSlot.end
+        selectedSlot.start
       )
 
       if (result.ok) {
@@ -130,15 +155,11 @@ export function SlotPicker({
           expiresAt: result.expiresAt,
         })
       } else {
-        setError(
-          result.error === "slot_taken"
-            ? "This slot was just taken. Please choose another."
-            : "Could not reserve this slot. Please try again."
-        )
+        setError(friendlyError(result.error))
         setSelectedSlot(null)
       }
     } catch {
-      setError("Could not reserve this slot. Please try again.")
+      setError(friendlyError("reserve-failed"))
       setSelectedSlot(null)
     } finally {
       setReserving(false)

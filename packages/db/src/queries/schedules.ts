@@ -99,7 +99,8 @@ export async function listAvailabilityRules(
       .where(
         and(
           eq(availabilityRules.scheduleId, scheduleId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
       .orderBy(
@@ -157,7 +158,8 @@ export async function listDateOverrides(
       .where(
         and(
           eq(dateOverrides.scheduleId, scheduleId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
       .orderBy(asc(dateOverrides.overrideDate))
@@ -231,7 +233,8 @@ export async function deleteDateOverride(
       .where(
         and(
           eq(dateOverrides.id, overrideId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
       .limit(1)

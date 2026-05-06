@@ -12,12 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
-import {
-  disconnectCalendarAction,
-  loadSubCalendars,
-  saveBusySources,
-  saveDestinationCalendar,
-} from "./actions"
+import { disconnectCalendarAction } from "./actions"
 
 interface CalendarIntegration {
   id: string
@@ -29,7 +24,7 @@ interface CalendarIntegration {
 
 interface Props {
   integrations: CalendarIntegration[]
-  pipesWidgetToken: string
+  pipesWidgetToken: string | null
 }
 
 export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
@@ -63,7 +58,7 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
     <div className="space-y-6">
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(`error.${error}`)}</AlertDescription>
         </Alert>
       )}
 
@@ -73,24 +68,30 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("connectTitle")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="mb-4 text-sm text-muted-foreground">
-            {t("connectDescription")}
-          </p>
-          <div
-            data-workos-pipes-widget
-            data-auth-token={pipesWidgetToken}
-            className="min-h-[200px]"
-          />
-          <p className="mt-3 text-xs text-muted-foreground">
-            {t("connectHint")}
-          </p>
-        </CardContent>
-      </Card>
+      {pipesWidgetToken ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("connectTitle")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-muted-foreground">
+              {t("connectDescription")}
+            </p>
+            <div
+              data-workos-pipes-widget
+              data-auth-token={pipesWidgetToken}
+              className="min-h-[200px]"
+            />
+            <p className="mt-3 text-xs text-muted-foreground">
+              {t("connectHint")}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <Alert>
+          <AlertDescription>{t("connectUnavailable")}</AlertDescription>
+        </Alert>
+      )}
 
       {integrations.length > 0 && (
         <Card>

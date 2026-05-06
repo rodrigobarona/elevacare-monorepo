@@ -115,8 +115,16 @@ export async function calendarEventCreate(params: {
           startsAt: main.sessions.startsAt,
           endsAt: main.sessions.endsAt,
           sessionMode: main.sessions.sessionMode,
+          eventTypeTitle: main.eventTypes.title,
+          bookingTimezone: main.bookings.timezone,
+          bookedLocale: main.bookings.bookedLocale,
         })
         .from(main.sessions)
+        .innerJoin(main.bookings, eq(main.sessions.bookingId, main.bookings.id))
+        .innerJoin(
+          main.eventTypes,
+          eq(main.sessions.eventTypeId, main.eventTypes.id)
+        )
         .where(eq(main.sessions.id, sessionId))
         .limit(1)
       return row
@@ -172,12 +180,18 @@ export async function calendarEventCreate(params: {
     )
     const adapter = getAdapter(provider)
 
+    const locale = (session.bookedLocale as "en" | "pt" | "es") ?? "en"
+    const eventTitle =
+      session.eventTypeTitle?.[locale] ??
+      session.eventTypeTitle?.en ??
+      "Eleva Session"
+
     const eventInput: CalendarEventInput = {
       calendarId: destination.externalCalendarId,
-      summary: `Eleva Session`,
+      summary: eventTitle,
       startTime: session.startsAt,
       endTime: session.endsAt,
-      timezone: "UTC",
+      timezone: session.bookingTimezone ?? "UTC",
       idempotencyId: bookingId,
     }
 
@@ -397,7 +411,9 @@ export async function calendarEventDelete(params: {
     } catch (deleteErr) {
       const msg =
         deleteErr instanceof Error ? deleteErr.message : String(deleteErr)
-      if (!msg.includes("404") && !msg.includes("410")) {
+      const statusMatch = /:\s*(\d{3})/.exec(msg)
+      const status = statusMatch ? Number(statusMatch[1]) : 0
+      if (status !== 404 && status !== 410) {
         throw deleteErr
       }
     }

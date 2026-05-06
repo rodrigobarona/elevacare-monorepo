@@ -11,7 +11,6 @@ import {
 } from "@eleva/ui/components/dropdown-menu"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -41,6 +40,7 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
         setError(result.error)
         return
       }
+      router.refresh()
     } finally {
       setPending(false)
     }
@@ -56,6 +56,7 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
         return
       }
       setDeleteOpen(false)
+      router.refresh()
     } finally {
       setPending(false)
     }
@@ -108,13 +109,13 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
+            <Button
               onClick={handleDeleteConfirm}
               disabled={pending}
-              className="text-destructive-foreground bg-destructive hover:bg-destructive/90"
+              variant="destructive"
             >
               {pending ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

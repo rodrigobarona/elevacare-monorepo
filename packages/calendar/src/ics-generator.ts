@@ -38,16 +38,32 @@ function escapeText(text: string): string {
     .replace(/\n/g, "\\n")
 }
 
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
 function foldLine(line: string): string {
   const MAX_OCTETS = 75
-  if (line.length <= MAX_OCTETS) return line
+  const bytes = encoder.encode(line)
+  if (bytes.length <= MAX_OCTETS) return line
 
-  const parts: string[] = [line.slice(0, MAX_OCTETS)]
-  let offset = MAX_OCTETS
-  while (offset < line.length) {
-    parts.push(" " + line.slice(offset, offset + MAX_OCTETS - 1))
-    offset += MAX_OCTETS - 1
+  const parts: string[] = []
+  let pos = 0
+  let first = true
+
+  while (pos < bytes.length) {
+    const chunkSize = first ? MAX_OCTETS : MAX_OCTETS - 1
+    let end = Math.min(pos + chunkSize, bytes.length)
+
+    while (end > pos && (bytes[end] ?? 0) >= 0x80 && (bytes[end] ?? 0) < 0xc0) {
+      end--
+    }
+
+    const chunk = decoder.decode(bytes.slice(pos, end))
+    parts.push(first ? chunk : " " + chunk)
+    pos = end
+    first = false
   }
+
   return parts.join("\r\n")
 }
 

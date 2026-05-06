@@ -69,6 +69,14 @@ export async function GET(request: Request) {
     string,
   ]
 
+  const UUID_RE =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (!UUID_RE.test(expertProfileId) || !codeVerifier) {
+    return NextResponse.redirect(
+      new URL("/expert/onboarding?invoicing_error=invalid_state", appUrl)
+    )
+  }
+
   const parsed = InvoicingProviderSlug.safeParse(rawProvider)
   if (!parsed.success) {
     return NextResponse.redirect(

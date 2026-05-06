@@ -128,6 +128,7 @@ export async function sendBookingIcsEmail(
     to: [payload.expertEmail],
     subject: t.subject.newBooking(payload.patientName, formattedDate),
     html,
+    headers: { "X-Entity-Ref-ID": `${payload.bookingId}:booking` },
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),
@@ -172,6 +173,9 @@ export async function sendRescheduleIcsEmail(
     to: [payload.expertEmail],
     subject: t.subject.rescheduled(payload.patientName, formattedDate),
     html,
+    headers: {
+      "X-Entity-Ref-ID": `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
+    },
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),
@@ -208,6 +212,7 @@ export async function sendCancellationIcsEmail(
     to: [payload.expertEmail],
     subject: t.subject.cancelled(payload.patientName, formattedDate),
     html,
+    headers: { "X-Entity-Ref-ID": `${payload.bookingId}:cancel` },
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),

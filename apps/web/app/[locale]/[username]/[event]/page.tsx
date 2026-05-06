@@ -1,3 +1,4 @@
+import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { findExpertByUsername, findPublicEventType } from "@eleva/db"
@@ -41,7 +42,6 @@ export async function generateMetadata(props: PageProps): Promise<Metadata> {
 }
 
 export default async function BookingPage(props: PageProps) {
-  const { headers } = await import("next/headers")
   const { locale, username, event: eventSlug } = await props.params
 
   const expert = await findExpertByUsername(username)
@@ -60,10 +60,15 @@ export default async function BookingPage(props: PageProps) {
 
   const priceDisplay =
     eventType.priceAmount > 0
-      ? new Intl.NumberFormat(locale, {
-          style: "currency",
-          currency: eventType.currency,
-        }).format(eventType.priceAmount / 100)
+      ? (() => {
+          const fmt = new Intl.NumberFormat(locale, {
+            style: "currency",
+            currency: eventType.currency,
+          })
+          const fractionDigits =
+            fmt.resolvedOptions().maximumFractionDigits ?? 2
+          return fmt.format(eventType.priceAmount / 10 ** fractionDigits)
+        })()
       : "Free"
 
   return (

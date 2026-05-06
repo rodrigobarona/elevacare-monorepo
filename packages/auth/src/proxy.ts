@@ -54,10 +54,7 @@ export function withAuth(
   })
 
   return async (req, event) => {
-    const authResponse = await proxy(
-      req,
-      event ?? (undefined as unknown as NextFetchEvent)
-    )
+    const authResponse = await proxy(req, event as NextFetchEvent)
     if (
       authResponse &&
       authResponse.status >= 300 &&

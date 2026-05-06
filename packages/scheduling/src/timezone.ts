@@ -152,7 +152,22 @@ export function createUtcFromLocalTime(
       verify.minute
     )
     const correction = expectedEpoch - actualEpoch
-    return new Date(adjusted.getTime() + correction)
+    const corrected = new Date(adjusted.getTime() + correction)
+
+    const recheck = getDateParts(corrected, timezone)
+    if (
+      recheck.year !== y ||
+      recheck.month !== m ||
+      recheck.day !== d ||
+      recheck.hour !== hour ||
+      recheck.minute !== minute
+    ) {
+      throw new RangeError(
+        `Invalid or ambiguous local time: ${dateStr} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} in ${timezone}`
+      )
+    }
+
+    return corrected
   }
 
   return adjusted

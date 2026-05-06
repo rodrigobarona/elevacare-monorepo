@@ -208,6 +208,19 @@
       "back": "Back to experts"
     }
   },
+  "slotPicker": {
+    "errors": {
+      "expert-not-found": "This expert could not be found. Please check the URL.",
+      "event-not-found": "This event type is no longer available.",
+      "load-failed": "Unable to load available times. Please try again.",
+      "invalid-date-range": "Invalid date range selected.",
+      "invalid-slot-start": "Invalid time slot. Please select another.",
+      "slot_taken": "This slot was just booked by someone else. Please choose another.",
+      "reserve-failed": "Could not reserve this slot. Please try again.",
+      "conflict": "This time conflicts with an existing booking.",
+      "generic": "Something went wrong. Please try again."
+    }
+  },
   "becomePartner": {
     "hero": {
       "title": "Apply to join Eleva.care",
