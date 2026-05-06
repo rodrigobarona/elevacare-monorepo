@@ -81,11 +81,19 @@ export async function listConnectedProviders(
         provider: provider as CalendarProvider,
         connected: result.active,
       })
-    } catch {
-      providers.push({
-        provider: provider as CalendarProvider,
-        connected: false,
-      })
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        (err.message.includes("not_found") ||
+          err.message.includes("not_installed"))
+      ) {
+        providers.push({
+          provider: provider as CalendarProvider,
+          connected: false,
+        })
+      } else {
+        throw err
+      }
     }
   }
 

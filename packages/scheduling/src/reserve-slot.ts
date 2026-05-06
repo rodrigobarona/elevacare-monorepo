@@ -138,9 +138,9 @@ export async function convertReservation(
   orgId: string,
   reservationId: string,
   bookingId: string
-): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
-    await tx
+): Promise<{ converted: boolean }> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const updated = await tx
       .update(slotReservations)
       .set({ status: "converted", bookingId })
       .where(
@@ -149,21 +149,21 @@ export async function convertReservation(
           eq(slotReservations.status, "active")
         )
       )
-
-    const [row] = await tx
-      .select({
+      .returning({
         expertProfileId: slotReservations.expertProfileId,
         startsAt: slotReservations.startsAt,
         holdToken: slotReservations.holdToken,
       })
-      .from(slotReservations)
-      .where(eq(slotReservations.id, reservationId))
-      .limit(1)
 
-    if (row) {
-      const key = slotKey(row.expertProfileId, row.startsAt.toISOString())
-      await compareAndDelete(redis, key, row.holdToken)
+    if (updated.length === 0) {
+      return { converted: false }
     }
+
+    const row = updated[0]!
+    const key = slotKey(row.expertProfileId, row.startsAt.toISOString())
+    await compareAndDelete(redis, key, row.holdToken)
+
+    return { converted: true }
   })
 }
 

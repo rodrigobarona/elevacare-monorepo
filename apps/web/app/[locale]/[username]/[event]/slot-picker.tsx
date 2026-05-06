@@ -116,27 +116,33 @@ export function SlotPicker({
     setReserving(true)
     setError(null)
 
-    const result = await reserveSlotAction(
-      username,
-      eventSlug,
-      selectedSlot.start,
-      selectedSlot.end
-    )
-
-    if (result.ok) {
-      setReservation({
-        id: result.reservationId,
-        expiresAt: result.expiresAt,
-      })
-    } else {
-      setError(
-        result.error === "slot_taken"
-          ? "This slot was just taken. Please choose another."
-          : "Could not reserve this slot. Please try again."
+    try {
+      const result = await reserveSlotAction(
+        username,
+        eventSlug,
+        selectedSlot.start,
+        selectedSlot.end
       )
+
+      if (result.ok) {
+        setReservation({
+          id: result.reservationId,
+          expiresAt: result.expiresAt,
+        })
+      } else {
+        setError(
+          result.error === "slot_taken"
+            ? "This slot was just taken. Please choose another."
+            : "Could not reserve this slot. Please try again."
+        )
+        setSelectedSlot(null)
+      }
+    } catch {
+      setError("Could not reserve this slot. Please try again.")
       setSelectedSlot(null)
+    } finally {
+      setReserving(false)
     }
-    setReserving(false)
   }
 
   const grouped = groupByDay(slots, tz)

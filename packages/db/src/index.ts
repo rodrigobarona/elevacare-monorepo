@@ -13,6 +13,7 @@ export type {
   StripeIdentityStatus,
   InvoicingSetupStatus,
 } from "./schema/main/expert-profiles"
+export type { ExpertIntegration } from "./schema/main/expert-integrations"
 export {
   findExpertByUsername,
   findClinicBySlug,

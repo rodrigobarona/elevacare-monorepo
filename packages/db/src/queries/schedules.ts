@@ -79,7 +79,8 @@ export async function updateScheduleTimezone(
       .where(
         and(
           eq(schedules.id, scheduleId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
   })
@@ -122,7 +123,8 @@ export async function replaceAvailabilityRules(
       .where(
         and(
           eq(schedules.id, scheduleId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
       .limit(1)
@@ -176,7 +178,8 @@ export async function upsertDateOverride(
       .where(
         and(
           eq(schedules.id, scheduleId),
-          eq(schedules.expertProfileId, expertProfileId)
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
         )
       )
       .limit(1)

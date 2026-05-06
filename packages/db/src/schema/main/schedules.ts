@@ -2,11 +2,11 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   check,
+  date,
   index,
   pgPolicy,
   pgTable,
   smallint,
-  text,
   time,
   uniqueIndex,
   uuid,
@@ -119,7 +119,7 @@ export const dateOverrides = pgTable(
       .notNull()
       .references(() => schedules.id, { onDelete: "cascade" }),
 
-    overrideDate: text("override_date").notNull(),
+    overrideDate: date("override_date", { mode: "string" }).notNull(),
     startTime: time("start_time"),
     endTime: time("end_time"),
     isBlocked: boolean("is_blocked").notNull().default(false),

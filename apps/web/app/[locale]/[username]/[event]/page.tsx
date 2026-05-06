@@ -60,7 +60,10 @@ export default async function BookingPage(props: PageProps) {
 
   const priceDisplay =
     eventType.priceAmount > 0
-      ? `${(eventType.priceAmount / 100).toFixed(2)} ${eventType.currency.toUpperCase()}`
+      ? new Intl.NumberFormat(locale, {
+          style: "currency",
+          currency: eventType.currency,
+        }).format(eventType.priceAmount / 100)
       : "Free"
 
   return (

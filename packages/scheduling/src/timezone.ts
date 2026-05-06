@@ -104,8 +104,14 @@ export function formatDateInTimezone(date: Date, timezone: string): string {
  * Parse a time string ("HH:MM" or "HH:MM:SS") to minutes since midnight.
  */
 export function parseTimeToMinutes(timeStr: string): number {
-  const parts = timeStr.split(":")
-  return +parts[0]! * 60 + +parts[1]!
+  const match = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(timeStr)
+  if (!match) throw new Error(`Invalid time format: "${timeStr}"`)
+  const hours = +match[1]!
+  const mins = +match[2]!
+  if (hours > 23 || mins > 59) {
+    throw new Error(`Time out of range: "${timeStr}"`)
+  }
+  return hours * 60 + mins
 }
 
 /**
@@ -130,9 +136,22 @@ export function createUtcFromLocalTime(
   const adjusted = new Date(guess.getTime() - offset * 60_000)
 
   const verify = getDateParts(adjusted, timezone)
-  const verifyMinutes = verify.hour * 60 + verify.minute
-  if (verifyMinutes !== minutes) {
-    const correction = (minutes - verifyMinutes) * 60_000
+  if (
+    verify.year !== y ||
+    verify.month !== m ||
+    verify.day !== d ||
+    verify.hour !== hour ||
+    verify.minute !== minute
+  ) {
+    const expectedEpoch = Date.UTC(y, m - 1, d, hour, minute)
+    const actualEpoch = Date.UTC(
+      verify.year,
+      verify.month - 1,
+      verify.day,
+      verify.hour,
+      verify.minute
+    )
+    const correction = expectedEpoch - actualEpoch
     return new Date(adjusted.getTime() + correction)
   }
 

@@ -88,6 +88,10 @@ export function ScheduleEditor({
   const [overrides, setOverrides] =
     React.useState<OverrideRow[]>(initialOverrides)
 
+  React.useEffect(() => {
+    setOverrides(initialOverrides)
+  }, [initialOverrides])
+
   const [newDate, setNewDate] = React.useState("")
   const [newBlocked, setNewBlocked] = React.useState(true)
   const [newStart, setNewStart] = React.useState("09:00")

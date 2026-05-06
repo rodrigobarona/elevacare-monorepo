@@ -11,7 +11,8 @@ import { routing } from "./i18n/routing"
 const intl = createIntl(routing)
 
 const handler = (req: NextRequest, _event?: NextFetchEvent) => {
-  if (req.nextUrl.pathname.startsWith("/api/")) {
+  const pathname = req.nextUrl.pathname
+  if (pathname === "/api" || pathname.startsWith("/api/")) {
     return NextResponse.next()
   }
   return intl(req)

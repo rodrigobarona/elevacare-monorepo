@@ -7,6 +7,7 @@ import type {
 } from "../types"
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
+const FETCH_TIMEOUT_MS = 10_000
 
 export class GoogleCalendarAdapter implements CalendarAdapter {
   readonly provider = "google" as const
@@ -14,6 +15,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   async listCalendars(accessToken: string): Promise<CalendarListItem[]> {
     const res = await fetch(`${GOOGLE_CALENDAR_API}/users/me/calendarList`, {
       headers: { Authorization: `Bearer ${accessToken}` },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     })
     if (!res.ok) throw new Error(`Google listCalendars: ${res.status}`)
     const data = (await res.json()) as {
@@ -49,6 +51,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
         timeMax: timeMax.toISOString(),
         items: calendarIds.map((id) => ({ id })),
       }),
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     })
     if (!res.ok) throw new Error(`Google freeBusy: ${res.status}`)
     const data = (await res.json()) as {
@@ -91,6 +94,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     )
     if (res.status === 409) {
@@ -112,7 +116,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     event: Partial<CalendarEventInput>
   ): Promise<CalendarEvent> {
     const body: Record<string, unknown> = {}
-    if (event.summary) body.summary = event.summary
+    if (event.summary !== undefined) body.summary = event.summary
     if (event.description !== undefined) body.description = event.description
     if (event.startTime)
       body.start = {
@@ -135,6 +139,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(body),
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     )
     if (!res.ok) throw new Error(`Google updateEvent: ${res.status}`)
@@ -151,6 +156,7 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
       }
     )
     if (!res.ok && res.status !== 410) {
@@ -165,7 +171,10 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   ): Promise<CalendarEvent> {
     const res = await fetch(
       `${GOOGLE_CALENDAR_API}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`,
-      { headers: { Authorization: `Bearer ${accessToken}` } }
+      {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      }
     )
     if (!res.ok) throw new Error(`Google getEvent: ${res.status}`)
     return this.parseEvent(calendarId, await res.json())

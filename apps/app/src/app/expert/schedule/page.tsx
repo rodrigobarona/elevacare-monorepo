@@ -23,7 +23,9 @@ export default async function SchedulePage() {
 
   const h = await headers()
   const geoTz = h.get("x-vercel-ip-timezone")
-  const fallbackTz = profile.timezone ?? geoTz ?? "UTC"
+  const validTimezones = new Set(Intl.supportedValuesOf("timeZone"))
+  const validatedGeoTz = geoTz && validTimezones.has(geoTz) ? geoTz : undefined
+  const fallbackTz = profile.timezone ?? validatedGeoTz ?? "UTC"
 
   const schedule = await getOrCreateDefaultSchedule(
     profile.orgId,

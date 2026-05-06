@@ -144,6 +144,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     }
 
     expect(redis.set).toHaveBeenCalledTimes(CONCURRENCY)
+    expect(insertCounter).toBe(1)
   })
 
   it("different slots can be reserved concurrently by the same expert", async () => {

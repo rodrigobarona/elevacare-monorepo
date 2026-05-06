@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm"
 import {
+  type AnyPgColumn,
   index,
   integer,
   pgEnum,
@@ -150,7 +151,7 @@ export const bookings = pgTable(
 
     /** Self-reference for rescheduled bookings. */
     rescheduledFromId: uuid("rescheduled_from_id").references(
-      (): any => bookings.id
+      (): AnyPgColumn => bookings.id
     ),
 
     cancellationReason: text("cancellation_reason"),

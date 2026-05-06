@@ -111,15 +111,20 @@ export async function deleteEventType(
   expertProfileId: string
 ): Promise<void> {
   await withOrgContext(orgId, async (tx: Tx) => {
-    await tx
+    const rows = await tx
       .update(eventTypes)
       .set({ deletedAt: new Date(), active: false, published: false })
       .where(
         and(
           eq(eventTypes.id, eventTypeId),
-          eq(eventTypes.expertProfileId, expertProfileId)
+          eq(eventTypes.expertProfileId, expertProfileId),
+          isNull(eventTypes.deletedAt)
         )
       )
+      .returning({ id: eventTypes.id })
+    if (rows.length === 0) {
+      throw new Error(`Event type ${eventTypeId} not found or already deleted`)
+    }
   })
 }
 

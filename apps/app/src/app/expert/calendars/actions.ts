@@ -8,6 +8,7 @@ import {
   disconnectIntegration,
   replaceBusySources,
   replaceDestinationCalendar,
+  type ExpertIntegration,
 } from "@eleva/db"
 import {
   getAdapter,
@@ -26,9 +27,9 @@ async function verifyCalendarOwnership(
   orgId: string,
   expertProfileId: string,
   integrationId: string
-): Promise<boolean> {
+): Promise<ExpertIntegration | null> {
   const integrations = await listCalendarIntegrations(orgId, expertProfileId)
-  return integrations.some((i) => i.id === integrationId)
+  return integrations.find((i) => i.id === integrationId) ?? null
 }
 
 export async function disconnectCalendarAction(
@@ -39,19 +40,20 @@ export async function disconnectCalendarAction(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const owned = await verifyCalendarOwnership(
+    const integration = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
       integrationId
     )
-    if (!owned) return { ok: false, error: "unauthorized-calendar" }
+    if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
     await disconnectIntegration(profile.orgId, integrationId)
 
     revalidatePath("/expert/calendars")
     revalidatePath("/expert/integrations")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("disconnect-calendar failed", err)
     return { ok: false, error: "disconnect-failed" }
   }
 }
@@ -73,19 +75,12 @@ export async function loadSubCalendars(integrationId: string): Promise<
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const owned = await verifyCalendarOwnership(
+    const integration = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
       integrationId
     )
-    if (!owned) return { ok: false, error: "unauthorized-calendar" }
-
-    const integrations = await listCalendarIntegrations(
-      profile.orgId,
-      profile.id
-    )
-    const integration = integrations.find((i) => i.id === integrationId)
-    if (!integration) return { ok: false, error: "calendar-not-found" }
+    if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
     const provider = SLUG_TO_PROVIDER[integration.slug]
     if (!provider) return { ok: false, error: "unknown-provider" }
@@ -106,7 +101,8 @@ export async function loadSubCalendars(integrationId: string): Promise<
         email: c.email,
       })),
     }
-  } catch {
+  } catch (err) {
+    console.error("load-sub-calendars failed", err)
     return { ok: false, error: "load-failed" }
   }
 }
@@ -120,17 +116,18 @@ export async function saveBusySources(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const owned = await verifyCalendarOwnership(
+    const integration = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
       integrationId
     )
-    if (!owned) return { ok: false, error: "unauthorized-calendar" }
+    if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
     await replaceBusySources(profile.orgId, integrationId, sources, profile.id)
     revalidatePath("/expert/calendars")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("save-busy-sources failed", err)
     return { ok: false, error: "save-failed" }
   }
 }
@@ -145,12 +142,12 @@ export async function saveDestinationCalendar(
     const profile = await getExpertProfileByUserId(session.user.id)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const owned = await verifyCalendarOwnership(
+    const integration = await verifyCalendarOwnership(
       profile.orgId,
       profile.id,
       integrationId
     )
-    if (!owned) return { ok: false, error: "unauthorized-calendar" }
+    if (!integration) return { ok: false, error: "unauthorized-calendar" }
 
     await replaceDestinationCalendar(
       profile.orgId,
@@ -161,7 +158,8 @@ export async function saveDestinationCalendar(
     )
     revalidatePath("/expert/calendars")
     return { ok: true }
-  } catch {
+  } catch (err) {
+    console.error("save-destination-calendar failed", err)
     return { ok: false, error: "save-failed" }
   }
 }

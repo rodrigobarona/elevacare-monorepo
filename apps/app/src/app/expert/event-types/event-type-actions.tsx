@@ -30,11 +30,17 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
   const router = useRouter()
   const [pending, setPending] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   async function handleTogglePublish() {
     setPending(true)
+    setError(null)
     try {
-      await togglePublishAction(eventTypeId, !published)
+      const result = await togglePublishAction(eventTypeId, !published)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
     } finally {
       setPending(false)
     }
@@ -42,19 +48,34 @@ export function EventTypeActions({ eventTypeId, published }: Props) {
 
   async function handleDeleteConfirm() {
     setPending(true)
+    setError(null)
     try {
-      await deleteEventTypeAction(eventTypeId)
+      const result = await deleteEventTypeAction(eventTypeId)
+      if (!result.ok) {
+        setError(result.error)
+        return
+      }
+      setDeleteOpen(false)
     } finally {
       setPending(false)
-      setDeleteOpen(false)
     }
   }
 
   return (
     <>
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" disabled={pending}>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={pending}
+            aria-label="Event type actions"
+          >
             &#x2022;&#x2022;&#x2022;
           </Button>
         </DropdownMenuTrigger>

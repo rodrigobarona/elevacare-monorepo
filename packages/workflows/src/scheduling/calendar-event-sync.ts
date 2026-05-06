@@ -119,7 +119,7 @@ export async function calendarEventCreate(params: {
       bookingId,
       sessionId,
     })
-    return { calendarEventId: null }
+    throw err
   }
 }
 
@@ -202,6 +202,7 @@ export async function calendarEventUpdate(params: {
       workflow: "calendarEventUpdate",
       sessionId,
     })
+    throw err
   }
 }
 
@@ -271,11 +272,19 @@ export async function calendarEventDelete(params: {
     )
     const adapter = getAdapter(provider)
 
-    await adapter.deleteEvent(
-      accessToken,
-      destination.externalCalendarId,
-      session.calendarEventId
-    )
+    try {
+      await adapter.deleteEvent(
+        accessToken,
+        destination.externalCalendarId,
+        session.calendarEventId
+      )
+    } catch (deleteErr) {
+      const msg =
+        deleteErr instanceof Error ? deleteErr.message : String(deleteErr)
+      if (!msg.includes("404") && !msg.includes("410")) {
+        throw deleteErr
+      }
+    }
 
     await withOrgContext(orgId, async (tx: Tx) => {
       await tx
@@ -288,5 +297,6 @@ export async function calendarEventDelete(params: {
       workflow: "calendarEventDelete",
       sessionId,
     })
+    throw err
   }
 }

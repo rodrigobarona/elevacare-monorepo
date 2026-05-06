@@ -30,7 +30,7 @@ export interface DateOverrideInput {
 
 const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"))
 
-const timePattern = /^\d{2}:\d{2}$/
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/
 
 const saveScheduleSchema = z.object({
   timezone: z.string().refine((tz) => VALID_TIMEZONES.has(tz), {
@@ -130,6 +130,15 @@ export async function addDateOverrideAction(
       profile.id,
       parsed.data.timezone
     )
+
+    if (schedule.timezone !== parsed.data.timezone) {
+      await updateScheduleTimezone(
+        profile.orgId,
+        schedule.id,
+        profile.id,
+        parsed.data.timezone
+      )
+    }
 
     await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
       scheduleId: schedule.id,

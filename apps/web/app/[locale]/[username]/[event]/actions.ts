@@ -100,6 +100,9 @@ export async function reserveSlotAction(
     if (!eventType) return { ok: false, error: "event-not-found" }
 
     const slotStart = new Date(slotStartIso)
+    if (Number.isNaN(slotStart.getTime())) {
+      return { ok: false, error: "invalid-slot-start" }
+    }
 
     const ruleError = validateBookingRules({
       eventType: {
