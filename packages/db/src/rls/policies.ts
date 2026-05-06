@@ -1,14 +1,16 @@
 /**
  * RLS policy DDL generator.
  *
- * Produces idempotent SQL statements applied after each migration. Run
- * via `pnpm db:rls` (see packages/db/package.json). The output is plain
- * SQL so operators can inspect it on the Neon dashboard.
+ * ENABLE ROW LEVEL SECURITY and CREATE POLICY are now managed by the
+ * Drizzle schema (pgPolicy declarations in each table file). This
+ * script is retained only for:
  *
- * Policy keys:
- * - tenant tables  : USING org_id::text = current_setting('eleva.org_id', true)
- * - audit tables   : SELECT only; UPDATE/DELETE revoked at the role level
- *                    (installed by applyAuditRolePolicy).
+ *   1. FORCE ROW LEVEL SECURITY — Drizzle does not emit this; FORCE
+ *      makes RLS apply even to table owners (defense-in-depth).
+ *   2. Audit DB policies — the audit_events table is in a separate
+ *      Drizzle config and RLS is still applied via this script.
+ *
+ * Run via `pnpm db:rls` after each migration.
  *
  * ADR-003 is the source of truth.
  */
@@ -21,24 +23,28 @@ export const TENANT_TABLES = [
   "expert_profiles",
   "expert_listings",
   "clinic_profiles",
-  "expert_integration_credentials",
+  "expert_integrations",
   "become_partner_applications",
+  "schedules",
+  "availability_rules",
+  "date_overrides",
+  "event_types",
+  "calendar_busy_sources",
+  "calendar_destinations",
+  "slot_reservations",
+  "bookings",
+  "sessions",
+  "expert_practice_locations",
+  "event_locations",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
 
 /**
- * organisations is special: the row's own id IS the tenant id (you can
- * only read your own org). That is a different predicate shape.
+ * organisations uses id (self-reference), become_partner_applications
+ * uses applicant_org_id + platform admin escape hatch.
  */
 const ORG_SELF_TABLES = new Set<string>(["organizations"])
-
-/**
- * Tables that scope by a non-standard tenant column. The applicant's
- * personal org owns the row at submission time; admin reads happen
- * via withPlatformAdminContext (the same escape hatch
- * audit_events uses).
- */
 const APPLICANT_ORG_TABLES = new Set<string>(["become_partner_applications"])
 
 function tenantPredicate(table: string): string {
@@ -54,6 +60,13 @@ function tenantPredicate(table: string): string {
   return `org_id::text = current_setting('eleva.org_id', true)`
 }
 
+/**
+ * Idempotent policy DDL. Drizzle's pgPolicy declarations define the
+ * schema intent, but drizzle-kit push currently drops USING/WITH CHECK
+ * clauses. This script is the authoritative enforcement layer:
+ * - FORCE ROW LEVEL SECURITY (Drizzle only emits ENABLE)
+ * - DROP + CREATE each policy with correct USING/WITH CHECK predicates
+ */
 export function buildMainRlsStatements(): string[] {
   const out: string[] = []
   for (const table of TENANT_TABLES) {

@@ -19,8 +19,8 @@
   "dependencies": {
     "@eleva/audit": "workspace:*",
     "@eleva/db": "workspace:*",
-    "@workos-inc/authkit-nextjs": "^2.9.0",
-    "@workos-inc/node": "^9.1.0",
+    "@workos-inc/authkit-nextjs": "^4.0.1",
+    "@workos-inc/node": "^9.2.0",
     "drizzle-orm": "^0.45.2",
     "jose": "^5.10.0"
   },

@@ -60,7 +60,7 @@ An ESLint rule enforces that `src/proxy.ts` does not contain inline business log
 ## Vercel Platform Integration
 
 - **Vercel CLI** is linked at repo root (see [.vercel/repo.json](../../.vercel/repo.json)). Each app is a separate Vercel project:
-  - `elevacare-marketing` → `apps/web` (gateway app, owns `eleva.care` root domain)
+  - `elevacare-web` → `apps/web` (gateway app, owns `eleva.care` root domain)
   - `elevacare-app` → `apps/app` (authenticated product, routes rewritten from gateway at root: `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`)
   - `elevacare-api` → `apps/api` (served on the dedicated `api.eleva.care` subdomain; not rewritten from the gateway)
   - `elevacare-docs` → `apps/docs` (served under `eleva.care/docs/*` via multi-zone rewrite)
@@ -81,13 +81,13 @@ See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and the reference blueprint
 
 ### basePath convention
 
-| App                  | Vercel project        | `basePath`        | Where it serves                                                                                                                                        |
-| -------------------- | --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `apps/web` (gateway) | `elevacare-marketing` | `/`               | marketing + marketplace + public profiles + booking funnel + context-sensitive root + proxy/rewrite rules                                              |
-| `apps/app`           | `elevacare-app`       | `/` (no basePath) | authenticated product at root (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway |
-| `apps/api`           | `elevacare-api`       | `/` (no basePath) | all APIs on `api.eleva.care` subdomain — not rewritten from the gateway                                                                                |
-| `apps/docs`          | `elevacare-docs`      | `/docs`           | Fumadocs product + ERS PT compliance docs                                                                                                              |
-| `apps/email`         | `elevacare-email`     | —                 | internal React Email preview; `email.eleva.care`; not public                                                                                           |
+| App                  | Vercel project    | `basePath`        | Where it serves                                                                                                                                        |
+| -------------------- | ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `apps/web` (gateway) | `elevacare-web`   | `/`               | marketing + marketplace + public profiles + booking funnel + context-sensitive root + proxy/rewrite rules                                              |
+| `apps/app`           | `elevacare-app`   | `/` (no basePath) | authenticated product at root (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) — rewritten individually from the gateway |
+| `apps/api`           | `elevacare-api`   | `/` (no basePath) | all APIs on `api.eleva.care` subdomain — not rewritten from the gateway                                                                                |
+| `apps/docs`          | `elevacare-docs`  | `/docs`           | Fumadocs product + ERS PT compliance docs                                                                                                              |
+| `apps/email`         | `elevacare-email` | —                 | internal React Email preview; `email.eleva.care`; not public                                                                                           |
 
 ### Rewrite configuration
 

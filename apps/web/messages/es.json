@@ -208,6 +208,37 @@
       "back": "Volver a expertos"
     }
   },
+  "slotPicker": {
+    "heading": "Selecciona una hora",
+    "reservedTitle": "¡Horario Reservado!",
+    "heldUntil": "Tu horario está reservado hasta las {time}. Completa el pago para confirmar tu cita.",
+    "paymentComingSoon": "Integración de pagos próximamente.",
+    "previousWeek": "← Semana anterior",
+    "nextWeek": "Siguiente semana →",
+    "timesShownIn": "Horarios en {tz}",
+    "loading": "Cargando horarios disponibles...",
+    "noSlots": "No hay horarios disponibles esta semana. Prueba otra semana.",
+    "reserveSlot": "Reservar horario",
+    "reserving": "Reservando...",
+    "errors": {
+      "expert-not-found": "No se encontró este especialista. Verifica la URL.",
+      "event-not-found": "Este tipo de evento ya no está disponible.",
+      "load-failed": "No se pudieron cargar los horarios disponibles. Inténtalo de nuevo.",
+      "invalid-date-range": "Rango de fechas no válido.",
+      "invalid-slot-start": "Horario no válido. Selecciona otro.",
+      "slot_taken": "Este horario acaba de ser reservado por otra persona. Elige otro.",
+      "reserve-failed": "No se pudo reservar este horario. Inténtalo de nuevo.",
+      "conflict": "Este horario entra en conflicto con una reserva existente.",
+      "no-schedule": "Este especialista no tiene horario configurado.",
+      "slot-unavailable": "Este horario ya no está disponible.",
+      "reservation-failed": "No se pudo reservar este horario. Inténtalo de nuevo.",
+      "past_slot": "Este horario ya pasó. Selecciona un horario futuro.",
+      "insufficient_notice": "Este horario es demasiado pronto. Elige un horario más tarde.",
+      "outside_booking_window": "Este horario está fuera del período de reserva.",
+      "db_error": "Ocurrió un error del sistema. Inténtalo de nuevo más tarde.",
+      "generic": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
   "becomePartner": {
     "hero": {
       "title": "Postula para unirte a Eleva.care",

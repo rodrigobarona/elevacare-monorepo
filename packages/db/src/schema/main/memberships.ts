@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   index,
   pgEnum,
+  pgPolicy,
   pgTable,
   timestamp,
   uniqueIndex,
@@ -55,6 +56,10 @@ export const memberships = pgTable(
     ),
     orgIdx: index("memberships_org_idx").on(t.orgId),
     userIdx: index("memberships_user_idx").on(t.userId),
+    tenantPolicy: pgPolicy("memberships_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

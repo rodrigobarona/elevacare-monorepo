@@ -1,5 +1,7 @@
+import { sql } from "drizzle-orm"
 import {
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   uniqueIndex,
@@ -39,6 +41,10 @@ export const organizations = pgTable(
   },
   (t) => ({
     workosIdx: uniqueIndex("organizations_workos_org_id_idx").on(t.workosOrgId),
+    tenantPolicy: pgPolicy("organizations_tenant_isolation", {
+      using: sql`id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

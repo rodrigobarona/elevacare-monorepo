@@ -1,12 +1,9 @@
-import { neon, neonConfig } from "@neondatabase/serverless"
+import { neon } from "@neondatabase/serverless"
 import { drizzle } from "drizzle-orm/neon-http"
 import { requireAuditDbEnv, requireDbEnv } from "@eleva/config/env"
 
 import * as mainSchema from "./schema/main/index"
 import * as auditSchema from "./schema/audit/index"
-
-// Enable WebSocket-less fetch-based driver (Next.js + serverless friendly).
-neonConfig.fetchConnectionCache = true
 
 /**
  * Main application database client. Reads/writes all tenant data.

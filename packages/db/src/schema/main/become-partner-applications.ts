@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm"
 import {
+  foreignKey,
   index,
   jsonb,
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -88,9 +90,7 @@ export const becomePartnerApplications = pgTable(
      * approval solo-expert / clinic org is captured separately in
      * `provisioned_org_id` once the admin promotes the application.
      */
-    applicantOrgId: uuid("applicant_org_id")
-      .notNull()
-      .references(() => organizations.id, { onDelete: "cascade" }),
+    applicantOrgId: uuid("applicant_org_id").notNull(),
 
     type: becomePartnerApplicantTypeEnum("type").notNull(),
 
@@ -109,19 +109,19 @@ export const becomePartnerApplications = pgTable(
     practiceCountries: text("practice_countries")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** ISO-639-1 codes. */
     languages: text("languages")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** Categories applicant requests to be listed under. */
     categorySlugs: text("category_slugs")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** Uploaded supporting documents. */
     documents: jsonb("documents")
@@ -145,10 +145,7 @@ export const becomePartnerApplications = pgTable(
     rejectionReason: text("rejection_reason"),
 
     /** Set on approval — the new solo-expert / clinic org id. */
-    provisionedOrgId: uuid("provisioned_org_id").references(
-      () => organizations.id,
-      { onDelete: "set null" }
-    ),
+    provisionedOrgId: uuid("provisioned_org_id"),
 
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -179,6 +176,20 @@ export const becomePartnerApplications = pgTable(
     )
       .on(t.applicantUserId)
       .where(sql`status IN ('submitted', 'under_review')`),
+    applicantOrgFk: foreignKey({
+      name: "bpa_applicant_org_fk",
+      columns: [t.applicantOrgId],
+      foreignColumns: [organizations.id],
+    }).onDelete("cascade"),
+    provisionedOrgFk: foreignKey({
+      name: "bpa_provisioned_org_fk",
+      columns: [t.provisionedOrgId],
+      foreignColumns: [organizations.id],
+    }).onDelete("set null"),
+    tenantPolicy: pgPolicy("become_partner_applications_tenant_isolation", {
+      using: sql`applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`applicant_org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+    }),
   })
 )
 

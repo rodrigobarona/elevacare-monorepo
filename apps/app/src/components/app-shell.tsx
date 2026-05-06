@@ -27,6 +27,12 @@ const NAV: Array<{
     matchPrefix: "/expert",
   },
   {
+    href: "/expert/integrations",
+    labelKey: "nav.integrations",
+    needs: "events:manage",
+    matchPrefix: "/expert/integrations",
+  },
+  {
     href: "/expert/finance",
     labelKey: "nav.finance",
     needs: "payouts:view_own",

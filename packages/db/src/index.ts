@@ -13,6 +13,7 @@ export type {
   StripeIdentityStatus,
   InvoicingSetupStatus,
 } from "./schema/main/expert-profiles"
+export type { ExpertIntegration } from "./schema/main/expert-integrations"
 export {
   findExpertByUsername,
   findClinicBySlug,
@@ -41,3 +42,35 @@ export {
   type ListApplicationsResult,
   type ApproveApplicationResult,
 } from "./queries/admin"
+export {
+  listExpertEventTypes,
+  getEventType,
+  createEventType,
+  updateEventType,
+  deleteEventType,
+  findPublicEventType,
+  listPublicEventTypes,
+} from "./queries/event-types"
+export {
+  getOrCreateDefaultSchedule,
+  getSchedule,
+  updateScheduleTimezone,
+  listAvailabilityRules,
+  replaceAvailabilityRules,
+  listDateOverrides,
+  upsertDateOverride,
+  deleteDateOverride,
+} from "./queries/schedules"
+export {
+  getExpertScheduleForBooking,
+  listExpertBusyBookings,
+  type BookingScheduleData,
+} from "./queries/booking-public"
+export {
+  listCalendarIntegrations,
+  listExpertIntegrations,
+  disconnectIntegration,
+  replaceBusySources,
+  replaceDestinationCalendar,
+} from "./queries/calendars"
+export type { LocalizedText } from "./schema/main/shared"

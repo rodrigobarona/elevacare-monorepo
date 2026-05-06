@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm"
+import { type SQL, sql } from "drizzle-orm"
 import {
   boolean,
   check,
@@ -6,6 +6,7 @@ import {
   index,
   jsonb,
   pgEnum,
+  pgPolicy,
   pgTable,
   text,
   uniqueIndex,
@@ -114,13 +115,13 @@ export const expertProfiles = pgTable(
     languages: text("languages")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** ISO-3166-1 alpha-2 codes (e.g., 'PT', 'ES', 'BR'). */
     practiceCountries: text("practice_countries")
       .array()
       .notNull()
-      .default(sql`ARRAY[]::text[]`),
+      .$defaultFn(() => []),
 
     /** Free-form license scope (e.g., "OPP 12345"). Validated by admin. */
     licenseScope: text("license_scope"),
@@ -139,7 +140,7 @@ export const expertProfiles = pgTable(
     sessionModes: sessionModeEnum("session_modes")
       .array()
       .notNull()
-      .default(sql`ARRAY['online']::session_mode[]`),
+      .default(["online"]),
 
     /** Stripe Connect Express account ID. Set after createConnectAccount. */
     stripeAccountId: varchar("stripe_account_id", { length: 255 }),
@@ -163,6 +164,9 @@ export const expertProfiles = pgTable(
      */
     topExpertActive: boolean("top_expert_active").notNull().default(false),
 
+    /** IANA timezone (e.g. "Europe/Lisbon"). Null until set by expert. */
+    timezone: varchar("timezone", { length: 64 }),
+
     /** Free-form metadata for marketing surfaces. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
 
@@ -171,8 +175,14 @@ export const expertProfiles = pgTable(
      * Weighted: A=display_name, B=headline, C=bio.
      * Uses eleva_fts_simple (unaccent, no stemming) so locale-specific
      * tsqueries match all word forms at query time.
+     *
+     * Requires extensions: pg_trgm, unaccent + FTS config eleva_fts_simple.
+     * Run `pnpm --filter @eleva/db db:fts` once per DB to install them.
      */
-    searchVector: tsvector("search_vector"),
+    searchVector: tsvector("search_vector").generatedAlwaysAs(
+      (): SQL =>
+        sql`setweight(to_tsvector('eleva_fts_simple', coalesce(display_name, '')), 'A') || setweight(to_tsvector('eleva_fts_simple', coalesce(headline, '')), 'B') || setweight(to_tsvector('eleva_fts_simple', coalesce(bio, '')), 'C')`
+    ),
 
     status: expertStatusEnum("status").notNull().default("draft"),
 
@@ -186,10 +196,18 @@ export const expertProfiles = pgTable(
     userIdx: index("expert_profiles_user_idx").on(t.userId),
     statusIdx: index("expert_profiles_status_idx").on(t.status),
     searchIdx: index("expert_profiles_search_idx").using("gin", t.searchVector),
+    trgmIdx: index("expert_profiles_name_trgm_idx").using(
+      "gin",
+      t.displayName.op("gin_trgm_ops")
+    ),
     usernameFormatChk: check(
       "expert_profiles_username_format",
       sql`username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND username NOT LIKE '%--%'`
     ),
+    tenantPolicy: pgPolicy("expert_profiles_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
   })
 )
 

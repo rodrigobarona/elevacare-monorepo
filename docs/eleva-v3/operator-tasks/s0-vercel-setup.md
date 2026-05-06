@@ -9,13 +9,13 @@ All 5 Vercel projects are connected to the monorepo
 `rodrigobarona/elevacare-monorepo` with the correct root directories and
 domains configured in the Vercel dashboard:
 
-| Project | Root Directory | Public host(s) |
-| --- | --- | --- |
-| `elevacare-marketing` | `apps/web` | `eleva.care` (gateway) |
-| `elevacare-app` | `apps/app` | `eleva.care` (via gateway rewrites: `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) |
-| `elevacare-api` | `apps/api` | `api.eleva.care` |
-| `elevacare-docs` | `apps/docs` | `eleva.care/docs` (via gateway rewrite) |
-| `elevacare-email` | `apps/email` | `email.eleva.care` (internal) |
+| Project           | Root Directory | Public host(s)                                                                                                    |
+| ----------------- | -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `elevacare-web`   | `apps/web`     | `eleva.care` (gateway)                                                                                            |
+| `elevacare-app`   | `apps/app`     | `eleva.care` (via gateway rewrites: `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) |
+| `elevacare-api`   | `apps/api`     | `api.eleva.care`                                                                                                  |
+| `elevacare-docs`  | `apps/docs`    | `eleva.care/docs` (via gateway rewrite)                                                                           |
+| `elevacare-email` | `apps/email`   | `email.eleva.care` (internal)                                                                                     |
 
 Production branch is `main`; preview deploys fire on every other branch.
 `pnpm install` is the install command; Next.js is the framework preset.

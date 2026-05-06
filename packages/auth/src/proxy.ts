@@ -3,10 +3,14 @@ import {
   type NextFetchEvent,
   type NextRequest,
 } from "next/server"
-import { authkitMiddleware } from "@workos-inc/authkit-nextjs"
+import {
+  authkitProxy,
+  partitionAuthkitHeaders,
+  applyResponseHeaders,
+} from "@workos-inc/authkit-nextjs"
 
 /**
- * withAuth proxy wrapper. Composes WorkOS AuthKit's Next.js middleware
+ * withAuth proxy wrapper. Composes WorkOS AuthKit's Next.js proxy
  * which handles:
  *   - reading/refreshing the WorkOS session cookie (scope=.eleva.care)
  *   - redirecting unauthenticated users to /signin for protected paths
@@ -26,9 +30,9 @@ export type ProxyHandler = (
 ) => NextResponse | Response | Promise<NextResponse | Response>
 
 export interface WithAuthOptions {
-  /** Paths the WorkOS middleware should NOT gate. Defaults to the public surface. */
+  /** Paths the WorkOS proxy should NOT gate. Defaults to the public surface. */
   unauthenticatedPaths?: string[]
-  /** Whether AuthKit enforces auth at the middleware layer. */
+  /** Whether AuthKit enforces auth at the proxy layer. */
   enforce?: boolean
 }
 
@@ -45,7 +49,7 @@ export function withAuth(
   handler: ProxyHandler,
   options: WithAuthOptions = {}
 ): ProxyHandler {
-  const middleware = authkitMiddleware({
+  const proxy = authkitProxy({
     middlewareAuth: {
       enabled: options.enforce ?? true,
       unauthenticatedPaths:
@@ -54,10 +58,7 @@ export function withAuth(
   })
 
   return async (req, event) => {
-    const authResponse = await middleware(
-      req,
-      event ?? (undefined as unknown as NextFetchEvent)
-    )
+    const authResponse = await proxy(req, event as NextFetchEvent)
     if (
       authResponse &&
       authResponse.status >= 300 &&
@@ -77,18 +78,19 @@ export function withAuth(
       return downstream
     }
 
-    // Merge any Set-Cookie / session-refresh headers from AuthKit onto the
-    // downstream response so the refreshed cookie reaches the browser.
     if (authResponse) {
+      const { responseHeaders } = partitionAuthkitHeaders(
+        req,
+        authResponse.headers
+      )
       const merged =
         downstream instanceof NextResponse
           ? downstream
-          : NextResponse.next(downstream)
-      authResponse.headers.forEach((value, key) => {
-        if (key.toLowerCase() === "set-cookie")
-          merged.headers.append(key, value)
-      })
-      return merged
+          : new NextResponse(downstream.body, {
+              status: downstream.status,
+              headers: downstream.headers,
+            })
+      return applyResponseHeaders(merged, responseHeaders)
     }
     return downstream
   }

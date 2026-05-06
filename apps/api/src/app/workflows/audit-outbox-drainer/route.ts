@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { drainAuditOutbox } from "@eleva/workflows"
+import { drainAuditOutbox } from "@eleva/workflows/drainers"
 
 /**
  * HTTP trigger for the audit outbox drainer. Called by:

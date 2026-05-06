@@ -1,2 +1,18 @@
-// @eleva/calendar — scaffolded in Sprint 0. Implementation lands in later sprints.
-export {};
+export { getAdapter } from "./registry"
+export { GoogleCalendarAdapter } from "./adapters/google"
+export { MicrosoftCalendarAdapter } from "./adapters/microsoft"
+export {
+  getCalendarToken,
+  listConnectedProviders,
+  CalendarTokenError,
+} from "./credential-manager"
+export { generateIcsRequest, generateIcsCancel } from "./ics-generator"
+export type {
+  CalendarProvider,
+  CalendarAdapter,
+  CalendarEvent,
+  CalendarEventInput,
+  CalendarListItem,
+  FreeBusyInterval,
+} from "./types"
+export type { IcsEventInput, IcsMethod } from "./ics-generator"

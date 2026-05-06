@@ -1,3 +1,14 @@
+/**
+ * FTS prerequisite installer — creates extensions and text search configs
+ * that Drizzle cannot manage. Run once per fresh database:
+ *
+ *   pnpm --filter @eleva/db db:fts
+ *
+ * The generated column (search_vector) and indexes (GIN + trigram) are
+ * now declared in the Drizzle schema (expert-profiles.ts) and managed
+ * by drizzle-kit migrations.
+ */
+
 import { neon } from "@neondatabase/serverless"
 
 const url = process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL
@@ -44,50 +55,9 @@ BEGIN
   END IF;
 END $$`,
   },
-  {
-    label: "Add or replace search_vector as GENERATED column",
-    query: `DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'expert_profiles' AND column_name = 'search_vector'
-  ) THEN
-    ALTER TABLE expert_profiles ADD COLUMN search_vector tsvector
-      GENERATED ALWAYS AS (
-        setweight(to_tsvector('eleva_fts_simple', coalesce(display_name, '')), 'A') ||
-        setweight(to_tsvector('eleva_fts_simple', coalesce(headline, '')), 'B') ||
-        setweight(to_tsvector('eleva_fts_simple', coalesce(bio, '')), 'C')
-      ) STORED;
-  ELSIF EXISTS (
-    SELECT 1 FROM information_schema.columns
-    WHERE table_name = 'expert_profiles' AND column_name = 'search_vector'
-      AND is_generated = 'NEVER'
-  ) THEN
-    ALTER TABLE expert_profiles DROP COLUMN search_vector;
-    ALTER TABLE expert_profiles ADD COLUMN search_vector tsvector
-      GENERATED ALWAYS AS (
-        setweight(to_tsvector('eleva_fts_simple', coalesce(display_name, '')), 'A') ||
-        setweight(to_tsvector('eleva_fts_simple', coalesce(headline, '')), 'B') ||
-        setweight(to_tsvector('eleva_fts_simple', coalesce(bio, '')), 'C')
-      ) STORED;
-  ELSE
-    RAISE NOTICE 'search_vector already exists as GENERATED column, skipping';
-  END IF;
-END $$`,
-  },
-  {
-    label: "GIN index for FTS",
-    query:
-      "CREATE INDEX IF NOT EXISTS expert_profiles_search_idx ON expert_profiles USING GIN (search_vector)",
-  },
-  {
-    label: "Trigram GIN index for typo tolerance",
-    query:
-      "CREATE INDEX IF NOT EXISTS expert_profiles_name_trgm_idx ON expert_profiles USING GIN (display_name gin_trgm_ops)",
-  },
 ]
 
-console.log(`Running ${statements.length} FTS migration statements…\n`)
+console.log(`Running ${statements.length} FTS prerequisite statements…\n`)
 
 for (const [i, { label, query }] of statements.entries()) {
   console.log(`  [${i + 1}/${statements.length}] ${label}`)
@@ -100,4 +70,4 @@ for (const [i, { label, query }] of statements.entries()) {
   }
 }
 
-console.log("FTS migration complete.")
+console.log("FTS prerequisites installed.")

@@ -9,41 +9,45 @@ import {
 describe("buildMainRlsStatements", () => {
   const stmts = buildMainRlsStatements()
 
-  it("emits ENABLE + FORCE + DROP + CREATE for every tenant table", () => {
+  it("emits ENABLE + FORCE for every tenant table", () => {
     for (const table of TENANT_TABLES) {
       expect(stmts).toContain(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
       expect(stmts).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    }
+  })
+
+  it("drops then creates policy for every tenant table", () => {
+    for (const table of TENANT_TABLES) {
       expect(stmts).toContain(
         `DROP POLICY IF EXISTS ${table}_tenant_isolation ON ${table};`
       )
       expect(
-        stmts.some((s) =>
-          s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
+        stmts.some(
+          (s) =>
+            s.startsWith(`CREATE POLICY ${table}_tenant_isolation`) &&
+            s.includes("USING") &&
+            s.includes("WITH CHECK")
         )
       ).toBe(true)
     }
   })
 
-  it("keys the predicate on current_setting eleva.org_id", () => {
-    for (const stmt of stmts.filter((s) => s.startsWith("CREATE POLICY"))) {
-      expect(stmt).toContain(`current_setting('eleva.org_id', true)`)
-    }
-  })
-
-  it("is idempotent (all DROPs are IF EXISTS)", () => {
-    const drops = stmts.filter((s) => s.startsWith("DROP POLICY"))
-    expect(drops.length).toBeGreaterThan(0)
-    expect(drops.every((s) => s.includes("IF EXISTS"))).toBe(true)
-  })
-
-  it("organizations policy uses id (self) not org_id", () => {
+  it("uses id for organizations self-reference", () => {
     const orgPolicy = stmts.find((s) =>
       s.startsWith("CREATE POLICY organizations_tenant_isolation")
     )
-    expect(orgPolicy).toBeDefined()
     expect(orgPolicy).toContain(
-      `id::text = current_setting('eleva.org_id', true)`
+      "id::text = current_setting('eleva.org_id', true)"
     )
+    expect(orgPolicy).not.toMatch(/\borg_id::text\b/)
+  })
+
+  it("uses applicant_org_id + platform_admin for become_partner_applications", () => {
+    const bpaPolicy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY become_partner_applications_tenant_isolation")
+    )
+    expect(bpaPolicy).toContain("applicant_org_id::text")
+    expect(bpaPolicy).toContain("eleva.platform_admin")
   })
 })
 
@@ -79,6 +83,6 @@ describe("buildAllRlsSql", () => {
     const sql = buildAllRlsSql()
     expect(sql).toContain("-- Main DB RLS")
     expect(sql).toContain("-- Audit DB RLS")
-    expect(sql).toContain("ENABLE ROW LEVEL SECURITY")
+    expect(sql).toContain("FORCE ROW LEVEL SECURITY")
   })
 })

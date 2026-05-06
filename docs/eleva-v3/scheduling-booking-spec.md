@@ -107,16 +107,18 @@ Examples:
 - personal time off
 - temporary expanded availability
 
-### Connected Calendar
+### Connected Calendar (Optional)
 
-Represents an external calendar account.
+Represents an external calendar account. **Calendar connection is not required** — experts can operate fully without connecting any external calendar (see ADR-004 Calendar-Optional Mode and [`calendar-integration-spec.md`](./calendar-integration-spec.md)).
 
 Supported providers at launch:
 
 - Google Calendar
 - Microsoft Outlook calendar
 
-**OAuth ownership**: Eleva owns the OAuth flows, token refresh, event read/write, and webhook/Pub-Sub subscription in `packages/calendar`. Tokens are stored in WorkOS Vault via `packages/encryption`. **WorkOS Pipes is not used** for calendar sync (see ADR-004).
+**OAuth credential management**: WorkOS Pipes manages connect flows, token storage, and refresh for Google Calendar and Microsoft Outlook Calendar (see ADR-004 amendment). `packages/calendar` owns the `CalendarAdapter` interface for direct API calls.
+
+**No-calendar fallback**: When no destination calendar is configured, the system sends `.ics` email invites (with JSON-LD for Gmail rich cards) to the expert for each booking lifecycle event.
 
 ### Expert Practice Location
 
@@ -164,9 +166,9 @@ The first build should support:
 
 - single-host bookings
 - multiple event types per expert
-- multiple connected calendars
-- busy-time detection from selected calendars
-- one destination calendar per expert or per event type
+- optional calendar connections (multiple per expert when connected)
+- busy-time detection from selected calendars (when connected)
+- one destination calendar per expert or per event type (when connected); `.ics` email fallback when not connected
 - weekly availability rules
 - date overrides/blocked dates
 - online / in-person / phone location types
@@ -371,7 +373,8 @@ Sensitive session-adjacent content should not leak through reminder payloads or 
 ## Closed Decisions
 
 - **SMS is launch-critical** for PT (see ADR-012 + notifications-spec)
-- **Calendar OAuth ownership = Eleva** (see ADR-004), not WorkOS Pipes
+- **Calendar OAuth credential management = WorkOS Pipes** (see ADR-004 amendment 2026-05); Eleva retains full CalendarAdapter control
+- **Calendar connection is optional** — experts can use Eleva-only scheduling with .ics email fallback (see ADR-004 Calendar-Optional Mode)
 - **Final reminder defaults**: 24h email+SMS, 1h email (SMS opt-in)
 
 ## Related Docs

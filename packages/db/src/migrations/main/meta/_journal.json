@@ -19,8 +19,36 @@
     {
       "idx": 2,
       "version": "7",
-      "when": 1778259600000,
-      "tag": "0002_expert_fts_search",
+      "when": 1778021700253,
+      "tag": "0002_early_zeigeist",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778023289033,
+      "tag": "0003_milky_enchantress",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1778025400751,
+      "tag": "0004_lying_carnage",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1778026442211,
+      "tag": "0005_adorable_lily_hollister",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1778032008019,
+      "tag": "0006_happy_mentor",
       "breakpoints": true
     }
   ]

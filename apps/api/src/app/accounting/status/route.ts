@@ -82,15 +82,13 @@ export async function GET(request: Request) {
     const cred = await withOrgContext(expert.orgId, async (tx: Tx) => {
       const [row] = await tx
         .select()
-        .from(main.expertIntegrationCredentials)
+        .from(main.expertIntegrations)
         .where(
           and(
-            eq(main.expertIntegrationCredentials.expertProfileId, expert.id),
-            eq(
-              main.expertIntegrationCredentials.provider,
-              expert.invoicingProvider!
-            ),
-            isNull(main.expertIntegrationCredentials.deletedAt)
+            eq(main.expertIntegrations.expertProfileId, expert.id),
+            eq(main.expertIntegrations.slug, expert.invoicingProvider!),
+            eq(main.expertIntegrations.category, "invoicing"),
+            isNull(main.expertIntegrations.deletedAt)
           )
         )
         .limit(1)
@@ -98,19 +96,23 @@ export async function GET(request: Request) {
     })
 
     if (cred) {
-      try {
-        const adapter = getAdapter(
-          expert.invoicingProvider as InvoicingProviderSlug
-        )
-        adapterStatus = await adapter.status({
-          vaultRef: cred.vaultRef,
-          metadata: cred.metadata ?? undefined,
-        })
-      } catch (err) {
-        console.error("[accounting/status] Adapter status check failed:", err)
-        adapterStatus = {
-          status: "error",
-          message: "provider_error",
+      if (!cred.vaultRef) {
+        adapterStatus = { status: "error", message: "missing_credentials" }
+      } else {
+        try {
+          const adapter = getAdapter(
+            expert.invoicingProvider as InvoicingProviderSlug
+          )
+          adapterStatus = await adapter.status({
+            vaultRef: cred.vaultRef,
+            metadata: cred.metadata ?? undefined,
+          })
+        } catch (err) {
+          console.error("[accounting/status] Adapter status check failed:", err)
+          adapterStatus = {
+            status: "error",
+            message: "provider_error",
+          }
         }
       }
     }
