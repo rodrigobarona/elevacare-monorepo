@@ -5,7 +5,12 @@ import type {
   CalendarListItem,
   FreeBusyInterval,
 } from "../types"
-import { CalendarTokenError } from "../credential-manager"
+import {
+  CalendarTokenError,
+  CalendarAdapterError,
+  CalendarNotFoundError,
+  CalendarValidationError,
+} from "../errors"
 
 const GOOGLE_CALENDAR_API = "https://www.googleapis.com/calendar/v3"
 const FETCH_TIMEOUT_MS = 10_000
@@ -23,7 +28,15 @@ async function throwGoogleError(
   } catch {
     body = "(unreadable)"
   }
-  throw new Error(`Google ${operation}: ${res.status} — ${body}`)
+  if (res.status === 404) {
+    throw new CalendarNotFoundError("google", operation, body)
+  }
+  throw new CalendarAdapterError({
+    provider: "google",
+    operation,
+    message: `Google ${operation}: ${res.status} — ${body}`,
+    statusCode: res.status,
+  })
 }
 
 export class GoogleCalendarAdapter implements CalendarAdapter {
@@ -105,9 +118,11 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       }
       for (const [calId, cal] of Object.entries(data.calendars)) {
         if (cal.errors?.length) {
-          throw new Error(
-            `Google freeBusy error for calendar ${calId}: ${JSON.stringify(cal.errors)}`
-          )
+          throw new CalendarAdapterError({
+            provider: "google",
+            operation: "freeBusy",
+            message: `freeBusy error for calendar ${calId}: ${JSON.stringify(cal.errors)}`,
+          })
         }
         for (const b of cal.busy) {
           intervals.push({ start: new Date(b.start), end: new Date(b.end) })
@@ -124,7 +139,9 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
   ): Promise<CalendarEvent> {
     const eventId = event.idempotencyId.replace(/-/g, "").toLowerCase()
     if (!/^[0-9a-f]{32}$/.test(eventId)) {
-      throw new Error(
+      throw new CalendarValidationError(
+        "google",
+        "createEvent",
         `Invalid idempotencyId: must be a UUID (got "${event.idempotencyId}")`
       )
     }
@@ -178,12 +195,18 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       (event.startTime && !event.endTime) ||
       (!event.startTime && event.endTime)
     ) {
-      throw new Error(
-        "updateEvent requires both startTime and endTime, or neither"
+      throw new CalendarValidationError(
+        "google",
+        "updateEvent",
+        "requires both startTime and endTime, or neither"
       )
     }
     if (event.startTime && event.endTime && event.startTime >= event.endTime) {
-      throw new Error("updateEvent: startTime must be before endTime")
+      throw new CalendarValidationError(
+        "google",
+        "updateEvent",
+        "startTime must be before endTime"
+      )
     }
 
     const body: Record<string, unknown> = {}
@@ -263,7 +286,11 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
       | undefined
 
     if (!start || !end) {
-      throw new Error(`Google parseEvent: missing start/end in event ${raw.id}`)
+      throw new CalendarValidationError(
+        "google",
+        "parseEvent",
+        `missing start/end in event ${raw.id}`
+      )
     }
 
     let startTime: Date
@@ -274,8 +301,10 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     } else if (start.date) {
       startTime = new Date(`${start.date}T00:00:00`)
     } else {
-      throw new Error(
-        `Google parseEvent: no dateTime or date in start for event ${raw.id}`
+      throw new CalendarValidationError(
+        "google",
+        "parseEvent",
+        `no dateTime or date in start for event ${raw.id}`
       )
     }
 
@@ -284,8 +313,10 @@ export class GoogleCalendarAdapter implements CalendarAdapter {
     } else if (end.date) {
       endTime = new Date(`${end.date}T00:00:00`)
     } else {
-      throw new Error(
-        `Google parseEvent: no dateTime or date in end for event ${raw.id}`
+      throw new CalendarValidationError(
+        "google",
+        "parseEvent",
+        `no dateTime or date in end for event ${raw.id}`
       )
     }
 

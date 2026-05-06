@@ -49,12 +49,28 @@ function getWorkOS(): WorkOS {
 /**
  * Generate a WorkOS widget token for the given user + organization.
  * Used by the Pipes connection widget on the integrations/calendars pages.
+ *
+ * Prefer `getWidgetTokenFromSession()` in most cases to avoid trusting
+ * caller-supplied IDs.
  */
 export async function getWidgetToken(
   userId: string,
   organizationId: string
 ): Promise<string> {
+  if (!userId || !organizationId) {
+    throw new Error("getWidgetToken: userId and organizationId are required")
+  }
   const workos = getWorkOS()
   const response = await workos.widgets.createToken({ userId, organizationId })
   return response.token
+}
+
+/**
+ * Session-aware variant that derives userId and organizationId from
+ * the authenticated session. Throws UnauthorizedError if there is no
+ * active session.
+ */
+export async function getWidgetTokenFromSession(): Promise<string> {
+  const session = await requireSession()
+  return getWidgetToken(session.user.workosUserId, session.workosOrgId)
 }

@@ -205,8 +205,8 @@ export const expertProfiles = pgTable(
       sql`username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND username NOT LIKE '%--%'`
     ),
     tenantPolicy: pgPolicy("expert_profiles_tenant_isolation", {
-      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
     }),
   })
 )

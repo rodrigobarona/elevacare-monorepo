@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { Plus, X } from "lucide-react"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -27,20 +29,16 @@ import {
   type AvailabilityRuleInput,
 } from "./actions"
 
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-] as const
+const DAY_INDICES = [0, 1, 2, 3, 4, 5, 6] as const
+
+interface TimeWindow {
+  startTime: string
+  endTime: string
+}
 
 interface DayRule {
   enabled: boolean
-  startTime: string
-  endTime: string
+  windows: TimeWindow[]
 }
 
 interface OverrideRow {
@@ -58,18 +56,37 @@ interface Props {
 }
 
 const ALL_TIMEZONES = Intl.supportedValuesOf("timeZone")
+const DEFAULT_WINDOW: TimeWindow = { startTime: "09:00", endTime: "17:00" }
 
 function rulesToDayMap(
   rules: AvailabilityRuleInput[]
 ): Record<number, DayRule> {
   const map: Record<number, DayRule> = {}
   for (let i = 0; i < 7; i++) {
-    const rule = rules.find((r) => r.dayOfWeek === i)
-    map[i] = rule
-      ? { enabled: true, startTime: rule.startTime, endTime: rule.endTime }
-      : { enabled: false, startTime: "09:00", endTime: "17:00" }
+    const dayRules = rules.filter((r) => r.dayOfWeek === i)
+    map[i] =
+      dayRules.length > 0
+        ? {
+            enabled: true,
+            windows: dayRules.map((r) => ({
+              startTime: r.startTime,
+              endTime: r.endTime,
+            })),
+          }
+        : { enabled: false, windows: [{ ...DEFAULT_WINDOW }] }
   }
   return map
+}
+
+function windowsOverlap(windows: TimeWindow[]): boolean {
+  if (windows.length < 2) return false
+  const sorted = [...windows].sort((a, b) =>
+    a.startTime.localeCompare(b.startTime)
+  )
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i]!.startTime < sorted[i - 1]!.endTime) return true
+  }
+  return false
 }
 
 export function ScheduleEditor({
@@ -78,6 +95,7 @@ export function ScheduleEditor({
   initialOverrides,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations("schedule")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
@@ -97,11 +115,62 @@ export function ScheduleEditor({
   const [newStart, setNewStart] = React.useState("09:00")
   const [newEnd, setNewEnd] = React.useState("17:00")
 
-  function updateDay(dayIdx: number, field: keyof DayRule, value: unknown) {
+  function toggleDay(dayIdx: number, enabled: boolean) {
     setDays((prev) => ({
       ...prev,
-      [dayIdx]: { ...prev[dayIdx]!, [field]: value },
+      [dayIdx]: {
+        ...prev[dayIdx]!,
+        enabled,
+        windows: enabled
+          ? prev[dayIdx]!.windows.length > 0
+            ? prev[dayIdx]!.windows
+            : [{ ...DEFAULT_WINDOW }]
+          : prev[dayIdx]!.windows,
+      },
     }))
+  }
+
+  function updateWindow(
+    dayIdx: number,
+    windowIdx: number,
+    field: keyof TimeWindow,
+    value: string
+  ) {
+    setDays((prev) => {
+      const day = prev[dayIdx]!
+      const updated = day.windows.map((w, i) =>
+        i === windowIdx ? { ...w, [field]: value } : w
+      )
+      return { ...prev, [dayIdx]: { ...day, windows: updated } }
+    })
+  }
+
+  function addWindow(dayIdx: number) {
+    setDays((prev) => {
+      const day = prev[dayIdx]!
+      const last = day.windows[day.windows.length - 1]
+      const newWindow: TimeWindow = last
+        ? { startTime: last.endTime, endTime: "17:00" }
+        : { ...DEFAULT_WINDOW }
+      return {
+        ...prev,
+        [dayIdx]: { ...day, windows: [...day.windows, newWindow] },
+      }
+    })
+  }
+
+  function removeWindow(dayIdx: number, windowIdx: number) {
+    setDays((prev) => {
+      const day = prev[dayIdx]!
+      const updated = day.windows.filter((_, i) => i !== windowIdx)
+      if (updated.length === 0) {
+        return {
+          ...prev,
+          [dayIdx]: { enabled: false, windows: [{ ...DEFAULT_WINDOW }] },
+        }
+      }
+      return { ...prev, [dayIdx]: { ...day, windows: updated } }
+    })
   }
 
   async function handleSave() {
@@ -112,16 +181,26 @@ export function ScheduleEditor({
     const rules: AvailabilityRuleInput[] = []
     for (let i = 0; i < 7; i++) {
       const day = days[i]!
-      if (day.enabled) {
-        if (day.startTime >= day.endTime) {
-          setError(`${DAYS[i]}: start time must be before end time`)
+      if (!day.enabled) continue
+
+      const dayName = t(`days.${i}`)
+      for (const w of day.windows) {
+        if (w.startTime >= w.endTime) {
+          setError(t("error.startBeforeEnd", { day: dayName }))
           setPending(false)
           return
         }
+      }
+      if (windowsOverlap(day.windows)) {
+        setError(t("error.overlappingWindows", { day: dayName }))
+        setPending(false)
+        return
+      }
+      for (const w of day.windows) {
         rules.push({
           dayOfWeek: i,
-          startTime: day.startTime,
-          endTime: day.endTime,
+          startTime: w.startTime,
+          endTime: w.endTime,
         })
       }
     }
@@ -144,7 +223,7 @@ export function ScheduleEditor({
     setError(null)
 
     if (!newBlocked && newStart >= newEnd) {
-      setError("Override start time must be before end time")
+      setError(t("error.overrideStartBeforeEnd"))
       setPending(false)
       return
     }
@@ -192,13 +271,13 @@ export function ScheduleEditor({
       )}
       {success && (
         <Alert>
-          <AlertDescription>Schedule saved successfully.</AlertDescription>
+          <AlertDescription>{t("saved")}</AlertDescription>
         </Alert>
       )}
 
       <Card>
         <CardHeader>
-          <CardTitle>Timezone</CardTitle>
+          <CardTitle>{t("timezone")}</CardTitle>
         </CardHeader>
         <CardContent>
           <Select value={timezone} onValueChange={setTimezone}>
@@ -218,41 +297,73 @@ export function ScheduleEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle>Weekly Hours</CardTitle>
+          <CardTitle>{t("weeklyHours")}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {DAYS.map((dayName, idx) => {
+        <CardContent className="space-y-4">
+          {DAY_INDICES.map((idx) => {
             const day = days[idx]!
+            const dayLabel = t(`days.${idx}`)
             return (
-              <div key={idx} className="flex items-center gap-4">
-                <label className="flex w-28 items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={day.enabled}
-                    onCheckedChange={(v) => updateDay(idx, "enabled", !!v)}
-                  />
-                  {dayName}
-                </label>
-                {day.enabled && (
-                  <>
-                    <Input
-                      type="time"
-                      value={day.startTime}
-                      onChange={(e) =>
-                        updateDay(idx, "startTime", e.target.value)
-                      }
-                      className="w-32"
+              <div key={idx} className="space-y-2">
+                <div className="flex items-center gap-4">
+                  <label className="flex w-28 items-center gap-2 text-sm">
+                    <Checkbox
+                      checked={day.enabled}
+                      onCheckedChange={(v) => toggleDay(idx, !!v)}
                     />
-                    <span className="text-muted-foreground">to</span>
-                    <Input
-                      type="time"
-                      value={day.endTime}
-                      onChange={(e) =>
-                        updateDay(idx, "endTime", e.target.value)
-                      }
-                      className="w-32"
-                    />
-                  </>
-                )}
+                    {dayLabel}
+                  </label>
+                  {day.enabled && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => addWindow(idx)}
+                      className="ml-auto"
+                    >
+                      <Plus className="mr-1 h-3 w-3" />
+                      {t("addWindow")}
+                    </Button>
+                  )}
+                </div>
+                {day.enabled &&
+                  day.windows.map((w, wIdx) => (
+                    <div
+                      key={wIdx}
+                      className="ml-[7.5rem] flex items-center gap-2"
+                    >
+                      <Input
+                        type="time"
+                        value={w.startTime}
+                        onChange={(e) =>
+                          updateWindow(idx, wIdx, "startTime", e.target.value)
+                        }
+                        className="w-32"
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {t("to")}
+                      </span>
+                      <Input
+                        type="time"
+                        value={w.endTime}
+                        onChange={(e) =>
+                          updateWindow(idx, wIdx, "endTime", e.target.value)
+                        }
+                        className="w-32"
+                      />
+                      {day.windows.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => removeWindow(idx, wIdx)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
               </div>
             )
           })}
@@ -261,7 +372,7 @@ export function ScheduleEditor({
 
       <Card>
         <CardHeader>
-          <CardTitle>Date Overrides</CardTitle>
+          <CardTitle>{t("dateOverrides")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {overrides.length > 0 && (
@@ -274,8 +385,8 @@ export function ScheduleEditor({
                   <span>
                     {ov.overrideDate}
                     {ov.isBlocked
-                      ? " — Blocked"
-                      : ` — ${ov.startTime ?? ""} to ${ov.endTime ?? ""}`}
+                      ? ` — ${t("blocked")}`
+                      : ` — ${ov.startTime ?? ""} ${t("to")} ${ov.endTime ?? ""}`}
                   </span>
                   <Button
                     variant="ghost"
@@ -283,7 +394,7 @@ export function ScheduleEditor({
                     onClick={() => handleRemoveOverride(ov.id)}
                     disabled={pending}
                   >
-                    Remove
+                    {t("remove")}
                   </Button>
                 </div>
               ))}
@@ -292,7 +403,7 @@ export function ScheduleEditor({
 
           <div className="flex flex-wrap items-end gap-3">
             <div className="space-y-1.5">
-              <Label>Date</Label>
+              <Label>{t("overrideDate")}</Label>
               <Input
                 type="date"
                 value={newDate}
@@ -305,12 +416,12 @@ export function ScheduleEditor({
                 checked={newBlocked}
                 onCheckedChange={(v) => setNewBlocked(!!v)}
               />
-              Block entire day
+              {t("overrideBlockDay")}
             </label>
             {!newBlocked && (
               <>
                 <div className="space-y-1.5">
-                  <Label>From</Label>
+                  <Label>{t("overrideFrom")}</Label>
                   <Input
                     type="time"
                     value={newStart}
@@ -319,7 +430,7 @@ export function ScheduleEditor({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>To</Label>
+                  <Label>{t("overrideTo")}</Label>
                   <Input
                     type="time"
                     value={newEnd}
@@ -335,14 +446,14 @@ export function ScheduleEditor({
               variant="outline"
               size="sm"
             >
-              Add override
+              {t("addOverride")}
             </Button>
           </div>
         </CardContent>
       </Card>
 
       <Button onClick={handleSave} disabled={pending}>
-        {pending ? "Saving..." : "Save schedule"}
+        {pending ? t("saving") : t("save")}
       </Button>
     </div>
   )
