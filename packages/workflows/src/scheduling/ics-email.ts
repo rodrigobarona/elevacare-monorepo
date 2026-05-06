@@ -4,8 +4,19 @@ import {
   generateIcsCancel,
   type IcsEventInput,
 } from "@eleva/calendar"
+import {
+  renderBookingConfirmed,
+  renderBookingRescheduled,
+  renderBookingCancelled,
+  getEmailTranslations,
+  type EmailLocale,
+} from "@eleva/email"
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+let _resend: Resend | null = null
+function resend() {
+  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY)
+  return _resend
+}
 
 const FROM_ADDRESS = "Eleva Care <bookings@eleva.care>"
 
@@ -20,6 +31,8 @@ export interface IcsEmailPayload {
   timezone: string
   sessionMode: string
   location?: string
+  /** Locale for the email content (from booking's bookedLocale). */
+  locale?: EmailLocale
   /** Sequence number for reschedules (0 = original, 1+ = updates). */
   sequence?: number
 }
@@ -42,30 +55,38 @@ function buildIcsInput(payload: IcsEmailPayload): IcsEventInput {
 function buildJsonLd(payload: IcsEmailPayload, status: string): string {
   const locationObj =
     payload.sessionMode === "in_person" && payload.location
-      ? `{ "@type": "Place", "name": ${JSON.stringify(payload.location)} }`
-      : `{ "@type": "VirtualLocation", "url": "https://app.eleva.care" }`
+      ? { "@type": "Place", name: payload.location }
+      : { "@type": "VirtualLocation", url: "https://app.eleva.care" }
 
-  return `<script type="application/ld+json">
-{
-  "@context": "http://schema.org",
-  "@type": "EventReservation",
-  "reservationNumber": "BKG-${payload.bookingId.slice(0, 8)}",
-  "reservationStatus": "http://schema.org/${status}",
-  "underName": { "@type": "Person", "name": ${JSON.stringify(payload.expertName)} },
-  "reservationFor": {
-    "@type": "Event",
-    "name": ${JSON.stringify(`${payload.eventTypeName} with ${payload.patientName}`)},
-    "startDate": "${payload.startsAt.toISOString()}",
-    "endDate": "${payload.endsAt.toISOString()}",
-    "location": ${locationObj}
-  }
-}
-</script>`
+  return JSON.stringify({
+    "@context": "http://schema.org",
+    "@type": "EventReservation",
+    reservationNumber: `BKG-${payload.bookingId.slice(0, 8)}`,
+    reservationStatus: `http://schema.org/${status}`,
+    underName: { "@type": "Person", name: payload.expertName },
+    reservationFor: {
+      "@type": "Event",
+      name: `${payload.eventTypeName} with ${payload.patientName}`,
+      startDate: payload.startsAt.toISOString(),
+      endDate: payload.endsAt.toISOString(),
+      location: locationObj,
+    },
+  })
 }
 
-function formatDateTime(date: Date, tz: string): string {
+const LOCALE_MAP: Record<EmailLocale, string> = {
+  en: "en-GB",
+  pt: "pt-PT",
+  es: "es-ES",
+}
+
+function formatDateTime(
+  date: Date,
+  tz: string,
+  locale: EmailLocale = "en"
+): string {
   try {
-    return date.toLocaleString("en-GB", {
+    return date.toLocaleString(LOCALE_MAP[locale] ?? "en-GB", {
       timeZone: tz,
       weekday: "long",
       year: "numeric",
@@ -82,27 +103,31 @@ function formatDateTime(date: Date, tz: string): string {
 export async function sendBookingIcsEmail(
   payload: IcsEmailPayload
 ): Promise<void> {
+  const locale = payload.locale ?? "en"
+  const t = getEmailTranslations(locale)
   const icsContent = generateIcsRequest(buildIcsInput(payload))
-  const formattedDate = formatDateTime(payload.startsAt, payload.timezone)
+  const formattedDate = formatDateTime(
+    payload.startsAt,
+    payload.timezone,
+    locale
+  )
   const jsonLd = buildJsonLd(payload, "Confirmed")
 
-  await resend.emails.send({
+  const html = await renderBookingConfirmed({
+    patientName: payload.patientName,
+    eventTypeName: payload.eventTypeName,
+    formattedDate,
+    sessionMode: payload.sessionMode,
+    location: payload.location,
+    locale,
+    jsonLd,
+  })
+
+  await resend().emails.send({
     from: FROM_ADDRESS,
     to: [payload.expertEmail],
-    subject: `New booking: ${payload.patientName} — ${formattedDate}`,
-    html: `${jsonLd}
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-  <h2 style="color: #1a1a1a; margin-bottom: 8px;">New Booking Confirmed</h2>
-  <p style="color: #4a4a4a; margin-bottom: 20px;">A new session has been booked. The calendar invite is attached.</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <tr><td style="padding: 8px 0; color: #6b6b6b; width: 120px;">Patient</td><td style="padding: 8px 0; color: #1a1a1a; font-weight: 500;">${payload.patientName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Service</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.eventTypeName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Date &amp; Time</td><td style="padding: 8px 0; color: #1a1a1a;">${formattedDate}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Mode</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.sessionMode}</td></tr>
-    ${payload.location ? `<tr><td style="padding: 8px 0; color: #6b6b6b;">Location</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.location}</td></tr>` : ""}
-  </table>
-  <p style="color: #6b6b6b; font-size: 13px;">Open the attached .ics file to add this event to your calendar.</p>
-</div>`,
+    subject: t.subject.newBooking(payload.patientName, formattedDate),
+    html,
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),
@@ -117,28 +142,36 @@ export async function sendRescheduleIcsEmail(
   payload: IcsEmailPayload,
   previousStartsAt: Date
 ): Promise<void> {
+  const locale = payload.locale ?? "en"
+  const t = getEmailTranslations(locale)
   const icsContent = generateIcsRequest(buildIcsInput(payload))
-  const formattedDate = formatDateTime(payload.startsAt, payload.timezone)
-  const formattedPrevious = formatDateTime(previousStartsAt, payload.timezone)
+  const formattedDate = formatDateTime(
+    payload.startsAt,
+    payload.timezone,
+    locale
+  )
+  const formattedPrevious = formatDateTime(
+    previousStartsAt,
+    payload.timezone,
+    locale
+  )
   const jsonLd = buildJsonLd(payload, "Confirmed")
 
-  await resend.emails.send({
+  const html = await renderBookingRescheduled({
+    patientName: payload.patientName,
+    eventTypeName: payload.eventTypeName,
+    previousDate: formattedPrevious,
+    newDate: formattedDate,
+    sessionMode: payload.sessionMode,
+    locale,
+    jsonLd,
+  })
+
+  await resend().emails.send({
     from: FROM_ADDRESS,
     to: [payload.expertEmail],
-    subject: `Rescheduled: ${payload.patientName} — ${formattedDate}`,
-    html: `${jsonLd}
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-  <h2 style="color: #1a1a1a; margin-bottom: 8px;">Booking Rescheduled</h2>
-  <p style="color: #4a4a4a; margin-bottom: 20px;">A session has been rescheduled. The updated calendar invite is attached.</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <tr><td style="padding: 8px 0; color: #6b6b6b; width: 120px;">Patient</td><td style="padding: 8px 0; color: #1a1a1a; font-weight: 500;">${payload.patientName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Service</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.eventTypeName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Previous</td><td style="padding: 8px 0; color: #c0392b; text-decoration: line-through;">${formattedPrevious}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">New Time</td><td style="padding: 8px 0; color: #27ae60; font-weight: 500;">${formattedDate}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Mode</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.sessionMode}</td></tr>
-  </table>
-  <p style="color: #6b6b6b; font-size: 13px;">Open the attached .ics file to update the event in your calendar.</p>
-</div>`,
+    subject: t.subject.rescheduled(payload.patientName, formattedDate),
+    html,
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),
@@ -152,25 +185,29 @@ export async function sendRescheduleIcsEmail(
 export async function sendCancellationIcsEmail(
   payload: IcsEmailPayload
 ): Promise<void> {
+  const locale = payload.locale ?? "en"
+  const t = getEmailTranslations(locale)
   const icsContent = generateIcsCancel(buildIcsInput(payload))
-  const formattedDate = formatDateTime(payload.startsAt, payload.timezone)
+  const formattedDate = formatDateTime(
+    payload.startsAt,
+    payload.timezone,
+    locale
+  )
   const jsonLd = buildJsonLd(payload, "Cancelled")
 
-  await resend.emails.send({
+  const html = await renderBookingCancelled({
+    patientName: payload.patientName,
+    eventTypeName: payload.eventTypeName,
+    formattedDate,
+    locale,
+    jsonLd,
+  })
+
+  await resend().emails.send({
     from: FROM_ADDRESS,
     to: [payload.expertEmail],
-    subject: `Cancelled: ${payload.patientName} — ${formattedDate}`,
-    html: `${jsonLd}
-<div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-  <h2 style="color: #1a1a1a; margin-bottom: 8px;">Booking Cancelled</h2>
-  <p style="color: #4a4a4a; margin-bottom: 20px;">A session has been cancelled. The cancellation invite is attached to remove it from your calendar.</p>
-  <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
-    <tr><td style="padding: 8px 0; color: #6b6b6b; width: 120px;">Patient</td><td style="padding: 8px 0; color: #1a1a1a; font-weight: 500;">${payload.patientName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Service</td><td style="padding: 8px 0; color: #1a1a1a;">${payload.eventTypeName}</td></tr>
-    <tr><td style="padding: 8px 0; color: #6b6b6b;">Was scheduled</td><td style="padding: 8px 0; color: #c0392b;">${formattedDate}</td></tr>
-  </table>
-  <p style="color: #6b6b6b; font-size: 13px;">Open the attached .ics file to remove this event from your calendar.</p>
-</div>`,
+    subject: t.subject.cancelled(payload.patientName, formattedDate),
+    html,
     attachments: [
       {
         content: Buffer.from(icsContent, "utf-8"),

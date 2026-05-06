@@ -41,6 +41,7 @@ async function loadBookingContext(
         endsAt: main.sessions.endsAt,
         sessionMode: main.sessions.sessionMode,
         timezone: main.bookings.timezone,
+        bookedLocale: main.bookings.bookedLocale,
       })
       .from(main.sessions)
       .innerJoin(main.bookings, eq(main.sessions.bookingId, main.bookings.id))
@@ -70,7 +71,9 @@ async function loadBookingContext(
     return row
   })
 
-  const eventTypeName = data.eventTypeTitle?.en ?? "Session"
+  const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
+  const eventTypeName =
+    data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
 
   return {
     expertEmail: data.expertEmail,
@@ -82,6 +85,7 @@ async function loadBookingContext(
     endsAt: data.endsAt,
     timezone: data.timezone,
     sessionMode: data.sessionMode,
+    locale,
   }
 }
 
