@@ -6,6 +6,7 @@ export {
   listConnectedProviders,
   CalendarTokenError,
 } from "./credential-manager"
+export { generateIcsRequest, generateIcsCancel } from "./ics-generator"
 export type {
   CalendarProvider,
   CalendarAdapter,
@@ -14,3 +15,4 @@ export type {
   CalendarListItem,
   FreeBusyInterval,
 } from "./types"
+export type { IcsEventInput, IcsMethod } from "./ics-generator"

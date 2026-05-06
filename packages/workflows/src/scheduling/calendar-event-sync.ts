@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm"
-import { db, main } from "@eleva/db"
+import { main } from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
 import {
@@ -8,6 +8,12 @@ import {
   type CalendarProvider,
   type CalendarEventInput,
 } from "@eleva/calendar"
+import {
+  sendBookingIcsEmail,
+  sendRescheduleIcsEmail,
+  sendCancellationIcsEmail,
+  type IcsEmailPayload,
+} from "./ics-email"
 
 const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
   "google-calendar": "google",
@@ -20,9 +26,71 @@ function resolveProvider(slug: string): CalendarProvider {
   return provider
 }
 
+async function loadBookingContext(
+  orgId: string,
+  sessionId: string,
+  bookingId: string
+): Promise<IcsEmailPayload | null> {
+  const data = await withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({
+        expertEmail: main.users.email,
+        expertName: main.expertProfiles.displayName,
+        eventTypeTitle: main.eventTypes.title,
+        startsAt: main.sessions.startsAt,
+        endsAt: main.sessions.endsAt,
+        sessionMode: main.sessions.sessionMode,
+        timezone: main.bookings.timezone,
+      })
+      .from(main.sessions)
+      .innerJoin(main.bookings, eq(main.sessions.bookingId, main.bookings.id))
+      .innerJoin(
+        main.expertProfiles,
+        eq(main.sessions.expertProfileId, main.expertProfiles.id)
+      )
+      .innerJoin(main.users, eq(main.expertProfiles.userId, main.users.id))
+      .innerJoin(
+        main.eventTypes,
+        eq(main.sessions.eventTypeId, main.eventTypes.id)
+      )
+      .where(eq(main.sessions.id, sessionId))
+      .limit(1)
+    return row
+  })
+
+  if (!data) return null
+
+  const patientData = await withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({ displayName: main.users.displayName })
+      .from(main.bookings)
+      .innerJoin(main.users, eq(main.bookings.patientUserId, main.users.id))
+      .where(eq(main.bookings.id, bookingId))
+      .limit(1)
+    return row
+  })
+
+  const eventTypeName = data.eventTypeTitle?.en ?? "Session"
+
+  return {
+    expertEmail: data.expertEmail,
+    expertName: data.expertName,
+    patientName: patientData?.displayName ?? "Patient",
+    eventTypeName,
+    bookingId,
+    startsAt: data.startsAt,
+    endsAt: data.endsAt,
+    timezone: data.timezone,
+    sessionMode: data.sessionMode,
+  }
+}
+
 /**
  * Create a calendar event in the expert's destination calendar when a
  * booking is confirmed.
+ *
+ * If no destination calendar is configured, sends an .ics email to
+ * the expert instead (calendar-optional mode).
  *
  * Uses the idempotencyId (booking ID) to prevent duplicate events on
  * retry. Google returns 409 on duplicate client-supplied event IDs;
@@ -66,7 +134,13 @@ export async function calendarEventCreate(params: {
       return row
     })
 
-    if (!destination) return { calendarEventId: null }
+    if (!destination) {
+      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+      if (emailPayload) {
+        await sendBookingIcsEmail(emailPayload)
+      }
+      return { calendarEventId: null }
+    }
 
     const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
@@ -125,14 +199,26 @@ export async function calendarEventCreate(params: {
 
 /**
  * Update an existing calendar event (e.g., on reschedule).
+ *
+ * If no destination calendar is configured (calendar-optional mode),
+ * sends an updated .ics email to the expert.
  */
 export async function calendarEventUpdate(params: {
   sessionId: string
+  bookingId: string
   orgId: string
   newStartTime: Date
   newEndTime: Date
+  previousStartTime: Date
 }): Promise<void> {
-  const { sessionId, orgId, newStartTime, newEndTime } = params
+  const {
+    sessionId,
+    bookingId,
+    orgId,
+    newStartTime,
+    newEndTime,
+    previousStartTime,
+  } = params
 
   try {
     const session = await withOrgContext(orgId, async (tx: Tx) => {
@@ -147,7 +233,7 @@ export async function calendarEventUpdate(params: {
       return row
     })
 
-    if (!session?.calendarEventId) return
+    if (!session) return
 
     const destination = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
@@ -163,7 +249,21 @@ export async function calendarEventUpdate(params: {
       return row
     })
 
-    if (!destination) return
+    if (!destination) {
+      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+      if (emailPayload) {
+        const updated: IcsEmailPayload = {
+          ...emailPayload,
+          startsAt: newStartTime,
+          endsAt: newEndTime,
+          sequence: 1,
+        }
+        await sendRescheduleIcsEmail(updated, previousStartTime)
+      }
+      return
+    }
+
+    if (!session.calendarEventId) return
 
     const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
@@ -208,12 +308,16 @@ export async function calendarEventUpdate(params: {
 
 /**
  * Delete a calendar event (e.g., on cancellation).
+ *
+ * If no destination calendar is configured (calendar-optional mode),
+ * sends a cancellation .ics email to the expert.
  */
 export async function calendarEventDelete(params: {
   sessionId: string
+  bookingId: string
   orgId: string
 }): Promise<void> {
-  const { sessionId, orgId } = params
+  const { sessionId, bookingId, orgId } = params
 
   try {
     const session = await withOrgContext(orgId, async (tx: Tx) => {
@@ -228,7 +332,7 @@ export async function calendarEventDelete(params: {
       return row
     })
 
-    if (!session?.calendarEventId) return
+    if (!session) return
 
     const destination = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx
@@ -244,7 +348,15 @@ export async function calendarEventDelete(params: {
       return row
     })
 
-    if (!destination) return
+    if (!destination) {
+      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+      if (emailPayload) {
+        await sendCancellationIcsEmail(emailPayload)
+      }
+      return
+    }
+
+    if (!session.calendarEventId) return
 
     const integration = await withOrgContext(orgId, async (tx: Tx) => {
       const [row] = await tx

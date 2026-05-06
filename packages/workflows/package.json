@@ -17,7 +17,8 @@
     "@eleva/calendar": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/observability": "workspace:*",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "^0.45.2",
+    "resend": "^6.12.2"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

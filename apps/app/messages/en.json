@@ -81,6 +81,7 @@
   "calendars.status.disconnected": "Disconnected",
   "calendars.status.error": "Error",
   "calendars.status.expired": "Expired",
+  "calendars.noCalendarFallback": "No calendar connected. Your schedule is managed in Eleva and you will receive .ics email invites for each booking.",
 
   "integrations.title": "Integrations",
   "integrations.description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",

@@ -55,11 +55,21 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
     }
   }
 
+  const hasConnectedCalendar = integrations.some(
+    (i) => i.status === "connected"
+  )
+
   return (
     <div className="space-y-6">
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {!hasConnectedCalendar && (
+        <Alert>
+          <AlertDescription>{t("noCalendarFallback")}</AlertDescription>
         </Alert>
       )}
 

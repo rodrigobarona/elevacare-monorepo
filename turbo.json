@@ -36,7 +36,8 @@
     "QSTASH_TOKEN",
     "QSTASH_CURRENT_SIGNING_KEY",
     "QSTASH_NEXT_SIGNING_KEY",
-    "WORKFLOWS_DRAIN_SECRET"
+    "WORKFLOWS_DRAIN_SECRET",
+    "RESEND_API_KEY"
   ],
   "tasks": {
     "build": {

@@ -114,6 +114,42 @@ The system should clearly define:
 - how access is limited
 - how reconnection flows work
 
+## No-Calendar Fallback (Calendar-Optional Mode)
+
+Calendar connection is **not required**. Experts who choose not to connect Google or Microsoft calendars still get full scheduling functionality:
+
+### How It Works
+
+1. Expert defines availability via schedules, weekly rules, and date overrides — all stored in Eleva's database.
+2. Slot computation uses only internal data (schedule + existing bookings). No `externalBusyTimes` are injected when no `calendar_busy_sources` exist.
+3. When a booking is confirmed/rescheduled/cancelled and no `calendar_destinations` row exists, the system sends an email to the expert with:
+   - A `.ics` attachment (`text/calendar; method=REQUEST` or `method=CANCEL`) — compatible with all email clients and calendar apps.
+   - Schema.org `EventReservation` JSON-LD in the HTML — enables Gmail's rich event card with "Add to Calendar" action.
+
+### Detection
+
+Implicit: the absence of rows in `calendar_destinations` for the expert triggers the email fallback. No explicit "calendar-optional" flag is needed.
+
+### Expert UX
+
+- The calendars settings page shows a status message when no calendar is connected.
+- Publishing event types does not require a calendar connection.
+- Experts can connect a calendar at any time and the system switches to direct calendar writes.
+
+### Lifecycle Coverage
+
+| Event               | Calendar Connected            | No Calendar                                    |
+| ------------------- | ----------------------------- | ---------------------------------------------- |
+| Booking confirmed   | Write to destination calendar | Send .ics email (METHOD:REQUEST)               |
+| Booking rescheduled | Update calendar event         | Send updated .ics email (SEQUENCE incremented) |
+| Booking cancelled   | Delete calendar event         | Send cancellation .ics email (METHOD:CANCEL)   |
+
+### Implementation
+
+- `.ics` generation: `packages/calendar/src/ics-generator.ts` (RFC 5545 compliant)
+- Email sending: `packages/workflows/src/scheduling/ics-email.ts` (Resend with attachment + JSON-LD)
+- Fallback logic: `packages/workflows/src/scheduling/calendar-event-sync.ts` (checks for destination before deciding path)
+
 ## Future Extensions
 
 The model should leave room for:
@@ -124,10 +160,13 @@ The model should leave room for:
 
 But MVP should remain focused and simple.
 
+## Closed Questions
+
+- **Calendar connection required?** No — calendar-optional mode with .ics email fallback (decided 2026-05-06, see ADR-004).
+- **Event-level destination calendars at launch?** No — one destination per expert is sufficient for MVP.
+
 ## Open Questions
 
-- exact provider onboarding UX
-- whether event-level destination calendars are needed at launch
 - exact reconnect/re-auth flow
 - whether any sync-back behavior is needed later
 

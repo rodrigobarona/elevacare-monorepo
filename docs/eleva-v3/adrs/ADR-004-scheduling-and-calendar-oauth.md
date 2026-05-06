@@ -73,10 +73,25 @@ Pipes replaces all of this unfinished plumbing with a production-ready, managed 
 - **Eleva scope**: CalendarAdapter interface, direct API calls, busy/destination calendar model, idempotent event creation, webhook handling, freebusy queries.
 - WorkOS Pipes may also be used for future integrations (SCIM provisioning, directory sync) but those are separate decisions.
 
+## Calendar-Optional Mode (2026-05-06)
+
+Calendar connection is **optional**. Experts can use Eleva scheduling without connecting any external calendar:
+
+- **Schedule management**: Experts define availability via `schedules`, `availability_rules`, and `date_overrides` in Eleva's database. This works identically with or without a connected calendar.
+- **Slot computation**: `packages/scheduling` computes available slots from internal data (schedule rules + existing bookings). External busy times from connected calendars are additive — zero `calendar_busy_sources` rows is a valid state.
+- **Post-booking behavior**:
+  - If a `calendar_destinations` row exists: write event to the provider calendar via `CalendarAdapter` (existing flow).
+  - If no destination is configured: send an email with an `.ics` attachment (RFC 5545 `METHOD:REQUEST` or `METHOD:CANCEL`) plus schema.org `EventReservation` JSON-LD for Gmail rich cards.
+- **Lifecycle coverage**: The `.ics` fallback applies to all booking lifecycle events — creation, reschedule (updated `.ics` with incremented `SEQUENCE`), and cancellation (`METHOD:CANCEL`).
+- **Detection**: Implicit. No explicit toggle is needed; the absence of `calendar_destinations` rows triggers the email fallback. Experts see a status message in the calendars settings page.
+
+This allows experts who prefer not to manage OAuth connections to still receive structured calendar invites they can manually add to any calendar app.
+
 ## Consequences
 
 - Booking flow guarantees no double-write to destination calendar (idempotent event creation with client-supplied ID + 409 fallback) — this is an adapter-level concern, unaffected by Pipes.
-- Expert experience: connects calendar via Pipes widget, then picks busy sources and destination calendar in Eleva's post-connect setup flow.
+- Expert experience: connects calendar via Pipes widget, then picks busy sources and destination calendar in Eleva's post-connect setup flow. If they skip this step, they receive `.ics` emails instead.
 - Token expiration self-heals via Pipes' automatic refresh. If refresh fails, `getCalendarToken` throws `CalendarTokenError("needs_reauthorization")` which is surfaced to the expert.
 - No cron/scheduler needed for token refresh — Pipes handles this automatically.
 - Supports round-robin / collective / clinic scheduling in phase 2 without rewrite.
+- Calendar-optional mode requires no DB schema changes — the existing schema supports it implicitly.

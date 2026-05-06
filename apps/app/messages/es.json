@@ -81,6 +81,7 @@
   "calendars.status.disconnected": "Desconectado",
   "calendars.status.error": "Error",
   "calendars.status.expired": "Expirado",
+  "calendars.noCalendarFallback": "Ningún calendario conectado. Tu agenda se gestiona en Eleva y recibirás invitaciones .ics por email para cada reserva.",
 
   "integrations.title": "Integraciones",
   "integrations.description": "Conecta calendarios, herramientas de facturación y otros servicios a tu práctica Eleva.",
