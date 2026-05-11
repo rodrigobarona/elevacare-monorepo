@@ -82,18 +82,19 @@ export function withAuth(
     }
 
     if (authResponse) {
-      const { responseHeaders } = partitionAuthkitHeaders(
+      const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
         req,
         authResponse.headers
       )
-      const merged =
-        downstream instanceof NextResponse
-          ? downstream
-          : new NextResponse(downstream.body, {
-              status: downstream.status,
-              headers: downstream.headers,
-            })
-      return applyResponseHeaders(merged, responseHeaders)
+      const base = NextResponse.next({ request: { headers: requestHeaders } })
+
+      if (downstream instanceof NextResponse) {
+        downstream.headers.forEach((value, name) => {
+          base.headers.append(name, value)
+        })
+      }
+
+      return applyResponseHeaders(base, responseHeaders)
     }
     return downstream
   }
