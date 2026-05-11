@@ -52,8 +52,7 @@ export function withAuth(
   const proxy = authkitProxy({
     redirectUri:
       process.env.WORKOS_REDIRECT_URI ??
-      process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI ??
-      "",
+      process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI,
     middlewareAuth: {
       enabled: options.enforce ?? true,
       unauthenticatedPaths:
