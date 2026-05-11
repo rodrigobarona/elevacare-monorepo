@@ -258,15 +258,5 @@
     "react-dom": "19.2.3",
     "prismjs": "^1.30.0",
     "prettier": "3.6.2"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write",
-      "vitest related --run"
-    ],
-    "*.{js,jsx,json,css,md}": [
-      "prettier --write"
-    ]
   }
 }

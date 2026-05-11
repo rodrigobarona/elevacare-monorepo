@@ -9,7 +9,8 @@
     ".": "./src/index.ts",
     "./env": "./src/env.ts",
     "./i18n": "./src/i18n.ts",
-    "./reserved-usernames": "./src/reserved-usernames.ts"
+    "./reserved-usernames": "./src/reserved-usernames.ts",
+    "./routing": "./src/routing.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -42,7 +42,7 @@ export const ENV_CONFIG = {
   WORKOS_CLIENT_ID: process.env.WORKOS_CLIENT_ID || '',
   NEXT_PUBLIC_WORKOS_CLIENT_ID: process.env.NEXT_PUBLIC_WORKOS_CLIENT_ID || '',
   WORKOS_COOKIE_PASSWORD: process.env.WORKOS_COOKIE_PASSWORD || '',
-  WORKOS_REDIRECT_URI: process.env.WORKOS_REDIRECT_URI || '',
+  NEXT_PUBLIC_WORKOS_REDIRECT_URI: process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || '',
   WORKOS_WEBHOOK_SECRET: process.env.WORKOS_WEBHOOK_SECRET || '',
 
   // Stripe Configuration
@@ -211,7 +211,7 @@ export const ENV_VALIDATORS = {
 
     // Optional but recommended
     const optionalVars: string[] = [];
-    if (!ENV_CONFIG.WORKOS_REDIRECT_URI) optionalVars.push('WORKOS_REDIRECT_URI');
+    if (!ENV_CONFIG.NEXT_PUBLIC_WORKOS_REDIRECT_URI) optionalVars.push('NEXT_PUBLIC_WORKOS_REDIRECT_URI');
     if (!ENV_CONFIG.WORKOS_WEBHOOK_SECRET) optionalVars.push('WORKOS_WEBHOOK_SECRET');
 
     let message = '';

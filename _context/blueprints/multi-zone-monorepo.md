@@ -114,10 +114,10 @@ Rewrites live in the **gateway's** `next.config.mjs`. Destinations are environme
 
 ```js
 // apps/web/next.config.mjs
-const apiUrl = process.env.API_URL || "http://localhost:3002";
-const dashUrl = process.env.DASHBOARD_URL || "http://localhost:3003";
-const docsUrl = process.env.DOCS_URL || "http://localhost:3004";
-const contentUrl = process.env.CONTENT_URL || "http://localhost:3005";
+const apiUrl = process.env.API_URL || "http://localhost:3002"
+const dashUrl = process.env.DASHBOARD_URL || "http://localhost:3003"
+const docsUrl = process.env.DOCS_URL || "http://localhost:3004"
+const contentUrl = process.env.CONTENT_URL || "http://localhost:3005"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -130,36 +130,38 @@ const nextConfig = {
       beforeFiles: [
         {
           source: "/",
-          has: [{ type: "header", key: "accept", value: "(.*)text/markdown(.*)" }],
+          has: [
+            { type: "header", key: "accept", value: "(.*)text/markdown(.*)" },
+          ],
           destination: "/md",
         },
       ],
 
       // afterFiles: standard prefix proxies to upstream Vercel projects.
       afterFiles: [
-        { source: "/api/:path*",      destination: `${apiUrl}/api/:path*` },
-        { source: "/docs",            destination: `${docsUrl}/docs` },
-        { source: "/docs/:path*",     destination: `${docsUrl}/docs/:path*` },
-        { source: "/p/:path*",        destination: `${contentUrl}/p/:path*` },
-        { source: "/login",           destination: `${dashUrl}/login` },
-        { source: "/signup",          destination: `${dashUrl}/signup` },
-        { source: "/callback",        destination: `${dashUrl}/callback` },
-        { source: "/logout",          destination: `${dashUrl}/logout` },
+        { source: "/api/:path*", destination: `${apiUrl}/api/:path*` },
+        { source: "/docs", destination: `${docsUrl}/docs` },
+        { source: "/docs/:path*", destination: `${docsUrl}/docs/:path*` },
+        { source: "/p/:path*", destination: `${contentUrl}/p/:path*` },
+        { source: "/login", destination: `${dashUrl}/login` },
+        { source: "/signup", destination: `${dashUrl}/signup` },
+        { source: "/callback", destination: `${dashUrl}/callback` },
+        { source: "/logout", destination: `${dashUrl}/logout` },
       ],
-    };
+    }
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig
 ```
 
 ### Rewrite vs. redirect — the rule of thumb
 
-| Goal | Use |
-| --- | --- |
-| Serve another app's content under a path of the gateway, browser URL stays on the gateway | **Rewrite** |
-| Force a permanent canonical URL change (e.g. internal subdomain → root) | **Redirect (301)** at the platform level (Vercel domain redirect), not in app code |
-| Conditional routing based on cookies, geo, or auth state | **Proxy / middleware**, not rewrite (rewrites are static) |
+| Goal                                                                                      | Use                                                                                |
+| ----------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Serve another app's content under a path of the gateway, browser URL stays on the gateway | **Rewrite**                                                                        |
+| Force a permanent canonical URL change (e.g. internal subdomain → root)                   | **Redirect (301)** at the platform level (Vercel domain redirect), not in app code |
+| Conditional routing based on cookies, geo, or auth state                                  | **Proxy / middleware**, not rewrite (rewrites are static)                          |
 
 ### `beforeFiles` vs. `afterFiles`
 
@@ -268,19 +270,19 @@ const nextConfig = {
     return [
       // basePath: false escapes the auto-prefix when needed.
       { source: "/", destination: "/docs", permanent: false, basePath: false },
-    ];
+    ]
   },
-};
+}
 ```
 
 ### 2. Keep routes flat — avoid double-nesting
 
 `basePath` auto-prefixes **every** route. If you also nest your routes under a folder of the same name, you double up.
 
-| App folder path | basePath | Served at | Result |
-| --- | --- | --- | --- |
-| `app/[[...slug]]/page.tsx` | `/docs` | `/docs/[slug]` | Correct |
-| `app/docs/[[...slug]]/page.tsx` | `/docs` | `/docs/docs/[slug]` | Wrong — loops |
+| App folder path                 | basePath | Served at           | Result        |
+| ------------------------------- | -------- | ------------------- | ------------- |
+| `app/[[...slug]]/page.tsx`      | `/docs`  | `/docs/[slug]`      | Correct       |
+| `app/docs/[[...slug]]/page.tsx` | `/docs`  | `/docs/docs/[slug]` | Wrong — loops |
 
 Keep app routes at the project root; let `basePath` provide the single prefix.
 
@@ -301,10 +303,10 @@ Sub-apps should not implement i18n routing, auth gates, or rewrites that overlap
 
 The codebase uses two parallel sets of URL environment variables. Keep them straight:
 
-| Naming | Audience | Example | Where it points |
-| --- | --- | --- | --- |
-| `*_BASE_URL` | **Public**, consumer-facing. Used by shared config (e.g. `packages/core/config/domains.ts`) to build links, QR codes, OAuth redirect URIs, OG image URLs. | `WEB_BASE_URL=https://example.com` | The canonical root domain. |
-| `*_URL` | **Internal**. Used by `apps/web/next.config.mjs` rewrites and `proxy.ts` to forward traffic to upstream Vercel projects. | `DOCS_URL=https://docs.example.com` | The internal Vercel project domain. |
+| Naming       | Audience                                                                                                                                                  | Example                             | Where it points                     |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ----------------------------------- |
+| `*_BASE_URL` | **Public**, consumer-facing. Used by shared config (e.g. `packages/core/config/domains.ts`) to build links, QR codes, OAuth redirect URIs, OG image URLs. | `WEB_BASE_URL=https://example.com`  | The canonical root domain.          |
+| `*_URL`      | **Internal**. Used by `apps/web/next.config.mjs` rewrites and `proxy.ts` to forward traffic to upstream Vercel projects.                                  | `DOCS_URL=https://docs.example.com` | The internal Vercel project domain. |
 
 This split matters because:
 
@@ -317,15 +319,15 @@ If you collapse them into one variable, you eventually leak internal subdomains 
 
 ## Vercel Project Topology
 
-| Concern | Setup |
-| --- | --- |
-| Vercel projects | One per `apps/*` folder. `vercel link` from inside each app directory. |
-| Root domain | Attached to the gateway project only. |
-| Sub-app domains | Each gets an internal subdomain (`app.example.com`, `docs.example.com`, ...). |
-| Public API subdomain | `api.example.com` is the one sub-app that is intentionally consumer-facing. APIs are fine on subdomains; SEO does not apply. |
-| Env vars per project | Project-specific values (e.g. `WORKOS_REDIRECT_URI` only on dashboard). |
-| Shared env vars | Defined once in **Vercel Team Settings → Environment Variables** and linked to each project that needs them. Examples: `DATABASE_URL`, `SESSION_SECRET`, `WORKOS_API_KEY`. |
-| Local development | `vercel env pull .env.local` from each app directory after `vercel link`. |
+| Concern              | Setup                                                                                                                                                                      |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Vercel projects      | One per `apps/*` folder. `vercel link` from inside each app directory.                                                                                                     |
+| Root domain          | Attached to the gateway project only.                                                                                                                                      |
+| Sub-app domains      | Each gets an internal subdomain (`app.example.com`, `docs.example.com`, ...).                                                                                              |
+| Public API subdomain | `api.example.com` is the one sub-app that is intentionally consumer-facing. APIs are fine on subdomains; SEO does not apply.                                               |
+| Env vars per project | Project-specific values (e.g. `NEXT_PUBLIC_WORKOS_REDIRECT_URI` only on dashboard).                                                                                        |
+| Shared env vars      | Defined once in **Vercel Team Settings → Environment Variables** and linked to each project that needs them. Examples: `DATABASE_URL`, `SESSION_SECRET`, `WORKOS_API_KEY`. |
+| Local development    | `vercel env pull .env.local` from each app directory after `vercel link`.                                                                                                  |
 
 ### Why one Vercel project per app
 
@@ -344,10 +346,10 @@ When the gateway has a preview build pointing at `DOCS_URL=https://docs.example.
 
 Internal subdomains are not user-facing. They must not appear in Google. There are two strategies; pick per sub-app.
 
-| Strategy | Use when | How |
-| --- | --- | --- |
-| **301 redirect to canonical root URL** | The sub-app serves HTML content that has an equivalent root-domain URL. Google follows the 301, transfers ranking signals, and removes the old URL. | Configure the subdomain as a **redirect domain** in the Vercel dashboard for that project. |
-| **`robots.txt` Disallow + `X-Robots-Tag: noindex`** | The sub-app is auth-gated, returns API responses, or has nothing meaningful at a canonical equivalent. | Add `app/robots.ts` returning `Disallow: /`, plus a `headers()` entry returning `X-Robots-Tag: noindex` on every response. |
+| Strategy                                            | Use when                                                                                                                                            | How                                                                                                                        |
+| --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **301 redirect to canonical root URL**              | The sub-app serves HTML content that has an equivalent root-domain URL. Google follows the 301, transfers ranking signals, and removes the old URL. | Configure the subdomain as a **redirect domain** in the Vercel dashboard for that project.                                 |
+| **`robots.txt` Disallow + `X-Robots-Tag: noindex`** | The sub-app is auth-gated, returns API responses, or has nothing meaningful at a canonical equivalent.                                              | Add `app/robots.ts` returning `Disallow: /`, plus a `headers()` entry returning `X-Robots-Tag: noindex` on every response. |
 
 ### Why **not** redirect from `proxy.ts`
 
@@ -364,9 +366,9 @@ The sub-app cannot reliably distinguish a direct visit from a rewritten request.
 
 The fix is to **let Vercel handle the redirect at the edge, before the request reaches the app**. Multi-zone rewrites bypass domain-level redirects because they target the project directly.
 
-| Request origin | What happens |
-| --- | --- |
-| Direct visit `docs.example.com/quickstart` | Vercel edge 301 → `example.com/docs/quickstart` |
+| Request origin                             | What happens                                     |
+| ------------------------------------------ | ------------------------------------------------ |
+| Direct visit `docs.example.com/quickstart` | Vercel edge 301 → `example.com/docs/quickstart`  |
 | Rewrite from `example.com/docs/quickstart` | Bypasses domain redirect, sub-app serves content |
 
 Also set `metadataBase` in the sub-app's root `layout.tsx` to the canonical URL (`https://example.com/docs`) so `<link rel="canonical">` and OG URLs are correct.
@@ -401,15 +403,15 @@ If `content.example.com` is configured as a redirect domain (SEO strategy 1), ma
 
 When the gateway authenticates a user, the session cookie must also be readable on the sub-app's own domain (for direct access, debugging, and the OAuth callback round trip).
 
-| Property | Value |
-| --- | --- |
-| Cookie name | `your_app_session` (one name across all apps) |
-| Encryption | iron-session, JWE, or equivalent encrypted + signed cookie |
-| Domain | `.example.com` (leading dot) in production, unset in local dev |
-| `Secure` | `true` in production |
-| `HttpOnly` | `true` |
-| `SameSite` | `lax` |
-| Max age | 7 days, refreshed on each request |
+| Property    | Value                                                          |
+| ----------- | -------------------------------------------------------------- |
+| Cookie name | `your_app_session` (one name across all apps)                  |
+| Encryption  | iron-session, JWE, or equivalent encrypted + signed cookie     |
+| Domain      | `.example.com` (leading dot) in production, unset in local dev |
+| `Secure`    | `true` in production                                           |
+| `HttpOnly`  | `true`                                                         |
+| `SameSite`  | `lax`                                                          |
+| Max age     | 7 days, refreshed on each request                              |
 
 The leading dot (`.example.com`) makes the cookie readable on the apex (`example.com`, where the gateway runs) **and** every subdomain (`app.example.com`, `api.example.com`). Locally, leave the domain unset so it scopes to `localhost`.
 
@@ -436,16 +438,20 @@ The cookie is set by **whichever app handles the OAuth callback**. The callback 
     "DOCS_BASE_URL"
   ],
   "tasks": {
-    "build":     { "dependsOn": ["^build"], "inputs": ["$TURBO_DEFAULT$", ".env*"], "outputs": [".next/**", "!.next/cache/**"] },
-    "lint":      { "dependsOn": ["^lint"] },
-    "format":    { "dependsOn": ["^format"] },
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [".next/**", "!.next/cache/**"]
+    },
+    "lint": { "dependsOn": ["^lint"] },
+    "format": { "dependsOn": ["^format"] },
     "typecheck": { "dependsOn": ["^typecheck"] },
-    "test":      { "dependsOn": ["^build"] },
-    "dev":       { "cache": false, "persistent": true },
+    "test": { "dependsOn": ["^build"] },
+    "dev": { "cache": false, "persistent": true },
     "db:generate": { "cache": false },
-    "db:migrate":  { "cache": false },
-    "db:push":     { "cache": false },
-    "db:studio":   { "cache": false, "persistent": true }
+    "db:migrate": { "cache": false },
+    "db:push": { "cache": false },
+    "db:studio": { "cache": false, "persistent": true }
   }
 }
 ```
@@ -463,7 +469,7 @@ Each app's `next.config.mjs` must transpile any workspace package it imports:
 ```js
 const nextConfig = {
   transpilePackages: ["@workspace/ui", "@workspace/core", "@workspace/auth"],
-};
+}
 ```
 
 Without this, Next.js tries to import compiled output from `node_modules` and fails because workspace packages ship as TypeScript source.
@@ -474,14 +480,14 @@ Without this, Next.js tries to import compiled output from `node_modules` and fa
 
 A minimal recommended set:
 
-| Package | Purpose | Notes |
-| --- | --- | --- |
-| `@workspace/core` | Domain types, business logic, shared config (`config/domains.ts`, `config/env.ts`). | Pure TS, no React. Consumed by every app. |
-| `@workspace/db` | ORM schema, migrations, query helpers. | Owns the database. Apps import query functions, not raw SQL. |
-| `@workspace/auth` | Cookie/session helpers, permission checks, current-user resolution. | Wraps your auth provider (WorkOS, Clerk, NextAuth, etc.) so apps share one session shape. |
-| `@workspace/ui` | Shared component library — shadcn/ui primitives, Tailwind theme, app-agnostic components. | Re-exports from `@workspace/ui/components/*`. |
-| `@workspace/eslint-config` | Shared ESLint flat config. | Apps and packages extend it. |
-| `@workspace/typescript-config` | Shared `tsconfig.json` presets (base, next, react-library). | |
+| Package                        | Purpose                                                                                   | Notes                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `@workspace/core`              | Domain types, business logic, shared config (`config/domains.ts`, `config/env.ts`).       | Pure TS, no React. Consumed by every app.                                                 |
+| `@workspace/db`                | ORM schema, migrations, query helpers.                                                    | Owns the database. Apps import query functions, not raw SQL.                              |
+| `@workspace/auth`              | Cookie/session helpers, permission checks, current-user resolution.                       | Wraps your auth provider (WorkOS, Clerk, NextAuth, etc.) so apps share one session shape. |
+| `@workspace/ui`                | Shared component library — shadcn/ui primitives, Tailwind theme, app-agnostic components. | Re-exports from `@workspace/ui/components/*`.                                             |
+| `@workspace/eslint-config`     | Shared ESLint flat config.                                                                | Apps and packages extend it.                                                              |
+| `@workspace/typescript-config` | Shared `tsconfig.json` presets (base, next, react-library).                               |                                                                                           |
 
 ### Apps depend via `workspace:*`
 
@@ -491,7 +497,7 @@ A minimal recommended set:
   "dependencies": {
     "@workspace/auth": "workspace:*",
     "@workspace/core": "workspace:*",
-    "@workspace/ui":   "workspace:*"
+    "@workspace/ui": "workspace:*"
   }
 }
 ```
@@ -514,18 +520,18 @@ The CLI is run from one app for context, but components are placed in `packages/
 
 Pick a stable port per app and bake it into local defaults so the gateway's rewrites work out of the box without env files.
 
-| App | Port |
-| --- | --- |
-| `apps/web` (gateway) | 3000 |
-| `apps/api` | 3001 (or 3002 if you prefer aligning with Vercel's defaults) |
-| `apps/dashboard` | 3003 |
-| `apps/docs` | 3004 |
-| `apps/content` | 3005 |
+| App                  | Port                                                         |
+| -------------------- | ------------------------------------------------------------ |
+| `apps/web` (gateway) | 3000                                                         |
+| `apps/api`           | 3001 (or 3002 if you prefer aligning with Vercel's defaults) |
+| `apps/dashboard`     | 3003                                                         |
+| `apps/docs`          | 3004                                                         |
+| `apps/content`       | 3005                                                         |
 
 Defaults in the gateway's `next.config.mjs`:
 
 ```js
-const docsUrl = process.env.DOCS_URL || "http://localhost:3004";
+const docsUrl = process.env.DOCS_URL || "http://localhost:3004"
 ```
 
 ### Run one or all apps
@@ -553,16 +559,16 @@ cd ../docs && vercel env pull .env.local
 
 ## Common Failure Modes
 
-| Symptom | Cause | Fix |
-| --- | --- | --- |
-| `DNS_HOSTNAME_RESOLVED_PRIVATE` on a rewritten path | Rewrite URL env var unset, defaulting to `localhost` in production. | Set `DOCS_URL` (etc.) on the gateway Vercel project and redeploy with **Clear Cache**. |
-| `ERR_TOO_MANY_REDIRECTS` on a sub-app path (e.g. `/docs`) | Either the sub-app's `proxy.ts` is 301-ing rewritten requests, or routes are double-nested under `app/<basePath>/...`. | Move the redirect to a **Vercel domain redirect**; flatten routes to `app/[[...slug]]/`. |
-| `ERR_TOO_MANY_REDIRECTS` on an authed gateway path | Unauthenticated request fell through to i18n middleware, which prefix-redirected back into the same path. | In the proxy, redirect unauthenticated users to `/login` **before** running i18n. |
-| 404 on `/` for authenticated users | Proxy passed through with `NextResponse.next()` but the gateway has no `app/page.tsx` (all pages live under `app/[locale]/`). | Redirect authenticated `/` to a real route (`/products`) instead of passing through. |
-| 404 on a sub-app's subdomain root (e.g. `docs.example.com/`) | With `basePath: "/docs"`, the app root is at `/docs`, not `/`. | Expected. Configure a Vercel domain redirect from the subdomain to `example.com/docs`. |
-| Stale rewrite destinations after env var change | Turbo remote cache served an old build with the old baked-in URL. | Add the var to `turbo.json` `globalEnv`; redeploy with **Clear Cache**. |
-| Cookie set on dashboard not visible on gateway | Cookie domain not set, or set to a host instead of `.example.com`. | Set `Domain=.example.com` in production; leave unset in local dev. |
-| Internal subdomain showing up in Google | Neither SEO strategy applied, or `proxy.ts` 301 created a loop and gave up. | Configure the subdomain as a Vercel **redirect domain**, or add `robots.txt` + `X-Robots-Tag: noindex`. |
+| Symptom                                                      | Cause                                                                                                                         | Fix                                                                                                     |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `DNS_HOSTNAME_RESOLVED_PRIVATE` on a rewritten path          | Rewrite URL env var unset, defaulting to `localhost` in production.                                                           | Set `DOCS_URL` (etc.) on the gateway Vercel project and redeploy with **Clear Cache**.                  |
+| `ERR_TOO_MANY_REDIRECTS` on a sub-app path (e.g. `/docs`)    | Either the sub-app's `proxy.ts` is 301-ing rewritten requests, or routes are double-nested under `app/<basePath>/...`.        | Move the redirect to a **Vercel domain redirect**; flatten routes to `app/[[...slug]]/`.                |
+| `ERR_TOO_MANY_REDIRECTS` on an authed gateway path           | Unauthenticated request fell through to i18n middleware, which prefix-redirected back into the same path.                     | In the proxy, redirect unauthenticated users to `/login` **before** running i18n.                       |
+| 404 on `/` for authenticated users                           | Proxy passed through with `NextResponse.next()` but the gateway has no `app/page.tsx` (all pages live under `app/[locale]/`). | Redirect authenticated `/` to a real route (`/products`) instead of passing through.                    |
+| 404 on a sub-app's subdomain root (e.g. `docs.example.com/`) | With `basePath: "/docs"`, the app root is at `/docs`, not `/`.                                                                | Expected. Configure a Vercel domain redirect from the subdomain to `example.com/docs`.                  |
+| Stale rewrite destinations after env var change              | Turbo remote cache served an old build with the old baked-in URL.                                                             | Add the var to `turbo.json` `globalEnv`; redeploy with **Clear Cache**.                                 |
+| Cookie set on dashboard not visible on gateway               | Cookie domain not set, or set to a host instead of `.example.com`.                                                            | Set `Domain=.example.com` in production; leave unset in local dev.                                      |
+| Internal subdomain showing up in Google                      | Neither SEO strategy applied, or `proxy.ts` 301 created a loop and gave up.                                                   | Configure the subdomain as a Vercel **redirect domain**, or add `robots.txt` + `X-Robots-Tag: noindex`. |
 
 ---
 
@@ -593,16 +599,16 @@ When the checklist is complete, `pnpm dev` should bring up all apps, requests to
 
 This blueprint was extracted from the EUlabel codebase. Below is the mapping from generic placeholders to the concrete EUlabel apps and domains. See the linked existing pages for deeper, EUlabel-specific detail.
 
-| Generic | EUlabel | Notes |
-| --- | --- | --- |
-| `example.com` | `eulabel.eu` | Root domain owned by `apps/web`. |
-| `apps/web` (gateway) | [`apps/web`](apps/web) | Marketing + multi-zone gateway + i18n + auth proxy. |
-| `apps/api` | [`apps/api`](apps/api) | Public REST API on `api.eulabel.eu`. |
-| `apps/dashboard` | [`apps/dashboard`](apps/dashboard) | Brand dashboard on `app.eulabel.eu`, served under `/{orgSlug}/...`. |
-| `apps/docs` | [`apps/docs`](apps/docs) | FumaDocs site on `docs.eulabel.eu`, served under `/docs`. |
-| `apps/content` | [`apps/passport`](apps/passport) | Consumer-facing Digital Product Passport pages on `passport.eulabel.eu`, served under `/p/{productId}`. |
-| (extra) | [`apps/resolver`](apps/resolver) | GS1-conformant Digital Link resolver on `id.eulabel.eu`, served under `/01/{gtin}`. EUlabel-specific. |
-| `customer.com` | `label.brand.com` | White-label resolver and passport via Vercel Domains API. |
+| Generic              | EUlabel                            | Notes                                                                                                   |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `example.com`        | `eulabel.eu`                       | Root domain owned by `apps/web`.                                                                        |
+| `apps/web` (gateway) | [`apps/web`](apps/web)             | Marketing + multi-zone gateway + i18n + auth proxy.                                                     |
+| `apps/api`           | [`apps/api`](apps/api)             | Public REST API on `api.eulabel.eu`.                                                                    |
+| `apps/dashboard`     | [`apps/dashboard`](apps/dashboard) | Brand dashboard on `app.eulabel.eu`, served under `/{orgSlug}/...`.                                     |
+| `apps/docs`          | [`apps/docs`](apps/docs)           | FumaDocs site on `docs.eulabel.eu`, served under `/docs`.                                               |
+| `apps/content`       | [`apps/passport`](apps/passport)   | Consumer-facing Digital Product Passport pages on `passport.eulabel.eu`, served under `/p/{productId}`. |
+| (extra)              | [`apps/resolver`](apps/resolver)   | GS1-conformant Digital Link resolver on `id.eulabel.eu`, served under `/01/{gtin}`. EUlabel-specific.   |
+| `customer.com`       | `label.brand.com`                  | White-label resolver and passport via Vercel Domains API.                                               |
 
 EUlabel-specific concerns covered in the existing architecture pages:
 
@@ -682,13 +688,13 @@ flowchart LR
 
 ## Sources
 
-| Source | File |
-| --- | --- |
-| Apps and packages inventory, scripts, design decisions | [`_docs/70_engineering_architecture/monorepo-structure.md`](_docs/70_engineering_architecture/monorepo-structure.md) |
-| Multi-zone rewrites, SEO strategy, cookie/session, white-label, basePath and Turbo cache pitfalls | [`_docs/70_engineering_architecture/domain-routing.md`](_docs/70_engineering_architecture/domain-routing.md) |
-| Stack rationale (Next.js as single framework, Vercel for multitenancy) | [`_docs/70_engineering_architecture/stack-decisions.md`](_docs/70_engineering_architecture/stack-decisions.md) |
-| Concrete `rewrites()` implementation | [`apps/web/next.config.mjs`](apps/web/next.config.mjs) |
-| Concrete proxy with priority ladder | [`apps/web/proxy.ts`](apps/web/proxy.ts) |
-| `basePath` example | [`apps/docs/next.config.mjs`](apps/docs/next.config.mjs) |
-| Workspace and pipeline configuration | [`pnpm-workspace.yaml`](pnpm-workspace.yaml), [`turbo.json`](turbo.json), [`package.json`](package.json) |
-| Documentation conventions this page follows | [`.cursor/rules/documentation-writing.mdc`](.cursor/rules/documentation-writing.mdc) |
+| Source                                                                                            | File                                                                                                                 |
+| ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Apps and packages inventory, scripts, design decisions                                            | [`_docs/70_engineering_architecture/monorepo-structure.md`](_docs/70_engineering_architecture/monorepo-structure.md) |
+| Multi-zone rewrites, SEO strategy, cookie/session, white-label, basePath and Turbo cache pitfalls | [`_docs/70_engineering_architecture/domain-routing.md`](_docs/70_engineering_architecture/domain-routing.md)         |
+| Stack rationale (Next.js as single framework, Vercel for multitenancy)                            | [`_docs/70_engineering_architecture/stack-decisions.md`](_docs/70_engineering_architecture/stack-decisions.md)       |
+| Concrete `rewrites()` implementation                                                              | [`apps/web/next.config.mjs`](apps/web/next.config.mjs)                                                               |
+| Concrete proxy with priority ladder                                                               | [`apps/web/proxy.ts`](apps/web/proxy.ts)                                                                             |
+| `basePath` example                                                                                | [`apps/docs/next.config.mjs`](apps/docs/next.config.mjs)                                                             |
+| Workspace and pipeline configuration                                                              | [`pnpm-workspace.yaml`](pnpm-workspace.yaml), [`turbo.json`](turbo.json), [`package.json`](package.json)             |
+| Documentation conventions this page follows                                                       | [`.cursor/rules/documentation-writing.mdc`](.cursor/rules/documentation-writing.mdc)                                 |

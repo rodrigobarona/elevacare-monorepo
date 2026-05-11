@@ -27,9 +27,9 @@
 
 ## What didn't
 
-| Issue                                  | Detail                                                                                                                                  |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| **Vendor lock via `clerkUserId` text** | Every table is FK'd to a Clerk-issued opaque string. Migrating off Clerk means rewriting every join.                                    |
+| Issue                                  | Detail                                                                                                                                   |
+| -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vendor lock via `clerkUserId` text** | Every table is FK'd to a Clerk-issued opaque string. Migrating off Clerk means rewriting every join.                                     |
 | **No first-class organizations**       | Clerk has Orgs but we never adopted them; multi-tenancy was DIY via `clerkUserId`. Cannot model clinics or shared workspaces cleanly.    |
 | **RBAC is single-string metadata**     | One role per user, mutable strings, no permissions surface, no inheritance, no scoped checks. Every role check is "string equals".       |
 | **DB sync is fragile**                 | Clerk webhook misfires (out-of-order events, dropped retries) caused stale local rows. Sync was never built to be eventually-consistent. |
@@ -82,7 +82,7 @@ Adopt-as-is from `clerk-workos` branch:
 
 - AuthKit handles email/password, Google SSO, MFA, sessions.
 - Session validation in `src/proxy.ts` via the WorkOS Node SDK helper.
-- New env: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_REDIRECT_URI`, `WORKOS_WEBHOOK_SECRET`.
+- New env: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `NEXT_PUBLIC_WORKOS_REDIRECT_URI`, `WORKOS_WEBHOOK_SECRET`.
 
 Branch reference: `_docs/04-development/PROXY-MIDDLEWARE.md`.
 
@@ -110,17 +110,18 @@ Why org-per-user beats user-per-user:
 Adapted from `clerk-workos` branch (`_docs/_WorkOS RABAC implemenation/`). Two WorkOS defaults + three custom roles; the branch's generated config still references the older six-role set (`superadmin`, `partner_admin`, `user`) and is renamed during v2 generation:
 
 - **5 roles**:
-  - `member` *(WorkOS default)* — patient persona.
+  - `member` _(WorkOS default)_ — patient persona.
   - `expert_community` — standard expert.
   - `expert_top` — premium expert.
   - `clinic` — clinic owner (Phase 2).
-  - `admin` *(WorkOS default)* — Eleva staff.
+  - `admin` _(WorkOS default)_ — Eleva staff.
 - **~132 granular permissions** in `resource:action` format (e.g., `meetings:read`, `payouts:approve`, `records:write`, `subscriptions:manage`). The branch's generated CSV/MD reports the current canonical count (the original blueprint plan referenced "89"; the catalog has grown).
 - **No role inheritance at the WorkOS level**: the matrix is explicit per role. The DSL that generates `infra/workos/rbac-config.json` supports an `extends` shortcut for source readability, flattened at build time. Lecturer is **not** a separate role — it's an add-on subscription that injects extra permissions into the holder's JWT.
 - **No `superadmin`**: the destructive permissions previously gated by it (`users:impersonate`, `organizations:delete`, `payments:retry_failed`, `audit:export`, `settings:manage_features`) are granted to a small operator subset of `admin` users via WorkOS group membership.
 - Permissions baked into **JWT claims** at session issuance — no DB lookup on every request.
 
 Generated artifacts (lift from branch):
+
 - `packages/rbac/permissions.ts` — full enum.
 - `packages/rbac/roles.ts` — role-to-permissions mapping.
 - `packages/rbac/check.ts` — `hasPermission(claims, 'meetings:read', { orgId })`.
@@ -131,12 +132,12 @@ Detail: [18-rbac-and-permissions.md](18-rbac-and-permissions.md).
 
 ### 4. Four-layer enforcement
 
-| Layer                      | Where                                | Reads                       |
-| -------------------------- | ------------------------------------ | --------------------------- |
-| **L1 — Proxy**             | `src/proxy.ts` route gate            | JWT claims, route table     |
-| **L2 — Layout**            | Server-component layout `await auth()` | JWT claims                |
-| **L3 — Server action / API** | `withPermission()` decorator        | JWT claims, request context |
-| **L4 — Database (RLS)**    | Postgres policies                    | `app.current_org_id`, `app.role` set per transaction |
+| Layer                        | Where                                  | Reads                                                |
+| ---------------------------- | -------------------------------------- | ---------------------------------------------------- |
+| **L1 — Proxy**               | `src/proxy.ts` route gate              | JWT claims, route table                              |
+| **L2 — Layout**              | Server-component layout `await auth()` | JWT claims                                           |
+| **L3 — Server action / API** | `withPermission()` decorator           | JWT claims, request context                          |
+| **L4 — Database (RLS)**      | Postgres policies                      | `app.current_org_id`, `app.role` set per transaction |
 
 Drift between layers caused most authorization bugs. v2 makes L4 mandatory and L1–L3 cheap (no DB hit) by reading JWT.
 
@@ -190,16 +191,16 @@ export async function withOrgContext<T>(orgId: string, fn: () => Promise<T>): Pr
 
 ### 7. Migration mapping (Clerk → WorkOS)
 
-| Clerk concept                      | WorkOS equivalent                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `clerkUserId` (text PK)            | `workos_user_id` (text unique) → local `users.id` (uuid)                                         |
-| `public_metadata.role` (string)    | WorkOS role on the membership + JWT claim `role`                                                 |
-| `public_metadata.expert_setup`     | `organizations.metadata.expert_setup` jsonb on the expert's org                                  |
-| Clerk webhook `user.created`       | WorkOS webhook `user.created` + `ensureUserOrg()` callback                                       |
-| `clerkMiddleware()`                | `workosAuth()` proxy handler (composable, JWT-only check, no SDK call per request)              |
-| `<SignIn />` UI                    | WorkOS-hosted AuthKit redirect                                                                   |
-| `auth().userId`                    | `(await auth()).user.id`                                                                         |
-| `auth().has({ permission })`       | `hasPermission(claims, 'meetings:read')`                                                         |
+| Clerk concept                   | WorkOS equivalent                                                                  |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| `clerkUserId` (text PK)         | `workos_user_id` (text unique) → local `users.id` (uuid)                           |
+| `public_metadata.role` (string) | WorkOS role on the membership + JWT claim `role`                                   |
+| `public_metadata.expert_setup`  | `organizations.metadata.expert_setup` jsonb on the expert's org                    |
+| Clerk webhook `user.created`    | WorkOS webhook `user.created` + `ensureUserOrg()` callback                         |
+| `clerkMiddleware()`             | `workosAuth()` proxy handler (composable, JWT-only check, no SDK call per request) |
+| `<SignIn />` UI                 | WorkOS-hosted AuthKit redirect                                                     |
+| `auth().userId`                 | `(await auth()).user.id`                                                           |
+| `auth().has({ permission })`    | `hasPermission(claims, 'meetings:read')`                                           |
 
 ### 8. Google OAuth tokens
 
@@ -228,7 +229,7 @@ Branch reference: `_docs/_WorkOS Vault implemenation/CAL-COM-CALENDAR-SELECTION.
 
 - [ ] `packages/auth` exposes `auth()`, `requireAuth()`, `requirePermission()`, `withOrgContext()`.
 - [ ] `packages/rbac` lifted from branch and renamed to the v2 taxonomy (~132 permissions, 5 roles — 2 WorkOS defaults + 3 custom; decorator + check helpers).
-- [ ] WorkOS env vars set: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `WORKOS_REDIRECT_URI`, `WORKOS_WEBHOOK_SECRET`.
+- [ ] WorkOS env vars set: `WORKOS_API_KEY`, `WORKOS_CLIENT_ID`, `WORKOS_COOKIE_PASSWORD`, `NEXT_PUBLIC_WORKOS_REDIRECT_URI`, `WORKOS_WEBHOOK_SECRET`.
 - [ ] `src/proxy.ts` uses JWT-claim RBAC, **never** queries the DB on a per-request basis.
 - [ ] WorkOS webhook handler at `/api/workos/webhook` covers user/org/membership events.
 - [ ] `ensureUserOrg(userId, orgType)` runs on every auth callback — idempotent.

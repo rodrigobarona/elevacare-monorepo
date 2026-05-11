@@ -1,142 +1,183 @@
 {
-  "nav.dashboard": "Painel",
-  "nav.patient": "Paciente",
-  "nav.expert": "Especialista",
-  "nav.org": "Organização",
-  "nav.admin": "Administração",
-  "nav.settings": "Definições",
-  "nav.logout": "Terminar sessão",
-
-  "auth.signin.title": "Iniciar sessão na Eleva",
-  "auth.signin.cta": "Continuar com a WorkOS",
-  "auth.signup.title": "Crie a sua conta Eleva",
-  "auth.signup.cta": "Continuar com a WorkOS",
-
-  "dashboard.patient.welcome": "Bem-vindo(a), {name}",
-  "dashboard.patient.subtitle": "As suas próximas consultas e relatórios ficam aqui.",
-  "dashboard.expert.welcome": "Olá, {name}",
-  "dashboard.expert.subtitle": "A sua agenda, reservas e relatórios ficam aqui.",
-  "dashboard.org.welcome": "Clínica: {name}",
-  "dashboard.org.subtitle": "Gira membros, faturação e horários.",
-  "dashboard.admin.welcome": "Consola do operador Eleva",
-  "dashboard.admin.subtitle": "Aprovações, pagamentos e auditoria.",
-
-  "settings.profile.title": "Perfil",
-  "settings.profile.email": "E-mail",
-  "settings.profile.language": "Idioma",
-  "settings.profile.save": "Guardar",
-
-  "nav.finance": "Finanças",
-  "nav.adminApplications": "Candidaturas",
-
-  "finance.title": "Finanças",
-  "finance.description": "Gira os seus pagamentos, saldos e definições fiscais.",
-  "finance.balance": "Saldo",
-  "finance.payouts": "Pagamentos",
-  "finance.accountDetails": "Detalhes da Conta",
-  "finance.taxSettings": "Definições Fiscais",
-
-  "nav.eventTypes": "Tipos de Evento",
-  "nav.schedule": "Horário",
-  "nav.calendars": "Calendários",
-  "nav.integrations": "Integrações",
-
-  "eventTypes.title": "Tipos de Evento",
-  "eventTypes.description": "Defina os serviços que os pacientes podem reservar consigo.",
-  "eventTypes.create": "Novo tipo de evento",
-  "eventTypes.createTitle": "Criar Tipo de Evento",
-  "eventTypes.createDescription": "Defina um novo serviço reservável para os seus pacientes.",
-  "eventTypes.editTitle": "Editar Tipo de Evento",
-  "eventTypes.editDescription": "Atualize os detalhes e regras de reserva deste tipo de evento.",
-  "eventTypes.empty": "Ainda não criou nenhum tipo de evento.",
-  "eventTypes.createFirst": "Crie o seu primeiro tipo de evento",
-  "eventTypes.status.published": "Publicado",
-  "eventTypes.status.draft": "Rascunho",
-  "eventTypes.error.no-profile": "O seu perfil de especialista não foi encontrado.",
-  "eventTypes.error.toggle-failed": "Não foi possível atualizar o tipo de evento. Tente novamente.",
-  "eventTypes.error.delete-failed": "Não foi possível eliminar o tipo de evento. Tente novamente.",
-  "eventTypes.error.generic": "Ocorreu um erro. Tente novamente.",
-  "eventTypes.actions.ariaLabel": "Ações do tipo de evento",
-  "eventTypes.actions.edit": "Editar",
-  "eventTypes.actions.publish": "Publicar",
-  "eventTypes.actions.unpublish": "Despublicar",
-  "eventTypes.actions.delete": "Eliminar",
-  "eventTypes.actions.deleteTitle": "Eliminar tipo de evento?",
-  "eventTypes.actions.deleteDescription": "Esta ação não pode ser desfeita. Eliminará permanentemente o tipo de evento e todos os dados associados.",
-  "eventTypes.actions.cancel": "Cancelar",
-  "eventTypes.actions.deleting": "A eliminar...",
-
-  "schedule.title": "Horário",
-  "schedule.description": "Defina a sua disponibilidade semanal e exceções de datas.",
-  "schedule.timezone": "Fuso horário",
-  "schedule.weeklyHours": "Horas semanais",
-  "schedule.dateOverrides": "Exceções de datas",
-  "schedule.addOverride": "Adicionar exceção",
-  "schedule.blocked": "Bloqueado",
-  "schedule.save": "Guardar horário",
-  "schedule.saving": "A guardar...",
-  "schedule.saved": "Horário guardado com sucesso.",
-  "schedule.to": "até",
-  "schedule.addWindow": "Adicionar janela",
-  "schedule.remove": "Remover",
-  "schedule.overrideDate": "Data",
-  "schedule.overrideBlockDay": "Bloquear dia inteiro",
-  "schedule.overrideFrom": "De",
-  "schedule.overrideTo": "Até",
-  "schedule.days.0": "Domingo",
-  "schedule.days.1": "Segunda-feira",
-  "schedule.days.2": "Terça-feira",
-  "schedule.days.3": "Quarta-feira",
-  "schedule.days.4": "Quinta-feira",
-  "schedule.days.5": "Sexta-feira",
-  "schedule.days.6": "Sábado",
-  "schedule.error.startBeforeEnd": "{day}: a hora de início deve ser antes da hora de fim",
-  "schedule.error.overrideStartBeforeEnd": "A hora de início da exceção deve ser antes da hora de fim",
-  "schedule.error.overlappingWindows": "{day}: as janelas de disponibilidade não podem sobrepor-se",
-
-  "calendars.backToIntegrations": "Integrações",
-  "calendars.title": "Calendários Conectados",
-  "calendars.description": "Conecte o seu calendário Google ou Microsoft para evitar reservas duplas.",
-  "calendars.connectTitle": "Conectar um calendário",
-  "calendars.connectDescription": "Associe a sua conta Google ou Microsoft para que a Eleva verifique a sua disponibilidade e crie eventos de sessão.",
-  "calendars.connectHint": "As suas credenciais de calendário são geridas de forma segura pela WorkOS. A Eleva nunca armazena a sua palavra-passe.",
-  "calendars.connectedTitle": "Os seus calendários",
-  "calendars.connectGoogle": "Conectar Google Calendar",
-  "calendars.connectMicrosoft": "Conectar Microsoft Calendar",
-  "calendars.busySources": "Fontes de ocupação",
-  "calendars.destination": "Calendário de destino",
-  "calendars.disconnect": "Desconectar",
-  "calendars.disconnectConfirm": "Desconectar este calendário? A Eleva deixará de verificar a disponibilidade e criar eventos.",
-  "calendars.empty": "Nenhum calendário conectado ainda.",
-  "calendars.status.connecting": "A conectar",
-  "calendars.status.connected": "Conectado",
-  "calendars.status.disconnected": "Desconectado",
-  "calendars.status.error": "Erro",
-  "calendars.status.expired": "Expirado",
-  "calendars.noCalendarFallback": "Nenhum calendário conectado. A sua agenda é gerida na Eleva e receberá convites .ics por email para cada marcação.",
-  "calendars.connectUnavailable": "A ligação ao calendário não está disponível de momento. Tente novamente mais tarde.",
-  "calendars.error.no-profile": "O seu perfil de especialista não foi encontrado.",
-  "calendars.error.unauthorized-calendar": "Não tem acesso a esta integração de calendário.",
-  "calendars.error.unknown-provider": "Fornecedor de calendário desconhecido.",
-  "calendars.error.disconnect-failed": "Não foi possível desconectar o calendário. Tente novamente.",
-  "calendars.error.load-failed": "Não foi possível carregar os dados do calendário. Tente novamente.",
-  "calendars.error.save-failed": "Não foi possível guardar as definições do calendário. Tente novamente.",
-
-  "integrations.title": "Integrações",
-  "integrations.description": "Conecte calendários, ferramentas de faturação e outros serviços à sua prática Eleva.",
-  "integrations.category.calendar": "Calendários",
-  "integrations.category.invoicing": "Faturação",
-  "integrations.category.crm": "CRM",
-  "integrations.category.video": "Vídeo",
-  "integrations.category.other": "Outros",
-  "integrations.status.connecting": "A conectar",
-  "integrations.status.connected": "Conectado",
-  "integrations.status.disconnected": "Desconectado",
-  "integrations.status.error": "Erro",
-  "integrations.status.expired": "Expirado",
-  "integrations.configureCalendars": "Configurar calendários",
-  "integrations.connectViaPipes": "Conecte através das definições da sua conta para ativar esta integração.",
-  "integrations.availableIn": "Disponível em: {countries}",
-
-  "errors.unauthorized": "Não tem acesso a esta página."
+  "nav": {
+    "dashboard": "Painel",
+    "patient": "Paciente",
+    "expert": "Especialista",
+    "org": "Organização",
+    "admin": "Administração",
+    "settings": "Definições",
+    "logout": "Terminar sessão",
+    "finance": "Finanças",
+    "adminApplications": "Candidaturas",
+    "eventTypes": "Tipos de Evento",
+    "schedule": "Horário",
+    "calendars": "Calendários",
+    "integrations": "Integrações"
+  },
+  "auth": {
+    "signin": {
+      "title": "Iniciar sessão na Eleva",
+      "cta": "Continuar com a WorkOS"
+    },
+    "signup": {
+      "title": "Crie a sua conta Eleva",
+      "cta": "Continuar com a WorkOS"
+    }
+  },
+  "dashboard": {
+    "patient": {
+      "welcome": "Bem-vindo(a), {name}",
+      "subtitle": "As suas próximas consultas e relatórios ficam aqui."
+    },
+    "expert": {
+      "welcome": "Olá, {name}",
+      "subtitle": "A sua agenda, reservas e relatórios ficam aqui."
+    },
+    "org": {
+      "welcome": "Clínica: {name}",
+      "subtitle": "Gira membros, faturação e horários."
+    },
+    "admin": {
+      "welcome": "Consola do operador Eleva",
+      "subtitle": "Aprovações, pagamentos e auditoria."
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "Perfil",
+      "email": "E-mail",
+      "language": "Idioma",
+      "save": "Guardar"
+    }
+  },
+  "finance": {
+    "title": "Finanças",
+    "description": "Gira os seus pagamentos, saldos e definições fiscais.",
+    "balance": "Saldo",
+    "payouts": "Pagamentos",
+    "accountDetails": "Detalhes da Conta",
+    "taxSettings": "Definições Fiscais"
+  },
+  "eventTypes": {
+    "title": "Tipos de Evento",
+    "description": "Defina os serviços que os pacientes podem reservar consigo.",
+    "create": "Novo tipo de evento",
+    "createTitle": "Criar Tipo de Evento",
+    "createDescription": "Defina um novo serviço reservável para os seus pacientes.",
+    "editTitle": "Editar Tipo de Evento",
+    "editDescription": "Atualize os detalhes e regras de reserva deste tipo de evento.",
+    "empty": "Ainda não criou nenhum tipo de evento.",
+    "createFirst": "Crie o seu primeiro tipo de evento",
+    "status": {
+      "published": "Publicado",
+      "draft": "Rascunho"
+    },
+    "error": {
+      "no-profile": "O seu perfil de especialista não foi encontrado.",
+      "toggle-failed": "Não foi possível atualizar o tipo de evento. Tente novamente.",
+      "delete-failed": "Não foi possível eliminar o tipo de evento. Tente novamente.",
+      "generic": "Ocorreu um erro. Tente novamente."
+    },
+    "actions": {
+      "ariaLabel": "Ações do tipo de evento",
+      "edit": "Editar",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "delete": "Eliminar",
+      "deleteTitle": "Eliminar tipo de evento?",
+      "deleteDescription": "Esta ação não pode ser desfeita. Eliminará permanentemente o tipo de evento e todos os dados associados.",
+      "cancel": "Cancelar",
+      "deleting": "A eliminar..."
+    }
+  },
+  "schedule": {
+    "title": "Horário",
+    "description": "Defina a sua disponibilidade semanal e exceções de datas.",
+    "timezone": "Fuso horário",
+    "weeklyHours": "Horas semanais",
+    "dateOverrides": "Exceções de datas",
+    "addOverride": "Adicionar exceção",
+    "blocked": "Bloqueado",
+    "save": "Guardar horário",
+    "saving": "A guardar...",
+    "saved": "Horário guardado com sucesso.",
+    "to": "até",
+    "addWindow": "Adicionar janela",
+    "remove": "Remover",
+    "overrideDate": "Data",
+    "overrideBlockDay": "Bloquear dia inteiro",
+    "overrideFrom": "De",
+    "overrideTo": "Até",
+    "days": {
+      "0": "Domingo",
+      "1": "Segunda-feira",
+      "2": "Terça-feira",
+      "3": "Quarta-feira",
+      "4": "Quinta-feira",
+      "5": "Sexta-feira",
+      "6": "Sábado"
+    },
+    "error": {
+      "startBeforeEnd": "{day}: a hora de início deve ser antes da hora de fim",
+      "overrideStartBeforeEnd": "A hora de início da exceção deve ser antes da hora de fim",
+      "overlappingWindows": "{day}: as janelas de disponibilidade não podem sobrepor-se"
+    }
+  },
+  "calendars": {
+    "backToIntegrations": "Integrações",
+    "title": "Calendários Conectados",
+    "description": "Conecte o seu calendário Google ou Microsoft para evitar reservas duplas.",
+    "connectTitle": "Conectar um calendário",
+    "connectDescription": "Associe a sua conta Google ou Microsoft para que a Eleva verifique a sua disponibilidade e crie eventos de sessão.",
+    "connectHint": "As suas credenciais de calendário são geridas de forma segura pela WorkOS. A Eleva nunca armazena a sua palavra-passe.",
+    "connectedTitle": "Os seus calendários",
+    "connectGoogle": "Conectar Google Calendar",
+    "connectMicrosoft": "Conectar Microsoft Calendar",
+    "busySources": "Fontes de ocupação",
+    "destination": "Calendário de destino",
+    "disconnect": "Desconectar",
+    "disconnectConfirm": "Desconectar este calendário? A Eleva deixará de verificar a disponibilidade e criar eventos.",
+    "empty": "Nenhum calendário conectado ainda.",
+    "status": {
+      "connecting": "A conectar",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "error": "Erro",
+      "expired": "Expirado"
+    },
+    "noCalendarFallback": "Nenhum calendário conectado. A sua agenda é gerida na Eleva e receberá convites .ics por email para cada marcação.",
+    "connectUnavailable": "A ligação ao calendário não está disponível de momento. Tente novamente mais tarde.",
+    "error": {
+      "no-profile": "O seu perfil de especialista não foi encontrado.",
+      "unauthorized-calendar": "Não tem acesso a esta integração de calendário.",
+      "unknown-provider": "Fornecedor de calendário desconhecido.",
+      "disconnect-failed": "Não foi possível desconectar o calendário. Tente novamente.",
+      "load-failed": "Não foi possível carregar os dados do calendário. Tente novamente.",
+      "save-failed": "Não foi possível guardar as definições do calendário. Tente novamente."
+    }
+  },
+  "integrations": {
+    "title": "Integrações",
+    "description": "Conecte calendários, ferramentas de faturação e outros serviços à sua prática Eleva.",
+    "category": {
+      "calendar": "Calendários",
+      "invoicing": "Faturação",
+      "crm": "CRM",
+      "video": "Vídeo",
+      "other": "Outros"
+    },
+    "status": {
+      "connecting": "A conectar",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "error": "Erro",
+      "expired": "Expirado"
+    },
+    "configureCalendars": "Configurar calendários",
+    "connectViaPipes": "Conecte através das definições da sua conta para ativar esta integração.",
+    "availableIn": "Disponível em: {countries}"
+  },
+  "errors": {
+    "unauthorized": "Não tem acesso a esta página."
+  }
 }

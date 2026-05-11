@@ -31,3 +31,8 @@ export {
   validateUsername,
   type UsernameError,
 } from "./reserved-usernames"
+export {
+  APP_ROOT_SEGMENTS,
+  APP_STANDALONE_PATHS,
+  APP_REWRITE_PATHS,
+} from "./routing"

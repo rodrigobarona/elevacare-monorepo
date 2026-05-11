@@ -48,5 +48,4 @@ export const WORKOS_CLIENT_ID = process.env.WORKOS_CLIENT_ID;
  * WorkOS Redirect URI
  * Where users are redirected after authentication
  */
-export const WORKOS_REDIRECT_URI =
-  process.env.WORKOS_REDIRECT_URI || 'http://localhost:3000/api/auth/callback';
+export const WORKOS_REDIRECT_URI = process.env.NEXT_PUBLIC_WORKOS_REDIRECT_URI || 'http://localhost:3000/callback';

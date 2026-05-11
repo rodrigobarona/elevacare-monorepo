@@ -1,142 +1,183 @@
 {
-  "nav.dashboard": "Dashboard",
-  "nav.patient": "Patient",
-  "nav.expert": "Expert",
-  "nav.org": "Organisation",
-  "nav.admin": "Admin",
-  "nav.settings": "Settings",
-  "nav.logout": "Sign out",
-
-  "auth.signin.title": "Sign in to Eleva",
-  "auth.signin.cta": "Continue with WorkOS",
-  "auth.signup.title": "Create your Eleva account",
-  "auth.signup.cta": "Continue with WorkOS",
-
-  "dashboard.patient.welcome": "Welcome, {name}",
-  "dashboard.patient.subtitle": "Your upcoming appointments and reports live here.",
-  "dashboard.expert.welcome": "Hello, {name}",
-  "dashboard.expert.subtitle": "Your schedule, bookings, and reports live here.",
-  "dashboard.org.welcome": "Clinic: {name}",
-  "dashboard.org.subtitle": "Manage members, billing, and schedules.",
-  "dashboard.admin.welcome": "Eleva operator console",
-  "dashboard.admin.subtitle": "Approvals, payouts, and audit.",
-
-  "settings.profile.title": "Profile",
-  "settings.profile.email": "Email",
-  "settings.profile.language": "Language",
-  "settings.profile.save": "Save",
-
-  "nav.finance": "Finance",
-  "nav.adminApplications": "Applications",
-
-  "finance.title": "Finance",
-  "finance.description": "Manage your payouts, balances, and tax settings.",
-  "finance.balance": "Balance",
-  "finance.payouts": "Payouts",
-  "finance.accountDetails": "Account Details",
-  "finance.taxSettings": "Tax Settings",
-
-  "nav.eventTypes": "Event Types",
-  "nav.schedule": "Schedule",
-  "nav.calendars": "Calendars",
-  "nav.integrations": "Integrations",
-
-  "eventTypes.title": "Event Types",
-  "eventTypes.description": "Define the services patients can book with you.",
-  "eventTypes.create": "New event type",
-  "eventTypes.createTitle": "Create Event Type",
-  "eventTypes.createDescription": "Define a new bookable service for your patients.",
-  "eventTypes.editTitle": "Edit Event Type",
-  "eventTypes.editDescription": "Update this event type's details and booking rules.",
-  "eventTypes.empty": "You haven't created any event types yet.",
-  "eventTypes.createFirst": "Create your first event type",
-  "eventTypes.status.published": "Published",
-  "eventTypes.status.draft": "Draft",
-  "eventTypes.error.no-profile": "Your expert profile was not found.",
-  "eventTypes.error.toggle-failed": "Could not update the event type. Please try again.",
-  "eventTypes.error.delete-failed": "Could not delete the event type. Please try again.",
-  "eventTypes.error.generic": "Something went wrong. Please try again.",
-  "eventTypes.actions.ariaLabel": "Event type actions",
-  "eventTypes.actions.edit": "Edit",
-  "eventTypes.actions.publish": "Publish",
-  "eventTypes.actions.unpublish": "Unpublish",
-  "eventTypes.actions.delete": "Delete",
-  "eventTypes.actions.deleteTitle": "Delete event type?",
-  "eventTypes.actions.deleteDescription": "This action cannot be undone. This will permanently delete the event type and all associated data.",
-  "eventTypes.actions.cancel": "Cancel",
-  "eventTypes.actions.deleting": "Deleting...",
-
-  "schedule.title": "Schedule",
-  "schedule.description": "Set your weekly availability and date overrides.",
-  "schedule.timezone": "Timezone",
-  "schedule.weeklyHours": "Weekly hours",
-  "schedule.dateOverrides": "Date overrides",
-  "schedule.addOverride": "Add override",
-  "schedule.blocked": "Blocked",
-  "schedule.save": "Save schedule",
-  "schedule.saving": "Saving...",
-  "schedule.saved": "Schedule saved successfully.",
-  "schedule.to": "to",
-  "schedule.addWindow": "Add window",
-  "schedule.remove": "Remove",
-  "schedule.overrideDate": "Date",
-  "schedule.overrideBlockDay": "Block entire day",
-  "schedule.overrideFrom": "From",
-  "schedule.overrideTo": "To",
-  "schedule.days.0": "Sunday",
-  "schedule.days.1": "Monday",
-  "schedule.days.2": "Tuesday",
-  "schedule.days.3": "Wednesday",
-  "schedule.days.4": "Thursday",
-  "schedule.days.5": "Friday",
-  "schedule.days.6": "Saturday",
-  "schedule.error.startBeforeEnd": "{day}: start time must be before end time",
-  "schedule.error.overrideStartBeforeEnd": "Override start time must be before end time",
-  "schedule.error.overlappingWindows": "{day}: availability windows must not overlap",
-
-  "calendars.backToIntegrations": "Integrations",
-  "calendars.title": "Connected Calendars",
-  "calendars.description": "Connect your Google or Microsoft calendar to avoid double bookings.",
-  "calendars.connectTitle": "Connect a calendar",
-  "calendars.connectDescription": "Link your Google or Microsoft account so Eleva can check your availability and create session events.",
-  "calendars.connectHint": "Your calendar credentials are managed securely by WorkOS. Eleva never stores your password.",
-  "calendars.connectedTitle": "Your calendars",
-  "calendars.connectGoogle": "Connect Google Calendar",
-  "calendars.connectMicrosoft": "Connect Microsoft Calendar",
-  "calendars.busySources": "Busy sources",
-  "calendars.destination": "Destination calendar",
-  "calendars.disconnect": "Disconnect",
-  "calendars.disconnectConfirm": "Disconnect this calendar? Eleva will no longer check availability or create events.",
-  "calendars.empty": "No calendars connected yet.",
-  "calendars.status.connecting": "Connecting",
-  "calendars.status.connected": "Connected",
-  "calendars.status.disconnected": "Disconnected",
-  "calendars.status.error": "Error",
-  "calendars.status.expired": "Expired",
-  "calendars.noCalendarFallback": "No calendar connected. Your schedule is managed in Eleva and you will receive .ics email invites for each booking.",
-  "calendars.connectUnavailable": "Calendar connection is temporarily unavailable. Please try again later.",
-  "calendars.error.no-profile": "Your expert profile was not found.",
-  "calendars.error.unauthorized-calendar": "You do not have access to this calendar integration.",
-  "calendars.error.unknown-provider": "Unknown calendar provider.",
-  "calendars.error.disconnect-failed": "Could not disconnect the calendar. Please try again.",
-  "calendars.error.load-failed": "Could not load calendar data. Please try again.",
-  "calendars.error.save-failed": "Could not save calendar settings. Please try again.",
-
-  "integrations.title": "Integrations",
-  "integrations.description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
-  "integrations.category.calendar": "Calendars",
-  "integrations.category.invoicing": "Invoicing",
-  "integrations.category.crm": "CRM",
-  "integrations.category.video": "Video",
-  "integrations.category.other": "Other",
-  "integrations.status.connecting": "Connecting",
-  "integrations.status.connected": "Connected",
-  "integrations.status.disconnected": "Disconnected",
-  "integrations.status.error": "Error",
-  "integrations.status.expired": "Expired",
-  "integrations.configureCalendars": "Configure calendars",
-  "integrations.connectViaPipes": "Connect via your account settings to enable this integration.",
-  "integrations.availableIn": "Available in: {countries}",
-
-  "errors.unauthorized": "You do not have access to this page."
+  "nav": {
+    "dashboard": "Dashboard",
+    "patient": "Patient",
+    "expert": "Expert",
+    "org": "Organisation",
+    "admin": "Admin",
+    "settings": "Settings",
+    "logout": "Sign out",
+    "finance": "Finance",
+    "adminApplications": "Applications",
+    "eventTypes": "Event Types",
+    "schedule": "Schedule",
+    "calendars": "Calendars",
+    "integrations": "Integrations"
+  },
+  "auth": {
+    "signin": {
+      "title": "Sign in to Eleva",
+      "cta": "Continue with WorkOS"
+    },
+    "signup": {
+      "title": "Create your Eleva account",
+      "cta": "Continue with WorkOS"
+    }
+  },
+  "dashboard": {
+    "patient": {
+      "welcome": "Welcome, {name}",
+      "subtitle": "Your upcoming appointments and reports live here."
+    },
+    "expert": {
+      "welcome": "Hello, {name}",
+      "subtitle": "Your schedule, bookings, and reports live here."
+    },
+    "org": {
+      "welcome": "Clinic: {name}",
+      "subtitle": "Manage members, billing, and schedules."
+    },
+    "admin": {
+      "welcome": "Eleva operator console",
+      "subtitle": "Approvals, payouts, and audit."
+    }
+  },
+  "settings": {
+    "profile": {
+      "title": "Profile",
+      "email": "Email",
+      "language": "Language",
+      "save": "Save"
+    }
+  },
+  "finance": {
+    "title": "Finance",
+    "description": "Manage your payouts, balances, and tax settings.",
+    "balance": "Balance",
+    "payouts": "Payouts",
+    "accountDetails": "Account Details",
+    "taxSettings": "Tax Settings"
+  },
+  "eventTypes": {
+    "title": "Event Types",
+    "description": "Define the services patients can book with you.",
+    "create": "New event type",
+    "createTitle": "Create Event Type",
+    "createDescription": "Define a new bookable service for your patients.",
+    "editTitle": "Edit Event Type",
+    "editDescription": "Update this event type's details and booking rules.",
+    "empty": "You haven't created any event types yet.",
+    "createFirst": "Create your first event type",
+    "status": {
+      "published": "Published",
+      "draft": "Draft"
+    },
+    "error": {
+      "no-profile": "Your expert profile was not found.",
+      "toggle-failed": "Could not update the event type. Please try again.",
+      "delete-failed": "Could not delete the event type. Please try again.",
+      "generic": "Something went wrong. Please try again."
+    },
+    "actions": {
+      "ariaLabel": "Event type actions",
+      "edit": "Edit",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "delete": "Delete",
+      "deleteTitle": "Delete event type?",
+      "deleteDescription": "This action cannot be undone. This will permanently delete the event type and all associated data.",
+      "cancel": "Cancel",
+      "deleting": "Deleting..."
+    }
+  },
+  "schedule": {
+    "title": "Schedule",
+    "description": "Set your weekly availability and date overrides.",
+    "timezone": "Timezone",
+    "weeklyHours": "Weekly hours",
+    "dateOverrides": "Date overrides",
+    "addOverride": "Add override",
+    "blocked": "Blocked",
+    "save": "Save schedule",
+    "saving": "Saving...",
+    "saved": "Schedule saved successfully.",
+    "to": "to",
+    "addWindow": "Add window",
+    "remove": "Remove",
+    "overrideDate": "Date",
+    "overrideBlockDay": "Block entire day",
+    "overrideFrom": "From",
+    "overrideTo": "To",
+    "days": {
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
+    },
+    "error": {
+      "startBeforeEnd": "{day}: start time must be before end time",
+      "overrideStartBeforeEnd": "Override start time must be before end time",
+      "overlappingWindows": "{day}: availability windows must not overlap"
+    }
+  },
+  "calendars": {
+    "backToIntegrations": "Integrations",
+    "title": "Connected Calendars",
+    "description": "Connect your Google or Microsoft calendar to avoid double bookings.",
+    "connectTitle": "Connect a calendar",
+    "connectDescription": "Link your Google or Microsoft account so Eleva can check your availability and create session events.",
+    "connectHint": "Your calendar credentials are managed securely by WorkOS. Eleva never stores your password.",
+    "connectedTitle": "Your calendars",
+    "connectGoogle": "Connect Google Calendar",
+    "connectMicrosoft": "Connect Microsoft Calendar",
+    "busySources": "Busy sources",
+    "destination": "Destination calendar",
+    "disconnect": "Disconnect",
+    "disconnectConfirm": "Disconnect this calendar? Eleva will no longer check availability or create events.",
+    "empty": "No calendars connected yet.",
+    "status": {
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error",
+      "expired": "Expired"
+    },
+    "noCalendarFallback": "No calendar connected. Your schedule is managed in Eleva and you will receive .ics email invites for each booking.",
+    "connectUnavailable": "Calendar connection is temporarily unavailable. Please try again later.",
+    "error": {
+      "no-profile": "Your expert profile was not found.",
+      "unauthorized-calendar": "You do not have access to this calendar integration.",
+      "unknown-provider": "Unknown calendar provider.",
+      "disconnect-failed": "Could not disconnect the calendar. Please try again.",
+      "load-failed": "Could not load calendar data. Please try again.",
+      "save-failed": "Could not save calendar settings. Please try again."
+    }
+  },
+  "integrations": {
+    "title": "Integrations",
+    "description": "Connect calendars, invoicing tools, and other services to your Eleva practice.",
+    "category": {
+      "calendar": "Calendars",
+      "invoicing": "Invoicing",
+      "crm": "CRM",
+      "video": "Video",
+      "other": "Other"
+    },
+    "status": {
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error",
+      "expired": "Expired"
+    },
+    "configureCalendars": "Configure calendars",
+    "connectViaPipes": "Connect via your account settings to enable this integration.",
+    "availableIn": "Available in: {countries}"
+  },
+  "errors": {
+    "unauthorized": "You do not have access to this page."
+  }
 }

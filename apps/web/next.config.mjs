@@ -12,14 +12,12 @@
  * @type {import('next').NextConfig}
  */
 import createNextIntlPlugin from "next-intl/plugin"
+import { APP_ROOT_SEGMENTS, APP_STANDALONE_PATHS } from "@eleva/config/routing"
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts")
 
 const APP_URL = process.env.APP_URL || "http://localhost:3001"
 const DOCS_URL = process.env.DOCS_URL || "http://localhost:3003"
-
-const APP_ROOT_SEGMENTS = ["patient", "expert", "org", "admin", "settings"]
-const APP_STANDALONE_PATHS = ["callback", "logout", "signin", "signup"]
 
 const appRewrites = [
   ...APP_ROOT_SEGMENTS.flatMap((seg) => [

@@ -43,7 +43,7 @@ const s1aSchema = z.object({
   WORKOS_API_KEY: stringOptional,
   WORKOS_CLIENT_ID: stringOptional,
   WORKOS_COOKIE_PASSWORD: stringOptional,
-  WORKOS_REDIRECT_URI: urlOptional,
+  NEXT_PUBLIC_WORKOS_REDIRECT_URI: urlOptional,
   WORKOS_VAULT_NAMESPACE: z.string().default("eleva-v3-main"),
 
   DATABASE_URL: postgresUrl.optional(),

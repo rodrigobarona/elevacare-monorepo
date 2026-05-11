@@ -140,13 +140,13 @@ After custom domain verification, update redirect URIs in your application:
 **Before:**
 
 ```
-WORKOS_REDIRECT_URI=https://youthful-ginger-43.authkit.app/callback
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://youthful-ginger-43.authkit.app/callback
 ```
 
 **After:**
 
 ```
-WORKOS_REDIRECT_URI=https://auth.yourdomain.com/callback
+NEXT_PUBLIC_WORKOS_REDIRECT_URI=https://auth.yourdomain.com/callback
 ```
 
 **CRITICAL:** Also update the redirect URI in WorkOS Dashboard under your application's configuration.
@@ -208,7 +208,7 @@ curl -I https://auth.yourdomain.com
 
 **Fix:**
 
-1. Update `WORKOS_REDIRECT_URI` environment variable
+1. Update `NEXT_PUBLIC_WORKOS_REDIRECT_URI` environment variable
 2. Update redirect URI in WorkOS Dashboard application settings
 3. Restart application to load new environment variables
 4. Clear browser cache/cookies

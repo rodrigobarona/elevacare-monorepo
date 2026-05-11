@@ -1,7 +1,30 @@
+import path from "node:path"
+
+/** Skip `_context/` snapshots — they use their own eslint configs without root deps. */
+function repoFilesOnly(filenames) {
+  return filenames.filter((f) => {
+    const normalized = f.split(path.sep).join("/")
+    return !normalized.includes("/_context/")
+  })
+}
+
 export default {
   // eslint-plugin-only-warn in @eleva/eslint-config downgrades errors to
   // warnings; the boundaries rules explicitly re-escalate the ones that
   // must block a commit. So we do not pass --max-warnings here.
-  '*.{ts,tsx,js,mjs,cjs}': ['prettier --write', 'eslint --fix'],
-  '*.{json,md,yml,yaml,css}': ['prettier --write'],
-};
+  "*.{ts,tsx,js,mjs,cjs}": (filenames) => {
+    const files = repoFilesOnly(filenames)
+    if (files.length === 0) return []
+    const quoted = files.map((f) => JSON.stringify(f))
+    return [
+      `prettier --write ${quoted.join(" ")}`,
+      `eslint --fix ${quoted.join(" ")}`,
+    ]
+  },
+  "*.{json,md,yml,yaml,css}": (filenames) => {
+    const files = repoFilesOnly(filenames)
+    if (files.length === 0) return []
+    const quoted = files.map((f) => JSON.stringify(f))
+    return `prettier --write ${quoted.join(" ")}`
+  },
+}
