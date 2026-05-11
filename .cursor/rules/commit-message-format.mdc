@@ -1,0 +1,64 @@
+---
+description: Conventional Commits format enforced by commitlint. Apply when creating git commits.
+globs:
+alwaysApply: false
+---
+
+# Commit Message Format
+
+This repo uses **Conventional Commits** enforced by `commitlint` with `@commitlint/config-conventional`.
+
+## Rules
+
+| Rule | Limit |
+|------|-------|
+| Header (first line) | max **100** characters total (type + scope + subject) |
+| Body lines | max **200** characters per line |
+| Subject | must not be empty |
+| Type | must not be empty, must be one of the allowed types |
+
+## Format
+
+```
+type(scope): subject
+
+body (wrap lines at 200 chars max)
+```
+
+### Allowed Types
+
+`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
+
+### Allowed Scopes
+
+**Apps:** `web`, `app`, `api`, `docs`, `email`
+
+**Packages (@eleva/*):** `ui`, `auth`, `db`, `billing`, `accounting`, `scheduling`, `calendar`, `notifications`, `workflows`, `flags`, `audit`, `encryption`, `ai`, `crm`, `compliance`, `observability`, `config`, `eslint-config`, `typescript-config`
+
+**Sprint scopes:** `s0`–`s8`, `s1-a`, `s1-b`, `s2-a`, `s2-b`, `s3-a`, `s3-b`, `s4-a`, `s4-b`, `s5-a`, `s5-b`, `s0.1`–`s8.16`
+
+**Cross-cutting:** `ci`, `deps`, `release`
+
+Scope is optional. Omit it for changes spanning multiple areas.
+
+## Examples
+
+```
+fix(auth): forward request headers in proxy middleware composition
+```
+
+```
+feat(scheduling): add weekly availability rules with timezone support
+
+Implements the availability engine that computes open slots from
+weekly rules minus calendar busy-time. Supports per-rule timezone
+and date-range overrides.
+```
+
+```
+chore: update turbo.json globalEnv with new billing vars
+```
+
+## Body Wrapping
+
+If the body exceeds 200 characters on a single line, break it into multiple lines. Use blank lines to separate paragraphs.
