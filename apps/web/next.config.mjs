@@ -49,7 +49,7 @@ const nextConfig = {
   ],
   async rewrites() {
     return {
-      afterFiles: [...appRewrites, ...docsRewrites],
+      beforeFiles: [...appRewrites, ...docsRewrites],
     }
   },
 }
