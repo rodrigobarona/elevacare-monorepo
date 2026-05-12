@@ -6,9 +6,14 @@
  * the codebase. Add new hosts here + land an ADR when a new vendor ships.
  */
 
+const assetOrigin = process.env.APP_ASSET_PREFIX
+  ? [process.env.APP_ASSET_PREFIX]
+  : []
+
 export const CSP_ALLOWLIST = {
   scriptSrc: [
     "'self'",
+    ...assetOrigin,
     "https://js.stripe.com",
     "https://connect-js.stripe.com",
     "https://cdn.sentry-cdn.com",
@@ -17,6 +22,7 @@ export const CSP_ALLOWLIST = {
   ],
   connectSrc: [
     "'self'",
+    ...assetOrigin,
     "https://api.eleva.care",
     "https://api.stripe.com",
     "https://m.stripe.com",
@@ -34,8 +40,8 @@ export const CSP_ALLOWLIST = {
     "https://*.daily.co",
   ],
   imgSrc: ["'self'", "data:", "blob:", "https:"],
-  styleSrc: ["'self'", "'unsafe-inline'"],
-  fontSrc: ["'self'", "data:"],
+  styleSrc: ["'self'", "'unsafe-inline'", ...assetOrigin],
+  fontSrc: ["'self'", "data:", ...assetOrigin],
   mediaSrc: ["'self'", "blob:", "https://*.daily.co"],
   workerSrc: ["'self'", "blob:"],
   formAction: ["'self'", "https://connect-js.stripe.com"],
