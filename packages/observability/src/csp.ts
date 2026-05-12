@@ -108,6 +108,9 @@ function resolveAllowlist(): Record<string, string[]> {
   }
   if (isDev) {
     merged.scriptSrc?.push("'unsafe-eval'", "'wasm-unsafe-eval'")
+    // #region agent log
+    merged.connectSrc?.push("http://127.0.0.1:*")
+    // #endregion
   }
 
   return merged

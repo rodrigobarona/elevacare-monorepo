@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { LogOut, LayoutDashboard, Settings } from "lucide-react"
 import { useTranslations } from "next-intl"
 
@@ -43,23 +44,23 @@ export function UserMenu({ name, email, initials }: UserMenuProps) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href="/auth-redirect">
+          <Link href="/auth-redirect">
             <LayoutDashboard />
             {t("dashboard")}
-          </a>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <a href="/settings">
+          <Link href="/settings">
             <Settings />
             {t("settings")}
-          </a>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <a href="/logout">
+          <Link href="/logout">
             <LogOut />
             {t("signout")}
-          </a>
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

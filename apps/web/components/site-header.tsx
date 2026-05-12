@@ -1,3 +1,4 @@
+import NextLink from "next/link"
 import { getTranslations } from "next-intl/server"
 import { getAuthUser } from "@eleva/auth/server"
 
@@ -86,12 +87,10 @@ export async function SiteHeader() {
                 className="hidden md:inline-flex"
                 asChild
               >
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-                <a href="/signin">{t("nav.signin")}</a>
+                <NextLink href="/signin">{t("nav.signin")}</NextLink>
               </Button>
               <Button size="sm" className="hidden md:inline-flex" asChild>
-                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-                <a href="/signup">{t("nav.signup")}</a>
+                <NextLink href="/signup">{t("nav.signup")}</NextLink>
               </Button>
             </>
           )}

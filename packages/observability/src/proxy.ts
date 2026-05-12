@@ -62,7 +62,10 @@ export function withHeaders(
     for (const [k, v] of Object.entries(DEFAULT_HEADERS)) {
       nextRes.headers.set(k, v)
     }
-    if (options.emitCsp !== false) {
+    // #region agent log — CSP disabled in dev to test hydration (hypothesis F)
+    const _skipCsp = process.env.NODE_ENV === "development"
+    // #endregion
+    if (options.emitCsp !== false && !_skipCsp) {
       // #region agent log
       fetch(
         "http://127.0.0.1:7536/ingest/075ce577-f51d-4430-93b0-5a0cff32d8ef",

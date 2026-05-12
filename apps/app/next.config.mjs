@@ -5,10 +5,12 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 const allowedOrigins = []
 if (env.NEXT_PUBLIC_APP_URL) {
-  try {
-    allowedOrigins.push(new URL(env.NEXT_PUBLIC_APP_URL).host)
-  } catch {
-    // invalid URL, skip
+  for (const raw of env.NEXT_PUBLIC_APP_URL.split(",")) {
+    try {
+      allowedOrigins.push(new URL(raw.trim()).host)
+    } catch {
+      // invalid URL segment, skip
+    }
   }
 }
 
@@ -17,8 +19,10 @@ const nextConfig = {
   // ADR-014 (revised): apps/app runs at the root; authenticated routes
   // (/patient, /expert, /org, /admin, /settings, /callback, /logout)
   // are individually rewritten from the gateway (apps/web).
-  serverActions: {
-    allowedOrigins,
+  experimental: {
+    serverActions: {
+      allowedOrigins,
+    },
   },
   transpilePackages: [
     "@eleva/audit",
