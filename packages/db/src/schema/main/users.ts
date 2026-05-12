@@ -1,4 +1,10 @@
-import { pgTable, text, uniqueIndex, varchar } from "drizzle-orm/pg-core"
+import {
+  boolean,
+  pgTable,
+  text,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/pg-core"
 import { createdAt, deletedAt, pkColumn, updatedAt } from "./shared"
 
 /**
@@ -18,6 +24,9 @@ export const users = pgTable(
     workosUserId: varchar("workos_user_id", { length: 255 }).notNull(),
     email: text("email").notNull(),
     displayName: text("display_name"),
+    completedOnboarding: boolean("completed_onboarding")
+      .notNull()
+      .default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     deletedAt: deletedAt(),

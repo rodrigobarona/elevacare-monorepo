@@ -14,7 +14,18 @@ export {
   requirePermission,
   withSessionContext,
 } from "./session"
-export { ensurePersonalOrg } from "./provisioning"
+export { ensurePersonalOrg, findExistingPersonalOrg } from "./provisioning"
+export {
+  syncUser,
+  softDeleteUser,
+  syncOrganization,
+  softDeleteOrganization,
+  syncMembership,
+  deleteMembership,
+  type WorkOSUserEventData,
+  type WorkOSOrganizationEventData,
+  type WorkOSMembershipEventData,
+} from "./sync"
 export { withAuth, type WithAuthOptions } from "./proxy"
 export {
   getSession,

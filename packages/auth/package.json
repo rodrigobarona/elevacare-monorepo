@@ -22,6 +22,7 @@
     "@workos-inc/authkit-nextjs": "^4.0.1",
     "@workos-inc/node": "^9.2.0",
     "drizzle-orm": "^0.45.2",
+    "iron-session": "^8.0.4",
     "jose": "^5.10.0"
   },
   "peerDependencies": {

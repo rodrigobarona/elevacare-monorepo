@@ -9,7 +9,8 @@
     "start": "next start --port 3002",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "setup:qstash": "tsx --env-file=../../.env.local scripts/setup-qstash-schedule.ts"
   },
   "dependencies": {
     "@eleva/accounting": "workspace:^",
@@ -20,6 +21,9 @@
     "@eleva/encryption": "workspace:^",
     "@eleva/observability": "workspace:*",
     "@eleva/workflows": "workspace:*",
+    "@upstash/qstash": "^2.8.4",
+    "@upstash/redis": "^1.34.0",
+    "@workos-inc/node": "^9.2.0",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.3",
     "react": "^19.2.4",
@@ -32,6 +36,7 @@
     "@types/react": "^19.2.10",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

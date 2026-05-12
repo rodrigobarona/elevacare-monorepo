@@ -258,3 +258,25 @@ export function requireCronSecret(): { CRON_SECRET: string } {
   }
   return { CRON_SECRET: e.CRON_SECRET }
 }
+
+export interface RequiredQStashEnv {
+  QSTASH_TOKEN: string
+  QSTASH_CURRENT_SIGNING_KEY: string
+  QSTASH_NEXT_SIGNING_KEY: string
+}
+
+export function requireQStashEnv(): RequiredQStashEnv {
+  const e = env()
+  const missing: string[] = []
+  if (!e.QSTASH_TOKEN) missing.push("QSTASH_TOKEN")
+  if (!e.QSTASH_CURRENT_SIGNING_KEY) missing.push("QSTASH_CURRENT_SIGNING_KEY")
+  if (!e.QSTASH_NEXT_SIGNING_KEY) missing.push("QSTASH_NEXT_SIGNING_KEY")
+  if (missing.length > 0) {
+    throw new Error(`QStash boot: missing env vars: ${missing.join(", ")}`)
+  }
+  return {
+    QSTASH_TOKEN: e.QSTASH_TOKEN!,
+    QSTASH_CURRENT_SIGNING_KEY: e.QSTASH_CURRENT_SIGNING_KEY!,
+    QSTASH_NEXT_SIGNING_KEY: e.QSTASH_NEXT_SIGNING_KEY!,
+  }
+}

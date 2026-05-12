@@ -1,0 +1,8 @@
+DROP INDEX "expert_integrations_expert_slug_idx";--> statement-breakpoint
+ALTER TABLE "event_types" ALTER COLUMN "currency" SET DEFAULT 'EUR';--> statement-breakpoint
+ALTER TABLE "users" ADD COLUMN "completed_onboarding" boolean DEFAULT false NOT NULL;--> statement-breakpoint
+CREATE UNIQUE INDEX "expert_integrations_expert_slug_idx" ON "expert_integrations" USING btree ("expert_profile_id","slug") WHERE deleted_at IS NULL;--> statement-breakpoint
+ALTER TABLE "event_types" ADD CONSTRAINT "event_types_currency_iso" CHECK (currency = upper(currency) AND length(currency) = 3);--> statement-breakpoint
+ALTER POLICY "expert_profiles_tenant_isolation" ON "expert_profiles" TO public USING (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true') WITH CHECK (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');--> statement-breakpoint
+ALTER POLICY "organizations_tenant_isolation" ON "organizations" TO public USING (id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true') WITH CHECK (id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');--> statement-breakpoint
+ALTER POLICY "memberships_tenant_isolation" ON "memberships" TO public USING (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true') WITH CHECK (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');

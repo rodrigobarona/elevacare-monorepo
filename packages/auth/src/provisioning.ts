@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { db, main } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
 
@@ -15,6 +15,36 @@ import { withAudit } from "@eleva/audit"
  * All writes funnel through withAudit so the outbox drainer records
  * user.created + org.created + membership.created events.
  */
+
+/**
+ * Look up whether a WorkOS user already has a personal org in Eleva's DB.
+ * Returns the existing org ids or null if the user has never been provisioned.
+ */
+export async function findExistingPersonalOrg(
+  workosUserId: string
+): Promise<{ workosOrgId: string; orgId: string } | null> {
+  const [row] = await db()
+    .select({
+      workosOrgId: main.organizations.workosOrgId,
+      orgId: main.organizations.id,
+    })
+    .from(main.users)
+    .innerJoin(main.memberships, eq(main.memberships.userId, main.users.id))
+    .innerJoin(
+      main.organizations,
+      eq(main.organizations.id, main.memberships.orgId)
+    )
+    .where(
+      and(
+        eq(main.users.workosUserId, workosUserId),
+        eq(main.organizations.type, "personal"),
+        isNull(main.organizations.deletedAt)
+      )
+    )
+    .limit(1)
+
+  return row ?? null
+}
 
 export interface EnsurePersonalOrgInput {
   workosUserId: string

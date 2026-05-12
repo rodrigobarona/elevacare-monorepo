@@ -50,6 +50,13 @@
       "when": 1778032008019,
       "tag": "0006_happy_mentor",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1778603601877,
+      "tag": "0007_careful_darkhawk",
+      "breakpoints": true
     }
   ]
 }

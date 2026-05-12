@@ -1,15 +1,14 @@
 import { handleAuth } from "@workos-inc/authkit-nextjs"
-import { provisionNewUser } from "@/lib/provision-user"
 
 /**
  * WorkOS OAuth callback. AuthKit exchanges the authorization code for
- * a session cookie, provisions the user's personal org on first sign-in,
- * then redirects to the role-home page via the gateway.
+ * a session cookie, then redirects to the auth-redirect page which
+ * decides routing based on onboarding status.
+ *
+ * No provisioning here -- org creation happens in the onboarding wizard,
+ * and data sync happens via the QStash-driven Events API poller.
  */
 export const GET = handleAuth({
   returnPathname: "/auth-redirect",
   baseURL: process.env.NEXT_PUBLIC_APP_URL,
-  onSuccess: async ({ user, organizationId }) => {
-    await provisionNewUser(user, organizationId)
-  },
 })
