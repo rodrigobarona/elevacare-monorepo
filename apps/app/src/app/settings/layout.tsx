@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell"
 import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
 
 import "@radix-ui/themes/styles.css"
-import "@workos-inc/widgets/dist/css/styles.css"
+import "@workos-inc/widgets/styles.css"
 
 export default async function SettingsLayout({
   children,
