@@ -11,6 +11,10 @@ import { db, main } from "@eleva/db"
  * - Idempotent: safe to call multiple times with the same event data
  * - Stale-safe: compares updated_at to skip older events (WorkOS best practice)
  * - No side effects: pure DB operations, no emails or 3rd-party calls
+ *
+ * Full event catalog: https://workos.com/docs/events
+ * To add new events, update SYNC_EVENTS + processWorkOSEvent below,
+ * add a matching sync function, and create a DB migration if needed.
  */
 
 export const SYNC_EVENTS = [
