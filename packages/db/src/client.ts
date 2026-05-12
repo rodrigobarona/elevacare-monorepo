@@ -22,17 +22,25 @@ function buildAuditClient() {
   return drizzle(neon(AUDIT_DATABASE_URL), { schema: auditSchema })
 }
 
-let _db: ReturnType<typeof buildMainClient> | null = null
-let _auditDb: ReturnType<typeof buildAuditClient> | null = null
+// Cache clients on `globalThis` so Turbopack/Next HMR reloads in
+// development reuse the same instances rather than rebuilding them on
+// every module re-evaluation. neon-http itself is stateless, but
+// matching the pattern used by `context.ts` keeps singleton behavior
+// uniform across the package.
+const globalForDb = globalThis as unknown as {
+  __elevaDb?: ReturnType<typeof buildMainClient>
+  __elevaAuditDb?: ReturnType<typeof buildAuditClient>
+}
 
 export function db() {
-  if (!_db) _db = buildMainClient()
-  return _db
+  if (!globalForDb.__elevaDb) globalForDb.__elevaDb = buildMainClient()
+  return globalForDb.__elevaDb
 }
 
 export function auditDb() {
-  if (!_auditDb) _auditDb = buildAuditClient()
-  return _auditDb
+  if (!globalForDb.__elevaAuditDb)
+    globalForDb.__elevaAuditDb = buildAuditClient()
+  return globalForDb.__elevaAuditDb
 }
 
 /**
@@ -40,8 +48,8 @@ export function auditDb() {
  * when they mock env vars. Do NOT call in production code.
  */
 export function __resetClientsForTests() {
-  _db = null
-  _auditDb = null
+  globalForDb.__elevaDb = undefined
+  globalForDb.__elevaAuditDb = undefined
 }
 
 export { mainSchema, auditSchema }

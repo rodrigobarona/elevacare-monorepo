@@ -31,15 +31,34 @@ export type Tx = Parameters<
 
 function buildPoolClient() {
   const { DATABASE_URL } = requireDbEnv()
-  const pool = new Pool({ connectionString: DATABASE_URL })
+  // Pool sizing + timeouts:
+  //   - `max` caps concurrent connections so a runaway request burst (or a
+  //     leaked pool from HMR) cannot exhaust Neon's per-project connection
+  //     limit and silently hang every subsequent query.
+  //   - `connectionTimeoutMillis` makes `pool.connect()` reject after 10s
+  //     instead of waiting forever when the limit is reached.
+  //   - `idleTimeoutMillis` reclaims sockets that no caller is using so
+  //     they're returned to Neon promptly.
+  const pool = new Pool({
+    connectionString: DATABASE_URL,
+    max: 5,
+    connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 30_000,
+  })
   return drizzle(pool, { schema: mainSchema })
 }
 
-let _txDb: ReturnType<typeof buildPoolClient> | null = null
+// Cache the pool on `globalThis` so Turbopack/Next HMR re-evaluations of
+// this module reuse the same `Pool` instance instead of leaking a fresh
+// one on every reload (which holds open Neon connections until the dev
+// server is restarted).
+const globalForDb = globalThis as unknown as {
+  __elevaTxDb?: ReturnType<typeof buildPoolClient>
+}
 
 function getTxDb() {
-  if (!_txDb) _txDb = buildPoolClient()
-  return _txDb
+  if (!globalForDb.__elevaTxDb) globalForDb.__elevaTxDb = buildPoolClient()
+  return globalForDb.__elevaTxDb
 }
 
 /**
@@ -78,5 +97,5 @@ export async function withPlatformAdminContext<T>(
 }
 
 export function __resetContextClientForTests() {
-  _txDb = null
+  globalForDb.__elevaTxDb = undefined
 }
