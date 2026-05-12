@@ -43,6 +43,7 @@ const nextConfig = {
     "@eleva/config",
     "@eleva/db",
     "@eleva/observability",
+    "@eleva/storage",
     "@eleva/ui",
   ],
   async rewrites() {

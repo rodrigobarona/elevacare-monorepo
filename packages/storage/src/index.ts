@@ -1,8 +1,13 @@
 /**
- * Vercel Blob helper for Become-Partner application documents.
+ * @eleva/storage
  *
  * Owns ALL @vercel/blob access for the platform — boundary lint
- * forbids `from "@vercel/blob"` outside of @eleva/billing/uploads.
+ * forbids `from "@vercel/blob"` outside of `@eleva/storage/*`.
+ *
+ * Sub-entrypoints:
+ *   - "@eleva/storage"                  — server-side `put`/`del` helpers
+ *   - "@eleva/storage/blob-upload-handler" — `handleUpload` wrapper (Route Handler)
+ *   - "@eleva/storage/blob-upload-client"  — `"use client"` upload helper
  *
  * Public reads: the URLs Vercel Blob returns are public-by-default
  * but unguessable (path includes a random suffix). For PHI / fiscal

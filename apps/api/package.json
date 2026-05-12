@@ -20,6 +20,7 @@
     "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:^",
     "@eleva/observability": "workspace:*",
+    "@eleva/storage": "workspace:*",
     "@eleva/workflows": "workspace:*",
     "@upstash/qstash": "^2.8.4",
     "@upstash/redis": "^1.34.0",

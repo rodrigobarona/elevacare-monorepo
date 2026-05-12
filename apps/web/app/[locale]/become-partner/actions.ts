@@ -9,7 +9,9 @@ import {
 } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
 import { getSession, UnauthorizedError } from "@eleva/auth"
+import { mintUploadToken } from "@eleva/auth/upload-token"
 import { validateUsername } from "@eleva/config/reserved-usernames"
+import { env } from "@eleva/config/env"
 
 import {
   becomePartnerSubmissionSchema,
@@ -176,4 +178,30 @@ function isPgUniqueViolation(err: unknown, constraint?: string): boolean {
   if (pg.code !== "23505") return false
   if (constraint !== undefined) return pg.constraint === constraint
   return true
+}
+
+// ---------------------------------------------------------------------------
+// Upload auth
+// ---------------------------------------------------------------------------
+
+export interface UploadAuth {
+  token: string
+  uploadUrl: string
+}
+
+/**
+ * Mint a short-lived upload token so the client can authenticate with
+ * the API upload route (cross-origin, no cookies). Called by the
+ * document-upload component before each Vercel Blob upload.
+ */
+export async function getUploadAuthAction(): Promise<UploadAuth | null> {
+  const session = await getSession()
+  if (!session) return null
+
+  const token = await mintUploadToken(session.user.id)
+  const apiUrl = (env().API_URL ?? "").replace(/\/$/, "")
+  return {
+    token,
+    uploadUrl: `${apiUrl}/blob/upload`,
+  }
 }

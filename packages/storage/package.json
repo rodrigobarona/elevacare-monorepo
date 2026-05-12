@@ -1,5 +1,5 @@
 {
-  "name": "@eleva/billing",
+  "name": "@eleva/storage",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -7,20 +7,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./server": "./src/server/index.ts",
-    "./embedded": "./src/embedded/index.ts"
+    "./blob-upload-handler": "./src/blob-upload-handler.ts",
+    "./blob-upload-client": "./src/blob-upload-client.ts"
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "@eleva/encryption": "workspace:*",
-    "@stripe/connect-js": "^3.3.39",
-    "@stripe/react-connect-js": "^3.3.36",
-    "stripe": "^22.1.0"
+    "@vercel/blob": "^2.3.3"
   },
   "peerDependencies": {
     "react": "19.x"
@@ -33,7 +29,7 @@
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "@types/react": "^19.2.10",
+    "@types/node": "^25.1.0",
     "eslint": "^9.39.2",
     "react": "^19.2.4",
     "typescript": "^5.9.3"

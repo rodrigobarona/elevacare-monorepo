@@ -21,6 +21,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
+    "@eleva/storage": "workspace:*",
     "@eleva/ui": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "lucide-react": "^1.8.0",

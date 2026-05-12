@@ -1,0 +1,45 @@
+---
+description: All HTTP API endpoints must live in apps/api. Never create route handlers in apps/web or apps/app.
+globs: apps/web/app/**/route.ts, apps/app/**/route.ts
+alwaysApply: false
+---
+
+# API Route Placement
+
+All HTTP API endpoints (Next.js Route Handlers, i.e. `route.ts` files) **MUST** live in `apps/api`.
+
+## Why
+
+The monorepo has a dedicated API application (`apps/api`) deployed on its own subdomain (`api.eleva.care`). Keeping every API route in one place ensures:
+
+- **Single source of truth** for CORS, auth middleware, and rate-limiting policies.
+- **Independent scaling** — the API scales separately from the web/app frontends.
+- **Consistent auth model** — cross-origin routes use bearer tokens minted by the calling app; session cookies are not assumed.
+- **Simpler auditing** — all server-side HTTP surface area is in one directory tree.
+
+## Rules
+
+1. **Never create `route.ts`** (or `route.js`) inside `apps/web/app/` or `apps/app/src/app/`.
+2. **Server Actions are fine** — `"use server"` functions in web/app are NOT API routes; they run same-origin and are the correct pattern for form submissions and mutations initiated by React components.
+3. If a feature needs a new HTTP endpoint (webhooks, file uploads, integrations), add it under `apps/api/src/app/<feature>/route.ts`.
+4. For **Vercel Blob uploads**, use the existing generic `POST /blob/upload` route:
+   - Add an entry to `UPLOAD_POLICIES` in `apps/api/src/app/blob/upload/route.ts` with a pathname regex.
+   - Call `uploadBlobClient()` from `@eleva/storage/blob-upload-client` on the client side with the matching `prefix` + `kind`.
+   - Auth uses a short-lived sealed bearer token minted via a server action (`@eleva/auth/upload-token`).
+   - **Do NOT create a new route** — extend the policy registry instead.
+5. When adding a new API route, follow the existing patterns in `apps/api`:
+   - Export `dynamic = "force-dynamic"` and `runtime = "nodejs"`.
+   - Implement an `OPTIONS` handler for CORS preflight.
+   - Use `corsHeaders(request, "METHOD, OPTIONS")` from `@/lib/cors`.
+
+## Cross-origin auth pattern
+
+```text
+Web app (server action)           API app (route handler)
+─────────────────────────         ─────────────────────────
+getSession()                      verifyUploadToken(bearer)
+  → mintUploadToken(userId)         → { userId }
+  → return { token, uploadUrl }
+```
+
+The client sends `Authorization: Bearer <token>` to the API route. No cookies cross the origin boundary.

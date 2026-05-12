@@ -3,7 +3,7 @@ import {
   UploadValidationError,
   ALLOWED_DOCUMENT_MIME_TYPES,
   MAX_DOCUMENT_BYTES,
-} from "./uploads"
+} from "./index"
 
 describe("upload validation constants", () => {
   it("accepts pdf and common image types", () => {

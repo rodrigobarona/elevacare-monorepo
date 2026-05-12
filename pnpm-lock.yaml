@@ -74,6 +74,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@eleva/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@eleva/workflows':
         specifier: workspace:*
         version: link:../../packages/workflows
@@ -321,6 +324,9 @@ importers:
       '@eleva/scheduling':
         specifier: workspace:^
         version: link:../../packages/scheduling
+      '@eleva/storage':
+        specifier: workspace:*
+        version: link:../../packages/storage
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -533,9 +539,6 @@ importers:
       '@stripe/react-connect-js':
         specifier: ^3.3.36
         version: 3.3.36(@stripe/connect-js@3.3.39)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      '@vercel/blob':
-        specifier: ^2.3.3
-        version: 2.3.3
       stripe:
         specifier: ^22.1.0
         version: 22.1.0(@types/node@25.6.0)
@@ -878,6 +881,34 @@ importers:
       vitest:
         specifier: ^4.1.5
         version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(msw@2.13.4(@types/node@25.6.0)(typescript@5.9.3))(vite@8.0.9(@types/node@25.6.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
+
+  packages/storage:
+    dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
+      '@vercel/blob':
+        specifier: ^2.3.3
+        version: 2.3.3
+    devDependencies:
+      '@eleva/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@eleva/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^25.1.0
+        version: 25.6.0
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4(jiti@2.6.1)
+      react:
+        specifier: ^19.2.4
+        version: 19.2.5
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
 
   packages/typescript-config: {}
 

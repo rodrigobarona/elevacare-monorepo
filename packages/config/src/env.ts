@@ -238,9 +238,7 @@ export function requireToconlineEnv(): RequiredToconlineEnv {
 export function requireBlobEnv(): { BLOB_READ_WRITE_TOKEN: string } {
   const e = env()
   if (!e.BLOB_READ_WRITE_TOKEN) {
-    throw new Error(
-      "@eleva/billing/uploads boot: missing BLOB_READ_WRITE_TOKEN"
-    )
+    throw new Error("@eleva/storage boot: missing BLOB_READ_WRITE_TOKEN")
   }
   return { BLOB_READ_WRITE_TOKEN: e.BLOB_READ_WRITE_TOKEN }
 }

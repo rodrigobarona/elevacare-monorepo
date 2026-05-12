@@ -12,8 +12,9 @@ import {
   CardTitle,
 } from "@eleva/ui/components/card"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
-import { uploadApplicationDocumentClient } from "@eleva/billing/uploads-client"
+import { uploadBlobClient } from "@eleva/storage/blob-upload-client"
 
+import { getUploadAuthAction } from "@/app/[locale]/become-partner/actions"
 import {
   ALLOWED_DOC_KINDS,
   type ApplicationDocumentInput,
@@ -128,9 +129,19 @@ function DocumentSlot({
     setProgress(0)
 
     try {
-      const uploaded = await uploadApplicationDocumentClient({
+      const auth = await getUploadAuthAction()
+      if (!auth) {
+        setInteraction("error")
+        setErrorMessage(t("errors.uploadFailed"))
+        return
+      }
+
+      const uploaded = await uploadBlobClient({
+        prefix: "become-partner",
         kind,
         file,
+        handleUploadUrl: auth.uploadUrl,
+        headers: { Authorization: `Bearer ${auth.token}` },
         onUploadProgress: (e) => setProgress(e.percentage),
       })
       onUploaded({

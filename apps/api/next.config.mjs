@@ -13,6 +13,7 @@ const nextConfig = {
     "@eleva/db",
     "@eleva/encryption",
     "@eleva/observability",
+    "@eleva/storage",
     "@eleva/workflows",
   ],
 }
