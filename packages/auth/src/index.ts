@@ -18,6 +18,7 @@ export { ensurePersonalOrg, findExistingPersonalOrg } from "./provisioning"
 export {
   SYNC_EVENTS,
   type SyncEventType,
+  type ExternalIdWriteBack,
   processWorkOSEvent,
   syncUser,
   softDeleteUser,

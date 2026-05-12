@@ -1,39 +1,67 @@
 import { NextResponse, type NextRequest } from "next/server"
-import createIntl from "next-intl/middleware"
-import { i18nConfig } from "@eleva/config/i18n"
-import { APP_STANDALONE_PATHS, APP_ROOT_SEGMENTS } from "@eleva/config/routing"
+import { cookieName, isLocale } from "@eleva/config/i18n"
+import { countryToLocale } from "@eleva/config/country-to-locale"
+import { APP_STANDALONE_PATHS } from "@eleva/config/routing"
 import { withAuth } from "@eleva/auth/proxy"
 import { withHeaders } from "@eleva/observability/proxy"
 
-const intl = createIntl({
-  locales: i18nConfig.locales as unknown as string[],
-  defaultLocale: i18nConfig.defaultLocale,
-  localePrefix: i18nConfig.localePrefix,
-  localeDetection: i18nConfig.localeDetection,
-  localeCookie: i18nConfig.localeCookie,
-})
+const AUTH_FLOW_PATHS = APP_STANDALONE_PATHS.map((p) => `/${p}`)
 
-const SKIP_INTL = new Set([
-  ...APP_STANDALONE_PATHS.map((p) => `/${p}`),
-  ...APP_ROOT_SEGMENTS.map((p) => `/${p}`),
-])
+/**
+ * Resolve locale from the request and set it as a request header so
+ * next-intl's getRequestConfig can pick it up without URL-based routing.
+ *
+ * Resolution order: ELEVA_LOCALE cookie > Accept-Language > Vercel geo > en
+ */
+function resolveAndSetLocale(req: NextRequest): NextResponse {
+  const existingCookie = req.cookies.get(cookieName)?.value
+  let locale: string | undefined
 
-function shouldSkipIntl(pathname: string): boolean {
-  if (SKIP_INTL.has(pathname)) return true
-  for (const prefix of SKIP_INTL) {
-    if (pathname.startsWith(prefix + "/")) return true
+  if (existingCookie && isLocale(existingCookie)) {
+    locale = existingCookie
   }
-  return false
+
+  if (!locale) {
+    const acceptLang = req.headers.get("accept-language")
+    if (acceptLang) {
+      for (const part of acceptLang.split(",")) {
+        const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
+        if (isLocale(lang)) {
+          locale = lang
+          break
+        }
+      }
+    }
+  }
+
+  if (!locale) {
+    locale = countryToLocale(req.headers.get("x-vercel-ip-country"))
+  }
+
+  const response = NextResponse.next({
+    request: {
+      headers: new Headers(req.headers),
+    },
+  })
+
+  // Pass resolved locale via header for getRequestConfig
+  response.headers.set("x-eleva-locale", locale)
+
+  // Set/refresh the ELEVA_LOCALE cookie if not already present
+  if (!existingCookie || existingCookie !== locale) {
+    response.cookies.set(cookieName, locale, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    })
+  }
+
+  return response
 }
 
 const handler = (req: NextRequest) => {
-  if (shouldSkipIntl(req.nextUrl.pathname)) {
-    return NextResponse.next()
-  }
-  return intl(req)
+  return resolveAndSetLocale(req)
 }
-
-const AUTH_FLOW_PATHS = APP_STANDALONE_PATHS.map((p) => `/${p}`)
 
 export default withHeaders(
   withAuth(handler, {

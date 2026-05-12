@@ -16,11 +16,13 @@ export {
 } from "./env"
 export {
   i18nConfig,
+  appI18nConfig,
   locales,
   defaultLocale,
   localeNames,
   cookieName as localeCookieName,
   isLocale,
+  resolveLocaleFromHeaders,
   type Locale,
   type I18nConfig,
 } from "./i18n"

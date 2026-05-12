@@ -1,11 +1,13 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { cookies } from "next/headers"
 import { WorkOS } from "@workos-inc/node"
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import { db, main } from "@eleva/db"
+import { cookieName, isLocale } from "@eleva/config/i18n"
 
-type ActionResult = { ok: true } | { ok: false; error: string }
+type ActionResult = { ok: true } | { ok: false; errorKey: string }
 
 let _workos: WorkOS | null = null
 function getWorkOS(): WorkOS {
@@ -20,24 +22,25 @@ function getWorkOS(): WorkOS {
 /**
  * Creates a personal organization in WorkOS, a membership linking the
  * user, and fast-path writes IDs to the Eleva DB for immediate UX.
+ * Also syncs the user's locale preference to WorkOS for cross-device
+ * persistence and localized emails.
+ *
  * No PII is stored — only opaque WorkOS IDs and Eleva metadata.
  * The QStash poller will also process these events idempotently
  * within 5 min (no-op since we already wrote the rows).
  */
-export async function createWorkspace(
-  formData: FormData
-): Promise<ActionResult> {
+export async function createSpace(formData: FormData): Promise<ActionResult> {
   const { user } = await withAuth({ ensureSignedIn: true })
-  const workspaceName = (formData.get("workspaceName") as string)?.trim()
+  const spaceName = (formData.get("spaceName") as string)?.trim()
 
-  if (!workspaceName || workspaceName.length < 2) {
-    return { ok: false, error: "Workspace name must be at least 2 characters" }
+  if (!spaceName || spaceName.length < 2) {
+    return { ok: false, errorKey: "errorMinLength" }
   }
 
   const workos = getWorkOS()
 
   const org = await workos.organizations.createOrganization({
-    name: workspaceName,
+    name: spaceName,
   })
 
   await workos.userManagement.createOrganizationMembership({
@@ -46,7 +49,18 @@ export async function createWorkspace(
     roleSlug: "admin",
   })
 
-  await db().transaction(async (tx) => {
+  // Sync current locale preference to WorkOS for cross-device persistence
+  const jar = await cookies()
+  const currentLocale = jar.get(cookieName)?.value
+  if (currentLocale && isLocale(currentLocale)) {
+    await workos.userManagement
+      .updateUser({ userId: user.id, locale: currentLocale })
+      .catch(() => {
+        // Non-critical: locale sync failure should not block onboarding
+      })
+  }
+
+  const { dbUserId, dbOrgId } = await db().transaction(async (tx) => {
     const [upsertedUser] = await tx
       .insert(main.users)
       .values({
@@ -94,7 +108,20 @@ export async function createWorkspace(
           updatedAt: new Date(),
         },
       })
+
+    return { dbUserId: userId, dbOrgId: orgId }
   })
+
+  await Promise.allSettled([
+    workos.userManagement.updateUser({
+      userId: user.id,
+      externalId: dbUserId,
+    }),
+    workos.organizations.updateOrganization({
+      organization: org.id,
+      externalId: dbOrgId,
+    }),
+  ])
 
   redirect("/auth-redirect")
 }
@@ -102,7 +129,7 @@ export async function createWorkspace(
 /**
  * Checks if the current user already has a WorkOS org membership
  * (e.g. they were invited). If so, fast-path writes IDs to DB and
- * skips the workspace creation step.
+ * skips the space creation step.
  */
 export async function checkExistingMembership(): Promise<{
   hasMembership: boolean
@@ -118,7 +145,7 @@ export async function checkExistingMembership(): Promise<{
   if (memberships.data.length > 0) {
     const membership = memberships.data[0]!
 
-    await db().transaction(async (tx) => {
+    const { dbUserId, dbOrgId } = await db().transaction(async (tx) => {
       const [upsertedUser] = await tx
         .insert(main.users)
         .values({
@@ -168,7 +195,20 @@ export async function checkExistingMembership(): Promise<{
             updatedAt: new Date(),
           },
         })
+
+      return { dbUserId: userId, dbOrgId: orgId }
     })
+
+    await Promise.allSettled([
+      workos.userManagement.updateUser({
+        userId: user.id,
+        externalId: dbUserId,
+      }),
+      workos.organizations.updateOrganization({
+        organization: membership.organizationId,
+        externalId: dbOrgId,
+      }),
+    ])
 
     return { hasMembership: true }
   }

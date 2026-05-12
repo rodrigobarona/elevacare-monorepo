@@ -177,6 +177,18 @@
     "connectViaPipes": "Conecta a través de los ajustes de tu cuenta para activar esta integración.",
     "availableIn": "Disponible en: {countries}"
   },
+  "onboarding": {
+    "title": "Bienvenido/a a Eleva",
+    "subtitle": "Vamos a configurar tu espacio, {name}.",
+    "cardTitle": "Crea tu espacio",
+    "cardDescription": "Tu espacio es donde gestionas tu camino de salud.",
+    "nameLabel": "Nombre del espacio",
+    "namePlaceholder": "Mi espacio",
+    "submit": "Crear espacio",
+    "submitting": "Creando...",
+    "defaultName": "Espacio de {name}",
+    "errorMinLength": "El nombre del espacio debe tener al menos 2 caracteres"
+  },
   "errors": {
     "unauthorized": "No tienes acceso a esta página."
   }

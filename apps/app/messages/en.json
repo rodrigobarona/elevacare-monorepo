@@ -177,6 +177,18 @@
     "connectViaPipes": "Connect via your account settings to enable this integration.",
     "availableIn": "Available in: {countries}"
   },
+  "onboarding": {
+    "title": "Welcome to Eleva",
+    "subtitle": "Let's set up your space, {name}.",
+    "cardTitle": "Create your space",
+    "cardDescription": "Your space is where you manage your health journey.",
+    "nameLabel": "Space name",
+    "namePlaceholder": "My Space",
+    "submit": "Create space",
+    "submitting": "Creating...",
+    "defaultName": "{name}'s Space",
+    "errorMinLength": "Space name must be at least 2 characters"
+  },
   "errors": {
     "unauthorized": "You do not have access to this page."
   }

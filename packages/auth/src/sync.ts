@@ -35,38 +35,49 @@ export const SYNC_EVENTS = [
 
 export type SyncEventType = (typeof SYNC_EVENTS)[number]
 
+export type ExternalIdWriteBack =
+  | { type: "user"; workosId: string; dbId: string }
+  | { type: "organization"; workosId: string; dbId: string }
+
 /**
  * Dispatches a single WorkOS event to the appropriate sync function.
- * Used by the QStash-triggered polling route.
+ * Returns write-back hints so the caller can set WorkOS external_id
+ * without this module importing the WorkOS SDK.
  */
 export async function processWorkOSEvent(event: {
   event: string
   data: unknown
-}): Promise<void> {
+}): Promise<ExternalIdWriteBack | null> {
   switch (event.event) {
     case "user.created":
-    case "user.updated":
-      await syncUser((event.data as WorkOSUserEventData).id)
-      break
+    case "user.updated": {
+      const workosId = (event.data as WorkOSUserEventData).id
+      const dbId = await syncUser(workosId)
+      return dbId ? { type: "user", workosId, dbId } : null
+    }
     case "user.deleted":
       await softDeleteUser((event.data as WorkOSUserEventData).id)
-      break
+      return null
     case "organization.created":
-    case "organization.updated":
-      await syncOrganization(event.data as WorkOSOrganizationEventData)
-      break
+    case "organization.updated": {
+      const data = event.data as WorkOSOrganizationEventData
+      const dbId = await syncOrganization(data)
+      return dbId ? { type: "organization", workosId: data.id, dbId } : null
+    }
     case "organization.deleted":
       await softDeleteOrganization(
         (event.data as WorkOSOrganizationEventData).id
       )
-      break
+      return null
     case "organization_membership.created":
     case "organization_membership.updated":
       await syncMembership(event.data as WorkOSMembershipEventData)
-      break
+      return null
     case "organization_membership.deleted":
       await deleteMembership(event.data as WorkOSMembershipEventData)
-      break
+      return null
+    default:
+      return null
   }
 }
 
@@ -108,14 +119,17 @@ function safeDate(
   return new Date()
 }
 
-export async function syncUser(workosUserId: string): Promise<void> {
-  await db()
+export async function syncUser(workosUserId: string): Promise<string> {
+  const [row] = await db()
     .insert(main.users)
     .values({ workosUserId })
     .onConflictDoUpdate({
       target: main.users.workosUserId,
       set: { updatedAt: new Date() },
     })
+    .returning({ id: main.users.id })
+
+  return row!.id
 }
 
 export async function softDeleteUser(workosUserId: string): Promise<void> {
@@ -132,8 +146,8 @@ export async function softDeleteUser(workosUserId: string): Promise<void> {
 
 export async function syncOrganization(
   data: WorkOSOrganizationEventData
-): Promise<void> {
-  await db()
+): Promise<string> {
+  const [row] = await db()
     .insert(main.organizations)
     .values({
       workosOrgId: data.id,
@@ -143,6 +157,9 @@ export async function syncOrganization(
       target: main.organizations.workosOrgId,
       set: { updatedAt: new Date() },
     })
+    .returning({ id: main.organizations.id })
+
+  return row!.id
 }
 
 export async function softDeleteOrganization(

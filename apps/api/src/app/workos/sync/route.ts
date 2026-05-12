@@ -1,7 +1,11 @@
 import { verifySignatureAppRouter } from "@upstash/qstash/nextjs"
 import { Redis } from "@upstash/redis"
 import { getWorkOS } from "@eleva/auth/server"
-import { SYNC_EVENTS, processWorkOSEvent } from "@eleva/auth"
+import {
+  SYNC_EVENTS,
+  processWorkOSEvent,
+  type ExternalIdWriteBack,
+} from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -38,9 +42,29 @@ async function handler() {
       break
     }
 
+    const writeBacks: ExternalIdWriteBack[] = []
+
     for (const event of events) {
-      await processWorkOSEvent(event)
+      const wb = await processWorkOSEvent(event)
+      if (wb) writeBacks.push(wb)
     }
+
+    await Promise.allSettled(
+      writeBacks.map((wb) => {
+        switch (wb.type) {
+          case "user":
+            return workos.userManagement.updateUser({
+              userId: wb.workosId,
+              externalId: wb.dbId,
+            })
+          case "organization":
+            return workos.organizations.updateOrganization({
+              organization: wb.workosId,
+              externalId: wb.dbId,
+            })
+        }
+      })
+    )
 
     lastEventId = events.at(-1)!.id
     totalProcessed += events.length

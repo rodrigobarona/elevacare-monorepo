@@ -1,8 +1,9 @@
 ---
-description: Adding or modifying WorkOS event synchronization. Apply when working with WorkOS events, the sync poller, or SYNC_EVENTS.
+description: Adding or modifying WorkOS event synchronization. Apply when working with WorkOS events, the sync poller, SYNC_EVENTS, or external_id write-back.
 globs:
   - packages/auth/src/sync.ts
   - apps/api/src/app/workos/sync/**
+  - apps/app/src/app/onboarding/actions.ts
 ---
 
 # WorkOS Events API Sync
@@ -25,10 +26,28 @@ lives in WorkOS and is accessed:
 
 - **SSOT for event types**: `packages/auth/src/sync.ts` owns `SYNC_EVENTS`,
   `processWorkOSEvent()`, and all individual sync functions.
-- **Thin route**: `apps/api/src/app/workos/sync/route.ts` only handles QStash
-  signature verification, Redis cursor, WorkOS API pagination, and calls
-  `processWorkOSEvent`. No domain logic lives in the route.
+- **Thin route**: `apps/api/src/app/workos/sync/route.ts` handles QStash
+  signature verification, Redis cursor, WorkOS API pagination, calls
+  `processWorkOSEvent`, and writes back `external_id` to WorkOS.
 - **Cursor**: stored in Upstash Redis (`workos:events:cursor`), not in the DB.
+
+## External ID write-back
+
+Eleva DB UUIDs (`users.id`, `organizations.id`) are written back to WorkOS as
+`external_id` on both users and organizations. This creates a bidirectional
+link useful for Stripe sync, payment lookups, JWT template claims, and
+cross-system debugging.
+
+- **Convention**: WorkOS user `external_id` = `users.id` UUID; WorkOS org
+  `external_id` = `organizations.id` UUID.
+- **Set by**: onboarding fast-path (`apps/app/src/app/onboarding/actions.ts`)
+  and the sync route (via `ExternalIdWriteBack` return from `processWorkOSEvent`).
+- **Query by**: `workos.userManagement.getUserByExternalId(dbUuid)` and
+  `workos.organizations.getOrganizationByExternalId(dbUuid)`.
+- **Idempotent**: re-setting the same value is a no-op; failures are swallowed
+  with `Promise.allSettled` so they never block event processing or onboarding.
+- `sync.ts` stays pure (no WorkOS SDK import). It returns `ExternalIdWriteBack`
+  hints; the route handler owns the API call.
 
 ## Adding a new event
 

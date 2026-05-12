@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useActionState } from "react"
+import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -13,16 +14,18 @@ import {
   CardTitle,
   CardDescription,
 } from "@eleva/ui/components/card"
-import { createWorkspace } from "./actions"
+import { createSpace } from "./actions"
 
 interface Props {
   defaultName: string
 }
 
 export function OnboardingForm({ defaultName }: Props) {
+  const t = useTranslations("onboarding")
+
   const [state, formAction, isPending] = useActionState(
-    async (_prev: { ok: boolean; error?: string }, formData: FormData) => {
-      const result = await createWorkspace(formData)
+    async (_prev: { ok: boolean; errorKey?: string }, formData: FormData) => {
+      const result = await createSpace(formData)
       return result
     },
     { ok: true }
@@ -32,34 +35,32 @@ export function OnboardingForm({ defaultName }: Props) {
     <form action={formAction}>
       <Card>
         <CardHeader>
-          <CardTitle>Create your workspace</CardTitle>
-          <CardDescription>
-            Your workspace is where you manage your health journey.
-          </CardDescription>
+          <CardTitle>{t("cardTitle")}</CardTitle>
+          <CardDescription>{t("cardDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="workspaceName">Workspace name</Label>
+            <Label htmlFor="spaceName">{t("nameLabel")}</Label>
             <Input
-              id="workspaceName"
-              name="workspaceName"
+              id="spaceName"
+              name="spaceName"
               defaultValue={defaultName}
-              placeholder="My Workspace"
+              placeholder={t("namePlaceholder")}
               required
               minLength={2}
               maxLength={100}
               autoFocus
             />
           </div>
-          {!state.ok && state.error && (
+          {!state.ok && state.errorKey && (
             <p className="text-sm text-destructive" role="alert">
-              {state.error}
+              {t(state.errorKey)}
             </p>
           )}
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending ? "Creating..." : "Create workspace"}
+            {isPending ? t("submitting") : t("submit")}
           </Button>
         </CardFooter>
       </Card>
