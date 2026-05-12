@@ -32,6 +32,8 @@ export {
 } from "./sync"
 export { withAuth, type WithAuthOptions } from "./proxy"
 export {
+  type AuthUser,
+  getAuthUser,
   getSession,
   requireSession,
   getWidgetToken,

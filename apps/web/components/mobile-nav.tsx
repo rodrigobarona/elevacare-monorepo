@@ -1,11 +1,12 @@
 "use client"
 
-import { Menu } from "lucide-react"
+import { Menu, LayoutDashboard, Settings, LogOut } from "lucide-react"
 
 import { Button } from "@eleva/ui/components/button"
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -22,6 +23,10 @@ interface MobileNavProps {
   menuLabel: string
   signinLabel: string
   signupLabel: string
+  user?: { name: string; email: string; initials: string } | null
+  dashboardLabel?: string
+  settingsLabel?: string
+  signoutLabel?: string
 }
 
 export function MobileNav({
@@ -30,6 +35,10 @@ export function MobileNav({
   menuLabel,
   signinLabel,
   signupLabel,
+  user,
+  dashboardLabel,
+  settingsLabel,
+  signoutLabel,
 }: MobileNavProps) {
   return (
     <Sheet>
@@ -46,6 +55,7 @@ export function MobileNav({
       <SheetContent side="right" className="w-72">
         <SheetHeader>
           <SheetTitle>{siteName}</SheetTitle>
+          <SheetDescription className="sr-only">{menuLabel}</SheetDescription>
         </SheetHeader>
         <nav className="flex flex-col gap-1 p-4">
           {links.map((link) => (
@@ -60,14 +70,46 @@ export function MobileNav({
         </nav>
         <div className="mt-auto flex flex-col gap-3 border-t border-border/60 p-4">
           <LanguageSwitcher />
-          <Button variant="outline" asChild>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/signin">{signinLabel}</a>
-          </Button>
-          <Button asChild>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/signup">{signupLabel}</a>
-          </Button>
+          {user ? (
+            <>
+              <div className="px-3 py-2">
+                <p className="text-sm font-medium">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              <Button variant="outline" asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/auth-redirect">
+                  <LayoutDashboard className="mr-2 size-4" />
+                  {dashboardLabel}
+                </a>
+              </Button>
+              <Button variant="outline" asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/settings">
+                  <Settings className="mr-2 size-4" />
+                  {settingsLabel}
+                </a>
+              </Button>
+              <Button variant="ghost" asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/logout">
+                  <LogOut className="mr-2 size-4" />
+                  {signoutLabel}
+                </a>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="outline" asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/signin">{signinLabel}</a>
+              </Button>
+              <Button asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/signup">{signupLabel}</a>
+              </Button>
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

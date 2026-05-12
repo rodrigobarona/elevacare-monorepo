@@ -11,7 +11,10 @@
     "signin": "Iniciar sesión",
     "signup": "Empezar",
     "menu": "Menú",
-    "skipToContent": "Saltar al contenido principal"
+    "skipToContent": "Saltar al contenido principal",
+    "dashboard": "Panel",
+    "settings": "Ajustes",
+    "signout": "Cerrar sesión"
   },
   "footer": {
     "tagline": "El cuidado, cerca de ti.",

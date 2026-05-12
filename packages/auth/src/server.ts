@@ -6,6 +6,13 @@ import { unsealData } from "iron-session"
 import { resolveSessionFromWorkosUser } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
+export interface AuthUser {
+  id: string
+  email: string
+  firstName: string | null
+  lastName: string | null
+}
+
 interface WorkosCookieSession {
   accessToken: string
   refreshToken: string
@@ -96,6 +103,37 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
 })
 
 /**
+ * Lightweight auth check that returns basic WorkOS user info from the
+ * session cookie without querying the database. Ideal for UI that
+ * only needs to know "is the user logged in?" and show their name
+ * (e.g. the marketing site header avatar).
+ *
+ * Memoised per-request via React.cache.
+ */
+export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
+  let user: WorkosCookieSession["user"] | null = null
+
+  try {
+    const workosSession = await authkitGetSession()
+    user = workosSession.user ?? null
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
+      user = await getWorkosUserFromCookie()
+    } else {
+      throw err
+    }
+  }
+
+  if (!user) return null
+  return {
+    id: user.id,
+    email: user.email ?? "unknown",
+    firstName: user.firstName ?? null,
+    lastName: user.lastName ?? null,
+  }
+})
+
+/**
  * Convenience wrapper that throws UnauthorizedError if there is no
  * session or the requested capability is missing. Use in Server
  * Actions / Route Handlers where unauthed access is a hard error.
@@ -136,13 +174,18 @@ export function getWorkOS(): WorkOS {
  */
 export async function getWidgetToken(
   userId: string,
-  organizationId: string
+  organizationId: string,
+  scopes?: string[]
 ): Promise<string> {
   if (!userId || !organizationId) {
     throw new Error("getWidgetToken: userId and organizationId are required")
   }
   const workos = getWorkOS()
-  const response = await workos.widgets.createToken({ userId, organizationId })
+  const response = await workos.widgets.createToken({
+    userId,
+    organizationId,
+    ...(scopes?.length && { scopes }),
+  } as Parameters<typeof workos.widgets.createToken>[0])
   return response.token
 }
 
@@ -151,7 +194,9 @@ export async function getWidgetToken(
  * the authenticated session. Throws UnauthorizedError if there is no
  * active session.
  */
-export async function getWidgetTokenFromSession(): Promise<string> {
+export async function getWidgetTokenFromSession(
+  scopes?: string[]
+): Promise<string> {
   const session = await requireSession()
-  return getWidgetToken(session.user.workosUserId, session.workosOrgId)
+  return getWidgetToken(session.user.workosUserId, session.workosOrgId, scopes)
 }

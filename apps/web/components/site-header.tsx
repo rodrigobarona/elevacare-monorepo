@@ -1,12 +1,26 @@
 import { getTranslations } from "next-intl/server"
+import { getAuthUser } from "@eleva/auth/server"
 
 import { Button } from "@eleva/ui/components/button"
 import { Link } from "@/i18n/navigation"
 import { LanguageSwitcher } from "@/components/language-switcher"
 import { MobileNav } from "@/components/mobile-nav"
+import { UserMenu } from "@/components/user-menu"
+
+function getInitials(
+  firstName: string | null,
+  lastName: string | null,
+  email: string
+): string {
+  if (firstName && lastName)
+    return `${firstName[0]}${lastName[0]}`.toUpperCase()
+  if (firstName) return firstName[0]!.toUpperCase()
+  return email[0]!.toUpperCase()
+}
 
 export async function SiteHeader() {
   const t = await getTranslations()
+  const user = await getAuthUser()
 
   const links: Array<{
     href: "/" | "/about" | "/experts" | "/become-partner"
@@ -17,6 +31,16 @@ export async function SiteHeader() {
     { href: "/about", key: "nav.about" },
     { href: "/become-partner", key: "nav.becomePartner" },
   ]
+
+  const userProps = user
+    ? {
+        name:
+          [user.firstName, user.lastName].filter(Boolean).join(" ") ||
+          user.email,
+        email: user.email,
+        initials: getInitials(user.firstName, user.lastName, user.email),
+      }
+    : null
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/70">
@@ -50,20 +74,27 @@ export async function SiteHeader() {
           <div className="hidden md:block">
             <LanguageSwitcher />
           </div>
-          {/* signin/signup live in apps/app — cross-app navigation, not a Next.js page in apps/web */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden md:inline-flex"
-            asChild
-          >
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/signin">{t("nav.signin")}</a>
-          </Button>
-          <Button size="sm" className="hidden md:inline-flex" asChild>
-            {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-            <a href="/signup">{t("nav.signup")}</a>
-          </Button>
+          {userProps ? (
+            <div className="hidden md:block">
+              <UserMenu {...userProps} />
+            </div>
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex"
+                asChild
+              >
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/signin">{t("nav.signin")}</a>
+              </Button>
+              <Button size="sm" className="hidden md:inline-flex" asChild>
+                {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
+                <a href="/signup">{t("nav.signup")}</a>
+              </Button>
+            </>
+          )}
           <MobileNav
             links={links.map((link) => ({
               href: link.href,
@@ -73,6 +104,10 @@ export async function SiteHeader() {
             menuLabel={t("nav.menu")}
             signinLabel={t("nav.signin")}
             signupLabel={t("nav.signup")}
+            user={userProps}
+            dashboardLabel={t("nav.dashboard")}
+            settingsLabel={t("nav.settings")}
+            signoutLabel={t("nav.signout")}
           />
         </div>
       </div>

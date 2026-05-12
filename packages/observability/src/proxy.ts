@@ -46,10 +46,10 @@ export function withHeaders(
   handler: ProxyHandler,
   options: WithHeadersOptions = {}
 ): ProxyHandler {
-  const cspValue = options.csp ?? buildCspHeader()
   const correlationHeader = correlationIdHeader()
 
   return async (req) => {
+    const cspValue = options.csp ?? buildCspHeader()
     const incoming = req.headers.get(correlationHeader)
     const correlationId = incoming ?? generateCorrelationId()
 

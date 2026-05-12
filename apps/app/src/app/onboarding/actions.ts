@@ -52,16 +52,10 @@ export async function createSpace(
     roleSlug: "admin",
   })
 
-  // Sync current locale preference to WorkOS for cross-device persistence
   const jar = await cookies()
   const currentLocale = jar.get(cookieName)?.value
-  if (currentLocale && isLocale(currentLocale)) {
-    await workos.userManagement
-      .updateUser({ userId: user.id, locale: currentLocale })
-      .catch(() => {
-        // Non-critical: locale sync failure should not block onboarding
-      })
-  }
+  const locale =
+    currentLocale && isLocale(currentLocale) ? currentLocale : undefined
 
   const { dbUserId, dbOrgId } = await db().transaction(async (tx) => {
     const [upsertedUser] = await tx
@@ -119,6 +113,7 @@ export async function createSpace(
     workos.userManagement.updateUser({
       userId: user.id,
       externalId: dbUserId,
+      ...(locale && { locale }),
     }),
     workos.organizations.updateOrganization({
       organization: org.id,
@@ -139,6 +134,11 @@ export async function checkExistingMembership(): Promise<{
 }> {
   const { user } = await withAuth({ ensureSignedIn: true })
   const workos = getWorkOS()
+
+  const jar = await cookies()
+  const currentLocale = jar.get(cookieName)?.value
+  const locale =
+    currentLocale && isLocale(currentLocale) ? currentLocale : undefined
 
   const memberships = await workos.userManagement.listOrganizationMemberships({
     userId: user.id,
@@ -206,6 +206,7 @@ export async function checkExistingMembership(): Promise<{
       workos.userManagement.updateUser({
         userId: user.id,
         externalId: dbUserId,
+        ...(locale && { locale }),
       }),
       workos.organizations.updateOrganization({
         organization: membership.organizationId,

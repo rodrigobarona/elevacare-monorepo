@@ -11,7 +11,10 @@
     "signin": "Sign in",
     "signup": "Get started",
     "menu": "Menu",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "signout": "Sign out"
   },
   "footer": {
     "tagline": "Care, close to you.",

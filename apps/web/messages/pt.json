@@ -11,7 +11,10 @@
     "signin": "Iniciar sessão",
     "signup": "Começar",
     "menu": "Menu",
-    "skipToContent": "Saltar para o conteúdo principal"
+    "skipToContent": "Saltar para o conteúdo principal",
+    "dashboard": "Painel",
+    "settings": "Definições",
+    "signout": "Terminar sessão"
   },
   "footer": {
     "tagline": "Cuidado, perto de si.",

@@ -43,11 +43,18 @@
     }
   },
   "settings": {
+    "title": "Ajustes de la cuenta",
     "profile": {
       "title": "Perfil",
       "email": "Correo",
       "language": "Idioma",
       "save": "Guardar"
+    },
+    "security": {
+      "title": "Seguridad"
+    },
+    "sessions": {
+      "title": "Sesiones"
     }
   },
   "finance": {
