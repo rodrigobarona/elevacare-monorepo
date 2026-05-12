@@ -23,13 +23,9 @@ interface Props {
 export function OnboardingForm({ defaultName }: Props) {
   const t = useTranslations("onboarding")
 
-  const [state, formAction, isPending] = useActionState(
-    async (_prev: { ok: boolean; errorKey?: string }, formData: FormData) => {
-      const result = await createSpace(formData)
-      return result
-    },
-    { ok: true }
-  )
+  const [state, formAction, isPending] = useActionState(createSpace, {
+    ok: true,
+  })
 
   return (
     <form action={formAction}>

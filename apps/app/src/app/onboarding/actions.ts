@@ -29,7 +29,10 @@ function getWorkOS(): WorkOS {
  * The QStash poller will also process these events idempotently
  * within 5 min (no-op since we already wrote the rows).
  */
-export async function createSpace(formData: FormData): Promise<ActionResult> {
+export async function createSpace(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
   const { user } = await withAuth({ ensureSignedIn: true })
   const spaceName = (formData.get("spaceName") as string)?.trim()
 

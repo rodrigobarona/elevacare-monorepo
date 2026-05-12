@@ -1,16 +1,9 @@
 import { getTranslations } from "next-intl/server"
-import { Menu } from "lucide-react"
 
 import { Button } from "@eleva/ui/components/button"
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@eleva/ui/components/sheet"
 import { Link } from "@/i18n/navigation"
 import { LanguageSwitcher } from "@/components/language-switcher"
+import { MobileNav } from "@/components/mobile-nav"
 
 export async function SiteHeader() {
   const t = await getTranslations()
@@ -71,45 +64,16 @@ export async function SiteHeader() {
             {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
             <a href="/signup">{t("nav.signup")}</a>
           </Button>
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="md:hidden"
-                aria-label={t("nav.menu")}
-              >
-                <Menu />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72">
-              <SheetHeader>
-                <SheetTitle>{t("site.name")}</SheetTitle>
-              </SheetHeader>
-              <nav className="flex flex-col gap-1 p-4">
-                {links.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className="rounded-md px-3 py-2 text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    {t(link.key)}
-                  </Link>
-                ))}
-              </nav>
-              <div className="mt-auto flex flex-col gap-3 border-t border-border/60 p-4">
-                <LanguageSwitcher />
-                <Button variant="outline" asChild>
-                  {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-                  <a href="/signin">{t("nav.signin")}</a>
-                </Button>
-                <Button asChild>
-                  {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
-                  <a href="/signup">{t("nav.signup")}</a>
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
+          <MobileNav
+            links={links.map((link) => ({
+              href: link.href,
+              label: t(link.key),
+            }))}
+            siteName={t("site.name")}
+            menuLabel={t("nav.menu")}
+            signinLabel={t("nav.signin")}
+            signupLabel={t("nav.signup")}
+          />
         </div>
       </div>
     </header>
