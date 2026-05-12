@@ -16,6 +16,9 @@ export {
 } from "./session"
 export { ensurePersonalOrg, findExistingPersonalOrg } from "./provisioning"
 export {
+  SYNC_EVENTS,
+  type SyncEventType,
+  processWorkOSEvent,
   syncUser,
   softDeleteUser,
   syncOrganization,

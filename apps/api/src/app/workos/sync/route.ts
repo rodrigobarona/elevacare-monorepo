@@ -1,37 +1,13 @@
 import { verifySignatureAppRouter } from "@upstash/qstash/nextjs"
 import { Redis } from "@upstash/redis"
 import { getWorkOS } from "@eleva/auth/server"
-import {
-  syncUser,
-  softDeleteUser,
-  syncOrganization,
-  softDeleteOrganization,
-  syncMembership,
-  deleteMembership,
-} from "@eleva/auth"
-import type {
-  WorkOSUserEventData,
-  WorkOSOrganizationEventData,
-  WorkOSMembershipEventData,
-} from "@eleva/auth"
+import { SYNC_EVENTS, processWorkOSEvent } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 export const maxDuration = 60
 
 const CURSOR_KEY = "workos:events:cursor"
-
-const SYNC_EVENTS = [
-  "user.created",
-  "user.updated",
-  "user.deleted",
-  "organization.created",
-  "organization.updated",
-  "organization.deleted",
-  "organization_membership.created",
-  "organization_membership.updated",
-  "organization_membership.deleted",
-] as const
 
 function getRedis() {
   return new Redis({
@@ -63,39 +39,7 @@ async function handler() {
     }
 
     for (const event of events) {
-      switch (event.event) {
-        case "user.created":
-        case "user.updated":
-          await syncUser(event.data as unknown as WorkOSUserEventData)
-          break
-        case "user.deleted":
-          await softDeleteUser(
-            (event.data as unknown as WorkOSUserEventData).id
-          )
-          break
-        case "organization.created":
-        case "organization.updated":
-          await syncOrganization(
-            event.data as unknown as WorkOSOrganizationEventData
-          )
-          break
-        case "organization.deleted":
-          await softDeleteOrganization(
-            (event.data as unknown as WorkOSOrganizationEventData).id
-          )
-          break
-        case "organization_membership.created":
-        case "organization_membership.updated":
-          await syncMembership(
-            event.data as unknown as WorkOSMembershipEventData
-          )
-          break
-        case "organization_membership.deleted":
-          await deleteMembership(
-            event.data as unknown as WorkOSMembershipEventData
-          )
-          break
-      }
+      await processWorkOSEvent(event)
     }
 
     lastEventId = events.at(-1)!.id

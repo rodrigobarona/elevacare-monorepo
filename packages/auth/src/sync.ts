@@ -13,6 +13,55 @@ import { db, main } from "@eleva/db"
  * - No side effects: pure DB operations, no emails or 3rd-party calls
  */
 
+export const SYNC_EVENTS = [
+  "user.created",
+  "user.updated",
+  "user.deleted",
+  "organization.created",
+  "organization.updated",
+  "organization.deleted",
+  "organization_membership.created",
+  "organization_membership.updated",
+  "organization_membership.deleted",
+] as const
+
+export type SyncEventType = (typeof SYNC_EVENTS)[number]
+
+/**
+ * Dispatches a single WorkOS event to the appropriate sync function.
+ * Used by the QStash-triggered polling route.
+ */
+export async function processWorkOSEvent(event: {
+  event: string
+  data: unknown
+}): Promise<void> {
+  switch (event.event) {
+    case "user.created":
+    case "user.updated":
+      await syncUser(event.data as WorkOSUserEventData)
+      break
+    case "user.deleted":
+      await softDeleteUser((event.data as WorkOSUserEventData).id)
+      break
+    case "organization.created":
+    case "organization.updated":
+      await syncOrganization(event.data as WorkOSOrganizationEventData)
+      break
+    case "organization.deleted":
+      await softDeleteOrganization(
+        (event.data as WorkOSOrganizationEventData).id
+      )
+      break
+    case "organization_membership.created":
+    case "organization_membership.updated":
+      await syncMembership(event.data as WorkOSMembershipEventData)
+      break
+    case "organization_membership.deleted":
+      await deleteMembership(event.data as WorkOSMembershipEventData)
+      break
+  }
+}
+
 export interface WorkOSUserEventData {
   id: string
   email: string
