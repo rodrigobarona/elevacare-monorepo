@@ -10,10 +10,16 @@ const assetOrigin = process.env.APP_ASSET_PREFIX
   ? [process.env.APP_ASSET_PREFIX]
   : []
 
+const isPreview = process.env.VERCEL_ENV === "preview"
+const vercelLive = isPreview
+  ? ["https://vercel.live", "https://*.vercel.live"]
+  : []
+
 export const CSP_ALLOWLIST = {
   scriptSrc: [
     "'self'",
     ...assetOrigin,
+    ...vercelLive,
     "https://js.stripe.com",
     "https://connect-js.stripe.com",
     "https://cdn.sentry-cdn.com",
@@ -23,6 +29,7 @@ export const CSP_ALLOWLIST = {
   connectSrc: [
     "'self'",
     ...assetOrigin,
+    ...vercelLive,
     "https://api.eleva.care",
     "https://api.stripe.com",
     "https://m.stripe.com",
@@ -34,6 +41,7 @@ export const CSP_ALLOWLIST = {
   ],
   frameSrc: [
     "'self'",
+    ...vercelLive,
     "https://js.stripe.com",
     "https://connect-js.stripe.com",
     "https://*.stripe.com",
