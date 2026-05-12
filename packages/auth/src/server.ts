@@ -92,7 +92,12 @@ export async function requireSession(
 
 let _workos: WorkOS | null = null
 
-function getWorkOS(): WorkOS {
+/**
+ * Singleton WorkOS SDK client. Reads WORKOS_API_KEY from the environment.
+ * Exported so that other packages (e.g. the QStash sync route) can reuse
+ * the same instance without duplicating env-var handling.
+ */
+export function getWorkOS(): WorkOS {
   if (!_workos) {
     const key = process.env.WORKOS_API_KEY
     if (!key) throw new Error("WORKOS_API_KEY is required")

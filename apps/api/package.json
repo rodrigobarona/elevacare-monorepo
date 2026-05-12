@@ -23,7 +23,6 @@
     "@eleva/workflows": "workspace:*",
     "@upstash/qstash": "^2.8.4",
     "@upstash/redis": "^1.34.0",
-    "@workos-inc/node": "^9.2.0",
     "drizzle-orm": "^0.45.2",
     "next": "^16.2.3",
     "react": "^19.2.4",

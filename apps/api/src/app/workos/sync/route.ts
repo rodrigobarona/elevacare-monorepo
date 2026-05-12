@@ -1,6 +1,6 @@
 import { verifySignatureAppRouter } from "@upstash/qstash/nextjs"
 import { Redis } from "@upstash/redis"
-import { WorkOS } from "@workos-inc/node"
+import { getWorkOS } from "@eleva/auth/server"
 import {
   syncUser,
   softDeleteUser,
@@ -35,16 +35,12 @@ const SYNC_EVENTS = [
 
 function getRedis() {
   return new Redis({
-    url: process.env.KV_REST_API_URL!,
-    token: process.env.KV_REST_API_TOKEN!,
+    url: process.env.UPSTASH_REDIS_REST_URL!,
+    token: process.env.UPSTASH_REDIS_REST_TOKEN!,
   })
 }
 
-function getWorkOS() {
-  return new WorkOS(process.env.WORKOS_API_KEY!)
-}
-
-async function handler(_req: Request) {
+async function handler() {
   const redis = getRedis()
   const workos = getWorkOS()
 
