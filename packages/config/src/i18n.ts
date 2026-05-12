@@ -4,9 +4,10 @@
  * Locales at launch: Portuguese (pt), English (en), Spanish (es).
  * EN is the default and served with no URL prefix; PT and ES get prefixed.
  *
- * This module is consumed by next-intl's createMiddleware in
- * apps/{web,app}/src/proxy.ts and by server/client components via
- * next-intl helpers.
+ * This module is consumed by next-intl routing/middleware in
+ * apps/web (via i18n/routing.ts + proxy.ts) and apps/app (via
+ * proxy.ts cookie resolution), as well as by server/client
+ * components via next-intl helpers.
  */
 
 import { countryToLocale } from "./country-to-locale"

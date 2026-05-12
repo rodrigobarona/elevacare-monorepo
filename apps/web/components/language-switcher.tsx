@@ -25,11 +25,8 @@ export function LanguageSwitcher() {
 
   function switchTo(next: Locale) {
     if (next === locale) return
-    const query = Object.fromEntries(
-      new URLSearchParams(window.location.search)
-    )
     startTransition(() => {
-      router.replace({ pathname, query }, { locale: next })
+      router.replace(pathname, { locale: next })
     })
   }
 
