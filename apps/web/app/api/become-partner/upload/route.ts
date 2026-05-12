@@ -11,17 +11,18 @@ import { getSession } from "@eleva/auth"
 
 export async function POST(request: Request): Promise<Response> {
   try {
+    // Read session at route level where the Next.js ALS context (and
+    // the proxy-injected x-workos-middleware header) is available.
+    // Inside handleUpload's callbacks the context may no longer carry
+    // the header, causing AuthKit's server-side withAuth() to throw.
+    const session = await getSession()
+
     return await handleApplicationDocumentUpload({
       request,
-      // Auth runs INSIDE authorize so Vercel Blob's signed
-      // server-to-server completion callback (which carries no user
-      // session) is not 401'd by a top-of-route gate.
       authorize: async (pathname) => {
-        const session = await getSession()
         if (!session) {
           throw new Error("unauthorized")
         }
-        // Pathname shape: become-partner/<kind>/<filename>
         const match = pathname.match(
           /^become-partner\/(license|id|cv|professional_insurance)\/[^/]+$/
         )
@@ -34,9 +35,6 @@ export async function POST(request: Request): Promise<Response> {
           kind,
         }
       },
-      // No onCompleted: the form server action persists the URL onto
-      // the application row. Keeping the route handler stateless makes
-      // retries safe.
     })
   } catch (err) {
     console.error("become-partner upload failed", err)
