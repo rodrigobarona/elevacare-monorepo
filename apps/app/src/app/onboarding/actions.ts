@@ -19,8 +19,9 @@ function getWorkOS(): WorkOS {
 
 /**
  * Creates a personal organization in WorkOS, a membership linking the
- * user, and fast-path writes all records to the Eleva DB for immediate
- * UX. The QStash poller will also process these events idempotently
+ * user, and fast-path writes IDs to the Eleva DB for immediate UX.
+ * No PII is stored — only opaque WorkOS IDs and Eleva metadata.
+ * The QStash poller will also process these events idempotently
  * within 5 min (no-op since we already wrote the rows).
  */
 export async function createWorkspace(
@@ -45,23 +46,16 @@ export async function createWorkspace(
     roleSlug: "admin",
   })
 
-  const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
-
   await db().transaction(async (tx) => {
     const [upsertedUser] = await tx
       .insert(main.users)
       .values({
         workosUserId: user.id,
-        email: user.email!,
-        displayName,
         completedOnboarding: true,
       })
       .onConflictDoUpdate({
         target: main.users.workosUserId,
         set: {
-          email: user.email!,
-          displayName,
           completedOnboarding: true,
           updatedAt: new Date(),
         },
@@ -75,14 +69,10 @@ export async function createWorkspace(
       .values({
         workosOrgId: org.id,
         type: "personal",
-        displayName: workspaceName,
       })
       .onConflictDoUpdate({
         target: main.organizations.workosOrgId,
-        set: {
-          displayName: workspaceName,
-          updatedAt: new Date(),
-        },
+        set: { updatedAt: new Date() },
       })
       .returning({ id: main.organizations.id })
 
@@ -111,8 +101,8 @@ export async function createWorkspace(
 
 /**
  * Checks if the current user already has a WorkOS org membership
- * (e.g. they were invited). If so, fast-path writes to DB and skips
- * the workspace creation step.
+ * (e.g. they were invited). If so, fast-path writes IDs to DB and
+ * skips the workspace creation step.
  */
 export async function checkExistingMembership(): Promise<{
   hasMembership: boolean
@@ -127,27 +117,17 @@ export async function checkExistingMembership(): Promise<{
 
   if (memberships.data.length > 0) {
     const membership = memberships.data[0]!
-    const orgData = await workos.organizations.getOrganization(
-      membership.organizationId
-    )
-
-    const displayName =
-      [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
 
     await db().transaction(async (tx) => {
       const [upsertedUser] = await tx
         .insert(main.users)
         .values({
           workosUserId: user.id,
-          email: user.email!,
-          displayName,
           completedOnboarding: true,
         })
         .onConflictDoUpdate({
           target: main.users.workosUserId,
           set: {
-            email: user.email!,
-            displayName,
             completedOnboarding: true,
             updatedAt: new Date(),
           },
@@ -159,16 +139,12 @@ export async function checkExistingMembership(): Promise<{
       const [upsertedOrg] = await tx
         .insert(main.organizations)
         .values({
-          workosOrgId: orgData.id,
+          workosOrgId: membership.organizationId,
           type: "personal",
-          displayName: orgData.name,
         })
         .onConflictDoUpdate({
           target: main.organizations.workosOrgId,
-          set: {
-            displayName: orgData.name,
-            updatedAt: new Date(),
-          },
+          set: { updatedAt: new Date() },
         })
         .returning({ id: main.organizations.id })
 

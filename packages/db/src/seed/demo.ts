@@ -77,8 +77,6 @@ async function upsertPersona(persona: SeedPersona) {
       .insert(main.users)
       .values({
         workosUserId: persona.workosUserId,
-        email: persona.email,
-        displayName: persona.displayName,
       })
       .returning({ id: main.users.id })
     userId = inserted!.id
@@ -97,7 +95,6 @@ async function upsertPersona(persona: SeedPersona) {
       .values({
         workosOrgId: persona.workosOrgId,
         type: persona.orgType,
-        displayName: persona.orgDisplayName,
       })
       .returning({ id: main.organizations.id })
     orgId = inserted!.id

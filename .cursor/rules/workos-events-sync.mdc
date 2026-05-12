@@ -10,6 +10,17 @@ globs:
 Eleva mirrors WorkOS data into its local DB via cursor-based polling of the
 WorkOS Events API. QStash triggers the poller every 5 minutes.
 
+## IDs-only architecture
+
+**NO PII is stored in the Eleva DB.** The `users` table stores only
+`workos_user_id` + `completed_onboarding`. The `organizations` table stores
+only `workos_org_id` + `type`. All personal data (email, name, profile picture)
+lives in WorkOS and is accessed:
+
+- **Current user session**: from the AuthKit session token (via `getSession()`).
+- **Other users** (admin panels, team lists): via `getWorkOS().userManagement.getUser(workosUserId)`.
+- **Background jobs** (calendar sync, emails): via WorkOS User Management API.
+
 ## Architecture
 
 - **SSOT for event types**: `packages/auth/src/sync.ts` owns `SYNC_EVENTS`,

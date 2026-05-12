@@ -1,5 +1,5 @@
 import { redirect, notFound } from "next/navigation"
-import { getSession } from "@eleva/auth/server"
+import { getSession, getWorkOS } from "@eleva/auth/server"
 import { getApplicationById } from "@eleva/db"
 import { Badge } from "@eleva/ui/components/badge"
 import {
@@ -27,6 +27,18 @@ export default async function ApplicationDetailPage({ params }: Props) {
   const { id } = await params
   const app = await getApplicationById(id)
   if (!app) notFound()
+
+  let applicantEmail = "—"
+  let applicantDisplayName = "—"
+  if (app.applicantWorkosUserId) {
+    const workosUser = await getWorkOS().userManagement.getUser(
+      app.applicantWorkosUserId
+    )
+    applicantEmail = workosUser.email
+    applicantDisplayName =
+      [workosUser.firstName, workosUser.lastName].filter(Boolean).join(" ") ||
+      workosUser.email
+  }
 
   const canAct = app.status === "submitted" || app.status === "under_review"
 
@@ -59,11 +71,8 @@ export default async function ApplicationDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <dl className="grid gap-4 sm:grid-cols-2">
-              <Field label="Email" value={app.applicantEmail ?? "—"} />
-              <Field
-                label="Display Name"
-                value={app.applicantDisplayName ?? "—"}
-              />
+              <Field label="Email" value={applicantEmail} />
+              <Field label="Display Name" value={applicantDisplayName} />
               <Field label="NIF" value={app.nif ?? "—"} />
               <Field label="License #" value={app.licenseNumber ?? "—"} />
               <Field label="License Scope" value={app.licenseScope ?? "—"} />

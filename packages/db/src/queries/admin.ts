@@ -7,8 +7,7 @@ import type { BecomePartnerStatus } from "../schema/main/become-partner-applicat
 export interface AdminApplicationRow {
   id: string
   applicantUserId: string
-  applicantEmail: string | null
-  applicantDisplayName: string | null
+  applicantWorkosUserId: string | null
   type: main.BecomePartnerApplicantType
   usernameRequested: string
   displayName: string
@@ -47,8 +46,7 @@ function mapRow(
   return {
     id: app.id,
     applicantUserId: app.applicantUserId,
-    applicantEmail: user?.email ?? null,
-    applicantDisplayName: user?.displayName ?? null,
+    applicantWorkosUserId: user?.workosUserId ?? null,
     type: app.type,
     usernameRequested: app.usernameRequested,
     displayName: app.displayName,
@@ -214,7 +212,7 @@ export interface ApproveApplicationResult {
   orgId: string
   userId: string
   username: string
-  applicantEmail: string | null
+  applicantWorkosUserId: string | null
 }
 
 export async function approveApplication(
@@ -248,7 +246,6 @@ export async function approveApplication(
       .values({
         workosOrgId: `pending_${app.applicantUserId}`,
         type: app.type === "clinic_admin" ? "clinic" : "solo_expert",
-        displayName: app.displayName,
       })
       .returning({ id: main.organizations.id })
 
@@ -310,7 +307,7 @@ export async function approveApplication(
       .where(eq(main.becomePartnerApplications.id, id))
 
     const userRows = await tx
-      .select({ email: main.users.email })
+      .select({ workosUserId: main.users.workosUserId })
       .from(main.users)
       .where(eq(main.users.id, app.applicantUserId))
       .limit(1)
@@ -320,7 +317,7 @@ export async function approveApplication(
       orgId: org.id,
       userId: app.applicantUserId,
       username: app.usernameRequested,
-      applicantEmail: userRows[0]?.email ?? null,
+      applicantWorkosUserId: userRows[0]?.workosUserId ?? null,
     }
   })
 }

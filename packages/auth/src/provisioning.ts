@@ -70,8 +70,6 @@ export async function ensurePersonalOrg(
       .insert(main.users)
       .values({
         workosUserId: input.workosUserId,
-        email: input.email,
-        displayName: input.displayName ?? null,
       })
       .returning({ id: main.users.id })
     userId = inserted!.id
@@ -125,7 +123,6 @@ export async function ensurePersonalOrg(
       id: orgId,
       workosOrgId: input.workosOrgId,
       type: "personal",
-      displayName: input.displayName ?? input.email,
     })
     await tx.insert(main.memberships).values({
       userId,

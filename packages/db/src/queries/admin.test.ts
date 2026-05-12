@@ -91,8 +91,7 @@ describe("admin queries", () => {
       }
       const fakeUser = {
         id: "user-1",
-        email: "dr@test.com",
-        displayName: "Dr. Smith",
+        workosUserId: "user_01ABC",
       }
 
       mockTx.select.mockReturnValueOnce(chain([{ count: 1 }]))
@@ -103,7 +102,7 @@ describe("admin queries", () => {
       const result = await listApplications()
 
       expect(result.total).toBe(1)
-      expect(result.rows[0]?.applicantEmail).toBe("dr@test.com")
+      expect(result.rows[0]?.applicantWorkosUserId).toBe("user_01ABC")
       expect(result.rows[0]?.displayName).toBe("Dr. Smith")
     })
   })

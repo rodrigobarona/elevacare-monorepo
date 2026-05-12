@@ -114,7 +114,6 @@ export default async function BecomePartnerQueuePage({ searchParams }: Props) {
                   </div>
                   <CardDescription>
                     @{app.usernameRequested} &middot;{" "}
-                    {app.applicantEmail ?? "unknown email"} &middot;{" "}
                     {app.type.replace("_", " ")}
                   </CardDescription>
                 </CardHeader>

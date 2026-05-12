@@ -1,29 +1,22 @@
-import {
-  boolean,
-  pgTable,
-  text,
-  uniqueIndex,
-  varchar,
-} from "drizzle-orm/pg-core"
+import { boolean, pgTable, uniqueIndex, varchar } from "drizzle-orm/pg-core"
 import { createdAt, deletedAt, pkColumn, updatedAt } from "./shared"
 
 /**
- * Canonical Eleva user identity. One WorkOS user -> one row. Identity
- * profile data beyond email/display-name lives in the per-org profile
- * tables (expert_profiles, clinic_profiles, patient_profiles) that land
- * in S2.
+ * Canonical Eleva user identity. One WorkOS user -> one row.
+ *
+ * PII (email, display name) is NOT stored here — WorkOS is the SSOT
+ * for identity data. The AuthKit session token provides PII at runtime.
+ * For other-user PII lookups (admin panels, team lists), call the
+ * WorkOS User Management API.
  *
  * NOT tenant-scoped: users live outside any single org because a single
  * human can hold memberships across multiple orgs (patient + expert).
- * All mutations still go through withAudit, but no RLS policy applies.
  */
 export const users = pgTable(
   "users",
   {
     id: pkColumn(),
     workosUserId: varchar("workos_user_id", { length: 255 }).notNull(),
-    email: text("email").notNull(),
-    displayName: text("display_name"),
     completedOnboarding: boolean("completed_onboarding")
       .notNull()
       .default(false),
@@ -33,7 +26,6 @@ export const users = pgTable(
   },
   (t) => ({
     workosIdx: uniqueIndex("users_workos_user_id_idx").on(t.workosUserId),
-    emailIdx: uniqueIndex("users_email_lower_idx").on(t.email),
   })
 )
 

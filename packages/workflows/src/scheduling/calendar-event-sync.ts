@@ -1,4 +1,5 @@
 import { and, eq } from "drizzle-orm"
+import { WorkOS } from "@workos-inc/node"
 import { main } from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
@@ -16,6 +17,16 @@ import {
   sendCancellationIcsEmail,
   type IcsEmailPayload,
 } from "./ics-email"
+
+let _workos: WorkOS | null = null
+function getWorkOS(): WorkOS {
+  if (!_workos) {
+    const key = process.env.WORKOS_API_KEY
+    if (!key) throw new Error("WORKOS_API_KEY is required")
+    _workos = new WorkOS(key)
+  }
+  return _workos
+}
 
 const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
   "google-calendar": "google",
@@ -36,7 +47,7 @@ async function loadBookingContext(
   const data = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({
-        expertEmail: main.users.email,
+        expertWorkosUserId: main.users.workosUserId,
         expertName: main.expertProfiles.displayName,
         eventTypeTitle: main.eventTypes.title,
         startsAt: main.sessions.startsAt,
@@ -66,8 +77,7 @@ async function loadBookingContext(
   const patientData = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({
-        displayName: main.users.displayName,
-        email: main.users.email,
+        workosUserId: main.users.workosUserId,
       })
       .from(main.bookings)
       .innerJoin(main.users, eq(main.bookings.patientUserId, main.users.id))
@@ -76,17 +86,27 @@ async function loadBookingContext(
     return row
   })
 
-  if (!patientData?.email) return null
+  if (!patientData?.workosUserId) return null
+
+  const workos = getWorkOS()
+  const [expertUser, patientUser] = await Promise.all([
+    workos.userManagement.getUser(data.expertWorkosUserId),
+    workos.userManagement.getUser(patientData.workosUserId),
+  ])
 
   const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
   const eventTypeName =
     data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
 
+  const patientName =
+    [patientUser.firstName, patientUser.lastName].filter(Boolean).join(" ") ||
+    "Patient"
+
   return {
-    expertEmail: data.expertEmail,
+    expertEmail: expertUser.email,
     expertName: data.expertName,
-    patientName: patientData.displayName ?? "Patient",
-    patientEmail: patientData.email,
+    patientName,
+    patientEmail: patientUser.email,
     eventTypeName,
     bookingId,
     startsAt: data.startsAt,

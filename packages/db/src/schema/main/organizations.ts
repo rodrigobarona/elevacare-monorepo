@@ -3,7 +3,6 @@ import {
   pgEnum,
   pgPolicy,
   pgTable,
-  text,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -20,6 +19,9 @@ export const orgTypeEnum = pgEnum("org_type", [
  * Organization = tenant boundary. Every tenant-scoped table carries
  * org_id referencing this table.
  *
+ * PII (org display name) is NOT stored — WorkOS is the SSOT.
+ * Fetch org names via the WorkOS Organizations API when needed for display.
+ *
  * Special orgs:
  * - type='personal' : auto-provisioned on first sign-in; patient product
  *   label lives here.
@@ -34,7 +36,6 @@ export const organizations = pgTable(
     id: pkColumn(),
     workosOrgId: varchar("workos_org_id", { length: 255 }).notNull(),
     type: orgTypeEnum("type").notNull(),
-    displayName: text("display_name").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     deletedAt: deletedAt(),

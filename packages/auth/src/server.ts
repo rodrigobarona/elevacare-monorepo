@@ -9,7 +9,12 @@ import { UnauthorizedError, type ElevaSession } from "./types"
 interface WorkosCookieSession {
   accessToken: string
   refreshToken: string
-  user: { id: string }
+  user: {
+    id: string
+    email?: string
+    firstName?: string | null
+    lastName?: string | null
+  }
   impersonator?: unknown
 }
 
@@ -20,7 +25,9 @@ interface WorkosCookieSession {
  * header is not propagated to `headers()` (e.g. in Next.js 16 Route
  * Handlers).
  */
-async function getWorkosUserFromCookie(): Promise<{ id: string } | null> {
+async function getWorkosUserFromCookie(): Promise<
+  WorkosCookieSession["user"] | null
+> {
   const password = process.env.WORKOS_COOKIE_PASSWORD
   if (!password) return null
 
@@ -58,20 +65,34 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
   void cookies()
 
   let workosUserId: string | null = null
+  let tokenEmail: string | null = null
+  let tokenFirstName: string | null = null
+  let tokenLastName: string | null = null
+
   try {
     const workosSession = await authkitGetSession()
     workosUserId = workosSession.user?.id ?? null
+    tokenEmail = workosSession.user?.email ?? null
+    tokenFirstName = workosSession.user?.firstName ?? null
+    tokenLastName = workosSession.user?.lastName ?? null
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      const user = await getWorkosUserFromCookie()
-      workosUserId = user?.id ?? null
+      const cookieUser = await getWorkosUserFromCookie()
+      workosUserId = cookieUser?.id ?? null
+      tokenEmail = cookieUser?.email ?? null
+      tokenFirstName = cookieUser?.firstName ?? null
+      tokenLastName = cookieUser?.lastName ?? null
     } else {
       throw err
     }
   }
 
   if (!workosUserId) return null
-  return resolveSessionFromWorkosUser(workosUserId)
+  return resolveSessionFromWorkosUser(workosUserId, {
+    email: tokenEmail ?? "unknown",
+    firstName: tokenFirstName,
+    lastName: tokenLastName,
+  })
 })
 
 /**

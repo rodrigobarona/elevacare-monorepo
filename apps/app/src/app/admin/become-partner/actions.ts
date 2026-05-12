@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { requireSession } from "@eleva/auth/server"
+import { requireSession, getWorkOS } from "@eleva/auth/server"
 import {
   claimApplication,
   rejectApplication,
@@ -54,23 +54,26 @@ export async function approveApplicationAction(
     const session = await requireSession("experts:approve")
     const result = await approveApplication(id, session.user.id)
 
-    const email = result.applicantEmail
-    if (!email) {
+    if (!result.applicantWorkosUserId) {
       revalidatePath("/admin/become-partner")
       return {
         ok: true,
         data: result,
         warning:
-          "Stripe Connect provisioning skipped: applicant has no email on file.",
+          "Stripe Connect provisioning skipped: applicant has no WorkOS user ID.",
       }
     }
+
+    const workosUser = await getWorkOS().userManagement.getUser(
+      result.applicantWorkosUserId
+    )
 
     try {
       const connectAccount = await createConnectAccount(
         {
           expertProfileId: result.expertProfileId,
           orgId: result.orgId,
-          email,
+          email: workosUser.email,
         },
         { idempotencyKey: `connect_${result.expertProfileId}` }
       )

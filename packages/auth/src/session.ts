@@ -5,19 +5,30 @@ import { capabilitiesFor, deriveProductLabel } from "./capabilities"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
 /**
+ * PII provided by the AuthKit session token. Passed in by the caller
+ * (getSession) so the DB query stays PII-free.
+ */
+export interface WorkOSTokenUser {
+  email: string
+  firstName?: string | null
+  lastName?: string | null
+}
+
+/**
  * Resolve an Eleva session from a verified WorkOS user id. Returns null
  * when the user has no active memberships (new-sign-up race; the caller
  * usually triggers ensurePersonalOrg in that case).
+ *
+ * PII (email, displayName) comes from the WorkOS token, not the DB.
  */
 export async function resolveSessionFromWorkosUser(
   workosUserId: string,
+  tokenUser: WorkOSTokenUser,
   opts: { preferredOrgId?: string } = {}
 ): Promise<ElevaSession | null> {
   const rows = await db()
     .select({
       userId: main.users.id,
-      email: main.users.email,
-      displayName: main.users.displayName,
       orgId: main.organizations.id,
       workosOrgId: main.organizations.workosOrgId,
       orgType: main.organizations.type,
@@ -49,12 +60,16 @@ export async function resolveSessionFromWorkosUser(
   const productLabel = deriveProductLabel(picked.orgType, picked.workosRole)
   const capabilities = capabilitiesFor(productLabel)
 
+  const displayName =
+    [tokenUser.firstName, tokenUser.lastName].filter(Boolean).join(" ") ||
+    tokenUser.email
+
   return {
     user: {
       id: picked.userId,
       workosUserId,
-      email: picked.email,
-      displayName: picked.displayName,
+      email: tokenUser.email,
+      displayName,
     },
     orgId: picked.orgId,
     workosOrgId: picked.workosOrgId,

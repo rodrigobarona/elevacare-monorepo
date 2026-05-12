@@ -7,6 +7,10 @@ import { db, main } from "@eleva/db"
  * These are the SINGLE WRITE PATH for WorkOS data entering the Eleva DB.
  * Called by the QStash-triggered poller and by the onboarding fast-path.
  *
+ * IDs-only architecture: NO PII (email, names) is written to the DB.
+ * WorkOS is the SSOT for identity data. The DB only stores opaque IDs
+ * and Eleva-specific metadata (org type, role, status, onboarding flag).
+ *
  * Design invariants:
  * - Idempotent: safe to call multiple times with the same event data
  * - Stale-safe: compares updated_at to skip older events (WorkOS best practice)
@@ -42,7 +46,7 @@ export async function processWorkOSEvent(event: {
   switch (event.event) {
     case "user.created":
     case "user.updated":
-      await syncUser(event.data as WorkOSUserEventData)
+      await syncUser((event.data as WorkOSUserEventData).id)
       break
     case "user.deleted":
       await softDeleteUser((event.data as WorkOSUserEventData).id)
@@ -68,19 +72,12 @@ export async function processWorkOSEvent(event: {
 
 export interface WorkOSUserEventData {
   id: string
-  email: string
-  firstName: string | null
-  lastName: string | null
-  emailVerified: boolean
-  profilePictureUrl: string | null
   createdAt?: string
   updatedAt?: string
 }
 
 export interface WorkOSOrganizationEventData {
   id: string
-  name: string
-  externalId: string | null
   createdAt?: string
   updatedAt?: string
 }
@@ -111,40 +108,13 @@ function safeDate(
   return new Date()
 }
 
-function buildDisplayName(
-  firstName: string | null,
-  lastName: string | null,
-  email: string
-): string {
-  if (firstName && lastName) return `${firstName} ${lastName}`
-  if (firstName) return firstName
-  return email
-}
-
-export async function syncUser(data: WorkOSUserEventData): Promise<void> {
-  const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
-  const displayName = buildDisplayName(
-    data.firstName,
-    data.lastName,
-    data.email
-  )
-
+export async function syncUser(workosUserId: string): Promise<void> {
   await db()
     .insert(main.users)
-    .values({
-      workosUserId: data.id,
-      email: data.email,
-      displayName,
-      updatedAt: eventUpdatedAt,
-    })
+    .values({ workosUserId })
     .onConflictDoUpdate({
       target: main.users.workosUserId,
-      set: {
-        email: data.email,
-        displayName,
-        updatedAt: eventUpdatedAt,
-      },
-      where: lt(main.users.updatedAt, eventUpdatedAt),
+      set: { updatedAt: new Date() },
     })
 }
 
@@ -163,23 +133,15 @@ export async function softDeleteUser(workosUserId: string): Promise<void> {
 export async function syncOrganization(
   data: WorkOSOrganizationEventData
 ): Promise<void> {
-  const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
-
   await db()
     .insert(main.organizations)
     .values({
       workosOrgId: data.id,
       type: "personal",
-      displayName: data.name,
-      updatedAt: eventUpdatedAt,
     })
     .onConflictDoUpdate({
       target: main.organizations.workosOrgId,
-      set: {
-        displayName: data.name,
-        updatedAt: eventUpdatedAt,
-      },
-      where: lt(main.organizations.updatedAt, eventUpdatedAt),
+      set: { updatedAt: new Date() },
     })
 }
 
@@ -215,7 +177,6 @@ export async function syncMembership(
   if (!user || !org) return
 
   const workosRole = data.role?.slug === "admin" ? "admin" : "member"
-  const status = data.status === "active" ? "active" : "active"
   const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
 
   await db()
@@ -224,14 +185,14 @@ export async function syncMembership(
       userId: user.id,
       orgId: org.id,
       workosRole: workosRole as "admin" | "member",
-      status,
+      status: "active",
       updatedAt: eventUpdatedAt,
     })
     .onConflictDoUpdate({
       target: [main.memberships.userId, main.memberships.orgId],
       set: {
         workosRole: workosRole as "admin" | "member",
-        status,
+        status: "active",
         updatedAt: eventUpdatedAt,
       },
       where: lt(main.memberships.updatedAt, eventUpdatedAt),

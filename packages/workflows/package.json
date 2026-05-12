@@ -20,6 +20,7 @@
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
+    "@workos-inc/node": "^9.2.0",
     "drizzle-orm": "^0.45.2",
     "resend": "^6.12.2"
   },

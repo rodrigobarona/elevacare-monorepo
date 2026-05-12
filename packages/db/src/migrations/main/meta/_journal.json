@@ -57,6 +57,13 @@
       "when": 1778603601877,
       "tag": "0007_careful_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1778611612173,
+      "tag": "0008_drop-pii-columns",
+      "breakpoints": true
     }
   ]
 }
