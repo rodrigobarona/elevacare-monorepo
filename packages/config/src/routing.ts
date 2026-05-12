@@ -12,6 +12,7 @@ export const APP_ROOT_SEGMENTS = [
   "org",
   "admin",
   "settings",
+  "onboarding",
 ] as const
 
 export const APP_STANDALONE_PATHS = [

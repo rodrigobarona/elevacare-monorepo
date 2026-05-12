@@ -8,30 +8,27 @@ import { getSession } from "@eleva/auth/server"
  * - User has active org membership → role-based dashboard
  * - User not in DB or no org yet → onboarding wizard
  */
-const gateway =
-  process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "http://localhost:3000"
-
 export default async function AuthRedirectPage() {
   const session = await getSession()
 
   if (!session) {
-    redirect(`${gateway}/onboarding`)
+    redirect("/onboarding")
   }
 
   switch (session.productLabel) {
     case "patient":
-      redirect(`${gateway}/patient`)
+      redirect("/patient")
       break
     case "expert":
-      redirect(`${gateway}/expert`)
+      redirect("/expert")
       break
     case "clinic_admin":
-      redirect(`${gateway}/org`)
+      redirect("/org")
       break
     case "eleva_operator":
-      redirect(`${gateway}/admin`)
+      redirect("/admin")
       break
     default:
-      redirect(`${gateway}/onboarding`)
+      redirect("/onboarding")
   }
 }
