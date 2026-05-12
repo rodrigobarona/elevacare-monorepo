@@ -1,7 +1,11 @@
 "use client"
 
 import { WorkOsWidgets } from "@workos-inc/widgets"
-import { WorkOsLocaleProvider } from "@workos-inc/widgets-i18n"
+import {
+  type LocaleCode,
+  isValidLocale,
+  WorkOsLocaleProvider,
+} from "@workos-inc/widgets-i18n"
 
 export function ElevaWidgetsProvider({
   locale,
@@ -10,8 +14,10 @@ export function ElevaWidgetsProvider({
   locale: string
   children: React.ReactNode
 }) {
+  const resolvedLocale: LocaleCode = isValidLocale(locale) ? locale : "en"
+
   return (
-    <WorkOsLocaleProvider locale={locale}>
+    <WorkOsLocaleProvider locale={resolvedLocale}>
       <WorkOsWidgets
         theme={{
           accentColor: "teal",
