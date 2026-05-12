@@ -42,18 +42,42 @@ WorkOS Events API. QStash triggers the poller every 5 minutes.
 | `organization_membership.created` / `organization_membership.updated` | `syncMembership()` |
 | `organization_membership.deleted` | `deleteMembership()` |
 
+## SDK casing
+
+The WorkOS Node SDK v9+ **deserializes** event data from snake_case to camelCase.
+Interfaces in `sync.ts` use camelCase (`updatedAt`, `firstName`, `userId`, etc.)
+to match the SDK output, NOT the raw API JSON (`updated_at`, `first_name`, `user_id`).
+
 ## Available but not yet synced
 
-WorkOS emits many more events that Eleva may need in the future:
+WorkOS emits ~40+ event types. They naturally split into two tiers:
 
-- `authentication.*` -- login success/failure audit trail
-- `session.created` / `session.revoked` -- session tracking
-- `invitation.created` / `invitation.accepted` / `invitation.revoked` -- invite flows
-- `connection.*` -- SSO connection lifecycle
-- `dsync.*` -- Directory Sync (users, groups)
-- `role.*` / `permission.*` / `organization_role.*` -- RBAC changes
-- `organization_domain.*` -- domain verification
-- `flag.*` -- feature flag changes
+### Tier 1 -- DB sync (current)
+Events whose data must be mirrored in the Eleva DB for queries. These are the
+9 events listed above.
 
-When adding these, follow the same pattern: add to `SYNC_EVENTS`, handle in
-`processWorkOSEvent()`, write an idempotent sync function, migrate if needed.
+### Tier 2 -- Notifications / audit (future)
+Events that don't need DB writes but should trigger actions (email alerts,
+in-app notifications, security logs, activity feeds). The existing architecture
+supports this: add a case to `processWorkOSEvent()` that calls a notification
+service instead of a DB write. Same QStash poller, same cursor.
+
+| Category | Events | Potential use |
+|----------|--------|---------------|
+| Authentication | `authentication.password_succeeded/failed`, `oauth_succeeded/failed`, `sso_succeeded/failed`, `passkey_succeeded/failed`, `mfa_succeeded`, `magic_auth_succeeded/failed` | Security alerts, login audit trail, suspicious activity detection |
+| Radar | `authentication.radar_risk_detected` | Real-time alert on risky login (bot, blocklist) |
+| Sessions | `session.created`, `session.revoked` | "New device" notifications, concurrent session limits |
+| Email verification | `email_verification.created` | Internal onboarding nudges |
+| Invitations | `invitation.created/accepted/revoked/resent` | In-app notification, team activity feed |
+| Password reset | `password_reset.created/succeeded` | Security notification ("password changed") |
+| Roles / Permissions | `role.*`, `organization_role.*`, `permission.*` | RBAC change audit, "permissions changed" notification |
+| Organization domains | `organization_domain.verified/created/updated/deleted` | Admin notification on SSO domain verification |
+| Connections (SSO) | `connection.activated/deactivated/deleted` | SSO lifecycle tracking |
+| Directory Sync | `dsync.*` | User/group provisioning from external IdPs |
+| Feature flags | `flag.created/updated/deleted/rule_updated` | Flag change audit log |
+
+Full event catalog: https://workos.com/docs/events
+
+When adding any event, follow the same pattern: add to `SYNC_EVENTS`, handle in
+`processWorkOSEvent()`, write the handler (DB sync or notification dispatch),
+migrate if needed.
