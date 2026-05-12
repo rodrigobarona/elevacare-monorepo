@@ -1,9 +1,7 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { UserProfile } from "@workos-inc/widgets"
-import { UserSecurity } from "@workos-inc/widgets"
-import { UserSessions } from "@workos-inc/widgets"
+import { UserProfile, UserSecurity, UserSessions } from "@workos-inc/widgets"
 import { getSettingsWidgetToken } from "./actions"
 
 interface SettingsWidgetsProps {
