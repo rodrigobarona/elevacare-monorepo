@@ -53,41 +53,7 @@ export function withHeaders(
     const incoming = req.headers.get(correlationHeader)
     const correlationId = incoming ?? generateCorrelationId()
 
-    // #region agent log
-    const _whStart = Date.now()
-    // #endregion
     const res = await withCorrelationId(correlationId, async () => handler(req))
-    // #region agent log
-    const _whElapsed = Date.now() - _whStart
-    const _resType =
-      res instanceof NextResponse
-        ? "NextResponse"
-        : res instanceof Response
-          ? "Response"
-          : typeof res
-    const _resStatus = res instanceof Response ? res.status : "unknown"
-    fetch("http://127.0.0.1:7536/ingest/075ce577-f51d-4430-93b0-5a0cff32d8ef", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "005272",
-      },
-      body: JSON.stringify({
-        sessionId: "005272",
-        location: "observability/proxy.ts:handler-result",
-        message: "withHeaders handler result",
-        data: {
-          pathname: req.nextUrl.pathname,
-          elapsed: _whElapsed,
-          resType: _resType,
-          status: _resStatus,
-          cspLength: cspValue.length,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "C,E",
-      }),
-    }).catch(() => {})
-    // #endregion
 
     // Build a NextResponse we can mutate regardless of handler return type.
     const nextRes = res instanceof NextResponse ? res : NextResponse.next(res)
@@ -97,6 +63,26 @@ export function withHeaders(
       nextRes.headers.set(k, v)
     }
     if (options.emitCsp !== false) {
+      // #region agent log
+      fetch(
+        "http://127.0.0.1:7536/ingest/075ce577-f51d-4430-93b0-5a0cff32d8ef",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Debug-Session-Id": "005272",
+          },
+          body: JSON.stringify({
+            sessionId: "005272",
+            location: "observability/proxy.ts:csp-value",
+            message: "CSP header value",
+            data: { pathname: req.nextUrl.pathname, csp: cspValue },
+            timestamp: Date.now(),
+            hypothesisId: "F",
+          }),
+        }
+      ).catch(() => {})
+      // #endregion
       nextRes.headers.set("Content-Security-Policy", cspValue)
     }
     if (options.extra) {

@@ -64,9 +64,6 @@ export function withAuth(
   options: WithAuthOptions = {}
 ): ProxyHandler {
   return async (req, event) => {
-    // #region agent log
-    const _authStart = Date.now()
-    // #endregion
     const { session, headers, authorizationUrl } = await authkit(req)
 
     const enforce = options.enforce ?? true
@@ -79,61 +76,7 @@ export function withAuth(
       }
     }
 
-    // #region agent log
-    fetch("http://127.0.0.1:7536/ingest/075ce577-f51d-4430-93b0-5a0cff32d8ef", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "005272",
-      },
-      body: JSON.stringify({
-        sessionId: "005272",
-        location: "auth/proxy.ts:post-authkit",
-        message: "authkit completed",
-        data: {
-          pathname: req.nextUrl.pathname,
-          authkitMs: Date.now() - _authStart,
-          hasSession: !!session?.user,
-          hasAuthUrl: !!authorizationUrl,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "B",
-      }),
-    }).catch(() => {})
-    // #endregion
     const downstream = await handler(req, event)
-    // #region agent log
-    const _dsStatus =
-      downstream instanceof Response ? downstream.status : "unknown"
-    const _dsIsRedirect =
-      downstream instanceof Response &&
-      downstream.status >= 300 &&
-      downstream.status < 400
-    fetch("http://127.0.0.1:7536/ingest/075ce577-f51d-4430-93b0-5a0cff32d8ef", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Debug-Session-Id": "005272",
-      },
-      body: JSON.stringify({
-        sessionId: "005272",
-        location: "auth/proxy.ts:downstream",
-        message: "downstream handler result",
-        data: {
-          pathname: req.nextUrl.pathname,
-          status: _dsStatus,
-          isRedirect: _dsIsRedirect,
-          isNextResponse: downstream instanceof NextResponse,
-          location:
-            downstream instanceof Response
-              ? downstream.headers.get("location")
-              : null,
-        },
-        timestamp: Date.now(),
-        hypothesisId: "C",
-      }),
-    }).catch(() => {})
-    // #endregion
     if (
       downstream instanceof Response &&
       downstream.status >= 300 &&
