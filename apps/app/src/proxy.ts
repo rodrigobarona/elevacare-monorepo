@@ -33,7 +33,19 @@ const handler = (req: NextRequest) => {
   return intl(req)
 }
 
-export default withHeaders(withAuth(handler))
+const AUTH_FLOW_PATHS = APP_STANDALONE_PATHS.map((p) => `/${p}`)
+
+export default withHeaders(
+  withAuth(handler, {
+    unauthenticatedPaths: [
+      "/",
+      "/home",
+      "/about",
+      "/legal/:path*",
+      ...AUTH_FLOW_PATHS,
+    ],
+  })
+)
 
 export const config = {
   matcher: ["/((?!_next|_vercel|.*\\..*).*)"],

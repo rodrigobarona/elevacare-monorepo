@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 import { Menu } from "lucide-react"
 
@@ -56,9 +55,7 @@ export async function SiteHeader() {
         </div>
         <div className="flex items-center gap-2">
           <div className="hidden md:block">
-            <Suspense fallback={null}>
-              <LanguageSwitcher />
-            </Suspense>
+            <LanguageSwitcher />
           </div>
           {/* signin/signup live in apps/app — cross-app navigation, not a Next.js page in apps/web */}
           <Button
@@ -101,9 +98,7 @@ export async function SiteHeader() {
                 ))}
               </nav>
               <div className="mt-auto flex flex-col gap-3 border-t border-border/60 p-4">
-                <Suspense fallback={null}>
-                  <LanguageSwitcher />
-                </Suspense>
+                <LanguageSwitcher />
                 <Button variant="outline" asChild>
                   {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
                   <a href="/signin">{t("nav.signin")}</a>

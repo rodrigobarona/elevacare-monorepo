@@ -15,6 +15,7 @@ export const APP_ROOT_SEGMENTS = [
 ] as const
 
 export const APP_STANDALONE_PATHS = [
+  "auth-redirect",
   "callback",
   "logout",
   "signin",

@@ -1,7 +1,6 @@
 "use client"
 
 import { useTransition } from "react"
-import { useSearchParams } from "next/navigation"
 import { Globe } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
 
@@ -22,15 +21,15 @@ export function LanguageSwitcher() {
   const locale = useLocale() as Locale
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
   function switchTo(next: Locale) {
     if (next === locale) return
-    const search = searchParams.toString()
-    const target = search ? `${pathname}?${search}` : pathname
+    const query = Object.fromEntries(
+      new URLSearchParams(window.location.search)
+    )
     startTransition(() => {
-      router.replace(target, { locale: next })
+      router.replace({ pathname, query }, { locale: next })
     })
   }
 
