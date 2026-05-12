@@ -63,8 +63,8 @@ const s1aSchema = z.object({
   EDGE_CONFIG: urlOptional,
   FLAGS_SECRET: stringOptional,
 
-  UPSTASH_REDIS_REST_URL: urlOptional,
-  UPSTASH_REDIS_REST_TOKEN: stringOptional,
+  KV_REST_API_URL: urlOptional,
+  KV_REST_API_TOKEN: stringOptional,
   QSTASH_TOKEN: stringOptional,
   QSTASH_CURRENT_SIGNING_KEY: stringOptional,
   QSTASH_NEXT_SIGNING_KEY: stringOptional,

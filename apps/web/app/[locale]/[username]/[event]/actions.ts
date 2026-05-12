@@ -23,10 +23,10 @@ let _redis: Redis | null = null
 function getRedisClient(): Redis | null {
   if (_redis) return _redis
   const e = env()
-  if (!e.UPSTASH_REDIS_REST_URL || !e.UPSTASH_REDIS_REST_TOKEN) return null
+  if (!e.KV_REST_API_URL || !e.KV_REST_API_TOKEN) return null
   _redis = new Redis({
-    url: e.UPSTASH_REDIS_REST_URL,
-    token: e.UPSTASH_REDIS_REST_TOKEN,
+    url: e.KV_REST_API_URL,
+    token: e.KV_REST_API_TOKEN,
   })
   return _redis
 }

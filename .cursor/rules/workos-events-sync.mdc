@@ -1,0 +1,59 @@
+---
+description: Adding or modifying WorkOS event synchronization. Apply when working with WorkOS events, the sync poller, or SYNC_EVENTS.
+globs:
+  - packages/auth/src/sync.ts
+  - apps/api/src/app/workos/sync/**
+---
+
+# WorkOS Events API Sync
+
+Eleva mirrors WorkOS data into its local DB via cursor-based polling of the
+WorkOS Events API. QStash triggers the poller every 5 minutes.
+
+## Architecture
+
+- **SSOT for event types**: `packages/auth/src/sync.ts` owns `SYNC_EVENTS`,
+  `processWorkOSEvent()`, and all individual sync functions.
+- **Thin route**: `apps/api/src/app/workos/sync/route.ts` only handles QStash
+  signature verification, Redis cursor, WorkOS API pagination, and calls
+  `processWorkOSEvent`. No domain logic lives in the route.
+- **Cursor**: stored in Upstash Redis (`workos:events:cursor`), not in the DB.
+
+## Adding a new event
+
+1. Check the full event catalog at https://workos.com/docs/events
+2. Add the event name to `SYNC_EVENTS` in `packages/auth/src/sync.ts`
+3. Add a `case` branch in `processWorkOSEvent()` calling your sync function
+4. Write an idempotent sync function following existing patterns:
+   - Upsert with `onConflictDoUpdate`
+   - Stale-safe: `where: lt(table.updatedAt, eventUpdatedAt)`
+5. If the event requires a new DB table or column, create a Drizzle migration
+6. Export the new sync function and any new types from `packages/auth/src/index.ts`
+7. Run `pnpm --filter @eleva/auth run typecheck && pnpm --filter @eleva/api run typecheck`
+
+## Currently synced events (9)
+
+| Event | Sync function |
+|-------|---------------|
+| `user.created` / `user.updated` | `syncUser()` |
+| `user.deleted` | `softDeleteUser()` |
+| `organization.created` / `organization.updated` | `syncOrganization()` |
+| `organization.deleted` | `softDeleteOrganization()` |
+| `organization_membership.created` / `organization_membership.updated` | `syncMembership()` |
+| `organization_membership.deleted` | `deleteMembership()` |
+
+## Available but not yet synced
+
+WorkOS emits many more events that Eleva may need in the future:
+
+- `authentication.*` -- login success/failure audit trail
+- `session.created` / `session.revoked` -- session tracking
+- `invitation.created` / `invitation.accepted` / `invitation.revoked` -- invite flows
+- `connection.*` -- SSO connection lifecycle
+- `dsync.*` -- Directory Sync (users, groups)
+- `role.*` / `permission.*` / `organization_role.*` -- RBAC changes
+- `organization_domain.*` -- domain verification
+- `flag.*` -- feature flag changes
+
+When adding these, follow the same pattern: add to `SYNC_EVENTS`, handle in
+`processWorkOSEvent()`, write an idempotent sync function, migrate if needed.
