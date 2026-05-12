@@ -69,31 +69,46 @@ export async function processWorkOSEvent(event: {
 export interface WorkOSUserEventData {
   id: string
   email: string
-  first_name: string | null
-  last_name: string | null
-  email_verified: boolean
-  profile_picture_url: string | null
-  created_at: string
-  updated_at: string
+  firstName: string | null
+  lastName: string | null
+  emailVerified: boolean
+  profilePictureUrl: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface WorkOSOrganizationEventData {
   id: string
   name: string
-  external_id: string | null
-  created_at: string
-  updated_at: string
+  externalId: string | null
+  createdAt?: string
+  updatedAt?: string
 }
 
 export interface WorkOSMembershipEventData {
   id: string
-  user_id: string
-  organization_id: string
+  userId: string
+  organizationId: string
   status: "active" | "pending"
   role: { slug: string }
   roles: Array<{ slug: string }>
-  created_at: string
-  updated_at: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+function safeDate(
+  primary: string | undefined | null,
+  fallback?: string | undefined | null
+): Date {
+  if (primary) {
+    const d = new Date(primary)
+    if (!Number.isNaN(d.getTime())) return d
+  }
+  if (fallback) {
+    const d = new Date(fallback)
+    if (!Number.isNaN(d.getTime())) return d
+  }
+  return new Date()
 }
 
 function buildDisplayName(
@@ -107,10 +122,10 @@ function buildDisplayName(
 }
 
 export async function syncUser(data: WorkOSUserEventData): Promise<void> {
-  const eventUpdatedAt = new Date(data.updated_at)
+  const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
   const displayName = buildDisplayName(
-    data.first_name,
-    data.last_name,
+    data.firstName,
+    data.lastName,
     data.email
   )
 
@@ -148,7 +163,7 @@ export async function softDeleteUser(workosUserId: string): Promise<void> {
 export async function syncOrganization(
   data: WorkOSOrganizationEventData
 ): Promise<void> {
-  const eventUpdatedAt = new Date(data.updated_at)
+  const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
 
   await db()
     .insert(main.organizations)
@@ -188,20 +203,20 @@ export async function syncMembership(
   const [user] = await db()
     .select({ id: main.users.id })
     .from(main.users)
-    .where(eq(main.users.workosUserId, data.user_id))
+    .where(eq(main.users.workosUserId, data.userId))
     .limit(1)
 
   const [org] = await db()
     .select({ id: main.organizations.id })
     .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, data.organization_id))
+    .where(eq(main.organizations.workosOrgId, data.organizationId))
     .limit(1)
 
   if (!user || !org) return
 
   const workosRole = data.role?.slug === "admin" ? "admin" : "member"
   const status = data.status === "active" ? "active" : "active"
-  const eventUpdatedAt = new Date(data.updated_at)
+  const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
 
   await db()
     .insert(main.memberships)
@@ -224,18 +239,18 @@ export async function syncMembership(
 }
 
 export async function deleteMembership(
-  data: Pick<WorkOSMembershipEventData, "user_id" | "organization_id">
+  data: Pick<WorkOSMembershipEventData, "userId" | "organizationId">
 ): Promise<void> {
   const [user] = await db()
     .select({ id: main.users.id })
     .from(main.users)
-    .where(eq(main.users.workosUserId, data.user_id))
+    .where(eq(main.users.workosUserId, data.userId))
     .limit(1)
 
   const [org] = await db()
     .select({ id: main.organizations.id })
     .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, data.organization_id))
+    .where(eq(main.organizations.workosOrgId, data.organizationId))
     .limit(1)
 
   if (!user || !org) return
