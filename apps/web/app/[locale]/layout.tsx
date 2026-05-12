@@ -6,8 +6,6 @@ import { Geist_Mono, DM_Sans, Lora } from "next/font/google"
 
 import "@eleva/ui/globals.css"
 import { cn } from "@eleva/ui/lib/utils"
-import { ThemeProvider } from "@/components/theme-provider"
-import { ThemeScript } from "@/components/theme-script"
 import { SiteHeader } from "@/components/site-header"
 import { SiteFooter } from "@/components/site-footer"
 import { routing } from "@/i18n/routing"
@@ -53,7 +51,6 @@ export default async function LocaleLayout({
   return (
     <html
       lang={locale}
-      suppressHydrationWarning
       className={cn(
         "antialiased",
         fontMono.variable,
@@ -63,17 +60,14 @@ export default async function LocaleLayout({
       )}
     >
       <body className="min-h-svh bg-background text-foreground">
-        <ThemeScript />
         <NextIntlClientProvider>
-          <ThemeProvider>
-            <div className="flex min-h-svh flex-col">
-              <SiteHeader />
-              <main id="main" className="flex-1">
-                {children}
-              </main>
-              <SiteFooter />
-            </div>
-          </ThemeProvider>
+          <div className="flex min-h-svh flex-col">
+            <SiteHeader />
+            <main id="main" className="flex-1">
+              {children}
+            </main>
+            <SiteFooter />
+          </div>
         </NextIntlClientProvider>
       </body>
     </html>
