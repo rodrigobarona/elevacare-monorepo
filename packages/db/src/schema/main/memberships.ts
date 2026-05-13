@@ -21,7 +21,7 @@ export const membershipStatusEnum = pgEnum("membership_status", [
 
 /**
  * Links a user to an organization with a WorkOS seniority role.
- * Eleva product label (patient / expert / clinic admin / operator) is
+ * Eleva product label (member / expert / clinic admin / operator) is
  * DERIVED from (org.type, membership.workos_role) + capability bundles
  * loaded from infra/workos/rbac-config.json. We do not store derived
  * labels in this table.

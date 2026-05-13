@@ -4,7 +4,7 @@ import type { ProductLabel } from "./types"
 /**
  * Eleva product label derivation per identity-rbac-spec.md role catalog:
  *
- *   (personal, admin)       -> patient
+ *   (personal, admin)       -> member
  *   (solo_expert, admin)    -> expert
  *   (clinic, admin)         -> clinic_admin
  *   (clinic, member)        -> expert
@@ -17,7 +17,7 @@ export function deriveProductLabel(
   workosRole: WorkosRole
 ): ProductLabel {
   if (orgType === "eleva_operator") return "eleva_operator"
-  if (orgType === "personal" && workosRole === "admin") return "patient"
+  if (orgType === "personal" && workosRole === "admin") return "member"
   if (orgType === "solo_expert" && workosRole === "admin") return "expert"
   if (orgType === "clinic" && workosRole === "admin") return "clinic_admin"
   if (orgType === "clinic" && workosRole === "member") return "expert"
@@ -34,7 +34,7 @@ export function deriveProductLabel(
  * catalog here.
  */
 export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
-  patient: [
+  member: [
     "appointments:view_own",
     "sessions:view_own",
     "billing:view_own",

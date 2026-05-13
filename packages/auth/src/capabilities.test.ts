@@ -7,8 +7,8 @@ import {
 } from "./capabilities"
 
 describe("deriveProductLabel", () => {
-  it("personal + admin = patient", () => {
-    expect(deriveProductLabel("personal", "admin")).toBe("patient")
+  it("personal + admin = member", () => {
+    expect(deriveProductLabel("personal", "admin")).toBe("member")
   })
   it("solo_expert + admin = expert", () => {
     expect(deriveProductLabel("solo_expert", "admin")).toBe("expert")
@@ -49,9 +49,9 @@ describe("capability bundles", () => {
     )
   })
 
-  it("patient has diary:share but no expert caps", () => {
-    expect(CAPABILITY_BUNDLES.patient).toContain("diary:share")
-    expect(CAPABILITY_BUNDLES.patient).not.toContain("events:manage")
+  it("member has diary:share but no expert caps", () => {
+    expect(CAPABILITY_BUNDLES.member).toContain("diary:share")
+    expect(CAPABILITY_BUNDLES.member).not.toContain("events:manage")
   })
 
   it("eleva_operator has audit:view_all + workflows:retry", () => {
@@ -60,7 +60,7 @@ describe("capability bundles", () => {
   })
 
   it("capabilitiesFor returns the matching bundle", () => {
-    expect(capabilitiesFor("patient")).toEqual(CAPABILITY_BUNDLES.patient)
+    expect(capabilitiesFor("member")).toEqual(CAPABILITY_BUNDLES.member)
   })
 
   it("hasCapability checks membership", () => {

@@ -16,7 +16,7 @@ import { createdAt, deletedAt, pkColumn, updatedAt } from "./shared"
  * WorkOS User Management API.
  *
  * NOT tenant-scoped: users live outside any single org because a single
- * human can hold memberships across multiple orgs (patient + expert).
+ * human can hold memberships across multiple orgs (member + expert).
  */
 export const users = pgTable(
   "users",

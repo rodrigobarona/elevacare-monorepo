@@ -15,7 +15,7 @@
 
 export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   // Authenticated routes at the root (ADR-014 revised)
-  "patient",
+  "member",
   "expert",
   "org",
   "admin",

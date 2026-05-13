@@ -23,7 +23,7 @@ export const orgTypeEnum = pgEnum("org_type", [
  * Fetch org names via the WorkOS Organizations API when needed for display.
  *
  * Special orgs:
- * - type='personal' : auto-provisioned on first sign-in; patient product
+ * - type='personal' : auto-provisioned on first sign-in; member product
  *   label lives here.
  * - type='solo_expert' : created on Become-Partner approval.
  * - type='clinic' : clinic signup; clinic admins hold workos_role='admin'.

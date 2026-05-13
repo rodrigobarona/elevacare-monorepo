@@ -107,8 +107,8 @@ export const slotReservations = pgTable(
 
 /**
  * Customer-facing commercial commitment tied to a specific slot and
- * event type. org_id = expert's org. Patient access via application-
- * layer queries using withPlatformAdminContext + patient_user_id filter.
+ * event type. org_id = expert's org. Member access via application-
+ * layer queries using withPlatformAdminContext + member_user_id filter.
  */
 export const bookings = pgTable(
   "bookings",
@@ -123,7 +123,7 @@ export const bookings = pgTable(
     expertProfileId: uuid("expert_profile_id")
       .notNull()
       .references(() => expertProfiles.id),
-    patientUserId: uuid("patient_user_id")
+    memberUserId: uuid("member_user_id")
       .notNull()
       .references(() => users.id),
 
@@ -174,7 +174,7 @@ export const bookings = pgTable(
   (t) => ({
     orgIdx: index("bookings_org_idx").on(t.orgId),
     expertIdx: index("bookings_expert_idx").on(t.expertProfileId),
-    patientIdx: index("bookings_patient_idx").on(t.patientUserId),
+    memberIdx: index("bookings_member_idx").on(t.memberUserId),
     statusIdx: index("bookings_status_idx").on(t.status),
     timeIdx: index("bookings_time_idx").on(t.expertProfileId, t.startsAt),
     stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
@@ -209,7 +209,7 @@ export const sessions = pgTable(
     expertProfileId: uuid("expert_profile_id")
       .notNull()
       .references(() => expertProfiles.id),
-    patientUserId: uuid("patient_user_id")
+    memberUserId: uuid("member_user_id")
       .notNull()
       .references(() => users.id),
 
@@ -242,7 +242,7 @@ export const sessions = pgTable(
     orgIdx: index("sessions_org_idx").on(t.orgId),
     bookingIdx: index("sessions_booking_idx").on(t.bookingId),
     expertIdx: index("sessions_expert_idx").on(t.expertProfileId),
-    patientIdx: index("sessions_patient_idx").on(t.patientUserId),
+    memberIdx: index("sessions_member_idx").on(t.memberUserId),
     timeIdx: index("sessions_time_idx").on(t.startsAt),
     tenantPolicy: pgPolicy("sessions_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

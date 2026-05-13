@@ -7,7 +7,7 @@
  */
 
 export const APP_ROOT_SEGMENTS = [
-  "patient",
+  "dashboard",
   "expert",
   "org",
   "admin",

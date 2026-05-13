@@ -8,7 +8,8 @@ import {
 describe("reserved usernames", () => {
   it("covers every gateway first-segment path", () => {
     for (const slug of [
-      "patient",
+      "dashboard",
+      "member",
       "expert",
       "org",
       "admin",
@@ -45,7 +46,7 @@ describe("reserved usernames", () => {
   })
 
   it("is case-insensitive", () => {
-    expect(isReserved("PATIENT")).toBe(true)
+    expect(isReserved("MEMBER")).toBe(true)
     expect(isReserved("Api")).toBe(true)
   })
 
@@ -92,7 +93,7 @@ describe("validateUsername", () => {
   })
 
   it("rejects reserved names", () => {
-    expect(validateUsername("patient")).toBe("reserved")
+    expect(validateUsername("member")).toBe("reserved")
     expect(validateUsername("admin")).toBe("reserved")
   })
 

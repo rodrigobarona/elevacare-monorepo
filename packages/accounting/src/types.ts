@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 /**
- * Tier 2 — Expert → Patient invoicing adapter contract.
+ * Tier 2 — Expert → Member invoicing adapter contract.
  *
  * Per ADR-013, every supported invoicing provider implements this
  * interface. Adapters live under
@@ -86,8 +86,8 @@ export const IssueInvoiceInput = z.object({
   bookingId: z.string().uuid(),
   /** Eleva expert profile issuing the invoice. */
   expertProfileId: z.string().uuid(),
-  /** Patient billing details (resolved by dispatcher). */
-  patient: z.object({
+  /** Member billing details (resolved by dispatcher). */
+  member: z.object({
     /**
      * NIF / VAT number / fiscal ID. Empty string for "consumidor final".
      * Adapters that require a NIF will fail with `'fiscal-id-missing'`.
@@ -127,7 +127,7 @@ export const IssueInvoiceResult = z.object({
   externalId: z.string(),
   /** Final invoice number (e.g., 'FT 2026/0042'). */
   invoiceNumber: z.string(),
-  /** Public URL or signed PDF URL the patient receives. */
+  /** Public URL or signed PDF URL the member receives. */
   pdfUrl: z.string().url().optional(),
   /** Total invoiced amount (sum of lines + tax). */
   total: z.number(),
