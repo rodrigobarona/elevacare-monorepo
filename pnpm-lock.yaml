@@ -303,39 +303,12 @@ importers:
 
   apps/web:
     dependencies:
-      '@eleva/audit':
-        specifier: workspace:^
-        version: link:../../packages/audit
-      '@eleva/auth':
-        specifier: workspace:^
-        version: link:../../packages/auth
-      '@eleva/billing':
-        specifier: workspace:^
-        version: link:../../packages/billing
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
-      '@eleva/db':
-        specifier: workspace:^
-        version: link:../../packages/db
-      '@eleva/observability':
-        specifier: workspace:^
-        version: link:../../packages/observability
-      '@eleva/scheduling':
-        specifier: workspace:^
-        version: link:../../packages/scheduling
-      '@eleva/storage':
-        specifier: workspace:*
-        version: link:../../packages/storage
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      '@hookform/resolvers':
-        specifier: ^3.10.0
-        version: 3.10.0(react-hook-form@7.75.0(react@19.2.5))
-      '@upstash/redis':
-        specifier: ^1.34.0
-        version: 1.38.0
       lucide-react:
         specifier: ^1.8.0
         version: 1.8.0(react@19.2.5)
@@ -345,27 +318,15 @@ importers:
       next-intl:
         specifier: ^4.9.1
         version: 4.9.1(next@16.2.4(@opentelemetry/api@1.9.1)(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(react@19.2.5)(typescript@5.9.3)
-      next-themes:
-        specifier: ^0.4.6
-        version: 0.4.6(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       react:
         specifier: ^19.2.4
         version: 19.2.5
       react-dom:
         specifier: ^19.2.4
         version: 19.2.5(react@19.2.5)
-      react-hook-form:
-        specifier: ^7.54.2
-        version: 7.75.0(react@19.2.5)
-      sonner:
-        specifier: ^2.0.3
-        version: 2.0.7(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
-      zod:
-        specifier: ^3.25.76
-        version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
-        specifier: workspace:^
+        specifier: workspace:*
         version: link:../../packages/eslint-config
       '@eleva/typescript-config':
         specifier: workspace:*
@@ -388,9 +349,6 @@ importers:
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
-      vitest:
-        specifier: ^4.1.5
-        version: 4.1.5(@opentelemetry/api@1.9.1)(@types/node@25.6.0)(@vitest/coverage-v8@4.1.5)(msw@2.13.4(@types/node@25.6.0)(typescript@5.9.3))(vite@8.0.9(@types/node@25.6.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.21.0)(yaml@2.8.3))
 
   infra/workos:
     dependencies:
@@ -1998,11 +1956,6 @@ packages:
     engines: {node: '>=18.14.1'}
     peerDependencies:
       hono: ^4
-
-  '@hookform/resolvers@3.10.0':
-    resolution: {integrity: sha512-79Dv+3mDF7i+2ajj7SkypSKHhl1cbln1OGavqrsF7p6mbUv11xpqpacPsGDCTRvCSjEEIez2ef1NveSVL3b0Ag==}
-    peerDependencies:
-      react-hook-form: ^7.0.0
 
   '@hookform/resolvers@5.2.2':
     resolution: {integrity: sha512-A/IxlMLShx3KjV/HeTcTfaMxdwy690+L/ZADoeaTltLx+CVuzkeVIPuybK3jrRfw7YZnmdKsVVHAlEPIAEUNlA==}
@@ -8362,10 +8315,6 @@ snapshots:
   '@hono/node-server@1.19.14(hono@4.12.14)':
     dependencies:
       hono: 4.12.14
-
-  '@hookform/resolvers@3.10.0(react-hook-form@7.75.0(react@19.2.5))':
-    dependencies:
-      react-hook-form: 7.75.0(react@19.2.5)
 
   '@hookform/resolvers@5.2.2(react-hook-form@7.75.0(react@19.2.5))':
     dependencies:

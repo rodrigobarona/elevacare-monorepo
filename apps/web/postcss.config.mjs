@@ -1,1 +1,1 @@
-export { default } from "@eleva/ui/postcss.config";
+export { default } from "@eleva/ui/postcss.config"
