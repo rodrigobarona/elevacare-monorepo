@@ -1,0 +1,87 @@
+diff --git a/dist/lang/translations/es.json b/dist/lang/translations/es.json
+index da1afad3b0b6477dbe1fe9e339bb0eb72f256874..e9e77783c247ebe783b45d7c357884e652f603f6 100644
+--- a/dist/lang/translations/es.json
++++ b/dist/lang/translations/es.json
+@@ -293,5 +293,23 @@
+   "z19aZa": "Contraseña",
+   "zG7XDc": "Hubo un error al revocar la invitación. Por favor, inténtalo de nuevo.",
+   "zokPvK": "Establecer contraseña",
+-  "zx2oPb": "Eliminar {domain} cancelará el proceso de verificación del registro DNS. Esta acción es inmediata y no se puede deshacer."
++  "zx2oPb": "Eliminar {domain} cancelará el proceso de verificación del registro DNS. Esta acción es inmediata y no se puede deshacer.",
++  "+2ILQR": "Editar",
++  "/7/PVX": "Ahora no",
++  "/c8Kki": "Confirma tu contraseña",
++  "0N6IHb": "Establecer una contraseña",
++  "1VNN1w": "Confirmar contraseña",
++  "1bX9l4": "Enviar código de verificación",
++  "23tmgn": "Las credenciales proporcionadas son incorrectas o faltan. Revisa y actualiza la configuración del registro de logs.",
++  "9OH/qs": "Se ha enviado un código de verificación a {email}. Introdúcelo a continuación.",
++  "Dn/G2O": "Algo salió mal. Inténtalo de nuevo.",
++  "HVuco9": "Usar un email diferente",
++  "HYO1Ra": "Contraseña",
++  "K6x8v6": "Enviaremos un código de verificación a tu nueva dirección de email para confirmar el cambio. Tu email actual es {email}.",
++  "KdUdX9": "Cambiar dirección de email",
++  "QyYabV": "nombre@ejemplo.com",
++  "U7k/vL": "Tu email se ha actualizado correctamente a {email}. También puedes establecer una contraseña ahora si deseas iniciar sesión con email y contraseña.",
++  "YxbwGs": "Introduce una contraseña",
++  "dbgchn": "Nueva dirección de email",
++  "upvyOt": "Introducir código de verificación"
+ }
+diff --git a/dist/lang/translations/pt-BR.json b/dist/lang/translations/pt-BR.json
+index a4ecaacb663a2ff437680f060409352bc2e9dbdf..d5a15c0c974cf9703e102f2e2e07b5357986f33a 100644
+--- a/dist/lang/translations/pt-BR.json
++++ b/dist/lang/translations/pt-BR.json
+@@ -293,5 +293,23 @@
+   "z19aZa": "Senha",
+   "zG7XDc": "Houve um erro ao revogar o convite. Tente novamente.",
+   "zokPvK": "Definir senha",
+-  "zx2oPb": "Remover {domain} cancelará o processo de verificação do registro DNS. Esta ação é imediata e não pode ser desfeita."
++  "zx2oPb": "Remover {domain} cancelará o processo de verificação do registro DNS. Esta ação é imediata e não pode ser desfeita.",
++  "+2ILQR": "Editar",
++  "/7/PVX": "Agora não",
++  "/c8Kki": "Confirme sua senha",
++  "0N6IHb": "Definir uma senha",
++  "1VNN1w": "Confirmar senha",
++  "1bX9l4": "Enviar código de verificação",
++  "23tmgn": "As credenciais fornecidas estão incorretas ou ausentes. Revise e atualize a configuração do registro de logs.",
++  "9OH/qs": "Um código de verificação foi enviado para {email}. Insira-o abaixo.",
++  "Dn/G2O": "Algo deu errado. Tente novamente.",
++  "HVuco9": "Usar um email diferente",
++  "HYO1Ra": "Senha",
++  "K6x8v6": "Enviaremos um código de verificação para o seu novo endereço de email para confirmar a alteração. Seu email atual é {email}.",
++  "KdUdX9": "Alterar endereço de email",
++  "QyYabV": "nome@exemplo.com",
++  "U7k/vL": "Seu email foi atualizado com sucesso para {email}. Você também pode definir uma senha agora, se quiser fazer login com email e senha.",
++  "YxbwGs": "Insira uma senha",
++  "dbgchn": "Novo endereço de email",
++  "upvyOt": "Inserir código de verificação"
+ }
+diff --git a/dist/lang/translations/pt.json b/dist/lang/translations/pt.json
+index a548db0dba9b03971686b4ea47750ae6e95a01b0..3e3197aee9f1bed1cb340d4df1845bd0d0bb279a 100644
+--- a/dist/lang/translations/pt.json
++++ b/dist/lang/translations/pt.json
+@@ -293,5 +293,23 @@
+   "z19aZa": "Senha",
+   "zG7XDc": "Ocorreu um erro ao revogar o convite. Tente novamente.",
+   "zokPvK": "Definir senha",
+-  "zx2oPb": "Remover {domain} cancelará o processo de verificação do registro DNS. Esta ação é imediata e não pode ser desfeita."
++  "zx2oPb": "Remover {domain} cancelará o processo de verificação do registro DNS. Esta ação é imediata e não pode ser desfeita.",
++  "+2ILQR": "Editar",
++  "/7/PVX": "Agora não",
++  "/c8Kki": "Confirme a sua palavra-passe",
++  "0N6IHb": "Definir uma palavra-passe",
++  "1VNN1w": "Confirmar palavra-passe",
++  "1bX9l4": "Enviar código de verificação",
++  "23tmgn": "As credenciais fornecidas estão incorretas ou em falta. Reveja e atualize a configuração do registo de logs.",
++  "9OH/qs": "Foi enviado um código de verificação para {email}. Introduza-o abaixo.",
++  "Dn/G2O": "Algo correu mal. Tente novamente.",
++  "HVuco9": "Usar um email diferente",
++  "HYO1Ra": "Palavra-passe",
++  "K6x8v6": "Enviaremos um código de verificação para o seu novo endereço de email para confirmar a alteração. O seu email atual é {email}.",
++  "KdUdX9": "Alterar endereço de email",
++  "QyYabV": "nome@exemplo.com",
++  "U7k/vL": "O seu email foi atualizado com sucesso para {email}. Pode também definir uma palavra-passe agora, se desejar iniciar sessão com email e palavra-passe.",
++  "YxbwGs": "Introduza uma palavra-passe",
++  "dbgchn": "Novo endereço de email",
++  "upvyOt": "Introduzir código de verificação"
+ }
