@@ -93,7 +93,8 @@ export function withAuth(
 
     if (downstream instanceof NextResponse) {
       downstream.headers.forEach((value, name) => {
-        base.headers.append(name, value)
+        if (name.startsWith("x-middleware-")) return
+        base.headers.set(name, value)
       })
     }
 

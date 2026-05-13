@@ -1,0 +1,60 @@
+{
+  "meta": {
+    "title": "Eleva.care — Saúde da Mulher, Elevada",
+    "description": "Conecte-se com especialistas verificados em saúde da mulher para cuidados personalizados e baseados em evidência — 100% online."
+  },
+  "nav": {
+    "about": "Sobre",
+    "home": "Início",
+    "signin": "Entrar",
+    "signup": "Criar conta",
+    "dashboard": "Painel",
+    "signout": "Sair"
+  },
+  "home": {
+    "eyebrow": "Saúde da mulher, elevada",
+    "heading": "Cuidado especializado, ",
+    "headingAccent": "perto de si",
+    "description": "Conecte-se com especialistas verificados em saúde da mulher para cuidados personalizados e baseados em evidência — em qualquer lugar, a qualquer hora.",
+    "cta": "Encontrar especialista",
+    "ctaSecondary": "Tornar-se parceiro"
+  },
+  "about": {
+    "title": "Sobre — Eleva.care",
+    "description": "A Eleva.care conecta mulheres com especialistas de saúde verificados para cuidados personalizados e baseados em evidência — 100% online.",
+    "eyebrow": "A nossa missão",
+    "heading": "A saúde da mulher merece ",
+    "headingAccent": "melhor",
+    "intro": "A Eleva.care foi fundada com uma crença simples: todas as mulheres devem ter acesso a cuidados de saúde especializados e baseados em evidência — independentemente de onde vivam.",
+    "stats": {
+      "online": "Consultas online",
+      "languages": "Idiomas suportados",
+      "specialities": "Especialidades"
+    },
+    "valuesHeading": "O que defendemos",
+    "values": {
+      "evidenceBased": {
+        "title": "Baseado em evidência",
+        "description": "Todos os especialistas na nossa plataforma são rigorosamente verificados. Combinamos experiência clínica com a investigação mais recente para oferecer cuidados fundamentados na ciência."
+      },
+      "accessible": {
+        "title": "Acessível",
+        "description": "O apoio de qualidade em saúde da mulher não deve depender da geografia. O nosso modelo 100% online elimina barreiras e leva cuidados especializados até si."
+      },
+      "humanCentred": {
+        "title": "Centrado na pessoa",
+        "description": "Por trás de cada consulta há uma ligação real. Desenhamos cada interação com empatia, confiança e atenção às suas necessidades individuais."
+      },
+      "inclusive": {
+        "title": "Inclusivo",
+        "description": "A saúde da mulher abrange todas as idades e fases da vida. A nossa rede multidisciplinar cobre gravidez, saúde pélvica, bem-estar mental, nutrição e muito mais."
+      }
+    },
+    "ctaHeading": "Pronta para começar?",
+    "ctaDescription": "Encontre a especialista certa para o seu percurso de saúde — demora apenas um minuto.",
+    "cta": "Encontrar especialista"
+  },
+  "footer": {
+    "rights": "© {year} Eleva.care. Todos os direitos reservados."
+  }
+}

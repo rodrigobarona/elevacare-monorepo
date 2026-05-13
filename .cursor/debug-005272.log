@@ -1,0 +1,2 @@
+{"sessionId":"005272","location":"debug-hydration.tsx:beforeunload","message":"Before unload fired","data":{"url":"http://localhost:3000/pt/experts"},"timestamp":1778634906264,"hypothesisId":"H"}
+{"sessionId":"005272","location":"debug-hydration.tsx:pagehide","message":"Page is unloading","data":{"url":"http://localhost:3000/pt/experts","persisted":false},"timestamp":1778634907126,"hypothesisId":"H"}

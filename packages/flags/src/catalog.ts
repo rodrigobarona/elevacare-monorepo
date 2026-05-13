@@ -138,6 +138,33 @@ export const FLAG_CATALOG = {
       "Hide provider from install UI; existing connections read-only.",
     dependsOn: ["ff.expert_invoicing_apps_enabled"],
   },
+  "marketing.showStatsStrip": {
+    name: "marketing.showStatsStrip",
+    purpose: "Gate homepage stats strip section until real data exists.",
+    owner: "commercial",
+    scope: "global",
+    default: false,
+    rolloutStage: "dev-only",
+    killSwitchBehavior: "Stats strip hidden; page renders without it.",
+  },
+  "marketing.showTestimonials": {
+    name: "marketing.showTestimonials",
+    purpose: "Gate homepage testimonials section until real data exists.",
+    owner: "commercial",
+    scope: "global",
+    default: false,
+    rolloutStage: "dev-only",
+    killSwitchBehavior: "Testimonials section hidden; page renders without it.",
+  },
+  "marketing.showPressLogos": {
+    name: "marketing.showPressLogos",
+    purpose: "Gate homepage press logos section until real data exists.",
+    owner: "commercial",
+    scope: "global",
+    default: false,
+    rolloutStage: "dev-only",
+    killSwitchBehavior: "Press logos section hidden; page renders without it.",
+  },
 } as const satisfies Record<string, FlagEntry>
 
 export type FlagName = keyof typeof FLAG_CATALOG
