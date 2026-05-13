@@ -57,57 +57,55 @@ export async function createSpace(
   const locale =
     currentLocale && isLocale(currentLocale) ? currentLocale : undefined
 
-  const { dbUserId, dbOrgId } = await db().transaction(async (tx) => {
-    const [upsertedUser] = await tx
-      .insert(main.users)
-      .values({
-        workosUserId: user.id,
+  const d = db()
+
+  const [upsertedUser] = await d
+    .insert(main.users)
+    .values({
+      workosUserId: user.id,
+      completedOnboarding: true,
+    })
+    .onConflictDoUpdate({
+      target: main.users.workosUserId,
+      set: {
         completedOnboarding: true,
-      })
-      .onConflictDoUpdate({
-        target: main.users.workosUserId,
-        set: {
-          completedOnboarding: true,
-          updatedAt: new Date(),
-        },
-      })
-      .returning({ id: main.users.id })
+        updatedAt: new Date(),
+      },
+    })
+    .returning({ id: main.users.id })
 
-    const userId = upsertedUser!.id
+  const dbUserId = upsertedUser!.id
 
-    const [upsertedOrg] = await tx
-      .insert(main.organizations)
-      .values({
-        workosOrgId: org.id,
-        type: "personal",
-      })
-      .onConflictDoUpdate({
-        target: main.organizations.workosOrgId,
-        set: { updatedAt: new Date() },
-      })
-      .returning({ id: main.organizations.id })
+  const [upsertedOrg] = await d
+    .insert(main.organizations)
+    .values({
+      workosOrgId: org.id,
+      type: "personal",
+    })
+    .onConflictDoUpdate({
+      target: main.organizations.workosOrgId,
+      set: { updatedAt: new Date() },
+    })
+    .returning({ id: main.organizations.id })
 
-    const orgId = upsertedOrg!.id
+  const dbOrgId = upsertedOrg!.id
 
-    await tx
-      .insert(main.memberships)
-      .values({
-        userId,
-        orgId,
+  await d
+    .insert(main.memberships)
+    .values({
+      userId: dbUserId,
+      orgId: dbOrgId,
+      workosRole: "admin",
+      status: "active",
+    })
+    .onConflictDoUpdate({
+      target: [main.memberships.userId, main.memberships.orgId],
+      set: {
         workosRole: "admin",
         status: "active",
-      })
-      .onConflictDoUpdate({
-        target: [main.memberships.userId, main.memberships.orgId],
-        set: {
-          workosRole: "admin",
-          status: "active",
-          updatedAt: new Date(),
-        },
-      })
-
-    return { dbUserId: userId, dbOrgId: orgId }
-  })
+        updatedAt: new Date(),
+      },
+    })
 
   await Promise.allSettled([
     workos.userManagement.updateUser({
@@ -148,59 +146,57 @@ export async function checkExistingMembership(): Promise<{
   if (memberships.data.length > 0) {
     const membership = memberships.data[0]!
 
-    const { dbUserId, dbOrgId } = await db().transaction(async (tx) => {
-      const [upsertedUser] = await tx
-        .insert(main.users)
-        .values({
-          workosUserId: user.id,
+    const d = db()
+
+    const [upsertedUser] = await d
+      .insert(main.users)
+      .values({
+        workosUserId: user.id,
+        completedOnboarding: true,
+      })
+      .onConflictDoUpdate({
+        target: main.users.workosUserId,
+        set: {
           completedOnboarding: true,
-        })
-        .onConflictDoUpdate({
-          target: main.users.workosUserId,
-          set: {
-            completedOnboarding: true,
-            updatedAt: new Date(),
-          },
-        })
-        .returning({ id: main.users.id })
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ id: main.users.id })
 
-      const userId = upsertedUser!.id
+    const dbUserId = upsertedUser!.id
 
-      const [upsertedOrg] = await tx
-        .insert(main.organizations)
-        .values({
-          workosOrgId: membership.organizationId,
-          type: "personal",
-        })
-        .onConflictDoUpdate({
-          target: main.organizations.workosOrgId,
-          set: { updatedAt: new Date() },
-        })
-        .returning({ id: main.organizations.id })
+    const [upsertedOrg] = await d
+      .insert(main.organizations)
+      .values({
+        workosOrgId: membership.organizationId,
+        type: "personal",
+      })
+      .onConflictDoUpdate({
+        target: main.organizations.workosOrgId,
+        set: { updatedAt: new Date() },
+      })
+      .returning({ id: main.organizations.id })
 
-      const orgId = upsertedOrg!.id
+    const dbOrgId = upsertedOrg!.id
 
-      const role = membership.role?.slug === "admin" ? "admin" : "member"
+    const role = membership.role?.slug === "admin" ? "admin" : "member"
 
-      await tx
-        .insert(main.memberships)
-        .values({
-          userId,
-          orgId,
+    await d
+      .insert(main.memberships)
+      .values({
+        userId: dbUserId,
+        orgId: dbOrgId,
+        workosRole: role as "admin" | "member",
+        status: "active",
+      })
+      .onConflictDoUpdate({
+        target: [main.memberships.userId, main.memberships.orgId],
+        set: {
           workosRole: role as "admin" | "member",
           status: "active",
-        })
-        .onConflictDoUpdate({
-          target: [main.memberships.userId, main.memberships.orgId],
-          set: {
-            workosRole: role as "admin" | "member",
-            status: "active",
-            updatedAt: new Date(),
-          },
-        })
-
-      return { dbUserId: userId, dbOrgId: orgId }
-    })
+          updatedAt: new Date(),
+        },
+      })
 
     await Promise.allSettled([
       workos.userManagement.updateUser({
