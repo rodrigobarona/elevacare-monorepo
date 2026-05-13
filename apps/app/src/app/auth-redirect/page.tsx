@@ -16,8 +16,8 @@ export default async function AuthRedirectPage() {
   }
 
   switch (session.productLabel) {
-    case "patient":
-      redirect("/patient")
+    case "member":
+      redirect("/dashboard")
       break
     case "expert":
       redirect("/expert")

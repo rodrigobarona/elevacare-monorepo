@@ -23,8 +23,8 @@ const FROM_ADDRESS = "Eleva Care <bookings@eleva.care>"
 export interface IcsEmailPayload {
   expertEmail: string
   expertName: string
-  patientName: string
-  patientEmail: string
+  memberName: string
+  memberEmail: string
   eventTypeName: string
   bookingId: string
   startsAt: Date
@@ -41,8 +41,8 @@ export interface IcsEmailPayload {
 function buildIcsInput(payload: IcsEmailPayload): IcsEventInput {
   return {
     uid: payload.bookingId,
-    summary: `${payload.eventTypeName} — ${payload.patientName}`,
-    description: `Eleva Care session with ${payload.patientName}. Mode: ${payload.sessionMode}.`,
+    summary: `${payload.eventTypeName} — ${payload.memberName}`,
+    description: `Eleva Care session with ${payload.memberName}. Mode: ${payload.sessionMode}.`,
     startTime: payload.startsAt,
     endTime: payload.endsAt,
     timezone: payload.timezone,
@@ -50,7 +50,7 @@ function buildIcsInput(payload: IcsEmailPayload): IcsEventInput {
     organizer: { name: "Eleva Care", email: "bookings@eleva.care" },
     attendees: [
       { name: payload.expertName, email: payload.expertEmail },
-      { name: payload.patientName, email: payload.patientEmail },
+      { name: payload.memberName, email: payload.memberEmail },
     ],
     sequence: payload.sequence ?? 0,
   }
@@ -73,7 +73,7 @@ function buildJsonLd(
     underName: { "@type": "Person", name: payload.expertName },
     reservationFor: {
       "@type": "Event",
-      name: `${payload.eventTypeName} with ${payload.patientName}`,
+      name: `${payload.eventTypeName} with ${payload.memberName}`,
       startDate: payload.startsAt.toISOString(),
       endDate: payload.endsAt.toISOString(),
       location: locationObj,
@@ -121,7 +121,7 @@ export async function sendBookingIcsEmail(
   const jsonLd = buildJsonLd(payload, "Confirmed")
 
   const html = await renderBookingConfirmed({
-    patientName: payload.patientName,
+    memberName: payload.memberName,
     eventTypeName: payload.eventTypeName,
     formattedDate,
     sessionMode: payload.sessionMode,
@@ -133,8 +133,8 @@ export async function sendBookingIcsEmail(
   const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail, payload.patientEmail],
-      subject: t.subject.newBooking(payload.patientName, formattedDate),
+      to: [payload.expertEmail, payload.memberEmail],
+      subject: t.subject.newBooking(payload.memberName, formattedDate),
       html,
       headers: { "X-Entity-Ref-ID": `${payload.bookingId}:booking` },
       attachments: [
@@ -174,7 +174,7 @@ export async function sendRescheduleIcsEmail(
   const jsonLd = buildJsonLd(payload, "Confirmed")
 
   const html = await renderBookingRescheduled({
-    patientName: payload.patientName,
+    memberName: payload.memberName,
     eventTypeName: payload.eventTypeName,
     previousDate: formattedPrevious,
     newDate: formattedDate,
@@ -186,8 +186,8 @@ export async function sendRescheduleIcsEmail(
   const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail, payload.patientEmail],
-      subject: t.subject.rescheduled(payload.patientName, formattedDate),
+      to: [payload.expertEmail, payload.memberEmail],
+      subject: t.subject.rescheduled(payload.memberName, formattedDate),
       html,
       headers: {
         "X-Entity-Ref-ID": `${payload.bookingId}:reschedule:${payload.sequence ?? 1}`,
@@ -225,7 +225,7 @@ export async function sendCancellationIcsEmail(
   const jsonLd = buildJsonLd(payload, "Cancelled")
 
   const html = await renderBookingCancelled({
-    patientName: payload.patientName,
+    memberName: payload.memberName,
     eventTypeName: payload.eventTypeName,
     formattedDate,
     locale,
@@ -235,8 +235,8 @@ export async function sendCancellationIcsEmail(
   const { error } = await resend().emails.send(
     {
       from: FROM_ADDRESS,
-      to: [payload.expertEmail, payload.patientEmail],
-      subject: t.subject.cancelled(payload.patientName, formattedDate),
+      to: [payload.expertEmail, payload.memberEmail],
+      subject: t.subject.cancelled(payload.memberName, formattedDate),
       html,
       headers: { "X-Entity-Ref-ID": `${payload.bookingId}:cancel` },
       attachments: [

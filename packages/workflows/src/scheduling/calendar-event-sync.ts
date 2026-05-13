@@ -74,39 +74,39 @@ async function loadBookingContext(
 
   if (!data) return null
 
-  const patientData = await withOrgContext(orgId, async (tx: Tx) => {
+  const memberData = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({
         workosUserId: main.users.workosUserId,
       })
       .from(main.bookings)
-      .innerJoin(main.users, eq(main.bookings.patientUserId, main.users.id))
+      .innerJoin(main.users, eq(main.bookings.memberUserId, main.users.id))
       .where(eq(main.bookings.id, bookingId))
       .limit(1)
     return row
   })
 
-  if (!patientData?.workosUserId) return null
+  if (!memberData?.workosUserId) return null
 
   const workos = getWorkOS()
-  const [expertUser, patientUser] = await Promise.all([
+  const [expertUser, memberUser] = await Promise.all([
     workos.userManagement.getUser(data.expertWorkosUserId),
-    workos.userManagement.getUser(patientData.workosUserId),
+    workos.userManagement.getUser(memberData.workosUserId),
   ])
 
   const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
   const eventTypeName =
     data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
 
-  const patientName =
-    [patientUser.firstName, patientUser.lastName].filter(Boolean).join(" ") ||
-    "Patient"
+  const memberName =
+    [memberUser.firstName, memberUser.lastName].filter(Boolean).join(" ") ||
+    "Member"
 
   return {
     expertEmail: expertUser.email,
     expertName: data.expertName,
-    patientName,
-    patientEmail: patientUser.email,
+    memberName,
+    memberEmail: memberUser.email,
     eventTypeName,
     bookingId,
     startsAt: data.startsAt,

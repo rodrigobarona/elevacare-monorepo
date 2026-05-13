@@ -228,7 +228,7 @@ export function EventTypeForm({ mode, eventTypeId, defaultValues }: Props) {
                   [activeLocale]: e.target.value,
                 }))
               }
-              placeholder="Describe what patients can expect"
+              placeholder="Describe what to expect"
               rows={3}
             />
           </div>

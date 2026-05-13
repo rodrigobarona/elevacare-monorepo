@@ -11,7 +11,7 @@ const nextConfig = {
 
   async rewrites() {
     const rootSegments = [
-      "patient",
+      "dashboard",
       "expert",
       "org",
       "admin",

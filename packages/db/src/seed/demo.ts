@@ -3,7 +3,7 @@ import { db } from "../client"
 import * as main from "../schema/main"
 
 /**
- * Demo seed: one patient (patient.demo@example.test), one solo expert
+ * Demo seed: one member (member.demo@example.test), one solo expert
  * (pat.mota@example.test / username 'patimota'), one clinic
  * (clinic.admin@example.test / slug 'clinicamota') plus a second
  * expert membership of the clinic admin (clinic+admin).
@@ -52,12 +52,12 @@ const SEEDS: SeedPersona[] = [
     workosRole: "admin",
   },
   {
-    workosUserId: "dev_user_patient_demo",
-    workosOrgId: "dev_org_patient_demo_personal",
-    email: "patient.demo@example.test",
-    displayName: "Demo Patient",
+    workosUserId: "dev_user_member_demo",
+    workosOrgId: "dev_org_member_demo_personal",
+    email: "member.demo@example.test",
+    displayName: "Demo Member",
     orgType: "personal",
-    orgDisplayName: "Demo Patient (personal)",
+    orgDisplayName: "Demo Member (personal)",
     workosRole: "admin",
   },
 ]

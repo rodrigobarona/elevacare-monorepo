@@ -3,7 +3,7 @@ import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { AppShell } from "@/components/app-shell"
 
-export default async function PatientDashboardPage() {
+export default async function DashboardPage() {
   const session = await getSession()
   if (!session) redirect("/signin")
   if (!session.capabilities.includes("appointments:view_own")) {
@@ -14,12 +14,12 @@ export default async function PatientDashboardPage() {
     <AppShell session={session}>
       <header className="space-y-2">
         <h1 className="text-2xl font-medium">
-          {t("dashboard.patient.welcome", {
+          {t("dashboard.member.welcome", {
             name: session.user.displayName ?? session.user.email,
           })}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {t("dashboard.patient.subtitle")}
+          {t("dashboard.member.subtitle")}
         </p>
       </header>
     </AppShell>

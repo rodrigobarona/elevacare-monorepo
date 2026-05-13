@@ -111,8 +111,8 @@ export function StepInvoicing({ profile, onDone }: Props) {
       )}
 
       <p className="text-sm text-muted-foreground">
-        Choose how your patient invoices will be issued. You can connect an
-        automated provider or handle invoicing manually.
+        Choose how your invoices will be issued. You can connect an automated
+        provider or handle invoicing manually.
       </p>
 
       <div className="grid gap-3">

@@ -1,7 +1,6 @@
 {
   "nav": {
     "dashboard": "Panel",
-    "patient": "Paciente",
     "expert": "Experto",
     "org": "Organización",
     "admin": "Administración",
@@ -25,7 +24,7 @@
     }
   },
   "dashboard": {
-    "patient": {
+    "member": {
       "welcome": "Bienvenido/a, {name}",
       "subtitle": "Tus próximas citas e informes viven aquí."
     },
@@ -84,10 +83,10 @@
   },
   "eventTypes": {
     "title": "Tipos de Evento",
-    "description": "Define los servicios que los pacientes pueden reservar contigo.",
+    "description": "Define los servicios que ofreces.",
     "create": "Nuevo tipo de evento",
     "createTitle": "Crear Tipo de Evento",
-    "createDescription": "Define un nuevo servicio reservable para tus pacientes.",
+    "createDescription": "Crea un nuevo servicio reservable.",
     "editTitle": "Editar Tipo de Evento",
     "editDescription": "Actualiza los detalles y reglas de reserva de este tipo de evento.",
     "empty": "Aún no has creado ningún tipo de evento.",

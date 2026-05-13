@@ -1,7 +1,6 @@
 {
   "nav": {
     "dashboard": "Dashboard",
-    "patient": "Patient",
     "expert": "Expert",
     "org": "Organisation",
     "admin": "Admin",
@@ -25,7 +24,7 @@
     }
   },
   "dashboard": {
-    "patient": {
+    "member": {
       "welcome": "Welcome, {name}",
       "subtitle": "Your upcoming appointments and reports live here."
     },
@@ -84,10 +83,10 @@
   },
   "eventTypes": {
     "title": "Event Types",
-    "description": "Define the services patients can book with you.",
+    "description": "Define the bookable services you offer.",
     "create": "New event type",
     "createTitle": "Create Event Type",
-    "createDescription": "Define a new bookable service for your patients.",
+    "createDescription": "Create a new bookable service.",
     "editTitle": "Edit Event Type",
     "editDescription": "Update this event type's details and booking rules.",
     "empty": "You haven't created any event types yet.",

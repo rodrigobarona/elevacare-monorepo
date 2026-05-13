@@ -15,10 +15,10 @@ const NAV: Array<{
   matchPrefix: string
 }> = [
   {
-    href: "/patient",
-    labelKey: "nav.patient",
+    href: "/dashboard",
+    labelKey: "nav.dashboard",
     needs: "appointments:view_own",
-    matchPrefix: "/patient",
+    matchPrefix: "/dashboard",
   },
   {
     href: "/expert",

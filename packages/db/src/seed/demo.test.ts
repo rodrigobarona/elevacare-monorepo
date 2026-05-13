@@ -92,7 +92,7 @@ describe("seedDemo", () => {
     expect(results.map((r) => r.email).sort()).toEqual([
       "clinic.admin@example.test",
       "pat.mota@example.test",
-      "patient.demo@example.test",
+      "member.demo@example.test",
     ])
     // Three personas * (user + org + membership) = 9 inserts plus
     // one expert_profiles row (Patricia) + one clinic_profiles row.

@@ -15,7 +15,7 @@ import type {
  *
  * Per ADR-013 Tier 2 design:
  *   - The expert chooses NOT to auto-issue invoices through Eleva.
- *   - Eleva still surfaces booking + patient fiscal data to the
+ *   - Eleva still surfaces booking + member fiscal data to the
  *     expert dashboard and produces a monthly SAF-T / CSV export.
  *   - `issueInvoice` always succeeds with a sentinel result so the
  *     dispatcher can mark the expert_invoice_log row as

@@ -4,7 +4,7 @@ import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingCancelledProps {
-  patientName: string
+  memberName: string
   eventTypeName: string
   formattedDate: string
   locale?: EmailLocale
@@ -12,7 +12,7 @@ export interface BookingCancelledProps {
 }
 
 export function BookingCancelledEmail({
-  patientName,
+  memberName,
   eventTypeName,
   formattedDate,
   locale = "en",
@@ -22,7 +22,7 @@ export function BookingCancelledEmail({
 
   return (
     <EmailLayout
-      preview={t.subject.cancelled(patientName, formattedDate)}
+      preview={t.subject.cancelled(memberName, formattedDate)}
       locale={locale}
       jsonLd={jsonLd}
     >
@@ -35,7 +35,7 @@ export function BookingCancelledEmail({
         </Text>
 
         <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow label={t.labels.patient} value={patientName} bold />
+          <DetailRow label={t.labels.member} value={memberName} bold />
           <DetailRow label={t.labels.service} value={eventTypeName} />
           <DetailRow
             label={t.labels.wasScheduled}
@@ -55,7 +55,7 @@ export function BookingCancelledEmail({
 }
 
 BookingCancelledEmail.PreviewProps = {
-  patientName: "Maria Silva",
+  memberName: "Maria Silva",
   eventTypeName: "Primeira Consulta",
   formattedDate: "Segunda-feira, 16 de junho de 2026, 10:00",
   locale: "pt",

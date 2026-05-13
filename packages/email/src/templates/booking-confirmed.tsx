@@ -4,7 +4,7 @@ import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingConfirmedProps {
-  patientName: string
+  memberName: string
   eventTypeName: string
   formattedDate: string
   sessionMode: string
@@ -14,7 +14,7 @@ export interface BookingConfirmedProps {
 }
 
 export function BookingConfirmedEmail({
-  patientName,
+  memberName,
   eventTypeName,
   formattedDate,
   sessionMode,
@@ -26,7 +26,7 @@ export function BookingConfirmedEmail({
 
   return (
     <EmailLayout
-      preview={t.subject.newBooking(patientName, formattedDate)}
+      preview={t.subject.newBooking(memberName, formattedDate)}
       locale={locale}
       jsonLd={jsonLd}
     >
@@ -39,7 +39,7 @@ export function BookingConfirmedEmail({
         </Text>
 
         <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow label={t.labels.patient} value={patientName} bold />
+          <DetailRow label={t.labels.member} value={memberName} bold />
           <DetailRow label={t.labels.service} value={eventTypeName} />
           <DetailRow label={t.labels.dateTime} value={formattedDate} />
           <DetailRow label={t.labels.mode} value={sessionMode} />
@@ -57,7 +57,7 @@ export function BookingConfirmedEmail({
 }
 
 BookingConfirmedEmail.PreviewProps = {
-  patientName: "Maria Silva",
+  memberName: "Maria Silva",
   eventTypeName: "Primeira Consulta",
   formattedDate: "Segunda-feira, 16 de junho de 2026, 10:00",
   sessionMode: "online",

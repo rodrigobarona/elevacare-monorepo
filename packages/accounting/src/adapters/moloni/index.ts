@@ -31,9 +31,9 @@ const MANIFEST: AdapterManifest = {
   countries: ["PT", "ES"],
   installType: "oauth",
   description: {
-    en: "Connect your Moloni account to issue patient invoices automatically.",
-    pt: "Ligue a sua conta Moloni para emitir faturas aos pacientes automaticamente.",
-    es: "Conecte su cuenta Moloni para emitir facturas a los pacientes automáticamente.",
+    en: "Connect your Moloni account to issue invoices automatically.",
+    pt: "Ligue a sua conta Moloni para emitir faturas automaticamente.",
+    es: "Conecte su cuenta Moloni para emitir facturas automáticamente.",
   },
 }
 

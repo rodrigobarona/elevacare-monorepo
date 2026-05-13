@@ -23,7 +23,7 @@ import type {
  *
  * Tier 1 (Eleva → expert) lives separately under
  * `eleva-platform/toconline.ts` (S6); Tier 2 here is the
- * expert-owned account used to issue patient invoices.
+ * expert-owned account used to issue invoices.
  *
  * Authentication: OAuth 2.0 Authorization Code + PKCE (S256)
  * against `app33.toconline.pt/oauth`. Tokens are encrypted via
@@ -39,7 +39,7 @@ const MANIFEST: AdapterManifest = {
   countries: ["PT"],
   installType: "oauth",
   description: {
-    en: "Connect your TOConline account to issue AT-certified patient invoices automatically.",
+    en: "Connect your TOConline account to issue AT-certified invoices automatically.",
     pt: "Ligue a sua conta TOConline para emitir faturas certificadas pela AT automaticamente.",
     es: "Conecte su cuenta TOConline para emitir facturas certificadas por AT automáticamente.",
   },
@@ -157,9 +157,9 @@ async function issueInvoice(
     document_type: "FT",
     date: input.date,
     series_id: meta.seriesId,
-    customer_tax_registration_number: input.patient.fiscalId || "999999990",
-    customer_business_name: input.patient.name,
-    customer_country: input.patient.country,
+    customer_tax_registration_number: input.member.fiscalId || "999999990",
+    customer_business_name: input.member.name,
+    customer_country: input.member.country,
     notes: input.notes,
     lines: input.lines.map((l) => ({
       description: l.description,

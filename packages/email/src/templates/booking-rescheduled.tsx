@@ -4,7 +4,7 @@ import { DetailRow } from "./detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingRescheduledProps {
-  patientName: string
+  memberName: string
   eventTypeName: string
   previousDate: string
   newDate: string
@@ -14,7 +14,7 @@ export interface BookingRescheduledProps {
 }
 
 export function BookingRescheduledEmail({
-  patientName,
+  memberName,
   eventTypeName,
   previousDate,
   newDate,
@@ -26,7 +26,7 @@ export function BookingRescheduledEmail({
 
   return (
     <EmailLayout
-      preview={t.subject.rescheduled(patientName, newDate)}
+      preview={t.subject.rescheduled(memberName, newDate)}
       locale={locale}
       jsonLd={jsonLd}
     >
@@ -39,7 +39,7 @@ export function BookingRescheduledEmail({
         </Text>
 
         <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow label={t.labels.patient} value={patientName} bold />
+          <DetailRow label={t.labels.member} value={memberName} bold />
           <DetailRow label={t.labels.service} value={eventTypeName} />
           <DetailRow
             label={t.labels.previous}
@@ -66,7 +66,7 @@ export function BookingRescheduledEmail({
 }
 
 BookingRescheduledEmail.PreviewProps = {
-  patientName: "Maria Silva",
+  memberName: "Maria Silva",
   eventTypeName: "Primeira Consulta",
   previousDate: "Segunda-feira, 16 de junho de 2026, 10:00",
   newDate: "Quarta-feira, 18 de junho de 2026, 14:00",

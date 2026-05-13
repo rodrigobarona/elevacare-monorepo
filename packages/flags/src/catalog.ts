@@ -89,7 +89,7 @@ export const FLAG_CATALOG = {
   },
   "ff.diary_share": {
     name: "ff.diary_share",
-    purpose: "Patient \u2192 expert diary sharing.",
+    purpose: "Member \u2192 expert diary sharing.",
     owner: "product",
     scope: "org",
     default: false,
@@ -109,7 +109,7 @@ export const FLAG_CATALOG = {
   },
   "ff.expert_invoicing_apps_enabled": {
     name: "ff.expert_invoicing_apps_enabled",
-    purpose: "Tier 2 expert \u2192 patient invoice registry globally enabled.",
+    purpose: "Tier 2 expert invoicing registry globally enabled.",
     owner: "payments",
     scope: "global",
     default: false,

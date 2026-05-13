@@ -5,7 +5,11 @@ type Props = {
   params: Promise<{ locale: string }>
 }
 
-export default async function Home({ params }: Props) {
+/**
+ * Logged-in users can always reach the marketing page at /home
+ * (the root / redirects authenticated users to their dashboard).
+ */
+export default async function HomePage({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
 

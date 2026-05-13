@@ -20,7 +20,7 @@ const translations = {
         "Open the attached .ics file to remove this event from your calendar.",
     },
     labels: {
-      patient: "Patient",
+      member: "Member",
       service: "Service",
       dateTime: "Date & Time",
       mode: "Mode",
@@ -30,12 +30,12 @@ const translations = {
       wasScheduled: "Was scheduled",
     },
     subject: {
-      newBooking: (patient: string, date: string) =>
-        `New booking: ${patient} — ${date}`,
-      rescheduled: (patient: string, date: string) =>
-        `Rescheduled: ${patient} — ${date}`,
-      cancelled: (patient: string, date: string) =>
-        `Cancelled: ${patient} — ${date}`,
+      newBooking: (member: string, date: string) =>
+        `New booking: ${member} — ${date}`,
+      rescheduled: (member: string, date: string) =>
+        `Rescheduled: ${member} — ${date}`,
+      cancelled: (member: string, date: string) =>
+        `Cancelled: ${member} — ${date}`,
     },
     layout: {
       footer:
@@ -61,7 +61,7 @@ const translations = {
         "Abra o ficheiro .ics em anexo para remover este evento do seu calendário.",
     },
     labels: {
-      patient: "Paciente",
+      member: "Membro",
       service: "Serviço",
       dateTime: "Data e Hora",
       mode: "Modalidade",
@@ -71,12 +71,12 @@ const translations = {
       wasScheduled: "Estava agendada",
     },
     subject: {
-      newBooking: (patient: string, date: string) =>
-        `Nova marcação: ${patient} — ${date}`,
-      rescheduled: (patient: string, date: string) =>
-        `Reagendada: ${patient} — ${date}`,
-      cancelled: (patient: string, date: string) =>
-        `Cancelada: ${patient} — ${date}`,
+      newBooking: (member: string, date: string) =>
+        `Nova marcação: ${member} — ${date}`,
+      rescheduled: (member: string, date: string) =>
+        `Reagendada: ${member} — ${date}`,
+      cancelled: (member: string, date: string) =>
+        `Cancelada: ${member} — ${date}`,
     },
     layout: {
       footer: "Recebeu este email porque tem uma conta ativa na Eleva Care.",
@@ -101,7 +101,7 @@ const translations = {
         "Abra el archivo .ics adjunto para eliminar este evento de su calendario.",
     },
     labels: {
-      patient: "Paciente",
+      member: "Miembro",
       service: "Servicio",
       dateTime: "Fecha y Hora",
       mode: "Modalidad",
@@ -111,12 +111,12 @@ const translations = {
       wasScheduled: "Estaba programada",
     },
     subject: {
-      newBooking: (patient: string, date: string) =>
-        `Nueva reserva: ${patient} — ${date}`,
-      rescheduled: (patient: string, date: string) =>
-        `Reprogramada: ${patient} — ${date}`,
-      cancelled: (patient: string, date: string) =>
-        `Cancelada: ${patient} — ${date}`,
+      newBooking: (member: string, date: string) =>
+        `Nueva reserva: ${member} — ${date}`,
+      rescheduled: (member: string, date: string) =>
+        `Reprogramada: ${member} — ${date}`,
+      cancelled: (member: string, date: string) =>
+        `Cancelada: ${member} — ${date}`,
     },
     layout: {
       footer:
@@ -138,7 +138,7 @@ export interface EmailTranslations {
     icsHintRemove: string
   }
   labels: {
-    patient: string
+    member: string
     service: string
     dateTime: string
     mode: string
@@ -148,9 +148,9 @@ export interface EmailTranslations {
     wasScheduled: string
   }
   subject: {
-    newBooking: (patient: string, date: string) => string
-    rescheduled: (patient: string, date: string) => string
-    cancelled: (patient: string, date: string) => string
+    newBooking: (member: string, date: string) => string
+    rescheduled: (member: string, date: string) => string
+    cancelled: (member: string, date: string) => string
   }
   layout: {
     footer: string

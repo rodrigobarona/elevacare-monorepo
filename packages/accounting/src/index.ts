@@ -1,5 +1,5 @@
 /**
- * @eleva/accounting — Tier 2 expert→patient invoicing adapter
+ * @eleva/accounting — Tier 2 expert→member invoicing adapter
  * registry. See ADR-013.
  *
  * Owns ALL provider SDK access (TOConline, Moloni, ...). Other

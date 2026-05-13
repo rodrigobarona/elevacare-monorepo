@@ -4,7 +4,7 @@
  * Never emit to external log/error stores:
  * - session notes, transcripts, AI prompts (PHI)
  * - card numbers, CVC, full IBAN (PCI)
- * - patient NIF values (except as a minimum-necessary ID hash when
+ * - member NIF values (except as a minimum-necessary ID hash when
  *   strictly required by an admin surface \u2014 handled by audit, not logs)
  *
  * Applied as a Sentry beforeSend hook + a BetterStack transport filter.
