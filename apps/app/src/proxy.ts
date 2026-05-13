@@ -7,10 +7,12 @@ import {
 } from "@workos-inc/authkit-nextjs"
 import { cookieName, isLocale } from "@eleva/config/i18n"
 import { countryToLocale } from "@eleva/config/country-to-locale"
-import { APP_STANDALONE_PATHS } from "@eleva/config/routing"
+import { APP_STANDALONE_PATHS, APP_FIXED_SEGMENTS } from "@eleva/config/routing"
 import { withHeaders } from "@eleva/observability/proxy"
 
 const AUTH_FLOW_PATHS = APP_STANDALONE_PATHS.map((p) => `/${p}`)
+const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+const fixedSegments = new Set<string>(APP_FIXED_SEGMENTS)
 
 const UNAUTH_PATHS = [
   "/",
@@ -88,6 +90,26 @@ async function handler(req: NextRequest): Promise<NextResponse | Response> {
       maxAge: 31536000,
       sameSite: "lax",
     })
+  }
+
+  if (session.user) {
+    const segments = req.nextUrl.pathname.split("/").filter(Boolean)
+    const firstSegment = segments[0]
+    if (
+      firstSegment &&
+      !isUnauthenticatedPath(req.nextUrl.pathname, UNAUTH_PATHS) &&
+      !fixedSegments.has(firstSegment)
+    ) {
+      const existingOrg = req.cookies.get(LAST_ACTIVE_ORG_COOKIE)?.value
+      if (existingOrg !== firstSegment) {
+        response.cookies.set(LAST_ACTIVE_ORG_COOKIE, firstSegment, {
+          path: "/",
+          maxAge: 31536000,
+          sameSite: "lax",
+          httpOnly: true,
+        })
+      }
+    }
   }
 
   return applyResponseHeaders(response, responseHeaders)
