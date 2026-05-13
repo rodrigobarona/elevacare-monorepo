@@ -20,7 +20,7 @@ import { cookieName, isLocale } from "@eleva/config/i18n"
  */
 export const GET = handleAuth({
   returnPathname: "/auth-redirect",
-  baseURL: process.env.NEXT_PUBLIC_APP_URL,
+  baseURL: process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL,
   onSuccess: async (data) => {
     const jar = await cookies()
     const existing = jar.get(cookieName)?.value
