@@ -85,9 +85,15 @@ export async function POST(request: Request): Promise<Response> {
       request,
       responseHeaders: cors,
       authorize: async (pathname) => {
-        if (!token) throw new Error("unauthorized")
+        if (!token) {
+          console.error("[blob/upload] no bearer token in Authorization header")
+          throw new Error("unauthorized")
+        }
         const verified = await verifyUploadToken(token)
-        if (!verified) throw new Error("unauthorized")
+        if (!verified) {
+          console.error("[blob/upload] upload token verification failed")
+          throw new Error("unauthorized")
+        }
 
         const resolved = resolvePolicy(pathname)
         if (!resolved) throw new Error("invalid-pathname")

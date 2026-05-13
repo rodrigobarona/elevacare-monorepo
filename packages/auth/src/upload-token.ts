@@ -46,15 +46,20 @@ export async function mintUploadToken(userId: string): Promise<string> {
 export async function verifyUploadToken(
   token: string
 ): Promise<{ userId: string } | null> {
+  const password = getTokenPassword()
   try {
     const payload = await unsealData<UploadTokenPayload>(token, {
-      password: getTokenPassword(),
+      password,
       ttl: UPLOAD_TOKEN_TTL_SECONDS,
     })
     if (payload.purpose !== "blob-upload") return null
     if (!payload.sub) return null
     return { userId: payload.sub }
-  } catch {
+  } catch (err) {
+    console.warn(
+      "[upload-token] unseal failed:",
+      err instanceof Error ? err.message : err
+    )
     return null
   }
 }
