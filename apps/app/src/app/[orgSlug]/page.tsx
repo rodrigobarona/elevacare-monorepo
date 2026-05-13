@@ -21,7 +21,7 @@ export default async function OrgHomePage({
     case "clinic_admin":
       return <ClinicAdminDashboard session={session} />
     case "eleva_operator":
-      redirect(`/${orgSlug}/admin`)
+      redirect("/admin")
   }
 }
 

@@ -38,19 +38,14 @@ const STATUS_VARIANT: Record<
 }
 
 interface Props {
-  params: Promise<{ orgSlug: string }>
   searchParams: Promise<{ status?: string; page?: string }>
 }
 
-export default async function BecomePartnerQueuePage({
-  params,
-  searchParams,
-}: Props) {
-  const { orgSlug } = await params
+export default async function BecomePartnerQueuePage({ searchParams }: Props) {
   const session = await getSession()
   if (!session) redirect("/signin")
   if (!session.capabilities.includes("applications:review"))
-    redirect(`/${orgSlug}`)
+    redirect(`/${session.orgSlug}`)
 
   const query = await searchParams
   const filters: ListApplicationsFilters = { limit: 25, offset: 0 }
@@ -79,7 +74,7 @@ export default async function BecomePartnerQueuePage({
           (s) => (
             <Link
               key={s}
-              href={`/${orgSlug}/admin/become-partner${s === "all" ? "" : `?status=${s}`}`}
+              href={`/admin/become-partner${s === "all" ? "" : `?status=${s}`}`}
               className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/50 ${
                 (query.status ?? "all") === s
                   ? "border-foreground/20 bg-muted"
@@ -101,7 +96,7 @@ export default async function BecomePartnerQueuePage({
           {rows.map((app) => (
             <Link
               key={app.id}
-              href={`/${orgSlug}/admin/become-partner/${app.id}`}
+              href={`/admin/become-partner/${app.id}`}
               className="block"
             >
               <Card className="transition-shadow hover:shadow-md">

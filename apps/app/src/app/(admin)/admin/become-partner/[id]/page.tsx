@@ -16,15 +16,15 @@ import { ApplicationActions } from "./application-actions"
 export const dynamic = "force-dynamic"
 
 interface Props {
-  params: Promise<{ orgSlug: string; id: string }>
+  params: Promise<{ id: string }>
 }
 
 export default async function ApplicationDetailPage({ params }: Props) {
-  const { orgSlug, id } = await params
+  const { id } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
   if (!session.capabilities.includes("applications:review")) {
-    redirect(`/${orgSlug}`)
+    redirect(`/${session.orgSlug}`)
   }
   const app = await getApplicationById(id)
   if (!app) notFound()

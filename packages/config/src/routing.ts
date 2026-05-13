@@ -7,7 +7,7 @@
  */
 
 /** First-level segments that the app owns (no org slug prefix). */
-export const APP_FIXED_SEGMENTS = ["onboarding", "account"] as const
+export const APP_FIXED_SEGMENTS = ["onboarding", "account", "admin"] as const
 
 /** Auth-related standalone paths (no session needed). */
 export const APP_STANDALONE_PATHS = [
@@ -22,7 +22,7 @@ export const APP_STANDALONE_PATHS = [
  * Second-level segments that appear under /[orgSlug]/*. Used by
  * the web proxy to detect org-slug-prefixed app routes.
  */
-export const ORG_SCOPED_SEGMENTS = ["expert", "admin", "settings"] as const
+export const ORG_SCOPED_SEGMENTS = ["expert", "settings"] as const
 
 /**
  * All first-level paths that the app claims. Any first segment NOT

@@ -43,16 +43,16 @@ function buildNav(orgSlug: string): NavItem[] {
       matchPrefix: `${s}/expert/finance`,
     },
     {
-      href: `${s}/admin`,
+      href: "/admin",
       labelKey: "nav.admin",
       needs: "audit:view_all",
-      matchPrefix: `${s}/admin`,
+      matchPrefix: "/admin",
     },
     {
-      href: `${s}/admin/become-partner`,
+      href: "/admin/become-partner",
       labelKey: "nav.adminApplications",
       needs: "applications:review",
-      matchPrefix: `${s}/admin/become-partner`,
+      matchPrefix: "/admin/become-partner",
     },
     {
       href: "/account/settings",

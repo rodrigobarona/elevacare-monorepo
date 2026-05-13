@@ -10,6 +10,8 @@ import { locales } from "@eleva/config/i18n"
 
 const intlMiddleware = createMiddleware(routing)
 
+const appAssetPrefix = process.env.APP_ASSET_PREFIX || "http://localhost:3001"
+
 const fixedAppPaths = new Set<string>([
   ...APP_FIXED_SEGMENTS,
   ...APP_STANDALONE_PATHS,
@@ -64,7 +66,8 @@ export default function proxy(request: NextRequest) {
   const hasSession = request.cookies.has(SESSION_COOKIE)
 
   if (isAppRoute(pathname, hasSession)) {
-    return
+    const url = new URL(pathname + request.nextUrl.search, appAssetPrefix)
+    return NextResponse.rewrite(url)
   }
 
   if (isRootPath(pathname) && hasSession) {

@@ -10,14 +10,7 @@ const nextConfig = {
   transpilePackages: ["@eleva/auth", "@eleva/config", "@eleva/db", "@eleva/ui"],
 
   async rewrites() {
-    const rootSegments = [
-      "dashboard",
-      "expert",
-      "org",
-      "admin",
-      "settings",
-      "onboarding",
-    ]
+    const rootSegments = ["onboarding", "account", "admin"]
     const standalonePaths = [
       "auth-redirect",
       "callback",
