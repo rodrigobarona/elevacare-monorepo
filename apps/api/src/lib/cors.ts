@@ -38,7 +38,7 @@ export function matchAllowedOrigin(origin: string): string | null {
     return origin
   }
 
-  if (url.hostname.endsWith(".preview.eleva.care")) {
+  if (url.hostname === "eleva.care" || url.hostname.endsWith(".eleva.care")) {
     return origin
   }
 

@@ -54,6 +54,13 @@ export interface BlobUploadCompletedPayload {
   contentType: string | null
 }
 
+export interface AuthorizeResult extends BlobUploadTokenPayload {
+  /** Per-request MIME type override; takes precedence over top-level default. */
+  allowedContentTypes?: readonly string[]
+  /** Per-request size limit override; takes precedence over top-level default. */
+  maxBytes?: number
+}
+
 export interface HandleBlobUploadInput {
   request: Request
 
@@ -62,19 +69,23 @@ export interface HandleBlobUploadInput {
    * Throw to reject. Return a payload that identifies the user and
    * the logical upload kind; it is sealed into the Blob token and
    * echoed back on `onCompleted`.
+   *
+   * Optionally return `allowedContentTypes` / `maxBytes` to override
+   * the top-level defaults on a per-pathname basis.
    */
   authorize: (
     pathname: string,
     clientPayload: string | null
-  ) => Promise<BlobUploadTokenPayload> | BlobUploadTokenPayload
+  ) => Promise<AuthorizeResult> | AuthorizeResult
 
   /**
    * MIME types accepted by this upload. Defaults to PDF + common
-   * image formats.
+   * image formats. Can be overridden per-request via `authorize`.
    */
   allowedContentTypes?: readonly string[]
 
-  /** Maximum file size in bytes. Defaults to 10 MB. */
+  /** Maximum file size in bytes. Defaults to 10 MB.
+   *  Can be overridden per-request via `authorize`. */
   maxBytes?: number
 
   /**
@@ -102,10 +113,10 @@ export async function handleBlobUpload(
   const { BLOB_READ_WRITE_TOKEN } = requireBlobEnv()
   const body = (await input.request.json()) as HandleUploadBody
 
-  const allowedContentTypes = input.allowedContentTypes
+  const fallbackContentTypes = input.allowedContentTypes
     ? [...input.allowedContentTypes]
     : [...DEFAULT_ALLOWED_CONTENT_TYPES]
-  const maxBytes = input.maxBytes ?? DEFAULT_MAX_BYTES
+  const fallbackMaxBytes = input.maxBytes ?? DEFAULT_MAX_BYTES
 
   const json = await handleUpload({
     body,
@@ -113,11 +124,20 @@ export async function handleBlobUpload(
     token: BLOB_READ_WRITE_TOKEN,
     onBeforeGenerateToken: async (pathname, clientPayload) => {
       const decision = await input.authorize(pathname, clientPayload)
+
+      const contentTypes = decision.allowedContentTypes
+        ? [...decision.allowedContentTypes]
+        : fallbackContentTypes
+      const maxSize = decision.maxBytes ?? fallbackMaxBytes
+
       return {
-        allowedContentTypes,
+        allowedContentTypes: contentTypes,
         addRandomSuffix: true,
-        maximumSizeInBytes: maxBytes,
-        tokenPayload: JSON.stringify(decision),
+        maximumSizeInBytes: maxSize,
+        tokenPayload: JSON.stringify({
+          userId: decision.userId,
+          kind: decision.kind,
+        }),
       }
     },
     onUploadCompleted: async ({ blob, tokenPayload }) => {

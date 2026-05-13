@@ -46,7 +46,7 @@ export async function updateLanguagePreference(
       httpOnly: false,
     })
 
-    revalidatePath("/settings")
+    revalidatePath("/", "layout")
     return { ok: true, saved: true }
   } catch (err) {
     console.error("updateLanguagePreference failed", err)

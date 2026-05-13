@@ -1,6 +1,7 @@
 "use client"
 
-import { useActionState } from "react"
+import { useEffect, useRef, useActionState } from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations, useLocale } from "next-intl"
 import { Label } from "@eleva/ui/components/label"
 import { Button } from "@eleva/ui/components/button"
@@ -17,11 +18,21 @@ import { updateLanguagePreference } from "./actions"
 export function LanguagePreference() {
   const t = useTranslations("settings")
   const currentLocale = useLocale()
+  const router = useRouter()
+  const prevSavedRef = useRef(false)
 
   const [state, formAction, isPending] = useActionState(
     updateLanguagePreference,
     { ok: true }
   )
+
+  useEffect(() => {
+    const justSaved = state.ok && "saved" in state && state.saved === true
+    if (justSaved && !prevSavedRef.current) {
+      router.refresh()
+    }
+    prevSavedRef.current = justSaved ?? false
+  }, [state, router])
 
   return (
     <form action={formAction} className="space-y-4">

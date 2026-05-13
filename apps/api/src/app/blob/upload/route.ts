@@ -81,11 +81,6 @@ export async function POST(request: Request): Promise<Response> {
     const authHeader = request.headers.get("authorization")
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
 
-    let policyOverrides: {
-      allowedContentTypes?: readonly string[]
-      maxBytes?: number
-    } = {}
-
     return await handleBlobUpload({
       request,
       responseHeaders: cors,
@@ -97,14 +92,13 @@ export async function POST(request: Request): Promise<Response> {
         const resolved = resolvePolicy(pathname)
         if (!resolved) throw new Error("invalid-pathname")
 
-        policyOverrides = {
+        return {
+          userId: verified.userId,
+          kind: resolved.kind,
           allowedContentTypes: resolved.policy.allowedContentTypes,
           maxBytes: resolved.policy.maxBytes,
         }
-
-        return { userId: verified.userId, kind: resolved.kind }
       },
-      ...policyOverrides,
     })
   } catch (err) {
     console.error("blob upload failed", err)
