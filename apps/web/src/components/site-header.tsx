@@ -17,7 +17,7 @@ interface SiteHeaderProps {
 
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   const t = await getTranslations("nav")
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3001"
+  const appUrl = process.env.APP_URL || "http://localhost:3001"
 
   let user: {
     firstName: string | null
