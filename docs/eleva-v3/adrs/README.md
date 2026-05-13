@@ -40,7 +40,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 
 ## Current ADRs
 
-- [`ADR-001-app-topology.md`](./ADR-001-app-topology.md) — one authenticated product app first; public web and authenticated product are separate apps
+- [`ADR-001-app-topology.md`](./ADR-001-app-topology.md) — ~~one authenticated product app first~~ (superseded by ADR-015)
 - [`ADR-002-package-manager.md`](./ADR-002-package-manager.md) — pnpm installer + bun as task runner; bun install banned
 - [`ADR-003-tenancy-and-rls.md`](./ADR-003-tenancy-and-rls.md) — Neon RLS with `withOrgContext()`; two Neon projects (main + audit)
 - [`ADR-004-scheduling-and-calendar-oauth.md`](./ADR-004-scheduling-and-calendar-oauth.md) — Eleva-owned Google/Microsoft OAuth in `packages/calendar`; cal.com-inspired scheduling model with online/in-person/phone modes
@@ -54,6 +54,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-012-portugal-first-launch.md`](./ADR-012-portugal-first-launch.md) — PT-first launch with ERS, Stripe Tax PT/NIF, MB WAY, TOConline; ES deferred to phase 2
 - [`ADR-013-accounting-integration.md`](./ADR-013-accounting-integration.md) — Two-tier invoicing; Tier 1 TOConline; Tier 2 adapter registry (TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T)
 - [`ADR-014-multi-zone-rewrites.md`](./ADR-014-multi-zone-rewrites.md) — Single canonical public domain (`eleva.care`) with Vercel multi-zone rewrites; gateway app owns root; sub-apps served under `/app`, `/api`, `/docs` prefixes; internal Vercel URLs redirected/noindexed
+- [`ADR-015-multi-app-split.md`](./ADR-015-multi-app-split.md) — Split `apps/app` into role-focused micro-apps (member, account, expert, team, admin, academy) on `eleva.care` via gateway proxy rewrites + subdomains; Vercel Microfrontends rejected on cost
 
 ## ADR Template
 

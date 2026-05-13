@@ -1,9 +1,11 @@
 # ADR-001: Start With One Authenticated Product App
 
 ## Status
-Accepted
+
+Superseded by [ADR-015-multi-app-split.md](./ADR-015-multi-app-split.md)
 
 ## Date
+
 2026-04-22
 
 ## Context

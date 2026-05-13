@@ -76,6 +76,7 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   // Future surfaces kept for phase-2 (never let a user grab these)
   "academy",
   "courses",
+  "team",
   "teams",
 
   // Branded subresources / subdomains (collide with email/dns hygiene)

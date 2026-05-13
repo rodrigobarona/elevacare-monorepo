@@ -1,0 +1,35 @@
+{
+  "name": "@eleva/academy",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --turbopack --port 3005",
+    "build": "next build",
+    "start": "next start --port 3005",
+    "lint": "eslint .",
+    "format": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eleva/auth": "workspace:^",
+    "@eleva/config": "workspace:^",
+    "@eleva/db": "workspace:^",
+    "@eleva/observability": "workspace:^",
+    "@eleva/ui": "workspace:*",
+    "next": "^16.2.3",
+    "next-intl": "^4.9.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "zod": "^3.25.17"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/react": "^19.1.7",
+    "@types/react-dom": "^19.1.6",
+    "eslint": "^9.39.2",
+    "prettier": "^3.5.3",
+    "typescript": "^5.9.3"
+  }
+}

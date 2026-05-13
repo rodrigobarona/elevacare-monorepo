@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "courses": "Courses",
+    "analytics": "Analytics",
+    "settings": "Settings"
+  },
+  "academy": {
+    "title": "Eleva Academy",
+    "subtitle": "Create and manage your online courses.",
+    "courses": {
+      "title": "Courses",
+      "create": "New course",
+      "empty": "You haven't created any courses yet.",
+      "createFirst": "Create your first course"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "courses": "Cursos",
+    "analytics": "Analíticas",
+    "settings": "Configuración"
+  },
+  "academy": {
+    "title": "Eleva Academy",
+    "subtitle": "Crea y gestiona tus cursos online.",
+    "courses": {
+      "title": "Cursos",
+      "create": "Nuevo curso",
+      "empty": "Aún no has creado ningún curso.",
+      "createFirst": "Crea tu primer curso"
+    }
+  }
+}
