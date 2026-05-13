@@ -64,6 +64,13 @@
       "when": 1778611612173,
       "tag": "0008_drop-pii-columns",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1778676210152,
+      "tag": "0009_early_epoch",
+      "breakpoints": true
     }
   ]
 }

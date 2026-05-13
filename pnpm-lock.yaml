@@ -161,6 +161,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
+      '@eleva/storage':
+        specifier: workspace:^
+        version: link:../../packages/storage
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui

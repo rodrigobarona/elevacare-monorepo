@@ -3,7 +3,7 @@
  * per identity-rbac-spec.md. NOT stored; computed at session-read time.
  */
 export type ProductLabel =
-  | "patient"
+  | "member"
   | "expert"
   | "clinic_admin"
   | "eleva_operator"
@@ -14,6 +14,7 @@ export interface ElevaSession {
     workosUserId: string
     email: string
     displayName?: string | null
+    avatarUrl?: string | null
   }
   /** Currently active organization context (first membership by default). */
   orgId: string

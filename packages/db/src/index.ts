@@ -73,4 +73,5 @@ export {
   replaceBusySources,
   replaceDestinationCalendar,
 } from "./queries/calendars"
+export { getUserAvatarUrl, updateUserAvatarUrl } from "./queries/users"
 export type { LocalizedText } from "./schema/main/shared"

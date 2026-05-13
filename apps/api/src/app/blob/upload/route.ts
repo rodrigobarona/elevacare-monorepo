@@ -32,6 +32,10 @@ interface UploadPolicy {
   maxBytes?: number
 }
 
+const AVATAR_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
+
+const AVATAR_MAX_BYTES = 2 * 1024 * 1024 // 2 MB
+
 const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
   "become-partner": {
     match: (pathname) => {
@@ -40,6 +44,14 @@ const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
       )
       return m ? m[1]! : null
     },
+  },
+  avatar: {
+    match: (pathname) => {
+      const m = pathname.match(/^avatar\/profile\/[^/]+$/)
+      return m ? "profile" : null
+    },
+    allowedContentTypes: AVATAR_CONTENT_TYPES,
+    maxBytes: AVATAR_MAX_BYTES,
   },
 }
 
@@ -69,6 +81,11 @@ export async function POST(request: Request): Promise<Response> {
     const authHeader = request.headers.get("authorization")
     const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
 
+    let policyOverrides: {
+      allowedContentTypes?: readonly string[]
+      maxBytes?: number
+    } = {}
+
     return await handleBlobUpload({
       request,
       responseHeaders: cors,
@@ -80,8 +97,14 @@ export async function POST(request: Request): Promise<Response> {
         const resolved = resolvePolicy(pathname)
         if (!resolved) throw new Error("invalid-pathname")
 
+        policyOverrides = {
+          allowedContentTypes: resolved.policy.allowedContentTypes,
+          maxBytes: resolved.policy.maxBytes,
+        }
+
         return { userId: verified.userId, kind: resolved.kind }
       },
+      ...policyOverrides,
     })
   } catch (err) {
     console.error("blob upload failed", err)

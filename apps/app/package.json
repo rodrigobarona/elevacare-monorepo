@@ -22,6 +22,7 @@
     "@eleva/flags": "workspace:^",
     "@eleva/integrations": "workspace:^",
     "@eleva/observability": "workspace:^",
+    "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@radix-ui/themes": "^3.3.0",
     "@stripe/stripe-js": "^9.4.0",

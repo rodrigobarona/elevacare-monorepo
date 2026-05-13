@@ -48,7 +48,24 @@
       "title": "Profile",
       "email": "Email",
       "language": "Language",
-      "save": "Save"
+      "save": "Save",
+      "saving": "Saving...",
+      "languageSaved": "Language preference updated.",
+      "languageError": "Could not update language. Please try again."
+    },
+    "avatar": {
+      "title": "Profile photo",
+      "upload": "Upload photo",
+      "remove": "Remove",
+      "hint": "JPG, PNG or WebP. Max 2 MB.",
+      "tooLarge": "File is too large. Maximum size is 2 MB.",
+      "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "saveFailed": "Could not save avatar. Please try again.",
+      "removeFailed": "Could not remove avatar. Please try again."
+    },
+    "language": {
+      "title": "Language"
     },
     "security": {
       "title": "Security"

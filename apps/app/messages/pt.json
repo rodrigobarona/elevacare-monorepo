@@ -48,7 +48,24 @@
       "title": "Perfil",
       "email": "E-mail",
       "language": "Idioma",
-      "save": "Guardar"
+      "save": "Guardar",
+      "saving": "A guardar...",
+      "languageSaved": "Preferência de idioma atualizada.",
+      "languageError": "Não foi possível atualizar o idioma. Tente novamente."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "upload": "Carregar foto",
+      "remove": "Remover",
+      "hint": "JPG, PNG ou WebP. Máx. 2 MB.",
+      "tooLarge": "O ficheiro é demasiado grande. Tamanho máximo: 2 MB.",
+      "invalidType": "Tipo de ficheiro não suportado. Use JPG, PNG ou WebP.",
+      "uploadFailed": "O carregamento falhou. Tente novamente.",
+      "saveFailed": "Não foi possível guardar o avatar. Tente novamente.",
+      "removeFailed": "Não foi possível remover o avatar. Tente novamente."
+    },
+    "language": {
+      "title": "Idioma"
     },
     "security": {
       "title": "Segurança"

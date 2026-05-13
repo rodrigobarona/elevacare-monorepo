@@ -29,6 +29,7 @@ export async function resolveSessionFromWorkosUser(
   const rows = await db()
     .select({
       userId: main.users.id,
+      avatarUrl: main.users.avatarUrl,
       orgId: main.organizations.id,
       workosOrgId: main.organizations.workosOrgId,
       orgType: main.organizations.type,
@@ -70,6 +71,7 @@ export async function resolveSessionFromWorkosUser(
       workosUserId,
       email: tokenUser.email,
       displayName,
+      avatarUrl: picked.avatarUrl,
     },
     orgId: picked.orgId,
     workosOrgId: picked.workosOrgId,
