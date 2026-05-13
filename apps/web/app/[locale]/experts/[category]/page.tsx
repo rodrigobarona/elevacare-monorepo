@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
-import { ChevronRight } from "lucide-react"
 
 import { ExpertCard } from "@/components/expert-card"
 import { MarketplaceFilters } from "@/components/marketplace-filters"
-import { Link } from "@/i18n/navigation"
+import { Section } from "@/components/section"
+import { SectionHeading } from "@/components/section-heading"
+import { Eyebrow } from "@/components/eyebrow"
 import {
   EmptyState,
+  pickCategoryName,
   safeListCategories,
   safeListExperts,
 } from "@/lib/marketplace-helpers"
@@ -15,6 +17,7 @@ import {
   parseSearchParams,
   buildExpertFilters,
 } from "@/lib/marketplace-search-params"
+import { Link } from "@/i18n/navigation"
 
 interface PageProps {
   params: Promise<{ locale: string; category: string }>
@@ -25,14 +28,12 @@ export async function generateMetadata({
   params,
 }: PageProps): Promise<Metadata> {
   const { locale, category } = await params
-  const cats = await safeListCategories()
-  const cat = cats.find((c) => c.slug === category)
+  const allCats = await safeListCategories()
+  const cat = allCats.find((c) => c.slug === category)
   if (!cat) return {}
   const name = cat.displayName[locale] ?? cat.displayName.en
-  return {
-    title: name,
-    description: cat.description?.[locale] ?? cat.description?.en ?? undefined,
-  }
+  const t = await getTranslations({ locale, namespace: "category" })
+  return { title: name, description: t("expertCount", { count: 0 }) }
 }
 
 export default async function CategoryPage({
@@ -43,56 +44,72 @@ export default async function CategoryPage({
   setRequestLocale(locale)
   const search = await searchParams
 
-  const cats = await safeListCategories()
-  const cat = cats.find((c) => c.slug === category)
-  if (!cat) {
-    notFound()
-  }
+  const allCats = await safeListCategories()
+  const cat = allCats.find((c) => c.slug === category)
+  if (!cat) notFound()
 
-  const t = await getTranslations()
+  const catName = cat.displayName[locale] ?? cat.displayName.en
+  const catDesc = cat.description?.[locale] ?? cat.description?.en ?? null
+
   const parsed = parseSearchParams(search)
+  parsed.category = category
   parsed.locale = locale
-  const baseFilters = buildExpertFilters(parsed, {
-    categorySlug: cat.slug,
-  })
-  const expertsResult = await safeListExperts(baseFilters)
 
-  const name = cat.displayName[locale] ?? cat.displayName.en
-  const description = cat.description?.[locale] ?? cat.description?.en ?? null
-  const otherCategories = cats
-    .filter((c) => c.slug !== cat.slug)
-    .map((c) => ({
-      slug: c.slug,
-      name: c.displayName[locale] ?? c.displayName.en,
-    }))
+  const [t, expertsResult] = await Promise.all([
+    getTranslations(),
+    safeListExperts(buildExpertFilters(parsed)),
+  ])
+
+  const categories = allCats.map((c) => pickCategoryName(c, locale))
 
   return (
-    <div className="min-h-svh bg-muted/30">
+    <>
       <section className="border-b border-border/60 bg-background">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <Breadcrumb category={name} />
-          <h1 className="mt-4 font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            {name}
-          </h1>
-          {description ? (
+          <nav
+            className="mb-4 text-sm text-muted-foreground"
+            aria-label="Breadcrumb"
+          >
+            <ol className="flex items-center gap-1.5">
+              <li>
+                <Link href="/" className="hover:text-foreground">
+                  {t("category.breadcrumbHome")}
+                </Link>
+              </li>
+              <li aria-hidden>/</li>
+              <li>
+                <Link href="/experts" className="hover:text-foreground">
+                  {t("category.breadcrumbExperts")}
+                </Link>
+              </li>
+              <li aria-hidden>/</li>
+              <li className="text-foreground" aria-current="page">
+                {catName}
+              </li>
+            </ol>
+          </nav>
+          <Eyebrow>{t("marketplace.filters.category")}</Eyebrow>
+          <SectionHeading as="h1" className="mt-2">
+            {catName}
+          </SectionHeading>
+          {catDesc && (
             <p className="mt-3 max-w-2xl text-base text-muted-foreground">
-              {description}
+              {catDesc}
             </p>
-          ) : null}
-          <p className="mt-3 text-sm text-muted-foreground/80">
-            {t("category.expertCount", { count: expertsResult.total })}
-          </p>
+          )}
           <div className="mt-8">
             <MarketplaceFilters
-              categories={otherCategories}
-              showCategoryFilter={false}
-              basePath={`/experts/${cat.slug}`}
+              categories={categories}
+              basePath={`/experts/${category}`}
             />
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+      <Section className="bg-muted/20">
+        <p className="mb-6 text-sm text-muted-foreground">
+          {t("category.expertCount", { count: expertsResult.total })}
+        </p>
         {expertsResult.experts.length === 0 ? (
           <EmptyState
             title={t("category.noExperts.title")}
@@ -120,27 +137,7 @@ export default async function CategoryPage({
             ))}
           </ul>
         )}
-      </section>
-    </div>
-  )
-}
-
-async function Breadcrumb({ category }: { category: string }) {
-  const t = await getTranslations()
-  return (
-    <nav
-      aria-label="Breadcrumb"
-      className="flex items-center gap-1.5 text-xs text-muted-foreground"
-    >
-      <Link href="/" className="hover:text-foreground">
-        {t("category.breadcrumbHome")}
-      </Link>
-      <ChevronRight className="size-3" />
-      <Link href="/experts" className="hover:text-foreground">
-        {t("category.breadcrumbExperts")}
-      </Link>
-      <ChevronRight className="size-3" />
-      <span className="text-foreground">{category}</span>
-    </nav>
+      </Section>
+    </>
   )
 }

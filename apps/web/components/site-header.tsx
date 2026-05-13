@@ -1,4 +1,5 @@
 import NextLink from "next/link"
+import Image from "next/image"
 import { getTranslations } from "next-intl/server"
 import { getAuthUser } from "@eleva/auth/server"
 
@@ -55,8 +56,22 @@ export async function SiteHeader() {
         <div className="flex items-center gap-8">
           <Link
             href="/"
-            className="font-heading text-lg font-semibold tracking-tight text-foreground"
+            className="flex items-center gap-2 font-heading text-lg font-semibold tracking-tight text-foreground"
           >
+            <Image
+              src="/brand/eleva-mark-color.png"
+              alt=""
+              width={28}
+              height={28}
+              className="dark:hidden"
+            />
+            <Image
+              src="/brand/eleva-mark-white.png"
+              alt=""
+              width={28}
+              height={28}
+              className="hidden dark:block"
+            />
             {t("site.name")}
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
@@ -100,13 +115,7 @@ export async function SiteHeader() {
               label: t(link.key),
             }))}
             siteName={t("site.name")}
-            menuLabel={t("nav.menu")}
-            signinLabel={t("nav.signin")}
-            signupLabel={t("nav.signup")}
             user={userProps}
-            dashboardLabel={t("nav.dashboard")}
-            settingsLabel={t("nav.settings")}
-            signoutLabel={t("nav.signout")}
           />
         </div>
       </div>

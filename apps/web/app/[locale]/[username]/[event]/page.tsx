@@ -1,121 +1,183 @@
-import { headers } from "next/headers"
+import { cache } from "react"
 import { notFound } from "next/navigation"
+import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
-import { getTranslations } from "next-intl/server"
+import { Clock, Globe2, Video, MapPin, Phone, BadgeCheck } from "lucide-react"
+
 import { findExpertByUsername, findPublicEventType } from "@eleva/db"
+import { Badge } from "@eleva/ui/components/badge"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@eleva/ui/components/avatar"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
-import { Badge } from "@eleva/ui/components/badge"
+import { Link } from "@/i18n/navigation"
+import { SectionHeading } from "@/components/section-heading"
 import { SlotPicker } from "./slot-picker"
-
-type LocalizedText = { en: string; pt?: string; es?: string }
 
 interface PageProps {
   params: Promise<{ locale: string; username: string; event: string }>
 }
 
-function pickText(text: LocalizedText, locale: string): string {
-  if (locale === "pt" && text.pt) return text.pt
-  if (locale === "es" && text.es) return text.es
-  return text.en
+const getExpert = cache(async (username: string) => {
+  return findExpertByUsername(username)
+})
+
+const getEvent = cache(async (expertId: string, slug: string) => {
+  return findPublicEventType(expertId, slug)
+})
+
+function localizedText(
+  text: Record<string, string> | string | null | undefined,
+  locale: string
+): string {
+  if (!text) return ""
+  if (typeof text === "string") return text
+  return text[locale] ?? text.en ?? ""
 }
 
-export async function generateMetadata(props: PageProps): Promise<Metadata> {
-  const { locale, username, event: eventSlug } = await props.params
-  const expert = await findExpertByUsername(username)
-  if (!expert) return { title: "Not Found" }
-
-  const eventType = await findPublicEventType(expert.id, eventSlug)
-  if (!eventType) return { title: "Not Found" }
-
-  const title = pickText(eventType.title as LocalizedText, locale)
-
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale, username, event: eventSlug } = await params
+  const expert = await getExpert(username)
+  if (!expert) return {}
+  const eventType = await getEvent(expert.id, eventSlug)
+  if (!eventType) return {}
+  const title = localizedText(eventType.title, locale)
   return {
-    title: `Book ${title} with ${expert.displayName} — Eleva.care`,
-    description: eventType.description
-      ? pickText(eventType.description as LocalizedText, locale)
-      : `Book a ${eventType.durationMinutes}-minute ${title} session with ${expert.displayName}`,
+    title: `${title} · ${expert.displayName}`,
+    description: localizedText(eventType.description, locale) || undefined,
   }
 }
 
-export default async function BookingPage(props: PageProps) {
-  const { locale, username, event: eventSlug } = await props.params
+const modeIcons: Record<string, typeof Video> = {
+  online: Video,
+  in_person: MapPin,
+  phone: Phone,
+}
 
-  const expert = await findExpertByUsername(username)
+export default async function EventPage({ params }: PageProps) {
+  const { locale, username, event: eventSlug } = await params
+  setRequestLocale(locale)
+
+  const expert = await getExpert(username)
   if (!expert) notFound()
 
-  const eventType = await findPublicEventType(expert.id, eventSlug)
+  const eventType = await getEvent(expert.id, eventSlug)
   if (!eventType) notFound()
 
-  const h = await headers()
-  const ssrTz = h.get("x-vercel-ip-timezone") ?? "UTC"
-  const t = await getTranslations("slotPicker")
-
-  const title = pickText(eventType.title as LocalizedText, locale)
-  const description = eventType.description
-    ? pickText(eventType.description as LocalizedText, locale)
-    : null
-
-  const priceDisplay =
-    eventType.priceAmount > 0
-      ? (() => {
-          const fmt = new Intl.NumberFormat(locale, {
-            style: "currency",
-            currency: eventType.currency,
-          })
-          const fractionDigits =
-            fmt.resolvedOptions().maximumFractionDigits ?? 2
-          return fmt.format(eventType.priceAmount / 10 ** fractionDigits)
-        })()
-      : "Free"
+  const t = await getTranslations()
+  const ModeIcon = modeIcons[eventType.sessionMode] ?? Video
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const evTitle = localizedText(eventType.title, locale)
+  const evDesc = localizedText(eventType.description, locale)
 
   return (
-    <div className="mx-auto max-w-4xl space-y-8 px-4 py-8">
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {expert.displayName}
-              </p>
-              <CardTitle className="text-2xl">{title}</CardTitle>
-              {description && (
-                <p className="text-muted-foreground">{description}</p>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Badge variant="secondary">
-                {eventType.sessionMode.replace("_", " ")}
-              </Badge>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-6 text-sm text-muted-foreground">
-            <span>{eventType.durationMinutes} min</span>
-            <span>{priceDisplay}</span>
-            <span>
-              {(eventType.languages as string[])
-                .map((l) => l.toUpperCase())
-                .join(", ")}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+    <article className="mx-auto max-w-5xl px-4 py-12 sm:px-6 lg:py-16">
+      <nav
+        className="mb-6 text-sm text-muted-foreground"
+        aria-label="Breadcrumb"
+      >
+        <ol className="flex items-center gap-1.5">
+          <li>
+            <Link href={`/${username}`} className="hover:text-foreground">
+              {expert.displayName}
+            </Link>
+          </li>
+          <li aria-hidden>/</li>
+          <li className="text-foreground" aria-current="page">
+            {evTitle}
+          </li>
+        </ol>
+      </nav>
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-medium">{t("heading")}</h2>
-        <SlotPicker
-          username={username}
-          eventSlug={eventSlug}
-          durationMinutes={eventType.durationMinutes}
-          timezone={ssrTz}
-        />
-      </section>
-    </div>
+      <SectionHeading as="h1">{evTitle}</SectionHeading>
+      {evDesc && (
+        <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+          {evDesc}
+        </p>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Badge variant="outline" className="gap-1 text-xs">
+          <Clock className="size-3" />
+          {eventType.durationMinutes} min
+        </Badge>
+        <Badge variant="outline" className="gap-1 text-xs">
+          <ModeIcon className="size-3" />
+          {t(`marketplace.sessionMode.${eventType.sessionMode}`)}
+        </Badge>
+        {eventType.languages.length > 0 && (
+          <Badge variant="outline" className="gap-1 text-xs">
+            <Globe2 className="size-3" />
+            {eventType.languages.map((l: string) => l.toUpperCase()).join(", ")}
+          </Badge>
+        )}
+        <Badge className="text-xs font-semibold">
+          {new Intl.NumberFormat("pt-PT", {
+            style: "currency",
+            currency: eventType.currency,
+          }).format(eventType.priceAmount / 100)}
+        </Badge>
+      </div>
+
+      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_280px]">
+        <Card className="border-border/60">
+          <CardHeader>
+            <CardTitle>{t("slotPicker.heading")}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <SlotPicker
+              username={username}
+              eventSlug={eventSlug}
+              durationMinutes={eventType.durationMinutes}
+              timezone={tz}
+            />
+          </CardContent>
+        </Card>
+
+        <aside className="hidden lg:block">
+          <Card className="sticky top-24 border-border/60">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-3">
+                <Avatar className="size-12">
+                  {expert.avatarUrl && (
+                    <AvatarImage src={expert.avatarUrl} alt="" />
+                  )}
+                  <AvatarFallback className="text-sm">
+                    {initials(expert.displayName)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <div className="flex items-center gap-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      {expert.displayName}
+                    </p>
+                    <BadgeCheck className="size-3.5 text-primary" />
+                  </div>
+                  <Link
+                    href={`/${username}`}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    {t("marketplace.card.viewProfile")}
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </aside>
+      </div>
+    </article>
   )
+}
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/).slice(0, 2)
+  return parts.map((p) => p[0]?.toUpperCase()).join("") || "EL"
 }

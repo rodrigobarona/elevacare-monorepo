@@ -1,16 +1,23 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
-import { ArrowRight, ShieldCheck, Languages, Clock } from "lucide-react"
+import { ArrowRight, Search, CalendarCheck, Video } from "lucide-react"
 
-import { listCategories } from "@eleva/db"
+import { listCategories, listExperts } from "@eleva/db"
 import { Button } from "@eleva/ui/components/button"
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
 import { Link } from "@/i18n/navigation"
+import { GradientHero } from "@/components/gradient-hero"
+import { TrustStrip } from "@/components/trust-strip"
+import { Section } from "@/components/section"
+import { Eyebrow } from "@/components/eyebrow"
+import { SectionHeading } from "@/components/section-heading"
+import { CategoryCard } from "@/components/category-card"
+import { ExpertCard } from "@/components/expert-card"
+import { AudienceSplit } from "@/components/audience-split"
 
 interface PageProps {
   params: Promise<{ locale: string }>
@@ -21,242 +28,333 @@ export default async function HomePage({ params }: PageProps) {
   setRequestLocale(locale)
   const t = await getTranslations()
 
-  const categories = await safeListCategories()
+  const [categories, allExperts] = await Promise.all([
+    safeQuery(() => listCategories()),
+    safeQuery(() => listExperts({ pageSize: 24, locale })),
+  ])
+
+  const featuredExperts =
+    allExperts?.experts.filter((e) => e.topExpertActive).slice(0, 8) ?? []
 
   return (
     <>
-      <Hero
+      <GradientHero
+        variant="split"
         eyebrow={t("home.hero.eyebrow")}
-        title={t("home.hero.title")}
+        title={
+          <>
+            {t("home.hero.title").split(",")[0]},
+            <strong>{t("home.hero.title").split(",")[1]}</strong>
+          </>
+        }
         subtitle={t("home.hero.subtitle")}
-        ctaPrimary={t("home.hero.ctaPrimary")}
-        ctaSecondary={t("home.hero.ctaSecondary")}
-        trustEN={t("home.hero.trustEN")}
-        trustOnline={t("home.hero.trustOnline")}
-      />
-
-      <ValueProps />
-
-      <CategoriesPreview
-        title={t("home.categories.title")}
-        subtitle={t("home.categories.subtitle")}
-        viewAllLabel={t("home.categories.viewAll")}
-        categories={categories.slice(0, 6).map((c) => ({
-          slug: c.slug,
-          icon: c.icon,
-          name: c.displayName[locale] ?? c.displayName.en,
-          description: c.description?.[locale] ?? c.description?.en ?? null,
-        }))}
-      />
-
-      <PartnerCta
-        title={t("home.becomePartner.title")}
-        body={t("home.becomePartner.body")}
-        cta={t("home.becomePartner.cta")}
-      />
-    </>
-  )
-}
-
-function Hero({
-  eyebrow,
-  title,
-  subtitle,
-  ctaPrimary,
-  ctaSecondary,
-  trustEN,
-  trustOnline,
-}: {
-  eyebrow: string
-  title: string
-  subtitle: string
-  ctaPrimary: string
-  ctaSecondary: string
-  trustEN: string
-  trustOnline: string
-}) {
-  return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:py-28">
-        <div className="max-w-2xl">
-          <p className="text-sm font-medium tracking-wide text-primary uppercase">
-            {eyebrow}
-          </p>
-          <h1 className="mt-4 font-heading text-4xl leading-[1.05] font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            {title}
-          </h1>
-          <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            {subtitle}
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+        imageSrc="/img/lifestyle/Smiling-Women-Photo.jpg"
+        imageAlt=""
+        actions={
+          <>
             <Button size="lg" asChild>
               <Link href="/experts">
-                {ctaPrimary}
+                {t("home.hero.ctaPrimary")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <Link href="/become-partner">{ctaSecondary}</Link>
+              <Link href="/become-partner">{t("home.hero.ctaSecondary")}</Link>
             </Button>
-          </div>
-          <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
-            <span className="inline-flex items-center gap-2">
-              <ShieldCheck className="size-4 text-primary" />
-              {trustEN}
-            </span>
-            <span className="inline-flex items-center gap-2">
-              <Clock className="size-4 text-primary" />
-              {trustOnline}
-            </span>
-          </div>
-        </div>
-      </div>
-    </section>
-  )
-}
+          </>
+        }
+        trust={
+          <TrustStrip
+            items={[
+              { icon: "shield", label: t("home.hero.trustEN") },
+              { icon: "clock", label: t("home.hero.trustOnline") },
+            ]}
+          />
+        }
+      />
 
-async function ValueProps() {
-  const t = await getTranslations("home.valueProps")
-  const items: Array<{
-    key: "trust" | "languages" | "instant"
-    icon: React.ComponentType<{ className?: string }>
-  }> = [
-    { key: "trust", icon: ShieldCheck },
-    { key: "languages", icon: Languages },
-    { key: "instant", icon: Clock },
-  ]
-  return (
-    <section className="py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-          {t("title")}
-        </h2>
+      <Section>
+        <Eyebrow>{t("home.valueProps.title")}</Eyebrow>
+        <SectionHeading className="mt-3">
+          {t("home.valueProps.title")}
+        </SectionHeading>
         <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {items.map(({ key, icon: Icon }) => (
+          {(["trust", "languages", "instant"] as const).map((key) => (
             <Card key={key} className="border-border/60">
               <CardHeader>
-                <div className="mb-3 inline-flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Icon className="size-5" />
-                </div>
-                <CardTitle>{t(`items.${key}.title`)}</CardTitle>
+                <CardTitle>{t(`home.valueProps.items.${key}.title`)}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm leading-relaxed text-muted-foreground">
-                  {t(`items.${key}.body`)}
+                  {t(`home.valueProps.items.${key}.body`)}
                 </p>
               </CardContent>
             </Card>
           ))}
         </div>
-      </div>
-    </section>
-  )
-}
+      </Section>
 
-function CategoriesPreview({
-  title,
-  subtitle,
-  viewAllLabel,
-  categories,
-}: {
-  title: string
-  subtitle: string
-  viewAllLabel: string
-  categories: Array<{
-    slug: string
-    icon: string | null
-    name: string
-    description: string | null
-  }>
-}) {
-  if (categories.length === 0) return null
-  return (
-    <section className="bg-muted/30 py-16">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="flex items-end justify-between gap-4">
-          <div className="max-w-2xl">
-            <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-              {title}
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">{subtitle}</p>
-          </div>
-          <Button variant="ghost" asChild className="hidden sm:inline-flex">
-            <Link href="/experts">
-              {viewAllLabel}
-              <ArrowRight className="size-4" />
-            </Link>
-          </Button>
-        </div>
-        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((c) => (
-            <li key={c.slug}>
-              <Link
-                href={`/experts/${c.slug}`}
-                className="group block rounded-2xl focus-visible:ring-3 focus-visible:ring-ring"
-              >
-                <Card className="border-border/60 transition-colors group-hover:shadow-md hover:border-primary/40">
-                  <CardHeader>
-                    <CardTitle className="font-heading text-lg">
-                      {c.name}
-                    </CardTitle>
-                    {c.description ? (
-                      <CardDescription className="line-clamp-2">
-                        {c.description}
-                      </CardDescription>
-                    ) : null}
-                  </CardHeader>
-                </Card>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  )
-}
-
-function PartnerCta({
-  title,
-  body,
-  cta,
-}: {
-  title: string
-  body: string
-  cta: string
-}) {
-  return (
-    <section className="py-16">
-      <div className="mx-auto max-w-4xl px-4 sm:px-6">
-        <div className="rounded-3xl border border-border/60 bg-primary/5 p-10 text-center">
-          <h2 className="font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-            {title}
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-            {body}
-          </p>
-          <div className="mt-6 flex justify-center">
-            <Button size="lg" asChild>
-              <Link href="/become-partner">
-                {cta}
+      {categories && categories.length > 0 && (
+        <Section className="bg-muted/30">
+          <div className="flex items-end justify-between gap-4">
+            <div className="max-w-2xl">
+              <Eyebrow>{t("home.categories.subtitle")}</Eyebrow>
+              <SectionHeading className="mt-3">
+                {t("home.categories.title")}
+              </SectionHeading>
+            </div>
+            <Button variant="ghost" asChild className="hidden sm:inline-flex">
+              <Link href="/experts">
+                {t("home.categories.viewAll")}
                 <ArrowRight className="size-4" />
               </Link>
             </Button>
           </div>
+          <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {categories!.slice(0, 6).map((c) => (
+              <li key={c.slug}>
+                <CategoryCard
+                  slug={c.slug}
+                  name={c.displayName[locale] ?? c.displayName.en}
+                  description={
+                    c.description?.[locale] ?? c.description?.en ?? null
+                  }
+                />
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      <Section>
+        <Eyebrow>
+          {locale === "pt"
+            ? "Como funciona"
+            : locale === "es"
+              ? "Cómo funciona"
+              : "How it works"}
+        </Eyebrow>
+        <SectionHeading className="mt-3">
+          {locale === "pt"
+            ? "Três passos simples"
+            : locale === "es"
+              ? "Tres pasos sencillos"
+              : "Three simple steps"}
+        </SectionHeading>
+        <div className="mt-10 grid gap-8 md:grid-cols-3">
+          <HowItWorksStep
+            number="1"
+            icon={<Search className="size-6" />}
+            title={
+              locale === "pt"
+                ? "Descubra um especialista"
+                : locale === "es"
+                  ? "Descubra un especialista"
+                  : "Discover an expert"
+            }
+            body={
+              locale === "pt"
+                ? "Explore perfis verificados por especialidade, idioma ou país."
+                : locale === "es"
+                  ? "Explore perfiles verificados por especialidad, idioma o país."
+                  : "Browse verified profiles by specialty, language, or country."
+            }
+          />
+          <HowItWorksStep
+            number="2"
+            icon={<CalendarCheck className="size-6" />}
+            title={
+              locale === "pt"
+                ? "Agende uma sessão"
+                : locale === "es"
+                  ? "Agende una sesión"
+                  : "Book a session"
+            }
+            body={
+              locale === "pt"
+                ? "Escolha um horário que funcione para si e pague com segurança."
+                : locale === "es"
+                  ? "Elija un horario y pague de forma segura."
+                  : "Pick a time that works for you and pay securely."
+            }
+          />
+          <HowItWorksStep
+            number="3"
+            icon={<Video className="size-6" />}
+            title={
+              locale === "pt"
+                ? "Tenha a sua consulta"
+                : locale === "es"
+                  ? "Realice su consulta"
+                  : "Meet & follow up"
+            }
+            body={
+              locale === "pt"
+                ? "Encontre-se por vídeo e receba acompanhamento personalizado."
+                : locale === "es"
+                  ? "Reúnase por video y reciba seguimiento personalizado."
+                  : "Connect via video and get personalised follow-up."
+            }
+          />
         </div>
-      </div>
-    </section>
+      </Section>
+
+      {featuredExperts.length > 0 && (
+        <Section className="bg-muted/30">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <Eyebrow>
+                {locale === "pt"
+                  ? "Especialistas verificados"
+                  : locale === "es"
+                    ? "Especialistas verificados"
+                    : "Top experts"}
+              </Eyebrow>
+              <SectionHeading className="mt-3">
+                {locale === "pt"
+                  ? "Verificados e prontos para si"
+                  : locale === "es"
+                    ? "Verificados y listos para usted"
+                    : "Verified experts, ready when you are"}
+              </SectionHeading>
+            </div>
+            <Button variant="ghost" asChild className="hidden sm:inline-flex">
+              <Link href="/experts">
+                {t("home.categories.viewAll")}
+                <ArrowRight className="size-4" />
+              </Link>
+            </Button>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {featuredExperts.map((expert) => (
+              <ExpertCard
+                key={expert.username}
+                expert={expert}
+                labels={{
+                  topExpert: t("marketplace.card.topExpert"),
+                  languagesLabel: t("marketplace.card.languagesLabel"),
+                  countriesLabel: t("marketplace.card.countriesLabel"),
+                  viewProfile: t("marketplace.card.viewProfile"),
+                  sessionMode: {
+                    online: t("marketplace.sessionMode.online"),
+                    in_person: t("marketplace.sessionMode.in_person"),
+                    phone: t("marketplace.sessionMode.phone"),
+                  },
+                }}
+              />
+            ))}
+          </div>
+        </Section>
+      )}
+
+      <Section>
+        <AudienceSplit
+          items={[
+            {
+              title:
+                locale === "pt"
+                  ? "Procuro cuidado"
+                  : locale === "es"
+                    ? "Busco atención"
+                    : "I need care",
+              body:
+                locale === "pt"
+                  ? "Encontre especialistas verificados na sua língua."
+                  : locale === "es"
+                    ? "Encuentre especialistas verificados en su idioma."
+                    : "Find verified experts in your language.",
+              href: "/experts",
+              cta: t("home.hero.ctaPrimary"),
+            },
+            {
+              title:
+                locale === "pt"
+                  ? "Sou profissional"
+                  : locale === "es"
+                    ? "Soy profesional"
+                    : "I'm a professional",
+              body:
+                locale === "pt"
+                  ? "Junte-se ao marketplace e alcance pacientes."
+                  : locale === "es"
+                    ? "Únase al marketplace y alcance pacientes."
+                    : "Join the marketplace and reach patients.",
+              href: "/become-partner",
+              cta: t("home.hero.ctaSecondary"),
+            },
+            {
+              title:
+                locale === "pt"
+                  ? "Represento uma clínica"
+                  : locale === "es"
+                    ? "Represento una clínica"
+                    : "I represent a clinic",
+              body:
+                locale === "pt"
+                  ? "Gira a sua equipa e receba pacientes online."
+                  : locale === "es"
+                    ? "Gestione su equipo y reciba pacientes online."
+                    : "Manage your team and receive patients online.",
+              href: "/become-partner",
+              cta: t("home.hero.ctaSecondary"),
+            },
+          ]}
+        />
+      </Section>
+
+      <section className="bg-eleva-secondary-light/30 py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6">
+          <div className="rounded-3xl border border-border/60 bg-background p-10 text-center">
+            <SectionHeading>{t("home.becomePartner.title")}</SectionHeading>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+              {t("home.becomePartner.body")}
+            </p>
+            <div className="mt-6 flex justify-center">
+              <Button size="lg" asChild>
+                <Link href="/become-partner">
+                  {t("home.becomePartner.cta")}
+                  <ArrowRight className="size-4" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
   )
 }
 
-/**
- * The marketplace home page renders even before the DB is ready (e.g.
- * preview deployments without env vars). Swallow query errors and fall
- * back to an empty list rather than crashing the marketing surface.
- */
-async function safeListCategories() {
+function HowItWorksStep({
+  number,
+  icon,
+  title,
+  body,
+}: {
+  number: string
+  icon: React.ReactNode
+  title: string
+  body: string
+}) {
+  return (
+    <div className="text-center">
+      <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        {icon}
+      </div>
+      <p className="font-mono text-xs font-medium text-primary">{number}</p>
+      <h3 className="mt-1 font-heading text-lg font-semibold text-foreground">
+        {title}
+      </h3>
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+        {body}
+      </p>
+    </div>
+  )
+}
+
+async function safeQuery<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
-    return await listCategories()
+    return await fn()
   } catch {
-    return []
+    return null
   }
 }
