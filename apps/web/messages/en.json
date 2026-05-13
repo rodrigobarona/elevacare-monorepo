@@ -6,7 +6,10 @@
   "nav": {
     "about": "About",
     "home": "Home",
-    "signin": "Sign in"
+    "signin": "Sign in",
+    "signup": "Sign up",
+    "dashboard": "Dashboard",
+    "signout": "Sign out"
   },
   "home": {
     "eyebrow": "Women's health, elevated",

@@ -2,8 +2,7 @@ import { Button } from "@eleva/ui/components/button"
 import { ArrowRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { setRequestLocale } from "next-intl/server"
-import { Link } from "@/i18n/navigation"
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { SiteHeader } from "@/components/site-header"
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -13,34 +12,19 @@ export default async function Home({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  return <HomeContent />
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader nav={[{ href: "/about", labelKey: "about" }]} />
+      <HomeContent />
+    </div>
+  )
 }
 
 function HomeContent() {
   const t = useTranslations()
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-b px-6 py-4">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between">
-          <span className="text-lg font-semibold tracking-tight">
-            eleva<span className="text-primary">.care</span>
-          </span>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/about"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {t("nav.about")}
-            </Link>
-            <LanguageSwitcher />
-            <Button variant="outline" size="sm">
-              {t("nav.signin")}
-            </Button>
-          </div>
-        </nav>
-      </header>
-
+    <>
       <main className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
         <p className="mb-4 text-sm font-medium tracking-widest text-primary uppercase">
           {t("home.eyebrow")}
@@ -70,6 +54,6 @@ function HomeContent() {
           </p>
         </div>
       </footer>
-    </div>
+    </>
   )
 }

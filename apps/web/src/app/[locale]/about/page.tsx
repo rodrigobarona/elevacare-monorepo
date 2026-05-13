@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
-import { LanguageSwitcher } from "@/components/language-switcher"
+import { SiteHeader } from "@/components/site-header"
 import type { Metadata } from "next"
 
 type Props = {
@@ -36,34 +36,19 @@ export default async function AboutPage({ params }: Props) {
   const { locale } = await params
   setRequestLocale(locale)
 
-  return <AboutContent />
+  return (
+    <div className="flex min-h-dvh flex-col">
+      <SiteHeader nav={[{ href: "/", labelKey: "home" }]} />
+      <AboutContent />
+    </div>
+  )
 }
 
 function AboutContent() {
   const t = useTranslations()
 
   return (
-    <div className="flex min-h-dvh flex-col">
-      <header className="border-b px-6 py-4">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="text-lg font-semibold tracking-tight">
-            eleva<span className="text-primary">.care</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              {t("nav.home")}
-            </Link>
-            <LanguageSwitcher />
-            <Button variant="outline" size="sm">
-              {t("nav.signin")}
-            </Button>
-          </div>
-        </nav>
-      </header>
-
+    <>
       <main className="flex-1">
         <section className="px-6 py-24 text-center">
           <div className="mx-auto max-w-3xl">
@@ -140,6 +125,6 @@ function AboutContent() {
           </p>
         </div>
       </footer>
-    </div>
+    </>
   )
 }

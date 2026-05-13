@@ -6,7 +6,10 @@
   "nav": {
     "about": "Sobre",
     "home": "Início",
-    "signin": "Entrar"
+    "signin": "Entrar",
+    "signup": "Criar conta",
+    "dashboard": "Painel",
+    "signout": "Sair"
   },
   "home": {
     "eyebrow": "Saúde da mulher, elevada",

@@ -4,7 +4,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@eleva/ui", "@eleva/config"],
+  transpilePackages: ["@eleva/auth", "@eleva/config", "@eleva/db", "@eleva/ui"],
 }
 
 export default withNextIntl(nextConfig)

@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/auth": "workspace:^",
     "@eleva/config": "workspace:^",
     "@eleva/ui": "workspace:*",
     "lucide-react": "^1.8.0",

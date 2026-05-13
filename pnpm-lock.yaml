@@ -303,6 +303,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eleva/auth':
+        specifier: workspace:^
+        version: link:../../packages/auth
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
