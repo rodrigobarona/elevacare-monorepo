@@ -28,7 +28,22 @@ export default getRequestConfig(async () => {
     }
   }
 
-  // 3. Ultimate fallback
+  // 3. Fallback: parse Accept-Language header (defense-in-depth for edge
+  //    cases where the proxy header and cookie are both absent)
+  if (!locale) {
+    const acceptLang = hdrs.get("accept-language")
+    if (acceptLang) {
+      for (const part of acceptLang.split(",")) {
+        const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
+        if (isLocale(lang)) {
+          locale = lang as Locale
+          break
+        }
+      }
+    }
+  }
+
+  // 4. Ultimate fallback
   if (!locale) {
     locale = DEFAULT
   }

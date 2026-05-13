@@ -19,7 +19,7 @@ export function LanguagePreference() {
   const t = useTranslations("settings")
   const currentLocale = useLocale()
   const router = useRouter()
-  const prevSavedRef = useRef(false)
+  const lastRefreshedState = useRef<unknown>(null)
 
   const [state, formAction, isPending] = useActionState(
     updateLanguagePreference,
@@ -27,11 +27,15 @@ export function LanguagePreference() {
   )
 
   useEffect(() => {
-    const justSaved = state.ok && "saved" in state && state.saved === true
-    if (justSaved && !prevSavedRef.current) {
+    if (
+      state.ok &&
+      "saved" in state &&
+      state.saved &&
+      state !== lastRefreshedState.current
+    ) {
+      lastRefreshedState.current = state
       router.refresh()
     }
-    prevSavedRef.current = justSaved ?? false
   }, [state, router])
 
   return (
