@@ -17,7 +17,6 @@ interface SiteHeaderProps {
 
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   const t = await getTranslations("nav")
-  const appUrl = process.env.APP_URL || "http://localhost:3001"
 
   let user: {
     firstName: string | null
@@ -64,16 +63,16 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
               email={user.email}
               dashboardLabel={t("dashboard")}
               signOutLabel={t("signout")}
-              dashboardUrl={`${appUrl}/auth-redirect`}
-              signOutUrl={`${appUrl}/logout`}
+              dashboardUrl="/auth-redirect"
+              signOutUrl="/logout"
             />
           ) : (
             <>
               <Button variant="ghost" size="sm" asChild>
-                <a href={`${appUrl}/signin`}>{t("signin")}</a>
+                <a href="/signin">{t("signin")}</a>
               </Button>
               <Button size="sm" asChild>
-                <a href={`${appUrl}/signup`}>{t("signup")}</a>
+                <a href="/signup">{t("signup")}</a>
               </Button>
             </>
           )}
