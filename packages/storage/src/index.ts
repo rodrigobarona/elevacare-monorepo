@@ -9,9 +9,11 @@
  *   - "@eleva/storage/blob-upload-handler" — `handleUpload` wrapper (Route Handler)
  *   - "@eleva/storage/blob-upload-client"  — `"use client"` upload helper
  *
- * Public reads: the URLs Vercel Blob returns are public-by-default
- * but unguessable (path includes a random suffix). For PHI / fiscal
- * docs in S5+ we'll switch to private uploads via signed URLs.
+ * Two stores:
+ *   - Public  (BLOB_READ_WRITE_TOKEN)         — avatars, marketing assets
+ *   - Private (BLOB_PRIVATE_READ_WRITE_TOKEN) — expert documents, patient
+ *     reports, PHI. Private blobs require a signed download URL generated
+ *     server-side; the raw URL returns 403.
  *
  * Caller is responsible for:
  *   - Validating the file (MIME type + size cap of 10MB) BEFORE
@@ -20,8 +22,8 @@
  *     become_partner_applications row inside withAudit.
  */
 
-import { put, del, type PutBlobResult } from "@vercel/blob"
-import { requireBlobEnv } from "@eleva/config/env"
+import { put, del, get, type PutBlobResult } from "@vercel/blob"
+import { requireBlobEnv, requirePrivateBlobEnv } from "@eleva/config/env"
 import { createHash } from "node:crypto"
 
 const ALLOWED_DOC_MIME = new Set([
@@ -118,6 +120,92 @@ export async function uploadApplicationDocument(
 export async function deleteApplicationDocument(url: string): Promise<void> {
   const { BLOB_READ_WRITE_TOKEN } = requireBlobEnv()
   await del(url, { token: BLOB_READ_WRITE_TOKEN })
+}
+
+// ── Private blob helpers (expert documents, patient reports) ────────
+
+export interface UploadPrivateDocumentInput {
+  /** Pathname prefix, e.g. `"consultations/<id>"` or `"reports/<id>"`. */
+  prefix: string
+  /** Logical document kind within the prefix. */
+  kind: string
+  /** Original filename from the browser. */
+  name: string
+  /** Detected MIME type. */
+  contentType: string
+  /** File body. */
+  body: ArrayBuffer | Buffer | Blob
+}
+
+export async function uploadPrivateDocument(
+  input: UploadPrivateDocumentInput
+): Promise<UploadedDocument> {
+  validatePrivate(input)
+
+  const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+
+  const buf = await asArrayBuffer(input.body)
+  if (buf.byteLength === 0) {
+    throw new UploadValidationError("empty-file", "uploaded file is empty")
+  }
+  if (buf.byteLength > MAX_DOC_BYTES) {
+    throw new UploadValidationError(
+      "too-large",
+      `file exceeds ${MAX_DOC_BYTES} bytes`
+    )
+  }
+
+  const hash = createHash("sha256").update(new Uint8Array(buf)).digest("hex")
+  const safe = sanitizeFilename(input.name)
+  const pathname = `${input.prefix}/${input.kind}/${hash.slice(0, 8)}-${safe}`
+
+  const result: PutBlobResult = await put(pathname, buf, {
+    access: "private",
+    contentType: input.contentType,
+    addRandomSuffix: true,
+    token: BLOB_PRIVATE_READ_WRITE_TOKEN,
+  })
+
+  return {
+    url: result.url,
+    pathname: result.pathname,
+    name: input.name,
+    kind: input.kind,
+    contentType: input.contentType,
+    size: buf.byteLength,
+    hash,
+    uploadedAt: new Date().toISOString(),
+  }
+}
+
+export async function deletePrivateDocument(url: string): Promise<void> {
+  const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+  await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
+}
+
+/**
+ * Stream a private blob for an authorized user. Returns null if
+ * the blob no longer exists. The caller (an API route) is responsible
+ * for auth checks before calling this.
+ */
+export async function getPrivateDocument(url: string) {
+  const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+  return get(url, {
+    access: "private",
+    token: BLOB_PRIVATE_READ_WRITE_TOKEN,
+  })
+}
+
+function validatePrivate(input: UploadPrivateDocumentInput): void {
+  if (!input.name || input.name.trim().length === 0) {
+    throw new UploadValidationError("missing-name", "filename required")
+  }
+  if (!ALLOWED_DOC_MIME.has(input.contentType)) {
+    throw new UploadValidationError(
+      "mime-not-allowed",
+      `${input.contentType} not allowed; expected pdf or image`
+    )
+  }
 }
 
 function validate(input: UploadDocumentInput): void {

@@ -24,6 +24,7 @@ export default async function OnboardingPage() {
 
   const displayName =
     [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
+  const firstName = user.firstName || user.email
 
   const t = await getTranslations("onboarding")
 
@@ -39,7 +40,7 @@ export default async function OnboardingPage() {
           </p>
         </header>
 
-        <OnboardingForm defaultName={t("defaultName", { name: displayName })} />
+        <OnboardingForm defaultName={t("defaultName", { name: firstName })} />
       </div>
     </div>
   )

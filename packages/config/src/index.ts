@@ -35,6 +35,9 @@ export {
 } from "./reserved-usernames"
 export {
   APP_ROOT_SEGMENTS,
+  APP_FIXED_SEGMENTS,
   APP_STANDALONE_PATHS,
   APP_REWRITE_PATHS,
+  ORG_SCOPED_SEGMENTS,
 } from "./routing"
+export { slugify, generateUniqueOrgSlug } from "./slug"

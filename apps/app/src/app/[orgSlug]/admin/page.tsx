@@ -3,11 +3,16 @@ import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { AppShell } from "@/components/app-shell"
 
-export default async function AdminDashboardPage() {
+export default async function AdminDashboardPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
   if (!session.capabilities.includes("audit:view_all")) {
-    redirect("/")
+    redirect(`/${orgSlug}`)
   }
   const t = await getTranslations()
   return (

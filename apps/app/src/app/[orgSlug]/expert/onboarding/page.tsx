@@ -14,16 +14,21 @@ const STEPS = [
   "schedule",
 ] as const
 
-export default async function OnboardingPage() {
+export default async function OnboardingPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("expert:onboard")) redirect("/")
+  if (!session.capabilities.includes("expert:onboard")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/")
+  if (!profile) redirect(`/${orgSlug}`)
 
   if (profile.status === "active") {
-    redirect("/expert")
+    redirect(`/${orgSlug}/expert`)
   }
 
   const completedSteps = (profile.metadata as Record<string, unknown>)

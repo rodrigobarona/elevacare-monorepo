@@ -20,13 +20,18 @@ const CATEGORY_LABEL: Record<string, string> = {
   other: "Other",
 }
 
-export default async function IntegrationsPage() {
+export default async function IntegrationsPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("events:manage")) redirect("/")
+  if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/expert/onboarding")
+  if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
   const connected = await listExpertIntegrations(profile.orgId, profile.id)
   const connectedBySlug = new Map(connected.map((c) => [c.slug, c]))
@@ -62,6 +67,7 @@ export default async function IntegrationsPage() {
                       manifest={manifest}
                       status={connection?.status ?? null}
                       integrationId={connection?.id ?? null}
+                      orgSlug={orgSlug}
                     />
                   )
                 })}

@@ -18,13 +18,18 @@ export const dynamic = "force-dynamic"
 
 type LocalizedText = { en: string; pt?: string; es?: string }
 
-export default async function EventTypesPage() {
+export default async function EventTypesPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("events:manage")) redirect("/")
+  if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/expert/onboarding")
+  if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
   const eventTypes = await listExpertEventTypes(profile.orgId, profile.id)
   const t = await getTranslations("eventTypes")
@@ -38,7 +43,7 @@ export default async function EventTypesPage() {
             <h1 className="text-2xl font-medium">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">{t("description")}</p>
           </div>
-          <Link href="/expert/event-types/new">
+          <Link href={`/${orgSlug}/expert/event-types/new`}>
             <Button>{t("create")}</Button>
           </Link>
         </header>
@@ -48,7 +53,7 @@ export default async function EventTypesPage() {
             <CardContent className="py-12 text-center">
               <p className="text-muted-foreground">{t("empty")}</p>
               <Link
-                href="/expert/event-types/new"
+                href={`/${orgSlug}/expert/event-types/new`}
                 className="mt-4 inline-block"
               >
                 <Button variant="outline">{t("createFirst")}</Button>

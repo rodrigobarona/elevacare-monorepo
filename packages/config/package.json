@@ -11,7 +11,8 @@
     "./i18n": "./src/i18n.ts",
     "./country-to-locale": "./src/country-to-locale.ts",
     "./reserved-usernames": "./src/reserved-usernames.ts",
-    "./routing": "./src/routing.ts"
+    "./routing": "./src/routing.ts",
+    "./slug": "./src/slug.ts"
   },
   "scripts": {
     "lint": "eslint .",

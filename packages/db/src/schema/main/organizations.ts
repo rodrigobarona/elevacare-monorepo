@@ -1,8 +1,10 @@
 import { sql } from "drizzle-orm"
 import {
+  check,
   pgEnum,
   pgPolicy,
   pgTable,
+  text,
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
@@ -36,12 +38,19 @@ export const organizations = pgTable(
     id: pkColumn(),
     workosOrgId: varchar("workos_org_id", { length: 255 }).notNull(),
     type: orgTypeEnum("type").notNull(),
+    /** URL-safe slug used in org-scoped routes: /[slug]/dashboard */
+    slug: text("slug"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     deletedAt: deletedAt(),
   },
   (t) => ({
     workosIdx: uniqueIndex("organizations_workos_org_id_idx").on(t.workosOrgId),
+    slugIdx: uniqueIndex("organizations_slug_idx").on(t.slug),
+    slugFormatChk: check(
+      "organizations_slug_format",
+      sql`slug IS NULL OR (slug ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND slug NOT LIKE '%--%')`
+    ),
     tenantPolicy: pgPolicy("organizations_tenant_isolation", {
       using: sql`id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
       withCheck: sql`id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,

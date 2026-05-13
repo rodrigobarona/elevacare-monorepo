@@ -24,7 +24,7 @@ export interface WorkOSTokenUser {
 export async function resolveSessionFromWorkosUser(
   workosUserId: string,
   tokenUser: WorkOSTokenUser,
-  opts: { preferredOrgId?: string } = {}
+  opts: { preferredOrgId?: string; preferredOrgSlug?: string } = {}
 ): Promise<ElevaSession | null> {
   const rows = await db()
     .select({
@@ -33,6 +33,7 @@ export async function resolveSessionFromWorkosUser(
       orgId: main.organizations.id,
       workosOrgId: main.organizations.workosOrgId,
       orgType: main.organizations.type,
+      orgSlug: main.organizations.slug,
       workosRole: main.memberships.workosRole,
       status: main.memberships.status,
     })
@@ -53,9 +54,13 @@ export async function resolveSessionFromWorkosUser(
 
   if (rows.length === 0) return null
 
-  const preferred = opts.preferredOrgId
-    ? rows.find((r) => r.orgId === opts.preferredOrgId)
-    : undefined
+  const preferred =
+    (opts.preferredOrgSlug
+      ? rows.find((r) => r.orgSlug === opts.preferredOrgSlug)
+      : undefined) ??
+    (opts.preferredOrgId
+      ? rows.find((r) => r.orgId === opts.preferredOrgId)
+      : undefined)
   const picked = preferred ?? rows[0]!
 
   const productLabel = deriveProductLabel(picked.orgType, picked.workosRole)
@@ -75,6 +80,7 @@ export async function resolveSessionFromWorkosUser(
     },
     orgId: picked.orgId,
     workosOrgId: picked.workosOrgId,
+    orgSlug: picked.orgSlug,
     productLabel,
     workosRole: picked.workosRole,
     capabilities,

@@ -11,15 +11,15 @@ export const dynamic = "force-dynamic"
 type LocalizedText = { en: string; pt?: string; es?: string }
 
 export default async function EditEventTypePage(props: {
-  params: Promise<{ id: string }>
+  params: Promise<{ orgSlug: string; id: string }>
 }) {
-  const { id } = await props.params
+  const { orgSlug, id } = await props.params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("events:manage")) redirect("/")
+  if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/expert/onboarding")
+  if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
   const eventType = await getEventType(profile.orgId, id, profile.id)
   if (!eventType) notFound()

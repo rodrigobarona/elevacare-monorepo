@@ -15,6 +15,7 @@ interface Props {
   manifest: IntegrationManifest
   status: string | null
   integrationId: string | null
+  orgSlug: string
 }
 
 const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> =
@@ -26,7 +27,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> =
     expired: "destructive",
   }
 
-export function IntegrationCard({ manifest, status, integrationId }: Props) {
+export function IntegrationCard({
+  manifest,
+  status,
+  integrationId,
+  orgSlug,
+}: Props) {
   const t = useTranslations("integrations")
   const rawLocale = useLocale()
   const locale = (["en", "pt", "es"] as const).includes(
@@ -60,7 +66,7 @@ export function IntegrationCard({ manifest, status, integrationId }: Props) {
 
         {manifest.category === "calendar" && isConnected && integrationId && (
           <Link
-            href="/expert/calendars"
+            href={`/${orgSlug}/expert/calendars`}
             className="text-xs font-medium text-primary hover:underline"
           >
             {t("configureCalendars")}

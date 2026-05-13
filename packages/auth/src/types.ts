@@ -19,6 +19,8 @@ export interface ElevaSession {
   /** Currently active organization context (first membership by default). */
   orgId: string
   workosOrgId: string
+  /** URL slug for org-scoped routing: /[orgSlug]/dashboard */
+  orgSlug: string | null
   /** Derived product label for this org context. */
   productLabel: ProductLabel
   /** WorkOS seniority role inside the current org. */

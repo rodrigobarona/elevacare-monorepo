@@ -4,6 +4,7 @@ import {
   desc,
   eq,
   inArray,
+  isNotNull,
   isNull,
   or,
   sql,
@@ -463,5 +464,27 @@ export async function checkPublicSlugAvailability(
     }
 
     return { available: true }
+  })
+}
+
+/**
+ * Given a list of candidate slugs, return the subset that already
+ * exist as organization slugs. Used by the slug generation utility
+ * for collision avoidance.
+ */
+export async function findExistingOrgSlugs(
+  candidates: string[]
+): Promise<Set<string>> {
+  return withPlatformAdminContext(async (tx) => {
+    const rows = await tx
+      .select({ slug: main.organizations.slug })
+      .from(main.organizations)
+      .where(
+        and(
+          inArray(main.organizations.slug, candidates),
+          isNotNull(main.organizations.slug)
+        )
+      )
+    return new Set(rows.map((r) => r.slug).filter(Boolean) as string[])
   })
 }

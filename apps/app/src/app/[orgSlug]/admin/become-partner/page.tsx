@@ -38,26 +38,28 @@ const STATUS_VARIANT: Record<
 }
 
 interface Props {
+  params: Promise<{ orgSlug: string }>
   searchParams: Promise<{ status?: string; page?: string }>
 }
 
-export default async function BecomePartnerQueuePage({ searchParams }: Props) {
+export default async function BecomePartnerQueuePage({
+  params,
+  searchParams,
+}: Props) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("applications:review")) redirect("/")
+  if (!session.capabilities.includes("applications:review"))
+    redirect(`/${orgSlug}`)
 
-  const params = await searchParams
+  const query = await searchParams
   const filters: ListApplicationsFilters = { limit: 25, offset: 0 }
 
-  if (
-    params.status &&
-    params.status !== "all" &&
-    isValidStatus(params.status)
-  ) {
-    filters.status = params.status
+  if (query.status && query.status !== "all" && isValidStatus(query.status)) {
+    filters.status = query.status
   }
-  if (params.page) {
-    const p = Math.max(1, parseInt(params.page, 10) || 1)
+  if (query.page) {
+    const p = Math.max(1, parseInt(query.page, 10) || 1)
     filters.offset = (p - 1) * 25
   }
 
@@ -77,9 +79,9 @@ export default async function BecomePartnerQueuePage({ searchParams }: Props) {
           (s) => (
             <Link
               key={s}
-              href={`/admin/become-partner${s === "all" ? "" : `?status=${s}`}`}
+              href={`/${orgSlug}/admin/become-partner${s === "all" ? "" : `?status=${s}`}`}
               className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-muted/50 ${
-                (params.status ?? "all") === s
+                (query.status ?? "all") === s
                   ? "border-foreground/20 bg-muted"
                   : "border-transparent"
               }`}
@@ -99,7 +101,7 @@ export default async function BecomePartnerQueuePage({ searchParams }: Props) {
           {rows.map((app) => (
             <Link
               key={app.id}
-              href={`/admin/become-partner/${app.id}`}
+              href={`/${orgSlug}/admin/become-partner/${app.id}`}
               className="block"
             >
               <Card className="transition-shadow hover:shadow-md">

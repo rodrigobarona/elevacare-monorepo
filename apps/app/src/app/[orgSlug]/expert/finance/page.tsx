@@ -7,15 +7,21 @@ import { FinanceDashboard } from "./finance-dashboard"
 
 export const dynamic = "force-dynamic"
 
-export default async function FinancePage() {
+export default async function FinancePage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("payouts:view_own")) redirect("/")
+  if (!session.capabilities.includes("payouts:view_own"))
+    redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/")
+  if (!profile) redirect(`/${orgSlug}`)
   if (!profile.stripeAccountId) {
-    redirect("/expert/onboarding")
+    redirect(`/${orgSlug}/expert/onboarding`)
   }
 
   const t = await getTranslations("finance")

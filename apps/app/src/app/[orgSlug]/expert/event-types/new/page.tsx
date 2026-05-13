@@ -7,13 +7,18 @@ import { EventTypeForm } from "../event-type-form"
 
 export const dynamic = "force-dynamic"
 
-export default async function NewEventTypePage() {
+export default async function NewEventTypePage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("events:manage")) redirect("/")
+  if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/expert/onboarding")
+  if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
   const t = await getTranslations("eventTypes")
 

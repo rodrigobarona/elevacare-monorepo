@@ -13,13 +13,18 @@ const SLUG_LABEL: Record<string, string> = {
   "microsoft-calendar": "Microsoft Calendar",
 }
 
-export default async function CalendarsPage() {
+export default async function CalendarsPage({
+  params,
+}: {
+  params: Promise<{ orgSlug: string }>
+}) {
+  const { orgSlug } = await params
   const session = await getSession()
   if (!session) redirect("/signin")
-  if (!session.capabilities.includes("events:manage")) redirect("/")
+  if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)
-  if (!profile) redirect("/expert/onboarding")
+  if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
   const integrations = (
     await listCalendarIntegrations(profile.orgId, profile.id)
@@ -44,7 +49,10 @@ export default async function CalendarsPage() {
     <AppShell session={session}>
       <div className="mx-auto max-w-2xl space-y-6">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link href="/expert/integrations" className="hover:underline">
+          <Link
+            href={`/${orgSlug}/expert/integrations`}
+            className="hover:underline"
+          >
             {t("backToIntegrations")}
           </Link>
           <span>/</span>

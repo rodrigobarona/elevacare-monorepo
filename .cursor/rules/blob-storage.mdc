@@ -1,0 +1,71 @@
+---
+description: Vercel Blob storage rules — two-store architecture (public vs private). Apply when working with file uploads, @eleva/storage, blob tokens, or any code that stores/reads user-uploaded files.
+globs:
+  - packages/storage/**
+  - apps/api/src/app/blob/**
+  - "**/*upload*"
+  - "**/*blob*"
+  - "**/*document*"
+alwaysApply: false
+---
+
+# Blob Storage — Two-Store Architecture
+
+## Stores
+
+| Store | Env var | Access | Use for |
+|-------|---------|--------|---------|
+| **Public** | `BLOB_READ_WRITE_TOKEN` | `access: "public"` | Avatars, marketing assets, become-partner application docs |
+| **Private** | `BLOB_PRIVATE_READ_WRITE_TOKEN` | `access: "private"` | Expert documents, patient reports, consultation files, PHI |
+
+## Hard Rules
+
+1. **NEVER store patient data, health reports, or expert documents in the public store.** These contain PHI and must use `BLOB_PRIVATE_READ_WRITE_TOKEN` with `access: "private"`.
+2. **NEVER import `@vercel/blob` directly.** All blob access goes through `@eleva/storage`. Boundary lint enforces this.
+3. **Private blobs return 403 on direct URL access.** Serve them through an API route that checks authorization first, then streams via `getPrivateDocument()`.
+
+## Public Store API (`@eleva/storage`)
+
+```ts
+import { uploadApplicationDocument, deleteApplicationDocument } from "@eleva/storage"
+```
+
+- `uploadApplicationDocument()` — server-side put (become-partner docs)
+- `deleteApplicationDocument()` — server-side delete
+
+Client uploads (avatars, browser-initiated):
+
+```ts
+import { uploadBlobClient } from "@eleva/storage/blob-upload-client"   // "use client"
+import { handleBlobUpload }  from "@eleva/storage/blob-upload-handler" // Route Handler
+```
+
+## Private Store API (`@eleva/storage`)
+
+```ts
+import {
+  uploadPrivateDocument,
+  deletePrivateDocument,
+  getPrivateDocument,
+} from "@eleva/storage"
+```
+
+- `uploadPrivateDocument()` — server-side put with `access: "private"`
+- `deletePrivateDocument()` — server-side delete
+- `getPrivateDocument(url)` — returns a readable stream; the calling API route MUST verify the user is authorized before streaming
+
+## Env Config (`@eleva/config/env`)
+
+```ts
+import { requireBlobEnv, requirePrivateBlobEnv } from "@eleva/config/env"
+
+requireBlobEnv()        // { BLOB_READ_WRITE_TOKEN: string }
+requirePrivateBlobEnv() // { BLOB_PRIVATE_READ_WRITE_TOKEN: string }
+```
+
+## Checklist When Adding a New Upload Flow
+
+1. Decide public vs private based on content sensitivity.
+2. If private: add an API route in `apps/api` that streams the blob after auth check.
+3. Register a new upload policy in `apps/api/src/app/blob/upload/route.ts` if using client uploads.
+4. Ensure the correct env var is set in Vercel for all environments (production, preview, development).

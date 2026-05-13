@@ -105,6 +105,7 @@ const s2Schema = z.object({
   MOLONI_CLIENT_SECRET: stringOptional,
 
   BLOB_READ_WRITE_TOKEN: stringOptional,
+  BLOB_PRIVATE_READ_WRITE_TOKEN: stringOptional,
 })
 
 export const envSchema = baseSchema.merge(s1aSchema).merge(s2Schema)
@@ -241,6 +242,18 @@ export function requireBlobEnv(): { BLOB_READ_WRITE_TOKEN: string } {
     throw new Error("@eleva/storage boot: missing BLOB_READ_WRITE_TOKEN")
   }
   return { BLOB_READ_WRITE_TOKEN: e.BLOB_READ_WRITE_TOKEN }
+}
+
+export function requirePrivateBlobEnv(): {
+  BLOB_PRIVATE_READ_WRITE_TOKEN: string
+} {
+  const e = env()
+  if (!e.BLOB_PRIVATE_READ_WRITE_TOKEN) {
+    throw new Error(
+      "@eleva/storage boot: missing BLOB_PRIVATE_READ_WRITE_TOKEN"
+    )
+  }
+  return { BLOB_PRIVATE_READ_WRITE_TOKEN: e.BLOB_PRIVATE_READ_WRITE_TOKEN }
 }
 
 /**

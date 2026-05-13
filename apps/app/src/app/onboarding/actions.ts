@@ -4,8 +4,9 @@ import { redirect } from "next/navigation"
 import { cookies } from "next/headers"
 import { WorkOS } from "@workos-inc/node"
 import { withAuth } from "@workos-inc/authkit-nextjs"
-import { db, main } from "@eleva/db"
+import { db, main, findExistingOrgSlugs } from "@eleva/db"
 import { cookieName, isLocale } from "@eleva/config/i18n"
+import { generateUniqueOrgSlug } from "@eleva/config/slug"
 
 type ActionResult = { ok: true } | { ok: false; errorKey: string }
 
@@ -42,9 +43,10 @@ export async function createSpace(
 
   const workos = getWorkOS()
 
-  const org = await workos.organizations.createOrganization({
-    name: spaceName,
-  })
+  const [org, slug] = await Promise.all([
+    workos.organizations.createOrganization({ name: spaceName }),
+    generateUniqueOrgSlug(spaceName, findExistingOrgSlugs),
+  ])
 
   await workos.userManagement.createOrganizationMembership({
     userId: user.id,
@@ -81,6 +83,7 @@ export async function createSpace(
     .values({
       workosOrgId: org.id,
       type: "personal",
+      slug,
     })
     .onConflictDoUpdate({
       target: main.organizations.workosOrgId,
@@ -116,6 +119,7 @@ export async function createSpace(
     workos.organizations.updateOrganization({
       organization: org.id,
       externalId: dbOrgId,
+      metadata: { slug },
     }),
   ])
 
@@ -146,6 +150,14 @@ export async function checkExistingMembership(): Promise<{
   if (memberships.data.length > 0) {
     const membership = memberships.data[0]!
 
+    const workosOrg = await workos.organizations.getOrganization(
+      membership.organizationId
+    )
+    const slug = await generateUniqueOrgSlug(
+      workosOrg.name,
+      findExistingOrgSlugs
+    )
+
     const d = db()
 
     const [upsertedUser] = await d
@@ -170,12 +182,13 @@ export async function checkExistingMembership(): Promise<{
       .values({
         workosOrgId: membership.organizationId,
         type: "personal",
+        slug,
       })
       .onConflictDoUpdate({
         target: main.organizations.workosOrgId,
         set: { updatedAt: new Date() },
       })
-      .returning({ id: main.organizations.id })
+      .returning({ id: main.organizations.id, slug: main.organizations.slug })
 
     const dbOrgId = upsertedOrg!.id
 
@@ -207,6 +220,7 @@ export async function checkExistingMembership(): Promise<{
       workos.organizations.updateOrganization({
         organization: membership.organizationId,
         externalId: dbOrgId,
+        metadata: { slug: upsertedOrg!.slug ?? slug },
       }),
     ])
 

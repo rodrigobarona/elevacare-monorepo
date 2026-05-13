@@ -4,64 +4,63 @@ import type { ElevaSession } from "@eleva/auth"
 
 /**
  * Sidebar + topbar frame for every authenticated page. Renders a small
- * set of nav items gated by capability. Stays intentionally plain \u2014
+ * set of nav items gated by capability. Stays intentionally plain --
  * shadcn sidebar primitives land in S2.
  */
 
-const NAV: Array<{
+interface NavItem {
   href: string
   labelKey: string
   needs?: string
   matchPrefix: string
-}> = [
-  {
-    href: "/dashboard",
-    labelKey: "nav.dashboard",
-    needs: "appointments:view_own",
-    matchPrefix: "/dashboard",
-  },
-  {
-    href: "/expert",
-    labelKey: "nav.expert",
-    needs: "events:manage",
-    matchPrefix: "/expert",
-  },
-  {
-    href: "/expert/integrations",
-    labelKey: "nav.integrations",
-    needs: "events:manage",
-    matchPrefix: "/expert/integrations",
-  },
-  {
-    href: "/expert/finance",
-    labelKey: "nav.finance",
-    needs: "payouts:view_own",
-    matchPrefix: "/expert/finance",
-  },
-  {
-    href: "/org",
-    labelKey: "nav.org",
-    needs: "members:manage",
-    matchPrefix: "/org",
-  },
-  {
-    href: "/admin",
-    labelKey: "nav.admin",
-    needs: "audit:view_all",
-    matchPrefix: "/admin",
-  },
-  {
-    href: "/admin/become-partner",
-    labelKey: "nav.adminApplications",
-    needs: "applications:review",
-    matchPrefix: "/admin/become-partner",
-  },
-  {
-    href: "/settings",
-    labelKey: "nav.settings",
-    matchPrefix: "/settings",
-  },
-]
+}
+
+function buildNav(orgSlug: string): NavItem[] {
+  const s = `/${orgSlug}`
+  return [
+    {
+      href: s,
+      labelKey: "nav.dashboard",
+      needs: "appointments:view_own",
+      matchPrefix: s,
+    },
+    {
+      href: `${s}/expert`,
+      labelKey: "nav.expert",
+      needs: "events:manage",
+      matchPrefix: `${s}/expert`,
+    },
+    {
+      href: `${s}/expert/integrations`,
+      labelKey: "nav.integrations",
+      needs: "events:manage",
+      matchPrefix: `${s}/expert/integrations`,
+    },
+    {
+      href: `${s}/expert/finance`,
+      labelKey: "nav.finance",
+      needs: "payouts:view_own",
+      matchPrefix: `${s}/expert/finance`,
+    },
+    {
+      href: `${s}/admin`,
+      labelKey: "nav.admin",
+      needs: "audit:view_all",
+      matchPrefix: `${s}/admin`,
+    },
+    {
+      href: `${s}/admin/become-partner`,
+      labelKey: "nav.adminApplications",
+      needs: "applications:review",
+      matchPrefix: `${s}/admin/become-partner`,
+    },
+    {
+      href: "/account/settings",
+      labelKey: "nav.settings",
+      matchPrefix: "/account/settings",
+    },
+  ]
+}
 
 export function AppShell({
   session,
@@ -71,7 +70,8 @@ export function AppShell({
   children: React.ReactNode
 }) {
   const t = useTranslations()
-  const visible = NAV.filter(
+  const nav = buildNav(session.orgSlug ?? "")
+  const visible = nav.filter(
     (item) => !item.needs || session.capabilities.includes(item.needs)
   )
 

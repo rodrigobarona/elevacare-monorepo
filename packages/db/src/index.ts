@@ -20,6 +20,7 @@ export {
   listCategories,
   listExperts,
   checkPublicSlugAvailability,
+  findExistingOrgSlugs,
   type PublicExpertCard,
   type PublicExpertProfile,
   type PublicClinicProfile,

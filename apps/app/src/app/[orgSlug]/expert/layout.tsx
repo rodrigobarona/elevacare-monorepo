@@ -7,8 +7,10 @@ export const dynamic = "force-dynamic"
 
 export default async function ExpertLayout({
   children,
+  params: _params,
 }: {
   children: React.ReactNode
+  params: Promise<{ orgSlug: string }>
 }) {
   const session = await getSession()
   if (!session) redirect("/signin")
