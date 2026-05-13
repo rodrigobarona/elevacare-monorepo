@@ -35,6 +35,7 @@ export {
   type AuthUser,
   getAuthUser,
   getSession,
+  getSessionForOrg,
   requireSession,
   getWidgetToken,
   getWidgetTokenFromSession,

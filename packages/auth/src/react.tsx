@@ -5,7 +5,7 @@ import type { ReactNode } from "react"
 export interface ClientSessionShape {
   user: { id: string; email: string; displayName?: string | null }
   orgId: string
-  productLabel: "member" | "expert" | "clinic_admin" | "eleva_operator"
+  productLabel: "member" | "expert" | "team_admin" | "staff"
   capabilities: readonly string[]
 }
 

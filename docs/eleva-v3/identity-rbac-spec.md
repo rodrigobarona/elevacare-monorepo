@@ -87,13 +87,13 @@ The **Eleva product label** (patient, expert, clinic admin, operator) is derived
 
 ### Role catalog (what each user actually looks like)
 
-|Eleva product label|WorkOS role|Org type|Provisioning|
-|---|---|---|---|
-|**Patient**|`admin`|Personal org (org-of-one, auto-provisioned on signup)|every user owns their own personal org; patient is `admin` of it|
-|**Expert (solo)**|`admin`|Solo-expert org|dedicated solo org created on Become-Partner approval|
-|**Expert (clinic member)**|`member`|Clinic org|clinic admin invites expert into the clinic org|
-|**Clinic admin**|`admin`|Clinic org|clinic founder or elevated by existing clinic admin|
-|**Eleva operator (staff)**|`admin`|Single internal `eleva-operator` org|Eleva staff accounts only; platform-wide capability bundle|
+| Eleva product label        | WorkOS role | Org type                                              | Provisioning                                                     |
+| -------------------------- | ----------- | ----------------------------------------------------- | ---------------------------------------------------------------- |
+| **Patient**                | `admin`     | Personal org (org-of-one, auto-provisioned on signup) | every user owns their own personal org; patient is `admin` of it |
+| **Expert (solo)**          | `admin`     | Solo-expert org                                       | dedicated solo org created on Become-Partner approval            |
+| **Expert (clinic member)** | `member`    | Clinic org                                            | clinic admin invites expert into the clinic org                  |
+| **Clinic admin**           | `admin`     | Clinic org                                            | clinic founder or elevated by existing clinic admin              |
+| **Eleva operator (staff)** | `admin`     | Single internal `eleva-operator` org                  | Eleva staff accounts only; platform-wide capability bundle       |
 
 Notes:
 
@@ -107,8 +107,8 @@ Assigned via `infra/workos/rbac-config.json` and loaded into JWT claims:
 
 - `patient_capabilities`: `appointments:view_own`, `sessions:view_own`, `billing:view_own`, `diary:share`
 - `expert_capabilities`: `events:manage`, `schedule:manage`, `bookings:manage_own`, `reports:manage_own`, `payouts:view_own`
-- `clinic_admin_capabilities`: expert_capabilities + `members:manage`, `billing:manage_org`, `subscriptions:manage_org`
-- `eleva_operator_capabilities`: `experts:approve`, `experts:reject`, `users:view_all`, `payments:view_all`, `payouts:approve`, `audit:view_all`, `workflows:retry`, `accounting:reconcile`, `usernames:reserve`, `usernames:rename`
+- `team_admin_capabilities`: expert_capabilities + `members:manage`, `billing:manage_org`, `subscriptions:manage_org`
+- `staff_capabilities`: `experts:approve`, `experts:reject`, `users:view_all`, `payments:view_all`, `payouts:approve`, `audit:view_all`, `workflows:retry`, `accounting:reconcile`, `usernames:reserve`, `usernames:rename`
 
 The capability bundle is what actually drives access — WorkOS `admin`/`member` is the backbone it hangs on.
 

@@ -1,0 +1,61 @@
+{
+  "settings": {
+    "title": "Account settings",
+    "profile": {
+      "title": "Profile",
+      "email": "Email",
+      "language": "Language",
+      "save": "Save",
+      "saving": "Saving...",
+      "languageSaved": "Language preference updated.",
+      "languageError": "Could not update language. Please try again."
+    },
+    "avatar": {
+      "title": "Profile photo",
+      "upload": "Upload photo",
+      "remove": "Remove",
+      "hint": "JPG, PNG or WebP. Max 2 MB.",
+      "tooLarge": "File is too large. Maximum size is 2 MB.",
+      "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "saveFailed": "Could not save avatar. Please try again.",
+      "removeFailed": "Could not remove avatar. Please try again."
+    },
+    "language": {
+      "title": "Language"
+    },
+    "security": {
+      "title": "Security"
+    },
+    "sessions": {
+      "title": "Sessions"
+    }
+  },
+  "onboarding": {
+    "title": "Welcome to Eleva",
+    "subtitle": "Let's set up your space, {name}.",
+    "cardTitle": "Create your space",
+    "cardDescription": "Your space is where you manage your health journey.",
+    "nameLabel": "Space name",
+    "namePlaceholder": "My Space",
+    "submit": "Create space",
+    "submitting": "Creating...",
+    "defaultName": "{name}'s Space",
+    "errorMinLength": "Space name must be at least 2 characters"
+  },
+  "organizations": {
+    "title": "Organizations",
+    "description": "Manage your organizations, create new ones, or leave existing ones.",
+    "placeholder": "Organization management coming soon."
+  },
+  "billing": {
+    "title": "Billing",
+    "description": "Manage your personal subscription and payment methods.",
+    "placeholder": "Billing management coming soon."
+  },
+  "privacy": {
+    "title": "Privacy & Data",
+    "description": "Export your data or delete your account.",
+    "placeholder": "Privacy controls coming soon."
+  }
+}

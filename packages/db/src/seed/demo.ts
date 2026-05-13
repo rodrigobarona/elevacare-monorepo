@@ -27,7 +27,7 @@ interface SeedPersona {
   workosOrgId: string
   email: string
   displayName: string
-  orgType: "personal" | "solo_expert" | "clinic"
+  orgType: "personal" | "expert" | "team"
   orgDisplayName: string
   workosRole: "admin" | "member"
 }
@@ -38,7 +38,7 @@ const SEEDS: SeedPersona[] = [
     workosOrgId: "dev_org_patricia_mota_solo",
     email: "pat.mota@example.test",
     displayName: "Patricia Mota",
-    orgType: "solo_expert",
+    orgType: "expert",
     orgDisplayName: "Patricia Mota (solo)",
     workosRole: "admin",
   },
@@ -47,7 +47,7 @@ const SEEDS: SeedPersona[] = [
     workosOrgId: "dev_org_clinica_mota",
     email: "clinic.admin@example.test",
     displayName: "Clinic Admin",
-    orgType: "clinic",
+    orgType: "team",
     orgDisplayName: "Clinica Mota",
     workosRole: "admin",
   },

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
  * Unit tests for the demo seed. The @eleva/db client is mocked so we
  * do not need a live Neon connection \u2014 we verify the contract:
  *
- *   - Three personas seeded: solo_expert, clinic, personal.
+ *   - Three personas seeded: expert, team, personal.
  *   - Idempotent: when select returns an existing row, we do NOT
  *     re-insert.
  *   - Each persona produces one user row + one org row + one membership.

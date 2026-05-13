@@ -10,24 +10,22 @@ describe("deriveProductLabel", () => {
   it("personal + admin = member", () => {
     expect(deriveProductLabel("personal", "admin")).toBe("member")
   })
-  it("solo_expert + admin = expert", () => {
-    expect(deriveProductLabel("solo_expert", "admin")).toBe("expert")
+  it("expert + admin = expert", () => {
+    expect(deriveProductLabel("expert", "admin")).toBe("expert")
   })
-  it("clinic + admin = clinic_admin", () => {
-    expect(deriveProductLabel("clinic", "admin")).toBe("clinic_admin")
+  it("team + admin = team_admin", () => {
+    expect(deriveProductLabel("team", "admin")).toBe("team_admin")
   })
-  it("clinic + member = expert", () => {
-    expect(deriveProductLabel("clinic", "member")).toBe("expert")
+  it("team + member = expert", () => {
+    expect(deriveProductLabel("team", "member")).toBe("expert")
   })
-  it("eleva_operator always = eleva_operator regardless of role", () => {
-    expect(deriveProductLabel("eleva_operator", "admin")).toBe("eleva_operator")
-    expect(deriveProductLabel("eleva_operator", "member")).toBe(
-      "eleva_operator"
-    )
+  it("staff always = staff regardless of role", () => {
+    expect(deriveProductLabel("staff", "admin")).toBe("staff")
+    expect(deriveProductLabel("staff", "member")).toBe("staff")
   })
   it("rejects unsupported tuples", () => {
     expect(() => deriveProductLabel("personal", "member")).toThrow()
-    expect(() => deriveProductLabel("solo_expert", "member")).toThrow()
+    expect(() => deriveProductLabel("expert", "member")).toThrow()
   })
 })
 
@@ -40,11 +38,11 @@ describe("capability bundles", () => {
     }
   })
 
-  it("clinic_admin strictly extends expert", () => {
+  it("team_admin strictly extends expert", () => {
     for (const cap of CAPABILITY_BUNDLES.expert) {
-      expect(CAPABILITY_BUNDLES.clinic_admin).toContain(cap)
+      expect(CAPABILITY_BUNDLES.team_admin).toContain(cap)
     }
-    expect(CAPABILITY_BUNDLES.clinic_admin.length).toBeGreaterThan(
+    expect(CAPABILITY_BUNDLES.team_admin.length).toBeGreaterThan(
       CAPABILITY_BUNDLES.expert.length
     )
   })
@@ -54,9 +52,9 @@ describe("capability bundles", () => {
     expect(CAPABILITY_BUNDLES.member).not.toContain("events:manage")
   })
 
-  it("eleva_operator has audit:view_all + workflows:retry", () => {
-    expect(CAPABILITY_BUNDLES.eleva_operator).toContain("audit:view_all")
-    expect(CAPABILITY_BUNDLES.eleva_operator).toContain("workflows:retry")
+  it("staff has audit:view_all + workflows:retry", () => {
+    expect(CAPABILITY_BUNDLES.staff).toContain("audit:view_all")
+    expect(CAPABILITY_BUNDLES.staff).toContain("workflows:retry")
   })
 
   it("capabilitiesFor returns the matching bundle", () => {

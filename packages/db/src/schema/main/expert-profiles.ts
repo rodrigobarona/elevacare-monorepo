@@ -32,11 +32,11 @@ const tsvector = customType<{ data: string }>({
 /**
  * Expert public profile.
  *
- * One row per active solo-expert (org.type='solo_expert') and one row
- * per clinic-member-acting-as-expert (clinic experts share their
- * clinic's org_id and inherit the clinic's billing). The username
- * column shares a public namespace with `clinic_profiles.slug` —
- * resolution at /[username] tries experts first, then clinics
+ * One row per active freelance expert (org.type='expert') and one row
+ * per team-member-acting-as-expert (team experts share their
+ * team's org_id and inherit the team's billing). The username
+ * column shares a public namespace with team profile slugs —
+ * resolution at /[username] tries experts first, then teams
  * (search-and-discovery-spec.md).
  *
  * RLS: tenant-scoped by org_id. Public reads happen via a server

@@ -1,0 +1,16 @@
+{
+  "nav": {
+    "dashboard": "Panel",
+    "eventTypes": "Tipos de Evento",
+    "schedule": "Horario",
+    "calendars": "Calendarios",
+    "integrations": "Integraciones",
+    "finance": "Finanzas"
+  },
+  "dashboard": {
+    "expert": {
+      "welcome": "Hola, {name}",
+      "subtitle": "Tu horario, reservas e informes están aquí."
+    }
+  }
+}

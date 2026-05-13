@@ -5,8 +5,9 @@
 export type ProductLabel =
   | "member"
   | "expert"
-  | "clinic_admin"
-  | "eleva_operator"
+  | "team_admin"
+  | "lecturer"
+  | "staff"
 
 export interface ElevaSession {
   user: {

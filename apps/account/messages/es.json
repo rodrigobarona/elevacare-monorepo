@@ -1,0 +1,61 @@
+{
+  "settings": {
+    "title": "Configuración de la cuenta",
+    "profile": {
+      "title": "Perfil",
+      "email": "Email",
+      "language": "Idioma",
+      "save": "Guardar",
+      "saving": "Guardando...",
+      "languageSaved": "Preferencia de idioma actualizada.",
+      "languageError": "No se pudo actualizar el idioma. Inténtalo de nuevo."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "upload": "Subir foto",
+      "remove": "Eliminar",
+      "hint": "JPG, PNG o WebP. Máx 2 MB.",
+      "tooLarge": "El archivo es demasiado grande. El tamaño máximo es 2 MB.",
+      "invalidType": "Tipo de archivo no soportado. Usa JPG, PNG o WebP.",
+      "uploadFailed": "Error al subir. Inténtalo de nuevo.",
+      "saveFailed": "No se pudo guardar el avatar. Inténtalo de nuevo.",
+      "removeFailed": "No se pudo eliminar el avatar. Inténtalo de nuevo."
+    },
+    "language": {
+      "title": "Idioma"
+    },
+    "security": {
+      "title": "Seguridad"
+    },
+    "sessions": {
+      "title": "Sesiones"
+    }
+  },
+  "onboarding": {
+    "title": "Bienvenido a Eleva",
+    "subtitle": "Vamos a configurar tu espacio, {name}.",
+    "cardTitle": "Crea tu espacio",
+    "cardDescription": "Tu espacio es donde gestionas tu camino de salud.",
+    "nameLabel": "Nombre del espacio",
+    "namePlaceholder": "Mi Espacio",
+    "submit": "Crear espacio",
+    "submitting": "Creando...",
+    "defaultName": "Espacio de {name}",
+    "errorMinLength": "El nombre del espacio debe tener al menos 2 caracteres"
+  },
+  "organizations": {
+    "title": "Organizaciones",
+    "description": "Gestiona tus organizaciones, crea nuevas o abandona las existentes.",
+    "placeholder": "Gestión de organizaciones próximamente."
+  },
+  "billing": {
+    "title": "Facturación",
+    "description": "Gestiona tu suscripción personal y métodos de pago.",
+    "placeholder": "Gestión de facturación próximamente."
+  },
+  "privacy": {
+    "title": "Privacidad y Datos",
+    "description": "Exporta tus datos o elimina tu cuenta.",
+    "placeholder": "Controles de privacidad próximamente."
+  }
+}

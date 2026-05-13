@@ -199,7 +199,7 @@ export async function rejectApplication(
 
 /**
  * Approve a Become-Partner application. This:
- * 1. Creates a solo_expert organization
+ * 1. Creates an expert organization
  * 2. Creates a membership linking the applicant to that org
  * 3. Creates an expert_profiles row with status='draft'
  * 4. Updates the application with provisioned org + approved status
@@ -245,7 +245,7 @@ export async function approveApplication(
       .insert(main.organizations)
       .values({
         workosOrgId: `pending_${app.applicantUserId}`,
-        type: app.type === "clinic_admin" ? "clinic" : "solo_expert",
+        type: app.type === "team_admin" ? "team" : "expert",
       })
       .returning({ id: main.organizations.id })
 

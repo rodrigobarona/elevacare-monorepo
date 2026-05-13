@@ -1,0 +1,61 @@
+{
+  "settings": {
+    "title": "Definições da conta",
+    "profile": {
+      "title": "Perfil",
+      "email": "Email",
+      "language": "Idioma",
+      "save": "Guardar",
+      "saving": "A guardar...",
+      "languageSaved": "Preferência de idioma atualizada.",
+      "languageError": "Não foi possível atualizar o idioma. Tente novamente."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "upload": "Carregar foto",
+      "remove": "Remover",
+      "hint": "JPG, PNG ou WebP. Máx 2 MB.",
+      "tooLarge": "Ficheiro demasiado grande. O tamanho máximo é 2 MB.",
+      "invalidType": "Tipo de ficheiro não suportado. Use JPG, PNG ou WebP.",
+      "uploadFailed": "Falha no carregamento. Tente novamente.",
+      "saveFailed": "Não foi possível guardar o avatar. Tente novamente.",
+      "removeFailed": "Não foi possível remover o avatar. Tente novamente."
+    },
+    "language": {
+      "title": "Idioma"
+    },
+    "security": {
+      "title": "Segurança"
+    },
+    "sessions": {
+      "title": "Sessões"
+    }
+  },
+  "onboarding": {
+    "title": "Bem-vindo à Eleva",
+    "subtitle": "Vamos configurar o seu espaço, {name}.",
+    "cardTitle": "Crie o seu espaço",
+    "cardDescription": "O seu espaço é onde gere a sua jornada de saúde.",
+    "nameLabel": "Nome do espaço",
+    "namePlaceholder": "O meu Espaço",
+    "submit": "Criar espaço",
+    "submitting": "A criar...",
+    "defaultName": "Espaço de {name}",
+    "errorMinLength": "O nome do espaço tem de ter pelo menos 2 caracteres"
+  },
+  "organizations": {
+    "title": "Organizações",
+    "description": "Gerir as suas organizações, criar novas ou sair das existentes.",
+    "placeholder": "Gestão de organizações em breve."
+  },
+  "billing": {
+    "title": "Faturação",
+    "description": "Gerir a sua subscrição pessoal e métodos de pagamento.",
+    "placeholder": "Gestão de faturação em breve."
+  },
+  "privacy": {
+    "title": "Privacidade e Dados",
+    "description": "Exportar os seus dados ou eliminar a sua conta.",
+    "placeholder": "Controlos de privacidade em breve."
+  }
+}

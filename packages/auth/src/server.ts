@@ -67,7 +67,12 @@ async function getWorkosUserFromCookie(): Promise<
  *
  * Memoised per-request via React.cache.
  */
-export const getSession = cache(async (): Promise<ElevaSession | null> => {
+/**
+ * Shared helper that resolves WorkOS identity from AuthKit headers or
+ * cookie fallback. Returns the raw token fields needed by
+ * resolveSessionFromWorkosUser.
+ */
+async function resolveWorkosIdentity() {
   void headers()
   void cookies()
 
@@ -94,6 +99,16 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
     }
   }
 
+  return { workosUserId, tokenEmail, tokenFirstName, tokenLastName }
+}
+
+/**
+ * Default session loader (no org preference). Picks the first active
+ * membership. Use `getSessionForOrg` in org-scoped layouts instead.
+ */
+export const getSession = cache(async (): Promise<ElevaSession | null> => {
+  const { workosUserId, tokenEmail, tokenFirstName, tokenLastName } =
+    await resolveWorkosIdentity()
   if (!workosUserId) return null
   return resolveSessionFromWorkosUser(workosUserId, {
     email: tokenEmail ?? "unknown",
@@ -101,6 +116,30 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
     lastName: tokenLastName,
   })
 })
+
+/**
+ * Org-aware session loader. Resolves the session using the org slug
+ * from URL params so multi-org users land in the correct org context.
+ *
+ * Call this from `[orgSlug]/layout.tsx` instead of `getSession()`.
+ * NOT cache()'d because the orgSlug varies per-layout invocation.
+ */
+export async function getSessionForOrg(
+  orgSlug: string
+): Promise<ElevaSession | null> {
+  const { workosUserId, tokenEmail, tokenFirstName, tokenLastName } =
+    await resolveWorkosIdentity()
+  if (!workosUserId) return null
+  return resolveSessionFromWorkosUser(
+    workosUserId,
+    {
+      email: tokenEmail ?? "unknown",
+      firstName: tokenFirstName,
+      lastName: tokenLastName,
+    },
+    { preferredOrgSlug: orgSlug }
+  )
+}
 
 /**
  * Lightweight auth check that returns basic WorkOS user info from the

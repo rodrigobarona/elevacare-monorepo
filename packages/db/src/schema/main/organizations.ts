@@ -12,9 +12,9 @@ import { createdAt, deletedAt, pkColumn, updatedAt } from "./shared"
 
 export const orgTypeEnum = pgEnum("org_type", [
   "personal",
-  "solo_expert",
-  "clinic",
-  "eleva_operator",
+  "expert",
+  "team",
+  "staff",
 ])
 
 /**
@@ -27,9 +27,9 @@ export const orgTypeEnum = pgEnum("org_type", [
  * Special orgs:
  * - type='personal' : auto-provisioned on first sign-in; member product
  *   label lives here.
- * - type='solo_expert' : created on Become-Partner approval.
- * - type='clinic' : clinic signup; clinic admins hold workos_role='admin'.
- * - type='eleva_operator' : single internal org for Eleva staff, with
+ * - type='expert' : created on Become-Partner approval (freelance expert).
+ * - type='team' : team/clinic signup; team admins hold workos_role='admin'.
+ * - type='staff' : single internal org for Eleva staff, with
  *   cross-org capability bundles.
  */
 export const organizations = pgTable(

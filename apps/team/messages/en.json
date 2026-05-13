@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "members": "Members",
+    "billing": "Billing",
+    "settings": "Settings",
+    "landingPage": "Landing Page"
+  },
+  "dashboard": {
+    "welcome": "Team: {name}",
+    "subtitle": "Manage members, billing, and schedules."
+  },
+  "members": {
+    "title": "Team Members",
+    "description": "Invite experts to join your clinic.",
+    "invite": "Invite expert",
+    "placeholder": "No team members yet."
+  }
+}

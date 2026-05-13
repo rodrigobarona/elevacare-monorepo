@@ -1,23 +1,21 @@
 import createMiddleware from "next-intl/middleware"
 import { NextResponse, type NextRequest } from "next/server"
 import { routing } from "./i18n/routing"
-import {
-  APP_FIXED_SEGMENTS,
-  APP_STANDALONE_PATHS,
-  ORG_SCOPED_SEGMENTS,
-} from "@eleva/config/routing"
+import { APP_FIXED_SEGMENTS, APP_STANDALONE_PATHS } from "@eleva/config/routing"
 import { locales } from "@eleva/config/i18n"
 
 const intlMiddleware = createMiddleware(routing)
 
-const appAssetPrefix = process.env.APP_ASSET_PREFIX || "http://localhost:3001"
+const appOrigin = process.env.APP_ASSET_PREFIX || "http://localhost:3001"
+const expertOrigin = process.env.EXPERT_ASSET_PREFIX || "http://localhost:3002"
+const teamOrigin = process.env.TEAM_ASSET_PREFIX || "http://localhost:3004"
+const academyOrigin =
+  process.env.ACADEMY_ASSET_PREFIX || "http://localhost:3005"
 
 const fixedAppPaths = new Set<string>([
   ...APP_FIXED_SEGMENTS,
   ...APP_STANDALONE_PATHS,
 ])
-
-const orgScopedPaths = new Set<string>(ORG_SCOPED_SEGMENTS)
 
 const localeSet = new Set<string>(locales)
 
@@ -33,40 +31,48 @@ function isRootPath(pathname: string): boolean {
 }
 
 /**
- * Detect whether a request should be handled by the app zone.
+ * Determine the internal origin for a request. Returns null if the
+ * request should stay in the marketing zone (apps/web).
  *
- * Matches:
- * 1. Fixed app segments: /onboarding, /account, /auth-redirect, etc.
- * 2. Org-slug-prefixed paths: /[orgSlug] where the first segment is
- *    not a locale and not a known marketing path. Heuristic: if a
- *    second segment exists and is an org-scoped segment (expert, admin,
- *    settings), it's definitely an app route. A bare /[slug] with a
- *    session cookie is also treated as an app route (org home).
+ * Routing priority:
+ * 1. Fixed app-level paths (onboarding, account, admin, auth-redirect, etc.)
+ * 2. Org-scoped second-segment dispatch: expert -> apps/expert,
+ *    team -> apps/team, academy -> apps/academy
+ * 3. Bare /[orgSlug] with a session cookie -> member app (apps/app)
  */
-function isAppRoute(pathname: string, hasSession: boolean): boolean {
+function resolveOrigin(pathname: string, hasSession: boolean): string | null {
   const segments = pathname.split("/").filter(Boolean)
   const first = segments[0] ?? ""
   const second = segments[1] ?? ""
 
-  if (fixedAppPaths.has(first)) return true
+  if (fixedAppPaths.has(first)) return appOrigin
 
-  if (localeSet.has(first)) return false
+  if (localeSet.has(first)) return null
 
-  if (second && orgScopedPaths.has(second)) return true
+  if (second === "expert") return expertOrigin
+  if (second === "team") return teamOrigin
+  if (second === "academy") return academyOrigin
+
+  if (second === "settings") return appOrigin
 
   if (first && hasSession && !localeSet.has(first) && segments.length <= 1) {
-    return true
+    return appOrigin
   }
 
-  return false
+  if (first && !localeSet.has(first) && second) {
+    return appOrigin
+  }
+
+  return null
 }
 
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const hasSession = request.cookies.has(SESSION_COOKIE)
 
-  if (isAppRoute(pathname, hasSession)) {
-    const url = new URL(pathname + request.nextUrl.search, appAssetPrefix)
+  const origin = resolveOrigin(pathname, hasSession)
+  if (origin) {
+    const url = new URL(pathname + request.nextUrl.search, origin)
     return NextResponse.rewrite(url)
   }
 

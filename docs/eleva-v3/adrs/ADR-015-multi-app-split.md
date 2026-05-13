@@ -13,7 +13,7 @@ Accepted (supersedes ADR-001 topology decision; extends ADR-014 multi-zone rewri
 ADR-001 chose to start with one authenticated app (`apps/app`) and split later when justified. The product has since matured enough that the split is now justified:
 
 - Expert tools (`[orgSlug]/expert/*`) are a large, self-contained surface with Stripe Connect, calendar integrations, and scheduling logic.
-- Clinic/team management is a new product surface for `org_type: "clinic"`.
+- Team management is a new product surface for `org_type: "team"`.
 - Platform admin (`(admin)/*`) handles sensitive operations (application approvals, payouts, audit) that benefit from a hard security boundary.
 - Account settings (profile, security, orgs, billing) are cross-cutting concerns that span all product surfaces.
 - Academy (LMS) is a future product surface for lecturers to create and sell courses.
@@ -106,13 +106,13 @@ Every other app's `proxy.ts` redirects unauthenticated users to `account.eleva.c
 
 Each user can have multiple orgs. The org type determines which app serves the product surface:
 
-| Org type           | Product label             | App            | Example slug         |
-| ------------------ | ------------------------- | -------------- | -------------------- |
-| `personal`         | `member`                  | `apps/app`     | `rodrigos-space`     |
-| `solo_expert`      | `expert`                  | `apps/expert`  | `rodrigo-pt`         |
-| `clinic`           | `clinic_admin` / `expert` | `apps/team`    | `baronas-clinica`    |
-| `academy` (future) | `lecturer` (future)       | `apps/academy` | `learn-with-rodrigo` |
-| `eleva_operator`   | `eleva_operator`          | `apps/admin`   | N/A (subdomain)      |
+| Org type           | Product label           | App            | Example slug         |
+| ------------------ | ----------------------- | -------------- | -------------------- |
+| `personal`         | `member`                | `apps/app`     | `rodrigos-space`     |
+| `expert`           | `expert`                | `apps/expert`  | `rodrigo-pt`         |
+| `team`             | `team_admin` / `expert` | `apps/team`    | `baronas-clinica`    |
+| `academy` (future) | `lecturer` (future)     | `apps/academy` | `learn-with-rodrigo` |
+| `staff`            | `staff`                 | `apps/admin`   | N/A (subdomain)      |
 
 The org switcher in the shared `AppShell` lists all user memberships and navigates to the appropriate org+app URL. Each org is its own "world" with its own sidebar navigation.
 
@@ -121,8 +121,8 @@ The org switcher in the shared `AppShell` lists all user memberships and navigat
 All apps import the same `AppShell` component from `@eleva/ui`. The sidebar is org-scoped (not app-scoped):
 
 - When in a `personal` org: member nav (appointments, notes, reviews, courses)
-- When in a `solo_expert` org: expert nav (events, schedule, finance, calendars)
-- When in a `clinic` org: team nav (members, billing, landing page)
+- When in an `expert` org: expert nav (events, schedule, finance, calendars)
+- When in a `team` org: team nav (members, billing, landing page)
 - When in an `academy` org: lecturer nav (courses, analytics)
 
 Cross-app navigations (org switching, account settings) trigger a full page reload but the shell looks identical because it's the same component. Within an app, navigation is instant (client-side).

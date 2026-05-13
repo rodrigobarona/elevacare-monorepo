@@ -1,0 +1,19 @@
+{
+  "nav": {
+    "dashboard": "Painel",
+    "members": "Membros",
+    "billing": "Faturação",
+    "settings": "Definições",
+    "landingPage": "Página de Destino"
+  },
+  "dashboard": {
+    "welcome": "Equipa: {name}",
+    "subtitle": "Gerir membros, faturação e horários."
+  },
+  "members": {
+    "title": "Membros da Equipa",
+    "description": "Convide especialistas para se juntarem à sua clínica.",
+    "invite": "Convidar especialista",
+    "placeholder": "Ainda não há membros na equipa."
+  }
+}

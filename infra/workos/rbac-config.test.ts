@@ -43,16 +43,16 @@ describe("rbac-config.json", () => {
     }
   })
 
-  it("clinic_admin_capabilities strictly extends expert_capabilities", async () => {
+  it("team_admin_capabilities strictly extends expert_capabilities", async () => {
     const config = await load()
     const expert = config.roles.find((r) => r.slug === "expert_capabilities")!
-    const clinic = config.roles.find(
-      (r) => r.slug === "clinic_admin_capabilities"
+    const teamAdmin = config.roles.find(
+      (r) => r.slug === "team_admin_capabilities"
     )!
     for (const cap of expert.capabilities) {
-      expect(clinic.capabilities).toContain(cap)
+      expect(teamAdmin.capabilities).toContain(cap)
     }
-    expect(clinic.capabilities.length).toBeGreaterThan(
+    expect(teamAdmin.capabilities.length).toBeGreaterThan(
       expert.capabilities.length
     )
   })
@@ -65,13 +65,11 @@ describe("rbac-config.json", () => {
     expect(patient.capabilities).not.toContain("reports:manage_own")
   })
 
-  it("eleva_operator has audit:view_all + workflows:retry", async () => {
+  it("staff has audit:view_all + workflows:retry", async () => {
     const config = await load()
-    const operator = config.roles.find(
-      (r) => r.slug === "eleva_operator_capabilities"
-    )!
-    expect(operator.capabilities).toContain("audit:view_all")
-    expect(operator.capabilities).toContain("workflows:retry")
-    expect(operator.capabilities).toContain("payouts:approve")
+    const staff = config.roles.find((r) => r.slug === "staff_capabilities")!
+    expect(staff.capabilities).toContain("audit:view_all")
+    expect(staff.capabilities).toContain("workflows:retry")
+    expect(staff.capabilities).toContain("payouts:approve")
   })
 })

@@ -5,10 +5,11 @@ import type { ProductLabel } from "./types"
  * Eleva product label derivation per identity-rbac-spec.md role catalog:
  *
  *   (personal, admin)       -> member
- *   (solo_expert, admin)    -> expert
- *   (clinic, admin)         -> clinic_admin
- *   (clinic, member)        -> expert
- *   (eleva_operator, *)     -> eleva_operator
+ *   (expert, admin)         -> expert
+ *   (team, admin)           -> team_admin
+ *   (team, member)          -> expert
+ *   (academy, admin)        -> lecturer
+ *   (staff, *)              -> staff
  *
  * Anything else throws. This function is pure; no DB/network access.
  */
@@ -16,11 +17,13 @@ export function deriveProductLabel(
   orgType: OrgType,
   workosRole: WorkosRole
 ): ProductLabel {
-  if (orgType === "eleva_operator") return "eleva_operator"
+  if (orgType === "staff") return "staff"
   if (orgType === "personal" && workosRole === "admin") return "member"
-  if (orgType === "solo_expert" && workosRole === "admin") return "expert"
-  if (orgType === "clinic" && workosRole === "admin") return "clinic_admin"
-  if (orgType === "clinic" && workosRole === "member") return "expert"
+  if (orgType === "expert" && workosRole === "admin") return "expert"
+  if (orgType === "team" && workosRole === "admin") return "team_admin"
+  if (orgType === "team" && workosRole === "member") return "expert"
+  if ((orgType as string) === "academy" && workosRole === "admin")
+    return "lecturer"
   throw new Error(
     `Unsupported (orgType=${orgType}, workosRole=${workosRole}) combination`
   )
@@ -50,7 +53,7 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "expert:profile:edit",
     "expert:invoicing:manage",
   ],
-  clinic_admin: [
+  team_admin: [
     "events:manage",
     "schedule:manage",
     "bookings:manage_own",
@@ -63,7 +66,14 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "billing:manage_org",
     "subscriptions:manage_org",
   ],
-  eleva_operator: [
+  lecturer: [
+    "courses:manage",
+    "courses:create",
+    "courses:publish",
+    "academy:analytics:view",
+    "payouts:view_own",
+  ],
+  staff: [
     "experts:approve",
     "experts:reject",
     "applications:review",

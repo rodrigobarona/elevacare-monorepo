@@ -33,7 +33,7 @@
 
     {
       "slug": "members:manage",
-      "displayName": "Invite / remove clinic members"
+      "displayName": "Invite / remove team members"
     },
     { "slug": "billing:manage_org", "displayName": "Manage org billing" },
     {
@@ -92,8 +92,8 @@
       ]
     },
     {
-      "slug": "clinic_admin_capabilities",
-      "displayName": "Clinic admin capability bundle",
+      "slug": "team_admin_capabilities",
+      "displayName": "Team admin capability bundle",
       "capabilities": [
         "events:manage",
         "schedule:manage",
@@ -109,8 +109,8 @@
       ]
     },
     {
-      "slug": "eleva_operator_capabilities",
-      "displayName": "Eleva operator capability bundle",
+      "slug": "staff_capabilities",
+      "displayName": "Eleva staff capability bundle",
       "capabilities": [
         "experts:approve",
         "experts:reject",

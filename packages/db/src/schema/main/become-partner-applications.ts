@@ -30,7 +30,7 @@ import { users } from "./users"
  *
  * NOT tenant-scoped at submission time (the applicant has only a
  * personal org). On approval, the expert_profile created from this
- * row carries the new solo_expert org_id.
+ * row carries the new expert org_id.
  *
  * Mutations restricted to:
  *   - applicant (themselves; INSERT/UPDATE-while-status='submitted')
@@ -46,7 +46,7 @@ export const becomePartnerStatusEnum = pgEnum("become_partner_status", [
 
 export const becomePartnerApplicantTypeEnum = pgEnum(
   "become_partner_applicant_type",
-  ["solo_expert", "clinic_admin"]
+  ["expert", "team_admin"]
 )
 
 /**
