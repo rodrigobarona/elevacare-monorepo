@@ -152,7 +152,10 @@ export async function requireSession(
 let _workos: WorkOS | null = null
 
 /**
- * Singleton WorkOS SDK client. Reads WORKOS_API_KEY from the environment.
+ * Singleton WorkOS SDK client. Reads WORKOS_API_KEY and WORKOS_CLIENT_ID
+ * from the environment. The clientId is required so that widget tokens are
+ * bound to the correct application (and its allowed-origins CORS list).
+ *
  * Exported so that other packages (e.g. the QStash sync route) can reuse
  * the same instance without duplicating env-var handling.
  */
@@ -160,7 +163,9 @@ export function getWorkOS(): WorkOS {
   if (!_workos) {
     const key = process.env.WORKOS_API_KEY
     if (!key) throw new Error("WORKOS_API_KEY is required")
-    _workos = new WorkOS(key)
+    const clientId = process.env.WORKOS_CLIENT_ID
+    if (!clientId) throw new Error("WORKOS_CLIENT_ID is required")
+    _workos = new WorkOS(key, { clientId })
   }
   return _workos
 }
