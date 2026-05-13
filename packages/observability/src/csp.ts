@@ -38,7 +38,7 @@ const VENDORS: Record<string, VendorEntry> = {
   },
   sentry: {
     scriptSrc: ["https://cdn.sentry-cdn.com"],
-    connectSrc: ["https://*.sentry.io", "https://o*.ingest.sentry.io"],
+    connectSrc: ["https://*.sentry.io", "https://*.ingest.sentry.io"],
   },
   workos: {
     connectSrc: ["https://api.workos.com"],
