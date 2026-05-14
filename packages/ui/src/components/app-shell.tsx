@@ -29,8 +29,8 @@ export interface AppShellNavItem {
 
 const ACCOUNT_URL =
   typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://account.eleva.care"
-    : "https://account.eleva.care"
+    ? process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://eleva.care"
+    : "https://eleva.care"
 
 /**
  * Derive the home URL for an org based on its type.

@@ -3,14 +3,15 @@ import createNextIntlPlugin from "next-intl/plugin"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
-const allowedOrigins = []
-const accountUrl = env.ACCOUNT_URL || env.NEXT_PUBLIC_ACCOUNT_URL
-if (accountUrl) {
-  for (const raw of accountUrl.split(",")) {
-    try {
-      allowedOrigins.push(new URL(raw.trim()).host)
-    } catch {
-      // invalid URL segment, skip
+const allowedOrigins = ["eleva.care"]
+for (const urlVar of [env.APP_URL, env.NEXT_PUBLIC_APP_URL]) {
+  if (urlVar) {
+    for (const raw of urlVar.split(",")) {
+      try {
+        allowedOrigins.push(new URL(raw.trim()).host)
+      } catch {
+        // invalid URL segment, skip
+      }
     }
   }
 }
@@ -31,6 +32,7 @@ const nextConfig = {
     "@eleva/storage",
     "@eleva/ui",
   ],
+  assetPrefix: env.ACCOUNT_ASSET_PREFIX || undefined,
 }
 
 export default withNextIntl(nextConfig)

@@ -6,8 +6,7 @@ import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
 
-const ACCOUNT_SIGNIN_URL =
-  process.env.ACCOUNT_URL || "https://account.eleva.care"
+const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
 export default async function ExpertLayout({
@@ -22,7 +21,7 @@ export default async function ExpertLayout({
 
   if (!session) {
     const returnTo = encodeURIComponent(`/${orgSlug}/expert`)
-    redirect(`${ACCOUNT_SIGNIN_URL}/signin?returnTo=${returnTo}`)
+    redirect(`${SIGNIN_URL}/signin?returnTo=${returnTo}`)
   }
 
   if (session.orgSlug !== orgSlug) {

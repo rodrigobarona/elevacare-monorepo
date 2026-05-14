@@ -1,10 +1,60 @@
-# WorkOS Multiple Applications — Eleva Diary
+# WorkOS Multi-Application Setup
 
 ## Overview
 
-WorkOS "Multiple Applications" lets the Eleva Diary mobile app have its
-own client ID, redirect URIs, and session policy while sharing the same
-user pool and organizations as the web platform.
+All Eleva web apps (member, expert, team, academy, account, admin)
+share a **single WorkOS Application** and a single session cookie
+scoped to `.eleva.care`. The Eleva Diary mobile app (future) uses a
+**separate WorkOS Application** with its own client ID and token-based
+auth.
+
+## Web Platform — Shared Session Architecture
+
+All web apps share the same `WORKOS_CLIENT_ID`, `WORKOS_API_KEY`, and
+critically the same `WORKOS_COOKIE_PASSWORD`. The AuthKit cookie is
+scoped to `.eleva.care`, making it readable across:
+
+- `eleva.care` (gateway + proxy targets: app, expert, team, academy, account)
+- `admin.eleva.care` (platform operations)
+- `api.eleva.care` (server endpoints)
+
+The account app (`apps/account`) runs behind the gateway proxy at
+`eleva.care/signin`, `eleva.care/callback`, `eleva.care/account/*`, and
+`eleva.care/onboarding` -- just like the expert, team, and academy apps.
+
+### WorkOS Dashboard Configuration
+
+**Redirect URIs** (AuthKit > Redirects):
+
+| Environment | URI                              |
+| ----------- | -------------------------------- |
+| Production  | `https://eleva.care/callback`    |
+| Development | `http://localhost:3000/callback` |
+
+The gateway at `eleva.care` proxies `/callback` to the account app.
+Other apps redirect unauthenticated users to `eleva.care/signin`.
+
+**Allowed Origins** (AuthKit > Allowed Origins):
+
+```
+https://eleva.care
+http://localhost:3000
+```
+
+Only the account app (served at `eleva.care/account/*`) uses WorkOS
+widgets (profile management, security).
+
+### WorkOS Env Vars per Vercel Project
+
+All 7 auth-using projects need these (same values everywhere):
+
+```
+WORKOS_API_KEY=<same key>
+WORKOS_CLIENT_ID=<same client ID>
+WORKOS_COOKIE_PASSWORD=<same 32+ char password — MUST match>
+```
+
+## Eleva Diary — Separate Application (future)
 
 ## Setup Steps (WorkOS Dashboard)
 

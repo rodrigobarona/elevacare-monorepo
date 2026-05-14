@@ -4,9 +4,8 @@ import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 
-const ACCOUNT_SIGNIN_URL =
-  process.env.ACCOUNT_URL || "https://account.eleva.care"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
+const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
+const APP_URL = SIGNIN_URL
 
 export const metadata = {
   title: "Eleva.care — Admin",
@@ -21,7 +20,7 @@ export default async function AdminRootLayout({
   const session = await getSession()
 
   if (!session) {
-    redirect(`${ACCOUNT_SIGNIN_URL}/signin`)
+    redirect(`${SIGNIN_URL}/signin`)
   }
 
   if (!session.capabilities.includes("audit:view_all")) {

@@ -109,23 +109,40 @@ Rules:
 
 Human-facing surfaces are served on the **single canonical domain** `eleva.care`. APIs (webhooks, OAuth callbacks, session-aware server endpoints) live on the dedicated `api.eleva.care` subdomain for clean separation of concerns.
 
-### Zone map
+### Zone map (ADR-015 multi-app split)
 
-| App                                                                               | Vercel project                 | basePath          | Where it serves                                                                                                              | Public URL shape                                                                                                                                                                                                   |
-| --------------------------------------------------------------------------------- | ------------------------------ | ----------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Gateway (marketing + marketplace + public profiles + booking + auth root routing) | `elevacare-web` (`apps/web`)   | `/`               | `eleva.care/` root                                                                                                           | `eleva.care/`, `eleva.care/home`, `eleva.care/about`, `eleva.care/legal/*`, `eleva.care/experts`, `eleva.care/become-partner`, `eleva.care/clinics`, `eleva.care/[username]`, `eleva.care/[username]/[event-slug]` |
-| Authenticated product                                                             | `elevacare-app` (`apps/app`)   | `/` (no basePath) | `eleva.care/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` — rewritten individually from gateway | no `/app` prefix; routes live at the top level, matching vercel.com/dashboard / resend.com/emails                                                                                                                  |
-| Docs + ERS PT compliance                                                          | `elevacare-docs` (`apps/docs`) | `/docs`           | `eleva.care/docs/*` via multi-zone rewrite                                                                                   | `eleva.care/docs/compliance/portugal`                                                                                                                                                                              |
-| API + webhooks + OAuth callbacks + session-aware endpoints                        | `elevacare-api` (`apps/api`)   | `/` (no basePath) | `api.eleva.care/*` — separate subdomain, NOT rewritten                                                                       | `api.eleva.care/stripe/webhook`, `api.eleva.care/stripe/account-session`, `api.eleva.care/daily/transcripts`, `api.eleva.care/calendar/oauth/[provider]/callback`                                                  |
+| App                 | Vercel project      | Root dir       | Domain / routing                                                        | Purpose                                                |
+| ------------------- | ------------------- | -------------- | ----------------------------------------------------------------------- | ------------------------------------------------------ |
+| Gateway + marketing | `elevacare-web`     | `apps/web`     | `eleva.care/` root                                                      | Marketing, public profiles, booking, auth root routing |
+| Member (patient)    | `elevacare-app`     | `apps/app`     | `eleva.care/[orgSlug]` via proxy                                        | Member dashboard, appointments, reviews                |
+| Expert              | `elevacare-expert`  | `apps/expert`  | `eleva.care/[orgSlug]/expert/*` via proxy                               | Expert tools, scheduling, finance, Stripe Connect      |
+| Team (clinic)       | `elevacare-team`    | `apps/team`    | `eleva.care/[orgSlug]/team/*` via proxy                                 | Team/clinic management, expert invitations             |
+| Academy (future)    | `elevacare-academy` | `apps/academy` | `eleva.care/[orgSlug]/academy/*` via proxy                              | Lecturer course creation, LMS management               |
+| Account             | `elevacare-account` | `apps/account` | `eleva.care/signin`, `/callback`, `/account/*`, `/onboarding` via proxy | Auth flows, profile, settings, onboarding              |
+| Admin               | `elevacare-admin`   | `apps/admin`   | `admin.eleva.care` (subdomain)                                          | Platform ops, application approvals, payouts           |
+| API                 | `elevacare-api`     | `apps/api`     | `api.eleva.care` (subdomain)                                            | Webhooks, OAuth callbacks, server endpoints            |
+| Docs                | `elevacare-docs`    | `apps/docs`    | `eleva.care/docs/*` via multi-zone rewrite                              | ERS PT compliance docs                                 |
 
-Rewrites live in `apps/web/next.config.mjs` (gateway) and resolve `afterFiles`. They target specific root-level paths (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) and the `/docs` zone. `apps/app` runs at its own internal root (no `basePath`) and receives the path as-is. `apps/api` is on the subdomain and not rewritten at all.
+Rewrites live in `apps/web/next.config.mjs` and `apps/web/src/proxy.ts`. The gateway dispatches requests to the correct backend app: auth/account paths to `apps/account`, org-scoped second-segment matching (`expert`, `team`, `academy`) to their respective apps. Subdomain apps (`admin`, `api`) are independent projects with custom domains.
+
+### Marketplace integrations per project
+
+All apps share the same Neon project, Upstash Redis, and Vercel Blob stores. Connect Marketplace integrations so env vars are auto-provisioned:
+
+| Integration               | web | app | api | account | admin | expert | team | academy |
+| ------------------------- | --- | --- | --- | ------- | ----- | ------ | ---- | ------- |
+| **Neon Postgres**         | --  | YES | YES | YES     | YES   | YES    | YES  | YES     |
+| **Upstash Redis**         | --  | --  | YES | --      | --    | --     | --   | --      |
+| **Upstash QStash**        | --  | --  | YES | --      | --    | --     | --   | --      |
+| **Vercel Blob (public)**  | --  | --  | YES | YES     | --    | YES    | --   | --      |
+| **Vercel Blob (private)** | --  | --  | YES | YES     | --    | YES    | --   | --      |
 
 ### Context-sensitive root
 
-| State           | `eleva.care/`                                                              | `eleva.care/home`                                         |
-| --------------- | -------------------------------------------------------------------------- | --------------------------------------------------------- |
-| Unauthenticated | marketing home                                                             | marketing home                                            |
-| Authenticated   | **302 redirect** to role home (`/patient`, `/expert`, `/org`, or `/admin`) | marketing home (always; escape hatch for logged-in users) |
+| State           | `eleva.care/`                                                           | `eleva.care/home`                                         |
+| --------------- | ----------------------------------------------------------------------- | --------------------------------------------------------- |
+| Unauthenticated | marketing home                                                          | marketing home                                            |
+| Authenticated   | **302 redirect** to role home (`/[orgSlug]`, `/[orgSlug]/expert`, etc.) | marketing home (always; escape hatch for logged-in users) |
 
 ### Third-party-hosted surfaces (still subdomains)
 
@@ -150,10 +167,15 @@ Cookies scoped to `.eleva.care` make session-aware calls from the gateway/app wo
 
 These exist for operational purposes but are **never shared with users**:
 
-| Subdomain                                               | Host                             | Purpose                                 |
-| ------------------------------------------------------- | -------------------------------- | --------------------------------------- |
-| `email.eleva.care`                                      | `elevacare-email` (`apps/email`) | React Email preview tool, internal only |
-| `elevacare-app.vercel.app`, `elevacare-docs.vercel.app` | Vercel project domains           | CI, preview deploys, rewrite targets    |
+| Subdomain                      | Host                             | Purpose                                      |
+| ------------------------------ | -------------------------------- | -------------------------------------------- |
+| `email.eleva.care`             | `elevacare-email` (`apps/email`) | React Email preview tool, internal only      |
+| `elevacare-app.vercel.app`     | Vercel project domain            | CI, preview deploys, proxy rewrite target    |
+| `elevacare-account.vercel.app` | Vercel project domain            | Proxy rewrite target for auth/account routes |
+| `elevacare-expert.vercel.app`  | Vercel project domain            | Proxy rewrite target for expert routes       |
+| `elevacare-team.vercel.app`    | Vercel project domain            | Proxy rewrite target for team routes         |
+| `elevacare-academy.vercel.app` | Vercel project domain            | Proxy rewrite target for academy routes      |
+| `elevacare-docs.vercel.app`    | Vercel project domain            | Proxy rewrite target for /docs zone          |
 
 **Internal-subdomain canonicalization rule** (ADR-014): every internal subdomain serves either a 301 redirect to the canonical `eleva.care/...` URL **or** `X-Robots-Tag: noindex` + `robots.txt` disallow. Only `eleva.care` and `api.eleva.care` (not indexed, server-only) are publicly addressable.
 
@@ -178,13 +200,16 @@ These exist for operational purposes but are **never shared with users**:
 | Category landing                                  | `https://eleva.care/experts/womens-health`                                                            |
 | Become-Partner                                    | `https://eleva.care/become-partner`                                                                   |
 | Clinic signup                                     | `https://eleva.care/clinics`                                                                          |
-| Authenticated patient                             | `https://eleva.care/patient`                                                                          |
-| Authenticated expert                              | `https://eleva.care/expert`                                                                           |
-| Authenticated clinic admin                        | `https://eleva.care/org`                                                                              |
-| Eleva operator                                    | `https://eleva.care/admin`                                                                            |
-| Account settings (shared)                         | `https://eleva.care/settings`                                                                         |
-| WorkOS AuthKit callback                           | `https://eleva.care/callback` (rewritten to app zone)                                                 |
-| Logout                                            | `https://eleva.care/logout` (rewritten to app zone)                                                   |
+| Member dashboard                                  | `https://eleva.care/[orgSlug]` (proxy → `elevacare-app`)                                              |
+| Expert dashboard                                  | `https://eleva.care/[orgSlug]/expert` (proxy → `elevacare-expert`)                                    |
+| Team management                                   | `https://eleva.care/[orgSlug]/team` (proxy → `elevacare-team`)                                        |
+| Academy (lecturer)                                | `https://eleva.care/[orgSlug]/academy` (proxy → `elevacare-academy`)                                  |
+| Sign in                                           | `https://eleva.care/signin` (proxy → `elevacare-account`)                                             |
+| Account / settings                                | `https://eleva.care/account` (proxy → `elevacare-account`)                                            |
+| Onboarding                                        | `https://eleva.care/onboarding` (proxy → `elevacare-account`)                                         |
+| Admin ops                                         | `https://admin.eleva.care/` (subdomain)                                                               |
+| WorkOS AuthKit callback                           | `https://eleva.care/callback` (proxy → `elevacare-account`)                                           |
+| Logout                                            | `https://eleva.care/logout` (proxy → `elevacare-account`)                                             |
 | Docs + ERS PT compliance                          | `https://eleva.care/docs/compliance/portugal`                                                         |
 
 Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the root (no prefix); PT and ES carry the `pt` / `es` prefix.
@@ -239,18 +264,38 @@ Set up in Vercel DNS when Resend domain is added:
 
 ### Subdomain apps
 
-- `CNAME app`, `api`, `docs`, `email`, `sessions`, `status` → their respective Vercel projects / Daily / BetterStack
+- `CNAME admin` → `elevacare-admin` Vercel project (`admin.eleva.care`)
+- `CNAME api` → `elevacare-api` Vercel project (`api.eleva.care`)
+- `CNAME sessions` → Daily.co branded video
+- `CNAME status` → BetterStack status page
+- `CNAME email` → `elevacare-email` (internal only)
 
 ## Environment-Specific Configuration
 
 ### Local dev specifics
 
-- Apps run via `pnpm dev` through Turborepo; `vercel env pull .env.local` populates env vars from the Vercel Marketplace integrations (Neon branch, Upstash sandbox, Resend test, Sentry dev project, etc.) per app.
-- Gateway runs on `localhost:3000`, app zone on `localhost:3001`, api zone on `localhost:3002`, docs zone on `localhost:3003`.
-- Gateway's `APP_URL` and `DOCS_URL` env vars point at the sibling ports so gateway rewrites resolve locally. API is **not** rewritten; the app calls `localhost:3002` (or `api.localtest.me:3002` if you want CORS parity) directly with credentials.
+Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root populates shared env vars.
+
+**Port assignments:**
+
+| App           | Port | Env var                |
+| ------------- | ---- | ---------------------- |
+| web (gateway) | 3000 | --                     |
+| app (member)  | 3001 | `APP_ASSET_PREFIX`     |
+| api           | 3002 | --                     |
+| expert        | 3003 | `EXPERT_ASSET_PREFIX`  |
+| team          | 3004 | `TEAM_ASSET_PREFIX`    |
+| academy       | 3005 | `ACADEMY_ASSET_PREFIX` |
+| account       | 3006 | `ACCOUNT_URL`          |
+| admin         | 3007 | `ADMIN_URL`            |
+| docs          | 3008 | `DOCS_URL`             |
+| email         | 3009 | --                     |
+
+- Gateway's asset prefix env vars point at sibling ports so proxy rewrites resolve locally.
+- API is **not** rewritten; apps call `localhost:3002` directly.
 - Stripe webhooks forwarded via `stripe listen --forward-to localhost:3002/stripe/webhook`.
 - Daily rooms use the test domain; transcripts use the dev webhook URL (local tunnel when external reachability is needed).
-- WorkOS app configured with `http://localhost:3000/callback` (gateway rewrites to `localhost:3001/callback`).
+- WorkOS redirect URI: `http://localhost:3000/callback` (gateway proxies to account app).
 - Calendar OAuth + TOConline OAuth callbacks point at `localhost:3002` (api zone).
 
 ### Staging specifics
@@ -288,7 +333,7 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 | ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
 | Stripe webhook                              | `localhost:3002/stripe/webhook` via `stripe listen` | `api.staging.eleva.care/stripe/webhook`                    | `api.eleva.care/stripe/webhook`                    |
 | Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`             | `api.staging.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
-| WorkOS AuthKit callback (human-facing)      | `localhost:3000/callback` (rewritten to app)        | `staging.eleva.care/callback`                              | `eleva.care/callback`                              |
+| WorkOS AuthKit callback (human-facing)      | `localhost:3000/callback` (gateway → account app)   | `staging.eleva.care/callback`                              | `eleva.care/callback`                              |
 | WorkOS events webhook (server-to-server)    | `localhost:3002/workos/webhook`                     | `api.staging.eleva.care/workos/webhook`                    | `api.eleva.care/workos/webhook`                    |
 | Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`     | `api.staging.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
 | Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`  | `api.staging.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |

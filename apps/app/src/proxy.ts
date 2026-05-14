@@ -7,12 +7,19 @@ import {
 } from "@workos-inc/authkit-nextjs"
 import { cookieName, isLocale } from "@eleva/config/i18n"
 import { countryToLocale } from "@eleva/config/country-to-locale"
-import { APP_STANDALONE_PATHS, APP_FIXED_SEGMENTS } from "@eleva/config/routing"
+import {
+  APP_FIXED_SEGMENTS,
+  ACCOUNT_STANDALONE_PATHS,
+  ACCOUNT_FIXED_SEGMENTS,
+} from "@eleva/config/routing"
 import { withHeaders } from "@eleva/observability/proxy"
 
-const AUTH_FLOW_PATHS = APP_STANDALONE_PATHS.map((p) => `/${p}`)
+const AUTH_FLOW_PATHS = ACCOUNT_STANDALONE_PATHS.map((p) => `/${p}`)
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
-const fixedSegments = new Set<string>(APP_FIXED_SEGMENTS)
+const fixedSegments = new Set<string>([
+  ...APP_FIXED_SEGMENTS,
+  ...ACCOUNT_FIXED_SEGMENTS,
+])
 
 const UNAUTH_PATHS = [
   "/",

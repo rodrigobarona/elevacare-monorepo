@@ -8,8 +8,7 @@ interface NavItem {
   needs?: string
 }
 
-const ACCOUNT_URL =
-  process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://account.eleva.care"
+const ACCOUNT_URL = process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://eleva.care"
 
 function buildNav(orgSlug: string): NavItem[] {
   const s = `/${orgSlug}`

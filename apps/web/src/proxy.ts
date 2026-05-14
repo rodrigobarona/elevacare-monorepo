@@ -1,16 +1,28 @@
 import createMiddleware from "next-intl/middleware"
 import { NextResponse, type NextRequest } from "next/server"
 import { routing } from "./i18n/routing"
-import { APP_FIXED_SEGMENTS, APP_STANDALONE_PATHS } from "@eleva/config/routing"
+import {
+  APP_FIXED_SEGMENTS,
+  APP_STANDALONE_PATHS,
+  ACCOUNT_FIXED_SEGMENTS,
+  ACCOUNT_STANDALONE_PATHS,
+} from "@eleva/config/routing"
 import { locales } from "@eleva/config/i18n"
 
 const intlMiddleware = createMiddleware(routing)
 
 const appOrigin = process.env.APP_ASSET_PREFIX || "http://localhost:3001"
-const expertOrigin = process.env.EXPERT_ASSET_PREFIX || "http://localhost:3002"
+const expertOrigin = process.env.EXPERT_ASSET_PREFIX || "http://localhost:3003"
 const teamOrigin = process.env.TEAM_ASSET_PREFIX || "http://localhost:3004"
 const academyOrigin =
   process.env.ACADEMY_ASSET_PREFIX || "http://localhost:3005"
+const accountOrigin =
+  process.env.ACCOUNT_ASSET_PREFIX || "http://localhost:3006"
+
+const accountPaths = new Set<string>([
+  ...ACCOUNT_FIXED_SEGMENTS,
+  ...ACCOUNT_STANDALONE_PATHS,
+])
 
 const fixedAppPaths = new Set<string>([
   ...APP_FIXED_SEGMENTS,
@@ -35,16 +47,18 @@ function isRootPath(pathname: string): boolean {
  * request should stay in the marketing zone (apps/web).
  *
  * Routing priority:
- * 1. Fixed app-level paths (onboarding, account, admin, auth-redirect, etc.)
- * 2. Org-scoped second-segment dispatch: expert -> apps/expert,
+ * 1. Account paths (signin, callback, onboarding, account/*) -> apps/account
+ * 2. Fixed app-level paths (admin) -> apps/app
+ * 3. Org-scoped second-segment dispatch: expert -> apps/expert,
  *    team -> apps/team, academy -> apps/academy
- * 3. Bare /[orgSlug] with a session cookie -> member app (apps/app)
+ * 4. Bare /[orgSlug] with a session cookie -> member app (apps/app)
  */
 function resolveOrigin(pathname: string, hasSession: boolean): string | null {
   const segments = pathname.split("/").filter(Boolean)
   const first = segments[0] ?? ""
   const second = segments[1] ?? ""
 
+  if (accountPaths.has(first)) return accountOrigin
   if (fixedAppPaths.has(first)) return appOrigin
 
   if (localeSet.has(first)) return null

@@ -2,8 +2,7 @@ import { redirect, notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { getSessionForOrg } from "@eleva/auth/server"
 
-const ACCOUNT_SIGNIN_URL =
-  process.env.ACCOUNT_URL || "https://account.eleva.care"
+const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
 export default async function TeamLayout({
@@ -18,7 +17,7 @@ export default async function TeamLayout({
 
   if (!session) {
     const returnTo = encodeURIComponent(`/${orgSlug}/team`)
-    redirect(`${ACCOUNT_SIGNIN_URL}/signin?returnTo=${returnTo}`)
+    redirect(`${SIGNIN_URL}/signin?returnTo=${returnTo}`)
   }
 
   if (session.orgSlug !== orgSlug) {

@@ -4,23 +4,26 @@ import createNextIntlPlugin from "next-intl/plugin"
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 const appOrigin = env.APP_ASSET_PREFIX || "http://localhost:3001"
-const expertOrigin = env.EXPERT_ASSET_PREFIX || "http://localhost:3002"
+const expertOrigin = env.EXPERT_ASSET_PREFIX || "http://localhost:3003"
 const teamOrigin = env.TEAM_ASSET_PREFIX || "http://localhost:3004"
 const academyOrigin = env.ACADEMY_ASSET_PREFIX || "http://localhost:3005"
+const accountOrigin = env.ACCOUNT_ASSET_PREFIX || "http://localhost:3006"
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   transpilePackages: ["@eleva/auth", "@eleva/config", "@eleva/db", "@eleva/ui"],
 
   async rewrites() {
-    const rootSegments = ["onboarding", "account", "admin"]
-    const standalonePaths = [
+    const accountSegments = ["onboarding", "account"]
+    const accountStandalone = [
       "auth-redirect",
       "callback",
       "logout",
       "signin",
       "signup",
     ]
+
+    const appSegments = ["admin"]
 
     return {
       beforeFiles: [
@@ -39,14 +42,19 @@ const nextConfig = {
           source: "/:orgSlug/academy/:path*",
           destination: `${academyOrigin}/:orgSlug/academy/:path*`,
         },
+        // Account app (auth, onboarding, settings)
+        ...accountSegments.map((seg) => ({
+          source: `/${seg}/:path*`,
+          destination: `${accountOrigin}/${seg}/:path*`,
+        })),
+        ...accountStandalone.map((path) => ({
+          source: `/${path}`,
+          destination: `${accountOrigin}/${path}`,
+        })),
         // Member app fixed paths
-        ...rootSegments.map((seg) => ({
+        ...appSegments.map((seg) => ({
           source: `/${seg}/:path*`,
           destination: `${appOrigin}/${seg}/:path*`,
-        })),
-        ...standalonePaths.map((path) => ({
-          source: `/${path}`,
-          destination: `${appOrigin}/${path}`,
         })),
       ],
     }

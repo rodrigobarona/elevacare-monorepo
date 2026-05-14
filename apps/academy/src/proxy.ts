@@ -9,8 +9,7 @@ import { cookieName, isLocale } from "@eleva/config/i18n"
 import { countryToLocale } from "@eleva/config/country-to-locale"
 import { withHeaders } from "@eleva/observability/proxy"
 
-const ACCOUNT_SIGNIN_URL =
-  process.env.ACCOUNT_URL || "https://account.eleva.care"
+const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
 
 function resolveLocale(req: NextRequest): string {
   const fromCookie = req.cookies.get(cookieName)?.value
@@ -38,7 +37,7 @@ async function handler(req: NextRequest): Promise<NextResponse | Response> {
 
   if (!session.user && authorizationUrl) {
     const returnTo = encodeURIComponent(req.nextUrl.toString())
-    const signinUrl = `${ACCOUNT_SIGNIN_URL}/signin?returnTo=${returnTo}`
+    const signinUrl = `${SIGNIN_URL}/signin?returnTo=${returnTo}`
     return NextResponse.redirect(signinUrl)
   }
 
