@@ -4,6 +4,69 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@radix-ui/themes':
+      specifier: ^3.3.0
+      version: 3.3.0
+    '@tailwindcss/postcss':
+      specifier: ^4.1.18
+      version: 4.2.4
+    '@types/node':
+      specifier: ^25.1.0
+      version: 25.6.0
+    '@types/react':
+      specifier: ^19.2.14
+      version: 19.2.14
+    '@types/react-dom':
+      specifier: ^19.2.3
+      version: 19.2.3
+    '@workos-inc/authkit-nextjs':
+      specifier: ^4.0.1
+      version: 4.0.1
+    '@workos-inc/node':
+      specifier: ^9.2.0
+      version: 9.2.0
+    '@workos-inc/widgets':
+      specifier: ^1.12.0
+      version: 1.12.0
+    '@workos-inc/widgets-i18n':
+      specifier: ^1.0.0
+      version: 1.0.0
+    drizzle-orm:
+      specifier: ^0.45.2
+      version: 0.45.2
+    eslint:
+      specifier: ^9.39.2
+      version: 9.39.4
+    lucide-react:
+      specifier: ^1.8.0
+      version: 1.8.0
+    next:
+      specifier: ^16.2.6
+      version: 16.2.6
+    next-intl:
+      specifier: ^4.9.1
+      version: 4.9.1
+    next-themes:
+      specifier: ^0.4.6
+      version: 0.4.6
+    react:
+      specifier: ^19.2.6
+      version: 19.2.6
+    react-dom:
+      specifier: ^19.2.6
+      version: 19.2.6
+    tsx:
+      specifier: ^4.21.0
+      version: 4.21.0
+    typescript:
+      specifier: ^5.9.3
+      version: 5.9.3
+    zod:
+      specifier: ^3.25.76
+      version: 3.25.76
+
 importers:
 
   .:
@@ -69,19 +132,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.17
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -91,19 +154,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       prettier:
         specifier: ^3.5.3
         version: 3.8.3
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/account:
@@ -127,40 +190,40 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@radix-ui/themes':
-        specifier: ^3.3.0
+        specifier: 'catalog:'
         version: 3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       '@workos-inc/widgets':
-        specifier: ^1.12.0
+        specifier: 'catalog:'
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
-        specifier: ^1.0.0
+        specifier: 'catalog:'
         version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -170,22 +233,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/admin:
@@ -209,28 +272,28 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -240,22 +303,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/api:
@@ -294,16 +357,16 @@ importers:
         specifier: ^1.34.0
         version: 1.38.0
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eleva/eslint-config':
@@ -313,22 +376,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       tsx:
-        specifier: ^4.21.0
+        specifier: 'catalog:'
         version: 4.21.0
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/app:
@@ -370,7 +433,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@radix-ui/themes':
-        specifier: ^3.3.0
+        specifier: 'catalog:'
         version: 3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@stripe/stripe-js':
         specifier: ^9.4.0
@@ -379,37 +442,37 @@ importers:
         specifier: ^5.100.10
         version: 5.100.10(react@19.2.6)
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       '@workos-inc/widgets':
-        specifier: ^1.12.0
+        specifier: 'catalog:'
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
-        specifier: ^1.0.0
+        specifier: 'catalog:'
         version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -419,22 +482,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/docs:
@@ -443,13 +506,13 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eleva/eslint-config':
@@ -459,34 +522,34 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/email:
     dependencies:
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eleva/eslint-config':
@@ -496,19 +559,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/expert:
@@ -544,43 +607,43 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@radix-ui/themes':
-        specifier: ^3.3.0
+        specifier: 'catalog:'
         version: 3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@stripe/stripe-js':
         specifier: ^9.4.0
         version: 9.4.0
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       '@workos-inc/widgets':
-        specifier: ^1.12.0
+        specifier: 'catalog:'
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
-        specifier: ^1.0.0
+        specifier: 'catalog:'
         version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -590,22 +653,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/team:
@@ -629,28 +692,28 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -660,22 +723,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   apps/web:
@@ -690,19 +753,19 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
-        specifier: ^4.9.1
+        specifier: 'catalog:'
         version: 4.9.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
     devDependencies:
       '@eleva/eslint-config':
@@ -712,22 +775,22 @@ importers:
         specifier: workspace:*
         version: link:../../packages/typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   infra/workos:
@@ -761,7 +824,7 @@ importers:
         specifier: workspace:*
         version: link:../db
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -771,13 +834,13 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/accounting:
@@ -814,10 +877,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/audit:
@@ -829,7 +892,7 @@ importers:
         specifier: workspace:*
         version: link:../observability
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
@@ -839,10 +902,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/auth:
@@ -854,13 +917,13 @@ importers:
         specifier: workspace:*
         version: link:../db
       '@workos-inc/authkit-nextjs':
-        specifier: ^4.0.1
+        specifier: 'catalog:'
         version: 4.0.1(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@5.9.3)
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       iron-session:
         specifier: ^8.0.4
@@ -876,22 +939,22 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/billing:
@@ -919,22 +982,22 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/calendar:
     dependencies:
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
     devDependencies:
       '@eleva/eslint-config':
@@ -944,10 +1007,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/compliance:
@@ -959,16 +1022,16 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/config:
     dependencies:
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -978,13 +1041,13 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/crm:
@@ -996,10 +1059,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/db:
@@ -1011,7 +1074,7 @@ importers:
         specifier: ^1.1.0
         version: 1.1.0
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
@@ -1024,19 +1087,19 @@ importers:
         specifier: ^0.31.10
         version: 0.31.10
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       tsx:
-        specifier: ^4.21.0
+        specifier: 'catalog:'
         version: 4.21.0
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/email:
     dependencies:
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-email:
         specifier: ^6.0.0
@@ -1052,13 +1115,13 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/encryption:
@@ -1067,7 +1130,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
     devDependencies:
       '@eleva/eslint-config':
@@ -1077,10 +1140,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/eslint-config:
@@ -1144,19 +1207,19 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       tsx:
-        specifier: ^4.21.0
+        specifier: 'catalog:'
         version: 4.21.0
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/integrations:
@@ -1168,10 +1231,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/notifications:
@@ -1183,10 +1246,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/observability:
@@ -1205,19 +1268,19 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       next:
-        specifier: ^16.2.6
+        specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/scheduling:
@@ -1232,7 +1295,7 @@ importers:
         specifier: ^1.34.0
         version: 1.38.0
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
     devDependencies:
       '@eleva/eslint-config':
@@ -1242,10 +1305,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
       vitest:
         specifier: ^4.1.5
@@ -1267,16 +1330,16 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/typescript-config: {}
@@ -1299,19 +1362,19 @@ importers:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       lucide-react:
-        specifier: ^1.8.0
+        specifier: 'catalog:'
         version: 1.8.0(react@19.2.6)
       next-themes:
-        specifier: ^0.4.6
+        specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6
       react-dom:
-        specifier: ^19.2.6
+        specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
       react-hook-form:
         specifier: ^7.75.0
@@ -1329,7 +1392,7 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       zod:
-        specifier: ^3.25.76
+        specifier: 'catalog:'
         version: 3.25.76
     devDependencies:
       '@eleva/eslint-config':
@@ -1339,28 +1402,28 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       '@tailwindcss/postcss':
-        specifier: ^4.1.18
+        specifier: 'catalog:'
         version: 4.2.4
       '@turbo/gen':
         specifier: ^2.8.1
         version: 2.9.6(@types/node@25.6.0)
       '@types/node':
-        specifier: ^25.1.0
+        specifier: 'catalog:'
         version: 25.6.0
       '@types/react':
-        specifier: ^19.2.14
+        specifier: 'catalog:'
         version: 19.2.14
       '@types/react-dom':
-        specifier: ^19.2.3
+        specifier: 'catalog:'
         version: 19.2.3(@types/react@19.2.14)
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       tailwindcss:
         specifier: ^4.1.18
         version: 4.2.4
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
   packages/workflows:
@@ -1378,10 +1441,10 @@ importers:
         specifier: workspace:*
         version: link:../observability
       '@workos-inc/node':
-        specifier: ^9.2.0
+        specifier: 'catalog:'
         version: 9.2.0
       drizzle-orm:
-        specifier: ^0.45.2
+        specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       resend:
         specifier: ^6.12.2
@@ -1394,10 +1457,10 @@ importers:
         specifier: workspace:*
         version: link:../typescript-config
       eslint:
-        specifier: ^9.39.2
+        specifier: 'catalog:'
         version: 9.39.4(jiti@2.6.1)
       typescript:
-        specifier: ^5.9.3
+        specifier: 'catalog:'
         version: 5.9.3
 
 packages:

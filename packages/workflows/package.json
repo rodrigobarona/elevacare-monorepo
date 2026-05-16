@@ -20,14 +20,14 @@
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
-    "@workos-inc/node": "^9.2.0",
-    "drizzle-orm": "^0.45.2",
+    "@workos-inc/node": "catalog:",
+    "drizzle-orm": "catalog:",
     "resend": "^6.12.2"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "eslint": "catalog:",
+    "typescript": "catalog:"
   }
 }

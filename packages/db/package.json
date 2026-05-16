@@ -30,14 +30,14 @@
   "dependencies": {
     "@eleva/config": "workspace:*",
     "@neondatabase/serverless": "^1.1.0",
-    "drizzle-orm": "^0.45.2"
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^9.39.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
   }
 }

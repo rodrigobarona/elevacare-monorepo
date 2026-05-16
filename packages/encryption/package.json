@@ -15,12 +15,12 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "@workos-inc/node": "^9.2.0"
+    "@workos-inc/node": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "eslint": "catalog:",
+    "typescript": "catalog:"
   }
 }

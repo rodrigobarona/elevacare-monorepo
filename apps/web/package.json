@@ -15,20 +15,20 @@
     "@eleva/auth": "workspace:^",
     "@eleva/config": "workspace:^",
     "@eleva/ui": "workspace:*",
-    "lucide-react": "^1.8.0",
-    "next": "^16.2.6",
-    "next-intl": "^4.9.1",
-    "react": "^19.2.6",
-    "react-dom": "^19.2.6"
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-intl": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "@tailwindcss/postcss": "^4.1.18",
-    "@types/node": "^25.1.0",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
   }
 }

@@ -1,0 +1,70 @@
+---
+description: pnpm Catalog — centralized dependency versioning. Apply when adding, bumping, or removing shared dependencies in any package.json across the monorepo.
+globs:
+  - "**/package.json"
+  - pnpm-workspace.yaml
+alwaysApply: false
+---
+
+# pnpm Catalog — Centralized Dependency Versions
+
+## How It Works
+
+Shared dependency versions are defined once in `pnpm-workspace.yaml` under `catalog:`. Individual `package.json` files reference them with `"catalog:"` instead of hardcoded semver ranges.
+
+```yaml
+# pnpm-workspace.yaml
+catalog:
+  next: ^16.2.6
+  react: ^19.2.6
+```
+
+```jsonc
+// apps/app/package.json
+{
+  "dependencies": {
+    "next": "catalog:",   // resolves to ^16.2.6 from the catalog
+    "react": "catalog:"
+  }
+}
+```
+
+## Hard Rules
+
+1. **NEVER hardcode a semver range for a cataloged package.** If a dependency is listed in `pnpm-workspace.yaml` `catalog:`, every `package.json` that uses it MUST specify `"catalog:"` as the version — not a raw range like `"^16.2.6"`.
+
+2. **Bump versions in ONE place.** To upgrade a cataloged dependency, edit only the `catalog:` section in `pnpm-workspace.yaml`, then run `pnpm install`. Do NOT edit individual `package.json` files.
+
+3. **Do NOT catalog peerDependencies.** Peer deps express compatibility constraints (e.g. `"react": "19.x"`). Leave them as normal semver ranges. Only `dependencies` and `devDependencies` use `"catalog:"`.
+
+4. **Do NOT catalog workspace references.** Internal packages (`workspace:*`, `workspace:^`) are not managed by the catalog.
+
+5. **Do NOT catalog single-use dependencies.** If a package is only used in one workspace, keep it as a normal semver range. The catalog is for packages shared across 3+ workspaces.
+
+## Currently Cataloged Packages
+
+| Category | Packages |
+|----------|----------|
+| Framework | `next`, `react`, `react-dom`, `next-intl`, `next-themes` |
+| Types | `@types/react`, `@types/react-dom`, `@types/node` |
+| Build & lint | `typescript`, `eslint`, `@tailwindcss/postcss`, `tsx` |
+| Auth (WorkOS) | `@workos-inc/authkit-nextjs`, `@workos-inc/node`, `@workos-inc/widgets`, `@workos-inc/widgets-i18n` |
+| Database | `drizzle-orm` |
+| UI | `lucide-react`, `@radix-ui/themes`, `zod` |
+
+## Adding a New Dependency to the Catalog
+
+1. Check if the package is used in 3+ workspaces (or will be).
+2. Add it to `pnpm-workspace.yaml` under `catalog:` with the desired version range.
+3. In every `package.json` that uses it, replace the semver range with `"catalog:"`.
+4. Run `pnpm install` to update the lockfile.
+
+## Upgrading a Cataloged Dependency
+
+1. Edit the version in `pnpm-workspace.yaml` `catalog:` section.
+2. Run `pnpm install`.
+3. Commit both `pnpm-workspace.yaml` and `pnpm-lock.yaml`.
+
+## Cache Invalidation
+
+`pnpm-workspace.yaml` is listed in `turbo.json` `globalDependencies`. Any change to the catalog invalidates all Turborepo caches, ensuring builds pick up the new versions.

@@ -20,9 +20,9 @@
   "dependencies": {
     "@eleva/audit": "workspace:*",
     "@eleva/db": "workspace:*",
-    "@workos-inc/authkit-nextjs": "^4.0.1",
-    "@workos-inc/node": "^9.2.0",
-    "drizzle-orm": "^0.45.2",
+    "@workos-inc/authkit-nextjs": "catalog:",
+    "@workos-inc/node": "catalog:",
+    "drizzle-orm": "catalog:",
     "iron-session": "^8.0.4",
     "jose": "^5.10.0"
   },
@@ -41,11 +41,11 @@
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "@types/node": "^25.1.0",
-    "@types/react": "^19.2.14",
-    "eslint": "^9.39.2",
-    "next": "^16.2.6",
-    "react": "^19.2.6",
-    "typescript": "^5.9.3"
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "next": "catalog:",
+    "react": "catalog:",
+    "typescript": "catalog:"
   }
 }
