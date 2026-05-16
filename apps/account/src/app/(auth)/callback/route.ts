@@ -5,10 +5,10 @@ import { cookieName, isLocale } from "@eleva/config/i18n"
 /**
  * WorkOS OAuth callback for the account app. Sets the session cookie
  * on `.eleva.care` so all apps can read it, then redirects to
- * /auth-redirect which handles post-login routing.
+ * /dashboard which handles post-login routing.
  */
 export const GET = handleAuth({
-  returnPathname: "/auth-redirect",
+  returnPathname: "/dashboard",
   baseURL: process.env.ACCOUNT_URL || process.env.NEXT_PUBLIC_ACCOUNT_URL,
   onSuccess: async (data) => {
     const jar = await cookies()

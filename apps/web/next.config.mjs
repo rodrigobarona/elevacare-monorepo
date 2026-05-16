@@ -16,7 +16,7 @@ const nextConfig = {
   async rewrites() {
     const accountSegments = ["onboarding", "account"]
     const accountStandalone = [
-      "auth-redirect",
+      "dashboard",
       "callback",
       "logout",
       "signin",

@@ -62,7 +62,6 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "dashboard",
   "account",
   "onboarding",
-  "auth-redirect",
 
   // Infra
   "_next",

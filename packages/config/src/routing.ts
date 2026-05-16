@@ -11,7 +11,7 @@ export const ACCOUNT_FIXED_SEGMENTS = ["onboarding", "account"] as const
 
 /** Auth-related standalone paths routed to the account app. */
 export const ACCOUNT_STANDALONE_PATHS = [
-  "auth-redirect",
+  "dashboard",
   "callback",
   "logout",
   "signin",

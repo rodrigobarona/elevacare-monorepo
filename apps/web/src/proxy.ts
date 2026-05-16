@@ -92,7 +92,7 @@ export default function proxy(request: NextRequest) {
 
   if (isRootPath(pathname) && hasSession) {
     const url = request.nextUrl.clone()
-    url.pathname = "/auth-redirect"
+    url.pathname = "/dashboard"
     return NextResponse.redirect(url)
   }
 

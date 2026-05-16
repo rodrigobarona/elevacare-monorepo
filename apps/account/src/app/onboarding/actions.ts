@@ -117,7 +117,7 @@ export async function createSpace(
     }),
   ])
 
-  redirect("/auth-redirect")
+  redirect("/dashboard")
 }
 
 /**

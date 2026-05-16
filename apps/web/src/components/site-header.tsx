@@ -63,7 +63,7 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
               email={user.email}
               dashboardLabel={t("dashboard")}
               signOutLabel={t("signout")}
-              dashboardUrl="/auth-redirect"
+              dashboardUrl="/dashboard"
               signOutUrl="/logout"
             />
           ) : (

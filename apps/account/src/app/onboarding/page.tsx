@@ -15,7 +15,7 @@ export default async function OnboardingPage() {
 
   const { hasMembership } = await checkExistingMembership()
   if (hasMembership) {
-    redirect("/auth-redirect")
+    redirect("/dashboard")
   }
 
   const displayName =

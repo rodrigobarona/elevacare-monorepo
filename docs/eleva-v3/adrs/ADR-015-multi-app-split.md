@@ -56,7 +56,7 @@ Split `apps/app` into focused micro-apps. Use two routing mechanisms:
 
 The gateway (`apps/web`) dispatches requests to the correct app origin based on URL path segments:
 
-- `/signin`, `/signup`, `/callback`, `/logout`, `/auth-redirect` -> `apps/account`
+- `/signin`, `/signup`, `/callback`, `/logout`, `/dashboard` -> `apps/account`
 - `/onboarding/*`, `/account/*` -> `apps/account`
 - `/[orgSlug]/expert/*` -> `apps/expert`
 - `/[orgSlug]/team/*` -> `apps/team`
@@ -98,7 +98,7 @@ Auth flows are centralized in `apps/account`, served via the gateway proxy at `e
 - `/signin`, `/signup` -- redirect to WorkOS AuthKit
 - `/callback` -- handle WorkOS callback, set session cookie on `.eleva.care`
 - `/logout` -- clear session, redirect to `eleva.care`
-- `/auth-redirect` -- post-login routing with `returnTo` support
+- `/dashboard` -- post-login routing with `returnTo` support
 - `/onboarding` -- create first personal org ("space")
 
 Every other app's `proxy.ts` redirects unauthenticated users to `eleva.care/signin?returnTo={current-url}`. After the callback sets the `.eleva.care` cookie, the user is redirected back via `returnTo`.
