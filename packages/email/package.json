@@ -15,13 +15,13 @@
   },
   "dependencies": {
     "react-email": "^6.0.0",
-    "react": "^19.2.4",
+    "react": "^19.2.6",
     "resend": "^4.5.0"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "@types/react": "^19.2.10",
+    "@types/react": "^19.2.14",
     "eslint": "^9.39.2",
     "typescript": "^5.9.3"
   }
