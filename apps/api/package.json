@@ -24,7 +24,7 @@
     "@eleva/ui": "workspace:*",
     "@eleva/workflows": "workspace:*",
     "@upstash/qstash": "^2.11.0",
-    "@upstash/redis": "^1.38.0",
+    "@upstash/redis": "catalog:",
     "drizzle-orm": "catalog:",
     "next": "catalog:",
     "react": "catalog:",

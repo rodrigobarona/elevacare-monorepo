@@ -25,7 +25,7 @@
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@radix-ui/themes": "catalog:",
-    "@stripe/stripe-js": "^9.5.0",
+    "@stripe/stripe-js": "catalog:",
     "@tanstack/react-query": "^5.100.10",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",

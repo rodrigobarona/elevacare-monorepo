@@ -20,13 +20,29 @@ catalog:
   typescript: ^5.9.3
   eslint: ^9.39.2
   "@tailwindcss/postcss": ^4.3.0
+  tailwindcss: ^4.3.0
   tsx: ^4.22.0
+  prettier: ^3.8.3
+
+  # Testing
+  vitest: ^4.1.6
+  "@vitest/coverage-v8": ^4.1.6
 
   # Auth (WorkOS)
   "@workos-inc/authkit-nextjs": ^4.1.0
   "@workos-inc/node": ^9.3.0
   "@workos-inc/widgets": ^1.12.0
   "@workos-inc/widgets-i18n": ^1.0.0
+
+  # Payments (Stripe)
+  stripe: ^22.1.1
+  "@stripe/stripe-js": ^9.5.0
+
+  # Email
+  resend: ^6.12.3
+
+  # Infrastructure
+  "@upstash/redis": ^1.38.0
 
   # Database
   drizzle-orm: ^0.45.2

@@ -16,7 +16,7 @@
   "dependencies": {
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
-    "@upstash/redis": "^1.38.0",
+    "@upstash/redis": "catalog:",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {
@@ -24,6 +24,6 @@
     "@eleva/typescript-config": "workspace:*",
     "eslint": "catalog:",
     "typescript": "catalog:",
-    "vitest": "^4.1.6"
+    "vitest": "catalog:"
   }
 }

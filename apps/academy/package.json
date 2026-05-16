@@ -30,7 +30,7 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "eslint": "catalog:",
-    "prettier": "^3.8.3",
+    "prettier": "catalog:",
     "typescript": "catalog:"
   }
 }

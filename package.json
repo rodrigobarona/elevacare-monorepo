@@ -22,16 +22,16 @@
     "@commitlint/config-conventional": "^20.5.0",
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "@types/node": "^25.8.0",
-    "@vitest/coverage-v8": "^4.1.6",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0",
     "only-allow": "^1.2.1",
-    "prettier": "^3.8.3",
+    "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "turbo": "^2.9.14",
     "typescript": "5.9.3",
-    "vitest": "^4.1.6"
+    "vitest": "catalog:"
   },
   "packageManager": "pnpm@9.15.9",
   "engines": {
