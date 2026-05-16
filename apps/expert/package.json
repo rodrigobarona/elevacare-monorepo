@@ -22,7 +22,7 @@
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@radix-ui/themes": "catalog:",
-    "@stripe/stripe-js": "^9.4.0",
+    "@stripe/stripe-js": "^9.5.0",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
     "@workos-inc/widgets": "catalog:",

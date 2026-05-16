@@ -33,7 +33,7 @@ describe("buildCspHeader", () => {
   })
 
   it("exposes the underlying allowlist as a constant", () => {
-    expect(CSP_ALLOWLIST.scriptSrc.length).toBeGreaterThan(0)
-    expect(CSP_ALLOWLIST.connectSrc.length).toBeGreaterThan(0)
+    expect(CSP_ALLOWLIST.scriptSrc?.length).toBeGreaterThan(0)
+    expect(CSP_ALLOWLIST.connectSrc?.length).toBeGreaterThan(0)
   })
 })

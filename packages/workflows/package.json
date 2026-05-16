@@ -22,7 +22,7 @@
     "@eleva/observability": "workspace:*",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
-    "resend": "^6.12.2"
+    "resend": "^6.12.3"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

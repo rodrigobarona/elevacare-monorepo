@@ -18,9 +18,9 @@
   "dependencies": {
     "@eleva/config": "workspace:*",
     "@eleva/encryption": "workspace:*",
-    "@stripe/connect-js": "^3.3.39",
-    "@stripe/react-connect-js": "^3.3.36",
-    "stripe": "^22.1.0"
+    "@stripe/connect-js": "^3.4.3",
+    "@stripe/react-connect-js": "^3.4.2",
+    "stripe": "^22.1.1"
   },
   "peerDependencies": {
     "react": "19.x"

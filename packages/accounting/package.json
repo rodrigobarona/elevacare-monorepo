@@ -18,12 +18,12 @@
   "dependencies": {
     "@eleva/config": "workspace:*",
     "@eleva/encryption": "workspace:*",
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "eslint": "catalog:",
+    "typescript": "catalog:"
   }
 }

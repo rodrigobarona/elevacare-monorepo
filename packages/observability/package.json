@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "@sentry/nextjs": "^10.49.0"
+    "@sentry/nextjs": "^10.53.1"
   },
   "peerDependencies": {
     "next": "16.x",
