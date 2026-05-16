@@ -29,7 +29,7 @@ export interface AppShellNavItem {
 
 const ACCOUNT_URL =
   typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://eleva.care"
+    ? process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
     : "https://eleva.care"
 
 /**

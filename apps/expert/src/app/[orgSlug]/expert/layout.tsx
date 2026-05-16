@@ -1,13 +1,12 @@
 import { redirect, notFound } from "next/navigation"
-import { cookies } from "next/headers"
 import { getSessionForOrg } from "@eleva/auth/server"
 import { getExpertProfileByUserId } from "@eleva/db"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
 
-const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
-const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+const SIGNIN_URL = resolveGatewayUrl()
 
 export default async function ExpertLayout({
   children,
@@ -34,14 +33,6 @@ export default async function ExpertLayout({
   ) {
     notFound()
   }
-
-  const jar = await cookies()
-  jar.set(LAST_ACTIVE_ORG_COOKIE, orgSlug, {
-    path: "/",
-    maxAge: 31536000,
-    sameSite: "lax",
-    httpOnly: true,
-  })
 
   const profile = await getExpertProfileByUserId(session.user.id)
 

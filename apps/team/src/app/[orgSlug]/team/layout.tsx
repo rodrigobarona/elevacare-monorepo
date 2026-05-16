@@ -1,9 +1,8 @@
 import { redirect, notFound } from "next/navigation"
-import { cookies } from "next/headers"
 import { getSessionForOrg } from "@eleva/auth/server"
+import { resolveGatewayUrl } from "@eleva/config/env"
 
-const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
-const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+const SIGNIN_URL = resolveGatewayUrl()
 
 export default async function TeamLayout({
   children,
@@ -27,14 +26,6 @@ export default async function TeamLayout({
   if (session.productLabel !== "team_admin") {
     notFound()
   }
-
-  const jar = await cookies()
-  jar.set(LAST_ACTIVE_ORG_COOKIE, orgSlug, {
-    path: "/",
-    maxAge: 31536000,
-    sameSite: "lax",
-    httpOnly: true,
-  })
 
   return <>{children}</>
 }

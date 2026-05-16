@@ -28,8 +28,10 @@ const baseSchema = z.object({
     .enum(["development", "test", "production"])
     .default("development"),
   APP_URL: urlOptional,
+  NEXT_PUBLIC_APP_URL: urlOptional,
   API_URL: urlOptional,
   DOCS_URL: urlOptional,
+  ACCOUNT_URL: urlOptional,
   APP_ASSET_PREFIX: urlOptional,
   API_ASSET_PREFIX: urlOptional,
   DOCS_ASSET_PREFIX: urlOptional,
@@ -292,4 +294,38 @@ export function requireQStashEnv(): RequiredQStashEnv {
     QSTASH_CURRENT_SIGNING_KEY: e.QSTASH_CURRENT_SIGNING_KEY!,
     QSTASH_NEXT_SIGNING_KEY: e.QSTASH_NEXT_SIGNING_KEY!,
   }
+}
+
+/**
+ * Resolve the gateway URL (the public-facing domain through which all
+ * apps are served via multi-zone rewrites).
+ *
+ * Resolution order:
+ * 1. NEXT_PUBLIC_APP_URL env var (set per Vercel project per environment)
+ * 2. Validated host header (must match *.eleva.care or localhost)
+ * 3. Fallback to https://eleva.care
+ *
+ * Pass the `x-forwarded-host` or `host` header at request time for
+ * resilience when the env var is missing in preview environments.
+ */
+export function resolveGatewayUrl(hostHeader?: string | null): string {
+  const fromEnv = process.env.NEXT_PUBLIC_APP_URL
+  if (fromEnv) return fromEnv
+
+  if (hostHeader) {
+    const host = hostHeader.split(":")[0]!
+    if (
+      host === "eleva.care" ||
+      host.endsWith(".eleva.care") ||
+      host === "localhost"
+    ) {
+      const proto = host === "localhost" ? "http" : "https"
+      const port = hostHeader.includes(":")
+        ? `:${hostHeader.split(":")[1]}`
+        : ""
+      return `${proto}://${host}${port}`
+    }
+  }
+
+  return "https://eleva.care"
 }

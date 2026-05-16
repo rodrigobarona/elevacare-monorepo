@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { getSession } from "@eleva/auth/server"
+import { resolveGatewayUrl } from "@eleva/config/env"
 
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
 
 /**
  * Post-auth routing. After WorkOS callback sets the session cookie,
@@ -39,9 +39,12 @@ export default async function AuthRedirectPage({
     }
   }
 
+  const h = await headers()
+  const appUrl = resolveGatewayUrl(h.get("x-forwarded-host") ?? h.get("host"))
+
   const jar = await cookies()
   const lastSlug = jar.get(LAST_ACTIVE_ORG_COOKIE)?.value
   const slug = lastSlug ?? session.orgSlug
 
-  redirect(`${APP_URL}/${slug}`)
+  redirect(`${appUrl}/${slug}`)
 }

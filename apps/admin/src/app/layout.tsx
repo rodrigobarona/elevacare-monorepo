@@ -3,8 +3,9 @@ import { redirect } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
+import { resolveGatewayUrl } from "@eleva/config/env"
 
-const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
+const SIGNIN_URL = resolveGatewayUrl()
 const APP_URL = SIGNIN_URL
 
 export const metadata = {

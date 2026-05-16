@@ -7,9 +7,10 @@ import {
 } from "@workos-inc/authkit-nextjs"
 import { cookieName, isLocale } from "@eleva/config/i18n"
 import { countryToLocale } from "@eleva/config/country-to-locale"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { withHeaders } from "@eleva/observability/proxy"
 
-const SIGNIN_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
+const SIGNIN_URL = resolveGatewayUrl()
 
 function resolveLocale(req: NextRequest): string {
   const existingCookie = req.cookies.get(cookieName)?.value

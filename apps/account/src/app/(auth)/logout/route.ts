@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { signOut } from "@workos-inc/authkit-nextjs"
+import { resolveGatewayUrl } from "@eleva/config/env"
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
-
-async function handler(_req: NextRequest) {
+async function handler(req: NextRequest) {
   await signOut()
-  return NextResponse.redirect(new URL("/", APP_URL))
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
+  return NextResponse.redirect(new URL("/", resolveGatewayUrl(host)))
 }
 
 export const GET = handler

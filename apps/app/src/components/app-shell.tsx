@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import type { ElevaSession } from "@eleva/auth"
+import { resolveGatewayUrl } from "@eleva/config/env"
 
 interface NavItem {
   href: string
@@ -8,7 +9,7 @@ interface NavItem {
   needs?: string
 }
 
-const ACCOUNT_URL = process.env.NEXT_PUBLIC_ACCOUNT_URL || "https://eleva.care"
+const ACCOUNT_URL = resolveGatewayUrl()
 
 function buildNav(orgSlug: string): NavItem[] {
   const s = `/${orgSlug}`
