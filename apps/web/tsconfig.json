@@ -1,7 +1,6 @@
 {
   "extends": "@eleva/typescript-config/nextjs.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"],
       "@eleva/ui/*": ["../../packages/ui/src/*"]

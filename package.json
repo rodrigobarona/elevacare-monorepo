@@ -18,28 +18,36 @@
     "commitlint": "commitlint --edit"
   },
   "devDependencies": {
-    "@commitlint/cli": "^20.5.0",
-    "@commitlint/config-conventional": "^20.5.0",
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.0.4",
     "only-allow": "^1.2.1",
     "prettier": "catalog:",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "turbo": "^2.9.14",
-    "typescript": "5.9.3",
+    "typescript": "6.0.3",
     "vitest": "catalog:"
   },
   "packageManager": "pnpm@9.15.9",
   "engines": {
-    "node": ">=22.11.0",
+    "node": ">=24",
     "pnpm": ">=9.15.0"
   },
-  "patchedDependencies": {
-    "@workos-inc/widgets-i18n": "patches/@workos-inc__widgets-i18n.patch"
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "react-intl>typescript": "6",
+        "@formatjs/intl>typescript": "6"
+      }
+    },
+    "patchedDependencies": {
+      "@workos-inc/widgets-i18n": "patches/@workos-inc__widgets-i18n.patch"
+    }
   },
   "workspaces": [
     "apps/*",

@@ -74,7 +74,7 @@ export const ConnectResult = z.object({
    */
   vaultRef: z.string(),
   /** Adapter-specific identifiers (account ID, series ID, etc.). */
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
   /** ISO timestamp of the underlying token expiry, if known. */
   expiresAt: z.string().datetime().optional(),
 })

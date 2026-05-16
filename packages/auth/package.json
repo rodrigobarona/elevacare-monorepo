@@ -23,8 +23,7 @@
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
-    "iron-session": "^8.0.4",
-    "jose": "^5.10.0"
+    "iron-session": "^8.0.4"
   },
   "peerDependencies": {
     "next": "16.x",

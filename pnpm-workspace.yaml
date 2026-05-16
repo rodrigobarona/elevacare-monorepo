@@ -17,8 +17,8 @@ catalog:
   "@types/node": ^25.8.0
 
   # Build & lint
-  typescript: ^5.9.3
-  eslint: ^9.39.2
+  typescript: ^6.0.3
+  eslint: ^10.4.0
   "@tailwindcss/postcss": ^4.3.0
   tailwindcss: ^4.3.0
   tsx: ^4.22.0
@@ -50,4 +50,4 @@ catalog:
   # UI
   lucide-react: ^1.16.0
   "@radix-ui/themes": ^3.3.0
-  zod: ^3.25.76
+  zod: ^4.4.3

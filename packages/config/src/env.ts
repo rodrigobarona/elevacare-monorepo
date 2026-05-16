@@ -108,7 +108,9 @@ const s2Schema = z.object({
   BLOB_PRIVATE_READ_WRITE_TOKEN: stringOptional,
 })
 
-export const envSchema = baseSchema.merge(s1aSchema).merge(s2Schema)
+export const envSchema = baseSchema
+  .extend(s1aSchema.shape)
+  .extend(s2Schema.shape)
 
 export type Env = z.infer<typeof envSchema>
 export type BaseEnv = Env
@@ -119,7 +121,7 @@ export function env(): Env {
   if (cached) return cached
   const parsed = envSchema.safeParse(process.env)
   if (!parsed.success) {
-    const lines = parsed.error.errors
+    const lines = parsed.error.issues
       .map((e) => `  - ${e.path.join(".")}: ${e.message}`)
       .join("\n")
     throw new Error(`Invalid environment variables:\n${lines}`)

@@ -1,7 +1,6 @@
 {
   "extends": "@eleva/typescript-config/react-library.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@eleva/ui/*": ["./src/*"]
     }
