@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack --port 3009",
     "build": "next build",
-    "start": "next start --port 3004",
+    "start": "next start --port 3009",
     "lint": "eslint",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit"

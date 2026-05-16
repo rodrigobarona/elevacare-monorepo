@@ -30,10 +30,18 @@ const baseSchema = z.object({
   APP_URL: urlOptional,
   NEXT_PUBLIC_APP_URL: urlOptional,
   API_URL: urlOptional,
+  NEXT_PUBLIC_API_URL: urlOptional,
   DOCS_URL: urlOptional,
   ACCOUNT_URL: urlOptional,
+  NEXT_PUBLIC_ACCOUNT_URL: urlOptional,
+  ADMIN_URL: urlOptional,
+  NEXT_PUBLIC_ADMIN_URL: urlOptional,
   APP_ASSET_PREFIX: urlOptional,
   API_ASSET_PREFIX: urlOptional,
+  EXPERT_ASSET_PREFIX: urlOptional,
+  TEAM_ASSET_PREFIX: urlOptional,
+  ACADEMY_ASSET_PREFIX: urlOptional,
+  ACCOUNT_ASSET_PREFIX: urlOptional,
   DOCS_ASSET_PREFIX: urlOptional,
 })
 
