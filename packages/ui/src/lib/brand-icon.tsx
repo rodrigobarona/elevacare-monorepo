@@ -1,4 +1,4 @@
-import { ImageResponse } from "next/og"
+import { ImageResponse } from "@vercel/og"
 
 /**
  * Renders the official Eleva.care brand icon at the given size.
