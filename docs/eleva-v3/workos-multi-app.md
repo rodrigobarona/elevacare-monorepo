@@ -26,10 +26,11 @@ The account app (`apps/account`) runs behind the gateway proxy at
 
 **Redirect URIs** (AuthKit > Redirects):
 
-| Environment | URI                              |
-| ----------- | -------------------------------- |
-| Production  | `https://eleva.care/callback`    |
-| Development | `http://localhost:3000/callback` |
+| Environment | URI                               |
+| ----------- | --------------------------------- |
+| Production  | `https://eleva.care/callback`     |
+| Staging     | `https://dev.eleva.care/callback` |
+| Development | `http://localhost:3000/callback`  |
 
 The gateway at `eleva.care` proxies `/callback` to the account app.
 Other apps redirect unauthenticated users to `eleva.care/signin`.
@@ -38,6 +39,7 @@ Other apps redirect unauthenticated users to `eleva.care/signin`.
 
 ```
 https://eleva.care
+https://dev.eleva.care
 http://localhost:3000
 ```
 

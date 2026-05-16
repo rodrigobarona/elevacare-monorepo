@@ -167,15 +167,15 @@ Cookies scoped to `.eleva.care` make session-aware calls from the gateway/app wo
 
 These exist for operational purposes but are **never shared with users**:
 
-| Subdomain                      | Host                             | Purpose                                      |
-| ------------------------------ | -------------------------------- | -------------------------------------------- |
-| `email.eleva.care`             | `elevacare-email` (`apps/email`) | React Email preview tool, internal only      |
-| `elevacare-app.vercel.app`     | Vercel project domain            | CI, preview deploys, proxy rewrite target    |
-| `elevacare-account.vercel.app` | Vercel project domain            | Proxy rewrite target for auth/account routes |
-| `elevacare-expert.vercel.app`  | Vercel project domain            | Proxy rewrite target for expert routes       |
-| `elevacare-team.vercel.app`    | Vercel project domain            | Proxy rewrite target for team routes         |
-| `elevacare-academy.vercel.app` | Vercel project domain            | Proxy rewrite target for academy routes      |
-| `elevacare-docs.vercel.app`    | Vercel project domain            | Proxy rewrite target for /docs zone          |
+| Subdomain            | Host                                 | Purpose                                      |
+| -------------------- | ------------------------------------ | -------------------------------------------- |
+| `app.eleva.care`     | `elevacare-app` (`apps/app`)         | Proxy rewrite target for member routes       |
+| `account.eleva.care` | `elevacare-account` (`apps/account`) | Proxy rewrite target for auth/account routes |
+| `expert.eleva.care`  | `elevacare-expert` (`apps/expert`)   | Proxy rewrite target for expert routes       |
+| `team.eleva.care`    | `elevacare-team` (`apps/team`)       | Proxy rewrite target for team routes         |
+| `academy.eleva.care` | `elevacare-academy` (`apps/academy`) | Proxy rewrite target for academy routes      |
+| `email.eleva.care`   | `elevacare-email` (`apps/email`)     | React Email preview tool, internal only      |
+| `docs.eleva.care`    | `elevacare-docs` (`apps/docs`)       | Proxy rewrite target for /docs zone          |
 
 **Internal-subdomain canonicalization rule** (ADR-014): every internal subdomain serves either a 301 redirect to the canonical `eleva.care/...` URL **or** `X-Robots-Tag: noindex` + `robots.txt` disallow. Only `eleva.care` and `api.eleva.care` (not indexed, server-only) are publicly addressable.
 
@@ -266,9 +266,15 @@ Set up in Vercel DNS when Resend domain is added:
 
 - `CNAME admin` → `elevacare-admin` Vercel project (`admin.eleva.care`)
 - `CNAME api` → `elevacare-api` Vercel project (`api.eleva.care`)
+- `CNAME app` → `elevacare-app` Vercel project (`app.eleva.care`, proxy target)
+- `CNAME account` → `elevacare-account` Vercel project (`account.eleva.care`, proxy target)
+- `CNAME expert` → `elevacare-expert` Vercel project (`expert.eleva.care`, proxy target)
+- `CNAME team` → `elevacare-team` Vercel project (`team.eleva.care`, proxy target)
+- `CNAME academy` → `elevacare-academy` Vercel project (`academy.eleva.care`, proxy target)
+- `CNAME docs` → `elevacare-docs` Vercel project (`docs.eleva.care`, proxy target)
+- `CNAME email` → `elevacare-email` (internal only)
 - `CNAME sessions` → Daily.co branded video
 - `CNAME status` → BetterStack status page
-- `CNAME email` → `elevacare-email` (internal only)
 
 ## Environment-Specific Configuration
 
