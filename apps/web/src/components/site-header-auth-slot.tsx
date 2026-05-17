@@ -1,4 +1,5 @@
 import { getAuthUser } from "@eleva/auth/server"
+import { captureException } from "@eleva/observability"
 import { getTranslations } from "next-intl/server"
 import { UserMenu } from "./user-menu"
 import { SignedOutButtons } from "./signed-out-buttons"
@@ -23,9 +24,10 @@ export async function SiteHeaderAuthSlot() {
   } | null = null
   try {
     user = await getAuthUser()
-  } catch {
-    // Not authenticated -- silently fall through to logged-out state.
-    // Expected when no WorkOS cookie is present.
+  } catch (err) {
+    // getAuthUser returns null for unauthenticated visitors; a thrown
+    // error is unexpected and should be reported.
+    captureException(err, { component: "SiteHeaderAuthSlot" })
   }
 
   if (!user) {

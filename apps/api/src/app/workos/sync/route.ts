@@ -79,4 +79,7 @@ async function handler() {
   return Response.json({ processed: totalProcessed })
 }
 
-export const POST = verifySignatureAppRouter(handler)
+export const POST = (async (req: Request) => {
+  const verified = verifySignatureAppRouter(handler)
+  return verified(req as Parameters<typeof verified>[0])
+}) satisfies (req: Request) => Promise<Response>

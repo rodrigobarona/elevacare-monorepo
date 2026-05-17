@@ -793,6 +793,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/observability':
+        specifier: workspace:^
+        version: link:../../packages/observability
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
