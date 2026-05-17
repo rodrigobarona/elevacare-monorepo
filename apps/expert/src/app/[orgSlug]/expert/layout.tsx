@@ -1,8 +1,18 @@
 import { redirect, notFound } from "next/navigation"
-import { getSessionForOrg } from "@eleva/auth/server"
+import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Calendar,
+  Clock,
+  Plug,
+  Wallet,
+} from "lucide-react"
+import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
+import type { DashboardConfig } from "@eleva/dashboard/nav-types"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
@@ -40,17 +50,78 @@ export default async function ExpertLayout({
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
   const stripePublishableKey =
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
-
   const showConnect = !!(profile?.stripeAccountId && stripePublishableKey)
+
+  let widgetToken: string | null = null
+  try {
+    widgetToken = await getWidgetTokenFromSession()
+  } catch {
+    // Widget token generation may fail if the role lacks permissions
+  }
+
+  const base = `/${orgSlug}/expert`
+  const dashboardConfig: DashboardConfig = {
+    navGroups: [
+      {
+        items: [
+          { title: "Dashboard", url: base, icon: <LayoutDashboard /> },
+          {
+            title: "Event Types",
+            url: `${base}/event-types`,
+            icon: <CalendarDays />,
+            needs: "events:manage",
+          },
+          {
+            title: "Schedule",
+            url: `${base}/schedule`,
+            icon: <Clock />,
+            needs: "schedule:manage",
+          },
+          {
+            title: "Calendars",
+            url: `${base}/calendars`,
+            icon: <Calendar />,
+            needs: "events:manage",
+          },
+          {
+            title: "Integrations",
+            url: `${base}/integrations`,
+            icon: <Plug />,
+            needs: "events:manage",
+          },
+          {
+            title: "Finance",
+            url: `${base}/finance`,
+            icon: <Wallet />,
+            needs: "payouts:view_own",
+          },
+        ],
+      },
+    ],
+    user: {
+      displayName: session.user.displayName,
+      email: session.user.email,
+      avatarUrl: session.user.avatarUrl,
+    },
+    orgSlug,
+    capabilities: session.capabilities,
+    widgetToken,
+    accountUrl: "/account/profile",
+    logoutUrl: "/logout",
+  }
+
+  const content = (
+    <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
+  )
 
   return showConnect ? (
     <ExpertConnectShell
       apiBaseUrl={apiBaseUrl}
       stripePublishableKey={stripePublishableKey}
     >
-      {children}
+      {content}
     </ExpertConnectShell>
   ) : (
-    <>{children}</>
+    content
   )
 }

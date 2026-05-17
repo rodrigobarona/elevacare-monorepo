@@ -209,6 +209,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -294,6 +297,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -318,6 +324,9 @@ importers:
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+      next-themes:
+        specifier: 'catalog:'
+        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -449,6 +458,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -635,6 +647,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -726,6 +741,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -750,6 +768,9 @@ importers:
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+      next-themes:
+        specifier: 'catalog:'
+        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -1111,6 +1132,55 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.4.0(jiti@2.6.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
+  packages/dashboard:
+    dependencies:
+      '@eleva/auth':
+        specifier: workspace:*
+        version: link:../auth
+      '@eleva/ui':
+        specifier: workspace:*
+        version: link:../ui
+      '@workos-inc/authkit-nextjs':
+        specifier: 'catalog:'
+        version: 4.1.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+      '@workos-inc/widgets':
+        specifier: 'catalog:'
+        version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@workos-inc/widgets-i18n':
+        specifier: 'catalog:'
+        version: 1.0.0(patch_hash=7gy7lzh77ke7hhpyj5ykfktrra)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.16.0(react@19.2.6)
+      next:
+        specifier: 'catalog:'
+        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next-themes:
+        specifier: 'catalog:'
+        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.6
+      react-dom:
+        specifier: 'catalog:'
+        version: 19.2.6(react@19.2.6)
+    devDependencies:
+      '@eleva/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@eleva/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: 'catalog:'
+        version: 19.2.3(@types/react@19.2.14)
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

@@ -4,7 +4,6 @@ import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { getWidgetTokenFromSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
-import { AppShell } from "@/components/app-shell"
 import { CalendarManager } from "./calendar-manager"
 
 export const dynamic = "force-dynamic"
@@ -46,29 +45,27 @@ export default async function CalendarsPage({
   const t = await getTranslations("calendars")
 
   return (
-    <AppShell session={session}>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link
-            href={`/${orgSlug}/expert/integrations`}
-            className="hover:underline"
-          >
-            {t("backToIntegrations")}
-          </Link>
-          <span>/</span>
-          <span>{t("title")}</span>
-        </div>
-
-        <header className="space-y-1">
-          <h1 className="text-2xl font-medium">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
-        </header>
-
-        <CalendarManager
-          integrations={integrations}
-          pipesWidgetToken={widgetToken}
-        />
+    <div className="mx-auto max-w-2xl space-y-6">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link
+          href={`/${orgSlug}/expert/integrations`}
+          className="hover:underline"
+        >
+          {t("backToIntegrations")}
+        </Link>
+        <span>/</span>
+        <span>{t("title")}</span>
       </div>
-    </AppShell>
+
+      <header className="space-y-1">
+        <h1 className="text-2xl font-medium">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
+      </header>
+
+      <CalendarManager
+        integrations={integrations}
+        pipesWidgetToken={widgetToken}
+      />
+    </div>
   )
 }

@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
-import { AppShell } from "@/components/app-shell"
 import { FinanceDashboard } from "./finance-dashboard"
 
 export const dynamic = "force-dynamic"
@@ -26,15 +25,13 @@ export default async function FinancePage({
   const t = await getTranslations("finance")
 
   return (
-    <AppShell session={session}>
-      <div className="space-y-6">
-        <header className="space-y-2">
-          <h1 className="text-2xl font-medium">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
-        </header>
+    <div className="space-y-6">
+      <header className="space-y-2">
+        <h1 className="text-2xl font-medium">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
+      </header>
 
-        <FinanceDashboard />
-      </div>
-    </AppShell>
+      <FinanceDashboard />
+    </div>
   )
 }

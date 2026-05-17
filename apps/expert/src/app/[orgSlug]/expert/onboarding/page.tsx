@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
-import { AppShell } from "@/components/app-shell"
 import { OnboardingWizard } from "./onboarding-wizard"
 
 export const dynamic = "force-dynamic"
@@ -45,37 +44,35 @@ export default async function OnboardingPage({
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
   return (
-    <AppShell session={session}>
-      <div className="mx-auto max-w-2xl">
-        <header className="mb-8 space-y-2">
-          <h1 className="text-2xl font-medium">Expert Onboarding</h1>
-          <p className="text-sm text-muted-foreground">
-            Complete all steps to activate your expert profile.
-          </p>
-        </header>
+    <div className="mx-auto max-w-2xl">
+      <header className="mb-8 space-y-2">
+        <h1 className="text-2xl font-medium">Expert Onboarding</h1>
+        <p className="text-sm text-muted-foreground">
+          Complete all steps to activate your expert profile.
+        </p>
+      </header>
 
-        <OnboardingWizard
-          steps={STEPS as unknown as string[]}
-          completedSteps={completed}
-          currentStep={currentStep!}
-          profile={{
-            id: profile.id,
-            orgId: profile.orgId,
-            nif: profile.nif,
-            licenseScope: profile.licenseScope,
-            languages: profile.languages,
-            practiceCountries: profile.practiceCountries,
-            worldwideMode: profile.worldwideMode,
-            sessionModes: profile.sessionModes,
-            stripeAccountId: profile.stripeAccountId,
-            stripeIdentityStatus: profile.stripeIdentityStatus,
-            invoicingProvider: profile.invoicingProvider,
-            invoicingSetupStatus: profile.invoicingSetupStatus,
-          }}
-          apiBaseUrl={apiBaseUrl}
-          stripePublishableKey={stripePublishableKey}
-        />
-      </div>
-    </AppShell>
+      <OnboardingWizard
+        steps={STEPS as unknown as string[]}
+        completedSteps={completed}
+        currentStep={currentStep!}
+        profile={{
+          id: profile.id,
+          orgId: profile.orgId,
+          nif: profile.nif,
+          licenseScope: profile.licenseScope,
+          languages: profile.languages,
+          practiceCountries: profile.practiceCountries,
+          worldwideMode: profile.worldwideMode,
+          sessionModes: profile.sessionModes,
+          stripeAccountId: profile.stripeAccountId,
+          stripeIdentityStatus: profile.stripeIdentityStatus,
+          invoicingProvider: profile.invoicingProvider,
+          invoicingSetupStatus: profile.invoicingSetupStatus,
+        }}
+        apiBaseUrl={apiBaseUrl}
+        stripePublishableKey={stripePublishableKey}
+      />
+    </div>
   )
 }

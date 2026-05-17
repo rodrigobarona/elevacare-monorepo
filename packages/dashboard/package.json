@@ -1,0 +1,35 @@
+{
+  "name": "@eleva/dashboard",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@eleva/auth": "workspace:*",
+    "@eleva/ui": "workspace:*",
+    "@workos-inc/authkit-nextjs": "catalog:",
+    "@workos-inc/widgets": "catalog:",
+    "@workos-inc/widgets-i18n": "catalog:",
+    "lucide-react": "catalog:",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.tsx",
+    "./nav-types": "./src/nav-types.ts",
+    "./switch-org-action": "./src/switch-org-action.ts",
+    "./*": "./src/*.tsx"
+  }
+}

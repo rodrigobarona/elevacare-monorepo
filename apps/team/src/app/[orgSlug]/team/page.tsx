@@ -11,17 +11,13 @@ export default async function TeamDashboardPage({
   const t = await getTranslations()
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-medium">
-          {t("dashboard.welcome", {
-            name: session?.user.displayName ?? "",
-          })}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("dashboard.subtitle")}
-        </p>
-      </header>
-    </div>
+    <header className="space-y-2">
+      <h1 className="text-2xl font-medium">
+        {t("dashboard.welcome", {
+          name: session?.user.displayName ?? "",
+        })}
+      </h1>
+      <p className="text-sm text-muted-foreground">{t("dashboard.subtitle")}</p>
+    </header>
   )
 }

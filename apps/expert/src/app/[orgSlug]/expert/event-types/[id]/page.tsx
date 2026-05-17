@@ -2,7 +2,6 @@ import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, getEventType } from "@eleva/db"
-import { AppShell } from "@/components/app-shell"
 import { EventTypeForm } from "../event-type-form"
 import type { EventTypeFormData } from "../actions"
 
@@ -45,16 +44,12 @@ export default async function EditEventTypePage(props: {
   }
 
   return (
-    <AppShell session={session}>
-      <div className="mx-auto max-w-2xl space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-medium">{t("editTitle")}</h1>
-          <p className="text-sm text-muted-foreground">
-            {t("editDescription")}
-          </p>
-        </header>
-        <EventTypeForm mode="edit" eventTypeId={id} defaultValues={defaults} />
-      </div>
-    </AppShell>
+    <div className="mx-auto max-w-2xl space-y-6">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-medium">{t("editTitle")}</h1>
+        <p className="text-sm text-muted-foreground">{t("editDescription")}</p>
+      </header>
+      <EventTypeForm mode="edit" eventTypeId={id} defaultValues={defaults} />
+    </div>
   )
 }

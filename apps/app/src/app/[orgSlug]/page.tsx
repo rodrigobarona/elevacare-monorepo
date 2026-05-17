@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
-import { AppShell } from "@/components/app-shell"
 
 export default async function OrgHomePage({
   params,
@@ -26,17 +25,15 @@ export default async function OrgHomePage({
 async function MemberDashboard({ session }: { session: ElevaSession }) {
   const t = await getTranslations()
   return (
-    <AppShell session={session}>
-      <header className="space-y-2">
-        <h1 className="text-2xl font-medium">
-          {t("dashboard.member.welcome", {
-            name: session.user.displayName ?? session.user.email,
-          })}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("dashboard.member.subtitle")}
-        </p>
-      </header>
-    </AppShell>
+    <header className="space-y-2">
+      <h1 className="text-2xl font-medium">
+        {t("dashboard.member.welcome", {
+          name: session.user.displayName ?? session.user.email,
+        })}
+      </h1>
+      <p className="text-sm text-muted-foreground">
+        {t("dashboard.member.subtitle")}
+      </p>
+    </header>
   )
 }
