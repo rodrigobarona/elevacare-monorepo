@@ -14,6 +14,7 @@
     "@eleva/auth": "workspace:^",
     "@eleva/billing": "workspace:^",
     "@eleva/config": "workspace:^",
+    "@eleva/dashboard": "workspace:*",
     "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
@@ -22,6 +23,7 @@
     "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
+    "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"

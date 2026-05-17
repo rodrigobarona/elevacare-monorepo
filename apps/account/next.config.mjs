@@ -27,6 +27,7 @@ const nextConfig = {
   transpilePackages: [
     "@eleva/auth",
     "@eleva/config",
+    "@eleva/dashboard",
     "@eleva/db",
     "@eleva/observability",
     "@eleva/storage",

@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation"
-import { guardSessionForOrg } from "@eleva/auth"
+import { guardSessionForOrg, UnauthorizedError } from "@eleva/auth"
+import { getWidgetTokenFromSession } from "@eleva/auth/server"
+import { LayoutDashboard, Settings } from "lucide-react"
+import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
+import type { DashboardConfig } from "@eleva/dashboard/nav-types"
 
 export default async function OrgSlugLayout({
   children,
@@ -15,5 +19,41 @@ export default async function OrgSlugLayout({
     notFound()
   }
 
-  return <>{children}</>
+  let widgetToken: string | null = null
+  try {
+    widgetToken = await getWidgetTokenFromSession()
+  } catch (err) {
+    if (!(err instanceof UnauthorizedError)) {
+      console.error("Unexpected error generating widget token", err)
+      throw err
+    }
+  }
+
+  const dashboardConfig: DashboardConfig = {
+    navGroups: [
+      {
+        items: [
+          {
+            title: "Dashboard",
+            url: `/${orgSlug}`,
+            icon: <LayoutDashboard />,
+            needs: "appointments:view_own",
+          },
+          { title: "Settings", url: "/account/profile", icon: <Settings /> },
+        ],
+      },
+    ],
+    user: {
+      displayName: session.user.displayName,
+      email: session.user.email,
+      avatarUrl: session.user.avatarUrl,
+    },
+    orgSlug,
+    capabilities: session.capabilities,
+    widgetToken,
+    accountUrl: "/account/profile",
+    logoutUrl: "/logout",
+  }
+
+  return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
 }

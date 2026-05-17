@@ -2,7 +2,6 @@ import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
-import { AppShell } from "@/components/app-shell"
 
 export const dynamic = "force-dynamic"
 
@@ -24,17 +23,15 @@ export default async function ExpertDashboardPage({
 
   const t = await getTranslations()
   return (
-    <AppShell session={session}>
-      <header className="space-y-2">
-        <h1 className="text-2xl font-medium">
-          {t("dashboard.expert.welcome", {
-            name: session.user.displayName ?? session.user.email,
-          })}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t("dashboard.expert.subtitle")}
-        </p>
-      </header>
-    </AppShell>
+    <header className="space-y-2">
+      <h1 className="text-2xl font-medium">
+        {t("dashboard.expert.welcome", {
+          name: session.user.displayName ?? session.user.email,
+        })}
+      </h1>
+      <p className="text-sm text-muted-foreground">
+        {t("dashboard.expert.subtitle")}
+      </p>
+    </header>
   )
 }

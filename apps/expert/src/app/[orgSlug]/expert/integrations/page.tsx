@@ -7,7 +7,6 @@ import {
   listCategories,
   type IntegrationManifest,
 } from "@eleva/integrations"
-import { AppShell } from "@/components/app-shell"
 import { IntegrationCard } from "./integration-card"
 
 export const dynamic = "force-dynamic"
@@ -39,42 +38,40 @@ export default async function IntegrationsPage({
   const t = await getTranslations("integrations")
 
   return (
-    <AppShell session={session}>
-      <div className="mx-auto max-w-3xl space-y-8">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-medium">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
-        </header>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <header className="space-y-1">
+        <h1 className="text-2xl font-medium">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("description")}</p>
+      </header>
 
-        {categories.map((category) => {
-          const manifests = listByCategory(category)
-          if (manifests.length === 0) return null
+      {categories.map((category) => {
+        const manifests = listByCategory(category)
+        if (manifests.length === 0) return null
 
-          return (
-            <section key={category} className="space-y-4">
-              <h2 className="text-lg font-medium">
-                {t(`category.${category}`, {
-                  defaultMessage: CATEGORY_LABEL[category] ?? category,
-                })}
-              </h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {manifests.map((manifest) => {
-                  const connection = connectedBySlug.get(manifest.slug)
-                  return (
-                    <IntegrationCard
-                      key={manifest.slug}
-                      manifest={manifest}
-                      status={connection?.status ?? null}
-                      integrationId={connection?.id ?? null}
-                      orgSlug={orgSlug}
-                    />
-                  )
-                })}
-              </div>
-            </section>
-          )
-        })}
-      </div>
-    </AppShell>
+        return (
+          <section key={category} className="space-y-4">
+            <h2 className="text-lg font-medium">
+              {t(`category.${category}`, {
+                defaultMessage: CATEGORY_LABEL[category] ?? category,
+              })}
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {manifests.map((manifest) => {
+                const connection = connectedBySlug.get(manifest.slug)
+                return (
+                  <IntegrationCard
+                    key={manifest.slug}
+                    manifest={manifest}
+                    status={connection?.status ?? null}
+                    integrationId={connection?.id ?? null}
+                    orgSlug={orgSlug}
+                  />
+                )
+              })}
+            </div>
+          </section>
+        )
+      })}
+    </div>
   )
 }

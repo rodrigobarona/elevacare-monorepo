@@ -31,6 +31,7 @@ const nextConfig = {
     "@eleva/audit",
     "@eleva/auth",
     "@eleva/config",
+    "@eleva/dashboard",
     "@eleva/db",
     "@eleva/encryption",
     "@eleva/flags",

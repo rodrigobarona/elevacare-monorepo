@@ -18,6 +18,7 @@
     "@eleva/billing": "workspace:^",
     "@eleva/calendar": "workspace:^",
     "@eleva/config": "workspace:^",
+    "@eleva/dashboard": "workspace:*",
     "@eleva/db": "workspace:^",
     "@eleva/flags": "workspace:^",
     "@eleva/integrations": "workspace:^",
