@@ -1,9 +1,6 @@
 import { getTranslations } from "next-intl/server"
-import { guardSession } from "@eleva/auth"
 
 export default async function BillingPage() {
-  await guardSession()
-
   const t = await getTranslations("billing")
 
   return (

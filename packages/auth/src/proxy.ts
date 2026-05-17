@@ -155,17 +155,17 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
     const { session, headers, authorizationUrl } = await authkit(req)
 
     const needsRedirect =
-      enforce &&
-      !session.user &&
-      authorizationUrl &&
-      !matchesPath(pathname, unauthenticatedPaths)
+      enforce && !session.user && !matchesPath(pathname, unauthenticatedPaths)
 
     if (needsRedirect) {
       if (typeof redirect === "object" && redirect.kind === "gateway") {
         return buildGatewayRedirect(req, redirect.baseUrl)
       }
+      const redirectUrl =
+        authorizationUrl ||
+        `${LOGIN_PATH}?returnTo=${encodeURIComponent(req.nextUrl.toString())}`
       return handleAuthkitProxy(req, headers, {
-        redirect: authorizationUrl,
+        redirect: redirectUrl,
       })
     }
 

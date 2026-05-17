@@ -1,9 +1,6 @@
 import { getTranslations } from "next-intl/server"
-import { guardSession } from "@eleva/auth"
 
 export default async function OrganizationsPage() {
-  await guardSession()
-
   const t = await getTranslations("organizations")
 
   return (

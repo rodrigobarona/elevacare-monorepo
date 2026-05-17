@@ -17,7 +17,9 @@ import {
  *
  *   export const config = { matcher: STANDARD_APP_MATCHER }
  */
-export const STANDARD_APP_MATCHER = ["/((?!_next|_vercel|.*\\..*).*)"] as const
+export const STANDARD_APP_MATCHER = [
+  "/((?!api|_next|_vercel|.*\\..*).*)",
+] as const
 
 /**
  * Matcher for apps that own their own /api route handlers and want
@@ -99,12 +101,14 @@ export function withHeaders(
 ): ProxyHandler {
   const correlationHeader = correlationIdHeader()
 
-  return async (req) => {
+  return async (req, event) => {
     const cspValue = options.csp ?? buildCspHeader()
     const incoming = req.headers.get(correlationHeader)
     const correlationId = incoming ?? generateCorrelationId()
 
-    const res = await withCorrelationId(correlationId, async () => handler(req))
+    const res = await withCorrelationId(correlationId, async () =>
+      handler(req, event)
+    )
 
     // Build a NextResponse we can mutate regardless of handler return type.
     const nextRes = res instanceof NextResponse ? res : NextResponse.next(res)
