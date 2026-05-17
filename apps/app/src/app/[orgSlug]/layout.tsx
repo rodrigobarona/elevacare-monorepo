@@ -1,6 +1,7 @@
 import "@radix-ui/themes/styles.css"
 
 import { notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg, UnauthorizedError } from "@eleva/auth"
 import { getWidgetTokenFromSession } from "@eleva/auth/server"
 import { resolveGatewayUrl } from "@eleva/config/env"
@@ -24,28 +25,30 @@ export default async function OrgSlugLayout({
     notFound()
   }
 
-  let widgetToken: string | null = null
-  try {
-    widgetToken = await getWidgetTokenFromSession()
-  } catch (err) {
-    if (!(err instanceof UnauthorizedError)) {
-      console.error("Unexpected error generating widget token", err)
-      throw err
-    }
-  }
+  const [widgetTokenResult, t] = await Promise.all([
+    getWidgetTokenFromSession().catch((err) => {
+      if (!(err instanceof UnauthorizedError)) {
+        console.error("Unexpected error generating widget token", err)
+        throw err
+      }
+      return null
+    }),
+    getTranslations("nav"),
+  ])
+  const widgetToken = widgetTokenResult
 
   const dashboardConfig: DashboardConfig = {
     navGroups: [
       {
         items: [
           {
-            title: "Dashboard",
+            title: t("dashboard"),
             url: `/${orgSlug}`,
             icon: <LayoutDashboard />,
             needs: "appointments:view_own",
           },
           {
-            title: "Settings",
+            title: t("settings"),
             url: `${GATEWAY_URL}/account/profile`,
             icon: <Settings />,
           },

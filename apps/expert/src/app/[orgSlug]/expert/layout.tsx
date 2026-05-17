@@ -1,6 +1,7 @@
 import "@radix-ui/themes/styles.css"
 
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
 import { LOGIN_PATH, UnauthorizedError } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
@@ -54,48 +55,50 @@ export default async function ExpertLayout({
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
   const showConnect = !!(profile?.stripeAccountId && stripePublishableKey)
 
-  let widgetToken: string | null = null
-  try {
-    widgetToken = await getWidgetTokenFromSession()
-  } catch (err) {
-    if (!(err instanceof UnauthorizedError)) {
-      console.error("Unexpected error generating widget token", err)
-      throw err
-    }
-  }
+  const [widgetTokenResult, t] = await Promise.all([
+    getWidgetTokenFromSession().catch((err) => {
+      if (!(err instanceof UnauthorizedError)) {
+        console.error("Unexpected error generating widget token", err)
+        throw err
+      }
+      return null
+    }),
+    getTranslations("nav"),
+  ])
+  const widgetToken = widgetTokenResult
 
   const base = `/${orgSlug}/expert`
   const dashboardConfig: DashboardConfig = {
     navGroups: [
       {
         items: [
-          { title: "Dashboard", url: base, icon: <LayoutDashboard /> },
+          { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
           {
-            title: "Event Types",
+            title: t("eventTypes"),
             url: `${base}/event-types`,
             icon: <CalendarDays />,
             needs: "events:manage",
           },
           {
-            title: "Schedule",
+            title: t("schedule"),
             url: `${base}/schedule`,
             icon: <Clock />,
             needs: "schedule:manage",
           },
           {
-            title: "Calendars",
+            title: t("calendars"),
             url: `${base}/calendars`,
             icon: <Calendar />,
             needs: "events:manage",
           },
           {
-            title: "Integrations",
+            title: t("integrations"),
             url: `${base}/integrations`,
             icon: <Plug />,
             needs: "events:manage",
           },
           {
-            title: "Finance",
+            title: t("finance"),
             url: `${base}/finance`,
             icon: <Wallet />,
             needs: "payouts:view_own",

@@ -9,12 +9,14 @@
   },
   "dependencies": {
     "@eleva/auth": "workspace:*",
+    "@eleva/config": "workspace:*",
     "@eleva/ui": "workspace:*",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/widgets": "catalog:",
     "@workos-inc/widgets-i18n": "catalog:",
     "lucide-react": "catalog:",
     "next": "catalog:",
+    "next-intl": "catalog:",
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
@@ -28,6 +30,7 @@
   },
   "exports": {
     ".": "./src/index.tsx",
+    "./messages": "./src/messages.ts",
     "./nav-types": "./src/nav-types.ts",
     "./switch-org-action": "./src/switch-org-action.ts",
     "./*": "./src/*.tsx"

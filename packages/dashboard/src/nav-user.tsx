@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { LogOut, User, Settings } from "lucide-react"
 import { Button } from "@eleva/ui/components/button"
 import {
@@ -37,6 +38,7 @@ export function NavUser({
   settingsUrl,
   logoutUrl = "/logout",
 }: NavUserProps) {
+  const t = useTranslations("shell")
   const displayName = user.displayName || user.email.split("@")[0] || ""
   const initials = displayName.slice(0, 2).toUpperCase()
 
@@ -76,13 +78,13 @@ export function NavUser({
           <DropdownMenuItem asChild>
             <Link href={accountUrl}>
               <User className="mr-2 size-4" />
-              Profile
+              {t("profile")}
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href={settingsUrl ?? deriveParentPath(accountUrl)}>
               <Settings className="mr-2 size-4" />
-              Settings
+              {t("settings")}
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
@@ -90,7 +92,7 @@ export function NavUser({
         <DropdownMenuItem asChild>
           <a href={logoutUrl}>
             <LogOut className="mr-2 size-4" />
-            Sign out
+            {t("signOut")}
           </a>
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -1,5 +1,7 @@
 "use client"
 
+import Link from "next/link"
+import { ArrowLeft } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -29,7 +31,13 @@ export function AppSidebar({
         {widgetToken ? (
           <OrgSwitcherWidget authToken={widgetToken} />
         ) : (
-          <div className="px-2 py-1.5 text-sm font-semibold">Eleva</div>
+          <Link
+            href={homeUrl}
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            <span>Back</span>
+          </Link>
         )}
       </SidebarHeader>
       <SidebarContent>

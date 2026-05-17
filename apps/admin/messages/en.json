@@ -1,4 +1,8 @@
 {
+  "nav": {
+    "overview": "Overview",
+    "partnerApplications": "Partner Applications"
+  },
   "dashboard": {
     "welcome": "Eleva operator console",
     "subtitle": "Approvals, payouts, and audit."

@@ -1,6 +1,7 @@
 import "@radix-ui/themes/styles.css"
 
 import { redirect, notFound } from "next/navigation"
+import { getTranslations } from "next-intl/server"
 import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
 import { LOGIN_PATH, UnauthorizedError } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
@@ -33,24 +34,26 @@ export default async function TeamLayout({
     notFound()
   }
 
-  let widgetToken: string | null = null
-  try {
-    widgetToken = await getWidgetTokenFromSession()
-  } catch (err) {
-    if (!(err instanceof UnauthorizedError)) {
-      console.error("Unexpected error generating widget token", err)
-      throw err
-    }
-  }
+  const [widgetTokenResult, t] = await Promise.all([
+    getWidgetTokenFromSession().catch((err) => {
+      if (!(err instanceof UnauthorizedError)) {
+        console.error("Unexpected error generating widget token", err)
+        throw err
+      }
+      return null
+    }),
+    getTranslations("nav"),
+  ])
+  const widgetToken = widgetTokenResult
 
   const base = `/${orgSlug}/team`
   const dashboardConfig: DashboardConfig = {
     navGroups: [
       {
         items: [
-          { title: "Dashboard", url: base, icon: <LayoutDashboard /> },
-          { title: "Members", url: `${base}/members`, icon: <Users /> },
-          { title: "Settings", url: `${base}/settings`, icon: <Settings /> },
+          { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
+          { title: t("members"), url: `${base}/members`, icon: <Users /> },
+          { title: t("settings"), url: `${base}/settings`, icon: <Settings /> },
         ],
       },
     ],

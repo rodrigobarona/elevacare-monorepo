@@ -1,4 +1,8 @@
 {
+  "nav": {
+    "overview": "Visão Geral",
+    "partnerApplications": "Candidaturas de Parceiros"
+  },
   "dashboard": {
     "welcome": "Consola do operador Eleva",
     "subtitle": "Aprovações, pagamentos e auditoria."

@@ -1,7 +1,7 @@
 import "@eleva/ui/globals.css"
 import { redirect } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
-import { getLocale, getMessages } from "next-intl/server"
+import { getLocale, getMessages, getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
@@ -32,16 +32,19 @@ export default async function AdminRootLayout({
     redirect(`${APP_URL}/${session.orgSlug}`)
   }
 
-  const locale = await getLocale()
-  const messages = await getMessages()
+  const [locale, messages, t] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getTranslations("nav"),
+  ])
 
   const dashboardConfig: DashboardConfig = {
     navGroups: [
       {
         items: [
-          { title: "Overview", url: "/", icon: <LayoutDashboard /> },
+          { title: t("overview"), url: "/", icon: <LayoutDashboard /> },
           {
-            title: "Partner Applications",
+            title: t("partnerApplications"),
             url: "/become-partner",
             icon: <UserCheck />,
           },

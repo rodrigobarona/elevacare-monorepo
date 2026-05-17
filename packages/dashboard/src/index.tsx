@@ -5,6 +5,7 @@ export { NavMain } from "./nav-main"
 export { NavUser } from "./nav-user"
 export { OrgSwitcherWidget } from "./org-switcher-widget"
 export { switchOrganization } from "./switch-org-action"
+export { getDashboardMessages } from "./messages"
 export type {
   NavItem,
   NavGroup,

@@ -3,6 +3,14 @@ packages:
   - "packages/*"
   - "infra/*"
 
+allowBuilds:
+  "@parcel/watcher": true
+  "@sentry/cli": true
+  "@swc/core": true
+  esbuild: true
+  msw: true
+  sharp: true
+
 catalog:
   # Framework
   next: ^16.2.6
