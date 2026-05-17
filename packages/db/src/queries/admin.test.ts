@@ -154,6 +154,10 @@ describe("admin queries", () => {
       mockTx.insert.mockReturnValueOnce(chain([{ id: "new-profile-id" }]))
       // update application
       mockTx.update.mockReturnValueOnce(chain([]))
+      // select user workosUserId
+      mockTx.select.mockReturnValueOnce(
+        chain([{ workosUserId: "wos_user_01ABC" }])
+      )
 
       const { approveApplication } = await import("./admin")
       const result = await approveApplication("app-1", "admin-user")
