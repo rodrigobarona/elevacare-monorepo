@@ -30,6 +30,7 @@ const nextConfig = {
     "@eleva/billing",
     "@eleva/calendar",
     "@eleva/config",
+    "@eleva/dashboard",
     "@eleva/db",
     "@eleva/integrations",
     "@eleva/observability",
