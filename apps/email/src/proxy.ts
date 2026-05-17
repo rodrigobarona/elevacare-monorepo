@@ -1,8 +1,5 @@
-import {
-  createPassthroughProxy,
-  PASSTHROUGH_APP_MATCHER,
-} from "@eleva/observability/proxy"
+import { createPassthroughProxy } from "@eleva/observability/proxy"
 
 export default createPassthroughProxy()
 
-export const config = { matcher: PASSTHROUGH_APP_MATCHER }
+export const config = { matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"] }

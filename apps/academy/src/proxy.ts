@@ -14,4 +14,4 @@ export default withHeaders(
   })
 )
 
-export const config = { matcher: STANDARD_APP_MATCHER }
+export const config = { matcher: ["/((?!_next|_vercel|.*\\..*).*)"] }

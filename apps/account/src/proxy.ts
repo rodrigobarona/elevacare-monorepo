@@ -1,4 +1,4 @@
-import { createAuthProxy, STANDARD_APP_MATCHER } from "@eleva/auth/proxy"
+import { createAuthProxy } from "@eleva/auth/proxy"
 import { withHeaders } from "@eleva/observability/proxy"
 
 /**
@@ -15,4 +15,4 @@ export default withHeaders(
   })
 )
 
-export const config = { matcher: STANDARD_APP_MATCHER }
+export const config = { matcher: ["/((?!_next|_vercel|.*\\..*).*)"] }
