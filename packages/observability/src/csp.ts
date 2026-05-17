@@ -89,9 +89,22 @@ function mergeVendors(): Record<string, string[]> {
 function resolveAllowlist(): Record<string, string[]> {
   const merged = mergeVendors()
 
-  const assetOrigin = process.env.APP_ASSET_PREFIX
-    ? [process.env.APP_ASSET_PREFIX]
-    : []
+  const ASSET_PREFIX_VARS = [
+    "APP_ASSET_PREFIX",
+    "API_ASSET_PREFIX",
+    "EXPERT_ASSET_PREFIX",
+    "TEAM_ASSET_PREFIX",
+    "ACADEMY_ASSET_PREFIX",
+    "ACCOUNT_ASSET_PREFIX",
+    "DOCS_ASSET_PREFIX",
+  ] as const
+  const assetOrigin = [
+    ...new Set(
+      ASSET_PREFIX_VARS.flatMap((v) =>
+        process.env[v] ? [process.env[v]!] : []
+      )
+    ),
+  ]
 
   const isPreview = process.env.VERCEL_ENV === "preview"
   const vercelLive = isPreview
@@ -106,15 +119,20 @@ function resolveAllowlist(): Record<string, string[]> {
     }
   }
   if (vercelLive.length) {
-    for (const d of ["scriptSrc", "connectSrc", "frameSrc"]) {
+    for (const d of [
+      "scriptSrc",
+      "connectSrc",
+      "frameSrc",
+      "styleSrc",
+      "fontSrc",
+      "imgSrc",
+    ]) {
       merged[d]?.push(...vercelLive)
     }
   }
   if (isDev) {
     merged.scriptSrc?.push("'unsafe-eval'", "'wasm-unsafe-eval'")
-    // #region agent log
     merged.connectSrc?.push("http://127.0.0.1:*")
-    // #endregion
   }
 
   return merged
