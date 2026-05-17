@@ -1,7 +1,9 @@
+import type { ReactNode } from "react"
+
 export interface NavItem {
   title: string
   url: string
-  icon: React.ReactNode
+  icon: ReactNode
   /** Required capability to show this item; omit for always visible */
   needs?: string
   shortcut?: string
@@ -31,6 +33,8 @@ export interface DashboardConfig {
   widgetToken?: string | null
   /** Account settings URL */
   accountUrl?: string
+  /** Settings page URL (falls back to parent path of accountUrl) */
+  settingsUrl?: string
   /** Logout URL */
   logoutUrl?: string
 }

@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation"
 import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
-import { LOGIN_PATH } from "@eleva/auth"
+import { LOGIN_PATH, UnauthorizedError } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { LayoutDashboard, Users, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
@@ -34,8 +34,11 @@ export default async function TeamLayout({
   let widgetToken: string | null = null
   try {
     widgetToken = await getWidgetTokenFromSession()
-  } catch {
-    // Widget token generation may fail if the role lacks permissions
+  } catch (err) {
+    if (!(err instanceof UnauthorizedError)) {
+      console.error("Unexpected error generating widget token", err)
+      throw err
+    }
   }
 
   const base = `/${orgSlug}/team`

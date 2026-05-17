@@ -22,12 +22,19 @@ import type { DashboardUser } from "./nav-types"
 interface NavUserProps {
   user: DashboardUser
   accountUrl?: string
+  settingsUrl?: string
   logoutUrl?: string
+}
+
+function deriveParentPath(url: string): string {
+  const lastSlash = url.lastIndexOf("/")
+  return lastSlash > 0 ? url.slice(0, lastSlash) : "/"
 }
 
 export function NavUser({
   user,
   accountUrl = "/account/profile",
+  settingsUrl,
   logoutUrl = "/logout",
 }: NavUserProps) {
   const displayName = user.displayName || user.email.split("@")[0] || ""
@@ -73,7 +80,7 @@ export function NavUser({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href={accountUrl.replace("/profile", "")}>
+            <Link href={settingsUrl ?? deriveParentPath(accountUrl)}>
               <Settings className="mr-2 size-4" />
               Settings
             </Link>

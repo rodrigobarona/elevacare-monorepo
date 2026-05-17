@@ -8,6 +8,7 @@ interface DashboardHeaderProps {
   user: DashboardUser
   widgetToken?: string | null
   accountUrl?: string
+  settingsUrl?: string
   logoutUrl?: string
   children?: React.ReactNode
 }
@@ -16,6 +17,7 @@ export function DashboardHeader({
   user,
   widgetToken,
   accountUrl,
+  settingsUrl,
   logoutUrl,
   children,
 }: DashboardHeaderProps) {
@@ -34,7 +36,12 @@ export function DashboardHeader({
         </>
       )}
       <div className="ml-auto flex items-center gap-1">
-        <NavUser user={user} accountUrl={accountUrl} logoutUrl={logoutUrl} />
+        <NavUser
+          user={user}
+          accountUrl={accountUrl}
+          settingsUrl={settingsUrl}
+          logoutUrl={logoutUrl}
+        />
       </div>
     </header>
   )

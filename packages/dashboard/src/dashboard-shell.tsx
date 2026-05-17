@@ -31,6 +31,7 @@ export function DashboardShell({
             user={config.user}
             widgetToken={config.widgetToken}
             accountUrl={config.accountUrl}
+            settingsUrl={config.settingsUrl}
             logoutUrl={config.logoutUrl}
           >
             {headerSlot}
