@@ -62,7 +62,7 @@ export default async function TeamLayout({
     orgSlug,
     capabilities: session.capabilities,
     widgetToken,
-    accountUrl: "/account/profile",
+    accountUrl: `${GATEWAY_URL}/account/profile`,
     logoutUrl: "/logout",
   }
 

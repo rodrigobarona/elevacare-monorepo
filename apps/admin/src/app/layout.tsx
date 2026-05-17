@@ -53,7 +53,7 @@ export default async function AdminRootLayout({
       email: session.user.email,
       avatarUrl: session.user.avatarUrl,
     },
-    accountUrl: "/account/profile",
+    accountUrl: `${GATEWAY_URL}/account/profile`,
     logoutUrl: "/logout",
   }
 

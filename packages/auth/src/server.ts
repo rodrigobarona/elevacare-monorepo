@@ -1,8 +1,10 @@
 import { cache } from "react"
 import { cookies, headers } from "next/headers"
+import { isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
 import { withAuth as authkitGetSession } from "@workos-inc/authkit-nextjs"
 import { unsealData } from "iron-session"
+import { db, main } from "@eleva/db"
 import { resolveSessionFromWorkosUser } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
