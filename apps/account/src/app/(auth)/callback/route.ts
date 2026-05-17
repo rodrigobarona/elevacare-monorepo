@@ -3,6 +3,14 @@ import { cookies } from "next/headers"
 import { cookieName, isLocale } from "@eleva/config/i18n"
 
 /**
+ * Always dynamic -- this route exchanges the OAuth code for a session,
+ * sets the WorkOS session cookie, and may set the locale cookie.
+ * Never prerender, never cache.
+ */
+export const dynamic = "force-dynamic"
+export const fetchCache = "force-no-store"
+
+/**
  * WorkOS OAuth callback for the account app. Sets the session cookie
  * on `.eleva.care` so all apps can read it, then redirects to
  * /dashboard which handles post-login routing.

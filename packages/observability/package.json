@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./proxy": "./src/proxy.ts",
+    "./proxy-locale": "./src/proxy-locale.ts",
     "./sentry": "./src/sentry.ts"
   },
   "scripts": {

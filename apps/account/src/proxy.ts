@@ -5,67 +5,45 @@ import {
   partitionAuthkitHeaders,
   applyResponseHeaders,
 } from "@workos-inc/authkit-nextjs"
-import { cookieName, isLocale } from "@eleva/config/i18n"
-import { countryToLocale } from "@eleva/config/country-to-locale"
 import { withHeaders } from "@eleva/observability/proxy"
-
-const UNAUTH_PATHS = ["/signin", "/signup", "/callback", "/logout"]
-
-function resolveLocale(req: NextRequest): string {
-  const existingCookie = req.cookies.get(cookieName)?.value
-  if (existingCookie && isLocale(existingCookie)) {
-    return existingCookie
-  }
-
-  const acceptLang = req.headers.get("accept-language")
-  if (acceptLang) {
-    for (const part of acceptLang.split(",")) {
-      const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
-      if (isLocale(lang)) return lang
-    }
-  }
-
-  return countryToLocale(req.headers.get("x-vercel-ip-country"))
-}
+import {
+  persistLocaleCookie,
+  resolveLocaleForRequest,
+} from "@eleva/observability/proxy-locale"
 
 /**
- * Account app proxy: AuthKit auth + locale resolution.
- *
- * Auth routes (/signin, /signup, /callback, /logout) are allowed
- * without a session. All other routes require authentication --
- * unauthenticated users are redirected to /signin.
+ * Routes that drive WorkOS themselves via dedicated route handlers
+ * (signin/signup -> getSignInUrl/getSignUpUrl, callback -> handleAuth,
+ * logout -> signOut). Short-circuiting here avoids ~50-200ms of cookie
+ * decryption + token-refresh round-trip in the WorkOS hosted-UI handoff.
  */
+const UNAUTH_PATHS = new Set(["/signin", "/signup", "/callback", "/logout"])
+
 async function handler(req: NextRequest): Promise<NextResponse | Response> {
-  const { session, headers, authorizationUrl } = await authkit(req)
-  const pathname = req.nextUrl.pathname
+  const locale = resolveLocaleForRequest(req)
 
-  const isUnauthPath = UNAUTH_PATHS.some((p) => pathname === p)
-
-  if (!session.user && authorizationUrl && !isUnauthPath) {
-    return handleAuthkitHeaders(req, headers, {
-      redirect: authorizationUrl,
-    })
+  if (UNAUTH_PATHS.has(req.nextUrl.pathname)) {
+    const requestHeaders = new Headers(req.headers)
+    requestHeaders.set("x-eleva-locale", locale)
+    const response = NextResponse.next({ request: { headers: requestHeaders } })
+    persistLocaleCookie(req, response, locale)
+    return response
   }
 
-  const locale = resolveLocale(req)
+  const { session, headers, authorizationUrl } = await authkit(req)
+
+  if (!session.user && authorizationUrl) {
+    return handleAuthkitHeaders(req, headers, { redirect: authorizationUrl })
+  }
+
   const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
     req,
     headers
   )
-
   requestHeaders.set("x-eleva-locale", locale)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
-
-  const existingCookie = req.cookies.get(cookieName)?.value
-  if (!existingCookie || existingCookie !== locale) {
-    response.cookies.set(cookieName, locale, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
-    })
-  }
-
+  persistLocaleCookie(req, response, locale)
   return applyResponseHeaders(response, responseHeaders)
 }
 

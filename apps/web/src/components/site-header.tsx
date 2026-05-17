@@ -1,10 +1,9 @@
-import { getAuthUser } from "@eleva/auth/server"
-import { Button } from "@eleva/ui/components/button"
-import { Avatar, AvatarFallback } from "@eleva/ui/components/avatar"
+import { Suspense } from "react"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
 import { LanguageSwitcher } from "./language-switcher"
-import { UserMenu } from "./user-menu"
+import { SignedOutButtons } from "./signed-out-buttons"
+import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
 
 type NavItem = {
   href: string
@@ -15,29 +14,16 @@ interface SiteHeaderProps {
   nav?: NavItem[]
 }
 
+/**
+ * Marketing site header. The auth-aware slot (signin buttons vs user
+ * menu) is wrapped in Suspense so the page shell + nav links stream
+ * down before WorkOS session resolution finishes. Most marketing
+ * visitors are logged-out, so the SignedOutButtons fallback is the
+ * correct steady state -- meaning clicking "Sign in" is interactive
+ * the instant the header paints, with no perceived auth latency.
+ */
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   const t = await getTranslations("nav")
-
-  let user: {
-    firstName: string | null
-    lastName: string | null
-    email: string
-  } | null = null
-  try {
-    user = await getAuthUser()
-  } catch {
-    // Not authenticated -- silently fall through to logged-out state.
-    // This is expected on the marketing site when no WorkOS cookie exists.
-  }
-
-  const initials = user
-    ? [user.firstName?.[0], user.lastName?.[0]]
-        .filter(Boolean)
-        .join("")
-        .toUpperCase() ||
-      user.email[0]?.toUpperCase() ||
-      "?"
-    : null
 
   return (
     <header className="border-b px-6 py-4">
@@ -56,26 +42,16 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
             </Link>
           ))}
           <LanguageSwitcher />
-          {user ? (
-            <UserMenu
-              initials={initials!}
-              firstName={user.firstName}
-              email={user.email}
-              dashboardLabel={t("dashboard")}
-              signOutLabel={t("signout")}
-              dashboardUrl="/dashboard"
-              signOutUrl="/logout"
-            />
-          ) : (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <a href="/signin">{t("signin")}</a>
-              </Button>
-              <Button size="sm" asChild>
-                <a href="/signup">{t("signup")}</a>
-              </Button>
-            </>
-          )}
+          <Suspense
+            fallback={
+              <SignedOutButtons
+                signInLabel={t("signin")}
+                signUpLabel={t("signup")}
+              />
+            }
+          >
+            <SiteHeaderAuthSlot />
+          </Suspense>
         </div>
       </nav>
     </header>
