@@ -1,11 +1,6 @@
-import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
 
 export default async function OrganizationsPage() {
-  const session = await getSession()
-  if (!session) redirect("/signin")
-
   const t = await getTranslations("organizations")
 
   return (

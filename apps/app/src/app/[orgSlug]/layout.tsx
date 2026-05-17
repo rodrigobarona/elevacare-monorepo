@@ -1,5 +1,5 @@
-import { redirect, notFound } from "next/navigation"
-import { getSessionForOrg } from "@eleva/auth/server"
+import { notFound } from "next/navigation"
+import { guardSessionForOrg } from "@eleva/auth"
 
 export default async function OrgSlugLayout({
   children,
@@ -9,11 +9,7 @@ export default async function OrgSlugLayout({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSessionForOrg(orgSlug)
-
-  if (!session) {
-    redirect("/signin")
-  }
+  const session = await guardSessionForOrg(orgSlug)
 
   if (session.orgSlug !== orgSlug) {
     notFound()

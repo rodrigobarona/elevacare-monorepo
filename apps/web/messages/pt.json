@@ -6,8 +6,8 @@
   "nav": {
     "about": "Sobre",
     "home": "Início",
-    "signin": "Entrar",
-    "signup": "Criar conta",
+    "login": "Entrar",
+    "getStarted": "Começar agora",
     "dashboard": "Painel",
     "signout": "Sair"
   },

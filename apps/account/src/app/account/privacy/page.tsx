@@ -1,11 +1,6 @@
-import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
 
 export default async function PrivacyPage() {
-  const session = await getSession()
-  if (!session) redirect("/signin")
-
   const t = await getTranslations("privacy")
 
   return (

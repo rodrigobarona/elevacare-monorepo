@@ -3,10 +3,11 @@ import { redirect } from "next/navigation"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
+import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 
-const SIGNIN_URL = resolveGatewayUrl()
-const APP_URL = SIGNIN_URL
+const GATEWAY_URL = resolveGatewayUrl()
+const APP_URL = GATEWAY_URL
 
 export const metadata = {
   title: "Eleva.care — Admin",
@@ -21,7 +22,7 @@ export default async function AdminRootLayout({
   const session = await getSession()
 
   if (!session) {
-    redirect(`${SIGNIN_URL}/signin`)
+    redirect(`${GATEWAY_URL}${LOGIN_PATH}`)
   }
 
   if (!session.capabilities.includes("audit:view_all")) {

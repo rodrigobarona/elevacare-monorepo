@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { getSession } from "@eleva/auth"
+import { getSession, LOGIN_PATH } from "@eleva/auth"
 import {
   getAdapter,
   InvoicingProviderSlug,
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 
   const session = await getSession()
   if (!session) {
-    return NextResponse.redirect(new URL("/signin", appUrl))
+    return NextResponse.redirect(new URL(LOGIN_PATH, appUrl))
   }
 
   const url = new URL(request.url)

@@ -1,4 +1,8 @@
-import { NextResponse, type NextRequest } from "next/server"
+import {
+  NextResponse,
+  type NextFetchEvent,
+  type NextRequest,
+} from "next/server"
 import { buildCspHeader } from "./csp"
 import {
   correlationIdHeader,
@@ -7,20 +11,69 @@ import {
 } from "./correlation"
 
 /**
+ * Standard matcher for app proxies. Excludes Next internals
+ * (`_next`, `_vercel`) and any path containing a dot (static assets,
+ * images, fonts, etc.). Use this in every protected app proxy:
+ *
+ *   export const config = { matcher: STANDARD_APP_MATCHER }
+ */
+export const STANDARD_APP_MATCHER = [
+  "/((?!api|_next|_vercel|.*\\..*).*)",
+] as const
+
+/**
+ * Matcher for apps that own their own /api route handlers and want
+ * those to bypass the proxy entirely (e.g. docs, email).
+ */
+export const PASSTHROUGH_APP_MATCHER = [
+  "/((?!api|_next|_vercel|.*\\..*).*)",
+] as const
+
+export type ProxyHandler = (
+  req: NextRequest,
+  event?: NextFetchEvent
+) => NextResponse | Response | Promise<NextResponse | Response>
+
+/**
+ * Tiny pass-through proxy for apps that don't need auth or locale
+ * resolution at the edge (docs, email, api). Centralized so they
+ * all stay consistent.
+ */
+export function createPassthroughProxy(): ProxyHandler {
+  return () => NextResponse.next()
+}
+
+/**
+ * Match a pathname against a list of patterns. Each pattern is either
+ * an exact pathname (e.g. `/home`) or a single trailing glob
+ * (e.g. `/legal/:path*` matches `/legal/privacy`, `/legal/terms`,
+ * etc., but NOT `/legalese`).
+ */
+export function matchesPath(
+  pathname: string,
+  patterns: readonly string[]
+): boolean {
+  for (const pattern of patterns) {
+    if (pattern.endsWith("/:path*")) {
+      const prefix = pattern.slice(0, -"/:path*".length)
+      if (pathname === prefix || pathname.startsWith(prefix + "/")) return true
+    } else if (pathname === pattern) {
+      return true
+    }
+  }
+  return false
+}
+
+/**
  * Composable proxy wrapper: adds secure headers + correlation ID on
  * every response. Drop it into `src/proxy.ts` via:
  *
- *   export default withHeaders(withAuth(intl));
+ *   export default withHeaders(createAuthProxy({ ... }))
  *
  * See docs/eleva-v3/implementation-sprints.md "Next.js 16 Naming
- * Conventions" \u2014 this helper is part of the ceiling that keeps
+ * Conventions" -- this helper is part of the ceiling that keeps
  * each app's src/proxy.ts under 50 LOC.
  */
-
-export type ProxyHandler = (
-  req: NextRequest
-  // next-intl's middleware has a richer signature; we keep this loose.
-) => NextResponse | Promise<NextResponse> | Response | Promise<Response>
 
 const HSTS = "max-age=63072000; includeSubDomains; preload"
 
@@ -48,12 +101,14 @@ export function withHeaders(
 ): ProxyHandler {
   const correlationHeader = correlationIdHeader()
 
-  return async (req) => {
+  return async (req, event) => {
     const cspValue = options.csp ?? buildCspHeader()
     const incoming = req.headers.get(correlationHeader)
     const correlationId = incoming ?? generateCorrelationId()
 
-    const res = await withCorrelationId(correlationId, async () => handler(req))
+    const res = await withCorrelationId(correlationId, async () =>
+      handler(req, event)
+    )
 
     // Build a NextResponse we can mutate regardless of handler return type.
     const nextRes = res instanceof NextResponse ? res : NextResponse.next(res)

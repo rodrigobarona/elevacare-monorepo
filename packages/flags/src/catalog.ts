@@ -138,8 +138,8 @@ export const FLAG_CATALOG = {
       "Hide provider from install UI; existing connections read-only.",
     dependsOn: ["ff.expert_invoicing_apps_enabled"],
   },
-  "marketing.showStatsStrip": {
-    name: "marketing.showStatsStrip",
+  "ff.marketing.stats_strip": {
+    name: "ff.marketing.stats_strip",
     purpose: "Gate homepage stats strip section until real data exists.",
     owner: "commercial",
     scope: "global",
@@ -147,8 +147,8 @@ export const FLAG_CATALOG = {
     rolloutStage: "dev-only",
     killSwitchBehavior: "Stats strip hidden; page renders without it.",
   },
-  "marketing.showTestimonials": {
-    name: "marketing.showTestimonials",
+  "ff.marketing.testimonials": {
+    name: "ff.marketing.testimonials",
     purpose: "Gate homepage testimonials section until real data exists.",
     owner: "commercial",
     scope: "global",
@@ -156,8 +156,8 @@ export const FLAG_CATALOG = {
     rolloutStage: "dev-only",
     killSwitchBehavior: "Testimonials section hidden; page renders without it.",
   },
-  "marketing.showPressLogos": {
-    name: "marketing.showPressLogos",
+  "ff.marketing.press_logos": {
+    name: "ff.marketing.press_logos",
     purpose: "Gate homepage press logos section until real data exists.",
     owner: "commercial",
     scope: "global",

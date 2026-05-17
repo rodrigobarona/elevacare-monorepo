@@ -14,7 +14,7 @@ export const ACCOUNT_STANDALONE_PATHS = [
   "dashboard",
   "callback",
   "logout",
-  "signin",
+  "login",
   "signup",
 ] as const
 

@@ -1,72 +1,17 @@
-import { NextResponse, type NextRequest } from "next/server"
-import {
-  authkit,
-  handleAuthkitHeaders,
-  partitionAuthkitHeaders,
-  applyResponseHeaders,
-} from "@workos-inc/authkit-nextjs"
-import { cookieName, isLocale } from "@eleva/config/i18n"
-import { countryToLocale } from "@eleva/config/country-to-locale"
+import { createAuthProxy } from "@eleva/auth/proxy"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { withHeaders } from "@eleva/observability/proxy"
 
-const SIGNIN_URL = resolveGatewayUrl()
+/**
+ * Academy app: org-scoped learning portal. Unauthenticated users
+ * bounce to the gateway's /login with a returnTo pointing back
+ * to the current academy URL.
+ */
+export default withHeaders(
+  createAuthProxy({
+    redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
+    unauthenticatedPaths: [],
+  })
+)
 
-function resolveLocale(req: NextRequest): string {
-  const fromCookie = req.cookies.get(cookieName)?.value
-  if (fromCookie && isLocale(fromCookie)) return fromCookie
-
-  const acceptLang = req.headers.get("accept-language")
-  if (acceptLang) {
-    for (const part of acceptLang.split(",")) {
-      const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
-      if (isLocale(lang)) return lang
-    }
-  }
-
-  const country = req.headers.get("x-vercel-ip-country")
-  if (country) {
-    const mapped = countryToLocale(country)
-    if (mapped) return mapped
-  }
-
-  return "en"
-}
-
-async function handler(req: NextRequest): Promise<NextResponse | Response> {
-  const { session, headers, authorizationUrl } = await authkit(req)
-
-  if (!session.user && authorizationUrl) {
-    const returnTo = encodeURIComponent(req.nextUrl.toString())
-    const signinUrl = `${SIGNIN_URL}/signin?returnTo=${returnTo}`
-    return NextResponse.redirect(signinUrl)
-  }
-
-  const locale = resolveLocale(req)
-  const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
-    req,
-    headers
-  )
-
-  requestHeaders.set("x-eleva-locale", locale)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
-
-  const jar = req.cookies
-  const currentLocale = jar.get(cookieName)?.value
-  if (currentLocale !== locale) {
-    response.cookies.set(cookieName, locale, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
-    })
-  }
-
-  return applyResponseHeaders(response, responseHeaders)
-}
-
-export default withHeaders(handler)
-
-export const config = {
-  matcher: ["/((?!_next|_vercel|.*\\..*).*)"],
-}
+export const config = { matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"] }

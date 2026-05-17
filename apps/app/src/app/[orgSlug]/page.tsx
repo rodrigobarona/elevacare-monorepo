@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSessionForOrg } from "@eleva/auth/server"
+import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
 import { AppShell } from "@/components/app-shell"
 
 export default async function OrgHomePage({
@@ -9,8 +9,7 @@ export default async function OrgHomePage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSessionForOrg(orgSlug)
-  if (!session) redirect("/signin")
+  const session = await guardSessionForOrg(orgSlug)
 
   switch (session.productLabel) {
     case "member":
@@ -24,11 +23,7 @@ export default async function OrgHomePage({
   }
 }
 
-async function MemberDashboard({
-  session,
-}: {
-  session: NonNullable<Awaited<ReturnType<typeof getSessionForOrg>>>
-}) {
+async function MemberDashboard({ session }: { session: ElevaSession }) {
   const t = await getTranslations()
   return (
     <AppShell session={session}>

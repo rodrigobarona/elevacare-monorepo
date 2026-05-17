@@ -1,12 +1,13 @@
 import { redirect, notFound } from "next/navigation"
 import { getSessionForOrg } from "@eleva/auth/server"
+import { LOGIN_PATH } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
 
-const SIGNIN_URL = resolveGatewayUrl()
+const GATEWAY_URL = resolveGatewayUrl()
 
 export default async function ExpertLayout({
   children,
@@ -20,7 +21,7 @@ export default async function ExpertLayout({
 
   if (!session) {
     const returnTo = encodeURIComponent(`/${orgSlug}/expert`)
-    redirect(`${SIGNIN_URL}/signin?returnTo=${returnTo}`)
+    redirect(`${GATEWAY_URL}${LOGIN_PATH}?returnTo=${returnTo}`)
   }
 
   if (session.orgSlug !== orgSlug) {

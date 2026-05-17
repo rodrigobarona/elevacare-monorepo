@@ -47,7 +47,7 @@ function isRootPath(pathname: string): boolean {
  * request should stay in the marketing zone (apps/web).
  *
  * Routing priority:
- * 1. Account paths (signin, callback, onboarding, account/*) -> apps/account
+ * 1. Account paths (login, callback, onboarding, account/*) -> apps/account
  * 2. Fixed app-level paths (admin) -> apps/app
  * 3. Org-scoped second-segment dispatch: expert -> apps/expert,
  *    team -> apps/team, academy -> apps/academy

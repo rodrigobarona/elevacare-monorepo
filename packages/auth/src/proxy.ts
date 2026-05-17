@@ -1,103 +1,188 @@
-import {
-  NextResponse,
-  type NextFetchEvent,
-  type NextRequest,
-} from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import {
   authkit,
-  handleAuthkitHeaders,
+  handleAuthkitProxy,
   partitionAuthkitHeaders,
   applyResponseHeaders,
 } from "@workos-inc/authkit-nextjs"
+import { matchesPath, type ProxyHandler } from "@eleva/observability/proxy"
+import {
+  persistLocaleCookie,
+  resolveLocaleForRequest,
+} from "@eleva/observability/proxy-locale"
+import { LOGIN_PATH } from "./guards"
 
 /**
- * withAuth proxy wrapper. Composes WorkOS AuthKit's composable API
- * which handles:
- *   - reading/refreshing the WorkOS session cookie (scope=.eleva.care)
- *   - redirecting unauthenticated users to /signin for protected paths
- *   - exposing the session to Server Components via headers
+ * Single source of truth for every Eleva app proxy.
  *
- * Uses the `authkit()` composable function which ALWAYS returns the
- * `x-workos-middleware` header, ensuring server-side `withAuth()` can
- * detect that middleware ran on every route.
+ * Compose with the secure-headers wrapper from @eleva/observability:
  *
- * Usage in apps/app/src/proxy.ts:
+ *   // satellite app (admin / expert / team / academy)
+ *   export default withHeaders(
+ *     createAuthProxy({
+ *       redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
+ *     })
+ *   )
  *
- *   export default withHeaders(withAuth(intl));
+ *   // member app with org-slug tracking
+ *   export default withHeaders(
+ *     createAuthProxy({
+ *       unauthenticatedPaths: [...],
+ *       onAuthenticated: trackLastActiveOrg,
+ *     })
+ *   )
+ *
+ *   // account app, with auth-flow routes that drive WorkOS themselves
+ *   export default withHeaders(
+ *     createAuthProxy({
+ *       authFlowPaths: ["/login", "/signup", "/callback", "/logout"],
+ *       unauthenticatedPaths: [],
+ *     })
+ *   )
+ *
+ * The factory handles, in order, on every request:
+ *   1. Short-circuit `authkit()` for declared auth-flow paths
+ *      (saves ~50-200ms by skipping cookie decryption + token refresh).
+ *   2. `authkit(req)` to resolve session + AuthKit headers.
+ *   3. Redirect unauthenticated users on protected paths -- via either
+ *      AuthKit's authorizationUrl (default) OR the gateway /login URL
+ *      (for satellite apps that prefer to bounce through eleva.care).
+ *   4. Resolve + propagate ELEVA_LOCALE to request headers and cookie.
+ *   5. Invoke optional onAuthenticated hook (cookie writes, etc.).
+ *   6. Re-apply AuthKit response headers via applyResponseHeaders.
  */
 
-export type ProxyHandler = (
-  req: NextRequest,
-  event?: NextFetchEvent
-) => NextResponse | Response | Promise<NextResponse | Response>
+export type { ProxyHandler } from "@eleva/observability/proxy"
+// Re-exported here so callers only need one import for the matcher
+// + factory pair. Single source of truth lives in observability/proxy.
+export {
+  STANDARD_APP_MATCHER,
+  PASSTHROUGH_APP_MATCHER,
+  createPassthroughProxy,
+} from "@eleva/observability/proxy"
 
-export interface WithAuthOptions {
-  /** Paths the WorkOS proxy should NOT gate. Defaults to the public surface. */
-  unauthenticatedPaths?: string[]
-  /** Whether AuthKit enforces auth at the proxy layer. */
-  enforce?: boolean
-}
-
-const DEFAULT_UNAUTH_PATHS = [
+/**
+ * Default unauth allowlist for protected apps. Apps can override.
+ * Includes the WorkOS auth-flow paths so that even with `enforce: true`
+ * the proxy does not redirect a login attempt to itself.
+ */
+export const DEFAULT_UNAUTHENTICATED_PATHS = [
   "/",
   "/home",
   "/about",
   "/legal/:path*",
-  "/signin",
+  LOGIN_PATH,
   "/signup",
-]
+  "/callback",
+  "/logout",
+] as const
 
-function isUnauthenticatedPath(pathname: string, paths: string[]): boolean {
-  for (const pattern of paths) {
-    if (pattern.endsWith("/:path*")) {
-      const prefix = pattern.slice(0, -"/:path*".length)
-      if (pathname === prefix || pathname.startsWith(prefix + "/")) return true
-    } else if (pathname === pattern) {
-      return true
-    }
-  }
-  return false
+interface SessionLike {
+  user?: { id: string } | null
 }
 
-export function withAuth(
-  handler: ProxyHandler,
-  options: WithAuthOptions = {}
-): ProxyHandler {
-  return async (req, event) => {
+export type RedirectStrategy = "authkit" | { kind: "gateway"; baseUrl: string }
+
+export interface AuthProxyOptions {
+  /**
+   * Paths allowed without a session. AuthKit still runs so server
+   * components keep their middleware headers, but no redirect is
+   * issued. Supports a single trailing `/:path*` glob.
+   */
+  unauthenticatedPaths?: readonly string[]
+
+  /**
+   * Paths that drive their own WorkOS interaction inside route
+   * handlers (e.g. /login, /signup, /callback, /logout). These skip
+   * `authkit()` entirely, avoiding wasted cookie decryption work.
+   */
+  authFlowPaths?: readonly string[]
+
+  /** Whether to enforce auth at the proxy layer. Default true. */
+  enforce?: boolean
+
+  /**
+   * How to bounce unauthenticated users to the sign-in screen.
+   *   - "authkit" (default): redirect to the AuthKit authorizationUrl
+   *     using handleAuthkitProxy (preserves PKCE cookies + headers).
+   *   - { kind: "gateway", baseUrl }: redirect to
+   *     `${baseUrl}/login?returnTo=...` -- used by satellite apps
+   *     so the gateway can drive the WorkOS handshake centrally.
+   */
+  redirect?: RedirectStrategy
+
+  /**
+   * Optional hook for authenticated requests. Runs after locale is
+   * persisted, before AuthKit response headers are applied. Use it
+   * for app-specific cookies like "last active org".
+   */
+  onAuthenticated?: (
+    req: NextRequest,
+    response: NextResponse,
+    session: SessionLike
+  ) => void
+}
+
+function buildAuthFlowResponse(req: NextRequest): NextResponse {
+  const locale = resolveLocaleForRequest(req)
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set("x-eleva-locale", locale)
+  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  persistLocaleCookie(req, response, locale)
+  return response
+}
+
+function buildGatewayRedirect(req: NextRequest, baseUrl: string): NextResponse {
+  const returnTo = encodeURIComponent(req.nextUrl.toString())
+  return NextResponse.redirect(`${baseUrl}${LOGIN_PATH}?returnTo=${returnTo}`)
+}
+
+export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
+  const unauthenticatedPaths =
+    options.unauthenticatedPaths ?? DEFAULT_UNAUTHENTICATED_PATHS
+  const authFlowSet = new Set(options.authFlowPaths ?? [])
+  const enforce = options.enforce ?? true
+  const redirect = options.redirect ?? "authkit"
+  const onAuthenticated = options.onAuthenticated
+
+  return async (req) => {
+    const pathname = req.nextUrl.pathname
+
+    if (authFlowSet.has(pathname)) {
+      return buildAuthFlowResponse(req)
+    }
+
     const { session, headers, authorizationUrl } = await authkit(req)
 
-    const enforce = options.enforce ?? true
-    if (enforce && !session.user && authorizationUrl) {
-      const unauthPaths = options.unauthenticatedPaths ?? DEFAULT_UNAUTH_PATHS
-      if (!isUnauthenticatedPath(req.nextUrl.pathname, unauthPaths)) {
-        return handleAuthkitHeaders(req, headers, {
-          redirect: authorizationUrl,
-        })
+    const needsRedirect =
+      enforce && !session.user && !matchesPath(pathname, unauthenticatedPaths)
+
+    if (needsRedirect) {
+      if (typeof redirect === "object" && redirect.kind === "gateway") {
+        return buildGatewayRedirect(req, redirect.baseUrl)
       }
+      const redirectUrl =
+        authorizationUrl ||
+        `${LOGIN_PATH}?returnTo=${encodeURIComponent(req.nextUrl.toString())}`
+      return handleAuthkitProxy(req, headers, {
+        redirect: redirectUrl,
+      })
     }
 
-    const downstream = await handler(req, event)
-    if (
-      downstream instanceof Response &&
-      downstream.status >= 300 &&
-      downstream.status < 400
-    ) {
-      return downstream
-    }
-
+    const locale = resolveLocaleForRequest(req)
     const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
       req,
       headers
     )
-    const base = NextResponse.next({ request: { headers: requestHeaders } })
+    requestHeaders.set("x-eleva-locale", locale)
 
-    if (downstream instanceof NextResponse) {
-      downstream.headers.forEach((value, name) => {
-        if (name.startsWith("x-middleware-")) return
-        base.headers.set(name, value)
-      })
+    const response = NextResponse.next({ request: { headers: requestHeaders } })
+    persistLocaleCookie(req, response, locale)
+
+    if (session.user && onAuthenticated) {
+      onAuthenticated(req, response, session as SessionLike)
     }
 
-    return applyResponseHeaders(base, responseHeaders)
+    return applyResponseHeaders(response, responseHeaders)
   }
 }
