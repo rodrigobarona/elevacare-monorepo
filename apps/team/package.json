@@ -18,6 +18,7 @@
     "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
+    "@radix-ui/themes": "catalog:",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
     "lucide-react": "catalog:",

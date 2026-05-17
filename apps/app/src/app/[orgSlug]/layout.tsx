@@ -1,3 +1,5 @@
+import "@radix-ui/themes/styles.css"
+
 import { notFound } from "next/navigation"
 import { guardSessionForOrg, UnauthorizedError } from "@eleva/auth"
 import { getWidgetTokenFromSession } from "@eleva/auth/server"

@@ -1,6 +1,7 @@
 "use client"
 
 import "@workos-inc/widgets/styles.css"
+import "./org-switcher-widget.css"
 import { WorkOsWidgets, OrganizationSwitcher } from "@workos-inc/widgets"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
@@ -37,7 +38,7 @@ export function OrgSwitcherWidget({
   }
 
   return (
-    <div className="flex items-center [&_.woswidgets-root]:h-auto! [&_.woswidgets-root]:min-h-0! [&_.woswidgets-root]:bg-transparent!">
+    <div className="eleva-org-switcher w-full">
       <WorkOsWidgets
         theme={{
           appearance: resolvedTheme === "dark" ? "dark" : "light",
@@ -49,7 +50,7 @@ export function OrgSwitcherWidget({
         <OrganizationSwitcher
           authToken={authToken}
           switchToOrganization={handleSwitch}
-          variant="ghost"
+          variant="outline"
         />
       </WorkOsWidgets>
     </div>
