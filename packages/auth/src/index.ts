@@ -30,7 +30,16 @@ export {
   type WorkOSOrganizationEventData,
   type WorkOSMembershipEventData,
 } from "./sync"
-export { withAuth, type WithAuthOptions } from "./proxy"
+export {
+  createAuthProxy,
+  createPassthroughProxy,
+  STANDARD_APP_MATCHER,
+  PASSTHROUGH_APP_MATCHER,
+  DEFAULT_UNAUTHENTICATED_PATHS,
+  type AuthProxyOptions,
+  type ProxyHandler,
+  type RedirectStrategy,
+} from "./proxy"
 export {
   type AuthUser,
   getAuthUser,

@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/observability": "workspace:*",
     "@eleva/ui": "workspace:*",
     "next": "catalog:",
     "react": "catalog:",

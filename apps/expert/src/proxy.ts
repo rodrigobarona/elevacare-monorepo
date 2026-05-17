@@ -1,46 +1,17 @@
-import { NextResponse, type NextRequest } from "next/server"
-import {
-  authkit,
-  partitionAuthkitHeaders,
-  applyResponseHeaders,
-} from "@workos-inc/authkit-nextjs"
+import { createAuthProxy, STANDARD_APP_MATCHER } from "@eleva/auth/proxy"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { withHeaders } from "@eleva/observability/proxy"
-import {
-  persistLocaleCookie,
-  resolveLocaleForRequest,
-} from "@eleva/observability/proxy-locale"
-
-const SIGNIN_URL = resolveGatewayUrl()
 
 /**
- * Expert app proxy: AuthKit + locale resolution.
- *
- * Unauthenticated users are redirected to eleva.care/signin
- * with a returnTo pointing back to the current expert URL.
+ * Expert app: org-scoped expert workspace. Unauthenticated users
+ * bounce to the gateway's /signin with a returnTo pointing back
+ * to the current expert URL.
  */
-async function handler(req: NextRequest): Promise<NextResponse | Response> {
-  const { session, headers, authorizationUrl } = await authkit(req)
+export default withHeaders(
+  createAuthProxy({
+    redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
+    unauthenticatedPaths: [],
+  })
+)
 
-  if (!session.user && authorizationUrl) {
-    const returnTo = encodeURIComponent(req.nextUrl.toString())
-    return NextResponse.redirect(`${SIGNIN_URL}/signin?returnTo=${returnTo}`)
-  }
-
-  const locale = resolveLocaleForRequest(req)
-  const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
-    req,
-    headers
-  )
-  requestHeaders.set("x-eleva-locale", locale)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
-  persistLocaleCookie(req, response, locale)
-  return applyResponseHeaders(response, responseHeaders)
-}
-
-export default withHeaders(handler)
-
-export const config = {
-  matcher: ["/((?!_next|_vercel|.*\\..*).*)"],
-}
+export const config = { matcher: STANDARD_APP_MATCHER }

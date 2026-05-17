@@ -1,10 +1,8 @@
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import {
+  createPassthroughProxy,
+  PASSTHROUGH_APP_MATCHER,
+} from "@eleva/observability/proxy"
 
-export default function proxy(_req: NextRequest) {
-  return NextResponse.next();
-}
+export default createPassthroughProxy()
 
-export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
-};
+export const config = { matcher: PASSTHROUGH_APP_MATCHER }

@@ -1,43 +1,21 @@
-import { NextResponse, type NextRequest } from "next/server"
-import {
-  authkit,
-  handleAuthkitHeaders,
-  partitionAuthkitHeaders,
-  applyResponseHeaders,
-} from "@workos-inc/authkit-nextjs"
+import { createAuthProxy, STANDARD_APP_MATCHER } from "@eleva/auth/proxy"
 import { withHeaders } from "@eleva/observability/proxy"
 import {
-  persistLocaleCookie,
-  resolveLocaleForRequest,
-} from "@eleva/observability/proxy-locale"
-import { isUnauthenticatedPath, trackLastActiveOrg } from "./lib/proxy-routing"
+  MEMBER_APP_UNAUTHENTICATED_PATHS,
+  trackLastActiveOrg,
+} from "./lib/proxy-routing"
 
-async function handler(req: NextRequest): Promise<NextResponse | Response> {
-  const { session, headers, authorizationUrl } = await authkit(req)
+/**
+ * Member app: protected app that ALSO serves marketing-shaped public
+ * routes (/, /home, /about, /legal/...). Authenticated visits to any
+ * first-level segment that isn't a fixed app segment are tracked as
+ * the user's last active org (used by /dashboard to bounce them back).
+ */
+export default withHeaders(
+  createAuthProxy({
+    unauthenticatedPaths: MEMBER_APP_UNAUTHENTICATED_PATHS,
+    onAuthenticated: trackLastActiveOrg,
+  })
+)
 
-  if (
-    !session.user &&
-    authorizationUrl &&
-    !isUnauthenticatedPath(req.nextUrl.pathname)
-  ) {
-    return handleAuthkitHeaders(req, headers, { redirect: authorizationUrl })
-  }
-
-  const locale = resolveLocaleForRequest(req)
-  const { requestHeaders, responseHeaders } = partitionAuthkitHeaders(
-    req,
-    headers
-  )
-  requestHeaders.set("x-eleva-locale", locale)
-
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
-  persistLocaleCookie(req, response, locale)
-  if (session.user) trackLastActiveOrg(req, response)
-  return applyResponseHeaders(response, responseHeaders)
-}
-
-export default withHeaders(handler)
-
-export const config = {
-  matcher: ["/((?!_next|_vercel|.*\\..*).*)"],
-}
+export const config = { matcher: STANDARD_APP_MATCHER }

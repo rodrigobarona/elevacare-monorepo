@@ -537,6 +537,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@eleva/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -577,6 +580,9 @@ importers:
 
   apps/email:
     dependencies:
+      '@eleva/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -951,9 +957,15 @@ importers:
       '@eleva/audit':
         specifier: workspace:*
         version: link:../audit
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
+      '@eleva/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@workos-inc/authkit-nextjs':
         specifier: 'catalog:'
         version: 4.1.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)

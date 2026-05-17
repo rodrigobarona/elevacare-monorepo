@@ -4,6 +4,7 @@ import {
   ACCOUNT_STANDALONE_PATHS,
   ACCOUNT_FIXED_SEGMENTS,
 } from "@eleva/config/routing"
+import { matchesPath } from "@eleva/observability/proxy"
 
 const AUTH_FLOW_PATHS = ACCOUNT_STANDALONE_PATHS.map((p) => `/${p}`)
 
@@ -14,30 +15,19 @@ const fixedSegments = new Set<string>([
   ...ACCOUNT_FIXED_SEGMENTS,
 ])
 
-const UNAUTH_PATHS = [
+/**
+ * Paths that the member app serves publicly (marketing-shaped routes
+ * + the WorkOS auth flow paths). Used both by the proxy (to skip the
+ * unauthenticated redirect) AND by `trackLastActiveOrg` (to skip
+ * cookie writes on non-org URLs).
+ */
+export const MEMBER_APP_UNAUTHENTICATED_PATHS = [
   "/",
   "/home",
   "/about",
   "/legal/:path*",
   ...AUTH_FLOW_PATHS,
 ] as const
-
-/**
- * Check whether the request pathname is allowed without a session.
- * Supports both exact matches and a single-trailing-glob convention
- * (e.g. `/legal/:path*` matches `/legal/privacy`, `/legal/terms`).
- */
-export function isUnauthenticatedPath(pathname: string): boolean {
-  for (const pattern of UNAUTH_PATHS) {
-    if (pattern.endsWith("/:path*")) {
-      const prefix = pattern.slice(0, -"/:path*".length)
-      if (pathname === prefix || pathname.startsWith(prefix + "/")) return true
-    } else if (pathname === pattern) {
-      return true
-    }
-  }
-  return false
-}
 
 /**
  * Persist the first URL segment as the "last active org" cookie so
@@ -53,7 +43,7 @@ export function trackLastActiveOrg(
   const firstSegment = segments[0]
   if (
     !firstSegment ||
-    isUnauthenticatedPath(req.nextUrl.pathname) ||
+    matchesPath(req.nextUrl.pathname, MEMBER_APP_UNAUTHENTICATED_PATHS) ||
     fixedSegments.has(firstSegment)
   ) {
     return

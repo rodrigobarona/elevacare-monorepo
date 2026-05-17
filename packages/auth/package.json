@@ -19,7 +19,9 @@
   },
   "dependencies": {
     "@eleva/audit": "workspace:*",
+    "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@eleva/observability": "workspace:*",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
