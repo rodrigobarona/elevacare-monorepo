@@ -244,3 +244,75 @@ export async function getWidgetTokenFromSession(
   const session = await requireSession()
   return getWidgetToken(session.user.workosUserId, session.workosOrgId, scopes)
 }
+
+export interface UserOrganization {
+  workosOrgId: string
+  orgId: string
+  orgSlug: string | null
+  orgType: string
+  name: string
+  isCurrent: boolean
+}
+
+/**
+ * Fetch all organizations the current user belongs to, enriched with
+ * display names from WorkOS. Runs server-side only (no CORS issues).
+ *
+ * Falls back to a formatted slug when the WorkOS API call fails.
+ */
+export async function getUserOrganizations(): Promise<UserOrganization[]> {
+  const session = await requireSession()
+  const workos = getWorkOS()
+
+  const memberships = await workos.userManagement.listOrganizationMemberships({
+    userId: session.user.workosUserId,
+    statuses: ["active"],
+  })
+
+  const orgs = await Promise.all(
+    memberships.data.map(async (m) => {
+      let name: string
+      try {
+        const org = await workos.organizations.getOrganization(m.organizationId)
+        name = org.name
+      } catch {
+        name = formatSlugAsName(m.organizationId)
+      }
+
+      return {
+        workosOrgId: m.organizationId,
+        orgId: "",
+        orgSlug: null as string | null,
+        orgType: "",
+        name,
+        isCurrent: m.organizationId === session.workosOrgId,
+      }
+    })
+  )
+
+  const orgIdRows = await db()
+    .select({
+      id: main.organizations.id,
+      workosOrgId: main.organizations.workosOrgId,
+      slug: main.organizations.slug,
+      type: main.organizations.type,
+    })
+    .from(main.organizations)
+    .where(isNull(main.organizations.deletedAt))
+
+  const byWorkosId = new Map(orgIdRows.map((r) => [r.workosOrgId, r]))
+  for (const org of orgs) {
+    const row = byWorkosId.get(org.workosOrgId)
+    if (row) {
+      org.orgId = row.id
+      org.orgSlug = row.slug
+      org.orgType = row.type
+    }
+  }
+
+  return orgs.filter((o) => o.orgId && o.orgSlug)
+}
+
+function formatSlugAsName(slug: string): string {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+}
