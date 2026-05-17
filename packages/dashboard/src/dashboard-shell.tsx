@@ -6,7 +6,7 @@ import type { DashboardConfig } from "./nav-types"
 
 interface DashboardShellProps {
   config: DashboardConfig
-  /** Extra elements to render in the header (after org switcher) */
+  /** Extra elements to render in the header (after breadcrumbs etc.) */
   headerSlot?: React.ReactNode
   children: React.ReactNode
 }
@@ -25,11 +25,11 @@ export function DashboardShell({
           homeUrl={homeUrl}
           navGroups={config.navGroups}
           capabilities={config.capabilities}
+          widgetToken={config.widgetToken}
         />
         <SidebarInset>
           <DashboardHeader
             user={config.user}
-            widgetToken={config.widgetToken}
             accountUrl={config.accountUrl}
             settingsUrl={config.settingsUrl}
             logoutUrl={config.logoutUrl}

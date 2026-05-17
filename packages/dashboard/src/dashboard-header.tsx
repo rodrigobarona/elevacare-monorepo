@@ -1,12 +1,10 @@
 import { Separator } from "@eleva/ui/components/separator"
 import { SidebarTrigger } from "@eleva/ui/components/sidebar"
 import { NavUser } from "./nav-user"
-import { OrgSwitcherWidget } from "./org-switcher-widget"
 import type { DashboardUser } from "./nav-types"
 
 interface DashboardHeaderProps {
   user: DashboardUser
-  widgetToken?: string | null
   accountUrl?: string
   settingsUrl?: string
   logoutUrl?: string
@@ -15,7 +13,6 @@ interface DashboardHeaderProps {
 
 export function DashboardHeader({
   user,
-  widgetToken,
   accountUrl,
   settingsUrl,
   logoutUrl,
@@ -24,11 +21,6 @@ export function DashboardHeader({
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="md:hidden" />
-      {widgetToken ? (
-        <OrgSwitcherWidget authToken={widgetToken} />
-      ) : (
-        <div className="text-sm font-medium">Eleva</div>
-      )}
       {children && (
         <>
           <Separator orientation="vertical" className="h-4" />
