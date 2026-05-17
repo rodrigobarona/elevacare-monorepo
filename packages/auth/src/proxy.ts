@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import {
   authkit,
-  handleAuthkitHeaders,
+  handleAuthkitProxy,
   partitionAuthkitHeaders,
   applyResponseHeaders,
 } from "@workos-inc/authkit-nextjs"
@@ -103,7 +103,7 @@ export interface AuthProxyOptions {
   /**
    * How to bounce unauthenticated users to the sign-in screen.
    *   - "authkit" (default): redirect to the AuthKit authorizationUrl
-   *     using handleAuthkitHeaders (preserves PKCE cookies + headers).
+   *     using handleAuthkitProxy (preserves PKCE cookies + headers).
    *   - { kind: "gateway", baseUrl }: redirect to
    *     `${baseUrl}/signin?returnTo=...` -- used by satellite apps
    *     so the gateway can drive the WorkOS handshake centrally.
@@ -163,7 +163,7 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
       if (typeof redirect === "object" && redirect.kind === "gateway") {
         return buildGatewayRedirect(req, redirect.baseUrl)
       }
-      return handleAuthkitHeaders(req, headers, {
+      return handleAuthkitProxy(req, headers, {
         redirect: authorizationUrl,
       })
     }
