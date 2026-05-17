@@ -91,6 +91,9 @@ catalogs:
       specifier: ^4.4.3
       version: 4.4.3
 
+patchedDependencies:
+  '@workos-inc/widgets-i18n': 8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce
+
 importers:
 
   .:
@@ -113,6 +116,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.6(vitest@4.1.6)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.0(jiti@2.6.1)
       husky:
         specifier: ^9.1.7
         version: 9.1.7
@@ -233,7 +239,7 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
@@ -494,7 +500,7 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
@@ -677,7 +683,7 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
@@ -1153,7 +1159,7 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
@@ -10712,7 +10718,7 @@ snapshots:
     dependencies:
       eventemitter3: 5.0.4
 
-  '@workos-inc/widgets-i18n@1.0.0(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)':
+  '@workos-inc/widgets-i18n@1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)':
     dependencies:
       '@workos-inc/widgets': 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6

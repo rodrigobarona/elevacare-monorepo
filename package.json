@@ -22,6 +22,7 @@
     "@commitlint/config-conventional": "^21.0.1",
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
+    "eslint": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "husky": "^9.1.7",
@@ -36,18 +37,7 @@
   "packageManager": "pnpm@11.1.2+sha512.415a1cc25974731e75455c1468371be74c5aa5fb7621b50d4056d222451609f11412f23fd602e6169f1e060466641f798597e1be961a10688836a67b16569499",
   "engines": {
     "node": ">=24",
-    "pnpm": ">=9.15.0"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "allowedVersions": {
-        "react-intl>typescript": "6",
-        "@formatjs/intl>typescript": "6"
-      }
-    },
-    "patchedDependencies": {
-      "@workos-inc/widgets-i18n": "patches/@workos-inc__widgets-i18n.patch"
-    }
+    "pnpm": ">=11"
   },
   "workspaces": [
     "apps/*",

@@ -3,6 +3,18 @@ packages:
   - "packages/*"
   - "infra/*"
 
+strictPeerDependencies: true
+autoInstallPeers: true
+enablePrePostScripts: true
+
+peerDependencyRules:
+  allowedVersions:
+    "react-intl>typescript": "6"
+    "@formatjs/intl>typescript": "6"
+
+patchedDependencies:
+  "@workos-inc/widgets-i18n": "patches/@workos-inc__widgets-i18n.patch"
+
 allowBuilds:
   "@parcel/watcher": true
   "@sentry/cli": true

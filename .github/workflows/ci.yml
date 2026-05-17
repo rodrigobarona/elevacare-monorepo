@@ -10,7 +10,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  PNPM_VERSION: 9.15.9
+  PNPM_VERSION: 11.1.2
   NODE_VERSION: 24
   TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
   TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
