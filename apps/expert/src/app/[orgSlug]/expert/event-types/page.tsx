@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations, getLocale } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, listExpertEventTypes } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
 import { Button } from "@eleva/ui/components/button"
@@ -24,8 +24,7 @@ export default async function EventTypesPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  const session = await guardSession()
   if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)

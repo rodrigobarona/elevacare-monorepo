@@ -1,6 +1,6 @@
-import { redirect, notFound } from "next/navigation"
+import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
-import { getSessionForOrg } from "@eleva/auth/server"
+import { guardSessionForOrg } from "@eleva/auth"
 
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
@@ -12,11 +12,7 @@ export default async function AcademyLayout({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSessionForOrg(orgSlug)
-
-  if (!session) {
-    redirect("/signin")
-  }
+  const session = await guardSessionForOrg(orgSlug)
 
   if (session.orgSlug !== orgSlug) {
     notFound()

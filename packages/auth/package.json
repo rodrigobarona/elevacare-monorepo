@@ -10,6 +10,7 @@
     "./proxy": "./src/proxy.ts",
     "./server": "./src/server.ts",
     "./react": "./src/react.tsx",
+    "./guards": "./src/guards.ts",
     "./upload-token": "./src/upload-token.ts"
   },
   "scripts": {

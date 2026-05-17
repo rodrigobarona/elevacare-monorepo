@@ -1,27 +1,27 @@
 import { Button } from "@eleva/ui/components/button"
 
 interface SignedOutButtonsProps {
-  signInLabel: string
-  signUpLabel: string
+  loginLabel: string
+  getStartedLabel: string
 }
 
 /**
- * Plain anchor links to /signin and /signup -- intentionally not using
+ * Plain anchor links to /login and /signup -- intentionally not using
  * the i18n `<Link>` so the browser does a full navigation and lets the
  * gateway proxy rewrite to the account zone. Internal SPA navigation
  * would bypass the cross-zone rewrite and hit a 404.
  */
 export function SignedOutButtons({
-  signInLabel,
-  signUpLabel,
+  loginLabel,
+  getStartedLabel,
 }: SignedOutButtonsProps) {
   return (
     <>
       <Button variant="ghost" size="sm" asChild>
-        <a href="/signin">{signInLabel}</a>
+        <a href="/login">{loginLabel}</a>
       </Button>
       <Button size="sm" asChild>
-        <a href="/signup">{signUpLabel}</a>
+        <a href="/signup">{getStartedLabel}</a>
       </Button>
     </>
   )

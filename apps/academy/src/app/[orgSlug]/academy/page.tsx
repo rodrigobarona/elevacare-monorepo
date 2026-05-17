@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 
 export default async function AcademyHomePage({
   params,
@@ -7,11 +6,7 @@ export default async function AcademyHomePage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-
-  if (!session) {
-    redirect("/signin")
-  }
+  await guardSession()
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">

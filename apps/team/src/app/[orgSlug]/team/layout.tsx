@@ -1,8 +1,9 @@
 import { redirect, notFound } from "next/navigation"
 import { getSessionForOrg } from "@eleva/auth/server"
+import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 
-const SIGNIN_URL = resolveGatewayUrl()
+const GATEWAY_URL = resolveGatewayUrl()
 
 export default async function TeamLayout({
   children,
@@ -16,7 +17,7 @@ export default async function TeamLayout({
 
   if (!session) {
     const returnTo = encodeURIComponent(`/${orgSlug}/team`)
-    redirect(`${SIGNIN_URL}/signin?returnTo=${returnTo}`)
+    redirect(`${GATEWAY_URL}${LOGIN_PATH}?returnTo=${returnTo}`)
   }
 
   if (session.orgSlug !== orgSlug) {

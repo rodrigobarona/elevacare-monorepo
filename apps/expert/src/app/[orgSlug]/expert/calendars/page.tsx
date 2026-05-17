@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession, getWidgetTokenFromSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
+import { getWidgetTokenFromSession } from "@eleva/auth/server"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
 import { CalendarManager } from "./calendar-manager"
@@ -19,8 +20,7 @@ export default async function CalendarsPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  const session = await guardSession()
   if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)

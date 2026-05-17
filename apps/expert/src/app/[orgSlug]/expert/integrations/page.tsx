@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, listExpertIntegrations } from "@eleva/db"
 import {
   listByCategory,
@@ -26,8 +26,7 @@ export default async function IntegrationsPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  const session = await guardSession()
   if (!session.capabilities.includes("events:manage")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)

@@ -49,4 +49,5 @@ export {
   getWidgetToken,
   getWidgetTokenFromSession,
 } from "./server"
+export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"

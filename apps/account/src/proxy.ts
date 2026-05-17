@@ -10,7 +10,7 @@ import { withHeaders } from "@eleva/observability/proxy"
  */
 export default withHeaders(
   createAuthProxy({
-    authFlowPaths: ["/signin", "/signup", "/callback", "/logout"],
+    authFlowPaths: ["/login", "/signup", "/callback", "/logout"],
     unauthenticatedPaths: [],
   })
 )

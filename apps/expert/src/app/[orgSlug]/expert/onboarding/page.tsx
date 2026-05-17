@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
 import { OnboardingWizard } from "./onboarding-wizard"
@@ -20,8 +20,7 @@ export default async function OnboardingPage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  const session = await guardSession()
   if (!session.capabilities.includes("expert:onboard")) redirect(`/${orgSlug}`)
 
   const profile = await getExpertProfileByUserId(session.user.id)

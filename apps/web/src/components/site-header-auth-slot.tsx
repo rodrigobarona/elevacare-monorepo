@@ -5,7 +5,7 @@ import { SignedOutButtons } from "./signed-out-buttons"
 
 /**
  * Async auth slot for the marketing header. Rendered inside a Suspense
- * boundary so the rest of the page (and the signin/signup buttons in
+ * boundary so the rest of the page (and the login/signup buttons in
  * the fallback) become interactive without waiting on the WorkOS
  * cookie decryption + iron-session unseal performed by `getAuthUser()`.
  *
@@ -30,7 +30,10 @@ export async function SiteHeaderAuthSlot() {
 
   if (!user) {
     return (
-      <SignedOutButtons signInLabel={t("signin")} signUpLabel={t("signup")} />
+      <SignedOutButtons
+        loginLabel={t("login")}
+        getStartedLabel={t("getStarted")}
+      />
     )
   }
 

@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation"
 import { getLocale } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
 
 import "@radix-ui/themes/styles.css"
@@ -11,8 +10,7 @@ export default async function SettingsLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  await guardSession()
 
   const locale = await getLocale()
 

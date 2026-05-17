@@ -1,10 +1,10 @@
-import { createAuthProxy, STANDARD_APP_MATCHER } from "@eleva/auth/proxy"
+import { createAuthProxy } from "@eleva/auth/proxy"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { withHeaders } from "@eleva/observability/proxy"
 
 /**
  * Expert app: org-scoped expert workspace. Unauthenticated users
- * bounce to the gateway's /signin with a returnTo pointing back
+ * bounce to the gateway's /login with a returnTo pointing back
  * to the current expert URL.
  */
 export default withHeaders(
@@ -14,4 +14,4 @@ export default withHeaders(
   })
 )
 
-export const config = { matcher: STANDARD_APP_MATCHER }
+export const config = { matcher: ["/((?!_next|_vercel|.*\\..*).*)" ] }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSession } from "@eleva/auth/server"
+import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { AppShell } from "@/components/app-shell"
 import { FinanceDashboard } from "./finance-dashboard"
@@ -13,8 +13,7 @@ export default async function FinancePage({
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
-  const session = await getSession()
-  if (!session) redirect("/signin")
+  const session = await guardSession()
   if (!session.capabilities.includes("payouts:view_own"))
     redirect(`/${orgSlug}`)
 

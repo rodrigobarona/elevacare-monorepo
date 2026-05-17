@@ -15,11 +15,11 @@ interface SiteHeaderProps {
 }
 
 /**
- * Marketing site header. The auth-aware slot (signin buttons vs user
+ * Marketing site header. The auth-aware slot (login buttons vs user
  * menu) is wrapped in Suspense so the page shell + nav links stream
  * down before WorkOS session resolution finishes. Most marketing
  * visitors are logged-out, so the SignedOutButtons fallback is the
- * correct steady state -- meaning clicking "Sign in" is interactive
+ * correct steady state -- meaning clicking "Log in" is interactive
  * the instant the header paints, with no perceived auth latency.
  */
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
@@ -45,8 +45,8 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
           <Suspense
             fallback={
               <SignedOutButtons
-                signInLabel={t("signin")}
-                signUpLabel={t("signup")}
+                loginLabel={t("login")}
+                getStartedLabel={t("getStarted")}
               />
             }
           >

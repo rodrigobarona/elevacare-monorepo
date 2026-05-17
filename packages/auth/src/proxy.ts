@@ -10,6 +10,7 @@ import {
   persistLocaleCookie,
   resolveLocaleForRequest,
 } from "@eleva/observability/proxy-locale"
+import { LOGIN_PATH } from "./guards"
 
 /**
  * Single source of truth for every Eleva app proxy.
@@ -34,7 +35,7 @@ import {
  *   // account app, with auth-flow routes that drive WorkOS themselves
  *   export default withHeaders(
  *     createAuthProxy({
- *       authFlowPaths: ["/signin", "/signup", "/callback", "/logout"],
+ *       authFlowPaths: ["/login", "/signup", "/callback", "/logout"],
  *       unauthenticatedPaths: [],
  *     })
  *   )
@@ -44,7 +45,7 @@ import {
  *      (saves ~50-200ms by skipping cookie decryption + token refresh).
  *   2. `authkit(req)` to resolve session + AuthKit headers.
  *   3. Redirect unauthenticated users on protected paths -- via either
- *      AuthKit's authorizationUrl (default) OR the gateway /signin URL
+ *      AuthKit's authorizationUrl (default) OR the gateway /login URL
  *      (for satellite apps that prefer to bounce through eleva.care).
  *   4. Resolve + propagate ELEVA_LOCALE to request headers and cookie.
  *   5. Invoke optional onAuthenticated hook (cookie writes, etc.).
@@ -63,14 +64,14 @@ export {
 /**
  * Default unauth allowlist for protected apps. Apps can override.
  * Includes the WorkOS auth-flow paths so that even with `enforce: true`
- * the proxy does not redirect a signin attempt to itself.
+ * the proxy does not redirect a login attempt to itself.
  */
 export const DEFAULT_UNAUTHENTICATED_PATHS = [
   "/",
   "/home",
   "/about",
   "/legal/:path*",
-  "/signin",
+  LOGIN_PATH,
   "/signup",
   "/callback",
   "/logout",
@@ -92,7 +93,7 @@ export interface AuthProxyOptions {
 
   /**
    * Paths that drive their own WorkOS interaction inside route
-   * handlers (e.g. /signin, /signup, /callback, /logout). These skip
+   * handlers (e.g. /login, /signup, /callback, /logout). These skip
    * `authkit()` entirely, avoiding wasted cookie decryption work.
    */
   authFlowPaths?: readonly string[]
@@ -105,7 +106,7 @@ export interface AuthProxyOptions {
    *   - "authkit" (default): redirect to the AuthKit authorizationUrl
    *     using handleAuthkitProxy (preserves PKCE cookies + headers).
    *   - { kind: "gateway", baseUrl }: redirect to
-   *     `${baseUrl}/signin?returnTo=...` -- used by satellite apps
+   *     `${baseUrl}/login?returnTo=...` -- used by satellite apps
    *     so the gateway can drive the WorkOS handshake centrally.
    */
   redirect?: RedirectStrategy
@@ -133,7 +134,7 @@ function buildAuthFlowResponse(req: NextRequest): NextResponse {
 
 function buildGatewayRedirect(req: NextRequest, baseUrl: string): NextResponse {
   const returnTo = encodeURIComponent(req.nextUrl.toString())
-  return NextResponse.redirect(`${baseUrl}/signin?returnTo=${returnTo}`)
+  return NextResponse.redirect(`${baseUrl}${LOGIN_PATH}?returnTo=${returnTo}`)
 }
 
 export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {

@@ -6,8 +6,8 @@
   "nav": {
     "about": "About",
     "home": "Home",
-    "signin": "Sign in",
-    "signup": "Sign up",
+    "login": "Log in",
+    "getStarted": "Get started",
     "dashboard": "Dashboard",
     "signout": "Sign out"
   },
