@@ -27,11 +27,6 @@ export interface AppShellNavItem {
   active?: boolean
 }
 
-const ACCOUNT_URL =
-  typeof process !== "undefined"
-    ? process.env.NEXT_PUBLIC_APP_URL || "https://eleva.care"
-    : "https://eleva.care"
-
 /**
  * Derive the home URL for an org based on its type.
  */
@@ -122,13 +117,13 @@ export function AppShell({
         {/* User menu */}
         <div className="mt-6 space-y-1 border-t pt-4">
           <a
-            href={`${ACCOUNT_URL}/profile`}
+            href="/account/profile"
             className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-muted/50"
           >
             {displayName}
           </a>
           <a
-            href={`${ACCOUNT_URL}/organizations`}
+            href="/account/organizations"
             className="block rounded-md px-3 py-2 text-xs text-muted-foreground hover:bg-muted/50"
           >
             Manage organizations

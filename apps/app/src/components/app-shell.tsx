@@ -1,7 +1,6 @@
 import Link from "next/link"
 import { useTranslations } from "next-intl"
 import type { ElevaSession } from "@eleva/auth"
-import { resolveGatewayUrl } from "@eleva/config/env"
 
 interface NavItem {
   href: string
@@ -9,13 +8,11 @@ interface NavItem {
   needs?: string
 }
 
-const ACCOUNT_URL = resolveGatewayUrl()
-
 function buildNav(orgSlug: string): NavItem[] {
   const s = `/${orgSlug}`
   return [
     { href: s, labelKey: "nav.dashboard", needs: "appointments:view_own" },
-    { href: `${ACCOUNT_URL}/profile`, labelKey: "nav.settings" },
+    { href: "/account/profile", labelKey: "nav.settings" },
   ]
 }
 
