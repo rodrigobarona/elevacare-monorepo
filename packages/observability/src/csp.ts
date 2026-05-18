@@ -86,6 +86,36 @@ function mergeVendors(): Record<string, string[]> {
   return result
 }
 
+/**
+ * Vercel Live / Vercel Toolbar origins, per directive.
+ *
+ * Loaded by the platform from `https://vercel.live/_next-live/...` and
+ * websocket-collaborates via `*.pusher.com`. The Toolbar (Comments,
+ * Feature Flags, Edit Mode, Layout Shift Tool, Accessibility Audit,
+ * etc.) is enabled by default on preview deployments and can ALSO be
+ * enabled in production via Vercel project settings or the browser
+ * extension. The trigger is therefore "any Vercel deployment", not
+ * just preview.
+ *
+ * Minimal set sourced from the official Vercel docs + community
+ * verification:
+ *   - https://vercel.com/docs/workflow-collaboration/comments/specialized-usage
+ *   - https://github.com/vercel/next.js/discussions/56562
+ */
+const VERCEL_LIVE: Record<string, readonly string[]> = {
+  scriptSrc: ["https://vercel.live", "https://vercel.com"],
+  connectSrc: [
+    "https://vercel.live",
+    "https://vercel.com",
+    "https://*.pusher.com",
+    "wss://*.pusher.com",
+  ],
+  frameSrc: ["https://vercel.live", "https://vercel.com"],
+  imgSrc: ["https://vercel.live", "https://vercel.com"],
+  styleSrc: ["https://vercel.com"],
+  fontSrc: ["https://vercel.live", "https://assets.vercel.com"],
+}
+
 function resolveAllowlist(): Record<string, string[]> {
   const merged = mergeVendors()
 
@@ -106,10 +136,11 @@ function resolveAllowlist(): Record<string, string[]> {
     ),
   ]
 
-  const isPreview = process.env.VERCEL_ENV === "preview"
-  const vercelLive = isPreview
-    ? ["https://vercel.live", "https://*.vercel.live"]
-    : []
+  // Allow Vercel Live whenever we are on Vercel infra. The platform
+  // injects the toolbar script only when enabled (preview default, or
+  // production via project settings), so extra CSP entries are inert
+  // when the script is not loaded.
+  const isOnVercel = process.env.VERCEL === "1"
 
   const isDev = process.env.NODE_ENV === "development"
 
@@ -118,16 +149,10 @@ function resolveAllowlist(): Record<string, string[]> {
       merged[d]?.push(...assetOrigin)
     }
   }
-  if (vercelLive.length) {
-    for (const d of [
-      "scriptSrc",
-      "connectSrc",
-      "frameSrc",
-      "styleSrc",
-      "fontSrc",
-      "imgSrc",
-    ]) {
-      merged[d]?.push(...vercelLive)
+  if (isOnVercel) {
+    for (const [directive, origins] of Object.entries(VERCEL_LIVE)) {
+      merged[directive] ??= []
+      merged[directive].push(...origins)
     }
   }
   if (isDev) {
