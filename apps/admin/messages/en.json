@@ -1,7 +1,6 @@
 {
   "nav": {
-    "overview": "Overview",
-    "partnerApplications": "Partner Applications"
+    "overview": "Overview"
   },
   "dashboard": {
     "welcome": "Eleva operator console",

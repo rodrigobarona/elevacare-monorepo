@@ -11,8 +11,6 @@ export type AuditEntity =
   | "membership"
   | "role"
   | "permission"
-  // S2 — Become-Partner + expert lifecycle
-  | "become_partner_application"
   | "expert_profile"
   | "expert_integration_credential"
 
@@ -28,7 +26,6 @@ export type AuditAction =
   | "invited"
   | "accepted"
   | "removed"
-  // S2 — Become-Partner + expert lifecycle
   | "submitted"
   | "approved"
   | "rejected"

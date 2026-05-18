@@ -20,7 +20,7 @@ type BlobUploadResult = Awaited<ReturnType<typeof blobUpload>>
 export interface UploadBlobClientInput {
   /**
    * Pathname prefix that groups uploads logically (e.g.
-   * `"become-partner"`, `"profile-photo"`, `"clinic-logo"`).
+   * `"avatar"`, `"profile-photo"`, `"clinic-logo"`).
    */
   prefix: string
   /** Logical document / asset kind within the prefix. */

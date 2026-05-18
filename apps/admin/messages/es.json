@@ -1,7 +1,6 @@
 {
   "nav": {
-    "overview": "Vista General",
-    "partnerApplications": "Solicitudes de Socios"
+    "overview": "Vista General"
   },
   "dashboard": {
     "welcome": "Consola del operador Eleva",

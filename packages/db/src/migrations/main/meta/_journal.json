@@ -92,6 +92,13 @@
       "when": 1747180000000,
       "tag": "0012_rename-org-types",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1747570800000,
+      "tag": "0013_drop-become-partner-applications",
+      "breakpoints": true
     }
   ]
 }

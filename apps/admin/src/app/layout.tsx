@@ -5,7 +5,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import { LayoutDashboard, UserCheck } from "lucide-react"
+import { LayoutDashboard } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 
@@ -40,14 +40,7 @@ export default async function AdminRootLayout({
 
   const dashboardConfig = await buildDashboardConfig(session, [
     {
-      items: [
-        { title: t("overview"), url: "/", icon: <LayoutDashboard /> },
-        {
-          title: t("partnerApplications"),
-          url: "/become-partner",
-          icon: <UserCheck />,
-        },
-      ],
+      items: [{ title: t("overview"), url: "/", icon: <LayoutDashboard /> }],
     },
   ])
 

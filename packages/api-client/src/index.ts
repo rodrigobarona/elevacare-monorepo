@@ -68,6 +68,139 @@ export type CreateMembershipRequest = z.infer<
 >
 export type ApiError = z.infer<typeof ApiErrorSchema>
 
+// ── Avatar ──────────────────────────────────────────────────────────
+
+export const UpdateAvatarRequestSchema = z.object({
+  url: z.string().url(),
+})
+
+export type UpdateAvatarRequest = z.infer<typeof UpdateAvatarRequestSchema>
+
+// ── Expert Profile ──────────────────────────────────────────────────
+
+const LocalizedTextSchema = z.object({
+  en: z.string(),
+  pt: z.string().optional(),
+  es: z.string().optional(),
+})
+
+export const PatchExpertProfileRequestSchema = z.object({
+  nif: z.string().nullish(),
+  licenseScope: z.string().nullish(),
+  languages: z.array(z.string()).optional(),
+  practiceCountries: z.array(z.string()).optional(),
+  worldwideMode: z.boolean().optional(),
+  sessionModes: z.array(z.enum(["online", "in_person", "phone"])).optional(),
+  displayName: z.string().min(1).optional(),
+  headline: z.string().nullish(),
+  bio: z.string().nullish(),
+})
+
+export type PatchExpertProfileRequest = z.infer<
+  typeof PatchExpertProfileRequestSchema
+>
+
+export const InvoicingRequestSchema = z.object({
+  provider: z.enum(["toconline", "moloni", "manual"]),
+})
+
+export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
+
+// ── Schedule ────────────────────────────────────────────────────────
+
+export const SaveScheduleRequestSchema = z.object({
+  timezone: z.string(),
+  rules: z.array(
+    z.object({
+      dayOfWeek: z.number().int().min(0).max(6),
+      startTime: z.string(),
+      endTime: z.string(),
+    })
+  ),
+})
+
+export type SaveScheduleRequest = z.infer<typeof SaveScheduleRequestSchema>
+
+export const DateOverrideRequestSchema = z.object({
+  overrideDate: z.string(),
+  startTime: z.string().optional(),
+  endTime: z.string().optional(),
+  isBlocked: z.boolean(),
+  timezone: z.string(),
+})
+
+export type DateOverrideRequest = z.infer<typeof DateOverrideRequestSchema>
+
+// ── Event Types ─────────────────────────────────────────────────────
+
+export const CreateEventTypeRequestSchema = z.object({
+  slug: z.string().optional(),
+  title: LocalizedTextSchema,
+  description: LocalizedTextSchema.nullish(),
+  durationMinutes: z.number().int().positive(),
+  priceAmount: z.number().nonnegative(),
+  currency: z.string().min(3).max(3),
+  languages: z.array(z.string()),
+  sessionMode: z.enum(["online", "in_person", "phone"]),
+  bookingWindowDays: z.number().int().positive().nullish(),
+  minimumNoticeMinutes: z.number().int().nonnegative(),
+  bufferBeforeMinutes: z.number().int().nonnegative(),
+  bufferAfterMinutes: z.number().int().nonnegative(),
+  cancellationWindowHours: z.number().int().positive().nullish(),
+  rescheduleWindowHours: z.number().int().positive().nullish(),
+  requiresApproval: z.boolean(),
+  worldwideMode: z.boolean(),
+})
+
+export type CreateEventTypeRequest = z.infer<
+  typeof CreateEventTypeRequestSchema
+>
+
+export const UpdateEventTypeRequestSchema =
+  CreateEventTypeRequestSchema.partial().extend({
+    published: z.boolean().optional(),
+  })
+
+export type UpdateEventTypeRequest = z.infer<
+  typeof UpdateEventTypeRequestSchema
+>
+
+export const PublishEventTypeRequestSchema = z.object({
+  published: z.boolean(),
+})
+
+export type PublishEventTypeRequest = z.infer<
+  typeof PublishEventTypeRequestSchema
+>
+
+// ── Calendar Integrations ───────────────────────────────────────────
+
+export const BusySourcesRequestSchema = z.object({
+  sources: z.array(
+    z.object({
+      externalCalendarId: z.string(),
+      displayName: z.string(),
+    })
+  ),
+})
+
+export type BusySourcesRequest = z.infer<typeof BusySourcesRequestSchema>
+
+export const DestinationCalendarRequestSchema = z.object({
+  externalCalendarId: z.string(),
+})
+
+export type DestinationCalendarRequest = z.infer<
+  typeof DestinationCalendarRequestSchema
+>
+
+export interface SubCalendar {
+  id: string
+  name: string
+  primary: boolean
+  email?: string
+}
+
 // ---------------------------------------------------------------------------
 // Client
 // ---------------------------------------------------------------------------
@@ -155,6 +288,122 @@ export function createApiClient(options: ApiClientOptions) {
     memberships: {
       create(data: CreateMembershipRequest) {
         return request<{ ok: true }>("POST", "/memberships", data)
+      },
+    },
+
+    users: {
+      avatar: {
+        get() {
+          return request<{ avatarUrl: string | null }>("GET", "/users/avatar")
+        },
+        update(data: UpdateAvatarRequest) {
+          return request<{ ok: true }>("PUT", "/users/avatar", data)
+        },
+        remove() {
+          return request<{ ok: true }>("DELETE", "/users/avatar")
+        },
+      },
+    },
+
+    experts: {
+      profile: {
+        patch(data: PatchExpertProfileRequest) {
+          return request<{ ok: true }>("PATCH", "/experts/profile", data)
+        },
+        completeStep(step: string) {
+          return request<{ ok: true }>(
+            "POST",
+            `/experts/profile/steps/${encodeURIComponent(step)}/complete`
+          )
+        },
+        setInvoicing(data: InvoicingRequest) {
+          return request<{ ok: true }>(
+            "PUT",
+            "/experts/profile/invoicing",
+            data
+          )
+        },
+      },
+      schedule: {
+        get() {
+          return request<{ schedule: unknown }>("GET", "/experts/schedule")
+        },
+        save(data: SaveScheduleRequest) {
+          return request<{ ok: true }>("PUT", "/experts/schedule", data)
+        },
+        addOverride(data: DateOverrideRequest) {
+          return request<{ ok: true }>(
+            "POST",
+            "/experts/schedule/overrides",
+            data
+          )
+        },
+        removeOverride(overrideId: string) {
+          return request<{ ok: true }>(
+            "DELETE",
+            `/experts/schedule/overrides/${encodeURIComponent(overrideId)}`
+          )
+        },
+      },
+      eventTypes: {
+        create(data: CreateEventTypeRequest) {
+          return request<{ ok: true; id: string }>(
+            "POST",
+            "/experts/event-types",
+            data
+          )
+        },
+        update(id: string, data: UpdateEventTypeRequest) {
+          return request<{ ok: true }>(
+            "PATCH",
+            `/experts/event-types/${encodeURIComponent(id)}`,
+            data
+          )
+        },
+        publish(id: string, data: PublishEventTypeRequest) {
+          return request<{ ok: true }>(
+            "PATCH",
+            `/experts/event-types/${encodeURIComponent(id)}/publish`,
+            data
+          )
+        },
+        remove(id: string) {
+          return request<{ ok: true }>(
+            "DELETE",
+            `/experts/event-types/${encodeURIComponent(id)}`
+          )
+        },
+      },
+      integrations: {
+        disconnect(integrationId: string) {
+          return request<{ ok: true }>(
+            "DELETE",
+            `/experts/integrations/${encodeURIComponent(integrationId)}`
+          )
+        },
+        listCalendars(integrationId: string) {
+          return request<{ calendars: SubCalendar[] }>(
+            "GET",
+            `/experts/integrations/${encodeURIComponent(integrationId)}/calendars`
+          )
+        },
+        setBusySources(integrationId: string, data: BusySourcesRequest) {
+          return request<{ ok: true }>(
+            "PUT",
+            `/experts/integrations/${encodeURIComponent(integrationId)}/busy-sources`,
+            data
+          )
+        },
+        setDestination(
+          integrationId: string,
+          data: DestinationCalendarRequest
+        ) {
+          return request<{ ok: true }>(
+            "PUT",
+            `/experts/integrations/${encodeURIComponent(integrationId)}/destination`,
+            data
+          )
+        },
       },
     },
   }

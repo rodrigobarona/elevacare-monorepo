@@ -24,7 +24,6 @@ export const TENANT_TABLES = [
   "expert_listings",
   "clinic_profiles",
   "expert_integrations",
-  "become_partner_applications",
   "schedules",
   "availability_rules",
   "date_overrides",
@@ -40,12 +39,7 @@ export const TENANT_TABLES = [
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
 
-/**
- * organisations uses id (self-reference), become_partner_applications
- * uses applicant_org_id + platform admin escape hatch.
- */
 const ORG_SELF_TABLES = new Set<string>(["organizations"])
-const APPLICANT_ORG_TABLES = new Set<string>(["become_partner_applications"])
 
 /**
  * Tables that grant unrestricted access to platform admins. Bootstrap
@@ -53,7 +47,6 @@ const APPLICANT_ORG_TABLES = new Set<string>(["become_partner_applications"])
  * `eleva.org_id` is set, so these tables need an escape hatch.
  */
 export const ADMIN_BYPASS_TABLES = new Set<string>([
-  "become_partner_applications",
   "expert_profiles",
   "memberships",
   "organizations",
@@ -66,9 +59,6 @@ function tenantPredicate(table: string): string {
 
   if (ORG_SELF_TABLES.has(table)) {
     return `id::text = current_setting('eleva.org_id', true)${adminBypass}`
-  }
-  if (APPLICANT_ORG_TABLES.has(table)) {
-    return `applicant_org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
   }
   return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
 }

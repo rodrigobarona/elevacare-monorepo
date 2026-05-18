@@ -380,6 +380,9 @@ importers:
       '@eleva/billing':
         specifier: workspace:*
         version: link:../../packages/billing
+      '@eleva/calendar':
+        specifier: workspace:*
+        version: link:../../packages/calendar
       '@eleva/config':
         specifier: workspace:*
         version: link:../../packages/config

@@ -133,11 +133,6 @@ describe("public queries", () => {
         categoryId: { name: "categoryId" },
         sortOrder: { name: "sortOrder" },
       },
-      becomePartnerApplications: {
-        id: { name: "id" },
-        usernameRequested: { name: "usernameRequested" },
-        status: { name: "status" },
-      },
     }))
 
     const mod = await import("./public")
@@ -244,16 +239,8 @@ describe("public queries", () => {
     })
   })
 
-  it("checkPublicSlugAvailability flags pending applications", async () => {
-    const { mod } = await loadModule([[], [], [{ id: "app-hit" }]])
-    expect(await mod.checkPublicSlugAvailability("ana-silva")).toEqual({
-      available: false,
-      reason: "pending-application",
-    })
-  })
-
   it("checkPublicSlugAvailability returns available when no hits", async () => {
-    const { mod } = await loadModule([[], [], []])
+    const { mod } = await loadModule([[], []])
     expect(await mod.checkPublicSlugAvailability("ana-silva")).toEqual({
       available: true,
     })
