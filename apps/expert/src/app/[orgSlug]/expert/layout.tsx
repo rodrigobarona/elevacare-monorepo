@@ -115,6 +115,7 @@ export default async function ExpertLayout({
     capabilities: session.capabilities,
     widgetToken,
     accountUrl: `${GATEWAY_URL}/account/profile`,
+    homepageUrl: "/home",
     logoutUrl: "/logout",
   }
 

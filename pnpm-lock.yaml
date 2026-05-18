@@ -152,6 +152,9 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/dashboard':
+        specifier: workspace:*
+        version: link:../../packages/dashboard
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
@@ -164,6 +167,9 @@ importers:
       '@workos-inc/authkit-nextjs':
         specifier: 'catalog:'
         version: 4.1.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+      lucide-react:
+        specifier: 'catalog:'
+        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)

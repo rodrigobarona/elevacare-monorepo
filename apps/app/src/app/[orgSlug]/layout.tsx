@@ -64,6 +64,7 @@ export default async function OrgSlugLayout({
     capabilities: session.capabilities,
     widgetToken,
     accountUrl: `${GATEWAY_URL}/account/profile`,
+    homepageUrl: "/home",
     logoutUrl: "/logout",
   }
 

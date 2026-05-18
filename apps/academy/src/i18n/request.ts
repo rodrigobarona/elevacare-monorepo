@@ -6,6 +6,7 @@ import {
   isLocale,
   type Locale,
 } from "@eleva/config/i18n"
+import { getDashboardMessages } from "@eleva/dashboard/messages"
 
 const DEFAULT: Locale = defaultLocale
 
@@ -43,8 +44,11 @@ export default getRequestConfig(async () => {
     locale = DEFAULT
   }
 
-  const messages = (
-    await import(`../../messages/${locale}.json`, { with: { type: "json" } })
-  ).default as Record<string, string>
-  return { locale, messages }
+  const [appMessages, dashboardMessages] = await Promise.all([
+    import(`../../messages/${locale}.json`, { with: { type: "json" } }).then(
+      (m) => m.default as Record<string, unknown>
+    ),
+    getDashboardMessages(locale),
+  ])
+  return { locale, messages: { ...appMessages, ...dashboardMessages } }
 })

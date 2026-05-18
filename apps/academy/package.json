@@ -14,10 +14,12 @@
   "dependencies": {
     "@eleva/auth": "workspace:^",
     "@eleva/config": "workspace:^",
+    "@eleva/dashboard": "workspace:*",
     "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@workos-inc/authkit-nextjs": "catalog:",
+    "lucide-react": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
     "react": "catalog:",
