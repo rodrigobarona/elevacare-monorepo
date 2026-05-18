@@ -89,25 +89,33 @@ export async function POST(request: Request) {
       body.data.timezone
     )
 
-    if (schedule.timezone !== body.data.timezone) {
-      await updateScheduleTimezone(
-        profile.orgId,
-        schedule.id,
-        profile.id,
-        body.data.timezone
-      )
-    }
-
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
-        await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
-          scheduleId: schedule.id,
-          overrideDate: body.data.overrideDate,
-          startTime: body.data.isBlocked ? null : (body.data.startTime ?? null),
-          endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
-          isBlocked: body.data.isBlocked,
-        })
+      async (tx, ctx) => {
+        if (schedule.timezone !== body.data.timezone) {
+          await updateScheduleTimezone(
+            profile.orgId,
+            schedule.id,
+            profile.id,
+            body.data.timezone,
+            tx
+          )
+        }
+        await upsertDateOverride(
+          profile.orgId,
+          schedule.id,
+          profile.id,
+          {
+            scheduleId: schedule.id,
+            overrideDate: body.data.overrideDate,
+            startTime: body.data.isBlocked
+              ? null
+              : (body.data.startTime ?? null),
+            endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
+            isBlocked: body.data.isBlocked,
+          },
+          tx
+        )
         await ctx.emit({
           entity: "schedule",
           action: "updated",

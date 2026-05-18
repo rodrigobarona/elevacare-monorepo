@@ -129,12 +129,13 @@ export async function PUT(request: Request) {
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
+    async (tx, ctx) => {
       await updateScheduleTimezone(
         profile.orgId,
         schedule.id,
         profile.id,
-        body.data.timezone
+        body.data.timezone,
+        tx
       )
       await replaceAvailabilityRules(
         profile.orgId,
@@ -145,7 +146,8 @@ export async function PUT(request: Request) {
           dayOfWeek: r.dayOfWeek,
           startTime: r.startTime,
           endTime: r.endTime,
-        }))
+        })),
+        tx
       )
       await ctx.emit({
         entity: "schedule",

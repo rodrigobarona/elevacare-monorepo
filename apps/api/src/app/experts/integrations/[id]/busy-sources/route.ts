@@ -126,8 +126,8 @@ export async function PUT(
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await replaceBusySources(profile.orgId, id, enriched, profile.id)
+    async (tx, ctx) => {
+      await replaceBusySources(profile.orgId, id, enriched, profile.id, tx)
       await ctx.emit({
         entity: "expert_integration_credential",
         action: "updated",

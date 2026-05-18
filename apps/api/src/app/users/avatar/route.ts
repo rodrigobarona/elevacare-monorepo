@@ -47,14 +47,12 @@ async function resolveUserId(request: Request): Promise<string> {
   return verified.userId
 }
 
-async function cleanupOldBlob(userId: string): Promise<void> {
-  const oldUrl = await getUserAvatarUrl(userId)
-  if (oldUrl) {
-    try {
-      await deletePublicBlob(oldUrl)
-    } catch (err) {
-      console.warn("[users/avatar] failed to delete old blob, continuing", err)
-    }
+async function tryDeleteBlob(url: string | null): Promise<void> {
+  if (!url) return
+  try {
+    await deletePublicBlob(url)
+  } catch (err) {
+    console.warn("[users/avatar] failed to delete old blob, continuing", err)
   }
 }
 
@@ -110,10 +108,11 @@ export async function PUT(request: Request) {
     )
   }
 
+  const previousUrl = await getUserAvatarUrl(session.user.id)
   await withAudit(
     { orgId: session.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await updateUserAvatarUrl(session.user.id, body.data.url)
+    async (tx, ctx) => {
+      await updateUserAvatarUrl(session.user.id, body.data.url, tx)
       await ctx.emit({
         entity: "user",
         action: "updated",
@@ -122,7 +121,7 @@ export async function PUT(request: Request) {
       })
     }
   )
-  await cleanupOldBlob(session.user.id)
+  await tryDeleteBlob(previousUrl)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
@@ -145,10 +144,11 @@ export async function DELETE(request: Request) {
   )
   if (rateLimited) return rateLimited
 
+  const previousUrl = await getUserAvatarUrl(session.user.id)
   await withAudit(
     { orgId: session.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await updateUserAvatarUrl(session.user.id, null)
+    async (tx, ctx) => {
+      await updateUserAvatarUrl(session.user.id, null, tx)
       await ctx.emit({
         entity: "user",
         action: "updated",
@@ -157,7 +157,7 @@ export async function DELETE(request: Request) {
       })
     }
   )
-  await cleanupOldBlob(session.user.id)
+  await tryDeleteBlob(previousUrl)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

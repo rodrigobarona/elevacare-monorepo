@@ -132,12 +132,13 @@ export async function PATCH(
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
+      async (tx, ctx) => {
         await updateEventType(
           profile.orgId,
           id,
           updates as Parameters<typeof updateEventType>[2],
-          profile.id
+          profile.id,
+          tx
         )
         await ctx.emit({
           entity: "event_type",
@@ -197,8 +198,8 @@ export async function DELETE(
   const { id } = await params
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await deleteEventType(profile.orgId, id, profile.id)
+    async (tx, ctx) => {
+      await deleteEventType(profile.orgId, id, profile.id, tx)
       await ctx.emit({
         entity: "event_type",
         action: "deleted",

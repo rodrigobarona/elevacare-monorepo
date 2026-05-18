@@ -103,16 +103,19 @@ export async function ensurePersonalOrg(
       await withAudit(
         { orgId: existingOrg.id, actorUserId: userId },
         async (tx, ctx) => {
-          await tx.insert(main.memberships).values({
-            userId,
-            orgId: existingOrg.id,
-            workosRole: "admin",
-            status: "active",
-          })
+          const [row] = await tx
+            .insert(main.memberships)
+            .values({
+              userId,
+              orgId: existingOrg.id,
+              workosRole: "admin",
+              status: "active",
+            })
+            .returning({ id: main.memberships.id })
           await ctx.emit({
             entity: "membership",
             action: "created",
-            entityId: null,
+            entityId: row!.id,
             payload: { orgId: existingOrg.id, userId, role: "admin" },
           })
         }
@@ -271,7 +274,18 @@ export async function provisionMembership(
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId ?? null },
     async (tx, ctx) => {
-      await tx
+      const [existing] = await tx
+        .select({ id: main.memberships.id })
+        .from(main.memberships)
+        .where(
+          and(
+            eq(main.memberships.userId, input.userId),
+            eq(main.memberships.orgId, input.orgId)
+          )
+        )
+        .limit(1)
+
+      const [row] = await tx
         .insert(main.memberships)
         .values({
           userId: input.userId,
@@ -287,10 +301,12 @@ export async function provisionMembership(
             updatedAt: new Date(),
           },
         })
+        .returning({ id: main.memberships.id })
+
       await ctx.emit({
         entity: "membership",
-        action: "created",
-        entityId: null,
+        action: existing ? "updated" : "created",
+        entityId: row!.id,
         payload: { userId: input.userId, orgId: input.orgId, role: input.role },
       })
     }

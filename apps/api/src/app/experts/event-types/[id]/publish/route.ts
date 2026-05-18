@@ -55,18 +55,19 @@ export async function PATCH(
   const { id } = await params
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
+    async (tx, ctx) => {
       await updateEventType(
         profile.orgId,
         id,
         { published: body.data.published },
-        profile.id
+        profile.id,
+        tx
       )
       await ctx.emit({
         entity: "event_type",
         action: body.data.published ? "published" : "unpublished",
         entityId: id,
-        payload: {},
+        payload: { published: body.data.published },
       })
     }
   )

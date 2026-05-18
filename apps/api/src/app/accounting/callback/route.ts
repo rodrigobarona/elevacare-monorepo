@@ -116,7 +116,7 @@ export async function GET(request: Request) {
       await withAudit(
         { orgId: expert.orgId, actorUserId: session.user.id },
         async (tx, ctx) => {
-          await tx
+          const [integration] = await tx
             .insert(main.expertIntegrations)
             .values({
               orgId: expert.orgId,
@@ -146,6 +146,7 @@ export async function GET(request: Request) {
                 updatedAt: new Date(),
               },
             })
+            .returning({ id: main.expertIntegrations.id })
 
           await tx
             .update(main.expertProfiles)
@@ -159,7 +160,7 @@ export async function GET(request: Request) {
           await ctx.emit({
             entity: "expert_integration_credential",
             action: "connected",
-            entityId: expert.id,
+            entityId: integration!.id,
             payload: { provider: providerSlug, category: "invoicing" },
           })
         }

@@ -93,27 +93,31 @@ export async function POST(request: Request) {
   try {
     const row = await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
-        const created = await createEventType(profile.orgId, {
-          expertProfileId: profile.id,
-          orgId: profile.orgId,
-          slug,
-          title: data.title,
-          description: data.description ?? null,
-          durationMinutes: data.durationMinutes,
-          priceAmount: data.priceAmount,
-          currency: data.currency,
-          languages: data.languages.length > 0 ? data.languages : ["en"],
-          sessionMode: data.sessionMode,
-          bookingWindowDays: data.bookingWindowDays ?? null,
-          minimumNoticeMinutes: data.minimumNoticeMinutes,
-          bufferBeforeMinutes: data.bufferBeforeMinutes,
-          bufferAfterMinutes: data.bufferAfterMinutes,
-          cancellationWindowHours: data.cancellationWindowHours ?? null,
-          rescheduleWindowHours: data.rescheduleWindowHours ?? null,
-          requiresApproval: data.requiresApproval,
-          worldwideMode: data.worldwideMode,
-        })
+      async (tx, ctx) => {
+        const created = await createEventType(
+          profile.orgId,
+          {
+            expertProfileId: profile.id,
+            orgId: profile.orgId,
+            slug,
+            title: data.title,
+            description: data.description ?? null,
+            durationMinutes: data.durationMinutes,
+            priceAmount: data.priceAmount,
+            currency: data.currency,
+            languages: data.languages.length > 0 ? data.languages : ["en"],
+            sessionMode: data.sessionMode,
+            bookingWindowDays: data.bookingWindowDays ?? null,
+            minimumNoticeMinutes: data.minimumNoticeMinutes,
+            bufferBeforeMinutes: data.bufferBeforeMinutes,
+            bufferAfterMinutes: data.bufferAfterMinutes,
+            cancellationWindowHours: data.cancellationWindowHours ?? null,
+            rescheduleWindowHours: data.rescheduleWindowHours ?? null,
+            requiresApproval: data.requiresApproval,
+            worldwideMode: data.worldwideMode,
+          },
+          tx
+        )
         await ctx.emit({
           entity: "event_type",
           action: "created",

@@ -198,7 +198,18 @@ export async function syncMembership(
   const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
 
   await withAudit({ orgId: org.id, actorUserId: null }, async (tx, ctx) => {
-    await tx
+    const [existing] = await tx
+      .select({ id: main.memberships.id })
+      .from(main.memberships)
+      .where(
+        and(
+          eq(main.memberships.userId, user.id),
+          eq(main.memberships.orgId, org.id)
+        )
+      )
+      .limit(1)
+
+    const [row] = await tx
       .insert(main.memberships)
       .values({
         userId: user.id,
@@ -216,10 +227,12 @@ export async function syncMembership(
         },
         where: lt(main.memberships.updatedAt, eventUpdatedAt),
       })
+      .returning({ id: main.memberships.id })
+
     await ctx.emit({
       entity: "membership",
-      action: "created",
-      entityId: null,
+      action: existing ? "synced" : "created",
+      entityId: row?.id ?? existing?.id ?? null,
       payload: {
         userId: user.id,
         orgId: org.id,
@@ -248,7 +261,7 @@ export async function deleteMembership(
   if (!user || !org) return
 
   await withAudit({ orgId: org.id, actorUserId: null }, async (tx, ctx) => {
-    await tx
+    const [deleted] = await tx
       .delete(main.memberships)
       .where(
         and(
@@ -256,10 +269,11 @@ export async function deleteMembership(
           eq(main.memberships.orgId, org.id)
         )
       )
+      .returning({ id: main.memberships.id })
     await ctx.emit({
       entity: "membership",
       action: "removed",
-      entityId: null,
+      entityId: deleted?.id ?? null,
       payload: {
         userId: user.id,
         orgId: org.id,

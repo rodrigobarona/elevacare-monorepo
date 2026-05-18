@@ -104,19 +104,23 @@ export async function PUT(
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
+    async (tx, ctx) => {
       await replaceDestinationCalendar(
         profile.orgId,
         profile.id,
         id,
         body.data.externalCalendarId,
-        matched.name
+        matched.name,
+        tx
       )
       await ctx.emit({
         entity: "expert_integration_credential",
         action: "updated",
         entityId: id,
-        payload: { field: "destination", calendarName: matched.name },
+        payload: {
+          field: "destination",
+          externalCalendarId: body.data.externalCalendarId,
+        },
       })
     }
   )
