@@ -130,10 +130,11 @@ async function main() {
     // 2. Find the product
     const product = await findProductByMetadataKey(stripe, e.productMetadataKey)
     if (!product) {
-      console.log(
-        `    ⚠ Product with metadata key "${e.productMetadataKey}" not found — skipping attachment`
+      throw new Error(
+        `[entitlements] Product with metadata key "${e.productMetadataKey}" not found ` +
+          `(required by entitlement "${e.lookupKey}"). ` +
+          `Run 'pnpm seed:products --apply' first.`
       )
-      continue
     }
 
     // 3. Attach feature to product (if not already attached)

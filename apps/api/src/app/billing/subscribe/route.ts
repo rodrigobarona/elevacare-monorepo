@@ -1,11 +1,13 @@
-import { z, type ZodIssue } from "zod"
-import { getSession } from "@eleva/auth"
+import { z } from "zod"
+import { UnauthorizedError } from "@eleva/auth"
 import {
   createOrgSubscription,
   swapSubscriptionTier,
   stripe,
 } from "@eleva/billing/server"
 import { secureJson } from "../../../lib/security-headers"
+import { corsHeaders } from "../../../lib/cors"
+import { requireApiAuth } from "../../../lib/auth"
 import {
   applyRateLimit,
   RATE_LIMITS,
@@ -19,8 +21,8 @@ import {
  * current organization. The org must already have a Stripe Customer
  * (set during provisioning via provisionOrgBilling).
  *
- * Auth model: session-based (cookie). The user must hold
- * `billing:manage_org` or `subscriptions:manage_org` capability.
+ * Auth model: session-based (cookie) or Bearer token.
+ * The user must hold `billing:manage_org` or `subscriptions:manage_org` capability.
  *
  * Request body:
  *   { tier: "clinic_starter" | "clinic_growth" | "expert_top", quantity?: number }
@@ -45,13 +47,27 @@ const requestSchema = z.object({
   quantity: z.number().int().min(1).max(100).optional(),
 })
 
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "POST, OPTIONS"),
+  })
+}
+
 export async function POST(request: Request) {
-  const session = await getSession()
-  if (!session) {
-    return secureJson(
-      { error: "unauthorized", code: "no-session" },
-      { status: 401 }
-    )
+  const headers = corsHeaders(request, "POST, OPTIONS")
+
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    if (err instanceof UnauthorizedError) {
+      return secureJson(
+        { error: "unauthorized", code: err.code },
+        { status: 401, headers }
+      )
+    }
+    throw err
   }
 
   const canManageBilling =
@@ -61,7 +77,7 @@ export async function POST(request: Request) {
   if (!canManageBilling) {
     return secureJson(
       { error: "forbidden", code: "missing-capability" },
-      { status: 403 }
+      { status: 403, headers }
     )
   }
 
@@ -76,43 +92,63 @@ export async function POST(request: Request) {
     const raw = await request.json()
     body = requestSchema.parse(raw)
   } catch (err) {
-    const message =
-      err instanceof z.ZodError
-        ? err.issues
-            .map((e: ZodIssue) => `${e.path.join(".")}: ${e.message}`)
-            .join(", ")
-        : "invalid-json"
-    return secureJson({ error: "validation_error", message }, { status: 400 })
+    if (err instanceof z.ZodError) {
+      return secureJson(
+        { error: "validation", issues: err.issues },
+        { status: 422, headers }
+      )
+    }
+    return secureJson(
+      { error: "validation", issues: [{ message: "invalid-json" }] },
+      { status: 422, headers }
+    )
   }
 
   const { tier, quantity } = body
 
-  const s = stripe()
-  const customers = await s.customers.search({
-    query: `metadata["workos_org_id"]:"${session.workosOrgId}"`,
-  })
-
-  const customer = customers.data[0]
-  if (!customer) {
-    return secureJson(
-      {
-        error: "no_stripe_customer",
-        message:
-          "Organization does not have a Stripe customer. Contact support.",
-      },
-      { status: 409 }
-    )
-  }
-
-  const subscriptions = await s.subscriptions.list({
-    customer: customer.id,
-    status: "active",
-    limit: 5,
-  })
-
-  const existingSub = subscriptions.data[0]
-
   try {
+    const s = stripe()
+    const customers = await s.customers.search({
+      query: `metadata["workos_org_id"]:"${session.workosOrgId}"`,
+    })
+
+    const customer = customers.data[0]
+    if (!customer) {
+      return secureJson(
+        {
+          error: "no_stripe_customer",
+          message:
+            "Organization does not have a Stripe customer. Contact support.",
+        },
+        { status: 409, headers }
+      )
+    }
+
+    const subscriptions = await s.subscriptions.list({
+      customer: customer.id,
+      status: "active" as unknown as undefined,
+      limit: 5,
+    })
+
+    const incompleteSubscriptions = await s.subscriptions.list({
+      customer: customer.id,
+      status: "incomplete" as unknown as undefined,
+      limit: 5,
+    })
+
+    const trialingSubscriptions = await s.subscriptions.list({
+      customer: customer.id,
+      status: "trialing" as unknown as undefined,
+      limit: 5,
+    })
+
+    const allSubs = [
+      ...subscriptions.data,
+      ...incompleteSubscriptions.data,
+      ...trialingSubscriptions.data,
+    ]
+    const existingSub = allSubs[0]
+
     if (existingSub) {
       const updated = await swapSubscriptionTier({
         subscriptionId: existingSub.id,
@@ -126,17 +162,20 @@ export async function POST(request: Request) {
             error: "tier_not_found",
             message: `Product for tier '${tier}' not found in Stripe.`,
           },
-          { status: 404 }
+          { status: 404, headers }
         )
       }
 
       const clientSecret = await extractClientSecret(s, updated.latest_invoice)
 
-      return secureJson({
-        subscriptionId: updated.id,
-        status: updated.status,
-        clientSecret,
-      })
+      return secureJson(
+        {
+          subscriptionId: updated.id,
+          status: updated.status,
+          clientSecret,
+        },
+        { headers }
+      )
     }
 
     const subscription = await createOrgSubscription({
@@ -151,7 +190,7 @@ export async function POST(request: Request) {
           error: "tier_not_found",
           message: `Product for tier '${tier}' not found in Stripe.`,
         },
-        { status: 404 }
+        { status: 404, headers }
       )
     }
 
@@ -160,14 +199,20 @@ export async function POST(request: Request) {
       subscription.latest_invoice
     )
 
-    return secureJson({
-      subscriptionId: subscription.id,
-      status: subscription.status,
-      clientSecret,
-    })
+    return secureJson(
+      {
+        subscriptionId: subscription.id,
+        status: subscription.status,
+        clientSecret,
+      },
+      { headers }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    return secureJson({ error: "stripe_error", message }, { status: 502 })
+    return secureJson(
+      { error: "stripe_error", message },
+      { status: 502, headers }
+    )
   }
 }
 

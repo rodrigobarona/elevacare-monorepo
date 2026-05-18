@@ -16,7 +16,8 @@
             "type": "string",
             "pattern": "^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$"
           },
-          "displayName": { "type": "string" }
+          "displayName": { "type": "string" },
+          "description": { "type": "string" }
         },
         "additionalProperties": false
       }
@@ -32,6 +33,7 @@
             "pattern": "^[a-z][a-z0-9_-]*$"
           },
           "displayName": { "type": "string" },
+          "description": { "type": "string" },
           "capabilities": {
             "type": "array",
             "items": { "type": "string" }

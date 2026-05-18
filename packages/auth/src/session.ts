@@ -21,6 +21,8 @@ export interface ResolveSessionOpts {
   jwtPermissions?: string[]
   /** Entitlements from the WorkOS JWT `entitlements` claim. */
   jwtEntitlements?: string[]
+  /** The org_id from the JWT — used to scope permissions to the correct org. */
+  jwtOrgId?: string | null
 }
 
 /**
@@ -79,13 +81,16 @@ export async function resolveSessionFromWorkosUser(
 
   const productLabel = deriveProductLabel(picked.orgType, picked.workosRole)
 
+  const jwtMatchesPicked =
+    !opts.jwtOrgId || opts.jwtOrgId === picked.workosOrgId
+
   const capabilities =
-    opts.jwtPermissions && opts.jwtPermissions.length > 0
+    jwtMatchesPicked && opts.jwtPermissions && opts.jwtPermissions.length > 0
       ? opts.jwtPermissions
       : capabilitiesFor(productLabel)
 
   const entitlements =
-    opts.jwtEntitlements && opts.jwtEntitlements.length > 0
+    jwtMatchesPicked && opts.jwtEntitlements && opts.jwtEntitlements.length > 0
       ? opts.jwtEntitlements
       : undefined
 

@@ -1,5 +1,6 @@
 import { WorkOS } from "@workos-inc/node"
 import { createOrgCustomer, createOrgSubscription } from "./subscriptions"
+import { stripe } from "./client"
 import type { ProductTier } from "./subscriptions"
 
 /**
@@ -45,7 +46,7 @@ export interface ProvisionBillingResult {
  * 3. Creates a free-tier subscription (so entitlements flow from day one)
  *
  * Should be called after the org is created in both WorkOS and Eleva DB.
- * Idempotent: if the WorkOS org already has a stripeCustomerId, returns early.
+ * Idempotent: handles partial failures by checking existing state at each step.
  */
 export async function provisionOrgBilling(
   input: ProvisionBillingInput
@@ -55,11 +56,15 @@ export async function provisionOrgBilling(
   const existingOrg = await workos.organizations.getOrganization(
     input.workosOrgId
   )
-  if (existingOrg.stripeCustomerId) {
-    return {
-      stripeCustomerId: existingOrg.stripeCustomerId,
-      subscriptionId: null,
-    }
+
+  let stripeCustomerId = existingOrg.stripeCustomerId
+
+  if (stripeCustomerId) {
+    const subscriptionId = await ensureSubscriptionExists(
+      stripeCustomerId,
+      input.orgType
+    )
+    return { stripeCustomerId, subscriptionId }
   }
 
   const customer = await createOrgCustomer({
@@ -69,19 +74,57 @@ export async function provisionOrgBilling(
     email: input.email,
   })
 
+  stripeCustomerId = customer.id
+
   await workos.organizations.updateOrganization({
     organization: input.workosOrgId,
-    stripeCustomerId: customer.id,
+    stripeCustomerId,
   })
 
   const tier = ORG_TYPE_TO_TIER[input.orgType] ?? "member_free"
-  const subscription = await createOrgSubscription({
-    customerId: customer.id,
-    tier,
+  let subscriptionId: string | null = null
+  try {
+    const subscription = await createOrgSubscription({
+      customerId: stripeCustomerId,
+      tier,
+    })
+    subscriptionId = subscription?.id ?? null
+  } catch (err) {
+    console.error(
+      `[provisioning] Subscription creation failed for customer ${stripeCustomerId}:`,
+      err instanceof Error ? err.message : err
+    )
+  }
+
+  return { stripeCustomerId, subscriptionId }
+}
+
+/**
+ * Validates that an active subscription exists for the customer.
+ * If missing, creates the default tier subscription.
+ */
+async function ensureSubscriptionExists(
+  customerId: string,
+  orgType: string
+): Promise<string | null> {
+  const s = stripe()
+  const subscriptions = await s.subscriptions.list({
+    customer: customerId,
+    limit: 5,
   })
 
-  return {
-    stripeCustomerId: customer.id,
-    subscriptionId: subscription?.id ?? null,
+  const activeSub = subscriptions.data.find((sub) =>
+    ["active", "trialing", "incomplete"].includes(sub.status)
+  )
+
+  if (activeSub) {
+    return activeSub.id
   }
+
+  const tier = ORG_TYPE_TO_TIER[orgType] ?? "member_free"
+  const subscription = await createOrgSubscription({
+    customerId,
+    tier,
+  })
+  return subscription?.id ?? null
 }

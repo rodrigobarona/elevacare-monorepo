@@ -76,6 +76,7 @@ interface ResolvedIdentity {
   tokenLastName: string | null
   permissions: string[]
   entitlements: string[]
+  jwtOrgId: string | null
 }
 
 /**
@@ -108,6 +109,7 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
   let tokenLastName: string | null = null
   let permissions: string[] = []
   let entitlements: string[] = []
+  let jwtOrgId: string | null = null
 
   try {
     const workosSession = await authkitGetSession()
@@ -123,6 +125,9 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
       }
       if (Array.isArray(claims.entitlements)) {
         entitlements = claims.entitlements as string[]
+      }
+      if (typeof claims.org_id === "string") {
+        jwtOrgId = claims.org_id
       }
     }
   } catch (err) {
@@ -144,6 +149,7 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
     tokenLastName,
     permissions,
     entitlements,
+    jwtOrgId,
   }
 }
 
@@ -159,6 +165,7 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
     tokenLastName,
     permissions,
     entitlements,
+    jwtOrgId,
   } = await resolveWorkosIdentity()
   if (!workosUserId) return null
   return resolveSessionFromWorkosUser(
@@ -168,7 +175,7 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
       firstName: tokenFirstName,
       lastName: tokenLastName,
     },
-    { jwtPermissions: permissions, jwtEntitlements: entitlements }
+    { jwtPermissions: permissions, jwtEntitlements: entitlements, jwtOrgId }
   )
 })
 
@@ -189,6 +196,7 @@ export async function getSessionForOrg(
     tokenLastName,
     permissions,
     entitlements,
+    jwtOrgId,
   } = await resolveWorkosIdentity()
   if (!workosUserId) return null
   return resolveSessionFromWorkosUser(
@@ -202,6 +210,7 @@ export async function getSessionForOrg(
       preferredOrgSlug: orgSlug,
       jwtPermissions: permissions,
       jwtEntitlements: entitlements,
+      jwtOrgId,
     }
   )
 }

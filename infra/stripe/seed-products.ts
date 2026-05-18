@@ -84,6 +84,64 @@ async function findExistingProduct(
   return products.data[0] ?? null
 }
 
+async function ensurePricesForProduct(
+  stripe: Stripe,
+  product: Stripe.Product,
+  p: (typeof PRODUCTS)[number]
+): Promise<void> {
+  const prices = await stripe.prices.list({
+    product: product.id,
+    active: true,
+    limit: 20,
+  })
+
+  const hasBasePrice = prices.data.some(
+    (pr) => pr.metadata.eleva_price_type === "base"
+  )
+
+  if (!hasBasePrice) {
+    const price = await stripe.prices.create({
+      product: product.id,
+      currency: "eur",
+      unit_amount: p.priceAmount,
+      recurring: { interval: p.interval },
+      metadata: {
+        eleva_product_key: p.metadataKey,
+        eleva_price_type: "base",
+      },
+    })
+    console.log(
+      `    + created missing base price: ${price.id} (EUR ${(p.priceAmount / 100).toFixed(2)}/${p.interval})`
+    )
+  }
+
+  if ("seatPrice" in p && p.seatPrice) {
+    const sp = p.seatPrice as SeatPrice
+    const hasSeatPrice = prices.data.some(
+      (pr) => pr.metadata.eleva_price_type === "per_seat"
+    )
+
+    if (!hasSeatPrice) {
+      const seatPriceObj = await stripe.prices.create({
+        product: product.id,
+        currency: "eur",
+        unit_amount: sp.amount,
+        recurring: {
+          interval: p.interval,
+          usage_type: "licensed",
+        },
+        metadata: {
+          eleva_product_key: sp.metadataKey,
+          eleva_price_type: "per_seat",
+        },
+      })
+      console.log(
+        `    + created missing seat price: ${seatPriceObj.id} (EUR ${(sp.amount / 100).toFixed(2)}/seat/${p.interval})`
+      )
+    }
+  }
+}
+
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes("--apply")
@@ -127,8 +185,10 @@ async function main() {
 
   for (const p of PRODUCTS) {
     const existing = await findExistingProduct(stripe, p.metadataKey)
+
     if (existing) {
-      console.log(`  ⏭ ${p.name} already exists (${existing.id}), skipping`)
+      console.log(`  ⏭ ${p.name} already exists (${existing.id})`)
+      await ensurePricesForProduct(stripe, existing, p)
       continue
     }
 

@@ -35,8 +35,9 @@ export function deriveProductLabel(
 }
 
 /**
- * Maps WorkOS custom role slugs to Eleva product labels.
- * Used when reading the `role` claim from the JWT access token.
+ * @deprecated Use `deriveProductLabel(orgType, role)` instead — role-to-label
+ * resolution requires org-type context that a flat slug map cannot provide.
+ * Retained only for backward compat; will be removed in a future cleanup.
  */
 export const WORKOS_ROLE_TO_LABEL: Record<string, ProductLabel> = {
   member: "member",
@@ -44,7 +45,6 @@ export const WORKOS_ROLE_TO_LABEL: Record<string, ProductLabel> = {
   team_admin: "team_admin",
   lecturer: "lecturer",
   staff: "staff",
-  admin: "team_admin",
 }
 
 /**

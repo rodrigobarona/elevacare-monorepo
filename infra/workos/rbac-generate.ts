@@ -1,4 +1,3 @@
- 
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { dirname, resolve } from "node:path"
@@ -147,6 +146,18 @@ async function createRole(
   })
 }
 
+async function updateRole(
+  apiKey: string,
+  slug: string,
+  name: string,
+  description?: string
+): Promise<void> {
+  await workosRequest(apiKey, "PATCH", `/authorization/roles/${slug}`, {
+    name,
+    ...(description !== undefined && { description }),
+  })
+}
+
 async function setRolePermissions(
   apiKey: string,
   roleSlug: string,
@@ -239,14 +250,23 @@ async function main() {
   }
   if (staleDeleted === 0) console.log("  (no stale roles found)")
 
-  // --- Step 2: Ensure all required roles exist (create missing) ---
+  // --- Step 2: Ensure all required roles exist (create missing, update stale) ---
   console.log("[2/5] Ensuring required roles exist...")
   const rolesAfterCleanup = await listEnvironmentRoles(apiKey)
-  const currentRoleSlugs = new Set(rolesAfterCleanup.map((r) => r.slug))
+  const currentRolesBySlug = new Map(rolesAfterCleanup.map((r) => [r.slug, r]))
 
   for (const role of config.roles) {
-    if (currentRoleSlugs.has(role.slug)) {
-      console.log(`  ✓ '${role.slug}' exists`)
+    const liveRole = currentRolesBySlug.get(role.slug)
+    if (liveRole) {
+      const nameChanged = liveRole.name !== role.displayName
+      const descChanged =
+        (liveRole.description ?? "") !== (role.description ?? "")
+      if (nameChanged || descChanged) {
+        await updateRole(apiKey, role.slug, role.displayName, role.description)
+        console.log(`  ↻ Updated '${role.slug}' (${role.displayName})`)
+      } else {
+        console.log(`  ✓ '${role.slug}' exists`)
+      }
     } else {
       await createRole(apiKey, role.slug, role.displayName, role.description)
       console.log(`  + Created '${role.slug}' (${role.displayName})`)

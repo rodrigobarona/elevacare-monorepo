@@ -55,7 +55,6 @@ pnpm rbac:generate -- --env=production --apply
 
 | Role Slug    | Display Name | Description                                                                    |
 | ------------ | ------------ | ------------------------------------------------------------------------------ |
-| `member`     | Member       | Default role for members (patients). Basic platform access.                    |
 | `expert`     | Expert       | Solo expert (community or top tier). Manages profile, availability, invoicing. |
 | `team_admin` | Team Admin   | Clinic owner/admin. Manages team members, billing, settings.                   |
 | `lecturer`   | Lecturer     | Academy instructor. Creates courses, manages content, views analytics.         |
@@ -63,10 +62,10 @@ pnpm rbac:generate -- --env=production --apply
 
 ### Built-in WorkOS roles (not managed by script)
 
-| Role     | Behavior                                                       |
-| -------- | -------------------------------------------------------------- |
-| `admin`  | Inherits ALL permissions from all roles below it (full access) |
-| `member` | Base role — we assign our member capabilities to it            |
+| Role     | Behavior                                                                                     |
+| -------- | -------------------------------------------------------------------------------------------- |
+| `admin`  | Inherits ALL permissions from all roles below it (full access)                               |
+| `member` | Base role — our `member` capabilities are assigned to it via the script's permission mapping |
 
 ## Adding a new capability
 
@@ -113,6 +112,6 @@ The script is designed as nuke-and-repave: it always converges to the state defi
 | Issue                           | Cause                                  | Fix                                     |
 | ------------------------------- | -------------------------------------- | --------------------------------------- |
 | `displayName` too long          | WorkOS limits to 48 chars              | Shorten the display name                |
-| Role not created                | Slug contains invalid chars            | Use `[a-z][a-z0-9_]*` pattern           |
+| Role not created                | Slug contains invalid chars            | Use `[a-z][a-z0-9_-]*` pattern          |
 | `admin` shows fewer permissions | Normal — inherits from lower roles     | Not a bug; functional access is correct |
 | 404 on role deletion            | Role already deleted or is system role | Safe to ignore                          |
