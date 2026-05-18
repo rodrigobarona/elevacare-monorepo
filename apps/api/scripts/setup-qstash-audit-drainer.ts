@@ -46,7 +46,7 @@ async function main() {
     )
     process.exit(1)
   }
-  const destination = `${apiBaseUrl}/workflows/audit-outbox-drainer`
+  const destination = `${apiBaseUrl.replace(/\/+$/, "")}/workflows/audit-outbox-drainer`
 
   console.log("QStash Audit Drainer Schedule Setup")
   console.log("====================================")
@@ -66,12 +66,12 @@ async function main() {
   const client = new Client({ baseUrl, token })
 
   const existingSchedules = await client.schedules.list()
-  const existing = existingSchedules.find((s) => s.destination === destination)
+  const matches = existingSchedules.filter((s) => s.destination === destination)
 
-  if (existing) {
-    console.log(`Found existing schedule: ${existing.scheduleId}`)
-    console.log("  Removing old schedule...")
-    await client.schedules.delete(existing.scheduleId)
+  for (const match of matches) {
+    console.log(`Found existing schedule: ${match.scheduleId}`)
+    console.log("  Removing...")
+    await client.schedules.delete(match.scheduleId)
   }
 
   const schedule = await client.schedules.create({

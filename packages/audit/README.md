@@ -102,8 +102,21 @@ await withAudit(
 | ---------- | ------------------------- | -------- | ----------------------------------------------- |
 | `entity`   | `AuditEntity`             | Yes      | What was mutated (closed union in `types.ts`)   |
 | `action`   | `AuditAction`             | Yes      | What happened (closed union in `types.ts`)      |
-| `entityId` | `string \| null`          | No       | Primary key of the mutated resource             |
+| `entityId` | `string \| null`          | Yes      | Primary key of the mutated resource (see below) |
 | `payload`  | `Record<string, unknown>` | No       | Contextual data (key fields, before/after diff) |
+
+> **Note on `entityId`:** Provide the UUID primary key of the target resource for
+> all domain CRUD operations. Use `null` only for system-level or composite-key
+> operations that don't target a single identifiable resource (e.g., membership
+> upserts keyed by `(userId, orgId)`).
+>
+> ```typescript
+> // CRUD — always set entityId to the resource PK
+> entityId: row.id // "d3f8a1b2-..."
+>
+> // System/composite-key — null is acceptable
+> entityId: null // membership (userId+orgId), global config
+> ```
 
 ### `withPlatformAudit(options, fn)`
 
