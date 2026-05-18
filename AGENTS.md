@@ -7,6 +7,7 @@
 - **Domain packages own logic**: `@eleva/auth` owns user/org/membership provisioning and WorkOS interactions. `@eleva/db` owns schema and query helpers. Apps and API routes are thin orchestration layers.
 - **No direct DB writes in frontend apps**: Frontend apps (`apps/account`, `apps/app`, `apps/admin`, `apps/expert`) should not import `db()` or `main.*` from `@eleva/db` directly for writes. Use `@eleva/db` query helpers for reads in Server Components, and call domain package functions or `apps/api` for writes.
 - **Documented by default**: Every new API endpoint must have its Zod schemas registered in the OpenAPI spec. The spec is the single source of truth for both runtime validation and docs generation.
+- **Audit by default**: Every mutating API endpoint and domain function MUST wrap its writes in `withAudit()` from `@eleva/audit`. This inserts an `audit_outbox` row atomically with domain data. The drainer ships rows to the append-only `audit_events` table in the separate audit Neon project. See `.cursor/rules/audit-wiring.mdc` and `packages/audit/README.md`.
 
 ## Learned User Preferences
 
@@ -21,3 +22,4 @@
 - Shared dependency versions are managed via **pnpm Catalog** in `pnpm-workspace.yaml`. When adding or bumping a cataloged dependency, edit the `catalog:` section in `pnpm-workspace.yaml` and use `"catalog:"` as the version in `package.json`. Never hardcode semver ranges for cataloged packages. See `.cursor/rules/pnpm-catalog.mdc` for the full protocol.
 - `@eleva/api-client` is the typed HTTP client for consuming `apps/api`. All apps and scripts should use it instead of ad-hoc `fetch`. Schemas are shared between client and server via Zod.
 - `apps/docs` will host Fumadocs-powered API reference at `/docs/api-reference`, auto-generated from the OpenAPI spec. Hand-written guides go in MDX under `/docs/guides`.
+- `@eleva/audit` owns the transactional outbox pattern. `withAudit(options, fn)` wraps domain writes; `fn` receives a Drizzle `tx` and must call `ctx.emit({ entity, action, entityId, payload })`. Entity/action values are closed unions in `packages/audit/src/types.ts` — extend them when adding new auditable operations. The drainer runs via `POST /workflows/audit-outbox-drainer` on a QStash schedule (twice daily).
