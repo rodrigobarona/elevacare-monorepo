@@ -9,6 +9,10 @@
       "subtitle": "As suas próximas consultas e relatórios ficam aqui."
     }
   },
+  "settings": {
+    "title": "Definições",
+    "subtitle": "Gerir as preferências da organização."
+  },
   "errors": {
     "unauthorized": "Não tem acesso a esta página."
   }

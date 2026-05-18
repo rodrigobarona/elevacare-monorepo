@@ -9,6 +9,10 @@
       "subtitle": "Tus próximas citas e informes viven aquí."
     }
   },
+  "settings": {
+    "title": "Ajustes",
+    "subtitle": "Gestionar las preferencias de la organización."
+  },
   "errors": {
     "unauthorized": "No tienes acceso a esta página."
   }

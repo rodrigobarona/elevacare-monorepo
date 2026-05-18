@@ -9,6 +9,10 @@
       "subtitle": "Your upcoming appointments and reports live here."
     }
   },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Manage your organization preferences."
+  },
   "errors": {
     "unauthorized": "You do not have access to this page."
   }
