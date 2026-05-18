@@ -2,7 +2,6 @@
 description: Stripe webhook events two-file contract. Apply when adding, removing, or modifying Stripe webhook event handling.
 globs:
   - apps/api/src/app/webhooks/stripe/route.ts
-  - apps/api/src/app/stripe/webhook/route.ts
   - packages/billing/src/server/webhook.ts
   - infra/stripe/setup-webhooks.ts
 alwaysApply: false
@@ -21,10 +20,9 @@ events the endpoint subscribes to. Both must stay in sync.
 | `packages/billing/src/server/webhook.ts` | Runtime processor: idempotency log, dispatch switch, typed handlers, `withAudit` wiring |
 | `infra/stripe/setup-webhooks.ts` | Endpoint configuration: `WEBHOOK_EVENTS` array sent to Stripe API |
 
-The route files (`apps/api/src/app/webhooks/stripe/route.ts` canonical and
-`apps/api/src/app/stripe/webhook/route.ts` legacy during cutover) are thin
-wrappers: verify signature, call `processStripeEvent`, return status code.
-Do not put per-event business logic in the routes.
+The route file `apps/api/src/app/webhooks/stripe/route.ts` is a thin
+wrapper: verify signature, call `processStripeEvent`, return status code.
+Do not put per-event business logic in the route.
 
 ## Adding a new event
 
@@ -97,10 +95,6 @@ Booking payments + refunds + disputes:
 
 Canonical: `POST /webhooks/stripe` (production:
 `https://api.eleva.care/webhooks/stripe`).
-
-The legacy `POST /stripe/webhook` route is kept active during cutover and
-delegates to the same `processStripeEvent` core. It will be removed in a
-follow-up commit once Stripe Dashboard is pointed at the canonical URL.
 
 ## Idempotency contract
 

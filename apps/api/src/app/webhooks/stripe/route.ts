@@ -4,20 +4,15 @@ import { secureJson } from "../../../lib/security-headers"
 /**
  * POST /webhooks/stripe
  *
- * Canonical Stripe webhook receiver (Phase 1 of stripe-foundation-review).
- * Verifies the Stripe signature against STRIPE_WEBHOOK_SECRET, persists
- * the event for idempotency, and dispatches to typed handlers.
+ * Canonical Stripe webhook receiver. Verifies the Stripe signature against
+ * STRIPE_WEBHOOK_SECRET, persists the event for idempotency, and dispatches
+ * to typed handlers in `@eleva/billing/server`.
  *
  * Auth model: Stripe signature verification (no session required).
  *
- * Replaces the legacy /stripe/webhook endpoint. During cutover BOTH URLs
- * accept events and delegate to the same `processStripeEvent` core. To
- * complete the cutover:
- *
- *   1. Deploy this endpoint.
- *   2. Run `pnpm stripe:setup:webhooks -- --url <NEW_URL> --apply`.
- *   3. Verify deliveries land here with `received=true`.
- *   4. Remove the legacy /stripe/webhook route in a follow-up commit.
+ * The route handler is intentionally thin: signature verification + result
+ * mapping. All business logic lives in `processStripeEvent` so the same core
+ * can be invoked from tests and from QStash-driven retries.
  *
  * See `infra/stripe/setup-webhooks.ts` for the canonical event list,
  * `.cursor/rules/stripe-webhooks.mdc` for the two-file contract, and

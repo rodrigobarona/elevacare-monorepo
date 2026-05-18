@@ -62,18 +62,11 @@ Each product has an attached Stripe Entitlement Feature with a `lookup_key` matc
 
 `setup-webhooks.ts` manages the Stripe webhook endpoint that receives platform events. The endpoint URL must be passed via `--url` so the same script works across environments.
 
-**Canonical endpoint URL** (per Phase 1 of stripe-foundation-review):
+**Canonical endpoint URL:**
 
 ```
 https://api.eleva.care/webhooks/stripe
 ```
-
-The legacy URL (`/stripe/webhook`) is still active in the API layer during cutover and delegates to the same `processStripeEvent` core. Cutover order:
-
-1. Deploy `/webhooks/stripe` (already shipped).
-2. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply` to update the Stripe Dashboard.
-3. Verify deliveries land on `/webhooks/stripe` (check `stripe_webhook_events` rows).
-4. Remove the legacy `/stripe/webhook` route file in a follow-up commit.
 
 **Subscribed events** (from `setup-webhooks.ts` `WEBHOOK_EVENTS`):
 
@@ -109,7 +102,7 @@ Booking payments + refunds + disputes:
 - `charge.refunded`
 - `charge.dispute.created`
 
-These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. The route handlers (`apps/api/src/app/webhooks/stripe/route.ts` canonical and `apps/api/src/app/stripe/webhook/route.ts` legacy) are thin wrappers that verify the signature and call `processStripeEvent`.
+These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. The route handler `apps/api/src/app/webhooks/stripe/route.ts` is a thin wrapper that verifies the signature and calls `processStripeEvent`.
 
 **Idempotency.** Every event is recorded in the `stripe_webhook_events` table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are short-circuited via `INSERT ... ON CONFLICT DO NOTHING` and the route returns `200 { received: true, status: "duplicate" }`.
 

@@ -161,7 +161,7 @@ Starter / Growth / Enterprise per the tier table above.
 
 ### Single webhook endpoint
 
-- **one `/api/stripe/webhook`** per environment handles every event type (Payment + Subscriptions + Connect + Identity)
+- **one `/webhooks/stripe`** per environment handles every event type (Payment + Subscriptions + Connect + Identity), dispatched by `processStripeEvent` in `@eleva/billing/server`
 - `packages/billing/webhook` exports the single handler:
   - verifies signature
   - writes `stripe_event_log(id PK, type, livemode, received_at, processed_at)` for idempotency

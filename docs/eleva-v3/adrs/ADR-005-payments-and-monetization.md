@@ -29,7 +29,7 @@ Grounded in [Doctolib's business model](https://businessmodelcanvastemplate.com/
 - Stripe API pinned **≥ 2023-08-16** → Dynamic Payment Methods on by default
 - **Never hardcode `payment_method_types`** — methods auto-shown per country (PT gets MB WAY + card + wallets; EU gets SEPA/iDEAL/Bancontact per country)
 - **Multibanco reference vouchers excluded** (7-day delay + voucher reminder complexity, MB WAY covers PT)
-- **Single webhook endpoint** `/api/stripe/webhook` per environment handles Payment + Subscriptions + Connect + Identity events; idempotency via Neon `stripe_event_log`
+- **Single webhook endpoint** `/webhooks/stripe` per environment handles Payment + Subscriptions + Connect + Identity events; idempotency via Neon `stripe_webhook_events` (canonical table name; the ADR's original `stripe_event_log` proposal was renamed during Phase 1 implementation)
 - Two accounts: `staging` + `production` (separate Connect platform, webhook, seed scripts)
 - **Stripe Tax** configured for PT (NIF, no billing-address requirement)
 - **Stripe Entitlements** for plan gating via `packages/flags`

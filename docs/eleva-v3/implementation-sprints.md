@@ -282,9 +282,9 @@ Governed by: [payments-payouts-spec.md](./payments-payouts-spec.md), [notificati
 
 Backend (Track A):
 
-- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to `api.eleva.care/stripe/webhook` and `api.staging.eleva.care/stripe/webhook` — subdomain, not rewritten.
-- Drizzle schema: `stripe_event_log`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
-- `@eleva/billing/webhook`: single `/stripe/webhook` route in `apps/api`. Verifies signature → writes `stripe_event_log` for idempotency → dispatches by `event.type` to the right Vercel Workflow. Subscribed events locked per handbook.
+- Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to `api.eleva.care/webhooks/stripe` and `api.staging.eleva.care/webhooks/stripe` — subdomain, not rewritten.
+- Drizzle schema: `stripe_webhook_events`, `billing_customers`, `billing_subscriptions`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
+- `@eleva/billing/server` `processStripeEvent`: single `/webhooks/stripe` route in `apps/api`. Verifies signature → writes `stripe_webhook_events` for idempotency → dispatches by `event.type` under `withAudit`. Subscribed events locked per handbook.
 - **Stripe AccountSession endpoint** lives on the API subdomain at `api.eleva.care/stripe/account-session` (session-aware; reads WorkOS session cookie scoped on `.eleva.care`; CORS allows `https://eleva.care` with credentials). App zone calls it with `credentials: 'include'`.
 - `@eleva/workflows`:
   - `paymentSucceeded` → `bookingConfirmation` → entitlement write → Lane 1 fan-out

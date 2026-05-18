@@ -112,7 +112,7 @@ Each workflow follows this layered model:
 ## Trigger Sources
 
 - internal product actions
-- **Stripe webhooks** (single endpoint `/api/stripe/webhook`, dispatch by `event.type`)
+- **Stripe webhooks** (single endpoint `/webhooks/stripe`, dispatch by `event.type` via `processStripeEvent`)
 - **Daily webhooks** (room ended, transcript ready)
 - **Resend webhooks** (Lane 2 automation runs, delivery events)
 - scheduled reminders (durable `waitFor` inside workflow)

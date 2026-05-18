@@ -149,7 +149,7 @@ API + infra rules:
 - **Never hardcode `payment_method_types`** on PaymentIntents or Checkout Sessions
 - Enabled payment methods managed in **Stripe Dashboard** per environment (staging + production accounts each configure their own set)
 - Two accounts: `staging` and `production`, each with its own Connect platform and webhook
-- **Single webhook endpoint** `/api/stripe/webhook` per environment handles every event type (Payment + Subscriptions + Connect + Identity); dispatch by `event.type` inside the handler
+- **Single webhook endpoint** `/webhooks/stripe` per environment handles every event type (Payment + Subscriptions + Connect + Identity); dispatch by `event.type` inside `processStripeEvent` in `@eleva/billing/server`
 - Idempotency on `event.id` via Neon `stripe_event_log(id PK, type, livemode, received_at, processed_at)`
 
 Explicit exclusions:

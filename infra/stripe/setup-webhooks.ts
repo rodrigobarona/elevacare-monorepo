@@ -2,18 +2,11 @@ import Stripe from "stripe"
 
 /**
  * setup-webhooks — creates or updates the Stripe webhook endpoint that
- * receives billing events. Idempotent: if an endpoint with the same URL
- * already exists, its enabled_events list is synced to the canonical set.
+ * receives Eleva platform events. Idempotent: if an endpoint with the
+ * same URL already exists, its enabled_events list is synced to the
+ * canonical set.
  *
- * Canonical endpoint URL (per Phase 1 of stripe-foundation-review):
- *   https://api.eleva.care/webhooks/stripe
- *
- * The legacy URL (/stripe/webhook) is still active in the API layer
- * during cutover. To migrate the Stripe Dashboard to the new URL:
- *   1. Deploy /webhooks/stripe (this is already shipped).
- *   2. Run this script with the new URL and --apply.
- *   3. Verify deliveries land on /webhooks/stripe.
- *   4. Remove the legacy route file in a follow-up commit.
+ * Canonical endpoint URL: https://api.eleva.care/webhooks/stripe
  *
  * Usage:
  *   pnpm setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
@@ -39,7 +32,10 @@ const WEBHOOK_EVENTS: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
   "customer.subscription.updated",
   "customer.subscription.deleted",
   "invoice.paid",
-  "invoice.payment_succeeded", // legacy alias kept for back-compat
+  // invoice.payment_succeeded is a Stripe-emitted alias for invoice.paid
+  // that older integrations still rely on; Eleva subscribes to both for
+  // robustness and the dispatcher routes them through the same handler.
+  "invoice.payment_succeeded",
   "invoice.payment_failed",
   "invoice.payment_action_required",
   // Stripe Identity (expert KYC).

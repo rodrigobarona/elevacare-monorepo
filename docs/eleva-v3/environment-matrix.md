@@ -218,7 +218,7 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 
 | Concern                                                   | Production URL                                             |
 | --------------------------------------------------------- | ---------------------------------------------------------- |
-| Stripe webhook (external)                                 | `https://api.eleva.care/stripe/webhook`                    |
+| Stripe webhook (external)                                 | `https://api.eleva.care/webhooks/stripe`                   |
 | Stripe AccountSession (session-aware, CORS + credentials) | `https://api.eleva.care/stripe/account-session`            |
 | Daily transcript webhook                                  | `https://api.eleva.care/daily/transcripts`                 |
 | Daily room events webhook                                 | `https://api.eleva.care/daily/events`                      |
@@ -299,7 +299,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 - Gateway's asset prefix env vars point at sibling ports so proxy rewrites resolve locally.
 - API is **not** rewritten; apps call `localhost:3002` directly.
-- Stripe webhooks forwarded via `stripe listen --forward-to localhost:3002/stripe/webhook`.
+- Stripe webhooks forwarded via `stripe listen --forward-to localhost:3002/webhooks/stripe`.
 - Daily rooms use the test domain; transcripts use the dev webhook URL (local tunnel when external reachability is needed).
 - WorkOS redirect URI: `http://localhost:3000/callback` (gateway proxies to account app).
 - Calendar OAuth + TOConline OAuth callbacks point at `localhost:3002` (api zone).
@@ -335,17 +335,17 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.staging.eleva.care` in staging. WorkOS AuthKit callback lives at `eleva.care/callback` (rewritten from gateway to app zone) because it's part of the human-facing auth flow. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
-| Integration                                 | Local                                               | Staging                                                    | Production                                         |
-| ------------------------------------------- | --------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
-| Stripe webhook                              | `localhost:3002/stripe/webhook` via `stripe listen` | `api.staging.eleva.care/stripe/webhook`                    | `api.eleva.care/stripe/webhook`                    |
-| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`             | `api.staging.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
-| WorkOS AuthKit callback (human-facing)      | `localhost:3000/callback` (gateway → account app)   | `staging.eleva.care/callback`                              | `eleva.care/callback`                              |
-| WorkOS events webhook (server-to-server)    | `localhost:3002/workos/webhook`                     | `api.staging.eleva.care/workos/webhook`                    | `api.eleva.care/workos/webhook`                    |
-| Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`     | `api.staging.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
-| Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`  | `api.staging.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
-| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`      | `api.staging.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
-| Daily transcript webhook                    | local tunnel (ngrok) when needed                    | `api.staging.eleva.care/daily/transcripts`                 | `api.eleva.care/daily/transcripts`                 |
-| Resend delivery events                      | local tunnel                                        | `api.staging.eleva.care/resend/events`                     | `api.eleva.care/resend/events`                     |
+| Integration                                 | Local                                                | Staging                                                    | Production                                         |
+| ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
+| Stripe webhook                              | `localhost:3002/webhooks/stripe` via `stripe listen` | `api.staging.eleva.care/webhooks/stripe`                   | `api.eleva.care/webhooks/stripe`                   |
+| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`              | `api.staging.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
+| WorkOS AuthKit callback (human-facing)      | `localhost:3000/callback` (gateway → account app)    | `staging.eleva.care/callback`                              | `eleva.care/callback`                              |
+| WorkOS events webhook (server-to-server)    | `localhost:3002/workos/webhook`                      | `api.staging.eleva.care/workos/webhook`                    | `api.eleva.care/workos/webhook`                    |
+| Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`      | `api.staging.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
+| Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`   | `api.staging.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
+| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.staging.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
+| Daily transcript webhook                    | local tunnel (ngrok) when needed                     | `api.staging.eleva.care/daily/transcripts`                 | `api.eleva.care/daily/transcripts`                 |
+| Resend delivery events                      | local tunnel                                         | `api.staging.eleva.care/resend/events`                     | `api.eleva.care/resend/events`                     |
 
 ## Secret Loading Mechanics
 
