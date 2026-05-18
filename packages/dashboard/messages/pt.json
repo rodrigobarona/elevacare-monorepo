@@ -2,6 +2,7 @@
   "shell": {
     "profile": "Perfil",
     "settings": "Definições",
+    "homepage": "Visitar Página Inicial",
     "signOut": "Terminar sessão"
   }
 }

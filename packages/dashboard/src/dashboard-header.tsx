@@ -7,6 +7,7 @@ interface DashboardHeaderProps {
   user: DashboardUser
   accountUrl?: string
   settingsUrl?: string
+  homepageUrl?: string
   logoutUrl?: string
   children?: React.ReactNode
 }
@@ -15,6 +16,7 @@ export function DashboardHeader({
   user,
   accountUrl,
   settingsUrl,
+  homepageUrl,
   logoutUrl,
   children,
 }: DashboardHeaderProps) {
@@ -32,6 +34,7 @@ export function DashboardHeader({
           user={user}
           accountUrl={accountUrl}
           settingsUrl={settingsUrl}
+          homepageUrl={homepageUrl}
           logoutUrl={logoutUrl}
         />
       </div>

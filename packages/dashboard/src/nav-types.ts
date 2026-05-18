@@ -37,6 +37,8 @@ export interface DashboardConfig {
   accountUrl?: string
   /** Settings page URL (falls back to parent path of accountUrl) */
   settingsUrl?: string
+  /** Public homepage URL (shows "Visit Homepage" in user menu when set) */
+  homepageUrl?: string
   /** Logout URL */
   logoutUrl?: string
 }

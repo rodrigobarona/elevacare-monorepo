@@ -1,4 +1,11 @@
 {
+  "nav": {
+    "account": "Cuenta",
+    "profile": "Perfil",
+    "billing": "Facturación",
+    "organizations": "Organizaciones",
+    "privacy": "Privacidad"
+  },
   "settings": {
     "title": "Configuración de la cuenta",
     "profile": {

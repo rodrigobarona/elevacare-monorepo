@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { LogOut, User, Settings } from "lucide-react"
+import { Globe, LogOut, User, Settings } from "lucide-react"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -24,6 +24,7 @@ interface NavUserProps {
   user: DashboardUser
   accountUrl?: string
   settingsUrl?: string
+  homepageUrl?: string
   logoutUrl?: string
 }
 
@@ -36,6 +37,7 @@ export function NavUser({
   user,
   accountUrl = "/account/profile",
   settingsUrl,
+  homepageUrl,
   logoutUrl = "/logout",
 }: NavUserProps) {
   const t = useTranslations("shell")
@@ -88,6 +90,17 @@ export function NavUser({
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        {homepageUrl && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href={homepageUrl}>
+                <Globe className="mr-2 size-4" />
+                {t("homepage")}
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <a href={logoutUrl}>

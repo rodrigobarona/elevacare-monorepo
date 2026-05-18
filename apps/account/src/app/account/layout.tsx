@@ -1,4 +1,4 @@
-import { getLocale } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { User, CreditCard, Building2, Shield } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
@@ -14,22 +14,26 @@ export default async function SettingsLayout({
   children: React.ReactNode
 }) {
   const session = await guardSession()
-  const locale = await getLocale()
+  const [locale, t] = await Promise.all([getLocale(), getTranslations("nav")])
 
   const dashboardConfig: DashboardConfig = {
     homeUrl: "/dashboard",
     navGroups: [
       {
-        label: "Account",
+        label: t("account"),
         items: [
-          { title: "Profile", url: "/account/profile", icon: <User /> },
-          { title: "Billing", url: "/account/billing", icon: <CreditCard /> },
+          { title: t("profile"), url: "/account/profile", icon: <User /> },
           {
-            title: "Organizations",
+            title: t("billing"),
+            url: "/account/billing",
+            icon: <CreditCard />,
+          },
+          {
+            title: t("organizations"),
             url: "/account/organizations",
             icon: <Building2 />,
           },
-          { title: "Privacy", url: "/account/privacy", icon: <Shield /> },
+          { title: t("privacy"), url: "/account/privacy", icon: <Shield /> },
         ],
       },
     ],
@@ -39,6 +43,7 @@ export default async function SettingsLayout({
       avatarUrl: session.user.avatarUrl,
     },
     accountUrl: "/account/profile",
+    homepageUrl: "/home",
     logoutUrl: "/logout",
   }
 

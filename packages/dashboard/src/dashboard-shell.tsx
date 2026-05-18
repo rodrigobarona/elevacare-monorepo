@@ -33,6 +33,7 @@ export function DashboardShell({
             user={config.user}
             accountUrl={config.accountUrl}
             settingsUrl={config.settingsUrl}
+            homepageUrl={config.homepageUrl}
             logoutUrl={config.logoutUrl}
           >
             {headerSlot}
