@@ -42,6 +42,20 @@ export const ORG_SCOPED_SEGMENTS = [
 ] as const
 
 /**
+ * First-level paths that belong to the marketing zone (apps/web) even
+ * for authenticated users. The web proxy must NOT rewrite these to
+ * appOrigin regardless of session state.
+ */
+export const WEB_MARKETING_PATHS = [
+  "home",
+  "about",
+  "legal",
+  "help",
+  "blog",
+  "pricing",
+] as const
+
+/**
  * All first-level paths that the gateway claims (union of account + app).
  * Any first segment NOT in this set and NOT a locale may be an org slug.
  */
@@ -50,6 +64,37 @@ export const APP_REWRITE_PATHS = [
   ...APP_FIXED_SEGMENTS,
   ...APP_STANDALONE_PATHS,
 ] as const
+
+/**
+ * Slug values that must never be assigned to an organization. Includes
+ * all gateway-reserved segments, marketing paths, Next.js metadata
+ * convention routes, and common static asset directories.
+ */
+export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
+  ...ACCOUNT_REWRITE_PATHS,
+  ...APP_FIXED_SEGMENTS,
+  ...WEB_MARKETING_PATHS,
+  ...ORG_SCOPED_SEGMENTS,
+  // Next.js metadata file convention routes
+  "icon",
+  "apple-icon",
+  "opengraph-image",
+  "twitter-image",
+  "sitemap",
+  "robots",
+  "manifest",
+  // Infrastructure paths
+  "api",
+  "trpc",
+  "_next",
+  "_vercel",
+  // Common static asset directories
+  "fonts",
+  "images",
+  "assets",
+  "static",
+  "icons",
+])
 
 /**
  * @deprecated Use APP_FIXED_SEGMENTS + ACCOUNT_FIXED_SEGMENTS instead.

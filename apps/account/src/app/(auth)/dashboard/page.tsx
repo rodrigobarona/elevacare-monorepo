@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { cookies, headers } from "next/headers"
 import { getSession } from "@eleva/auth/server"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { RESERVED_SLUGS } from "@eleva/config/routing"
 
 const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
@@ -44,7 +45,13 @@ export default async function AuthRedirectPage({
 
   const jar = await cookies()
   const lastSlug = jar.get(LAST_ACTIVE_ORG_COOKIE)?.value
-  const slug = lastSlug ?? session.orgSlug
+  const slug =
+    lastSlug && !RESERVED_SLUGS.has(lastSlug) ? lastSlug : session.orgSlug
+
+  if (RESERVED_SLUGS.has(slug)) {
+    jar.delete(LAST_ACTIVE_ORG_COOKIE)
+    redirect("/onboarding")
+  }
 
   redirect(`${appUrl}/${slug}`)
 }

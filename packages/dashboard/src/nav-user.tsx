@@ -94,10 +94,10 @@ export function NavUser({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={homepageUrl}>
+              <a href={homepageUrl}>
                 <Globe className="mr-2 size-4" />
                 {t("homepage")}
-              </Link>
+              </a>
             </DropdownMenuItem>
           </>
         )}

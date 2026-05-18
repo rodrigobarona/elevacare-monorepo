@@ -1,4 +1,4 @@
-import { isReserved, validateUsername } from "./reserved-usernames"
+import { validateUsername } from "./reserved-usernames"
 
 /**
  * Convert a display name into a URL-safe slug.
@@ -43,9 +43,7 @@ export async function generateUniqueOrgSlug(
     candidates.push(suffixed)
   }
 
-  const validCandidates = candidates.filter(
-    (c) => validateUsername(c) === null || !isReserved(c)
-  )
+  const validCandidates = candidates.filter((c) => validateUsername(c) === null)
 
   if (validCandidates.length === 0) {
     const fallback = `org-${Date.now().toString(36).slice(-6)}`

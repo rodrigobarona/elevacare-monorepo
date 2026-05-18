@@ -72,6 +72,22 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "sitemap.xml",
   "manifest.json",
 
+  // Next.js metadata file convention routes
+  "icon",
+  "apple-icon",
+  "opengraph-image",
+  "twitter-image",
+  "sitemap",
+  "robots",
+  "manifest",
+
+  // Common static asset directories
+  "fonts",
+  "images",
+  "assets",
+  "static",
+  "icons",
+
   // Future surfaces kept for phase-2 (never let a user grab these)
   "academy",
   "courses",

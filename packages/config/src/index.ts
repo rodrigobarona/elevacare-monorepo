@@ -39,5 +39,7 @@ export {
   APP_STANDALONE_PATHS,
   APP_REWRITE_PATHS,
   ORG_SCOPED_SEGMENTS,
+  WEB_MARKETING_PATHS,
+  RESERVED_SLUGS,
 } from "./routing"
 export { slugify, generateUniqueOrgSlug } from "./slug"

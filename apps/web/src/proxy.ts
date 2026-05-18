@@ -6,6 +6,7 @@ import {
   APP_STANDALONE_PATHS,
   ACCOUNT_FIXED_SEGMENTS,
   ACCOUNT_STANDALONE_PATHS,
+  WEB_MARKETING_PATHS,
 } from "@eleva/config/routing"
 import { locales } from "@eleva/config/i18n"
 
@@ -28,6 +29,8 @@ const fixedAppPaths = new Set<string>([
   ...APP_FIXED_SEGMENTS,
   ...APP_STANDALONE_PATHS,
 ])
+
+const marketingPaths = new Set<string>(WEB_MARKETING_PATHS)
 
 const localeSet = new Set<string>(locales)
 
@@ -62,6 +65,7 @@ function resolveOrigin(pathname: string, hasSession: boolean): string | null {
   if (fixedAppPaths.has(first)) return appOrigin
 
   if (localeSet.has(first)) return null
+  if (marketingPaths.has(first)) return null
 
   if (second === "expert") return expertOrigin
   if (second === "team") return teamOrigin
