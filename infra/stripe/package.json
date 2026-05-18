@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "seed:products": "tsx --env-file=../../.env.local seed-products.ts",
+    "seed:entitlements": "tsx --env-file=../../.env.local seed-entitlements.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

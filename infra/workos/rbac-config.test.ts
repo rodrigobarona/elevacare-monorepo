@@ -49,10 +49,10 @@ describe("rbac-config.json", () => {
     }
   })
 
-  it("team-admin strictly extends expert", async () => {
+  it("team_admin strictly extends expert", async () => {
     const config = await load()
     const expert = config.roles.find((r) => r.slug === "expert")!
-    const teamAdmin = config.roles.find((r) => r.slug === "team-admin")!
+    const teamAdmin = config.roles.find((r) => r.slug === "team_admin")!
     for (const cap of expert.capabilities) {
       expect(teamAdmin.capabilities).toContain(cap)
     }
@@ -90,7 +90,7 @@ describe("rbac-config.json", () => {
     const slugs = config.roles.map((r) => r.slug)
     expect(slugs).toContain("member")
     expect(slugs).toContain("expert")
-    expect(slugs).toContain("team-admin")
+    expect(slugs).toContain("team_admin")
     expect(slugs).toContain("lecturer")
     expect(slugs).toContain("staff")
   })

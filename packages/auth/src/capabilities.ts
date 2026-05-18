@@ -41,7 +41,7 @@ export function deriveProductLabel(
 export const WORKOS_ROLE_TO_LABEL: Record<string, ProductLabel> = {
   member: "member",
   expert: "expert",
-  "team-admin": "team_admin",
+  team_admin: "team_admin",
   lecturer: "lecturer",
   staff: "staff",
   admin: "team_admin",

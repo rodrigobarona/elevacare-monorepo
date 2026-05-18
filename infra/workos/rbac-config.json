@@ -190,7 +190,7 @@
       ]
     },
     {
-      "slug": "team-admin",
+      "slug": "team_admin",
       "displayName": "Team Admin",
       "description": "Clinic or team administrator with member management and billing control.",
       "capabilities": [
