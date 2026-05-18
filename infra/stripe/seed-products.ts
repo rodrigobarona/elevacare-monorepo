@@ -153,7 +153,7 @@ async function main() {
   }
 
   const stripe = new Stripe(apiKey, {
-    apiVersion: "2025-04-30.basil",
+    apiVersion: "2026-04-22.dahlia",
     appInfo: { name: "Eleva.care Seed Script", version: "1.0.0" },
   })
 

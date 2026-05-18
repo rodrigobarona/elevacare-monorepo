@@ -17,6 +17,7 @@
     "stripe:seed:products": "pnpm --filter=@eleva/infra-stripe seed:products",
     "stripe:seed:entitlements": "pnpm --filter=@eleva/infra-stripe seed:entitlements",
     "stripe:seed": "pnpm stripe:seed:products --apply && pnpm stripe:seed:entitlements --apply",
+    "stripe:setup:webhooks": "pnpm --filter=@eleva/infra-stripe setup:webhooks",
     "flags:sync": "pnpm --filter=@eleva/flags flags:sync",
     "db:seed:demo": "pnpm --filter=@eleva/db db:seed:demo",
     "commitlint": "commitlint --edit"

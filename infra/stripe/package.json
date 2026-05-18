@@ -6,6 +6,7 @@
   "scripts": {
     "seed:products": "tsx --env-file=../../.env.local seed-products.ts",
     "seed:entitlements": "tsx --env-file=../../.env.local seed-entitlements.ts",
+    "setup:webhooks": "tsx --env-file=../../.env.local setup-webhooks.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

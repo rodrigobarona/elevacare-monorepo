@@ -1,0 +1,109 @@
+---
+description: Stripe webhook event handling and endpoint configuration. Apply when adding, removing, or modifying Stripe webhook event handlers or changing the events the webhook endpoint subscribes to.
+globs:
+  - apps/api/src/app/stripe/webhook/**
+  - infra/stripe/setup-webhooks.ts
+alwaysApply: false
+---
+
+# Stripe Webhook Events — Two-File Contract
+
+Stripe webhook handling in Eleva follows a two-file contract: the **handler**
+declares which events it processes, and the **setup script** declares which
+events the endpoint subscribes to. Both must stay in sync.
+
+## The two files
+
+| File | Owns |
+| --- | --- |
+| `apps/api/src/app/stripe/webhook/route.ts` | Runtime handler: `switch (event.type)` with a `case` per event |
+| `infra/stripe/setup-webhooks.ts` | Endpoint configuration: `WEBHOOK_EVENTS` array sent to Stripe API |
+
+## Adding a new event
+
+1. Add a `case` branch in the handler's `handleEvent` switch in
+   `apps/api/src/app/stripe/webhook/route.ts`.
+2. Add the same event string to `WEBHOOK_EVENTS` in
+   `infra/stripe/setup-webhooks.ts`.
+3. Run the setup script to update the live endpoint:
+
+   ```bash
+   pnpm stripe:setup:webhooks -- --url <ENDPOINT_URL> --apply
+   ```
+
+4. For local dev, restart `stripe listen` (the CLI forwards all events by
+   default, but the handler will only process the ones it has `case` branches
+   for).
+
+## Removing an event
+
+1. Remove the `case` branch from the handler.
+2. Remove the event from `WEBHOOK_EVENTS` in the setup script.
+3. Re-run the setup script to update the endpoint.
+
+## Current events
+
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+
+## Rules
+
+- **Never** add an event to the setup script without a matching handler case.
+- **Never** add a handler case without adding the event to the setup script.
+- The handler must **always** verify the webhook signature via
+  `stripe().webhooks.constructEvent()` before processing.
+- The handler must return `200` for unrecognized events (the `default: break`
+  in the switch handles this) so Stripe does not retry them.
+- The setup script is idempotent: safe to re-run at any time.
+- The signing secret (`STRIPE_WEBHOOK_SECRET`) is only shown once at endpoint
+  creation. If lost, delete and recreate the endpoint.
+
+## Local development
+
+Use the Stripe CLI to forward webhook events to the local API server
+(port 3002). Do **not** run `setup-webhooks.ts` for localhost — the CLI
+handles everything.
+
+### First-time setup
+
+1. Install the Stripe CLI: `brew install stripe/stripe-cli/stripe`
+2. Log in: `stripe login`
+3. Start the listener:
+
+   ```bash
+   stripe listen --forward-to localhost:3002/stripe/webhook
+   ```
+
+4. Copy the `whsec_...` secret from the CLI output into `.env.local`:
+
+   ```bash
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   ```
+
+5. Restart the API dev server (`pnpm --filter @eleva/api dev`) so it picks up
+   the new secret.
+
+### Daily workflow
+
+```bash
+# Terminal 1 — start the API
+pnpm --filter @eleva/api dev
+
+# Terminal 2 — forward Stripe events to the local API
+stripe listen --forward-to localhost:3002/stripe/webhook
+```
+
+The CLI forwards **all** event types. The handler's `default: break` safely
+ignores events it does not have a `case` for.
+
+### Triggering test events
+
+```bash
+stripe trigger customer.subscription.created
+stripe trigger invoice.payment_succeeded
+```
+
+Check the API server logs for `[stripe-webhook]` output confirming delivery.
