@@ -13,21 +13,36 @@ import {
 /**
  * Standard matcher for app proxies. Excludes Next internals
  * (`_next`, `_vercel`) and any path containing a dot (static assets,
- * images, fonts, etc.). Use this in every protected app proxy:
+ * images, fonts, etc.).
  *
- *   export const config = { matcher: STANDARD_APP_MATCHER }
+ * IMPORTANT: Next.js' static analyzer requires the matcher value to
+ * be a literal INSIDE each app's `src/proxy.ts`. Do NOT import this
+ * constant directly into `config.matcher` -- the build will fail
+ * with "matcher needs to be a static string or array of static
+ * strings". Inline the literal in each proxy.ts and reference this
+ * constant in a comment so the value stays in sync. The constant is
+ * exported here for unit tests and documentation only.
+ *
+ * Canonical literal:
+ *   ["/((?!api|_next|_vercel|.*\\..*).*)"]
  */
-export const STANDARD_APP_MATCHER = [
+export const STANDARD_APP_MATCHER: readonly [string] = [
   "/((?!api|_next|_vercel|.*\\..*).*)",
-] as const
+]
 
 /**
  * Matcher for apps that own their own /api route handlers and want
  * those to bypass the proxy entirely (e.g. docs, email).
+ *
+ * Same inline rule as STANDARD_APP_MATCHER above -- this is a
+ * reference/test constant, not an importable matcher.
+ *
+ * Canonical literal:
+ *   ["/((?!api|_next|_vercel|.*\\..*).*)"]
  */
-export const PASSTHROUGH_APP_MATCHER = [
+export const PASSTHROUGH_APP_MATCHER: readonly [string] = [
   "/((?!api|_next|_vercel|.*\\..*).*)",
-] as const
+]
 
 export type ProxyHandler = (
   req: NextRequest,

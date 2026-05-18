@@ -5,8 +5,7 @@ import { guardSessionForOrg } from "@eleva/auth"
 import { LayoutDashboard, BookOpen, BarChart3, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-
-const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 
 export default async function AcademyLayout({
   children,

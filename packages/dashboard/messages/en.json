@@ -1,8 +1,11 @@
 {
   "shell": {
+    "back": "Back",
     "profile": "Profile",
     "settings": "Settings",
     "homepage": "Visit Homepage",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "orgSwitcher": "Organization switcher",
+    "orgSwitchError": "Error switching organization"
   }
 }

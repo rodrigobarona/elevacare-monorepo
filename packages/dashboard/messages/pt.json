@@ -1,8 +1,11 @@
 {
   "shell": {
+    "back": "Voltar",
     "profile": "Perfil",
     "settings": "Definições",
     "homepage": "Visitar Página Inicial",
-    "signOut": "Terminar sessão"
+    "signOut": "Terminar sessão",
+    "orgSwitcher": "Seletor de organização",
+    "orgSwitchError": "Erro ao mudar de organização"
   }
 }

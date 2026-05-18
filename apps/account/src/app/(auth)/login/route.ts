@@ -1,5 +1,6 @@
 import { getSignInUrl } from "@workos-inc/authkit-nextjs"
 import { redirect } from "next/navigation"
+import { sanitizeReturnTo } from "@eleva/auth/return-to"
 
 /**
  * Always run dynamically -- this route sets a PKCE cookie via
@@ -11,13 +12,6 @@ import { redirect } from "next/navigation"
  */
 export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
-
-function sanitizeReturnTo(value: string | null): string | undefined {
-  if (!value) return undefined
-  if (!value.startsWith("/") || value.startsWith("//") || value.includes("://"))
-    return undefined
-  return value
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
