@@ -3,6 +3,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   listCalendarIntegrations,
@@ -53,7 +54,18 @@ export async function DELETE(
     )
   }
 
-  await disconnectIntegration(profile.orgId, id, profile.id)
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await disconnectIntegration(profile.orgId, id, profile.id)
+      await ctx.emit({
+        entity: "expert_integration_credential",
+        action: "disconnected",
+        entityId: id,
+        payload: { slug: integration.slug },
+      })
+    }
+  )
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

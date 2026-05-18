@@ -2,6 +2,7 @@ import { z } from "zod"
 import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
 import { deletePublicBlob } from "@eleva/storage"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
+import { withAudit } from "@eleva/audit"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -46,14 +47,12 @@ async function resolveUserId(request: Request): Promise<string> {
   return verified.userId
 }
 
-async function cleanupOldBlob(userId: string): Promise<void> {
-  const oldUrl = await getUserAvatarUrl(userId)
-  if (oldUrl) {
-    try {
-      await deletePublicBlob(oldUrl)
-    } catch (err) {
-      console.warn("[users/avatar] failed to delete old blob, continuing", err)
-    }
+async function tryDeleteBlob(url: string | null): Promise<void> {
+  if (!url) return
+  try {
+    await deletePublicBlob(url)
+  } catch (err) {
+    console.warn("[users/avatar] failed to delete old blob, continuing", err)
   }
 }
 
@@ -83,9 +82,9 @@ export async function GET(request: Request) {
 export async function PUT(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let userId: string
+  let session
   try {
-    userId = await resolveUserId(request)
+    session = await requireApiAuth(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -94,7 +93,7 @@ export async function PUT(request: Request) {
   }
 
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request, userId),
+    rateLimitKey(request, session.user.id),
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
@@ -109,17 +108,31 @@ export async function PUT(request: Request) {
     )
   }
 
-  await updateUserAvatarUrl(userId, body.data.url)
-  await cleanupOldBlob(userId)
+  const previousUrl = await getUserAvatarUrl(session.user.id)
+  await withAudit(
+    { orgId: session.orgId, actorUserId: session.user.id },
+    async (tx, ctx) => {
+      await updateUserAvatarUrl(session.user.id, body.data.url, tx)
+      await ctx.emit({
+        entity: "user",
+        action: "updated",
+        entityId: session.user.id,
+        payload: { field: "avatarUrl", hasNewValue: true },
+      })
+    }
+  )
+  if (previousUrl && previousUrl !== body.data.url) {
+    await tryDeleteBlob(previousUrl)
+  }
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
 export async function DELETE(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let userId: string
+  let session
   try {
-    userId = await resolveUserId(request)
+    session = await requireApiAuth(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -128,13 +141,25 @@ export async function DELETE(request: Request) {
   }
 
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request, userId),
+    rateLimitKey(request, session.user.id),
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
 
-  await updateUserAvatarUrl(userId, null)
-  await cleanupOldBlob(userId)
+  const previousUrl = await getUserAvatarUrl(session.user.id)
+  await withAudit(
+    { orgId: session.orgId, actorUserId: session.user.id },
+    async (tx, ctx) => {
+      await updateUserAvatarUrl(session.user.id, null, tx)
+      await ctx.emit({
+        entity: "user",
+        action: "updated",
+        entityId: session.user.id,
+        payload: { field: "avatarUrl", cleared: true },
+      })
+    }
+  )
+  await tryDeleteBlob(previousUrl)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

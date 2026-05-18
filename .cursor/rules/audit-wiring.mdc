@@ -1,0 +1,77 @@
+---
+description: Audit logging via transactional outbox. Apply when creating or editing mutating API routes or domain package functions that write to the database.
+globs:
+  - apps/api/src/app/**/route.ts
+  - packages/auth/src/**/*.ts
+  - packages/db/src/queries/**/*.ts
+  - packages/billing/src/**/*.ts
+  - packages/accounting/src/**/*.ts
+alwaysApply: false
+---
+
+# Audit Wiring — `withAudit` from `@eleva/audit`
+
+## Rule
+
+Every mutating operation (POST, PUT, PATCH, DELETE handler or domain function that writes to the database) MUST wrap its writes in `withAudit()` from `@eleva/audit`.
+
+## Required Pattern
+
+```typescript
+import { withAudit } from "@eleva/audit"
+import { main } from "@eleva/db"
+
+await withAudit(
+  { orgId, actorUserId: session.user.id },
+  async (tx, ctx) => {
+    // All DB writes use the `tx` handle (NOT raw db())
+    await tx.insert(main.someTable).values({ ... })
+
+    // MUST call ctx.emit() exactly once before returning
+    await ctx.emit({
+      entity: "entity_name",    // from AuditEntity union
+      action: "action_verb",    // from AuditAction union
+      entityId: primaryKeyId,   // primary key of mutated resource
+      payload: { key: "value" },// contextual data (no PII)
+    })
+
+    return result
+  }
+)
+```
+
+## Enforcement Rules
+
+1. **All writes through `tx`** — never use `db()` directly inside the fn body. The transaction handle ensures atomicity with the outbox row.
+
+2. **`ctx.emit()` is mandatory** — `withAudit` throws if fn returns without emitting. One emit per `withAudit` call.
+
+3. **Entity and action from closed unions** — use values defined in `packages/audit/src/types.ts`. If a new entity/action is needed, add it to the union first.
+
+4. **`entityId` should be the primary key** — the UUID or ID of the resource that was created/updated/deleted.
+
+5. **Payload guidelines:**
+   - DO include: resource IDs, key business fields, before/after for updates
+   - DO NOT include: passwords, full emails, health data, tokens, session secrets
+   - Prefer structured diffs: `{ before: { name: "Old" }, after: { name: "New" } }`
+
+6. **One `withAudit` per logical operation** — if a route creates multiple related entities (e.g., org + membership), use one `withAudit` for the primary entity.
+
+7. **Placement:**
+   - Domain package functions (preferred): wrap the domain function body
+   - API route handlers: wrap the domain logic section after auth/validation
+
+## Exceptions (no audit required)
+
+- Read-only endpoints (GET)
+- Health/readiness probes (`/health`, `/cron/keep-alive`)
+- The drainer itself (`/workflows/audit-outbox-drainer`)
+- Blob upload completion callbacks (audited separately via the initiating action)
+- Cookie-only mutations (locale preference, last-active-org)
+
+## Key Files
+
+- `packages/audit/src/with-audit.ts` — implementation
+- `packages/audit/src/types.ts` — `AuditEntity` / `AuditAction` unions
+- `packages/audit/README.md` — full documentation
+- `docs/eleva-v3/adrs/ADR-003-tenancy-and-rls.md` — architecture decision

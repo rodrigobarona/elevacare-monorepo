@@ -374,6 +374,9 @@ importers:
       '@eleva/accounting':
         specifier: workspace:^
         version: link:../../packages/accounting
+      '@eleva/audit':
+        specifier: workspace:*
+        version: link:../../packages/audit
       '@eleva/auth':
         specifier: workspace:*
         version: link:../../packages/auth

@@ -13,6 +13,9 @@ export type AuditEntity =
   | "permission"
   | "expert_profile"
   | "expert_integration_credential"
+  | "event_type"
+  | "schedule"
+  | "blob"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -32,6 +35,10 @@ export type AuditAction =
   | "claimed"
   | "connected"
   | "disconnected"
+  | "published"
+  | "unpublished"
+  | "synced"
+  | "uploaded"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

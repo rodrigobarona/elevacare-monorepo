@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, createEventType } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -90,26 +91,42 @@ export async function POST(request: Request) {
   }
 
   try {
-    const row = await createEventType(profile.orgId, {
-      expertProfileId: profile.id,
-      orgId: profile.orgId,
-      slug,
-      title: data.title,
-      description: data.description ?? null,
-      durationMinutes: data.durationMinutes,
-      priceAmount: data.priceAmount,
-      currency: data.currency,
-      languages: data.languages.length > 0 ? data.languages : ["en"],
-      sessionMode: data.sessionMode,
-      bookingWindowDays: data.bookingWindowDays ?? null,
-      minimumNoticeMinutes: data.minimumNoticeMinutes,
-      bufferBeforeMinutes: data.bufferBeforeMinutes,
-      bufferAfterMinutes: data.bufferAfterMinutes,
-      cancellationWindowHours: data.cancellationWindowHours ?? null,
-      rescheduleWindowHours: data.rescheduleWindowHours ?? null,
-      requiresApproval: data.requiresApproval,
-      worldwideMode: data.worldwideMode,
-    })
+    const row = await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        const created = await createEventType(
+          profile.orgId,
+          {
+            expertProfileId: profile.id,
+            orgId: profile.orgId,
+            slug,
+            title: data.title,
+            description: data.description ?? null,
+            durationMinutes: data.durationMinutes,
+            priceAmount: data.priceAmount,
+            currency: data.currency,
+            languages: data.languages.length > 0 ? data.languages : ["en"],
+            sessionMode: data.sessionMode,
+            bookingWindowDays: data.bookingWindowDays ?? null,
+            minimumNoticeMinutes: data.minimumNoticeMinutes,
+            bufferBeforeMinutes: data.bufferBeforeMinutes,
+            bufferAfterMinutes: data.bufferAfterMinutes,
+            cancellationWindowHours: data.cancellationWindowHours ?? null,
+            rescheduleWindowHours: data.rescheduleWindowHours ?? null,
+            requiresApproval: data.requiresApproval,
+            worldwideMode: data.worldwideMode,
+          },
+          tx
+        )
+        await ctx.emit({
+          entity: "event_type",
+          action: "created",
+          entityId: created.id,
+          payload: { slug, durationMinutes: data.durationMinutes },
+        })
+        return created
+      }
+    )
 
     return secureJson({ ok: true, id: row.id }, { status: 201, headers })
   } catch (err) {

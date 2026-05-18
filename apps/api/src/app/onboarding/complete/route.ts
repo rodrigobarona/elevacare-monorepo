@@ -66,6 +66,7 @@ export async function POST(request: Request) {
     orgName: body.data.spaceName,
     role: "admin",
     orgType: "personal",
+    actorUserId: session.user.id,
   })
 
   const settled = await Promise.allSettled([

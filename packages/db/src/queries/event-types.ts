@@ -48,15 +48,17 @@ export async function getEventType(
 
 export async function createEventType(
   orgId: string,
-  data: Omit<NewEventType, "id" | "createdAt" | "updatedAt" | "deletedAt">
+  data: Omit<NewEventType, "id" | "createdAt" | "updatedAt" | "deletedAt">,
+  txOpt?: Tx
 ): Promise<EventType> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .insert(eventTypes)
       .values({ ...data, orgId })
       .returning()
     return row!
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function updateEventType(
@@ -87,9 +89,10 @@ export async function updateEventType(
       | "scheduleId"
     >
   >,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<EventType | undefined> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .update(eventTypes)
       .set({ ...data, updatedAt: new Date() })
@@ -102,15 +105,17 @@ export async function updateEventType(
       )
       .returning()
     return row
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function deleteEventType(
   orgId: string,
   eventTypeId: string,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const rows = await tx
       .update(eventTypes)
       .set({ deletedAt: new Date(), active: false, published: false })
@@ -125,7 +130,8 @@ export async function deleteEventType(
     if (rows.length === 0) {
       throw new Error(`Event type ${eventTypeId} not found or already deleted`)
     }
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
 /**

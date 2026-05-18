@@ -6,12 +6,8 @@ import {
   InvoicingProviderSlug,
   type ConnectInput,
 } from "@eleva/accounting"
-import {
-  main,
-  withOrgContext,
-  withPlatformAdminContext,
-  type Tx,
-} from "@eleva/db"
+import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import { withAudit } from "@eleva/audit"
 import { env } from "@eleva/config/env"
 
 /**
@@ -117,47 +113,58 @@ export async function GET(request: Request) {
     const result = await adapter.connect(connectInput)
 
     try {
-      await withOrgContext(expert.orgId, async (tx: Tx) => {
-        await tx
-          .insert(main.expertIntegrations)
-          .values({
-            orgId: expert.orgId,
-            expertProfileId: expert.id,
-            category: "invoicing",
-            slug: providerSlug,
-            connectType: "oauth",
-            vaultRef: result.vaultRef,
-            metadata: result.metadata ?? {},
-            status: "connected",
-            connectedAt: new Date(),
-            expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
-          })
-          .onConflictDoUpdate({
-            target: [
-              main.expertIntegrations.expertProfileId,
-              main.expertIntegrations.slug,
-            ],
-            set: {
-              vaultRef: result.vaultRef,
-              connectType: "oauth",
+      await withAudit(
+        { orgId: expert.orgId, actorUserId: session.user.id },
+        async (tx, ctx) => {
+          const [integration] = await tx
+            .insert(main.expertIntegrations)
+            .values({
+              orgId: expert.orgId,
+              expertProfileId: expert.id,
               category: "invoicing",
+              slug: providerSlug,
+              connectType: "oauth",
+              vaultRef: result.vaultRef,
               metadata: result.metadata ?? {},
               status: "connected",
               connectedAt: new Date(),
               expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
-              updatedAt: new Date(),
-            },
-          })
+            })
+            .onConflictDoUpdate({
+              target: [
+                main.expertIntegrations.expertProfileId,
+                main.expertIntegrations.slug,
+              ],
+              set: {
+                vaultRef: result.vaultRef,
+                connectType: "oauth",
+                category: "invoicing",
+                metadata: result.metadata ?? {},
+                status: "connected",
+                connectedAt: new Date(),
+                expiresAt: result.expiresAt ? new Date(result.expiresAt) : null,
+                updatedAt: new Date(),
+              },
+            })
+            .returning({ id: main.expertIntegrations.id })
 
-        await tx
-          .update(main.expertProfiles)
-          .set({
-            invoicingProvider: providerSlug,
-            invoicingSetupStatus: "connected",
-            updatedAt: new Date(),
+          await tx
+            .update(main.expertProfiles)
+            .set({
+              invoicingProvider: providerSlug,
+              invoicingSetupStatus: "connected",
+              updatedAt: new Date(),
+            })
+            .where(eq(main.expertProfiles.id, expert.id))
+
+          await ctx.emit({
+            entity: "expert_integration_credential",
+            action: "connected",
+            entityId: integration!.id,
+            payload: { provider: providerSlug, category: "invoicing" },
           })
-          .where(eq(main.expertProfiles.id, expert.id))
-      })
+        }
+      )
     } catch (dbErr) {
       try {
         await adapter.disconnect({ vaultRef: result.vaultRef })

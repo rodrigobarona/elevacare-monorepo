@@ -3,7 +3,9 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
-import { getExpertProfileByUserId, deleteDateOverride } from "@eleva/db"
+import { eq } from "drizzle-orm"
+import { withAudit } from "@eleva/audit"
+import { getExpertProfileByUserId, deleteDateOverride, main } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -41,7 +43,24 @@ export async function DELETE(
   const { id } = await params
 
   try {
-    await deleteDateOverride(profile.orgId, id, profile.id)
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        const [override] = await tx
+          .select({ scheduleId: main.dateOverrides.scheduleId })
+          .from(main.dateOverrides)
+          .where(eq(main.dateOverrides.id, id))
+          .limit(1)
+
+        await deleteDateOverride(profile.orgId, id, profile.id, tx)
+        await ctx.emit({
+          entity: "schedule",
+          action: "updated",
+          entityId: override?.scheduleId ?? id,
+          payload: { action: "override_removed", overrideId: id },
+        })
+      }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson(

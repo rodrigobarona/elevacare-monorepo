@@ -1,5 +1,6 @@
 import { eq, lt, and, isNull } from "drizzle-orm"
 import { db, main } from "@eleva/db"
+import { withAudit } from "@eleva/audit"
 
 /**
  * WorkOS Events API data sync functions.
@@ -196,24 +197,50 @@ export async function syncMembership(
   const workosRole = data.role?.slug === "admin" ? "admin" : "member"
   const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
 
-  await db()
-    .insert(main.memberships)
-    .values({
-      userId: user.id,
-      orgId: org.id,
-      workosRole: workosRole as "admin" | "member",
-      status: "active",
-      updatedAt: eventUpdatedAt,
-    })
-    .onConflictDoUpdate({
-      target: [main.memberships.userId, main.memberships.orgId],
-      set: {
+  await withAudit({ orgId: org.id, actorUserId: null }, async (tx, ctx) => {
+    const [existing] = await tx
+      .select({ id: main.memberships.id })
+      .from(main.memberships)
+      .where(
+        and(
+          eq(main.memberships.userId, user.id),
+          eq(main.memberships.orgId, org.id)
+        )
+      )
+      .limit(1)
+
+    const [row] = await tx
+      .insert(main.memberships)
+      .values({
+        userId: user.id,
+        orgId: org.id,
         workosRole: workosRole as "admin" | "member",
         status: "active",
         updatedAt: eventUpdatedAt,
+      })
+      .onConflictDoUpdate({
+        target: [main.memberships.userId, main.memberships.orgId],
+        set: {
+          workosRole: workosRole as "admin" | "member",
+          status: "active",
+          updatedAt: eventUpdatedAt,
+        },
+        where: lt(main.memberships.updatedAt, eventUpdatedAt),
+      })
+      .returning({ id: main.memberships.id })
+
+    await ctx.emit({
+      entity: "membership",
+      action: existing ? "synced" : "created",
+      entityId: row?.id ?? existing?.id ?? null,
+      payload: {
+        userId: user.id,
+        orgId: org.id,
+        role: workosRole,
+        source: "workos_sync",
       },
-      where: lt(main.memberships.updatedAt, eventUpdatedAt),
     })
+  })
 }
 
 export async function deleteMembership(
@@ -233,12 +260,25 @@ export async function deleteMembership(
 
   if (!user || !org) return
 
-  await db()
-    .delete(main.memberships)
-    .where(
-      and(
-        eq(main.memberships.userId, user.id),
-        eq(main.memberships.orgId, org.id)
+  await withAudit({ orgId: org.id, actorUserId: null }, async (tx, ctx) => {
+    const [deleted] = await tx
+      .delete(main.memberships)
+      .where(
+        and(
+          eq(main.memberships.userId, user.id),
+          eq(main.memberships.orgId, org.id)
+        )
       )
-    )
+      .returning({ id: main.memberships.id })
+    await ctx.emit({
+      entity: "membership",
+      action: "removed",
+      entityId: deleted?.id ?? null,
+      payload: {
+        userId: user.id,
+        orgId: org.id,
+        source: "workos_sync",
+      },
+    })
+  })
 }

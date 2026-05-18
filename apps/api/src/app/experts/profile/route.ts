@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -68,27 +69,40 @@ export async function PATCH(request: Request) {
   if (!steps.includes("profile")) steps.push("profile")
 
   try {
-    await updateExpertProfile(profile.id, profile.orgId, {
-      ...(data.nif !== undefined && { nif: data.nif ?? null }),
-      ...(data.licenseScope !== undefined && {
-        licenseScope: data.licenseScope ?? null,
-      }),
-      ...(data.languages && { languages: data.languages }),
-      ...(data.practiceCountries && {
-        practiceCountries: data.practiceCountries,
-      }),
-      ...(data.worldwideMode !== undefined && {
-        worldwideMode: data.worldwideMode,
-      }),
-      ...(data.sessionModes && {
-        sessionModes:
-          data.sessionModes.length > 0 ? data.sessionModes : ["online"],
-      }),
-      ...(data.displayName && { displayName: data.displayName }),
-      ...(data.headline !== undefined && { headline: data.headline ?? null }),
-      ...(data.bio !== undefined && { bio: data.bio ?? null }),
-      metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-    })
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (_tx, ctx) => {
+        await updateExpertProfile(profile.id, profile.orgId, {
+          ...(data.nif !== undefined && { nif: data.nif ?? null }),
+          ...(data.licenseScope !== undefined && {
+            licenseScope: data.licenseScope ?? null,
+          }),
+          ...(data.languages && { languages: data.languages }),
+          ...(data.practiceCountries && {
+            practiceCountries: data.practiceCountries,
+          }),
+          ...(data.worldwideMode !== undefined && {
+            worldwideMode: data.worldwideMode,
+          }),
+          ...(data.sessionModes && {
+            sessionModes:
+              data.sessionModes.length > 0 ? data.sessionModes : ["online"],
+          }),
+          ...(data.displayName && { displayName: data.displayName }),
+          ...(data.headline !== undefined && {
+            headline: data.headline ?? null,
+          }),
+          ...(data.bio !== undefined && { bio: data.bio ?? null }),
+          metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+        })
+        await ctx.emit({
+          entity: "expert_profile",
+          action: "updated",
+          entityId: profile.id,
+          payload: { fields: Object.keys(data) },
+        })
+      }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })

@@ -14,9 +14,10 @@ import {
 export async function getOrCreateDefaultSchedule(
   orgId: string,
   expertProfileId: string,
-  timezone: string
+  timezone: string,
+  txOpt?: Tx
 ): Promise<Schedule> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [existing] = await tx
       .select()
       .from(schedules)
@@ -42,7 +43,8 @@ export async function getOrCreateDefaultSchedule(
       })
       .returning()
     return created!
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function getDefaultSchedule(
@@ -90,9 +92,10 @@ export async function updateScheduleTimezone(
   orgId: string,
   scheduleId: string,
   expertProfileId: string,
-  timezone: string
+  timezone: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     await tx
       .update(schedules)
       .set({ timezone, updatedAt: new Date() })
@@ -103,7 +106,8 @@ export async function updateScheduleTimezone(
           isNull(schedules.deletedAt)
         )
       )
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
 export async function listAvailabilityRules(
@@ -135,9 +139,10 @@ export async function replaceAvailabilityRules(
   orgId: string,
   scheduleId: string,
   expertProfileId: string,
-  rules: Omit<NewAvailabilityRule, "id" | "orgId" | "createdAt">[]
+  rules: Omit<NewAvailabilityRule, "id" | "orgId" | "createdAt">[],
+  txOpt?: Tx
 ): Promise<AvailabilityRule[]> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [sched] = await tx
       .select({ id: schedules.id })
       .from(schedules)
@@ -162,7 +167,8 @@ export async function replaceAvailabilityRules(
       .insert(availabilityRules)
       .values(rules.map((r) => ({ ...r, orgId, scheduleId })))
       .returning()
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function listDateOverrides(
@@ -191,9 +197,10 @@ export async function upsertDateOverride(
   orgId: string,
   scheduleId: string,
   expertProfileId: string,
-  data: Omit<NewDateOverride, "id" | "orgId" | "createdAt">
+  data: Omit<NewDateOverride, "id" | "orgId" | "createdAt">,
+  txOpt?: Tx
 ): Promise<DateOverride> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [sched] = await tx
       .select({ id: schedules.id })
       .from(schedules)
@@ -237,15 +244,17 @@ export async function upsertDateOverride(
       .values({ ...data, orgId, scheduleId })
       .returning()
     return created!
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function deleteDateOverride(
   orgId: string,
   overrideId: string,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .select({ id: dateOverrides.id })
       .from(dateOverrides)
@@ -262,5 +271,6 @@ export async function deleteDateOverride(
     if (!row) throw new Error("unauthorized-override")
 
     await tx.delete(dateOverrides).where(eq(dateOverrides.id, overrideId))
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }

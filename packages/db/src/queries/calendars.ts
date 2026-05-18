@@ -77,9 +77,10 @@ export async function replaceBusySources(
   orgId: string,
   integrationId: string,
   sources: { externalCalendarId: string; displayName: string }[],
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [owner] = await tx
       .select({ id: expertIntegrations.id })
       .from(expertIntegrations)
@@ -107,7 +108,8 @@ export async function replaceBusySources(
         }))
       )
     }
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
 export async function replaceDestinationCalendar(
@@ -115,9 +117,10 @@ export async function replaceDestinationCalendar(
   expertProfileId: string,
   integrationId: string,
   externalCalendarId: string,
-  displayName: string
+  displayName: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [owner] = await tx
       .select({ id: expertIntegrations.id })
       .from(expertIntegrations)
@@ -142,5 +145,6 @@ export async function replaceDestinationCalendar(
       externalCalendarId,
       displayName,
     })
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }

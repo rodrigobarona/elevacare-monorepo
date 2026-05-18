@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm"
 import { db } from "../client"
+import { type Tx } from "../context"
 import { users } from "../schema/main/users"
 
 export async function getUserAvatarUrl(userId: string): Promise<string | null> {
@@ -13,9 +14,11 @@ export async function getUserAvatarUrl(userId: string): Promise<string | null> {
 
 export async function updateUserAvatarUrl(
   userId: string,
-  avatarUrl: string | null
+  avatarUrl: string | null,
+  txOpt?: Tx
 ): Promise<void> {
-  await db()
+  const client = txOpt ?? db()
+  await client
     .update(users)
     .set({ avatarUrl, updatedAt: new Date() })
     .where(eq(users.id, userId))
