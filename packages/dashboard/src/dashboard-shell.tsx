@@ -16,7 +16,8 @@ export function DashboardShell({
   headerSlot,
   children,
 }: DashboardShellProps) {
-  const homeUrl = config.orgSlug ? `/${config.orgSlug}` : "/"
+  const homeUrl =
+    config.homeUrl ?? (config.orgSlug ? `/${config.orgSlug}` : "/")
 
   return (
     <SidebarProvider>

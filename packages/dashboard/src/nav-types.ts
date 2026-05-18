@@ -27,6 +27,8 @@ export interface DashboardConfig {
   user: DashboardUser
   /** Active org slug (null for standalone dashboards) */
   orgSlug?: string | null
+  /** Override the sidebar "Back" link destination (defaults to /{orgSlug} or /) */
+  homeUrl?: string
   /** User capabilities for gating nav items */
   capabilities?: readonly string[]
   /** Widget token for the org switcher (omit to hide org switcher) */

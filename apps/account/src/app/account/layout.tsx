@@ -17,6 +17,7 @@ export default async function SettingsLayout({
   const locale = await getLocale()
 
   const dashboardConfig: DashboardConfig = {
+    homeUrl: "/dashboard",
     navGroups: [
       {
         label: "Account",
