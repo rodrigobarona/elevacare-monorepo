@@ -5,6 +5,7 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   getOrCreateDefaultSchedule,
@@ -97,13 +98,27 @@ export async function POST(request: Request) {
       )
     }
 
-    await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
-      scheduleId: schedule.id,
-      overrideDate: body.data.overrideDate,
-      startTime: body.data.isBlocked ? null : (body.data.startTime ?? null),
-      endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
-      isBlocked: body.data.isBlocked,
-    })
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (_tx, ctx) => {
+        await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
+          scheduleId: schedule.id,
+          overrideDate: body.data.overrideDate,
+          startTime: body.data.isBlocked ? null : (body.data.startTime ?? null),
+          endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
+          isBlocked: body.data.isBlocked,
+        })
+        await ctx.emit({
+          entity: "schedule",
+          action: "updated",
+          entityId: schedule.id,
+          payload: {
+            overrideDate: body.data.overrideDate,
+            isBlocked: body.data.isBlocked,
+          },
+        })
+      }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })

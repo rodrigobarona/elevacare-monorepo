@@ -198,6 +198,7 @@ export interface ProvisionOrganizationInput {
   name: string
   type?: "personal" | "expert" | "team" | "staff"
   slug?: string
+  actorUserId?: string | null
 }
 
 export interface ProvisionOrganizationResult {
@@ -236,9 +237,20 @@ export async function provisionOrganization(
   }
 
   const orgId = crypto.randomUUID()
-  await db()
-    .insert(main.organizations)
-    .values({ id: orgId, workosOrgId: input.workosOrgId, type, slug })
+  await withAudit(
+    { orgId, actorUserId: input.actorUserId ?? null },
+    async (tx, ctx) => {
+      await tx
+        .insert(main.organizations)
+        .values({ id: orgId, workosOrgId: input.workosOrgId, type, slug })
+      await ctx.emit({
+        entity: "organization",
+        action: "created",
+        entityId: orgId,
+        payload: { type, workosOrgId: input.workosOrgId, slug },
+      })
+    }
+  )
 
   return { orgId, slug, created: true }
 }
@@ -247,6 +259,7 @@ export interface ProvisionMembershipInput {
   userId: string
   orgId: string
   role: "admin" | "member"
+  actorUserId?: string | null
 }
 
 /**
@@ -255,22 +268,33 @@ export interface ProvisionMembershipInput {
 export async function provisionMembership(
   input: ProvisionMembershipInput
 ): Promise<void> {
-  await db()
-    .insert(main.memberships)
-    .values({
-      userId: input.userId,
-      orgId: input.orgId,
-      workosRole: input.role,
-      status: "active",
-    })
-    .onConflictDoUpdate({
-      target: [main.memberships.userId, main.memberships.orgId],
-      set: {
-        workosRole: input.role,
-        status: "active",
-        updatedAt: new Date(),
-      },
-    })
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId ?? null },
+    async (tx, ctx) => {
+      await tx
+        .insert(main.memberships)
+        .values({
+          userId: input.userId,
+          orgId: input.orgId,
+          workosRole: input.role,
+          status: "active",
+        })
+        .onConflictDoUpdate({
+          target: [main.memberships.userId, main.memberships.orgId],
+          set: {
+            workosRole: input.role,
+            status: "active",
+            updatedAt: new Date(),
+          },
+        })
+      await ctx.emit({
+        entity: "membership",
+        action: "created",
+        entityId: null,
+        payload: { userId: input.userId, orgId: input.orgId, role: input.role },
+      })
+    }
+  )
 }
 
 export interface CompleteOnboardingInput {
@@ -279,6 +303,7 @@ export interface CompleteOnboardingInput {
   orgName: string
   role: "admin" | "member"
   orgType?: "personal" | "expert" | "team" | "staff"
+  actorUserId?: string | null
 }
 
 export interface CompleteOnboardingResult {
@@ -303,16 +328,20 @@ export async function completeOnboarding(
     completedOnboarding: true,
   })
 
+  const actorUserId = input.actorUserId ?? userId
+
   const { orgId, slug } = await provisionOrganization({
     workosOrgId: input.workosOrgId,
     name: input.orgName,
     type: input.orgType ?? "personal",
+    actorUserId,
   })
 
   await provisionMembership({
     userId,
     orgId,
     role: input.role,
+    actorUserId,
   })
 
   return { userId, orgId, slug }

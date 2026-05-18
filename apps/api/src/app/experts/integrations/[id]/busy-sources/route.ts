@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   listCalendarIntegrations,
@@ -123,7 +124,18 @@ export async function PUT(
       s.displayName,
   }))
 
-  await replaceBusySources(profile.orgId, id, enriched, profile.id)
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await replaceBusySources(profile.orgId, id, enriched, profile.id)
+      await ctx.emit({
+        entity: "expert_integration_credential",
+        action: "updated",
+        entityId: id,
+        payload: { field: "busySources", count: enriched.length },
+      })
+    }
+  )
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

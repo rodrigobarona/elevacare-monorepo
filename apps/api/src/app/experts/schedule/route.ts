@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   getOrCreateDefaultSchedule,
@@ -126,22 +127,36 @@ export async function PUT(request: Request) {
     body.data.timezone
   )
 
-  await updateScheduleTimezone(
-    profile.orgId,
-    schedule.id,
-    profile.id,
-    body.data.timezone
-  )
-  await replaceAvailabilityRules(
-    profile.orgId,
-    schedule.id,
-    profile.id,
-    body.data.rules.map((r) => ({
-      scheduleId: schedule.id,
-      dayOfWeek: r.dayOfWeek,
-      startTime: r.startTime,
-      endTime: r.endTime,
-    }))
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await updateScheduleTimezone(
+        profile.orgId,
+        schedule.id,
+        profile.id,
+        body.data.timezone
+      )
+      await replaceAvailabilityRules(
+        profile.orgId,
+        schedule.id,
+        profile.id,
+        body.data.rules.map((r) => ({
+          scheduleId: schedule.id,
+          dayOfWeek: r.dayOfWeek,
+          startTime: r.startTime,
+          endTime: r.endTime,
+        }))
+      )
+      await ctx.emit({
+        entity: "schedule",
+        action: "updated",
+        entityId: schedule.id,
+        payload: {
+          timezone: body.data.timezone,
+          rulesCount: body.data.rules.length,
+        },
+      })
+    }
   )
 
   return secureJson({ ok: true }, { status: 200, headers })

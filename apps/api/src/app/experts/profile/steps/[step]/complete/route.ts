@@ -4,6 +4,7 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -66,9 +67,20 @@ export async function POST(
   const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
   if (!steps.includes(step)) steps.push(step)
 
-  await updateExpertProfile(profile.id, profile.orgId, {
-    metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-  })
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await updateExpertProfile(profile.id, profile.orgId, {
+        metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+      })
+      await ctx.emit({
+        entity: "expert_profile",
+        action: "updated",
+        entityId: profile.id,
+        payload: { step, completedSteps: steps },
+      })
+    }
+  )
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

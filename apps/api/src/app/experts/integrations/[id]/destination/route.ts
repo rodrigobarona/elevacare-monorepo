@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   listCalendarIntegrations,
@@ -101,12 +102,23 @@ export async function PUT(
     )
   }
 
-  await replaceDestinationCalendar(
-    profile.orgId,
-    profile.id,
-    id,
-    body.data.externalCalendarId,
-    matched.name
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await replaceDestinationCalendar(
+        profile.orgId,
+        profile.id,
+        id,
+        body.data.externalCalendarId,
+        matched.name
+      )
+      await ctx.emit({
+        entity: "expert_integration_credential",
+        action: "updated",
+        entityId: id,
+        payload: { field: "destination", calendarName: matched.name },
+      })
+    }
   )
 
   return secureJson({ ok: true }, { status: 200, headers })

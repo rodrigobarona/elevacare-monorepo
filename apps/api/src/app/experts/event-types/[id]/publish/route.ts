@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateEventType } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -52,11 +53,22 @@ export async function PATCH(
   }
 
   const { id } = await params
-  await updateEventType(
-    profile.orgId,
-    id,
-    { published: body.data.published },
-    profile.id
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await updateEventType(
+        profile.orgId,
+        id,
+        { published: body.data.published },
+        profile.id
+      )
+      await ctx.emit({
+        entity: "event_type",
+        action: body.data.published ? "published" : "unpublished",
+        entityId: id,
+        payload: {},
+      })
+    }
   )
 
   return secureJson({ ok: true }, { status: 200, headers })

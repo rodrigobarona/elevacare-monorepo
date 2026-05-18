@@ -51,7 +51,10 @@ export async function POST(request: Request) {
   }
 
   try {
-    await provisionMembership(body.data)
+    await provisionMembership({
+      ...body.data,
+      actorUserId: session.user.id,
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })

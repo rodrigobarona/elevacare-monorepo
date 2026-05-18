@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     workosOrgId: workosOrg.id,
     name: body.data.name,
     type: body.data.type,
+    actorUserId: session.user.id,
   })
 
   await Promise.allSettled([

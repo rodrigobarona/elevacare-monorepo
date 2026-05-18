@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   updateEventType,
@@ -129,11 +130,22 @@ export async function PATCH(
   if (data.published !== undefined) updates.published = data.published
 
   try {
-    await updateEventType(
-      profile.orgId,
-      id,
-      updates as Parameters<typeof updateEventType>[2],
-      profile.id
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (_tx, ctx) => {
+        await updateEventType(
+          profile.orgId,
+          id,
+          updates as Parameters<typeof updateEventType>[2],
+          profile.id
+        )
+        await ctx.emit({
+          entity: "event_type",
+          action: "updated",
+          entityId: id,
+          payload: { fields: Object.keys(updates) },
+        })
+      }
     )
     return secureJson({ ok: true }, { status: 200, headers })
   } catch (err) {
@@ -183,7 +195,18 @@ export async function DELETE(
   }
 
   const { id } = await params
-  await deleteEventType(profile.orgId, id, profile.id)
+  await withAudit(
+    { orgId: profile.orgId, actorUserId: session.user.id },
+    async (_tx, ctx) => {
+      await deleteEventType(profile.orgId, id, profile.id)
+      await ctx.emit({
+        entity: "event_type",
+        action: "deleted",
+        entityId: id,
+        payload: {},
+      })
+    }
+  )
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

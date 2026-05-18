@@ -4,6 +4,7 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -56,16 +57,27 @@ export async function PUT(request: Request) {
   if (!steps.includes("invoicing")) steps.push("invoicing")
 
   try {
-    await updateExpertProfile(profile.id, profile.orgId, {
-      invoicingProvider: provider,
-      invoicingSetupStatus:
-        provider === "manual" ? "manual_acknowledged" : "connecting",
-      metadata: {
-        ...(profile.metadata ?? {}),
-        completedSteps: steps,
-        invoicingProvider: provider,
-      },
-    })
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (_tx, ctx) => {
+        await updateExpertProfile(profile.id, profile.orgId, {
+          invoicingProvider: provider,
+          invoicingSetupStatus:
+            provider === "manual" ? "manual_acknowledged" : "connecting",
+          metadata: {
+            ...(profile.metadata ?? {}),
+            completedSteps: steps,
+            invoicingProvider: provider,
+          },
+        })
+        await ctx.emit({
+          entity: "expert_profile",
+          action: "updated",
+          entityId: profile.id,
+          payload: { field: "invoicing", provider },
+        })
+      }
+    )
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })
