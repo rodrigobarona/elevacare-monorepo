@@ -53,24 +53,29 @@ export async function PATCH(
   }
 
   const { id } = await params
-  await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      await updateEventType(
-        profile.orgId,
-        id,
-        { published: body.data.published },
-        profile.id,
-        tx
-      )
-      await ctx.emit({
-        entity: "event_type",
-        action: body.data.published ? "published" : "unpublished",
-        entityId: id,
-        payload: { published: body.data.published },
-      })
-    }
-  )
+  try {
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        await updateEventType(
+          profile.orgId,
+          id,
+          { published: body.data.published },
+          profile.id,
+          tx
+        )
+        await ctx.emit({
+          entity: "event_type",
+          action: body.data.published ? "published" : "unpublished",
+          entityId: id,
+          payload: { published: body.data.published },
+        })
+      }
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

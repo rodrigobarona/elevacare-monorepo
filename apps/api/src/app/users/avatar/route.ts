@@ -121,7 +121,9 @@ export async function PUT(request: Request) {
       })
     }
   )
-  await tryDeleteBlob(previousUrl)
+  if (previousUrl && previousUrl !== body.data.url) {
+    await tryDeleteBlob(previousUrl)
+  }
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

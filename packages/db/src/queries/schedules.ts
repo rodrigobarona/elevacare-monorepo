@@ -14,9 +14,10 @@ import {
 export async function getOrCreateDefaultSchedule(
   orgId: string,
   expertProfileId: string,
-  timezone: string
+  timezone: string,
+  txOpt?: Tx
 ): Promise<Schedule> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [existing] = await tx
       .select()
       .from(schedules)
@@ -42,7 +43,8 @@ export async function getOrCreateDefaultSchedule(
       })
       .returning()
     return created!
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function getDefaultSchedule(

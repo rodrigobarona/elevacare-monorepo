@@ -196,18 +196,23 @@ export async function DELETE(
   }
 
   const { id } = await params
-  await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      await deleteEventType(profile.orgId, id, profile.id, tx)
-      await ctx.emit({
-        entity: "event_type",
-        action: "deleted",
-        entityId: id,
-        payload: {},
-      })
-    }
-  )
+  try {
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        await deleteEventType(profile.orgId, id, profile.id, tx)
+        await ctx.emit({
+          entity: "event_type",
+          action: "deleted",
+          entityId: id,
+          payload: {},
+        })
+      }
+    )
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

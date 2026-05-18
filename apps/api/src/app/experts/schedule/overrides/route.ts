@@ -83,15 +83,15 @@ export async function POST(request: Request) {
   }
 
   try {
-    const schedule = await getOrCreateDefaultSchedule(
-      profile.orgId,
-      profile.id,
-      body.data.timezone
-    )
-
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const schedule = await getOrCreateDefaultSchedule(
+          profile.orgId,
+          profile.id,
+          body.data.timezone,
+          tx
+        )
         if (schedule.timezone !== body.data.timezone) {
           await updateScheduleTimezone(
             profile.orgId,
