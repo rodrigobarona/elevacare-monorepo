@@ -12,6 +12,11 @@ import type { ProductLabel } from "./types"
  *   (staff, *)              -> staff
  *
  * Anything else throws. This function is pure; no DB/network access.
+ *
+ * NOTE: This is the FALLBACK derivation. With custom WorkOS environment
+ * roles, the JWT `permissions` claim is the primary source of truth.
+ * This function is used when JWT claims are unavailable (e.g. during
+ * provisioning or in test contexts).
  */
 export function deriveProductLabel(
   orgType: OrgType,
@@ -30,11 +35,23 @@ export function deriveProductLabel(
 }
 
 /**
- * RBAC bundle \u2192 capability-slug list. Keeps the mapping colocated with
- * the label-derivation logic so tests cover them together. Bundles live
- * in infra/workos/rbac-config.json; the source-of-truth loader in
- * @eleva/db reads the JSON, but for local test isolation we mirror the
- * catalog here.
+ * @deprecated Use `deriveProductLabel(orgType, role)` instead — role-to-label
+ * resolution requires org-type context that a flat slug map cannot provide.
+ * Retained only for backward compat; will be removed in a future cleanup.
+ */
+export const WORKOS_ROLE_TO_LABEL: Record<string, ProductLabel> = {
+  member: "member",
+  expert: "expert",
+  team_admin: "team_admin",
+  lecturer: "lecturer",
+  staff: "staff",
+}
+
+/**
+ * RBAC bundle -> capability-slug list. Mirrors the roles defined in
+ * infra/workos/rbac-config.json. With custom WorkOS environment roles,
+ * these are pushed to WorkOS and returned via JWT `permissions` claim.
+ * This map remains as fallback for local test isolation and validation.
  */
 export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
   member: [
@@ -50,8 +67,8 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "reports:manage_own",
     "payouts:view_own",
     "expert:onboard",
-    "expert:profile:edit",
-    "expert:invoicing:manage",
+    "expert:profile_edit",
+    "expert:invoicing_manage",
   ],
   team_admin: [
     "events:manage",
@@ -60,8 +77,8 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "reports:manage_own",
     "payouts:view_own",
     "expert:onboard",
-    "expert:profile:edit",
-    "expert:invoicing:manage",
+    "expert:profile_edit",
+    "expert:invoicing_manage",
     "members:manage",
     "billing:manage_org",
     "subscriptions:manage_org",
@@ -70,7 +87,7 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "courses:manage",
     "courses:create",
     "courses:publish",
-    "academy:analytics:view",
+    "academy:analytics_view",
     "payouts:view_own",
   ],
   staff: [

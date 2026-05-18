@@ -1,0 +1,23 @@
+{
+  "name": "@eleva/infra-stripe",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed:products": "tsx --env-file=../../.env.local seed-products.ts",
+    "seed:entitlements": "tsx --env-file=../../.env.local seed-entitlements.ts",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "stripe": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}

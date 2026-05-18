@@ -5,6 +5,7 @@ import { cookies } from "next/headers"
 import { withAuth } from "@workos-inc/authkit-nextjs"
 import { getWorkOS } from "@eleva/auth/server"
 import { completeOnboarding } from "@eleva/auth"
+import { provisionOrgBilling } from "@eleva/billing/server"
 import { cookieName, isLocale } from "@eleva/config/i18n"
 
 type ActionResult = { ok: true } | { ok: false; errorKey: string }
@@ -12,6 +13,7 @@ type ActionResult = { ok: true } | { ok: false; errorKey: string }
 /**
  * Creates a personal organization in WorkOS, a membership linking the
  * user, and provisions rows in the Eleva DB via @eleva/auth.
+ * Then provisions Stripe billing (customer + free-tier subscription).
  */
 export async function createSpace(
   _prevState: ActionResult,
@@ -59,6 +61,21 @@ export async function createSpace(
       metadata: { slug: result.slug },
     }),
   ])
+
+  try {
+    await provisionOrgBilling({
+      orgId: result.orgId,
+      workosOrgId: org.id,
+      orgName: spaceName,
+      orgType: "personal",
+      email: user.email,
+    })
+  } catch (err) {
+    console.error(
+      "[onboarding] Billing provisioning failed (non-blocking):",
+      err instanceof Error ? err.message : err
+    )
+  }
 
   redirect("/dashboard")
 }
@@ -123,6 +140,21 @@ export async function checkExistingMembership(): Promise<{
         metadata: { slug: result.slug },
       }),
     ])
+
+    try {
+      await provisionOrgBilling({
+        orgId: result.orgId,
+        workosOrgId: membership.organizationId,
+        orgName: workosOrg.name,
+        orgType,
+        email: user.email,
+      })
+    } catch (err) {
+      console.error(
+        "[onboarding] Billing provisioning failed (non-blocking):",
+        err instanceof Error ? err.message : err
+      )
+    }
 
     return { hasMembership: true }
   }

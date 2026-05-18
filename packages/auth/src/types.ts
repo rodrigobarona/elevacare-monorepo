@@ -28,6 +28,8 @@ export interface ElevaSession {
   workosRole: "admin" | "member"
   /** Union of capability slugs granted by this membership's role bundle. */
   capabilities: readonly string[]
+  /** Stripe Entitlements from WorkOS access token (populated when Stripe add-on is enabled). */
+  entitlements?: readonly string[]
 }
 
 export class UnauthorizedError extends Error {

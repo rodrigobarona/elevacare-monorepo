@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { cookies, headers } from "next/headers"
-import { getSession } from "@eleva/auth/server"
+import { getSession, getSessionForOrg } from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { LAST_ACTIVE_ORG_COOKIE, RESERVED_SLUGS } from "@eleva/config/routing"
@@ -23,7 +23,14 @@ export default async function AuthRedirectPage({
     typeof params.returnTo === "string" ? params.returnTo : undefined
   const returnTo = sanitizeReturnTo(rawReturnTo)
 
-  const session = await getSession()
+  const jar = await cookies()
+  const lastSlug = jar.get(LAST_ACTIVE_ORG_COOKIE)?.value
+  const preferredSlug =
+    lastSlug && !RESERVED_SLUGS.has(lastSlug) ? lastSlug : undefined
+
+  const session = preferredSlug
+    ? await getSessionForOrg(preferredSlug)
+    : await getSession()
 
   if (!session || !session.orgSlug) {
     redirect("/onboarding")
@@ -36,10 +43,11 @@ export default async function AuthRedirectPage({
   const h = await headers()
   const appUrl = resolveGatewayUrl(h.get("x-forwarded-host") ?? h.get("host"))
 
-  const jar = await cookies()
-  const lastSlug = jar.get(LAST_ACTIVE_ORG_COOKIE)?.value
-  const slug =
-    lastSlug && !RESERVED_SLUGS.has(lastSlug) ? lastSlug : session.orgSlug
+  const slug = session.orgSlug
+
+  if (preferredSlug && preferredSlug !== slug) {
+    jar.delete(LAST_ACTIVE_ORG_COOKIE)
+  }
 
   if (RESERVED_SLUGS.has(slug)) {
     jar.delete(LAST_ACTIVE_ORG_COOKIE)

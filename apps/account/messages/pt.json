@@ -47,6 +47,7 @@
     "namePlaceholder": "O meu Espaço",
     "submit": "Criar espaço",
     "submitting": "A criar...",
+    "processingHint": "A configurar o seu espaço — pode demorar um momento.",
     "defaultName": "Espaço de {name}",
     "errorMinLength": "O nome do espaço tem de ter pelo menos 2 caracteres"
   },

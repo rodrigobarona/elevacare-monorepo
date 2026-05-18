@@ -216,6 +216,9 @@ importers:
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
+      '@eleva/billing':
+        specifier: workspace:^
+        version: link:../../packages/billing
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
@@ -886,6 +889,31 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  infra/stripe:
+    dependencies:
+      stripe:
+        specifier: 'catalog:'
+        version: 22.1.1(@types/node@25.8.0)
+    devDependencies:
+      '@eleva/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@eleva/typescript-config':
+        specifier: workspace:*
+        version: link:../../packages/typescript-config
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.8.0
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.0(jiti@2.6.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.22.0
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   infra/workos:
     dependencies:
       '@workos-inc/node':
@@ -1089,6 +1117,9 @@ importers:
       '@stripe/react-connect-js':
         specifier: ^3.4.2
         version: 3.4.2(@stripe/connect-js@3.4.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@workos-inc/node':
+        specifier: 'catalog:'
+        version: 9.3.0
       stripe:
         specifier: 'catalog:'
         version: 22.1.1(@types/node@25.8.0)

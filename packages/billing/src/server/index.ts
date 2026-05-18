@@ -9,6 +9,19 @@ export { stripe, __resetStripeForTests } from "./client"
 export { createConnectAccount } from "./connect"
 export { createAccountSession } from "./account-session"
 export { createIdentityVerificationSession } from "./identity"
+export {
+  createOrgCustomer,
+  createOrgSubscription,
+  swapSubscriptionTier,
+  findTierPrice,
+  PRODUCT_KEYS,
+} from "./subscriptions"
+export type { ProductTier } from "./subscriptions"
+export { provisionOrgBilling } from "./provisioning"
+export type {
+  ProvisionBillingInput,
+  ProvisionBillingResult,
+} from "./provisioning"
 export type {
   ConnectAccountSession,
   ConnectComponentName,

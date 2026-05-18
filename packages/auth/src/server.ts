@@ -69,12 +69,37 @@ async function getWorkosUserFromCookie(): Promise<
  *
  * Memoised per-request via React.cache.
  */
+interface ResolvedIdentity {
+  workosUserId: string | null
+  tokenEmail: string | null
+  tokenFirstName: string | null
+  tokenLastName: string | null
+  permissions: string[]
+  entitlements: string[]
+  jwtOrgId: string | null
+}
+
+/**
+ * Decode the payload section of a JWT without verification (the token
+ * is already verified by AuthKit middleware or cookie unsealing).
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> {
+  const parts = token.split(".")
+  if (parts.length !== 3) return {}
+  try {
+    const payload = Buffer.from(parts[1]!, "base64url").toString("utf8")
+    return JSON.parse(payload) as Record<string, unknown>
+  } catch {
+    return {}
+  }
+}
+
 /**
  * Shared helper that resolves WorkOS identity from AuthKit headers or
  * cookie fallback. Returns the raw token fields needed by
- * resolveSessionFromWorkosUser.
+ * resolveSessionFromWorkosUser, plus JWT claims (permissions, entitlements).
  */
-async function resolveWorkosIdentity() {
+async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
   void headers()
   void cookies()
 
@@ -82,6 +107,9 @@ async function resolveWorkosIdentity() {
   let tokenEmail: string | null = null
   let tokenFirstName: string | null = null
   let tokenLastName: string | null = null
+  let permissions: string[] = []
+  let entitlements: string[] = []
+  let jwtOrgId: string | null = null
 
   try {
     const workosSession = await authkitGetSession()
@@ -89,6 +117,19 @@ async function resolveWorkosIdentity() {
     tokenEmail = workosSession.user?.email ?? null
     tokenFirstName = workosSession.user?.firstName ?? null
     tokenLastName = workosSession.user?.lastName ?? null
+
+    if (workosSession.accessToken) {
+      const claims = decodeJwtPayload(workosSession.accessToken)
+      if (Array.isArray(claims.permissions)) {
+        permissions = claims.permissions as string[]
+      }
+      if (Array.isArray(claims.entitlements)) {
+        entitlements = claims.entitlements as string[]
+      }
+      if (typeof claims.org_id === "string") {
+        jwtOrgId = claims.org_id
+      }
+    }
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
       const cookieUser = await getWorkosUserFromCookie()
@@ -101,7 +142,15 @@ async function resolveWorkosIdentity() {
     }
   }
 
-  return { workosUserId, tokenEmail, tokenFirstName, tokenLastName }
+  return {
+    workosUserId,
+    tokenEmail,
+    tokenFirstName,
+    tokenLastName,
+    permissions,
+    entitlements,
+    jwtOrgId,
+  }
 }
 
 /**
@@ -109,14 +158,25 @@ async function resolveWorkosIdentity() {
  * membership. Use `getSessionForOrg` in org-scoped layouts instead.
  */
 export const getSession = cache(async (): Promise<ElevaSession | null> => {
-  const { workosUserId, tokenEmail, tokenFirstName, tokenLastName } =
-    await resolveWorkosIdentity()
+  const {
+    workosUserId,
+    tokenEmail,
+    tokenFirstName,
+    tokenLastName,
+    permissions,
+    entitlements,
+    jwtOrgId,
+  } = await resolveWorkosIdentity()
   if (!workosUserId) return null
-  return resolveSessionFromWorkosUser(workosUserId, {
-    email: tokenEmail ?? "unknown",
-    firstName: tokenFirstName,
-    lastName: tokenLastName,
-  })
+  return resolveSessionFromWorkosUser(
+    workosUserId,
+    {
+      email: tokenEmail ?? "unknown",
+      firstName: tokenFirstName,
+      lastName: tokenLastName,
+    },
+    { jwtPermissions: permissions, jwtEntitlements: entitlements, jwtOrgId }
+  )
 })
 
 /**
@@ -129,8 +189,15 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
 export async function getSessionForOrg(
   orgSlug: string
 ): Promise<ElevaSession | null> {
-  const { workosUserId, tokenEmail, tokenFirstName, tokenLastName } =
-    await resolveWorkosIdentity()
+  const {
+    workosUserId,
+    tokenEmail,
+    tokenFirstName,
+    tokenLastName,
+    permissions,
+    entitlements,
+    jwtOrgId,
+  } = await resolveWorkosIdentity()
   if (!workosUserId) return null
   return resolveSessionFromWorkosUser(
     workosUserId,
@@ -139,7 +206,12 @@ export async function getSessionForOrg(
       firstName: tokenFirstName,
       lastName: tokenLastName,
     },
-    { preferredOrgSlug: orgSlug }
+    {
+      preferredOrgSlug: orgSlug,
+      jwtPermissions: permissions,
+      jwtEntitlements: entitlements,
+      jwtOrgId,
+    }
   )
 }
 

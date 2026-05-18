@@ -168,7 +168,7 @@ export async function softDeleteOrganization(
 ): Promise<void> {
   await db()
     .update(main.organizations)
-    .set({ deletedAt: new Date() })
+    .set({ deletedAt: new Date(), slug: null })
     .where(
       and(
         eq(main.organizations.workosOrgId, workosOrgId),

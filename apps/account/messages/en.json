@@ -47,6 +47,7 @@
     "namePlaceholder": "My Space",
     "submit": "Create space",
     "submitting": "Creating...",
+    "processingHint": "Setting up your space — this may take a moment.",
     "defaultName": "{name}'s Space",
     "errorMinLength": "Space name must be at least 2 characters"
   },
