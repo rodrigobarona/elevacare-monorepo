@@ -24,11 +24,14 @@
     "@eleva/ui": "workspace:*",
     "@eleva/workflows": "workspace:*",
     "@upstash/qstash": "^2.11.0",
+    "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "catalog:",
     "drizzle-orm": "catalog:",
     "next": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "zod": "catalog:",
+    "zod-openapi": "^5.4.6"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",

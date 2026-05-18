@@ -14,7 +14,21 @@ export {
   requirePermission,
   withSessionContext,
 } from "./session"
-export { ensurePersonalOrg, findExistingPersonalOrg } from "./provisioning"
+export {
+  ensurePersonalOrg,
+  findExistingPersonalOrg,
+  provisionUser,
+  provisionOrganization,
+  provisionMembership,
+  completeOnboarding,
+  type ProvisionUserInput,
+  type ProvisionUserResult,
+  type ProvisionOrganizationInput,
+  type ProvisionOrganizationResult,
+  type ProvisionMembershipInput,
+  type CompleteOnboardingInput,
+  type CompleteOnboardingResult,
+} from "./provisioning"
 export {
   SYNC_EVENTS,
   type SyncEventType,

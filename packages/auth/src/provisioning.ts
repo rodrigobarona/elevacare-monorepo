@@ -1,16 +1,20 @@
 import { and, eq, isNull } from "drizzle-orm"
-import { db, main } from "@eleva/db"
+import { db, main, findExistingOrgSlugs } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
+import { generateUniqueOrgSlug } from "@eleva/config/slug"
 
 /**
- * First-sign-in hook: ensure the given WorkOS user has an Eleva
- * `users` row AND a personal org + admin membership. Idempotent
- * (matches on workosUserId / workosOrgId) so repeated invocations
- * during sign-in retries are safe.
+ * Provisioning functions for users, organizations, and memberships.
+ *
+ * These are the canonical write path for identity provisioning in the
+ * Eleva DB. Called by:
+ *   - Onboarding fast-path (apps/account, apps/api)
+ *   - WorkOS event sync (packages/auth/sync.ts)
+ *   - API endpoints (apps/api)
  *
  * WorkOS createOrganization is the caller's responsibility (kept out
- * of this package so the auth SDK surface can fully mock); this
- * function only mirrors the WorkOS ids into Eleva's DB.
+ * of this package so the auth SDK surface can fully mock); these
+ * functions only mirror the WorkOS ids into Eleva's DB.
  *
  * All writes funnel through withAudit so the outbox drainer records
  * user.created + org.created + membership.created events.
@@ -139,4 +143,177 @@ export async function ensurePersonalOrg(
   })
 
   return { userId, orgId }
+}
+
+// ---------------------------------------------------------------------------
+// Granular provisioning functions for API-first / agentic use
+// ---------------------------------------------------------------------------
+
+export interface ProvisionUserInput {
+  workosUserId: string
+  completedOnboarding?: boolean
+}
+
+export interface ProvisionUserResult {
+  userId: string
+  created: boolean
+}
+
+/**
+ * Upsert a user row keyed by WorkOS user ID.
+ * Sets `completedOnboarding` when provided.
+ */
+export async function provisionUser(
+  input: ProvisionUserInput
+): Promise<ProvisionUserResult> {
+  const [existing] = await db()
+    .select({ id: main.users.id })
+    .from(main.users)
+    .where(eq(main.users.workosUserId, input.workosUserId))
+    .limit(1)
+
+  if (existing) {
+    if (input.completedOnboarding) {
+      await db()
+        .update(main.users)
+        .set({ completedOnboarding: true, updatedAt: new Date() })
+        .where(eq(main.users.workosUserId, input.workosUserId))
+    }
+    return { userId: existing.id, created: false }
+  }
+
+  const [inserted] = await db()
+    .insert(main.users)
+    .values({
+      workosUserId: input.workosUserId,
+      ...(input.completedOnboarding && { completedOnboarding: true }),
+    })
+    .returning({ id: main.users.id })
+
+  return { userId: inserted!.id, created: true }
+}
+
+export interface ProvisionOrganizationInput {
+  workosOrgId: string
+  name: string
+  type?: "personal" | "expert" | "team" | "staff"
+  slug?: string
+}
+
+export interface ProvisionOrganizationResult {
+  orgId: string
+  slug: string
+  created: boolean
+}
+
+/**
+ * Upsert an organization row keyed by WorkOS org ID.
+ * Generates a unique slug if one is not provided.
+ */
+export async function provisionOrganization(
+  input: ProvisionOrganizationInput
+): Promise<ProvisionOrganizationResult> {
+  const slug =
+    input.slug ??
+    (await generateUniqueOrgSlug(input.name, findExistingOrgSlugs))
+  const type = input.type ?? "personal"
+
+  const [existing] = await db()
+    .select({ id: main.organizations.id, slug: main.organizations.slug })
+    .from(main.organizations)
+    .where(eq(main.organizations.workosOrgId, input.workosOrgId))
+    .limit(1)
+
+  if (existing) {
+    const existingSlug = existing.slug ?? slug
+    if (!existing.slug) {
+      await db()
+        .update(main.organizations)
+        .set({ slug: existingSlug, updatedAt: new Date() })
+        .where(eq(main.organizations.workosOrgId, input.workosOrgId))
+    }
+    return { orgId: existing.id, slug: existingSlug, created: false }
+  }
+
+  const orgId = crypto.randomUUID()
+  await db()
+    .insert(main.organizations)
+    .values({ id: orgId, workosOrgId: input.workosOrgId, type, slug })
+
+  return { orgId, slug, created: true }
+}
+
+export interface ProvisionMembershipInput {
+  userId: string
+  orgId: string
+  role: "admin" | "member"
+}
+
+/**
+ * Upsert a membership row. Idempotent on (userId, orgId).
+ */
+export async function provisionMembership(
+  input: ProvisionMembershipInput
+): Promise<void> {
+  await db()
+    .insert(main.memberships)
+    .values({
+      userId: input.userId,
+      orgId: input.orgId,
+      workosRole: input.role,
+      status: "active",
+    })
+    .onConflictDoUpdate({
+      target: [main.memberships.userId, main.memberships.orgId],
+      set: {
+        workosRole: input.role,
+        status: "active",
+        updatedAt: new Date(),
+      },
+    })
+}
+
+export interface CompleteOnboardingInput {
+  workosUserId: string
+  workosOrgId: string
+  orgName: string
+  role: "admin" | "member"
+  orgType?: "personal" | "expert" | "team" | "staff"
+}
+
+export interface CompleteOnboardingResult {
+  userId: string
+  orgId: string
+  slug: string
+}
+
+/**
+ * High-level onboarding orchestrator: provisions user + org + membership
+ * in the Eleva DB. Does NOT call WorkOS (create org, create membership,
+ * set externalId) -- that is the caller's responsibility.
+ *
+ * This is the function both Server Actions and API routes should call
+ * for onboarding, eliminating the duplicated inline upsert logic.
+ */
+export async function completeOnboarding(
+  input: CompleteOnboardingInput
+): Promise<CompleteOnboardingResult> {
+  const { userId } = await provisionUser({
+    workosUserId: input.workosUserId,
+    completedOnboarding: true,
+  })
+
+  const { orgId, slug } = await provisionOrganization({
+    workosOrgId: input.workosOrgId,
+    name: input.orgName,
+    type: input.orgType ?? "personal",
+  })
+
+  await provisionMembership({
+    userId,
+    orgId,
+    role: input.role,
+  })
+
+  return { userId, orgId, slug }
 }

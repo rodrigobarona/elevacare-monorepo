@@ -18,11 +18,18 @@ export const runtime = "nodejs"
 
 export async function POST(request: Request) {
   const secret = process.env.WORKFLOWS_DRAIN_SECRET
-  if (secret) {
-    const header = request.headers.get("authorization") ?? ""
-    if (header !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 })
-    }
+  if (!secret) {
+    return NextResponse.json(
+      {
+        error: "server_misconfiguration",
+        message: "WORKFLOWS_DRAIN_SECRET is required",
+      },
+      { status: 500 }
+    )
+  }
+  const header = request.headers.get("authorization") ?? ""
+  if (header !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
 
   try {

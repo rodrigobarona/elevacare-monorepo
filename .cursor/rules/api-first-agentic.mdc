@@ -1,0 +1,90 @@
+---
+description: API-first and agentic-first architecture. Apply when creating API routes, Server Actions, or any code that writes to the database from a frontend app.
+globs:
+  - apps/*/src/app/**/actions.ts
+  - apps/*/src/app/**/route.ts
+  - apps/api/src/app/**/route.ts
+  - packages/auth/src/**
+alwaysApply: false
+---
+
+# API-First & Agentic-First Architecture
+
+## Route Handlers in `apps/api`
+
+Every route handler MUST follow this pattern:
+
+1. **Auth**: call `requireApiAuth(request)` from `@/lib/auth`. Return 401 for anonymous, 403 for missing capability.
+2. **BotID**: on public-facing POST routes, call `checkBot()` from `@/lib/bot-protection` before business logic.
+3. **Rate limit**: call `applyRateLimit()` from `@/lib/rate-limit` with the appropriate config.
+4. **Validation**: parse request body with a Zod schema. Return 422 with `{ error: "validation", issues }` on failure.
+5. **Business logic**: call domain package functions (`@eleva/auth`, `@eleva/db` helpers). Never inline raw DB logic.
+6. **Response**: use `secureJson()` from `@/lib/security-headers`. Always include CORS via `corsHeaders()`.
+
+```typescript
+// Pattern for new API routes
+import { z } from "zod"
+import { corsHeaders } from "@/lib/cors"
+import { requireApiAuth } from "@/lib/auth"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import { secureJson } from "@/lib/security-headers"
+import { UnauthorizedError } from "@eleva/auth"
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+const BodySchema = z.object({ /* ... */ })
+
+export async function POST(request: Request) {
+  const headers = corsHeaders(request, "POST, OPTIONS")
+  let session
+  try { session = await requireApiAuth(request) }
+  catch (err) {
+    if (err instanceof UnauthorizedError)
+      return secureJson({ error: "unauthorized" }, { status: 401, headers })
+    throw err
+  }
+  const rateLimited = await applyRateLimit(rateLimitKey(request, session.user.id), RATE_LIMITS.authenticated)
+  if (rateLimited) return rateLimited
+  const body = BodySchema.safeParse(await request.json().catch(() => ({})))
+  if (!body.success) return secureJson({ error: "validation", issues: body.error.issues }, { status: 422, headers })
+  // ... domain logic ...
+  return secureJson({ ok: true }, { status: 201, headers })
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, { status: 204, headers: corsHeaders(request, "POST, OPTIONS") })
+}
+```
+
+## Error format
+
+All API errors MUST return JSON: `{ error: string, issues?: ZodIssue[], message?: string }` with HTTP status:
+- 401: unauthorized (no session / invalid bearer)
+- 403: forbidden (missing capability / bot blocked)
+- 404: not found
+- 422: validation error
+- 429: rate limited (include `Retry-After` header)
+- 500: internal error
+
+## Server Actions in frontend apps
+
+Server Actions are thin proxies. They MUST:
+- Validate form input
+- Call domain package functions (e.g. `completeOnboarding()` from `@eleva/auth`) or the API
+- Handle redirects / cookie management
+- NOT contain inline `db()` + `main.*` upsert logic
+
+## No direct DB writes in frontend apps
+
+- `@eleva/db` query helpers (e.g. `getExpertProfileByUserId()`) are OK for reads in Server Components.
+- Raw `db()` + `main.*` imports in frontend apps are forbidden for new code.
+- Writes go through domain package functions or `apps/api` endpoints.
+
+## CORS
+
+Use the strict matcher: `APP_URL` + `*.preview.eleva.care` + named subdomains + dev localhost. Do NOT use broad `*.eleva.care`.
+
+## OpenAPI
+
+New endpoints should have Zod schemas that can be registered in the OpenAPI spec at `apps/api/src/lib/openapi.ts`. The spec is served at `GET /openapi.json`.
