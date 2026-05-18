@@ -216,6 +216,9 @@ importers:
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
+      '@eleva/billing':
+        specifier: workspace:^
+        version: link:../../packages/billing
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config

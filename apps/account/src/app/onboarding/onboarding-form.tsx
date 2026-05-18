@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useActionState } from "react"
 import { useTranslations } from "next-intl"
+import { Loader2 } from "lucide-react"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -46,6 +47,7 @@ export function OnboardingForm({ defaultName }: Props) {
               minLength={2}
               maxLength={100}
               autoFocus
+              disabled={isPending}
             />
           </div>
           {!state.ok && state.errorKey && (
@@ -54,10 +56,16 @@ export function OnboardingForm({ defaultName }: Props) {
             </p>
           )}
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex-col gap-3">
           <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isPending ? t("submitting") : t("submit")}
           </Button>
+          {isPending && (
+            <p className="animate-pulse text-sm text-muted-foreground">
+              {t("processingHint")}
+            </p>
+          )}
         </CardFooter>
       </Card>
     </form>

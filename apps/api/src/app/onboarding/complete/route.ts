@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { completeOnboarding } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
+import { provisionOrgBilling } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -98,6 +99,21 @@ export async function POST(request: Request) {
         slug: result.slug,
       },
       { status: 207, headers }
+    )
+  }
+
+  try {
+    await provisionOrgBilling({
+      orgId: result.orgId,
+      workosOrgId: org.id,
+      orgName: body.data.spaceName,
+      orgType: "personal",
+      email: session.user.email,
+    })
+  } catch (err) {
+    console.error(
+      "[onboarding/complete] Billing provisioning failed (non-blocking):",
+      err instanceof Error ? err.message : err
     )
   }
 
