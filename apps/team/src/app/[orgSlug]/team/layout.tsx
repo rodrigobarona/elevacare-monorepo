@@ -2,12 +2,12 @@ import "@radix-ui/themes/styles.css"
 
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
-import { LOGIN_PATH, UnauthorizedError } from "@eleva/auth"
+import { getSessionForOrg } from "@eleva/auth/server"
+import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { LayoutDashboard, Users, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
-import type { DashboardConfig } from "@eleva/dashboard/nav-types"
+import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 
 const GATEWAY_URL = resolveGatewayUrl()
 
@@ -34,41 +34,18 @@ export default async function TeamLayout({
     notFound()
   }
 
-  const [widgetTokenResult, t] = await Promise.all([
-    getWidgetTokenFromSession().catch((err) => {
-      if (!(err instanceof UnauthorizedError)) {
-        console.error("Unexpected error generating widget token", err)
-        throw err
-      }
-      return null
-    }),
-    getTranslations("nav"),
-  ])
-  const widgetToken = widgetTokenResult
+  const t = await getTranslations("nav")
 
   const base = `/${orgSlug}/team`
-  const dashboardConfig: DashboardConfig = {
-    navGroups: [
-      {
-        items: [
-          { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
-          { title: t("members"), url: `${base}/members`, icon: <Users /> },
-          { title: t("settings"), url: `${base}/settings`, icon: <Settings /> },
-        ],
-      },
-    ],
-    user: {
-      displayName: session.user.displayName,
-      email: session.user.email,
-      avatarUrl: session.user.avatarUrl,
+  const dashboardConfig = await buildDashboardConfig(session, [
+    {
+      items: [
+        { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
+        { title: t("members"), url: `${base}/members`, icon: <Users /> },
+        { title: t("settings"), url: `${base}/settings`, icon: <Settings /> },
+      ],
     },
-    orgSlug,
-    capabilities: session.capabilities,
-    widgetToken,
-    accountUrl: `${GATEWAY_URL}/account/profile`,
-    homepageUrl: "/home",
-    logoutUrl: "/logout",
-  }
+  ])
 
   return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
 }

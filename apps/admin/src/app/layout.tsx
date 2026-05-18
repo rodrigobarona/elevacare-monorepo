@@ -7,7 +7,7 @@ import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { LayoutDashboard, UserCheck } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
-import type { DashboardConfig } from "@eleva/dashboard/nav-types"
+import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 
 const GATEWAY_URL = resolveGatewayUrl()
 const APP_URL = GATEWAY_URL
@@ -38,28 +38,18 @@ export default async function AdminRootLayout({
     getTranslations("nav"),
   ])
 
-  const dashboardConfig: DashboardConfig = {
-    navGroups: [
-      {
-        items: [
-          { title: t("overview"), url: "/", icon: <LayoutDashboard /> },
-          {
-            title: t("partnerApplications"),
-            url: "/become-partner",
-            icon: <UserCheck />,
-          },
-        ],
-      },
-    ],
-    user: {
-      displayName: session.user.displayName,
-      email: session.user.email,
-      avatarUrl: session.user.avatarUrl,
+  const dashboardConfig = await buildDashboardConfig(session, [
+    {
+      items: [
+        { title: t("overview"), url: "/", icon: <LayoutDashboard /> },
+        {
+          title: t("partnerApplications"),
+          url: "/become-partner",
+          icon: <UserCheck />,
+        },
+      ],
     },
-    accountUrl: `${GATEWAY_URL}/account/profile`,
-    homepageUrl: "/home",
-    logoutUrl: "/logout",
-  }
+  ])
 
   return (
     <html lang={locale} suppressHydrationWarning>

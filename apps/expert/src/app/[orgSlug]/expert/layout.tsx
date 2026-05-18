@@ -2,8 +2,8 @@ import "@radix-ui/themes/styles.css"
 
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { getSessionForOrg, getWidgetTokenFromSession } from "@eleva/auth/server"
-import { LOGIN_PATH, UnauthorizedError } from "@eleva/auth"
+import { getSessionForOrg } from "@eleva/auth/server"
+import { LOGIN_PATH } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import {
@@ -15,7 +15,7 @@ import {
   Wallet,
 } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
-import type { DashboardConfig } from "@eleva/dashboard/nav-types"
+import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
@@ -55,69 +55,46 @@ export default async function ExpertLayout({
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
   const showConnect = !!(profile?.stripeAccountId && stripePublishableKey)
 
-  const [widgetTokenResult, t] = await Promise.all([
-    getWidgetTokenFromSession().catch((err) => {
-      if (!(err instanceof UnauthorizedError)) {
-        console.error("Unexpected error generating widget token", err)
-        throw err
-      }
-      return null
-    }),
-    getTranslations("nav"),
-  ])
-  const widgetToken = widgetTokenResult
+  const t = await getTranslations("nav")
 
   const base = `/${orgSlug}/expert`
-  const dashboardConfig: DashboardConfig = {
-    navGroups: [
-      {
-        items: [
-          { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
-          {
-            title: t("eventTypes"),
-            url: `${base}/event-types`,
-            icon: <CalendarDays />,
-            needs: "events:manage",
-          },
-          {
-            title: t("schedule"),
-            url: `${base}/schedule`,
-            icon: <Clock />,
-            needs: "schedule:manage",
-          },
-          {
-            title: t("calendars"),
-            url: `${base}/calendars`,
-            icon: <Calendar />,
-            needs: "events:manage",
-          },
-          {
-            title: t("integrations"),
-            url: `${base}/integrations`,
-            icon: <Plug />,
-            needs: "events:manage",
-          },
-          {
-            title: t("finance"),
-            url: `${base}/finance`,
-            icon: <Wallet />,
-            needs: "payouts:view_own",
-          },
-        ],
-      },
-    ],
-    user: {
-      displayName: session.user.displayName,
-      email: session.user.email,
-      avatarUrl: session.user.avatarUrl,
+  const dashboardConfig = await buildDashboardConfig(session, [
+    {
+      items: [
+        { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
+        {
+          title: t("eventTypes"),
+          url: `${base}/event-types`,
+          icon: <CalendarDays />,
+          needs: "events:manage",
+        },
+        {
+          title: t("schedule"),
+          url: `${base}/schedule`,
+          icon: <Clock />,
+          needs: "schedule:manage",
+        },
+        {
+          title: t("calendars"),
+          url: `${base}/calendars`,
+          icon: <Calendar />,
+          needs: "events:manage",
+        },
+        {
+          title: t("integrations"),
+          url: `${base}/integrations`,
+          icon: <Plug />,
+          needs: "events:manage",
+        },
+        {
+          title: t("finance"),
+          url: `${base}/finance`,
+          icon: <Wallet />,
+          needs: "payouts:view_own",
+        },
+      ],
     },
-    orgSlug,
-    capabilities: session.capabilities,
-    widgetToken,
-    accountUrl: `${GATEWAY_URL}/account/profile`,
-    homepageUrl: "/home",
-    logoutUrl: "/logout",
-  }
+  ])
 
   const content = (
     <DashboardShell config={dashboardConfig}>{children}</DashboardShell>

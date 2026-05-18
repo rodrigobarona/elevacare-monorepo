@@ -2,7 +2,7 @@ import { getLocale, getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { User, CreditCard, Building2, Shield } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
-import type { DashboardConfig } from "@eleva/dashboard/nav-types"
+import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
 
 import "@radix-ui/themes/styles.css"
@@ -16,9 +16,9 @@ export default async function SettingsLayout({
   const session = await guardSession()
   const [locale, t] = await Promise.all([getLocale(), getTranslations("nav")])
 
-  const dashboardConfig: DashboardConfig = {
-    homeUrl: "/dashboard",
-    navGroups: [
+  const dashboardConfig = await buildDashboardConfig(
+    session,
+    [
       {
         label: t("account"),
         items: [
@@ -37,15 +37,8 @@ export default async function SettingsLayout({
         ],
       },
     ],
-    user: {
-      displayName: session.user.displayName,
-      email: session.user.email,
-      avatarUrl: session.user.avatarUrl,
-    },
-    accountUrl: "/account/profile",
-    homepageUrl: "/home",
-    logoutUrl: "/logout",
-  }
+    { homeUrl: "/dashboard", accountUrl: "/account/profile" }
+  )
 
   return (
     <DashboardShell config={dashboardConfig}>
