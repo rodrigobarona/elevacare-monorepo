@@ -88,12 +88,18 @@ export function resolveDispatch(
     return { kind: "rewrite", origin: origins.app }
   }
 
-  if (second === "expert") return { kind: "rewrite", origin: origins.expert }
-  if (second === "team") return { kind: "rewrite", origin: origins.team }
-  if (second === "academy") return { kind: "rewrite", origin: origins.academy }
-  if (second === "settings") return { kind: "rewrite", origin: origins.app }
+  const isSlug = !RESERVED_SLUGS.has(first) && isOrgSlugShape(first)
 
-  if (!RESERVED_SLUGS.has(first) && isOrgSlugShape(first)) {
+  if (isSlug && second === "expert")
+    return { kind: "rewrite", origin: origins.expert }
+  if (isSlug && second === "team")
+    return { kind: "rewrite", origin: origins.team }
+  if (isSlug && second === "academy")
+    return { kind: "rewrite", origin: origins.academy }
+  if (isSlug && second === "settings")
+    return { kind: "rewrite", origin: origins.app }
+
+  if (isSlug) {
     if (hasSession) {
       return { kind: "rewrite", origin: origins.app }
     }

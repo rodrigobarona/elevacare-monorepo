@@ -8,7 +8,7 @@ import {
   isValidLocale,
   WorkOsLocaleProvider,
 } from "@workos-inc/widgets-i18n"
-import { useLocale } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
 import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 import { switchOrganization } from "./switch-org-action"
@@ -22,6 +22,7 @@ export function OrgSwitcherWidget({
   authToken,
   onSwitch,
 }: OrgSwitcherWidgetProps) {
+  const t = useTranslations("shell")
   const locale = useLocale()
   const resolvedLocale: LocaleCode = isValidLocale(locale) ? locale : "en"
   const { resolvedTheme } = useTheme()
@@ -41,12 +42,16 @@ export function OrgSwitcherWidget({
       const { redirectUrl } = await switchOrganization(organizationId, pathname)
       window.location.href = redirectUrl
     } catch (err) {
-      console.error("Error switching organization:", err)
+      console.error(t("orgSwitchError"), err)
     }
   }
 
   return (
-    <div className="eleva-org-switcher w-full">
+    <div
+      className="eleva-org-switcher w-full"
+      role="region"
+      aria-label={t("orgSwitcher")}
+    >
       <WorkOsLocaleProvider locale={resolvedLocale}>
         <WorkOsWidgets
           theme={{

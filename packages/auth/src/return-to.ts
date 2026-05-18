@@ -48,7 +48,15 @@ export function sanitizeReturnTo(
     const url = new URL(decoded)
     if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
     const relative = `${url.pathname}${url.search}${url.hash}`
-    return relative || "/"
+    if (
+      !relative ||
+      !relative.startsWith("/") ||
+      relative.startsWith("//") ||
+      relative.includes("://")
+    ) {
+      return "/"
+    }
+    return relative
   } catch {
     return undefined
   }

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { useTranslations } from "next-intl"
 import { ArrowLeft } from "lucide-react"
 import {
   Sidebar,
@@ -25,6 +26,8 @@ export function AppSidebar({
   widgetToken,
   ...props
 }: AppSidebarProps) {
+  const t = useTranslations("shell")
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border p-2">
@@ -36,7 +39,7 @@ export function AppSidebar({
             className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
           >
             <ArrowLeft className="size-4" />
-            <span>Back</span>
+            <span>{t("back")}</span>
           </Link>
         )}
       </SidebarHeader>
