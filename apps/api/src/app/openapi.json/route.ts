@@ -1,23 +1,34 @@
 import { generateOpenApiSpec } from "@/lib/openapi"
 import { corsHeaders } from "@/lib/cors"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import { secureJson } from "@/lib/security-headers"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-let cachedSpec: string | null = null
+let cachedSpec: unknown = null
 
 export async function GET(request: Request) {
+  const headers = corsHeaders(request, "GET, OPTIONS")
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request),
+    RATE_LIMITS.public
+  )
+  if (rateLimited) return rateLimited
+
   if (!cachedSpec) {
-    cachedSpec = JSON.stringify(generateOpenApiSpec(), null, 2)
+    cachedSpec = generateOpenApiSpec()
   }
 
-  const headers = {
-    ...corsHeaders(request, "GET, OPTIONS"),
-    "Content-Type": "application/json",
-    "Cache-Control": "public, max-age=300, s-maxage=3600",
-  }
-
-  return new Response(cachedSpec, { status: 200, headers })
+  return secureJson(cachedSpec, {
+    status: 200,
+    headers: {
+      ...headers,
+      "Cache-Control": "public, max-age=300, s-maxage=3600",
+    },
+    noStore: false,
+  })
 }
 
 export async function OPTIONS(request: Request) {

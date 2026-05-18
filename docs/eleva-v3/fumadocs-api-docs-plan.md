@@ -31,7 +31,7 @@ Create `source.config.ts` with:
 
 ### 3. Site Structure
 
-```
+```text
 /docs                    -- Landing + getting started guides (MDX)
 /docs/api-reference      -- Auto-generated from OpenAPI spec
 /docs/guides             -- Hand-written integration guides

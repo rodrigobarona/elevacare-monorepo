@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server"
 import { drainAuditOutbox } from "@eleva/workflows/drainers"
+import { corsHeaders } from "@/lib/cors"
+import { secureJson } from "@/lib/security-headers"
 
 /**
  * HTTP trigger for the audit outbox drainer. Called by:
- *   - QStash schedule (every 30s in staging/prod) \u2014 wiring lands with
+ *   - QStash schedule (every 30s in staging/prod) — wiring lands with
  *     infra/qstash in S4.
  *   - The operator dashboard "manual drain" button in S6.
  *   - CI integration test.
@@ -17,26 +18,38 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
+  const headers = corsHeaders(request, "POST, OPTIONS")
+
   const secret = process.env.WORKFLOWS_DRAIN_SECRET
   if (!secret) {
-    return NextResponse.json(
+    return secureJson(
       {
         error: "server_misconfiguration",
         message: "WORKFLOWS_DRAIN_SECRET is required",
       },
-      { status: 500 }
+      { status: 500, headers }
     )
   }
-  const header = request.headers.get("authorization") ?? ""
-  if (header !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "unauthorized" }, { status: 401 })
+  const authHeader = request.headers.get("authorization") ?? ""
+  if (authHeader !== `Bearer ${secret}`) {
+    return secureJson({ error: "unauthorized" }, { status: 401, headers })
   }
 
   try {
     const result = await drainAuditOutbox()
-    return NextResponse.json({ ok: true, ...result })
+    return secureJson({ ok: true, ...result }, { status: 200, headers })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+    return secureJson(
+      { ok: false, error: "internal", message },
+      { status: 500, headers }
+    )
   }
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "POST, OPTIONS"),
+  })
 }

@@ -1,12 +1,12 @@
 import { z } from "zod"
-import { eq, isNull, and } from "drizzle-orm"
 import { provisionOrganization } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
-import { db, main } from "@eleva/db"
+import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { checkBot } from "@/lib/bot-protection"
 import { UnauthorizedError } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
@@ -28,6 +28,11 @@ export async function POST(request: Request) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
     }
     throw err
+  }
+
+  const botVerdict = await checkBot()
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
   }
 
   const rateLimited = await applyRateLimit(
@@ -87,6 +92,12 @@ export async function GET(request: Request) {
     throw err
   }
 
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
   const url = new URL(request.url)
   const slug = url.searchParams.get("slug")
 
@@ -97,21 +108,7 @@ export async function GET(request: Request) {
     )
   }
 
-  const [org] = await db()
-    .select({
-      id: main.organizations.id,
-      workosOrgId: main.organizations.workosOrgId,
-      slug: main.organizations.slug,
-      type: main.organizations.type,
-    })
-    .from(main.organizations)
-    .where(
-      and(
-        eq(main.organizations.slug, slug),
-        isNull(main.organizations.deletedAt)
-      )
-    )
-    .limit(1)
+  const org = await getOrganizationBySlug(slug)
 
   if (!org) {
     return secureJson({ error: "not_found" }, { status: 404, headers })

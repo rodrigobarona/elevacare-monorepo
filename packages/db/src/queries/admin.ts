@@ -3,6 +3,39 @@ import { and, eq, isNull } from "drizzle-orm"
 import { withPlatformAdminContext, type Tx } from "../context"
 import * as main from "../schema/main"
 
+export interface OrganizationBySlugResult {
+  id: string
+  workosOrgId: string
+  slug: string | null
+  type: string | null
+}
+
+/**
+ * Look up an organization by its unique slug.
+ */
+export async function getOrganizationBySlug(
+  slug: string
+): Promise<OrganizationBySlugResult | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const rows = await tx
+      .select({
+        id: main.organizations.id,
+        workosOrgId: main.organizations.workosOrgId,
+        slug: main.organizations.slug,
+        type: main.organizations.type,
+      })
+      .from(main.organizations)
+      .where(
+        and(
+          eq(main.organizations.slug, slug),
+          isNull(main.organizations.deletedAt)
+        )
+      )
+      .limit(1)
+    return rows[0] ?? null
+  })
+}
+
 /**
  * Fetch an expert profile by user ID (used after approval to check
  * onboarding state).

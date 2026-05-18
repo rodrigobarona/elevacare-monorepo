@@ -137,14 +137,18 @@ export async function PATCH(
     )
     return secureJson({ ok: true }, { status: 200, headers })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : ""
-    if (msg.includes("event_types_expert_slug_idx")) {
+    const dbErr = err as { code?: string; constraint?: string }
+    if (
+      dbErr?.code === "23505" ||
+      dbErr?.constraint === "event_types_expert_slug_idx"
+    ) {
       return secureJson(
         { error: "conflict", message: "slug already taken" },
         { status: 409, headers }
       )
     }
-    throw err
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
   }
 }
 

@@ -249,13 +249,20 @@ export function createApiClient(options: ApiClientOptions) {
       credentials: bearerToken ? "omit" : "include",
     })
 
-    const json = await response.json()
+    const text = await response.text()
 
     if (!response.ok) {
-      throw new ApiClientError(response.status, json as ApiError)
+      let error: ApiError
+      try {
+        error = JSON.parse(text) as ApiError
+      } catch {
+        error = { error: "unknown", message: text || `HTTP ${response.status}` }
+      }
+      throw new ApiClientError(response.status, error)
     }
 
-    return json as T
+    if (!text) return undefined as unknown as T
+    return JSON.parse(text) as T
   }
 
   return {

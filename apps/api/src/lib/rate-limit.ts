@@ -1,5 +1,6 @@
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
+import { secureJson } from "./security-headers"
 
 let redis: Redis | null = null
 
@@ -54,10 +55,12 @@ export const RATE_LIMITS = {
 /**
  * Apply rate limiting. Returns null if allowed, or a Response if blocked.
  * Gracefully degrades (allows request) if Redis is unavailable.
+ * Pass `routeHeaders` to merge CORS/security headers into the 429 response.
  */
 export async function applyRateLimit(
   identifier: string,
-  config: RateLimitConfig
+  config: RateLimitConfig,
+  routeHeaders?: HeadersInit
 ): Promise<Response | null> {
   const limiter = getLimiter(config.prefix, config.maxRequests, config.windowMs)
   if (!limiter) return null
@@ -65,14 +68,21 @@ export async function applyRateLimit(
   try {
     const result = await limiter.limit(identifier)
     if (!result.success) {
-      return Response.json(
+      const retryAfter = Math.max(
+        0,
+        Math.ceil((result.reset - Date.now()) / 1000)
+      )
+      return secureJson(
         { error: "rate_limit_exceeded", retryAfter: result.reset },
         {
           status: 429,
           headers: {
-            "Retry-After": String(
-              Math.ceil((result.reset - Date.now()) / 1000)
+            ...Object.fromEntries(
+              routeHeaders instanceof Headers
+                ? routeHeaders.entries()
+                : Object.entries(routeHeaders ?? {})
             ),
+            "Retry-After": String(retryAfter),
             "X-RateLimit-Limit": String(config.maxRequests),
             "X-RateLimit-Remaining": String(result.remaining),
             "X-RateLimit-Reset": String(result.reset),

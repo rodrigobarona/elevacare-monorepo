@@ -91,12 +91,22 @@ export async function PUT(
     )
   }
 
-  const accessToken = await getCalendarToken(
-    session.user.workosUserId,
-    provider
-  )
-  const adapter = getAdapter(provider)
-  const providerCalendars = await adapter.listCalendars(accessToken)
+  let accessToken: string
+  let providerCalendars: { id: string; name: string }[]
+  try {
+    accessToken = await getCalendarToken(session.user.workosUserId, provider)
+    const adapter = getAdapter(provider)
+    providerCalendars = await adapter.listCalendars(accessToken)
+  } catch {
+    return secureJson(
+      {
+        error: "provider_error",
+        message: "failed to fetch calendars from provider",
+      },
+      { status: 502, headers }
+    )
+  }
+
   const allowedIds = new Set(providerCalendars.map((c) => c.id))
 
   if (body.data.sources.some((s) => !allowedIds.has(s.externalCalendarId))) {

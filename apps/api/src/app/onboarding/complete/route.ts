@@ -29,8 +29,10 @@ export async function POST(request: Request) {
     throw err
   }
 
-  const botBlocked = await checkBot({ checkLevel: "deepAnalysis" })
-  if (botBlocked) return botBlocked
+  const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
+  }
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
@@ -66,7 +68,7 @@ export async function POST(request: Request) {
     orgType: "personal",
   })
 
-  await Promise.allSettled([
+  const settled = await Promise.allSettled([
     workos.userManagement.updateUser({
       userId: session.user.workosUserId,
       externalId: result.userId,
@@ -78,6 +80,25 @@ export async function POST(request: Request) {
       metadata: { slug: result.slug },
     }),
   ])
+
+  const failures = settled.filter(
+    (s): s is PromiseRejectedResult => s.status === "rejected"
+  )
+  if (failures.length > 0) {
+    for (const f of failures) {
+      console.error("[onboarding/complete] WorkOS update failed:", f.reason)
+    }
+    return secureJson(
+      {
+        error: "partial_failure",
+        message: "Onboarding completed but WorkOS sync failed",
+        userId: result.userId,
+        orgId: result.orgId,
+        slug: result.slug,
+      },
+      { status: 207, headers }
+    )
+  }
 
   return secureJson(
     {

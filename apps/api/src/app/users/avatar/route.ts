@@ -70,6 +70,12 @@ export async function GET(request: Request) {
     throw err
   }
 
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, userId),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
   const avatarUrl = await getUserAvatarUrl(userId)
   return secureJson({ avatarUrl }, { status: 200, headers, noStore: false })
 }
@@ -103,8 +109,8 @@ export async function PUT(request: Request) {
     )
   }
 
-  await cleanupOldBlob(userId)
   await updateUserAvatarUrl(userId, body.data.url)
+  await cleanupOldBlob(userId)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
@@ -127,8 +133,8 @@ export async function DELETE(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  await cleanupOldBlob(userId)
   await updateUserAvatarUrl(userId, null)
+  await cleanupOldBlob(userId)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

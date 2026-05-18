@@ -2,6 +2,7 @@ import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { checkBot } from "@/lib/bot-protection"
 import { UnauthorizedError } from "@eleva/auth"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 
@@ -31,6 +32,11 @@ export async function POST(
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
     }
     throw err
+  }
+
+  const botVerdict = await checkBot()
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
   }
 
   const rateLimited = await applyRateLimit(

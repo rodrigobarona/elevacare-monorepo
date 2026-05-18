@@ -14,9 +14,15 @@ import {
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
+const VALID_TZ_SET = new Set(Intl.supportedValuesOf("timeZone"))
+
 export async function initializeScheduleAction(
   timezone: string
 ): Promise<ActionResult> {
+  if (!VALID_TZ_SET.has(timezone)) {
+    return { ok: false, error: "invalid-timezone" }
+  }
+
   try {
     const session = await requireSession("events:manage")
     const profile = await getExpertProfileByUserId(session.user.id)

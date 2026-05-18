@@ -92,12 +92,23 @@ export async function checkExistingMembership(): Promise<{
     )
     const role = membership.role?.slug === "admin" ? "admin" : "member"
 
+    const orgMetadata = workosOrg.metadata as
+      | Record<string, unknown>
+      | undefined
+    const orgType =
+      (orgMetadata?.org_type as
+        | "personal"
+        | "expert"
+        | "team"
+        | "staff"
+        | undefined) ?? "personal"
+
     const result = await completeOnboarding({
       workosUserId: user.id,
       workosOrgId: membership.organizationId,
       orgName: workosOrg.name,
       role: role as "admin" | "member",
-      orgType: "personal",
+      orgType,
     })
 
     await Promise.allSettled([

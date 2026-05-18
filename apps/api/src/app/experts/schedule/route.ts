@@ -50,6 +50,12 @@ export async function GET(request: Request) {
     throw err
   }
 
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
@@ -58,7 +64,9 @@ export async function GET(request: Request) {
     )
   }
 
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+  const tz =
+    (profile as { timezone?: string }).timezone ??
+    Intl.DateTimeFormat().resolvedOptions().timeZone
   const schedule = await getOrCreateDefaultSchedule(
     profile.orgId,
     profile.id,

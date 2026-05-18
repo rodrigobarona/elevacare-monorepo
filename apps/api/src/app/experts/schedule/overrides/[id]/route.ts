@@ -39,7 +39,16 @@ export async function DELETE(
   }
 
   const { id } = await params
-  await deleteDateOverride(profile.orgId, id, profile.id)
+
+  try {
+    await deleteDateOverride(profile.orgId, id, profile.id)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson(
+      { ok: false, error: "internal", message },
+      { status: 500, headers }
+    )
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

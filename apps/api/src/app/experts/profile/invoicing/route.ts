@@ -43,7 +43,7 @@ export async function PUT(request: Request) {
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
-      { error: "not found", message: "no expert profile" },
+      { error: "not_found", message: "no expert profile" },
       { status: 404, headers }
     )
   }
@@ -55,16 +55,21 @@ export async function PUT(request: Request) {
   const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
   if (!steps.includes("invoicing")) steps.push("invoicing")
 
-  await updateExpertProfile(profile.id, profile.orgId, {
-    invoicingProvider: provider,
-    invoicingSetupStatus:
-      provider === "manual" ? "manual_acknowledged" : "connecting",
-    metadata: {
-      ...(profile.metadata ?? {}),
-      completedSteps: steps,
+  try {
+    await updateExpertProfile(profile.id, profile.orgId, {
       invoicingProvider: provider,
-    },
-  })
+      invoicingSetupStatus:
+        provider === "manual" ? "manual_acknowledged" : "connecting",
+      metadata: {
+        ...(profile.metadata ?? {}),
+        completedSteps: steps,
+        invoicingProvider: provider,
+      },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

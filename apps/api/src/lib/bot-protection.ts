@@ -1,8 +1,12 @@
 /**
  * Vercel BotID server-side check. Wraps `checkBotId()` from `botid/server`.
  *
- * Returns null if the request is from a human (or BotID is not configured).
- * Returns a 403 Response if the request is from a bot.
+ * Returns `{ isBot: true }` if the request is from a bot.
+ * Returns `{ isBot: false }` if the request is from a human.
+ * Returns `null` if BotID is not configured or unavailable.
+ *
+ * Callers are responsible for building the appropriate Response
+ * (e.g. via secureJson with CORS headers).
  *
  * BotID is opt-in: if the `botid` package is not installed or the
  * environment does not support it (e.g. local dev), requests pass through.
@@ -10,9 +14,13 @@
  * Install BotID: `pnpm --filter @eleva/api add botid`
  * Then add <BotIdClient> in the consuming app's root layout.
  */
+export interface BotVerdict {
+  isBot: boolean
+}
+
 export async function checkBot(options?: {
   checkLevel?: "basic" | "deepAnalysis"
-}): Promise<Response | null> {
+}): Promise<BotVerdict | null> {
   try {
     const mod = await (Function('return import("botid/server")')() as Promise<{
       checkBotId: (opts: {
@@ -26,9 +34,7 @@ export async function checkBot(options?: {
       },
     })
 
-    if (verification.isBot) {
-      return Response.json({ error: "blocked" }, { status: 403 })
-    }
+    return { isBot: verification.isBot }
   } catch {
     // `botid` not installed or not in a Vercel environment -- pass through
   }

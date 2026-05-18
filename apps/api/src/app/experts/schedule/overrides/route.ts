@@ -3,6 +3,7 @@ import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import { checkBot } from "@/lib/bot-protection"
 import { UnauthorizedError } from "@eleva/auth"
 import {
   getExpertProfileByUserId,
@@ -51,6 +52,11 @@ export async function POST(request: Request) {
     throw err
   }
 
+  const botVerdict = await checkBot()
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
+  }
+
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
     RATE_LIMITS.authenticated
@@ -75,28 +81,33 @@ export async function POST(request: Request) {
     )
   }
 
-  const schedule = await getOrCreateDefaultSchedule(
-    profile.orgId,
-    profile.id,
-    body.data.timezone
-  )
-
-  if (schedule.timezone !== body.data.timezone) {
-    await updateScheduleTimezone(
+  try {
+    const schedule = await getOrCreateDefaultSchedule(
       profile.orgId,
-      schedule.id,
       profile.id,
       body.data.timezone
     )
-  }
 
-  await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
-    scheduleId: schedule.id,
-    overrideDate: body.data.overrideDate,
-    startTime: body.data.isBlocked ? null : (body.data.startTime ?? null),
-    endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
-    isBlocked: body.data.isBlocked,
-  })
+    if (schedule.timezone !== body.data.timezone) {
+      await updateScheduleTimezone(
+        profile.orgId,
+        schedule.id,
+        profile.id,
+        body.data.timezone
+      )
+    }
+
+    await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
+      scheduleId: schedule.id,
+      overrideDate: body.data.overrideDate,
+      startTime: body.data.isBlocked ? null : (body.data.startTime ?? null),
+      endTime: body.data.isBlocked ? null : (body.data.endTime ?? null),
+      isBlocked: body.data.isBlocked,
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
 
   return secureJson({ ok: true }, { status: 201, headers })
 }

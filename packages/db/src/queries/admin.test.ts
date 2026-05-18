@@ -73,8 +73,9 @@ describe("admin queries", () => {
   })
 
   describe("updateExpertProfile", () => {
-    it("calls update with the provided data", async () => {
-      mockTx.update.mockReturnValueOnce(chain([]))
+    it("calls update with set and where using correct args", async () => {
+      const chainObj = chain([])
+      mockTx.update.mockReturnValueOnce(chainObj)
 
       const { updateExpertProfile } = await import("./admin")
       await updateExpertProfile("profile-1", "org-1", {
@@ -82,6 +83,10 @@ describe("admin queries", () => {
       })
 
       expect(mockTx.update).toHaveBeenCalled()
+      expect(chainObj.set).toHaveBeenCalledWith(
+        expect.objectContaining({ displayName: "New Name" })
+      )
+      expect(chainObj.where).toHaveBeenCalled()
     })
   })
 })

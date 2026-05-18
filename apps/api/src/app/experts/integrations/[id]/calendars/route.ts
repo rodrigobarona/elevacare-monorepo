@@ -1,5 +1,6 @@
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
@@ -33,6 +34,12 @@ export async function GET(
     throw err
   }
 
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
@@ -60,24 +67,34 @@ export async function GET(
     )
   }
 
-  const accessToken = await getCalendarToken(
-    session.user.workosUserId,
-    provider
-  )
-  const adapter = getAdapter(provider)
-  const subCalendars = await adapter.listCalendars(accessToken)
+  try {
+    const accessToken = await getCalendarToken(
+      session.user.workosUserId,
+      provider
+    )
+    const adapter = getAdapter(provider)
+    const subCalendars = await adapter.listCalendars(accessToken)
 
-  return secureJson(
-    {
-      calendars: subCalendars.map((c) => ({
-        id: c.id,
-        name: c.name,
-        primary: c.primary,
-        email: c.email,
-      })),
-    },
-    { status: 200, headers }
-  )
+    return secureJson(
+      {
+        calendars: subCalendars.map((c) => ({
+          id: c.id,
+          name: c.name,
+          primary: c.primary,
+          email: c.email,
+        })),
+      },
+      { status: 200, headers }
+    )
+  } catch {
+    return secureJson(
+      {
+        error: "provider_error",
+        message: "failed to fetch calendars from provider",
+      },
+      { status: 502, headers }
+    )
+  }
 }
 
 export async function OPTIONS(request: Request) {

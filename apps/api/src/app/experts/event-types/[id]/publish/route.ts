@@ -46,7 +46,7 @@ export async function PATCH(
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
-      { error: "not found", message: "no expert profile" },
+      { error: "not_found", message: "no expert profile" },
       { status: 404, headers }
     )
   }

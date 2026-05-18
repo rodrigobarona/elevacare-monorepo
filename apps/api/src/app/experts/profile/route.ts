@@ -67,27 +67,32 @@ export async function PATCH(request: Request) {
   const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
   if (!steps.includes("profile")) steps.push("profile")
 
-  await updateExpertProfile(profile.id, profile.orgId, {
-    ...(data.nif !== undefined && { nif: data.nif ?? null }),
-    ...(data.licenseScope !== undefined && {
-      licenseScope: data.licenseScope ?? null,
-    }),
-    ...(data.languages && { languages: data.languages }),
-    ...(data.practiceCountries && {
-      practiceCountries: data.practiceCountries,
-    }),
-    ...(data.worldwideMode !== undefined && {
-      worldwideMode: data.worldwideMode,
-    }),
-    ...(data.sessionModes && {
-      sessionModes:
-        data.sessionModes.length > 0 ? data.sessionModes : ["online"],
-    }),
-    ...(data.displayName && { displayName: data.displayName }),
-    ...(data.headline !== undefined && { headline: data.headline ?? null }),
-    ...(data.bio !== undefined && { bio: data.bio ?? null }),
-    metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-  })
+  try {
+    await updateExpertProfile(profile.id, profile.orgId, {
+      ...(data.nif !== undefined && { nif: data.nif ?? null }),
+      ...(data.licenseScope !== undefined && {
+        licenseScope: data.licenseScope ?? null,
+      }),
+      ...(data.languages && { languages: data.languages }),
+      ...(data.practiceCountries && {
+        practiceCountries: data.practiceCountries,
+      }),
+      ...(data.worldwideMode !== undefined && {
+        worldwideMode: data.worldwideMode,
+      }),
+      ...(data.sessionModes && {
+        sessionModes:
+          data.sessionModes.length > 0 ? data.sessionModes : ["online"],
+      }),
+      ...(data.displayName && { displayName: data.displayName }),
+      ...(data.headline !== undefined && { headline: data.headline ?? null }),
+      ...(data.bio !== undefined && { bio: data.bio ?? null }),
+      metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+    })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Internal server error"
+    return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

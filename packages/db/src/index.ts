@@ -30,7 +30,11 @@ export {
   type SlugAvailability,
 } from "./queries/public"
 export { pingMainDb, pingAuditDb } from "./ping"
-export { getExpertProfileByUserId, updateExpertProfile } from "./queries/admin"
+export {
+  getExpertProfileByUserId,
+  updateExpertProfile,
+  getOrganizationBySlug,
+} from "./queries/admin"
 export {
   listExpertEventTypes,
   getEventType,

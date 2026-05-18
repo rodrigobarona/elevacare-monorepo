@@ -12,7 +12,13 @@ import { createApiClient } from "@eleva/api-client"
 import { isLocale, cookieName, type Locale } from "@eleva/config/i18n"
 
 function getApiBaseUrl(): string {
-  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+  const url = process.env.NEXT_PUBLIC_API_URL
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_API_URL environment variable is required but not set"
+    )
+  }
+  return url
 }
 
 async function getAuthedApiClient() {
