@@ -5,8 +5,17 @@ import { dirname, resolve } from "node:path"
 
 interface RbacConfig {
   version: number
-  capabilities: Array<{ slug: string; displayName: string }>
-  roles: Array<{ slug: string; displayName: string; capabilities: string[] }>
+  capabilities: Array<{
+    slug: string
+    displayName: string
+    description?: string
+  }>
+  roles: Array<{
+    slug: string
+    displayName: string
+    description?: string
+    capabilities: string[]
+  }>
 }
 
 async function load(): Promise<RbacConfig> {
@@ -15,22 +24,19 @@ async function load(): Promise<RbacConfig> {
 }
 
 describe("rbac-config.json", () => {
-  it("capability slugs follow area[:subarea]:action shape", async () => {
+  it("capability slugs follow area:action shape (two segments)", async () => {
     const config = await load()
-    // Two- or three-segment colon-delimited slugs of lowercase
-    // [a-z_]+. Three-segment is reserved for entity:subentity:action
-    // patterns like 'expert:profile:edit'.
     for (const cap of config.capabilities) {
-      expect(cap.slug).toMatch(/^[a-z_]+:[a-z_]+(:[a-z_]+)?$/)
+      expect(cap.slug).toMatch(/^[a-z][a-z0-9_]*:[a-z][a-z0-9_]*$/)
       expect(cap.displayName.length).toBeGreaterThan(0)
     }
   })
 
-  it("role slugs are snake_case and unique", async () => {
+  it("role slugs are lowercase with hyphens/underscores and unique", async () => {
     const config = await load()
     const slugs = config.roles.map((r) => r.slug)
     expect(new Set(slugs).size).toBe(slugs.length)
-    for (const slug of slugs) expect(slug).toMatch(/^[a-z_]+$/)
+    for (const slug of slugs) expect(slug).toMatch(/^[a-z][a-z0-9_-]*$/)
   })
 
   it("every role capability references a declared capability slug", async () => {
@@ -43,12 +49,10 @@ describe("rbac-config.json", () => {
     }
   })
 
-  it("team_admin_capabilities strictly extends expert_capabilities", async () => {
+  it("team-admin strictly extends expert", async () => {
     const config = await load()
-    const expert = config.roles.find((r) => r.slug === "expert_capabilities")!
-    const teamAdmin = config.roles.find(
-      (r) => r.slug === "team_admin_capabilities"
-    )!
+    const expert = config.roles.find((r) => r.slug === "expert")!
+    const teamAdmin = config.roles.find((r) => r.slug === "team-admin")!
     for (const cap of expert.capabilities) {
       expect(teamAdmin.capabilities).toContain(cap)
     }
@@ -57,19 +61,37 @@ describe("rbac-config.json", () => {
     )
   })
 
-  it("patient bundle includes diary:share but no expert capabilities", async () => {
+  it("member bundle includes diary:share but no expert capabilities", async () => {
     const config = await load()
-    const patient = config.roles.find((r) => r.slug === "patient_capabilities")!
-    expect(patient.capabilities).toContain("diary:share")
-    expect(patient.capabilities).not.toContain("events:manage")
-    expect(patient.capabilities).not.toContain("reports:manage_own")
+    const member = config.roles.find((r) => r.slug === "member")!
+    expect(member.capabilities).toContain("diary:share")
+    expect(member.capabilities).not.toContain("events:manage")
+    expect(member.capabilities).not.toContain("reports:manage_own")
   })
 
   it("staff has audit:view_all + workflows:retry", async () => {
     const config = await load()
-    const staff = config.roles.find((r) => r.slug === "staff_capabilities")!
+    const staff = config.roles.find((r) => r.slug === "staff")!
     expect(staff.capabilities).toContain("audit:view_all")
     expect(staff.capabilities).toContain("workflows:retry")
     expect(staff.capabilities).toContain("payouts:approve")
+  })
+
+  it("lecturer has academy capabilities", async () => {
+    const config = await load()
+    const lecturer = config.roles.find((r) => r.slug === "lecturer")!
+    expect(lecturer.capabilities).toContain("courses:manage")
+    expect(lecturer.capabilities).toContain("courses:publish")
+    expect(lecturer.capabilities).toContain("academy:analytics_view")
+  })
+
+  it("all expected roles exist", async () => {
+    const config = await load()
+    const slugs = config.roles.map((r) => r.slug)
+    expect(slugs).toContain("member")
+    expect(slugs).toContain("expert")
+    expect(slugs).toContain("team-admin")
+    expect(slugs).toContain("lecturer")
+    expect(slugs).toContain("staff")
   })
 })

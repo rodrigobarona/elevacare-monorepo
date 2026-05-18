@@ -14,17 +14,31 @@ export interface WorkOSTokenUser {
   lastName?: string | null
 }
 
+export interface ResolveSessionOpts {
+  preferredOrgId?: string
+  preferredOrgSlug?: string
+  /** Permissions from the WorkOS JWT `permissions` claim. */
+  jwtPermissions?: string[]
+  /** Entitlements from the WorkOS JWT `entitlements` claim. */
+  jwtEntitlements?: string[]
+}
+
 /**
  * Resolve an Eleva session from a verified WorkOS user id. Returns null
  * when the user has no active memberships (new-sign-up race; the caller
  * usually triggers ensurePersonalOrg in that case).
  *
  * PII (email, displayName) comes from the WorkOS token, not the DB.
+ *
+ * When JWT claims are available (permissions, entitlements), they are
+ * used as the primary source of truth for capabilities and entitlements.
+ * Falls back to app-side derivation via deriveProductLabel + capabilitiesFor
+ * when JWT claims are empty (e.g. before WorkOS roles are fully configured).
  */
 export async function resolveSessionFromWorkosUser(
   workosUserId: string,
   tokenUser: WorkOSTokenUser,
-  opts: { preferredOrgId?: string; preferredOrgSlug?: string } = {}
+  opts: ResolveSessionOpts = {}
 ): Promise<ElevaSession | null> {
   const rows = await db()
     .select({
@@ -64,7 +78,16 @@ export async function resolveSessionFromWorkosUser(
   const picked = preferred ?? rows[0]!
 
   const productLabel = deriveProductLabel(picked.orgType, picked.workosRole)
-  const capabilities = capabilitiesFor(productLabel)
+
+  const capabilities =
+    opts.jwtPermissions && opts.jwtPermissions.length > 0
+      ? opts.jwtPermissions
+      : capabilitiesFor(productLabel)
+
+  const entitlements =
+    opts.jwtEntitlements && opts.jwtEntitlements.length > 0
+      ? opts.jwtEntitlements
+      : undefined
 
   const displayName =
     [tokenUser.firstName, tokenUser.lastName].filter(Boolean).join(" ") ||
@@ -84,6 +107,7 @@ export async function resolveSessionFromWorkosUser(
     productLabel,
     workosRole: picked.workosRole,
     capabilities,
+    entitlements,
   }
 }
 

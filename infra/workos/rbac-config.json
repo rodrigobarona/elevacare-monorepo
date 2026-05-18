@@ -1,75 +1,172 @@
 {
   "$schema": "./rbac-config.schema.json",
-  "version": 1,
+  "version": 3,
   "capabilities": [
-    { "slug": "appointments:view_own", "displayName": "View own appointments" },
-    { "slug": "sessions:view_own", "displayName": "View own sessions" },
-    { "slug": "billing:view_own", "displayName": "View own billing" },
-    { "slug": "diary:share", "displayName": "Share diary with an expert" },
+    {
+      "slug": "appointments:view_own",
+      "displayName": "View own appointments",
+      "description": "See scheduled and past appointments in the member dashboard."
+    },
+    {
+      "slug": "sessions:view_own",
+      "displayName": "View own sessions",
+      "description": "Access recordings, notes, and history of own sessions."
+    },
+    {
+      "slug": "billing:view_own",
+      "displayName": "View own billing",
+      "description": "See invoices, receipts, and payment history."
+    },
+    {
+      "slug": "diary:share",
+      "displayName": "Share diary with an expert",
+      "description": "Grant an expert read access to the member health diary."
+    },
 
-    { "slug": "events:manage", "displayName": "Manage event types" },
+    {
+      "slug": "events:manage",
+      "displayName": "Manage event types",
+      "description": "Create, edit, and archive bookable event types."
+    },
     {
       "slug": "schedule:manage",
-      "displayName": "Manage availability schedule"
+      "displayName": "Manage availability schedule",
+      "description": "Set working hours, breaks, and holiday blocks."
     },
-    { "slug": "bookings:manage_own", "displayName": "Manage own bookings" },
+    {
+      "slug": "bookings:manage_own",
+      "displayName": "Manage own bookings",
+      "description": "Confirm, reschedule, or cancel own bookings."
+    },
     {
       "slug": "reports:manage_own",
-      "displayName": "Author and publish reports"
+      "displayName": "Author and publish reports",
+      "description": "Write post-session reports and publish to members."
     },
-    { "slug": "payouts:view_own", "displayName": "View own payouts" },
+    {
+      "slug": "payouts:view_own",
+      "displayName": "View own payouts",
+      "description": "See payout history, pending amounts, and transfers."
+    },
     {
       "slug": "expert:onboard",
-      "displayName": "Run own expert onboarding wizard"
+      "displayName": "Run expert onboarding",
+      "description": "Complete the expert onboarding wizard (identity, Stripe, profile)."
     },
     {
-      "slug": "expert:profile:edit",
-      "displayName": "Edit own expert profile"
+      "slug": "expert:profile_edit",
+      "displayName": "Edit own expert profile",
+      "description": "Update bio, specialties, avatar, and public profile."
     },
     {
-      "slug": "expert:invoicing:manage",
-      "displayName": "Manage own invoicing adapter (TOConline / Moloni / manual)"
+      "slug": "expert:invoicing_manage",
+      "displayName": "Manage own invoicing adapter",
+      "description": "Connect and configure invoicing (TOConline, Moloni, manual)."
     },
 
     {
       "slug": "members:manage",
-      "displayName": "Invite / remove team members"
+      "displayName": "Manage team members",
+      "description": "Invite, remove, and change roles of org members."
     },
-    { "slug": "billing:manage_org", "displayName": "Manage org billing" },
+    {
+      "slug": "billing:manage_org",
+      "displayName": "Manage org billing",
+      "description": "Update payment method, view org invoices, manage plan."
+    },
     {
       "slug": "subscriptions:manage_org",
-      "displayName": "Manage org subscriptions"
+      "displayName": "Manage org subscriptions",
+      "description": "Upgrade, downgrade, or cancel the org subscription."
     },
 
-    { "slug": "experts:approve", "displayName": "Approve expert applications" },
-    { "slug": "experts:reject", "displayName": "Reject expert applications" },
+    {
+      "slug": "courses:manage",
+      "displayName": "Manage courses",
+      "description": "Edit course content, modules, and settings."
+    },
+    {
+      "slug": "courses:create",
+      "displayName": "Create new courses",
+      "description": "Create new courses from scratch or templates."
+    },
+    {
+      "slug": "courses:publish",
+      "displayName": "Publish courses",
+      "description": "Make courses visible and enrollable by students."
+    },
+    {
+      "slug": "academy:analytics_view",
+      "displayName": "View academy analytics",
+      "description": "See enrollment, completion, and revenue metrics."
+    },
+
+    {
+      "slug": "experts:approve",
+      "displayName": "Approve expert applications",
+      "description": "Accept a Become-Partner application and provision expert access."
+    },
+    {
+      "slug": "experts:reject",
+      "displayName": "Reject expert applications",
+      "description": "Decline a Become-Partner application with feedback."
+    },
     {
       "slug": "applications:review",
-      "displayName": "Review Become-Partner applications queue"
+      "displayName": "Review applications queue",
+      "description": "Browse and filter the Become-Partner applications list."
     },
     {
       "slug": "applications:claim",
-      "displayName": "Claim a Become-Partner application for review"
+      "displayName": "Claim an application",
+      "description": "Lock an application for review to avoid duplicate work."
     },
-    { "slug": "users:view_all", "displayName": "View all users" },
-    { "slug": "payments:view_all", "displayName": "View all payments" },
-    { "slug": "payouts:approve", "displayName": "Approve payouts" },
+    {
+      "slug": "users:view_all",
+      "displayName": "View all users",
+      "description": "Browse all platform users across organizations."
+    },
+    {
+      "slug": "payments:view_all",
+      "displayName": "View all payments",
+      "description": "See all transactions, charges, and refunds platform-wide."
+    },
+    {
+      "slug": "payouts:approve",
+      "displayName": "Approve payouts",
+      "description": "Release pending expert payouts for transfer."
+    },
     {
       "slug": "audit:view_all",
-      "displayName": "View cross-tenant audit stream"
+      "displayName": "View audit stream",
+      "description": "Read the cross-tenant audit event log."
     },
-    { "slug": "workflows:retry", "displayName": "Retry failed workflow steps" },
+    {
+      "slug": "workflows:retry",
+      "displayName": "Retry failed workflows",
+      "description": "Re-trigger failed background workflow steps."
+    },
     {
       "slug": "accounting:reconcile",
-      "displayName": "Run accounting reconciliation"
+      "displayName": "Run accounting reconciliation",
+      "description": "Match Stripe transactions against internal ledger."
     },
-    { "slug": "usernames:reserve", "displayName": "Reserve public usernames" },
-    { "slug": "usernames:rename", "displayName": "Rename public usernames" }
+    {
+      "slug": "usernames:reserve",
+      "displayName": "Reserve public usernames",
+      "description": "Block a username slug before it is assigned."
+    },
+    {
+      "slug": "usernames:rename",
+      "displayName": "Rename public usernames",
+      "description": "Change an existing user or org public slug."
+    }
   ],
   "roles": [
     {
-      "slug": "patient_capabilities",
-      "displayName": "Patient capability bundle",
+      "slug": "member",
+      "displayName": "Member",
+      "description": "Default role for patients/members using the personal health app.",
       "capabilities": [
         "appointments:view_own",
         "sessions:view_own",
@@ -78,8 +175,9 @@
       ]
     },
     {
-      "slug": "expert_capabilities",
-      "displayName": "Expert capability bundle",
+      "slug": "expert",
+      "displayName": "Expert",
+      "description": "Approved health professional with booking, reporting, and payout capabilities.",
       "capabilities": [
         "events:manage",
         "schedule:manage",
@@ -87,13 +185,14 @@
         "reports:manage_own",
         "payouts:view_own",
         "expert:onboard",
-        "expert:profile:edit",
-        "expert:invoicing:manage"
+        "expert:profile_edit",
+        "expert:invoicing_manage"
       ]
     },
     {
-      "slug": "team_admin_capabilities",
-      "displayName": "Team admin capability bundle",
+      "slug": "team-admin",
+      "displayName": "Team Admin",
+      "description": "Clinic or team administrator with member management and billing control.",
       "capabilities": [
         "events:manage",
         "schedule:manage",
@@ -101,16 +200,29 @@
         "reports:manage_own",
         "payouts:view_own",
         "expert:onboard",
-        "expert:profile:edit",
-        "expert:invoicing:manage",
+        "expert:profile_edit",
+        "expert:invoicing_manage",
         "members:manage",
         "billing:manage_org",
         "subscriptions:manage_org"
       ]
     },
     {
-      "slug": "staff_capabilities",
-      "displayName": "Eleva staff capability bundle",
+      "slug": "lecturer",
+      "displayName": "Lecturer",
+      "description": "Academy instructor who creates, manages, and publishes courses.",
+      "capabilities": [
+        "courses:manage",
+        "courses:create",
+        "courses:publish",
+        "academy:analytics_view",
+        "payouts:view_own"
+      ]
+    },
+    {
+      "slug": "staff",
+      "displayName": "Eleva Staff",
+      "description": "Internal Eleva operator with full platform administration access.",
       "capabilities": [
         "experts:approve",
         "experts:reject",

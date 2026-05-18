@@ -20,6 +20,7 @@
     "@eleva/encryption": "workspace:*",
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
+    "@workos-inc/node": "catalog:",
     "stripe": "catalog:"
   },
   "peerDependencies": {
