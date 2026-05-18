@@ -33,6 +33,7 @@
     "./config-helpers": "./src/config-helpers.ts",
     "./messages": "./src/messages.ts",
     "./nav-types": "./src/nav-types.ts",
+    "./request-config": "./src/request-config.ts",
     "./switch-org-action": "./src/switch-org-action.ts",
     "./*": "./src/*.tsx"
   }
