@@ -25,6 +25,15 @@ export const nextJsConfig = [
     languageOptions: {
       globals: {
         ...globals.serviceworker,
+        ...globals.browser,
+      },
+    },
+  },
+  {
+    files: ["*.config.{js,mjs,ts}", "next.config.{js,mjs}"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
       },
     },
   },

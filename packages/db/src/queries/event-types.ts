@@ -4,7 +4,6 @@ import {
   eventTypes,
   type NewEventType,
   type EventType,
-  type LocalizedText,
 } from "../schema/main/index"
 
 export async function listExpertEventTypes(

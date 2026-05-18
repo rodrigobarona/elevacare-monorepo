@@ -22,6 +22,21 @@ export const config = [
     },
   },
   {
+    rules: {
+      // Allow `_`-prefixed args and vars to mark intentionally-unused
+      // (interface contract, placeholder param, destructure rest, etc).
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+          destructuredArrayIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
+  {
     plugins: {
       onlyWarn,
     },

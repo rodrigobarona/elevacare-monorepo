@@ -44,7 +44,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-002-package-manager.md`](./ADR-002-package-manager.md) — pnpm installer + bun as task runner; bun install banned
 - [`ADR-003-tenancy-and-rls.md`](./ADR-003-tenancy-and-rls.md) — Neon RLS with `withOrgContext()`; two Neon projects (main + audit)
 - [`ADR-004-scheduling-and-calendar-oauth.md`](./ADR-004-scheduling-and-calendar-oauth.md) — Eleva-owned Google/Microsoft OAuth in `packages/calendar`; cal.com-inspired scheduling model with online/in-person/phone modes
-- [`ADR-005-payments-and-monetization.md`](./ADR-005-payments-and-monetization.md) — Stripe Connect Express + Dynamic Payment Methods + Embedded Components + single webhook; hybrid monetization (solo=commission, clinic=SaaS tiers); Multibanco vouchers excluded; three-party revenue demoted to phase-2
+- [`ADR-005-payments-and-monetization.md`](./ADR-005-payments-and-monetization.md) — Stripe Connect Express + Dynamic Payment Methods + Embedded Components + single webhook; hybrid monetization (solo=commission, clinic=SaaS tiers); Multibanco vouchers excluded; three-party revenue demoted to phase-2 (UX subsection superseded by ADR-016)
 - [`ADR-006-notifications-two-lane.md`](./ADR-006-notifications-two-lane.md) — Lane 1 transactional (Vercel Workflows + Resend + Twilio + Neon inbox + Expo push) and Lane 2 marketing (Resend Automations); Novu retired
 - [`ADR-007-durable-workflows.md`](./ADR-007-durable-workflows.md) — Vercel Workflows DevKit for durable orchestration; QStash scoped to periodic cron only
 - [`ADR-008-feature-flags.md`](./ADR-008-feature-flags.md) — Vercel Flags SDK + Edge Config; PostHog adapter reserved for experimentation
@@ -55,6 +55,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-013-accounting-integration.md`](./ADR-013-accounting-integration.md) — Two-tier invoicing; Tier 1 TOConline; Tier 2 adapter registry (TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T)
 - [`ADR-014-multi-zone-rewrites.md`](./ADR-014-multi-zone-rewrites.md) — Single canonical public domain (`eleva.care`) with Vercel multi-zone rewrites; gateway app owns root; sub-apps served under `/app`, `/api`, `/docs` prefixes; internal Vercel URLs redirected/noindexed
 - [`ADR-015-multi-app-split.md`](./ADR-015-multi-app-split.md) — Split `apps/app` into role-focused micro-apps (member, account, expert, team, admin, academy) on `eleva.care` via gateway proxy rewrites + subdomains; Vercel Microfrontends rejected on cost
+- [`ADR-016-subscription-ux-direction.md`](./ADR-016-subscription-ux-direction.md) — Embedded Checkout for SaaS subscription purchase + Customer Portal for management as the steady-state ("embedded widgets, no custom UI" paradigm consistent with WorkOS Widgets); multi-admin audit closed via `withAudit` on Portal session-mint correlated with webhook events; custom in-app management UI is contingency-only, not a planned migration; supersedes ADR-005's UX subsection; `payment_method_types` for subscriptions is `card + sepa_debit` only (MB WAY/Multibanco are one-time-only)
 
 ## ADR Template
 

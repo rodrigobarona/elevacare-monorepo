@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (UX subsection superseded by [ADR-016](ADR-016-subscription-ux-direction.md), 2026-05-18)
 
 ## Date
 
@@ -37,11 +37,13 @@ Grounded in [Doctolib's business model](https://businessmodelcanvastemplate.com/
 
 ### Stripe UX — fully embedded, no redirects
 
+> **Superseded by [ADR-016](ADR-016-subscription-ux-direction.md) (Accepted 2026-05-18)** for SaaS subscription surfaces. ADR-016 keeps the embedded paradigm but adopts Stripe Embedded Checkout for subscription purchase and Stripe-hosted Customer Portal for subscription management, replacing the "Custom Eleva UI + Payment Element for subscription management" stance below. Patient booking checkout, Connect Embedded Components, Identity Embedded, the Appearance API mapping, and CSP allowances remain unchanged. ADR-016 also corrects the implicit assumption that MB WAY/Multibanco can be used for SaaS recurring billing — they cannot.
+
 - Payment Element for patient checkout
 - Connect Embedded Components for expert: `<ConnectAccountOnboarding>`, `<ConnectPayouts>`, `<ConnectBalances>`, `<ConnectAccountManagement>`, `<ConnectDocuments>`, `<ConnectTaxSettings>`, `<ConnectNotificationBanner>`
-- Custom Eleva UI + Payment Element + Billing API for subscription management (expert Top Expert tier, clinic SaaS tiers) — **no Customer Portal redirect**
+- ~~Custom Eleva UI + Payment Element + Billing API for subscription management (expert Top Expert tier, clinic SaaS tiers) — no Customer Portal redirect~~ → see ADR-016: **Embedded Checkout for purchase + Customer Portal for management**, with multi-admin audit closed via `withAudit` on Portal session-mint correlated with webhook events.
 - `appearance` API mapped to Eleva design tokens; dark-mode; locale via next-intl
-- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com`
+- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com`, `billing.stripe.com` (added by ADR-016 for Portal redirect return flow)
 - `AccountSession` tokens minted server-side per screen with precise permissions
 
 ### Monetization — segment-differentiated hybrid

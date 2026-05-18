@@ -1,7 +1,9 @@
 ---
-description: Stripe webhook event handling and endpoint configuration. Apply when adding, removing, or modifying Stripe webhook event handlers or changing the events the webhook endpoint subscribes to.
+description: Stripe webhook events two-file contract. Apply when adding, removing, or modifying Stripe webhook event handling.
 globs:
-  - apps/api/src/app/stripe/webhook/**
+  - apps/api/src/app/webhooks/stripe/route.ts
+  - apps/api/src/app/stripe/webhook/route.ts
+  - packages/billing/src/server/webhook.ts
   - infra/stripe/setup-webhooks.ts
 alwaysApply: false
 ---
@@ -16,50 +18,113 @@ events the endpoint subscribes to. Both must stay in sync.
 
 | File | Owns |
 | --- | --- |
-| `apps/api/src/app/stripe/webhook/route.ts` | Runtime handler: `switch (event.type)` with a `case` per event |
+| `packages/billing/src/server/webhook.ts` | Runtime processor: idempotency log, dispatch switch, typed handlers, `withAudit` wiring |
 | `infra/stripe/setup-webhooks.ts` | Endpoint configuration: `WEBHOOK_EVENTS` array sent to Stripe API |
+
+The route files (`apps/api/src/app/webhooks/stripe/route.ts` canonical and
+`apps/api/src/app/stripe/webhook/route.ts` legacy during cutover) are thin
+wrappers: verify signature, call `processStripeEvent`, return status code.
+Do not put per-event business logic in the routes.
 
 ## Adding a new event
 
-1. Add a `case` branch in the handler's `handleEvent` switch in
-   `apps/api/src/app/stripe/webhook/route.ts`.
+1. Add a `case` branch in `dispatchEvent` inside
+   `packages/billing/src/server/webhook.ts`. Each handler must:
+   - resolve the tenant `orgId` (via `resolveOrgIdFromCustomer`,
+     `resolveOrgIdFromConnectAccount`, or metadata),
+   - return `{ kind: "ignored", reason, resolvedOrgId: null }` when the
+     event has no resolvable tenant (Stripe must not retry — these are
+     valid events the system chose not to act on),
+   - wrap mirror writes in `withAudit({ orgId, actorUserId: null })` and
+     emit a closed-union `entity` + `action`.
+
 2. Add the same event string to `WEBHOOK_EVENTS` in
    `infra/stripe/setup-webhooks.ts`.
-3. Run the setup script to update the live endpoint:
+
+3. If a new audit `entity` or `action` is needed, extend the closed
+   unions in `packages/audit/src/types.ts` first.
+
+4. Run the setup script to update the live endpoint:
 
    ```bash
    pnpm stripe:setup:webhooks -- --url <ENDPOINT_URL> --apply
    ```
 
-4. For local dev, restart `stripe listen` (the CLI forwards all events by
-   default, but the handler will only process the ones it has `case` branches
-   for).
+5. For local dev, restart `stripe listen` (the CLI forwards all events
+   by default, but the dispatcher only processes events with a `case`).
 
 ## Removing an event
 
-1. Remove the `case` branch from the handler.
+1. Remove the `case` branch from `dispatchEvent`.
 2. Remove the event from `WEBHOOK_EVENTS` in the setup script.
 3. Re-run the setup script to update the endpoint.
 
-## Current events
+## Current canonical events
 
+SaaS lifecycle:
+
+- `checkout.session.completed`
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
-- `invoice.payment_succeeded`
+- `invoice.paid`
+- `invoice.payment_succeeded` (legacy alias kept for back-compat)
 - `invoice.payment_failed`
+- `invoice.payment_action_required`
+
+Stripe Identity:
+
+- `identity.verification_session.verified`
+- `identity.verification_session.requires_input`
+- `identity.verification_session.canceled`
+
+Stripe Connect platform + payouts:
+
+- `account.updated`
+- `capability.updated`
+- `account.application.deauthorized`
+- `payout.paid`
+- `payout.failed`
+
+Booking payments + refunds + disputes:
+
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `charge.refunded`
+- `charge.dispute.created`
+
+## Endpoint URL
+
+Canonical: `POST /webhooks/stripe` (production:
+`https://api.eleva.care/webhooks/stripe`).
+
+The legacy `POST /stripe/webhook` route is kept active during cutover and
+delegates to the same `processStripeEvent` core. It will be removed in a
+follow-up commit once Stripe Dashboard is pointed at the canonical URL.
+
+## Idempotency contract
+
+`processStripeEvent` inserts every Stripe `event.id` into the
+`stripe_webhook_events` table with status='received' before dispatch. On
+duplicate delivery the `INSERT ... ON CONFLICT DO NOTHING` short-circuits
+and the route returns `200 { received: true, status: "duplicate" }`. The
+status column transitions to `processed` (with `processed_at`) on success
+or `failed` (with truncated `error`) on retryable handler error.
 
 ## Rules
 
-- **Never** add an event to the setup script without a matching handler case.
-- **Never** add a handler case without adding the event to the setup script.
-- The handler must **always** verify the webhook signature via
-  `stripe().webhooks.constructEvent()` before processing.
-- The handler must return `200` for unrecognized events (the `default: break`
-  in the switch handles this) so Stripe does not retry them.
+- **Never** add an event to the setup script without a matching `case`.
+- **Never** add a `case` without adding the event to the setup script.
+- The route handler must **always** verify the webhook signature via
+  `stripe().webhooks.constructEventAsync()` before calling
+  `processStripeEvent`.
+- Routes return `200` for `processed`, `duplicate`, and `ignored`
+  results; `500` for `failed` (Stripe retries non-2xx with backoff).
+- Domain mirror writes inside handlers MUST use `withAudit` with the
+  resolved `orgId` and `actorUserId: null`.
 - The setup script is idempotent: safe to re-run at any time.
-- The signing secret (`STRIPE_WEBHOOK_SECRET`) is only shown once at endpoint
-  creation. If lost, delete and recreate the endpoint.
+- The signing secret (`STRIPE_WEBHOOK_SECRET`) is only shown once at
+  endpoint creation. If lost, delete and recreate the endpoint.
 
 ## Local development
 
@@ -74,7 +139,7 @@ handles everything.
 3. Start the listener:
 
    ```bash
-   stripe listen --forward-to localhost:3002/stripe/webhook
+   stripe listen --forward-to localhost:3002/webhooks/stripe
    ```
 
 4. Copy the `whsec_...` secret from the CLI output into `.env.local`:
@@ -83,8 +148,8 @@ handles everything.
    STRIPE_WEBHOOK_SECRET=whsec_...
    ```
 
-5. Restart the API dev server (`pnpm --filter @eleva/api dev`) so it picks up
-   the new secret.
+5. Restart the API dev server (`pnpm --filter @eleva/api dev`) so it
+   picks up the new secret.
 
 ### Daily workflow
 
@@ -93,17 +158,31 @@ handles everything.
 pnpm --filter @eleva/api dev
 
 # Terminal 2 — forward Stripe events to the local API
-stripe listen --forward-to localhost:3002/stripe/webhook
+stripe listen --forward-to localhost:3002/webhooks/stripe
 ```
 
-The CLI forwards **all** event types. The handler's `default: break` safely
-ignores events it does not have a `case` for.
+The CLI forwards **all** event types. The dispatcher's `default` branch
+returns `{ kind: "ignored", reason: "no handler registered..." }` for
+events it does not recognize.
 
 ### Triggering test events
 
 ```bash
+stripe trigger checkout.session.completed
 stripe trigger customer.subscription.created
-stripe trigger invoice.payment_succeeded
+stripe trigger invoice.paid
+stripe trigger payment_intent.succeeded
+stripe trigger payout.paid
+stripe trigger account.updated
+stripe trigger identity.verification_session.verified
 ```
 
-Check the API server logs for `[stripe-webhook]` output confirming delivery.
+Check the API server logs for `[stripe-webhook]` output confirming
+delivery and `stripe_webhook_events` rows for the persisted entries.
+
+## WorkOS Stripe Add-on note
+
+The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per
+ADR-016). For staging/dev, use Stripe **test mode** on a standard
+account, not a Sandbox account. Entitlements and `workos_seat_count`
+meter integration require this.

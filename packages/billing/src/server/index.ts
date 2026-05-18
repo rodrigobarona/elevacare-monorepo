@@ -22,6 +22,8 @@ export type {
   ProvisionBillingInput,
   ProvisionBillingResult,
 } from "./provisioning"
+export { processStripeEvent } from "./webhook"
+export type { StripeEventResult } from "./webhook"
 export type {
   ConnectAccountSession,
   ConnectComponentName,

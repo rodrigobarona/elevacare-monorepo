@@ -18,9 +18,11 @@ export function SignedOutButtons({
   return (
     <>
       <Button variant="ghost" size="sm" asChild>
+        {}
         <a href="/login">{loginLabel}</a>
       </Button>
       <Button size="sm" asChild>
+        {}
         <a href="/signup">{getStartedLabel}</a>
       </Button>
     </>

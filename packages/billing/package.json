@@ -16,11 +16,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
+    "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:*",
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
     "@workos-inc/node": "catalog:",
+    "drizzle-orm": "catalog:",
     "stripe": "catalog:"
   },
   "peerDependencies": {

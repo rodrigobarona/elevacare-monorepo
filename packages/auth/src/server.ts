@@ -103,20 +103,11 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
   void headers()
   void cookies()
 
-  let workosUserId: string | null = null
-  let tokenEmail: string | null = null
-  let tokenFirstName: string | null = null
-  let tokenLastName: string | null = null
-  let permissions: string[] = []
-  let entitlements: string[] = []
-  let jwtOrgId: string | null = null
-
   try {
     const workosSession = await authkitGetSession()
-    workosUserId = workosSession.user?.id ?? null
-    tokenEmail = workosSession.user?.email ?? null
-    tokenFirstName = workosSession.user?.firstName ?? null
-    tokenLastName = workosSession.user?.lastName ?? null
+    let permissions: string[] = []
+    let entitlements: string[] = []
+    let jwtOrgId: string | null = null
 
     if (workosSession.accessToken) {
       const claims = decodeJwtPayload(workosSession.accessToken)
@@ -130,26 +121,30 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
         jwtOrgId = claims.org_id
       }
     }
+
+    return {
+      workosUserId: workosSession.user?.id ?? null,
+      tokenEmail: workosSession.user?.email ?? null,
+      tokenFirstName: workosSession.user?.firstName ?? null,
+      tokenLastName: workosSession.user?.lastName ?? null,
+      permissions,
+      entitlements,
+      jwtOrgId,
+    }
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
       const cookieUser = await getWorkosUserFromCookie()
-      workosUserId = cookieUser?.id ?? null
-      tokenEmail = cookieUser?.email ?? null
-      tokenFirstName = cookieUser?.firstName ?? null
-      tokenLastName = cookieUser?.lastName ?? null
-    } else {
-      throw err
+      return {
+        workosUserId: cookieUser?.id ?? null,
+        tokenEmail: cookieUser?.email ?? null,
+        tokenFirstName: cookieUser?.firstName ?? null,
+        tokenLastName: cookieUser?.lastName ?? null,
+        permissions: [],
+        entitlements: [],
+        jwtOrgId: null,
+      }
     }
-  }
-
-  return {
-    workosUserId,
-    tokenEmail,
-    tokenFirstName,
-    tokenLastName,
-    permissions,
-    entitlements,
-    jwtOrgId,
+    throw err
   }
 }
 
@@ -224,19 +219,7 @@ export async function getSessionForOrg(
  * Memoised per-request via React.cache.
  */
 export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
-  let user: WorkosCookieSession["user"] | null = null
-
-  try {
-    const workosSession = await authkitGetSession()
-    user = workosSession.user ?? null
-  } catch (err) {
-    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      user = await getWorkosUserFromCookie()
-    } else {
-      throw err
-    }
-  }
-
+  const user = await resolveWorkosUserOrNull()
   if (!user) return null
   return {
     id: user.id,
@@ -245,6 +228,20 @@ export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
     lastName: user.lastName ?? null,
   }
 })
+
+async function resolveWorkosUserOrNull(): Promise<
+  WorkosCookieSession["user"] | null
+> {
+  try {
+    const workosSession = await authkitGetSession()
+    return workosSession.user ?? null
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
+      return await getWorkosUserFromCookie()
+    }
+    throw err
+  }
+}
 
 /**
  * Convenience wrapper that throws UnauthorizedError if there is no

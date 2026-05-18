@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import Stripe from "stripe"
 
 /**
@@ -6,25 +5,60 @@ import Stripe from "stripe"
  * receives billing events. Idempotent: if an endpoint with the same URL
  * already exists, its enabled_events list is synced to the canonical set.
  *
+ * Canonical endpoint URL (per Phase 1 of stripe-foundation-review):
+ *   https://api.eleva.care/webhooks/stripe
+ *
+ * The legacy URL (/stripe/webhook) is still active in the API layer
+ * during cutover. To migrate the Stripe Dashboard to the new URL:
+ *   1. Deploy /webhooks/stripe (this is already shipped).
+ *   2. Run this script with the new URL and --apply.
+ *   3. Verify deliveries land on /webhooks/stripe.
+ *   4. Remove the legacy route file in a follow-up commit.
+ *
  * Usage:
- *   pnpm setup:webhooks -- --url https://api.eleva.care/stripe/webhook
- *   pnpm setup:webhooks -- --url https://api.eleva.care/stripe/webhook --apply
+ *   pnpm setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
+ *   pnpm setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply
  *
  * The signing secret (whsec_...) is only returned on creation. Save it
  * immediately as STRIPE_WEBHOOK_SECRET in your environment.
  *
  * For local development, use the Stripe CLI instead:
- *   stripe listen --forward-to localhost:3002/stripe/webhook
+ *   stripe listen --forward-to localhost:3002/webhooks/stripe
  *
  * Uses STRIPE_SECRET_KEY from .env.local (staging by default).
+ *
+ * Note: the WorkOS Stripe Add-on does NOT support Stripe Sandbox
+ * accounts (per ADR-016). For staging/dev, use Stripe test mode on a
+ * standard account, not a Sandbox account.
  */
 
 const WEBHOOK_EVENTS: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [
+  // SaaS subscription lifecycle.
+  "checkout.session.completed",
   "customer.subscription.created",
   "customer.subscription.updated",
   "customer.subscription.deleted",
-  "invoice.payment_succeeded",
+  "invoice.paid",
+  "invoice.payment_succeeded", // legacy alias kept for back-compat
   "invoice.payment_failed",
+  "invoice.payment_action_required",
+  // Stripe Identity (expert KYC).
+  "identity.verification_session.verified",
+  "identity.verification_session.requires_input",
+  "identity.verification_session.canceled",
+  // Stripe Connect platform (expert / clinic accounts).
+  "account.updated",
+  "capability.updated",
+  "account.application.deauthorized",
+  // Connect payouts (expert payouts on the connected account).
+  "payout.paid",
+  "payout.failed",
+  // Booking PaymentIntents (patient checkout).
+  "payment_intent.succeeded",
+  "payment_intent.payment_failed",
+  // Refunds and disputes (booking payments).
+  "charge.refunded",
+  "charge.dispute.created",
 ]
 
 function parseArgs(argv: string[]): { url: string | null; apply: boolean } {
@@ -56,7 +90,7 @@ async function main() {
   if (!url) {
     console.error(
       "[stripe:webhooks] Missing --url argument.\n" +
-        "  Usage: pnpm setup:webhooks -- --url https://api.eleva.care/stripe/webhook [--apply]"
+        "  Usage: pnpm setup:webhooks -- --url https://api.eleva.care/webhooks/stripe [--apply]"
     )
     process.exit(1)
   }
@@ -130,7 +164,8 @@ async function main() {
   const created = await stripe.webhookEndpoints.create({
     url,
     enabled_events: [...WEBHOOK_EVENTS],
-    description: "Eleva billing events (subscriptions + invoices)",
+    description:
+      "Eleva platform events (SaaS subs, invoices, Identity, Connect, payouts, booking payments)",
   })
 
   console.log(`[stripe:webhooks] Created endpoint: ${created.id}`)

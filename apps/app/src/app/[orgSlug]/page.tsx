@@ -14,11 +14,11 @@ export default async function OrgHomePage({
     case "member":
       return <MemberDashboard session={session} />
     case "expert":
-      redirect(`/${orgSlug}/expert`)
+      return redirect(`/${orgSlug}/expert`)
     case "team_admin":
-      redirect(`/${orgSlug}/team`)
+      return redirect(`/${orgSlug}/team`)
     case "staff":
-      redirect("/admin")
+      return redirect("/admin")
   }
 }
 

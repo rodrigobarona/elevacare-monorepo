@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { seedExpertCategories } from "./expert-categories"
 
 async function main() {
