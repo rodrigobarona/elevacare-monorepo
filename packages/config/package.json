@@ -12,6 +12,7 @@
     "./country-to-locale": "./src/country-to-locale.ts",
     "./reserved-usernames": "./src/reserved-usernames.ts",
     "./routing": "./src/routing.ts",
+    "./dispatch": "./src/dispatch.ts",
     "./slug": "./src/slug.ts"
   },
   "scripts": {

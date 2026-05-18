@@ -100,3 +100,28 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
  * @deprecated Use APP_FIXED_SEGMENTS + ACCOUNT_FIXED_SEGMENTS instead.
  */
 export const APP_ROOT_SEGMENTS = APP_FIXED_SEGMENTS
+
+/**
+ * Cookie used by the gateway and member app to remember the last org
+ * a user was active in. Allows /dashboard and bare-/ to short-circuit
+ * to /[orgSlug] without round-tripping to the DB.
+ *
+ * Set as httpOnly by app/proxy (server reads only).
+ */
+export const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
+
+/**
+ * Shape check for a candidate org slug pulled from a URL segment.
+ *
+ * Mirrors the format rules enforced by validateUsername() in
+ * reserved-usernames.ts (lowercase a-z0-9, hyphens, 3-30 chars,
+ * no leading/trailing/consecutive hyphens) but performs ONLY shape
+ * checks -- callers must layer reserved-name and locale checks on
+ * top. Used by apps/web/src/proxy.ts to decide whether an unknown
+ * first segment should be treated as a potential org slug.
+ */
+const ORG_SLUG_SHAPE = /^[a-z0-9](?:[a-z0-9]|-(?!-)){1,28}[a-z0-9]$/
+
+export function isOrgSlugShape(segment: string): boolean {
+  return ORG_SLUG_SHAPE.test(segment)
+}

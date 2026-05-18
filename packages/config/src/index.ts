@@ -41,5 +41,13 @@ export {
   ORG_SCOPED_SEGMENTS,
   WEB_MARKETING_PATHS,
   RESERVED_SLUGS,
+  LAST_ACTIVE_ORG_COOKIE,
+  isOrgSlugShape,
 } from "./routing"
+export {
+  resolveDispatch,
+  isRootPath,
+  type Dispatch,
+  type GatewayOrigins,
+} from "./dispatch"
 export { slugify, generateUniqueOrgSlug } from "./slug"

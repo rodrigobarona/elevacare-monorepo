@@ -3,12 +3,11 @@ import {
   APP_FIXED_SEGMENTS,
   ACCOUNT_STANDALONE_PATHS,
   ACCOUNT_FIXED_SEGMENTS,
+  LAST_ACTIVE_ORG_COOKIE,
 } from "@eleva/config/routing"
 import { matchesPath } from "@eleva/observability/proxy"
 
 const AUTH_FLOW_PATHS = ACCOUNT_STANDALONE_PATHS.map((p) => `/${p}`)
-
-const LAST_ACTIVE_ORG_COOKIE = "eleva-last-org"
 
 const fixedSegments = new Set<string>([
   ...APP_FIXED_SEGMENTS,

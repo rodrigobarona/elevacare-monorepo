@@ -13,4 +13,6 @@ export default withHeaders(
   })
 )
 
+// Matcher must be inlined (Next.js static-analyzer requirement).
+// Keep in sync with STANDARD_APP_MATCHER in @eleva/observability/proxy.
 export const config = { matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"] }

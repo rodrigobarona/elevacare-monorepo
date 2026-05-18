@@ -11,6 +11,7 @@
     "./server": "./src/server.ts",
     "./react": "./src/react.tsx",
     "./guards": "./src/guards.ts",
+    "./return-to": "./src/return-to.ts",
     "./upload-token": "./src/upload-token.ts"
   },
   "scripts": {
