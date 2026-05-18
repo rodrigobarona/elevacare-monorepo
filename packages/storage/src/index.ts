@@ -21,7 +21,7 @@
  */
 
 import { put, del, get, type PutBlobResult } from "@vercel/blob"
-import { requirePrivateBlobEnv } from "@eleva/config/env"
+import { requireBlobEnv, requirePrivateBlobEnv } from "@eleva/config/env"
 import { createHash } from "node:crypto"
 
 const ALLOWED_DOC_MIME = new Set([
@@ -55,6 +55,35 @@ export interface UploadedDocument {
   size: number
   hash: string
   uploadedAt: string
+}
+
+// ── Public blob helpers (avatars, marketing assets) ─────────────────
+
+export interface UploadPublicBlobInput {
+  /** Full pathname including prefix, e.g. `"avatar/profile/photo.jpg"`. */
+  pathname: string
+  /** File body. */
+  body: ArrayBuffer | Buffer | Blob
+  /** Detected MIME type. */
+  contentType: string
+}
+
+export async function uploadPublicBlob(
+  input: UploadPublicBlobInput
+): Promise<{ url: string; pathname: string }> {
+  const { BLOB_READ_WRITE_TOKEN } = requireBlobEnv()
+  const result: PutBlobResult = await put(input.pathname, input.body, {
+    access: "public",
+    contentType: input.contentType,
+    addRandomSuffix: true,
+    token: BLOB_READ_WRITE_TOKEN,
+  })
+  return { url: result.url, pathname: result.pathname }
+}
+
+export async function deletePublicBlob(url: string): Promise<void> {
+  const { BLOB_READ_WRITE_TOKEN } = requireBlobEnv()
+  await del(url, { token: BLOB_READ_WRITE_TOKEN })
 }
 
 // ── Private blob helpers (expert documents, patient reports) ────────

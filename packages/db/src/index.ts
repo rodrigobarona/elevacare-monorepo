@@ -41,6 +41,7 @@ export {
   listPublicEventTypes,
 } from "./queries/event-types"
 export {
+  getDefaultSchedule,
   getOrCreateDefaultSchedule,
   getSchedule,
   updateScheduleTimezone,

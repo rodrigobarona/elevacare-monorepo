@@ -210,6 +210,9 @@ importers:
 
   apps/account:
     dependencies:
+      '@eleva/api-client':
+        specifier: workspace:^
+        version: link:../../packages/api-client
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
@@ -219,9 +222,6 @@ importers:
       '@eleva/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
-      '@eleva/db':
-        specifier: workspace:^
-        version: link:../../packages/db
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability

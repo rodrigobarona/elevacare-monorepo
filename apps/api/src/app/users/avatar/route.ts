@@ -1,5 +1,7 @@
 import { z } from "zod"
 import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
+import { deletePublicBlob } from "@eleva/storage"
+import { verifyUploadToken } from "@eleva/auth/upload-token"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -9,16 +11,58 @@ import { UnauthorizedError } from "@eleva/auth"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
+const BLOB_HOST_PATTERN = /\.public\.blob\.vercel-storage\.com$/
+
 const UpdateAvatarSchema = z.object({
-  url: z.string().url(),
+  url: z
+    .string()
+    .url()
+    .refine(
+      (url) => {
+        try {
+          return BLOB_HOST_PATTERN.test(new URL(url).hostname)
+        } catch {
+          return false
+        }
+      },
+      { message: "URL must be a Vercel Blob public store URL" }
+    ),
 })
+
+async function resolveUserId(request: Request): Promise<string> {
+  try {
+    const session = await requireApiAuth(request)
+    return session.user.id
+  } catch (err) {
+    if (!(err instanceof UnauthorizedError)) throw err
+  }
+
+  const authHeader = request.headers.get("authorization") ?? ""
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null
+  if (!token) throw new UnauthorizedError("no-session")
+
+  const verified = await verifyUploadToken(token)
+  if (!verified) throw new UnauthorizedError("no-session")
+  return verified.userId
+}
+
+async function cleanupOldBlob(userId: string): Promise<void> {
+  const oldUrl = await getUserAvatarUrl(userId)
+  if (oldUrl) {
+    try {
+      await deletePublicBlob(oldUrl)
+    } catch (err) {
+      console.warn("[users/avatar] failed to delete old blob, continuing", err)
+    }
+  }
+}
 
 export async function GET(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let session
+  let userId: string
   try {
-    session = await requireApiAuth(request)
+    userId = await resolveUserId(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -26,16 +70,16 @@ export async function GET(request: Request) {
     throw err
   }
 
-  const avatarUrl = await getUserAvatarUrl(session.user.id)
+  const avatarUrl = await getUserAvatarUrl(userId)
   return secureJson({ avatarUrl }, { status: 200, headers, noStore: false })
 }
 
 export async function PUT(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let session
+  let userId: string
   try {
-    session = await requireApiAuth(request)
+    userId = await resolveUserId(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -44,7 +88,7 @@ export async function PUT(request: Request) {
   }
 
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request, session.user.id),
+    rateLimitKey(request, userId),
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
@@ -59,16 +103,17 @@ export async function PUT(request: Request) {
     )
   }
 
-  await updateUserAvatarUrl(session.user.id, body.data.url)
+  await cleanupOldBlob(userId)
+  await updateUserAvatarUrl(userId, body.data.url)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
 export async function DELETE(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let session
+  let userId: string
   try {
-    session = await requireApiAuth(request)
+    userId = await resolveUserId(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -77,12 +122,13 @@ export async function DELETE(request: Request) {
   }
 
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request, session.user.id),
+    rateLimitKey(request, userId),
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
 
-  await updateUserAvatarUrl(session.user.id, null)
+  await cleanupOldBlob(userId)
+  await updateUserAvatarUrl(userId, null)
   return secureJson({ ok: true }, { status: 200, headers })
 }
 

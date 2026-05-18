@@ -45,6 +45,26 @@ export async function getOrCreateDefaultSchedule(
   })
 }
 
+export async function getDefaultSchedule(
+  orgId: string,
+  expertProfileId: string
+): Promise<Schedule | undefined> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.expertProfileId, expertProfileId),
+          eq(schedules.isDefault, true),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .limit(1)
+    return row
+  })
+}
+
 export async function getSchedule(
   orgId: string,
   scheduleId: string,

@@ -8,8 +8,18 @@ import {
   getWorkOS,
 } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
-import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
+import { createApiClient } from "@eleva/api-client"
 import { isLocale, cookieName, type Locale } from "@eleva/config/i18n"
+
+function getApiBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+}
+
+async function getAuthedApiClient() {
+  const session = await requireSession()
+  const token = await mintUploadToken(session.user.id)
+  return createApiClient({ baseUrl: getApiBaseUrl(), bearerToken: token })
+}
 
 export async function getSettingsWidgetToken(): Promise<string> {
   return getWidgetTokenFromSession(["widgets:users-table:manage"])
@@ -62,14 +72,15 @@ export async function getAvatarUploadToken(): Promise<string> {
 }
 
 export async function getCurrentAvatarUrl(): Promise<string | null> {
-  const session = await requireSession()
-  return getUserAvatarUrl(session.user.id)
+  const api = await getAuthedApiClient()
+  const { avatarUrl } = await api.users.avatar.get()
+  return avatarUrl
 }
 
 export async function updateAvatar(url: string): Promise<{ ok: boolean }> {
   try {
-    const session = await requireSession()
-    await updateUserAvatarUrl(session.user.id, url)
+    const api = await getAuthedApiClient()
+    await api.users.avatar.update({ url })
     revalidatePath("/profile")
     return { ok: true }
   } catch (err) {
@@ -80,8 +91,8 @@ export async function updateAvatar(url: string): Promise<{ ok: boolean }> {
 
 export async function removeAvatar(): Promise<{ ok: boolean }> {
   try {
-    const session = await requireSession()
-    await updateUserAvatarUrl(session.user.id, null)
+    const api = await getAuthedApiClient()
+    await api.users.avatar.remove()
     revalidatePath("/profile")
     return { ok: true }
   } catch (err) {
