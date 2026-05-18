@@ -14,6 +14,29 @@ import {
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
+const VALID_TZ_SET = new Set(Intl.supportedValuesOf("timeZone"))
+
+export async function initializeScheduleAction(
+  timezone: string
+): Promise<ActionResult> {
+  if (!VALID_TZ_SET.has(timezone)) {
+    return { ok: false, error: "invalid-timezone" }
+  }
+
+  try {
+    const session = await requireSession("events:manage")
+    const profile = await getExpertProfileByUserId(session.user.id)
+    if (!profile) return { ok: false, error: "no-profile" }
+
+    await getOrCreateDefaultSchedule(profile.orgId, profile.id, timezone)
+    revalidatePath("/expert/schedule")
+    return { ok: true }
+  } catch (err) {
+    console.error("[initializeScheduleAction]", err)
+    return { ok: false, error: "init-failed" }
+  }
+}
+
 export interface AvailabilityRuleInput {
   dayOfWeek: number
   startTime: string

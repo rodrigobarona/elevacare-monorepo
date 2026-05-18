@@ -11,10 +11,10 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/api-client": "workspace:^",
     "@eleva/auth": "workspace:^",
     "@eleva/config": "workspace:^",
     "@eleva/dashboard": "workspace:*",
-    "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",

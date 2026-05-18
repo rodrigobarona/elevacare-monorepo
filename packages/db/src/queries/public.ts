@@ -395,24 +395,15 @@ export interface SlugAvailability {
    * Reason the candidate is unavailable. Only populated when
    * available === false.
    */
-  reason?:
-    | "reserved"
-    | "format-invalid"
-    | "expert-taken"
-    | "clinic-taken"
-    | "pending-application"
+  reason?: "reserved" | "format-invalid" | "expert-taken" | "clinic-taken"
 }
 
 /**
- * Cross-namespace availability check for a public slug. Used by both
- * the Become-Partner username picker and the clinic-signup slug
- * picker. Order:
+ * Cross-namespace availability check for a public slug. Used by
+ * the clinic-signup slug picker and expert username selection. Order:
  *   1. Reserved list short-circuit.
  *   2. expert_profiles.username (lowercase).
  *   3. clinic_profiles.slug (lowercase).
- *   4. become_partner_applications.username_requested where status in
- *      ('submitted', 'under_review') — soft-reservation while admin
- *      reviews the application.
  *
  * NOTE: This function does NOT validate the format. Callers must run
  * validateUsername() before calling so the reason='format-invalid'
@@ -444,23 +435,6 @@ export async function checkPublicSlugAvailability(
       .limit(1)
     if (clinicHit.length > 0) {
       return { available: false, reason: "clinic-taken" as const }
-    }
-
-    const pendingHit = await tx
-      .select({ id: main.becomePartnerApplications.id })
-      .from(main.becomePartnerApplications)
-      .where(
-        and(
-          eq(main.becomePartnerApplications.usernameRequested, lowered),
-          inArray(main.becomePartnerApplications.status, [
-            "submitted",
-            "under_review",
-          ])
-        )
-      )
-      .limit(1)
-    if (pendingHit.length > 0) {
-      return { available: false, reason: "pending-application" as const }
     }
 
     return { available: true }

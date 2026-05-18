@@ -4,11 +4,12 @@ import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import {
   getExpertProfileByUserId,
-  getOrCreateDefaultSchedule,
+  getDefaultSchedule,
   listAvailabilityRules,
   listDateOverrides,
 } from "@eleva/db"
 import { ScheduleEditor } from "./schedule-editor"
+import { InitScheduleButton } from "./init-schedule-button"
 
 export const dynamic = "force-dynamic"
 
@@ -24,24 +25,33 @@ export default async function SchedulePage({
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) redirect(`/${orgSlug}/expert/onboarding`)
 
-  const h = await headers()
-  const geoTz = h.get("x-vercel-ip-timezone")
-  const validTimezones = new Set(Intl.supportedValuesOf("timeZone"))
-  const validatedGeoTz = geoTz && validTimezones.has(geoTz) ? geoTz : undefined
-  const fallbackTz = profile.timezone ?? validatedGeoTz ?? "UTC"
+  const schedule = await getDefaultSchedule(profile.orgId, profile.id)
 
-  const schedule = await getOrCreateDefaultSchedule(
-    profile.orgId,
-    profile.id,
-    fallbackTz
-  )
+  const t = await getTranslations("schedule")
+
+  if (!schedule) {
+    const h = await headers()
+    const geoTz = h.get("x-vercel-ip-timezone")
+    const validTimezones = new Set(Intl.supportedValuesOf("timeZone"))
+    const validatedGeoTz =
+      geoTz && validTimezones.has(geoTz) ? geoTz : undefined
+    const fallbackTz = profile.timezone ?? validatedGeoTz ?? "UTC"
+
+    return (
+      <div className="mx-auto max-w-2xl space-y-6">
+        <header className="space-y-1">
+          <h1 className="text-2xl font-medium">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("description")}</p>
+        </header>
+        <InitScheduleButton timezone={fallbackTz} />
+      </div>
+    )
+  }
 
   const [rules, overrides] = await Promise.all([
     listAvailabilityRules(profile.orgId, schedule.id, profile.id),
     listDateOverrides(profile.orgId, schedule.id, profile.id),
   ])
-
-  const t = await getTranslations("schedule")
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">

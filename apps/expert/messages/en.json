@@ -72,6 +72,10 @@
       "5": "Friday",
       "6": "Saturday"
     },
+    "noScheduleTitle": "No schedule set up yet",
+    "noScheduleDescription": "Create your default availability schedule to start accepting bookings.",
+    "createSchedule": "Set up schedule",
+    "creating": "Creating...",
     "error": {
       "startBeforeEnd": "{day}: start time must be before end time",
       "overrideStartBeforeEnd": "Override start time must be before end time",

@@ -37,14 +37,6 @@ const AVATAR_CONTENT_TYPES = ["image/jpeg", "image/png", "image/webp"] as const
 const AVATAR_MAX_BYTES = 2 * 1024 * 1024 // 2 MB
 
 const UPLOAD_POLICIES: Record<string, UploadPolicy> = {
-  "become-partner": {
-    match: (pathname) => {
-      const m = pathname.match(
-        /^become-partner\/(license|id|cv|professional_insurance)\/[^/]+$/
-      )
-      return m ? m[1]! : null
-    },
-  },
   avatar: {
     match: (pathname) => {
       const m = pathname.match(/^avatar\/profile\/[^/]+$/)

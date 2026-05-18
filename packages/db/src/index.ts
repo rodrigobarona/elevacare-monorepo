@@ -31,17 +31,9 @@ export {
 } from "./queries/public"
 export { pingMainDb, pingAuditDb } from "./ping"
 export {
-  listApplications,
-  getApplicationById,
-  claimApplication,
-  rejectApplication,
-  approveApplication,
   getExpertProfileByUserId,
   updateExpertProfile,
-  type AdminApplicationRow,
-  type ListApplicationsFilters,
-  type ListApplicationsResult,
-  type ApproveApplicationResult,
+  getOrganizationBySlug,
 } from "./queries/admin"
 export {
   listExpertEventTypes,
@@ -53,6 +45,7 @@ export {
   listPublicEventTypes,
 } from "./queries/event-types"
 export {
+  getDefaultSchedule,
   getOrCreateDefaultSchedule,
   getSchedule,
   updateScheduleTimezone,

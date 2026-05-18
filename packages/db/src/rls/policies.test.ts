@@ -43,14 +43,6 @@ describe("buildMainRlsStatements", () => {
     expect(orgPolicy).not.toMatch(/\borg_id::text\b/)
   })
 
-  it("uses applicant_org_id + platform_admin for become_partner_applications", () => {
-    const bpaPolicy = stmts.find((s) =>
-      s.startsWith("CREATE POLICY become_partner_applications_tenant_isolation")
-    )
-    expect(bpaPolicy).toContain("applicant_org_id::text")
-    expect(bpaPolicy).toContain("eleva.platform_admin")
-  })
-
   it("includes platform_admin bypass for expert_profiles", () => {
     const policy = stmts.find((s) =>
       s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")

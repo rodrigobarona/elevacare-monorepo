@@ -222,6 +222,16 @@ Each entry should include:
 - Summary: Triaged 20+ findings from the PR #7 code review against [`tech-debt-backlog.md`](./tech-debt-backlog.md). Fixed 11 still-valid issues (auth proxy SDK primitives, slot-picker race conditions and missing deps, timezone input validation, calendar busy-source whitelist, email JSON-LD rendering, booking-context email guard, accounting error logging, reserve-slot error fallback). Deferred 5 items requiring infrastructure or schema migrations: (1) accounting callback PKCE server-side opaque state (Sprint 7+), (2) persist `expertIntegrationId`/`externalCalendarId` in sessions table (Sprint 7), (3) composite FK on `expert_integrations` child tables (Sprint 7), (4) ICS VTIMEZONE generation (Sprint 7+), (5) external busy-time cache for public booking funnel (Sprint 5+). Skipped 4 items already tracked or assessed: `scheduleId` composite FK (Item #5), WorkOS disconnect lifecycle (Item #12), `findPart` throw-vs-fallback (verify step catches mismatches), duplicate outside-diff comments. RLS policy updates (Items #2–4) and composite-FK changes (Items #5, #15–17) are planned for batched migrations per the schema-and-migration-rules policy.
 - Reference: [`tech-debt-backlog.md`](./tech-debt-backlog.md), [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 
+### 2026-05-18: API-First, Agentic-First, and Secure Architecture
+
+- Owner: engineering
+- Status: active
+- Summary: Adopted an API-first, agentic-first, and secure-by-default architecture. All mutating business logic is callable via HTTP endpoints in `apps/api`, every endpoint supports dual auth (session + Bearer) with deterministic JSON error codes, and every route explicitly declares its auth model with rate limiting and Zod validation required. BotID is enforced on public-facing mutations.
+- Core principles: API-first, Agentic-first, Secure-by-default
+- Key consequences: migration of inline DB writes from Server Actions to domain package functions or API calls; standardized error envelope; OpenAPI spec as source of truth.
+- Reference: [`api-first-architecture.md`](./api-first-architecture.md)
+- Primary affected artifacts: `apps/api/src/lib/auth.ts` (requireApiAuth), `apps/api/src/lib/rate-limit.ts`, `apps/api/src/lib/bot-protection.ts`, `apps/api/src/lib/openapi.ts`, `packages/api-client` schemas
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)
