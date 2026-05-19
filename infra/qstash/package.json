@@ -1,0 +1,26 @@
+{
+  "name": "@eleva/infra-qstash",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "list": "tsx --env-file=../../.env.local list-schedules.ts",
+    "setup:workos-sync": "tsx --env-file=../../.env.local setup-workos-sync.ts",
+    "setup:audit-drainer": "tsx --env-file=../../.env.local setup-audit-drainer.ts",
+    "setup:stripe-stuck": "tsx --env-file=../../.env.local setup-stripe-stuck-events.ts",
+    "setup:all": "tsx --env-file=../../.env.local setup-all.ts"
+  },
+  "dependencies": {
+    "@upstash/qstash": "^2.11.0"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:"
+  }
+}
