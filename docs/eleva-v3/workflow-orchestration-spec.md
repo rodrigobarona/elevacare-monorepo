@@ -104,7 +104,7 @@ There is no ad hoc cron route for core product correctness. Anything that must s
 Each workflow follows this layered model:
 
 1. **Trigger ingestion** — webhook route, internal event, or scheduled QStash poke
-2. **Authenticity + replay check** — signature verify (Stripe/Daily), `stripe_event_log` idempotency check
+2. **Authenticity + replay check** — signature verify (Stripe/Daily), `stripe_webhook_events` idempotency check
 3. **Idempotent domain processing** — compute state transitions
 4. **Fan-out to downstream steps** — notifications, invoices, calendar, AI, etc.
 5. **Observability** — Sentry tags, BetterStack heartbeat, audit row
@@ -197,7 +197,7 @@ Never mix in one handler:
 
 Instead:
 
-- the webhook route only verifies + acks + writes `stripe_event_log` + dispatches the workflow
+- the webhook route only verifies + acks + writes `stripe_webhook_events` + dispatches the workflow
 - the workflow owns domain mutation + fan-out + retries
 
 ## Correlation And Observability

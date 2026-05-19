@@ -394,7 +394,7 @@ Frontend (Track B):
   - `/admin/payments` + payout approval
   - `/admin/subscriptions` + expert Top Expert + clinic SaaS
   - `/admin/accounting` + reconciliation report + Tier 1 + Tier 2 invoice list + retry actions
-  - `/admin/webhooks` + `stripe_event_log` viewer
+  - `/admin/webhooks` + `stripe_webhook_events` viewer
   - `/admin/workflows` + DLQ + manual retry
   - `/admin/audit` + correlation-ID filter
 - CI guard that `ff.three_party_revenue = false` in staging + production.
