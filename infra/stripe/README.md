@@ -64,7 +64,7 @@ Each product has an attached Stripe Entitlement Feature with a `lookup_key` matc
 
 **Canonical endpoint URL:**
 
-```
+```text
 https://api.eleva.care/webhooks/stripe
 ```
 

@@ -107,16 +107,16 @@ Stripe Identity stays as an embedded modal (`stripe.verifyIdentity(clientSecret)
 
 ### Code
 
-- `[apps/api/src/app/billing/checkout/route.ts](apps/api/src/app/billing/checkout/route.ts)` — new `POST /billing/checkout` returning Checkout Session `client_secret`. Auth: `requireApiAuth` + `billing:manage_org` + rate limit + Vercel BotID. Wrapped in `withAudit({ entity: "billing_checkout", action: "session_created" })`.
-- `[apps/api/src/app/billing/portal/route.ts](apps/api/src/app/billing/portal/route.ts)` — new `POST /billing/portal` returning Portal session URL. Same auth profile. **Wrapped in `withAudit({ entity: "billing_portal", action: "session_minted" })` capturing actor `user_id`, `org_id`, and Stripe `customer_id`** — this is the billing-actor audit anchor for the multi-admin correlation pattern described above.
-- `[apps/api/src/app/billing/subscribe/route.ts](apps/api/src/app/billing/subscribe/route.ts)` — keep as a temporary compatibility wrapper or delete if no client depends on it.
-- `[packages/payments/src/embedded](packages/payments/src/embedded)` — Embedded Checkout React wrapper using `EmbeddedCheckoutProvider`. No custom subscription-management UI is built; Portal redirect is the only management surface.
+- `[apps/api/src/app/billing/checkout/route.ts](../../../apps/api/src/app/billing/checkout/route.ts)` — new `POST /billing/checkout` returning Checkout Session `client_secret`. Auth: `requireApiAuth` + `billing:manage_org` + rate limit + Vercel BotID. Wrapped in `withAudit({ entity: "billing_checkout", action: "session_created" })`.
+- `[apps/api/src/app/billing/portal/route.ts](../../../apps/api/src/app/billing/portal/route.ts)` — new `POST /billing/portal` returning Portal session URL. Same auth profile. **Wrapped in `withAudit({ entity: "billing_portal", action: "session_minted" })` capturing actor `user_id`, `org_id`, and Stripe `customer_id`** — this is the billing-actor audit anchor for the multi-admin correlation pattern described above.
+- `[apps/api/src/app/billing/subscribe/route.ts](../../../apps/api/src/app/billing/subscribe/route.ts)` — keep as a temporary compatibility wrapper or delete if no client depends on it.
+- `[packages/payments/src/embedded](../../../packages/payments/src/embedded)` — Embedded Checkout React wrapper using `EmbeddedCheckoutProvider`. No custom subscription-management UI is built; Portal redirect is the only management surface.
 - The return URL after Embedded Checkout success must call WorkOS `session.refresh()` before reading entitlements, with a server-side fallback that reads entitlements from Stripe directly until JWT and Stripe agree.
 
 ### Configuration
 
-- `[infra/stripe/seed-products.ts](infra/stripe/seed-products.ts)` — `payment_method_types` for subscription products is `["card", "sepa_debit"]` only. Booking PaymentIntents keep the full dynamic set including MB WAY.
-- A Portal Configuration must be created (one per environment) with cancel/update/payment-method/invoice/tax-id features enabled. Add to `[infra/stripe/setup-webhooks.ts](infra/stripe/setup-webhooks.ts)` or a sibling `setup-portal.ts`.
+- `[infra/stripe/seed-products.ts](../../../infra/stripe/seed-products.ts)` — `payment_method_types` for subscription products is `["card", "sepa_debit"]` only. Booking PaymentIntents keep the full dynamic set including MB WAY.
+- A Portal Configuration must be created (one per environment) with cancel/update/payment-method/invoice/tax-id features enabled. Add to `[infra/stripe/setup-webhooks.ts](../../../infra/stripe/setup-webhooks.ts)` or a sibling `setup-portal.ts`.
 
 ### Compliance
 
@@ -134,7 +134,7 @@ Stripe Identity stays as an embedded modal (`stripe.verifyIdentity(clientSecret)
 
 - Update [ADR-005](ADR-005-payments-and-monetization.md): mark the UX subsection as superseded by ADR-016, but leave its monetization, Connect, Tax, and three-party-revenue decisions intact.
 - Update the [stripe-foundation-review plan](../../../.cursor/plans/stripe-foundation-review_7e063870.plan.md) Open Decision section to mark Option A + hybrid as resolved.
-- Update `[infra/stripe/README.md](infra/stripe/README.md)` and `[.cursor/rules/stripe-webhooks.mdc](.cursor/rules/stripe-webhooks.mdc)` to reflect the final UX direction.
+- Update `[infra/stripe/README.md](../../../infra/stripe/README.md)` and `[.cursor/rules/stripe-webhooks.mdc](../../../.cursor/rules/stripe-webhooks.mdc)` to reflect the final UX direction.
 
 ## References
 

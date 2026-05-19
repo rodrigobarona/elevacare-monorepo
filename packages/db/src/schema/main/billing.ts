@@ -139,8 +139,16 @@ export const stripeWebhookEvents = pgTable(
      * event to a tenant (via metadata, customer, or connected account).
      * Useful for support queries; not used for RLS (the table itself is
      * platform-level, not tenant-scoped).
+     *
+     * FK guards against persisting orphaned org ids. ON DELETE SET NULL
+     * keeps the platform-level idempotency log intact when an org is
+     * hard-deleted (the audit history of what Stripe sent is more
+     * valuable than the back-link, and `organizations.deletedAt` is the
+     * normal soft-delete path which doesn't trigger the FK).
      */
-    resolvedOrgId: uuid("resolved_org_id"),
+    resolvedOrgId: uuid("resolved_org_id").references(() => organizations.id, {
+      onDelete: "set null",
+    }),
   },
   (t) => ({
     typeIdx: index("stripe_webhook_events_type_idx").on(t.eventType),

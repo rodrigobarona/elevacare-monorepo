@@ -125,17 +125,25 @@ export async function POST(request: Request) {
       )
     }
 
-    // Single list call with status='all' is more efficient than three
-    // separate calls. Filter client-side for the live subscriptions we
-    // care about (active, trialing, incomplete).
-    const subscriptions = await s.subscriptions.list({
+    // Auto-paginate the customer's subscription history and short-circuit
+    // on the first live status. A single page (limit 10) could miss an
+    // active subscription buried behind canceled / past_due history when
+    // the customer has churned and resubscribed multiple times.
+    const liveStatuses = new Set<string>(["active", "trialing", "incomplete"])
+    const subsIterable = s.subscriptions.list({
       customer: customer.id,
       status: "all",
-      limit: 10,
+      limit: 100,
     })
-    const existingSub = subscriptions.data.find((sub) =>
-      ["active", "trialing", "incomplete"].includes(sub.status)
-    )
+    type StripeSubscription =
+      typeof subsIterable extends AsyncIterable<infer T> ? T : never
+    let existingSub: StripeSubscription | null = null
+    for await (const sub of subsIterable) {
+      if (liveStatuses.has(sub.status)) {
+        existingSub = sub
+        break
+      }
+    }
 
     if (existingSub) {
       const updated = await swapSubscriptionTier({

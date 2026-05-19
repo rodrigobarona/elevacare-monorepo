@@ -145,9 +145,18 @@ async function ensureSeatPrices(
   const hasLicensedPrice = existingPrices.some(
     (pr) => pr.metadata.eleva_price_type === "per_seat"
   )
-  const hasMeteredPrice = existingPrices.some(
-    (pr) => pr.metadata.eleva_price_type === "per_seat_metered"
-  )
+  // Match strictly on meter id so a re-seed against a different
+  // WORKOS_SEAT_METER_ID re-creates the metered price instead of
+  // silently skipping it. Without the meter-id check, idempotent sync
+  // would treat any per_seat_metered price as a match even if it points
+  // at a stale meter from a previous environment.
+  const hasMeteredPrice =
+    !!meterId &&
+    existingPrices.some(
+      (pr) =>
+        pr.metadata.eleva_price_type === "per_seat_metered" &&
+        pr.metadata.eleva_seat_meter_id === meterId
+    )
 
   if (!hasLicensedPrice) {
     const seatPriceObj = await stripe.prices.create({

@@ -127,6 +127,13 @@
       "when": 1779181354724,
       "tag": "0017_drop_billing_subs_price_ids_default",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1779190338406,
+      "tag": "0018_public_loners",
+      "breakpoints": true
     }
   ]
 }

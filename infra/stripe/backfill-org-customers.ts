@@ -84,12 +84,19 @@ async function run() {
       try {
         workosOrg = await workos.organizations.getOrganization(org.workosOrgId)
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err)
         // Orphans = local org row that no longer exists in WorkOS.
         // Likely soft-delete sync drift; skip rather than block on
         // them. The /workos/sync route will reconcile when WorkOS
         // emits the matching organization.deleted event.
-        if (msg.includes("not found")) {
+        //
+        // Use the structured `status === 404` field exposed by the
+        // WorkOS SDK's RequestException contract (NotFoundException
+        // sets `readonly status = 404`). Duck-typing on `status`
+        // avoids importing NotFoundException directly so the bundle
+        // stays minimal and the check survives SDK refactors that
+        // rename the exception class.
+        const status = (err as { status?: number } | null)?.status
+        if (status === 404) {
           orphan++
           if (!apply) {
             console.warn(

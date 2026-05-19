@@ -7,6 +7,16 @@ const ErrorSchema = z.object({
   message: z.string().optional(),
 })
 
+// `/webhooks/stripe` returns this richer payload on retryable handler
+// failures so operators can correlate Stripe redelivery attempts with the
+// original event id and dispatcher reason.
+const StripeWebhookErrorSchema = z.object({
+  received: z.literal(false),
+  status: z.literal("failed"),
+  eventType: z.string(),
+  error: z.string(),
+})
+
 const RateLimitErrorSchema = z.object({
   error: z.literal("rate_limit_exceeded"),
   retryAfter: z.number(),
@@ -977,7 +987,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "500": {
               description:
                 "Handler returned a retryable error; Stripe will retry with exponential backoff",
-              content: { "application/json": { schema: ErrorSchema } },
+              content: {
+                "application/json": { schema: StripeWebhookErrorSchema },
+              },
             },
           },
         },

@@ -194,7 +194,19 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
  * refresh, not the refresh itself).
  */
 export async function refreshSessionEntitlements(): Promise<void> {
-  await authkitRefreshSession({ ensureSignedIn: false })
+  try {
+    await authkitRefreshSession({ ensureSignedIn: false })
+  } catch (err) {
+    // Swallow — the docstring promises non-throwing semantics so callers
+    // (e.g. apps/api/src/app/billing/subscribe/route.ts) can fire-and-forget
+    // without wrapping every call site. The user simply sees stale
+    // entitlements until natural rotation; ADR-016 audit attribution is
+    // unaffected because the action that triggered the refresh is the one
+    // that gets audited.
+    console.error(
+      `[refreshSessionEntitlements] authkitRefreshSession failed: ${err instanceof Error ? err.message : String(err)}`
+    )
+  }
 }
 
 /**

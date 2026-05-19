@@ -285,6 +285,7 @@ Backend (Track A):
 - Stripe staging + production accounts with API version pinned ≥ 2023-08-16. Dashboard enables PT methods (card, MB WAY, Apple/Google Pay, Link) for staging + prod separately. Webhook endpoints set to `api.eleva.care/webhooks/stripe` and `api.staging.eleva.care/webhooks/stripe` — subdomain, not rewritten.
 - Drizzle schema: `stripe_webhook_events`, `billing_customers`, `billing_subscriptions`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
 - `@eleva/billing/server` `processStripeEvent`: single `/webhooks/stripe` route in `apps/api`. Verifies signature → writes `stripe_webhook_events` for idempotency → dispatches by `event.type` under `withAudit`. Subscribed events locked per handbook.
+- **ADR-016 exception**: subscription Checkout Sessions are the only place `payment_method_types` may be hardcoded — pinned to `["card", "sepa_debit"]` (MB WAY/Multibanco are one-time-only and cannot recur). Booking PaymentIntents continue to rely on Dynamic Payment Methods. See `processStripeEvent` and `stripe_webhook_events` for the implementing code paths.
 - **Stripe AccountSession endpoint** lives on the API subdomain at `api.eleva.care/stripe/account-session` (session-aware; reads WorkOS session cookie scoped on `.eleva.care`; CORS allows `https://eleva.care` with credentials). App zone calls it with `credentials: 'include'`.
 - `@eleva/workflows`:
   - `paymentSucceeded` → `bookingConfirmation` → entitlement write → Lane 1 fan-out
@@ -517,7 +518,7 @@ A sprint exits only when:
 5. Every new table has `org_id` (if tenant-scoped) + RLS policy + isolation test
 6. Every mutating action has an audit row
 7. No direct vendor SDK imports outside the owning package
-8. No `payment_method_types` hardcoded; no `bun install`; no `process.env.ENCRYPTION_KEY`
+8. No `payment_method_types` hardcoded **outside the ADR-016 subscription Checkout exception (`["card", "sepa_debit"]` only)**; no `bun install`; no `process.env.ENCRYPTION_KEY`
 9. Status update in [decision-log.md](./decision-log.md) when a decision changed
 10. Changelog entry in `apps/docs/changelog.mdx`
 

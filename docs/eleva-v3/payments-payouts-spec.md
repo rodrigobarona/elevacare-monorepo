@@ -161,11 +161,12 @@ Starter / Growth / Enterprise per the tier table above.
 
 ### Single webhook endpoint
 
-- **one `/webhooks/stripe`** per environment handles every event type (Payment + Subscriptions + Connect + Identity), dispatched by `processStripeEvent` in `@eleva/billing/server`
-- `packages/billing/webhook` exports the single handler:
-  - verifies signature
-  - writes `stripe_event_log(id PK, type, livemode, received_at, processed_at)` for idempotency
-  - dispatches by `event.type` to the right Vercel Workflow
+- **one `/webhooks/stripe`** per environment is implemented in `@eleva/billing/server` and dispatched through `processStripeEvent`
+- the route handler in `apps/api/src/app/webhooks/stripe/route.ts` is intentionally thin — it forwards verified events to `processStripeEvent`; all business logic lives in `@eleva/billing/server`
+- `processStripeEvent` is the canonical flow:
+  - verifies the Stripe signature against `STRIPE_WEBHOOK_SECRET`
+  - persists every `event.id` in `stripe_webhook_events` (Neon, platform-level table) for idempotency — `INSERT ... ON CONFLICT DO NOTHING` short-circuits duplicate deliveries; status transitions are `received → processing → processed | failed | failed_terminal | ignored`
+  - dispatches by `event.type` to the right Vercel Workflow under `withAudit({ orgId, actorUserId: null })` so every mirror write is auditable
 - locked subscribed event types:
   - **Payment**: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.processing`, `charge.refunded`, `charge.dispute.*`
   - **Subscriptions**: `customer.subscription.*`, `invoice.*`

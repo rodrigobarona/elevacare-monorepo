@@ -35,7 +35,7 @@ Grounded in [Doctolib's business model](https://businessmodelcanvastemplate.com/
 - **Stripe Entitlements** for plan gating via `packages/flags`
 - **Stripe Identity** embedded modal for expert KYC
 
-### Stripe UX — fully embedded, no redirects
+### Stripe UX — superseded by ADR-016 (embedded + hosted redirects)
 
 > **Superseded by [ADR-016](ADR-016-subscription-ux-direction.md) (Accepted 2026-05-18)** for SaaS subscription surfaces. ADR-016 keeps the embedded paradigm but adopts Stripe Embedded Checkout for subscription purchase and Stripe-hosted Customer Portal for subscription management, replacing the "Custom Eleva UI + Payment Element for subscription management" stance below. Patient booking checkout, Connect Embedded Components, Identity Embedded, the Appearance API mapping, and CSP allowances remain unchanged. ADR-016 also corrects the implicit assumption that MB WAY/Multibanco can be used for SaaS recurring billing — they cannot.
 

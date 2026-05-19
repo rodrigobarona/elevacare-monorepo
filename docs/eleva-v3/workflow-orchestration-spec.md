@@ -124,7 +124,7 @@ Each workflow follows this layered model:
 
 The following flows **must** be idempotent:
 
-- all Stripe webhook events (keyed on `event.id` via `stripe_event_log`)
+- all Stripe webhook events (keyed on `event.id` via `stripe_webhook_events`)
 - booking confirmation creation
 - reminder scheduling
 - platform-fee invoice issuance (keyed on `booking_id`)

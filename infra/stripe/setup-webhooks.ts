@@ -69,8 +69,12 @@ async function findExistingEndpoint(
   stripe: Stripe,
   url: string
 ): Promise<Stripe.WebhookEndpoint | null> {
-  const endpoints = await stripe.webhookEndpoints.list({ limit: 100 })
-  return endpoints.data.find((ep) => ep.url === url) ?? null
+  // Auto-paginate so accounts with >100 webhook endpoints are still
+  // matched. Stops as soon as the target URL is found.
+  for await (const ep of stripe.webhookEndpoints.list({ limit: 100 })) {
+    if (ep.url === url) return ep
+  }
+  return null
 }
 
 function eventsMatch(existing: string[], desired: readonly string[]): boolean {
