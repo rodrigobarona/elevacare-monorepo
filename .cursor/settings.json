@@ -2,6 +2,24 @@
   "plugins": {
     "posthog": {
       "enabled": true
+    },
+    "workos": {
+      "enabled": true
+    },
+    "pr-review-canvas": {
+      "enabled": true
+    },
+    "agent-compatibility": {
+      "enabled": true
+    },
+    "continual-learning": {
+      "enabled": true
+    },
+    "docs-canvas": {
+      "enabled": true
+    },
+    "twilio-developer-kit": {
+      "enabled": true
     }
   }
 }
