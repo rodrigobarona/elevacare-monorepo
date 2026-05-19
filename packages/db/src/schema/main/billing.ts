@@ -213,10 +213,16 @@ export const billingSubscriptions = pgTable(
     tier: varchar("tier", { length: 64 }).notNull().default("unknown"),
     status: stripeSubscriptionStatusEnum("status").notNull(),
     /** Stripe price IDs of the items currently on the subscription. */
+    // Use $defaultFn (client-side) rather than .default() because
+    // drizzle-kit's introspection diff for array DB defaults always
+    // produces false-drift (Postgres canonicalizes the default to
+    // 'foo'::text[] which never matches Drizzle's emitted DDL). The
+    // domain code always sets priceIds explicitly anyway, so the
+    // client-side fallback is sufficient for direct inserts.
     priceIds: text("price_ids")
       .array()
       .notNull()
-      .default(sql`'{}'::text[]`),
+      .$defaultFn(() => []),
     /** Subscription item ID for the metered seat (WorkOS Seat Sync), if any. */
     seatItemId: varchar("seat_item_id", { length: 255 }),
     currentPeriodStart: timestamp("current_period_start", {

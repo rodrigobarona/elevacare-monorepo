@@ -120,6 +120,13 @@
       "when": 1779179146916,
       "tag": "0016_event_ordering_and_terminal_failures",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1779181354724,
+      "tag": "0017_drop_billing_subs_price_ids_default",
+      "breakpoints": true
     }
   ]
 }

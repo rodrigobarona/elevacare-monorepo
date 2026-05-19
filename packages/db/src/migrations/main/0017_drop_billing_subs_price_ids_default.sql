@@ -1,0 +1,1 @@
+ALTER TABLE "billing_subscriptions" ALTER COLUMN "price_ids" DROP DEFAULT;
