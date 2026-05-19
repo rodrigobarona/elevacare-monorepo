@@ -148,10 +148,16 @@ async function main() {
   const existing = await findExistingEndpoint(stripe, url)
 
   if (existing) {
-    if (existing.api_version && existing.api_version !== apiVersion) {
-      console.warn(
-        `[stripe:webhooks] WARNING: existing endpoint api_version='${existing.api_version}' does NOT match desired '${apiVersion}'.`
-      )
+    const driftMessage =
+      existing.api_version === null
+        ? `[stripe:webhooks] WARNING: existing endpoint uses 'account default' api_version. ` +
+          `Events arrive in whatever version the Stripe account is currently configured for, ` +
+          `which can drift if the account default changes. Explicit pinning to '${apiVersion}' is recommended.`
+        : existing.api_version !== apiVersion
+          ? `[stripe:webhooks] WARNING: existing endpoint api_version='${existing.api_version}' does NOT match desired '${apiVersion}'.`
+          : null
+    if (driftMessage) {
+      console.warn(driftMessage)
       console.warn(
         "[stripe:webhooks] Stripe locks api_version at endpoint creation. To fix, delete and recreate the endpoint:"
       )
@@ -160,6 +166,9 @@ async function main() {
       )
       console.warn(
         "[stripe:webhooks]   pnpm stripe:setup:webhooks -- --url <URL> --apply"
+      )
+      console.warn(
+        "[stripe:webhooks] Note: deleting + recreating returns a new whsec_* secret; update STRIPE_WEBHOOK_SECRET in env after."
       )
     }
     if (eventsMatch(existing.enabled_events, WEBHOOK_EVENTS)) {

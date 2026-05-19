@@ -22,7 +22,7 @@
  * Reads STRIPE_SECRET_KEY, WORKOS_API_KEY, DATABASE_URL from .env.local.
  */
 
-import { eq } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { db, main as schema, withPlatformAdminContext } from "@eleva/db"
@@ -66,20 +66,40 @@ async function run() {
         name: schema.organizations.slug,
       })
       .from(schema.organizations)
+      // Skip soft-deleted orgs; they don't bill and don't need mirrors.
+      .where(isNull(schema.organizations.deletedAt))
     return rows
   })
-  console.log(`[backfill] Found ${orgs.length} orgs\n`)
+  console.log(`[backfill] Found ${orgs.length} live orgs\n`)
 
   let provisioned = 0
   let mirroredOnly = 0
   let alreadyOk = 0
+  let orphan = 0
   let failed = 0
 
   for (const org of orgs) {
     try {
-      const workosOrg = await workos.organizations.getOrganization(
-        org.workosOrgId
-      )
+      let workosOrg
+      try {
+        workosOrg = await workos.organizations.getOrganization(org.workosOrgId)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+        // Orphans = local org row that no longer exists in WorkOS.
+        // Likely soft-delete sync drift; skip rather than block on
+        // them. The /workos/sync route will reconcile when WorkOS
+        // emits the matching organization.deleted event.
+        if (msg.includes("not found")) {
+          orphan++
+          if (!apply) {
+            console.warn(
+              `[backfill] ORPHAN: org ${org.id} (workos=${org.workosOrgId}) does not exist in WorkOS - skipping`
+            )
+          }
+          continue
+        }
+        throw err
+      }
       const hasMirror = await checkMirrorExists(org.id)
 
       if (workosOrg.stripeCustomerId && hasMirror) {
@@ -133,9 +153,15 @@ async function run() {
   console.log(`  Already OK: ${alreadyOk}`)
   console.log(`  Provisioned (new customer): ${provisioned}`)
   console.log(`  Mirrored only (existing customer): ${mirroredOnly}`)
+  console.log(`  Orphan (deleted in WorkOS): ${orphan}`)
   console.log(`  Failed: ${failed}`)
   if (!apply) {
     console.log("\n[backfill] DRY-RUN complete. Re-run with --apply to commit.")
+  }
+  if (orphan > 0) {
+    console.log(
+      "\n[backfill] Orphans should be reconciled via /workos/sync - they correspond to deleted WorkOS orgs."
+    )
   }
 }
 
