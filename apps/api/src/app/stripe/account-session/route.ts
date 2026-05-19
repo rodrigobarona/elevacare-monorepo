@@ -47,11 +47,16 @@ const RequestSchema = z.object({
   components: z.array(z.string()).min(1, "at least one component is required"),
 })
 
-const ResponseSchema = z.object({
-  clientSecret: z.string(),
-  expiresAt: z.number(),
-})
-export type CreateAccountSessionResponse = z.infer<typeof ResponseSchema>
+/**
+ * Response shape used by `satisfies` in the route. The OpenAPI spec
+ * for this route lives in apps/api/src/lib/openapi.ts (Zod schemas
+ * there generate the JSON spec); we keep this as a TypeScript
+ * interface here to avoid an unused runtime Zod schema.
+ */
+export interface CreateAccountSessionResponse {
+  clientSecret: string
+  expiresAt: number
+}
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

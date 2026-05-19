@@ -1,4 +1,3 @@
-import { z } from "zod"
 import { UnauthorizedError } from "@eleva/auth"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
@@ -16,17 +15,19 @@ import { secureJson } from "@/lib/security-headers"
  *
  * Auth model (api-first per AGENTS.md): session-based (cookie) OR
  * Bearer token. Caller must hold the `expert:onboard` capability.
+ *
+ * The OpenAPI spec for this route lives in apps/api/src/lib/openapi.ts
+ * (Zod schemas there generate the JSON spec consumers download).
  */
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const ResponseSchema = z.object({
-  id: z.string(),
-  clientSecret: z.string(),
-  status: z.string(),
-})
-export type CreateIdentitySessionResponse = z.infer<typeof ResponseSchema>
+export interface CreateIdentitySessionResponse {
+  id: string
+  clientSecret: string
+  status: string
+}
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {
