@@ -26,12 +26,12 @@ From the monorepo root:
 # Dry-run
 pnpm stripe:seed:products
 pnpm stripe:seed:entitlements
-pnpm stripe:setup:webhooks -- --url https://api.eleva.care/stripe/webhook
+pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
 
 # Apply (creates in Stripe)
 pnpm stripe:seed:products -- --apply
 pnpm stripe:seed:entitlements -- --apply
-pnpm stripe:setup:webhooks -- --url https://api.eleva.care/stripe/webhook --apply
+pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply
 
 # Run both seed scripts in sequence (apply mode)
 pnpm stripe:seed
@@ -60,17 +60,51 @@ Each product has an attached Stripe Entitlement Feature with a `lookup_key` matc
 
 ## Webhook endpoint
 
-`setup-webhooks.ts` manages the Stripe webhook endpoint that receives billing events. The endpoint URL must be passed via `--url` so the same script works across environments.
+`setup-webhooks.ts` manages the Stripe webhook endpoint that receives platform events. The endpoint URL must be passed via `--url` so the same script works across environments.
 
-**Subscribed events:**
+**Canonical endpoint URL:**
 
+```text
+https://api.eleva.care/webhooks/stripe
+```
+
+**Subscribed events** (from `setup-webhooks.ts` `WEBHOOK_EVENTS`):
+
+SaaS lifecycle:
+
+- `checkout.session.completed`
 - `customer.subscription.created`
 - `customer.subscription.updated`
 - `customer.subscription.deleted`
-- `invoice.payment_succeeded`
+- `invoice.paid`
+- `invoice.payment_succeeded` (legacy alias kept for back-compat)
 - `invoice.payment_failed`
+- `invoice.payment_action_required`
 
-These match the handler in `apps/api/src/app/stripe/webhook/route.ts`.
+Stripe Identity:
+
+- `identity.verification_session.verified`
+- `identity.verification_session.requires_input`
+- `identity.verification_session.canceled`
+
+Stripe Connect platform + payouts:
+
+- `account.updated`
+- `capability.updated`
+- `account.application.deauthorized`
+- `payout.paid`
+- `payout.failed`
+
+Booking payments + refunds + disputes:
+
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `charge.refunded`
+- `charge.dispute.created`
+
+These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. The route handler `apps/api/src/app/webhooks/stripe/route.ts` is a thin wrapper that verifies the signature and calls `processStripeEvent`.
+
+**Idempotency.** Every event is recorded in the `stripe_webhook_events` table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are short-circuited via `INSERT ... ON CONFLICT DO NOTHING` and the route returns `200 { received: true, status: "duplicate" }`.
 
 **The signing secret (`whsec_...`) is only returned when the endpoint is first created.** Save it immediately as `STRIPE_WEBHOOK_SECRET` in your environment. On subsequent runs, the script syncs the events list but cannot retrieve the secret again.
 
@@ -86,7 +120,7 @@ on port 3002.
 3. Start the listener:
 
    ```bash
-   stripe listen --forward-to localhost:3002/stripe/webhook
+   stripe listen --forward-to localhost:3002/webhooks/stripe
    ```
 
 4. Copy the `whsec_...` from the CLI output into `.env.local`:
@@ -104,28 +138,38 @@ on port 3002.
 pnpm --filter @eleva/api dev
 
 # Terminal 2 — Stripe event forwarding
-stripe listen --forward-to localhost:3002/stripe/webhook
+stripe listen --forward-to localhost:3002/webhooks/stripe
 ```
 
 **Triggering test events:**
 
 ```bash
+stripe trigger checkout.session.completed
 stripe trigger customer.subscription.created
-stripe trigger invoice.payment_succeeded
+stripe trigger invoice.paid
+stripe trigger payment_intent.succeeded
+stripe trigger payout.paid
+stripe trigger account.updated
+stripe trigger identity.verification_session.verified
 ```
 
-Check the API logs for `[stripe-webhook]` output.
+Check the API logs for `[stripe-webhook]` output and `stripe_webhook_events` rows for the persisted entries.
+
+### WorkOS Stripe Add-on note
+
+The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per ADR-016). For staging/dev, use Stripe **test mode** on a standard account, not a Sandbox account. Entitlements and `workos_seat_count` meter integration require this.
 
 ## Production deployment checklist
 
 1. Set `STRIPE_SECRET_KEY` to the **live** key
 2. Run `pnpm stripe:seed:products -- --apply`
 3. Run `pnpm stripe:seed:entitlements -- --apply`
-4. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/stripe/webhook --apply`
+4. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply`
 5. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
 6. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
-7. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with 5 events
-8. Verify in WorkOS Dashboard: Stripe Add-on connected to the live Stripe account
+7. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
+8. Verify in WorkOS Dashboard: Stripe Add-on connected to the live Stripe account (must be a standard account, not a Sandbox — Sandbox is unsupported)
+9. Trigger a `customer.subscription.created` test event and verify a row appears in the `stripe_webhook_events` table with status='processed'
 
 ## Idempotency
 

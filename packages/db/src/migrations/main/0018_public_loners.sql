@@ -1,0 +1,1 @@
+ALTER TABLE "stripe_webhook_events" ADD CONSTRAINT "stripe_webhook_events_resolved_org_id_organizations_id_fk" FOREIGN KEY ("resolved_org_id") REFERENCES "public"."organizations"("id") ON DELETE set null ON UPDATE no action;

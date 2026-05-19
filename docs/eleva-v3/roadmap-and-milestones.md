@@ -130,7 +130,7 @@ Should include:
   - **Connect Express** platform for experts and clinics
   - **Dynamic Payment Methods** enabled per Dashboard (PT: card + MB WAY + wallets; other EU: regional methods)
   - NIF collection + Stripe Tax PT
-  - **single `/api/stripe/webhook` endpoint** with `stripe_event_log` idempotency
+  - **single `/webhooks/stripe` endpoint** with `stripe_webhook_events` idempotency
   - **no hardcoded `payment_method_types`**, no Multibanco vouchers
 - **Stripe Embedded Components wired**:
   - Payment Element

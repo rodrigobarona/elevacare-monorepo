@@ -104,7 +104,7 @@ There is no ad hoc cron route for core product correctness. Anything that must s
 Each workflow follows this layered model:
 
 1. **Trigger ingestion** — webhook route, internal event, or scheduled QStash poke
-2. **Authenticity + replay check** — signature verify (Stripe/Daily), `stripe_event_log` idempotency check
+2. **Authenticity + replay check** — signature verify (Stripe/Daily), `stripe_webhook_events` idempotency check
 3. **Idempotent domain processing** — compute state transitions
 4. **Fan-out to downstream steps** — notifications, invoices, calendar, AI, etc.
 5. **Observability** — Sentry tags, BetterStack heartbeat, audit row
@@ -112,7 +112,7 @@ Each workflow follows this layered model:
 ## Trigger Sources
 
 - internal product actions
-- **Stripe webhooks** (single endpoint `/api/stripe/webhook`, dispatch by `event.type`)
+- **Stripe webhooks** (single endpoint `/webhooks/stripe`, dispatch by `event.type` via `processStripeEvent`)
 - **Daily webhooks** (room ended, transcript ready)
 - **Resend webhooks** (Lane 2 automation runs, delivery events)
 - scheduled reminders (durable `waitFor` inside workflow)
@@ -124,7 +124,7 @@ Each workflow follows this layered model:
 
 The following flows **must** be idempotent:
 
-- all Stripe webhook events (keyed on `event.id` via `stripe_event_log`)
+- all Stripe webhook events (keyed on `event.id` via `stripe_webhook_events`)
 - booking confirmation creation
 - reminder scheduling
 - platform-fee invoice issuance (keyed on `booking_id`)
@@ -197,7 +197,7 @@ Never mix in one handler:
 
 Instead:
 
-- the webhook route only verifies + acks + writes `stripe_event_log` + dispatches the workflow
+- the webhook route only verifies + acks + writes `stripe_webhook_events` + dispatches the workflow
 - the workflow owns domain mutation + fan-out + retries
 
 ## Correlation And Observability

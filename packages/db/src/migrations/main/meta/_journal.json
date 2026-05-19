@@ -99,6 +99,41 @@
       "when": 1747570800000,
       "tag": "0013_drop-become-partner-applications",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1779143396411,
+      "tag": "0014_add_billing_mirror_and_webhook_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1779177335657,
+      "tag": "0015_stripe_event_state_machine",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1779179146916,
+      "tag": "0016_event_ordering_and_terminal_failures",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1779181354724,
+      "tag": "0017_drop_billing_subs_price_ids_default",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1779190338406,
+      "tag": "0018_public_loners",
+      "breakpoints": true
     }
   ]
 }

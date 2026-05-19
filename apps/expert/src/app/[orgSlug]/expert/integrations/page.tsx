@@ -2,11 +2,7 @@ import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, listExpertIntegrations } from "@eleva/db"
-import {
-  listByCategory,
-  listCategories,
-  type IntegrationManifest,
-} from "@eleva/integrations"
+import { listByCategory, listCategories } from "@eleva/integrations"
 import { IntegrationCard } from "./integration-card"
 
 export const dynamic = "force-dynamic"

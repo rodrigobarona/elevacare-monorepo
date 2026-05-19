@@ -99,8 +99,8 @@ Each entry should include:
 
 - Owner: payments
 - Status: active
-- Summary: Stripe API pinned ≥ 2023-08-16. `payment_method_types` never hardcoded — Dynamic Payment Methods auto-show the right set per country (PT = card + MB WAY + wallets; EU = SEPA/iDEAL/Bancontact per country). Enabled methods managed in Stripe Dashboard per environment. Two accounts (staging + production). Single `/api/stripe/webhook` endpoint per env handles all event types (Payment + Subscriptions + Connect + Identity) with idempotency via `stripe_event_log`. UX uses Embedded Components everywhere (Payment Element, Connect Onboarding/Payouts/Balances/Account Management/Tax/Notification Banner, Identity embedded modal). No redirects, no popups, no Customer Portal. `appearance` API themed to Eleva tokens. CSP allows Stripe domains.
-- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md), ADR-005
+- Summary: Stripe API pinned ≥ 2023-08-16. `payment_method_types` never hardcoded for booking checkout — Dynamic Payment Methods auto-show the right set per country (PT = card + MB WAY + wallets; EU = SEPA/iDEAL/Bancontact per country). Subscription Checkout limited to `card + sepa_debit` per ADR-016 (MB WAY/Multibanco are one-time-only). Enabled methods managed in Stripe Dashboard per environment. Two accounts (staging + production). Single `/webhooks/stripe` endpoint per env handles all event types (Payment + Subscriptions + Connect + Identity) with idempotency via `stripe_webhook_events`. UX uses Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016, plus Connect/Identity Embedded Components, Payment Element for booking checkout. `appearance` API themed to Eleva tokens. CSP allows Stripe domains.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md), ADR-005, ADR-016
 
 ### 2026-04-22: Multibanco reference vouchers — excluded
 
@@ -221,6 +221,14 @@ Each entry should include:
 - Status: active
 - Summary: Triaged 20+ findings from the PR #7 code review against [`tech-debt-backlog.md`](./tech-debt-backlog.md). Fixed 11 still-valid issues (auth proxy SDK primitives, slot-picker race conditions and missing deps, timezone input validation, calendar busy-source whitelist, email JSON-LD rendering, booking-context email guard, accounting error logging, reserve-slot error fallback). Deferred 5 items requiring infrastructure or schema migrations: (1) accounting callback PKCE server-side opaque state (Sprint 7+), (2) persist `expertIntegrationId`/`externalCalendarId` in sessions table (Sprint 7), (3) composite FK on `expert_integrations` child tables (Sprint 7), (4) ICS VTIMEZONE generation (Sprint 7+), (5) external busy-time cache for public booking funnel (Sprint 5+). Skipped 4 items already tracked or assessed: `scheduleId` composite FK (Item #5), WorkOS disconnect lifecycle (Item #12), `findPart` throw-vs-fallback (verify step catches mismatches), duplicate outside-diff comments. RLS policy updates (Items #2–4) and composite-FK changes (Items #5, #15–17) are planned for batched migrations per the schema-and-migration-rules policy.
 - Reference: [`tech-debt-backlog.md`](./tech-debt-backlog.md), [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
+
+### 2026-05-18: Subscription UX — Embedded Checkout + Customer Portal (supersedes ADR-005 UX)
+
+- Owner: payments
+- Status: active
+- Supersedes: 2026-04-22 Stripe UX subsection of ADR-005 ("Custom Eleva UI + Payment Element + no Customer Portal redirect").
+- Summary: Subscription purchase flow uses Stripe **Embedded Checkout** + **Customer Portal** for management instead of a custom Eleva UI + Payment Element. Multi-admin attribution closed via `withAudit({ entity: "billing_portal", action: "session_minted" })` correlated with webhook events. Subscription `payment_method_types` pinned to `["card", "sepa_debit"]` (MB WAY/Multibanco are one-time-only). Booking checkout, Connect Embedded Components, Identity, and the Appearance API mapping remain unchanged from ADR-005.
+- Reference: [`adrs/ADR-016-subscription-ux-direction.md`](./adrs/ADR-016-subscription-ux-direction.md), [`adrs/ADR-005-payments-and-monetization.md`](./adrs/ADR-005-payments-and-monetization.md)
 
 ### 2026-05-18: API-First, Agentic-First, and Secure Architecture
 

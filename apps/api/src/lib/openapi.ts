@@ -7,6 +7,16 @@ const ErrorSchema = z.object({
   message: z.string().optional(),
 })
 
+// `/webhooks/stripe` returns this richer payload on retryable handler
+// failures so operators can correlate Stripe redelivery attempts with the
+// original event id and dispatcher reason.
+const StripeWebhookErrorSchema = z.object({
+  received: z.literal(false),
+  status: z.literal("failed"),
+  eventType: z.string(),
+  error: z.string(),
+})
+
 const RateLimitErrorSchema = z.object({
   error: z.literal("rate_limit_exceeded"),
   retryAfter: z.number(),
@@ -765,6 +775,222 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+          },
+        },
+      },
+      "/billing/subscribe": {
+        post: {
+          operationId: "billingSubscribe",
+          summary: "Create or upgrade an org subscription",
+          description:
+            "Creates a new subscription or swaps an existing one to the requested tier on the authenticated user's current organization. The org must have a Stripe Customer (set during provisioning). Returns a PaymentIntent client_secret for Payment Element confirmation when payment is required.",
+          tags: ["Billing"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  tier: z.enum([
+                    "expert_community",
+                    "expert_top",
+                    "clinic_starter",
+                    "clinic_growth",
+                  ]),
+                  quantity: z.number().int().min(1).max(100).optional(),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Subscription created or updated",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    subscriptionId: z.string(),
+                    status: z.string(),
+                    clientSecret: z.string().nullable(),
+                  }),
+                },
+              },
+            },
+            "403": {
+              description: "Missing billing:manage_org capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "Tier not found in Stripe (run seed-products)",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "Org has no Stripe Customer; run provisioning backfill",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/stripe/identity": {
+        post: {
+          operationId: "createIdentitySession",
+          summary: "Create a Stripe Identity verification session",
+          description:
+            "Creates a Stripe Identity verification session for the authenticated expert. Returns the client_secret to mount the embedded Identity modal. Webhook updates `expert_profiles.stripe_identity_status`.",
+          tags: ["Stripe"],
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: z.object({}).passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Identity session created",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    id: z.string(),
+                    clientSecret: z.string(),
+                    status: z.string(),
+                  }),
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:onboard capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "No expert profile for this user",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/stripe/account-session": {
+        post: {
+          operationId: "createAccountSession",
+          summary: "Mint a Stripe Connect AccountSession",
+          description:
+            "Mints a short-lived Stripe Connect AccountSession scoped to a per-page allow-list of components. The returned client_secret is consumed by `@stripe/connect-js` + `@stripe/react-connect-js` to render embedded Connect components.",
+          tags: ["Stripe"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  components: z
+                    .array(
+                      z.enum([
+                        "account_onboarding",
+                        "account_management",
+                        "notification_banner",
+                        "balances",
+                        "payouts",
+                        "payments",
+                        "tax_settings",
+                        "tax_registrations",
+                      ])
+                    )
+                    .min(1),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "AccountSession minted",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    clientSecret: z.string(),
+                    expiresAt: z.number(),
+                  }),
+                },
+              },
+            },
+            "403": {
+              description: "Missing payouts:view_own capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "No expert profile for this user",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Expert has no Connect account linked",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/webhooks/stripe": {
+        post: {
+          operationId: "stripeWebhook",
+          summary: "Stripe webhook receiver",
+          description:
+            "Stripe-signed webhook receiver. Verifies the `stripe-signature` header against `STRIPE_WEBHOOK_SECRET` and dispatches the event through `processStripeEvent`. Persists each `event.id` in `stripe_webhook_events` for idempotency. Returns 200 for processed/ignored/duplicate, 500 only for retryable handler failures (so Stripe redelivers).",
+          tags: ["Webhooks"],
+          security: [],
+          parameters: [
+            {
+              name: "stripe-signature",
+              in: "header",
+              required: true,
+              description: "Stripe signature header (`v1=...,t=...`).",
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            description: "Raw Stripe event body.",
+            content: {
+              "application/json": {
+                schema: z.object({}).passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Event accepted (processed | ignored | duplicate)",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    received: z.literal(true),
+                    status: z.enum(["processed", "ignored", "duplicate"]),
+                    eventType: z.string().optional(),
+                  }),
+                },
+              },
+            },
+            "400": {
+              description: "Missing or invalid signature",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description:
+                "Handler returned a retryable error; Stripe will retry with exponential backoff",
+              content: {
+                "application/json": { schema: StripeWebhookErrorSchema },
+              },
+            },
           },
         },
       },

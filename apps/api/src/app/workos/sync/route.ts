@@ -38,7 +38,6 @@ async function handler() {
 
     const events = response.data
     if (events.length === 0) {
-      hasMore = false
       break
     }
 

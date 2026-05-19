@@ -105,10 +105,15 @@ export function ScheduleEditor({
   const [days, setDays] = React.useState(() => rulesToDayMap(initialRules))
   const [overrides, setOverrides] =
     React.useState<OverrideRow[]>(initialOverrides)
-
-  React.useEffect(() => {
+  // Reset local overrides state when the parent passes a new initial set
+  // (e.g. after a save). React 19 canonical pattern: compare during render
+  // instead of mirroring via useEffect, which avoids cascading renders.
+  const [prevInitialOverrides, setPrevInitialOverrides] =
+    React.useState(initialOverrides)
+  if (prevInitialOverrides !== initialOverrides) {
+    setPrevInitialOverrides(initialOverrides)
     setOverrides(initialOverrides)
-  }, [initialOverrides])
+  }
 
   const [newDate, setNewDate] = React.useState("")
   const [newBlocked, setNewBlocked] = React.useState(true)

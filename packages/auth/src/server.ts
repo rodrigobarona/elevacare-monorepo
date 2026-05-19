@@ -2,7 +2,10 @@ import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
-import { withAuth as authkitGetSession } from "@workos-inc/authkit-nextjs"
+import {
+  refreshSession as authkitRefreshSession,
+  withAuth as authkitGetSession,
+} from "@workos-inc/authkit-nextjs"
 import { unsealData } from "iron-session"
 import { db, main } from "@eleva/db"
 import { resolveSessionFromWorkosUser } from "./session"
@@ -33,10 +36,12 @@ interface WorkosCookieSession {
  * fallback when the proxy-injected `x-workos-middleware` request
  * header is not propagated to `headers()` (e.g. in Next.js 16 Route
  * Handlers).
+ *
+ * Returns the user PLUS the access token so callers can decode JWT
+ * claims (permissions, entitlements, org_id) without a second cookie
+ * unseal.
  */
-async function getWorkosUserFromCookie(): Promise<
-  WorkosCookieSession["user"] | null
-> {
+async function getWorkosSessionFromCookie(): Promise<WorkosCookieSession | null> {
   const password = process.env.WORKOS_COOKIE_PASSWORD
   if (!password) return null
 
@@ -46,13 +51,17 @@ async function getWorkosUserFromCookie(): Promise<
   if (!cookie) return null
 
   try {
-    const session = await unsealData<WorkosCookieSession>(cookie.value, {
-      password,
-    })
-    return session.user ?? null
+    return await unsealData<WorkosCookieSession>(cookie.value, { password })
   } catch {
     return null
   }
+}
+
+async function getWorkosUserFromCookie(): Promise<
+  WorkosCookieSession["user"] | null
+> {
+  const session = await getWorkosSessionFromCookie()
+  return session?.user ?? null
 }
 
 /**
@@ -103,20 +112,11 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
   void headers()
   void cookies()
 
-  let workosUserId: string | null = null
-  let tokenEmail: string | null = null
-  let tokenFirstName: string | null = null
-  let tokenLastName: string | null = null
-  let permissions: string[] = []
-  let entitlements: string[] = []
-  let jwtOrgId: string | null = null
-
   try {
     const workosSession = await authkitGetSession()
-    workosUserId = workosSession.user?.id ?? null
-    tokenEmail = workosSession.user?.email ?? null
-    tokenFirstName = workosSession.user?.firstName ?? null
-    tokenLastName = workosSession.user?.lastName ?? null
+    let permissions: string[] = []
+    let entitlements: string[] = []
+    let jwtOrgId: string | null = null
 
     if (workosSession.accessToken) {
       const claims = decodeJwtPayload(workosSession.accessToken)
@@ -130,26 +130,82 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
         jwtOrgId = claims.org_id
       }
     }
+
+    return {
+      workosUserId: workosSession.user?.id ?? null,
+      tokenEmail: workosSession.user?.email ?? null,
+      tokenFirstName: workosSession.user?.firstName ?? null,
+      tokenLastName: workosSession.user?.lastName ?? null,
+      permissions,
+      entitlements,
+      jwtOrgId,
+    }
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      const cookieUser = await getWorkosUserFromCookie()
-      workosUserId = cookieUser?.id ?? null
-      tokenEmail = cookieUser?.email ?? null
-      tokenFirstName = cookieUser?.firstName ?? null
-      tokenLastName = cookieUser?.lastName ?? null
-    } else {
-      throw err
-    }
-  }
+      const cookieSession = await getWorkosSessionFromCookie()
+      const cookieUser = cookieSession?.user ?? null
 
-  return {
-    workosUserId,
-    tokenEmail,
-    tokenFirstName,
-    tokenLastName,
-    permissions,
-    entitlements,
-    jwtOrgId,
+      // W6: decode JWT entitlements/permissions/org_id from the cookie
+      // accessToken so capabilities and entitlements aren't blank during
+      // the AuthKit-middleware-missing window.
+      let permissions: string[] = []
+      let entitlements: string[] = []
+      let jwtOrgId: string | null = null
+      if (cookieSession?.accessToken) {
+        const claims = decodeJwtPayload(cookieSession.accessToken)
+        if (Array.isArray(claims.permissions)) {
+          permissions = claims.permissions as string[]
+        }
+        if (Array.isArray(claims.entitlements)) {
+          entitlements = claims.entitlements as string[]
+        }
+        if (typeof claims.org_id === "string") {
+          jwtOrgId = claims.org_id
+        }
+      }
+
+      return {
+        workosUserId: cookieUser?.id ?? null,
+        tokenEmail: cookieUser?.email ?? null,
+        tokenFirstName: cookieUser?.firstName ?? null,
+        tokenLastName: cookieUser?.lastName ?? null,
+        permissions,
+        entitlements,
+        jwtOrgId,
+      }
+    }
+    throw err
+  }
+}
+
+/**
+ * Force a WorkOS access-token refresh so the next page render picks up
+ * fresh JWT claims (entitlements, org_id, permissions). Use after a
+ * server action mutates state that is reflected in the JWT — most
+ * importantly after a Stripe subscription change so new entitlements
+ * appear immediately instead of waiting for natural token rotation.
+ *
+ * Wraps `refreshSession` from `@workos-inc/authkit-nextjs`. Non-throwing
+ * by design: on failure the caller logs and returns; the user simply
+ * sees stale entitlements until the next natural refresh.
+ *
+ * Per ADR-016: the multi-admin attribution chain works regardless of
+ * whether refresh succeeded (we audit the action that triggered the
+ * refresh, not the refresh itself).
+ */
+export async function refreshSessionEntitlements(): Promise<void> {
+  try {
+    await authkitRefreshSession({ ensureSignedIn: false })
+  } catch (err) {
+    // Swallow — the docstring promises non-throwing semantics so callers
+    // (e.g. apps/api/src/app/billing/subscribe/route.ts) can fire-and-forget
+    // without wrapping every call site. The user simply sees stale
+    // entitlements until natural rotation; ADR-016 audit attribution is
+    // unaffected because the action that triggered the refresh is the one
+    // that gets audited.
+    console.error(
+      `[refreshSessionEntitlements] authkitRefreshSession failed: ${err instanceof Error ? err.message : String(err)}`
+    )
   }
 }
 
@@ -224,19 +280,7 @@ export async function getSessionForOrg(
  * Memoised per-request via React.cache.
  */
 export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
-  let user: WorkosCookieSession["user"] | null = null
-
-  try {
-    const workosSession = await authkitGetSession()
-    user = workosSession.user ?? null
-  } catch (err) {
-    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      user = await getWorkosUserFromCookie()
-    } else {
-      throw err
-    }
-  }
-
+  const user = await resolveWorkosUserOrNull()
   if (!user) return null
   return {
     id: user.id,
@@ -245,6 +289,20 @@ export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
     lastName: user.lastName ?? null,
   }
 })
+
+async function resolveWorkosUserOrNull(): Promise<
+  WorkosCookieSession["user"] | null
+> {
+  try {
+    const workosSession = await authkitGetSession()
+    return workosSession.user ?? null
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
+      return await getWorkosUserFromCookie()
+    }
+    throw err
+  }
+}
 
 /**
  * Convenience wrapper that throws UnauthorizedError if there is no

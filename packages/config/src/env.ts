@@ -203,6 +203,15 @@ export function requireStripeEnv(): RequiredStripeEnv {
   if (!e.STRIPE_SECRET_KEY) missing.push("STRIPE_SECRET_KEY")
   if (!e.STRIPE_PUBLISHABLE_KEY) missing.push("STRIPE_PUBLISHABLE_KEY")
   if (!e.STRIPE_CONNECT_CLIENT_ID) missing.push("STRIPE_CONNECT_CLIENT_ID")
+  // The Stripe API version pin governs the SDK request shape AND
+  // (when passed to webhookEndpoints.create) the inbound event shape.
+  // Both must match. ADR-016 / payments-payouts-spec require the
+  // current dahlia version because subscription period and invoice
+  // subscription paths moved at 2025-03-31.basil. We require it
+  // explicitly instead of falling back to a hardcoded default so
+  // accidental drift between SDK version and webhook events surfaces
+  // at boot rather than as silent payload-shape divergence in prod.
+  if (!e.STRIPE_API_VERSION) missing.push("STRIPE_API_VERSION")
   if (missing.length > 0) {
     throw new Error(
       `@eleva/billing boot: missing env vars: ${missing.join(", ")}`
@@ -212,7 +221,7 @@ export function requireStripeEnv(): RequiredStripeEnv {
     STRIPE_SECRET_KEY: e.STRIPE_SECRET_KEY!,
     STRIPE_PUBLISHABLE_KEY: e.STRIPE_PUBLISHABLE_KEY!,
     STRIPE_CONNECT_CLIENT_ID: e.STRIPE_CONNECT_CLIENT_ID!,
-    STRIPE_API_VERSION: e.STRIPE_API_VERSION || "2023-08-16",
+    STRIPE_API_VERSION: e.STRIPE_API_VERSION!,
   }
 }
 

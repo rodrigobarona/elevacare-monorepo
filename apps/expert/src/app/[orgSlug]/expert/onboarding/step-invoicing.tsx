@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -46,6 +47,9 @@ interface Props {
 }
 
 export function StepInvoicing({ profile, onDone }: Props) {
+  const router = useRouter()
+  const params = useParams<{ orgSlug: string }>()
+  const orgSlug = params?.orgSlug
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
@@ -64,7 +68,11 @@ export function StepInvoicing({ profile, onDone }: Props) {
           setError(result.error)
           return
         }
-        window.location.href = `/expert/onboarding/toconline-redirect`
+        if (!orgSlug) {
+          setError("Missing tenant context — refresh and try again.")
+          return
+        }
+        router.push(`/${orgSlug}/expert/onboarding/toconline-redirect`)
         return
       }
 

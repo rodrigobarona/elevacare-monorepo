@@ -8,7 +8,6 @@ import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   getOrCreateDefaultSchedule,
-  getSchedule,
   updateScheduleTimezone,
   replaceAvailabilityRules,
   listAvailabilityRules,

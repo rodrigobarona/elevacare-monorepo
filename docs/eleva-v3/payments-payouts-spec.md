@@ -140,8 +140,9 @@ Starter / Growth / Enterprise per the tier table above.
 
 ### Dynamic Payment Methods
 
-- **never hardcode `payment_method_types`** on PaymentIntents or Checkout Sessions
-- Stripe picks based on customer country/currency/device/amount
+- **never hardcode `payment_method_types`** on PaymentIntents or booking Checkout Sessions — Dynamic Payment Methods auto-show the right set per country
+- **ADR-016 carve-out**: SaaS subscription Checkout Sessions (`mode: "subscription"`) MUST pin `payment_method_types: ["card", "sepa_debit"]` because MB WAY and Multibanco are one-time-only and cannot recur. This is the only place `payment_method_types` may be hardcoded — see [ADR-016](./adrs/ADR-016-subscription-ux-direction.md) and [ADR-005](./adrs/ADR-005-payments-and-monetization.md).
+- Stripe picks based on customer country/currency/device/amount (booking checkout)
 - enabled methods managed in Stripe Dashboard per environment
 - expected per-country method set:
   - **PT** → card + **MB WAY** + Apple Pay + Google Pay + Link
@@ -161,11 +162,11 @@ Starter / Growth / Enterprise per the tier table above.
 
 ### Single webhook endpoint
 
-- **one `/api/stripe/webhook`** per environment handles every event type (Payment + Subscriptions + Connect + Identity)
-- `packages/billing/webhook` exports the single handler:
-  - verifies signature
-  - writes `stripe_event_log(id PK, type, livemode, received_at, processed_at)` for idempotency
-  - dispatches by `event.type` to the right Vercel Workflow
+- **one `/webhooks/stripe`** per environment is implemented in `@eleva/billing/server` and dispatched through `processStripeEvent`
+- the route handler in `apps/api/src/app/webhooks/stripe/route.ts` is intentionally thin — it reads the raw request body and the `stripe-signature` header, verifies the Stripe signature against `STRIPE_WEBHOOK_SECRET` via `stripe().webhooks.constructEventAsync()`, then forwards the resulting verified `Stripe.Event` to `processStripeEvent`; all business logic lives in `@eleva/billing/server`
+- `processStripeEvent` is the canonical idempotency + dispatch flow (signature verification is the route's responsibility — see `.cursor/rules/stripe-webhooks.mdc`):
+  - persists every `event.id` in `stripe_webhook_events` (Neon, platform-level table) for idempotency — `INSERT ... ON CONFLICT DO NOTHING` short-circuits duplicate deliveries; status transitions are `received → processing → processed | failed | failed_terminal | ignored`
+  - dispatches by `event.type` to the right Vercel Workflow under `withAudit({ orgId, actorUserId: null })` so every mirror write is auditable
 - locked subscribed event types:
   - **Payment**: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.processing`, `charge.refunded`, `charge.dispute.*`
   - **Subscriptions**: `customer.subscription.*`, `invoice.*`
@@ -185,8 +186,10 @@ All Stripe surfaces render inline in Eleva's app. No popups, no Stripe-hosted pa
 | Expert account management                  | `<ConnectAccountManagement>`, `<ConnectDocuments>`                                     | `/expert/finance/account`      |
 | Expert tax                                 | `<ConnectTaxSettings>`, `<ConnectTaxRegistrations>`, `<ConnectTaxThresholdMonitoring>` | `/expert/finance/tax`          |
 | Platform action-needed                     | `<ConnectNotificationBanner>`                                                          | top of expert/clinic workspace |
-| Expert SaaS subscription management        | custom Eleva UI + Payment Element + Billing API                                        | `/expert/billing`              |
-| Clinic SaaS subscription + seat management | custom Eleva UI + Payment Element + Billing API                                        | `/org/billing`                 |
+| Expert SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                       | `/expert/billing`              |
+| Expert SaaS subscription management        | Stripe Customer Portal (per ADR-016, audited on session-mint)                          | `/expert/billing` → Portal     |
+| Clinic SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                       | `/org/billing`                 |
+| Clinic SaaS subscription + seat management | Stripe Customer Portal (per ADR-016; seat sync via WorkOS Seat Sync)                   | `/org/billing` → Portal        |
 | Patient payment-method update              | Payment Element in save-card mode                                                      | patient account                |
 
 Architecture:
@@ -195,7 +198,7 @@ Architecture:
 - `/api/stripe/account-session` mints short-lived `AccountSession` tokens with precise component permissions; RBAC-gated
 - `appearance` API maps Eleva design tokens (brand colors, radius, fonts) → Stripe widget theme; dark-mode supported
 - `locale` prop wired to next-intl (`pt` / `en` / `es`)
-- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com` in `script-src` and `frame-src`
+- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com`, `billing.stripe.com` (per ADR-016, for Customer Portal redirect return flow) in `script-src` and `frame-src`
 - error UX: components wrapped in Eleva error boundary; `onExit` / `onLoadError` handled with consistent retry CTA
 
 Account type locked: **Stripe Connect Express + Embedded Components** (not Custom). Express supports all embedded components we need without Custom's extra compliance and fee load.

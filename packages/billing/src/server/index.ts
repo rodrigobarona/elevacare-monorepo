@@ -22,6 +22,18 @@ export type {
   ProvisionBillingInput,
   ProvisionBillingResult,
 } from "./provisioning"
+export { processStripeEvent, TerminalError } from "./webhook"
+export type { StripeEventResult } from "./webhook"
+export {
+  computeCommissionRate,
+  isPriorityRanked,
+  hasCRMAccess,
+  isTopExpert,
+  isClinicSaaS,
+  ENTITLEMENT_KEYS,
+  type BillingSession,
+  type EntitlementKey,
+} from "./commission"
 export type {
   ConnectAccountSession,
   ConnectComponentName,

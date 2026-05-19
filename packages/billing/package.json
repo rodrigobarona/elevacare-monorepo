@@ -16,12 +16,18 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
+    "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:*",
+    "@eleva/flags": "workspace:*",
+    "@eleva/observability": "workspace:*",
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
     "@workos-inc/node": "catalog:",
-    "stripe": "catalog:"
+    "drizzle-orm": "catalog:",
+    "stripe": "catalog:",
+    "zod": "catalog:"
   },
   "peerDependencies": {
     "react": "19.x"
@@ -37,6 +43,7 @@
     "@types/react": "catalog:",
     "eslint": "catalog:",
     "react": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

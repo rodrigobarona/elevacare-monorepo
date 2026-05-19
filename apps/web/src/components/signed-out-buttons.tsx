@@ -1,3 +1,12 @@
+/**
+ * Plain anchor links to /login and /signup — intentionally not using
+ * the i18n `<Link>` so the browser does a full navigation and lets the
+ * gateway proxy rewrite to the account zone. Internal SPA navigation
+ * would bypass the cross-zone rewrite and hit a 404.
+ *
+ * The file-level eslint-disable above is a block comment so it survives
+ * Prettier (line comments don't work as file-scoped disables anyway).
+ */
 import { Button } from "@eleva/ui/components/button"
 
 interface SignedOutButtonsProps {
@@ -5,12 +14,6 @@ interface SignedOutButtonsProps {
   getStartedLabel: string
 }
 
-/**
- * Plain anchor links to /login and /signup -- intentionally not using
- * the i18n `<Link>` so the browser does a full navigation and lets the
- * gateway proxy rewrite to the account zone. Internal SPA navigation
- * would bypass the cross-zone rewrite and hit a 404.
- */
 export function SignedOutButtons({
   loginLabel,
   getStartedLabel,

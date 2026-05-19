@@ -19,18 +19,15 @@ async function executeAll(
   label: string
 ) {
   const sql = neon(connectionString)
-  // eslint-disable-next-line no-console
   console.log(`[rls] applying ${stmts.length} statements to ${label}`)
   for (const stmt of stmts) {
     try {
       await sql.query(stmt)
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error(`[rls] failed on ${label}:`, stmt)
       throw err
     }
   }
-  // eslint-disable-next-line no-console
   console.log(`[rls] ${label} done`)
 }
 

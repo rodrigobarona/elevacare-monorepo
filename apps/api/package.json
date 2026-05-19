@@ -11,7 +11,8 @@
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
     "setup:qstash": "tsx --env-file=../../.env.local scripts/setup-qstash-schedule.ts",
-    "setup:qstash:audit": "tsx --env-file=../../.env.local scripts/setup-qstash-audit-drainer.ts"
+    "setup:qstash:audit": "tsx --env-file=../../.env.local scripts/setup-qstash-audit-drainer.ts",
+    "setup:qstash:stripe-stuck": "tsx --env-file=../../.env.local scripts/setup-qstash-stripe-stuck-events.ts"
   },
   "dependencies": {
     "@eleva/accounting": "workspace:^",

@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { seedDemo } from "./demo"
 
 async function main() {

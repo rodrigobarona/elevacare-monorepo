@@ -47,7 +47,7 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 27. [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 28. [`testing-strategy.md`](./testing-strategy.md)
 29. [`roadmap-and-milestones.md`](./roadmap-and-milestones.md)
-29a. [`implementation-sprints.md`](./implementation-sprints.md)
+    29a. [`implementation-sprints.md`](./implementation-sprints.md)
 30. [`dependency-map.md`](./dependency-map.md)
 31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
 32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
@@ -81,7 +81,7 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - The monorepo uses **pnpm + Turborepo** (bun allowed as a task runner only; `bun install` banned).
 - **Neon Postgres with RLS** + `withOrgContext()` is the non-bypassable tenancy layer, across two Neon projects (`eleva_v3_main` + `eleva_v3_audit`).
 - **WorkOS** (EU) owns auth, organizations, and Vault.
-- **Stripe** Connect Express + Dynamic Payment Methods + Entitlements + **Embedded Components everywhere** + single `/api/stripe/webhook` per env. No Customer Portal redirect. Multibanco reference vouchers excluded.
+- **Stripe** Connect Express + Dynamic Payment Methods + Entitlements + **Embedded Components** + single `/webhooks/stripe` per env (canonical handler in `@eleva/billing/server`). Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016. Multibanco reference vouchers excluded.
 - **Hybrid monetization**: solo experts = commission (15% → 8% on Top Expert tier); clinics/orgs = per-seat SaaS (Starter/Growth/Enterprise), no commission on clinic-member bookings. Three-party revenue demoted to phase-2 opt-in.
 - **Two-tier invoicing** in `packages/accounting`: Tier 1 (Eleva→Expert/Clinic) via TOConline; Tier 2 (Expert→Patient) via cal.com-style adapter registry.
 - **Notifications two-lane**: Lane 1 transactional (Vercel Workflows + Resend + Twilio EU + Neon inbox + Expo push) and Lane 2 marketing (Resend Automations, PHI-free). Novu retired.
@@ -137,6 +137,7 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`launch-readiness-checklist.md`](./launch-readiness-checklist.md): final cross-functional launch checklist
 - [`admin-operator-playbooks.md`](./admin-operator-playbooks.md): internal staff playbooks for approvals, support, and sensitive operations
 - [`integration-runbooks.md`](./integration-runbooks.md): provider failure handling and investigation paths
+- [`operator-tasks/`](./operator-tasks/): one-shot cutover and provisioning checklists tied to specific releases ([Sprint 0 Vercel setup](./operator-tasks/s0-vercel-setup.md), [Stripe Phase 1+2 cutover](./operator-tasks/stripe-phase-1-2-cutover.md))
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md): schema ownership, migration discipline, and rollout safety rules
 - [`testing-strategy.md`](./testing-strategy.md): test layering, critical-flow coverage, and validation priorities
 - [`roadmap-and-milestones.md`](./roadmap-and-milestones.md): milestone-based delivery sequencing and exit criteria

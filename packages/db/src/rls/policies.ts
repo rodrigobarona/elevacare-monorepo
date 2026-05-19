@@ -35,6 +35,8 @@ export const TENANT_TABLES = [
   "sessions",
   "expert_practice_locations",
   "event_locations",
+  "billing_customers",
+  "billing_subscriptions",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
@@ -50,6 +52,14 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   "expert_profiles",
   "memberships",
   "organizations",
+  // Billing mirrors are written from the Stripe webhook handler under a
+  // service context with no end-user session. The Drizzle pgPolicy
+  // declarations on these tables already include the eleva.platform_admin
+  // bypass (see packages/db/src/schema/main/billing.ts); listing them
+  // here keeps `pnpm db:rls` regenerated policies in sync instead of
+  // dropping the bypass clause on each run.
+  "billing_customers",
+  "billing_subscriptions",
 ])
 
 function tenantPredicate(table: string): string {

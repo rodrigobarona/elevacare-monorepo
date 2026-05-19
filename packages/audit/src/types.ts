@@ -16,6 +16,23 @@ export type AuditEntity =
   | "event_type"
   | "schedule"
   | "blob"
+  // Stripe billing surface (Phase 1 of stripe-foundation-review).
+  // billing_customer/billing_subscription mirror Stripe state in our DB
+  // for support tooling; entitlement decisions still come from the WorkOS
+  // access-token entitlements claim (see ADR-016).
+  | "billing_customer"
+  | "billing_subscription"
+  | "billing_invoice"
+  | "billing_checkout"
+  // billing_portal.session_minted is the multi-admin attribution anchor
+  // (see ADR-016): we audit who minted a Customer Portal session URL,
+  // then correlate with subsequent webhook events to infer the actor.
+  | "billing_portal"
+  // Stripe Connect platform + payouts (expert marketplace surface).
+  | "connect_account"
+  | "connect_payout"
+  | "identity_verification"
+  | "booking_payment"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -39,6 +56,26 @@ export type AuditAction =
   | "unpublished"
   | "synced"
   | "uploaded"
+  // Stripe billing lifecycle.
+  | "canceled"
+  | "reactivated"
+  | "past_due_recovered"
+  | "paid"
+  | "payment_failed"
+  | "requires_action"
+  | "refunded"
+  | "disputed"
+  | "session_created"
+  | "session_minted"
+  // Connect platform / capabilities.
+  | "capability_changed"
+  | "deauthorized"
+  // Connect payouts.
+  | "succeeded"
+  | "failed"
+  // Identity verification.
+  | "verified"
+  | "requires_input"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */
