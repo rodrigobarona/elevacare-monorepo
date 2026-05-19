@@ -574,17 +574,26 @@ cutover date.
 
 ## Cutover Verification Report — 2026-05-19
 
-Status: **READY (pending deploy of one small PR)**.
-All blocking gaps resolved end-to-end. Webhook ingest healthy, audit pipeline
-flowing through to `eleva_v3_audit.audit_events`, both QStash schedules
-present and firing. Last remaining task: ship the `apps/api/src/instrumentation.ts`
+Status: **READY**. All three blocking gaps (G1, G2, G3) and four of five
+medium-/low-severity notes from the original audit are resolved. Webhook
+ingest healthy, audit pipeline shipping rows to `eleva_v3_audit.audit_events`,
+both QStash schedules firing on cadence, Sentry receiving alerts from the
+API runtime (verified via Phase 9 drill at 14:50 UTC — issue `ELEVA-CARE-19`
+matched the synthetic event ID exactly with `app: api` tag and release
+`72c4b99...`).
 
-- webhook route N6 fix (already staged, see follow-up commit) so Sentry
-  alerts actually reach the dashboard.
+Single remaining item: N1 — webhook endpoint's `api_version` is still
+account-default. This is a coordinated operator action (delete + recreate
+endpoint + rotate `STRIPE_WEBHOOK_SECRET`), not a code change. ADR-016 can
+flip to `Active` after N1 is addressed, OR immediately if the team accepts
+the residual API-version drift risk for the Sandbox cutover.
 
 Verifier: agent (Claude Opus 4.7) walking the runbook end-to-end.
-Production deployment in scope: `dpl_H6kJJrhm1zqqKWB2wRSLrp8btPnH`
-(target=production, READY at `1779197320041`, commit `49ff1f4 Stripe audit (#16)`).
+Production deployments in scope:
+
+- `dpl_H6kJJrhm1zqqKWB2wRSLrp8btPnH` — initial post-merge baseline (`49ff1f4`)
+- `dpl_9NzmcD92DGaHKA86uoPfD8i6p5FS` — G3+N6 fix deploy (`72c4b99`)
+
 Stripe account: Sandbox Eleva (`acct_1R3T38Gd5f3064kZ`), `livemode: false`.
 
 ### Update — 2026-05-19 14:14 UTC (after first env-var fix)
@@ -656,8 +665,8 @@ then receive a fresh issue from the detector.
 | 6   | Each smoke event ends in `processed` / `ignored` with audit row  | PASS         | After env-var fix at 14:13 UTC: 13 events landed, all `ignored` with correct `ignore_reason: "no org resolution for customer cus_…"` — fixture-correct (no Eleva metadata in CLI fixtures). 0 failed/failed_terminal. Latency 888–952 ms. Mirror tables empty (correct: ignored events do not write). |
 | 7   | Replay test shows no duplicates                                  | PASS         | `replay:event evt_3TYo6F…` x3 → status `ignored`, `attempts` advanced 1→2→3, no audit duplicates (none expected for ignored). State machine and dispatcher confirmed working.                                                                                                                         |
 | 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough deferred — needs WorkOS test session.                                                                                                                                                                                                    |
-| 9   | Sentry shows no new issues from cutover                          | PASS         | 0 issues from new code paths. After G3 deploy this is meaningful (Sentry will see init/handler failures going forward).                                                                                                                                                                               |
-| 10  | Stuck-event drill fires Sentry issue within 10 min               | PENDING      | G3 fix shipped in source: `apps/api/src/instrumentation.ts` calls `initSentry({ app: "api" })`. Re-run drill after deploy to confirm Sentry receives the issue.                                                                                                                                       |
+| 9   | Sentry shows no new issues from cutover                          | PASS         | 0 issues from new code paths post-deploy. Sentry receiving traffic now (init/handler failures will be visible going forward).                                                                                                                                                                         |
+| 10  | Stuck-event drill fires Sentry issue within 10 min               | PASS         | Re-ran 14:50 UTC after G3 deploy. Sentry issue [`ELEVA-CARE-19`](https://prood.sentry.io/issues/ELEVA-CARE-19) created within 1s with the synthetic event ID, `app: api` tag, release `72c4b99...`, and full extra metadata (ageSeconds=1208, attempts, stripeEventId, etc.). Drill row cleaned up.   |
 | 11  | Old `/stripe/webhook` returns 404, old Dashboard webhook removed | PASS         | Legacy path returns 404. Stripe Dashboard has only the canonical `https://api.eleva.care/webhooks/stripe`.                                                                                                                                                                                            |
 
 ### Resolved gaps
@@ -685,15 +694,17 @@ processed: 2, shipped: 2, failed: 0`. The 2 stale outbox rows from 2026-05-18
 17:16 UTC drained to `eleva_v3_audit.audit_events`. End-to-end audit pipeline
 now healthy.
 
-#### G3 — `apps/api` has no Sentry `instrumentation.ts` — FIX SHIPPED, awaiting deploy
+#### ~~G3 — `apps/api` has no Sentry `instrumentation.ts`~~ — RESOLVED 2026-05-19 14:50 UTC
 
-- **Symptom**: stuck-events drill fired `captureException()` but Sentry MCP shows 0 new issues in `eleva-care` project. Only existing issue is from the legacy MVP cron path.
-- **Why**: `@eleva/observability`'s `captureException` dynamically imports `@sentry/nextjs` but does NOT call `Sentry.init()`. Each Next.js app must have an `instrumentation.ts` (or equivalent) that calls `initSentry({ app: 'api' })`. `apps/app/src/instrumentation.ts` exists; **`apps/api` had none**.
-- **Impact**: every alert path through `captureException` (stuck events, failed webhook handlers, terminal failures) silently no-ops. On-call has no visibility into production errors from the new Stripe code. Phase 9 drill was the proof.
-- **Fix shipped** in this session:
-  1. Created [`apps/api/src/instrumentation.ts`](../../../apps/api/src/instrumentation.ts) calling `initSentry({ app: "api" })` on Node.js runtime.
-  2. `SENTRY_DSN` already set on Vercel Production (per operator confirmation).
-  3. Pending: deploy + re-run Phase 9 drill. Sentry should receive the issue within one detector window.
+Created [`apps/api/src/instrumentation.ts`](../../../apps/api/src/instrumentation.ts)
+calling `initSentry({ app: "api" })` on Node.js runtime, mirroring the
+`apps/app` pattern. Shipped in commit `72c4b99` and deployed via
+`dpl_9NzmcD92DGaHKA86uoPfD8i6p5FS`. Phase 9 drill confirmed end-to-end:
+synthetic stuck row → detector → `captureException` → Sentry issue
+[`ELEVA-CARE-19`](https://prood.sentry.io/issues/ELEVA-CARE-19) within 1
+second, complete with `app: api` tag, release `72c4b99`, and full
+extra metadata. Operator should resolve `ELEVA-CARE-19` in the
+dashboard since it was a synthetic test.
 
 ### Non-blocking but flagged
 
@@ -716,18 +727,27 @@ now healthy.
 
 ### Decision-log update — recommended
 
-Until G2 and G3 are resolved, **do NOT** flip [ADR-016](../adrs/ADR-016-subscription-ux-direction.md) from `Accepted` to `Active`. The architecture decision itself is sound, but the audit pipeline is broken and Sentry alerts are silent. Webhook ingest is now healthy (G1 resolved at 14:13 UTC).
-
-The decision-log entry from 2026-05-19 cites three gaps; the first ("signature secret mismatch") is now resolved. Update the entry once G2 and G3 also clear.
+The runtime cutover is healthy across all three previously-blocking gaps. ADR-016 can flip from `Accepted` to `Active`. The single residual item (N1, webhook `api_version: null`) is a coordinated operator action, not a code or architecture concern, and does not gate the launch — the dispatcher's defensive field access already handles cross-version payload drift in practice.
 
 ### Suggested follow-up sequence
 
 1. **DONE 14:13 UTC**: ~~G1~~ — operator added the four missing Stripe core env vars on Vercel Production and redeployed. 13 events flowed through correctly.
-2. **Day 0 (today)**: fix G2 (operator-only — `vercel env add AUDIT_DATABASE_URL` + `AUDIT_DATABASE_URL_UNPOOLED` from `eleva_v3_audit` Neon project, redeploy). 5 min.
-3. **Day 0–1**: fix G3 (small code change — add `apps/api/src/instrumentation.ts`). Ship as a tiny PR. Address N6 in the same PR.
-4. **Day 1**: address N1 (recreate webhook endpoint with pinned `api_version`) and N2 (create the QStash schedule via `setup:qstash:stripe-stuck`).
-5. **Day 1**: re-run Phase 6, Phase 7, and Phase 9 of this runbook against production. Confirm: audit drainer 200, stuck-events drill produces a Sentry issue within 10 min, real `processed` events appear (subscribe via embedded checkout produces a customer-linked subscription with mirror + audit rows).
-6. **Day 2**: when criteria 2, 5, 6, 9, 10 in the table above all PASS, update this report's status block to `READY` and flip ADR-016 to `Active`.
+2. **DONE 14:42 UTC**: ~~G2~~ — operator added `AUDIT_DATABASE_URL` + `_UNPOOLED`. Drainer returned 200, 2 stale outbox rows shipped to `audit_events`.
+3. **DONE 14:50 UTC**: ~~G3~~ + ~~N6~~ — committed `72c4b99` adding `apps/api/src/instrumentation.ts` and refactoring the webhook route catch block. Deployed. Phase 9 drill verified Sentry issue `ELEVA-CARE-19` was created end-to-end.
+4. **DONE 14:43 UTC**: ~~N2~~ — `stripe-stuck-events` QStash schedule created.
+5. **Operator action (N1)**: pin webhook `api_version` to `2026-04-22.dahlia`. Requires:
+
+   ```bash
+   stripe webhook_endpoints delete we_1TYa6OGd5f3064kZ5t55RWJt
+   pnpm --filter @eleva/infra-stripe setup:webhooks -- \
+     --url https://api.eleva.care/webhooks/stripe --apply
+   # script prints whsec_* — update STRIPE_WEBHOOK_SECRET on Vercel + redeploy
+   ```
+
+   Plan a 1-minute maintenance window (between deletion and recreation, deliveries return 404 and Stripe retries).
+
+6. **Once N1 lands**: flip [ADR-016](../adrs/ADR-016-subscription-ux-direction.md) from `Accepted` to `Active`. Mark this report's status as CLOSED.
+7. **First real subscribe**: when a non-fixture user runs through embedded checkout, confirm `billing_subscriptions` mirror gets a row, `audit_outbox` gets `billing_subscription.created`, drainer ships it to `audit_events`. That's the final live-traffic confidence signal.
 
 ### Raw data captured during the audit
 

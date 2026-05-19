@@ -32,13 +32,13 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-05-19: Stripe Phase 1+2 cutover — READY pending one PR deploy (Sentry instrumentation)
+### 2026-05-19: Stripe Phase 1+2 cutover — READY (all blocking gaps resolved)
 
 - Owner: platform/billing
-- Status: needs-review
-- Summary: PR #16 (`Stripe audit`) merged and deployed. Three iterations of fixes through the day: 14:13 UTC operator added the four core Stripe env vars (resolves G1, originally misdiagnosed as a webhook-secret mismatch — was actually a `@eleva/billing` boot throw masquerading as a signature error). 14:42 UTC operator added `AUDIT_DATABASE_URL` + `_UNPOOLED` (resolves G2 — drainer now `200 OK`, 2 stale outbox rows shipped to `eleva_v3_audit.audit_events`). Same session: shipped `apps/api/src/instrumentation.ts` for G3, refactored webhook route catch block (N6), created the missing `stripe-stuck-events` QStash schedule (N2). N1 (webhook `api_version: null`) is the only remaining medium-severity item, intentionally deferred to a coordinated operator action since it requires deleting + recreating the endpoint and rotating `STRIPE_WEBHOOK_SECRET`. After the G3+N6 PR deploys and the Phase 9 stuck-event drill confirms Sentry receives the issue, ADR-016 can flip to `Active`.
+- Status: needs-review (pending ADR-016 flip)
+- Summary: PR #16 (`Stripe audit`) merged and the runtime cutover is healthy across all three originally-blocking gaps after three operator iterations on 2026-05-19. **G1** (originally misdiagnosed as a `STRIPE_WEBHOOK_SECRET` mismatch — was actually a `@eleva/billing` boot throw masked by the route's signature catch) resolved 14:13 UTC after operator added `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_API_VERSION` to Vercel Production. **G2** resolved 14:42 UTC after `AUDIT_DATABASE_URL` + `_UNPOOLED` were added — audit drainer returned `200 OK`, 2 stale outbox rows shipped to `eleva_v3_audit.audit_events`. **G3** resolved 14:50 UTC by commit `72c4b99` (deploy `dpl_9NzmcD92DGaHKA86uoPfD8i6p5FS`) which added `apps/api/src/instrumentation.ts` calling `initSentry({ app: "api" })`; Phase 9 drill confirmed end-to-end with Sentry issue `ELEVA-CARE-19` containing the synthetic event ID, `app: api` tag, release `72c4b99`. Same commit fixed N6 (webhook route catch block now distinguishes init from signature errors). N2 (`stripe-stuck-events` QStash schedule) created at 14:43 UTC. Only N1 (webhook `api_version: null`) remains, intentionally deferred as a coordinated operator action (delete + recreate endpoint + rotate `STRIPE_WEBHOOK_SECRET`); does not block the launch given the dispatcher's runtime-defensive field access. ADR-016 can now flip to `Active`.
 - Reference: [`operator-tasks/stripe-phase-1-2-cutover.md`](./operator-tasks/stripe-phase-1-2-cutover.md), [`adrs/ADR-016-subscription-ux-direction.md`](./adrs/ADR-016-subscription-ux-direction.md)
-- Next review: after G3+N6 PR deploys and the Phase 9 drill confirms Sentry; then flip ADR-016 status
+- Next review: after first non-fixture subscribe round-trips through embedded checkout and the resulting `billing_subscription.created` event makes it through mirror → outbox → audit_events
 
 ### 2026-04-22: Start with one authenticated product app
 
