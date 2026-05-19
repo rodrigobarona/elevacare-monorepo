@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   boolean,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgPolicy,
@@ -43,7 +44,7 @@ import { organizations } from "./organizations"
 
 export const stripeWebhookEventStatusEnum = pgEnum(
   "stripe_webhook_event_status",
-  ["received", "processed", "failed", "ignored"]
+  ["received", "processing", "processed", "failed", "ignored"]
 )
 
 /**
@@ -103,6 +104,23 @@ export const stripeWebhookEvents = pgTable(
       .default("received"),
     /** Last error message if status='failed'. Truncated to 2k chars. */
     error: text("error"),
+    /**
+     * Reason recorded when status='ignored' (e.g. "no org resolution for
+     * customer cus_..."). Lets operators query silent no-ops separately
+     * from successful processing.
+     */
+    ignoreReason: text("ignore_reason"),
+    /**
+     * Number of dispatch attempts. Incremented on each (re-)claim of the
+     * row from received/failed -> processing. Useful for diagnostics and
+     * for stuck-event alerting.
+     */
+    attempts: integer("attempts").notNull().default(0),
+    /** Timestamp of the most recent claim attempt. */
+    lastAttemptAt: timestamp("last_attempt_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     /**
      * Optional resolved org id. Set when the handler successfully maps the
      * event to a tenant (via metadata, customer, or connected account).

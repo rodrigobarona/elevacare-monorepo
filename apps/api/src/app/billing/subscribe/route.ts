@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { UnauthorizedError } from "@eleva/auth"
+import { refreshSessionEntitlements } from "@eleva/auth/server"
 import {
   createOrgSubscription,
   swapSubscriptionTier,
@@ -124,35 +125,23 @@ export async function POST(request: Request) {
       )
     }
 
+    // Single list call with status='all' is more efficient than three
+    // separate calls. Filter client-side for the live subscriptions we
+    // care about (active, trialing, incomplete).
     const subscriptions = await s.subscriptions.list({
       customer: customer.id,
-      status: "active" as unknown as undefined,
-      limit: 5,
+      status: "all",
+      limit: 10,
     })
-
-    const incompleteSubscriptions = await s.subscriptions.list({
-      customer: customer.id,
-      status: "incomplete" as unknown as undefined,
-      limit: 5,
-    })
-
-    const trialingSubscriptions = await s.subscriptions.list({
-      customer: customer.id,
-      status: "trialing" as unknown as undefined,
-      limit: 5,
-    })
-
-    const allSubs = [
-      ...subscriptions.data,
-      ...incompleteSubscriptions.data,
-      ...trialingSubscriptions.data,
-    ]
-    const existingSub = allSubs[0]
+    const existingSub = subscriptions.data.find((sub) =>
+      ["active", "trialing", "incomplete"].includes(sub.status)
+    )
 
     if (existingSub) {
       const updated = await swapSubscriptionTier({
         subscriptionId: existingSub.id,
         newTier: tier,
+        orgId: session.orgId,
         quantity,
       })
 
@@ -168,6 +157,16 @@ export async function POST(request: Request) {
 
       const clientSecret = await extractClientSecret(s, updated.latest_invoice)
 
+      // Refresh the WorkOS session so the JWT immediately picks up new
+      // entitlements (otherwise the cached cookie keeps the old set).
+      // Non-blocking: if refresh fails the user sees stale entitlements
+      // until natural rotation, which is recoverable.
+      void refreshSessionEntitlements().catch((err) => {
+        console.warn(
+          `[billing/subscribe] Session refresh failed after swap for org ${session.orgId}: ${err instanceof Error ? err.message : String(err)}`
+        )
+      })
+
       return secureJson(
         {
           subscriptionId: updated.id,
@@ -181,6 +180,7 @@ export async function POST(request: Request) {
     const subscription = await createOrgSubscription({
       customerId: customer.id,
       tier,
+      orgId: session.orgId,
       quantity,
     })
 
@@ -198,6 +198,12 @@ export async function POST(request: Request) {
       s,
       subscription.latest_invoice
     )
+
+    void refreshSessionEntitlements().catch((err) => {
+      console.warn(
+        `[billing/subscribe] Session refresh failed after create for org ${session.orgId}: ${err instanceof Error ? err.message : String(err)}`
+      )
+    })
 
     return secureJson(
       {

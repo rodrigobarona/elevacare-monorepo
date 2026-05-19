@@ -11,6 +11,13 @@ import Stripe from "stripe"
  *
  * Uses STRIPE_SECRET_KEY from .env.local (staging by default).
  * For production, set STRIPE_SECRET_KEY to the production key.
+ *
+ * Per ADR-016 + W5: clinic seat prices use the WorkOS-managed
+ * `workos_seat_count` Billing Meter when `WORKOS_SEAT_METER_ID` is set
+ * in env. Otherwise the script falls back to the legacy licensed
+ * per-seat price (kept for back-compat during migration). Either way,
+ * the new metered price has `eleva_price_type: "per_seat_metered"` and
+ * is preferred by `findSeatPriceWithType` in @eleva/billing/server.
  */
 
 const PRODUCTS = [
@@ -116,28 +123,76 @@ async function ensurePricesForProduct(
 
   if ("seatPrice" in p && p.seatPrice) {
     const sp = p.seatPrice as SeatPrice
-    const hasSeatPrice = prices.data.some(
-      (pr) => pr.metadata.eleva_price_type === "per_seat"
-    )
+    await ensureSeatPrices(stripe, product.id, p, sp, prices.data)
+  }
+}
 
-    if (!hasSeatPrice) {
-      const seatPriceObj = await stripe.prices.create({
-        product: product.id,
-        currency: "eur",
-        unit_amount: sp.amount,
-        recurring: {
-          interval: p.interval,
-          usage_type: "licensed",
-        },
-        metadata: {
-          eleva_product_key: sp.metadataKey,
-          eleva_price_type: "per_seat",
-        },
-      })
-      console.log(
-        `    + created missing seat price: ${seatPriceObj.id} (EUR ${(sp.amount / 100).toFixed(2)}/seat/${p.interval})`
-      )
-    }
+/**
+ * Creates seat prices for a clinic product. When WORKOS_SEAT_METER_ID
+ * is set, creates a metered price (`per_seat_metered`) tied to the
+ * WorkOS-managed `workos_seat_count` Billing Meter. Always also keeps
+ * the legacy licensed price (`per_seat`) so existing subscriptions
+ * billed against it continue to function until migrated.
+ */
+async function ensureSeatPrices(
+  stripe: Stripe,
+  productId: string,
+  p: (typeof PRODUCTS)[number],
+  sp: SeatPrice,
+  existingPrices: Stripe.Price[]
+): Promise<void> {
+  const meterId = process.env.WORKOS_SEAT_METER_ID
+  const hasLicensedPrice = existingPrices.some(
+    (pr) => pr.metadata.eleva_price_type === "per_seat"
+  )
+  const hasMeteredPrice = existingPrices.some(
+    (pr) => pr.metadata.eleva_price_type === "per_seat_metered"
+  )
+
+  if (!hasLicensedPrice) {
+    const seatPriceObj = await stripe.prices.create({
+      product: productId,
+      currency: "eur",
+      unit_amount: sp.amount,
+      recurring: {
+        interval: p.interval,
+        usage_type: "licensed",
+      },
+      metadata: {
+        eleva_product_key: sp.metadataKey,
+        eleva_price_type: "per_seat",
+      },
+    })
+    console.log(
+      `    + created licensed seat price: ${seatPriceObj.id} (EUR ${(sp.amount / 100).toFixed(2)}/seat/${p.interval})`
+    )
+  }
+
+  if (meterId && !hasMeteredPrice) {
+    const seatPriceObj = await stripe.prices.create({
+      product: productId,
+      currency: "eur",
+      unit_amount: sp.amount,
+      recurring: {
+        interval: p.interval,
+        usage_type: "metered",
+        meter: meterId,
+      },
+      metadata: {
+        eleva_product_key: `${sp.metadataKey}_metered`,
+        eleva_price_type: "per_seat_metered",
+        eleva_seat_meter_id: meterId,
+      },
+    })
+    console.log(
+      `    + created metered seat price: ${seatPriceObj.id} (EUR ${(sp.amount / 100).toFixed(2)}/seat/${p.interval} via meter ${meterId})`
+    )
+  } else if (!meterId) {
+    console.warn(
+      `    ! WORKOS_SEAT_METER_ID not set; skipping metered seat price for ${p.name}. ` +
+        `Set the env var to the workos_seat_count meter id from your Stripe Dashboard ` +
+        `(Billing -> Meters) and re-run to enable WorkOS Seat Sync.`
+    )
   }
 }
 
@@ -217,22 +272,8 @@ async function main() {
 
     if ("seatPrice" in p && p.seatPrice) {
       const sp = p.seatPrice as SeatPrice
-      const seatPriceObj = await stripe.prices.create({
-        product: product.id,
-        currency: "eur",
-        unit_amount: sp.amount,
-        recurring: {
-          interval: p.interval,
-          usage_type: "licensed",
-        },
-        metadata: {
-          eleva_product_key: sp.metadataKey,
-          eleva_price_type: "per_seat",
-        },
-      })
-      console.log(
-        `    + seat price: ${seatPriceObj.id} (EUR ${(sp.amount / 100).toFixed(2)}/seat/${p.interval})`
-      )
+      // No existing prices yet for a freshly-created product, so pass [].
+      await ensureSeatPrices(stripe, product.id, p, sp, [])
     }
   }
 

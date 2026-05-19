@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { provisionOrganization } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
+import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
@@ -68,6 +69,27 @@ export async function POST(request: Request) {
       metadata: { slug: result.slug },
     }),
   ])
+
+  // W2: provision Stripe billing for every newly-created org so the
+  // WorkOS Stripe Add-on can attach entitlements. Non-blocking: a
+  // failure here does not roll back org creation; an operator can
+  // re-run the backfill script (`backfill-org-customers.ts`).
+  if (result.created) {
+    try {
+      await provisionOrgBilling({
+        orgId: result.orgId,
+        workosOrgId: workosOrg.id,
+        orgName: body.data.name,
+        orgType: body.data.type,
+        actorUserId: session.user.id,
+        email: session.user.email,
+      })
+    } catch (err) {
+      console.warn(
+        `[organizations] provisionOrgBilling failed for ${result.orgId}: ${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+  }
 
   return secureJson(
     {

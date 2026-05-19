@@ -106,14 +106,32 @@ async function main() {
     process.exit(1)
   }
 
+  // Webhook endpoint api_version MUST match the Stripe SDK version
+  // pinned in @eleva/billing/server (see packages/config STRIPE_API_VERSION).
+  // If they drift, payload shapes diverge from our TypeScript types
+  // (e.g. Subscription.current_period_start moved per-item at basil).
+  const apiVersionRaw = process.env.STRIPE_API_VERSION ?? "2026-04-22.dahlia"
+  // The SDK's `new Stripe()` typing only accepts the latest literal
+  // string, but the WebhookEndpointCreateParams.ApiVersion accepts the
+  // full historical union. We cast each surface separately.
+  const apiVersion =
+    apiVersionRaw as Stripe.WebhookEndpointCreateParams.ApiVersion
+  const sdkApiVersion = apiVersionRaw as ConstructorParameters<
+    typeof Stripe
+  >[1] extends infer C | undefined
+    ? C extends { apiVersion?: infer V }
+      ? Exclude<V, undefined>
+      : string
+    : string
+
   const stripe = new Stripe(apiKey, {
-    apiVersion: "2026-04-22.dahlia",
+    apiVersion: sdkApiVersion,
     appInfo: { name: "Eleva.care Webhook Setup", version: "1.0.0" },
   })
 
   const isTestMode = apiKey.startsWith("sk_test_")
   console.log(
-    `[stripe:webhooks] Mode: ${isTestMode ? "TEST" : "LIVE"} | Apply: ${apply}\n`
+    `[stripe:webhooks] Mode: ${isTestMode ? "TEST" : "LIVE"} | API version: ${apiVersion} | Apply: ${apply}\n`
   )
 
   if (!apply) {
@@ -130,12 +148,27 @@ async function main() {
   const existing = await findExistingEndpoint(stripe, url)
 
   if (existing) {
+    if (existing.api_version && existing.api_version !== apiVersion) {
+      console.warn(
+        `[stripe:webhooks] WARNING: existing endpoint api_version='${existing.api_version}' does NOT match desired '${apiVersion}'.`
+      )
+      console.warn(
+        "[stripe:webhooks] Stripe locks api_version at endpoint creation. To fix, delete and recreate the endpoint:"
+      )
+      console.warn(
+        `[stripe:webhooks]   stripe webhook_endpoints delete ${existing.id}`
+      )
+      console.warn(
+        "[stripe:webhooks]   pnpm stripe:setup:webhooks -- --url <URL> --apply"
+      )
+    }
     if (eventsMatch(existing.enabled_events, WEBHOOK_EVENTS)) {
       console.log(
         `[stripe:webhooks] Endpoint already exists and events are in sync (${existing.id})`
       )
       console.log(`  URL: ${existing.url}`)
       console.log(`  Status: ${existing.status}`)
+      console.log(`  API version: ${existing.api_version ?? "account default"}`)
       console.log(
         "\n[stripe:webhooks] No changes needed. The signing secret was shown at creation time only."
       )
@@ -145,6 +178,10 @@ async function main() {
     const updated = await stripe.webhookEndpoints.update(existing.id, {
       enabled_events: [...WEBHOOK_EVENTS],
     })
+    // NOTE: webhookEndpoints.update does NOT accept api_version; the
+    // version is locked at endpoint creation. If the existing endpoint
+    // is on the wrong api_version, delete and recreate it (the script
+    // will print the new whsec_* secret).
     console.log(`[stripe:webhooks] Updated endpoint: ${updated.id}`)
     console.log(`  URL: ${updated.url}`)
     console.log("  Synced events:")
@@ -160,6 +197,7 @@ async function main() {
   const created = await stripe.webhookEndpoints.create({
     url,
     enabled_events: [...WEBHOOK_EVENTS],
+    api_version: apiVersion,
     description:
       "Eleva platform events (SaaS subs, invoices, Identity, Connect, payouts, booking payments)",
   })

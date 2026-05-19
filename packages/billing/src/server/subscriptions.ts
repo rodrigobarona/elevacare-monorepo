@@ -63,8 +63,13 @@ export async function findTierPrice(tier: ProductTier): Promise<string | null> {
 
 /**
  * Finds the per-seat price for a given product tier, if one exists.
+ * Prefers the metered (`per_seat_metered`) price over the legacy
+ * licensed (`per_seat`) price so clinics opt into WorkOS Seat Sync as
+ * soon as `seed-products.ts --apply` creates the metered price.
  */
-async function findSeatPrice(tier: ProductTier): Promise<string | null> {
+async function findSeatPriceWithType(
+  tier: ProductTier
+): Promise<{ priceId: string; metered: boolean } | null> {
   const metadataKey = PRODUCT_KEYS[tier]
   const products = await stripe().products.search({
     query: `metadata["eleva_product_key"]:"${metadataKey}"`,
@@ -80,22 +85,41 @@ async function findSeatPrice(tier: ProductTier): Promise<string | null> {
     limit: 10,
   })
 
-  const seatPrice = prices.data.find(
+  // Prefer metered, fall back to legacy licensed.
+  const meteredPrice = prices.data.find(
+    (p) => p.metadata.eleva_price_type === "per_seat_metered"
+  )
+  if (meteredPrice) {
+    return { priceId: meteredPrice.id, metered: true }
+  }
+  const licensedPrice = prices.data.find(
     (p) => p.metadata.eleva_price_type === "per_seat"
   )
-  return seatPrice?.id ?? null
+  if (licensedPrice) {
+    return { priceId: licensedPrice.id, metered: false }
+  }
+  return null
 }
 
 /**
  * Creates a subscription for an org on the given tier.
  * Used during provisioning to give every org a subscription from day one.
  *
- * Base tier is always quantity=1. If a seat price exists and quantity > 1,
- * a separate per-seat item is added.
+ * Base tier is always quantity=1. For clinic tiers a metered seat item
+ * priced against the WorkOS-managed `workos_seat_count` Billing Meter
+ * is attached automatically (per ADR-016 + W5). The application MUST
+ * NOT pass `quantity` for metered seat items; WorkOS Seat Sync owns
+ * member-count reporting.
+ *
+ * `eleva_org_id` and `eleva_tier` are stamped in subscription metadata
+ * so the webhook can resolve the tenant from event metadata even
+ * before the local mirror has caught up.
  */
 export async function createOrgSubscription(input: {
   customerId: string
   tier: ProductTier
+  orgId: string
+  /** Legacy: only honored for non-metered seat prices. */
   quantity?: number
 }): Promise<Stripe.Subscription | null> {
   const priceId = await findTierPrice(input.tier)
@@ -105,9 +129,15 @@ export async function createOrgSubscription(input: {
     { price: priceId, quantity: 1 },
   ]
 
-  const seatPriceId = await findSeatPrice(input.tier)
-  if (seatPriceId && input.quantity && input.quantity > 0) {
-    items.push({ price: seatPriceId, quantity: input.quantity })
+  const seatPrice = await findSeatPriceWithType(input.tier)
+  if (seatPrice) {
+    if (seatPrice.metered) {
+      // Metered seats: WorkOS Seat Sync writes meter events; do NOT
+      // pass quantity here.
+      items.push({ price: seatPrice.priceId })
+    } else if (input.quantity && input.quantity > 0) {
+      items.push({ price: seatPrice.priceId, quantity: input.quantity })
+    }
   }
 
   return stripe().subscriptions.create({
@@ -116,6 +146,7 @@ export async function createOrgSubscription(input: {
     payment_behavior: "default_incomplete",
     metadata: {
       eleva_tier: input.tier,
+      eleva_org_id: input.orgId,
     },
   })
 }
@@ -127,6 +158,8 @@ export async function createOrgSubscription(input: {
 export async function swapSubscriptionTier(input: {
   subscriptionId: string
   newTier: ProductTier
+  orgId: string
+  /** Legacy: only honored for non-metered seat prices. */
   quantity?: number
 }): Promise<Stripe.Subscription | null> {
   const newPriceId = await findTierPrice(input.newTier)
@@ -137,10 +170,14 @@ export async function swapSubscriptionTier(input: {
   )
 
   const currentBaseItem = subscription.items.data.find(
-    (item) => item.price.metadata?.eleva_price_type !== "per_seat"
+    (item) =>
+      item.price.metadata?.eleva_price_type !== "per_seat" &&
+      item.price.metadata?.eleva_price_type !== "per_seat_metered"
   )
   const currentSeatItem = subscription.items.data.find(
-    (item) => item.price.metadata?.eleva_price_type === "per_seat"
+    (item) =>
+      item.price.metadata?.eleva_price_type === "per_seat" ||
+      item.price.metadata?.eleva_price_type === "per_seat_metered"
   )
 
   const items: Stripe.SubscriptionUpdateParams.Item[] = []
@@ -151,17 +188,16 @@ export async function swapSubscriptionTier(input: {
     items.push({ price: newPriceId, quantity: 1 })
   }
 
-  const newSeatPriceId = await findSeatPrice(input.newTier)
-  if (newSeatPriceId && input.quantity && input.quantity > 0) {
-    if (currentSeatItem) {
-      items.push({
-        id: currentSeatItem.id,
-        price: newSeatPriceId,
-        quantity: input.quantity,
-      })
-    } else {
-      items.push({ price: newSeatPriceId, quantity: input.quantity })
+  const newSeatPrice = await findSeatPriceWithType(input.newTier)
+  if (newSeatPrice) {
+    const itemUpdate: Stripe.SubscriptionUpdateParams.Item = {
+      price: newSeatPrice.priceId,
     }
+    if (currentSeatItem) itemUpdate.id = currentSeatItem.id
+    if (!newSeatPrice.metered && input.quantity && input.quantity > 0) {
+      itemUpdate.quantity = input.quantity
+    }
+    items.push(itemUpdate)
   } else if (currentSeatItem) {
     items.push({ id: currentSeatItem.id, deleted: true })
   }
@@ -171,6 +207,7 @@ export async function swapSubscriptionTier(input: {
     payment_behavior: "default_incomplete",
     metadata: {
       eleva_tier: input.newTier,
+      eleva_org_id: input.orgId,
     },
     proration_behavior: "create_prorations",
   })

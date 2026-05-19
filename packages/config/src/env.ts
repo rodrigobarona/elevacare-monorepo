@@ -212,7 +212,14 @@ export function requireStripeEnv(): RequiredStripeEnv {
     STRIPE_SECRET_KEY: e.STRIPE_SECRET_KEY!,
     STRIPE_PUBLISHABLE_KEY: e.STRIPE_PUBLISHABLE_KEY!,
     STRIPE_CONNECT_CLIENT_ID: e.STRIPE_CONNECT_CLIENT_ID!,
-    STRIPE_API_VERSION: e.STRIPE_API_VERSION || "2023-08-16",
+    // The Stripe API version pin governs the SDK request shape AND
+    // (when passed to webhookEndpoints.create) the inbound event shape.
+    // Both must match. ADR-016 / payments-payouts-spec require the
+    // current dahlia version because subscription period and invoice
+    // subscription paths moved at 2025-03-31.basil. The 2023-08-16
+    // floor is the "Connect Embedded Components require this" baseline
+    // from older docs; new deployments should set STRIPE_API_VERSION.
+    STRIPE_API_VERSION: e.STRIPE_API_VERSION || "2026-04-22.dahlia",
   }
 }
 

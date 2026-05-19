@@ -2,7 +2,10 @@ import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
-import { withAuth as authkitGetSession } from "@workos-inc/authkit-nextjs"
+import {
+  refreshSession as authkitRefreshSession,
+  withAuth as authkitGetSession,
+} from "@workos-inc/authkit-nextjs"
 import { unsealData } from "iron-session"
 import { db, main } from "@eleva/db"
 import { resolveSessionFromWorkosUser } from "./session"
@@ -33,10 +36,12 @@ interface WorkosCookieSession {
  * fallback when the proxy-injected `x-workos-middleware` request
  * header is not propagated to `headers()` (e.g. in Next.js 16 Route
  * Handlers).
+ *
+ * Returns the user PLUS the access token so callers can decode JWT
+ * claims (permissions, entitlements, org_id) without a second cookie
+ * unseal.
  */
-async function getWorkosUserFromCookie(): Promise<
-  WorkosCookieSession["user"] | null
-> {
+async function getWorkosSessionFromCookie(): Promise<WorkosCookieSession | null> {
   const password = process.env.WORKOS_COOKIE_PASSWORD
   if (!password) return null
 
@@ -46,13 +51,17 @@ async function getWorkosUserFromCookie(): Promise<
   if (!cookie) return null
 
   try {
-    const session = await unsealData<WorkosCookieSession>(cookie.value, {
-      password,
-    })
-    return session.user ?? null
+    return await unsealData<WorkosCookieSession>(cookie.value, { password })
   } catch {
     return null
   }
+}
+
+async function getWorkosUserFromCookie(): Promise<
+  WorkosCookieSession["user"] | null
+> {
+  const session = await getWorkosSessionFromCookie()
+  return session?.user ?? null
 }
 
 /**
@@ -133,19 +142,59 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
     }
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      const cookieUser = await getWorkosUserFromCookie()
+      const cookieSession = await getWorkosSessionFromCookie()
+      const cookieUser = cookieSession?.user ?? null
+
+      // W6: decode JWT entitlements/permissions/org_id from the cookie
+      // accessToken so capabilities and entitlements aren't blank during
+      // the AuthKit-middleware-missing window.
+      let permissions: string[] = []
+      let entitlements: string[] = []
+      let jwtOrgId: string | null = null
+      if (cookieSession?.accessToken) {
+        const claims = decodeJwtPayload(cookieSession.accessToken)
+        if (Array.isArray(claims.permissions)) {
+          permissions = claims.permissions as string[]
+        }
+        if (Array.isArray(claims.entitlements)) {
+          entitlements = claims.entitlements as string[]
+        }
+        if (typeof claims.org_id === "string") {
+          jwtOrgId = claims.org_id
+        }
+      }
+
       return {
         workosUserId: cookieUser?.id ?? null,
         tokenEmail: cookieUser?.email ?? null,
         tokenFirstName: cookieUser?.firstName ?? null,
         tokenLastName: cookieUser?.lastName ?? null,
-        permissions: [],
-        entitlements: [],
-        jwtOrgId: null,
+        permissions,
+        entitlements,
+        jwtOrgId,
       }
     }
     throw err
   }
+}
+
+/**
+ * Force a WorkOS access-token refresh so the next page render picks up
+ * fresh JWT claims (entitlements, org_id, permissions). Use after a
+ * server action mutates state that is reflected in the JWT — most
+ * importantly after a Stripe subscription change so new entitlements
+ * appear immediately instead of waiting for natural token rotation.
+ *
+ * Wraps `refreshSession` from `@workos-inc/authkit-nextjs`. Non-throwing
+ * by design: on failure the caller logs and returns; the user simply
+ * sees stale entitlements until the next natural refresh.
+ *
+ * Per ADR-016: the multi-admin attribution chain works regardless of
+ * whether refresh succeeded (we audit the action that triggered the
+ * refresh, not the refresh itself).
+ */
+export async function refreshSessionEntitlements(): Promise<void> {
+  await authkitRefreshSession({ ensureSignedIn: false })
 }
 
 /**

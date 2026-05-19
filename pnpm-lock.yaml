@@ -891,6 +891,18 @@ importers:
 
   infra/stripe:
     dependencies:
+      '@eleva/billing':
+        specifier: workspace:*
+        version: link:../../packages/billing
+      '@eleva/db':
+        specifier: workspace:*
+        version: link:../../packages/db
+      '@workos-inc/node':
+        specifier: 'catalog:'
+        version: 9.3.0
+      drizzle-orm:
+        specifier: 'catalog:'
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       stripe:
         specifier: 'catalog:'
         version: 22.1.1(@types/node@25.8.0)
@@ -1117,6 +1129,12 @@ importers:
       '@eleva/encryption':
         specifier: workspace:*
         version: link:../encryption
+      '@eleva/flags':
+        specifier: workspace:*
+        version: link:../flags
+      '@eleva/observability':
+        specifier: workspace:*
+        version: link:../observability
       '@stripe/connect-js':
         specifier: ^3.4.3
         version: 3.4.3
@@ -1132,6 +1150,9 @@ importers:
       stripe:
         specifier: 'catalog:'
         version: 22.1.1(@types/node@25.8.0)
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*

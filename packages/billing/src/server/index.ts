@@ -24,6 +24,16 @@ export type {
 } from "./provisioning"
 export { processStripeEvent } from "./webhook"
 export type { StripeEventResult } from "./webhook"
+export {
+  computeCommissionRate,
+  isPriorityRanked,
+  hasCRMAccess,
+  isTopExpert,
+  isClinicSaaS,
+  ENTITLEMENT_KEYS,
+  type BillingSession,
+  type EntitlementKey,
+} from "./commission"
 export type {
   ConnectAccountSession,
   ConnectComponentName,
