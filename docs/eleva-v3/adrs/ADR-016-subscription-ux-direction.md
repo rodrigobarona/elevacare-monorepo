@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted (supersedes the UX subsection of [ADR-005](ADR-005-payments-and-monetization.md): "Stripe UX — fully embedded, no redirects" lines 38-46)
+Active (effective 2026-05-19; supersedes the UX subsection of [ADR-005](ADR-005-payments-and-monetization.md): "Stripe UX — fully embedded, no redirects" lines 38-46)
 
 ## Date
 
-2026-05-18
+2026-05-18 (Accepted), 2026-05-19 (Active after Phase 1+2 cutover audit closed)
 
 ## Context
 

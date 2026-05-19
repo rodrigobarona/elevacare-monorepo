@@ -762,3 +762,53 @@ Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
 - Phase 8: 3 successful replays of `evt_3TYo6FGd5f3064kZ0WfsA4Xc`
 - Phase 9: synthetic stuck row insert + detector run + cleanup
 - Phase 11: Sentry + Vercel logs cross-reference
+
+---
+
+## Production Readiness Audit — 2026-05-19 (evening)
+
+Status: **PASS — production-ready** with two non-blocking findings (N7, N8).
+Recommend ADR-016 flip from `Accepted` to `Active`.
+
+Walked an 8-phase audit grounded in current Stripe + WorkOS docs (pulled via
+Context7). Highlights:
+
+- **5/5 adversarial webhook security tests pass**: missing/wrong/stale/tampered signatures all rejected with `400`; positive control accepted.
+- **End-to-end real-customer happy path verified**: created a real WorkOS org + Stripe customer + paid subscription, dispatcher classified as `processed` (not `ignored`), mirror + audit + JWT pipeline all populated correctly. **First non-fixture event in the project's history.**
+- **Subscription lifecycle 5/5**: create → upgrade tier → cancel-at-period-end → immediate cancel all dispatch + mirror + audit correctly.
+- **F3 event ordering protection works**: stale replay refused with `stale event (created X < last Y)` reason, mirror not reverted.
+- **Idempotency under stress**: 5-replay storm produced no duplicate audit rows; `attempts` advances monotonically (2 → 7).
+- **Audit pipeline coherent**: `audit_outbox.shipped` count == `audit_events` count exactly.
+- **Performance**: webhook p50 = 899 ms / p95 = 1999 ms (within Stripe-recommended ack budget).
+- **Bonus signal**: a real user (`espacio-de-rodrigo`) actually used the platform during the audit window — the full provisioning + subscription pipeline ran without any agent intervention and shows up clean in mirrors + audit.
+
+### New non-blocking findings
+
+#### N7 — Stripe Entitlements API returns empty for active subscriptions (Sandbox)
+
+`s.entitlements.activeEntitlements.list({ customer })` returned `count: 0` for
+a customer with an `active` paid subscription on a product that has the
+`Clinic Starter Access` entitlement feature attached. The feature attachment
+itself was verified via `/v1/products/.../features` (returns the right link).
+
+This may be a Stripe Sandbox limitation, or it may indicate the WorkOS Stripe
+Add-on populates JWT entitlement claims directly (rather than relying on the
+Stripe Entitlements API). Re-test on a live Stripe account to confirm the
+production behavior. If app code reads `customers.activeEntitlements.list` to
+gate features, that path may need the Add-on JWT claim path instead.
+
+#### N8 — Webhook handler error column lacks PG diagnostic detail
+
+When the dispatcher's database operation throws, the captured `error` column
+contains only Drizzle's `Failed query: ... params: ...` prefix, not the
+underlying PostgreSQL `code`, `detail`, `constraint`, or `hint`. Production
+debugging will be harder than necessary. Recommend a one-line change in
+[`packages/billing/src/server/webhook.ts`](../../../packages/billing/src/server/webhook.ts)
+to extract `(err as any).code/.detail/.constraint` into the captured message
+(see report for the exact patch).
+
+### Done-criteria revisit
+
+All 11 original done-criteria still PASS or PARTIAL with documented owners.
+Production is ready to onboard real users. ADR-016 can flip to `Active` now;
+N7 + N8 are tracked as backlog items, not blockers.

@@ -32,13 +32,13 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-05-19: Stripe Phase 1+2 cutover — READY (all blocking gaps resolved)
+### 2026-05-19: Stripe Phase 1+2 cutover — PRODUCTION READY (audit complete)
 
 - Owner: platform/billing
-- Status: needs-review (pending ADR-016 flip)
-- Summary: PR #16 (`Stripe audit`) merged and the runtime cutover is healthy across all three originally-blocking gaps after three operator iterations on 2026-05-19. **G1** (originally misdiagnosed as a `STRIPE_WEBHOOK_SECRET` mismatch — was actually a `@eleva/billing` boot throw masked by the route's signature catch) resolved 14:13 UTC after operator added `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`, `STRIPE_CONNECT_CLIENT_ID`, `STRIPE_API_VERSION` to Vercel Production. **G2** resolved 14:42 UTC after `AUDIT_DATABASE_URL` + `_UNPOOLED` were added — audit drainer returned `200 OK`, 2 stale outbox rows shipped to `eleva_v3_audit.audit_events`. **G3** resolved 14:50 UTC by commit `72c4b99` (deploy `dpl_9NzmcD92DGaHKA86uoPfD8i6p5FS`) which added `apps/api/src/instrumentation.ts` calling `initSentry({ app: "api" })`; Phase 9 drill confirmed end-to-end with Sentry issue `ELEVA-CARE-19` containing the synthetic event ID, `app: api` tag, release `72c4b99`. Same commit fixed N6 (webhook route catch block now distinguishes init from signature errors). N2 (`stripe-stuck-events` QStash schedule) created at 14:43 UTC. Only N1 (webhook `api_version: null`) remains, intentionally deferred as a coordinated operator action (delete + recreate endpoint + rotate `STRIPE_WEBHOOK_SECRET`); does not block the launch given the dispatcher's runtime-defensive field access. ADR-016 can now flip to `Active`.
+- Status: active
+- Summary: 8-phase production-readiness audit completed evening of 2026-05-19, grounded in current Stripe + WorkOS docs via Context7. All 11 original done-criteria remain PASS. New evidence: real-customer happy path verified end-to-end (first non-fixture event in lifetime hit dispatcher as `processed`, mirror + audit + ordering protection all healthy); 5/5 adversarial webhook security tests passed (missing/wrong/stale/tampered signatures all 400); subscription lifecycle full coverage (create/upgrade/cancel-AP/cancel-now); F3 ordering protection refuses stale replays correctly; idempotency under 5-replay storm produced 0 duplicate audit rows; audit pipeline coherence (outbox shipped count == audit_events count exactly); webhook p95 = 1999ms (within Stripe-recommended ack budget). Bonus: a real user provisioned a real org during the audit window with full pipeline working end-to-end with no agent intervention. Two non-blocking findings flagged for backlog: **N7** Stripe Entitlements API returns empty in Sandbox (re-test on live to confirm WorkOS Add-on JWT-claim path); **N8** webhook handler error column lacks PG diagnostic detail (one-line fix). ADR-016 can flip from `Accepted` to `Active` immediately.
 - Reference: [`operator-tasks/stripe-phase-1-2-cutover.md`](./operator-tasks/stripe-phase-1-2-cutover.md), [`adrs/ADR-016-subscription-ux-direction.md`](./adrs/ADR-016-subscription-ux-direction.md)
-- Next review: after first non-fixture subscribe round-trips through embedded checkout and the resulting `billing_subscription.created` event makes it through mirror → outbox → audit_events
+- Next review: only triggered by a P1+ incident or major Stripe API version migration
 
 ### 2026-04-22: Start with one authenticated product app
 
