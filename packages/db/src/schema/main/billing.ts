@@ -44,7 +44,20 @@ import { organizations } from "./organizations"
 
 export const stripeWebhookEventStatusEnum = pgEnum(
   "stripe_webhook_event_status",
-  ["received", "processing", "processed", "failed", "ignored"]
+  [
+    "received",
+    "processing",
+    "processed",
+    // `failed` = retryable (DB outage, transient Stripe error); the
+    // claim flow allows it to be re-claimed on the next delivery.
+    "failed",
+    // `failed_terminal` = unrecoverable (malformed payload, validation
+    // error, missing required metadata that's not coming back). The
+    // claim flow does NOT re-claim it; Stripe stops retrying because
+    // the route returns 200.
+    "failed_terminal",
+    "ignored",
+  ]
 )
 
 /**
@@ -218,6 +231,19 @@ export const billingSubscriptions = pgTable(
     canceledAt: timestamp("canceled_at", { withTimezone: true, mode: "date" }),
     /** Snapshot of Stripe subscription metadata at last sync. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    /**
+     * F3: timestamp from `event.created` of the most recent event
+     * applied to this row. Stripe does NOT guarantee webhook delivery
+     * ordering, so handlers compare the incoming event's `created` to
+     * this column and skip stale events. Without this, an
+     * out-of-order `customer.subscription.deleted` could overwrite a
+     * subsequent `customer.subscription.updated` (status='active'),
+     * causing a cancelled subscription to look active again.
+     */
+    lastEventCreatedAt: timestamp("last_event_created_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

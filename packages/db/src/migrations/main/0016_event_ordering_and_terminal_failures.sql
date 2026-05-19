@@ -1,0 +1,2 @@
+ALTER TYPE "public"."stripe_webhook_event_status" ADD VALUE 'failed_terminal' BEFORE 'ignored';--> statement-breakpoint
+ALTER TABLE "billing_subscriptions" ADD COLUMN "last_event_created_at" timestamp with time zone;

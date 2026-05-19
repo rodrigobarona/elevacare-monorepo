@@ -46,6 +46,29 @@ const ERROR_TRUNCATE_LENGTH = 2000
  */
 const STALE_PROCESSING_MS = 10 * 60 * 1000 // 10 minutes
 
+/**
+ * F2 enhancement: marker class for unrecoverable handler errors. When a
+ * handler throws a `TerminalError`, the processor records the event as
+ * `failed_terminal` so the claim flow does NOT re-run it on Stripe
+ * retries (which would just keep failing with the same error).
+ *
+ * Use for:
+ *   - malformed payloads (missing required fields the API contract
+ *     guarantees)
+ *   - validation errors that won't change between retries (e.g. invalid
+ *     tier name in metadata)
+ *   - logic bugs surfaced by the event (no retry will fix them)
+ *
+ * Do NOT use for transient errors (DB outage, network blip, Stripe 5xx);
+ * those should throw normal Error and become `failed` (retryable).
+ */
+export class TerminalError extends Error {
+  override readonly name = "TerminalError"
+  constructor(message: string) {
+    super(message)
+  }
+}
+
 export type StripeEventResult =
   | { status: "duplicate"; eventId: string }
   | { status: "processed"; eventId: string; eventType: string }
@@ -95,12 +118,18 @@ export async function processStripeEvent(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown handler error"
-    await markFailed(event.id, message)
+    const terminal = err instanceof TerminalError
+    if (terminal) {
+      await markFailedTerminal(event.id, message)
+    } else {
+      await markFailed(event.id, message)
+    }
     // Fire-and-forget Sentry capture; never block on observability.
     void captureException(err, {
       stripeEventId: event.id,
       stripeEventType: event.type,
       livemode: event.livemode,
+      terminal,
     }).catch(() => {})
     return {
       status: "failed",
@@ -252,6 +281,28 @@ async function markFailed(eventId: string, error: string): Promise<void> {
       .update(main.stripeWebhookEvents)
       .set({
         status: "failed",
+        error: error.slice(0, ERROR_TRUNCATE_LENGTH),
+      })
+      .where(eq(main.stripeWebhookEvents.eventId, eventId))
+  })
+}
+
+/**
+ * F2 enhancement: terminal failure marker. The claim flow excludes
+ * `failed_terminal` rows so subsequent Stripe retries short-circuit to
+ * 'duplicate' and Stripe stops retrying. Use only for unrecoverable
+ * errors raised via TerminalError.
+ */
+async function markFailedTerminal(
+  eventId: string,
+  error: string
+): Promise<void> {
+  await withPlatformAdminContext(async (tx) => {
+    await tx
+      .update(main.stripeWebhookEvents)
+      .set({
+        status: "failed_terminal",
+        processedAt: new Date(),
         error: error.slice(0, ERROR_TRUNCATE_LENGTH),
       })
       .where(eq(main.stripeWebhookEvents.eventId, eventId))
@@ -421,21 +472,26 @@ export function subscriptionPeriod(subscription: Stripe.Subscription): {
 }
 
 /**
- * Look up the prior status of a subscription mirror row, if any. Used to
- * detect reactivation and past_due_recovery transitions.
+ * Look up the prior status + last applied event timestamp from a
+ * subscription mirror row. Used to detect reactivation /
+ * past_due_recovery transitions AND to enforce event ordering (F3).
  */
-async function previousMirrorStatus(
-  stripeSubscriptionId: string
-): Promise<string | null> {
+async function previousMirror(stripeSubscriptionId: string): Promise<{
+  status: string
+  lastEventCreatedAt: Date | null
+} | null> {
   return withPlatformAdminContext(async (tx) => {
     const rows = await tx
-      .select({ status: main.billingSubscriptions.status })
+      .select({
+        status: main.billingSubscriptions.status,
+        lastEventCreatedAt: main.billingSubscriptions.lastEventCreatedAt,
+      })
       .from(main.billingSubscriptions)
       .where(
         eq(main.billingSubscriptions.stripeSubscriptionId, stripeSubscriptionId)
       )
       .limit(1)
-    return rows[0]?.status ?? null
+    return rows[0] ?? null
   })
 }
 
@@ -480,7 +536,25 @@ async function handleSubscriptionEvent(
   }
   const status = statusParse.data
 
-  const priorStatus = await previousMirrorStatus(subscription.id)
+  // F3: event ordering protection. Stripe does NOT guarantee webhook
+  // delivery order. If we receive an older event after a newer one has
+  // already been applied, the OLD event must NOT overwrite mirror
+  // state (e.g. an out-of-order subscription.deleted reverting an
+  // active subscription back to canceled).
+  const eventCreatedAt = new Date(event.created * 1000)
+  const priorMirror = await previousMirror(subscription.id)
+  if (
+    priorMirror?.lastEventCreatedAt &&
+    eventCreatedAt < priorMirror.lastEventCreatedAt
+  ) {
+    return {
+      kind: "ignored",
+      reason: `stale event (created ${eventCreatedAt.toISOString()} < last ${priorMirror.lastEventCreatedAt.toISOString()})`,
+      resolvedOrgId: orgId,
+    }
+  }
+
+  const priorStatus = priorMirror?.status ?? null
   const action = mapSubscriptionAction(event.type, status, priorStatus)
 
   await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
@@ -490,6 +564,7 @@ async function handleSubscriptionEvent(
       tier,
       status,
       customerId,
+      eventCreatedAt,
     })
 
     // F3: top_expert_active is mirrored from EVERY subscription event,
@@ -557,9 +632,14 @@ async function upsertSubscriptionMirror(
     tier: string
     status: (typeof main.stripeSubscriptionStatusEnum.enumValues)[number]
     customerId: string
+    /** F3: timestamp from event.created; persisted on the row so retries
+     * can compare and skip stale events (Stripe does not guarantee
+     * webhook delivery order). */
+    eventCreatedAt: Date
   }
 ): Promise<void> {
-  const { orgId, subscription, tier, status, customerId } = input
+  const { orgId, subscription, tier, status, customerId, eventCreatedAt } =
+    input
   const priceIds = subscription.items.data.map((item) => item.price.id)
   const seatItemId =
     subscription.items.data.find(
@@ -589,6 +669,7 @@ async function upsertSubscriptionMirror(
       cancelAtPeriodEnd: subscription.cancel_at_period_end,
       canceledAt,
       metadata: subscription.metadata as Record<string, unknown>,
+      lastEventCreatedAt: eventCreatedAt,
     })
     .onConflictDoUpdate({
       target: main.billingSubscriptions.stripeSubscriptionId,
@@ -602,6 +683,7 @@ async function upsertSubscriptionMirror(
         cancelAtPeriodEnd: subscription.cancel_at_period_end,
         canceledAt,
         metadata: subscription.metadata as Record<string, unknown>,
+        lastEventCreatedAt: eventCreatedAt,
         updatedAt: new Date(),
       },
     })
