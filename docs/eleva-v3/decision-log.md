@@ -32,6 +32,14 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-05-19: Stripe Phase 1+2 cutover — READY pending one PR deploy (Sentry instrumentation)
+
+- Owner: platform/billing
+- Status: needs-review
+- Summary: PR #16 (`Stripe audit`) merged and deployed. Three iterations of fixes through the day: 14:13 UTC operator added the four core Stripe env vars (resolves G1, originally misdiagnosed as a webhook-secret mismatch — was actually a `@eleva/billing` boot throw masquerading as a signature error). 14:42 UTC operator added `AUDIT_DATABASE_URL` + `_UNPOOLED` (resolves G2 — drainer now `200 OK`, 2 stale outbox rows shipped to `eleva_v3_audit.audit_events`). Same session: shipped `apps/api/src/instrumentation.ts` for G3, refactored webhook route catch block (N6), created the missing `stripe-stuck-events` QStash schedule (N2). N1 (webhook `api_version: null`) is the only remaining medium-severity item, intentionally deferred to a coordinated operator action since it requires deleting + recreating the endpoint and rotating `STRIPE_WEBHOOK_SECRET`. After the G3+N6 PR deploys and the Phase 9 stuck-event drill confirms Sentry receives the issue, ADR-016 can flip to `Active`.
+- Reference: [`operator-tasks/stripe-phase-1-2-cutover.md`](./operator-tasks/stripe-phase-1-2-cutover.md), [`adrs/ADR-016-subscription-ux-direction.md`](./adrs/ADR-016-subscription-ux-direction.md)
+- Next review: after G3+N6 PR deploys and the Phase 9 drill confirms Sentry; then flip ADR-016 status
+
 ### 2026-04-22: Start with one authenticated product app
 
 - Owner: architecture/product

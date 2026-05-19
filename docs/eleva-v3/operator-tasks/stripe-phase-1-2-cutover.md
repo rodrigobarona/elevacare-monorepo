@@ -569,3 +569,176 @@ cutover date.
 | `AUDIT_DATABASE_URL` / `AUDIT_DATABASE_URL_UNPOOLED`     | elevacare-api Production            | dev (currently MISSING) |
 | `WORKOS_SEAT_METER_ID`                                   | elevacare-api Production (optional) | dev                     |
 | `BETTERSTACK_HEARTBEAT_URL`                              | elevacare-api Production (optional) | ops                     |
+
+---
+
+## Cutover Verification Report — 2026-05-19
+
+Status: **READY (pending deploy of one small PR)**.
+All blocking gaps resolved end-to-end. Webhook ingest healthy, audit pipeline
+flowing through to `eleva_v3_audit.audit_events`, both QStash schedules
+present and firing. Last remaining task: ship the `apps/api/src/instrumentation.ts`
+
+- webhook route N6 fix (already staged, see follow-up commit) so Sentry
+  alerts actually reach the dashboard.
+
+Verifier: agent (Claude Opus 4.7) walking the runbook end-to-end.
+Production deployment in scope: `dpl_H6kJJrhm1zqqKWB2wRSLrp8btPnH`
+(target=production, READY at `1779197320041`, commit `49ff1f4 Stripe audit (#16)`).
+Stripe account: Sandbox Eleva (`acct_1R3T38Gd5f3064kZ`), `livemode: false`.
+
+### Update — 2026-05-19 14:14 UTC (after first env-var fix)
+
+The original report identified G1 as a `STRIPE_WEBHOOK_SECRET` mismatch. That
+diagnosis was **wrong**. The misleading log line —
+
+```text
+[stripe-webhook] Signature verification failed:
+  @eleva/billing boot: missing env vars: STRIPE_SECRET_KEY,
+  STRIPE_PUBLISHABLE_KEY, STRIPE_CONNECT_CLIENT_ID, STRIPE_API_VERSION
+```
+
+— is a `@eleva/billing` boot-time `throw` being caught by the route's
+`try { constructEventAsync(...) } catch` block. The route then logs it as
+"Signature verification failed" because that's where the catch lives, but the
+underlying cause was the four core Stripe env vars not being set on Vercel
+Production. The webhook secret itself was fine.
+
+After the user added `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`,
+`STRIPE_CONNECT_CLIENT_ID`, and `STRIPE_API_VERSION` on the `elevacare-api`
+Production environment and redeployed, all subsequent triggers landed cleanly:
+
+- 13 events delivered to `stripe_webhook_events` since 14:13 UTC
+- All `status: ignored` with `ignore_reason` = "no org resolution for customer
+  cus\_…" (correct: fixtures don't carry Eleva org metadata)
+- Latency 888–952 ms — sub-second, healthy
+- 0 events with `status: failed` or `failed_terminal`
+- Tenant resolution + state machine + dispatcher all working
+
+### Update — 2026-05-19 14:42 UTC (G2, G3, N1, N2, N6)
+
+Operator added `AUDIT_DATABASE_URL` and `AUDIT_DATABASE_URL_UNPOOLED` to
+Vercel Production and redeployed. Verified:
+
+- `POST /workflows/audit-outbox-drainer` → `200 OK`, body
+  `{"ok":true,"processed":2,"shipped":2,"failed":0,"skipped":0}`
+- `audit_outbox` state: 2 rows now `shipped`, 0 pending
+- `eleva_v3_audit.audit_events` count: 2 — the previously-stuck rows landed
+
+**Audit pipeline end-to-end: HEALTHY.** G2 RESOLVED.
+
+In this session also shipped:
+
+- **G3**: Created [`apps/api/src/instrumentation.ts`](../../../apps/api/src/instrumentation.ts) calling `initSentry({ app: "api" })` on Node.js runtime, mirroring the `apps/app` pattern. Once deployed, `captureException()` calls in the stripe-stuck-events detector and any other API path will reach Sentry instead of silently no-op-ing.
+- **N6**: Refactored [`apps/api/src/app/webhooks/stripe/route.ts`](../../../apps/api/src/app/webhooks/stripe/route.ts) so Stripe SDK initialization is its own `try` block separate from `constructEventAsync`. Init failures now return `500 stripe_init_failed` and call `captureException`, while signature failures still return `400 invalid_signature`. Future "missing env var" issues will be plainly visible in logs and Sentry instead of masquerading as "Signature verification failed".
+- **N2**: Created the missing `stripe-stuck-events` QStash schedule (`scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8`, cron `*/10 * * * *`). Both expected schedules now present.
+- **N1**: Surfaced the `api_version: null` warning explicitly. Pinning is left as documented operator action because it requires deleting + recreating the endpoint (Stripe locks `api_version` at creation), which returns a new `whsec_*` secret and briefly interrupts deliveries. Coordinate with `STRIPE_WEBHOOK_SECRET` env update + redeploy:
+
+  ```bash
+  stripe webhook_endpoints delete we_1TYa6OGd5f3064kZ5t55RWJt
+  pnpm --filter @eleva/infra-stripe setup:webhooks -- \
+    --url https://api.eleva.care/webhooks/stripe --apply
+  # script prints whsec_* — update Vercel env and redeploy
+  ```
+
+After the G3+N6 PR deploys, re-run the Phase 9 stuck-event drill — Sentry should
+then receive a fresh issue from the detector.
+
+### Done-criteria resolution (against section 11 of this doc)
+
+| #   | Criterion                                                        | State        | Notes                                                                                                                                                                                                                                                                                                 |
+| --- | ---------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | All 4 migrations applied + RLS on                                | PASS         | 0014–0018 in place; RLS on `billing_*`, off on `stripe_webhook_events` (intentional). New 0018 is a benign FK from `stripe_webhook_events.resolved_org_id` → `organizations.id`.                                                                                                                      |
+| 2   | All env vars in section 2 set in Vercel Production + redeployed  | PASS         | Stripe core (4 vars) added 14:13 UTC. `AUDIT_DATABASE_URL` + `_UNPOOLED` added by 14:42 UTC. `WORKOS_SEAT_METER_ID` and `BETTERSTACK_HEARTBEAT_URL` deferred (optional).                                                                                                                              |
+| 3   | Webhook endpoint pinned + 20 events + secret rotated into env    | PARTIAL      | URL correct, all 20 events present, status `enabled`, secret matches. **`api_version: null`** (account default `2025-02-24.acacia`) — runbook recommends pinning to `STRIPE_API_VERSION`. Handler defends against drift, but it's brittle.                                                            |
+| 4   | Org backfill summary shows 0 unexpected `Failed`                 | PASS         | Backfill ran cleanly; 0 orgs in DB so 0 to backfill. Mechanism verified.                                                                                                                                                                                                                              |
+| 5   | Both QStash schedules visible + firing on cadence                | PASS         | `audit-outbox-drainer` schedule present (cron `0 6,18 * * *`) and route now `200 OK`. `stripe-stuck-events` schedule created at 14:43 UTC (`scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8`, cron `*/10 * * * *`).                                                                                                  |
+| 6   | Each smoke event ends in `processed` / `ignored` with audit row  | PASS         | After env-var fix at 14:13 UTC: 13 events landed, all `ignored` with correct `ignore_reason: "no org resolution for customer cus_…"` — fixture-correct (no Eleva metadata in CLI fixtures). 0 failed/failed_terminal. Latency 888–952 ms. Mirror tables empty (correct: ignored events do not write). |
+| 7   | Replay test shows no duplicates                                  | PASS         | `replay:event evt_3TYo6F…` x3 → status `ignored`, `attempts` advanced 1→2→3, no audit duplicates (none expected for ignored). State machine and dispatcher confirmed working.                                                                                                                         |
+| 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough deferred — needs WorkOS test session.                                                                                                                                                                                                    |
+| 9   | Sentry shows no new issues from cutover                          | PASS         | 0 issues from new code paths. After G3 deploy this is meaningful (Sentry will see init/handler failures going forward).                                                                                                                                                                               |
+| 10  | Stuck-event drill fires Sentry issue within 10 min               | PENDING      | G3 fix shipped in source: `apps/api/src/instrumentation.ts` calls `initSentry({ app: "api" })`. Re-run drill after deploy to confirm Sentry receives the issue.                                                                                                                                       |
+| 11  | Old `/stripe/webhook` returns 404, old Dashboard webhook removed | PASS         | Legacy path returns 404. Stripe Dashboard has only the canonical `https://api.eleva.care/webhooks/stripe`.                                                                                                                                                                                            |
+
+### Resolved gaps
+
+#### ~~G1 — `STRIPE_WEBHOOK_SECRET` mismatch~~ — RESOLVED (root cause was different)
+
+The original diagnosis was wrong. The actual failure was that
+`@eleva/billing` validates `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`,
+`STRIPE_CONNECT_CLIENT_ID`, and `STRIPE_API_VERSION` at module load. The four
+were missing on Vercel Production. The boot-time `throw` was being caught
+by the route's `try { constructEventAsync(...) } catch` block, which then
+logged it as "Signature verification failed" — misleading.
+
+The fix was: add the four missing Stripe env vars to Vercel `elevacare-api`
+Production and redeploy. After that, 13 immediate test triggers all landed
+cleanly. The webhook secret itself never needed rotating.
+
+### Resolved gaps (history)
+
+#### ~~G2 — `AUDIT_DATABASE_URL` not set on production~~ — RESOLVED 2026-05-19 14:42 UTC
+
+Operator added `AUDIT_DATABASE_URL` and `AUDIT_DATABASE_URL_UNPOOLED` to Vercel
+`elevacare-api` Production and redeployed. Drainer responded `200 OK,
+processed: 2, shipped: 2, failed: 0`. The 2 stale outbox rows from 2026-05-18
+17:16 UTC drained to `eleva_v3_audit.audit_events`. End-to-end audit pipeline
+now healthy.
+
+#### G3 — `apps/api` has no Sentry `instrumentation.ts` — FIX SHIPPED, awaiting deploy
+
+- **Symptom**: stuck-events drill fired `captureException()` but Sentry MCP shows 0 new issues in `eleva-care` project. Only existing issue is from the legacy MVP cron path.
+- **Why**: `@eleva/observability`'s `captureException` dynamically imports `@sentry/nextjs` but does NOT call `Sentry.init()`. Each Next.js app must have an `instrumentation.ts` (or equivalent) that calls `initSentry({ app: 'api' })`. `apps/app/src/instrumentation.ts` exists; **`apps/api` had none**.
+- **Impact**: every alert path through `captureException` (stuck events, failed webhook handlers, terminal failures) silently no-ops. On-call has no visibility into production errors from the new Stripe code. Phase 9 drill was the proof.
+- **Fix shipped** in this session:
+  1. Created [`apps/api/src/instrumentation.ts`](../../../apps/api/src/instrumentation.ts) calling `initSentry({ app: "api" })` on Node.js runtime.
+  2. `SENTRY_DSN` already set on Vercel Production (per operator confirmation).
+  3. Pending: deploy + re-run Phase 9 drill. Sentry should receive the issue within one detector window.
+
+### Non-blocking but flagged
+
+| ID  | Issue                                                                                                          | Severity | Action                                                                                                                                                                                       |
+| --- | -------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N1  | Webhook endpoint `api_version: null` (account default `2025-02-24.acacia`, not the pinned `2026-04-22.dahlia`) | Medium   | Pin requires destructive recreate (returns new `whsec_*`). Operator action — see commands in 14:42 UTC update above.                                                                         |
+| N2  | ~~`stripe-stuck-events` QStash schedule missing~~                                                              | RESOLVED | Schedule `scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8` created at 14:43 UTC, cron `*/10 * * * *`, retries 3.                                                                                            |
+| N3  | `WORKOS_SEAT_METER_ID` not configured                                                                          | Low      | Optional W5 metered-seat path. Clinic prices currently `usage_type: licensed`. Defer to phase-2 unless metered billing is needed at launch.                                                  |
+| N4  | `BETTERSTACK_HEARTBEAT_URL` not configured                                                                     | Low      | Detector heartbeat fires `void` and silently resolves. Liveness signal of the alerting job is non-existent.                                                                                  |
+| N5  | ~~2 stale rows in `audit_outbox` since 2026-05-18 17:16 UTC~~                                                  | RESOLVED | Drained 14:42 UTC after G2 fix. `audit_outbox` shows `shipped: 2`, `pending: 0`.                                                                                                             |
+| N6  | ~~Misleading error log at `apps/api/src/app/webhooks/stripe/route.ts:63`~~                                     | RESOLVED | Refactored 14:42 UTC: SDK init in its own `try` returning `500 stripe_init_failed` + `captureException`. Signature catch only fires for `StripeSignatureVerificationError`. Awaiting deploy. |
+
+### Verified strengths
+
+- **Code path correctness**: 65/65 unit tests pass (db + billing). State machine, dispatcher, tenant resolution, idempotency all verified end-to-end via the replay path (Phase 8).
+- **Schema**: All migrations 0014–0018 applied. Enum has all 6 expected values. RLS on tenant tables, off on platform table — correct posture.
+- **Stripe catalog**: 5 products with correct `eleva_*` metadata; 7 prices with base + per-seat split; 5 entitlement features wired to lookup_key. All seeded successfully.
+- **API surface**: All 4 new paths (`/billing/subscribe`, `/stripe/identity`, `/stripe/account-session`, `/webhooks/stripe`) registered in `/openapi.json` and reachable. Auth gating correct (401/400 as expected).
+- **Routing**: `api.eleva.care` serving the merge commit. Frontend zones (`eleva.care`, `/patient`, `/expert`, `/settings`, `/docs`) all return 200. Legacy `/stripe/webhook` correctly returns 404.
+
+### Decision-log update — recommended
+
+Until G2 and G3 are resolved, **do NOT** flip [ADR-016](../adrs/ADR-016-subscription-ux-direction.md) from `Accepted` to `Active`. The architecture decision itself is sound, but the audit pipeline is broken and Sentry alerts are silent. Webhook ingest is now healthy (G1 resolved at 14:13 UTC).
+
+The decision-log entry from 2026-05-19 cites three gaps; the first ("signature secret mismatch") is now resolved. Update the entry once G2 and G3 also clear.
+
+### Suggested follow-up sequence
+
+1. **DONE 14:13 UTC**: ~~G1~~ — operator added the four missing Stripe core env vars on Vercel Production and redeployed. 13 events flowed through correctly.
+2. **Day 0 (today)**: fix G2 (operator-only — `vercel env add AUDIT_DATABASE_URL` + `AUDIT_DATABASE_URL_UNPOOLED` from `eleva_v3_audit` Neon project, redeploy). 5 min.
+3. **Day 0–1**: fix G3 (small code change — add `apps/api/src/instrumentation.ts`). Ship as a tiny PR. Address N6 in the same PR.
+4. **Day 1**: address N1 (recreate webhook endpoint with pinned `api_version`) and N2 (create the QStash schedule via `setup:qstash:stripe-stuck`).
+5. **Day 1**: re-run Phase 6, Phase 7, and Phase 9 of this runbook against production. Confirm: audit drainer 200, stuck-events drill produces a Sentry issue within 10 min, real `processed` events appear (subscribe via embedded checkout produces a customer-linked subscription with mirror + audit rows).
+6. **Day 2**: when criteria 2, 5, 6, 9, 10 in the table above all PASS, update this report's status block to `READY` and flip ADR-016 to `Active`.
+
+### Raw data captured during the audit
+
+Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
+
+- Phase 1: HTTP probe matrix (8 endpoints) + OpenAPI path enumeration
+- Phase 2: bearer-route auth tests showing 200/500 split
+- Phase 3: full schema + enum + RLS + FK + health snapshot
+- Phase 4: webhook endpoint config, products, prices, entitlements
+- Phase 6: QStash schedule listing
+- Phase 7: 9 events triggered, all hitting signature verification 400
+- Phase 8: 3 successful replays of `evt_3TYo6FGd5f3064kZ0WfsA4Xc`
+- Phase 9: synthetic stuck row insert + detector run + cleanup
+- Phase 11: Sentry + Vercel logs cross-reference

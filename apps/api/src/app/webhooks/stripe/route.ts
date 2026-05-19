@@ -1,3 +1,4 @@
+import { captureException } from "@eleva/observability"
 import { processStripeEvent, stripe } from "@eleva/billing/server"
 import { secureJson } from "../../../lib/security-headers"
 import { corsHeaders } from "../../../lib/cors"
@@ -42,6 +43,28 @@ export async function POST(request: Request) {
     )
   }
 
+  // Initialize the Stripe SDK BEFORE the signature try block. `stripe()` calls
+  // `@eleva/config.requireStripeEnv()` which throws if any of STRIPE_SECRET_KEY,
+  // STRIPE_PUBLISHABLE_KEY, STRIPE_CONNECT_CLIENT_ID, or STRIPE_API_VERSION are
+  // unset. Folding that throw into the signature catch (the previous bug)
+  // produced the misleading "Signature verification failed" log line for what
+  // was actually a missing-env-var boot failure. Distinguishing the two paths
+  // is N6 from the post-merge audit.
+  let stripeClient: ReturnType<typeof stripe>
+  try {
+    stripeClient = stripe()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "stripe init failed"
+    console.error("[stripe-webhook] Stripe SDK init failed:", message)
+    void captureException(err, { route: "/webhooks/stripe", phase: "init" })
+    // 500 so Stripe retries with backoff; the operator's job is to fix the
+    // missing env var, not to debug a delivery loop.
+    return secureJson(
+      { error: "stripe_init_failed", message },
+      { status: 500, headers }
+    )
+  }
+
   const body = await request.text()
   const signature = request.headers.get("stripe-signature")
 
@@ -53,14 +76,23 @@ export async function POST(request: Request) {
     ReturnType<ReturnType<typeof stripe>["webhooks"]["constructEventAsync"]>
   >
   try {
-    event = await stripe().webhooks.constructEventAsync(
+    event = await stripeClient.webhooks.constructEventAsync(
       body,
       signature,
       webhookSecret
     )
   } catch (err) {
+    // At this point the SDK is initialized, so any throw here is a genuine
+    // signature problem (timestamp drift, body tampering, wrong secret).
+    // Detect Stripe's named error class to keep the log honest, but treat
+    // any throw as a 400 so Stripe doesn't burn retries on signature drift.
+    const isSignatureError =
+      err instanceof Error && err.name === "StripeSignatureVerificationError"
     const message = err instanceof Error ? err.message : "invalid signature"
-    console.error("[stripe-webhook] Signature verification failed:", message)
+    console.error(
+      `[stripe-webhook] ${isSignatureError ? "Signature verification failed" : "constructEventAsync threw"}:`,
+      message
+    )
     return secureJson({ error: "invalid_signature" }, { status: 400, headers })
   }
 
