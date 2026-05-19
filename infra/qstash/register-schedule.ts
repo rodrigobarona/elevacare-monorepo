@@ -49,32 +49,46 @@ export interface SchedulerResult {
   action: "dry-run" | "created" | "recreated"
 }
 
-function requireEnv(name: string): string {
+function readEnv(name: string, options: { required: boolean }): string | null {
   const value = process.env[name]
   if (!value) {
-    console.error(`[qstash] Missing required env var: ${name}`)
-    process.exit(1)
+    if (options.required) {
+      console.error(`[qstash] Missing required env var: ${name}`)
+      process.exit(1)
+    }
+    return null
   }
   return value
 }
 
-function requirePublicApiBaseUrl(): string {
+interface ApiBaseUrlResult {
+  /** Cleaned URL or a placeholder string for dry-run preview. */
+  url: string
+  /** True when API_BASE_URL was missing or pointed at localhost. */
+  invalid: boolean
+}
+
+function readPublicApiBaseUrl(): ApiBaseUrlResult {
   const apiBaseUrl = process.env.API_BASE_URL
   if (
     !apiBaseUrl ||
     apiBaseUrl.includes("localhost") ||
     apiBaseUrl.includes("127.0.0.1")
   ) {
-    console.error(
-      "[qstash] API_BASE_URL must be set to a publicly reachable URL.\n" +
-        "  QStash is a cloud service and cannot call localhost.\n\n" +
-        "  Examples:\n" +
-        "    API_BASE_URL=https://api.eleva.care pnpm qstash:setup:all   # production\n" +
-        "    API_BASE_URL=https://staging-api.eleva.care ...             # staging"
-    )
-    process.exit(1)
+    return { url: "<API_BASE_URL not set>", invalid: true }
   }
-  return apiBaseUrl.replace(/\/+$/, "")
+  return { url: apiBaseUrl.replace(/\/+$/, ""), invalid: false }
+}
+
+function explainMissingApiBaseUrl(): void {
+  console.error(
+    "\n[qstash] API_BASE_URL must be set to a publicly reachable URL.\n" +
+      "  QStash is a cloud service and cannot call localhost.\n\n" +
+      "  Examples:\n" +
+      "    API_BASE_URL=https://api.eleva.care pnpm qstash:setup           # production\n" +
+      "    API_BASE_URL=https://staging-api.eleva.care pnpm qstash:setup   # staging\n" +
+      "    pnpm qstash:setup -- --dry-run                                  # preview only (no API_BASE_URL needed)\n"
+  )
 }
 
 /**
@@ -83,19 +97,28 @@ function requirePublicApiBaseUrl(): string {
  * Idempotent: if any existing schedule already targets the same destination,
  * it is deleted first. This makes the script safe to re-run during
  * promotion (staging → prod) or after a config change.
+ *
+ * Dry-run is permissive: it prints what WOULD happen even if API_BASE_URL is
+ * unset, so an operator can preview the schedule shape before configuring
+ * the target environment. Apply mode (the default) requires API_BASE_URL,
+ * QSTASH_TOKEN, and (when applicable) WORKFLOWS_DRAIN_SECRET; missing any
+ * of these causes the process to exit cleanly with a usage hint.
  */
 export async function registerSchedule(
   spec: ScheduleSpec,
   options: SchedulerOptions = {}
 ): Promise<SchedulerResult> {
   const { dryRun = false } = options
-  const token = requireEnv("QSTASH_TOKEN")
+  // QSTASH_TOKEN and WORKFLOWS_DRAIN_SECRET are only mandatory in apply
+  // mode. In dry-run we still surface their absence as warnings so the
+  // operator notices before hitting "go".
+  const token = readEnv("QSTASH_TOKEN", { required: !dryRun })
   const baseUrl = process.env.QSTASH_URL
-  const apiBaseUrl = requirePublicApiBaseUrl()
-  const destination = `${apiBaseUrl}${spec.path.startsWith("/") ? "" : "/"}${spec.path}`
+  const { url: apiBaseUrl, invalid: apiBaseInvalid } = readPublicApiBaseUrl()
   const drainSecret = spec.requireBearer
-    ? requireEnv("WORKFLOWS_DRAIN_SECRET")
+    ? readEnv("WORKFLOWS_DRAIN_SECRET", { required: !dryRun })
     : null
+  const destination = `${apiBaseUrl}${spec.path.startsWith("/") ? "" : "/"}${spec.path}`
   const retries = spec.retries ?? 3
 
   console.log(`\n[qstash] ${spec.name}`)
@@ -103,13 +126,30 @@ export async function registerSchedule(
   console.log(`  Cron:        ${spec.cron}`)
   console.log(`  Retries:     ${retries}`)
   console.log(
-    `  Bearer:      ${drainSecret ? "yes (WORKFLOWS_DRAIN_SECRET)" : "no"}`
+    `  Bearer:      ${spec.requireBearer ? (drainSecret ? "yes (WORKFLOWS_DRAIN_SECRET)" : "yes (WORKFLOWS_DRAIN_SECRET) - NOT SET") : "no"}`
   )
   if (spec.description) console.log(`  Reason:      ${spec.description}`)
   if (dryRun) console.log(`  Mode:        DRY RUN (no changes)`)
 
   if (dryRun) {
+    if (apiBaseInvalid) {
+      console.warn(
+        "  Warning:     API_BASE_URL is missing or points at localhost. " +
+          "Apply mode would refuse to run."
+      )
+    }
     return { scheduleId: null, destination, action: "dry-run" }
+  }
+
+  // Apply mode: re-validate the inputs we softened for dry-run.
+  if (apiBaseInvalid) {
+    explainMissingApiBaseUrl()
+    process.exit(1)
+  }
+  if (!token) {
+    // readEnv would have already exited, but guard the type narrowing.
+    console.error("[qstash] QSTASH_TOKEN missing")
+    process.exit(1)
   }
 
   const client = new Client({ baseUrl, token })
