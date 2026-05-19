@@ -1,4 +1,7 @@
 import type Stripe from "stripe"
+import { withAudit } from "@eleva/audit"
+import { main, withPlatformAdminContext } from "@eleva/db"
+import { eq } from "drizzle-orm"
 import { stripe } from "./client"
 
 /**
@@ -101,6 +104,48 @@ async function findSeatPriceWithType(
   return null
 }
 
+async function buildSubscriptionItems(input: {
+  tier: ProductTier
+  quantity?: number
+}): Promise<{
+  items: Array<{ price: string; quantity?: number }>
+  priceId: string
+} | null> {
+  const priceId = await findTierPrice(input.tier)
+  if (!priceId) return null
+
+  const items: Array<{ price: string; quantity?: number }> = [
+    { price: priceId, quantity: 1 },
+  ]
+
+  const seatPrice = await findSeatPriceWithType(input.tier)
+  if (seatPrice) {
+    if (seatPrice.metered) {
+      items.push({ price: seatPrice.priceId })
+    } else if (input.quantity && input.quantity > 0) {
+      items.push({ price: seatPrice.priceId, quantity: input.quantity })
+    }
+  }
+
+  return { items, priceId }
+}
+
+export async function getBillingCustomerForOrg(
+  orgId: string
+): Promise<{ stripeCustomerId: string; workosOrgId: string } | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const rows = await tx
+      .select({
+        stripeCustomerId: main.billingCustomers.stripeCustomerId,
+        workosOrgId: main.billingCustomers.workosOrgId,
+      })
+      .from(main.billingCustomers)
+      .where(eq(main.billingCustomers.orgId, orgId))
+      .limit(1)
+    return rows[0] ?? null
+  })
+}
+
 /**
  * Creates a subscription for an org on the given tier.
  * Used during provisioning to give every org a subscription from day one.
@@ -122,33 +167,118 @@ export async function createOrgSubscription(input: {
   /** Legacy: only honored for non-metered seat prices. */
   quantity?: number
 }): Promise<Stripe.Subscription | null> {
-  const priceId = await findTierPrice(input.tier)
-  if (!priceId) return null
-
-  const items: Stripe.SubscriptionCreateParams.Item[] = [
-    { price: priceId, quantity: 1 },
-  ]
-
-  const seatPrice = await findSeatPriceWithType(input.tier)
-  if (seatPrice) {
-    if (seatPrice.metered) {
-      // Metered seats: WorkOS Seat Sync writes meter events; do NOT
-      // pass quantity here.
-      items.push({ price: seatPrice.priceId })
-    } else if (input.quantity && input.quantity > 0) {
-      items.push({ price: seatPrice.priceId, quantity: input.quantity })
-    }
-  }
+  const itemResult = await buildSubscriptionItems(input)
+  if (!itemResult) return null
 
   return stripe().subscriptions.create({
     customer: input.customerId,
-    items,
+    items: itemResult.items,
     payment_behavior: "default_incomplete",
     metadata: {
       eleva_tier: input.tier,
       eleva_org_id: input.orgId,
     },
   })
+}
+
+export async function createSubscriptionCheckoutSession(input: {
+  customerId: string
+  tier: ProductTier
+  orgId: string
+  workosOrgId: string
+  actorUserId: string
+  returnUrl: string
+  quantity?: number
+}): Promise<{ id: string; clientSecret: string }> {
+  const itemResult = await buildSubscriptionItems(input)
+  if (!itemResult) {
+    throw new Error(`Product for tier '${input.tier}' not found in Stripe.`)
+  }
+
+  const session = await stripe().checkout.sessions.create(
+    {
+      mode: "subscription",
+      ui_mode: "embedded_page",
+      customer: input.customerId,
+      client_reference_id: `${input.orgId}:${input.actorUserId}`,
+      line_items: itemResult.items,
+      return_url: input.returnUrl,
+      automatic_tax: { enabled: true },
+      tax_id_collection: { enabled: true },
+      billing_address_collection: "required",
+      metadata: {
+        eleva_org_id: input.orgId,
+        workos_org_id: input.workosOrgId,
+        eleva_tier: input.tier,
+      },
+      subscription_data: {
+        metadata: {
+          eleva_org_id: input.orgId,
+          workos_org_id: input.workosOrgId,
+          eleva_tier: input.tier,
+        },
+      },
+    },
+    {
+      idempotencyKey: `checkout_${input.orgId}_${input.tier}_${input.actorUserId}`,
+    }
+  )
+
+  if (!session.client_secret) {
+    throw new Error("Stripe Checkout returned no client_secret")
+  }
+
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (_tx, ctx) => {
+      await ctx.emit({
+        entity: "billing_checkout",
+        action: "session_created",
+        entityId: session.id,
+        payload: {
+          stripeCheckoutSessionId: session.id,
+          stripeCustomerId: input.customerId,
+          tier: input.tier,
+          returnUrl: input.returnUrl,
+        },
+      })
+    }
+  )
+
+  return { id: session.id, clientSecret: session.client_secret }
+}
+
+export async function createBillingPortalSession(input: {
+  customerId: string
+  orgId: string
+  actorUserId: string
+  returnUrl: string
+  configurationId?: string
+}): Promise<{ id: string; url: string }> {
+  const session = await stripe().billingPortal.sessions.create({
+    customer: input.customerId,
+    return_url: input.returnUrl,
+    ...(input.configurationId && { configuration: input.configurationId }),
+  })
+
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (_tx, ctx) => {
+      await ctx.emit({
+        entity: "billing_portal",
+        action: "session_minted",
+        entityId: session.id,
+        payload: {
+          stripeBillingPortalSessionId: session.id,
+          stripeCustomerId: input.customerId,
+          configurationId: input.configurationId ?? null,
+          returnUrl: input.returnUrl,
+        },
+      })
+    }
+  )
+
+  return { id: session.id, url: session.url }
 }
 
 /**

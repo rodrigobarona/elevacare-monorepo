@@ -223,18 +223,43 @@ export async function provisionOrganization(
   const type = input.type ?? "personal"
 
   const [existing] = await db()
-    .select({ id: main.organizations.id, slug: main.organizations.slug })
+    .select({
+      id: main.organizations.id,
+      slug: main.organizations.slug,
+      type: main.organizations.type,
+    })
     .from(main.organizations)
     .where(eq(main.organizations.workosOrgId, input.workosOrgId))
     .limit(1)
 
   if (existing) {
     const existingSlug = existing.slug ?? slug
-    if (!existing.slug) {
-      await db()
-        .update(main.organizations)
-        .set({ slug: existingSlug, updatedAt: new Date() })
-        .where(eq(main.organizations.workosOrgId, input.workosOrgId))
+    const shouldUpdateType = existing.type !== type
+    if (!existing.slug || shouldUpdateType) {
+      await withAudit(
+        { orgId: existing.id, actorUserId: input.actorUserId ?? null },
+        async (tx, ctx) => {
+          await tx
+            .update(main.organizations)
+            .set({
+              slug: existingSlug,
+              type,
+              updatedAt: new Date(),
+            })
+            .where(eq(main.organizations.workosOrgId, input.workosOrgId))
+
+          await ctx.emit({
+            entity: "organization",
+            action: "updated",
+            entityId: existing.id,
+            payload: {
+              workosOrgId: input.workosOrgId,
+              before: { type: existing.type, slug: existing.slug },
+              after: { type, slug: existingSlug },
+            },
+          })
+        }
+      )
     }
     return { orgId: existing.id, slug: existingSlug, created: false }
   }

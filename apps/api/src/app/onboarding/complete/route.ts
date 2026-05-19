@@ -2,6 +2,7 @@ import { z } from "zod"
 import { completeOnboarding } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
 import { provisionOrgBilling } from "@eleva/billing/server"
+import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -79,7 +80,7 @@ export async function POST(request: Request) {
     workos.organizations.updateOrganization({
       organization: org.id,
       externalId: result.orgId,
-      metadata: { slug: result.slug },
+      metadata: { slug: result.slug, org_type: "personal" },
     }),
   ])
 
@@ -116,6 +117,9 @@ export async function POST(request: Request) {
       err instanceof Error ? err.message : err
     )
   }
+
+  headers["Set-Cookie"] =
+    `${LAST_ACTIVE_ORG_COOKIE}=${encodeURIComponent(result.slug)}; Path=/; Max-Age=31536000; SameSite=Lax; HttpOnly`
 
   return secureJson(
     {

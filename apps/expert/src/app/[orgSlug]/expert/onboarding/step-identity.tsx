@@ -4,6 +4,7 @@ import * as React from "react"
 import { Button } from "@eleva/ui/components/button"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { Badge } from "@eleva/ui/components/badge"
+import { createApiClient } from "@eleva/api-client"
 import { markStepComplete } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
 
@@ -25,17 +26,8 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
     setError(null)
 
     try {
-      const res = await fetch(`${apiBaseUrl}/stripe/identity`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      })
-      if (!res.ok) {
-        const data = (await res.json()) as { error?: string }
-        throw new Error(data.error ?? "Failed to create verification session")
-      }
-
-      const { clientSecret } = (await res.json()) as { clientSecret: string }
+      const api = createApiClient({ baseUrl: apiBaseUrl })
+      const { clientSecret } = await api.stripe.identity.createSession()
 
       const { loadStripe } = await import("@stripe/stripe-js")
       const stripe = await loadStripe(

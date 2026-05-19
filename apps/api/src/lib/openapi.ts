@@ -1,5 +1,17 @@
 import { createDocument } from "zod-openapi"
 import { z } from "zod"
+import {
+  BillingCheckoutRequestSchema,
+  BillingCheckoutResponseSchema,
+  BillingPortalRequestSchema,
+  BillingPortalResponseSchema,
+  BillingSubscribeRequestSchema,
+  BillingSubscribeResponseSchema,
+  CreateAccountSessionRequestSchema,
+  CreateAccountSessionResponseSchema,
+  CreateIdentitySessionResponseSchema,
+  SyncExistingOnboardingResponseSchema,
+} from "@eleva/api-client"
 
 const ErrorSchema = z.object({
   error: z.string(),
@@ -130,6 +142,26 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: RateLimitErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/onboarding/sync-existing": {
+        post: {
+          operationId: "syncExistingOnboardingMembership",
+          summary: "Sync an existing WorkOS membership into Eleva",
+          description:
+            "Used by account onboarding when a user already has a WorkOS organization membership. Provisions local user/org/membership mirrors through the API boundary.",
+          tags: ["Onboarding"],
+          responses: {
+            "200": {
+              description: "Existing membership sync result",
+              content: {
+                "application/json": {
+                  schema: SyncExistingOnboardingResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
           },
         },
       },
@@ -778,40 +810,98 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/billing/checkout": {
+        post: {
+          operationId: "createBillingCheckoutSession",
+          summary: "Create an embedded subscription Checkout Session",
+          description:
+            "Creates a Stripe Checkout Session with ui_mode=embedded for the authenticated user's current organization.",
+          tags: ["Billing"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: BillingCheckoutRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Checkout Session created",
+              content: {
+                "application/json": { schema: BillingCheckoutResponseSchema },
+              },
+            },
+            "403": {
+              description: "Missing billing management capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "Org has no Stripe Customer; run provisioning backfill",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/billing/portal": {
+        post: {
+          operationId: "createBillingPortalSession",
+          summary: "Create a Stripe Customer Portal session",
+          description:
+            "Mints a Stripe Customer Portal session and audits the mint for multi-admin billing attribution.",
+          tags: ["Billing"],
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": { schema: BillingPortalRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Portal session created",
+              content: {
+                "application/json": { schema: BillingPortalResponseSchema },
+              },
+            },
+            "403": {
+              description: "Missing billing management capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description:
+                "Org has no Stripe Customer; run provisioning backfill",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
       "/billing/subscribe": {
         post: {
           operationId: "billingSubscribe",
           summary: "Create or upgrade an org subscription",
           description:
-            "Creates a new subscription or swaps an existing one to the requested tier on the authenticated user's current organization. The org must have a Stripe Customer (set during provisioning). Returns a PaymentIntent client_secret for Payment Element confirmation when payment is required.",
+            "Compatibility endpoint for the legacy Payment Element subscription flow. Prefer POST /billing/checkout for new clients.",
           tags: ["Billing"],
           requestBody: {
             required: true,
             content: {
-              "application/json": {
-                schema: z.object({
-                  tier: z.enum([
-                    "expert_community",
-                    "expert_top",
-                    "clinic_starter",
-                    "clinic_growth",
-                  ]),
-                  quantity: z.number().int().min(1).max(100).optional(),
-                }),
-              },
+              "application/json": { schema: BillingSubscribeRequestSchema },
             },
           },
           responses: {
             "200": {
               description: "Subscription created or updated",
               content: {
-                "application/json": {
-                  schema: z.object({
-                    subscriptionId: z.string(),
-                    status: z.string(),
-                    clientSecret: z.string().nullable(),
-                  }),
-                },
+                "application/json": { schema: BillingSubscribeResponseSchema },
               },
             },
             "403": {
@@ -855,11 +945,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Identity session created",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    id: z.string(),
-                    clientSecret: z.string(),
-                    status: z.string(),
-                  }),
+                  schema: CreateIdentitySessionResponseSchema,
                 },
               },
             },
@@ -890,22 +976,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  components: z
-                    .array(
-                      z.enum([
-                        "account_onboarding",
-                        "account_management",
-                        "notification_banner",
-                        "balances",
-                        "payouts",
-                        "payments",
-                        "tax_settings",
-                        "tax_registrations",
-                      ])
-                    )
-                    .min(1),
-                }),
+                schema: CreateAccountSessionRequestSchema,
               },
             },
           },
@@ -914,10 +985,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "AccountSession minted",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    clientSecret: z.string(),
-                    expiresAt: z.number(),
-                  }),
+                  schema: CreateAccountSessionResponseSchema,
                 },
               },
             },

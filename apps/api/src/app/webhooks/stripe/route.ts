@@ -125,6 +125,19 @@ export async function POST(request: Request) {
         },
         { headers }
       )
+    case "failed_terminal":
+      console.error(
+        `[stripe-webhook] Terminal handler failure for ${result.eventType} (${result.eventId}): ${result.error}`
+      )
+      return secureJson(
+        {
+          received: true,
+          status: "failed_terminal",
+          eventType: result.eventType,
+          error: result.error,
+        },
+        { headers }
+      )
     case "failed":
       // Return 500 so Stripe retries with exponential backoff.
       console.error(

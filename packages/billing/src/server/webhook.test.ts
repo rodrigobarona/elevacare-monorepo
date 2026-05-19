@@ -1,12 +1,53 @@
 import type Stripe from "stripe"
 import { describe, expect, it } from "vitest"
 import {
+  extractErrorDetail,
   mapSubscriptionAction,
   orgIdFromMetadata,
   subscriptionIdFromInvoice,
   subscriptionPeriod,
   tierFromMetadata,
 } from "./webhook"
+
+describe("extractErrorDetail", () => {
+  it("puts PostgreSQL diagnostics before the generic query message", () => {
+    const err = Object.assign(
+      new Error('Failed query: insert into "billing_subscriptions" ...'),
+      {
+        name: "NeonDbError",
+        code: "23514",
+        constraint: "organizations_slug_format",
+        detail: "Failing row contains (...).",
+        hint: "Check slug format.",
+      }
+    )
+
+    expect(extractErrorDetail(err)).toBe(
+      'NeonDbError [code:23514] [constraint:organizations_slug_format] [detail:Failing row contains (...).] [hint:Check slug format.] — original message: Failed query: insert into "billing_subscriptions" ...'
+    )
+  })
+
+  it("includes Stripe diagnostic fields when a Stripe API call fails", () => {
+    const err = Object.assign(new Error("No such customer: cus_missing"), {
+      name: "StripeInvalidRequestError",
+      type: "StripeInvalidRequestError",
+      code: "resource_missing",
+      param: "customer",
+      statusCode: 404,
+    })
+
+    expect(extractErrorDetail(err)).toBe(
+      "StripeInvalidRequestError [type:StripeInvalidRequestError] [code:resource_missing] [param:customer] [statusCode:404] — original message: No such customer: cus_missing"
+    )
+  })
+
+  it("falls back to a named Error message when no diagnostics exist", () => {
+    const err = new Error("plain failure")
+    err.name = "PlainError"
+
+    expect(extractErrorDetail(err)).toBe("PlainError: plain failure")
+  })
+})
 
 describe("mapSubscriptionAction", () => {
   it("maps customer.subscription.created -> created regardless of status", () => {

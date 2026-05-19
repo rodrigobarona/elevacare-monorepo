@@ -1,5 +1,9 @@
 import { z } from "zod"
 import { UnauthorizedError } from "@eleva/auth"
+import {
+  BillingSubscribeRequestSchema,
+  type BillingSubscribeRequest,
+} from "@eleva/api-client"
 import { refreshSessionEntitlements } from "@eleva/auth/server"
 import {
   createOrgSubscription,
@@ -37,16 +41,6 @@ import {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const requestSchema = z.object({
-  tier: z.enum([
-    "expert_community",
-    "expert_top",
-    "clinic_starter",
-    "clinic_growth",
-  ]),
-  quantity: z.number().int().min(1).max(100).optional(),
-})
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {
@@ -88,10 +82,10 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  let body: z.infer<typeof requestSchema>
+  let body: BillingSubscribeRequest
   try {
     const raw = await request.json()
-    body = requestSchema.parse(raw)
+    body = BillingSubscribeRequestSchema.parse(raw)
   } catch (err) {
     if (err instanceof z.ZodError) {
       return secureJson(

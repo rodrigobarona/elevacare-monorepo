@@ -6,15 +6,18 @@
   "scripts": {
     "seed:products": "tsx --env-file=../../.env.local seed-products.ts",
     "seed:entitlements": "tsx --env-file=../../.env.local seed-entitlements.ts",
+    "setup:portal": "tsx --env-file=../../.env.local setup-portal.ts",
     "setup:webhooks": "tsx --env-file=../../.env.local setup-webhooks.ts",
     "backfill:org-customers": "tsx --env-file=../../.env.local backfill-org-customers.ts",
     "replay:event": "tsx --env-file=../../.env.local replay-event.ts",
+    "verify:entitlements": "tsx --env-file=../../.env.local verify-entitlements.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@eleva/billing": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@neondatabase/serverless": "catalog:",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "stripe": "catalog:"

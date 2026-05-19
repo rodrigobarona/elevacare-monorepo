@@ -49,7 +49,8 @@
     "submitting": "Creating...",
     "processingHint": "Setting up your space — this may take a moment.",
     "defaultName": "{name}'s Space",
-    "errorMinLength": "Space name must be at least 2 characters"
+    "errorMinLength": "Space name must be at least 2 characters",
+    "errorGeneric": "We couldn't complete onboarding. Please try again."
   },
   "organizations": {
     "title": "Organizations",

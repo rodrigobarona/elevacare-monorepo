@@ -38,5 +38,6 @@ export default function proxy(request: NextRequest) {
 // (handled by Next's filesystem, not this proxy), so we exclude it.
 // Satellite apps use STANDARD_APP_MATCHER from @eleva/observability/proxy.
 export const config = {
-  matcher: "/((?!api|trpc|_next|_vercel|.*\\..*).*)",
+  matcher:
+    "/((?!api|trpc|_next|_vercel|icon|apple-icon|opengraph-image|twitter-image|manifest|robots|sitemap|.*\\..*).*)",
 }

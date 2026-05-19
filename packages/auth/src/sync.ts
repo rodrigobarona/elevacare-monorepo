@@ -90,6 +90,7 @@ export interface WorkOSUserEventData {
 
 export interface WorkOSOrganizationEventData {
   id: string
+  metadata?: Record<string, unknown> | null
   createdAt?: string
   updatedAt?: string
 }
@@ -148,15 +149,32 @@ export async function softDeleteUser(workosUserId: string): Promise<void> {
 export async function syncOrganization(
   data: WorkOSOrganizationEventData
 ): Promise<string> {
+  const metadataType = data.metadata?.["org_type"]
+  const hasKnownType =
+    metadataType === "expert" ||
+    metadataType === "team" ||
+    metadataType === "staff" ||
+    metadataType === "personal"
+  const orgType =
+    metadataType === "expert" ||
+    metadataType === "team" ||
+    metadataType === "staff" ||
+    metadataType === "personal"
+      ? metadataType
+      : "personal"
+
   const [row] = await db()
     .insert(main.organizations)
     .values({
       workosOrgId: data.id,
-      type: "personal",
+      type: orgType,
     })
     .onConflictDoUpdate({
       target: main.organizations.workosOrgId,
-      set: { updatedAt: new Date() },
+      set: {
+        updatedAt: new Date(),
+        ...(hasKnownType && { type: orgType }),
+      },
     })
     .returning({ id: main.organizations.id })
 
@@ -194,8 +212,13 @@ export async function syncMembership(
 
   if (!user || !org) return
 
-  const workosRole = data.role?.slug === "admin" ? "admin" : "member"
+  const roleSlugs = data.roles?.map((role) => role.slug) ?? []
+  const workosRole =
+    data.role?.slug === "admin" || roleSlugs.includes("admin")
+      ? "admin"
+      : "member"
   const eventUpdatedAt = safeDate(data.updatedAt, data.createdAt)
+  const status = data.status === "pending" ? "pending" : "active"
 
   await withAudit({ orgId: org.id, actorUserId: null }, async (tx, ctx) => {
     const [existing] = await tx
@@ -215,14 +238,14 @@ export async function syncMembership(
         userId: user.id,
         orgId: org.id,
         workosRole: workosRole as "admin" | "member",
-        status: "active",
+        status,
         updatedAt: eventUpdatedAt,
       })
       .onConflictDoUpdate({
         target: [main.memberships.userId, main.memberships.orgId],
         set: {
           workosRole: workosRole as "admin" | "member",
-          status: "active",
+          status,
           updatedAt: eventUpdatedAt,
         },
         where: lt(main.memberships.updatedAt, eventUpdatedAt),
@@ -237,6 +260,8 @@ export async function syncMembership(
         userId: user.id,
         orgId: org.id,
         role: workosRole,
+        status,
+        roleSlugs,
         source: "workos_sync",
       },
     })

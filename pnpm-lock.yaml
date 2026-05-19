@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@neondatabase/serverless':
+      specifier: ^1.1.0
+      version: 1.1.0
     '@radix-ui/themes':
       specifier: ^3.3.0
       version: 3.3.0
@@ -377,6 +380,9 @@ importers:
       '@eleva/accounting':
         specifier: workspace:^
         version: link:../../packages/accounting
+      '@eleva/api-client':
+        specifier: workspace:^
+        version: link:../../packages/api-client
       '@eleva/audit':
         specifier: workspace:*
         version: link:../../packages/audit
@@ -660,6 +666,9 @@ importers:
       '@eleva/accounting':
         specifier: workspace:^
         version: link:../../packages/accounting
+      '@eleva/api-client':
+        specifier: workspace:^
+        version: link:../../packages/api-client
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
@@ -922,6 +931,9 @@ importers:
       '@eleva/db':
         specifier: workspace:*
         version: link:../../packages/db
+      '@neondatabase/serverless':
+        specifier: 'catalog:'
+        version: 1.1.0
       '@workos-inc/node':
         specifier: 'catalog:'
         version: 9.3.0
@@ -1166,6 +1178,9 @@ importers:
       '@stripe/react-connect-js':
         specifier: ^3.4.2
         version: 3.4.2(@stripe/connect-js@3.4.3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      '@stripe/stripe-js':
+        specifier: 'catalog:'
+        version: 9.5.0
       '@workos-inc/node':
         specifier: 'catalog:'
         version: 9.3.0
@@ -1333,7 +1348,7 @@ importers:
         specifier: workspace:*
         version: link:../config
       '@neondatabase/serverless':
-        specifier: ^1.1.0
+        specifier: 'catalog:'
         version: 1.1.0
       drizzle-orm:
         specifier: 'catalog:'

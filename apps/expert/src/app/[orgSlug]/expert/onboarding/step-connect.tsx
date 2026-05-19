@@ -7,6 +7,7 @@ import {
   ElevaConnectProvider,
   ConnectAccountOnboarding,
 } from "@eleva/billing/embedded"
+import { createApiClient } from "@eleva/api-client"
 import { markStepComplete } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
 
@@ -26,14 +27,10 @@ export function StepConnect({
   const [error, setError] = React.useState<string | null>(null)
 
   const fetchClientSecret = React.useCallback(async () => {
-    const res = await fetch(`${apiBaseUrl}/stripe/account-session`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ components: ["account_onboarding"] }),
+    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const data = await api.stripe.accountSession.create({
+      components: ["account_onboarding"],
     })
-    if (!res.ok) throw new Error("Failed to fetch Connect session")
-    const data = (await res.json()) as { clientSecret: string }
     return data.clientSecret
   }, [apiBaseUrl])
 

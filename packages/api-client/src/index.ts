@@ -16,6 +16,19 @@ export const CompleteOnboardingResponseSchema = z.object({
   slug: z.string(),
 })
 
+export const SyncExistingOnboardingResponseSchema = z.discriminatedUnion(
+  "hasMembership",
+  [
+    z.object({ hasMembership: z.literal(false) }),
+    z.object({
+      hasMembership: z.literal(true),
+      userId: z.string().uuid(),
+      orgId: z.string().uuid(),
+      slug: z.string(),
+    }),
+  ]
+)
+
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().min(2).max(100).trim(),
   type: z.enum(["personal", "expert", "team", "staff"]).default("personal"),
@@ -41,6 +54,70 @@ export const CreateMembershipRequestSchema = z.object({
   role: z.enum(["admin", "member"]).default("member"),
 })
 
+export const BillingTierSchema = z.enum([
+  "expert_community",
+  "expert_top",
+  "clinic_starter",
+  "clinic_growth",
+])
+
+export const BillingCheckoutRequestSchema = z.object({
+  tier: BillingTierSchema,
+  quantity: z.number().int().min(1).max(100).optional(),
+  returnUrl: z.string().url().optional(),
+})
+
+export const BillingCheckoutResponseSchema = z.object({
+  sessionId: z.string(),
+  clientSecret: z.string(),
+})
+
+export const BillingPortalRequestSchema = z.object({
+  returnUrl: z.string().url().optional(),
+})
+
+export const BillingPortalResponseSchema = z.object({
+  id: z.string(),
+  url: z.string().url(),
+})
+
+export const BillingSubscribeRequestSchema = z.object({
+  tier: BillingTierSchema,
+  quantity: z.number().int().min(1).max(100).optional(),
+})
+
+export const BillingSubscribeResponseSchema = z.object({
+  subscriptionId: z.string(),
+  status: z.string(),
+  clientSecret: z.string().nullable(),
+})
+
+export const ConnectComponentNameSchema = z.enum([
+  "account_onboarding",
+  "account_management",
+  "notification_banner",
+  "balances",
+  "payouts",
+  "payments",
+  "tax_settings",
+  "tax_registrations",
+])
+
+export const CreateAccountSessionRequestSchema = z.object({
+  components: z.array(ConnectComponentNameSchema).min(1),
+})
+
+export const CreateAccountSessionResponseSchema = z.object({
+  clientSecret: z.string(),
+  expiresAt: z.number(),
+})
+
+export const CreateIdentitySessionResponseSchema = z.object({
+  id: z.string(),
+  clientSecret: z.string(),
+  status: z.string(),
+})
+
 export const ApiErrorSchema = z.object({
   error: z.string(),
   issues: z.array(z.unknown()).optional(),
@@ -54,6 +131,9 @@ export type CompleteOnboardingRequest = z.infer<
 export type CompleteOnboardingResponse = z.infer<
   typeof CompleteOnboardingResponseSchema
 >
+export type SyncExistingOnboardingResponse = z.infer<
+  typeof SyncExistingOnboardingResponseSchema
+>
 export type CreateOrganizationRequest = z.infer<
   typeof CreateOrganizationRequestSchema
 >
@@ -65,6 +145,31 @@ export type GetOrganizationResponse = z.infer<
 >
 export type CreateMembershipRequest = z.infer<
   typeof CreateMembershipRequestSchema
+>
+export type BillingTier = z.infer<typeof BillingTierSchema>
+export type BillingCheckoutRequest = z.infer<
+  typeof BillingCheckoutRequestSchema
+>
+export type BillingCheckoutResponse = z.infer<
+  typeof BillingCheckoutResponseSchema
+>
+export type BillingPortalRequest = z.infer<typeof BillingPortalRequestSchema>
+export type BillingPortalResponse = z.infer<typeof BillingPortalResponseSchema>
+export type BillingSubscribeRequest = z.infer<
+  typeof BillingSubscribeRequestSchema
+>
+export type BillingSubscribeResponse = z.infer<
+  typeof BillingSubscribeResponseSchema
+>
+export type ConnectComponentName = z.infer<typeof ConnectComponentNameSchema>
+export type CreateAccountSessionRequest = z.infer<
+  typeof CreateAccountSessionRequestSchema
+>
+export type CreateAccountSessionResponse = z.infer<
+  typeof CreateAccountSessionResponseSchema
+>
+export type CreateIdentitySessionResponse = z.infer<
+  typeof CreateIdentitySessionResponseSchema
 >
 export type ApiError = z.infer<typeof ApiErrorSchema>
 
@@ -221,6 +326,8 @@ export interface ApiClientOptions {
   baseUrl: string
   /** Bearer token for agent/M2M auth. Omit for cookie-based session auth. */
   bearerToken?: string
+  /** Extra headers for server-side proxies that forward cookies or tracing. */
+  headers?: Record<string, string>
   /** Custom fetch implementation (for testing or Node.js). */
   fetch?: typeof globalThis.fetch
 }
@@ -237,6 +344,7 @@ export function createApiClient(options: ApiClientOptions) {
     const url = `${baseUrl.replace(/\/$/, "")}${path}`
     const headers: Record<string, string> = {
       "content-type": "application/json",
+      ...(options.headers ?? {}),
     }
     if (bearerToken) {
       headers["authorization"] = `Bearer ${bearerToken}`
@@ -274,6 +382,12 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
       },
+      syncExisting() {
+        return request<SyncExistingOnboardingResponse>(
+          "POST",
+          "/onboarding/sync-existing"
+        )
+      },
     },
 
     organizations: {
@@ -295,6 +409,46 @@ export function createApiClient(options: ApiClientOptions) {
     memberships: {
       create(data: CreateMembershipRequest) {
         return request<{ ok: true }>("POST", "/memberships", data)
+      },
+    },
+
+    billing: {
+      checkout(data: BillingCheckoutRequest) {
+        return request<BillingCheckoutResponse>(
+          "POST",
+          "/billing/checkout",
+          data
+        )
+      },
+      portal(data: BillingPortalRequest = {}) {
+        return request<BillingPortalResponse>("POST", "/billing/portal", data)
+      },
+      subscribe(data: BillingSubscribeRequest) {
+        return request<BillingSubscribeResponse>(
+          "POST",
+          "/billing/subscribe",
+          data
+        )
+      },
+    },
+
+    stripe: {
+      identity: {
+        createSession() {
+          return request<CreateIdentitySessionResponse>(
+            "POST",
+            "/stripe/identity"
+          )
+        },
+      },
+      accountSession: {
+        create(data: CreateAccountSessionRequest) {
+          return request<CreateAccountSessionResponse>(
+            "POST",
+            "/stripe/account-session",
+            data
+          )
+        },
       },
     },
 

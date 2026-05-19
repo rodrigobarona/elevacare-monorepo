@@ -1,7 +1,11 @@
 import { getTranslations } from "next-intl/server"
+import { BillingClient } from "./billing-client"
 
 export default async function BillingPage() {
   const t = await getTranslations("billing")
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+  const stripePublishableKey =
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
   return (
     <>
@@ -9,7 +13,10 @@ export default async function BillingPage() {
         <h1 className="text-2xl font-medium">{t("title")}</h1>
         <p className="text-sm text-muted-foreground">{t("description")}</p>
       </header>
-      <p className="text-muted-foreground">{t("placeholder")}</p>
+      <BillingClient
+        apiBaseUrl={apiBaseUrl}
+        stripePublishableKey={stripePublishableKey}
+      />
     </>
   )
 }

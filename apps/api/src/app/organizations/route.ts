@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { provisionOrganization } from "@eleva/auth"
+import { provisionMembership, provisionOrganization } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
@@ -55,6 +55,12 @@ export async function POST(request: Request) {
     name: body.data.name,
   })
 
+  await workos.userManagement.createOrganizationMembership({
+    userId: session.user.workosUserId,
+    organizationId: workosOrg.id,
+    roleSlug: "admin",
+  })
+
   const result = await provisionOrganization({
     workosOrgId: workosOrg.id,
     name: body.data.name,
@@ -66,9 +72,16 @@ export async function POST(request: Request) {
     workos.organizations.updateOrganization({
       organization: workosOrg.id,
       externalId: result.orgId,
-      metadata: { slug: result.slug },
+      metadata: { slug: result.slug, org_type: body.data.type },
     }),
   ])
+
+  await provisionMembership({
+    userId: session.user.id,
+    orgId: result.orgId,
+    role: "admin",
+    actorUserId: session.user.id,
+  })
 
   // W2: provision Stripe billing for every newly-created org so the
   // WorkOS Stripe Add-on can attach entitlements. Non-blocking: a

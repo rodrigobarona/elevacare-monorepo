@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@eleva/config": "workspace:*",
-    "@neondatabase/serverless": "^1.1.0",
+    "@neondatabase/serverless": "catalog:",
     "drizzle-orm": "catalog:"
   },
   "devDependencies": {

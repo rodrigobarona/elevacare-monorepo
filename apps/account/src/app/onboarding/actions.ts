@@ -1,83 +1,12 @@
 "use server"
 
-import { redirect } from "next/navigation"
+import { headers } from "next/headers"
 import { cookies } from "next/headers"
-import { withAuth } from "@workos-inc/authkit-nextjs"
-import { getWorkOS } from "@eleva/auth/server"
-import { completeOnboarding } from "@eleva/auth"
-import { provisionOrgBilling } from "@eleva/billing/server"
-import { cookieName, isLocale } from "@eleva/config/i18n"
+import { createApiClient } from "@eleva/api-client"
+import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 
-type ActionResult = { ok: true } | { ok: false; errorKey: string }
-
-/**
- * Creates a personal organization in WorkOS, a membership linking the
- * user, and provisions rows in the Eleva DB via @eleva/auth.
- * Then provisions Stripe billing (customer + free-tier subscription).
- */
-export async function createSpace(
-  _prevState: ActionResult,
-  formData: FormData
-): Promise<ActionResult> {
-  const { user } = await withAuth({ ensureSignedIn: true })
-  const spaceName = (formData.get("spaceName") as string)?.trim()
-
-  if (!spaceName || spaceName.length < 2) {
-    return { ok: false, errorKey: "errorMinLength" }
-  }
-
-  const workos = getWorkOS()
-
-  const org = await workos.organizations.createOrganization({ name: spaceName })
-
-  await workos.userManagement.createOrganizationMembership({
-    userId: user.id,
-    organizationId: org.id,
-    roleSlug: "admin",
-  })
-
-  const jar = await cookies()
-  const currentLocale = jar.get(cookieName)?.value
-  const locale =
-    currentLocale && isLocale(currentLocale) ? currentLocale : undefined
-
-  const result = await completeOnboarding({
-    workosUserId: user.id,
-    workosOrgId: org.id,
-    orgName: spaceName,
-    role: "admin",
-    orgType: "personal",
-  })
-
-  await Promise.allSettled([
-    workos.userManagement.updateUser({
-      userId: user.id,
-      externalId: result.userId,
-      ...(locale && { locale }),
-    }),
-    workos.organizations.updateOrganization({
-      organization: org.id,
-      externalId: result.orgId,
-      metadata: { slug: result.slug },
-    }),
-  ])
-
-  try {
-    await provisionOrgBilling({
-      orgId: result.orgId,
-      workosOrgId: org.id,
-      orgName: spaceName,
-      orgType: "personal",
-      email: user.email,
-    })
-  } catch (err) {
-    console.error(
-      "[onboarding] Billing provisioning failed (non-blocking):",
-      err instanceof Error ? err.message : err
-    )
-  }
-
-  redirect("/dashboard")
+function getApiBaseUrl(): string {
+  return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
 }
 
 /**
@@ -88,74 +17,22 @@ export async function createSpace(
 export async function checkExistingMembership(): Promise<{
   hasMembership: boolean
 }> {
-  const { user } = await withAuth({ ensureSignedIn: true })
-  const workos = getWorkOS()
-
-  const jar = await cookies()
-  const currentLocale = jar.get(cookieName)?.value
-  const locale =
-    currentLocale && isLocale(currentLocale) ? currentLocale : undefined
-
-  const memberships = await workos.userManagement.listOrganizationMemberships({
-    userId: user.id,
-    limit: 1,
+  const incomingHeaders = await headers()
+  const cookie = incomingHeaders.get("cookie") ?? ""
+  const api = createApiClient({
+    baseUrl: getApiBaseUrl(),
+    headers: cookie ? { cookie } : undefined,
   })
 
-  if (memberships.data.length > 0) {
-    const membership = memberships.data[0]!
-
-    const workosOrg = await workos.organizations.getOrganization(
-      membership.organizationId
-    )
-    const role = membership.role?.slug === "admin" ? "admin" : "member"
-
-    const orgMetadata = workosOrg.metadata as
-      | Record<string, unknown>
-      | undefined
-    const orgType =
-      (orgMetadata?.org_type as
-        | "personal"
-        | "expert"
-        | "team"
-        | "staff"
-        | undefined) ?? "personal"
-
-    const result = await completeOnboarding({
-      workosUserId: user.id,
-      workosOrgId: membership.organizationId,
-      orgName: workosOrg.name,
-      role: role as "admin" | "member",
-      orgType,
+  const result = await api.onboarding.syncExisting()
+  if (result.hasMembership) {
+    const jar = await cookies()
+    jar.set(LAST_ACTIVE_ORG_COOKIE, result.slug, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      httpOnly: true,
     })
-
-    await Promise.allSettled([
-      workos.userManagement.updateUser({
-        userId: user.id,
-        externalId: result.userId,
-        ...(locale && { locale }),
-      }),
-      workos.organizations.updateOrganization({
-        organization: membership.organizationId,
-        externalId: result.orgId,
-        metadata: { slug: result.slug },
-      }),
-    ])
-
-    try {
-      await provisionOrgBilling({
-        orgId: result.orgId,
-        workosOrgId: membership.organizationId,
-        orgName: workosOrg.name,
-        orgType,
-        email: user.email,
-      })
-    } catch (err) {
-      console.error(
-        "[onboarding] Billing provisioning failed (non-blocking):",
-        err instanceof Error ? err.message : err
-      )
-    }
-
     return { hasMembership: true }
   }
 

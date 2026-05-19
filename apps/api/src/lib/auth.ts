@@ -2,7 +2,7 @@ import { getSession, type ElevaSession, UnauthorizedError } from "@eleva/auth"
 
 export type ApiAuthResult =
   | { type: "session"; session: ElevaSession }
-  | { type: "bearer"; token: string }
+  | { type: "bearer"; session: ElevaSession }
   | { type: "anonymous" }
 
 /**
@@ -19,8 +19,10 @@ export async function resolveApiAuth(request: Request): Promise<ApiAuthResult> {
 
   if (authHeader.startsWith("Bearer ")) {
     const token = authHeader.slice(7)
-    if (token) {
-      return { type: "bearer", token }
+    const expected = process.env.ELEVA_API_BEARER_TOKEN
+    if (token && expected && token === expected) {
+      const session = sessionFromBearerHeaders(request)
+      if (session) return { type: "bearer", session }
     }
   }
 
@@ -46,14 +48,14 @@ export async function requireApiAuth(request: Request): Promise<ElevaSession> {
     return auth.session
   }
 
+  if (auth.type === "bearer") {
+    return auth.session
+  }
+
   if (auth.type === "anonymous") {
     throw new UnauthorizedError("no-session")
   }
 
-  // Bearer token present but no session -- for now, bearer-only routes
-  // (cron, QStash, drainer) handle their own token validation inline.
-  // When WorkOS API key validation is wired (Phase 3+), this will
-  // resolve bearer tokens to an ElevaSession-like object.
   throw new UnauthorizedError("no-session")
 }
 
@@ -70,4 +72,71 @@ export async function requireApiCapability(
     throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
   }
   return session
+}
+
+function sessionFromBearerHeaders(request: Request): ElevaSession | null {
+  const headers = request.headers
+  const userId = headers.get("x-eleva-user-id")
+  const workosUserId = headers.get("x-eleva-workos-user-id")
+  const email = headers.get("x-eleva-user-email")
+  const orgId = headers.get("x-eleva-org-id")
+  const workosOrgId = headers.get("x-eleva-workos-org-id")
+  const productLabel = headers.get("x-eleva-product-label")
+  const workosRole = headers.get("x-eleva-workos-role")
+
+  if (
+    !userId ||
+    !workosUserId ||
+    !email ||
+    !orgId ||
+    !workosOrgId ||
+    !isProductLabel(productLabel) ||
+    !isWorkosRole(workosRole)
+  ) {
+    return null
+  }
+
+  return {
+    user: {
+      id: userId,
+      workosUserId,
+      email,
+      displayName: headers.get("x-eleva-user-display-name"),
+      avatarUrl: null,
+    },
+    orgId,
+    workosOrgId,
+    orgSlug: headers.get("x-eleva-org-slug"),
+    productLabel,
+    workosRole,
+    capabilities: splitHeader(headers.get("x-eleva-capabilities")),
+    entitlements: splitHeader(headers.get("x-eleva-entitlements")),
+  }
+}
+
+function splitHeader(value: string | null): string[] {
+  return value
+    ? value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+    : []
+}
+
+function isProductLabel(
+  value: string | null
+): value is ElevaSession["productLabel"] {
+  return (
+    value === "member" ||
+    value === "expert" ||
+    value === "team_admin" ||
+    value === "lecturer" ||
+    value === "staff"
+  )
+}
+
+function isWorkosRole(
+  value: string | null
+): value is ElevaSession["workosRole"] {
+  return value === "admin" || value === "member"
 }

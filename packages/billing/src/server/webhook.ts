@@ -74,6 +74,12 @@ export type StripeEventResult =
   | { status: "processed"; eventId: string; eventType: string }
   | { status: "ignored"; eventId: string; eventType: string; reason: string }
   | {
+      status: "failed_terminal"
+      eventId: string
+      eventType: string
+      error: string
+    }
+  | {
       status: "failed"
       eventId: string
       eventType: string
@@ -117,7 +123,8 @@ export async function processStripeEvent(
       eventType: event.type,
     }
   } catch (err) {
-    const message = err instanceof Error ? err.message : "unknown handler error"
+    const diagnostic = extractErrorDiagnostic(err)
+    const message = diagnostic.message
     const terminal = err instanceof TerminalError
     if (terminal) {
       await markFailedTerminal(event.id, message)
@@ -130,13 +137,168 @@ export async function processStripeEvent(
       stripeEventType: event.type,
       livemode: event.livemode,
       terminal,
+      webhookErrorDetail: diagnostic.message,
+      webhookErrorName: diagnostic.name,
+      webhookErrorCode: diagnostic.code,
+      webhookErrorDetailField: diagnostic.detail,
+      webhookErrorConstraint: diagnostic.constraint,
+      webhookErrorHint: diagnostic.hint,
+      webhookErrorType: diagnostic.type,
+      webhookErrorParam: diagnostic.param,
+      webhookErrorStatusCode: diagnostic.statusCode,
     }).catch(() => {})
+    return terminal
+      ? {
+          status: "failed_terminal",
+          eventId: event.id,
+          eventType: event.type,
+          error: message,
+        }
+      : {
+          status: "failed",
+          eventId: event.id,
+          eventType: event.type,
+          error: message,
+        }
+  }
+}
+
+interface ErrorDiagnosticRecord {
+  name?: unknown
+  message?: unknown
+  code?: unknown
+  detail?: unknown
+  constraint?: unknown
+  hint?: unknown
+  type?: unknown
+  param?: unknown
+  statusCode?: unknown
+}
+
+interface ExtractedErrorDiagnostic {
+  message: string
+  name: string | undefined
+  code: string | undefined
+  detail: string | undefined
+  constraint: string | undefined
+  hint: string | undefined
+  type: string | undefined
+  param: string | undefined
+  statusCode: string | undefined
+}
+
+function errorRecord(err: unknown): ErrorDiagnosticRecord | null {
+  if (!err || typeof err !== "object") return null
+  return err as ErrorDiagnosticRecord
+}
+
+function textField(value: unknown): string | null {
+  return typeof value === "string" && value.length > 0 ? value : null
+}
+
+function numberField(value: unknown): string | null {
+  return typeof value === "number" ? String(value) : null
+}
+
+function diagnosticPart(label: string, value: string | null): string | null {
+  return value ? `[${label}:${value}]` : null
+}
+
+/**
+ * Convert thrown handler errors into an operator-useful single-line string.
+ *
+ * Neon/Drizzle errors often expose the useful PostgreSQL diagnostics as
+ * properties (`code`, `detail`, `constraint`, `hint`) while `.message` only
+ * contains "Failed query: ... params: ...". Put those structured details
+ * first so they survive the `ERROR_TRUNCATE_LENGTH` slice in `markFailed()`.
+ */
+export function extractErrorDetail(err: unknown): string {
+  return extractErrorDiagnostic(err).message
+}
+
+function extractErrorDiagnostic(err: unknown): ExtractedErrorDiagnostic {
+  const record = errorRecord(err)
+  if (!record) {
     return {
-      status: "failed",
-      eventId: event.id,
-      eventType: event.type,
-      error: message,
+      message: "unknown handler error",
+      name: undefined,
+      code: undefined,
+      detail: undefined,
+      constraint: undefined,
+      hint: undefined,
+      type: undefined,
+      param: undefined,
+      statusCode: undefined,
     }
+  }
+
+  const name = textField(record.name)
+  const message =
+    textField(record.message) ??
+    (err instanceof Error ? err.message : "unknown handler error")
+  const code = textField(record.code)
+  const detail = textField(record.detail)
+  const constraint = textField(record.constraint)
+  const hint = textField(record.hint)
+  const type = textField(record.type)
+  const param = textField(record.param)
+  const statusCode = numberField(record.statusCode)
+
+  const hasPostgresDiagnostic = Boolean(
+    detail || constraint || hint || (code && !type)
+  )
+  const pgParts = [
+    diagnosticPart("code", code),
+    diagnosticPart("constraint", constraint),
+    diagnosticPart("detail", detail),
+    diagnosticPart("hint", hint),
+  ].filter(Boolean)
+
+  if (hasPostgresDiagnostic && pgParts.length > 0) {
+    return {
+      message: `${name ?? "DatabaseError"} ${pgParts.join(" ")} — original message: ${message}`,
+      name: name ?? undefined,
+      code: code ?? undefined,
+      detail: detail ?? undefined,
+      constraint: constraint ?? undefined,
+      hint: hint ?? undefined,
+      type: undefined,
+      param: undefined,
+      statusCode: undefined,
+    }
+  }
+
+  const stripeParts = [
+    diagnosticPart("type", type),
+    diagnosticPart("code", code),
+    diagnosticPart("param", param),
+    diagnosticPart("statusCode", statusCode),
+  ].filter(Boolean)
+
+  if (stripeParts.length > 0) {
+    return {
+      message: `${name ?? "StripeError"} ${stripeParts.join(" ")} — original message: ${message}`,
+      name: name ?? undefined,
+      code: code ?? undefined,
+      detail: undefined,
+      constraint: undefined,
+      hint: undefined,
+      type: type ?? undefined,
+      param: param ?? undefined,
+      statusCode: statusCode ?? undefined,
+    }
+  }
+
+  return {
+    message: name ? `${name}: ${message}` : message,
+    name: name ?? undefined,
+    code: undefined,
+    detail: undefined,
+    constraint: undefined,
+    hint: undefined,
+    type: undefined,
+    param: undefined,
+    statusCode: undefined,
   }
 }
 
@@ -528,11 +690,9 @@ async function handleSubscriptionEvent(
 
   const statusParse = subscriptionStatusSchema.safeParse(subscription.status)
   if (!statusParse.success) {
-    return {
-      kind: "ignored",
-      reason: `unknown subscription status: ${subscription.status}`,
-      resolvedOrgId: orgId,
-    }
+    throw new TerminalError(
+      `unknown subscription status: ${subscription.status}`
+    )
   }
   const status = statusParse.data
 

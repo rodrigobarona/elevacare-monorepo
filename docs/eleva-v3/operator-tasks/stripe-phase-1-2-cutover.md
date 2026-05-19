@@ -784,31 +784,36 @@ Context7). Highlights:
 
 ### New non-blocking findings
 
-#### N7 — Stripe Entitlements API returns empty for active subscriptions (Sandbox)
+#### N7 — Stripe Entitlements API diagnostic path returns empty in Sandbox
 
 `s.entitlements.activeEntitlements.list({ customer })` returned `count: 0` for
 a customer with an `active` paid subscription on a product that has the
 `Clinic Starter Access` entitlement feature attached. The feature attachment
 itself was verified via `/v1/products/.../features` (returns the right link).
 
-This may be a Stripe Sandbox limitation, or it may indicate the WorkOS Stripe
-Add-on populates JWT entitlement claims directly (rather than relying on the
-Stripe Entitlements API). Re-test on a live Stripe account to confirm the
-production behavior. If app code reads `customers.activeEntitlements.list` to
-gate features, that path may need the Add-on JWT claim path instead.
+Follow-up implementation confirmed **no application runtime code reads
+`customers.activeEntitlements.list`**. Feature gates read
+`session.entitlements` from the WorkOS access-token JWT via `@eleva/flags`.
+Therefore this is not a production blocker and has no known user-facing impact.
+
+The Stripe Entitlements API remains useful as a diagnostic comparison path.
+Use `pnpm stripe:verify:entitlements -- --org-id <uuid> --access-token <jwt>`
+to compare the canonical WorkOS JWT claim with the Stripe API response. Re-test
+on a live Stripe account when moving out of Sandbox; if WorkOS support confirms
+the Add-on depends on the Stripe API path, revisit subscription to
+`entitlements.active_entitlement_summary.updated`.
 
 #### N8 — Webhook handler error column lacks PG diagnostic detail
 
-When the dispatcher's database operation throws, the captured `error` column
-contains only Drizzle's `Failed query: ... params: ...` prefix, not the
-underlying PostgreSQL `code`, `detail`, `constraint`, or `hint`. Production
-debugging will be harder than necessary. Recommend a one-line change in
-[`packages/billing/src/server/webhook.ts`](../../../packages/billing/src/server/webhook.ts)
-to extract `(err as any).code/.detail/.constraint` into the captured message
-(see report for the exact patch).
+Resolved in follow-up: [`packages/billing/src/server/webhook.ts`](../../../packages/billing/src/server/webhook.ts)
+now extracts PostgreSQL and Stripe diagnostic fields into the stored
+`stripe_webhook_events.error` message and Sentry extras. This keeps
+`code`, `detail`, `constraint`, `hint`, Stripe `type`, `param`, and `statusCode`
+visible during incidents while preserving the existing string column.
 
 ### Done-criteria revisit
 
 All 11 original done-criteria still PASS or PARTIAL with documented owners.
-Production is ready to onboard real users. ADR-016 can flip to `Active` now;
-N7 + N8 are tracked as backlog items, not blockers.
+N8 is resolved in code. N7 is reframed as live-mode JWT verification deferred
+until the first real subscriber because runtime feature gates read the WorkOS
+JWT claim, not Stripe's diagnostic active-entitlements API.

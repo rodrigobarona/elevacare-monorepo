@@ -5,6 +5,7 @@ import {
   ElevaConnectProvider,
   ConnectNotificationBanner,
 } from "@eleva/billing/embedded"
+import { createApiClient } from "@eleva/api-client"
 
 interface Props {
   apiBaseUrl: string
@@ -18,23 +19,17 @@ export function ExpertConnectShell({
   children,
 }: Props) {
   const fetchClientSecret = React.useCallback(async () => {
-    const res = await fetch(`${apiBaseUrl}/stripe/account-session`, {
-      method: "POST",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        components: [
-          "notification_banner",
-          "account_management",
-          "balances",
-          "payouts",
-          "payments",
-          "tax_settings",
-        ],
-      }),
+    const api = createApiClient({ baseUrl: apiBaseUrl })
+    const data = await api.stripe.accountSession.create({
+      components: [
+        "notification_banner",
+        "account_management",
+        "balances",
+        "payouts",
+        "payments",
+        "tax_settings",
+      ],
     })
-    if (!res.ok) throw new Error("Failed to fetch Connect session")
-    const data = (await res.json()) as { clientSecret: string }
     return data.clientSecret
   }, [apiBaseUrl])
 

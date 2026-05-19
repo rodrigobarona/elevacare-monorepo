@@ -63,6 +63,7 @@ catalog:
 
   # Infrastructure
   "@upstash/redis": ^1.38.0
+  "@neondatabase/serverless": ^1.1.0
 
   # Database
   drizzle-orm: ^0.45.2

@@ -24,6 +24,7 @@
     "@eleva/observability": "workspace:*",
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
+    "@stripe/stripe-js": "catalog:",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "stripe": "catalog:",

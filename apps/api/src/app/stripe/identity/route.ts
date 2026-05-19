@@ -1,4 +1,5 @@
 import { UnauthorizedError } from "@eleva/auth"
+import type { CreateIdentitySessionResponse } from "@eleva/api-client"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -22,12 +23,6 @@ import { secureJson } from "@/lib/security-headers"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-export interface CreateIdentitySessionResponse {
-  id: string
-  clientSecret: string
-  status: string
-}
 
 export async function OPTIONS(request: Request) {
   return new Response(null, {

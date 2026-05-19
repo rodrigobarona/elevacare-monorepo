@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useActionState } from "react"
 import { useTranslations } from "next-intl"
 import { Loader2 } from "lucide-react"
+import { createApiClient } from "@eleva/api-client"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -15,21 +15,49 @@ import {
   CardTitle,
   CardDescription,
 } from "@eleva/ui/components/card"
-import { createSpace } from "./actions"
 
 interface Props {
   defaultName: string
+  apiBaseUrl: string
+  locale?: string
 }
 
-export function OnboardingForm({ defaultName }: Props) {
-  const t = useTranslations("onboarding")
+type ActionResult = { ok: true } | { ok: false; errorKey: string }
 
-  const [state, formAction, isPending] = useActionState(createSpace, {
+export function OnboardingForm({ defaultName, apiBaseUrl, locale }: Props) {
+  const t = useTranslations("onboarding")
+  const [state, setState] = React.useState<ActionResult>({
     ok: true,
   })
+  const [isPending, setIsPending] = React.useState(false)
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setIsPending(true)
+    setState({ ok: true })
+
+    const formData = new FormData(event.currentTarget)
+    const spaceName = (formData.get("spaceName") as string)?.trim()
+
+    if (!spaceName || spaceName.length < 2) {
+      setState({ ok: false, errorKey: "errorMinLength" })
+      setIsPending(false)
+      return
+    }
+
+    try {
+      const api = createApiClient({ baseUrl: apiBaseUrl })
+      await api.onboarding.complete({ spaceName, locale })
+      window.location.assign("/dashboard")
+    } catch (err) {
+      console.error("onboarding API failed", err)
+      setState({ ok: false, errorKey: "errorGeneric" })
+      setIsPending(false)
+    }
+  }
 
   return (
-    <form action={formAction}>
+    <form onSubmit={handleSubmit}>
       <Card>
         <CardHeader>
           <CardTitle>{t("cardTitle")}</CardTitle>

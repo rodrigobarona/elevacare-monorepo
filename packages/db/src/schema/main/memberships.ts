@@ -14,6 +14,7 @@ import { users } from "./users"
 
 export const workosRoleEnum = pgEnum("workos_role", ["admin", "member"])
 export const membershipStatusEnum = pgEnum("membership_status", [
+  "pending",
   "active",
   "suspended",
   "removed",

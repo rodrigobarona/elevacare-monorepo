@@ -15,6 +15,8 @@ Idempotent scripts to provision Stripe products, prices, entitlement features, a
 | `pnpm seed:products --apply`                 | Creates products and prices in Stripe                     |
 | `pnpm seed:entitlements`                     | Dry-run: shows entitlement features that would be created |
 | `pnpm seed:entitlements --apply`             | Creates features and attaches them to products            |
+| `pnpm setup:portal`                          | Dry-run: shows Customer Portal configuration              |
+| `pnpm setup:portal --apply`                  | Creates a Customer Portal configuration                   |
 | `pnpm setup:webhooks -- --url <URL>`         | Dry-run: shows webhook endpoint that would be configured  |
 | `pnpm setup:webhooks -- --url <URL> --apply` | Creates or updates the webhook endpoint                   |
 
@@ -26,11 +28,13 @@ From the monorepo root:
 # Dry-run
 pnpm stripe:seed:products
 pnpm stripe:seed:entitlements
+pnpm stripe:setup:portal
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
 
 # Apply (creates in Stripe)
 pnpm stripe:seed:products -- --apply
 pnpm stripe:seed:entitlements -- --apply
+pnpm stripe:setup:portal -- --apply
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply
 
 # Run both seed scripts in sequence (apply mode)
@@ -164,12 +168,14 @@ The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per ADR-016).
 1. Set `STRIPE_SECRET_KEY` to the **live** key
 2. Run `pnpm stripe:seed:products -- --apply`
 3. Run `pnpm stripe:seed:entitlements -- --apply`
-4. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply`
-5. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
-6. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
-7. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
-8. Verify in WorkOS Dashboard: Stripe Add-on connected to the live Stripe account (must be a standard account, not a Sandbox — Sandbox is unsupported)
-9. Trigger a `customer.subscription.created` test event and verify a row appears in the `stripe_webhook_events` table with status='processed'
+4. Run `pnpm stripe:setup:portal -- --apply`
+5. Save the printed Portal configuration ID as `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`
+6. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply`
+7. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
+8. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
+9. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
+10. Verify in WorkOS Dashboard: Stripe Add-on connected to the live Stripe account (must be a standard account, not a Sandbox — Sandbox is unsupported)
+11. Trigger a `customer.subscription.created` test event and verify a row appears in the `stripe_webhook_events` table with status='processed'
 
 ## Idempotency
 
@@ -177,6 +183,7 @@ All scripts are idempotent:
 
 - `seed-products.ts` searches by `metadata["eleva_product_key"]` — skips existing products
 - `seed-entitlements.ts` searches by `lookup_key` — skips existing features and attachments
+- `setup-portal.ts` creates a new configuration and prints the ID; keep the active ID in env
 - `setup-webhooks.ts` matches by URL — updates events on existing endpoints, creates if missing
 
 Safe to re-run after adding new tiers, events, or if something went wrong.

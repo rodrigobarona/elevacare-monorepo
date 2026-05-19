@@ -1,9 +1,11 @@
-import { eq } from "drizzle-orm"
-import { z } from "zod"
 import { UnauthorizedError } from "@eleva/auth"
+import {
+  CreateAccountSessionRequestSchema,
+  type CreateAccountSessionResponse,
+} from "@eleva/api-client"
 import { createAccountSession } from "@eleva/billing/server"
 import type { ConnectComponentName } from "@eleva/billing/server"
-import { db, main } from "@eleva/db"
+import { getExpertProfileByUserId } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -43,21 +45,6 @@ const ALLOWED_COMPONENTS: ReadonlySet<ConnectComponentName> = new Set([
   "tax_registrations",
 ])
 
-const RequestSchema = z.object({
-  components: z.array(z.string()).min(1, "at least one component is required"),
-})
-
-/**
- * Response shape used by `satisfies` in the route. The OpenAPI spec
- * for this route lives in apps/api/src/lib/openapi.ts (Zod schemas
- * there generate the JSON spec); we keep this as a TypeScript
- * interface here to avoid an unused runtime Zod schema.
- */
-export interface CreateAccountSessionResponse {
-  clientSecret: string
-  expiresAt: number
-}
-
 export async function OPTIONS(request: Request) {
   return new Response(null, {
     status: 204,
@@ -94,7 +81,9 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const parsed = RequestSchema.safeParse(await request.json().catch(() => ({})))
+  const parsed = CreateAccountSessionRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
   if (!parsed.success) {
     return secureJson(
       { error: "validation", issues: parsed.error.issues },
@@ -110,15 +99,7 @@ export async function POST(request: Request) {
     return secureJson({ error: "invalid_components" }, { status: 422, headers })
   }
 
-  const [expert] = await db()
-    .select({
-      id: main.expertProfiles.id,
-      stripeAccountId: main.expertProfiles.stripeAccountId,
-      status: main.expertProfiles.status,
-    })
-    .from(main.expertProfiles)
-    .where(eq(main.expertProfiles.userId, session.user.id))
-    .limit(1)
+  const expert = await getExpertProfileByUserId(session.user.id)
 
   if (!expert) {
     return secureJson({ error: "no_expert_profile" }, { status: 404, headers })

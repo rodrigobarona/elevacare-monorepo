@@ -12,6 +12,9 @@ export { createIdentityVerificationSession } from "./identity"
 export {
   createOrgCustomer,
   createOrgSubscription,
+  createSubscriptionCheckoutSession,
+  createBillingPortalSession,
+  getBillingCustomerForOrg,
   swapSubscriptionTier,
   findTierPrice,
   PRODUCT_KEYS,

@@ -80,14 +80,19 @@ export async function resolveSessionFromWorkosUser(
   const picked = preferred ?? rows[0]!
 
   const productLabel = deriveProductLabel(picked.orgType, picked.workosRole)
+  const derivedCapabilities = capabilitiesFor(productLabel)
 
   const jwtMatchesPicked =
     !opts.jwtOrgId || opts.jwtOrgId === picked.workosOrgId
 
-  const capabilities =
+  const jwtCapabilities =
     jwtMatchesPicked && opts.jwtPermissions && opts.jwtPermissions.length > 0
-      ? opts.jwtPermissions
-      : capabilitiesFor(productLabel)
+      ? opts.jwtPermissions.filter((capability) =>
+          derivedCapabilities.includes(capability)
+        )
+      : []
+  const capabilities =
+    jwtCapabilities.length > 0 ? jwtCapabilities : derivedCapabilities
 
   const entitlements =
     jwtMatchesPicked && opts.jwtEntitlements && opts.jwtEntitlements.length > 0
