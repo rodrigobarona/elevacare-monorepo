@@ -3,6 +3,7 @@ import { completeOnboarding } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
+import { LocaleSchema } from "@eleva/config/i18n"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -15,7 +16,7 @@ export const runtime = "nodejs"
 
 const BodySchema = z.object({
   spaceName: z.string().min(2).max(100).trim(),
-  locale: z.string().min(2).max(10).optional(),
+  locale: LocaleSchema.optional(),
 })
 
 export async function POST(request: Request) {

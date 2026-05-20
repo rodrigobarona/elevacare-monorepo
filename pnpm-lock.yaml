@@ -1055,6 +1055,9 @@ importers:
 
   packages/api-client:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       zod:
         specifier: 'catalog:'
         version: 4.4.3

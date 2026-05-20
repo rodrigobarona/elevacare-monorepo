@@ -15,11 +15,12 @@ import {
   CardTitle,
   CardDescription,
 } from "@eleva/ui/components/card"
+import type { Locale } from "@eleva/config/i18n"
 
 interface Props {
   defaultName: string
   apiBaseUrl: string
-  locale?: string
+  locale?: Locale
 }
 
 type ActionResult = { ok: true } | { ok: false; errorKey: string }

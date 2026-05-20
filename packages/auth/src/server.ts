@@ -2,6 +2,7 @@ import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
+import { normalizeWorkOSLocale, type Locale } from "@eleva/config/i18n"
 import {
   refreshSession as authkitRefreshSession,
   withAuth as authkitGetSession,
@@ -26,6 +27,7 @@ interface WorkosCookieSession {
     email?: string
     firstName?: string | null
     lastName?: string | null
+    locale?: string | null
   }
   impersonator?: unknown
 }
@@ -86,6 +88,7 @@ interface ResolvedIdentity {
   permissions: string[]
   entitlements: string[]
   jwtOrgId: string | null
+  tokenLocale: Locale | null
 }
 
 /**
@@ -139,6 +142,9 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
       permissions,
       entitlements,
       jwtOrgId,
+      tokenLocale: normalizeWorkOSLocale(
+        (workosSession.user as { locale?: unknown } | undefined)?.locale
+      ),
     }
   } catch (err) {
     if (err instanceof Error && err.message.includes("AuthKit middleware")) {
@@ -172,11 +178,41 @@ async function resolveWorkosIdentity(): Promise<ResolvedIdentity> {
         permissions,
         entitlements,
         jwtOrgId,
+        tokenLocale: normalizeWorkOSLocale(cookieUser?.locale),
       }
     }
     throw err
   }
 }
+
+function getUserLocale(user: unknown): Locale | null {
+  return normalizeWorkOSLocale((user as { locale?: unknown } | null)?.locale)
+}
+
+/**
+ * WorkOS user.locale is the authenticated source of truth for UI language.
+ *
+ * AuthKit session payloads can include the user locale. If it is absent,
+ * fetch the WorkOS user once per request and normalize any region-specific
+ * value into Eleva's launch locale set.
+ */
+export const getAuthenticatedWorkOSLocale = cache(
+  async (): Promise<Locale | null> => {
+    const { workosUserId, tokenLocale } = await resolveWorkosIdentity()
+    if (!workosUserId) return null
+    if (tokenLocale) return tokenLocale
+
+    try {
+      const user = await getWorkOS().userManagement.getUser(workosUserId)
+      return getUserLocale(user)
+    } catch (err) {
+      console.error(
+        `[getAuthenticatedWorkOSLocale] failed to load WorkOS user locale: ${err instanceof Error ? err.message : String(err)}`
+      )
+      return null
+    }
+  }
+)
 
 /**
  * Force a WorkOS access-token refresh so the next page render picks up

@@ -7,6 +7,10 @@ import {
   isLocale,
   locales,
   localeNames,
+  getLocaleCookieDomain,
+  getLocaleCookieOptions,
+  normalizeLocale,
+  normalizeWorkOSLocale,
   resolveLocaleFromHeaders,
 } from "./i18n"
 
@@ -46,12 +50,45 @@ describe("i18n config", () => {
     expect(isLocale("it")).toBe(false)
     expect(isLocale("")).toBe(false)
   })
+
+  it("normalizes region-specific locale values", () => {
+    expect(normalizeLocale("pt-PT")).toBe("pt")
+    expect(normalizeLocale("es-MX")).toBe("es")
+    expect(normalizeLocale("EN-us")).toBe("en")
+    expect(normalizeWorkOSLocale("pt-BR")).toBe("pt")
+    expect(normalizeLocale("fr-FR")).toBeNull()
+    expect(normalizeLocale(null)).toBeNull()
+  })
+
+  it("scopes locale cookies to Eleva hosts only", () => {
+    expect(getLocaleCookieDomain("account.eleva.care")).toBe(".eleva.care")
+    expect(getLocaleCookieDomain("eleva.care")).toBe(".eleva.care")
+    expect(getLocaleCookieDomain("localhost:3000")).toBeUndefined()
+    expect(getLocaleCookieDomain("127.0.0.1:3000")).toBeUndefined()
+  })
+
+  it("builds shared locale cookie options", () => {
+    expect(getLocaleCookieOptions("app.eleva.care")).toEqual({
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      domain: ".eleva.care",
+    })
+    expect(
+      getLocaleCookieOptions("localhost:3000", { httpOnly: false })
+    ).toEqual({
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+      httpOnly: false,
+    })
+  })
 })
 
 describe("resolveLocaleFromHeaders", () => {
   it("returns locale from ELEVA_LOCALE cookie", () => {
     expect(
-      resolveLocaleFromHeaders({ cookie: "ELEVA_LOCALE=pt; other=value" })
+      resolveLocaleFromHeaders({ cookie: "ELEVA_LOCALE=pt-PT; other=value" })
     ).toBe("pt")
   })
 

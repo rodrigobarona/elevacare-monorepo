@@ -5,12 +5,14 @@ import { UserProfile, UserSecurity, UserSessions } from "@workos-inc/widgets"
 import { getSettingsWidgetToken } from "./actions"
 import { AvatarUpload } from "./avatar-upload"
 import { LanguagePreference } from "./language-preference"
+import type { Locale } from "@eleva/config/i18n"
 
 interface SettingsWidgetsProps {
   authToken: string
   avatarUrl: string | null
   displayName: string
   apiBaseUrl: string
+  preferredLocale: Locale | null
 }
 
 export function SettingsWidgets({
@@ -18,6 +20,7 @@ export function SettingsWidgets({
   avatarUrl,
   displayName,
   apiBaseUrl,
+  preferredLocale,
 }: SettingsWidgetsProps) {
   const t = useTranslations("settings")
 
@@ -39,7 +42,7 @@ export function SettingsWidgets({
 
       <section>
         <h2 className="mb-4 text-lg font-medium">{t("language.title")}</h2>
-        <LanguagePreference />
+        <LanguagePreference preferredLocale={preferredLocale} />
       </section>
 
       <section>

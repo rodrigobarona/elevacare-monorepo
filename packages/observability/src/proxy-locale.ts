@@ -1,11 +1,10 @@
 import type { NextRequest, NextResponse } from "next/server"
 import {
   cookieName,
+  getLocaleCookieOptions,
   resolveLocaleFromHeaders,
   type Locale,
 } from "@eleva/config/i18n"
-
-const COOKIE_MAX_AGE = 31536000 // 1 year
 
 /**
  * Resolve the user's locale from a NextRequest. Shared across every
@@ -34,9 +33,6 @@ export function persistLocaleCookie(
 ): void {
   const existingCookie = req.cookies.get(cookieName)?.value
   if (existingCookie === locale) return
-  response.cookies.set(cookieName, locale, {
-    path: "/",
-    maxAge: COOKIE_MAX_AGE,
-    sameSite: "lax",
-  })
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host")
+  response.cookies.set(cookieName, locale, getLocaleCookieOptions(host))
 }

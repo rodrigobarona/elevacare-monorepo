@@ -1,6 +1,8 @@
 import { getSignInUrl } from "@workos-inc/authkit-nextjs"
+import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
+import { resolveLocaleFromHeaders } from "@eleva/config/i18n"
 
 /**
  * Always run dynamically -- this route sets a PKCE cookie via
@@ -16,6 +18,15 @@ export const fetchCache = "force-no-store"
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const returnTo = sanitizeReturnTo(searchParams.get("returnTo"))
-  const url = await getSignInUrl({ returnTo })
+  const hdrs = await headers()
+  const locale = resolveLocaleFromHeaders({
+    cookie: hdrs.get("cookie"),
+    acceptLanguage: hdrs.get("accept-language"),
+    country: hdrs.get("x-vercel-ip-country"),
+  })
+  const url = await getSignInUrl({
+    returnTo,
+    state: JSON.stringify({ locale }),
+  })
   redirect(url)
 }

@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@eleva/config": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {

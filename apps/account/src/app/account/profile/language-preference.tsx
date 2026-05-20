@@ -15,9 +15,16 @@ import {
 import { locales, localeNames, type Locale } from "@eleva/config/i18n"
 import { updateLanguagePreference } from "./actions"
 
-export function LanguagePreference() {
+interface LanguagePreferenceProps {
+  preferredLocale: Locale | null
+}
+
+export function LanguagePreference({
+  preferredLocale,
+}: LanguagePreferenceProps) {
   const t = useTranslations("settings")
   const currentLocale = useLocale()
+  const selectedLocale = preferredLocale ?? (currentLocale as Locale)
   const router = useRouter()
   const lastRefreshedState = useRef<unknown>(null)
 
@@ -42,7 +49,7 @@ export function LanguagePreference() {
     <form action={formAction} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="locale">{t("profile.language")}</Label>
-        <Select name="locale" defaultValue={currentLocale}>
+        <Select name="locale" defaultValue={selectedLocale}>
           <SelectTrigger id="locale" className="w-48">
             <SelectValue />
           </SelectTrigger>

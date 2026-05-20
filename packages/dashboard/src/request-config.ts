@@ -1,11 +1,11 @@
 import { getRequestConfig } from "next-intl/server"
 import { cookies, headers } from "next/headers"
 import {
-  cookieName,
-  defaultLocale,
-  isLocale,
+  resolveLocaleFromHeaders,
+  normalizeLocale,
   type Locale,
 } from "@eleva/config/i18n"
+import { getAuthenticatedWorkOSLocale } from "@eleva/auth/server"
 import { getDashboardMessages } from "./messages"
 
 type MessageLoader = (locale: Locale) => Promise<Record<string, unknown>>
@@ -33,28 +33,26 @@ export function createRequestConfig(loadAppMessages: MessageLoader) {
  * Resolve the user's locale inside a Server Component / route handler.
  *
  * Resolution chain (mirrors the proxy's `resolveLocaleForRequest`):
- *  1. `x-eleva-locale` header (set by the auth proxy — most reliable)
- *  2. ELEVA_LOCALE cookie (explicit user preference)
- *  3. Accept-Language header (browser preference)
- *  4. defaultLocale fallback
+ *  1. WorkOS user.locale (authenticated source of truth)
+ *  2. `x-eleva-locale` header (set by the auth proxy)
+ *  3. ELEVA_LOCALE cookie (pre-auth preference / mirror)
+ *  4. Accept-Language header (browser preference)
+ *  5. x-vercel-ip-country geo header
+ *  6. defaultLocale fallback
  */
-async function resolveServerLocale(): Promise<Locale> {
-  const hdrs = await headers()
+export async function resolveServerLocale(): Promise<Locale> {
+  const workosLocale = await getAuthenticatedWorkOSLocale()
+  if (workosLocale) return workosLocale
 
+  const hdrs = await headers()
   const fromHeader = hdrs.get("x-eleva-locale")
-  if (fromHeader && isLocale(fromHeader)) return fromHeader as Locale
+  const headerLocale = normalizeLocale(fromHeader)
+  if (headerLocale) return headerLocale
 
   const jar = await cookies()
-  const fromCookie = jar.get(cookieName)?.value
-  if (fromCookie && isLocale(fromCookie)) return fromCookie as Locale
-
-  const acceptLang = hdrs.get("accept-language")
-  if (acceptLang) {
-    for (const part of acceptLang.split(",")) {
-      const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
-      if (isLocale(lang)) return lang as Locale
-    }
-  }
-
-  return defaultLocale
+  return resolveLocaleFromHeaders({
+    cookie: jar.toString(),
+    acceptLanguage: hdrs.get("accept-language"),
+    country: hdrs.get("x-vercel-ip-country"),
+  })
 }

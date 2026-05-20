@@ -1,6 +1,13 @@
 import { handleAuth } from "@workos-inc/authkit-nextjs"
-import { cookies } from "next/headers"
-import { cookieName, isLocale } from "@eleva/config/i18n"
+import { cookies, headers } from "next/headers"
+import { getWorkOS } from "@eleva/auth/server"
+import {
+  cookieName,
+  getLocaleCookieOptions,
+  normalizeLocale,
+  normalizeWorkOSLocale,
+  type Locale,
+} from "@eleva/config/i18n"
 
 /**
  * Always dynamic -- this route exchanges the OAuth code for a session,
@@ -9,6 +16,22 @@ import { cookieName, isLocale } from "@eleva/config/i18n"
  */
 export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
+
+function parseStateLocale(state: unknown): Locale | null {
+  if (typeof state !== "string" || !state) return null
+
+  try {
+    const parsed = JSON.parse(state) as { locale?: unknown }
+    return normalizeLocale(parsed.locale)
+  } catch {
+    return null
+  }
+}
+
+async function getRequestHost(): Promise<string | null> {
+  const hdrs = await headers()
+  return hdrs.get("x-forwarded-host") ?? hdrs.get("host")
+}
 
 /**
  * WorkOS OAuth callback for the account app. Sets the session cookie
@@ -19,23 +42,23 @@ export const GET = handleAuth({
   returnPathname: "/dashboard",
   baseURL: process.env.ACCOUNT_URL || process.env.NEXT_PUBLIC_ACCOUNT_URL,
   onSuccess: async (data) => {
-    const jar = await cookies()
-    const existing = jar.get(cookieName)?.value
+    const [jar, host] = await Promise.all([cookies(), getRequestHost()])
+    const existingLocale = normalizeLocale(jar.get(cookieName)?.value)
+    const stateLocale = parseStateLocale(data.state)
+    const workosLocale = normalizeWorkOSLocale(data.user.locale)
 
-    if (existing && isLocale(existing)) {
+    if (workosLocale) {
+      jar.set(cookieName, workosLocale, getLocaleCookieOptions(host))
       return
     }
 
-    const userLocale = data.user.locale
-    if (userLocale) {
-      const shortLocale = userLocale.split("-")[0]!.toLowerCase()
-      if (isLocale(shortLocale)) {
-        jar.set(cookieName, shortLocale, {
-          path: "/",
-          maxAge: 31536000,
-          sameSite: "lax",
-        })
-      }
+    const preAuthLocale = stateLocale ?? existingLocale
+    if (preAuthLocale) {
+      jar.set(cookieName, preAuthLocale, getLocaleCookieOptions(host))
+      await getWorkOS().userManagement.updateUser({
+        userId: data.user.id,
+        locale: preAuthLocale,
+      })
     }
   },
 })

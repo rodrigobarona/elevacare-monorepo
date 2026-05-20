@@ -1,6 +1,8 @@
 import { completeOnboarding, UnauthorizedError } from "@eleva/auth"
 import { getWorkOS } from "@eleva/auth/server"
 import { provisionOrgBilling } from "@eleva/billing/server"
+import { LocaleSchema } from "@eleva/config/i18n"
+import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -8,6 +10,12 @@ import { secureJson } from "@/lib/security-headers"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+const BodySchema = z
+  .object({
+    locale: LocaleSchema.optional(),
+  })
+  .optional()
 
 export async function POST(request: Request): Promise<Response> {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -27,6 +35,14 @@ export async function POST(request: Request): Promise<Response> {
     RATE_LIMITS.onboarding
   )
   if (rateLimited) return rateLimited
+
+  const body = BodySchema.safeParse(await request.json().catch(() => undefined))
+  if (!body.success) {
+    return secureJson(
+      { error: "validation", issues: body.error.issues },
+      { status: 422, headers }
+    )
+  }
 
   const workos = getWorkOS()
   const memberships = await workos.userManagement.listOrganizationMemberships({
@@ -65,6 +81,7 @@ export async function POST(request: Request): Promise<Response> {
     workos.userManagement.updateUser({
       userId: session.user.workosUserId,
       externalId: result.userId,
+      ...(body.data?.locale && { locale: body.data.locale }),
     }),
     workos.organizations.updateOrganization({
       organization: membership.organizationId,

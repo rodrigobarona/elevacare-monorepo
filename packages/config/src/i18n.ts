@@ -10,6 +10,7 @@
  * components via next-intl helpers.
  */
 
+import { z } from "zod"
 import { countryToLocale } from "./country-to-locale"
 
 export const locales = ["en", "pt", "es"] as const
@@ -26,6 +27,15 @@ export const localeNames: Record<Locale, string> = {
 export const cookieName = "ELEVA_LOCALE"
 
 const COOKIE_MAX_AGE = 31536000 // 1 year
+const SHARED_COOKIE_DOMAIN = ".eleva.care"
+
+export interface LocaleCookieOptions {
+  path: "/"
+  maxAge: number
+  sameSite: "lax"
+  httpOnly?: boolean
+  domain?: string
+}
 
 /**
  * Shape consumed by next-intl's createMiddleware. Typed loosely so it
@@ -61,9 +71,57 @@ export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value)
 }
 
+export const LocaleSchema = z.enum(locales)
+
 /**
- * Pure locale resolution utility. Shared across both apps and any server
- * code (API routes, email templates, etc.).
+ * Normalize any locale-ish value into Eleva's launch locale set.
+ *
+ * WorkOS may store BCP-47 values such as "pt-PT" while UI routes and
+ * message bundles use only the base launch language ("pt").
+ */
+export function normalizeLocale(value: unknown): Locale | null {
+  if (typeof value !== "string") return null
+
+  const base = value.trim().split("-")[0]?.toLowerCase()
+  return base && isLocale(base) ? base : null
+}
+
+export function normalizeWorkOSLocale(value: unknown): Locale | null {
+  return normalizeLocale(value)
+}
+
+export function getLocaleCookieDomain(
+  host: string | null | undefined
+): string | undefined {
+  if (!host) return undefined
+
+  const hostname = host.split(":")[0]?.toLowerCase()
+  if (!hostname) return undefined
+
+  if (hostname === "eleva.care" || hostname.endsWith(".eleva.care")) {
+    return SHARED_COOKIE_DOMAIN
+  }
+
+  return undefined
+}
+
+export function getLocaleCookieOptions(
+  host?: string | null,
+  options: { httpOnly?: boolean } = {}
+): LocaleCookieOptions {
+  const domain = getLocaleCookieDomain(host)
+  return {
+    path: "/",
+    maxAge: COOKIE_MAX_AGE,
+    sameSite: "lax",
+    ...(options.httpOnly !== undefined && { httpOnly: options.httpOnly }),
+    ...(domain && { domain }),
+  }
+}
+
+/**
+ * Pure unauthenticated locale discovery utility. Authenticated dashboard
+ * requests should prefer WorkOS user.locale first, then use this chain.
  *
  * Resolution chain:
  * 1. ELEVA_LOCALE cookie (explicit user preference)
@@ -80,13 +138,14 @@ export function resolveLocaleFromHeaders(headers: {
     const match = headers.cookie.match(
       new RegExp(`(?:^|;\\s*)${cookieName}=([^;]+)`)
     )
-    if (match && isLocale(match[1]!)) return match[1] as Locale
+    const locale = normalizeLocale(match?.[1])
+    if (locale) return locale
   }
 
   if (headers.acceptLanguage) {
     for (const part of headers.acceptLanguage.split(",")) {
-      const lang = part.split(";")[0]!.trim().split("-")[0]!.toLowerCase()
-      if (isLocale(lang)) return lang as Locale
+      const locale = normalizeLocale(part.split(";")[0])
+      if (locale) return locale
     }
   }
 

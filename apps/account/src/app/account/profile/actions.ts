@@ -1,6 +1,6 @@
 "use server"
 
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import {
   getWidgetTokenFromSession,
@@ -9,7 +9,12 @@ import {
 } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
 import { createApiClient } from "@eleva/api-client"
-import { isLocale, cookieName, type Locale } from "@eleva/config/i18n"
+import {
+  isLocale,
+  cookieName,
+  getLocaleCookieOptions,
+  type Locale,
+} from "@eleva/config/i18n"
 
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
@@ -54,13 +59,13 @@ export async function updateLanguagePreference(
       locale,
     })
 
-    const jar = await cookies()
-    jar.set(cookieName, locale, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
-      httpOnly: false,
-    })
+    const [jar, hdrs] = await Promise.all([cookies(), headers()])
+    const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host")
+    jar.set(
+      cookieName,
+      locale,
+      getLocaleCookieOptions(host, { httpOnly: false })
+    )
 
     revalidatePath("/", "layout")
     return { ok: true, saved: true }

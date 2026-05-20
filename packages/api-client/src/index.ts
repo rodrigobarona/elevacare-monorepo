@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { LocaleSchema } from "@eleva/config/i18n"
 
 // ---------------------------------------------------------------------------
 // Shared Zod schemas (used by both client and server)
@@ -6,8 +7,14 @@ import { z } from "zod"
 
 export const CompleteOnboardingRequestSchema = z.object({
   spaceName: z.string().min(2).max(100).trim(),
-  locale: z.string().min(2).max(10).optional(),
+  locale: LocaleSchema.optional(),
 })
+
+export const SyncExistingOnboardingRequestSchema = z
+  .object({
+    locale: LocaleSchema.optional(),
+  })
+  .optional()
 
 export const CompleteOnboardingResponseSchema = z.object({
   ok: z.literal(true),
@@ -127,6 +134,9 @@ export const ApiErrorSchema = z.object({
 
 export type CompleteOnboardingRequest = z.infer<
   typeof CompleteOnboardingRequestSchema
+>
+export type SyncExistingOnboardingRequest = z.infer<
+  typeof SyncExistingOnboardingRequestSchema
 >
 export type CompleteOnboardingResponse = z.infer<
   typeof CompleteOnboardingResponseSchema
@@ -382,10 +392,11 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
       },
-      syncExisting() {
+      syncExisting(data?: SyncExistingOnboardingRequest) {
         return request<SyncExistingOnboardingResponse>(
           "POST",
-          "/onboarding/sync-existing"
+          "/onboarding/sync-existing",
+          data
         )
       },
     },
