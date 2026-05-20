@@ -1,23 +1,19 @@
 import { env } from "node:process"
 import createNextIntlPlugin from "next-intl/plugin"
+import {
+  resolveAllowedDevOrigins,
+  resolveServerActionAllowedOrigins,
+  resolveZoneAssetPrefix,
+} from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
-const allowedOrigins = ["eleva.care"]
-for (const urlVar of [env.APP_URL, env.NEXT_PUBLIC_APP_URL]) {
-  if (urlVar) {
-    for (const raw of urlVar.split(",")) {
-      try {
-        allowedOrigins.push(new URL(raw.trim()).host)
-      } catch {
-        // invalid URL segment, skip
-      }
-    }
-  }
-}
+const allowedOrigins = resolveServerActionAllowedOrigins(env)
+const allowedDevOrigins = resolveAllowedDevOrigins(env)
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins,
   skipTrailingSlashRedirect: true,
   experimental: {
     serverActions: {
@@ -32,7 +28,7 @@ const nextConfig = {
     "@eleva/observability",
     "@eleva/ui",
   ],
-  assetPrefix: env.ACADEMY_ASSET_PREFIX || undefined,
+  assetPrefix: resolveZoneAssetPrefix("academy", env.ACADEMY_ASSET_PREFIX, env),
 }
 
 export default withNextIntl(nextConfig)

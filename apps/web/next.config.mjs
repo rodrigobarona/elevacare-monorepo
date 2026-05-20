@@ -1,4 +1,5 @@
 import createNextIntlPlugin from "next-intl/plugin"
+import { resolveGatewayStaticAssetRewrites } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
@@ -34,6 +35,11 @@ const nextConfig = {
    * dispatch logic that handles canonical URLs explicitly.
    */
   skipTrailingSlashRedirect: true,
+  async rewrites() {
+    return {
+      beforeFiles: resolveGatewayStaticAssetRewrites(),
+    }
+  },
   transpilePackages: ["@eleva/auth", "@eleva/config", "@eleva/db", "@eleva/ui"],
 }
 
