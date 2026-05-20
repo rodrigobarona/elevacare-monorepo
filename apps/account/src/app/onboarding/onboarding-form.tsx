@@ -8,13 +8,14 @@ import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@eleva/ui/components/card"
+  SettingsFieldset,
+  SettingsFieldsetActions,
+  SettingsFieldsetContent,
+  SettingsFieldsetDescription,
+  SettingsFieldsetFooter,
+  SettingsFieldsetStatus,
+  SettingsFieldsetTitle,
+} from "@eleva/ui/components/settings-fieldset"
 import type { Locale } from "@eleva/config/i18n"
 
 interface Props {
@@ -59,13 +60,13 @@ export function OnboardingForm({ defaultName, apiBaseUrl, locale }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card>
-        <CardHeader>
-          <CardTitle>{t("cardTitle")}</CardTitle>
-          <CardDescription>{t("cardDescription")}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+      <SettingsFieldset>
+        <SettingsFieldsetContent>
+          <SettingsFieldsetTitle>{t("cardTitle")}</SettingsFieldsetTitle>
+          <SettingsFieldsetDescription>
+            {t("cardDescription")}
+          </SettingsFieldsetDescription>
+          <div className="mt-4 space-y-2">
             <Label htmlFor="spaceName">{t("nameLabel")}</Label>
             <Input
               id="spaceName"
@@ -80,23 +81,23 @@ export function OnboardingForm({ defaultName, apiBaseUrl, locale }: Props) {
             />
           </div>
           {!state.ok && state.errorKey && (
-            <p className="text-sm text-destructive" role="alert">
+            <p className="mt-4 text-sm text-destructive" role="alert">
               {t(state.errorKey)}
             </p>
           )}
-        </CardContent>
-        <CardFooter className="flex-col gap-3">
-          <Button type="submit" className="w-full" disabled={isPending}>
-            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isPending ? t("submitting") : t("submit")}
-          </Button>
-          {isPending && (
-            <p className="animate-pulse text-sm text-muted-foreground">
-              {t("processingHint")}
-            </p>
-          )}
-        </CardFooter>
-      </Card>
+        </SettingsFieldsetContent>
+        <SettingsFieldsetFooter>
+          <SettingsFieldsetStatus>
+            {isPending ? t("processingHint") : null}
+          </SettingsFieldsetStatus>
+          <SettingsFieldsetActions>
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
+              {isPending ? t("submitting") : t("submit")}
+            </Button>
+          </SettingsFieldsetActions>
+        </SettingsFieldsetFooter>
+      </SettingsFieldset>
     </form>
   )
 }

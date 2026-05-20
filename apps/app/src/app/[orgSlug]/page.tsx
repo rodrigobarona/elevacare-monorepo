@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
 
 export default async function OrgHomePage({
@@ -25,15 +26,11 @@ export default async function OrgHomePage({
 async function MemberDashboard({ session }: { session: ElevaSession }) {
   const t = await getTranslations()
   return (
-    <header className="space-y-2">
-      <h1 className="text-2xl font-medium">
-        {t("dashboard.member.welcome", {
-          name: session.user.displayName ?? session.user.email,
-        })}
-      </h1>
-      <p className="text-sm text-muted-foreground">
-        {t("dashboard.member.subtitle")}
-      </p>
-    </header>
+    <AccountPageHeader
+      title={t("dashboard.member.welcome", {
+        name: session.user.displayName ?? session.user.email,
+      })}
+      description={t("dashboard.member.subtitle")}
+    />
   )
 }

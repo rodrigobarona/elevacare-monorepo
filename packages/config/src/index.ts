@@ -28,6 +28,18 @@ export {
 } from "./i18n"
 export { countryToLocale } from "./country-to-locale"
 export {
+  themes,
+  cookieName as themeCookieName,
+  isThemePreference,
+  parseThemeFromCookie,
+  getThemeCookieOptions,
+  resolveThemeClass,
+  persistThemeCookie,
+  type ThemePreference,
+  type ResolvedAppearance,
+  type ThemeCookieOptions,
+} from "./theme"
+export {
   RESERVED_USERNAMES,
   isReserved,
   validateUsername,

@@ -1,3 +1,39 @@
+diff --git a/dist/cjs/lib/dictionaries.cjs b/dist/cjs/lib/dictionaries.cjs
+index 8e29b3a67aff18c132b8d8a2504c2474e3646310..c03e9056a7ffd76274813bb8ccaddb5b9c7e60a4 100644
+--- a/dist/cjs/lib/dictionaries.cjs
++++ b/dist/cjs/lib/dictionaries.cjs
+@@ -50,11 +50,11 @@ const importMap = {
+   de: () => import("../../lang/translations/de.json"),
+   "de-DE": () => import("../../lang/translations/de.json"),
+   el: () => import("../../lang/translations/el.json"),
+-  en: async () => ({ default: {} }),
++  en: () => import("../../lang/translations/en-US.json"),
+   "en-AU": () => import("../../lang/translations/en-AU.json"),
+   "en-CA": () => import("../../lang/translations/en-CA.json"),
+   "en-GB": () => import("../../lang/translations/en-GB.json"),
+-  "en-US": async () => ({ default: {} }),
++  "en-US": () => import("../../lang/translations/en-US.json"),
+   es: () => import("../../lang/translations/es.json"),
+   "es-419": () => import("../../lang/translations/es-419.json"),
+   "es-ES": () => import("../../lang/translations/es.json"),
+diff --git a/dist/esm/lib/dictionaries.js b/dist/esm/lib/dictionaries.js
+index 889f31ce8d2cbb0f0dd96fb52db921db0ba25ff6..ab7edab2b24018056590c1a2ad5393dad590e65a 100644
+--- a/dist/esm/lib/dictionaries.js
++++ b/dist/esm/lib/dictionaries.js
+@@ -13,11 +13,11 @@ const importMap = {
+   de: () => import("../../lang/translations/de.json"),
+   "de-DE": () => import("../../lang/translations/de.json"),
+   el: () => import("../../lang/translations/el.json"),
+-  en: async () => ({ default: {} }),
++  en: () => import("../../lang/translations/en-US.json"),
+   "en-AU": () => import("../../lang/translations/en-AU.json"),
+   "en-CA": () => import("../../lang/translations/en-CA.json"),
+   "en-GB": () => import("../../lang/translations/en-GB.json"),
+-  "en-US": async () => ({ default: {} }),
++  "en-US": () => import("../../lang/translations/en-US.json"),
+   es: () => import("../../lang/translations/es.json"),
+   "es-419": () => import("../../lang/translations/es-419.json"),
+   "es-ES": () => import("../../lang/translations/es.json"),
 diff --git a/dist/lang/translations/es.json b/dist/lang/translations/es.json
 index da1afad3b0b6477dbe1fe9e339bb0eb72f256874..e9e77783c247ebe783b45d7c357884e652f603f6 100644
 --- a/dist/lang/translations/es.json

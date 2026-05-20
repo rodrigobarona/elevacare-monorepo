@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSessionForOrg } from "@eleva/auth"
 
 export default async function OrgSettingsPage({
@@ -12,9 +13,9 @@ export default async function OrgSettingsPage({
   const t = await getTranslations()
 
   return (
-    <header className="space-y-2">
-      <h1 className="text-2xl font-medium">{t("settings.title")}</h1>
-      <p className="text-sm text-muted-foreground">{t("settings.subtitle")}</p>
-    </header>
+    <AccountPageHeader
+      title={t("settings.title")}
+      description={t("settings.subtitle")}
+    />
   )
 }

@@ -12,5 +12,9 @@
       "welcome": "Hola, {name}",
       "subtitle": "Tu horario, reservas e informes están aquí."
     }
+  },
+  "onboarding": {
+    "title": "Onboarding de experto",
+    "description": "Completa todos los pasos para activar tu perfil de experto."
   }
 }

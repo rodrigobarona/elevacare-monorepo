@@ -1,6 +1,7 @@
 "use client"
 
 import "@workos-inc/widgets/styles.css"
+import "@eleva/dashboard/workos-widgets-overrides.css"
 import "./org-switcher-widget.css"
 import { WorkOsWidgets, OrganizationSwitcher } from "@workos-inc/widgets"
 import {
@@ -9,9 +10,13 @@ import {
   WorkOsLocaleProvider,
 } from "@workos-inc/widgets-i18n"
 import { useLocale, useTranslations } from "next-intl"
-import { useTheme } from "next-themes"
 import { usePathname } from "next/navigation"
 import { switchOrganization } from "./switch-org-action"
+import {
+  elevaWorkOsElements,
+  getElevaWorkOsTheme,
+} from "./workos-widgets-config"
+import { useResolvedAppearance } from "./use-resolved-appearance"
 
 interface OrgSwitcherWidgetProps {
   authToken: string
@@ -25,8 +30,8 @@ export function OrgSwitcherWidget({
   const t = useTranslations("shell")
   const locale = useLocale()
   const resolvedLocale: LocaleCode = isValidLocale(locale) ? locale : "en"
-  const { resolvedTheme } = useTheme()
   const pathname = usePathname()
+  const appearance = useResolvedAppearance()
 
   const handleSwitch = async ({
     organizationId,
@@ -54,12 +59,8 @@ export function OrgSwitcherWidget({
     >
       <WorkOsLocaleProvider locale={resolvedLocale}>
         <WorkOsWidgets
-          theme={{
-            appearance: resolvedTheme === "dark" ? "dark" : "light",
-            accentColor: "teal",
-            radius: "medium",
-            fontFamily: "inherit",
-          }}
+          theme={getElevaWorkOsTheme({ appearance })}
+          elements={elevaWorkOsElements}
         >
           <OrganizationSwitcher
             authToken={authToken}

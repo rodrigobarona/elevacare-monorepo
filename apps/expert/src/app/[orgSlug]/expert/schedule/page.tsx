@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
 import { headers } from "next/headers"
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import {
   getExpertProfileByUserId,
@@ -39,10 +40,7 @@ export default async function SchedulePage({
 
     return (
       <div className="mx-auto max-w-2xl space-y-6">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-medium">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
-        </header>
+        <AccountPageHeader title={t("title")} description={t("description")} />
         <InitScheduleButton timezone={fallbackTz} />
       </div>
     )
@@ -55,11 +53,7 @@ export default async function SchedulePage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
-      </header>
-
+      <AccountPageHeader title={t("title")} description={t("description")} />
       <ScheduleEditor
         timezone={schedule.timezone}
         initialRules={rules.map((r) => ({

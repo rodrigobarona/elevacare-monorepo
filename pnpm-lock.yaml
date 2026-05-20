@@ -75,6 +75,9 @@ catalogs:
     resend:
       specifier: ^6.12.3
       version: 6.12.3
+    sonner:
+      specifier: ^2.0.7
+      version: 2.0.7
     stripe:
       specifier: ^22.1.1
       version: 22.1.1
@@ -95,7 +98,7 @@ catalogs:
       version: 4.4.3
 
 patchedDependencies:
-  '@workos-inc/widgets-i18n': 8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce
+  '@workos-inc/widgets-i18n': 5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438
 
 importers:
 
@@ -175,7 +178,7 @@ importers:
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -251,25 +254,25 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      next-themes:
-        specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
       react-dom:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.7(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -333,7 +336,7 @@ importers:
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -430,7 +433,7 @@ importers:
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -530,13 +533,13 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -588,7 +591,7 @@ importers:
         version: link:../../packages/ui
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -631,7 +634,7 @@ importers:
         version: link:../../packages/ui
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -716,13 +719,13 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -801,7 +804,7 @@ importers:
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -862,7 +865,7 @@ importers:
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -1147,7 +1150,7 @@ importers:
         version: 10.4.0(jiti@2.6.1)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -1309,13 +1312,13 @@ importers:
         version: 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
-        version: 1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
+        version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl:
         specifier: 'catalog:'
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
@@ -1552,7 +1555,7 @@ importers:
         version: 10.4.0(jiti@2.6.1)
       next:
         specifier: 'catalog:'
-        version: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -1641,6 +1644,9 @@ importers:
       lucide-react:
         specifier: 'catalog:'
         version: 1.16.0(react@19.2.6)
+      next:
+        specifier: 'catalog:'
+        version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-themes:
         specifier: 'catalog:'
         version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1660,7 +1666,7 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(@types/node@25.8.0)(typescript@6.0.3)
       sonner:
-        specifier: ^2.0.7
+        specifier: 'catalog:'
         version: 2.0.7(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       tailwind-merge:
         specifier: ^3.6.0
@@ -10234,7 +10240,7 @@ snapshots:
       '@sentry/react': 10.53.1(react@19.2.6)
       '@sentry/vercel-edge': 10.53.1
       '@sentry/webpack-plugin': 5.3.0(webpack@5.106.2(esbuild@0.28.0))
-      next: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       rollup: 4.60.4
       stacktrace-parser: 0.1.11
     transitivePeerDependencies:
@@ -10733,7 +10739,7 @@ snapshots:
       '@vercel/edge-config-fs': 0.1.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
-      next: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
 
   '@vercel/og@0.11.1':
     dependencies:
@@ -10880,7 +10886,7 @@ snapshots:
       '@workos-inc/node': 9.3.0
       iron-session: 8.0.4
       jose: 5.10.0
-      next: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       path-to-regexp: 6.3.0
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
@@ -10892,7 +10898,7 @@ snapshots:
     dependencies:
       eventemitter3: 5.0.4
 
-  '@workos-inc/widgets-i18n@1.0.0(patch_hash=8e4093b0c62ed1ee5c641b02f2e4ec95e652b34bae7553da98516118c5a4a5ce)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)':
+  '@workos-inc/widgets-i18n@1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)':
     dependencies:
       '@workos-inc/widgets': 1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6
@@ -11774,7 +11780,7 @@ snapshots:
       jose: 5.10.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
-      next: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
@@ -12370,7 +12376,7 @@ snapshots:
       '@swc/core': 1.15.30
       icu-minify: 4.12.0
       negotiator: 1.0.0
-      next: 16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      next: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-intl-swc-plugin-extractor: 4.12.0
       po-parser: 2.1.1
       react: 19.2.6
@@ -12385,7 +12391,7 @@ snapshots:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
 
-  next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  next@16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       '@next/env': 16.2.6
       '@swc/helpers': 0.5.15
@@ -12394,7 +12400,7 @@ snapshots:
       postcss: 8.4.31
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)
-      styled-jsx: 5.1.6(react@19.2.6)
+      styled-jsx: 5.1.6(@babel/core@7.29.0)(react@19.2.6)
     optionalDependencies:
       '@next/swc-darwin-arm64': 16.2.6
       '@next/swc-darwin-x64': 16.2.6
@@ -13227,10 +13233,12 @@ snapshots:
 
   stubborn-utils@1.0.2: {}
 
-  styled-jsx@5.1.6(react@19.2.6):
+  styled-jsx@5.1.6(@babel/core@7.29.0)(react@19.2.6):
     dependencies:
       client-only: 0.0.1
       react: 19.2.6
+    optionalDependencies:
+      '@babel/core': 7.29.0
 
   supports-color@7.2.0:
     dependencies:

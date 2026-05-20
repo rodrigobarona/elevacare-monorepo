@@ -1,32 +1,36 @@
-import { getTranslations } from "next-intl/server"
+import { getLocale, getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import {
   getWidgetTokenFromSession,
   getSession,
   getAuthenticatedWorkOSLocale,
 } from "@eleva/auth/server"
 import { SettingsWidgets } from "./settings-widgets"
-import { getCurrentAvatarUrl } from "./actions"
 
-export default async function ProfilePage() {
+export default async function SettingsPage() {
   const t = await getTranslations()
-  const [authToken, session, avatarUrl, preferredLocale] = await Promise.all([
+  const [locale, authToken, session, preferredLocale] = await Promise.all([
+    getLocale(),
     getWidgetTokenFromSession(),
     getSession(),
-    getCurrentAvatarUrl(),
     getAuthenticatedWorkOSLocale(),
   ])
+  const avatarUrl = session?.user.avatarUrl ?? null
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
 
   return (
     <>
-      <header className="mb-8 space-y-1">
-        <h1 className="text-2xl font-medium">{t("settings.title")}</h1>
-      </header>
+      <AccountPageHeader
+        title={t("settings.title")}
+        description={t("settings.pageDescription")}
+      />
       <SettingsWidgets
+        locale={locale}
         authToken={authToken}
         avatarUrl={avatarUrl}
         displayName={session?.user.displayName ?? session?.user.email ?? ""}
+        email={session?.user.email ?? ""}
         apiBaseUrl={apiBaseUrl}
         preferredLocale={preferredLocale}
       />

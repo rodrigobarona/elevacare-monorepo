@@ -6,6 +6,11 @@
     "homepage": "Visitar Página Principal",
     "signOut": "Cerrar sesión",
     "orgSwitcher": "Selector de organización",
-    "orgSwitchError": "Error al cambiar de organización"
+    "orgSwitchError": "Error al cambiar de organización",
+    "theme": "Tema",
+    "themeLabel": "Apariencia",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "themeSystem": "Sistema"
   }
 }

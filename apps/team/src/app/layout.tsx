@@ -1,6 +1,13 @@
-import "@eleva/ui/globals.css"
+import "./styles.css"
+import { fontClassName } from "@eleva/ui/fonts"
+import { cn } from "@eleva/ui/lib/utils"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
+import { DashboardProviders } from "@eleva/dashboard/dashboard-providers"
+import {
+  getServerAppearance,
+  getServerThemePreference,
+} from "@eleva/dashboard/server-theme"
 
 export const metadata = {
   title: "Eleva.care — Team",
@@ -12,13 +19,24 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const locale = await getLocale()
-  const messages = await getMessages()
+  const [locale, messages, appearance, initialTheme] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getServerAppearance(),
+    getServerThemePreference(),
+  ])
+
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className="antialiased">
+    <html
+      lang={locale}
+      className={cn(fontClassName, appearance === "dark" && "dark")}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <DashboardProviders initialTheme={initialTheme}>
+            {children}
+          </DashboardProviders>
         </NextIntlClientProvider>
       </body>
     </html>

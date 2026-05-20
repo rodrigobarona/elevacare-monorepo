@@ -1,15 +1,18 @@
 {
   "nav": {
     "account": "Account",
-    "profile": "Profile",
+    "settings": "Settings",
     "billing": "Billing",
     "organizations": "Organizations",
     "privacy": "Privacy"
   },
   "settings": {
     "title": "Account settings",
+    "pageDescription": "Manage your profile, security, and preferences for your Eleva account.",
     "profile": {
       "title": "Profile",
+      "description": "Update your name and account details managed through WorkOS.",
+      "footerHint": "Email and identity changes may require verification.",
       "email": "Email",
       "language": "Language",
       "save": "Save",
@@ -19,6 +22,8 @@
     },
     "avatar": {
       "title": "Profile photo",
+      "description": "This is your avatar. Click the photo to upload a custom image from your files.",
+      "changePhoto": "Change profile photo",
       "upload": "Upload photo",
       "remove": "Remove",
       "hint": "JPG, PNG or WebP. Max 2 MB.",
@@ -26,16 +31,23 @@
       "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
       "uploadFailed": "Upload failed. Please try again.",
       "saveFailed": "Could not save avatar. Please try again.",
-      "removeFailed": "Could not remove avatar. Please try again."
+      "removeFailed": "Could not remove avatar. Please try again.",
+      "uploaded": "Profile photo updated.",
+      "removed": "Profile photo removed."
     },
     "language": {
-      "title": "Language"
+      "title": "Language",
+      "description": "Choose the language used across Eleva apps for your account.",
+      "footerHint": "Applies to account, dashboard, and email notifications where supported."
     },
     "security": {
-      "title": "Security"
+      "title": "Security",
+      "description": "Manage passwords, multi-factor authentication, and sign-in methods."
     },
     "sessions": {
-      "title": "Sessions"
+      "title": "Sessions",
+      "description": "Review devices and browsers where you are currently signed in.",
+      "footerHint": "Revoke sessions you do not recognize."
     }
   },
   "onboarding": {
@@ -60,6 +72,8 @@
   "billing": {
     "title": "Billing",
     "description": "Manage your personal subscription and payment methods.",
+    "subscriptionTitle": "Subscription",
+    "subscriptionDescription": "Choose a plan and manage checkout or your billing portal.",
     "placeholder": "Billing management coming soon."
   },
   "privacy": {

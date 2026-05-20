@@ -18,7 +18,13 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@eleva/ui/components/avatar"
+import {
+  getAvatarFallbackStyle,
+  getAvatarInitials,
+  getAvatarSeed,
+} from "@eleva/ui/lib/avatar-utils"
 import type { DashboardUser } from "./nav-types"
+import { NavThemeMenu } from "./nav-theme-menu"
 
 interface NavUserProps {
   user: DashboardUser
@@ -33,37 +39,54 @@ function deriveParentPath(url: string): string {
   return lastSlash > 0 ? url.slice(0, lastSlash) : "/"
 }
 
+function gatewayUrl(path: string): string {
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")
+  return base ? `${base}${path}` : path
+}
+
 export function NavUser({
   user,
-  accountUrl = "/account/profile",
+  accountUrl = gatewayUrl("/account/settings"),
   settingsUrl,
   homepageUrl,
-  logoutUrl = "/logout",
+  logoutUrl = gatewayUrl("/logout"),
 }: NavUserProps) {
   const t = useTranslations("shell")
   const displayName = user.displayName || user.email.split("@")[0] || ""
-  const initials = displayName.slice(0, 2).toUpperCase()
+  const avatarSeed = getAvatarSeed(user.email, displayName)
+  const initials = getAvatarInitials(displayName, user.email)
+  const fallbackStyle = getAvatarFallbackStyle(avatarSeed)
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar className="size-7">
-            {user.avatarUrl && (
+          <Avatar key={user.avatarUrl ?? "fallback"} className="size-7">
+            {user.avatarUrl ? (
               <AvatarImage src={user.avatarUrl} alt={displayName} />
-            )}
-            <AvatarFallback className="text-[10px]">{initials}</AvatarFallback>
+            ) : null}
+            <AvatarFallback
+              delayMs={0}
+              className="text-[10px] font-semibold text-white"
+              style={fallbackStyle}
+            >
+              {initials}
+            </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="min-w-56 rounded-lg" align="end">
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <Avatar className="size-8 rounded-lg">
-              {user.avatarUrl && (
+            <Avatar key={user.avatarUrl ?? "fallback-menu"} className="size-8">
+              {user.avatarUrl ? (
                 <AvatarImage src={user.avatarUrl} alt={displayName} />
-              )}
-              <AvatarFallback className="rounded-lg text-xs">
+              ) : null}
+              <AvatarFallback
+                delayMs={0}
+                className="text-xs font-semibold text-white"
+                style={fallbackStyle}
+              >
                 {initials}
               </AvatarFallback>
             </Avatar>
@@ -90,6 +113,8 @@ export function NavUser({
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <NavThemeMenu />
         {homepageUrl && (
           <>
             <DropdownMenuSeparator />

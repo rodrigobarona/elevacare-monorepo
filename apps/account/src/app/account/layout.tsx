@@ -1,12 +1,11 @@
-import { getLocale, getTranslations } from "next-intl/server"
+import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { User, CreditCard, Building2, Shield } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
-
 import "@radix-ui/themes/styles.css"
 import "@workos-inc/widgets/styles.css"
+import "@eleva/dashboard/workos-widgets-overrides.css"
 
 export default async function SettingsLayout({
   children,
@@ -14,7 +13,7 @@ export default async function SettingsLayout({
   children: React.ReactNode
 }) {
   const session = await guardSession()
-  const [locale, t] = await Promise.all([getLocale(), getTranslations("nav")])
+  const t = await getTranslations("nav")
 
   const dashboardConfig = await buildDashboardConfig(
     session,
@@ -22,7 +21,7 @@ export default async function SettingsLayout({
       {
         label: t("account"),
         items: [
-          { title: t("profile"), url: "/account/profile", icon: <User /> },
+          { title: t("settings"), url: "/account/settings", icon: <User /> },
           {
             title: t("billing"),
             url: "/account/billing",
@@ -37,12 +36,8 @@ export default async function SettingsLayout({
         ],
       },
     ],
-    { homeUrl: "/dashboard", accountUrl: "/account/profile" }
+    { homeUrl: "/dashboard", accountUrl: "/account/settings" }
   )
 
-  return (
-    <DashboardShell config={dashboardConfig}>
-      <ElevaWidgetsProvider locale={locale}>{children}</ElevaWidgetsProvider>
-    </DashboardShell>
-  )
+  return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
 }

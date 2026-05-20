@@ -17,10 +17,10 @@ public store.
 
 Account profile avatars use Vercel Blob client uploads:
 
-1. `apps/account/src/app/account/profile/avatar-upload.tsx` asks the Server
+1. `apps/account/src/app/account/settings/avatar-upload.tsx` asks the Server
    Action for a short-lived upload token.
 2. `getAvatarUploadToken()` in
-   `apps/account/src/app/account/profile/actions.ts` mints a scoped
+   `apps/account/src/app/account/settings/actions.ts` mints a scoped
    `blob-upload` token with the app user ID.
 3. `uploadBlobClient()` posts to `NEXT_PUBLIC_API_URL/blob/upload`.
 4. `apps/api/src/app/blob/upload/route.ts` validates the token, pathname,

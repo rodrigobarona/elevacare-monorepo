@@ -9,30 +9,39 @@ import {
   AvatarImage,
 } from "@eleva/ui/components/avatar"
 import { Button } from "@eleva/ui/components/button"
+import {
+  SettingsFieldset,
+  SettingsFieldsetActions,
+  SettingsFieldsetAvatarSlot,
+  SettingsFieldsetContent,
+  SettingsFieldsetDescription,
+  SettingsFieldsetFooter,
+  SettingsFieldsetStatus,
+  SettingsFieldsetTitle,
+} from "@eleva/ui/components/settings-fieldset"
 import { uploadBlobClient } from "@eleva/storage/blob-upload-client"
+import { toast } from "sonner"
+import {
+  getAvatarFallbackStyle,
+  getAvatarInitials,
+  getAvatarSeed,
+} from "@eleva/ui/lib/avatar-utils"
 import { getAvatarUploadToken, updateAvatar, removeAvatar } from "./actions"
 
 interface AvatarUploadProps {
   currentAvatarUrl: string | null
   displayName: string
+  email: string
   apiBaseUrl: string
 }
 
 const ACCEPTED_TYPES = "image/jpeg,image/png,image/webp"
 const MAX_SIZE_BYTES = 2 * 1024 * 1024
 
-function getInitials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((w) => w[0])
-    .join("")
-    .toUpperCase()
-}
-
 export function AvatarUpload({
   currentAvatarUrl,
   displayName,
+  email,
   apiBaseUrl,
 }: AvatarUploadProps) {
   const t = useTranslations("settings")
@@ -40,21 +49,21 @@ export function AvatarUpload({
   const [avatarUrl, setAvatarUrl] = React.useState(currentAvatarUrl)
   const [uploading, setUploading] = React.useState(false)
   const [removing, setRemoving] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const avatarSeed = getAvatarSeed(email, displayName)
+  const initials = getAvatarInitials(displayName, email)
+  const fallbackStyle = getAvatarFallbackStyle(avatarSeed)
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
 
-    setError(null)
-
     if (file.size > MAX_SIZE_BYTES) {
-      setError(t("avatar.tooLarge"))
+      toast.error(t("avatar.tooLarge"))
       return
     }
 
     if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
-      setError(t("avatar.invalidType"))
+      toast.error(t("avatar.invalidType"))
       return
     }
 
@@ -71,13 +80,14 @@ export function AvatarUpload({
 
       const { ok } = await updateAvatar(result.url)
       if (!ok) {
-        setError(t("avatar.saveFailed"))
+        toast.error(t("avatar.saveFailed"))
         return
       }
 
       setAvatarUrl(result.url)
+      toast.success(t("avatar.uploaded"))
     } catch {
-      setError(t("avatar.uploadFailed"))
+      toast.error(t("avatar.uploadFailed"))
     } finally {
       setUploading(false)
       if (fileInputRef.current) fileInputRef.current.value = ""
@@ -85,17 +95,17 @@ export function AvatarUpload({
   }
 
   async function handleRemove() {
-    setError(null)
     setRemoving(true)
     try {
       const { ok } = await removeAvatar()
       if (!ok) {
-        setError(t("avatar.removeFailed"))
+        toast.error(t("avatar.removeFailed"))
         return
       }
       setAvatarUrl(null)
+      toast.success(t("avatar.removed"))
     } catch {
-      setError(t("avatar.removeFailed"))
+      toast.error(t("avatar.removeFailed"))
     } finally {
       setRemoving(false)
     }
@@ -104,65 +114,73 @@ export function AvatarUpload({
   const busy = uploading || removing
 
   return (
-    <div className="flex items-start gap-6">
-      <div className="relative">
-        <Avatar className="size-20">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-          <AvatarFallback className="text-lg">
-            {getInitials(displayName)}
-          </AvatarFallback>
-        </Avatar>
-        {uploading && (
-          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60">
-            <Loader2 className="size-5 animate-spin text-muted-foreground" />
-          </div>
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex gap-2">
-          <Button
+    <SettingsFieldset>
+      <SettingsFieldsetContent layout="avatar">
+        <SettingsFieldsetAvatarSlot>
+          <button
             type="button"
-            variant="outline"
-            size="sm"
+            className="group relative cursor-pointer rounded-full focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-70"
             disabled={busy}
             onClick={() => fileInputRef.current?.click()}
+            aria-label={t("avatar.changePhoto")}
           >
-            <Camera className="mr-1.5 size-3.5" />
-            {t("avatar.upload")}
-          </Button>
+            <Avatar key={avatarUrl ?? "fallback"} className="size-20">
+              {avatarUrl ? (
+                <AvatarImage src={avatarUrl} alt={displayName} />
+              ) : null}
+              <AvatarFallback
+                delayMs={0}
+                className="text-3xl leading-none font-semibold text-white"
+                style={fallbackStyle}
+              >
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            {!uploading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/0 transition-colors group-hover:bg-foreground/40 group-focus-visible:bg-foreground/40">
+                <Camera className="size-5 text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+              </div>
+            )}
+            {uploading && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/60">
+                <Loader2 className="size-5 animate-spin text-muted-foreground" />
+              </div>
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPTED_TYPES}
+            className="hidden"
+            onChange={handleFileSelect}
+            aria-label={t("avatar.changePhoto")}
+          />
+        </SettingsFieldsetAvatarSlot>
 
-          {avatarUrl && (
+        <SettingsFieldsetTitle>{t("avatar.title")}</SettingsFieldsetTitle>
+        <SettingsFieldsetDescription>
+          {t("avatar.description")}
+        </SettingsFieldsetDescription>
+      </SettingsFieldsetContent>
+
+      <SettingsFieldsetFooter>
+        <SettingsFieldsetStatus>{t("avatar.hint")}</SettingsFieldsetStatus>
+        {avatarUrl ? (
+          <SettingsFieldsetActions>
             <Button
               type="button"
               variant="ghost"
               size="sm"
+              className="cursor-pointer"
               disabled={busy}
               onClick={handleRemove}
             >
               <Trash2 className="mr-1.5 size-3.5" />
               {t("avatar.remove")}
             </Button>
-          )}
-        </div>
-
-        <p className="text-xs text-muted-foreground">{t("avatar.hint")}</p>
-
-        {error && (
-          <p className="text-sm text-destructive" role="alert">
-            {error}
-          </p>
-        )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPTED_TYPES}
-          className="hidden"
-          onChange={handleFileSelect}
-          aria-label={t("avatar.upload")}
-        />
-      </div>
-    </div>
+          </SettingsFieldsetActions>
+        ) : null}
+      </SettingsFieldsetFooter>
+    </SettingsFieldset>
   )
 }

@@ -6,6 +6,11 @@
     "homepage": "Visit Homepage",
     "signOut": "Sign out",
     "orgSwitcher": "Organization switcher",
-    "orgSwitchError": "Error switching organization"
+    "orgSwitchError": "Error switching organization",
+    "theme": "Theme",
+    "themeLabel": "Appearance",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
   }
 }

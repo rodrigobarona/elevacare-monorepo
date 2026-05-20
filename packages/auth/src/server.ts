@@ -216,34 +216,37 @@ export const getAuthenticatedWorkOSLocale = cache(
 )
 
 /**
- * Force a WorkOS access-token refresh so the next page render picks up
- * fresh JWT claims (entitlements, org_id, permissions). Use after a
- * server action mutates state that is reflected in the JWT — most
- * importantly after a Stripe subscription change so new entitlements
- * appear immediately instead of waiting for natural token rotation.
+ * Force a WorkOS session refresh so the next page render picks up fresh
+ * JWT claims (locale, entitlements, org_id, permissions). Use after a
+ * server action mutates WorkOS user state that is reflected in the JWT.
  *
  * Wraps `refreshSession` from `@workos-inc/authkit-nextjs`. Non-throwing
  * by design: on failure the caller logs and returns; the user simply
- * sees stale entitlements until the next natural refresh.
+ * sees stale claims until the next natural refresh.
+ */
+export async function refreshWorkOSSession(): Promise<void> {
+  try {
+    await authkitRefreshSession({ ensureSignedIn: false })
+  } catch (err) {
+    // Swallow — callers expect non-throwing semantics so they can fire-and-forget
+    // without wrapping every call site. On failure the user sees stale JWT claims
+    // until natural token rotation.
+    console.error(
+      `[refreshWorkOSSession] authkitRefreshSession failed: ${err instanceof Error ? err.message : String(err)}`
+    )
+  }
+}
+
+/**
+ * Refresh the WorkOS session after entitlement-changing mutations (e.g.
+ * Stripe subscription updates) so new entitlements appear immediately.
  *
  * Per ADR-016: the multi-admin attribution chain works regardless of
  * whether refresh succeeded (we audit the action that triggered the
  * refresh, not the refresh itself).
  */
 export async function refreshSessionEntitlements(): Promise<void> {
-  try {
-    await authkitRefreshSession({ ensureSignedIn: false })
-  } catch (err) {
-    // Swallow — the docstring promises non-throwing semantics so callers
-    // (e.g. apps/api/src/app/billing/subscribe/route.ts) can fire-and-forget
-    // without wrapping every call site. The user simply sees stale
-    // entitlements until natural rotation; ADR-016 audit attribution is
-    // unaffected because the action that triggered the refresh is the one
-    // that gets audited.
-    console.error(
-      `[refreshSessionEntitlements] authkitRefreshSession failed: ${err instanceof Error ? err.message : String(err)}`
-    )
-  }
+  return refreshWorkOSSession()
 }
 
 /**

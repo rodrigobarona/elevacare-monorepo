@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { FinanceDashboard } from "./finance-dashboard"
@@ -26,11 +27,7 @@ export default async function FinancePage({
 
   return (
     <div className="space-y-6">
-      <header className="space-y-2">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
-      </header>
-
+      <AccountPageHeader title={t("title")} description={t("description")} />
       <FinanceDashboard />
     </div>
   )

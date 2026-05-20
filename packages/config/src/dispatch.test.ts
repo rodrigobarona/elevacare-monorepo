@@ -59,7 +59,7 @@ describe("resolveDispatch - account zone", () => {
       kind: "rewrite",
       origin: "http://account",
     })
-    expect(resolveDispatch("/account/profile", true, origins)).toEqual({
+    expect(resolveDispatch("/account/settings", true, origins)).toEqual({
       kind: "rewrite",
       origin: "http://account",
     })

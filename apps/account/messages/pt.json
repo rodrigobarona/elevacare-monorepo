@@ -1,15 +1,18 @@
 {
   "nav": {
     "account": "Conta",
-    "profile": "Perfil",
+    "settings": "Definições",
     "billing": "Faturação",
     "organizations": "Organizações",
     "privacy": "Privacidade"
   },
   "settings": {
     "title": "Definições da conta",
+    "pageDescription": "Gira o seu perfil, segurança e preferências da sua conta Eleva.",
     "profile": {
       "title": "Perfil",
+      "description": "Atualize o seu nome e dados de conta geridos através do WorkOS.",
+      "footerHint": "Alterações de email ou identidade podem exigir verificação.",
       "email": "Email",
       "language": "Idioma",
       "save": "Guardar",
@@ -19,6 +22,8 @@
     },
     "avatar": {
       "title": "Foto de perfil",
+      "description": "Este é o seu avatar. Clique na foto para carregar uma imagem personalizada.",
+      "changePhoto": "Alterar foto de perfil",
       "upload": "Carregar foto",
       "remove": "Remover",
       "hint": "JPG, PNG ou WebP. Máx 2 MB.",
@@ -26,16 +31,23 @@
       "invalidType": "Tipo de ficheiro não suportado. Use JPG, PNG ou WebP.",
       "uploadFailed": "Falha no carregamento. Tente novamente.",
       "saveFailed": "Não foi possível guardar o avatar. Tente novamente.",
-      "removeFailed": "Não foi possível remover o avatar. Tente novamente."
+      "removeFailed": "Não foi possível remover o avatar. Tente novamente.",
+      "uploaded": "Foto de perfil atualizada.",
+      "removed": "Foto de perfil removida."
     },
     "language": {
-      "title": "Idioma"
+      "title": "Idioma",
+      "description": "Escolha o idioma das aplicações Eleva para a sua conta.",
+      "footerHint": "Aplica-se à conta, painel e emails quando disponível."
     },
     "security": {
-      "title": "Segurança"
+      "title": "Segurança",
+      "description": "Gira palavras-passe, autenticação multifator e métodos de início de sessão."
     },
     "sessions": {
-      "title": "Sessões"
+      "title": "Sessões",
+      "description": "Reveja dispositivos e browsers onde tem sessão iniciada.",
+      "footerHint": "Revogue sessões que não reconheça."
     }
   },
   "onboarding": {
@@ -60,6 +72,8 @@
   "billing": {
     "title": "Faturação",
     "description": "Gerir a sua subscrição pessoal e métodos de pagamento.",
+    "subscriptionTitle": "Subscrição",
+    "subscriptionDescription": "Escolha um plano e gira o pagamento ou o portal de faturação.",
     "placeholder": "Gestão de faturação em breve."
   },
   "privacy": {

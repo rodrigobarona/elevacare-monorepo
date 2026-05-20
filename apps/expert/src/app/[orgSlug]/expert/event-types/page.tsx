@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 import { getTranslations, getLocale } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, listExpertEventTypes } from "@eleva/db"
 import { Button } from "@eleva/ui/components/button"
@@ -35,15 +36,15 @@ export default async function EventTypesPage({
 
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-medium">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("description")}</p>
-        </div>
-        <Link href={`/${orgSlug}/expert/event-types/new`}>
-          <Button>{t("create")}</Button>
-        </Link>
-      </header>
+      <AccountPageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <Link href={`/${orgSlug}/expert/event-types/new`}>
+            <Button>{t("create")}</Button>
+          </Link>
+        }
+      />
 
       {eventTypes.length === 0 ? (
         <Card>

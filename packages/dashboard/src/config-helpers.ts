@@ -49,9 +49,9 @@ export async function buildDashboardConfig(
     orgSlug: session.orgSlug,
     capabilities: session.capabilities,
     widgetToken,
-    accountUrl: `${GATEWAY_URL}/account/profile`,
-    homepageUrl: "/home",
-    logoutUrl: "/logout",
+    accountUrl: `${GATEWAY_URL}/account/settings`,
+    homepageUrl: `${GATEWAY_URL}/home`,
+    logoutUrl: `${GATEWAY_URL}/logout`,
     ...overrides,
   }
 }

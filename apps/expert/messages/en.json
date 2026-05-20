@@ -98,5 +98,9 @@
     "payouts": "Payouts",
     "accountDetails": "Account Details",
     "taxSettings": "Tax Settings"
+  },
+  "onboarding": {
+    "title": "Expert onboarding",
+    "description": "Complete all steps to activate your expert profile."
   }
 }

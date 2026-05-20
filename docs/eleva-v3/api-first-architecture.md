@@ -113,7 +113,7 @@ Rejected because:
 | -------- | --------------------------------------- | -------------------------------------------------------- |
 | P0       | `apps/account/onboarding/actions.ts`    | **Done** -- refactored to use `@eleva/auth` provisioning |
 | P0       | `apps/api` security hardening           | **Done** -- auth, rate limiting, headers, drainer fix    |
-| P1       | `apps/account/profile/actions.ts`       | Pending -- wire avatar through API                       |
+| P1       | `apps/account/settings/actions.ts`      | Pending -- wire avatar through API                       |
 | P1       | `apps/admin/become-partner/actions.ts`  | Pending -- when agents need it                           |
 | P2       | `apps/expert` Server Actions (4 files)  | Pending -- when agents need expert management            |
 | OK       | `apps/expert` Server Components (reads) | No change needed -- `@eleva/db` helpers for SSR          |

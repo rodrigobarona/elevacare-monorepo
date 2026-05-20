@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation"
+import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { OnboardingWizard } from "./onboarding-wizard"
@@ -43,14 +45,11 @@ export default async function OnboardingPage({
   const stripePublishableKey =
     process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
 
+  const t = await getTranslations("onboarding")
+
   return (
     <div className="mx-auto max-w-2xl">
-      <header className="mb-8 space-y-2">
-        <h1 className="text-2xl font-medium">Expert Onboarding</h1>
-        <p className="text-sm text-muted-foreground">
-          Complete all steps to activate your expert profile.
-        </p>
-      </header>
+      <AccountPageHeader title={t("title")} description={t("description")} />
 
       <OnboardingWizard
         steps={STEPS as unknown as string[]}

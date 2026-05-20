@@ -4,7 +4,15 @@ import { useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
-import { Card, CardContent } from "@eleva/ui/components/card"
+import {
+  SettingsFieldset,
+  SettingsFieldsetActions,
+  SettingsFieldsetContent,
+  SettingsFieldsetDescription,
+  SettingsFieldsetFooter,
+  SettingsFieldsetStatus,
+  SettingsFieldsetTitle,
+} from "@eleva/ui/components/settings-fieldset"
 import { CalendarClock } from "lucide-react"
 import { initializeScheduleAction } from "./actions"
 
@@ -23,19 +31,22 @@ export function InitScheduleButton({ timezone }: { timezone: string }) {
   }
 
   return (
-    <Card>
-      <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
-        <CalendarClock className="h-10 w-10 text-muted-foreground" />
-        <div className="space-y-1">
-          <p className="font-medium">{t("noScheduleTitle")}</p>
-          <p className="text-sm text-muted-foreground">
-            {t("noScheduleDescription")}
-          </p>
-        </div>
-        <Button onClick={handleClick} disabled={isPending}>
-          {isPending ? t("creating") : t("createSchedule")}
-        </Button>
-      </CardContent>
-    </Card>
+    <SettingsFieldset>
+      <SettingsFieldsetContent className="flex flex-col items-center text-center">
+        <CalendarClock className="mb-4 size-10 text-muted-foreground" />
+        <SettingsFieldsetTitle>{t("noScheduleTitle")}</SettingsFieldsetTitle>
+        <SettingsFieldsetDescription>
+          {t("noScheduleDescription")}
+        </SettingsFieldsetDescription>
+      </SettingsFieldsetContent>
+      <SettingsFieldsetFooter>
+        <SettingsFieldsetStatus />
+        <SettingsFieldsetActions>
+          <Button size="sm" onClick={handleClick} disabled={isPending}>
+            {isPending ? t("creating") : t("createSchedule")}
+          </Button>
+        </SettingsFieldsetActions>
+      </SettingsFieldsetFooter>
+    </SettingsFieldset>
   )
 }

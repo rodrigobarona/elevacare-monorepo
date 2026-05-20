@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./env": "./src/env.ts",
     "./i18n": "./src/i18n.ts",
+    "./theme": "./src/theme.ts",
     "./country-to-locale": "./src/country-to-locale.ts",
     "./reserved-usernames": "./src/reserved-usernames.ts",
     "./next-dev": "./src/next-dev.mjs",

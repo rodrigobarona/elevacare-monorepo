@@ -6,6 +6,7 @@ import {
   getWidgetTokenFromSession,
   requireSession,
   getWorkOS,
+  refreshWorkOSSession,
 } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
 import { createApiClient } from "@eleva/api-client"
@@ -71,7 +72,12 @@ export async function updateLanguagePreference(
       getLocaleCookieOptions(host, { httpOnly: false })
     )
 
+    // WorkOS user.locale is the authenticated source of truth, but the
+    // session JWT caches the old value until we refresh it.
+    await refreshWorkOSSession()
+
     revalidatePath("/", "layout")
+    revalidatePath("/account/settings")
     return { ok: true, saved: true }
   } catch (err) {
     console.error("updateLanguagePreference failed", err)
@@ -86,17 +92,11 @@ export async function getAvatarUploadToken(): Promise<string> {
   return mintUploadToken(session.user.id)
 }
 
-export async function getCurrentAvatarUrl(): Promise<string | null> {
-  const api = await getAuthedApiClient()
-  const { avatarUrl } = await api.users.avatar.get()
-  return avatarUrl
-}
-
 export async function updateAvatar(url: string): Promise<{ ok: boolean }> {
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.update({ url })
-    revalidatePath("/account/profile")
+    revalidatePath("/account/settings")
     return { ok: true }
   } catch (err) {
     console.error("updateAvatar failed", err)
@@ -108,7 +108,7 @@ export async function removeAvatar(): Promise<{ ok: boolean }> {
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.remove()
-    revalidatePath("/account/profile")
+    revalidatePath("/account/settings")
     return { ok: true }
   } catch (err) {
     console.error("removeAvatar failed", err)

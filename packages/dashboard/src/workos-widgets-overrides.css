@@ -1,0 +1,65 @@
+/* Bridge Radix Themes (WorkOS widgets) to Eleva shadcn tokens */
+.eleva-workos-widgets.woswidgets-root,
+.eleva-workos-widgets .woswidgets-root,
+.eleva-org-switcher .woswidgets-root {
+  --default-font-family: var(--font-sans);
+  background: transparent !important;
+  /* WorkOS base.css sets block-size: 100%; avoid empty stretch in settings fieldsets */
+  block-size: auto !important;
+  height: auto !important;
+}
+
+/* Embedded widgets are not full-page roots — cancel Radix min-height: 100dvh */
+@supports (min-height: 100dvh) {
+  .eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]),
+  .eleva-org-switcher.radix-themes:where([data-is-root-theme="true"]) {
+    min-height: auto !important;
+  }
+}
+
+/* Align solid accent buttons with Eleva primary */
+.eleva-workos-widgets .woswidgets-root,
+.eleva-org-switcher .woswidgets-root {
+  --accent-9: var(--primary);
+  --accent-10: var(--primary);
+  --accent-11: var(--primary-foreground);
+  --accent-contrast: var(--primary-foreground);
+}
+
+/*
+ * Settings embed: SettingsFieldset is the card — flatten WorkOS/Radix card chrome.
+ * Keep thin row dividers in multi-row lists (sessions, security) for scanability.
+ */
+.eleva-workos-widgets .woswidgets-widget :where(.rt-Card, .rt-BaseCard) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* List rows (sessions, security): one subtle rule between items */
+.eleva-workos-widgets .woswidgets-card-list-item:not(:first-child) {
+  border-top: 1px solid var(--border) !important;
+}
+
+/* Profile data list: row spacing + rules instead of full-width separators */
+.eleva-workos-widgets .woswidgets-widget .rt-DataListItem {
+  padding-block: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.eleva-workos-widgets .woswidgets-widget .rt-DataListItem:last-child {
+  border-bottom: none;
+}
+
+.eleva-workos-widgets .woswidgets-widget .rt-Separator {
+  display: none !important;
+}
+
+/* Sessions: "sign out all devices" — top rule, not a second nested card */
+.eleva-workos-widgets .woswidgets-widget > .rt-Flex > .rt-Card + .rt-Card {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border) !important;
+  border-radius: 0 !important;
+}

@@ -1,15 +1,29 @@
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
+import {
+  SettingsFieldset,
+  SettingsFieldsetContent,
+  SettingsFieldsetDescription,
+  SettingsFieldsetTitle,
+} from "@eleva/ui/components/settings-fieldset"
 
 export default async function OrganizationsPage() {
   const t = await getTranslations("organizations")
 
   return (
     <>
-      <header className="mb-8 space-y-1">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
-      </header>
-      <p className="text-muted-foreground">{t("placeholder")}</p>
+      <AccountPageHeader title={t("title")} description={t("description")} />
+      <SettingsFieldset>
+        <SettingsFieldsetContent>
+          <SettingsFieldsetTitle>{t("title")}</SettingsFieldsetTitle>
+          <SettingsFieldsetDescription>
+            {t("description")}
+          </SettingsFieldsetDescription>
+          <p className="mt-4 text-sm text-muted-foreground">
+            {t("placeholder")}
+          </p>
+        </SettingsFieldsetContent>
+      </SettingsFieldset>
     </>
   )
 }

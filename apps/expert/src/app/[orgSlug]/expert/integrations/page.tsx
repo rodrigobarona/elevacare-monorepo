@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, listExpertIntegrations } from "@eleva/db"
 import { listByCategory, listCategories } from "@eleva/integrations"
@@ -35,10 +36,7 @@ export default async function IntegrationsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
-      </header>
+      <AccountPageHeader title={t("title")} description={t("description")} />
 
       {categories.map((category) => {
         const manifests = listByCategory(category)

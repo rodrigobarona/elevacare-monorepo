@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSession } from "@eleva/auth"
 import { getExpertProfileByUserId, getEventType } from "@eleva/db"
 import { EventTypeForm } from "../event-type-form"
@@ -45,10 +46,10 @@ export default async function EditEventTypePage(props: {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-medium">{t("editTitle")}</h1>
-        <p className="text-sm text-muted-foreground">{t("editDescription")}</p>
-      </header>
+      <AccountPageHeader
+        title={t("editTitle")}
+        description={t("editDescription")}
+      />
       <EventTypeForm mode="edit" eventTypeId={id} defaultValues={defaults} />
     </div>
   )

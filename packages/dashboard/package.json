@@ -35,6 +35,13 @@
     "./nav-types": "./src/nav-types.ts",
     "./request-config": "./src/request-config.ts",
     "./switch-org-action": "./src/switch-org-action.ts",
+    "./sources.css": "./src/sources.css",
+    "./workos-widgets-config": "./src/workos-widgets-config.ts",
+    "./workos-widgets-overrides.css": "./src/workos-widgets-overrides.css",
+    "./dashboard-providers": "./src/dashboard-providers.tsx",
+    "./eleva-theme-provider": "./src/eleva-theme-provider.tsx",
+    "./use-resolved-appearance": "./src/use-resolved-appearance.ts",
+    "./server-theme": "./src/server-theme.ts",
     "./*": "./src/*.tsx"
   }
 }

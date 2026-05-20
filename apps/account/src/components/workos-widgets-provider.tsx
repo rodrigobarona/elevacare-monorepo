@@ -6,6 +6,12 @@ import {
   isValidLocale,
   WorkOsLocaleProvider,
 } from "@workos-inc/widgets-i18n"
+import {
+  ELEVA_WORKOS_WRAPPER_CLASS,
+  elevaWorkOsElements,
+  getElevaWorkOsTheme,
+} from "@eleva/dashboard/workos-widgets-config"
+import { useResolvedAppearance } from "@eleva/dashboard/use-resolved-appearance"
 
 export function ElevaWidgetsProvider({
   locale,
@@ -15,15 +21,14 @@ export function ElevaWidgetsProvider({
   children: React.ReactNode
 }) {
   const resolvedLocale: LocaleCode = isValidLocale(locale) ? locale : "en"
+  const appearance = useResolvedAppearance()
 
   return (
     <WorkOsLocaleProvider locale={resolvedLocale}>
       <WorkOsWidgets
-        theme={{
-          accentColor: "teal",
-          radius: "medium",
-          fontFamily: "DM Sans",
-        }}
+        className={ELEVA_WORKOS_WRAPPER_CLASS}
+        theme={getElevaWorkOsTheme({ appearance })}
+        elements={elevaWorkOsElements}
       >
         {children}
       </WorkOsWidgets>

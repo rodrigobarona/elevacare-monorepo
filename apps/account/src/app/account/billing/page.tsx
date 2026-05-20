@@ -1,4 +1,11 @@
 import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
+import {
+  SettingsFieldset,
+  SettingsFieldsetContent,
+  SettingsFieldsetDescription,
+  SettingsFieldsetTitle,
+} from "@eleva/ui/components/settings-fieldset"
 import { BillingClient } from "./billing-client"
 
 export default async function BillingPage() {
@@ -9,14 +16,23 @@ export default async function BillingPage() {
 
   return (
     <>
-      <header className="mb-8 space-y-1">
-        <h1 className="text-2xl font-medium">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
-      </header>
-      <BillingClient
-        apiBaseUrl={apiBaseUrl}
-        stripePublishableKey={stripePublishableKey}
-      />
+      <AccountPageHeader title={t("title")} description={t("description")} />
+      <SettingsFieldset>
+        <SettingsFieldsetContent>
+          <SettingsFieldsetTitle>
+            {t("subscriptionTitle")}
+          </SettingsFieldsetTitle>
+          <SettingsFieldsetDescription>
+            {t("subscriptionDescription")}
+          </SettingsFieldsetDescription>
+          <div className="mt-4">
+            <BillingClient
+              apiBaseUrl={apiBaseUrl}
+              stripePublishableKey={stripePublishableKey}
+            />
+          </div>
+        </SettingsFieldsetContent>
+      </SettingsFieldset>
     </>
   )
 }
