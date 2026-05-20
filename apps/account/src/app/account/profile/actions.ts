@@ -27,9 +27,13 @@ function getApiBaseUrl(): string {
 }
 
 async function getAuthedApiClient() {
-  const session = await requireSession()
-  const token = await mintUploadToken(session.user.id)
-  return createApiClient({ baseUrl: getApiBaseUrl(), bearerToken: token })
+  await requireSession()
+  const incomingHeaders = await headers()
+  const cookie = incomingHeaders.get("cookie") ?? ""
+  return createApiClient({
+    baseUrl: getApiBaseUrl(),
+    headers: cookie ? { cookie } : undefined,
+  })
 }
 
 export async function getSettingsWidgetToken(): Promise<string> {
@@ -92,7 +96,7 @@ export async function updateAvatar(url: string): Promise<{ ok: boolean }> {
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.update({ url })
-    revalidatePath("/profile")
+    revalidatePath("/account/profile")
     return { ok: true }
   } catch (err) {
     console.error("updateAvatar failed", err)
@@ -104,7 +108,7 @@ export async function removeAvatar(): Promise<{ ok: boolean }> {
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.remove()
-    revalidatePath("/profile")
+    revalidatePath("/account/profile")
     return { ok: true }
   } catch (err) {
     console.error("removeAvatar failed", err)

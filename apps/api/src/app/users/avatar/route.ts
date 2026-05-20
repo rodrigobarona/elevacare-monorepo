@@ -1,7 +1,6 @@
 import { z } from "zod"
 import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
 import { deletePublicBlob } from "@eleva/storage"
-import { verifyUploadToken } from "@eleva/auth/upload-token"
 import { withAudit } from "@eleva/audit"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
@@ -30,23 +29,6 @@ const UpdateAvatarSchema = z.object({
     ),
 })
 
-async function resolveUserId(request: Request): Promise<string> {
-  try {
-    const session = await requireApiAuth(request)
-    return session.user.id
-  } catch (err) {
-    if (!(err instanceof UnauthorizedError)) throw err
-  }
-
-  const authHeader = request.headers.get("authorization") ?? ""
-  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null
-  if (!token) throw new UnauthorizedError("no-session")
-
-  const verified = await verifyUploadToken(token)
-  if (!verified) throw new UnauthorizedError("no-session")
-  return verified.userId
-}
-
 async function tryDeleteBlob(url: string | null): Promise<void> {
   if (!url) return
   try {
@@ -59,9 +41,9 @@ async function tryDeleteBlob(url: string | null): Promise<void> {
 export async function GET(request: Request) {
   const headers = corsHeaders(request, "GET, PUT, DELETE, OPTIONS")
 
-  let userId: string
+  let session
   try {
-    userId = await resolveUserId(request)
+    session = await requireApiAuth(request)
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       return secureJson({ error: "unauthorized" }, { status: 401, headers })
@@ -70,12 +52,12 @@ export async function GET(request: Request) {
   }
 
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request, userId),
+    rateLimitKey(request, session.user.id),
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
 
-  const avatarUrl = await getUserAvatarUrl(userId)
+  const avatarUrl = await getUserAvatarUrl(session.user.id)
   return secureJson({ avatarUrl }, { status: 200, headers, noStore: false })
 }
 

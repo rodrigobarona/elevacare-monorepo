@@ -1,6 +1,10 @@
 "use client"
 
-import { Avatar, AvatarFallback } from "@eleva/ui/components/avatar"
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "@eleva/ui/components/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +19,7 @@ interface UserMenuProps {
   initials: string
   firstName: string | null
   email: string
+  avatarUrl: string | null
   dashboardLabel: string
   signOutLabel: string
   dashboardUrl: string
@@ -25,6 +30,7 @@ export function UserMenu({
   initials,
   firstName,
   email,
+  avatarUrl,
   dashboardLabel,
   signOutLabel,
   dashboardUrl,
@@ -34,6 +40,9 @@ export function UserMenu({
     <DropdownMenu>
       <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <Avatar className="size-8">
+          {avatarUrl && (
+            <AvatarImage src={avatarUrl} alt={firstName ?? email} />
+          )}
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>

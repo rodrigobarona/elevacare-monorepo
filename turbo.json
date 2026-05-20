@@ -5,7 +5,6 @@
   "globalDependencies": ["pnpm-workspace.yaml"],
   "globalEnv": ["NODE_ENV", "VERCEL", "VERCEL_ENV"],
   "globalPassThroughEnv": [
-    "VERCEL_URL",
     "DATABASE_URL",
     "DATABASE_URL_UNPOOLED",
     "POSTGRES_URL",
@@ -58,7 +57,6 @@
     "WORKOS_SEAT_METER_ID",
     "ELEVA_API_BEARER_TOKEN",
     "API_BASE_URL",
-    "NEXT_PUBLIC_APP_URL",
     "NEXT_RUNTIME"
   ],
   "tasks": {
@@ -70,6 +68,10 @@
         "ACCOUNT_URL",
         "API_URL",
         "DOCS_URL",
+        "NEXT_PUBLIC_ACCOUNT_URL",
+        "NEXT_PUBLIC_ADMIN_URL",
+        "NEXT_PUBLIC_API_URL",
+        "NEXT_PUBLIC_APP_URL",
         "APP_ASSET_PREFIX",
         "API_ASSET_PREFIX",
         "EXPERT_ASSET_PREFIX",

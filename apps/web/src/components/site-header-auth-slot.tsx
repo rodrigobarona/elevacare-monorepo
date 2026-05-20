@@ -21,6 +21,7 @@ export async function SiteHeaderAuthSlot() {
     firstName: string | null
     lastName: string | null
     email: string
+    avatarUrl: string | null
   } | null = null
   try {
     user = await getAuthUser()
@@ -52,6 +53,7 @@ export async function SiteHeaderAuthSlot() {
       initials={initials}
       firstName={user.firstName}
       email={user.email}
+      avatarUrl={user.avatarUrl}
       dashboardLabel={t("dashboard")}
       signOutLabel={t("signout")}
       dashboardUrl="/dashboard"

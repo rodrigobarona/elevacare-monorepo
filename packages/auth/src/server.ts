@@ -1,6 +1,6 @@
 import { cache } from "react"
 import { cookies, headers } from "next/headers"
-import { isNull } from "drizzle-orm"
+import { eq, isNull } from "drizzle-orm"
 import { WorkOS } from "@workos-inc/node"
 import { normalizeWorkOSLocale, type Locale } from "@eleva/config/i18n"
 import {
@@ -17,6 +17,7 @@ export interface AuthUser {
   email: string
   firstName: string | null
   lastName: string | null
+  avatarUrl: string | null
 }
 
 interface WorkosCookieSession {
@@ -308,10 +309,9 @@ export async function getSessionForOrg(
 }
 
 /**
- * Lightweight auth check that returns basic WorkOS user info from the
- * session cookie without querying the database. Ideal for UI that
- * only needs to know "is the user logged in?" and show their name
- * (e.g. the marketing site header avatar).
+ * Auth check for lightweight UI surfaces like the marketing header.
+ * WorkOS remains the source for identity fields; the Eleva user row
+ * provides app-owned profile state such as the uploaded avatar URL.
  *
  * Memoised per-request via React.cache.
  */
@@ -323,8 +323,21 @@ export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
     email: user.email ?? "unknown",
     firstName: user.firstName ?? null,
     lastName: user.lastName ?? null,
+    avatarUrl: await getAvatarUrlForWorkosUser(user.id),
   }
 })
+
+async function getAvatarUrlForWorkosUser(
+  workosUserId: string
+): Promise<string | null> {
+  const [row] = await db()
+    .select({ avatarUrl: main.users.avatarUrl })
+    .from(main.users)
+    .where(eq(main.users.workosUserId, workosUserId))
+    .limit(1)
+
+  return row?.avatarUrl ?? null
+}
 
 async function resolveWorkosUserOrNull(): Promise<
   WorkosCookieSession["user"] | null
