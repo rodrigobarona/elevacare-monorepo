@@ -26,7 +26,19 @@ export const NavMenuItemLink = forwardRef<
   HTMLAnchorElement,
   NavMenuItemLinkProps
 >(function NavMenuItemLink(
-  { href, title, icon, active, shortcut, className, ...props },
+  {
+    href,
+    title,
+    icon,
+    active,
+    shortcut,
+    className,
+    onPointerEnter,
+    onPointerLeave,
+    onFocus,
+    onBlur,
+    ...props
+  },
   ref
 ) {
   const [hovered, setHovered] = useState(false)
@@ -37,11 +49,23 @@ export const NavMenuItemLink = forwardRef<
       ref={ref}
       href={href}
       className={cn(className)}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-      onFocus={() => setHovered(true)}
-      onBlur={() => setHovered(false)}
       {...props}
+      onPointerEnter={(event) => {
+        setHovered(true)
+        onPointerEnter?.(event)
+      }}
+      onPointerLeave={(event) => {
+        setHovered(false)
+        onPointerLeave?.(event)
+      }}
+      onFocus={(event) => {
+        setHovered(true)
+        onFocus?.(event)
+      }}
+      onBlur={(event) => {
+        setHovered(false)
+        onBlur?.(event)
+      }}
     >
       <NavIcon
         icon={IconComponent}

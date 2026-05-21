@@ -25,6 +25,7 @@
 .eleva-workos-widgets.woswidgets-root,
 .eleva-workos-widgets .woswidgets-root,
 .eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]),
+.woswidgets-root.radix-themes:where([data-is-root-theme="true"]),
 .eleva-org-switcher.woswidgets-root,
 .eleva-org-switcher .woswidgets-root {
   --accent-1: var(--primary-foreground);
@@ -38,8 +39,59 @@
   --accent-contrast: var(--primary-foreground);
 }
 
+/* Pointer on clickable widget controls (Radix defaults to default cursor) */
+.eleva-workos-widgets
+  :where(
+    button,
+    .rt-Button,
+    .rt-BaseButton,
+    .rt-SelectTrigger,
+    .rt-Link,
+    a[href],
+    [role="button"]
+  ):not(:disabled):not([data-disabled]):not([aria-disabled="true"]),
+.eleva-org-switcher
+  :where(button, .rt-Button, .rt-BaseButton, [role="button"]):not(:disabled):not(
+    [data-disabled]
+  ):not([aria-disabled="true"]),
+/* Portaled modals (Editar nome, Alterar senha, etc.) — theme root leaves embed wrapper */
+.woswidgets-root.radix-themes
+  :where(
+    button,
+    .rt-Button,
+    .rt-BaseButton,
+    .rt-SelectTrigger,
+    .rt-Link,
+    a[href],
+    [role="button"]
+  ):not(:disabled):not([data-disabled]):not([aria-disabled="true"]),
+body:has(.eleva-workos-widgets)
+  :is(.rt-DialogContent, .rt-AlertDialogContent, [role="dialog"], [role="alertdialog"])
+  :where(button, .rt-Button, .rt-BaseButton, .woswidgets-button, [role="button"]):not(
+    :disabled
+  ):not([data-disabled]):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+.eleva-workos-widgets :where(button, .rt-Button, .rt-BaseButton)[data-disabled],
+.eleva-workos-widgets :where(button:disabled),
+.woswidgets-root.radix-themes
+  :where(button, .rt-Button, .rt-BaseButton)[data-disabled],
+.woswidgets-root.radix-themes :where(button:disabled) {
+  cursor: not-allowed;
+}
+
 /* Solid accent CTAs — same green as Eleva "Guardar" / primary buttons */
 .eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]),
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]),
+body:has(.eleva-workos-widgets)
+  .rt-DialogContent
   :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
     [data-color="gray"]
   ):not([data-color="red"]):not([data-disabled]) {
@@ -47,12 +99,56 @@
   color: var(--primary-foreground);
 }
 
+/* Destructive solid CTAs (sign out, revoke, etc.) — Eleva destructive, not primary green */
 .eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ),
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ),
+body:has(.eleva-workos-widgets)
+  :is(.rt-AlertDialogContent, [role="alertdialog"])
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-disabled]) {
+  background-color: var(--destructive);
+  color: oklch(0.985 0 0);
+}
+
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]):hover,
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]):hover,
+body:has(.eleva-workos-widgets)
+  .rt-DialogContent
   :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
     [data-color="gray"]
   ):not([data-color="red"]):not([data-disabled]):hover {
   background-color: var(--primary);
   filter: brightness(0.95);
+}
+
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ):hover,
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ):hover,
+body:has(.eleva-workos-widgets)
+  :is(.rt-AlertDialogContent, [role="alertdialog"])
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-disabled]):hover {
+  background-color: var(--destructive);
+  filter: brightness(0.92);
 }
 
 /*

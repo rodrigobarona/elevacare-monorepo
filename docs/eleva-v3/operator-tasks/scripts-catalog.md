@@ -32,10 +32,10 @@ All commands run from the repo root.
 
 ### WorkOS
 
-| Command                        | What it does                                                                                                                        | Idempotent?                                   |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| `pnpm workos:rbac:generate`    | Apply app capabilities from `infra/workos/rbac-config.json` (creates/updates roles + `area:action` permissions). Skips `widgets:*`. | Yes — re-run `workos:widgets:generate` after. |
-| `pnpm workos:widgets:generate` | Merge widget grants from `infra/workos/widgets-config.json` onto roles (preserves existing app permissions).                        | Yes                                           |
+| Command                        | What it does                                                                                                                                                                       | Idempotent?                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `pnpm workos:rbac:generate`    | Dry-run: preview app capabilities from `infra/workos/rbac-config.json` (creates/updates roles + `area:action` permissions). Skips `widgets:*`. Use `-- --apply` to mutate WorkOS.  | Yes — re-run `workos:widgets:generate` after rbac apply. |
+| `pnpm workos:widgets:generate` | Dry-run: preview widget grant merge from `infra/workos/widgets-config.json` onto roles (preserves existing app permissions). Use `-- --apply` to create/update `widgets:*` grants. | Yes                                                      |
 
 ### QStash (Upstash)
 

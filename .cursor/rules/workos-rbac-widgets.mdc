@@ -13,7 +13,7 @@ alwaysApply: false
 ## Layer 1 — App capabilities (API + JWT)
 
 - **SSOT:** [`infra/workos/rbac-config.json`](../../infra/workos/rbac-config.json)
-- **Sync:** `pnpm rbac:generate -- --apply` from monorepo root
+- **Sync:** `pnpm workos:rbac:generate -- --apply` from monorepo root
 - **Slugs:** `area:action` (e.g. `members:manage`, `appointments:view_own`)
 - **Mirror:** [`packages/auth/src/capabilities.ts`](../../packages/auth/src/capabilities.ts) `CAPABILITY_BUNDLES`
 - **Never** pass these slugs to `getWidgetTokenFromSession()` or `workos.widgets.createToken({ scopes })`

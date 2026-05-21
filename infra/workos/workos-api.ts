@@ -8,6 +8,7 @@ export interface WorkOSPermission {
   slug: string
   name: string
   description?: string
+  system?: boolean
 }
 
 export interface WorkOSRole {
@@ -16,6 +17,17 @@ export interface WorkOSRole {
   description?: string
   type?: string
   permissions?: string[]
+}
+
+export const WORKOS_ROLE_DESCRIPTION_MAX = 150
+
+export function truncateRoleDescription(
+  description: string | undefined,
+  max = WORKOS_ROLE_DESCRIPTION_MAX
+): string | undefined {
+  if (!description) return description
+  if (description.length <= max) return description
+  return `${description.slice(0, max - 1)}…`
 }
 
 export function resolveWorkosApiKey(envName: string): {
@@ -30,7 +42,23 @@ export function resolveWorkosApiKey(envName: string): {
 
 export function parseCliEnv(argv: string[]): string {
   const envArg = argv.find((a) => a.startsWith("--env="))
-  return envArg?.split("=")[1] ?? "staging"
+  const raw = envArg?.split("=")[1]
+  if (!raw) return "staging"
+
+  const aliases: Record<string, string> = {
+    prod: "production",
+    dev: "development",
+  }
+  const normalized = aliases[raw] ?? raw
+  const allowed = new Set(["staging", "production", "development"])
+
+  if (!allowed.has(normalized)) {
+    throw new Error(
+      `Invalid --env=${raw}. Allowed: staging, production, development (aliases: prod, dev).`
+    )
+  }
+
+  return normalized
 }
 
 export async function workosRequest<T>(
@@ -115,10 +143,6 @@ export async function deletePermission(
   await workosRequest(apiKey, "DELETE", `/authorization/permissions/${slug}`)
 }
 
-export async function deleteRole(apiKey: string, slug: string): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/roles/${slug}`)
-}
-
 export async function createPermission(
   apiKey: string,
   slug: string,
@@ -132,16 +156,29 @@ export async function createPermission(
   })
 }
 
+export async function updatePermission(
+  apiKey: string,
+  slug: string,
+  name: string,
+  description?: string
+): Promise<void> {
+  await workosRequest(apiKey, "PATCH", `/authorization/permissions/${slug}`, {
+    name,
+    ...(description !== undefined && { description }),
+  })
+}
+
 export async function createRole(
   apiKey: string,
   slug: string,
   name: string,
   description?: string
 ): Promise<void> {
+  const safeDescription = truncateRoleDescription(description)
   await workosRequest(apiKey, "POST", "/authorization/roles", {
     slug,
     name,
-    ...(description && { description }),
+    ...(safeDescription && { description: safeDescription }),
   })
 }
 
@@ -151,9 +188,10 @@ export async function updateRole(
   name: string,
   description?: string
 ): Promise<void> {
+  const safeDescription = truncateRoleDescription(description)
   await workosRequest(apiKey, "PATCH", `/authorization/roles/${slug}`, {
     name,
-    ...(description !== undefined && { description }),
+    ...(safeDescription !== undefined && { description: safeDescription }),
   })
 }
 

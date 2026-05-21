@@ -5,7 +5,6 @@ import {
   createPermission,
   createRole,
   deletePermission,
-  deleteRole,
   listAllPermissions,
   listEnvironmentRoles,
   parseCliEnv,
@@ -16,17 +15,15 @@ import {
 
 /**
  * rbac-generate — nuke-and-repave sync from infra/workos/rbac-config.json
- * to WorkOS. Deletes stale roles/permissions and re-creates everything from
- * the JSON source of truth with proper descriptions.
+ * to WorkOS. Re-creates capabilities and role assignments from the JSON
+ * source of truth with proper descriptions.
  *
  * Usage:
- *   pnpm rbac:generate              # dry-run (shows what would happen)
- *   pnpm rbac:generate --apply      # actually call WorkOS API
- *   pnpm rbac:generate --env=staging
- *   pnpm rbac:generate --env=production --apply
+ *   pnpm workos:rbac:generate              # dry-run (shows what would happen)
+ *   pnpm workos:rbac:generate --apply      # actually call WorkOS API
+ *   pnpm workos:rbac:generate --env=staging
+ *   pnpm workos:rbac:generate --env=production --apply
  */
-
-const PROTECTED_ROLE_SLUGS = new Set(["admin", "member"])
 
 interface RbacConfig {
   version: number
@@ -52,7 +49,13 @@ async function loadConfig(): Promise<RbacConfig> {
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes("--apply")
-  const envName = parseCliEnv(args)
+  let envName: string
+  try {
+    envName = parseCliEnv(args)
+  } catch (err) {
+    console.error(`[rbac] ${err instanceof Error ? err.message : err}`)
+    process.exit(1)
+  }
   const { apiKey, apiKeyEnv } = resolveWorkosApiKey(envName)
 
   const config = await loadConfig()
@@ -105,32 +108,10 @@ async function main() {
 
   console.log(`[rbac] Applying to WorkOS (${envName}) via ${apiKeyEnv}...\n`)
 
-  // --- Step 1: Delete stale roles not in our config ---
-  console.log("[1/5] Cleaning up stale roles...")
+  // --- Step 1: Ensure all required roles exist ---
+  console.log("[1/4] Ensuring required roles exist...")
   const existingRoles = await listEnvironmentRoles(apiKey)
-  let staleDeleted = 0
-  for (const role of existingRoles) {
-    if (PROTECTED_ROLE_SLUGS.has(role.slug)) continue
-    if (role.slug.startsWith("widgets:")) continue
-    if (roleSlugs.has(role.slug)) continue
-
-    try {
-      await setRolePermissions(apiKey, role.slug, [])
-      await deleteRole(apiKey, role.slug)
-      console.log(`  ✗ Deleted stale role '${role.slug}'`)
-      staleDeleted++
-    } catch (err) {
-      console.log(
-        `  ⚠ Could not delete '${role.slug}' (${err instanceof Error ? err.message : err})`
-      )
-    }
-  }
-  if (staleDeleted === 0) console.log("  (no stale roles found)")
-
-  // --- Step 2: Ensure all required roles exist (create missing, update stale) ---
-  console.log("[2/5] Ensuring required roles exist...")
-  const rolesAfterCleanup = await listEnvironmentRoles(apiKey)
-  const currentRolesBySlug = new Map(rolesAfterCleanup.map((r) => [r.slug, r]))
+  const currentRolesBySlug = new Map(existingRoles.map((r) => [r.slug, r]))
 
   for (const role of config.roles) {
     const liveRole = currentRolesBySlug.get(role.slug)
@@ -150,15 +131,15 @@ async function main() {
     }
   }
 
-  // --- Step 3: Clear permissions on all managed roles ---
-  console.log("[3/5] Clearing permissions on all managed roles...")
+  // --- Step 2: Clear permissions on all managed roles ---
+  console.log("[2/4] Clearing permissions on all managed roles...")
   for (const role of config.roles) {
     await setRolePermissions(apiKey, role.slug, [])
   }
   console.log(`  ✓ Cleared ${config.roles.length} roles`)
 
-  // --- Step 4: Delete all non-system permissions, recreate from config ---
-  console.log("[4/5] Replacing permissions...")
+  // --- Step 3: Delete all non-system permissions, recreate from config ---
+  console.log("[3/4] Replacing permissions...")
   const existingPerms = await listAllPermissions(apiKey)
   let deleted = 0
   for (const perm of existingPerms) {
@@ -188,8 +169,8 @@ async function main() {
   }
   console.log(`  Created ${created} permissions`)
 
-  // --- Step 5: Assign permissions to roles ---
-  console.log("[5/5] Assigning permissions to roles...")
+  // --- Step 4: Assign permissions to roles ---
+  console.log("[4/4] Assigning permissions to roles...")
   for (const role of config.roles) {
     await setRolePermissions(apiKey, role.slug, role.capabilities)
     console.log(`  ✓ ${role.slug}: ${role.capabilities.length} permissions`)

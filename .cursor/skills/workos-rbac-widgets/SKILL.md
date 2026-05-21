@@ -9,7 +9,7 @@ description: WorkOS app RBAC vs Widget permissions SSOT. Use when embedding @wor
 
 | Layer    | SSOT                               | Synced by script?                                            | Slug shape    |
 | -------- | ---------------------------------- | ------------------------------------------------------------ | ------------- |
-| App auth | `infra/workos/rbac-config.json`    | Yes — `pnpm rbac:generate -- --apply`                        | `area:action` |
+| App auth | `infra/workos/rbac-config.json`    | Yes — `pnpm workos:rbac:generate -- --apply`                 | `area:action` |
 | Widgets  | `infra/workos/widgets-config.json` | Yes — `pnpm workos:widgets:generate -- --apply` (after rbac) | `widgets:...` |
 
 ## Workflow: embed or fix a widget
@@ -26,7 +26,7 @@ Browser errors like “blocked by CORS policy” on `api.workos.com/_widgets/...
 Check in order:
 
 1. **Token scopes** — Network request uses widget JWT; scopes match `widgets-config.json` `tokenScopes`.
-2. **Role grants** — Run `pnpm workos:widgets:generate` then `--apply` if out of sync (`admin` needs `widgets:users-table:read` for personal Space account settings).
+2. **Role grants** — Run `pnpm workos:widgets:generate -- --apply` if out of sync (`admin` needs `widgets:users-table:read` for personal Space account settings).
 3. **CORS** — Dashboard → Authentication → CORS includes the page origin (e.g. `http://localhost:3006`) — not scripted.
 4. **Environment** — Scripts use `WORKOS_API_KEY` (staging) or `WORKOS_API_KEY_PRODUCTION` (prod).
 
@@ -41,7 +41,7 @@ Check in order:
 ## Workflow: add app capability (not widget)
 
 1. Edit `infra/workos/rbac-config.json` only.
-2. Run `pnpm rbac:generate -- --apply`.
+2. Run `pnpm workos:rbac:generate -- --apply`.
 3. Update `packages/auth/src/capabilities.ts` if needed.
 
 ## Key files

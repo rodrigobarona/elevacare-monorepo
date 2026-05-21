@@ -1,4 +1,5 @@
 import type { Icon } from "@phosphor-icons/react/lib"
+import type { NavIconName } from "./nav-icon-names"
 
 /**
  * Client Phosphor icons for nav — registry is only consumed via `@eleva/icons/client`.
@@ -21,25 +22,7 @@ import {
   WalletIcon,
 } from "@phosphor-icons/react"
 
-/** Serializable nav icon keys — safe to pass from Server Components. */
-export const NAV_ICON_NAMES = [
-  "SquaresFourIcon",
-  "UserIcon",
-  "CreditCardIcon",
-  "BuildingsIcon",
-  "ShieldIcon",
-  "GearIcon",
-  "UsersIcon",
-  "CalendarDotsIcon",
-  "ClockIcon",
-  "CalendarIcon",
-  "PlugIcon",
-  "WalletIcon",
-  "BookOpenIcon",
-  "ChartBarIcon",
-] as const
-
-export type NavIconName = (typeof NAV_ICON_NAMES)[number]
+export { NAV_ICON_NAMES, type NavIconName } from "./nav-icon-names"
 
 export const navIconRegistry: Record<NavIconName, Icon> = {
   SquaresFourIcon,

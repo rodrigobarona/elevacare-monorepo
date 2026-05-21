@@ -2,6 +2,30 @@
  * Pure helpers for merging WorkOS widget permissions into role assignments.
  */
 
+export interface WidgetPermissionMeta {
+  displayName: string
+  description: string
+}
+
+/** Eleva-managed WorkOS widget permissions (from widgets-config.json). */
+export const WIDGET_PERMISSION_CATALOG: Record<string, WidgetPermissionMeta> = {
+  "widgets:users-table:read": {
+    displayName: "Read users (widget)",
+    description:
+      "View session and device sign-in data in account settings (User Sessions widget).",
+  },
+  "widgets:users-table:manage": {
+    displayName: "Manage users (widget)",
+    description:
+      "Invite, remove, and update org members via the Users Management widget.",
+  },
+  "widgets:organization-switcher:read": {
+    displayName: "Read organization switcher (widget)",
+    description:
+      "List and switch between organization memberships in the org switcher.",
+  },
+}
+
 /** Remove all widgets:* slugs, then append the desired widget grant set. */
 export function mergeRoleWidgetPermissions(
   currentPermissions: readonly string[],
@@ -30,8 +54,20 @@ export function collectWidgetPermissionSlugs(
   return [...new Set(Object.values(roleWidgetGrants).flat())].sort()
 }
 
+export function widgetPermissionMeta(slug: string): WidgetPermissionMeta {
+  const catalog = WIDGET_PERMISSION_CATALOG[slug]
+  if (catalog) return catalog
+  return {
+    displayName: widgetPermissionDisplayName(slug),
+    description: `WorkOS Widgets permission (${slug}) synced from infra/workos/widgets-config.json`,
+  }
+}
+
 /** Human-readable permission name for WorkOS (max 48 chars). */
 export function widgetPermissionDisplayName(slug: string): string {
+  const catalog = WIDGET_PERMISSION_CATALOG[slug]
+  if (catalog) return catalog.displayName
+
   const match = /^widgets:([a-z0-9-]+):(read|manage)$/.exec(slug)
   if (!match) return slug.slice(0, 48)
 
@@ -48,7 +84,18 @@ export function widgetPermissionDisplayName(slug: string): string {
 }
 
 export function widgetPermissionDescription(slug: string): string {
-  return `WorkOS Widgets permission (${slug}) synced from infra/workos/widgets-config.json`
+  return widgetPermissionMeta(slug).description
+}
+
+export function widgetPermissionNeedsUpdate(
+  live: { name: string; description?: string },
+  slug: string
+): boolean {
+  const desired = widgetPermissionMeta(slug)
+  return (
+    live.name !== desired.displayName ||
+    (live.description ?? "") !== desired.description
+  )
 }
 
 export function findMissingWidgetSlugs(

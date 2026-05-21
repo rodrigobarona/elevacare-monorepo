@@ -13,10 +13,9 @@ import type { ProductLabel } from "./types"
  *
  * Anything else throws. This function is pure; no DB/network access.
  *
- * NOTE: This is the FALLBACK derivation. With custom WorkOS environment
- * roles, the JWT `permissions` claim is the primary source of truth.
- * This function is used when JWT claims are unavailable (e.g. during
- * provisioning or in test contexts).
+ * NOTE: WorkOS `admin`/`member` roles hold capability supersets synced from
+ * infra/workos/rbac-config.json. JWT `permissions` are intersected with the
+ * derived product bundle in session resolution.
  */
 export function deriveProductLabel(
   orgType: OrgType,
@@ -35,23 +34,9 @@ export function deriveProductLabel(
 }
 
 /**
- * @deprecated Use `deriveProductLabel(orgType, role)` instead — role-to-label
- * resolution requires org-type context that a flat slug map cannot provide.
- * Retained only for backward compat; will be removed in a future cleanup.
- */
-export const WORKOS_ROLE_TO_LABEL: Record<string, ProductLabel> = {
-  member: "member",
-  expert: "expert",
-  team_admin: "team_admin",
-  lecturer: "lecturer",
-  staff: "staff",
-}
-
-/**
- * RBAC bundle -> capability-slug list. Mirrors the roles defined in
- * infra/workos/rbac-config.json. With custom WorkOS environment roles,
- * these are pushed to WorkOS and returned via JWT `permissions` claim.
- * This map remains as fallback for local test isolation and validation.
+ * RBAC bundle -> capability-slug list. Product labels derived from
+ * (org_type, workos_role). WorkOS role supersets in rbac-config.json are
+ * intersected at runtime in packages/auth/src/session.ts.
  */
 export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
   member: [

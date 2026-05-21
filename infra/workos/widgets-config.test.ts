@@ -78,18 +78,11 @@ describe("widgets-config.json", () => {
     expect(config.roleWidgetGrants.member).toContain("widgets:users-table:read")
   })
 
-  it("role slugs align with rbac-config custom roles plus built-in admin", async () => {
+  it("roleWidgetGrants only reference WorkOS org-seniority roles", async () => {
     const config = await load()
-    const rbac = JSON.parse(
-      await readFile(
-        resolve(dirname(fileURLToPath(import.meta.url)), "rbac-config.json"),
-        "utf8"
-      )
-    ) as { roles: Array<{ slug: string }> }
-    const rbacSlugs = new Set(rbac.roles.map((r) => r.slug))
-    rbacSlugs.add("admin")
+    const allowed = new Set(["admin", "member"])
     for (const role of Object.keys(config.roleWidgetGrants)) {
-      expect(rbacSlugs.has(role), `unknown role slug ${role}`).toBe(true)
+      expect(allowed.has(role), `unknown WorkOS role slug ${role}`).toBe(true)
     }
   })
 })

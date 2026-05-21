@@ -4,4 +4,4 @@
  */
 export * from "./icons"
 export * from "./presets"
-export { NAV_ICON_NAMES, type NavIconName } from "./nav-icon-registry"
+export { NAV_ICON_NAMES, type NavIconName } from "./nav-icon-names"

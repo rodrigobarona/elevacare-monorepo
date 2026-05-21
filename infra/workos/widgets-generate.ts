@@ -9,14 +9,15 @@ import {
   parseCliEnv,
   resolveWorkosApiKey,
   setRolePermissions,
+  updatePermission,
 } from "./workos-api.js"
 import {
   collectWidgetPermissionSlugs,
   diffPermissionSets,
   findMissingWidgetSlugs,
   mergeRoleWidgetPermissions,
-  widgetPermissionDescription,
-  widgetPermissionDisplayName,
+  widgetPermissionMeta,
+  widgetPermissionNeedsUpdate,
 } from "./widget-permissions.js"
 
 /**
@@ -73,7 +74,13 @@ function validateConfig(config: WidgetsConfig): void {
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes("--apply")
-  const envName = parseCliEnv(args)
+  let envName: string
+  try {
+    envName = parseCliEnv(args)
+  } catch (err) {
+    console.error(`[widgets] ${err instanceof Error ? err.message : err}`)
+    process.exit(1)
+  }
   const { apiKey, apiKeyEnv } = resolveWorkosApiKey(envName)
 
   const config = await loadWidgetsConfig()
@@ -90,7 +97,10 @@ async function main() {
     console.log("\n[widgets] DRY-RUN — pass --apply to push to WorkOS.\n")
     console.log("Widget permissions required in environment:")
     for (const slug of requiredWidgetSlugs) {
+      const meta = widgetPermissionMeta(slug)
       console.log(`  • ${slug}`)
+      console.log(`    name: ${meta.displayName}`)
+      console.log(`    desc: ${meta.description}`)
     }
     console.log("\nRole grants to merge (keeps existing non-widgets perms):")
     for (const [role, grants] of Object.entries(desiredByRole)) {
@@ -114,12 +124,8 @@ async function main() {
   const missing = findMissingWidgetSlugs(requiredWidgetSlugs, permSlugs)
   if (missing.length > 0) {
     for (const slug of missing) {
-      await createPermission(
-        apiKey,
-        slug,
-        widgetPermissionDisplayName(slug),
-        widgetPermissionDescription(slug)
-      )
+      const meta = widgetPermissionMeta(slug)
+      await createPermission(apiKey, slug, meta.displayName, meta.description)
       console.log(`  + created ${slug}`)
     }
     allPerms = await listAllPermissions(apiKey)
@@ -130,9 +136,26 @@ async function main() {
       for (const slug of stillMissing) console.error(`  ✗ ${slug}`)
       process.exit(1)
     }
-  } else {
+  }
+
+  let updated = 0
+  for (const slug of requiredWidgetSlugs) {
+    const live = allPerms.find((p) => p.slug === slug)
+    if (!live || !widgetPermissionNeedsUpdate(live, slug)) continue
+    if (live.system) {
+      console.log(
+        `  ⚠ ${slug}: WorkOS system permission — metadata is read-only in Dashboard`
+      )
+      continue
+    }
+    const meta = widgetPermissionMeta(slug)
+    await updatePermission(apiKey, slug, meta.displayName, meta.description)
+    updated++
+    console.log(`  ↻ updated metadata for ${slug}`)
+  }
+  if (missing.length === 0 && updated === 0) {
     console.log(
-      `  ✓ All ${requiredWidgetSlugs.length} widget permissions present`
+      `  ✓ All ${requiredWidgetSlugs.length} widget permissions in sync`
     )
   }
 
@@ -142,7 +165,7 @@ async function main() {
   for (const role of Object.keys(desiredByRole)) {
     if (!roleSlugs.has(role)) {
       console.error(
-        `[widgets] Role '${role}' not found in WorkOS. Run pnpm rbac:generate -- --apply first.`
+        `[widgets] Role '${role}' not found in WorkOS. Run pnpm workos:rbac:generate -- --apply first.`
       )
       process.exit(1)
     }

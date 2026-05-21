@@ -207,6 +207,7 @@ _Rationale in code comments: `src/app/layout.tsx`._
 - **Weights:** `light` for idle sidebar nav, **`duotone`** for active nav and illustrations ≥ 32px, `regular` for chrome (chevrons, checks).
 - **Duotone colors:** primary `text-eleva-primary` / `text-sidebar-primary`; secondary `rgb(var(--eleva-primary-light))`.
 - `expert-verified-icon.svg` is a **trust** asset, not part of the icon registry.
+- Formal decision: [v3 icon SSOT / import boundary](../decision-log.md#2026-05-21-v3-icon-ssot--import-boundary-policy) (see also `.cursor/rules/eleva-icons.mdc`).
 
 ---
 
@@ -276,6 +277,7 @@ Workspace customization (logo, cover, brand colors) is **tenant-level**, not a r
 ## Cross-references
 
 - v3 product/engineering context: [Eleva v3 README](../README.md)
+- Icon SSOT policy: [decision log entry](../decision-log.md#2026-05-21-v3-icon-ssot--import-boundary-policy)
 - Packaged files: [asset pack](./assets/) · [previews](./previews/)
 - Recovery notes: [GAP-ANALYSIS.md](./GAP-ANALYSIS.md)
 - MVP product reference: [`_context/clone-repo/eleva-care-app`](../../../_context/clone-repo/eleva-care-app)

@@ -40,8 +40,8 @@ Server layouts pass `NavIconName` strings (`"UserIcon"`, `"SquaresFourIcon"`, â€
 ## Duotone (brand colors)
 
 ```tsx
-import { CalendarIcon, ElevaIcon } from "@eleva/icons"
-
+import { CalendarIcon } from "@eleva/icons"
+import { ElevaIcon } from "@eleva/icons/client"
 ;<ElevaIcon
   icon={CalendarIcon}
   weight="duotone"

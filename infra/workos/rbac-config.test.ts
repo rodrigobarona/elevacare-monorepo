@@ -23,6 +23,69 @@ async function load(): Promise<RbacConfig> {
   return JSON.parse(await readFile(resolve(here, "rbac-config.json"), "utf8"))
 }
 
+/** Admin-context product labels from identity-rbac-spec (workos_role = admin). */
+const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
+  member: [
+    "appointments:view_own",
+    "sessions:view_own",
+    "billing:view_own",
+    "diary:share",
+  ],
+  team_admin: [
+    "events:manage",
+    "schedule:manage",
+    "bookings:manage_own",
+    "reports:manage_own",
+    "payouts:view_own",
+    "expert:onboard",
+    "expert:profile_edit",
+    "expert:invoicing_manage",
+    "members:manage",
+    "billing:manage_org",
+    "subscriptions:manage_org",
+  ],
+  lecturer: [
+    "courses:manage",
+    "courses:create",
+    "courses:publish",
+    "academy:analytics_view",
+    "payouts:view_own",
+  ],
+  staff: [
+    "experts:approve",
+    "experts:reject",
+    "applications:review",
+    "applications:claim",
+    "users:view_all",
+    "payments:view_all",
+    "payouts:approve",
+    "audit:view_all",
+    "workflows:retry",
+    "accounting:reconcile",
+    "usernames:reserve",
+    "usernames:rename",
+  ],
+}
+
+const EXPERT_BUNDLE = [
+  "events:manage",
+  "schedule:manage",
+  "bookings:manage_own",
+  "reports:manage_own",
+  "payouts:view_own",
+  "expert:onboard",
+  "expert:profile_edit",
+  "expert:invoicing_manage",
+] as const
+
+function unionAdminCapabilities(): Set<string> {
+  const caps = new Set<string>()
+  for (const bundle of Object.values(ADMIN_CONTEXT_BUNDLES)) {
+    for (const cap of bundle) caps.add(cap)
+  }
+  return caps
+}
+
 describe("rbac-config.json", () => {
   it("capability slugs follow area:action shape (two segments)", async () => {
     const config = await load()
@@ -44,54 +107,53 @@ describe("rbac-config.json", () => {
     const capSlugs = new Set(config.capabilities.map((c) => c.slug))
     for (const role of config.roles) {
       for (const cap of role.capabilities) {
-        expect(capSlugs.has(cap), `${role.slug} \u2192 ${cap}`).toBe(true)
+        expect(capSlugs.has(cap), `${role.slug} → ${cap}`).toBe(true)
       }
     }
   })
 
-  it("team_admin strictly extends expert", async () => {
+  it("role descriptions fit WorkOS 150-character limit", async () => {
     const config = await load()
-    const expert = config.roles.find((r) => r.slug === "expert")!
-    const teamAdmin = config.roles.find((r) => r.slug === "team_admin")!
-    for (const cap of expert.capabilities) {
-      expect(teamAdmin.capabilities).toContain(cap)
+    for (const role of config.roles) {
+      if (role.description) {
+        expect(
+          role.description.length,
+          `${role.slug} description too long`
+        ).toBeLessThanOrEqual(150)
+      }
     }
-    expect(teamAdmin.capabilities.length).toBeGreaterThan(
-      expert.capabilities.length
-    )
   })
 
-  it("member bundle includes diary:share but no expert capabilities", async () => {
+  it("only WorkOS org-seniority roles admin and member are configured", async () => {
+    const config = await load()
+    expect(config.roles.map((r) => r.slug).sort()).toEqual(["admin", "member"])
+  })
+
+  it("admin holds the deduped union of admin-context capability bundles", async () => {
+    const config = await load()
+    const admin = config.roles.find((r) => r.slug === "admin")!
+    const expected = unionAdminCapabilities()
+    expect(new Set(admin.capabilities)).toEqual(expected)
+  })
+
+  it("admin includes patient and staff capabilities", async () => {
+    const config = await load()
+    const admin = config.roles.find((r) => r.slug === "admin")!
+    expect(admin.capabilities).toContain("diary:share")
+    expect(admin.capabilities).toContain("audit:view_all")
+    expect(admin.capabilities).toContain("events:manage")
+  })
+
+  it("member holds the expert-in-clinic bundle", async () => {
     const config = await load()
     const member = config.roles.find((r) => r.slug === "member")!
-    expect(member.capabilities).toContain("diary:share")
-    expect(member.capabilities).not.toContain("events:manage")
-    expect(member.capabilities).not.toContain("reports:manage_own")
+    expect(member.capabilities.sort()).toEqual([...EXPERT_BUNDLE].sort())
   })
 
-  it("staff has audit:view_all + workflows:retry", async () => {
+  it("member does not include staff-only capabilities", async () => {
     const config = await load()
-    const staff = config.roles.find((r) => r.slug === "staff")!
-    expect(staff.capabilities).toContain("audit:view_all")
-    expect(staff.capabilities).toContain("workflows:retry")
-    expect(staff.capabilities).toContain("payouts:approve")
-  })
-
-  it("lecturer has academy capabilities", async () => {
-    const config = await load()
-    const lecturer = config.roles.find((r) => r.slug === "lecturer")!
-    expect(lecturer.capabilities).toContain("courses:manage")
-    expect(lecturer.capabilities).toContain("courses:publish")
-    expect(lecturer.capabilities).toContain("academy:analytics_view")
-  })
-
-  it("all expected roles exist", async () => {
-    const config = await load()
-    const slugs = config.roles.map((r) => r.slug)
-    expect(slugs).toContain("member")
-    expect(slugs).toContain("expert")
-    expect(slugs).toContain("team_admin")
-    expect(slugs).toContain("lecturer")
-    expect(slugs).toContain("staff")
+    const member = config.roles.find((r) => r.slug === "member")!
+    expect(member.capabilities).not.toContain("audit:view_all")
+    expect(member.capabilities).not.toContain("users:view_all")
   })
 })

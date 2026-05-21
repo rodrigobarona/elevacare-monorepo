@@ -37,6 +37,8 @@
     "./switch-org-action": "./src/switch-org-action.ts",
     "./sources.css": "./src/sources.css",
     "./workos-widgets-config": "./src/workos-widgets-config.ts",
+    "./workos-widgets-locale": "./src/workos-widgets-locale.ts",
+    "./workos-widgets-messages": "./src/workos-widgets-messages.ts",
     "./workos-widgets-overrides.css": "./src/workos-widgets-overrides.css",
     "./dashboard-providers": "./src/dashboard-providers.tsx",
     "./eleva-theme-provider": "./src/eleva-theme-provider.tsx",

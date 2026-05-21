@@ -4,7 +4,9 @@ import {
   diffPermissionSets,
   findMissingWidgetSlugs,
   mergeRoleWidgetPermissions,
+  widgetPermissionDescription,
   widgetPermissionDisplayName,
+  widgetPermissionNeedsUpdate,
 } from "./widget-permissions"
 
 describe("mergeRoleWidgetPermissions", () => {
@@ -57,16 +59,47 @@ describe("collectWidgetPermissionSlugs", () => {
 })
 
 describe("widgetPermissionDisplayName", () => {
-  it("formats read and manage slugs within 48 chars", () => {
+  it("uses catalog display names within 48 chars", () => {
     expect(widgetPermissionDisplayName("widgets:users-table:read")).toBe(
-      "Read Users Table (widget)"
+      "Read users (widget)"
     )
     expect(widgetPermissionDisplayName("widgets:users-table:manage")).toBe(
-      "Manage Users Table (widget)"
+      "Manage users (widget)"
     )
     expect(
       widgetPermissionDisplayName("widgets:organization-switcher:read").length
     ).toBeLessThanOrEqual(48)
+  })
+})
+
+describe("widgetPermissionDescription", () => {
+  it("returns human-readable descriptions for managed widget slugs", () => {
+    expect(widgetPermissionDescription("widgets:users-table:read")).toContain(
+      "User Sessions"
+    )
+    expect(
+      widgetPermissionDescription("widgets:organization-switcher:read")
+    ).toContain("org switcher")
+  })
+})
+
+describe("widgetPermissionNeedsUpdate", () => {
+  it("detects name or description drift", () => {
+    expect(
+      widgetPermissionNeedsUpdate(
+        { name: "Read users (widget)", description: "old" },
+        "widgets:users-table:read"
+      )
+    ).toBe(true)
+    expect(
+      widgetPermissionNeedsUpdate(
+        {
+          name: "Read users (widget)",
+          description: widgetPermissionDescription("widgets:users-table:read"),
+        },
+        "widgets:users-table:read"
+      )
+    ).toBe(false)
   })
 })
 

@@ -35,17 +35,11 @@
     }
   ],
   "roleWidgetGrants": {
-    "admin": ["widgets:users-table:read", "widgets:organization-switcher:read"],
-    "member": ["widgets:users-table:read"],
-    "team_admin": [
+    "admin": [
       "widgets:users-table:manage",
-      "widgets:organization-switcher:read"
-    ],
-    "expert": [
       "widgets:users-table:read",
       "widgets:organization-switcher:read"
     ],
-    "lecturer": ["widgets:users-table:read"],
-    "staff": ["widgets:users-table:manage"]
+    "member": ["widgets:users-table:read"]
   }
 }
