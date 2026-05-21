@@ -35,7 +35,10 @@ export default async function SettingsLayout({
         ],
       },
     ],
-    { homeUrl: "/dashboard", accountUrl: "/account/settings" }
+    {
+      enableOrgSwitcher: false,
+      accountUrl: "/account/settings",
+    }
   )
 
   return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>

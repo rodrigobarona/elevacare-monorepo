@@ -46,11 +46,17 @@ export default async function AdminRootLayout({
     getServerThemePreference(),
   ])
 
-  const dashboardConfig = await buildDashboardConfig(session, [
+  const dashboardConfig = await buildDashboardConfig(
+    session,
+    [
+      {
+        items: [{ title: t("overview"), url: "/", icon: "SquaresFourIcon" }],
+      },
+    ],
     {
-      items: [{ title: t("overview"), url: "/", icon: "SquaresFourIcon" }],
-    },
-  ])
+      enableOrgSwitcher: false,
+    }
+  )
 
   return (
     <html

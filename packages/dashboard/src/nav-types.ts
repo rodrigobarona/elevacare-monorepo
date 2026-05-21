@@ -32,7 +32,7 @@ export interface DashboardConfig {
   homeUrl?: string
   /** User capabilities for gating nav items */
   capabilities?: readonly string[]
-  /** Widget token for the org switcher (omit to hide org switcher) */
+  /** Widget token for the org switcher (null hides switcher; use enableOrgSwitcher: false in buildDashboardConfig) */
   widgetToken?: string | null
   /** Account settings URL */
   accountUrl?: string
