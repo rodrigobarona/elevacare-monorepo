@@ -5,7 +5,6 @@ import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import { LayoutDashboard, Users, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 
@@ -40,9 +39,9 @@ export default async function TeamLayout({
   const dashboardConfig = await buildDashboardConfig(session, [
     {
       items: [
-        { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
-        { title: t("members"), url: `${base}/members`, icon: <Users /> },
-        { title: t("settings"), url: `${base}/settings`, icon: <Settings /> },
+        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
+        { title: t("members"), url: `${base}/members`, icon: "UsersIcon" },
+        { title: t("settings"), url: `${base}/settings`, icon: "GearIcon" },
       ],
     },
   ])

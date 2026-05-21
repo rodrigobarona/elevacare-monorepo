@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@eleva/ui/components/dropdown-menu"
-import { LayoutDashboard, LogOut } from "lucide-react"
+import { LayoutDashboard, LogOut } from "@eleva/icons"
 
 interface UserMenuProps {
   initials: string

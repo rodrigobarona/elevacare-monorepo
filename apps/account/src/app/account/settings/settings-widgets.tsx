@@ -15,7 +15,6 @@ import {
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
 import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
-import { getSettingsWidgetToken } from "./actions"
 import { AvatarUpload } from "./avatar-upload"
 import {
   LanguagePreference,
@@ -26,6 +25,7 @@ import type { Locale } from "@eleva/config/i18n"
 interface SettingsWidgetsProps {
   locale: string
   authToken: string
+  workosSessionId: string
   avatarUrl: string | null
   displayName: string
   email: string
@@ -36,6 +36,7 @@ interface SettingsWidgetsProps {
 export function SettingsWidgets({
   locale,
   authToken,
+  workosSessionId,
   avatarUrl,
   displayName,
   email,
@@ -125,7 +126,10 @@ export function SettingsWidgets({
           </SettingsFieldsetDescription>
           <div className="mt-4">
             <ElevaWidgetsProvider locale={locale}>
-              <UserSessions authToken={getSettingsWidgetToken} />
+              <UserSessions
+                authToken={authToken}
+                currentSessionId={workosSessionId}
+              />
             </ElevaWidgetsProvider>
           </div>
         </SettingsFieldsetContent>

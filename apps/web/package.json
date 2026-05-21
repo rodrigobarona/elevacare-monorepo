@@ -16,7 +16,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
-    "lucide-react": "catalog:",
+    "@eleva/icons": "workspace:*",
     "next": "catalog:",
     "next-intl": "catalog:",
     "react": "catalog:",

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { Checkbox as CheckboxPrimitive } from "radix-ui"
-import { Check, Minus } from "lucide-react"
+import { CheckIcon, MinusIcon } from "@eleva/icons"
 
 import { cn } from "@eleva/ui/lib/utils"
 
@@ -23,8 +23,8 @@ function Checkbox({
         data-slot="checkbox-indicator"
         className="group flex items-center justify-center text-current transition-none"
       >
-        <Check className="size-3.5 group-data-[state=indeterminate]:hidden" />
-        <Minus className="hidden size-3.5 group-data-[state=indeterminate]:block" />
+        <CheckIcon className="size-3.5 group-data-[state=indeterminate]:hidden" />
+        <MinusIcon className="hidden size-3.5 group-data-[state=indeterminate]:block" />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )

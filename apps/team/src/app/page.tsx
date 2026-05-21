@@ -8,7 +8,7 @@ import {
   EmptyTitle,
 } from "@eleva/ui/components/empty"
 import { OrgSwitcherWidget } from "@eleva/dashboard/org-switcher-widget"
-import { Building2 } from "lucide-react"
+import { Building2 } from "@eleva/icons"
 
 export default async function RootPage() {
   const session = await guardSession()

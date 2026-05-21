@@ -2,7 +2,6 @@ import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg } from "@eleva/auth"
-import { LayoutDashboard, BookOpen, BarChart3, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
@@ -35,17 +34,17 @@ export default async function AcademyLayout({
   const dashboardConfig = await buildDashboardConfig(session, [
     {
       items: [
-        { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
-        { title: t("courses"), url: `${base}/courses`, icon: <BookOpen /> },
+        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
+        { title: t("courses"), url: `${base}/courses`, icon: "BookOpenIcon" },
         {
           title: t("analytics"),
           url: `${base}/analytics`,
-          icon: <BarChart3 />,
+          icon: "ChartBarIcon",
         },
         {
           title: t("settings"),
           url: `${base}/settings`,
-          icon: <Settings />,
+          icon: "GearIcon",
         },
       ],
     },

@@ -1,6 +1,18 @@
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { dirname, resolve } from "node:path"
+import {
+  createPermission,
+  createRole,
+  deletePermission,
+  deleteRole,
+  listAllPermissions,
+  listEnvironmentRoles,
+  parseCliEnv,
+  resolveWorkosApiKey,
+  setRolePermissions,
+  updateRole,
+} from "./workos-api.js"
 
 /**
  * rbac-generate — nuke-and-repave sync from infra/workos/rbac-config.json
@@ -13,8 +25,6 @@ import { dirname, resolve } from "node:path"
  *   pnpm rbac:generate --env=staging
  *   pnpm rbac:generate --env=production --apply
  */
-
-const WORKOS_API_BASE = "https://api.workos.com"
 
 const PROTECTED_ROLE_SLUGS = new Set(["admin", "member"])
 
@@ -33,153 +43,17 @@ interface RbacConfig {
   }>
 }
 
-interface WorkOSPermission {
-  slug: string
-  name: string
-  description?: string
-}
-
-interface WorkOSRole {
-  slug: string
-  name: string
-  description?: string
-  type?: string
-}
-
 async function loadConfig(): Promise<RbacConfig> {
   const here = dirname(fileURLToPath(import.meta.url))
   const path = resolve(here, "rbac-config.json")
   return JSON.parse(await readFile(path, "utf8")) as RbacConfig
 }
 
-async function workosRequest<T>(
-  apiKey: string,
-  method: string,
-  path: string,
-  body?: unknown
-): Promise<T> {
-  const url = `${WORKOS_API_BASE}${path}`
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  }
-
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`WorkOS ${method} ${path} → ${res.status}: ${text}`)
-  }
-
-  if (res.status === 204 || res.headers.get("content-length") === "0") {
-    return {} as T
-  }
-
-  return res.json() as Promise<T>
-}
-
-async function listAllPermissions(apiKey: string): Promise<WorkOSPermission[]> {
-  const all: WorkOSPermission[] = []
-  let after: string | undefined
-
-  while (true) {
-    const params = new URLSearchParams({ limit: "100" })
-    if (after) params.set("after", after)
-
-    const res = await workosRequest<{
-      data: WorkOSPermission[]
-      list_metadata: { after: string | null }
-    }>(apiKey, "GET", `/authorization/permissions?${params}`)
-
-    all.push(...res.data)
-    if (!res.list_metadata.after) break
-    after = res.list_metadata.after
-  }
-
-  return all
-}
-
-async function listEnvironmentRoles(apiKey: string): Promise<WorkOSRole[]> {
-  const res = await workosRequest<{ data: WorkOSRole[] }>(
-    apiKey,
-    "GET",
-    "/authorization/roles"
-  )
-  return res.data
-}
-
-async function deletePermission(apiKey: string, slug: string): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/permissions/${slug}`)
-}
-
-async function deleteRole(apiKey: string, slug: string): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/roles/${slug}`)
-}
-
-async function createPermission(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "POST", "/authorization/permissions", {
-    slug,
-    name,
-    ...(description && { description }),
-  })
-}
-
-async function createRole(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "POST", "/authorization/roles", {
-    slug,
-    name,
-    ...(description && { description }),
-  })
-}
-
-async function updateRole(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "PATCH", `/authorization/roles/${slug}`, {
-    name,
-    ...(description !== undefined && { description }),
-  })
-}
-
-async function setRolePermissions(
-  apiKey: string,
-  roleSlug: string,
-  permissions: string[]
-): Promise<void> {
-  await workosRequest(
-    apiKey,
-    "PUT",
-    `/authorization/roles/${roleSlug}/permissions`,
-    { permissions }
-  )
-}
-
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes("--apply")
-  const envArg = args.find((a) => a.startsWith("--env="))
-  const envName = envArg?.split("=")[1] ?? "staging"
-
-  const apiKeyEnv =
-    envName === "production" ? "WORKOS_API_KEY_PRODUCTION" : "WORKOS_API_KEY"
-  const apiKey = process.env[apiKeyEnv] ?? process.env.WORKOS_API_KEY
+  const envName = parseCliEnv(args)
+  const { apiKey, apiKeyEnv } = resolveWorkosApiKey(envName)
 
   const config = await loadConfig()
 
@@ -190,7 +64,7 @@ async function main() {
     for (const cap of role.capabilities) {
       if (!capSlugs.includes(cap)) {
         console.error(
-          `Role '${role.slug}' references undefined capability '${cap}'.`
+          `[rbac] Role '${role.slug}' references undefined capability '${cap}'.`
         )
         process.exit(1)
       }
@@ -216,6 +90,9 @@ async function main() {
       )
       if (r.description) console.log(`    desc: ${r.description}`)
     }
+    console.log(
+      "\n[rbac] Widget grants are synced separately: pnpm widgets:generate -- --apply"
+    )
     return
   }
 
@@ -318,7 +195,10 @@ async function main() {
     console.log(`  ✓ ${role.slug}: ${role.capabilities.length} permissions`)
   }
 
-  console.log("\n[rbac] Done! Roles & permissions fully synced.")
+  console.log("\n[rbac] Done! App capabilities synced.")
+  console.log(
+    "[rbac] Next: pnpm widgets:generate -- --apply  (widget grants; preserves app perms on merge)"
+  )
 }
 
 main().catch((err) => {

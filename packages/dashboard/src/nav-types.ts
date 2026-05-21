@@ -1,9 +1,10 @@
-import type { ReactNode } from "react"
+import type { NavIconName } from "@eleva/icons"
 
 export interface NavItem {
   title: string
   url: string
-  icon: ReactNode
+  /** Serializable icon key — resolved client-side via getNavIcon. */
+  icon: NavIconName
   /** Required capability to show this item; omit for always visible */
   needs?: string
   shortcut?: string

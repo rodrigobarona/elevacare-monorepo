@@ -1,0 +1,51 @@
+{
+  "$schema": "./widgets-config.schema.json",
+  "version": 1,
+  "corsOriginsNote": "Configure in WorkOS Dashboard → Authentication → CORS (same environment as WORKOS_API_KEY). Include localhost app ports and https://dev.eleva.care / https://eleva.care.",
+  "widgets": [
+    {
+      "component": "UserProfile",
+      "tokenScopes": [],
+      "workosPermissions": [],
+      "surfaces": ["apps/account/account/settings"]
+    },
+    {
+      "component": "UserSecurity",
+      "tokenScopes": [],
+      "workosPermissions": [],
+      "surfaces": ["apps/account/account/settings"]
+    },
+    {
+      "component": "UserSessions",
+      "tokenScopes": ["widgets:users-table:read"],
+      "workosPermissions": ["widgets:users-table:read"],
+      "surfaces": ["apps/account/account/settings"]
+    },
+    {
+      "component": "UsersManagement",
+      "tokenScopes": ["widgets:users-table:manage"],
+      "workosPermissions": ["widgets:users-table:manage"],
+      "surfaces": ["apps/team", "apps/expert org admin"]
+    },
+    {
+      "component": "OrganizationSwitcher",
+      "tokenScopes": ["widgets:organization-switcher:read"],
+      "workosPermissions": ["widgets:organization-switcher:read"],
+      "surfaces": ["packages/dashboard app-sidebar"]
+    }
+  ],
+  "roleWidgetGrants": {
+    "admin": ["widgets:users-table:read", "widgets:organization-switcher:read"],
+    "member": ["widgets:users-table:read"],
+    "team_admin": [
+      "widgets:users-table:manage",
+      "widgets:organization-switcher:read"
+    ],
+    "expert": [
+      "widgets:users-table:read",
+      "widgets:organization-switcher:read"
+    ],
+    "lecturer": ["widgets:users-table:read"],
+    "staff": ["widgets:users-table:manage"]
+  }
+}

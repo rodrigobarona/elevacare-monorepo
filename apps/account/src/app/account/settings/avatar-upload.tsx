@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Camera, Trash2, Loader2 } from "lucide-react"
+import { CameraIcon, Trash2, Loader2 } from "@eleva/icons"
 import {
   Avatar,
   AvatarFallback,
@@ -138,7 +138,7 @@ export function AvatarUpload({
             </Avatar>
             {!uploading && (
               <div className="absolute inset-0 flex items-center justify-center rounded-full bg-foreground/0 transition-colors group-hover:bg-foreground/40 group-focus-visible:bg-foreground/40">
-                <Camera className="size-5 text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
+                <CameraIcon className="size-5 text-primary-foreground opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" />
               </div>
             )}
             {uploading && (

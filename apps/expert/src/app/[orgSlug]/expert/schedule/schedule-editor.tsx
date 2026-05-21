@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { Plus, X } from "lucide-react"
+import { PlusIcon, XIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -326,7 +326,7 @@ export function ScheduleEditor({
                       onClick={() => addWindow(idx)}
                       className="ml-auto"
                     >
-                      <Plus className="mr-1 h-3 w-3" />
+                      <PlusIcon className="mr-1 h-3 w-3" />
                       {t("addWindow")}
                     </Button>
                   )}
@@ -364,7 +364,7 @@ export function ScheduleEditor({
                           className="h-8 w-8"
                           onClick={() => removeWindow(idx, wIdx)}
                         >
-                          <X className="h-3 w-3" />
+                          <XIcon className="h-3 w-3" />
                         </Button>
                       )}
                     </div>

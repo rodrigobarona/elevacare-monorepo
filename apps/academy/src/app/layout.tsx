@@ -32,7 +32,7 @@ export default async function RootLayout({
       className={cn(fontClassName, appearance === "dark" && "dark")}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DashboardProviders initialTheme={initialTheme}>
             {children}

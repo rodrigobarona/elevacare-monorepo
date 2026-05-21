@@ -1,5 +1,5 @@
 import { Button } from "@eleva/ui/components/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
 import { SiteHeader } from "@/components/site-header"
 
@@ -31,7 +31,7 @@ function MarketingContent() {
         <div className="mt-10 flex gap-4">
           <Button size="lg">
             {t("home.cta")}
-            <ArrowRight data-icon="inline-end" />
+            <ArrowRightIcon data-icon="inline-end" />
           </Button>
           <Button variant="outline" size="lg">
             {t("home.ctaSecondary")}

@@ -3,7 +3,6 @@
 import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
 import {
-  getWidgetTokenFromSession,
   requireSession,
   getWorkOS,
   refreshWorkOSSession,
@@ -35,10 +34,6 @@ async function getAuthedApiClient() {
     baseUrl: getApiBaseUrl(),
     headers: cookie ? { cookie } : undefined,
   })
-}
-
-export async function getSettingsWidgetToken(): Promise<string> {
-  return getWidgetTokenFromSession(["widgets:users-table:manage"])
 }
 
 // ── Language preference ─────────────────────────────────────────────

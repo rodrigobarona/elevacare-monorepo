@@ -9,6 +9,9 @@ catalogs:
     '@neondatabase/serverless':
       specifier: ^1.1.0
       version: 1.1.0
+    '@phosphor-icons/react':
+      specifier: ^2.1.10
+      version: 2.1.10
     '@radix-ui/themes':
       specifier: ^3.3.0
       version: 3.3.0
@@ -51,9 +54,6 @@ catalogs:
     eslint:
       specifier: ^10.4.0
       version: 10.4.0
-    lucide-react:
-      specifier: ^1.16.0
-      version: 1.16.0
     next:
       specifier: ^16.2.6
       version: 16.2.6
@@ -164,6 +164,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
@@ -173,9 +176,6 @@ importers:
       '@workos-inc/authkit-nextjs':
         specifier: 'catalog:'
         version: 4.1.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -231,6 +231,9 @@ importers:
       '@eleva/dashboard':
         specifier: workspace:*
         version: link:../../packages/dashboard
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
@@ -255,9 +258,6 @@ importers:
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
         version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -319,6 +319,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
@@ -331,9 +334,6 @@ importers:
       '@workos-inc/node':
         specifier: 'catalog:'
         version: 9.3.0
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -501,6 +501,9 @@ importers:
       '@eleva/flags':
         specifier: workspace:^
         version: link:../../packages/flags
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/integrations':
         specifier: workspace:^
         version: link:../../packages/integrations
@@ -534,9 +537,6 @@ importers:
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
         version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -690,6 +690,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/integrations':
         specifier: workspace:^
         version: link:../../packages/integrations
@@ -720,9 +723,6 @@ importers:
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
         version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -784,6 +784,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
@@ -799,9 +802,6 @@ importers:
       '@workos-inc/node':
         specifier: 'catalog:'
         version: 9.3.0
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -854,15 +854,15 @@ importers:
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../../packages/icons
       '@eleva/observability':
         specifier: workspace:^
         version: link:../../packages/observability
       '@eleva/ui':
         specifier: workspace:*
         version: link:../../packages/ui
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1301,6 +1301,9 @@ importers:
       '@eleva/config':
         specifier: workspace:*
         version: link:../config
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@eleva/ui':
         specifier: workspace:*
         version: link:../ui
@@ -1313,9 +1316,6 @@ importers:
       '@workos-inc/widgets-i18n':
         specifier: 'catalog:'
         version: 1.0.0(patch_hash=5c09b5a1b4a52f02a1763293f3732f1b0110ee538a5bfc9b964c144a78b5b438)(@types/react@19.2.14)(@workos-inc/widgets@1.12.0(@radix-ui/themes@3.3.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(@tanstack/react-query@5.100.10(react@19.2.6))(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -1502,6 +1502,31 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  packages/icons:
+    dependencies:
+      '@phosphor-icons/react':
+        specifier: 'catalog:'
+        version: 2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+      react:
+        specifier: 'catalog:'
+        version: 19.2.6
+    devDependencies:
+      '@eleva/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@eleva/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/react':
+        specifier: 'catalog:'
+        version: 19.2.14
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.0(jiti@2.6.1)
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   packages/integrations:
     devDependencies:
       '@eleva/eslint-config':
@@ -1626,6 +1651,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@eleva/icons':
+        specifier: workspace:*
+        version: link:../icons
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.76.0(react@19.2.6))
@@ -1641,9 +1669,6 @@ importers:
       cmdk:
         specifier: ^1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      lucide-react:
-        specifier: 'catalog:'
-        version: 1.16.0(react@19.2.6)
       next:
         specifier: 'catalog:'
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -3306,6 +3331,13 @@ packages:
   '@parcel/watcher@2.5.6':
     resolution: {integrity: sha512-tmmZ3lQxAe/k/+rNnXQRawJ4NjxO2hqiOLTHvWchtGZULp4RyFeh6aU4XdOYBFe2KE1oShQTv4AblOs2iOrNnQ==}
     engines: {node: '>= 10.0.0'}
+
+  '@phosphor-icons/react@2.1.10':
+    resolution: {integrity: sha512-vt8Tvq8GLjheAZZYa+YG/pW7HDbov8El/MANW8pOAz4eGxrwhnbfrQZq0Cp4q8zBEu8NIhHdnr+r8thnfRSNYA==}
+    engines: {node: '>=10'}
+    peerDependencies:
+      react: '>= 16.8'
+      react-dom: '>= 16.8'
 
   '@prisma/instrumentation@7.6.0':
     resolution: {integrity: sha512-ZPW2gRiwpPzEfgeZgaekhqXrbW+Y2RJKHVqUmlhZhKzRNCcvR6DykzylDrynpArKKRQtLxoZy36fK7U0p3pdgQ==}
@@ -6436,11 +6468,6 @@ packages:
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
 
-  lucide-react@1.16.0:
-    resolution: {integrity: sha512-dYwyPzb4MEKpGUmNYk3WKWPnMrHs3FKM+q94kAnJrcDIqqn1hq2xY8scaS2ovsOCM5D51ey2gaRG3PBb1vgoYQ==}
-    peerDependencies:
-      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
@@ -9203,6 +9230,11 @@ snapshots:
       '@parcel/watcher-win32-arm64': 2.5.6
       '@parcel/watcher-win32-ia32': 2.5.6
       '@parcel/watcher-win32-x64': 2.5.6
+
+  '@phosphor-icons/react@2.1.10(react-dom@19.2.6(react@19.2.6))(react@19.2.6)':
+    dependencies:
+      react: 19.2.6
+      react-dom: 19.2.6(react@19.2.6)
 
   '@prisma/instrumentation@7.6.0(@opentelemetry/api@1.9.1)':
     dependencies:
@@ -12258,10 +12290,6 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
-
-  lucide-react@1.16.0(react@19.2.6):
-    dependencies:
-      react: 19.2.6
 
   magic-string@0.30.21:
     dependencies:

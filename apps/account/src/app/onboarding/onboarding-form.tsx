@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
-import { Loader2 } from "lucide-react"
+import { Loader2 } from "@eleva/icons"
 import { createApiClient } from "@eleva/api-client"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
