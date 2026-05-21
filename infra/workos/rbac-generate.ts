@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { dirname, resolve } from "node:path"
 import {
+  WorkosApiError,
   createPermission,
   createRole,
   deletePermission,
@@ -94,7 +95,7 @@ async function main() {
       if (r.description) console.log(`    desc: ${r.description}`)
     }
     console.log(
-      "\n[rbac] Widget grants are synced separately: pnpm widgets:generate -- --apply"
+      "\n[rbac] Widget grants are synced separately: pnpm workos:widgets:generate -- --apply"
     )
     return
   }
@@ -137,12 +138,12 @@ async function main() {
   let deleted = 0
   for (const perm of existingPerms) {
     if (perm.slug.startsWith("widgets:")) continue
+    if (perm.system) continue
     try {
       await deletePermission(apiKey, perm.slug)
       deleted++
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      if (msg.includes("→ 404:")) continue
+      if (err instanceof WorkosApiError && err.status === 404) continue
       console.error(
         `[rbac] Failed to delete permission '${perm.slug}' (${apiKeyEnv}):`,
         err
@@ -158,8 +159,7 @@ async function main() {
       await createPermission(apiKey, cap.slug, cap.displayName, cap.description)
       created++
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      if (msg.includes("409") || msg.includes("already exists")) {
+      if (err instanceof WorkosApiError && err.status === 409) {
         console.log(`  ⚠ '${cap.slug}' already exists`)
       } else {
         throw err
@@ -176,8 +176,10 @@ async function main() {
   }
 
   console.log("\n[rbac] Done! App capabilities synced.")
-  console.log(
-    "[rbac] Next: pnpm widgets:generate -- --apply  (widget grants; preserves app perms on merge)"
+  console.warn(
+    "\n[rbac] WARNING: rbac-generate clears widget grants from roles. You MUST run:\n" +
+      "  pnpm workos:widgets:generate -- --apply\n" +
+      "Widget access will be broken until widgets-generate completes."
   )
 }
 

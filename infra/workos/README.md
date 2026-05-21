@@ -99,7 +99,7 @@ Product labels are derived in code (`packages/auth/src/capabilities.ts`). When a
 
 ## Production deployment checklist
 
-1. Ensure `WORKOS_API_KEY` is set for the production environment
+1. Ensure `WORKOS_API_KEY_PRODUCTION` is set for the production environment (falls back to `WORKOS_API_KEY`)
 2. Review `rbac-config.json` changes (PR review recommended)
 3. Run `pnpm workos:rbac:generate -- --env=production --apply`
 4. Verify in WorkOS Dashboard: Authorization → Roles & Permissions
@@ -127,7 +127,9 @@ Widget UIs (`@workos-inc/widgets`) call `https://api.workos.com/_widgets/...` fr
 
 `rbac-generate.ts` intentionally **does not** sync `widgets:*` permissions. Use `widgets-generate.ts` instead.
 
-**Run order:** always `pnpm workos:rbac:generate -- --apply` first, then `pnpm workos:widgets:generate -- --apply`. Re-running rbac alone clears widget grants on roles; run widgets again after rbac changes.
+> **WARNING:** `pnpm workos:rbac:generate -- --apply` replaces role permission assignments and **will remove widget grants** from roles. You **must** run `pnpm workos:widgets:generate -- --apply` immediately afterward or widget access will break.
+
+**Run order:** always `pnpm workos:rbac:generate -- --apply` first, then `pnpm workos:widgets:generate -- --apply`.
 
 ### Widget scope quick reference
 

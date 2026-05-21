@@ -4,6 +4,22 @@
 
 export const WORKOS_API_BASE = "https://api.workos.com"
 
+export class WorkosApiError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly method: string,
+    readonly path: string
+  ) {
+    super(message)
+    this.name = "WorkosApiError"
+  }
+}
+
+export function encodePathSegment(segment: string): string {
+  return encodeURIComponent(segment)
+}
+
 export interface WorkOSPermission {
   slug: string
   name: string
@@ -82,14 +98,24 @@ export async function workosRequest<T>(
 
   if (!res.ok) {
     const text = await res.text()
-    throw new Error(`WorkOS ${method} ${path} → ${res.status}: ${text}`)
+    throw new WorkosApiError(
+      `WorkOS ${method} ${path} → ${res.status}: ${text}`,
+      res.status,
+      method,
+      path
+    )
   }
 
   if (res.status === 204 || res.headers.get("content-length") === "0") {
     return {} as T
   }
 
-  return res.json() as Promise<T>
+  const text = await res.text()
+  if (text.trim() === "") {
+    return {} as T
+  }
+
+  return JSON.parse(text) as T
 }
 
 export async function listAllPermissions(
@@ -133,7 +159,7 @@ export async function getEnvironmentRole(
   return workosRequest<WorkOSRole>(
     apiKey,
     "GET",
-    `/authorization/roles/${slug}`
+    `/authorization/roles/${encodePathSegment(slug)}`
   )
 }
 
@@ -141,7 +167,11 @@ export async function deletePermission(
   apiKey: string,
   slug: string
 ): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/permissions/${slug}`)
+  await workosRequest(
+    apiKey,
+    "DELETE",
+    `/authorization/permissions/${encodePathSegment(slug)}`
+  )
 }
 
 export async function createPermission(
@@ -163,10 +193,15 @@ export async function updatePermission(
   name: string,
   description?: string
 ): Promise<void> {
-  await workosRequest(apiKey, "PATCH", `/authorization/permissions/${slug}`, {
-    name,
-    ...(description !== undefined && { description }),
-  })
+  await workosRequest(
+    apiKey,
+    "PATCH",
+    `/authorization/permissions/${encodePathSegment(slug)}`,
+    {
+      name,
+      ...(description !== undefined && { description }),
+    }
+  )
 }
 
 export async function createRole(
@@ -190,10 +225,15 @@ export async function updateRole(
   description?: string
 ): Promise<void> {
   const safeDescription = truncateRoleDescription(description)
-  await workosRequest(apiKey, "PATCH", `/authorization/roles/${slug}`, {
-    name,
-    ...(safeDescription !== undefined && { description: safeDescription }),
-  })
+  await workosRequest(
+    apiKey,
+    "PATCH",
+    `/authorization/roles/${encodePathSegment(slug)}`,
+    {
+      name,
+      ...(safeDescription !== undefined && { description: safeDescription }),
+    }
+  )
 }
 
 export async function setRolePermissions(
@@ -204,7 +244,7 @@ export async function setRolePermissions(
   await workosRequest(
     apiKey,
     "PUT",
-    `/authorization/roles/${roleSlug}/permissions`,
+    `/authorization/roles/${encodePathSegment(roleSlug)}/permissions`,
     { permissions }
   )
 }

@@ -37,7 +37,8 @@ const EXPERT_BUNDLE = [
 
 /** Admin-context product labels from identity-rbac-spec (workos_role = admin). */
 const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
-  member: [
+  /** Patient product label — not the WorkOS org-seniority role `member`. */
+  patient: [
     "appointments:view_own",
     "sessions:view_own",
     "billing:view_own",
@@ -45,14 +46,7 @@ const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
   ],
   expert: EXPERT_BUNDLE,
   team_admin: [
-    "events:manage",
-    "schedule:manage",
-    "bookings:manage_own",
-    "reports:manage_own",
-    "payouts:view_own",
-    "expert:onboard",
-    "expert:profile_edit",
-    "expert:invoicing_manage",
+    ...EXPERT_BUNDLE,
     "members:manage",
     "billing:manage_org",
     "subscriptions:manage_org",
