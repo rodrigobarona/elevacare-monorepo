@@ -109,7 +109,7 @@ async function main() {
   console.log(`[rbac] Applying to WorkOS (${envName}) via ${apiKeyEnv}...\n`)
 
   // --- Step 1: Ensure all required roles exist ---
-  console.log("[1/4] Ensuring required roles exist...")
+  console.log("[1/3] Ensuring required roles exist...")
   const existingRoles = await listEnvironmentRoles(apiKey)
   const currentRolesBySlug = new Map(existingRoles.map((r) => [r.slug, r]))
 
@@ -131,15 +131,8 @@ async function main() {
     }
   }
 
-  // --- Step 2: Clear permissions on all managed roles ---
-  console.log("[2/4] Clearing permissions on all managed roles...")
-  for (const role of config.roles) {
-    await setRolePermissions(apiKey, role.slug, [])
-  }
-  console.log(`  ✓ Cleared ${config.roles.length} roles`)
-
-  // --- Step 3: Delete all non-system permissions, recreate from config ---
-  console.log("[3/4] Replacing permissions...")
+  // --- Step 2: Delete all non-system permissions, recreate from config ---
+  console.log("[2/3] Replacing permissions...")
   const existingPerms = await listAllPermissions(apiKey)
   let deleted = 0
   for (const perm of existingPerms) {
@@ -147,8 +140,14 @@ async function main() {
     try {
       await deletePermission(apiKey, perm.slug)
       deleted++
-    } catch {
-      // ignore
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (msg.includes("→ 404:")) continue
+      console.error(
+        `[rbac] Failed to delete permission '${perm.slug}' (${apiKeyEnv}):`,
+        err
+      )
+      throw err
     }
   }
   console.log(`  Deleted ${deleted} custom permissions`)
@@ -169,8 +168,8 @@ async function main() {
   }
   console.log(`  Created ${created} permissions`)
 
-  // --- Step 4: Assign permissions to roles ---
-  console.log("[4/4] Assigning permissions to roles...")
+  // --- Step 3: Assign permissions to roles ---
+  console.log("[3/3] Assigning permissions to roles...")
   for (const role of config.roles) {
     await setRolePermissions(apiKey, role.slug, role.capabilities)
     console.log(`  ✓ ${role.slug}: ${role.capabilities.length} permissions`)

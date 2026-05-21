@@ -63,9 +63,8 @@ pnpm workos:widgets:generate -- --env=production --apply
 ## What the script does (nuke-and-repave)
 
 1. **Ensures required roles exist** — updates metadata for `admin` and `member` (WorkOS org-seniority roles).
-2. **Clears permissions on all managed roles** — removes current permission assignments so we can rebuild cleanly.
-3. **Replaces all permissions** — deletes all non-system permissions, then recreates them from the JSON (with display names and descriptions).
-4. **Assigns permissions to roles** — maps capability supersets onto `admin` and `member`.
+2. **Replaces all permissions** — deletes all non-system permissions, then recreates them from the JSON (with display names and descriptions).
+3. **Assigns permissions to roles** — maps capability supersets onto `admin` and `member` in one PUT per role.
 
 ## Roles and capabilities
 

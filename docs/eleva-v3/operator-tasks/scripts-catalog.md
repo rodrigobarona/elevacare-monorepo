@@ -144,11 +144,14 @@ they were initially run on staging is safe.
 ### WorkOS — staging → production
 
 1. **Switch to a production `WORKOS_API_KEY`** in your shell.
-2. **Sync RBAC**:
+2. **Sync RBAC**, then **widget grants** (RBAC first so widgets merge onto app permissions):
 
    ```bash
-   pnpm workos:rbac:generate
+   pnpm workos:rbac:generate -- --env=production --apply
+   pnpm workos:widgets:generate -- --env=production --apply
    ```
+
+   Widget grants include production-specific variants from `infra/workos/widgets-config.json`.
 
 3. Verify in the WorkOS Dashboard → RBAC tab that all roles + permissions match `infra/workos/rbac-config.json`.
 

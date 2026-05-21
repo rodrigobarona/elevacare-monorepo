@@ -25,9 +25,10 @@ export function truncateRoleDescription(
   description: string | undefined,
   max = WORKOS_ROLE_DESCRIPTION_MAX
 ): string | undefined {
-  if (!description) return description
-  if (description.length <= max) return description
-  return `${description.slice(0, max - 1)}…`
+  if (description === undefined) return description
+  const chars = [...description]
+  if (chars.length <= max) return description
+  return `${chars.slice(0, max - 1).join("")}…`
 }
 
 export function resolveWorkosApiKey(envName: string): {
@@ -152,7 +153,7 @@ export async function createPermission(
   await workosRequest(apiKey, "POST", "/authorization/permissions", {
     slug,
     name,
-    ...(description && { description }),
+    ...(description !== undefined && { description }),
   })
 }
 
@@ -178,7 +179,7 @@ export async function createRole(
   await workosRequest(apiKey, "POST", "/authorization/roles", {
     slug,
     name,
-    ...(safeDescription && { description: safeDescription }),
+    ...(safeDescription !== undefined && { description: safeDescription }),
   })
 }
 

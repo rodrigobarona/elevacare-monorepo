@@ -34,4 +34,18 @@ describe("truncateRoleDescription", () => {
     expect(result!.length).toBe(150)
     expect(result!.endsWith("…")).toBe(true)
   })
+
+  it("truncates by Unicode code point without splitting surrogate pairs", () => {
+    const emoji = "😀".repeat(160)
+    const result = truncateRoleDescription(emoji)
+    expect([...result!].length).toBe(150)
+    expect(result!.endsWith("…")).toBe(true)
+    expect([...result!.slice(0, -1)].every((char) => char !== "\uD800")).toBe(
+      true
+    )
+  })
+
+  it("preserves empty string descriptions", () => {
+    expect(truncateRoleDescription("")).toBe("")
+  })
 })

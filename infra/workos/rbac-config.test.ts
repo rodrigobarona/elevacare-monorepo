@@ -23,6 +23,18 @@ async function load(): Promise<RbacConfig> {
   return JSON.parse(await readFile(resolve(here, "rbac-config.json"), "utf8"))
 }
 
+/** Expert-in-clinic bundle (workos_role = member in clinic org). */
+const EXPERT_BUNDLE = [
+  "events:manage",
+  "schedule:manage",
+  "bookings:manage_own",
+  "reports:manage_own",
+  "payouts:view_own",
+  "expert:onboard",
+  "expert:profile_edit",
+  "expert:invoicing_manage",
+] as const
+
 /** Admin-context product labels from identity-rbac-spec (workos_role = admin). */
 const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
   member: [
@@ -31,6 +43,7 @@ const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
     "billing:view_own",
     "diary:share",
   ],
+  expert: EXPERT_BUNDLE,
   team_admin: [
     "events:manage",
     "schedule:manage",
@@ -66,17 +79,6 @@ const ADMIN_CONTEXT_BUNDLES: Record<string, readonly string[]> = {
     "usernames:rename",
   ],
 }
-
-const EXPERT_BUNDLE = [
-  "events:manage",
-  "schedule:manage",
-  "bookings:manage_own",
-  "reports:manage_own",
-  "payouts:view_own",
-  "expert:onboard",
-  "expert:profile_edit",
-  "expert:invoicing_manage",
-] as const
 
 function unionAdminCapabilities(): Set<string> {
   const caps = new Set<string>()
