@@ -1,9 +1,10 @@
 "use server"
 
 import { getWidgetTokenFromSession } from "@eleva/auth/server"
-import { UnauthorizedError } from "@eleva/auth"
+import { UnauthorizedError, type ProductLabel } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import type { DashboardConfig, NavGroup } from "./nav-types"
+import { resolveProductHomeUrl } from "./resolve-product-home-url"
 
 type BuildDashboardConfigOverrides = Partial<
   Omit<DashboardConfig, "navGroups" | "user">
@@ -19,6 +20,7 @@ interface SessionLike {
     avatarUrl?: string | null
   }
   orgSlug?: string | null
+  productLabel?: ProductLabel
   capabilities?: readonly string[]
 }
 
@@ -49,7 +51,7 @@ export async function buildDashboardConfig(
 
   const homeUrl =
     configOverrides.homeUrl ??
-    (!enableOrgSwitcher ? `${GATEWAY_URL}/dashboard` : undefined)
+    (!enableOrgSwitcher ? resolveProductHomeUrl(session) : undefined)
 
   return {
     navGroups,

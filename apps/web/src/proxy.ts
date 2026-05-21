@@ -13,17 +13,6 @@ const intlMiddleware = createMiddleware(routing)
 const origins = resolveOriginsFromEnv()
 const SESSION_COOKIE = process.env.WORKOS_COOKIE_NAME || "wos-session"
 
-function shouldRedirectToLocalZone(origin: string): boolean {
-  if (process.env.NODE_ENV !== "development") return false
-
-  try {
-    const url = new URL(origin)
-    return url.hostname === "localhost" || url.hostname === "127.0.0.1"
-  } catch {
-    return false
-  }
-}
-
 export default function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const hasSession = request.cookies.has(SESSION_COOKIE)
@@ -32,9 +21,6 @@ export default function proxy(request: NextRequest) {
 
   if (decision.kind === "rewrite") {
     const destination = buildRewriteUrl(request, decision.origin)
-    if (shouldRedirectToLocalZone(decision.origin)) {
-      return NextResponse.redirect(destination)
-    }
     return NextResponse.rewrite(destination)
   }
 
