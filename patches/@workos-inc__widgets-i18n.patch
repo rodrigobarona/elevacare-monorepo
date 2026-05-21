@@ -121,3 +121,53 @@ index a548db0dba9b03971686b4ea47750ae6e95a01b0..3e3197aee9f1bed1cb340d4df1845bd0
 +  "dbgchn": "Novo endereço de email",
 +  "upvyOt": "Introduzir código de verificação"
  }
+diff --git a/dist/cjs/lib/locale-provider.cjs b/dist/cjs/lib/locale-provider.cjs
+index 1111111111111111111111111111111111111111..2222222222222222222222222222222222222222 100644
+--- a/dist/cjs/lib/locale-provider.cjs
++++ b/dist/cjs/lib/locale-provider.cjs
+@@ -61,7 +61,11 @@ function WorkOsLocaleProvider({
+   const [messages, setMessages] = React.useState(
+     initialMessages ?? null
+   );
+   React.useEffect(() => {
++    if (initialMessages != null) {
++      setMessages(initialMessages);
++      return;
++    }
+     let isCurrent = true;
+     (0, import_dictionaries.getDictionary)(locale).then((messages2) => {
+       if (isCurrent) {
+@@ -71,7 +75,7 @@ function WorkOsLocaleProvider({
+     return () => {
+       isCurrent = false;
+     };
+-  }, [locale]);
++  }, [locale, initialMessages]);
+   if (!messages) {
+     return children;
+   }
+diff --git a/dist/esm/lib/locale-provider.js b/dist/esm/lib/locale-provider.js
+index 3333333333333333333333333333333333333333..4444444444444444444444444444444444444444 100644
+--- a/dist/esm/lib/locale-provider.js
++++ b/dist/esm/lib/locale-provider.js
+@@ -34,7 +34,11 @@ function WorkOsLocaleProvider({
+   const [messages, setMessages] = React.useState(
+     initialMessages ?? null
+   );
+   React.useEffect(() => {
++    if (initialMessages != null) {
++      setMessages(initialMessages);
++      return;
++    }
+     let isCurrent = true;
+     getDictionary(locale).then((messages2) => {
+       if (isCurrent) {
+@@ -44,7 +48,7 @@ function WorkOsLocaleProvider({
+     return () => {
+       isCurrent = false;
+     };
+-  }, [locale]);
++  }, [locale, initialMessages]);
+   if (!messages) {
+     return children;
+   }
