@@ -11,6 +11,10 @@ import {
   CreateAccountSessionResponseSchema,
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
+  CreateOrganizationRequestSchema,
+  CreateOrganizationResponseSchema,
+  CreateWorkspaceRequestSchema,
+  ListOrganizationsMineResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -174,12 +178,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  name: z.string().min(2).max(100),
-                  type: z
-                    .enum(["personal", "expert", "team", "staff"])
-                    .default("personal"),
-                }),
+                schema: CreateOrganizationRequestSchema,
               },
             },
           },
@@ -188,12 +187,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Organization created",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    orgId: z.string().uuid(),
-                    slug: z.string(),
-                    workosOrgId: z.string(),
-                    created: z.boolean(),
-                  }),
+                  schema: CreateOrganizationResponseSchema,
                 },
               },
             },
@@ -255,6 +249,26 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/organizations/mine": {
+        get: {
+          operationId: "listMyOrganizations",
+          summary: "List current user's workspaces",
+          description:
+            "Returns all organizations the authenticated user belongs to, enriched for the workspace switcher UI and agent clients.",
+          tags: ["Organizations"],
+          responses: {
+            "200": {
+              description: "Workspace list",
+              content: {
+                "application/json": {
+                  schema: ListOrganizationsMineResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
           },
         },
       },

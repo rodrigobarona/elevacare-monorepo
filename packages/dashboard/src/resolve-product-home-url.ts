@@ -1,9 +1,14 @@
-import type { ProductLabel } from "@eleva/auth"
+import type { ProductLabel, OrgType } from "@eleva/auth/types"
+import {
+  resolveExpertWorkspaceBase,
+  resolveTeamAdminBase,
+} from "@eleva/auth/org-routing"
 import { resolveGatewayUrl } from "@eleva/config/env"
 
 export interface ProductHomeSession {
   orgSlug?: string | null
   productLabel?: ProductLabel
+  orgType?: OrgType | string | null
 }
 
 const GATEWAY_URL = resolveGatewayUrl()
@@ -25,9 +30,9 @@ export function resolveProductHomeUrl(session: ProductHomeSession): string {
   const slug = session.orgSlug
   switch (session.productLabel) {
     case "expert":
-      return `${GATEWAY_URL}/${slug}/expert`
+      return `${GATEWAY_URL}${resolveExpertWorkspaceBase(slug, session.orgType)}`
     case "team_admin":
-      return `${GATEWAY_URL}/${slug}/team`
+      return `${GATEWAY_URL}${resolveTeamAdminBase(slug)}`
     case "lecturer":
       return `${GATEWAY_URL}/${slug}/academy`
     case "staff":

@@ -1,6 +1,7 @@
 import { eq } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession, LOGIN_PATH } from "@eleva/auth"
+import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
 import {
   getAdapter,
   InvoicingProviderSlug,
@@ -8,7 +9,20 @@ import {
 } from "@eleva/accounting"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
-import { env } from "@eleva/config/env"
+import { env, resolveGatewayUrl } from "@eleva/config/env"
+
+function onboardingUrl(
+  query: string,
+  orgSlug: string | null | undefined,
+  orgType: string | null | undefined
+): URL {
+  const gateway = resolveGatewayUrl()
+  if (orgSlug) {
+    const base = resolveExpertWorkspaceBase(orgSlug, orgType)
+    return new URL(`${base}/setup?${query}`, gateway)
+  }
+  return new URL(`/onboarding?${query}`, gateway)
+}
 
 /**
  * GET /accounting/callback
@@ -42,20 +56,32 @@ export async function GET(request: Request) {
   if (error) {
     console.error("[accounting/callback] Provider error:", error)
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=provider_denied", appUrl)
+      onboardingUrl(
+        "invoicing_error=provider_denied",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
 
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=missing_params", appUrl)
+      onboardingUrl(
+        "invoicing_error=missing_params",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
 
   const parts = state.split(":")
   if (parts.length < 3) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=invalid_state", appUrl)
+      onboardingUrl(
+        "invoicing_error=invalid_state",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
 
@@ -69,14 +95,22 @@ export async function GET(request: Request) {
     /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
   if (!UUID_RE.test(expertProfileId) || !codeVerifier) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=invalid_state", appUrl)
+      onboardingUrl(
+        "invoicing_error=invalid_state",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
 
   const parsed = InvoicingProviderSlug.safeParse(rawProvider)
   if (!parsed.success) {
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=invalid_provider", appUrl)
+      onboardingUrl(
+        "invoicing_error=invalid_provider",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
   const providerSlug = parsed.data
@@ -90,8 +124,14 @@ export async function GET(request: Request) {
           id: main.expertProfiles.id,
           orgId: main.expertProfiles.orgId,
           userId: main.expertProfiles.userId,
+          orgSlug: main.organizations.slug,
+          orgType: main.organizations.type,
         })
         .from(main.expertProfiles)
+        .innerJoin(
+          main.organizations,
+          eq(main.expertProfiles.orgId, main.organizations.id)
+        )
         .where(eq(main.expertProfiles.id, expertProfileId))
         .limit(1)
       return row ?? null
@@ -99,7 +139,11 @@ export async function GET(request: Request) {
 
     if (!expert || expert.userId !== session.user.id) {
       return NextResponse.redirect(
-        new URL("/expert/onboarding?invoicing_error=not_found", appUrl)
+        onboardingUrl(
+          "invoicing_error=not_found",
+          session.orgSlug,
+          session.orgType
+        )
       )
     }
 
@@ -178,12 +222,16 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_connected=true", appUrl)
+      onboardingUrl("invoicing_connected=true", expert.orgSlug, expert.orgType)
     )
   } catch (err) {
     console.error("[accounting/callback] Connect failed:", err)
     return NextResponse.redirect(
-      new URL("/expert/onboarding?invoicing_error=connect_failed", appUrl)
+      onboardingUrl(
+        "invoicing_error=connect_failed",
+        session.orgSlug,
+        session.orgType
+      )
     )
   }
 }

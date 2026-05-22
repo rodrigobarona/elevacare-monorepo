@@ -39,6 +39,9 @@ export async function getOrganizationBySlug(
 /**
  * Fetch an expert profile by user ID (used after approval to check
  * onboarding state).
+ *
+ * @deprecated Prefer {@link getExpertProfileForOrg} in org-scoped routes —
+ * a user may have profiles in multiple orgs.
  */
 export async function getExpertProfileByUserId(
   userId: string
@@ -55,6 +58,55 @@ export async function getExpertProfileByUserId(
       )
       .limit(1)
     return rows[0] ?? null
+  })
+}
+
+/** Org-scoped expert profile lookup for multi-org users. */
+export async function getExpertProfileForOrg(
+  userId: string,
+  orgId: string
+): Promise<main.ExpertProfile | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const rows = await tx
+      .select()
+      .from(main.expertProfiles)
+      .where(
+        and(
+          eq(main.expertProfiles.userId, userId),
+          eq(main.expertProfiles.orgId, orgId),
+          isNull(main.expertProfiles.deletedAt)
+        )
+      )
+      .limit(1)
+    return rows[0] ?? null
+  })
+}
+
+/** Bootstrap a draft profile when an expert org has none yet (self-serve create). */
+export async function ensureExpertProfileForOrg(input: {
+  userId: string
+  orgId: string
+  orgSlug: string
+  displayName: string
+}): Promise<main.ExpertProfile> {
+  const existing = await getExpertProfileForOrg(input.userId, input.orgId)
+  if (existing) return existing
+
+  return withPlatformAdminContext(async (tx) => {
+    const [inserted] = await tx
+      .insert(main.expertProfiles)
+      .values({
+        orgId: input.orgId,
+        userId: input.userId,
+        username: input.orgSlug,
+        displayName: input.displayName,
+        status: "approved",
+      })
+      .returning()
+    if (!inserted) {
+      throw new Error("Failed to create expert profile")
+    }
+    return inserted
   })
 }
 

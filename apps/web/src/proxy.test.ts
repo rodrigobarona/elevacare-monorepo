@@ -3,6 +3,24 @@ import { NextRequest, NextResponse } from "next/server"
 import type { GatewayOrigins } from "@eleva/config/dispatch"
 import { createGatewayProxy } from "./lib/create-gateway-proxy"
 
+vi.mock("@eleva/auth/org-routing", () => ({
+  getOrgTypeBySlug: vi.fn(async (slug: string) => {
+    if (slug === "barona-expert") return "expert"
+    if (slug === "clinica-mota") return "team"
+    return null
+  }),
+  orgSlugNeedingTypeLookup: vi.fn((pathname: string) => {
+    const segments = pathname.split("/").filter(Boolean)
+    const first = segments[0] ?? ""
+    const second = segments[1] ?? ""
+    if (!first || first === "login" || first === "admin") return null
+    if (second === "team" || second === "admin" || second === "academy") {
+      return null
+    }
+    return first
+  }),
+}))
+
 const testOrigins: GatewayOrigins = {
   app: "http://localhost:3001",
   expert: "http://localhost:3003",
@@ -134,7 +152,7 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("redirects authenticated org slug to member app in development", async () => {
+  it("redirects authenticated team org slug to member app in development", async () => {
     vi.stubEnv("NODE_ENV", "development")
     const proxy = createGatewayProxy({
       origins: testOrigins,
@@ -151,7 +169,24 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("rewrites org-scoped expert route in production", async () => {
+  it("redirects authenticated expert org slug to expert app in development", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/barona-expert", {
+        cookieNames: ["wos-session"],
+      })
+    )
+    expect(res.status).toBe(307)
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3003/barona-expert"
+    )
+  })
+
+  it("rewrites clinic expert /team route to expert zone in production", async () => {
     vi.stubEnv("NODE_ENV", "production")
     const proxy = createGatewayProxy({
       origins: {
@@ -161,12 +196,31 @@ describe("createGatewayProxy integration", () => {
       intlMiddleware: marketingIntl,
     })
     const res = await proxy(
-      makeRequest("/clinica-mota/expert/schedule", {
+      makeRequest("/clinica-mota/team/schedule", {
         cookieNames: ["wos-session"],
       })
     )
     expect(res.headers.get("x-middleware-rewrite")).toBe(
-      "https://expert.eleva.care/clinica-mota/expert/schedule"
+      "https://expert.eleva.care/clinica-mota/team/schedule"
+    )
+  })
+
+  it("rewrites clinic admin route to team zone in production", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    const proxy = createGatewayProxy({
+      origins: {
+        ...testOrigins,
+        team: "https://team.eleva.care",
+      },
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/clinica-mota/admin", {
+        cookieNames: ["wos-session"],
+      })
+    )
+    expect(res.headers.get("x-middleware-rewrite")).toBe(
+      "https://team.eleva.care/clinica-mota/admin"
     )
   })
 

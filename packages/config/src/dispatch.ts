@@ -55,8 +55,8 @@ const localeSet = new Set<string>(locales)
  *  6. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup) at depth 1 -> account zone
  *  7. App standalone at depth 1 -> app zone
- *  8. Org-scoped second segment (/:slug/expert|team|academy|settings)
- *     -> respective satellite app
+ *  8. Org-scoped second segment (/:slug/team|admin|academy|settings)
+ *     -> respective satellite app (team org experts → /team, managers → /admin)
  *  9. Bare or deeper /:slug with valid shape:
  *       hasSession -> app zone (member app handles org check)
  *       !hasSession -> unauth-slug (caller redirects to /login)
@@ -100,9 +100,9 @@ export function resolveDispatch(
 
   const isSlug = !RESERVED_SLUGS.has(first) && isOrgSlugShape(first)
 
-  if (isSlug && second === "expert")
-    return { kind: "rewrite", origin: origins.expert }
   if (isSlug && second === "team")
+    return { kind: "rewrite", origin: origins.expert }
+  if (isSlug && second === "admin")
     return { kind: "rewrite", origin: origins.team }
   if (isSlug && second === "academy")
     return { kind: "rewrite", origin: origins.academy }

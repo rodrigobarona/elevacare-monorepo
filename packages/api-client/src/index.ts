@@ -38,7 +38,30 @@ export const SyncExistingOnboardingResponseSchema = z.discriminatedUnion(
 
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().min(2).max(100).trim(),
-  type: z.enum(["personal", "expert", "team", "staff"]).default("personal"),
+  type: z
+    .enum(["personal", "expert", "team", "academy", "staff"])
+    .default("personal"),
+})
+
+/** Workspace create flow — deliberate work orgs only (not personal onboarding). */
+export const CreateWorkspaceRequestSchema = z.object({
+  name: z.string().min(2).max(100).trim(),
+  type: z.enum(["expert", "team", "academy"]),
+})
+
+export const OrganizationSwitcherItemSchema = z.object({
+  workosOrgId: z.string(),
+  orgId: z.string().uuid(),
+  orgSlug: z.string(),
+  orgType: z.string(),
+  name: z.string(),
+  workosRole: z.enum(["admin", "member"]),
+  productLabel: z.string(),
+  isCurrent: z.boolean(),
+})
+
+export const ListOrganizationsMineResponseSchema = z.object({
+  organizations: z.array(OrganizationSwitcherItemSchema),
 })
 
 export const CreateOrganizationResponseSchema = z.object({
@@ -146,6 +169,15 @@ export type SyncExistingOnboardingResponse = z.infer<
 >
 export type CreateOrganizationRequest = z.infer<
   typeof CreateOrganizationRequestSchema
+>
+export type CreateWorkspaceRequest = z.infer<
+  typeof CreateWorkspaceRequestSchema
+>
+export type OrganizationSwitcherItem = z.infer<
+  typeof OrganizationSwitcherItemSchema
+>
+export type ListOrganizationsMineResponse = z.infer<
+  typeof ListOrganizationsMineResponseSchema
 >
 export type CreateOrganizationResponse = z.infer<
   typeof CreateOrganizationResponseSchema
@@ -402,6 +434,12 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     organizations: {
+      listMine() {
+        return request<ListOrganizationsMineResponse>(
+          "GET",
+          "/organizations/mine"
+        )
+      },
       create(data: CreateOrganizationRequest) {
         return request<CreateOrganizationResponse>(
           "POST",

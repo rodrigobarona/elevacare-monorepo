@@ -35,8 +35,8 @@ export const APP_STANDALONE_PATHS = [] as const
  * the web proxy to detect org-slug-prefixed app routes.
  */
 export const ORG_SCOPED_SEGMENTS = [
-  "expert",
   "team",
+  "admin",
   "academy",
   "settings",
 ] as const

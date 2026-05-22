@@ -96,6 +96,7 @@ catalogs:
 
 patchedDependencies:
   '@workos-inc/widgets-i18n': 2eb801f7e8ff273abf4af05b57744dfeb1a7b5459aaca6a06d5fd9634b412598
+  next-themes@0.4.6: 73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3
 
 importers:
 
@@ -339,7 +340,7 @@ importers:
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -542,7 +543,7 @@ importers:
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -731,7 +732,7 @@ importers:
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -810,7 +811,7 @@ importers:
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -1327,7 +1328,7 @@ importers:
         version: 4.12.0(next@16.2.6(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6))(react@19.2.6)(typescript@6.0.3)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       react:
         specifier: 'catalog:'
         version: 19.2.6
@@ -1677,7 +1678,7 @@ importers:
         version: 16.2.6(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       next-themes:
         specifier: 'catalog:'
-        version: 0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
+        version: 0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       radix-ui:
         specifier: ^1.4.3
         version: 1.4.3(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -12417,7 +12418,7 @@ snapshots:
     transitivePeerDependencies:
       - '@swc/helpers'
 
-  next-themes@0.4.6(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
+  next-themes@0.4.6(patch_hash=73478c20fb87207168b5c0fa9ccabf0c042408da2bc5a36131ed1c8bb57bf5a3)(react-dom@19.2.6(react@19.2.6))(react@19.2.6):
     dependencies:
       react: 19.2.6
       react-dom: 19.2.6(react@19.2.6)

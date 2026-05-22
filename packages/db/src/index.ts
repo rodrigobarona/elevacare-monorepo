@@ -12,6 +12,7 @@ export type {
   SessionMode,
   StripeIdentityStatus,
   InvoicingSetupStatus,
+  ExpertProfile,
 } from "./schema/main/expert-profiles"
 export type { ExpertIntegration } from "./schema/main/expert-integrations"
 export {
@@ -32,6 +33,8 @@ export {
 export { pingMainDb, pingAuditDb } from "./ping"
 export {
   getExpertProfileByUserId,
+  getExpertProfileForOrg,
+  ensureExpertProfileForOrg,
   updateExpertProfile,
   getOrganizationBySlug,
 } from "./queries/admin"

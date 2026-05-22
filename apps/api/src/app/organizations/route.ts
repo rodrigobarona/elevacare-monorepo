@@ -1,6 +1,8 @@
-import { z } from "zod"
-import { provisionMembership, provisionOrganization } from "@eleva/auth"
-import { getWorkOS } from "@eleva/auth/server"
+import {
+  CreateOrganizationRequestSchema,
+  CreateWorkspaceRequestSchema,
+} from "@eleva/api-client"
+import { createOrganization } from "@eleva/auth"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
@@ -12,11 +14,6 @@ import { UnauthorizedError } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const CreateOrgSchema = z.object({
-  name: z.string().min(2).max(100).trim(),
-  type: z.enum(["personal", "expert", "team", "staff"]).default("personal"),
-})
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, GET, OPTIONS")
@@ -42,7 +39,12 @@ export async function POST(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const body = CreateOrgSchema.safeParse(await request.json().catch(() => ({})))
+  const rawBody = await request.json().catch(() => ({}))
+  const workspaceBody = CreateWorkspaceRequestSchema.safeParse(rawBody)
+  const body = workspaceBody.success
+    ? workspaceBody
+    : CreateOrganizationRequestSchema.safeParse(rawBody)
+
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },
@@ -50,48 +52,18 @@ export async function POST(request: Request) {
     )
   }
 
-  const workos = getWorkOS()
-  const workosOrg = await workos.organizations.createOrganization({
-    name: body.data.name,
-  })
-
-  await workos.userManagement.createOrganizationMembership({
-    userId: session.user.workosUserId,
-    organizationId: workosOrg.id,
-    roleSlug: "admin",
-  })
-
-  const result = await provisionOrganization({
-    workosOrgId: workosOrg.id,
+  const result = await createOrganization({
+    workosUserId: session.user.workosUserId,
+    userId: session.user.id,
     name: body.data.name,
     type: body.data.type,
-    actorUserId: session.user.id,
   })
 
-  await Promise.allSettled([
-    workos.organizations.updateOrganization({
-      organization: workosOrg.id,
-      externalId: result.orgId,
-      metadata: { slug: result.slug, org_type: body.data.type },
-    }),
-  ])
-
-  await provisionMembership({
-    userId: session.user.id,
-    orgId: result.orgId,
-    role: "admin",
-    actorUserId: session.user.id,
-  })
-
-  // W2: provision Stripe billing for every newly-created org so the
-  // WorkOS Stripe Add-on can attach entitlements. Non-blocking: a
-  // failure here does not roll back org creation; an operator can
-  // re-run the backfill script (`backfill-org-customers.ts`).
   if (result.created) {
     try {
       await provisionOrgBilling({
         orgId: result.orgId,
-        workosOrgId: workosOrg.id,
+        workosOrgId: result.workosOrgId,
         orgName: body.data.name,
         orgType: body.data.type,
         actorUserId: session.user.id,
@@ -108,7 +80,7 @@ export async function POST(request: Request) {
     {
       orgId: result.orgId,
       slug: result.slug,
-      workosOrgId: workosOrg.id,
+      workosOrgId: result.workosOrgId,
       created: result.created,
     },
     { status: result.created ? 201 : 200, headers }

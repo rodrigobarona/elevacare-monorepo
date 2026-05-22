@@ -26,7 +26,7 @@ export function DashboardShell({
           homeUrl={homeUrl}
           navGroups={config.navGroups}
           capabilities={config.capabilities}
-          widgetToken={config.widgetToken}
+          organizations={config.organizations}
         />
         <SidebarInset>
           <DashboardHeader

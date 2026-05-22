@@ -136,10 +136,17 @@
       "breakpoints": true
     },
     {
-      "idx": 19,
+      "idx": 20,
       "version": "7",
-      "when": 1779233585917,
-      "tag": "0019_remarkable_shiva",
+      "when": 1779300000000,
+      "tag": "0020_add_academy_org_type",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1779416518992,
+      "tag": "0021_abnormal_jackpot",
       "breakpoints": true
     }
   ]

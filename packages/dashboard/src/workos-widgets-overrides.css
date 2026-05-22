@@ -1,7 +1,6 @@
 /* Bridge Radix Themes (WorkOS widgets) to Eleva shadcn tokens */
 .eleva-workos-widgets.woswidgets-root,
-.eleva-workos-widgets .woswidgets-root,
-.eleva-org-switcher .woswidgets-root {
+.eleva-workos-widgets .woswidgets-root {
   --default-font-family: var(--font-sans);
   background: transparent !important;
   /* WorkOS base.css sets block-size: 100%; avoid empty stretch in settings fieldsets */
@@ -11,8 +10,7 @@
 
 /* Embedded widgets are not full-page roots — cancel Radix min-height: 100dvh */
 @supports (min-height: 100dvh) {
-  .eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]),
-  .eleva-org-switcher.radix-themes:where([data-is-root-theme="true"]) {
+  .eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]) {
     min-height: auto !important;
   }
 }
@@ -25,9 +23,7 @@
 .eleva-workos-widgets.woswidgets-root,
 .eleva-workos-widgets .woswidgets-root,
 .eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]),
-.woswidgets-root.radix-themes:where([data-is-root-theme="true"]),
-.eleva-org-switcher.woswidgets-root,
-.eleva-org-switcher .woswidgets-root {
+.woswidgets-root.radix-themes:where([data-is-root-theme="true"]) {
   --accent-1: var(--primary-foreground);
   --accent-2: var(--primary-foreground);
   --accent-7: rgb(var(--eleva-primary-light));
@@ -50,10 +46,6 @@
     a[href],
     [role="button"]
   ):not(:disabled):not([data-disabled]):not([aria-disabled="true"]),
-.eleva-org-switcher
-  :where(button, .rt-Button, .rt-BaseButton, [role="button"]):not(:disabled):not(
-    [data-disabled]
-  ):not([aria-disabled="true"]),
 /* Portaled modals (Editar nome, Alterar senha, etc.) — theme root leaves embed wrapper */
 .woswidgets-root.radix-themes
   :where(

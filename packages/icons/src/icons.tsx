@@ -15,6 +15,7 @@ export {
   CameraIcon,
   CaretDownIcon,
   CaretRightIcon,
+  CaretUpDownIcon,
   CaretUpIcon,
   ChartBarIcon,
   CheckCircleIcon,

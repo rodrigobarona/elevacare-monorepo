@@ -7,22 +7,22 @@ import {
   SidebarContent,
   SidebarHeader,
 } from "@eleva/ui/components/sidebar"
-import { OrgSwitcherWidget } from "./org-switcher-widget"
+import { OrgSwitcher } from "./org-switcher"
 import { NavMain } from "./nav-main"
-import type { NavGroup } from "./nav-types"
+import type { NavGroup, OrgSwitcherItem } from "./nav-types"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   homeUrl?: string
   navGroups: NavGroup[]
   capabilities?: readonly string[]
-  widgetToken?: string | null
+  organizations?: OrgSwitcherItem[]
 }
 
 export function AppSidebar({
   homeUrl = "/",
   navGroups,
   capabilities,
-  widgetToken,
+  organizations,
   ...props
 }: AppSidebarProps) {
   const t = useTranslations("shell")
@@ -30,8 +30,8 @@ export function AppSidebar({
   return (
     <Sidebar {...props}>
       <SidebarHeader className="h-14 justify-center border-b border-sidebar-border p-2">
-        {widgetToken ? (
-          <OrgSwitcherWidget authToken={widgetToken} />
+        {organizations && organizations.length > 0 ? (
+          <OrgSwitcher organizations={organizations} />
         ) : (
           <a
             href={homeUrl}

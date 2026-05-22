@@ -65,9 +65,40 @@
     "errorGeneric": "We couldn't complete onboarding. Please try again."
   },
   "organizations": {
-    "title": "Organizations",
-    "description": "Manage your organizations, create new ones, or leave existing ones.",
-    "placeholder": "Organization management coming soon."
+    "title": "Workspaces",
+    "description": "Manage your workspaces, create new ones, or switch between them.",
+    "createWorkspace": "Create workspace"
+  },
+  "createWorkspace": {
+    "pickerTitle": "Create a workspace",
+    "pickerDescription": "Choose the type of workspace you want to create.",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "My workspace",
+    "submit": "Create workspace",
+    "submitting": "Creating…",
+    "errorGeneric": "We couldn't create your workspace. Please try again.",
+    "types": {
+      "expert": {
+        "title": "Expert",
+        "description": "Run your independent practice on Eleva.",
+        "wizardTitle": "Name your expert workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      },
+      "team": {
+        "title": "Team",
+        "description": "Manage multiple experts under one organization.",
+        "wizardTitle": "Name your team workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      },
+      "academy": {
+        "title": "Academy",
+        "description": "Publish and manage courses for your learners.",
+        "wizardTitle": "Name your academy workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      }
+    }
   },
   "billing": {
     "title": "Billing",

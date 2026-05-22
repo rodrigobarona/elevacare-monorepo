@@ -7,12 +7,16 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./capabilities": "./src/capabilities.ts",
+    "./types": "./src/types.ts",
     "./proxy": "./src/proxy.ts",
     "./server": "./src/server.ts",
     "./react": "./src/react.tsx",
     "./guards": "./src/guards.ts",
     "./return-to": "./src/return-to.ts",
-    "./upload-token": "./src/upload-token.ts"
+    "./upload-token": "./src/upload-token.ts",
+    "./organizations": "./src/organizations.ts",
+    "./org-routing": "./src/org-routing.ts"
   },
   "scripts": {
     "lint": "eslint .",

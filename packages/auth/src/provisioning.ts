@@ -199,7 +199,7 @@ export async function provisionUser(
 export interface ProvisionOrganizationInput {
   workosOrgId: string
   name: string
-  type?: "personal" | "expert" | "team" | "staff"
+  type?: "personal" | "expert" | "team" | "academy" | "staff"
   slug?: string
   actorUserId?: string | null
 }
