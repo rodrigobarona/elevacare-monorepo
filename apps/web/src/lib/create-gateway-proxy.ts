@@ -61,9 +61,13 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     ) {
       const slug = orgSlugNeedingTypeLookup(pathname)
       if (slug) {
-        const orgType = await getOrgTypeBySlug(slug)
-        if (orgType === "expert") {
-          decision = { kind: "rewrite", origin: origins.expert }
+        try {
+          const orgType = await getOrgTypeBySlug(slug)
+          if (orgType === "expert") {
+            decision = { kind: "rewrite", origin: origins.expert }
+          }
+        } catch (err) {
+          console.error("[gateway] org type lookup failed", { slug, err })
         }
       }
     }

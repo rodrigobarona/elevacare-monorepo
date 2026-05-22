@@ -343,7 +343,7 @@ export interface CompleteOnboardingInput {
   workosOrgId: string
   orgName: string
   role: "admin" | "member"
-  orgType?: "personal" | "expert" | "team" | "staff"
+  orgType?: "personal" | "expert" | "team" | "academy" | "staff"
   actorUserId?: string | null
 }
 

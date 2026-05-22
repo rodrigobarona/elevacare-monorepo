@@ -2,19 +2,16 @@
 
 import { z } from "zod"
 import { requireSession } from "@eleva/auth/server"
-import {
-  getExpertProfileForOrg,
-  getOrCreateDefaultSchedule,
-  updateScheduleTimezone,
-  replaceAvailabilityRules,
-  upsertDateOverride,
-  deleteDateOverride,
-} from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
+import { getAuthedApiClient } from "@/lib/server-api"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
 const VALID_TZ_SET = new Set(Intl.supportedValuesOf("timeZone"))
+const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"))
+const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/
+const OverrideIdSchema = z.string().uuid()
 
 export async function initializeScheduleAction(
   timezone: string
@@ -24,11 +21,9 @@ export async function initializeScheduleAction(
   }
 
   try {
-    const session = await requireSession("events:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
-    await getOrCreateDefaultSchedule(profile.orgId, profile.id, timezone)
+    const session = await requireSession("schedule:manage")
+    const api = await getAuthedApiClient()
+    await api.experts.schedule.save({ timezone, rules: [] })
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }
   } catch (err) {
@@ -50,10 +45,6 @@ export interface DateOverrideInput {
   isBlocked: boolean
   timezone: string
 }
-
-const VALID_TIMEZONES = new Set(Intl.supportedValuesOf("timeZone"))
-
-const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/
 
 const saveScheduleSchema = z.object({
   timezone: z.string().refine((tz) => VALID_TIMEZONES.has(tz), {
@@ -101,33 +92,12 @@ export async function saveScheduleAction(params: {
     const parsed = saveScheduleSchema.safeParse(params)
     if (!parsed.success) return { ok: false, error: "validation" }
 
-    const session = await requireSession("events:manage")
+    const session = await requireSession("schedule:manage")
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const schedule = await getOrCreateDefaultSchedule(
-      profile.orgId,
-      profile.id,
-      parsed.data.timezone
-    )
-
-    await updateScheduleTimezone(
-      profile.orgId,
-      schedule.id,
-      profile.id,
-      parsed.data.timezone
-    )
-    await replaceAvailabilityRules(
-      profile.orgId,
-      schedule.id,
-      profile.id,
-      parsed.data.rules.map((r) => ({
-        scheduleId: schedule.id,
-        dayOfWeek: r.dayOfWeek,
-        startTime: r.startTime,
-        endTime: r.endTime,
-      }))
-    )
+    const api = await getAuthedApiClient()
+    await api.experts.schedule.save(parsed.data)
 
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }
@@ -144,31 +114,21 @@ export async function addDateOverrideAction(
     const parsed = dateOverrideSchema.safeParse(data)
     if (!parsed.success) return { ok: false, error: "validation" }
 
-    const session = await requireSession("events:manage")
+    const session = await requireSession("schedule:manage")
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const schedule = await getOrCreateDefaultSchedule(
-      profile.orgId,
-      profile.id,
-      parsed.data.timezone
-    )
-
-    if (schedule.timezone !== parsed.data.timezone) {
-      await updateScheduleTimezone(
-        profile.orgId,
-        schedule.id,
-        profile.id,
-        parsed.data.timezone
-      )
-    }
-
-    await upsertDateOverride(profile.orgId, schedule.id, profile.id, {
-      scheduleId: schedule.id,
+    const api = await getAuthedApiClient()
+    await api.experts.schedule.addOverride({
       overrideDate: parsed.data.overrideDate,
-      startTime: parsed.data.isBlocked ? null : (parsed.data.startTime ?? null),
-      endTime: parsed.data.isBlocked ? null : (parsed.data.endTime ?? null),
       isBlocked: parsed.data.isBlocked,
+      timezone: parsed.data.timezone,
+      ...(parsed.data.isBlocked
+        ? {}
+        : {
+            startTime: parsed.data.startTime,
+            endTime: parsed.data.endTime,
+          }),
     })
 
     revalidateExpertWorkspace(session, "schedule")
@@ -182,12 +142,17 @@ export async function addDateOverrideAction(
 export async function removeDateOverrideAction(
   overrideId: string
 ): Promise<ActionResult> {
+  const parsed = OverrideIdSchema.safeParse(overrideId)
+  if (!parsed.success) return { ok: false, error: "validation" }
+
   try {
-    const session = await requireSession("events:manage")
+    const session = await requireSession("schedule:manage")
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    await deleteDateOverride(profile.orgId, overrideId, profile.id)
+    const api = await getAuthedApiClient()
+    await api.experts.schedule.removeOverride(parsed.data)
+
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }
   } catch (err) {

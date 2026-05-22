@@ -14,22 +14,23 @@ function orgInitials(name: string): string {
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase()
 }
 
-interface OrgSwitcherTriggerProps extends React.ComponentPropsWithoutRef<"div"> {
+interface OrgSwitcherTriggerProps extends React.ComponentPropsWithoutRef<"button"> {
   organization: OrgSwitcherItem
   homeUrl: string
   open: boolean
 }
 
 export const OrgSwitcherTrigger = React.forwardRef<
-  HTMLDivElement,
+  HTMLButtonElement,
   OrgSwitcherTriggerProps
 >(function OrgSwitcherTrigger(
   { organization, homeUrl, open, className, ...props },
   ref
 ) {
   return (
-    <div
+    <button
       ref={ref}
+      type="button"
       className={cn(
         "flex h-10 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",
         open && "bg-sidebar-accent",
@@ -56,6 +57,6 @@ export const OrgSwitcherTrigger = React.forwardRef<
         className="size-4 shrink-0 text-sidebar-foreground/70"
         aria-hidden
       />
-    </div>
+    </button>
   )
 })

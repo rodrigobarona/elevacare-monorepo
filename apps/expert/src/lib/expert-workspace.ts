@@ -2,8 +2,9 @@ import { redirect } from "next/navigation"
 import type { ElevaSession } from "@eleva/auth"
 import { guardSessionForOrg } from "@eleva/auth"
 import type { ExpertProfile } from "@eleva/db"
-import { ensureExpertProfileForOrg, getExpertProfileForOrg } from "@eleva/db"
+import { getExpertProfileForOrg } from "@eleva/db"
 import { requiresExpertOnboarding } from "@/lib/expert-profile-guards"
+import { resolveOrCreateExpertProfileForSession } from "@/lib/resolve-expert-profile"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { redirectToMemberOrg } from "@/lib/gateway-redirects"
 
@@ -22,19 +23,17 @@ export async function loadExpertWorkspace(
     redirectToMemberOrg(orgSlug)
   }
 
-  let profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-  if (!profile) {
-    profile = await ensureExpertProfileForOrg({
-      userId: session.user.id,
-      orgId: session.orgId,
-      orgSlug,
-      displayName: session.user.displayName ?? session.user.email,
-    })
-  }
+  const profile = await resolveOrCreateExpertProfileForSession(session, orgSlug)
 
   if (requiresExpertOnboarding(profile)) {
     redirect(expertWorkspacePath(session, "setup"))
   }
 
   return { session, profile, orgSlug }
+}
+
+export async function loadExpertProfileReadOnly(
+  session: ElevaSession
+): Promise<ExpertProfile | null> {
+  return getExpertProfileForOrg(session.user.id, session.orgId)
 }

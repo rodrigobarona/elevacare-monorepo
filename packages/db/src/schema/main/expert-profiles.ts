@@ -192,6 +192,9 @@ export const expertProfiles = pgTable(
   },
   (t) => ({
     usernameIdx: uniqueIndex("expert_profiles_username_idx").on(t.username),
+    userOrgIdx: uniqueIndex("expert_profiles_user_org_idx")
+      .on(t.userId, t.orgId)
+      .where(sql`${t.deletedAt} IS NULL`),
     orgIdx: index("expert_profiles_org_idx").on(t.orgId),
     userIdx: index("expert_profiles_user_idx").on(t.userId),
     statusIdx: index("expert_profiles_status_idx").on(t.status),

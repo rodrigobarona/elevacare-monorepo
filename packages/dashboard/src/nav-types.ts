@@ -1,4 +1,5 @@
 import type { NavIconName } from "@eleva/icons"
+import type { OrgType, ProductLabel } from "@eleva/auth/types"
 
 export interface NavItem {
   title: string
@@ -25,10 +26,10 @@ export interface OrgSwitcherItem {
   workosOrgId: string
   orgId: string
   orgSlug: string
-  orgType: string
+  orgType: OrgType
   name: string
   workosRole: "admin" | "member"
-  productLabel: string
+  productLabel: ProductLabel
   isCurrent: boolean
 }
 

@@ -36,11 +36,17 @@ export const SyncExistingOnboardingResponseSchema = z.discriminatedUnion(
   ]
 )
 
+export const OrgTypeSchema = z.enum([
+  "personal",
+  "expert",
+  "team",
+  "academy",
+  "staff",
+])
+
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().min(2).max(100).trim(),
-  type: z
-    .enum(["personal", "expert", "team", "academy", "staff"])
-    .default("personal"),
+  type: OrgTypeSchema.default("personal"),
 })
 
 /** Workspace create flow — deliberate work orgs only (not personal onboarding). */
@@ -53,7 +59,7 @@ export const OrganizationSwitcherItemSchema = z.object({
   workosOrgId: z.string(),
   orgId: z.string().uuid(),
   orgSlug: z.string(),
-  orgType: z.string(),
+  orgType: OrgTypeSchema,
   name: z.string(),
   workosRole: z.enum(["admin", "member"]),
   productLabel: z.string(),
@@ -252,6 +258,32 @@ export const InvoicingRequestSchema = z.object({
 })
 
 export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
+
+export const EnsureExpertProfileRequestSchema = z.object({
+  orgSlug: z.string().min(1).max(30),
+  displayName: z.string().min(1).max(200),
+})
+
+export type EnsureExpertProfileRequest = z.infer<
+  typeof EnsureExpertProfileRequestSchema
+>
+
+export const EnsureExpertProfileResponseSchema = z.object({
+  ok: z.literal(true),
+  profile: z.object({
+    id: z.string().uuid(),
+    orgId: z.string().uuid(),
+    userId: z.string().uuid(),
+    username: z.string(),
+    displayName: z.string(),
+    status: z.string(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  }),
+})
+
+export type EnsureExpertProfileResponse = z.infer<
+  typeof EnsureExpertProfileResponseSchema
+>
 
 // ── Schedule ────────────────────────────────────────────────────────
 
@@ -517,6 +549,13 @@ export function createApiClient(options: ApiClientOptions) {
 
     experts: {
       profile: {
+        ensure(data: EnsureExpertProfileRequest) {
+          return request<EnsureExpertProfileResponse>(
+            "POST",
+            "/experts/profile/ensure",
+            data
+          )
+        },
         patch(data: PatchExpertProfileRequest) {
           return request<{ ok: true }>("PATCH", "/experts/profile", data)
         },

@@ -70,6 +70,7 @@
     "createWorkspace": "Crear workspace"
   },
   "createWorkspace": {
+    "back": "Atrás",
     "pickerTitle": "Crear un workspace",
     "pickerDescription": "Elige el tipo de workspace que quieres crear.",
     "continue": "Continuar",

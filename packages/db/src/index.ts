@@ -35,8 +35,10 @@ export {
   getExpertProfileByUserId,
   getExpertProfileForOrg,
   ensureExpertProfileForOrg,
+  ensureExpertProfileForOrgDetailed,
   updateExpertProfile,
   getOrganizationBySlug,
+  type EnsureExpertProfileResult,
 } from "./queries/admin"
 export {
   listExpertEventTypes,

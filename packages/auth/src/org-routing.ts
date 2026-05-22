@@ -7,11 +7,26 @@ import { getOrganizationBySlug } from "@eleva/db"
 import type { OrgType } from "@eleva/db/schema"
 
 const TTL_MS = 5 * 60 * 1000
+const MAX_ORG_TYPE_CACHE = 500
 
 const orgTypeCache = new Map<
   string,
   { type: OrgType | null; expiresAt: number }
 >()
+
+function pruneOrgTypeCache(): void {
+  const now = Date.now()
+  for (const [slug, entry] of orgTypeCache) {
+    if (entry.expiresAt <= now) {
+      orgTypeCache.delete(slug)
+    }
+  }
+  while (orgTypeCache.size >= MAX_ORG_TYPE_CACHE) {
+    const oldest = orgTypeCache.keys().next().value
+    if (oldest === undefined) break
+    orgTypeCache.delete(oldest)
+  }
+}
 
 const orgScopedSegments = new Set<string>(ORG_SCOPED_SEGMENTS)
 
@@ -24,6 +39,7 @@ export async function getOrgTypeBySlug(slug: string): Promise<OrgType | null> {
 
   const org = await getOrganizationBySlug(slug)
   const type = (org?.type as OrgType | null | undefined) ?? null
+  pruneOrgTypeCache()
   orgTypeCache.set(slug, { type, expiresAt: Date.now() + TTL_MS })
   return type
 }

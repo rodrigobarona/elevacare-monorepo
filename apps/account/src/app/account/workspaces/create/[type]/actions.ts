@@ -54,10 +54,7 @@ export async function createWorkspace(
     })
   } catch (err) {
     console.error("createWorkspace failed", err)
-    return {
-      ok: false,
-      error: err instanceof Error ? err.message : "create_failed",
-    }
+    return { ok: false, error: "create_failed" }
   }
 
   await switchOrganization(workosOrgId, homeUrl)

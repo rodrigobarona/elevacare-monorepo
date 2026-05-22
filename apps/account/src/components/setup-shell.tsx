@@ -4,6 +4,7 @@ import { cn } from "@eleva/ui/lib/utils"
 
 interface SetupShellProps {
   backHref: string
+  backLabel?: string
   step: number
   totalSteps: number
   title: string
@@ -13,6 +14,7 @@ interface SetupShellProps {
 
 export function SetupShell({
   backHref,
+  backLabel = "Back",
   step,
   totalSteps,
   title,
@@ -30,7 +32,7 @@ export function SetupShell({
             className="inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
           >
             <ArrowLeftIcon className="size-4" />
-            Back
+            {backLabel}
           </Link>
         </div>
         <div className="h-1 w-full bg-muted">

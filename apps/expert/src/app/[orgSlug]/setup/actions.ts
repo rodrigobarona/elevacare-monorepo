@@ -2,7 +2,9 @@
 
 import { requireSession } from "@eleva/auth/server"
 import { getExpertProfileForOrg, updateExpertProfile } from "@eleva/db"
+import { getAuthedApiClient } from "@/lib/server-api"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
+import { allowedOnboardingStepNames } from "@/app/[orgSlug]/setup/onboarding-steps"
 
 const ALLOWED_SESSION_MODES = ["online", "in_person", "phone"] as const
 
@@ -25,18 +27,14 @@ export async function saveProfileStep(
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const completedSteps = (profile.metadata as Record<string, unknown>)
-      ?.completedSteps
-    const steps = Array.isArray(completedSteps) ? completedSteps : []
-    if (!steps.includes("profile")) steps.push("profile")
-
     const validSessionModes = (
       Array.isArray(data.sessionModes) ? data.sessionModes : []
     ).filter((m): m is (typeof ALLOWED_SESSION_MODES)[number] =>
       (ALLOWED_SESSION_MODES as readonly string[]).includes(m)
     )
 
-    await updateExpertProfile(profile.id, profile.orgId, {
+    const api = await getAuthedApiClient()
+    await api.experts.profile.patch({
       nif: data.nif ?? null,
       licenseScope: data.licenseScope ?? null,
       languages: data.languages,
@@ -44,7 +42,6 @@ export async function saveProfileStep(
       worldwideMode: data.worldwideMode,
       sessionModes:
         validSessionModes.length > 0 ? validSessionModes : ["online"],
-      metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
     })
 
     revalidateExpertWorkspace(session, "setup")
@@ -58,6 +55,10 @@ export async function saveProfileStep(
 export async function markStepComplete(
   stepName: string
 ): Promise<ActionResult> {
+  if (!allowedOnboardingStepNames.has(stepName)) {
+    return { ok: false, error: "invalid-step" }
+  }
+
   try {
     const session = await requireSession("expert:onboard")
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
@@ -88,21 +89,8 @@ export async function saveInvoicingChoice(
     const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
     if (!profile) return { ok: false, error: "no-profile" }
 
-    const completedSteps = (profile.metadata as Record<string, unknown>)
-      ?.completedSteps
-    const steps = Array.isArray(completedSteps) ? completedSteps : []
-    if (!steps.includes("invoicing")) steps.push("invoicing")
-
-    await updateExpertProfile(profile.id, profile.orgId, {
-      invoicingProvider: provider,
-      invoicingSetupStatus:
-        provider === "manual" ? "manual_acknowledged" : "connecting",
-      metadata: {
-        ...(profile.metadata ?? {}),
-        completedSteps: steps,
-        invoicingProvider: provider,
-      },
-    })
+    const api = await getAuthedApiClient()
+    await api.experts.profile.setInvoicing({ provider })
 
     revalidateExpertWorkspace(session, "setup")
     return { ok: true }

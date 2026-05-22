@@ -1,6 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm"
 
-import { withPlatformAdminContext, type Tx } from "../context"
+import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as main from "../schema/main"
 
 export interface OrganizationBySlugResult {
@@ -66,7 +66,7 @@ export async function getExpertProfileForOrg(
   userId: string,
   orgId: string
 ): Promise<main.ExpertProfile | null> {
-  return withPlatformAdminContext(async (tx) => {
+  return withOrgContext(orgId, async (tx) => {
     const rows = await tx
       .select()
       .from(main.expertProfiles)
@@ -82,6 +82,30 @@ export async function getExpertProfileForOrg(
   })
 }
 
+async function selectExpertProfileForOrg(
+  tx: Tx,
+  userId: string,
+  orgId: string
+): Promise<main.ExpertProfile | null> {
+  const rows = await tx
+    .select()
+    .from(main.expertProfiles)
+    .where(
+      and(
+        eq(main.expertProfiles.userId, userId),
+        eq(main.expertProfiles.orgId, orgId),
+        isNull(main.expertProfiles.deletedAt)
+      )
+    )
+    .limit(1)
+  return rows[0] ?? null
+}
+
+export interface EnsureExpertProfileResult {
+  profile: main.ExpertProfile
+  created: boolean
+}
+
 /** Bootstrap a draft profile when an expert org has none yet (self-serve create). */
 export async function ensureExpertProfileForOrg(input: {
   userId: string
@@ -89,10 +113,18 @@ export async function ensureExpertProfileForOrg(input: {
   orgSlug: string
   displayName: string
 }): Promise<main.ExpertProfile> {
-  const existing = await getExpertProfileForOrg(input.userId, input.orgId)
-  if (existing) return existing
+  const result = await ensureExpertProfileForOrgDetailed(input)
+  return result.profile
+}
 
-  return withPlatformAdminContext(async (tx) => {
+/** Like {@link ensureExpertProfileForOrg} but reports whether a row was inserted. */
+export async function ensureExpertProfileForOrgDetailed(input: {
+  userId: string
+  orgId: string
+  orgSlug: string
+  displayName: string
+}): Promise<EnsureExpertProfileResult> {
+  return withOrgContext(input.orgId, async (tx) => {
     const [inserted] = await tx
       .insert(main.expertProfiles)
       .values({
@@ -102,11 +134,25 @@ export async function ensureExpertProfileForOrg(input: {
         displayName: input.displayName,
         status: "approved",
       })
+      .onConflictDoNothing({
+        target: [main.expertProfiles.userId, main.expertProfiles.orgId],
+      })
       .returning()
-    if (!inserted) {
+
+    if (inserted) {
+      return { profile: inserted, created: true }
+    }
+
+    const existing = await selectExpertProfileForOrg(
+      tx,
+      input.userId,
+      input.orgId
+    )
+    if (!existing) {
       throw new Error("Failed to create expert profile")
     }
-    return inserted
+
+    return { profile: existing, created: false }
   })
 }
 
@@ -118,7 +164,6 @@ export async function updateExpertProfile(
   orgId: string,
   data: Partial<main.NewExpertProfile>
 ): Promise<void> {
-  const { withOrgContext } = await import("../context")
   await withOrgContext(orgId, async (tx: Tx) => {
     await tx
       .update(main.expertProfiles)

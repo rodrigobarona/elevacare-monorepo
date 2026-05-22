@@ -24,6 +24,7 @@ export default async function CreateWorkspacePage({
   return (
     <SetupShell
       backHref="/account/workspaces/new"
+      backLabel={t("back")}
       step={2}
       totalSteps={2}
       title={t(`types.${type}.wizardTitle`)}

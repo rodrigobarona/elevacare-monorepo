@@ -397,6 +397,49 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/experts/profile/ensure": {
+        post: {
+          operationId: "ensureExpertProfile",
+          summary: "Create expert profile if missing for the active org",
+          tags: ["Expert Profile"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  orgSlug: z.string().min(1).max(30),
+                  displayName: z.string().min(1).max(200),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Profile ensured",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    profile: z.object({
+                      id: z.string().uuid(),
+                      orgId: z.string().uuid(),
+                      userId: z.string().uuid(),
+                      username: z.string(),
+                      displayName: z.string(),
+                      status: z.string(),
+                      metadata: z
+                        .record(z.string(), z.unknown())
+                        .nullable()
+                        .optional(),
+                    }),
+                  }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/experts/profile/steps/{step}/complete": {
         post: {
           operationId: "completeOnboardingStep",

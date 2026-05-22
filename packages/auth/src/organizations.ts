@@ -128,36 +128,43 @@ export async function createOrganization(
     name: input.name,
   })
 
-  await workos.userManagement.createOrganizationMembership({
-    userId: input.workosUserId,
-    organizationId: workosOrg.id,
-    roleSlug: "admin",
-  })
+  try {
+    await workos.userManagement.createOrganizationMembership({
+      userId: input.workosUserId,
+      organizationId: workosOrg.id,
+      roleSlug: "admin",
+    })
 
-  const result = await provisionOrganization({
-    workosOrgId: workosOrg.id,
-    name: input.name,
-    type: input.type,
-    actorUserId: input.userId,
-  })
+    const result = await provisionOrganization({
+      workosOrgId: workosOrg.id,
+      name: input.name,
+      type: input.type,
+      actorUserId: input.userId,
+    })
 
-  await Promise.allSettled([
-    workos.organizations.updateOrganization({
-      organization: workosOrg.id,
-      externalId: result.orgId,
-      metadata: { slug: result.slug, org_type: input.type },
-    }),
-  ])
+    await Promise.allSettled([
+      workos.organizations.updateOrganization({
+        organization: workosOrg.id,
+        externalId: result.orgId,
+        metadata: { slug: result.slug, org_type: input.type },
+      }),
+    ])
 
-  await provisionMembership({
-    userId: input.userId,
-    orgId: result.orgId,
-    role: "admin",
-    actorUserId: input.userId,
-  })
+    await provisionMembership({
+      userId: input.userId,
+      orgId: result.orgId,
+      role: "admin",
+      actorUserId: input.userId,
+    })
 
-  return {
-    ...result,
-    workosOrgId: workosOrg.id,
+    return {
+      ...result,
+      workosOrgId: workosOrg.id,
+    }
+  } catch (err) {
+    await Promise.allSettled([
+      workos.organizations.deleteOrganization(workosOrg.id),
+    ])
+    throw err
   }
 }
