@@ -63,5 +63,10 @@ export {
   getWidgetToken,
   getWidgetTokenFromSession,
 } from "./server"
+export {
+  WIDGET_TOKEN_SCOPES,
+  scopesForWidget,
+  type WidgetComponent,
+} from "./widget-scopes"
 export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"

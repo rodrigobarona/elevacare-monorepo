@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
+import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
 export default async function OrgHomePage({
   params,
@@ -11,16 +12,11 @@ export default async function OrgHomePage({
   const { orgSlug } = await params
   const session = await guardSessionForOrg(orgSlug)
 
-  switch (session.productLabel) {
-    case "member":
-      return <MemberDashboard session={session} />
-    case "expert":
-      return redirect(`/${orgSlug}/expert`)
-    case "team_admin":
-      return redirect(`/${orgSlug}/team`)
-    case "staff":
-      return redirect("/admin")
+  if (session.orgSlug !== orgSlug || session.productLabel !== "member") {
+    redirect(resolveProductHomeUrl(session))
   }
+
+  return <MemberDashboard session={session} />
 }
 
 async function MemberDashboard({ session }: { session: ElevaSession }) {

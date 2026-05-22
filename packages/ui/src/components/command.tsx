@@ -12,7 +12,7 @@ import {
   DialogTitle,
 } from "@eleva/ui/components/dialog"
 import { InputGroup, InputGroupAddon } from "@eleva/ui/components/input-group"
-import { SearchIcon, CheckIcon } from "lucide-react"
+import { SearchIcon, CheckIcon } from "@eleva/icons"
 
 function Command({
   className,

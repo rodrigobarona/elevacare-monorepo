@@ -69,7 +69,6 @@ catalog:
   drizzle-orm: ^0.45.2
 
   # UI
-  lucide-react: ^1.16.0
   "@radix-ui/themes": ^3.3.0
   sonner: ^2.0.7
   zod: ^4.4.3

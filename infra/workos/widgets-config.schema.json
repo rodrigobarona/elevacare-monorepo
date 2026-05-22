@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Eleva WorkOS Widgets Config",
+  "type": "object",
+  "required": ["version", "widgets", "roleWidgetGrants"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "type": "number" },
+    "corsOriginsNote": { "type": "string" },
+    "widgets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "component",
+          "tokenScopes",
+          "workosPermissions",
+          "surfaces"
+        ],
+        "properties": {
+          "component": { "type": "string" },
+          "tokenScopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^widgets:[a-z0-9_-]+(?::(?:read|manage))?$"
+            }
+          },
+          "workosPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^widgets:[a-z0-9_-]+(?::(?:read|manage))?$"
+            }
+          },
+          "surfaces": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "roleWidgetGrants": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "pattern": "^widgets:[a-z0-9_-]+(?::(?:read|manage))?$"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

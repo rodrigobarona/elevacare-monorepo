@@ -1,0 +1,47 @@
+---
+description: WorkOS app RBAC (rbac-config.json) vs Widget permissions (widgets-config.json). Apply when embedding @workos-inc/widgets, getWidgetTokenFromSession, or debugging api.workos.com 403/CORS.
+globs:
+  - infra/workos/**
+  - packages/auth/**
+  - apps/**/settings/**
+  - "**/*widget*"
+alwaysApply: false
+---
+
+# WorkOS RBAC and Widgets (two layers)
+
+## Layer 1 — App capabilities (API + JWT)
+
+- **SSOT:** [`infra/workos/rbac-config.json`](../../infra/workos/rbac-config.json)
+- **Sync:** `pnpm workos:rbac:generate -- --apply` from monorepo root
+- **Slugs:** `area:action` (e.g. `members:manage`, `appointments:view_own`)
+- **Mirror:** [`packages/auth/src/capabilities.ts`](../../packages/auth/src/capabilities.ts) `CAPABILITY_BUNDLES`
+- **Never** pass these slugs to `getWidgetTokenFromSession()` or `workos.widgets.createToken({ scopes })`
+
+## Layer 2 — WorkOS Widgets (browser → api.workos.com)
+
+- **SSOT:** [`infra/workos/widgets-config.json`](../../infra/workos/widgets-config.json)
+- **Code constants:** [`packages/auth/src/widget-scopes.ts`](../../packages/auth/src/widget-scopes.ts)
+- **Sync:** `pnpm workos:widgets:generate -- --apply` (after `pnpm workos:rbac:generate -- --apply`)
+- **CORS:** WorkOS Dashboard → Authentication → CORS, same environment as `WORKOS_API_KEY`
+
+## Widget token rules
+
+| Component | `getWidgetTokenFromSession` scopes | Forbidden on account settings |
+| --------- | ---------------------------------- | ----------------------------- |
+| `UserProfile` | none (omit `scopes`) | `widgets:users-table:manage` |
+| `UserSecurity` | none | `widgets:users-table:manage` |
+| `UserSessions` | `widgets:users-table:read` (or reuse profile token) | `widgets:users-table:manage` |
+| `UsersManagement` | `widgets:users-table:manage` | — |
+| `OrganizationSwitcher` | `widgets:organization-switcher:read` | — |
+
+Account settings ([`apps/account/src/app/account/settings`](../../apps/account/src/app/account/settings)): use one SSR widget token for Profile/Security/Sessions; pass `currentSessionId` from AuthKit `withAuth().sessionId`.
+
+## Debugging 403 / “CORS blocked” on widget API
+
+1. Confirm `tokenScopes` in code match `widgets-config.json` for that component.
+2. WorkOS Dashboard → Roles: user’s role must include `workosPermissions` from `roleWidgetGrants` (personal Space users need `admin` + `widgets:users-table:read`).
+3. CORS origins include the app origin (e.g. `http://localhost:3006`).
+4. `WORKOS_API_KEY` environment matches the Dashboard environment where CORS and roles were configured.
+
+Load the **workos-rbac-widgets** skill for the full checklist.

@@ -1,9 +1,17 @@
 "use server"
 
 import { getWidgetTokenFromSession } from "@eleva/auth/server"
-import { UnauthorizedError } from "@eleva/auth"
+import { UnauthorizedError, type ProductLabel } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import type { DashboardConfig, NavGroup } from "./nav-types"
+import { resolveProductHomeUrl } from "./resolve-product-home-url"
+
+type BuildDashboardConfigOverrides = Partial<
+  Omit<DashboardConfig, "navGroups" | "user">
+> & {
+  /** When false, skip org switcher token fetch and show sidebar Back link instead */
+  enableOrgSwitcher?: boolean
+}
 
 interface SessionLike {
   user: {
@@ -12,6 +20,7 @@ interface SessionLike {
     avatarUrl?: string | null
   }
   orgSlug?: string | null
+  productLabel?: ProductLabel
   capabilities?: readonly string[]
 }
 
@@ -26,9 +35,10 @@ const GATEWAY_URL = resolveGatewayUrl()
 export async function buildDashboardConfig(
   session: SessionLike,
   navGroups: NavGroup[],
-  overrides?: Partial<Omit<DashboardConfig, "navGroups" | "user">>
+  overrides?: BuildDashboardConfigOverrides
 ): Promise<DashboardConfig> {
-  const fetchWidget = session.orgSlug != null
+  const { enableOrgSwitcher = true, ...configOverrides } = overrides ?? {}
+  const fetchWidget = enableOrgSwitcher && session.orgSlug != null
   const widgetToken = fetchWidget
     ? await getWidgetTokenFromSession().catch((err) => {
         if (!(err instanceof UnauthorizedError)) {
@@ -38,6 +48,10 @@ export async function buildDashboardConfig(
         return null
       })
     : null
+
+  const homeUrl =
+    configOverrides.homeUrl ??
+    (!enableOrgSwitcher ? resolveProductHomeUrl(session) : undefined)
 
   return {
     navGroups,
@@ -52,6 +66,7 @@ export async function buildDashboardConfig(
     accountUrl: `${GATEWAY_URL}/account/settings`,
     homepageUrl: `${GATEWAY_URL}/home`,
     logoutUrl: `${GATEWAY_URL}/logout`,
-    ...overrides,
+    ...(homeUrl ? { homeUrl } : {}),
+    ...configOverrides,
   }
 }

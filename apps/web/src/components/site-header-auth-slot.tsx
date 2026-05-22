@@ -6,13 +6,8 @@ import { SignedOutButtons } from "./signed-out-buttons"
 
 /**
  * Async auth slot for the marketing header. Rendered inside a Suspense
- * boundary so the rest of the page (and the login/signup buttons in
- * the fallback) become interactive without waiting on the WorkOS
- * cookie decryption + iron-session unseal performed by `getAuthUser()`.
- *
- * - Logged-out: returns the same SignedOutButtons used in the fallback,
- *   so visually nothing changes after the slot resolves.
- * - Logged-in:  returns the UserMenu, replacing the buttons.
+ * boundary; SiteHeader picks the fallback from the session cookie so
+ * logged-in visitors never flash signed-out buttons while this resolves.
  */
 export async function SiteHeaderAuthSlot() {
   const t = await getTranslations("nav")

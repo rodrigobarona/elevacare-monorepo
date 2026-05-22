@@ -32,6 +32,13 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-05-21: v3 icon SSOT / import boundary policy
+
+- Owner: design/platform
+- Status: active
+- Summary: Product iconography uses **`@eleva/icons`** as the single source of truth ([Phosphor Icons](https://phosphoricons.com)). Apps import SSR-safe icons from `@eleva/icons`; client wrappers (`NavIcon`, `ElevaIcon`, `getNavIcon`) from `@eleva/icons/client`. **Never** import `lucide-react` or `@phosphor-icons/react` outside `packages/icons`. Server layouts pass `NavIconName` string literals (not icon components) across the RSC boundary. **Weights:** `light` for idle sidebar nav, `duotone` for active nav and illustrations ≥ 32px, `regular` for UI chrome. **`expert-verified-icon.svg`** is a trust/marketing asset, not part of the icon registry.
+- Reference: [brand book §Iconography](./brand-book/README.md#iconography), `.cursor/rules/eleva-icons.mdc`, `packages/icons/`
+
 ### 2026-05-19: Stripe Phase 1+2 cutover — PRODUCTION READY (audit complete)
 
 - Owner: platform/billing

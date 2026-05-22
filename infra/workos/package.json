@@ -7,7 +7,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "rbac:generate": "tsx --env-file=../../.env.local rbac-generate.ts"
+    "rbac:generate": "tsx --env-file=../../.env.local rbac-generate.ts",
+    "widgets:generate": "tsx --env-file=../../.env.local widgets-generate.ts"
   },
   "dependencies": {
     "@workos-inc/node": "catalog:"

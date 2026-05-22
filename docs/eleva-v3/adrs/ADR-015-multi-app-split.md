@@ -41,22 +41,22 @@ Split `apps/app` into focused micro-apps. Use two routing mechanisms:
 
 ### App topology
 
-| App                                               | Repo path      | Public URL                                                    | Routing               | Port |
-| ------------------------------------------------- | -------------- | ------------------------------------------------------------- | --------------------- | ---- |
-| Gateway (marketing, marketplace, public profiles) | `apps/web`     | `eleva.care/*`                                                | Owns the domain       | 3000 |
-| Member (dashboard)                                | `apps/app`     | `eleva.care/[orgSlug]`                                        | Gateway proxy rewrite | 3001 |
-| API (webhooks, OAuth, server endpoints)           | `apps/api`     | `api.eleva.care/*`                                            | Own subdomain         | 3002 |
-| Account (identity hub)                            | `apps/account` | `eleva.care/signin`, `/callback`, `/account/*`, `/onboarding` | Gateway proxy rewrite | 3006 |
-| Expert (expert tools)                             | `apps/expert`  | `eleva.care/[orgSlug]/expert/*`                               | Gateway proxy rewrite | 3003 |
-| Team (clinic management)                          | `apps/team`    | `eleva.care/[orgSlug]/team/*`                                 | Gateway proxy rewrite | 3004 |
-| Academy (LMS, future)                             | `apps/academy` | `eleva.care/[orgSlug]/academy/*`                              | Gateway proxy rewrite | 3005 |
-| Admin (platform operations)                       | `apps/admin`   | `admin.eleva.care/*`                                          | Own subdomain         | 3007 |
+| App                                               | Repo path      | Public URL                                                   | Routing               | Port |
+| ------------------------------------------------- | -------------- | ------------------------------------------------------------ | --------------------- | ---- |
+| Gateway (marketing, marketplace, public profiles) | `apps/web`     | `eleva.care/*`                                               | Owns the domain       | 3000 |
+| Member (dashboard)                                | `apps/app`     | `eleva.care/[orgSlug]`                                       | Gateway proxy rewrite | 3001 |
+| API (webhooks, OAuth, server endpoints)           | `apps/api`     | `api.eleva.care/*`                                           | Own subdomain         | 3002 |
+| Account (identity hub)                            | `apps/account` | `eleva.care/login`, `/callback`, `/account/*`, `/onboarding` | Gateway proxy rewrite | 3006 |
+| Expert (expert tools)                             | `apps/expert`  | `eleva.care/[orgSlug]/expert/*`                              | Gateway proxy rewrite | 3003 |
+| Team (clinic management)                          | `apps/team`    | `eleva.care/[orgSlug]/team/*`                                | Gateway proxy rewrite | 3004 |
+| Academy (LMS, future)                             | `apps/academy` | `eleva.care/[orgSlug]/academy/*`                             | Gateway proxy rewrite | 3005 |
+| Admin (platform operations)                       | `apps/admin`   | `admin.eleva.care/*`                                         | Own subdomain         | 3007 |
 
 ### Root domain apps (`eleva.care`)
 
 The gateway (`apps/web`) dispatches requests to the correct app origin based on URL path segments:
 
-- `/signin`, `/signup`, `/callback`, `/logout`, `/dashboard` -> `apps/account`
+- `/login`, `/signup`, `/callback`, `/logout`, `/dashboard` -> `apps/account`
 - `/onboarding/*`, `/account/*` -> `apps/account`
 - `/[orgSlug]/expert/*` -> `apps/expert`
 - `/[orgSlug]/team/*` -> `apps/team`
@@ -95,13 +95,13 @@ All apps share one WorkOS application and one `@eleva/auth` package.
 
 Auth flows are centralized in `apps/account`, served via the gateway proxy at `eleva.care`:
 
-- `/signin`, `/signup` -- redirect to WorkOS AuthKit
+- `/login`, `/signup` -- redirect to WorkOS AuthKit
 - `/callback` -- handle WorkOS callback, set session cookie on `.eleva.care`
 - `/logout` -- clear session, redirect to `eleva.care`
 - `/dashboard` -- post-login routing with `returnTo` support
 - `/onboarding` -- create first personal org ("space")
 
-Every other app's `proxy.ts` redirects unauthenticated users to `eleva.care/signin?returnTo={current-url}`. After the callback sets the `.eleva.care` cookie, the user is redirected back via `returnTo`.
+Every other app's `proxy.ts` redirects unauthenticated users to `eleva.care/login?returnTo={current-url}`. After the callback sets the `.eleva.care` cookie, the user is redirected back via `returnTo`.
 
 ### Organization model
 

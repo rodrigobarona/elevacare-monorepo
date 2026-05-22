@@ -1,9 +1,10 @@
-import type { ReactNode } from "react"
+import type { NavIconName } from "@eleva/icons"
 
 export interface NavItem {
   title: string
   url: string
-  icon: ReactNode
+  /** Serializable icon key — resolved client-side via getNavIcon. */
+  icon: NavIconName
   /** Required capability to show this item; omit for always visible */
   needs?: string
   shortcut?: string
@@ -31,7 +32,7 @@ export interface DashboardConfig {
   homeUrl?: string
   /** User capabilities for gating nav items */
   capabilities?: readonly string[]
-  /** Widget token for the org switcher (omit to hide org switcher) */
+  /** Widget token for the org switcher (null hides switcher; use enableOrgSwitcher: false in buildDashboardConfig) */
   widgetToken?: string | null
   /** Account settings URL */
   accountUrl?: string

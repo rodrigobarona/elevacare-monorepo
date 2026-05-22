@@ -2,12 +2,9 @@
 
 import { useTheme } from "next-themes"
 import { useTranslations } from "next-intl"
-import { Monitor, Moon, Sun } from "lucide-react"
+import { CheckIcon, MonitorIcon, MoonIcon, SunIcon } from "@eleva/icons"
 import {
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
+  DropdownMenuItem,
   DropdownMenuSub,
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
@@ -20,12 +17,12 @@ import {
 
 const THEME_OPTIONS: {
   value: ThemePreference
-  icon: typeof Sun
+  icon: typeof SunIcon
   labelKey: "themeLight" | "themeDark" | "themeSystem"
 }[] = [
-  { value: "light", icon: Sun, labelKey: "themeLight" },
-  { value: "dark", icon: Moon, labelKey: "themeDark" },
-  { value: "system", icon: Monitor, labelKey: "themeSystem" },
+  { value: "light", icon: SunIcon, labelKey: "themeLight" },
+  { value: "dark", icon: MoonIcon, labelKey: "themeDark" },
+  { value: "system", icon: MonitorIcon, labelKey: "themeSystem" },
 ]
 
 export function NavThemeMenu() {
@@ -34,30 +31,34 @@ export function NavThemeMenu() {
 
   const active = theme ?? "system"
 
+  function selectTheme(value: ThemePreference) {
+    setTheme(value)
+    persistThemeCookie(value, window.location.host)
+  }
+
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger>
-        <Sun className="mr-2 size-4" />
+      <DropdownMenuSubTrigger className="gap-2 py-1">
+        <SunIcon className="size-4" />
         {t("theme")}
       </DropdownMenuSubTrigger>
-      <DropdownMenuSubContent>
-        <DropdownMenuLabel>{t("themeLabel")}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={active}
-          onValueChange={(value) => {
-            if (!isThemePreference(value)) return
-            setTheme(value)
-            persistThemeCookie(value, window.location.host)
-          }}
-        >
-          {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => (
-            <DropdownMenuRadioItem key={value} value={value}>
-              <Icon className="mr-2 size-4" />
-              {t(labelKey)}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+      <DropdownMenuSubContent className="min-w-36">
+        {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => (
+          <DropdownMenuItem
+            key={value}
+            className="py-1"
+            onClick={() => {
+              if (!isThemePreference(value)) return
+              selectTheme(value)
+            }}
+          >
+            <Icon className="size-4" />
+            <span className="flex-1">{t(labelKey)}</span>
+            {active === value ? (
+              <CheckIcon className="size-4 text-primary" aria-hidden />
+            ) : null}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuSubContent>
     </DropdownMenuSub>
   )

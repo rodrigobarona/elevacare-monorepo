@@ -13,7 +13,7 @@ import {
   SettingsFieldsetStatus,
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
-import { CalendarClock } from "lucide-react"
+import { CalendarClock } from "@eleva/icons"
 import { initializeScheduleAction } from "./actions"
 
 export function InitScheduleButton({ timezone }: { timezone: string }) {

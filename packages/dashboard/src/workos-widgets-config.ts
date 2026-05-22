@@ -26,7 +26,7 @@ export function getElevaWorkOsTheme(options?: {
 export const elevaWorkOsElements: ElevaWorkOsElements = {
   primaryButton: {
     variant: "solid",
-    highContrast: true,
+    highContrast: false,
     radius: "full",
     size: "2",
   },

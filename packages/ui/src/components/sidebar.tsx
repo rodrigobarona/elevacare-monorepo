@@ -3,7 +3,7 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
-import { PanelLeftIcon } from "lucide-react"
+import { PanelLeftIcon } from "@eleva/icons"
 
 import { useIsMobile } from "@eleva/ui/hooks/use-mobile"
 import { cn } from "@eleva/ui/lib/utils"

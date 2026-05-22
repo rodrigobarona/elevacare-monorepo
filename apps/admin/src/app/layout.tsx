@@ -7,7 +7,6 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import { LayoutDashboard } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { DashboardProviders } from "@eleva/dashboard/dashboard-providers"
@@ -47,11 +46,17 @@ export default async function AdminRootLayout({
     getServerThemePreference(),
   ])
 
-  const dashboardConfig = await buildDashboardConfig(session, [
+  const dashboardConfig = await buildDashboardConfig(
+    session,
+    [
+      {
+        items: [{ title: t("overview"), url: "/", icon: "SquaresFourIcon" }],
+      },
+    ],
     {
-      items: [{ title: t("overview"), url: "/", icon: <LayoutDashboard /> }],
-    },
-  ])
+      enableOrgSwitcher: false,
+    }
+  )
 
   return (
     <html
@@ -59,7 +64,7 @@ export default async function AdminRootLayout({
       className={cn(fontClassName, appearance === "dark" && "dark")}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased">
+      <body className="font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DashboardProviders initialTheme={initialTheme}>
             <DashboardShell config={dashboardConfig}>{children}</DashboardShell>

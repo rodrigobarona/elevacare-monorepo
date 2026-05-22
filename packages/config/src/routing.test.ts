@@ -65,8 +65,9 @@ describe("RESERVED_SLUGS - routing-critical entries", () => {
     }
   })
 
-  it("includes /admin", () => {
+  it("includes /admin and /docs", () => {
     expect(RESERVED_SLUGS.has("admin")).toBe(true)
+    expect(RESERVED_SLUGS.has("docs")).toBe(true)
   })
 
   it("includes Next.js metadata convention routes", () => {

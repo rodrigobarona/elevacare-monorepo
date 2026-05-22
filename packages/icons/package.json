@@ -1,0 +1,27 @@
+{
+  "name": "@eleva/icons",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@phosphor-icons/react": "^2.1.10",
+    "react": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/eslint-config": "workspace:*",
+    "@eleva/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client.ts",
+    "./icon": "./src/icon.tsx",
+    "./nav-icon": "./src/nav-icon.tsx"
+  }
+}

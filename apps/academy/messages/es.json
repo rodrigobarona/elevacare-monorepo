@@ -8,6 +8,7 @@
   "academy": {
     "title": "Eleva Academy",
     "subtitle": "Crea y gestiona tus cursos online.",
+    "comingSoon": "Gestión de cursos para {orgSlug}. Próximamente.",
     "courses": {
       "title": "Cursos",
       "create": "Nuevo curso",

@@ -32,9 +32,10 @@ All commands run from the repo root.
 
 ### WorkOS
 
-| Command                     | What it does                                                                                                              | Idempotent? |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------- |
-| `pnpm workos:rbac:generate` | Apply the RBAC config in `infra/workos/rbac-config.json` to the WorkOS environment (creates/updates roles + permissions). | Yes         |
+| Command                        | What it does                                                                                                                                                                       | Idempotent?                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `pnpm workos:rbac:generate`    | Dry-run: preview app capabilities from `infra/workos/rbac-config.json` (creates/updates roles + `area:action` permissions). Skips `widgets:*`. Use `-- --apply` to mutate WorkOS.  | Yes — re-run `workos:widgets:generate` after rbac apply. |
+| `pnpm workos:widgets:generate` | Dry-run: preview widget grant merge from `infra/workos/widgets-config.json` onto roles (preserves existing app permissions). Use `-- --apply` to create/update `widgets:*` grants. | Yes                                                      |
 
 ### QStash (Upstash)
 
@@ -77,21 +78,22 @@ Every script reads from `.env.local` by default. To run against a
 different environment, prefix the command with the env override or
 swap your `.env.local` to the target environment's values.
 
-| Var                                      | Used by                                                                               |
-| ---------------------------------------- | ------------------------------------------------------------------------------------- |
-| `STRIPE_SECRET_KEY`                      | All `stripe:*` commands                                                               |
-| `STRIPE_API_VERSION`                     | `stripe:setup:webhooks` (pins endpoint api_version)                                   |
-| `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` | `apps/api` `/billing/portal` route after `stripe:setup:portal -- --apply`             |
-| `STRIPE_PUBLISHABLE_KEY`                 | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                  |
-| `STRIPE_CONNECT_CLIENT_ID`               | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                  |
-| `WORKOS_API_KEY`                         | `workos:rbac:generate`, `stripe:backfill:org-customers`, `stripe:verify:entitlements` |
-| WorkOS access token JWT                  | Optional for `stripe:verify:entitlements -- --access-token <jwt>`                     |
-| `QSTASH_TOKEN`                           | All `qstash:*` commands                                                               |
-| `QSTASH_URL`                             | All `qstash:*` commands (defaults to `https://qstash.upstash.io`)                     |
-| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:audit-drainer`, `qstash:setup:stripe-stuck`, `qstash:setup`             |
-| `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).               |
-| `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands                           |
-| `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                                     |
+| Var                                      | Used by                                                                                                                               |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`                      | All `stripe:*` commands                                                                                                               |
+| `STRIPE_API_VERSION`                     | `stripe:setup:webhooks` (pins endpoint api_version)                                                                                   |
+| `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` | `apps/api` `/billing/portal` route after `stripe:setup:portal -- --apply`                                                             |
+| `STRIPE_PUBLISHABLE_KEY`                 | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                                                                  |
+| `STRIPE_CONNECT_CLIENT_ID`               | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                                                                  |
+| `WORKOS_API_KEY`                         | `workos:rbac:generate`, `workos:widgets:generate` (staging/default), `stripe:backfill:org-customers`, `stripe:verify:entitlements`    |
+| `WORKOS_API_KEY_PRODUCTION`              | `workos:rbac:generate -- --env=production`, `workos:widgets:generate -- --env=production` (preferred; falls back to `WORKOS_API_KEY`) |
+| WorkOS access token JWT                  | Optional for `stripe:verify:entitlements -- --access-token <jwt>`                                                                     |
+| `QSTASH_TOKEN`                           | All `qstash:*` commands                                                                                                               |
+| `QSTASH_URL`                             | All `qstash:*` commands (defaults to `https://qstash.upstash.io`)                                                                     |
+| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:audit-drainer`, `qstash:setup:stripe-stuck`, `qstash:setup`                                                             |
+| `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).                                                               |
+| `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands                                                                           |
+| `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                                                                                     |
 
 `stripe:verify:entitlements` always needs `DATABASE_URL` and `WORKOS_API_KEY`.
 It needs `STRIPE_SECRET_KEY` only when the diagnostic Stripe API comparison is
@@ -142,12 +144,15 @@ they were initially run on staging is safe.
 
 ### WorkOS — staging → production
 
-1. **Switch to a production `WORKOS_API_KEY`** in your shell.
-2. **Sync RBAC**:
+1. **Set `WORKOS_API_KEY_PRODUCTION`** in your shell (or export `WORKOS_API_KEY` as fallback).
+2. **Sync RBAC**, then **widget grants** (RBAC first so widgets merge onto app permissions):
 
    ```bash
-   pnpm workos:rbac:generate
+   pnpm workos:rbac:generate -- --env=production --apply
+   pnpm workos:widgets:generate -- --env=production --apply
    ```
+
+   Widget grants include production-specific variants from `infra/workos/widgets-config.json`.
 
 3. Verify in the WorkOS Dashboard → RBAC tab that all roles + permissions match `infra/workos/rbac-config.json`.
 

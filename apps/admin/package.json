@@ -20,7 +20,7 @@
     "@eleva/ui": "workspace:*",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
-    "lucide-react": "catalog:",
+    "@eleva/icons": "workspace:*",
     "next": "catalog:",
     "next-intl": "catalog:",
     "next-themes": "catalog:",

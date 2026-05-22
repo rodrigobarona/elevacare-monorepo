@@ -1,5 +1,5 @@
 import { Button } from "@eleva/ui/components/button"
-import { ArrowRight } from "lucide-react"
+import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
@@ -110,7 +110,7 @@ function AboutContent() {
               <Button size="lg" asChild>
                 <Link href="/">
                   {t("about.cta")}
-                  <ArrowRight data-icon="inline-end" />
+                  <ArrowRightIcon data-icon="inline-end" />
                 </Link>
               </Button>
             </div>

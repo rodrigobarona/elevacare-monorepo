@@ -1,11 +1,11 @@
 import "@radix-ui/themes/styles.css"
 
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { guardSessionForOrg } from "@eleva/auth"
-import { LayoutDashboard, Settings } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
+import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
 export default async function OrgSlugLayout({
   children,
@@ -18,7 +18,7 @@ export default async function OrgSlugLayout({
   const session = await guardSessionForOrg(orgSlug)
 
   if (session.orgSlug !== orgSlug) {
-    notFound()
+    redirect(resolveProductHomeUrl(session))
   }
 
   const t = await getTranslations("nav")
@@ -29,13 +29,13 @@ export default async function OrgSlugLayout({
         {
           title: t("dashboard"),
           url: `/${orgSlug}`,
-          icon: <LayoutDashboard />,
+          icon: "SquaresFourIcon",
           needs: "appointments:view_own",
         },
         {
           title: t("settings"),
           url: `/${orgSlug}/settings`,
-          icon: <Settings />,
+          icon: "GearIcon",
         },
       ],
     },

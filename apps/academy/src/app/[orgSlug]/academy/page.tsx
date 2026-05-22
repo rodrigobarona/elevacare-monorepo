@@ -1,16 +1,20 @@
+import { getTranslations } from "next-intl/server"
+import { AccountPageHeader } from "@eleva/dashboard"
+
 export default async function AcademyHomePage({
   params,
 }: {
   params: Promise<{ orgSlug: string }>
 }) {
   const { orgSlug } = await params
+  const t = await getTranslations("academy")
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8">
-      <h1 className="text-2xl font-bold">Eleva Academy</h1>
-      <p className="text-muted-foreground">
-        Course management for {orgSlug}. Coming soon.
+    <>
+      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <p className="text-sm text-muted-foreground">
+        {t("comingSoon", { orgSlug })}
       </p>
-    </main>
+    </>
   )
 }

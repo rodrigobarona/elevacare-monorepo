@@ -7,6 +7,7 @@ const origins: GatewayOrigins = {
   team: "http://team",
   academy: "http://academy",
   account: "http://account",
+  docs: "http://docs",
 }
 
 describe("resolveDispatch - locale + marketing", () => {
@@ -87,15 +88,26 @@ describe("resolveDispatch - account zone", () => {
   })
 })
 
-describe("resolveDispatch - app + admin", () => {
-  it("rewrites /admin to the app origin (prefix match)", () => {
-    expect(resolveDispatch("/admin", true, origins)).toEqual({
+describe("resolveDispatch - docs zone", () => {
+  it("rewrites /docs and /docs/* to docs origin (prefix match)", () => {
+    expect(resolveDispatch("/docs", false, origins)).toEqual({
       kind: "rewrite",
-      origin: "http://app",
+      origin: "http://docs",
     })
-    expect(resolveDispatch("/admin/users", true, origins)).toEqual({
+    expect(resolveDispatch("/docs/guides/foo", true, origins)).toEqual({
       kind: "rewrite",
-      origin: "http://app",
+      origin: "http://docs",
+    })
+  })
+})
+
+describe("resolveDispatch - admin redirect", () => {
+  it("returns admin-redirect for /admin and /admin/*", () => {
+    expect(resolveDispatch("/admin", true, origins)).toEqual({
+      kind: "admin-redirect",
+    })
+    expect(resolveDispatch("/admin/payments", false, origins)).toEqual({
+      kind: "admin-redirect",
     })
   })
 })

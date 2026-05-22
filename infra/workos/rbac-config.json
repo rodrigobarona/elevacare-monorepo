@@ -164,36 +164,14 @@
   ],
   "roles": [
     {
-      "slug": "member",
-      "displayName": "Member",
-      "description": "Default role for patients/members using the personal health app.",
+      "slug": "admin",
+      "displayName": "Admin",
+      "description": "Org admin role. Capability superset for admin-context product labels; effective access filtered at runtime by org type.",
       "capabilities": [
         "appointments:view_own",
         "sessions:view_own",
         "billing:view_own",
-        "diary:share"
-      ]
-    },
-    {
-      "slug": "expert",
-      "displayName": "Expert",
-      "description": "Approved health professional with booking, reporting, and payout capabilities.",
-      "capabilities": [
-        "events:manage",
-        "schedule:manage",
-        "bookings:manage_own",
-        "reports:manage_own",
-        "payouts:view_own",
-        "expert:onboard",
-        "expert:profile_edit",
-        "expert:invoicing_manage"
-      ]
-    },
-    {
-      "slug": "team_admin",
-      "displayName": "Team Admin",
-      "description": "Clinic or team administrator with member management and billing control.",
-      "capabilities": [
+        "diary:share",
         "events:manage",
         "schedule:manage",
         "bookings:manage_own",
@@ -204,26 +182,11 @@
         "expert:invoicing_manage",
         "members:manage",
         "billing:manage_org",
-        "subscriptions:manage_org"
-      ]
-    },
-    {
-      "slug": "lecturer",
-      "displayName": "Lecturer",
-      "description": "Academy instructor who creates, manages, and publishes courses.",
-      "capabilities": [
+        "subscriptions:manage_org",
         "courses:manage",
         "courses:create",
         "courses:publish",
         "academy:analytics_view",
-        "payouts:view_own"
-      ]
-    },
-    {
-      "slug": "staff",
-      "displayName": "Eleva Staff",
-      "description": "Internal Eleva operator with full platform administration access.",
-      "capabilities": [
         "experts:approve",
         "experts:reject",
         "applications:review",
@@ -236,6 +199,21 @@
         "accounting:reconcile",
         "usernames:reserve",
         "usernames:rename"
+      ]
+    },
+    {
+      "slug": "member",
+      "displayName": "Member",
+      "description": "Org member role. Expert-in-clinic capability bundle; effective access filtered at runtime by org type.",
+      "capabilities": [
+        "events:manage",
+        "schedule:manage",
+        "bookings:manage_own",
+        "reports:manage_own",
+        "payouts:view_own",
+        "expert:onboard",
+        "expert:profile_edit",
+        "expert:invoicing_manage"
       ]
     }
   ]

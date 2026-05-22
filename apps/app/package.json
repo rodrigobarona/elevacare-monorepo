@@ -32,7 +32,7 @@
     "@workos-inc/node": "catalog:",
     "@workos-inc/widgets": "catalog:",
     "@workos-inc/widgets-i18n": "catalog:",
-    "lucide-react": "catalog:",
+    "@eleva/icons": "workspace:*",
     "next": "catalog:",
     "next-intl": "catalog:",
     "next-themes": "catalog:",

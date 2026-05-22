@@ -22,7 +22,16 @@ export function resolveOriginsFromEnv(): GatewayOrigins {
     team: process.env.TEAM_ASSET_PREFIX || "http://localhost:3004",
     academy: process.env.ACADEMY_ASSET_PREFIX || "http://localhost:3005",
     account: process.env.ACCOUNT_ASSET_PREFIX || "http://localhost:3006",
+    docs: process.env.DOCS_ASSET_PREFIX || "http://localhost:3008",
   }
+}
+
+export function resolveAdminOrigin(): string {
+  return (
+    process.env.ADMIN_URL ||
+    process.env.NEXT_PUBLIC_ADMIN_URL ||
+    "http://localhost:3007"
+  )
 }
 
 export function buildRewriteUrl(req: NextRequest, origin: string): URL {
@@ -38,6 +47,29 @@ export function buildLoginRedirect(req: NextRequest): NextResponse {
   url.pathname = "/login"
   url.search = `?returnTo=${encodeURIComponent(returnTo)}`
   return NextResponse.redirect(url)
+}
+
+/** True for App Router client navigations that expect an RSC payload. */
+export function isRscRequest(req: NextRequest): boolean {
+  return (
+    req.headers.get("RSC") === "1" ||
+    req.headers.get("Next-Router-Prefetch") === "1" ||
+    req.headers.has("Next-Router-State-Tree") ||
+    req.nextUrl.searchParams.has("_rsc")
+  )
+}
+
+/**
+ * True for top-level browser navigations (address bar, refresh, <a> without
+ * client router). RSC/prefetch requests use cors/empty and must not redirect.
+ */
+export function isDocumentNavigation(req: NextRequest): boolean {
+  const mode = req.headers.get("Sec-Fetch-Mode")
+  const dest = req.headers.get("Sec-Fetch-Dest")
+  if (mode !== null) {
+    return mode === "navigate" && (dest === "document" || dest === "iframe")
+  }
+  return !isRscRequest(req)
 }
 
 /**
@@ -58,4 +90,20 @@ export function buildRootRedirect(req: NextRequest): NextResponse {
     url.pathname = "/dashboard"
   }
   return NextResponse.redirect(url)
+}
+
+/**
+ * Platform admin lives on admin.eleva.care (apps/admin). Root-domain
+ * /admin/* requests redirect to the admin origin with the /admin prefix
+ * stripped — admin app routes are root-relative on the subdomain.
+ */
+export function buildAdminRedirect(req: NextRequest): NextResponse {
+  const origin = resolveAdminOrigin()
+  const pathname = req.nextUrl.pathname
+  const adminPath =
+    pathname === "/admin"
+      ? "/"
+      : pathname.replace(/^\/admin(?=\/|$)/, "") || "/"
+  const destination = new URL(adminPath + req.nextUrl.search, origin)
+  return NextResponse.redirect(destination)
 }

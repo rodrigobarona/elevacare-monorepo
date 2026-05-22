@@ -20,6 +20,12 @@ describe("buildCspHeader", () => {
     expect(header).toMatch(/connect-src[^;]*sentry\.io/)
   })
 
+  it("includes WorkOS widget API in connect-src and frame-src", () => {
+    const header = buildCspHeader()
+    expect(header).toMatch(/connect-src[^;]*api\.workos\.com/)
+    expect(header).toMatch(/frame-src[^;]*api\.workos\.com/)
+  })
+
   it("locks frame-ancestors to none by default", () => {
     const header = buildCspHeader()
     expect(header).toMatch(/frame-ancestors 'none'/)

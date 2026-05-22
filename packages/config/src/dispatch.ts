@@ -26,12 +26,14 @@ export interface GatewayOrigins {
   team: string
   academy: string
   account: string
+  docs: string
 }
 
 export type Dispatch =
   | { kind: "marketing" }
   | { kind: "rewrite"; origin: string }
   | { kind: "unauth-slug"; slug: string }
+  | { kind: "admin-redirect" }
 
 const accountPrefixSegments = new Set<string>(ACCOUNT_FIXED_SEGMENTS)
 const appPrefixSegments = new Set<string>(APP_FIXED_SEGMENTS)
@@ -47,17 +49,18 @@ const localeSet = new Set<string>(locales)
  * Routing priority:
  *  1. Locale-prefixed (/pt, /es, /en) -> marketing
  *  2. Marketing first-segments (/about, /pricing, ...) -> marketing
- *  3. Fixed account segments (/onboarding, /account/*) -> account zone
- *  4. Fixed app segments (/admin) -> app zone
- *  5. Account standalone (/dashboard, /login, /callback, /logout,
+ *  3. Docs (/docs/*) -> docs zone
+ *  4. Platform admin (/admin/*) -> admin subdomain redirect
+ *  5. Fixed account segments (/onboarding, /account/*) -> account zone
+ *  6. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup) at depth 1 -> account zone
- *  6. App standalone at depth 1 -> app zone
- *  7. Org-scoped second segment (/:slug/expert|team|academy|settings)
+ *  7. App standalone at depth 1 -> app zone
+ *  8. Org-scoped second segment (/:slug/expert|team|academy|settings)
  *     -> respective satellite app
- *  8. Bare or deeper /:slug with valid shape:
+ *  9. Bare or deeper /:slug with valid shape:
  *       hasSession -> app zone (member app handles org check)
  *       !hasSession -> unauth-slug (caller redirects to /login)
- *  9. Anything else -> marketing
+ * 10. Anything else -> marketing
  */
 export function resolveDispatch(
   pathname: string,
@@ -73,6 +76,13 @@ export function resolveDispatch(
 
   if (localeSet.has(first)) return { kind: "marketing" }
   if (marketingPaths.has(first)) return { kind: "marketing" }
+
+  if (first === "docs") {
+    return { kind: "rewrite", origin: origins.docs }
+  }
+  if (first === "admin") {
+    return { kind: "admin-redirect" }
+  }
 
   if (accountPrefixSegments.has(first)) {
     return { kind: "rewrite", origin: origins.account }

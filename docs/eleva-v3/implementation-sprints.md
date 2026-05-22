@@ -57,7 +57,7 @@ Composition rule: `src/proxy.ts` must stay under ~50 LOC. Every concern (intl, a
 - Branch per feature, PR into `main`.
 - **CI green gates merge** (branch-protection required checks): lint, typecheck, Vitest, Playwright smoke, boundary lint (`no-restricted-paths`), i18n parity, RLS isolation test, **CodeRabbit AI review**.
 - **Every PR requires at least one CodeRabbit review.** `.coderabbit.yaml` at repo root drives the default config; author must acknowledge or address each CodeRabbit comment (reply or fix) before merge. Bot's aggregate status check must be green.
-- **Multi-zone discipline**: gateway (`apps/web`) owns `eleva.care`, carries rewrites and `src/proxy.ts`; sub-apps declare `basePath` (`/app`, `/api`, `/docs`) matching their zone prefix. No public subdomain additions without an ADR.
+- **Multi-zone discipline**: gateway (`apps/web`) owns `eleva.care` and runs `src/proxy.ts` for all dynamic dispatch via `@eleva/config/dispatch`. Sub-apps use `assetPrefix` from env (`/_app`, `/_docs`, … in dev) — only `apps/docs` declares `basePath: '/docs'`. No public subdomain additions without an ADR. See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md) and [gateway-audit.md](./gateway-audit.md).
 - **Single canonical URL rule**: every public URL, webhook, and OAuth callback lives under `eleva.care/...`. Internal Vercel project URLs serve `noindex` or 301-redirect to canonical. See [ADR-014](./adrs/ADR-014-multi-zone-rewrites.md).
 - Every mutating server action wrapped in `withAudit(action, entity, fn)` from `@eleva/audit`.
 - Every tenant query wrapped in `withOrgContext(orgId, fn)` from `@eleva/db`.
@@ -113,15 +113,15 @@ Deliverables:
 
 - Migrate `bun.lock` → `pnpm-lock.yaml`; pin `"packageManager": "pnpm@9.15.x"`. CI guard blocks `bun.lock` at root.
 - Rename `@workspace/*` → `@eleva/*` across [package.json](../../package.json), [packages/ui/package.json](../../packages/ui/package.json), [packages/eslint-config](../../packages/eslint-config), [packages/typescript-config](../../packages/typescript-config), and all import sites.
-- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`. Each with `src/proxy.ts` placeholder composing intl + headers. `basePath` config:
-  - `apps/app` → **no `basePath`** (runs at internal root; gateway rewrites `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` to it)
+- Scaffold new apps: `apps/app`, `apps/api`, `apps/docs`, `apps/email`, `apps/account`, `apps/expert`, `apps/team`, `apps/academy`, `apps/admin`. Each with `src/proxy.ts` composing auth + headers. `basePath` config:
+  - `apps/app`, `apps/account`, `apps/expert`, `apps/team`, `apps/academy`, `apps/admin` → **no `basePath`** (gateway proxy rewrites/redirects to internal root)
   - `apps/api` → **no `basePath`** (served on `api.eleva.care` subdomain; not rewritten)
   - `apps/docs` → `basePath: '/docs'`
-- **Multi-zone rewrites** in gateway [apps/web/next.config.mjs](../../apps/web/next.config.mjs) resolved `afterFiles`, destination URLs from env (`APP_URL`, `DOCS_URL`). API is **not** rewritten — lives on its own subdomain.
-- Create corresponding Vercel projects: `elevacare-app`, `elevacare-api`, `elevacare-docs`, `elevacare-email`; update [.vercel/repo.json](../../.vercel/repo.json). Gateway stays `elevacare-web`.
+- **Gateway routing** in [`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts) via [`resolveDispatch()`](../../packages/config/src/dispatch.ts). [`apps/web/next.config.mjs`](../../apps/web/next.config.mjs) carries **dev-only** static-asset rewrites (`beforeFiles`: `/_app`, `/_docs`, …). API is **not** rewritten — lives on its own subdomain.
+- Create corresponding Vercel projects per [environment-matrix.md](./environment-matrix.md). Gateway stays `elevacare-web`.
 - **Vercel DNS for `eleva.care`** per locked canonical mapping (ADR-014 + [environment-matrix.md](./environment-matrix.md)):
-  - production: `eleva.care` gateway; `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout` rewritten to `apps/app`; `/docs/*` rewritten to `apps/docs`; `api.eleva.care` points at `elevacare-api` Vercel project; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
-  - staging: `staging.eleva.care` gateway with same rewrite pattern; `api.staging.eleva.care` for staging API
+  - production: `eleva.care` gateway; org-slug routes (`/[orgSlug]`, `/[orgSlug]/expert/*`, …) proxied to satellite apps; `/login`, `/dashboard`, `/account/*` proxied to `apps/account`; `/docs/*` proxied to `apps/docs`; `admin.eleva.care` → `apps/admin`; `api.eleva.care` → `apps/api`; `email.eleva.care` (internal), `status.eleva.care` (BetterStack), `sessions.eleva.care` (Daily CNAME)
+  - staging: `staging.eleva.care` gateway with same dispatch pattern; `api.staging.eleva.care` for staging API
   - internal Vercel project URLs (`elevacare-app.vercel.app`, etc.) serve `noindex` + `robots.txt` disallow OR 301 to canonical
   - wildcard SSL `*.eleva.care` via Vercel
   - per-PR previews on `*.preview.eleva.care` wildcard
@@ -140,7 +140,7 @@ Deliverables:
 - Husky + lint-staged + commitlint.
 - `.env.example` seeded with every planned secret placeholder.
 
-Exit: empty-change PR goes green in <5 min; all four new Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app; `eleva.care/patient`, `/expert`, `/org`, `/admin` return placeholder pages via gateway rewrite to `apps/app`; `eleva.care/docs` returns Fumadocs placeholder via rewrite; `api.eleva.care/health` returns JSON healthcheck from `apps/api`; `eleva.care/home` returns marketing placeholder; `eleva.care/` without session returns marketing; `/` with test session 302s to `/patient`; internal Vercel URLs return 301 or `noindex`; CORS preflight from `eleva.care` to `api.eleva.care` succeeds; CodeRabbit posts a review on a dry-run PR.
+Exit: empty-change PR goes green in <5 min; all Vercel projects deploy a placeholder page; `vercel env pull` succeeds in each app; `eleva.care/[orgSlug]` returns member app via gateway proxy; `eleva.care/[orgSlug]/expert` returns expert app; `eleva.care/docs` returns Fumadocs placeholder; `eleva.care/login` returns account app; `admin.eleva.care` returns admin placeholder; `api.eleva.care/health` returns JSON healthcheck; `eleva.care/home` returns marketing; `eleva.care/` without session returns marketing; `/` with test session + document navigation 302s to `/dashboard` or last org; internal Vercel URLs return 301 or `noindex`; CORS preflight from `eleva.care` to `api.eleva.care` succeeds; CodeRabbit posts a review on a dry-run PR.
 
 MCPs: Vercel MCP (project creation + marketplace linking + DNS + Edge Config), Neon MCP (two projects).
 
@@ -169,9 +169,9 @@ Backend (Track A):
 
 Frontend (Track B):
 
-- `apps/app` shell with route groups `(expert)`, `(patient)`, `(org)`, `(admin)`, `(settings)`; **no `basePath`** (runs at its own internal root; gateway rewrites specific paths).
-- Gateway `apps/web/src/proxy.ts` composing `createMiddleware(i18nConfig)` → passthrough for `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`, `/docs` → `/home` always marketing → context-sensitive root (session → redirect to role home, no session → marketing) → i18n fallback.
-- Sign-in / sign-up under `apps/app/(auth)/[locale]/`; canonical URLs `eleva.care/signin`, `eleva.care/signup`, `eleva.care/callback` rewritten to app zone by the gateway.
+- `apps/app` shell with org-scoped routes under `/[orgSlug]/*`; **no `basePath`** (runs at internal root; gateway proxy dispatches by org slug).
+- Gateway [`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts) via `createGatewayProxy()` + `resolveDispatch()` → account paths, docs, org-slug rewrites, admin redirect, bare-`/ ` root redirect (document nav only), intl fallback for marketing.
+- Sign-in / sign-up under `apps/account`; canonical URLs `eleva.care/login`, `eleva.care/signup`, `eleva.care/callback` proxied to account zone by the gateway.
 - Sidebar nav gated by permissions.
 - next-intl scaffold with `pt`, `en`, `es` locale files; ELEVA_LOCALE cookie; country detection (PT→pt, BR→pt, ES→es, default en); EN served at the root.
 - `next-themes` dark mode (already installed in [apps/web](../../apps/web)).
@@ -184,7 +184,7 @@ Exit:
 - RLS isolation test green (org A insert, org B select → zero rows)
 - audit outbox drainer ships test events from `eleva_v3_main.audit_outbox` to `eleva_v3_audit.audit_events` at-least-once
 - forced error shows up in Sentry with correct correlation ID
-- `src/proxy.ts` remains under 50 LOC in `apps/web`; sub-app proxies are thin auth/header wrappers
+- `src/proxy.ts` remains under ~60 LOC in `apps/web`; sub-app proxies are thin auth/header wrappers; gateway integration tests in `apps/web/src/proxy.test.ts` pass
 - signup form rejects reserved usernames; DB rejects reserved slugs at the constraint level
 
 MCPs: WorkOS CLI (create app, import `rbac-config.json`), Neon MCP (migration branches), Vercel MCP (verify env vars on both apps).

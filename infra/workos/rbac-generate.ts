@@ -1,22 +1,30 @@
 import { readFile } from "node:fs/promises"
 import { fileURLToPath } from "node:url"
 import { dirname, resolve } from "node:path"
+import {
+  WorkosApiError,
+  createPermission,
+  createRole,
+  deletePermission,
+  listAllPermissions,
+  listEnvironmentRoles,
+  parseCliEnv,
+  resolveWorkosApiKey,
+  setRolePermissions,
+  updateRole,
+} from "./workos-api.js"
 
 /**
  * rbac-generate — nuke-and-repave sync from infra/workos/rbac-config.json
- * to WorkOS. Deletes stale roles/permissions and re-creates everything from
- * the JSON source of truth with proper descriptions.
+ * to WorkOS. Re-creates capabilities and role assignments from the JSON
+ * source of truth with proper descriptions.
  *
  * Usage:
- *   pnpm rbac:generate              # dry-run (shows what would happen)
- *   pnpm rbac:generate --apply      # actually call WorkOS API
- *   pnpm rbac:generate --env=staging
- *   pnpm rbac:generate --env=production --apply
+ *   pnpm workos:rbac:generate              # dry-run (shows what would happen)
+ *   pnpm workos:rbac:generate --apply      # actually call WorkOS API
+ *   pnpm workos:rbac:generate --env=staging
+ *   pnpm workos:rbac:generate --env=production --apply
  */
-
-const WORKOS_API_BASE = "https://api.workos.com"
-
-const PROTECTED_ROLE_SLUGS = new Set(["admin", "member"])
 
 interface RbacConfig {
   version: number
@@ -33,153 +41,23 @@ interface RbacConfig {
   }>
 }
 
-interface WorkOSPermission {
-  slug: string
-  name: string
-  description?: string
-}
-
-interface WorkOSRole {
-  slug: string
-  name: string
-  description?: string
-  type?: string
-}
-
 async function loadConfig(): Promise<RbacConfig> {
   const here = dirname(fileURLToPath(import.meta.url))
   const path = resolve(here, "rbac-config.json")
   return JSON.parse(await readFile(path, "utf8")) as RbacConfig
 }
 
-async function workosRequest<T>(
-  apiKey: string,
-  method: string,
-  path: string,
-  body?: unknown
-): Promise<T> {
-  const url = `${WORKOS_API_BASE}${path}`
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-  }
-
-  const res = await fetch(url, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  })
-
-  if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`WorkOS ${method} ${path} → ${res.status}: ${text}`)
-  }
-
-  if (res.status === 204 || res.headers.get("content-length") === "0") {
-    return {} as T
-  }
-
-  return res.json() as Promise<T>
-}
-
-async function listAllPermissions(apiKey: string): Promise<WorkOSPermission[]> {
-  const all: WorkOSPermission[] = []
-  let after: string | undefined
-
-  while (true) {
-    const params = new URLSearchParams({ limit: "100" })
-    if (after) params.set("after", after)
-
-    const res = await workosRequest<{
-      data: WorkOSPermission[]
-      list_metadata: { after: string | null }
-    }>(apiKey, "GET", `/authorization/permissions?${params}`)
-
-    all.push(...res.data)
-    if (!res.list_metadata.after) break
-    after = res.list_metadata.after
-  }
-
-  return all
-}
-
-async function listEnvironmentRoles(apiKey: string): Promise<WorkOSRole[]> {
-  const res = await workosRequest<{ data: WorkOSRole[] }>(
-    apiKey,
-    "GET",
-    "/authorization/roles"
-  )
-  return res.data
-}
-
-async function deletePermission(apiKey: string, slug: string): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/permissions/${slug}`)
-}
-
-async function deleteRole(apiKey: string, slug: string): Promise<void> {
-  await workosRequest(apiKey, "DELETE", `/authorization/roles/${slug}`)
-}
-
-async function createPermission(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "POST", "/authorization/permissions", {
-    slug,
-    name,
-    ...(description && { description }),
-  })
-}
-
-async function createRole(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "POST", "/authorization/roles", {
-    slug,
-    name,
-    ...(description && { description }),
-  })
-}
-
-async function updateRole(
-  apiKey: string,
-  slug: string,
-  name: string,
-  description?: string
-): Promise<void> {
-  await workosRequest(apiKey, "PATCH", `/authorization/roles/${slug}`, {
-    name,
-    ...(description !== undefined && { description }),
-  })
-}
-
-async function setRolePermissions(
-  apiKey: string,
-  roleSlug: string,
-  permissions: string[]
-): Promise<void> {
-  await workosRequest(
-    apiKey,
-    "PUT",
-    `/authorization/roles/${roleSlug}/permissions`,
-    { permissions }
-  )
-}
-
 async function main() {
   const args = process.argv.slice(2)
   const apply = args.includes("--apply")
-  const envArg = args.find((a) => a.startsWith("--env="))
-  const envName = envArg?.split("=")[1] ?? "staging"
-
-  const apiKeyEnv =
-    envName === "production" ? "WORKOS_API_KEY_PRODUCTION" : "WORKOS_API_KEY"
-  const apiKey = process.env[apiKeyEnv] ?? process.env.WORKOS_API_KEY
+  let envName: string
+  try {
+    envName = parseCliEnv(args)
+  } catch (err) {
+    console.error(`[rbac] ${err instanceof Error ? err.message : err}`)
+    process.exit(1)
+  }
+  const { apiKey, apiKeyEnv } = resolveWorkosApiKey(envName)
 
   const config = await loadConfig()
 
@@ -190,7 +68,7 @@ async function main() {
     for (const cap of role.capabilities) {
       if (!capSlugs.includes(cap)) {
         console.error(
-          `Role '${role.slug}' references undefined capability '${cap}'.`
+          `[rbac] Role '${role.slug}' references undefined capability '${cap}'.`
         )
         process.exit(1)
       }
@@ -216,6 +94,9 @@ async function main() {
       )
       if (r.description) console.log(`    desc: ${r.description}`)
     }
+    console.log(
+      "\n[rbac] Widget grants are synced separately: pnpm workos:widgets:generate -- --apply"
+    )
     return
   }
 
@@ -228,32 +109,10 @@ async function main() {
 
   console.log(`[rbac] Applying to WorkOS (${envName}) via ${apiKeyEnv}...\n`)
 
-  // --- Step 1: Delete stale roles not in our config ---
-  console.log("[1/5] Cleaning up stale roles...")
+  // --- Step 1: Ensure all required roles exist ---
+  console.log("[1/3] Ensuring required roles exist...")
   const existingRoles = await listEnvironmentRoles(apiKey)
-  let staleDeleted = 0
-  for (const role of existingRoles) {
-    if (PROTECTED_ROLE_SLUGS.has(role.slug)) continue
-    if (role.slug.startsWith("widgets:")) continue
-    if (roleSlugs.has(role.slug)) continue
-
-    try {
-      await setRolePermissions(apiKey, role.slug, [])
-      await deleteRole(apiKey, role.slug)
-      console.log(`  ✗ Deleted stale role '${role.slug}'`)
-      staleDeleted++
-    } catch (err) {
-      console.log(
-        `  ⚠ Could not delete '${role.slug}' (${err instanceof Error ? err.message : err})`
-      )
-    }
-  }
-  if (staleDeleted === 0) console.log("  (no stale roles found)")
-
-  // --- Step 2: Ensure all required roles exist (create missing, update stale) ---
-  console.log("[2/5] Ensuring required roles exist...")
-  const rolesAfterCleanup = await listEnvironmentRoles(apiKey)
-  const currentRolesBySlug = new Map(rolesAfterCleanup.map((r) => [r.slug, r]))
+  const currentRolesBySlug = new Map(existingRoles.map((r) => [r.slug, r]))
 
   for (const role of config.roles) {
     const liveRole = currentRolesBySlug.get(role.slug)
@@ -273,24 +132,23 @@ async function main() {
     }
   }
 
-  // --- Step 3: Clear permissions on all managed roles ---
-  console.log("[3/5] Clearing permissions on all managed roles...")
-  for (const role of config.roles) {
-    await setRolePermissions(apiKey, role.slug, [])
-  }
-  console.log(`  ✓ Cleared ${config.roles.length} roles`)
-
-  // --- Step 4: Delete all non-system permissions, recreate from config ---
-  console.log("[4/5] Replacing permissions...")
+  // --- Step 2: Delete all non-system permissions, recreate from config ---
+  console.log("[2/3] Replacing permissions...")
   const existingPerms = await listAllPermissions(apiKey)
   let deleted = 0
   for (const perm of existingPerms) {
     if (perm.slug.startsWith("widgets:")) continue
+    if (perm.system) continue
     try {
       await deletePermission(apiKey, perm.slug)
       deleted++
-    } catch {
-      // ignore
+    } catch (err) {
+      if (err instanceof WorkosApiError && err.status === 404) continue
+      console.error(
+        `[rbac] Failed to delete permission '${perm.slug}' (${apiKeyEnv}):`,
+        err
+      )
+      throw err
     }
   }
   console.log(`  Deleted ${deleted} custom permissions`)
@@ -301,8 +159,7 @@ async function main() {
       await createPermission(apiKey, cap.slug, cap.displayName, cap.description)
       created++
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      if (msg.includes("409") || msg.includes("already exists")) {
+      if (err instanceof WorkosApiError && err.status === 409) {
         console.log(`  ⚠ '${cap.slug}' already exists`)
       } else {
         throw err
@@ -311,14 +168,19 @@ async function main() {
   }
   console.log(`  Created ${created} permissions`)
 
-  // --- Step 5: Assign permissions to roles ---
-  console.log("[5/5] Assigning permissions to roles...")
+  // --- Step 3: Assign permissions to roles ---
+  console.log("[3/3] Assigning permissions to roles...")
   for (const role of config.roles) {
     await setRolePermissions(apiKey, role.slug, role.capabilities)
     console.log(`  ✓ ${role.slug}: ${role.capabilities.length} permissions`)
   }
 
-  console.log("\n[rbac] Done! Roles & permissions fully synced.")
+  console.log("\n[rbac] Done! App capabilities synced.")
+  console.warn(
+    "\n[rbac] WARNING: rbac-generate clears widget grants from roles. You MUST run:\n" +
+      "  pnpm workos:widgets:generate -- --apply\n" +
+      "Widget access will be broken until widgets-generate completes."
+  )
 }
 
 main().catch((err) => {

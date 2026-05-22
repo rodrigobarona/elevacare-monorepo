@@ -6,14 +6,6 @@ import { getSessionForOrg } from "@eleva/auth/server"
 import { LOGIN_PATH } from "@eleva/auth"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import {
-  LayoutDashboard,
-  CalendarDays,
-  Calendar,
-  Clock,
-  Plug,
-  Wallet,
-} from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { ExpertConnectShell } from "./expert-connect-shell"
@@ -61,35 +53,35 @@ export default async function ExpertLayout({
   const dashboardConfig = await buildDashboardConfig(session, [
     {
       items: [
-        { title: t("dashboard"), url: base, icon: <LayoutDashboard /> },
+        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
         {
           title: t("eventTypes"),
           url: `${base}/event-types`,
-          icon: <CalendarDays />,
+          icon: "CalendarDotsIcon",
           needs: "events:manage",
         },
         {
           title: t("schedule"),
           url: `${base}/schedule`,
-          icon: <Clock />,
+          icon: "ClockIcon",
           needs: "schedule:manage",
         },
         {
           title: t("calendars"),
           url: `${base}/calendars`,
-          icon: <Calendar />,
+          icon: "CalendarIcon",
           needs: "events:manage",
         },
         {
           title: t("integrations"),
           url: `${base}/integrations`,
-          icon: <Plug />,
+          icon: "PlugIcon",
           needs: "events:manage",
         },
         {
           title: t("finance"),
           url: `${base}/finance`,
-          icon: <Wallet />,
+          icon: "WalletIcon",
           needs: "payouts:view_own",
         },
       ],

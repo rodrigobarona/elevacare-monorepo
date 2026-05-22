@@ -17,13 +17,138 @@
   }
 }
 
-/* Align solid accent buttons with Eleva primary */
+/*
+ * Map Radix teal accent scale → Eleva primary (matches shadcn primary CTAs).
+ * Selectors must include the root node itself (.eleva-workos-widgets.woswidgets-root),
+ * not only descendants — WorkOS puts both classes on the same element.
+ */
+.eleva-workos-widgets.woswidgets-root,
 .eleva-workos-widgets .woswidgets-root,
+.eleva-workos-widgets.radix-themes:where([data-is-root-theme="true"]),
+.woswidgets-root.radix-themes:where([data-is-root-theme="true"]),
+.eleva-org-switcher.woswidgets-root,
 .eleva-org-switcher .woswidgets-root {
+  --accent-1: var(--primary-foreground);
+  --accent-2: var(--primary-foreground);
+  --accent-7: rgb(var(--eleva-primary-light));
+  --accent-8: rgb(var(--eleva-primary-light));
   --accent-9: var(--primary);
   --accent-10: var(--primary);
   --accent-11: var(--primary-foreground);
+  --accent-12: var(--primary);
   --accent-contrast: var(--primary-foreground);
+}
+
+/* Pointer on clickable widget controls (Radix defaults to default cursor) */
+.eleva-workos-widgets
+  :where(
+    button,
+    .rt-Button,
+    .rt-BaseButton,
+    .rt-SelectTrigger,
+    .rt-Link,
+    a[href],
+    [role="button"]
+  ):not(:disabled):not([data-disabled]):not([aria-disabled="true"]),
+.eleva-org-switcher
+  :where(button, .rt-Button, .rt-BaseButton, [role="button"]):not(:disabled):not(
+    [data-disabled]
+  ):not([aria-disabled="true"]),
+/* Portaled modals (Editar nome, Alterar senha, etc.) — theme root leaves embed wrapper */
+.woswidgets-root.radix-themes
+  :where(
+    button,
+    .rt-Button,
+    .rt-BaseButton,
+    .rt-SelectTrigger,
+    .rt-Link,
+    a[href],
+    [role="button"]
+  ):not(:disabled):not([data-disabled]):not([aria-disabled="true"]),
+body:has(.eleva-workos-widgets)
+  :is(.rt-DialogContent, .rt-AlertDialogContent, [role="dialog"], [role="alertdialog"])
+  :where(button, .rt-Button, .rt-BaseButton, .woswidgets-button, [role="button"]):not(
+    :disabled
+  ):not([data-disabled]):not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+.eleva-workos-widgets :where(button, .rt-Button, .rt-BaseButton)[data-disabled],
+.eleva-workos-widgets :where(button:disabled),
+.woswidgets-root.radix-themes
+  :where(button, .rt-Button, .rt-BaseButton)[data-disabled],
+.woswidgets-root.radix-themes :where(button:disabled) {
+  cursor: not-allowed;
+}
+
+/* Solid accent CTAs — same green as Eleva "Guardar" / primary buttons */
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]),
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]),
+body:has(.eleva-workos-widgets)
+  .rt-DialogContent
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]) {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Destructive solid CTAs (sign out, revoke, etc.) — Eleva destructive, not primary green */
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ),
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ),
+body:has(.eleva-workos-widgets)
+  :is(.rt-AlertDialogContent, [role="alertdialog"])
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-disabled]) {
+  background-color: var(--destructive);
+  color: oklch(0.985 0 0);
+}
+
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]):hover,
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]):hover,
+body:has(.eleva-workos-widgets)
+  .rt-DialogContent
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-color="red"]):not([data-disabled]):hover {
+  background-color: var(--primary);
+  filter: brightness(0.95);
+}
+
+.eleva-workos-widgets
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ):hover,
+.woswidgets-root.radix-themes
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid[data-color="red"]:not(
+    [data-disabled]
+  ):hover,
+body:has(.eleva-workos-widgets)
+  :is(.rt-AlertDialogContent, [role="alertdialog"])
+  :where(.rt-Button, .rt-BaseButton).rt-variant-solid:not(
+    [data-color="gray"]
+  ):not([data-disabled]):hover {
+  background-color: var(--destructive);
+  filter: brightness(0.92);
 }
 
 /*
@@ -42,17 +167,78 @@
   border-top: 1px solid var(--border) !important;
 }
 
-/* Profile data list: row spacing + rules instead of full-width separators */
-.eleva-workos-widgets .woswidgets-widget .rt-DataListItem {
+/*
+ * User profile DataList (horizontal): Radix lays out label | value via display:contents
+ * on items. Do NOT add borders/padding on .rt-DataListItem — that breaks the grid.
+ */
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal {
+  width: 100%;
+  column-gap: 1rem;
+}
+
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal
+  .rt-DataListItem {
+  display: contents;
+}
+
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal
+  .rt-DataListLabel {
+  padding-block: 0.75rem;
+  align-self: center;
+  min-width: 9rem;
+}
+
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal
+  .rt-DataListValue {
+  padding-block: 0.75rem;
+  align-self: center;
+  min-width: 0;
+}
+
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal
+  .rt-DataListValue
+  > .rt-Flex {
+  width: 100%;
+  min-width: 0;
+}
+
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot.rt-r-orientation-horizontal
+  .rt-Separator {
+  display: block !important;
+}
+
+/* Vertical data lists (if any): row borders instead of full-width separators */
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot:not(.rt-r-orientation-horizontal)
+  .rt-DataListItem {
   padding-block: 0.75rem;
   border-bottom: 1px solid var(--border);
 }
 
-.eleva-workos-widgets .woswidgets-widget .rt-DataListItem:last-child {
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot:not(.rt-r-orientation-horizontal)
+  .rt-DataListItem:last-child {
   border-bottom: none;
 }
 
-.eleva-workos-widgets .woswidgets-widget .rt-Separator {
+.eleva-workos-widgets
+  .woswidgets-widget
+  .rt-DataListRoot:not(.rt-r-orientation-horizontal)
+  .rt-Separator {
   display: none !important;
 }
 

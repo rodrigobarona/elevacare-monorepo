@@ -14,9 +14,7 @@ const allowedDevOrigins = resolveAllowedDevOrigins(env)
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins,
-  // ADR-014 (revised): apps/app runs at the root; authenticated routes
-  // (/dashboard, /expert, /org, /admin, /settings, /callback, /logout)
-  // are individually rewritten from the gateway (apps/web).
+  // Org-slug routes under /[orgSlug]/* are rewritten from the gateway (apps/web).
   skipTrailingSlashRedirect: true,
   experimental: {
     serverActions: {

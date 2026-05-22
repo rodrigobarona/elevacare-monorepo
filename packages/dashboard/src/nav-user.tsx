@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { Globe, LogOut, User, Settings } from "lucide-react"
+import { GlobeIcon, SignOutIcon, UserIcon, GearIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
@@ -75,9 +75,9 @@ export function NavUser({
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-56 rounded-lg" align="end">
+      <DropdownMenuContent className="min-w-56 rounded-lg p-1" align="end">
         <DropdownMenuLabel className="p-0 font-normal">
-          <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+          <div className="flex items-center gap-2 px-2 py-1 text-left text-sm">
             <Avatar key={user.avatarUrl ?? "fallback-menu"} className="size-8">
               {user.avatarUrl ? (
                 <AvatarImage src={user.avatarUrl} alt={displayName} />
@@ -99,37 +99,33 @@ export function NavUser({
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem asChild>
+        <DropdownMenuGroup className="p-0">
+          <DropdownMenuItem asChild className="py-1">
             <Link href={accountUrl}>
-              <User className="mr-2 size-4" />
+              <UserIcon className="size-4" />
               {t("profile")}
             </Link>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
+          <DropdownMenuItem asChild className="py-1">
             <Link href={settingsUrl ?? deriveParentPath(accountUrl)}>
-              <Settings className="mr-2 size-4" />
+              <GearIcon className="size-4" />
               {t("settings")}
             </Link>
           </DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <NavThemeMenu />
-        {homepageUrl && (
-          <>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
+          <NavThemeMenu />
+          {homepageUrl && (
+            <DropdownMenuItem asChild className="py-1">
               <a href={homepageUrl}>
-                <Globe className="mr-2 size-4" />
+                <GlobeIcon className="size-4" />
                 {t("homepage")}
               </a>
             </DropdownMenuItem>
-          </>
-        )}
+          )}
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
+        <DropdownMenuItem asChild className="py-1">
           <a href={logoutUrl}>
-            <LogOut className="mr-2 size-4" />
+            <SignOutIcon className="size-4" />
             {t("signOut")}
           </a>
         </DropdownMenuItem>

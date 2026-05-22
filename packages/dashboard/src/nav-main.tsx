@@ -1,7 +1,6 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import Link from "next/link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -11,6 +10,7 @@ import {
   SidebarMenuButton,
 } from "@eleva/ui/components/sidebar"
 import type { NavGroup } from "./nav-types"
+import { NavMenuItemLink } from "./nav-menu-item-link"
 
 interface NavMainProps {
   groups: NavGroup[]
@@ -36,29 +36,29 @@ export function NavMain({ groups, capabilities = [] }: NavMainProps) {
             )}
             <SidebarGroupContent>
               <SidebarMenu>
-                {visibleItems.map((item) => (
-                  <SidebarMenuItem key={item.url}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={
-                        pathname === item.url ||
-                        (item.url !== "/" &&
-                          pathname.startsWith(item.url + "/"))
-                      }
-                      tooltip={item.title}
-                    >
-                      <Link href={item.url}>
-                        {item.icon}
-                        <span>{item.title}</span>
-                        {item.shortcut && (
-                          <kbd className="ml-auto hidden text-[10px] font-medium text-muted-foreground/70 lg:inline-block">
-                            {item.shortcut}
-                          </kbd>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {visibleItems.map((item) => {
+                  const isActive =
+                    pathname === item.url ||
+                    (item.url !== "/" && pathname.startsWith(item.url + "/"))
+
+                  return (
+                    <SidebarMenuItem key={item.url}>
+                      <SidebarMenuButton
+                        asChild
+                        isActive={isActive}
+                        tooltip={item.title}
+                      >
+                        <NavMenuItemLink
+                          href={item.url}
+                          title={item.title}
+                          icon={item.icon}
+                          active={isActive}
+                          shortcut={item.shortcut}
+                        />
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )
+                })}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

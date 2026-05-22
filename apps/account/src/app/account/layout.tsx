@@ -1,6 +1,5 @@
 import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
-import { User, CreditCard, Building2, Shield } from "lucide-react"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import "@radix-ui/themes/styles.css"
@@ -21,22 +20,25 @@ export default async function SettingsLayout({
       {
         label: t("account"),
         items: [
-          { title: t("settings"), url: "/account/settings", icon: <User /> },
+          { title: t("settings"), url: "/account/settings", icon: "UserIcon" },
           {
             title: t("billing"),
             url: "/account/billing",
-            icon: <CreditCard />,
+            icon: "CreditCardIcon",
           },
           {
             title: t("organizations"),
             url: "/account/organizations",
-            icon: <Building2 />,
+            icon: "BuildingsIcon",
           },
-          { title: t("privacy"), url: "/account/privacy", icon: <Shield /> },
+          { title: t("privacy"), url: "/account/privacy", icon: "ShieldIcon" },
         ],
       },
     ],
-    { homeUrl: "/dashboard", accountUrl: "/account/settings" }
+    {
+      enableOrgSwitcher: false,
+      accountUrl: "/account/settings",
+    }
   )
 
   return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>

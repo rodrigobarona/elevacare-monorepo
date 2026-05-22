@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@eleva/ui/components/dropdown-menu"
-import { Globe, Check } from "lucide-react"
+import { GlobeIcon, CheckIcon } from "@eleva/icons"
 import { useTransition } from "react"
 
 export function LanguageSwitcher() {
@@ -34,13 +34,13 @@ export function LanguageSwitcher() {
           aria-label="Change language"
           disabled={isPending}
         >
-          <Globe className="size-4" />
+          <GlobeIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {locales.map((l) => (
           <DropdownMenuItem key={l} onClick={() => handleSelect(l)}>
-            {l === locale && <Check className="size-3.5" />}
+            {l === locale && <CheckIcon className="size-3.5" />}
             <span className={l === locale ? "font-medium" : ""}>
               {localeNames[l]}
             </span>

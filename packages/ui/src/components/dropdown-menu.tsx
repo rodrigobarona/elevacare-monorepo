@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
-import { Check, ChevronRight, Circle } from "lucide-react"
+import { CheckIcon, CaretRightIcon, CircleIcon } from "@eleva/icons"
 
 import { cn } from "@eleva/ui/lib/utils"
 
@@ -92,7 +92,7 @@ function DropdownMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <Check className="size-4" />
+          <CheckIcon className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -127,7 +127,7 @@ function DropdownMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <Circle className="size-2 fill-current" />
+          <CircleIcon className="size-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -203,13 +203,13 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-[inset]:pl-8 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground",
+        "flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-[inset]:pl-8 data-[state=open]:bg-accent data-[state=open]:text-accent-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className
       )}
       {...props}
     >
       {children}
-      <ChevronRight className="ml-auto size-4" />
+      <CaretRightIcon className="ml-auto size-4" />
     </DropdownMenuPrimitive.SubTrigger>
   )
 }

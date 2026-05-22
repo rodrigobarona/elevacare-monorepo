@@ -54,7 +54,7 @@ catalog:
 | Email | `resend` |
 | Infrastructure | `@upstash/redis` |
 | Database | `drizzle-orm` |
-| UI | `lucide-react`, `@radix-ui/themes`, `zod` |
+| UI | `@phosphor-icons/react`, `@radix-ui/themes`, `sonner`, `zod` |
 
 ## Adding a New Dependency to the Catalog
 

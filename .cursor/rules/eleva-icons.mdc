@@ -1,0 +1,39 @@
+---
+description: Eleva icon system — Phosphor via @eleva/icons only. Apply when adding icons, migrating imports, or styling duotone illustrations.
+globs:
+  - "packages/icons/**"
+  - "packages/ui/**"
+  - "packages/dashboard/**"
+  - "apps/**"
+alwaysApply: false
+---
+
+# Eleva Icons (`@eleva/icons`)
+
+## Hard rules
+
+1. Import icon components from `@eleva/icons` (SSR-safe). Import `NavIcon` / `ElevaIcon` from `@eleva/icons/client` only in client files.
+2. **Never** import `@phosphor-icons/react` or `lucide-react` outside `packages/icons`.
+3. **Server layouts**: sidebar nav uses `NavIconName` string literals (e.g. `"UserIcon"`), never Phosphor components — functions cannot cross the RSC boundary. Client `NavMenuItemLink` resolves via `getNavIcon` from `@eleva/icons/client`.
+4. Named imports only — do not re-export the full Phosphor catalog from app code.
+5. New icon? Add to `packages/icons/src/icons.tsx`, then consume from `@eleva/icons`.
+
+## Weights
+
+| Context | Weight | Size |
+|---------|--------|------|
+| Sidebar (idle) | `light` | 20px |
+| Sidebar (hover/focus) | `regular` | 20px + subtle scale |
+| Sidebar (active) | `duotone` | 20px + left accent bar |
+| Reduced motion (active) | `fill` | no scale / no duotone morph |
+| UI chrome | `regular` | 16px |
+| Illustrations | `duotone` | ≥ 32px |
+
+## Duotone brand colors
+
+- Primary: `text-eleva-primary` or `text-sidebar-primary`
+- Secondary layer: `duotoneColor="rgb(var(--eleva-primary-light))"` via `ElevaIcon` / `NavIcon`
+
+## shadcn
+
+[`packages/ui/components.json`](../../packages/ui/components.json) uses `"iconLibrary": "phosphor"`. Regenerate UI primitives with the CLI when adding shadcn components.
