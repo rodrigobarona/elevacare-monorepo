@@ -6,8 +6,9 @@ type Props = {
 }
 
 /**
- * Logged-in users can always reach the marketing page at /home
- * (the root / redirects authenticated users to their dashboard).
+ * Stable marketing URL for logged-in users arriving from product apps.
+ * Locale roots (/pt, /) also render the homepage; bare / still redirects
+ * to the product on full-page entry only.
  */
 export default async function HomePage({ params }: Props) {
   const { locale } = await params

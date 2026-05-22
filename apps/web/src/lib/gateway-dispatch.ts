@@ -40,6 +40,29 @@ export function buildLoginRedirect(req: NextRequest): NextResponse {
   return NextResponse.redirect(url)
 }
 
+/** True for App Router client navigations that expect an RSC payload. */
+export function isRscRequest(req: NextRequest): boolean {
+  return (
+    req.headers.get("RSC") === "1" ||
+    req.headers.get("Next-Router-Prefetch") === "1" ||
+    req.headers.has("Next-Router-State-Tree") ||
+    req.nextUrl.searchParams.has("_rsc")
+  )
+}
+
+/**
+ * True for top-level browser navigations (address bar, refresh, <a> without
+ * client router). RSC/prefetch requests use cors/empty and must not redirect.
+ */
+export function isDocumentNavigation(req: NextRequest): boolean {
+  const mode = req.headers.get("Sec-Fetch-Mode")
+  const dest = req.headers.get("Sec-Fetch-Dest")
+  if (mode !== null) {
+    return mode === "navigate" && (dest === "document" || dest === "iframe")
+  }
+  return !isRscRequest(req)
+}
+
 /**
  * Hybrid root redirect: if a valid `eleva-last-org` cookie exists,
  * skip the /dashboard hop and land the user directly on /[lastOrg].
