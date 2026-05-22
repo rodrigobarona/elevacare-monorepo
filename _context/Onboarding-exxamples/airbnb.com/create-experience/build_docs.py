@@ -112,8 +112,9 @@ def slug(title: str) -> str:
 
 
 def img_path(ts: str) -> str:
+    """Same-folder path as index.html (PNGs live at create-experience/ root)."""
     name = f"Screenshot 2026-05-22 at {ts}.png"
-    return "../" + name.replace(" ", "%20")
+    return name.replace(" ", "%20")
 
 
 def render_step(step: tuple) -> str:

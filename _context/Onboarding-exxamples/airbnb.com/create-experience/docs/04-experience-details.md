@@ -29,7 +29,7 @@ Experiência: title and description.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 29](../Screenshot%202026-05-22%20at%2009.59.59.png)
+![Step 29](Screenshot%202026-05-22%20at%2009.59.59.png)
 
 ---
 
@@ -56,7 +56,7 @@ Experiência: title and description.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 30](../Screenshot%202026-05-22%20at%2010.00.12.png)
+![Step 30](Screenshot%202026-05-22%20at%2010.00.12.png)
 
 ---
 
@@ -83,7 +83,7 @@ Experiência: title and description.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 31](../Screenshot%202026-05-22%20at%2010.00.19.png)
+![Step 31](Screenshot%202026-05-22%20at%2010.00.19.png)
 
 ---
 
@@ -110,7 +110,7 @@ Experiência: title and description.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 32](../Screenshot%202026-05-22%20at%2010.00.40.png)
+![Step 32](Screenshot%202026-05-22%20at%2010.00.40.png)
 
 ---
 

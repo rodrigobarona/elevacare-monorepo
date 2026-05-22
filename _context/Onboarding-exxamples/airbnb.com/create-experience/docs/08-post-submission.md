@@ -28,7 +28,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 64](../Screenshot%202026-05-22%20at%2010.06.55.png)
+![Step 64](Screenshot%202026-05-22%20at%2010.06.55.png)
 
 ---
 
@@ -54,7 +54,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 65](../Screenshot%202026-05-22%20at%2010.07.11.png)
+![Step 65](Screenshot%202026-05-22%20at%2010.07.11.png)
 
 ---
 
@@ -80,7 +80,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 66](../Screenshot%202026-05-22%20at%2010.07.39.png)
+![Step 66](Screenshot%202026-05-22%20at%2010.07.39.png)
 
 ---
 
@@ -106,7 +106,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 67](../Screenshot%202026-05-22%20at%2010.07.50.png)
+![Step 67](Screenshot%202026-05-22%20at%2010.07.50.png)
 
 ---
 
@@ -132,7 +132,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 68](../Screenshot%202026-05-22%20at%2010.08.03.png)
+![Step 68](Screenshot%202026-05-22%20at%2010.08.03.png)
 
 ---
 
@@ -158,7 +158,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 69](../Screenshot%202026-05-22%20at%2010.13.51.png)
+![Step 69](Screenshot%202026-05-22%20at%2010.13.51.png)
 
 ---
 
@@ -184,7 +184,7 @@ Dashboard, review status, preferences.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 70](../Screenshot%202026-05-22%20at%2010.14.09.png)
+![Step 70](Screenshot%202026-05-22%20at%2010.14.09.png)
 
 ---
 

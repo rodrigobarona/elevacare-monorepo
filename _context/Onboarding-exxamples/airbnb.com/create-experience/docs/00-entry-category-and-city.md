@@ -28,7 +28,7 @@ Pre-wizard: category drill-down, city, intro.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 1](../Screenshot%202026-05-22%20at%2009.52.08.png)
+![Step 1](Screenshot%202026-05-22%20at%2009.52.08.png)
 
 ---
 
@@ -54,7 +54,7 @@ Pre-wizard: category drill-down, city, intro.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 2](../Screenshot%202026-05-22%20at%2009.52.15.png)
+![Step 2](Screenshot%202026-05-22%20at%2009.52.15.png)
 
 ---
 
@@ -80,7 +80,7 @@ Pre-wizard: category drill-down, city, intro.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 3](../Screenshot%202026-05-22%20at%2009.52.32.png)
+![Step 3](Screenshot%202026-05-22%20at%2009.52.32.png)
 
 ---
 
@@ -106,7 +106,7 @@ Pre-wizard: category drill-down, city, intro.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 4](../Screenshot%202026-05-22%20at%2009.52.44.png)
+![Step 4](Screenshot%202026-05-22%20at%2009.52.44.png)
 
 ---
 
@@ -132,7 +132,7 @@ Pre-wizard: category drill-down, city, intro.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 5](../Screenshot%202026-05-22%20at%2009.52.55.png)
+![Step 5](Screenshot%202026-05-22%20at%2009.52.55.png)
 
 ---
 

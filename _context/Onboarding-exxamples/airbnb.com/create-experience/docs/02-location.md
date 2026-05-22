@@ -29,7 +29,7 @@ Local: meeting point and map pin.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 20](../Screenshot%202026-05-22%20at%2009.58.00.png)
+![Step 20](Screenshot%202026-05-22%20at%2009.58.00.png)
 
 ---
 
@@ -56,7 +56,7 @@ Local: meeting point and map pin.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 21](../Screenshot%202026-05-22%20at%2009.58.13.png)
+![Step 21](Screenshot%202026-05-22%20at%2009.58.13.png)
 
 ---
 
@@ -83,7 +83,7 @@ Local: meeting point and map pin.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 22](../Screenshot%202026-05-22%20at%2009.58.22.png)
+![Step 22](Screenshot%202026-05-22%20at%2009.58.22.png)
 
 ---
 
@@ -110,7 +110,7 @@ Local: meeting point and map pin.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 23](../Screenshot%202026-05-22%20at%2009.58.37.png)
+![Step 23](Screenshot%202026-05-22%20at%2009.58.37.png)
 
 ---
 

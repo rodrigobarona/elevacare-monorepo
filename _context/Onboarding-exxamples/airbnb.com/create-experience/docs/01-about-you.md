@@ -29,7 +29,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 6](../Screenshot%202026-05-22%20at%2009.53.06.png)
+![Step 6](Screenshot%202026-05-22%20at%2009.53.06.png)
 
 ---
 
@@ -56,7 +56,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 7](../Screenshot%202026-05-22%20at%2009.53.17.png)
+![Step 7](Screenshot%202026-05-22%20at%2009.53.17.png)
 
 ---
 
@@ -83,7 +83,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 8](../Screenshot%202026-05-22%20at%2009.53.28.png)
+![Step 8](Screenshot%202026-05-22%20at%2009.53.28.png)
 
 ---
 
@@ -110,7 +110,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 9](../Screenshot%202026-05-22%20at%2009.54.22.png)
+![Step 9](Screenshot%202026-05-22%20at%2009.54.22.png)
 
 ---
 
@@ -137,7 +137,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 10](../Screenshot%202026-05-22%20at%2009.54.29.png)
+![Step 10](Screenshot%202026-05-22%20at%2009.54.29.png)
 
 ---
 
@@ -164,7 +164,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 11](../Screenshot%202026-05-22%20at%2009.54.40.png)
+![Step 11](Screenshot%202026-05-22%20at%2009.54.40.png)
 
 ---
 
@@ -191,7 +191,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 12](../Screenshot%202026-05-22%20at%2009.55.11.png)
+![Step 12](Screenshot%202026-05-22%20at%2009.55.11.png)
 
 ---
 
@@ -218,7 +218,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 13](../Screenshot%202026-05-22%20at%2009.56.14.png)
+![Step 13](Screenshot%202026-05-22%20at%2009.56.14.png)
 
 ---
 
@@ -245,7 +245,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 14](../Screenshot%202026-05-22%20at%2009.56.32.png)
+![Step 14](Screenshot%202026-05-22%20at%2009.56.32.png)
 
 ---
 
@@ -272,7 +272,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 15](../Screenshot%202026-05-22%20at%2009.56.47.png)
+![Step 15](Screenshot%202026-05-22%20at%2009.56.47.png)
 
 ---
 
@@ -299,7 +299,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 16](../Screenshot%202026-05-22%20at%2009.57.00.png)
+![Step 16](Screenshot%202026-05-22%20at%2009.57.00.png)
 
 ---
 
@@ -326,7 +326,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 17](../Screenshot%202026-05-22%20at%2009.57.09.png)
+![Step 17](Screenshot%202026-05-22%20at%2009.57.09.png)
 
 ---
 
@@ -353,7 +353,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 18](../Screenshot%202026-05-22%20at%2009.57.19.png)
+![Step 18](Screenshot%202026-05-22%20at%2009.57.19.png)
 
 ---
 
@@ -380,7 +380,7 @@ Sobre si: credentials, profiles, residential address.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 19](../Screenshot%202026-05-22%20at%2009.57.48.png)
+![Step 19](Screenshot%202026-05-22%20at%2009.57.48.png)
 
 ---
 

@@ -29,7 +29,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 33](../Screenshot%202026-05-22%20at%2010.00.51.png)
+![Step 33](Screenshot%202026-05-22%20at%2010.00.51.png)
 
 ---
 
@@ -56,7 +56,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 34](../Screenshot%202026-05-22%20at%2010.01.01.png)
+![Step 34](Screenshot%202026-05-22%20at%2010.01.01.png)
 
 ---
 
@@ -83,7 +83,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 35](../Screenshot%202026-05-22%20at%2010.01.09.png)
+![Step 35](Screenshot%202026-05-22%20at%2010.01.09.png)
 
 ---
 
@@ -110,7 +110,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 36](../Screenshot%202026-05-22%20at%2010.01.26.png)
+![Step 36](Screenshot%202026-05-22%20at%2010.01.26.png)
 
 ---
 
@@ -137,7 +137,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 37](../Screenshot%202026-05-22%20at%2010.01.53.png)
+![Step 37](Screenshot%202026-05-22%20at%2010.01.53.png)
 
 ---
 
@@ -164,7 +164,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 38](../Screenshot%202026-05-22%20at%2010.02.00.png)
+![Step 38](Screenshot%202026-05-22%20at%2010.02.00.png)
 
 ---
 
@@ -191,7 +191,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 39](../Screenshot%202026-05-22%20at%2010.02.07.png)
+![Step 39](Screenshot%202026-05-22%20at%2010.02.07.png)
 
 ---
 
@@ -218,7 +218,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 40](../Screenshot%202026-05-22%20at%2010.02.14.png)
+![Step 40](Screenshot%202026-05-22%20at%2010.02.14.png)
 
 ---
 
@@ -245,7 +245,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 41](../Screenshot%202026-05-22%20at%2010.02.26.png)
+![Step 41](Screenshot%202026-05-22%20at%2010.02.26.png)
 
 ---
 
@@ -272,7 +272,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 42](../Screenshot%202026-05-22%20at%2010.02.37.png)
+![Step 42](Screenshot%202026-05-22%20at%2010.02.37.png)
 
 ---
 
@@ -299,7 +299,7 @@ Itinerário: up to 10 activities with nested modals.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 43](../Screenshot%202026-05-22%20at%2010.02.52.png)
+![Step 43](Screenshot%202026-05-22%20at%2010.02.52.png)
 
 ---
 

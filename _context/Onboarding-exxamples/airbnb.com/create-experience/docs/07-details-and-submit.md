@@ -29,7 +29,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 60](../Screenshot%202026-05-22%20at%2010.05.59.png)
+![Step 60](Screenshot%202026-05-22%20at%2010.05.59.png)
 
 ---
 
@@ -56,7 +56,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 61](../Screenshot%202026-05-22%20at%2010.06.23.png)
+![Step 61](Screenshot%202026-05-22%20at%2010.06.23.png)
 
 ---
 
@@ -83,7 +83,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 62](../Screenshot%202026-05-22%20at%2010.06.30.png)
+![Step 62](Screenshot%202026-05-22%20at%2010.06.30.png)
 
 ---
 
@@ -110,7 +110,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 63](../Screenshot%202026-05-22%20at%2010.06.39.png)
+![Step 63](Screenshot%202026-05-22%20at%2010.06.39.png)
 
 ---
 

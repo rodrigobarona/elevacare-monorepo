@@ -29,7 +29,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 44](../Screenshot%202026-05-22%20at%2010.03.07.png)
+![Step 44](Screenshot%202026-05-22%20at%2010.03.07.png)
 
 ---
 
@@ -56,7 +56,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 45](../Screenshot%202026-05-22%20at%2010.03.16.png)
+![Step 45](Screenshot%202026-05-22%20at%2010.03.16.png)
 
 ---
 
@@ -83,7 +83,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 46](../Screenshot%202026-05-22%20at%2010.03.28.png)
+![Step 46](Screenshot%202026-05-22%20at%2010.03.28.png)
 
 ---
 
@@ -110,7 +110,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 47](../Screenshot%202026-05-22%20at%2010.03.34.png)
+![Step 47](Screenshot%202026-05-22%20at%2010.03.34.png)
 
 ---
 
@@ -137,7 +137,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 48](../Screenshot%202026-05-22%20at%2010.03.53.png)
+![Step 48](Screenshot%202026-05-22%20at%2010.03.53.png)
 
 ---
 
@@ -164,7 +164,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 49](../Screenshot%202026-05-22%20at%2010.04.01.png)
+![Step 49](Screenshot%202026-05-22%20at%2010.04.01.png)
 
 ---
 
@@ -191,7 +191,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 50](../Screenshot%202026-05-22%20at%2010.04.13.png)
+![Step 50](Screenshot%202026-05-22%20at%2010.04.13.png)
 
 ---
 
@@ -218,7 +218,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 51](../Screenshot%202026-05-22%20at%2010.04.27.png)
+![Step 51](Screenshot%202026-05-22%20at%2010.04.27.png)
 
 ---
 
@@ -245,7 +245,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 52](../Screenshot%202026-05-22%20at%2010.04.36.png)
+![Step 52](Screenshot%202026-05-22%20at%2010.04.36.png)
 
 ---
 
@@ -272,7 +272,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 53](../Screenshot%202026-05-22%20at%2010.04.43.png)
+![Step 53](Screenshot%202026-05-22%20at%2010.04.43.png)
 
 ---
 
@@ -299,7 +299,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 54](../Screenshot%202026-05-22%20at%2010.04.52.png)
+![Step 54](Screenshot%202026-05-22%20at%2010.04.52.png)
 
 ---
 
@@ -326,7 +326,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 55](../Screenshot%202026-05-22%20at%2010.05.00.png)
+![Step 55](Screenshot%202026-05-22%20at%2010.05.00.png)
 
 ---
 
@@ -353,7 +353,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 56](../Screenshot%202026-05-22%20at%2010.05.09.png)
+![Step 56](Screenshot%202026-05-22%20at%2010.05.09.png)
 
 ---
 
@@ -380,7 +380,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 57](../Screenshot%202026-05-22%20at%2010.05.22.png)
+![Step 57](Screenshot%202026-05-22%20at%2010.05.22.png)
 
 ---
 
@@ -407,7 +407,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 58](../Screenshot%202026-05-22%20at%2010.05.39.png)
+![Step 58](Screenshot%202026-05-22%20at%2010.05.39.png)
 
 ---
 
@@ -434,7 +434,7 @@ Preços: per-person, private minimum, discounts.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 59](../Screenshot%202026-05-22%20at%2010.05.48.png)
+![Step 59](Screenshot%202026-05-22%20at%2010.05.48.png)
 
 ---
 

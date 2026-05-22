@@ -29,7 +29,7 @@ Fotografias: minimum 5 experience photos.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 24](../Screenshot%202026-05-22%20at%2009.58.50.png)
+![Step 24](Screenshot%202026-05-22%20at%2009.58.50.png)
 
 ---
 
@@ -56,7 +56,7 @@ Fotografias: minimum 5 experience photos.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 25](../Screenshot%202026-05-22%20at%2009.58.58.png)
+![Step 25](Screenshot%202026-05-22%20at%2009.58.58.png)
 
 ---
 
@@ -83,7 +83,7 @@ Fotografias: minimum 5 experience photos.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 26](../Screenshot%202026-05-22%20at%2009.59.19.png)
+![Step 26](Screenshot%202026-05-22%20at%2009.59.19.png)
 
 ---
 
@@ -110,7 +110,7 @@ Fotografias: minimum 5 experience photos.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 27](../Screenshot%202026-05-22%20at%2009.59.31.png)
+![Step 27](Screenshot%202026-05-22%20at%2009.59.31.png)
 
 ---
 
@@ -137,7 +137,7 @@ Fotografias: minimum 5 experience photos.
 **UX notes:**
 - See screenshot for full layout and secondary controls.
 
-![Step 28](../Screenshot%202026-05-22%20at%2009.59.48.png)
+![Step 28](Screenshot%202026-05-22%20at%2009.59.48.png)
 
 ---
 
