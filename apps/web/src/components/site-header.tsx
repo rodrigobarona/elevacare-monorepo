@@ -1,9 +1,13 @@
 import { Suspense } from "react"
+import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
+import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
 import { SignedOutButtons } from "./signed-out-buttons"
 import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
+
+const SESSION_COOKIE = process.env.WORKOS_COOKIE_NAME ?? "wos-session"
 
 type NavItem = {
   href: string
@@ -15,15 +19,14 @@ interface SiteHeaderProps {
 }
 
 /**
- * Marketing site header. The auth-aware slot (login buttons vs user
- * menu) is wrapped in Suspense so the page shell + nav links stream
- * down before WorkOS session resolution finishes. Most marketing
- * visitors are logged-out, so the SignedOutButtons fallback is the
- * correct steady state -- meaning clicking "Log in" is interactive
- * the instant the header paints, with no perceived auth latency.
+ * Marketing site header. The auth slot streams in behind Suspense; the
+ * fallback is chosen from the session cookie so logged-in visitors see
+ * an avatar placeholder instead of login buttons that swap out a moment
+ * later.
  */
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   const t = await getTranslations("nav")
+  const hasSessionCookie = (await cookies()).has(SESSION_COOKIE)
 
   return (
     <header className="border-b px-6 py-4">
@@ -44,10 +47,14 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
           <LanguageSwitcher />
           <Suspense
             fallback={
-              <SignedOutButtons
-                loginLabel={t("login")}
-                getStartedLabel={t("getStarted")}
-              />
+              hasSessionCookie ? (
+                <AuthHeaderPlaceholder />
+              ) : (
+                <SignedOutButtons
+                  loginLabel={t("login")}
+                  getStartedLabel={t("getStarted")}
+                />
+              )
             }
           >
             <SiteHeaderAuthSlot />
