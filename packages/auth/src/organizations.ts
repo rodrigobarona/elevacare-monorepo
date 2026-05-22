@@ -3,8 +3,7 @@ import { db, main } from "@eleva/db"
 import type { OrgType, WorkosRole } from "@eleva/db/schema"
 import { deriveProductLabel } from "./capabilities"
 import {
-  provisionMembership,
-  provisionOrganization,
+  provisionOrganizationWithAdminMembership,
   type ProvisionOrganizationResult,
 } from "./provisioning"
 import type { ProductLabel } from "./types"
@@ -135,10 +134,11 @@ export async function createOrganization(
       roleSlug: "admin",
     })
 
-    const result = await provisionOrganization({
+    const result = await provisionOrganizationWithAdminMembership({
       workosOrgId: workosOrg.id,
       name: input.name,
       type: input.type,
+      userId: input.userId,
       actorUserId: input.userId,
     })
 
@@ -149,13 +149,6 @@ export async function createOrganization(
         metadata: { slug: result.slug, org_type: input.type },
       }),
     ])
-
-    await provisionMembership({
-      userId: input.userId,
-      orgId: result.orgId,
-      role: "admin",
-      actorUserId: input.userId,
-    })
 
     return {
       ...result,

@@ -28,20 +28,16 @@ export const OrgSwitcherTrigger = React.forwardRef<
   ref
 ) {
   return (
-    <button
-      ref={ref}
-      type="button"
+    <div
       className={cn(
-        "flex h-10 w-full min-w-0 cursor-pointer items-center gap-1 rounded-md px-1.5 transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",
+        "flex h-10 w-full min-w-0 items-center gap-1 rounded-md px-1.5 transition-colors hover:bg-sidebar-accent",
         open && "bg-sidebar-accent",
         className
       )}
-      {...props}
     >
       <a
         href={homeUrl}
-        onClick={(event) => event.stopPropagation()}
-        className="flex min-w-0 flex-1 items-center gap-2 rounded-sm py-1 focus-visible:outline-none"
+        className="flex min-w-0 flex-1 items-center gap-2 rounded-sm py-1 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
       >
         <Avatar className="size-6 shrink-0">
           <AvatarFallback className="bg-sidebar-accent text-[10px] font-medium text-sidebar-foreground">
@@ -53,10 +49,17 @@ export const OrgSwitcherTrigger = React.forwardRef<
         </span>
         <OrgTypeBadge orgType={organization.orgType} />
       </a>
-      <CaretDownIcon
-        className="size-4 shrink-0 text-sidebar-foreground/70"
-        aria-hidden
-      />
-    </button>
+      <button
+        ref={ref}
+        type="button"
+        className="flex shrink-0 cursor-pointer items-center rounded-sm p-1 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
+        {...props}
+      >
+        <CaretDownIcon
+          className="size-4 text-sidebar-foreground/70"
+          aria-hidden
+        />
+      </button>
+    </div>
   )
 })

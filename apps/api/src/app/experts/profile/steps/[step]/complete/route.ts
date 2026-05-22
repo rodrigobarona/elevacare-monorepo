@@ -40,7 +40,11 @@ export async function POST(
   const parsedStep = ExpertOnboardingStepSchema.safeParse(stepParam)
   if (!parsedStep.success) {
     return secureJson(
-      { error: "validation", message: `invalid step: ${stepParam}` },
+      {
+        error: "validation",
+        issues: parsedStep.error.issues,
+        message: `invalid step: ${stepParam}`,
+      },
       { status: 422, headers }
     )
   }

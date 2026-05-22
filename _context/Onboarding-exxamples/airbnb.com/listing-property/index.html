@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airbnb — Listing property onboarding</title>
+  <style>
+    :root {
+      --bg: #fff; --fg: #222; --muted: #717171; --border: #ebebeb;
+      --accent: #ff385c; --sidebar-w: 260px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--fg); background: var(--bg); }
+    .layout { display: flex; min-height: 100vh; }
+    nav.sidebar {
+      width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+      overflow-y: auto; border-right: 1px solid var(--border); padding: 1.25rem 1rem;
+      background: #fafafa;
+    }
+    nav.sidebar h1 { font-size: 0.95rem; margin: 0 0 1rem; line-height: 1.35; }
+    nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+    nav.sidebar li { margin: 0.35rem 0; }
+    nav.sidebar a { color: var(--fg); text-decoration: none; font-size: 0.875rem; }
+    nav.sidebar a:hover { color: var(--accent); }
+    main { flex: 1; max-width: 900px; padding: 2rem 2.5rem 4rem; }
+    .chapter { margin-bottom: 3rem; }
+    h2 { font-size: 1.5rem; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.15rem; margin-top: 2rem; scroll-margin-top: 1rem; }
+    p, li { line-height: 1.6; }
+    table.meta, table.index { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+    table th, table td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+    table th { background: #f7f7f7; }
+    figure.screenshot { margin: 1.25rem 0; }
+    figure.screenshot img { max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; }
+    figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    pre { background: #f5f5f5; padding: 1rem; overflow-x: auto; font-size: 0.8rem; border-radius: 6px; }
+    a { color: #008489; }
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      nav.sidebar { position: relative; width: 100%; height: auto; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Chapters">
+      <h1>Airbnb listing onboarding</h1>
+      <ul><li><a href="#overview">Overview</a></li>
+<li><a href="#entry">00 — Entry and address</a></li>
+<li><a href="#phase-1">01 — About your space</a></li>
+<li><a href="#phase-2">02 — Stand out</a></li>
+<li><a href="#phase-3">03 — Finish and publish</a></li>
+<li><a href="#post">04 — Post-creation</a></li>
+<li><a href="#patterns">99 — Patterns</a></li>
+</ul>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:1.5rem">Markdown SSOT: <a href="readme.md">readme.md</a></p>
+    </nav>
+    <main>
+      <section id="overview" class="chapter">
+<h2>Overview</h2>
+<p>Reference documentation for the <strong>host flow to create a new Alojamento listing</strong> on Airbnb (2026-05-22, Portuguese UI).</p>
+<p><strong>Example property:</strong> Herdade da Camélia — Largo Prof. José Bernardo Cotrim 35, 2240, Nossa Senhora do Pranto, Portugal.</p>
+<h3>How to read</h3>
+<ul>
+<li><strong>Markdown (SSOT):</strong> <a href="readme.md">readme.md</a> and <a href="docs/">docs/</a> chapters</li>
+<li><strong>This HTML:</strong> visual walkthrough with inline screenshots</li>
+</ul>
+<h3>Macro-phases</h3>
+<table class="meta"><thead><tr><th>Phase</th><th>Chapter</th><th>Screens</th></tr></thead><tbody>
+<tr><td>Pre</td><td>Entry and address</td><td>1–4</td></tr>
+<tr><td>1</td><td>About your space</td><td>5–10</td></tr>
+<tr><td>2</td><td>Stand out</td><td>11–21</td></tr>
+<tr><td>3</td><td>Finish and publish</td><td>22–30</td></tr>
+<tr><td>Post</td><td>Compliance</td><td>31–34</td></tr>
+</tbody></table>
+<h3>Screenshot index</h3>
+<table class="index"><thead><tr><th>#</th><th>Time</th><th>Step</th><th>Jump</th></tr></thead><tbody>
+<tr><td>1</td><td>09:28:32</td><td>Listing type modal</td><td><a href="#entry">→</a></td></tr>
+<tr><td>2</td><td>09:28:48</td><td>Create listing landing</td><td><a href="#entry">→</a></td></tr>
+<tr><td>3</td><td>09:29:00</td><td>Landing with preview</td><td><a href="#entry">→</a></td></tr>
+<tr><td>4</td><td>09:29:36</td><td>Confirm address</td><td><a href="#entry">→</a></td></tr>
+<tr><td>5</td><td>09:29:58</td><td>Passo 1 interstitial</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>6</td><td>09:30:09</td><td>Property type grid</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>7</td><td>09:30:42</td><td>Space type</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>8</td><td>09:30:54</td><td>Map pin</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>9</td><td>09:31:07</td><td>Location privacy</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>10</td><td>09:31:42</td><td>Capacity</td><td><a href="#phase-1">→</a></td></tr>
+<tr><td>11</td><td>09:31:52</td><td>Passo 2 interstitial</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>12</td><td>09:32:02</td><td>Amenities empty</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>13</td><td>09:32:56</td><td>Amenities selected</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>14</td><td>09:33:05</td><td>Photos empty</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>15</td><td>09:33:25</td><td>Upload 2 photos</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>16</td><td>09:34:03</td><td>Upload 5 + size error</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>17</td><td>09:34:18</td><td>Partial upload</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>18</td><td>09:34:33</td><td>Photo review</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>19</td><td>09:34:42</td><td>Title</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>20</td><td>09:35:25</td><td>Highlights</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>21</td><td>09:35:55</td><td>Description</td><td><a href="#phase-2">→</a></td></tr>
+<tr><td>22</td><td>09:36:03</td><td>Passo 3 interstitial</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>23</td><td>09:36:12</td><td>Weekday price</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>24</td><td>09:36:31</td><td>Similar listings map</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>25</td><td>09:36:43</td><td>Weekend price</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>26</td><td>09:36:56</td><td>Discounts</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>27</td><td>09:37:05</td><td>Discounts help</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>28</td><td>09:37:15</td><td>Safety</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>29</td><td>09:37:31</td><td>Camera modal</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>30</td><td>09:37:49</td><td>Safety done</td><td><a href="#phase-3">→</a></td></tr>
+<tr><td>31</td><td>09:38:02</td><td>Dashboard modal</td><td><a href="#post">→</a></td></tr>
+<tr><td>32</td><td>09:38:20</td><td>Pending tasks</td><td><a href="#post">→</a></td></tr>
+<tr><td>33</td><td>09:38:33</td><td>PT registration hub</td><td><a href="#post">→</a></td></tr>
+<tr><td>34</td><td>09:38:51</td><td>Add registration #</td><td><a href="#post">→</a></td></tr>
+</tbody></table>
+</section>
+<section id="entry" class="chapter">
+<p>Pre-wizard steps before the 3-phase listing wizard. Host chooses <strong>what</strong> to list, then anchors the listing to a <strong>physical address</strong>.</p>
+<p>[← Hub("../readme.md) · Next: [01 — About your space](docs/01-phase-about-your-space.md)</p>
+<hr />
+<h3>Step 1 — Listing type modal</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.28.32.png`</td></tr>
+<tr><td>Timestamp</td><td>09:28:32</td></tr>
+<tr><td>Screen type</td><td>modal (overlay on host dashboard)</td></tr>
+<tr><td>Primary CTA</td><td>Próximo (Next)</td></tr>
+</tbody></table>
+<p>| Next enabled when | One of three listing categories is selected |</p>
+<p><strong>Goal:</strong> Route the host into the correct onboarding flow (accommodation vs experience vs service).</p>
+<p><strong>Context (background):</strong> Host dashboard (`Hoje` tab) is dimmed. User already has at least one listing (`Tem 1 reserva agendada`).</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Modal title: **O que gostaria de anunciar?** *(What would you like to list?)*</li>
+<li>Three large selectable cards (icon + label):</li>
+</ul>
+<p>  1. <strong>Alojamento</strong> *(Accommodation)* — house with tree illustration</p>
+<p>  2. <strong>Experiência</strong> *(Experience)* — hot air balloon illustration</p>
+<p>  3. <strong>Serviço</strong> *(Service)* — hotel bell illustration</p>
+<ul>
+<li>Close **X** (top right of modal)</li>
+<li>Footer: **Próximo** — disabled (grey) until selection</li>
+</ul>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>O que gostaria de anunciar?</li>
+<li>Alojamento · Experiência · Serviço</li>
+<li>Próximo</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>No default selection; **Próximo** stays disabled until user taps a card</li>
+<li>This walkthrough continues with **Alojamento**</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Early flow fork** — different products never share the same wizard</li>
+<li>Modal on existing dashboard preserves context (user can cancel without leaving host area)</li>
+<li>Visual 3D-style icons make categories scannable without reading</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.28.32.png" alt="Step 1" loading="lazy" /><figcaption>Step 1</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 2 — Create listing landing</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.28.48.png`</td></tr>
+<tr><td>Timestamp</td><td>09:28:48</td></tr>
+<tr><td>Screen type</td><td>full-page landing</td></tr>
+<tr><td>Primary CTA</td><td>Address search field (implicit — type to proceed)</td></tr>
+</tbody></table>
+<p>| Next enabled when | Address entered / selected from autocomplete (not shown in screenshot) |</p>
+<p><strong>Goal:</strong> Collect the property address as the first substantive input after choosing accommodation.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Airbnb logo (top left)</li>
+<li>**Split layout:** copy left, aspirational photo right</li>
+<li>Heading: **Crie o seu anúncio na Airbnb** *(Create your listing on Airbnb)*</li>
+<li>Subheading: **É fácil criar um anúncio de excelência – vamos começar pela sua morada.** *(It's easy to create an excellent listing – let's start with your address.)*</li>
+<li>Pill-shaped search input with magnifying glass icon</li>
+<li>Placeholder: **Insira o seu endereço** *(Enter your address)*</li>
+<li>Hero image: luxury outdoor pool/patio (rounded corners) — motivational, not user's property yet</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>Address is the entry point; no progress bar yet (pre-wizard)</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Address-first** reduces abandonment later (location drives comps, regulations, map)</li>
+<li>Aspirational imagery sets quality bar before any form fatigue</li>
+<li>Single field = low friction start</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.28.48.png" alt="Step 2" loading="lazy" /><figcaption>Step 2</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 3 — Landing with preview card</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.29.00.png`</td></tr>
+<tr><td>Timestamp</td><td>09:29:00</td></tr>
+<tr><td>Screen type</td><td>full-page landing (same as step 2, preview visible)</td></tr>
+<tr><td>Primary CTA</td><td>Address search field</td></tr>
+</tbody></table>
+<p>| Next enabled when | Address provided |</p>
+<p><strong>Goal:</strong> Same as step 2; shows <strong>live preview</strong> of what a finished listing card looks like.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Same left column as step 2</li>
+<li>Right side: light blue rounded container with **mock listing card**</li>
+</ul>
+<p>  - Photo: colorful Victorian row houses (San Francisco)</p>
+<p>  - Title: <strong>Entire condo in San Francisco, California</strong></p>
+<p>  - Footer: <strong>Hosted by Stephanie</strong> + avatar</p>
+<p><strong>Validation / gating:</strong> Same as step 2.</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Outcome preview** before work begins — classic conversion pattern</li>
+<li>Preview is generic (not geo-matched to typed address in this capture)</li>
+<li>Reinforces mental model: "you are building this card"</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.29.00.png" alt="Step 3" loading="lazy" /><figcaption>Step 3</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 4 — Confirm address modal</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.29.36.png`</td></tr>
+<tr><td>Timestamp</td><td>09:29:36</td></tr>
+<tr><td>Screen type</td><td>modal (over address landing)</td></tr>
+<tr><td>Primary CTA</td><td>Próximo (Next)</td></tr>
+</tbody></table>
+<p>| Next enabled when | Required fields valid (all shown fields populated in capture) |</p>
+<p><strong>Goal:</strong> Let host verify and edit parsed address components before entering the multi-step wizard.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Modal title: **Confirme o seu endereço** *(Confirm your address)*</li>
+<li>Back arrow (top left) · Close X (top right)</li>
+<li>Form fields (stacked):</li>
+</ul>
+<p>  - <strong>País/região</strong> *(Country/region)* — dropdown, value: `Portugal - PT`</p>
+<p>  - <strong>Nome da rua</strong> *(Street name)* — `Largo Prof. José Bernardo Cotrim 35`</p>
+<p>  - <strong>Apartamento, suíte, unidade (se aplicável)</strong> *(Apt/suite/unit if applicable)* — empty</p>
+<p>  - <strong>Código postal</strong> *(Postal code)* — `2240`</p>
+<p>  - <strong>Cidade/vila</strong> *(City/town)* — `Nossa Senhora do Pranto`</p>
+<ul>
+<li>Full-width dark button: **Próximo**</li>
+</ul>
+<p><strong>Copy (PT):</strong> Confirme o seu endereço · field labels above · Próximo</p>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>Autocomplete from step 2 pre-fills fields; user can correct before wizard starts</li>
+<li>Optional unit field does not block progress</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Human-in-the-loop** for geocoding errors (critical for rural PT addresses)</li>
+<li>Modal keeps user on landing context; back arrow returns to search</li>
+<li>After confirm → wizard Phase 1 begins</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.29.36.png" alt="Step 4" loading="lazy" /><figcaption>Step 4</figcaption></figure>
+</ul>
+<hr />
+<h2>Chapter summary</h2>
+<table class="meta">
+<thead><tr><th>Step</th><th>Collects</th><th>Blocks until</th></tr></thead><tbody>
+<tr><td>1</td><td>`listing_category` = accommodation \</td><td>experience \</td><td>service</td><td>Category selected</td></tr>
+<tr><td>2–3</td><td>Address query</td><td>Address entered</td></tr>
+</tbody></table>
+<p>| 4 | Structured address (country, street, unit, postal, city) | User confirms |</p>
+<p><strong>Next:</strong> <a href="01-phase-about-your-space.md">01 — About your space</a> (Passo 1 wizard)</p></section>
+<section id="phase-1" class="chapter">
+<p><strong>Passo 1 — Fale-nos sobre o seu espaço.</strong> Collects structural facts: property taxonomy, booking scope, map location, privacy, and capacity.</p>
+<p>[← 00 Entry](docs/00-entry-and-address.md) · [Hub("../readme.md) · Next: [02 — Stand out](docs/02-phase-stand-out.md)</p>
+<p><strong>Progress bar:</strong> Segment 1 of 3 (active throughout this chapter).</p>
+<hr />
+<h3>Step 5 — Passo 1 interstitial</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.29.58.png`</td></tr>
+<tr><td>Timestamp</td><td>09:29:58</td></tr>
+<tr><td>Screen type</td><td>interstitial (phase intro)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte (Next)</td></tr>
+</tbody></table>
+<p>| Next enabled when | Always (informational only) |</p>
+<p><strong>Goal:</strong> Set expectations for everything in Phase 1 before individual questions.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>**Passo 1** label (small grey)</li>
+<li>Heading: **Fale-nos sobre o seu espaço** *(Tell us about your space)*</li>
+<li>Body: explains upcoming questions — property type, entire space vs room, location, max guests</li>
+<li>Right: isometric 3D cutaway house illustration (bedroom, bath, living, dining, loft)</li>
+<li>Top right only: **Gravar e sair** (no "Have questions?" on this screen)</li>
+<li>Bottom: progress bar (segment 1 highlighted) · **Seguinte**</li>
+</ul>
+<p><strong>Copy (PT):</strong></p>
+<p>> Neste passo, vamos perguntar-lhe que tipo de propriedade tem e se os hóspedes podem reservar o espaço inteiro ou apenas um quarto. Em seguida, diga-nos a localização e o número máximo de hóspedes da estadia.</p>
+<p>*(In this step we will ask what type of property you have and whether guests can book the entire space or just a room. Then tell us the location and maximum number of guests.)*</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Phase interstitial** — no data collected; reduces surprise in long wizard</li>
+<li>Illustration matches category (home interior)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.29.58.png" alt="Step 5" loading="lazy" /><figcaption>Step 5</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 6 — Property type grid</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.30.09.png`</td></tr>
+<tr><td>Timestamp</td><td>09:30:09</td></tr>
+<tr><td>Screen type</td><td>wizard (single-select grid)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | One property type selected |</p>
+<p><strong>Goal:</strong> Classify the listing into Airbnb's property taxonomy.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Question: **Quais das seguintes opções descrevem melhor o seu espaço?** *(Which of the following best describes your space?)*</li>
+<li>~27 cards in a multi-column grid (icon + label), including:</li>
+</ul>
+<p>  - Casa, Apartamento, Celeiro, Pousada, Barco, Cabana, Caravana, Casa particular, Castelo, Gruta, Contentor, Casa cicládica, Dammuso, Casa domo, Casa-terra, Quinta, Casa de hóspedes, Hotel, Casa flutuante, Minsu, Riad, Ryokan, Cabana de pastor, Tenda, Minicasa, Torre, Casa na árvore</p>
+<ul>
+<li>Chrome: Tem dúvidas? · Gravar e sair · Anterior · Seguinte (disabled until selection)</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>Single-select; **Seguinte** greyed out with no selection</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>Large taxonomy exposed upfront (search/filter not shown — scroll implied)</li>
+<li>Icon + label cards scannable on desktop</li>
+<li>Choice affects search filters and guest expectations</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.30.09.png" alt="Step 6" loading="lazy" /><figcaption>Step 6</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 7 — Space type selection</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.30.42.png`</td></tr>
+<tr><td>Timestamp</td><td>09:30:42</td></tr>
+<tr><td>Screen type</td><td>wizard (single-select cards)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | One space type selected (pre-selected in capture) |</p>
+<p><strong>Goal:</strong> Define booking scope — entire place, private room, or hostel-style shared room.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Question: **Que tipo de espaço estará à disposição dos viajantes?** *(What type of space will be available to travelers?)*</li>
+<li>Three vertical cards:</li>
+</ul>
+<p>  1. <strong>Um espaço inteiro</strong> *(An entire space)* — "Os viajantes têm o espaço todo só para eles." — house icon — <strong>selected</strong> (thick border)</p>
+<p>  2. <strong>Um quarto</strong> *(A room)* — own room + shared spaces — door icon</p>
+<p>  3. <strong>Um quarto partilhado num hostel</strong> *(Shared room in a hostel)* — professional hostel, 24/7 staff — bunk beds icon</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>Descriptions clarify legal/operational model (especially hostel path)</li>
+<li>Selected state = prominent border (not checkbox)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.30.42.png" alt="Step 7" loading="lazy" /><figcaption>Step 7</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 8 — Map pin confirmation</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.30.54.png`</td></tr>
+<tr><td>Timestamp</td><td>09:30:54</td></tr>
+<tr><td>Screen type</td><td>wizard (map)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Pin position accepted (always allowed to continue with default) |</p>
+<p><strong>Goal:</strong> Confirm geolocation accuracy on a map.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **O marcador está no local certo?** *(Is the marker in the right place?)*</li>
+<li>Subtitle: **A sua morada só é partilhada com os hóspedes depois de estes terem concluído a reserva.** *(Your address is only shared with guests after they complete a booking.)*</li>
+<li>Google Maps embed with address bar: `Largo Prof. José Bernardo Cotrim 35, 2240, Portugal`</li>
+<li>Black circular pin with house icon</li>
+<li>Tooltip: **Arraste o mapa para reposicionar o marcador** *(Drag the map to reposition the marker)*</li>
+<li>Map zoom controls (+ / − / pan)</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Drag map, not pin** — reduces accidental mis-taps</li>
+<li>Reassurance about address privacy before booking</li>
+<li>Uses Google Maps branding</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.30.54.png" alt="Step 8" loading="lazy" /><figcaption>Step 8</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 9 — Location privacy on map</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.31.07.png`</td></tr>
+<tr><td>Timestamp</td><td>09:31:07</td></tr>
+<tr><td>Screen type</td><td>wizard (map + toggle)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Toggle set (either state allows proceed) |</p>
+<p><strong>Goal:</strong> Let host choose exact vs approximate map display pre-booking.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Decida como a localização será apresentada no mapa** *(Decide how the location will be shown on the map)*</li>
+<li>Subtitle: approximate location shown until reservation confirmed</li>
+<li>Same map + address bar as step 8</li>
+<li>Toggle card below map:</li>
+</ul>
+<p>  - <strong>Mostrar a localização exata</strong> *(Show exact location)*</p>
+<p>  - Description + "Saiba mais" link</p>
+<p>  - Toggle <strong>OFF</strong> in capture (approximate location for search)</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>Separates **pin accuracy** (step 8) from **guest-visible precision** (step 9)</li>
+<li>Default-off protects host privacy in rural/suburban listings</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.31.07.png" alt="Step 9" loading="lazy" /><figcaption>Step 9</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 10 — Capacity steppers</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.31.42.png`</td></tr>
+<tr><td>Timestamp</td><td>09:31:42</td></tr>
+<tr><td>Screen type</td><td>wizard (numeric steppers)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Values ≥ minimum (defaults shown) |</p>
+<p><strong>Goal:</strong> Capture occupancy and room counts; bed types deferred.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Partilhe algumas informações sobre o seu espaço** *(Share some information about your space)*</li>
+<li>Subtitle: **Adicionará mais detalhes mais tarde, como tipos de cama.** *(You'll add more details later, such as bed types.)*</li>
+<li>Four rows with − / value / + controls:</li>
+</ul>
+<p>  | Label | Value in capture |</p>
+<p>  |-------|------------------|</p>
+<p>  | Hóspedes (Guests) | 8 |</p>
+<p>  | Quartos (Bedrooms) | 4 |</p>
+<p>  | Camas (Beds) | 4 |</p>
+<p>  | Casas de banho (Bathrooms) | 3 |</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Deferred detail** — MVP capacity without bed configuration</li>
+<li>Stepper pattern avoids invalid keyboard input</li>
+<li>Ends Phase 1; next screen is Passo 2 interstitial</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.31.42.png" alt="Step 10" loading="lazy" /><figcaption>Step 10</figcaption></figure>
+</ul>
+<hr />
+<h2>Chapter summary</h2>
+<table class="meta">
+<thead><tr><th>Field</th><th>Collected in Phase 1</th></tr></thead><tbody>
+<tr><td>`property_type`</td><td>One of ~27 taxonomy values</td></tr>
+<tr><td>`space_type`</td><td>entire \</td><td>room \</td><td>hostel_shared</td></tr>
+<tr><td>`latitude/longitude`</td><td>Map pin</td></tr>
+<tr><td>`show_exact_location`</td><td>boolean</td></tr>
+</tbody></table>
+<p>| `max_guests`, `bedrooms`, `beds`, `bathrooms` | integers |</p>
+<p><strong>Next:</strong> <a href="02-phase-stand-out.md">02 — Stand out</a></p></section>
+<section id="phase-2" class="chapter">
+<p><strong>Passo 2 — Faça o seu espaço destacar-se.</strong> Merchandising: amenities, photos (minimum 5), title, highlight tags, and description.</p>
+<p>[← 01 About your space](docs/01-phase-about-your-space.md) · [Hub("../readme.md) · Next: [03 — Finish and publish](docs/03-phase-finish-and-publish.md)</p>
+<p><strong>Progress bar:</strong> Segment 2 of 3 becomes active at step 11.</p>
+<hr />
+<h3>Step 11 — Passo 2 interstitial</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.31.52.png`</td></tr>
+<tr><td>Timestamp</td><td>09:31:52</td></tr>
+<tr><td>Screen type</td><td>interstitial</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Always |</p>
+<p><strong>Goal:</strong> Preview Phase 2 work — amenities, 5+ photos, title, description.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>**Passo 2** label</li>
+<li>Heading: **Faça o seu espaço destacar-se** *(Make your space stand out)*</li>
+<li>Body: amenities + 5+ photos, then title and description</li>
+<li>Same house illustration as Passo 1</li>
+<li>Progress: segment 1 complete (black), segment 2 started</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.31.52.png" alt="Step 11" loading="lazy" /><figcaption>Step 11</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 12 — Amenities (unselected)</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.32.02.png`</td></tr>
+<tr><td>Timestamp</td><td>09:32:02</td></tr>
+<tr><td>Screen type</td><td>wizard (multi-select grid)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Not blocked — amenities appear optional at this step |</p>
+<p><strong>Goal:</strong> Select amenities; grouped by guest demand and "standout" features.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Diga aos viajantes o que o seu espaço tem para oferecer** *(Tell travelers what your space offers)*</li>
+<li>Subtitle: can add more after publishing</li>
+<li>**Section A — "E que tal estas opções? São Favoritos dos hóspedes!"** (8 items):</li>
+</ul>
+<p>  Wi-Fi, TV, Cozinha, Máquina de lavar roupa, Estacionamento gratuito no local, Estacionamento pago no local, Ar condicionado, Espaço de trabalho exclusivo</p>
+<ul>
+<li>**Section B — "Tem alguma comodidade de destaque?"** (12 items):</li>
+</ul>
+<p>  Piscina, Jacúzi, Pátio, Grelha de churrasco, Zona de refeições ao ar livre, Braseiro de jardim, Mesa de bilhar, Lareira interior, Piano, Equipamento de ginástica, Acesso ao lago, Acesso à praia</p>
+<ul>
+<li>All cards unselected (thin grey border)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.32.02.png" alt="Step 12" loading="lazy" /><figcaption>Step 12</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 13 — Amenities (selected)</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.32.56.png`</td></tr>
+<tr><td>Timestamp</td><td>09:32:56</td></tr>
+<tr><td>Screen type</td><td>wizard (same screen, selections applied)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Same screen after host toggles amenities.</p>
+<p><strong>Selected in capture (thick black border):</strong></p>
+<ul>
+<li>Favorites: Wi-Fi, TV, Cozinha, Máquina de lavar roupa, Estacionamento gratuito, Ar condicionado, Espaço de trabalho exclusivo</li>
+<li>Standout: Piscina, Jacúzi, Grelha de churrasco, Zona de refeições ao ar livre, Braseiro de jardim, Mesa de bilhar, Lareira interior</li>
+<li>Not selected: Estacionamento pago, Pátio, Piano, Ginástica, Lago, Praia</li>
+</ul>
+<p><strong>UX notes:</strong> Multi-select toggle cards; no maximum shown.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.32.56.png" alt="Step 13" loading="lazy" /><figcaption>Step 13</figcaption></figure>
+<hr />
+<h3>Step 14 — Photos empty state</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.33.05.png`</td></tr>
+<tr><td>Timestamp</td><td>09:33:05</td></tr>
+<tr><td>Screen type</td><td>wizard (upload)</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar fotos</td></tr>
+</tbody></table>
+<p>| Next enabled when | ≥ 5 photos uploaded |</p>
+<p><strong>Goal:</strong> Enforce minimum photo count for publish-quality listing.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Adicione algumas fotos da sua casa particular** *(Add some photos of your private home)* — copy adapts to property type</li>
+<li>Subtitle: **Para começar, precisa de 5 fotos.** Can add more later.</li>
+<li>Dashed drop zone + 3D camera illustration</li>
+<li>Button: **Adicionar fotos**</li>
+<li>**Seguinte** disabled (grey)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.33.05.png" alt="Step 14" loading="lazy" /><figcaption>Step 14</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 15 — Upload modal (2 photos)</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.33.25.png`</td></tr>
+<tr><td>Timestamp</td><td>09:33:25</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Carregar (Upload)</td></tr>
+</tbody></table>
+<p>| Next enabled when | N/A (modal); main Next still needs 5 photos |</p>
+<p><strong>Goal:</strong> Review selection before upload.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Modal: **Carregar fotografias** — **2 itens selecionados**</li>
+<li>X close · + add more</li>
+<li>Two large previews (patio sunset, aerial pool) with trash icons</li>
+<li>Filmstrip of additional thumbnails</li>
+<li>**Cancelar** · **Carregar** (primary black)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.33.25.png" alt="Step 15" loading="lazy" /><figcaption>Step 15</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 16 — Upload modal (5 photos, size error)</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.34.03.png`</td></tr>
+<tr><td>Timestamp</td><td>09:34:03</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+</tbody></table>
+<p>| Primary CTA | Carregar |</p>
+<p><strong>Goal:</strong> Upload batch with client-side size validation.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>**5 itens selecionados**</li>
+<li>2×2 grid + one tile; first image badge: **MAIS DE 25 MB** (orange warning)</li>
+<li>Background page title visible: **Escolha pelo menos 5 fotos**</li>
+<li>Main **Seguinte** still disabled</li>
+</ul>
+<p><strong>Validation:</strong></p>
+<ul>
+<li>Max file size **25 MB** per image</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.34.03.png" alt="Step 16" loading="lazy" /><figcaption>Step 16</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 17 — Partial upload feedback</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.34.18.png`</td></tr>
+<tr><td>Timestamp</td><td>09:34:18</td></tr>
+<tr><td>Screen type</td><td>modal + main grid</td></tr>
+</tbody></table>
+<p>| Primary CTA | Concluído / Carregar |</p>
+<p><strong>Goal:</strong> Report partial success; guide user to fix oversized files.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Toast in modal: **4 de 5 fotos carregadas** — some items not uploaded; choose files ≤ 25 MB</li>
+<li>Main page: cover photo grid, **Foto de capa** label, **Arrastar para reordenar**</li>
+<li>**Adicionar mais** placeholder tile</li>
+<li>**Carregar** disabled in modal until issue resolved</li>
+</ul>
+<p><strong>UX notes:</strong> Partial success messaging avoids "start over" frustration.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.34.18.png" alt="Step 17" loading="lazy" /><figcaption>Step 17</figcaption></figure>
+<hr />
+<h3>Step 18 — Photo review and organize</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.34.33.png`</td></tr>
+<tr><td>Timestamp</td><td>09:34:33</td></tr>
+<tr><td>Screen type</td><td>wizard (gallery)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte (enabled once ≥5 photos)</td></tr>
+</tbody></table>
+<p>| Next enabled when | Minimum photos met |</p>
+<p><strong>Goal:</strong> Confirm gallery order and cover; offer smart sort.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Já está! O que acha?** *(Done! What do you think?)*</li>
+<li>Subtitle: drag to reorder · + button to add more</li>
+<li>Large cover image with **Foto de capa** tag</li>
+<li>Grid of thumbnails with ⋯ menu per image</li>
+<li>Coachmark popup: **Comece com as suas melhores fotos** — **Organizar fotos** CTA</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.34.33.png" alt="Step 18" loading="lazy" /><figcaption>Step 18</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 19 — Listing title</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.34.42.png`</td></tr>
+<tr><td>Timestamp</td><td>09:34:42</td></tr>
+<tr><td>Screen type</td><td>wizard (text input)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Title length > 0 (max 50) |</p>
+<p><strong>Goal:</strong> Short searchable listing title.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Agora, vamos atribuir um título a casa particular**</li>
+<li>Hint: short titles work best; editable later</li>
+<li>Large textarea · counter **0/50**</li>
+<li>**Seguinte** disabled at 0 characters</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.34.42.png" alt="Step 19" loading="lazy" /><figcaption>Step 19</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 20 — Description highlights</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.35.25.png`</td></tr>
+<tr><td>Timestamp</td><td>09:35:25</td></tr>
+<tr><td>Screen type</td><td>wizard (multi-select chips, max 2)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Pick up to 2 vibe tags to seed description text.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Em seguida, vamos descrever a sua casa particular**</li>
+<li>Subtitle: choose up to 2; used to start description</li>
+<li>Chips: Calmo, Único, Próprio para famílias, Com estilo, Central, Espaçoso (icons each)</li>
+<li>Progress: segment 2 ~80% filled</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.35.25.png" alt="Step 20" loading="lazy" /><figcaption>Step 20</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 21 — Listing description</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.35.55.png`</td></tr>
+<tr><td>Timestamp</td><td>09:35:55</td></tr>
+<tr><td>Screen type</td><td>wizard (textarea)</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+</tbody></table>
+<p>| Next enabled when | Non-empty (likely) |</p>
+<p><strong>Goal:</strong> Free-text description with AI-assisted starter copy.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Crie a sua descrição** *(Create your description)*</li>
+<li>Subtitle: share what makes the space special</li>
+<li>Prefilled text: **Relaxe com toda a família neste alojamento tranquilo.**</li>
+<li>Counter: **53/500**</li>
+</ul>
+<p><strong>UX notes:</strong> Highlights from step 20 → generated opener; host can edit.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.35.55.png" alt="Step 21" loading="lazy" /><figcaption>Step 21</figcaption></figure>
+<hr />
+<h2>Chapter summary</h2>
+<table class="meta">
+<thead><tr><th>Asset</th><th>Rules</th></tr></thead><tbody>
+<tr><td>Amenities</td><td>Multi-select, two tiers; more can be added post-publish</td></tr>
+<tr><td>Photos</td><td>Min 5; max 25 MB each; cover + order</td></tr>
+<tr><td>Title</td><td>Max 50 chars</td></tr>
+<tr><td>Highlights</td><td>Max 2 tags</td></tr>
+</tbody></table>
+<p>| Description | Max 500 chars |</p>
+<p><strong>Next:</strong> <a href="03-phase-finish-and-publish.md">03 — Finish and publish</a></p></section>
+<section id="phase-3" class="chapter">
+<p><strong>Passo 3 — Conclua o seu anúncio e publique-o.</strong> Pricing, promotions, safety disclosures, and <strong>Criar anúncio</strong> (create listing).</p>
+<p>[← 02 Stand out](docs/02-phase-stand-out.md) · [Hub("../readme.md) · Next: [04 — Post-creation compliance](docs/04-post-creation-compliance.md)</p>
+<p><strong>Progress bar:</strong> Segment 3 of 3 active from step 22.</p>
+<hr />
+<h3>Step 22 — Passo 3 interstitial</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.36.03.png`</td></tr>
+<tr><td>Timestamp</td><td>09:36:03</td></tr>
+<tr><td>Screen type</td><td>interstitial</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Introduce final phase — nightly price, quick questions, publish.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>**Passo 3** · **Conclua o seu anúncio e publique-o**</li>
+<li>Body: set price per night, answer quick questions, publish when ready</li>
+<li>Illustration: modern house with solar panels, skylights, garden</li>
+<li>Progress: segments 1–2 complete; segment 3 started</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.36.03.png" alt="Step 22" loading="lazy" /><figcaption>Step 22</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 23 — Weekday base price</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.36.12.png`</td></tr>
+<tr><td>Timestamp</td><td>09:36:12</td></tr>
+<tr><td>Screen type</td><td>wizard (price input)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Set base nightly rate for weekdays.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Agora, defina um preço base para os dias úteis** *(Set a base price for weekdays)*</li>
+<li>Suggestion: **€ 140** — weekend price comes next</li>
+<li>Large display: **€140** (editable)</li>
+<li>**Preço do/a viajante: € 160** — guest-facing price after fees (expandable)</li>
+<li>Button: **Ver anúncios semelhantes** *(See similar listings)* — opens comps map</li>
+<li>Link: **Saiba mais sobre os preços**</li>
+</ul>
+<p><strong>Data in capture:</strong> Host €140 → Guest €160 (fee transparency).</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.36.12.png" alt="Step 23" loading="lazy" /><figcaption>Step 23</figcaption></figure>
+<hr />
+<h3>Step 24 — Similar listings map</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.36.31.png`</td></tr>
+<tr><td>Timestamp</td><td>09:36:31</td></tr>
+<tr><td>Screen type</td><td>overlay (fullscreen map modal)</td></tr>
+<tr><td>Primary CTA</td><td>Close X → return to pricing</td></tr>
+</tbody></table>
+<p>| Next enabled when | Modal dismissed |</p>
+<p><strong>Goal:</strong> Market comparison to calibrate price.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Map modal: **Comparar com anúncios semelhantes**</li>
+<li>Filter: **Casa/apartamento inteiro · 2 a 6 quartos**</li>
+<li>Date range: May 20, 2025 – May 20, 2026</li>
+<li>Panel: **Anúncios reservados** — most booked listings in range averaged **€65–€954**/night</li>
+<li>Map bubbles: competitor prices (€65–€516 etc.)</li>
+<li>User listing pin: **€140** (red, house icon)</li>
+<li>Google Maps attribution</li>
+</ul>
+<p><strong>UX notes:</strong> Data-driven pricing confidence without leaving onboarding.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.36.31.png" alt="Step 24" loading="lazy" /><figcaption>Step 24</figcaption></figure>
+<hr />
+<h3>Step 25 — Weekend price supplement</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.36.43.png`</td></tr>
+<tr><td>Timestamp</td><td>09:36:43</td></tr>
+<tr><td>Screen type</td><td>wizard (slider)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Add Fri/Sat premium as percentage on base price.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Defina um preço de fim de semana** *(Set a weekend price)*</li>
+<li>Subtitle: supplement for Fridays and Saturdays</li>
+<li>Large price: **€147** (host earnings at 5% supplement on €140)</li>
+<li>**Preço do/a viajante: € 168**</li>
+<li>Slider: **Suplemento de fim de semana** — 0% to 99%, suggestion try 5%</li>
+<li>Input shows **5%**</li>
+</ul>
+<p><strong>Math in capture:</strong> €140 × 1.05 ≈ €147 host; guest €168.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.36.43.png" alt="Step 25" loading="lazy" /><figcaption>Step 25</figcaption></figure>
+<hr />
+<h3>Step 26 — Discounts</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.36.56.png`</td></tr>
+<tr><td>Timestamp</td><td>09:36:56</td></tr>
+<tr><td>Screen type</td><td>wizard (checkbox list)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Seguinte |</p>
+<p><strong>Goal:</strong> Opt into launch discounts (all pre-checked in capture).</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Adicionar descontos** *(Add discounts)*</li>
+<li>Subtitle: stand out, book faster, get first reviews</li>
+<li>Four cards (checkbox right, all checked):</li>
+</ul>
+<p>  | % | Name | Rule |</p>
+<p>  |---|------|------|</p>
+<p>  | 20% | Promoção para novos anúncios | First 3 bookings |</p>
+<p>  | 10% | Desconto para reservas de última hora | Booked ≤14 days before |</p>
+<p>  | 10% | Desconto semanal | 7+ nights |</p>
+<p>  | 20% | Desconto mensal | 28+ nights |</p>
+<ul>
+<li>Footnote: **Só se aplica um desconto por estadia.** Saiba mais</li>
+</ul>
+<p><strong>UX notes:</strong> Pre-checked = opt-out model to accelerate early bookings.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.36.56.png" alt="Step 26" loading="lazy" /><figcaption>Step 26</figcaption></figure>
+<hr />
+<h3>Step 27 — Discounts help modal</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.37.05.png`</td></tr>
+<tr><td>Timestamp</td><td>09:37:05</td></tr>
+<tr><td>Screen type</td><td>modal (help)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Dismiss X |</p>
+<p><strong>Goal:</strong> Explain discount rules and regional suggestions.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Descontos**</li>
+<li>Body: change anytime; suggestions based on regional averages; weekly = 7+ nights, monthly = 28+ nights</li>
+<li>Link to Help Center discounts section</li>
+<li>Background discounts screen dimmed</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.37.05.png" alt="Step 27" loading="lazy" /><figcaption>Step 27</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 28 — Safety disclosures</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.37.15.png`</td></tr>
+<tr><td>Timestamp</td><td>09:37:15</td></tr>
+<tr><td>Screen type</td><td>wizard (compliance checklist)</td></tr>
+<tr><td>Primary CTA</td><td>**Criar anúncio** (not Seguinte)</td></tr>
+</tbody></table>
+<p>| Header | Sair only (no Save and exit / Have questions) |</p>
+<p><strong>Goal:</strong> Legal/safety attestations before listing creation.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Partilhe informações de segurança** *(Share safety information)*</li>
+<li>Question: **Tem alguma destas coisas no seu espaço?** (info icon)</li>
+<li>Checkboxes (all empty in capture):</li>
+</ul>
+<p>  - Outdoor security camera</p>
+<p>  - Noise decibel monitor</p>
+<p>  - Weapons on property</p>
+<ul>
+<li>Section **O que é important saber:**</li>
+</ul>
+<p>  - No indoor cameras (even off)</p>
+<p>  - Must disclose outdoor cameras to guests</p>
+<p>  - Local laws + Non-discrimination policy + fee links</p>
+<ul>
+<li>**Criar anúncio** button (terminal CTA rename)</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.37.15.png" alt="Step 28" loading="lazy" /><figcaption>Step 28</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 29 — Outdoor camera detail modal</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.37.31.png`</td></tr>
+<tr><td>Timestamp</td><td>09:37:31</td></tr>
+<tr><td>Screen type</td><td>modal (conditional)</td></tr>
+<tr><td>Primary CTA</td><td>Continuar</td></tr>
+</tbody></table>
+<p>| Next enabled when | Description text entered |</p>
+<p><strong>Goal:</strong> If outdoor camera checked, require monitored-area description.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Informe os hóspedes da existência de câmaras de segurança no exterior**</li>
+<li>Instruction: describe each camera's area (yard, pool, etc.) · Saiba mais</li>
+<li>Textarea · **300 caracteres disponíveis**</li>
+<li>**Continuar** disabled until input</li>
+</ul>
+<p><strong>UX notes:</strong> Conditional sub-flow keeps main form short.</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.37.31.png" alt="Step 29" loading="lazy" /><figcaption>Step 29</figcaption></figure>
+<hr />
+<h3>Step 30 — Safety completed</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.37.49.png`</td></tr>
+<tr><td>Timestamp</td><td>09:37:49</td></tr>
+<tr><td>Screen type</td><td>wizard (compliance, filled)</td></tr>
+</tbody></table>
+<p>| Primary CTA | Criar anúncio |</p>
+<p><strong>Goal:</strong> Review safety answers before submit.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Outdoor camera: **checked**</li>
+<li>Inline summary: **Para ver e controlar a piscina** + **Editar**</li>
+<li>Decibel monitor: unchecked</li>
+<li>Weapons: unchecked</li>
+<li>**Criar anúncio** enabled</li>
+</ul>
+<p><strong>Outcome:</strong> Clicking <strong>Criar anúncio</strong> creates listing draft → post-creation gates (chapter 04).</p>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.37.49.png" alt="Step 30" loading="lazy" /><figcaption>Step 30</figcaption></figure>
+<hr />
+<h2>Chapter summary</h2>
+<table class="meta">
+<thead><tr><th>Topic</th><th>Details</th></tr></thead><tbody>
+<tr><td>Weekday price</td><td>Base €/night + guest price display</td></tr>
+<tr><td>Weekend</td><td>% supplement on Fri/Sat</td></tr>
+<tr><td>Discounts</td><td>4 types; one per stay; opt-out defaults</td></tr>
+<tr><td>Safety</td><td>Cameras/weapons/noise; conditional camera copy</td></tr>
+</tbody></table>
+<p>| Terminal action | <strong>Criar anúncio</strong> ends wizard |</p>
+<p><strong>Next:</strong> <a href="04-post-creation-compliance.md">04 — Post-creation compliance</a></p></section>
+<section id="post" class="chapter">
+<p>After <strong>Criar anúncio</strong>, the listing exists but may not be fully <strong>publishable</strong>. Airbnb surfaces async gates on the host dashboard and jurisdiction-specific registration (Portugal in this walkthrough).</p>
+<p>[← 03 Finish and publish](docs/03-phase-finish-and-publish.md) · [Hub("../readme.md) · [Patterns](docs/99-patterns-and-data-model.md)</p>
+<hr />
+<h3>Step 31 — Listings dashboard + confirm modal</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.38.02.png`</td></tr>
+<tr><td>Timestamp</td><td>09:38:02</td></tr>
+<tr><td>Screen type</td><td>dashboard + modal</td></tr>
+</tbody></table>
+<p>| Primary CTA | Encontre coanfitriões (Find co-hosts) |</p>
+<p><strong>Goal:</strong> Block perceived "done" state — host must complete post-wizard steps.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Nav: Hoje · Calendário · **Anúncios** (active) · Mensagens</li>
+<li>Page: **Os seus anúncios** *(Your listings)*</li>
+<li>Banner: Herdade da Camélia — confirm important data — required to publish</li>
+<li>Listing cards:</li>
+</ul>
+<p>  - <strong>Herdade da Camélia</strong> — badge <strong>Ação necessária</strong> *(Action required)* — Nossa Senhora do Pranto</p>
+<p>  - <strong>Casa con piscina…</strong> — badge <strong>Publicado</strong> *(Published)* — Parede</p>
+<ul>
+<li>Modal:</li>
+</ul>
+<p>  - <strong>Necessário para publicar o anúncio</strong></p>
+<p>  - Icon: house + checkmark in pink circle</p>
+<p>  - <strong>Confirme alguns dados importantes</strong></p>
+<p>  - CTA: <strong>Encontre coanfitriões</strong></p>
+<p>  - Footer thumbnail: Herdade da Camélia</p>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Draft ≠ published** — status badge communicates blocker</li>
+<li>Co-host step may be recommended or required depending on region/listing type</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.38.02.png" alt="Step 31" loading="lazy" /><figcaption>Step 31</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 32 — Pending tasks</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.38.20.png`</td></tr>
+<tr><td>Timestamp</td><td>09:38:20</td></tr>
+<tr><td>Screen type</td><td>checklist page</td></tr>
+</tbody></table>
+<p>| Primary CTA | Per-task navigation (arrow on mandatory item) |</p>
+<p><strong>Goal:</strong> Enumerate remaining requirements with priority.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Tarefas pendentes** *(Pending tasks)*</li>
+<li>Task 1: **Cumprir os requisitos locais** *(Comply with local requirements)*</li>
+</ul>
+<p>  - Government requires tasks before hosting</p>
+<p>  - Badge: <strong>Obrigatório</strong> *(Mandatory)* · chevron →</p>
+<ul>
+<li>Task 2: **Confirme o seu número de telefone** — **Concluir** ✓ (completed)</li>
+<li>Sidebar card: listing preview (photo, Herdade da Camélia, address snippet)</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>Checklist pattern separates **wizard complete** from **legally host-ready**</li>
+<li>Phone verification can complete during or after wizard</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.38.20.png" alt="Step 32" loading="lazy" /><figcaption>Step 32</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 33 — Portugal registration hub</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.38.33.png`</td></tr>
+<tr><td>Timestamp</td><td>09:38:33</td></tr>
+<tr><td>Screen type</td><td>compliance hub (full page)</td></tr>
+</tbody></table>
+<p>| Primary CTAs | Three paths (see below) |</p>
+<p><strong>Goal:</strong> Route host through Portuguese <strong>Alojamento Local</strong> registration requirements.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Registe o seu espaço em Portugal** *(Register your space in Portugal)*</li>
+<li>Intro: if Alojamento Local / Estabelecimento Turístico / Aldeia Turística — add valid registration number</li>
+<li>Link: Saiba mais sobre hospedagem em Portugal</li>
+<li>**Path A — Still need to register?**</li>
+</ul>
+<p>  - Apply on Portal do Cidadão · immediate number · add to Airbnb</p>
+<p>  - Button: <strong>Registe o seu espaço</strong></p>
+<ul>
+<li>**Path B — Already have registration number?**</li>
+</ul>
+<p>  - Button: <strong>Adicione o número de registo</strong></p>
+<ul>
+<li>**Path C — Exempt?**</li>
+</ul>
+<p>  - Bullets: not AL (boat/tent); long-term only; proof via tax-registered lease</p>
+<p>  - Link: Portuguese regulation · Button: <strong>Confirme que o seu espaço está isento</strong></p>
+<ul>
+<li>Illustration: handshake over cityscape</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>**Jurisdiction gate** as separate hub, not crammed into wizard</li>
+<li>Three mutually exclusive paths reduce wrong-form submissions</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.38.33.png" alt="Step 33" loading="lazy" /><figcaption>Step 33</figcaption></figure>
+</ul>
+<hr />
+<h3>Step 34 — Add registration number</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.38.51.png`</td></tr>
+<tr><td>Timestamp</td><td>09:38:51</td></tr>
+<tr><td>Screen type</td><td>compliance form</td></tr>
+</tbody></table>
+<p>| Primary CTA | Submit (implied — not fully visible) |</p>
+<p><strong>Goal:</strong> Collect registration number and host identity for Turismo de Portugal alignment.</p>
+<p><strong>UI elements:</strong></p>
+<ul>
+<li>Title: **Adicione o número de registo**</li>
+<li>Warning: incorrect info or contact details in field → listing removal</li>
+<li>Fields:</li>
+</ul>
+<p>  - <strong>Número de registo</strong> (text)</p>
+<p>  - Role radio: <strong>Pessoa que registou este anúncio</strong> | <strong>Gestor da propriedade</strong></p>
+<p>  - <strong>Número de identificação fiscal</strong> (tax ID)</p>
+<p>  - <strong>O seu nome</strong> — prefilled: Rodrigo Barona</p>
+<p>  - <strong>O seu e-mail</strong> — prefilled: buziosetartarugas@gmail.com</p>
+<ul>
+<li>Read-only blocks:</li>
+</ul>
+<p>  - <strong>Endereço do espaço:</strong> Largo Prof. José Bernardo Cotrim 35, Nossa Senhora do Pranto, Santarém 2240, PT</p>
+<p>  - <strong>Anúncio:</strong> room URL</p>
+<p>  - <strong>Publicado</strong> status label</p>
+<p><strong>Data model:</strong></p>
+<ul>
+<li>Links wizard address to government registry</li>
+<li>Distinguishes registrant vs property manager</li>
+<li>Tax ID + contact for legal display</li>
+<figure class="screenshot"><img src="Screenshot%202026-05-22%20at%2009.38.51.png" alt="Step 34" loading="lazy" /><figcaption>Step 34</figcaption></figure>
+</ul>
+<hr />
+<h2>Chapter summary</h2>
+<pre><code>stateDiagram-v2
+  WizardComplete --> ListingDraft: Criar anúncio
+  ListingDraft --> ActionRequired: Dashboard shows Ação necessária
+  ActionRequired --> PendingTasks: Open checklist
+  PendingTasks --> LocalCompliance: Cumprir requisitos locais
+  LocalCompliance --> RegistrationForm: PT registration path
+  RegistrationForm --> Publishable: Valid RNAL + tasks done
+  Publishable --> Published: All gates cleared</code></pre>
+<table class="meta">
+<thead><tr><th>Gate</th><th>Type</th><th>Blocks publish</th></tr></thead><tbody>
+<tr><td>Co-host / important details</td><td>Modal on dashboard</td><td>Yes (in capture)</td></tr>
+<tr><td>Phone verification</td><td>Task</td><td>No (done)</td></tr>
+<tr><td>Local government requirements</td><td>Task — Obrigatório</td><td>Yes</td></tr>
+</tbody></table>
+<p>| Portugal registration number | Form | Yes (for AL listings) |</p>
+<p><strong>Reference:</strong> <a href="99-patterns-and-data-model.md">99 — Patterns and data model</a></p></section>
+<section id="patterns" class="chapter">
+<p>Cross-cutting UX patterns and implied data fields from the Airbnb accommodation listing onboarding flow. Use when designing Eleva onboarding or similar multi-step publish flows.</p>
+<p>[Hub("../readme.md)</p>
+<hr />
+<h2>Patterns to borrow</h2>
+<table class="meta">
+<thead><tr><th>Pattern</th><th>Airbnb example</th><th>Design intent</th><th>Eleva application ideas</th></tr></thead><tbody>
+<tr><td>**Listing type fork**</td><td>Alojamento / Experiência / Serviço modal</td><td>Route fundamentally different flows early</td><td>Expert vs Team vs Academy vs Space setup</td></tr>
+<tr><td>**Address-first landing**</td><td>Search → confirm modal → wizard</td><td>Anchor geography before details; enable comps & compliance</td><td>Clinic address before service catalog</td></tr>
+<tr><td>**Outcome preview**</td><td>Mock listing card on address landing</td><td>Motivation before effort</td><td>Preview member-facing profile</td></tr>
+<tr><td>**Phase interstitials**</td><td>Passo 1 / 2 / 3 full-screen intros</td><td>Chunk long wizard; set expectations</td><td>“Tell us about your practice” chapter breaks</td></tr>
+<tr><td>**3-segment progress**</td><td>One bar, three macro phases</td><td>Progress without 30-step anxiety</td><td>3 chapters: Profile · Offerings · Go live</td></tr>
+<tr><td>**Save and exit**</td><td>Gravar e sair on every step</td><td>Async completion; reduce abandonment fear</td><td>Draft save on all onboarding steps</td></tr>
+<tr><td>**Single-focus steps**</td><td>One question per screen</td><td>Mobile-friendly; clear back/next</td><td>One decision per route</td></tr>
+<tr><td>**Card single-select grids**</td><td>Property type, space type</td><td>Scannable taxonomy</td><td>Specialty / org type pickers</td></tr>
+<tr><td>**Stepper counters**</td><td>Guests, beds, baths</td><td>Fast numeric input</td><td>Capacity, session length, staff count</td></tr>
+<tr><td>**Deferred detail**</td><td>“Bed types later”, “more amenities after publish”</td><td>Ship MVP listing faster</td><td>Advanced settings post-launch</td></tr>
+<tr><td>**Grouped multi-select**</td><td>Guest favorites vs standout amenities</td><td>Prioritize high-conversion attributes</td><td>Core vs premium feature flags</td></tr>
+<tr><td>**Hard minimum + quality gate**</td><td>5 photos, ≤25 MB</td><td>Prevent broken public pages</td><td>Min gallery images, doc size limits</td></tr>
+<tr><td>**Partial upload feedback**</td><td>“4 of 5 uploaded” + size hint</td><td>Actionable recovery</td><td>Batch upload with per-file errors</td></tr>
+<tr><td>**Cover + reorder**</td><td>Foto de capa, drag sort, organize CTA</td><td>Control merchandising order</td><td>Hero image + ordered gallery</td></tr>
+<tr><td>**AI-assisted copy**</td><td>Highlights → prefilled description</td><td>Lower writing friction</td><td>Tone chips → bio draft</td></tr>
+<tr><td>**Char limits surfaced**</td><td>50 title, 500 description</td><td>No surprise truncation</td><td>Inline counters on all public text</td></tr>
+<tr><td>**Pricing with comps**</td><td>Suggested € + map overlay</td><td>Data-driven confidence</td><td>Market rate hints for services</td></tr>
+<tr><td>**Host vs guest price**</td><td>€140 host / €160 guest</td><td>Fee transparency</td><td>Member price vs platform fee display</td></tr>
+<tr><td>**Weekend modifier**</td><td>% slider Fri/Sat</td><td>Simple dynamic pricing</td><td>Peak hours / weekend surcharge</td></tr>
+<tr><td>**Opt-out discounts**</td><td>Pre-checked launch promos</td><td>Faster first conversions</td><td>Optional launch offers default on</td></tr>
+<tr><td>**Conditional sub-flow**</td><td>Camera checkbox → detail modal</td><td>Compliance without clutter</td><td>License upload only if regulated</td></tr>
+<tr><td>**Terminal CTA rename**</td><td>Criar anúncio vs Seguinte</td><td>Signals create/commit moment</td><td>“Publish profile” vs “Continue”</td></tr>
+<tr><td>**Post-submit checklist**</td><td>Tarefas pendentes</td><td>Draft created ≠ publishable</td><td>Onboarding checklist after profile draft</td></tr>
+<tr><td>**Jurisdiction gate**</td><td>Portugal registration hub</td><td>Legal async blocker</td><td>PT/EU regulatory steps by country</td></tr>
+<tr><td>**Dashboard status badges**</td><td>Ação necessária vs Publicado</td><td>At-a-glance completion</td><td>“Incomplete” vs “Live” on org cards</td></tr>
+<tr><td>**Help modals**</td><td>Discounts explainer</td><td>Educate without leaving flow</td><td>Contextual ? on complex policy fields</td></tr>
+</tbody></table>
+<p>| <strong>Map privacy split</strong> | Pin accuracy vs guest-visible precision | Safety + search relevance | Approximate clinic location until booking |</p>
+<hr />
+<h2>Implied data model</h2>
+<h3>Listing (root)</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`listing_category`</td><td>enum</td><td>Step 1</td><td>accommodation \</td><td>experience \</td><td>service</td></tr>
+<tr><td>`status`</td><td>enum</td><td>Post-create</td><td>draft \</td><td>action_required \</td><td>published</td></tr>
+<tr><td>`title`</td><td>string(50)</td><td>Step 19</td><td>Public headline</td></tr>
+<tr><td>`description`</td><td>string(500)</td><td>Step 21</td><td>May be AI-seeded</td></tr>
+</tbody></table>
+<p>| `highlight_tags` | string[] (max 2) | Step 20 | calm, unique, family, etc. |</p>
+<h3>Location</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`country_code`</td><td>string</td><td>Step 4</td><td>e.g. PT</td></tr>
+<tr><td>`street`</td><td>string</td><td>Step 4</td><td></td></tr>
+<tr><td>`unit`</td><td>string?</td><td>Step 4</td><td>Optional</td></tr>
+<tr><td>`postal_code`</td><td>string</td><td>Step 4</td><td></td></tr>
+<tr><td>`city`</td><td>string</td><td>Step 4</td><td></td></tr>
+<tr><td>`latitude`</td><td>number</td><td>Step 8</td><td>Map pin</td></tr>
+<tr><td>`longitude`</td><td>number</td><td>Step 8</td><td></td></tr>
+</tbody></table>
+<p>| `show_exact_location` | boolean | Step 9 | Pre-booking map display |</p>
+<h3>Property structure</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`property_type`</td><td>enum</td><td>Step 6</td><td>~27 values (house, apartment, …)</td></tr>
+<tr><td>`space_type`</td><td>enum</td><td>Step 7</td><td>entire \</td><td>private_room \</td><td>hostel_shared</td></tr>
+<tr><td>`max_guests`</td><td>int</td><td>Step 10</td><td></td></tr>
+<tr><td>`bedrooms`</td><td>int</td><td>Step 10</td><td></td></tr>
+<tr><td>`beds`</td><td>int</td><td>Step 10</td><td></td></tr>
+</tbody></table>
+<p>| `bathrooms` | int | Step 10 | |</p>
+<h3>Merchandising</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`amenity_ids`</td><td>string[]</td><td>Steps 12–13</td><td>Two tiers; extensible post-publish</td></tr>
+<tr><td>`photos`</td><td>Media[]</td><td>Steps 14–18</td><td>min 5; max 25MB; ordered; cover_index</td></tr>
+<tr><td>`photo.url`</td><td>string</td><td>Upload</td><td></td></tr>
+</tbody></table>
+<p>| `photo.size_bytes` | int | Upload | Validated ≤ 25MB |</p>
+<h3>Pricing</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`weekday_price_host`</td><td>money</td><td>Step 23</td><td>Base nightly</td></tr>
+<tr><td>`weekday_price_guest`</td><td>money</td><td>Step 23</td><td>After platform fees</td></tr>
+<tr><td>`weekend_supplement_percent`</td><td>0–99</td><td>Step 25</td><td>Fri/Sat</td></tr>
+<tr><td>`weekend_price_host`</td><td>money</td><td>Step 25</td><td>Derived</td></tr>
+<tr><td>`discount_new_listing`</td><td>boolean + %</td><td>Step 26</td><td>20% first 3 bookings</td></tr>
+<tr><td>`discount_last_minute`</td><td>boolean + %</td><td>Step 26</td><td>10%, ≤14 days</td></tr>
+<tr><td>`discount_weekly`</td><td>boolean + %</td><td>Step 26</td><td>10%, 7+ nights</td></tr>
+</tbody></table>
+<p>| `discount_monthly` | boolean + % | Step 26 | 20%, 28+ nights |</p>
+<h3>Safety & compliance</h3>
+<table class="meta">
+<thead><tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr></thead><tbody>
+<tr><td>`has_outdoor_camera`</td><td>boolean</td><td>Step 28–30</td><td></td></tr>
+<tr><td>`camera_areas_description`</td><td>string(300)?</td><td>Step 29</td><td>Required if camera</td></tr>
+<tr><td>`has_noise_monitor`</td><td>boolean</td><td>Step 28</td><td></td></tr>
+<tr><td>`has_weapons`</td><td>boolean</td><td>Step 28</td><td></td></tr>
+<tr><td>`phone_verified`</td><td>boolean</td><td>Post task 32</td><td></td></tr>
+<tr><td>`local_requirements_complete`</td><td>boolean</td><td>Post task 32</td><td>Jurisdiction-specific</td></tr>
+<tr><td>`pt_registration_number`</td><td>string?</td><td>Step 34</td><td>RNAL / Turismo de Portugal</td></tr>
+<tr><td>`host_role`</td><td>enum</td><td>Step 34</td><td>registrant \</td><td>property_manager</td></tr>
+<tr><td>`host_tax_id`</td><td>string</td><td>Step 34</td><td>NIF</td></tr>
+<tr><td>`host_name`</td><td>string</td><td>Step 34</td><td>Prefilled from account</td></tr>
+</tbody></table>
+<p>| `host_email` | string | Step 34 | Prefilled |</p>
+<hr />
+<h2>Wizard gating rules (summary)</h2>
+<table class="meta">
+<thead><tr><th>Step / area</th><th>Next disabled until</th></tr></thead><tbody>
+<tr><td>Listing type modal</td><td>Category selected</td></tr>
+<tr><td>Property type</td><td>One type selected</td></tr>
+<tr><td>Photos</td><td>≥ 5 successfully uploaded</td></tr>
+<tr><td>Title</td><td>length > 0</td></tr>
+<tr><td>Camera safety</td><td>If checked, area description non-empty</td></tr>
+</tbody></table>
+<p>| Upload modal | Oversized files removed or replaced |</p>
+<p>Optional steps (amenities) do not block <strong>Seguinte</strong> in observed flow.</p>
+<hr />
+<h2>Listing lifecycle states</h2>
+<pre><code>stateDiagram-v2
+  [*] --> NotStarted
+  NotStarted --> PreWizard: Open create flow
+  PreWizard --> Phase1: Address confirmed
+  Phase1 --> Phase2: Passo 1 complete
+  Phase2 --> Phase3: Passo 2 complete
+  Phase3 --> Draft: Criar anúncio
+  Draft --> ActionRequired: Missing co-host / details
+  ActionRequired --> PendingCompliance: Dashboard tasks
+  PendingCompliance --> Publishable: Phone + local rules + registration
+  Publishable --> Published: All gates pass
+  Published --> [*]</code></pre>
+<hr />
+<h2>Anti-patterns observed (avoid)</h2>
+<table class="meta">
+<thead><tr><th>Anti-pattern</th><th>Why Airbnb avoids it</th></tr></thead><tbody>
+<tr><td>Single 40-field form</td><td>Wizard + interstitials reduce overwhelm</td></tr>
+<tr><td>Publishing before compliance</td><td>Post-create checklist + badges</td></tr>
+<tr><td>Hiding fees until checkout</td><td>Guest price shown at pricing step</td></tr>
+<tr><td>Indoor camera allowed</td><td>Explicit ban in safety copy</td></tr>
+</tbody></table>
+<p>| Silent upload failures | Per-file size errors + partial success count |</p>
+<hr />
+<h2>Related chapters</h2>
+<ul>
+<li>[00 — Entry and address](docs/00-entry-and-address.md)</li>
+<li>[01 — About your space](docs/01-phase-about-your-space.md)</li>
+<li>[02 — Stand out](docs/02-phase-stand-out.md)</li>
+<li>[03 — Finish and publish](docs/03-phase-finish-and-publish.md)</li>
+<li>[04 — Post-creation compliance](docs/04-post-creation-compliance.md)</li>
+</ul></section>
+
+    </main>
+  </div>
+  <script>
+    document.querySelectorAll('nav.sidebar a').forEach(a => {
+      a.addEventListener('click', e => {
+        const id = a.getAttribute('href').slice(1);
+        const el = document.getElementById(id);
+        if (el) { e.preventDefault(); el.scrollIntoView({ behavior: 'smooth' }); history.pushState(null, '', '#' + id); }
+      });
+    });
+  </script>
+</body>
+</html>

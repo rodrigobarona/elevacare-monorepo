@@ -1,15 +1,19 @@
 "use server"
 
 import { requireSession } from "@eleva/auth/server"
-import type {
-  CreateEventTypeRequest,
-  UpdateEventTypeRequest,
+import {
+  CreateEventTypeRequestSchema,
+  UpdateEventTypeRequestSchema,
+  type CreateEventTypeRequest,
+  type UpdateEventTypeRequest,
 } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
-type ActionResult = { ok: true; id?: string } | { ok: false; error: string }
+type ActionResult =
+  | { ok: true; id?: string }
+  | { ok: false; error: string; details?: unknown }
 
 export interface EventTypeFormData {
   slug: string
@@ -71,8 +75,17 @@ export async function createEventTypeAction(
       return { ok: false, error: "slug-too-short" }
     }
 
+    const parsed = CreateEventTypeRequestSchema.safeParse(payload)
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: "invalid-input",
+        details: parsed.error.issues,
+      }
+    }
+
     const api = await getAuthedApiClient()
-    const result = await api.experts.eventTypes.create(payload)
+    const result = await api.experts.eventTypes.create(parsed.data)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true, id: result.id }
@@ -134,8 +147,17 @@ export async function updateEventTypeAction(
       updates.worldwideMode = data.worldwideMode
     }
 
+    const parsed = UpdateEventTypeRequestSchema.safeParse(updates)
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: "invalid-input",
+        details: parsed.error.issues,
+      }
+    }
+
     const api = await getAuthedApiClient()
-    await api.experts.eventTypes.update(eventTypeId, updates)
+    await api.experts.eventTypes.update(eventTypeId, parsed.data)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }

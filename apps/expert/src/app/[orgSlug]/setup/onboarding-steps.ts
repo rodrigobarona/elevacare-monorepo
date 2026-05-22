@@ -10,4 +10,11 @@ export type OnboardingStepName = Extract<
   (typeof EXPERT_WIZARD_STEPS)[number]
 >
 
-export const allowedOnboardingStepNames = new Set<string>(EXPERT_WIZARD_STEPS)
+export const allowedOnboardingStepNames: ReadonlySet<OnboardingStepName> =
+  new Set(EXPERT_WIZARD_STEPS)
+
+export function isOnboardingStepName(
+  stepName: string
+): stepName is OnboardingStepName {
+  return allowedOnboardingStepNames.has(stepName as OnboardingStepName)
+}

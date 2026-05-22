@@ -118,13 +118,16 @@ export async function ensureExpertProfileForOrg(input: {
 }
 
 /** Like {@link ensureExpertProfileForOrg} but reports whether a row was inserted. */
-export async function ensureExpertProfileForOrgDetailed(input: {
-  userId: string
-  orgId: string
-  orgSlug: string
-  displayName: string
-}): Promise<EnsureExpertProfileResult> {
-  return withOrgContext(input.orgId, async (tx) => {
+export async function ensureExpertProfileForOrgDetailed(
+  input: {
+    userId: string
+    orgId: string
+    orgSlug: string
+    displayName: string
+  },
+  txOpt?: Tx
+): Promise<EnsureExpertProfileResult> {
+  const run = async (tx: Tx) => {
     const [inserted] = await tx
       .insert(main.expertProfiles)
       .values({
@@ -153,7 +156,9 @@ export async function ensureExpertProfileForOrgDetailed(input: {
     }
 
     return { profile: existing, created: false }
-  })
+  }
+
+  return txOpt ? run(txOpt) : withOrgContext(input.orgId, run)
 }
 
 /**

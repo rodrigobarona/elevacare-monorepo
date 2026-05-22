@@ -1,12 +1,14 @@
 "use server"
 
 import { requireSession } from "@eleva/auth/server"
+import {
+  InvoicingRequestSchema,
+  PatchExpertProfileRequestSchema,
+} from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
-import { allowedOnboardingStepNames } from "@/app/[orgSlug]/setup/onboarding-steps"
-
-const ALLOWED_SESSION_MODES = ["online", "in_person", "phone"] as const
+import { isOnboardingStepName } from "@/app/[orgSlug]/setup/onboarding-steps"
 
 interface ProfileFormData {
   nif?: string
@@ -22,24 +24,29 @@ type ActionResult = { ok: true } | { ok: false; error: string }
 export async function saveProfileStep(
   data: ProfileFormData
 ): Promise<ActionResult> {
+  let payload
   try {
-    const session = await requireSession("expert:onboard")
-
-    const validSessionModes = (
-      Array.isArray(data.sessionModes) ? data.sessionModes : []
-    ).filter((m): m is (typeof ALLOWED_SESSION_MODES)[number] =>
-      (ALLOWED_SESSION_MODES as readonly string[]).includes(m)
-    )
-
-    const api = await getAuthedApiClient()
-    await api.experts.profile.patch({
+    payload = PatchExpertProfileRequestSchema.parse({
       nif: data.nif ?? null,
       licenseScope: data.licenseScope ?? null,
       languages: data.languages,
       practiceCountries: data.practiceCountries,
       worldwideMode: data.worldwideMode,
+      sessionModes: data.sessionModes,
+    })
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
+  try {
+    const session = await requireSession("expert:onboard")
+    const api = await getAuthedApiClient()
+    await api.experts.profile.patch({
+      ...payload,
       sessionModes:
-        validSessionModes.length > 0 ? validSessionModes : ["online"],
+        payload.sessionModes && payload.sessionModes.length > 0
+          ? payload.sessionModes
+          : ["online"],
     })
 
     revalidateExpertWorkspace(session, "setup")
@@ -56,7 +63,7 @@ export async function saveProfileStep(
 export async function markStepComplete(
   stepName: string
 ): Promise<ActionResult> {
-  if (!allowedOnboardingStepNames.has(stepName)) {
+  if (!isOnboardingStepName(stepName)) {
     return { ok: false, error: "invalid-step" }
   }
 
@@ -81,10 +88,17 @@ export async function markStepComplete(
 export async function saveInvoicingChoice(
   provider: "toconline" | "moloni" | "manual"
 ): Promise<ActionResult> {
+  let payload
+  try {
+    payload = InvoicingRequestSchema.parse({ provider })
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
   try {
     const session = await requireSession("expert:onboard")
     const api = await getAuthedApiClient()
-    await api.experts.profile.setInvoicing({ provider })
+    await api.experts.profile.setInvoicing(payload)
 
     revalidateExpertWorkspace(session, "setup")
     return { ok: true }

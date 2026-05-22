@@ -1,6 +1,7 @@
 import type { ElevaSession } from "@eleva/auth"
 import type { ExpertProfile } from "@eleva/db"
 import { getExpertProfileForOrg } from "@eleva/db"
+import { EnsureExpertProfileResponseSchema } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 
 export async function resolveExpertProfileForSession(
@@ -26,5 +27,12 @@ export async function resolveOrCreateExpertProfileForSession(
   const ensured = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (ensured) return ensured
 
-  return result.profile as ExpertProfile
+  const parsed = EnsureExpertProfileResponseSchema.shape.profile.safeParse(
+    result.profile
+  )
+  if (!parsed.success) {
+    throw new Error("Expert profile ensure returned an invalid profile shape")
+  }
+
+  return parsed.data as ExpertProfile
 }

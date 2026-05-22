@@ -17,7 +17,8 @@ export function mapExpertApiError(
     if (err.status === 403) {
       if (
         err.body.error === "forbidden" &&
-        err.body.message?.toLowerCase().includes("calendar")
+        typeof err.body.message === "string" &&
+        err.body.message.toLowerCase().includes("calendar")
       ) {
         return "unauthorized-calendar"
       }

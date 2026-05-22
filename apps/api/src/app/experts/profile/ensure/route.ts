@@ -51,13 +51,16 @@ export async function POST(request: Request) {
   try {
     const { profile } = await withAudit(
       { orgId: session.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
-        const result = await ensureExpertProfileForOrgDetailed({
-          userId: session.user.id,
-          orgId: session.orgId,
-          orgSlug: body.data.orgSlug,
-          displayName: body.data.displayName,
-        })
+      async (tx, ctx) => {
+        const result = await ensureExpertProfileForOrgDetailed(
+          {
+            userId: session.user.id,
+            orgId: session.orgId,
+            orgSlug: body.data.orgSlug,
+            displayName: body.data.displayName,
+          },
+          tx
+        )
 
         await ctx.emit({
           entity: "expert_profile",

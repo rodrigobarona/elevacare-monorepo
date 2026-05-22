@@ -1,19 +1,31 @@
 "use server"
 
+import { z } from "zod"
 import { requireSession } from "@eleva/auth/server"
+import { BusySourcesRequestSchema } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult = { ok: true; data?: unknown } | { ok: false; error: string }
 
+const IntegrationIdSchema = z.string().min(1)
+const ExternalCalendarIdSchema = z.string().min(1)
+
 export async function disconnectCalendarAction(
   integrationId: string
 ): Promise<ActionResult> {
+  let parsedIntegrationId: string
+  try {
+    parsedIntegrationId = IntegrationIdSchema.parse(integrationId)
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.disconnect(integrationId)
+    await api.experts.integrations.disconnect(parsedIntegrationId)
 
     revalidateExpertWorkspace(session, "calendars")
     revalidateExpertWorkspace(session, "integrations")
@@ -42,10 +54,18 @@ export async function loadSubCalendars(integrationId: string): Promise<
     }
   | { ok: false; error: string }
 > {
+  let parsedIntegrationId: string
+  try {
+    parsedIntegrationId = IntegrationIdSchema.parse(integrationId)
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
   try {
     await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    const result = await api.experts.integrations.listCalendars(integrationId)
+    const result =
+      await api.experts.integrations.listCalendars(parsedIntegrationId)
 
     return { ok: true, calendars: result.calendars }
   } catch (err) {
@@ -64,10 +84,21 @@ export async function saveBusySources(
   integrationId: string,
   sources: { externalCalendarId: string; displayName: string }[]
 ): Promise<ActionResult> {
+  let parsedIntegrationId: string
+  let parsedSources: z.infer<typeof BusySourcesRequestSchema>["sources"]
+  try {
+    parsedIntegrationId = IntegrationIdSchema.parse(integrationId)
+    parsedSources = BusySourcesRequestSchema.shape.sources.parse(sources)
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.setBusySources(integrationId, { sources })
+    await api.experts.integrations.setBusySources(parsedIntegrationId, {
+      sources: parsedSources,
+    })
 
     revalidateExpertWorkspace(session, "calendars")
     return { ok: true }
@@ -87,11 +118,21 @@ export async function saveDestinationCalendar(
   integrationId: string,
   externalCalendarId: string
 ): Promise<ActionResult> {
+  let parsedIntegrationId: string
+  let parsedExternalCalendarId: string
+  try {
+    parsedIntegrationId = IntegrationIdSchema.parse(integrationId)
+    parsedExternalCalendarId =
+      ExternalCalendarIdSchema.parse(externalCalendarId)
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.setDestination(integrationId, {
-      externalCalendarId,
+    await api.experts.integrations.setDestination(parsedIntegrationId, {
+      externalCalendarId: parsedExternalCalendarId,
     })
 
     revalidateExpertWorkspace(session, "calendars")
