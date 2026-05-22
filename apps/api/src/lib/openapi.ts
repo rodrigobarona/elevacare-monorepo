@@ -14,6 +14,7 @@ import {
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   CreateWorkspaceRequestSchema,
+  ExpertOnboardingStepSchema,
   ListOrganizationsMineResponseSchema,
 } from "@eleva/api-client"
 
@@ -452,14 +453,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               required: true,
               schema: {
                 type: "string",
-                enum: [
-                  "profile",
-                  "schedule",
-                  "event-types",
-                  "calendars",
-                  "invoicing",
-                  "review",
-                ],
+                enum: [...ExpertOnboardingStepSchema.options],
               },
             },
           ],

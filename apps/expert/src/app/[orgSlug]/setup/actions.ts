@@ -1,8 +1,8 @@
 "use server"
 
 import { requireSession } from "@eleva/auth/server"
-import { getExpertProfileForOrg, updateExpertProfile } from "@eleva/db"
 import { getAuthedApiClient } from "@/lib/server-api"
+import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 import { allowedOnboardingStepNames } from "@/app/[orgSlug]/setup/onboarding-steps"
 
@@ -24,8 +24,6 @@ export async function saveProfileStep(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("expert:onboard")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
 
     const validSessionModes = (
       Array.isArray(data.sessionModes) ? data.sessionModes : []
@@ -48,7 +46,10 @@ export async function saveProfileStep(
     return { ok: true }
   } catch (err) {
     console.error("[onboarding] saveProfileStep failed", err)
-    return { ok: false, error: "save-failed" }
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed"),
+    }
   }
 }
 
@@ -61,23 +62,19 @@ export async function markStepComplete(
 
   try {
     const session = await requireSession("expert:onboard")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
-    const completedSteps = (profile.metadata as Record<string, unknown>)
-      ?.completedSteps
-    const steps = Array.isArray(completedSteps) ? completedSteps : []
-    if (!steps.includes(stepName)) steps.push(stepName)
-
-    await updateExpertProfile(profile.id, profile.orgId, {
-      metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-    })
+    const api = await getAuthedApiClient()
+    await api.experts.profile.completeStep(stepName)
 
     revalidateExpertWorkspace(session, "setup")
     return { ok: true }
   } catch (err) {
     console.error("[onboarding] markStepComplete failed", err)
-    return { ok: false, error: "save-failed" }
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed", {
+        validation: "invalid-step",
+      }),
+    }
   }
 }
 
@@ -86,9 +83,6 @@ export async function saveInvoicingChoice(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("expert:onboard")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
     const api = await getAuthedApiClient()
     await api.experts.profile.setInvoicing({ provider })
 
@@ -96,6 +90,9 @@ export async function saveInvoicingChoice(
     return { ok: true }
   } catch (err) {
     console.error("[onboarding] saveInvoicingChoice failed", err)
-    return { ok: false, error: "save-failed" }
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed"),
+    }
   }
 }

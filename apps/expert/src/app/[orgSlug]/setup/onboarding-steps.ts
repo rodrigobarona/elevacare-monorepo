@@ -1,11 +1,13 @@
-export const ONBOARDING_STEPS = [
-  "profile",
-  "connect",
-  "identity",
-  "invoicing",
-  "schedule",
-] as const
+import {
+  EXPERT_WIZARD_STEPS,
+  type ExpertOnboardingStep,
+} from "@eleva/api-client"
 
-export type OnboardingStepName = (typeof ONBOARDING_STEPS)[number]
+export const ONBOARDING_STEPS = EXPERT_WIZARD_STEPS
 
-export const allowedOnboardingStepNames = new Set<string>(ONBOARDING_STEPS)
+export type OnboardingStepName = Extract<
+  ExpertOnboardingStep,
+  (typeof EXPERT_WIZARD_STEPS)[number]
+>
+
+export const allowedOnboardingStepNames = new Set<string>(EXPERT_WIZARD_STEPS)

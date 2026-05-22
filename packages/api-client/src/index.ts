@@ -285,6 +285,29 @@ export type EnsureExpertProfileResponse = z.infer<
   typeof EnsureExpertProfileResponseSchema
 >
 
+/** All completable expert onboarding / setup steps (API + metadata SSOT). */
+export const ExpertOnboardingStepSchema = z.enum([
+  "profile",
+  "connect",
+  "identity",
+  "invoicing",
+  "schedule",
+  "event-types",
+  "calendars",
+  "review",
+])
+
+export type ExpertOnboardingStep = z.infer<typeof ExpertOnboardingStepSchema>
+
+/** Ordered steps shown in the expert onboarding wizard UI. */
+export const EXPERT_WIZARD_STEPS = [
+  "profile",
+  "connect",
+  "identity",
+  "invoicing",
+  "schedule",
+] as const satisfies readonly ExpertOnboardingStep[]
+
 // ── Schedule ────────────────────────────────────────────────────────
 
 export const SaveScheduleRequestSchema = z.object({

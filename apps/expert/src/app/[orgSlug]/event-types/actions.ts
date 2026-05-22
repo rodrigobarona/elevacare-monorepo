@@ -1,21 +1,20 @@
 "use server"
 
 import { requireSession } from "@eleva/auth/server"
-import {
-  getExpertProfileForOrg,
-  createEventType,
-  updateEventType,
-  deleteEventType,
-  type LocalizedText,
-} from "@eleva/db"
+import type {
+  CreateEventTypeRequest,
+  UpdateEventTypeRequest,
+} from "@eleva/api-client"
+import { getAuthedApiClient } from "@/lib/server-api"
+import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult = { ok: true; id?: string } | { ok: false; error: string }
 
 export interface EventTypeFormData {
   slug: string
-  title: LocalizedText
-  description?: LocalizedText
+  title: CreateEventTypeRequest["title"]
+  description?: CreateEventTypeRequest["description"]
   durationMinutes: number
   priceAmount: number
   currency: string
@@ -40,46 +39,51 @@ function normalizeSlug(raw: string): string {
     .slice(0, 50)
 }
 
+function toCreatePayload(data: EventTypeFormData): CreateEventTypeRequest {
+  const slug = normalizeSlug(data.slug || data.title.en)
+  return {
+    slug,
+    title: data.title,
+    description: data.description ?? null,
+    durationMinutes: data.durationMinutes,
+    priceAmount: data.priceAmount,
+    currency: data.currency,
+    languages: data.languages,
+    sessionMode: data.sessionMode,
+    bookingWindowDays: data.bookingWindowDays ?? null,
+    minimumNoticeMinutes: data.minimumNoticeMinutes,
+    bufferBeforeMinutes: data.bufferBeforeMinutes,
+    bufferAfterMinutes: data.bufferAfterMinutes,
+    cancellationWindowHours: data.cancellationWindowHours ?? null,
+    rescheduleWindowHours: data.rescheduleWindowHours ?? null,
+    requiresApproval: data.requiresApproval,
+    worldwideMode: data.worldwideMode,
+  }
+}
+
 export async function createEventTypeAction(
   data: EventTypeFormData
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
+    const payload = toCreatePayload(data)
+    if ((payload.slug ?? "").length < 3) {
+      return { ok: false, error: "slug-too-short" }
+    }
 
-    const slug = normalizeSlug(data.slug || data.title.en)
-    if (slug.length < 3) return { ok: false, error: "slug-too-short" }
-
-    const row = await createEventType(profile.orgId, {
-      expertProfileId: profile.id,
-      orgId: profile.orgId,
-      slug,
-      title: data.title,
-      description: data.description ?? null,
-      durationMinutes: data.durationMinutes,
-      priceAmount: data.priceAmount,
-      currency: data.currency,
-      languages: data.languages.length > 0 ? data.languages : ["en"],
-      sessionMode: data.sessionMode,
-      bookingWindowDays: data.bookingWindowDays ?? null,
-      minimumNoticeMinutes: data.minimumNoticeMinutes,
-      bufferBeforeMinutes: data.bufferBeforeMinutes,
-      bufferAfterMinutes: data.bufferAfterMinutes,
-      cancellationWindowHours: data.cancellationWindowHours ?? null,
-      rescheduleWindowHours: data.rescheduleWindowHours ?? null,
-      requiresApproval: data.requiresApproval,
-      worldwideMode: data.worldwideMode,
-    })
+    const api = await getAuthedApiClient()
+    const result = await api.experts.eventTypes.create(payload)
 
     revalidateExpertWorkspace(session, "event-types")
-    return { ok: true, id: row.id }
+    return { ok: true, id: result.id }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "create-failed"
-    if (msg.includes("event_types_expert_slug_idx")) {
-      return { ok: false, error: "slug-taken" }
+    console.error("[createEventTypeAction]", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "create-failed", {
+        conflict: "slug-taken",
+      }),
     }
-    return { ok: false, error: "create-failed" }
   }
 }
 
@@ -89,10 +93,8 @@ export async function updateEventTypeAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
+    const updates: UpdateEventTypeRequest = {}
 
-    const updates: Record<string, unknown> = {}
     if (data.slug !== undefined) {
       const slug = normalizeSlug(data.slug)
       if (slug.length < 3) return { ok: false, error: "slug-too-short" }
@@ -100,44 +102,51 @@ export async function updateEventTypeAction(
     }
     if (data.title !== undefined) updates.title = data.title
     if (data.description !== undefined) updates.description = data.description
-    if (data.durationMinutes !== undefined)
+    if (data.durationMinutes !== undefined) {
       updates.durationMinutes = data.durationMinutes
+    }
     if (data.priceAmount !== undefined) updates.priceAmount = data.priceAmount
     if (data.currency !== undefined) updates.currency = data.currency
     if (data.languages !== undefined) updates.languages = data.languages
     if (data.sessionMode !== undefined) updates.sessionMode = data.sessionMode
-    if (data.bookingWindowDays !== undefined)
+    if (data.bookingWindowDays !== undefined) {
       updates.bookingWindowDays = data.bookingWindowDays
-    if (data.minimumNoticeMinutes !== undefined)
+    }
+    if (data.minimumNoticeMinutes !== undefined) {
       updates.minimumNoticeMinutes = data.minimumNoticeMinutes
-    if (data.bufferBeforeMinutes !== undefined)
+    }
+    if (data.bufferBeforeMinutes !== undefined) {
       updates.bufferBeforeMinutes = data.bufferBeforeMinutes
-    if (data.bufferAfterMinutes !== undefined)
+    }
+    if (data.bufferAfterMinutes !== undefined) {
       updates.bufferAfterMinutes = data.bufferAfterMinutes
-    if (data.cancellationWindowHours !== undefined)
+    }
+    if (data.cancellationWindowHours !== undefined) {
       updates.cancellationWindowHours = data.cancellationWindowHours
-    if (data.rescheduleWindowHours !== undefined)
+    }
+    if (data.rescheduleWindowHours !== undefined) {
       updates.rescheduleWindowHours = data.rescheduleWindowHours
-    if (data.requiresApproval !== undefined)
+    }
+    if (data.requiresApproval !== undefined) {
       updates.requiresApproval = data.requiresApproval
-    if (data.worldwideMode !== undefined)
+    }
+    if (data.worldwideMode !== undefined) {
       updates.worldwideMode = data.worldwideMode
+    }
 
-    await updateEventType(
-      profile.orgId,
-      eventTypeId,
-      updates as Parameters<typeof updateEventType>[2],
-      profile.id
-    )
+    const api = await getAuthedApiClient()
+    await api.experts.eventTypes.update(eventTypeId, updates)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "update-failed"
-    if (msg.includes("event_types_expert_slug_idx")) {
-      return { ok: false, error: "slug-taken" }
+    console.error("[updateEventTypeAction]", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "update-failed", {
+        conflict: "slug-taken",
+      }),
     }
-    return { ok: false, error: "update-failed" }
   }
 }
 
@@ -147,14 +156,14 @@ export async function togglePublishAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
+    const api = await getAuthedApiClient()
+    await api.experts.eventTypes.publish(eventTypeId, { published })
 
-    await updateEventType(profile.orgId, eventTypeId, { published }, profile.id)
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
-  } catch {
-    return { ok: false, error: "toggle-failed" }
+  } catch (err) {
+    console.error("[togglePublishAction]", err)
+    return { ok: false, error: mapExpertApiError(err, "toggle-failed") }
   }
 }
 
@@ -163,13 +172,13 @@ export async function deleteEventTypeAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
+    const api = await getAuthedApiClient()
+    await api.experts.eventTypes.remove(eventTypeId)
 
-    await deleteEventType(profile.orgId, eventTypeId, profile.id)
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
-  } catch {
-    return { ok: false, error: "delete-failed" }
+  } catch (err) {
+    console.error("[deleteEventTypeAction]", err)
+    return { ok: false, error: mapExpertApiError(err, "delete-failed") }
   }
 }

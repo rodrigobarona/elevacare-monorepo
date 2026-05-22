@@ -1,23 +1,14 @@
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { UnauthorizedError } from "@eleva/auth"
+import { ExpertOnboardingStepSchema } from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
+import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const VALID_STEPS = [
-  "profile",
-  "schedule",
-  "event-types",
-  "calendars",
-  "invoicing",
-  "review",
-]
 
 export async function POST(
   request: Request,
@@ -27,11 +18,10 @@ export async function POST(
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireApiCapability(request, "expert:onboard")
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const authFailure = apiAuthFailure(err, headers)
+    if (authFailure) return authFailure
     throw err
   }
 
@@ -46,10 +36,11 @@ export async function POST(
   )
   if (rateLimited) return rateLimited
 
-  const { step } = await params
-  if (!VALID_STEPS.includes(step)) {
+  const { step: stepParam } = await params
+  const parsedStep = ExpertOnboardingStepSchema.safeParse(stepParam)
+  if (!parsedStep.success) {
     return secureJson(
-      { error: "validation", message: `invalid step: ${step}` },
+      { error: "validation", message: `invalid step: ${stepParam}` },
       { status: 422, headers }
     )
   }
@@ -62,6 +53,7 @@ export async function POST(
     )
   }
 
+  const step = parsedStep.data
   const completedSteps = (profile.metadata as Record<string, unknown>)
     ?.completedSteps
   const steps = Array.isArray(completedSteps) ? [...completedSteps] : []

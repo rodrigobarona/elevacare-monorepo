@@ -2,8 +2,8 @@
 
 import { z } from "zod"
 import { requireSession } from "@eleva/auth/server"
-import { getExpertProfileForOrg } from "@eleva/db"
 import { getAuthedApiClient } from "@/lib/server-api"
+import { mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult = { ok: true } | { ok: false; error: string }
@@ -28,7 +28,7 @@ export async function initializeScheduleAction(
     return { ok: true }
   } catch (err) {
     console.error("[initializeScheduleAction]", err)
-    return { ok: false, error: "init-failed" }
+    return { ok: false, error: mapExpertApiError(err, "init-failed") }
   }
 }
 
@@ -93,9 +93,6 @@ export async function saveScheduleAction(params: {
     if (!parsed.success) return { ok: false, error: "validation" }
 
     const session = await requireSession("schedule:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
     const api = await getAuthedApiClient()
     await api.experts.schedule.save(parsed.data)
 
@@ -103,7 +100,7 @@ export async function saveScheduleAction(params: {
     return { ok: true }
   } catch (err) {
     console.error("[saveScheduleAction]", err)
-    return { ok: false, error: "save-failed" }
+    return { ok: false, error: mapExpertApiError(err, "save-failed") }
   }
 }
 
@@ -115,9 +112,6 @@ export async function addDateOverrideAction(
     if (!parsed.success) return { ok: false, error: "validation" }
 
     const session = await requireSession("schedule:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
     const api = await getAuthedApiClient()
     await api.experts.schedule.addOverride({
       overrideDate: parsed.data.overrideDate,
@@ -135,7 +129,7 @@ export async function addDateOverrideAction(
     return { ok: true }
   } catch (err) {
     console.error("[addDateOverrideAction]", err)
-    return { ok: false, error: "save-failed" }
+    return { ok: false, error: mapExpertApiError(err, "save-failed") }
   }
 }
 
@@ -147,9 +141,6 @@ export async function removeDateOverrideAction(
 
   try {
     const session = await requireSession("schedule:manage")
-    const profile = await getExpertProfileForOrg(session.user.id, session.orgId)
-    if (!profile) return { ok: false, error: "no-profile" }
-
     const api = await getAuthedApiClient()
     await api.experts.schedule.removeOverride(parsed.data)
 
@@ -157,6 +148,6 @@ export async function removeDateOverrideAction(
     return { ok: true }
   } catch (err) {
     console.error("[removeDateOverrideAction]", err)
-    return { ok: false, error: "delete-failed" }
+    return { ok: false, error: mapExpertApiError(err, "delete-failed") }
   }
 }

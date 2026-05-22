@@ -1,4 +1,5 @@
 import { getSession, type ElevaSession, UnauthorizedError } from "@eleva/auth"
+import { secureJson } from "@/lib/security-headers"
 
 export type ApiAuthResult =
   | { type: "session"; session: ElevaSession }
@@ -72,6 +73,21 @@ export async function requireApiCapability(
     throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
   }
   return session
+}
+
+/** Map UnauthorizedError to 401/403 JSON for route handlers. */
+export function apiAuthFailure(
+  err: unknown,
+  headers: Record<string, string>
+): Response | null {
+  if (err instanceof UnauthorizedError) {
+    const forbidden = err.code === "missing-capability"
+    return secureJson(
+      { error: forbidden ? "forbidden" : "unauthorized", code: err.code },
+      { status: forbidden ? 403 : 401, headers }
+    )
+  }
+  return null
 }
 
 function sessionFromBearerHeaders(request: Request): ElevaSession | null {

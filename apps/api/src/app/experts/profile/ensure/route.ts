@@ -1,10 +1,9 @@
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { UnauthorizedError } from "@eleva/auth"
 import { withAudit } from "@eleva/audit"
 import { ensureExpertProfileForOrgDetailed } from "@eleva/db"
 
@@ -23,9 +22,8 @@ export async function POST(request: Request) {
   try {
     session = await requireApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const authFailure = apiAuthFailure(err, headers)
+    if (authFailure) return authFailure
     throw err
   }
 

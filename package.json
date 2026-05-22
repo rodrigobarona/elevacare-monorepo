@@ -11,6 +11,7 @@
     "lint": "turbo lint",
     "format": "turbo format",
     "typecheck": "turbo typecheck",
+    "check:api-first-actions": "node scripts/check-api-first-actions.mjs",
     "test": "turbo test",
     "test:watch": "vitest",
     "commitlint": "commitlint --edit",
