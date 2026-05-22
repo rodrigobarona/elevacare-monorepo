@@ -580,6 +580,9 @@ importers:
 
   apps/docs:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:^
+        version: link:../../packages/config
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -897,6 +900,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(msw@2.13.4(@types/node@25.8.0)(typescript@6.0.3))(vite@8.0.9(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.0)(yaml@2.9.0))
 
   infra/qstash:
     dependencies:

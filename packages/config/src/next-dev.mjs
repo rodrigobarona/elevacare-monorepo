@@ -5,6 +5,7 @@ const LOCAL_ZONE_ASSET_PREFIXES = {
   expert: "/_expert",
   team: "/_team",
   academy: "/_academy",
+  docs: "/_docs",
 }
 
 function addUrlHosts(target, value) {
@@ -63,6 +64,10 @@ export function resolveGatewayStaticAssetRewrites(env = process.env) {
     {
       source: `${LOCAL_ZONE_ASSET_PREFIXES.academy}/:path*`,
       destination: `${env.ACADEMY_ASSET_PREFIX || "http://localhost:3005"}${LOCAL_ZONE_ASSET_PREFIXES.academy}/:path*`,
+    },
+    {
+      source: `${LOCAL_ZONE_ASSET_PREFIXES.docs}/:path*`,
+      destination: `${env.DOCS_ASSET_PREFIX || "http://localhost:3008"}${LOCAL_ZONE_ASSET_PREFIXES.docs}/:path*`,
     },
   ]
 }

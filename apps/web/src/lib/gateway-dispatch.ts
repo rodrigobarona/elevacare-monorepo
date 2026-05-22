@@ -22,7 +22,16 @@ export function resolveOriginsFromEnv(): GatewayOrigins {
     team: process.env.TEAM_ASSET_PREFIX || "http://localhost:3004",
     academy: process.env.ACADEMY_ASSET_PREFIX || "http://localhost:3005",
     account: process.env.ACCOUNT_ASSET_PREFIX || "http://localhost:3006",
+    docs: process.env.DOCS_ASSET_PREFIX || "http://localhost:3008",
   }
+}
+
+export function resolveAdminOrigin(): string {
+  return (
+    process.env.ADMIN_URL ||
+    process.env.NEXT_PUBLIC_ADMIN_URL ||
+    "http://localhost:3007"
+  )
 }
 
 export function buildRewriteUrl(req: NextRequest, origin: string): URL {
@@ -81,4 +90,20 @@ export function buildRootRedirect(req: NextRequest): NextResponse {
     url.pathname = "/dashboard"
   }
   return NextResponse.redirect(url)
+}
+
+/**
+ * Platform admin lives on admin.eleva.care (apps/admin). Root-domain
+ * /admin/* requests redirect to the admin origin with the /admin prefix
+ * stripped — admin app routes are root-relative on the subdomain.
+ */
+export function buildAdminRedirect(req: NextRequest): NextResponse {
+  const origin = resolveAdminOrigin()
+  const pathname = req.nextUrl.pathname
+  const adminPath =
+    pathname === "/admin"
+      ? "/"
+      : pathname.replace(/^\/admin(?=\/|$)/, "") || "/"
+  const destination = new URL(adminPath + req.nextUrl.search, origin)
+  return NextResponse.redirect(destination)
 }

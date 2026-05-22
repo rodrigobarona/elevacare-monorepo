@@ -24,8 +24,8 @@ export const ACCOUNT_REWRITE_PATHS = [
   ...ACCOUNT_STANDALONE_PATHS,
 ] as const
 
-/** First-level segments owned by the member app. */
-export const APP_FIXED_SEGMENTS = ["admin"] as const
+/** First-level segments owned by the member app (org-slug routes use /[orgSlug]/*). */
+export const APP_FIXED_SEGMENTS = [] as const
 
 /** Auth-related standalone paths (no session needed). */
 export const APP_STANDALONE_PATHS = [] as const
@@ -75,6 +75,9 @@ export const RESERVED_SLUGS: ReadonlySet<string> = new Set([
   ...APP_FIXED_SEGMENTS,
   ...WEB_MARKETING_PATHS,
   ...ORG_SCOPED_SEGMENTS,
+  // Gateway-fixed segments (not org slugs)
+  "admin",
+  "docs",
   // Next.js metadata file convention routes
   "icon",
   "apple-icon",
