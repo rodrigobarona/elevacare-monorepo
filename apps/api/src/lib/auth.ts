@@ -82,6 +82,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
   const orgId = headers.get("x-eleva-org-id")
   const workosOrgId = headers.get("x-eleva-workos-org-id")
   const productLabel = headers.get("x-eleva-product-label")
+  const orgType = headers.get("x-eleva-org-type")
   const workosRole = headers.get("x-eleva-workos-role")
 
   if (
@@ -91,6 +92,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
     !orgId ||
     !workosOrgId ||
     !isProductLabel(productLabel) ||
+    !isOrgType(orgType) ||
     !isWorkosRole(workosRole)
   ) {
     return null
@@ -108,6 +110,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
     workosOrgId,
     orgSlug: headers.get("x-eleva-org-slug"),
     productLabel,
+    orgType,
     workosRole,
     capabilities: splitHeader(headers.get("x-eleva-capabilities")),
     entitlements: splitHeader(headers.get("x-eleva-entitlements")),
@@ -139,4 +142,14 @@ function isWorkosRole(
   value: string | null
 ): value is ElevaSession["workosRole"] {
   return value === "admin" || value === "member"
+}
+
+function isOrgType(value: string | null): value is ElevaSession["orgType"] {
+  return (
+    value === "personal" ||
+    value === "expert" ||
+    value === "team" ||
+    value === "academy" ||
+    value === "staff"
+  )
 }
