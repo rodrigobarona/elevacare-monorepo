@@ -16,7 +16,6 @@ const BANNED = [
   "disconnectIntegration",
   "replaceBusySources",
   "replaceDestinationCalendar",
-  "ensureExpertProfileForOrgDetailed",
 ]
 
 const IMPORT_RE = new RegExp(

@@ -22,7 +22,6 @@ export const apiFirstActionsConfig = [
                 "disconnectIntegration",
                 "replaceBusySources",
                 "replaceDestinationCalendar",
-                "ensureExpertProfileForOrgDetailed",
               ],
               message:
                 "Server Actions must not write via @eleva/db. Call apps/api through @eleva/api-client instead.",

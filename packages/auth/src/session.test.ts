@@ -7,6 +7,7 @@ const mockSession: ElevaSession = {
   orgId: "org-1",
   workosOrgId: "workos-org-1",
   orgSlug: "test-org",
+  orgType: "expert",
   productLabel: "expert",
   workosRole: "admin",
   capabilities: ["events:manage", "bookings:manage_own"],

@@ -34,10 +34,8 @@ export { pingMainDb, pingAuditDb } from "./ping"
 export {
   getExpertProfileByUserId,
   getExpertProfileForOrg,
-  ensureExpertProfileForOrgDetailed,
   updateExpertProfile,
   getOrganizationBySlug,
-  type EnsureExpertProfileResult,
 } from "./queries/admin"
 export {
   listExpertEventTypes,

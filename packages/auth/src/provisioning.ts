@@ -1,7 +1,13 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { db, main, findExistingOrgSlugs } from "@eleva/db"
+import {
+  _ensureExpertProfileForOrgDetailed,
+  type EnsureExpertProfileResult,
+} from "@eleva/db/queries/admin"
 import { withAudit } from "@eleva/audit"
 import { generateUniqueOrgSlug } from "@eleva/config/slug"
+
+export type { EnsureExpertProfileResult } from "@eleva/db/queries/admin"
 
 /**
  * Provisioning functions for users, organizations, and memberships.
@@ -323,6 +329,17 @@ export async function provisionOrganizationWithAdminMembership(
           resolvedSlug = slug
         }
 
+        const [existingMembership] = await tx
+          .select({ id: main.memberships.id })
+          .from(main.memberships)
+          .where(
+            and(
+              eq(main.memberships.userId, input.userId),
+              eq(main.memberships.orgId, existing.id)
+            )
+          )
+          .limit(1)
+
         const [membershipRow] = await tx
           .insert(main.memberships)
           .values({
@@ -343,7 +360,7 @@ export async function provisionOrganizationWithAdminMembership(
 
         await ctx.emit({
           entity: "membership",
-          action: "updated",
+          action: existingMembership ? "updated" : "created",
           entityId: membershipRow!.id,
           payload: {
             userId: input.userId,
@@ -440,6 +457,30 @@ export async function provisionMembership(
         entityId: row!.id,
         payload: { userId: input.userId, orgId: input.orgId, role: input.role },
       })
+    }
+  )
+}
+
+export async function ensureExpertProfileForOrg(input: {
+  userId: string
+  orgId: string
+  orgSlug: string
+  displayName: string
+  actorUserId: string
+}): Promise<EnsureExpertProfileResult> {
+  return withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      const result = await _ensureExpertProfileForOrgDetailed(input, tx)
+      await ctx.emit({
+        entity: "expert_profile",
+        action: result.created ? "created" : "updated",
+        entityId: result.profile.id,
+        payload: result.created
+          ? { userId: input.userId, orgSlug: input.orgSlug }
+          : { ensured: true },
+      })
+      return result
     }
   )
 }

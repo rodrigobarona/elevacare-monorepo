@@ -4,8 +4,7 @@ import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { withAudit } from "@eleva/audit"
-import { ensureExpertProfileForOrgDetailed } from "@eleva/db"
+import { ensureExpertProfileForOrg } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -49,31 +48,13 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { profile } = await withAudit(
-      { orgId: session.orgId, actorUserId: session.user.id },
-      async (tx, ctx) => {
-        const result = await ensureExpertProfileForOrgDetailed(
-          {
-            userId: session.user.id,
-            orgId: session.orgId,
-            orgSlug: body.data.orgSlug,
-            displayName: body.data.displayName,
-          },
-          tx
-        )
-
-        await ctx.emit({
-          entity: "expert_profile",
-          action: result.created ? "created" : "updated",
-          entityId: result.profile.id,
-          payload: result.created
-            ? { userId: session.user.id, orgSlug: body.data.orgSlug }
-            : { ensured: true },
-        })
-
-        return result
-      }
-    )
+    const { profile } = await ensureExpertProfileForOrg({
+      userId: session.user.id,
+      orgId: session.orgId,
+      orgSlug: body.data.orgSlug,
+      displayName: body.data.displayName,
+      actorUserId: session.user.id,
+    })
 
     return secureJson(
       {

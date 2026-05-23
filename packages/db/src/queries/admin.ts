@@ -108,9 +108,9 @@ export interface EnsureExpertProfileResult {
 
 /**
  * Bootstrap a draft profile when an expert org has none yet (self-serve create).
- * Must run inside an audited transaction (e.g. `withAudit` from `@eleva/audit`).
+ * Internal — call only from audited domain code (e.g. `@eleva/auth`).
  */
-export async function ensureExpertProfileForOrgDetailed(
+export async function _ensureExpertProfileForOrgDetailed(
   input: {
     userId: string
     orgId: string
