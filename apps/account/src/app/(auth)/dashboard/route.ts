@@ -43,14 +43,13 @@ export async function GET(request: NextRequest) {
     return response
   }
 
+  const gateway = resolveGatewayUrl(
+    request.headers.get("x-forwarded-host") ?? request.headers.get("host")
+  )
+
   const destination = returnTo
-    ? new URL(returnTo, request.url)
-    : new URL(
-        `/${slug}`,
-        resolveGatewayUrl(
-          request.headers.get("x-forwarded-host") ?? request.headers.get("host")
-        )
-      )
+    ? new URL(returnTo, gateway)
+    : new URL(`/${slug}`, gateway)
 
   const response = NextResponse.redirect(destination)
   if (lastSlug !== slug) {

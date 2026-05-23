@@ -2,7 +2,60 @@ import { and, eq, isNull } from "drizzle-orm"
 import { db, withOrgContext } from "@eleva/db"
 import { main } from "@eleva/db"
 import { capabilitiesFor, deriveProductLabel } from "./capabilities"
-import { UnauthorizedError, type ElevaSession } from "./types"
+import {
+  UnauthorizedError,
+  type ElevaSession,
+  type ProductLabel,
+} from "./types"
+
+/**
+ * Capabilities that must be present when trusting JWT permissions over the
+ * derived product bundle (guards against stale partial JWTs after org switch).
+ */
+const JWT_REQUIRED_CAPABILITIES: Partial<
+  Record<ProductLabel, readonly string[]>
+> = {
+  member: ["appointments:view_own"],
+  expert: ["events:manage"],
+  team_admin: ["events:manage"],
+  lecturer: ["courses:manage"],
+}
+
+/**
+ * Resolve session capabilities from JWT permissions or the derived bundle.
+ * Exported for unit tests.
+ */
+export function resolveSessionCapabilities(
+  productLabel: ProductLabel,
+  derivedCapabilities: readonly string[],
+  opts: {
+    jwtMatchesPicked: boolean
+    jwtPermissions?: string[]
+  }
+): readonly string[] {
+  const { jwtMatchesPicked, jwtPermissions } = opts
+
+  const jwtCapabilities =
+    jwtMatchesPicked && jwtPermissions && jwtPermissions.length > 0
+      ? jwtPermissions.filter((capability) =>
+          derivedCapabilities.includes(capability)
+        )
+      : []
+
+  if (jwtCapabilities.length === 0) {
+    return derivedCapabilities
+  }
+
+  const required = JWT_REQUIRED_CAPABILITIES[productLabel]
+  if (
+    required &&
+    !required.every((capability) => jwtCapabilities.includes(capability))
+  ) {
+    return derivedCapabilities
+  }
+
+  return jwtCapabilities
+}
 
 /**
  * PII provided by the AuthKit session token. Passed in by the caller
@@ -85,14 +138,14 @@ export async function resolveSessionFromWorkosUser(
   const jwtMatchesPicked =
     !opts.jwtOrgId || opts.jwtOrgId === picked.workosOrgId
 
-  const jwtCapabilities =
-    jwtMatchesPicked && opts.jwtPermissions && opts.jwtPermissions.length > 0
-      ? opts.jwtPermissions.filter((capability) =>
-          derivedCapabilities.includes(capability)
-        )
-      : []
-  const capabilities =
-    jwtCapabilities.length > 0 ? jwtCapabilities : derivedCapabilities
+  const capabilities = resolveSessionCapabilities(
+    productLabel,
+    derivedCapabilities,
+    {
+      jwtMatchesPicked,
+      jwtPermissions: opts.jwtPermissions,
+    }
+  )
 
   const entitlements =
     jwtMatchesPicked && opts.jwtEntitlements && opts.jwtEntitlements.length > 0

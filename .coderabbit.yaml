@@ -36,6 +36,8 @@ reviews:
     - "!.cursor/hooks/state/**"
     - "!.vercel/README.txt"
     - "!_context/**"
+    - "!_context/PoCs/**"
+    - "!apps/poc/**"
     - "!**/generated/**"
   path_instructions:
     - path: apps/**/src/proxy.ts

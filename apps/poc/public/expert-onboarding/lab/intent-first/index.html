@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intent First · Eleva Design Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .modal-enter { animation: scaleIn 0.35s ease; }
+    @keyframes scaleIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+  </style>
+</head>
+<body class="min-h-screen bg-[#1a1512] text-stone-100">
+  <nav class="flex items-center justify-between px-6 py-5">
+    <span class="text-lg font-semibold tracking-tight">eleva</span>
+    <a href="/expert-onboarding" class="text-sm text-stone-400 hover:text-white">Design Lab</a>
+  </nav>
+
+  <section id="landing" class="mx-auto max-w-4xl px-6 pb-24 pt-8 text-center">
+    <p class="text-sm font-medium uppercase tracking-[0.2em] text-amber-400/90">Expert onboarding</p>
+    <h1 class="mt-6 text-4xl font-semibold leading-tight sm:text-5xl">What will you help members with?</h1>
+    <p class="mx-auto mt-4 max-w-md text-stone-400">Choose your focus — we'll tailor your Expert Space setup.</p>
+    <div class="mt-12 grid gap-4 sm:grid-cols-3">
+      <button type="button" data-cat="Mind & mood" class="cat-card group rounded-3xl border border-stone-700/80 bg-stone-900/50 p-8 text-left transition hover:border-amber-500/50 hover:bg-stone-900">
+        <span class="text-3xl">🧠</span>
+        <h2 class="mt-4 text-xl font-semibold group-hover:text-amber-300">Mind & mood</h2>
+        <p class="mt-2 text-sm text-stone-500">Therapy, coaching, stress</p>
+      </button>
+      <button type="button" data-cat="Body & nutrition" class="cat-card group rounded-3xl border border-stone-700/80 bg-stone-900/50 p-8 text-left transition hover:border-amber-500/50 hover:bg-stone-900">
+        <span class="text-3xl">🥗</span>
+        <h2 class="mt-4 text-xl font-semibold group-hover:text-amber-300">Body & nutrition</h2>
+        <p class="mt-2 text-sm text-stone-500">Diet, fitness, metabolic health</p>
+      </button>
+      <button type="button" data-cat="Recovery & sleep" class="cat-card group rounded-3xl border border-stone-700/80 bg-stone-900/50 p-8 text-left transition hover:border-amber-500/50 hover:bg-stone-900">
+        <span class="text-3xl">🌙</span>
+        <h2 class="mt-4 text-xl font-semibold group-hover:text-amber-300">Recovery & sleep</h2>
+        <p class="mt-2 text-sm text-stone-500">Rehab, rest, chronic care</p>
+      </button>
+    </div>
+  </section>
+
+  <div id="modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+    <div class="modal-enter w-full max-w-md rounded-3xl bg-white p-8 text-stone-900 shadow-2xl">
+      <h2 class="text-2xl font-semibold">Create your Expert Space</h2>
+      <p id="modalCat" class="mt-1 text-sm text-stone-500"></p>
+      <form id="signupForm" class="mt-6 space-y-4">
+        <div>
+          <label class="text-xs font-medium uppercase text-stone-400">Your name</label>
+          <input name="name" required class="mt-1 w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-500" placeholder="Dr. Ana Silva" />
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase text-stone-400">Email</label>
+          <input name="email" type="email" required class="mt-1 w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-500" placeholder="ana@example.com" />
+        </div>
+        <div>
+          <label class="text-xs font-medium uppercase text-stone-400">Country</label>
+          <select name="country" class="mt-1 w-full rounded-xl border border-stone-200 px-4 py-3 outline-none focus:border-amber-500">
+            <option value="PT">Portugal</option>
+            <option value="ES">Spain</option>
+            <option value="BR">Brazil</option>
+          </select>
+        </div>
+        <label class="flex items-start gap-3 text-sm text-stone-600">
+          <input name="consent" type="checkbox" required class="mt-1 rounded border-stone-300" />
+          <span>I understand telehealth sessions require member consent and I will follow Eleva community guidelines.</span>
+        </label>
+        <button type="submit" class="w-full rounded-full bg-stone-900 py-3.5 font-medium text-white hover:bg-stone-800">Continue</button>
+      </form>
+      <button type="button" id="closeModal" class="mt-4 w-full text-sm text-stone-400 hover:text-stone-600">Cancel</button>
+    </div>
+  </div>
+
+  <section id="success" class="hidden mx-auto max-w-lg px-6 py-24 text-center">
+    <div class="rounded-3xl border border-stone-700 bg-stone-900/80 p-10">
+      <p class="text-amber-400">Expert Space created</p>
+      <h2 id="successTitle" class="mt-4 text-2xl font-semibold"></h2>
+      <p class="mt-4 text-stone-400">Community Expert tier · compliance deferred until publish</p>
+      <ul class="mt-8 space-y-2 text-left text-sm text-stone-500">
+        <li>○ Add your first bookable session</li>
+        <li>○ Upload profile photos</li>
+        <li>○ Connect payouts</li>
+      </ul>
+      <a href="/expert-onboarding" class="mt-8 inline-block text-sm text-amber-400 hover:underline">← Back to Design Lab</a>
+    </div>
+  </section>
+
+  <script>
+    const SLUG = 'intent-first';
+    let category = '';
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+
+    document.querySelectorAll('.cat-card').forEach(btn => {
+      btn.addEventListener('click', () => {
+        category = btn.dataset.cat;
+        document.getElementById('modalCat').textContent = category;
+        document.getElementById('modal').classList.remove('hidden');
+        document.getElementById('modal').classList.add('flex');
+      });
+    });
+
+    document.getElementById('closeModal').onclick = () => {
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('modal').classList.remove('flex');
+    };
+
+    document.getElementById('signupForm').onsubmit = e => {
+      e.preventDefault();
+      const fd = new FormData(e.target);
+      const draft = {
+        specialty: category,
+        name: fd.get('name'),
+        practiceCountry: fd.get('country'),
+        telehealthAck: fd.get('consent') === 'on',
+      };
+      labSave(draft);
+      document.getElementById('modal').classList.add('hidden');
+      document.getElementById('landing').classList.add('hidden');
+      document.getElementById('success').classList.remove('hidden');
+      document.getElementById('successTitle').textContent = `${draft.name}'s Space · ${category}`;
+    };
+  </script>
+</body>
+</html>

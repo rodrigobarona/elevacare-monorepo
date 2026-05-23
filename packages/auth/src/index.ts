@@ -79,5 +79,11 @@ export {
   type CreateOrganizationResult,
 } from "./organizations"
 export { getWorkOS } from "./workos-client"
-export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
+export {
+  LOGIN_PATH,
+  buildGatewayLoginUrl,
+  guardSession,
+  guardSessionForOrg,
+  redirectToGatewayLogin,
+} from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"
