@@ -44,3 +44,15 @@ Alternate basemap: `CARTO_VOYAGER` in `map-basemaps.ts`.
 4. Document under `_context/PoCs/<slug>/`
 
 Spec docs: `_context/PoCs/readme.md`
+
+## CI / quality gates
+
+`apps/poc` is an **internal playground** — it is excluded from repo-wide lint,
+typecheck, build, pre-commit hooks, API-first action checks, and CodeRabbit
+(see `.lintstagedrc.mjs`, root `package.json` turbo filters, and
+`.coderabbit.yaml`). Run locally only:
+
+```bash
+pnpm --filter @eleva/poc dev
+pnpm --filter @eleva/poc build   # optional local smoke build
+```

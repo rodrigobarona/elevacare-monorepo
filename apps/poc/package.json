@@ -6,9 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack --port 3099",
     "build": "next build",
-    "start": "next start --port 3099",
-    "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "start": "next start --port 3099"
   },
   "dependencies": {
     "@eleva/config": "workspace:^",
@@ -24,14 +22,12 @@
     "react-leaflet": "catalog:"
   },
   "devDependencies": {
-    "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "@tailwindcss/postcss": "catalog:",
     "@types/leaflet": "catalog:",
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "eslint": "catalog:",
     "typescript": "catalog:"
   }
 }
