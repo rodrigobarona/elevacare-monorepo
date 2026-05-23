@@ -34,7 +34,6 @@ export { pingMainDb, pingAuditDb } from "./ping"
 export {
   getExpertProfileByUserId,
   getExpertProfileForOrg,
-  ensureExpertProfileForOrg,
   ensureExpertProfileForOrgDetailed,
   updateExpertProfile,
   getOrganizationBySlug,

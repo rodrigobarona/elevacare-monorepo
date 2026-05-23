@@ -8,7 +8,7 @@
 
 ---
 
-### Step 5 — Passo 1 interstitial
+## Step 5 — Passo 1 interstitial
 
 | Field | Value |
 |-------|-------|
@@ -185,6 +185,7 @@
 - Title: **Partilhe algumas informações sobre o seu espaço** *(Share some information about your space)*
 - Subtitle: **Adicionará mais detalhes mais tarde, como tipos de cama.** *(You'll add more details later, such as bed types.)*
 - Four rows with − / value / + controls:
+
   | Label | Value in capture |
   |-------|------------------|
   | Hóspedes (Guests) | 8 |

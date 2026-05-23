@@ -6,7 +6,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 44 — Maximum group size
+## Step 44 — Maximum group size
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 45 — Maximum group size adjusted
+## Step 45 — Maximum group size adjusted
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 46 — Price per person empty
+## Step 46 — Price per person empty
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 47 — Pricing tips modal
+## Step 47 — Pricing tips modal
 
 | Field | Value |
 |-------|-------|
@@ -114,7 +114,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 48 — Price per person entered
+## Step 48 — Price per person entered
 
 | Field | Value |
 |-------|-------|
@@ -141,7 +141,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 49 — Price breakdown expanded
+## Step 49 — Price breakdown expanded
 
 | Field | Value |
 |-------|-------|
@@ -168,7 +168,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 50 — More pricing info modal
+## Step 50 — More pricing info modal
 
 | Field | Value |
 |-------|-------|
@@ -195,7 +195,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 51 — Minimum private group price empty
+## Step 51 — Minimum private group price empty
 
 | Field | Value |
 |-------|-------|
@@ -222,7 +222,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 52 — Minimum private group price entered
+## Step 52 — Minimum private group price entered
 
 | Field | Value |
 |-------|-------|
@@ -249,7 +249,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 53 — Minimum private group breakdown
+## Step 53 — Minimum private group breakdown
 
 | Field | Value |
 |-------|-------|
@@ -276,7 +276,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 54 — Review prices summary
+## Step 54 — Review prices summary
 
 | Field | Value |
 |-------|-------|
@@ -303,7 +303,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 55 — Add discounts
+## Step 55 — Add discounts
 
 | Field | Value |
 |-------|-------|
@@ -330,7 +330,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 56 — Limited time discount modal
+## Step 56 — Limited time discount modal
 
 | Field | Value |
 |-------|-------|
@@ -357,7 +357,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 57 — Early bird discount modal
+## Step 57 — Early bird discount modal
 
 | Field | Value |
 |-------|-------|
@@ -384,7 +384,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 58 — Large group discount modal empty
+## Step 58 — Large group discount modal empty
 
 | Field | Value |
 |-------|-------|
@@ -411,7 +411,7 @@ Preços: per-person, private minimum, discounts.
 
 ---
 
-### Step 59 — Large group discount filled
+## Step 59 — Large group discount filled
 
 | Field | Value |
 |-------|-------|

@@ -6,7 +6,7 @@ Local: meeting point and map pin.
 
 ---
 
-### Step 20 — Meeting location search
+## Step 20 — Meeting location search
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Local: meeting point and map pin.
 
 ---
 
-### Step 21 — Confirm location address
+## Step 21 — Confirm location address
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Local: meeting point and map pin.
 
 ---
 
-### Step 22 — Address autocomplete suggestions
+## Step 22 — Address autocomplete suggestions
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Local: meeting point and map pin.
 
 ---
 
-### Step 23 — Confirm map marker
+## Step 23 — Confirm map marker
 
 | Field | Value |
 |-------|-------|

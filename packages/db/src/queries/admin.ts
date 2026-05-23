@@ -106,18 +106,10 @@ export interface EnsureExpertProfileResult {
   created: boolean
 }
 
-/** Bootstrap a draft profile when an expert org has none yet (self-serve create). */
-export async function ensureExpertProfileForOrg(input: {
-  userId: string
-  orgId: string
-  orgSlug: string
-  displayName: string
-}): Promise<main.ExpertProfile> {
-  const result = await ensureExpertProfileForOrgDetailed(input)
-  return result.profile
-}
-
-/** Like {@link ensureExpertProfileForOrg} but reports whether a row was inserted. */
+/**
+ * Bootstrap a draft profile when an expert org has none yet (self-serve create).
+ * Must run inside an audited transaction (e.g. `withAudit` from `@eleva/audit`).
+ */
 export async function ensureExpertProfileForOrgDetailed(
   input: {
     userId: string
@@ -125,40 +117,36 @@ export async function ensureExpertProfileForOrgDetailed(
     orgSlug: string
     displayName: string
   },
-  txOpt?: Tx
+  tx: Tx
 ): Promise<EnsureExpertProfileResult> {
-  const run = async (tx: Tx) => {
-    const [inserted] = await tx
-      .insert(main.expertProfiles)
-      .values({
-        orgId: input.orgId,
-        userId: input.userId,
-        username: input.orgSlug,
-        displayName: input.displayName,
-        status: "approved",
-      })
-      .onConflictDoNothing({
-        target: [main.expertProfiles.userId, main.expertProfiles.orgId],
-      })
-      .returning()
+  const [inserted] = await tx
+    .insert(main.expertProfiles)
+    .values({
+      orgId: input.orgId,
+      userId: input.userId,
+      username: input.orgSlug,
+      displayName: input.displayName,
+      status: "approved",
+    })
+    .onConflictDoNothing({
+      target: [main.expertProfiles.userId, main.expertProfiles.orgId],
+    })
+    .returning()
 
-    if (inserted) {
-      return { profile: inserted, created: true }
-    }
-
-    const existing = await selectExpertProfileForOrg(
-      tx,
-      input.userId,
-      input.orgId
-    )
-    if (!existing) {
-      throw new Error("Failed to create expert profile")
-    }
-
-    return { profile: existing, created: false }
+  if (inserted) {
+    return { profile: inserted, created: true }
   }
 
-  return txOpt ? run(txOpt) : withOrgContext(input.orgId, run)
+  const existing = await selectExpertProfileForOrg(
+    tx,
+    input.userId,
+    input.orgId
+  )
+  if (!existing) {
+    throw new Error("Failed to create expert profile")
+  }
+
+  return { profile: existing, created: false }
 }
 
 /**

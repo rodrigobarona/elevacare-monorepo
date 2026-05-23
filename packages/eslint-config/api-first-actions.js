@@ -22,7 +22,6 @@ export const apiFirstActionsConfig = [
                 "disconnectIntegration",
                 "replaceBusySources",
                 "replaceDestinationCalendar",
-                "ensureExpertProfileForOrg",
                 "ensureExpertProfileForOrgDetailed",
               ],
               message:

@@ -6,7 +6,7 @@ Pre-wizard: category drill-down, city, intro.
 
 ---
 
-### Step 1 — Select experience category
+## Step 1 — Select experience category
 
 | Field | Value |
 |-------|-------|
@@ -32,7 +32,7 @@ Pre-wizard: category drill-down, city, intro.
 
 ---
 
-### Step 2 — Select experience subtype
+## Step 2 — Select experience subtype
 
 | Field | Value |
 |-------|-------|
@@ -58,7 +58,7 @@ Pre-wizard: category drill-down, city, intro.
 
 ---
 
-### Step 3 — Enter experience city
+## Step 3 — Enter experience city
 
 | Field | Value |
 |-------|-------|
@@ -84,7 +84,7 @@ Pre-wizard: category drill-down, city, intro.
 
 ---
 
-### Step 4 — City search suggestions
+## Step 4 — City search suggestions
 
 | Field | Value |
 |-------|-------|
@@ -110,7 +110,7 @@ Pre-wizard: category drill-down, city, intro.
 
 ---
 
-### Step 5 — Create listing intro
+## Step 5 — Create listing intro
 
 | Field | Value |
 |-------|-------|

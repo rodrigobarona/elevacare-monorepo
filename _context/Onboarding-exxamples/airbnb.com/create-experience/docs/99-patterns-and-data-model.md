@@ -48,7 +48,7 @@ Cross-cutting UX patterns and implied data fields from the Airbnb **Experiência
 | `experience_category` | enum | Step 1 | art, food, sport, history, nature |
 | `experience_subcategory` | enum | Step 2 | e.g. gastronomic_tasting |
 | `city` | string | Steps 3–4 | Public city label |
-| `status` | enum | Post | draft \| submitted \| under_review \| published |
+| `status` | enum | Post | draft · submitted · under_review · published |
 | `title` | string(50) | Step 30 | Public headline |
 | `description` | string(200) | Step 32 | Participant-facing summary |
 

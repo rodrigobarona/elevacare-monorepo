@@ -17,11 +17,14 @@ export async function resolveOrCreateExpertProfileForSession(
   const existing = await getExpertProfileForOrg(session.user.id, session.orgId)
   if (existing) return existing
 
+  const trimmedDisplayName = session.user.displayName?.trim()
+  const displayName =
+    trimmedDisplayName || session.user.email.split("@")[0]?.trim() || orgSlug
+
   const api = await getAuthedApiClient()
   const result = await api.experts.profile.ensure({
     orgSlug,
-    displayName:
-      session.user.displayName ?? session.user.email.split("@")[0] ?? orgSlug,
+    displayName,
   })
 
   const ensured = await getExpertProfileForOrg(session.user.id, session.orgId)
@@ -34,5 +37,5 @@ export async function resolveOrCreateExpertProfileForSession(
     throw new Error("Expert profile ensure returned an invalid profile shape")
   }
 
-  return parsed.data as ExpertProfile
+  throw new Error("Expert profile ensured but could not be loaded from DB")
 }

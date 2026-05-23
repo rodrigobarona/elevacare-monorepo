@@ -8,7 +8,7 @@
 
 ---
 
-### Step 22 — Passo 3 interstitial
+## Step 22 — Passo 3 interstitial
 
 | Field | Value |
 |-------|-------|
@@ -126,12 +126,14 @@
 - Title: **Adicionar descontos** *(Add discounts)*
 - Subtitle: stand out, book faster, get first reviews
 - Four cards (checkbox right, all checked):
+
   | % | Name | Rule |
   |---|------|------|
   | 20% | Promoção para novos anúncios | First 3 bookings |
   | 10% | Desconto para reservas de última hora | Booked ≤14 days before |
   | 10% | Desconto semanal | 7+ nights |
   | 20% | Desconto mensal | 28+ nights |
+
 - Footnote: **Só se aplica um desconto por estadia.** Saiba mais
 
 **UX notes:** Pre-checked = opt-out model to accelerate early bookings.

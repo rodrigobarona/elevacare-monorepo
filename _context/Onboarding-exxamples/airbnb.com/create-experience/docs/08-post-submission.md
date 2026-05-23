@@ -6,7 +6,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 64 — Submission confirmation
+## Step 64 — Submission confirmation
 
 | Field | Value |
 |-------|-------|
@@ -32,7 +32,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 65 — Listings dashboard
+## Step 65 — Listings dashboard
 
 | Field | Value |
 |-------|-------|
@@ -58,7 +58,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 66 — Listing editor photos
+## Step 66 — Listing editor photos
 
 | Field | Value |
 |-------|-------|
@@ -84,7 +84,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 67 — Edit preferences documents
+## Step 67 — Edit preferences documents
 
 | Field | Value |
 |-------|-------|
@@ -110,7 +110,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 68 — Edit preferences taxes
+## Step 68 — Edit preferences taxes
 
 | Field | Value |
 |-------|-------|
@@ -136,7 +136,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 69 — Publish steps sidebar
+## Step 69 — Publish steps sidebar
 
 | Field | Value |
 |-------|-------|
@@ -162,7 +162,7 @@ Dashboard, review status, preferences.
 
 ---
 
-### Step 70 — Listings table view
+## Step 70 — Listings table view
 
 | Field | Value |
 |-------|-------|

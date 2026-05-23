@@ -6,7 +6,7 @@ Pre-wizard steps before the 3-phase listing wizard. Host chooses **what** to lis
 
 ---
 
-### Step 1 — Listing type modal
+## Step 1 — Listing type modal
 
 | Field | Value |
 |-------|-------|

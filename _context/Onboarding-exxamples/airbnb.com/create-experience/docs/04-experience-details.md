@@ -6,7 +6,7 @@ Experiência: title and description.
 
 ---
 
-### Step 29 — Experience title empty
+## Step 29 — Experience title empty
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Experiência: title and description.
 
 ---
 
-### Step 30 — Experience title filled
+## Step 30 — Experience title filled
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Experiência: title and description.
 
 ---
 
-### Step 31 — Experience description empty
+## Step 31 — Experience description empty
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Experiência: title and description.
 
 ---
 
-### Step 32 — Experience description filled
+## Step 32 — Experience description filled
 
 | Field | Value |
 |-------|-------|

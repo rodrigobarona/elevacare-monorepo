@@ -6,7 +6,7 @@ After **Criar anúncio**, the listing exists but may not be fully **publishable*
 
 ---
 
-### Step 31 — Listings dashboard + confirm modal
+## Step 31 — Listings dashboard + confirm modal
 
 | Field | Value |
 |-------|-------|
@@ -124,8 +124,8 @@ After **Criar anúncio**, the listing exists but may not be fully **publishable*
   - **Número de registo** (text)
   - Role radio: **Pessoa que registou este anúncio** | **Gestor da propriedade**
   - **Número de identificação fiscal** (tax ID)
-  - **O seu nome** — prefilled: Rodrigo Barona
-  - **O seu e-mail** — prefilled: buziosetartarugas@gmail.com
+  - **O seu nome** — prefilled: Nome Exemplo
+  - **O seu e-mail** — prefilled: email@example.com
 - Read-only blocks:
   - **Endereço do espaço:** Largo Prof. José Bernardo Cotrim 35, Nossa Senhora do Pranto, Santarém 2240, PT
   - **Anúncio:** room URL

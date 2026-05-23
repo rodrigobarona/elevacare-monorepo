@@ -52,6 +52,7 @@ export const OrgSwitcherTrigger = React.forwardRef<
       <button
         ref={ref}
         type="button"
+        aria-label="Open organization menu"
         className="flex shrink-0 cursor-pointer items-center rounded-sm p-1 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
         {...props}
       >

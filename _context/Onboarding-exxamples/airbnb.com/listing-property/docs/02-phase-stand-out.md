@@ -8,7 +8,7 @@
 
 ---
 
-### Step 11 — Passo 2 interstitial
+## Step 11 — Passo 2 interstitial
 
 | Field | Value |
 |-------|-------|

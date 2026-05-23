@@ -119,7 +119,8 @@ def img_path(ts: str) -> str:
 
 def render_step(step: tuple) -> str:
     ch, file, n, ts, section, sec_step, stype, cta, gate, title, pt, goal = step
-    anchor = slug(title)
+    step_heading = f"Step {n} — {title}"
+    anchor = slug(step_heading)
     meta_rows = [
         f"| Screenshot | `Screenshot 2026-05-22 at {ts}.png` |",
         f"| Timestamp | {ts.replace('.', ':')} |",
@@ -133,7 +134,7 @@ def render_step(step: tuple) -> str:
         f"| Next enabled when | {gate} |",
     ])
     lines = [
-        f"### Step {n} — {title}",
+        f"## {step_heading}",
         "",
         "| Field | Value |",
         "|-------|-------|",
@@ -183,6 +184,16 @@ def write_chapters():
         (DOCS / f"{fname}.md").write_text(content, encoding="utf-8")
 
 
+def convert_md_links(text: str) -> str:
+    def repl(m: re.Match[str]) -> str:
+        return (
+            f'<a href="{html.escape(m.group(2))}">'
+            f"{html.escape(m.group(1))}</a>"
+        )
+
+    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", repl, text)
+
+
 def md_to_html_fragment(md: str) -> str:
     """Minimal MD to HTML for generated chapters."""
     out: list[str] = []
@@ -217,7 +228,12 @@ def md_to_html_fragment(md: str) -> str:
         elif line.startswith("## "):
             close_table()
             close_list()
-            out.append(f"<h2>{html.escape(line[3:])}</h2>")
+            heading = line[3:]
+            if heading.startswith("Step "):
+                anchor = slug(heading)
+                out.append(f'<h2 id="{anchor}">{html.escape(heading)}</h2>')
+            else:
+                out.append(f"<h2>{html.escape(heading)}</h2>")
         elif line.startswith("!["):
             m = re.match(r"!\[([^\]]*)\]\(([^)]+)\)", line)
             if m:
@@ -247,11 +263,18 @@ def md_to_html_fragment(md: str) -> str:
                 out.append("<ul>")
                 in_list = True
             out.append(f"<li>{html.escape(line[2:])}</li>")
-        elif line.startswith("**") and line.endswith("**"):
+        elif line.startswith("**") and ":**" in line:
             close_table()
             close_list()
             key, _, rest = line.partition(":**")
-            out.append(f"<p><strong>{html.escape(key[2:])}</strong>{html.escape(rest)}</p>")
+            out.append(
+                f"<p><strong>{html.escape(key[2:])}:</strong>"
+                f"{html.escape(rest)}</p>"
+            )
+        elif line.startswith("**") and line.endswith("**"):
+            close_table()
+            close_list()
+            out.append(f"<p><strong>{html.escape(line[2:-2])}</strong></p>")
         elif line.strip() == "---":
             close_table()
             close_list()
@@ -261,7 +284,7 @@ def md_to_html_fragment(md: str) -> str:
         elif line.startswith("[") and "](" in line:
             close_table()
             close_list()
-            out.append(f"<p>{line}</p>")
+            out.append(f"<p>{convert_md_links(line)}</p>")
         else:
             close_table()
             close_list()
@@ -302,8 +325,8 @@ def write_index_html():
     }
     for fname, sec_id in ids.items():
         md = (DOCS / f"{fname}.md").read_text(encoding="utf-8")
-        # strip nav links at top
-        md_body = md.split("---\n", 2)[-1] if md.count("---") >= 2 else md
+        # Strip chapter header nav only (first ---); keep step --- separators.
+        md_body = md.split("---\n", 1)[1].lstrip("\n") if "---\n" in md else md
         frag = md_to_html_fragment(md_body)
         sections.append(f'<section id="{sec_id}" class="chapter">\n{frag}\n</section>')
 
@@ -408,7 +431,7 @@ def write_readme():
     }
     for _, file, n, ts, _, _, _, _, _, title, _, _ in STEPS:
         ch = ch_links[file]
-        anchor = slug(title)
+        anchor = slug(f"Step {n} — {title}")
         rows.append(
             f"| {n} | {ts.replace('.', ':')} | `Screenshot 2026-05-22 at {ts}.png` | "
             f"[{ch}](docs/{file}.md#{anchor}) | {title} |"

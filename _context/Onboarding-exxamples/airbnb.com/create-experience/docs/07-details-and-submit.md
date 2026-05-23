@@ -6,7 +6,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 
 ---
 
-### Step 60 — Offer details questionnaire
+## Step 60 — Offer details questionnaire
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 
 ---
 
-### Step 61 — Offer details answered
+## Step 61 — Offer details answered
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 
 ---
 
-### Step 62 — Requirements and terms
+## Step 62 — Requirements and terms
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Detalhes: compliance Q&A and Pedir para publicar.
 
 ---
 
-### Step 63 — Publish listing review
+## Step 63 — Publish listing review
 
 | Field | Value |
 |-------|-------|

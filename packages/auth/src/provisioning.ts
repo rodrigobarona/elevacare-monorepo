@@ -311,10 +311,18 @@ export async function provisionOrganizationWithAdminMembership(
     .limit(1)
 
   if (existing) {
-    const existingSlug = existing.slug ?? slug
+    let resolvedSlug = existing.slug ?? slug
     await withAudit(
       { orgId: existing.id, actorUserId: input.actorUserId },
       async (tx, ctx) => {
+        if (existing.slug === null) {
+          await tx
+            .update(main.organizations)
+            .set({ slug, updatedAt: new Date() })
+            .where(eq(main.organizations.id, existing.id))
+          resolvedSlug = slug
+        }
+
         const [membershipRow] = await tx
           .insert(main.memberships)
           .values({
@@ -334,20 +342,18 @@ export async function provisionOrganizationWithAdminMembership(
           .returning({ id: main.memberships.id })
 
         await ctx.emit({
-          entity: "organization",
+          entity: "membership",
           action: "updated",
-          entityId: existing.id,
+          entityId: membershipRow!.id,
           payload: {
-            workosOrgId: input.workosOrgId,
-            slug: existingSlug,
-            membershipId: membershipRow!.id,
             userId: input.userId,
+            orgId: existing.id,
             role: "admin",
           },
         })
       }
     )
-    return { orgId: existing.id, slug: existingSlug, created: false }
+    return { orgId: existing.id, slug: resolvedSlug, created: false }
   }
 
   const orgId = crypto.randomUUID()

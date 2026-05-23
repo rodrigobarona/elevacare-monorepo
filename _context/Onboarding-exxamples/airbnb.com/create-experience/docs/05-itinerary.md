@@ -6,7 +6,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 33 — Itinerary intro
+## Step 33 — Itinerary intro
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 34 — Create itinerary empty
+## Step 34 — Create itinerary empty
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 35 — First activity title modal
+## Step 35 — First activity title modal
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 36 — Activity description modal
+## Step 36 — Activity description modal
 
 | Field | Value |
 |-------|-------|
@@ -114,7 +114,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 37 — Activity description filled
+## Step 37 — Activity description filled
 
 | Field | Value |
 |-------|-------|
@@ -141,7 +141,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 38 — Set activity duration
+## Step 38 — Set activity duration
 
 | Field | Value |
 |-------|-------|
@@ -168,7 +168,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 39 — Choose activity photo
+## Step 39 — Choose activity photo
 
 | Field | Value |
 |-------|-------|
@@ -195,7 +195,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 40 — Activity photo selected
+## Step 40 — Activity photo selected
 
 | Field | Value |
 |-------|-------|
@@ -222,7 +222,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 41 — Itinerary list incomplete
+## Step 41 — Itinerary list incomplete
 
 | Field | Value |
 |-------|-------|
@@ -249,7 +249,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 42 — Edit activity modal
+## Step 42 — Edit activity modal
 
 | Field | Value |
 |-------|-------|
@@ -276,7 +276,7 @@ Itinerário: up to 10 activities with nested modals.
 
 ---
 
-### Step 43 — Second activity title modal
+## Step 43 — Second activity title modal
 
 | Field | Value |
 |-------|-------|

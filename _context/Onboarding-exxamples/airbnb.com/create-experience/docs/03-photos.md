@@ -6,7 +6,7 @@ Fotografias: minimum 5 experience photos.
 
 ---
 
-### Step 24 — Add photos empty state
+## Step 24 — Add photos empty state
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Fotografias: minimum 5 experience photos.
 
 ---
 
-### Step 25 — Photo tips modal
+## Step 25 — Photo tips modal
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Fotografias: minimum 5 experience photos.
 
 ---
 
-### Step 26 — Upload photos modal
+## Step 26 — Upload photos modal
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Fotografias: minimum 5 experience photos.
 
 ---
 
-### Step 27 — Photos grid partial (3)
+## Step 27 — Photos grid partial (3)
 
 | Field | Value |
 |-------|-------|
@@ -114,7 +114,7 @@ Fotografias: minimum 5 experience photos.
 
 ---
 
-### Step 28 — Photos grid with 5+
+## Step 28 — Photos grid with 5+
 
 | Field | Value |
 |-------|-------|

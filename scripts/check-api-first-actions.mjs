@@ -16,7 +16,6 @@ const BANNED = [
   "disconnectIntegration",
   "replaceBusySources",
   "replaceDestinationCalendar",
-  "ensureExpertProfileForOrg",
   "ensureExpertProfileForOrgDetailed",
 ]
 

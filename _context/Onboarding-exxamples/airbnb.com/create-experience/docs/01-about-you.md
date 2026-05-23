@@ -6,7 +6,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 6 — Gastronomy experience years
+## Step 6 — Gastronomy experience years
 
 | Field | Value |
 |-------|-------|
@@ -33,7 +33,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 7 — Expertise overview
+## Step 7 — Expertise overview
 
 | Field | Value |
 |-------|-------|
@@ -60,7 +60,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 8 — Add professional title modal
+## Step 8 — Add professional title modal
 
 | Field | Value |
 |-------|-------|
@@ -87,7 +87,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 9 — Professional title filled
+## Step 9 — Professional title filled
 
 | Field | Value |
 |-------|-------|
@@ -114,7 +114,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 10 — Title tips modal
+## Step 10 — Title tips modal
 
 | Field | Value |
 |-------|-------|
@@ -141,7 +141,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 11 — Expertise with title saved
+## Step 11 — Expertise with title saved
 
 | Field | Value |
 |-------|-------|
@@ -168,7 +168,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 12 — Add credentials modal
+## Step 12 — Add credentials modal
 
 | Field | Value |
 |-------|-------|
@@ -195,7 +195,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 13 — Add professional milestone modal
+## Step 13 — Add professional milestone modal
 
 | Field | Value |
 |-------|-------|
@@ -222,7 +222,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 14 — Add online profiles
+## Step 14 — Add online profiles
 
 | Field | Value |
 |-------|-------|
@@ -249,7 +249,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 15 — Add link modal empty
+## Step 15 — Add link modal empty
 
 | Field | Value |
 |-------|-------|
@@ -276,7 +276,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 16 — Add LinkedIn link
+## Step 16 — Add LinkedIn link
 
 | Field | Value |
 |-------|-------|
@@ -303,7 +303,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 17 — Online profiles saved
+## Step 17 — Online profiles saved
 
 | Field | Value |
 |-------|-------|
@@ -330,7 +330,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 18 — Personal address form
+## Step 18 — Personal address form
 
 | Field | Value |
 |-------|-------|
@@ -357,7 +357,7 @@ Sobre si: credentials, profiles, residential address.
 
 ---
 
-### Step 19 — Personal address confirmed
+## Step 19 — Personal address confirmed
 
 | Field | Value |
 |-------|-------|
