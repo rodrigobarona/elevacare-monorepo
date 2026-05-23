@@ -114,6 +114,7 @@ export async function resolveSessionFromWorkosUser(
     orgId: picked.orgId,
     workosOrgId: picked.workosOrgId,
     orgSlug: picked.orgSlug,
+    orgType: picked.orgType,
     productLabel,
     workosRole: picked.workosRole,
     capabilities,

@@ -11,6 +11,11 @@ import {
   CreateAccountSessionResponseSchema,
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
+  CreateOrganizationRequestSchema,
+  CreateOrganizationResponseSchema,
+  CreateWorkspaceRequestSchema,
+  ExpertOnboardingStepSchema,
+  ListOrganizationsMineResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -174,12 +179,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  name: z.string().min(2).max(100),
-                  type: z
-                    .enum(["personal", "expert", "team", "staff"])
-                    .default("personal"),
-                }),
+                schema: CreateOrganizationRequestSchema,
               },
             },
           },
@@ -188,12 +188,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Organization created",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    orgId: z.string().uuid(),
-                    slug: z.string(),
-                    workosOrgId: z.string(),
-                    created: z.boolean(),
-                  }),
+                  schema: CreateOrganizationResponseSchema,
                 },
               },
             },
@@ -255,6 +250,26 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/organizations/mine": {
+        get: {
+          operationId: "listMyOrganizations",
+          summary: "List current user's workspaces",
+          description:
+            "Returns all organizations the authenticated user belongs to, enriched for the workspace switcher UI and agent clients.",
+          tags: ["Organizations"],
+          responses: {
+            "200": {
+              description: "Workspace list",
+              content: {
+                "application/json": {
+                  schema: ListOrganizationsMineResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
           },
         },
       },
@@ -383,6 +398,49 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/experts/profile/ensure": {
+        post: {
+          operationId: "ensureExpertProfile",
+          summary: "Create expert profile if missing for the active org",
+          tags: ["Expert Profile"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  orgSlug: z.string().min(1).max(30),
+                  displayName: z.string().min(1).max(200),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Profile ensured",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    profile: z.object({
+                      id: z.string().uuid(),
+                      orgId: z.string().uuid(),
+                      userId: z.string().uuid(),
+                      username: z.string(),
+                      displayName: z.string(),
+                      status: z.string(),
+                      metadata: z
+                        .record(z.string(), z.unknown())
+                        .nullable()
+                        .optional(),
+                    }),
+                  }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/experts/profile/steps/{step}/complete": {
         post: {
           operationId: "completeOnboardingStep",
@@ -395,14 +453,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               required: true,
               schema: {
                 type: "string",
-                enum: [
-                  "profile",
-                  "schedule",
-                  "event-types",
-                  "calendars",
-                  "invoicing",
-                  "review",
-                ],
+                enum: [...ExpertOnboardingStepSchema.options],
               },
             },
           ],

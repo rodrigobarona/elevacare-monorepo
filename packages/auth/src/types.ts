@@ -1,5 +1,9 @@
+import type { OrgType } from "@eleva/db/schema"
+
+export type { OrgType }
+
 /**
- * Eleva product labels \u2014 derived from (org.type, membership.workos_role)
+ * Eleva product labels — derived from (org.type, membership.workos_role)
  * per identity-rbac-spec.md. NOT stored; computed at session-read time.
  */
 export type ProductLabel =
@@ -24,6 +28,8 @@ export interface ElevaSession {
   orgSlug: string | null
   /** Derived product label for this org context. */
   productLabel: ProductLabel
+  /** Eleva org type for the active organization. */
+  orgType: OrgType
   /** WorkOS seniority role inside the current org. */
   workosRole: "admin" | "member"
   /** Union of capability slugs granted by this membership's role bundle. */

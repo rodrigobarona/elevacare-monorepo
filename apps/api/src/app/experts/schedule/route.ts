@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
-import { UnauthorizedError } from "@eleva/auth"
 import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
@@ -42,11 +41,10 @@ export async function GET(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireApiCapability(request, "schedule:manage")
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const authFailure = apiAuthFailure(err, headers)
+    if (authFailure) return authFailure
     throw err
   }
 
@@ -88,11 +86,10 @@ export async function PUT(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireApiCapability(request, "schedule:manage")
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const authFailure = apiAuthFailure(err, headers)
+    if (authFailure) return authFailure
     throw err
   }
 

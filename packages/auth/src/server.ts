@@ -1,7 +1,6 @@
 import { cache } from "react"
 import { cookies, headers } from "next/headers"
-import { eq, isNull } from "drizzle-orm"
-import { WorkOS } from "@workos-inc/node"
+import { eq } from "drizzle-orm"
 import { normalizeWorkOSLocale, type Locale } from "@eleva/config/i18n"
 import {
   refreshSession as authkitRefreshSession,
@@ -11,6 +10,13 @@ import { unsealData } from "iron-session"
 import { db, main } from "@eleva/db"
 import { resolveSessionFromWorkosUser } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
+import {
+  listUserOrganizations,
+  type UserOrganizationItem,
+} from "./organizations"
+import { getWorkOS } from "./workos-client"
+
+export { getWorkOS } from "./workos-client"
 
 export interface AuthUser {
   id: string
@@ -372,27 +378,6 @@ export async function requireSession(
   return session
 }
 
-let _workos: WorkOS | null = null
-
-/**
- * Singleton WorkOS SDK client. Reads WORKOS_API_KEY and WORKOS_CLIENT_ID
- * from the environment. The clientId is required so that widget tokens are
- * bound to the correct application (and its allowed-origins CORS list).
- *
- * Exported so that other packages (e.g. the QStash sync route) can reuse
- * the same instance without duplicating env-var handling.
- */
-export function getWorkOS(): WorkOS {
-  if (!_workos) {
-    const key = process.env.WORKOS_API_KEY
-    if (!key) throw new Error("WORKOS_API_KEY is required")
-    const clientId = process.env.WORKOS_CLIENT_ID
-    if (!clientId) throw new Error("WORKOS_CLIENT_ID is required")
-    _workos = new WorkOS(key, { clientId })
-  }
-  return _workos
-}
-
 /**
  * Generate a WorkOS widget token for the given user + organization.
  * Used by the Pipes connection widget on the integrations/calendars pages.
@@ -429,74 +414,16 @@ export async function getWidgetTokenFromSession(
   return getWidgetToken(session.user.workosUserId, session.workosOrgId, scopes)
 }
 
-export interface UserOrganization {
-  workosOrgId: string
-  orgId: string
-  orgSlug: string | null
-  orgType: string
-  name: string
-  isCurrent: boolean
-}
+export interface UserOrganization extends UserOrganizationItem {}
 
 /**
  * Fetch all organizations the current user belongs to, enriched with
  * display names from WorkOS. Runs server-side only (no CORS issues).
- *
- * Falls back to a formatted slug when the WorkOS API call fails.
  */
 export async function getUserOrganizations(): Promise<UserOrganization[]> {
   const session = await requireSession()
-  const workos = getWorkOS()
-
-  const memberships = await workos.userManagement.listOrganizationMemberships({
-    userId: session.user.workosUserId,
-    statuses: ["active"],
+  return listUserOrganizations({
+    workosUserId: session.user.workosUserId,
+    currentWorkosOrgId: session.workosOrgId,
   })
-
-  const orgs = await Promise.all(
-    memberships.data.map(async (m) => {
-      let name: string
-      try {
-        const org = await workos.organizations.getOrganization(m.organizationId)
-        name = org.name
-      } catch {
-        name = formatSlugAsName(m.organizationId)
-      }
-
-      return {
-        workosOrgId: m.organizationId,
-        orgId: "",
-        orgSlug: null as string | null,
-        orgType: "",
-        name,
-        isCurrent: m.organizationId === session.workosOrgId,
-      }
-    })
-  )
-
-  const orgIdRows = await db()
-    .select({
-      id: main.organizations.id,
-      workosOrgId: main.organizations.workosOrgId,
-      slug: main.organizations.slug,
-      type: main.organizations.type,
-    })
-    .from(main.organizations)
-    .where(isNull(main.organizations.deletedAt))
-
-  const byWorkosId = new Map(orgIdRows.map((r) => [r.workosOrgId, r]))
-  for (const org of orgs) {
-    const row = byWorkosId.get(org.workosOrgId)
-    if (row) {
-      org.orgId = row.id
-      org.orgSlug = row.slug
-      org.orgType = row.type
-    }
-  }
-
-  return orgs.filter((o) => o.orgId && o.orgSlug)
-}
-
-function formatSlugAsName(slug: string): string {
-  return slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
 }

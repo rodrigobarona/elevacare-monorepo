@@ -16,8 +16,10 @@ export const metadata = {
 
 export default async function RootLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode
+  modal: React.ReactNode
 }) {
   const [locale, messages, appearance, initialTheme] = await Promise.all([
     getLocale(),
@@ -36,6 +38,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <DashboardProviders initialTheme={initialTheme}>
             {children}
+            {modal}
           </DashboardProviders>
         </NextIntlClientProvider>
       </body>

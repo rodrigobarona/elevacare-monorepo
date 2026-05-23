@@ -14,6 +14,7 @@ peerDependencyRules:
 
 patchedDependencies:
   "@workos-inc/widgets-i18n": "patches/@workos-inc__widgets-i18n.patch"
+  next-themes@0.4.6: patches/next-themes@0.4.6.patch
 
 allowBuilds:
   "@parcel/watcher": true

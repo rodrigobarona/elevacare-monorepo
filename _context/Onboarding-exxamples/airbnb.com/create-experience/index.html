@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Airbnb — Create experience onboarding</title>
+  <style>
+    :root {
+      --bg: #fff; --fg: #222; --muted: #717171; --border: #ebebeb;
+      --accent: #ff385c; --sidebar-w: 280px;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--fg); background: var(--bg); }
+    .layout { display: flex; min-height: 100vh; }
+    nav.sidebar {
+      width: var(--sidebar-w); flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+      overflow-y: auto; border-right: 1px solid var(--border); padding: 1.25rem 1rem;
+      background: #fafafa;
+    }
+    nav.sidebar h1 { font-size: 0.95rem; margin: 0 0 1rem; line-height: 1.35; }
+    nav.sidebar ul { list-style: none; padding: 0; margin: 0; }
+    nav.sidebar li { margin: 0.35rem 0; }
+    nav.sidebar a { color: var(--fg); text-decoration: none; font-size: 0.875rem; }
+    nav.sidebar a:hover { color: var(--accent); }
+    main { flex: 1; max-width: 920px; padding: 2rem 2.5rem 4rem; }
+    .chapter { margin-bottom: 3rem; }
+    h2 { font-size: 1.5rem; margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem; }
+    h3 { font-size: 1.15rem; margin-top: 2rem; scroll-margin-top: 1rem; }
+    p, li { line-height: 1.6; }
+    table.meta, table.index { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+    table th, table td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; }
+    table th { background: #f7f7f7; }
+    figure.screenshot { margin: 1.25rem 0; }
+    figure.screenshot img { max-width: 100%; height: auto; border: 1px solid var(--border); border-radius: 8px; }
+    figcaption { font-size: 0.8rem; color: var(--muted); margin-top: 0.35rem; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+    a { color: #008489; }
+    @media (max-width: 768px) {
+      .layout { flex-direction: column; }
+      nav.sidebar { position: relative; width: 100%; height: auto; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <nav class="sidebar" aria-label="Chapters">
+      <h1>Airbnb experience onboarding</h1>
+      <ul><li><a href="#overview">Overview</a></li>
+<li><a href="#entry">00 — Entry</a></li>
+<li><a href="#about">01 — About you</a></li>
+<li><a href="#location">02 — Location</a></li>
+<li><a href="#photos">03 — Photos</a></li>
+<li><a href="#experience">04 — Experience</a></li>
+<li><a href="#itinerary">05 — Itinerary</a></li>
+<li><a href="#pricing">06 — Pricing</a></li>
+<li><a href="#details">07 — Details</a></li>
+<li><a href="#post">08 — Post-submission</a></li>
+<li><a href="#patterns">99 — Patterns</a></li></ul>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:1.5rem">Markdown SSOT: <a href="readme.md">readme.md</a></p>
+    </nav>
+    <main>
+      <section id="overview" class="chapter">
+<h2>Overview</h2>
+<p>Reference documentation for the <strong>host flow to create a new Experiência (experience) listing</strong> on Airbnb (2026-05-22, Portuguese UI).</p>
+<p><strong>Example experience:</strong> Experimente a Paella Valenciana — Prova gastronómica · Comida e bebida · Parede, Portugal · €16/person.</p>
+<h3>How to read</h3>
+<ul>
+<li><strong>Markdown (SSOT):</strong> <a href="readme.md">readme.md</a> and <a href="docs/">docs/</a> chapters</li>
+<li><strong>This HTML:</strong> visual walkthrough with inline screenshots</li>
+</ul>
+<h3>Screenshot index (70 steps)</h3>
+<table class="index"><thead><tr><th>#</th><th>Time</th><th>Step</th><th>Jump</th></tr></thead><tbody>
+<tr><td>1</td><td>09:52:08</td><td>Select experience category</td><td><a href="#entry">→</a></td></tr>
+<tr><td>2</td><td>09:52:15</td><td>Select experience subtype</td><td><a href="#entry">→</a></td></tr>
+<tr><td>3</td><td>09:52:32</td><td>Enter experience city</td><td><a href="#entry">→</a></td></tr>
+<tr><td>4</td><td>09:52:44</td><td>City search suggestions</td><td><a href="#entry">→</a></td></tr>
+<tr><td>5</td><td>09:52:55</td><td>Create listing intro</td><td><a href="#entry">→</a></td></tr>
+<tr><td>6</td><td>09:53:06</td><td>Gastronomy experience years</td><td><a href="#about">→</a></td></tr>
+<tr><td>7</td><td>09:53:17</td><td>Expertise overview</td><td><a href="#about">→</a></td></tr>
+<tr><td>8</td><td>09:53:28</td><td>Add professional title modal</td><td><a href="#about">→</a></td></tr>
+<tr><td>9</td><td>09:54:22</td><td>Professional title filled</td><td><a href="#about">→</a></td></tr>
+<tr><td>10</td><td>09:54:29</td><td>Title tips modal</td><td><a href="#about">→</a></td></tr>
+<tr><td>11</td><td>09:54:40</td><td>Expertise with title saved</td><td><a href="#about">→</a></td></tr>
+<tr><td>12</td><td>09:55:11</td><td>Add credentials modal</td><td><a href="#about">→</a></td></tr>
+<tr><td>13</td><td>09:56:14</td><td>Add professional milestone modal</td><td><a href="#about">→</a></td></tr>
+<tr><td>14</td><td>09:56:32</td><td>Add online profiles</td><td><a href="#about">→</a></td></tr>
+<tr><td>15</td><td>09:56:47</td><td>Add link modal empty</td><td><a href="#about">→</a></td></tr>
+<tr><td>16</td><td>09:57:00</td><td>Add LinkedIn link</td><td><a href="#about">→</a></td></tr>
+<tr><td>17</td><td>09:57:09</td><td>Online profiles saved</td><td><a href="#about">→</a></td></tr>
+<tr><td>18</td><td>09:57:19</td><td>Personal address form</td><td><a href="#about">→</a></td></tr>
+<tr><td>19</td><td>09:57:48</td><td>Personal address confirmed</td><td><a href="#about">→</a></td></tr>
+<tr><td>20</td><td>09:58:00</td><td>Meeting location search</td><td><a href="#location">→</a></td></tr>
+<tr><td>21</td><td>09:58:13</td><td>Confirm location address</td><td><a href="#location">→</a></td></tr>
+<tr><td>22</td><td>09:58:22</td><td>Address autocomplete suggestions</td><td><a href="#location">→</a></td></tr>
+<tr><td>23</td><td>09:58:37</td><td>Confirm map marker</td><td><a href="#location">→</a></td></tr>
+<tr><td>24</td><td>09:58:50</td><td>Add photos empty state</td><td><a href="#photos">→</a></td></tr>
+<tr><td>25</td><td>09:58:58</td><td>Photo tips modal</td><td><a href="#photos">→</a></td></tr>
+<tr><td>26</td><td>09:59:19</td><td>Upload photos modal</td><td><a href="#photos">→</a></td></tr>
+<tr><td>27</td><td>09:59:31</td><td>Photos grid partial (3)</td><td><a href="#photos">→</a></td></tr>
+<tr><td>28</td><td>09:59:48</td><td>Photos grid with 5+</td><td><a href="#photos">→</a></td></tr>
+<tr><td>29</td><td>09:59:59</td><td>Experience title empty</td><td><a href="#experience">→</a></td></tr>
+<tr><td>30</td><td>10:00:12</td><td>Experience title filled</td><td><a href="#experience">→</a></td></tr>
+<tr><td>31</td><td>10:00:19</td><td>Experience description empty</td><td><a href="#experience">→</a></td></tr>
+<tr><td>32</td><td>10:00:40</td><td>Experience description filled</td><td><a href="#experience">→</a></td></tr>
+<tr><td>33</td><td>10:00:51</td><td>Itinerary intro</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>34</td><td>10:01:01</td><td>Create itinerary empty</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>35</td><td>10:01:09</td><td>First activity title modal</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>36</td><td>10:01:26</td><td>Activity description modal</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>37</td><td>10:01:53</td><td>Activity description filled</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>38</td><td>10:02:00</td><td>Set activity duration</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>39</td><td>10:02:07</td><td>Choose activity photo</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>40</td><td>10:02:14</td><td>Activity photo selected</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>41</td><td>10:02:26</td><td>Itinerary list incomplete</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>42</td><td>10:02:37</td><td>Edit activity modal</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>43</td><td>10:02:52</td><td>Second activity title modal</td><td><a href="#itinerary">→</a></td></tr>
+<tr><td>44</td><td>10:03:07</td><td>Maximum group size</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>45</td><td>10:03:16</td><td>Maximum group size adjusted</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>46</td><td>10:03:28</td><td>Price per person empty</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>47</td><td>10:03:34</td><td>Pricing tips modal</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>48</td><td>10:03:53</td><td>Price per person entered</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>49</td><td>10:04:01</td><td>Price breakdown expanded</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>50</td><td>10:04:13</td><td>More pricing info modal</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>51</td><td>10:04:27</td><td>Minimum private group price empty</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>52</td><td>10:04:36</td><td>Minimum private group price entered</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>53</td><td>10:04:43</td><td>Minimum private group breakdown</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>54</td><td>10:04:52</td><td>Review prices summary</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>55</td><td>10:05:00</td><td>Add discounts</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>56</td><td>10:05:09</td><td>Limited time discount modal</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>57</td><td>10:05:22</td><td>Early bird discount modal</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>58</td><td>10:05:39</td><td>Large group discount modal empty</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>59</td><td>10:05:48</td><td>Large group discount filled</td><td><a href="#pricing">→</a></td></tr>
+<tr><td>60</td><td>10:05:59</td><td>Offer details questionnaire</td><td><a href="#details">→</a></td></tr>
+<tr><td>61</td><td>10:06:23</td><td>Offer details answered</td><td><a href="#details">→</a></td></tr>
+<tr><td>62</td><td>10:06:30</td><td>Requirements and terms</td><td><a href="#details">→</a></td></tr>
+<tr><td>63</td><td>10:06:39</td><td>Publish listing review</td><td><a href="#details">→</a></td></tr>
+<tr><td>64</td><td>10:06:55</td><td>Submission confirmation</td><td><a href="#post">→</a></td></tr>
+<tr><td>65</td><td>10:07:11</td><td>Listings dashboard</td><td><a href="#post">→</a></td></tr>
+<tr><td>66</td><td>10:07:39</td><td>Listing editor photos</td><td><a href="#post">→</a></td></tr>
+<tr><td>67</td><td>10:07:50</td><td>Edit preferences documents</td><td><a href="#post">→</a></td></tr>
+<tr><td>68</td><td>10:08:03</td><td>Edit preferences taxes</td><td><a href="#post">→</a></td></tr>
+<tr><td>69</td><td>10:13:51</td><td>Publish steps sidebar</td><td><a href="#post">→</a></td></tr>
+<tr><td>70</td><td>10:14:09</td><td>Listings table view</td><td><a href="#post">→</a></td></tr>
+</tbody></table>
+</section>
+      <section id="entry" class="chapter">
+<h2 id="step-step-1-select-experience-category">Step 1 — Select experience category</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.52.08.png`</td></tr>
+<tr><td>Timestamp</td><td>09:52:08</td></tr>
+<tr><td>Section</td><td>pre-wizard</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Anterior</td></tr>
+<tr><td>Next enabled when</td><td>category selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Choose primary experience category from five illustrated cards.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Que Experiência vai oferecer?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>category selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.52.08.png" alt="Step 1" loading="lazy" /><figcaption>Step 1</figcaption></figure>
+<hr />
+<h2 id="step-step-2-select-experience-subtype">Step 2 — Select experience subtype</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.52.15.png`</td></tr>
+<tr><td>Timestamp</td><td>09:52:15</td></tr>
+<tr><td>Section</td><td>pre-wizard</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>subtype selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Food &amp; drink sub-types: dinner, cooking class, gastronomic tour, tasting.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Como descreveria a Experiência?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>subtype selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.52.15.png" alt="Step 2" loading="lazy" /><figcaption>Step 2</figcaption></figure>
+<hr />
+<h2 id="step-step-3-enter-experience-city">Step 3 — Enter experience city</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.52.32.png`</td></tr>
+<tr><td>Timestamp</td><td>09:52:32</td></tr>
+<tr><td>Section</td><td>pre-wizard</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>city entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> City search with category preview card on the right.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Onde vai oferecer a sua experiência?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>city entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.52.32.png" alt="Step 3" loading="lazy" /><figcaption>Step 3</figcaption></figure>
+<hr />
+<h2 id="step-step-4-city-search-suggestions">Step 4 — City search suggestions</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.52.44.png`</td></tr>
+<tr><td>Timestamp</td><td>09:52:44</td></tr>
+<tr><td>Section</td><td>pre-wizard</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>city selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Autocomplete modal with locality suggestions (e.g. Parede, Portugal).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Introduza uma cidade</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>city selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.52.44.png" alt="Step 4" loading="lazy" /><figcaption>Step 4</figcaption></figure>
+<hr />
+<h2 id="step-step-5-create-listing-intro">Step 5 — Create listing intro</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.52.55.png`</td></tr>
+<tr><td>Timestamp</td><td>09:52:55</td></tr>
+<tr><td>Section</td><td>pre-wizard</td></tr>
+<tr><td>Screen type</td><td>interstitial</td></tr>
+<tr><td>Primary CTA</td><td>Comece já</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Team will review listing against requirements before publish.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Crie o seu anúncio</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.52.55.png" alt="Step 5" loading="lazy" /><figcaption>Step 5</figcaption></figure>
+<hr />
+</section><section id="about" class="chapter">
+<h2 id="step-step-6-gastronomy-experience-years">Step 6 — Gastronomy experience years</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.53.06.png`</td></tr>
+<tr><td>Timestamp</td><td>09:53:06</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>years set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Numeric stepper for years in field (category-specific copy).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Quantos anos de experiência tem na área da gastronomia?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>years set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.53.06.png" alt="Step 6" loading="lazy" /><figcaption>Step 6</figcaption></figure>
+<hr />
+<h2 id="step-step-7-expertise-overview">Step 7 — Expertise overview</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.53.17.png`</td></tr>
+<tr><td>Timestamp</td><td>09:53:17</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>profile cards complete</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Three credential cards: Apresentação, Qualificações, Reconhecimento.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Dê a conhecer o que faz de melhor</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>profile cards complete</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.53.17.png" alt="Step 7" loading="lazy" /><figcaption>Step 7</figcaption></figure>
+<hr />
+<h2 id="step-step-8-add-professional-title-modal">Step 8 — Add professional title modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.53.28.png`</td></tr>
+<tr><td>Timestamp</td><td>09:53:28</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Title max 40 characters with Obter dicas link.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione o seu título profissional</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.53.28.png" alt="Step 8" loading="lazy" /><figcaption>Step 8</figcaption></figure>
+<hr />
+<h2 id="step-step-9-professional-title-filled">Step 9 — Professional title filled</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.54.22.png`</td></tr>
+<tr><td>Timestamp</td><td>09:54:22</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Character counter (e.g. 35/40) on title field.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Eu entusiasta da cozinha Valenciana</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.54.22.png" alt="Step 9" loading="lazy" /><figcaption>Step 9</figcaption></figure>
+<hr />
+<h2 id="step-step-10-title-tips-modal">Step 10 — Title tips modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.54.29.png`</td></tr>
+<tr><td>Timestamp</td><td>09:54:29</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Close</td></tr>
+<tr><td>Next enabled when</td><td>dismissed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Example titles for inspiration.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Como criar o seu título</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>dismissed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.54.29.png" alt="Step 10" loading="lazy" /><figcaption>Step 10</figcaption></figure>
+<hr />
+<h2 id="step-step-11-expertise-with-title-saved">Step 11 — Expertise with title saved</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.54.40.png`</td></tr>
+<tr><td>Timestamp</td><td>09:54:40</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>qualifications added</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Apresentação card shows saved title; Qualificações and Reconhecimento still editable.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Apresentação</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>qualifications added</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.54.40.png" alt="Step 11" loading="lazy" /><figcaption>Step 11</figcaption></figure>
+<hr />
+<h2 id="step-step-12-add-credentials-modal">Step 12 — Add credentials modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.55.11.png`</td></tr>
+<tr><td>Timestamp</td><td>09:55:11</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>min 150 chars</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Qualifications textarea minimum 150 characters.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione a sua formação e as suas credenciais</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>min 150 chars</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.55.11.png" alt="Step 12" loading="lazy" /><figcaption>Step 12</figcaption></figure>
+<hr />
+<h2 id="step-step-13-add-professional-milestone-modal">Step 13 — Add professional milestone modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.56.14.png`</td></tr>
+<tr><td>Timestamp</td><td>09:56:14</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>milestone entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Optional recognition / milestone (max 90 chars).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione um marco profissional</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>milestone entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.56.14.png" alt="Step 13" loading="lazy" /><figcaption>Step 13</figcaption></figure>
+<hr />
+<h2 id="step-step-14-add-online-profiles">Step 14 — Add online profiles</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.56.32.png`</td></tr>
+<tr><td>Timestamp</td><td>09:56:32</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar perfil / Saltar</td></tr>
+<tr><td>Next enabled when</td><td>optional</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Internal validation only — not shown on public listing.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione os seus perfis online</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>optional</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.56.32.png" alt="Step 14" loading="lazy" /><figcaption>Step 14</figcaption></figure>
+<hr />
+<h2 id="step-step-15-add-link-modal-empty">Step 15 — Add link modal empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.56.47.png`</td></tr>
+<tr><td>Timestamp</td><td>09:56:47</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>valid URL</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> URL field for LinkedIn or other profile.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicionar ligação</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>valid URL</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.56.47.png" alt="Step 15" loading="lazy" /><figcaption>Step 15</figcaption></figure>
+<hr />
+<h2 id="step-step-16-add-linkedin-link">Step 16 — Add LinkedIn link</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.57.00.png`</td></tr>
+<tr><td>Timestamp</td><td>09:57:00</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>valid URL</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Example LinkedIn URL entered.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>www.linkedin.com/in/...</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>valid URL</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.57.00.png" alt="Step 16" loading="lazy" /><figcaption>Step 16</figcaption></figure>
+<hr />
+<h2 id="step-step-17-online-profiles-saved">Step 17 — Online profiles saved</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.57.09.png`</td></tr>
+<tr><td>Timestamp</td><td>09:57:09</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>link saved or skipped</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Saved profile chips with remove option.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione os seus perfis online</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>link saved or skipped</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.57.09.png" alt="Step 17" loading="lazy" /><figcaption>Step 17</figcaption></figure>
+<hr />
+<h2 id="step-step-18-personal-address-form">Step 18 — Personal address form</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.57.19.png`</td></tr>
+<tr><td>Timestamp</td><td>09:57:19</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 4 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>address filled</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Residential address — not shared with travelers.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Qual é a sua morada?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>address filled</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.57.19.png" alt="Step 18" loading="lazy" /><figcaption>Step 18</figcaption></figure>
+<hr />
+<h2 id="step-step-19-personal-address-confirmed">Step 19 — Personal address confirmed</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.57.48.png`</td></tr>
+<tr><td>Timestamp</td><td>09:57:48</td></tr>
+<tr><td>Section</td><td>Sobre si</td></tr>
+<tr><td>Section step</td><td>Passo 4 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>address confirmed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Full address with postal code confirmed.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Gil Vicente, 2 · Parede</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>address confirmed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.57.48.png" alt="Step 19" loading="lazy" /><figcaption>Step 19</figcaption></figure>
+<hr />
+</section><section id="location" class="chapter">
+<h2 id="step-step-20-meeting-location-search">Step 20 — Meeting location search</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.00.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:00</td></tr>
+<tr><td>Section</td><td>Local</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>—</td></tr>
+<tr><td>Next enabled when</td><td>address entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Public meeting point visible on listing.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Onde é que as pessoas se irão encontrar consigo?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>address entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.00.png" alt="Step 20" loading="lazy" /><figcaption>Step 20</figcaption></figure>
+<hr />
+<h2 id="step-step-21-confirm-location-address">Step 21 — Confirm location address</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.13.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:13</td></tr>
+<tr><td>Section</td><td>Local</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>address filled</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Street, city, postal code fields for meeting point.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Confirme o local</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>address filled</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.13.png" alt="Step 21" loading="lazy" /><figcaption>Step 21</figcaption></figure>
+<hr />
+<h2 id="step-step-22-address-autocomplete-suggestions">Step 22 — Address autocomplete suggestions</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.22.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:22</td></tr>
+<tr><td>Section</td><td>Local</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>suggestion selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Pick from suggested addresses.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>SUGESTÕES</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>suggestion selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.22.png" alt="Step 22" loading="lazy" /><figcaption>Step 22</figcaption></figure>
+<hr />
+<h2 id="step-step-23-confirm-map-marker">Step 23 — Confirm map marker</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.37.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:37</td></tr>
+<tr><td>Section</td><td>Local</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>marker placed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Google Maps pin drag to reposition.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>O marcador está no local certo?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>marker placed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.37.png" alt="Step 23" loading="lazy" /><figcaption>Step 23</figcaption></figure>
+<hr />
+</section><section id="photos" class="chapter">
+<h2 id="step-step-24-add-photos-empty-state">Step 24 — Add photos empty state</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.50.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:50</td></tr>
+<tr><td>Section</td><td>Fotografias</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar</td></tr>
+<tr><td>Next enabled when</td><td>≥5 photos</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Minimum 5 unique experience photos required.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione fotos únicas da sua Experiência Airbnb</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>≥5 photos</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.50.png" alt="Step 24" loading="lazy" /><figcaption>Step 24</figcaption></figure>
+<hr />
+<h2 id="step-step-25-photo-tips-modal">Step 25 — Photo tips modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.58.58.png`</td></tr>
+<tr><td>Timestamp</td><td>09:58:58</td></tr>
+<tr><td>Section</td><td>Fotografias</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Close</td></tr>
+<tr><td>Next enabled when</td><td>dismissed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Guidance on photo quality and variety.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Como escolher as melhores fotografias</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>dismissed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.58.58.png" alt="Step 25" loading="lazy" /><figcaption>Step 25</figcaption></figure>
+<hr />
+<h2 id="step-step-26-upload-photos-modal">Step 26 — Upload photos modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.59.19.png`</td></tr>
+<tr><td>Timestamp</td><td>09:59:19</td></tr>
+<tr><td>Section</td><td>Fotografias</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar</td></tr>
+<tr><td>Next enabled when</td><td>photos selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Multi-select upload with item count.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Carregar fotografias</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>photos selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.59.19.png" alt="Step 26" loading="lazy" /><figcaption>Step 26</figcaption></figure>
+<hr />
+<h2 id="step-step-27-photos-grid-partial-3">Step 27 — Photos grid partial (3)</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.59.31.png`</td></tr>
+<tr><td>Timestamp</td><td>09:59:31</td></tr>
+<tr><td>Section</td><td>Fotografias</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>≥5 photos</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Cover photo badge; Next disabled until minimum met.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione pelo menos 5 fotos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>≥5 photos</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.59.31.png" alt="Step 27" loading="lazy" /><figcaption>Step 27</figcaption></figure>
+<hr />
+<h2 id="step-step-28-photos-grid-with-5">Step 28 — Photos grid with 5+</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.59.48.png`</td></tr>
+<tr><td>Timestamp</td><td>09:59:48</td></tr>
+<tr><td>Section</td><td>Fotografias</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>≥5 photos</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Gallery with cover and reorder affordances.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione pelo menos 5 fotos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>≥5 photos</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.59.48.png" alt="Step 28" loading="lazy" /><figcaption>Step 28</figcaption></figure>
+<hr />
+</section><section id="experience" class="chapter">
+<h2 id="step-step-29-experience-title-empty">Step 29 — Experience title empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 09.59.59.png`</td></tr>
+<tr><td>Timestamp</td><td>09:59:59</td></tr>
+<tr><td>Section</td><td>Experiência</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Max 50 characters.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Dê um título à sua Experiência</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 09.59.59.png" alt="Step 29" loading="lazy" /><figcaption>Step 29</figcaption></figure>
+<hr />
+<h2 id="step-step-30-experience-title-filled">Step 30 — Experience title filled</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.00.12.png`</td></tr>
+<tr><td>Timestamp</td><td>10:00:12</td></tr>
+<tr><td>Section</td><td>Experiência</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Title with character counter (31/50).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Experimente a Paella Valenciana</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.00.12.png" alt="Step 30" loading="lazy" /><figcaption>Step 30</figcaption></figure>
+<hr />
+<h2 id="step-step-31-experience-description-empty">Step 31 — Experience description empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.00.19.png`</td></tr>
+<tr><td>Timestamp</td><td>10:00:19</td></tr>
+<tr><td>Section</td><td>Experiência</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>description entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Max 200 characters — what participants will do.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Descreva a sua Experiência</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>description entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.00.19.png" alt="Step 31" loading="lazy" /><figcaption>Step 31</figcaption></figure>
+<hr />
+<h2 id="step-step-32-experience-description-filled">Step 32 — Experience description filled</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.00.40.png`</td></tr>
+<tr><td>Timestamp</td><td>10:00:40</td></tr>
+<tr><td>Section</td><td>Experiência</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>description entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Description with counter (61/200).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>gosto de fazer paella tradicional...</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>description entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.00.40.png" alt="Step 32" loading="lazy" /><figcaption>Step 32</figcaption></figure>
+<hr />
+</section><section id="itinerary" class="chapter">
+<h2 id="step-step-33-itinerary-intro">Step 33 — Itinerary intro</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.00.51.png`</td></tr>
+<tr><td>Timestamp</td><td>10:00:51</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>interstitial</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Sample timeline cards explaining itinerary value.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Crie um itinerário</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.00.51.png" alt="Step 33" loading="lazy" /><figcaption>Step 33</figcaption></figure>
+<hr />
+<h2 id="step-step-34-create-itinerary-empty">Step 34 — Create itinerary empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.01.01.png`</td></tr>
+<tr><td>Timestamp</td><td>10:01:01</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar atividade</td></tr>
+<tr><td>Next enabled when</td><td>≥1 activity</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Empty state with add activity CTA.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione até 10 atividades</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>≥1 activity</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.01.01.png" alt="Step 34" loading="lazy" /><figcaption>Step 34</figcaption></figure>
+<hr />
+<h2 id="step-step-35-first-activity-title-modal">Step 35 — First activity title modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.01.09.png`</td></tr>
+<tr><td>Timestamp</td><td>10:01:09</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Activity title max 35 characters.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Dê um título à primeira atividade</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.01.09.png" alt="Step 35" loading="lazy" /><figcaption>Step 35</figcaption></figure>
+<hr />
+<h2 id="step-step-36-activity-description-modal">Step 36 — Activity description modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.01.26.png`</td></tr>
+<tr><td>Timestamp</td><td>10:01:26</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>min 30 chars</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Minimum 30 characters per activity.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Descreva o que os participantes vão fazer</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>min 30 chars</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.01.26.png" alt="Step 36" loading="lazy" /><figcaption>Step 36</figcaption></figure>
+<hr />
+<h2 id="step-step-37-activity-description-filled">Step 37 — Activity description filled</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.01.53.png`</td></tr>
+<tr><td>Timestamp</td><td>10:01:53</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>min 30 chars met</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Description meets minimum length.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Entradas típicas da região</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>min 30 chars met</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.01.53.png" alt="Step 37" loading="lazy" /><figcaption>Step 37</figcaption></figure>
+<hr />
+<h2 id="step-step-38-set-activity-duration">Step 38 — Set activity duration</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.00.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:00</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>duration set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Duration picker (e.g. 60 minutes).</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Defina a duração</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>duration set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.00.png" alt="Step 38" loading="lazy" /><figcaption>Step 38</figcaption></figure>
+<hr />
+<h2 id="step-step-39-choose-activity-photo">Step 39 — Choose activity photo</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.07.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:07</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>photo selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Pick from uploaded experience photos.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Escolha uma fotografia</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>photo selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.07.png" alt="Step 39" loading="lazy" /><figcaption>Step 39</figcaption></figure>
+<hr />
+<h2 id="step-step-40-activity-photo-selected">Step 40 — Activity photo selected</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.14.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:14</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>photo selected</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Selected thumbnail highlighted.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Entradas típicas da região</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>photo selected</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.14.png" alt="Step 40" loading="lazy" /><figcaption>Step 40</figcaption></figure>
+<hr />
+<h2 id="step-step-41-itinerary-list-incomplete">Step 41 — Itinerary list incomplete</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.26.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:26</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>activities complete</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Activity row with duration; incomplete second activity.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicionar detalhes</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>activities complete</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.26.png" alt="Step 41" loading="lazy" /><figcaption>Step 41</figcaption></figure>
+<hr />
+<h2 id="step-step-42-edit-activity-modal">Step 42 — Edit activity modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.37.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:37</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Editar</td></tr>
+<tr><td>Next enabled when</td><td>edited</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Edit or remove existing activity.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Editar · Remover</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>edited</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.37.png" alt="Step 42" loading="lazy" /><figcaption>Step 42</figcaption></figure>
+<hr />
+<h2 id="step-step-43-second-activity-title-modal">Step 43 — Second activity title modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.02.52.png`</td></tr>
+<tr><td>Timestamp</td><td>10:02:52</td></tr>
+<tr><td>Section</td><td>Itinerário</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Seguinte</td></tr>
+<tr><td>Next enabled when</td><td>title entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Second activity title entry.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Prove tortilla de batata</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>title entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.02.52.png" alt="Step 43" loading="lazy" /><figcaption>Step 43</figcaption></figure>
+<hr />
+</section><section id="pricing" class="chapter">
+<h2 id="step-step-44-maximum-group-size">Step 44 — Maximum group size</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.03.07.png`</td></tr>
+<tr><td>Timestamp</td><td>10:03:07</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>group size set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Stepper for max participants.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione o número máximo de pessoas</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>group size set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.03.07.png" alt="Step 44" loading="lazy" /><figcaption>Step 44</figcaption></figure>
+<hr />
+<h2 id="step-step-45-maximum-group-size-adjusted">Step 45 — Maximum group size adjusted</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.03.16.png`</td></tr>
+<tr><td>Timestamp</td><td>10:03:16</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>group size set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Example: 10 guests maximum.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>10</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>group size set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.03.16.png" alt="Step 45" loading="lazy" /><figcaption>Step 45</figcaption></figure>
+<hr />
+<h2 id="step-step-46-price-per-person-empty">Step 46 — Price per person empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.03.28.png`</td></tr>
+<tr><td>Timestamp</td><td>10:03:28</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>price entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Currency input with earnings preview.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Preço por pessoa</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.03.28.png" alt="Step 46" loading="lazy" /><figcaption>Step 46</figcaption></figure>
+<hr />
+<h2 id="step-step-47-pricing-tips-modal">Step 47 — Pricing tips modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.03.34.png`</td></tr>
+<tr><td>Timestamp</td><td>10:03:34</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Close</td></tr>
+<tr><td>Next enabled when</td><td>dismissed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Pricing guidance modal.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Como definir o preço da sua Experiência</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>dismissed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.03.34.png" alt="Step 47" loading="lazy" /><figcaption>Step 47</figcaption></figure>
+<hr />
+<h2 id="step-step-48-price-per-person-entered">Step 48 — Price per person entered</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.03.53.png`</td></tr>
+<tr><td>Timestamp</td><td>10:03:53</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>price entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Host earnings after service fee.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>€16 · O seu rendimento: €13</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.03.53.png" alt="Step 48" loading="lazy" /><figcaption>Step 48</figcaption></figure>
+<hr />
+<h2 id="step-step-49-price-breakdown-expanded">Step 49 — Price breakdown expanded</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.01.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:01</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>price set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Expanded fee breakdown.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Taxa de serviço 20%</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.01.png" alt="Step 49" loading="lazy" /><figcaption>Step 49</figcaption></figure>
+<hr />
+<h2 id="step-step-50-more-pricing-info-modal">Step 50 — More pricing info modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.13.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:13</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Close</td></tr>
+<tr><td>Next enabled when</td><td>dismissed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Additional pricing education.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Mais informação sobre os preços</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>dismissed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.13.png" alt="Step 50" loading="lazy" /><figcaption>Step 50</figcaption></figure>
+<hr />
+<h2 id="step-step-51-minimum-private-group-price-empty">Step 51 — Minimum private group price empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.27.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:27</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo / Saltar</td></tr>
+<tr><td>Next enabled when</td><td>price or skip</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Optional private group minimum.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Preço mínimo para grupos privados</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price or skip</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.27.png" alt="Step 51" loading="lazy" /><figcaption>Step 51</figcaption></figure>
+<hr />
+<h2 id="step-step-52-minimum-private-group-price-entered">Step 52 — Minimum private group price entered</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.36.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:36</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>price entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Private group minimum with earnings.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>€150 · rendimento €120</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.36.png" alt="Step 52" loading="lazy" /><figcaption>Step 52</figcaption></figure>
+<hr />
+<h2 id="step-step-53-minimum-private-group-breakdown">Step 53 — Minimum private group breakdown</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.43.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:43</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 3 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>price set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Fee breakdown for private minimum.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Vai ganhar €120</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>price set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.43.png" alt="Step 53" loading="lazy" /><figcaption>Step 53</figcaption></figure>
+<hr />
+<h2 id="step-step-54-review-prices-summary">Step 54 — Review prices summary</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.04.52.png`</td></tr>
+<tr><td>Timestamp</td><td>10:04:52</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 4 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>prices set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Summary before discounts.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Reveja os seus preços</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>prices set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.04.52.png" alt="Step 54" loading="lazy" /><figcaption>Step 54</figcaption></figure>
+<hr />
+<h2 id="step-step-55-add-discounts">Step 55 — Add discounts</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.00.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:00</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 5 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Próximo</td></tr>
+<tr><td>Next enabled when</td><td>optional</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Optional promotional discounts.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Adicione descontos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>optional</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.00.png" alt="Step 55" loading="lazy" /><figcaption>Step 55</figcaption></figure>
+<hr />
+<h2 id="step-step-56-limited-time-discount-modal">Step 56 — Limited time discount modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.09.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:09</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 5 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>discount set</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> e.g. 10% for 90 days.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Desconto por tempo limitado</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>discount set</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.09.png" alt="Step 56" loading="lazy" /><figcaption>Step 56</figcaption></figure>
+<hr />
+<h2 id="step-step-57-early-bird-discount-modal">Step 57 — Early bird discount modal</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.22.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:22</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 5 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Aplique um desconto</td></tr>
+<tr><td>Next enabled when</td><td>discount confirmed</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> 20% early booking discount.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Desconto para reservas antecipadas</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>discount confirmed</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.22.png" alt="Step 57" loading="lazy" /><figcaption>Step 57</figcaption></figure>
+<hr />
+<h2 id="step-step-58-large-group-discount-modal-empty">Step 58 — Large group discount modal empty</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.39.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:39</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 5 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>min + % entered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Minimum people + discount %.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Desconto para grupos grandes</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>min + % entered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.39.png" alt="Step 58" loading="lazy" /><figcaption>Step 58</figcaption></figure>
+<hr />
+<h2 id="step-step-59-large-group-discount-filled">Step 59 — Large group discount filled</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.48.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:48</td></tr>
+<tr><td>Section</td><td>Preços</td></tr>
+<tr><td>Section step</td><td>Passo 5 de 7</td></tr>
+<tr><td>Screen type</td><td>modal</td></tr>
+<tr><td>Primary CTA</td><td>Guardar</td></tr>
+<tr><td>Next enabled when</td><td>configured</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Example: 20+ guests, 5% off.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Mínimo 20 · 5%</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>configured</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.48.png" alt="Step 59" loading="lazy" /><figcaption>Step 59</figcaption></figure>
+<hr />
+</section><section id="details" class="chapter">
+<h2 id="step-step-60-offer-details-questionnaire">Step 60 — Offer details questionnaire</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.05.59.png`</td></tr>
+<tr><td>Timestamp</td><td>10:05:59</td></tr>
+<tr><td>Section</td><td>Detalhes</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Concordo</td></tr>
+<tr><td>Next enabled when</td><td>all answered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Yes/No: transport, licensed transport, food, kitchen, alcohol.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Partilhe detalhes sobre o que irá oferecer</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>all answered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.05.59.png" alt="Step 60" loading="lazy" /><figcaption>Step 60</figcaption></figure>
+<hr />
+<h2 id="step-step-61-offer-details-answered">Step 61 — Offer details answered</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.06.23.png`</td></tr>
+<tr><td>Timestamp</td><td>10:06:23</td></tr>
+<tr><td>Section</td><td>Detalhes</td></tr>
+<tr><td>Section step</td><td>Passo 1 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Concordo</td></tr>
+<tr><td>Next enabled when</td><td>all answered</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Compliance questions completed.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Vai servir comida?</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>all answered</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.06.23.png" alt="Step 61" loading="lazy" /><figcaption>Step 61</figcaption></figure>
+<hr />
+<h2 id="step-step-62-requirements-and-terms">Step 62 — Requirements and terms</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.06.30.png`</td></tr>
+<tr><td>Timestamp</td><td>10:06:30</td></tr>
+<tr><td>Section</td><td>Detalhes</td></tr>
+<tr><td>Section step</td><td>Passo 2 de 7</td></tr>
+<tr><td>Screen type</td><td>wizard</td></tr>
+<tr><td>Primary CTA</td><td>Concordo</td></tr>
+<tr><td>Next enabled when</td><td>terms acknowledged</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Experience Terms and policies acceptance.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Requisitos e termos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>terms acknowledged</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.06.30.png" alt="Step 62" loading="lazy" /><figcaption>Step 62</figcaption></figure>
+<hr />
+<h2 id="step-step-63-publish-listing-review">Step 63 — Publish listing review</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.06.39.png`</td></tr>
+<tr><td>Timestamp</td><td>10:06:39</td></tr>
+<tr><td>Section</td><td>Detalhes</td></tr>
+<tr><td>Section step</td><td>Passo 7 de 7</td></tr>
+<tr><td>Screen type</td><td>review</td></tr>
+<tr><td>Primary CTA</td><td>Pedir para publicar</td></tr>
+<tr><td>Next enabled when</td><td>all sections complete</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Dark review screen with section checklist and preview card.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Publicar o anúncio</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>all sections complete</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.06.39.png" alt="Step 63" loading="lazy" /><figcaption>Step 63</figcaption></figure>
+<hr />
+</section><section id="post" class="chapter">
+<h2 id="step-step-64-submission-confirmation">Step 64 — Submission confirmation</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.06.55.png`</td></tr>
+<tr><td>Timestamp</td><td>10:06:55</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>interstitial</td></tr>
+<tr><td>Primary CTA</td><td>Concluído</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Thank-you after request to publish.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Agradecemos o seu envio</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.06.55.png" alt="Step 64" loading="lazy" /><figcaption>Step 64</figcaption></figure>
+<hr />
+<h2 id="step-step-65-listings-dashboard">Step 65 — Listings dashboard</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.07.11.png`</td></tr>
+<tr><td>Timestamp</td><td>10:07:11</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>dashboard</td></tr>
+<tr><td>Primary CTA</td><td>—</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Listing card with Enviado status badge.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Os seus anúncios · Enviado</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.07.11.png" alt="Step 65" loading="lazy" /><figcaption>Step 65</figcaption></figure>
+<hr />
+<h2 id="step-step-66-listing-editor-photos">Step 66 — Listing editor photos</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.07.39.png`</td></tr>
+<tr><td>Timestamp</td><td>10:07:39</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>editor</td></tr>
+<tr><td>Primary CTA</td><td>Gerir fotos</td></tr>
+<tr><td>Next enabled when</td><td>N/A</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Post-submit listing editor while under review.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Editor de anúncios · Em análise</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>N/A</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.07.39.png" alt="Step 66" loading="lazy" /><figcaption>Step 66</figcaption></figure>
+<hr />
+<h2 id="step-step-67-edit-preferences-documents">Step 67 — Edit preferences documents</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.07.50.png`</td></tr>
+<tr><td>Timestamp</td><td>10:07:50</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>settings</td></tr>
+<tr><td>Primary CTA</td><td>—</td></tr>
+<tr><td>Next enabled when</td><td>N/A</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Post-create preferences — documents.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Documentos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>N/A</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.07.50.png" alt="Step 67" loading="lazy" /><figcaption>Step 67</figcaption></figure>
+<hr />
+<h2 id="step-step-68-edit-preferences-taxes">Step 68 — Edit preferences taxes</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.08.03.png`</td></tr>
+<tr><td>Timestamp</td><td>10:08:03</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>settings</td></tr>
+<tr><td>Primary CTA</td><td>Adicionar um imposto</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Tax configuration after submission.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Impostos</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.08.03.png" alt="Step 68" loading="lazy" /><figcaption>Step 68</figcaption></figure>
+<hr />
+<h2 id="step-step-69-publish-steps-sidebar">Step 69 — Publish steps sidebar</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.13.51.png`</td></tr>
+<tr><td>Timestamp</td><td>10:13:51</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>overlay</td></tr>
+<tr><td>Primary CTA</td><td>Close</td></tr>
+<tr><td>Next enabled when</td><td>N/A</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Checklist: approval in progress, identity steps done.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Passos para publicar · Aprovação em curso</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>N/A</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.13.51.png" alt="Step 69" loading="lazy" /><figcaption>Step 69</figcaption></figure>
+<hr />
+<h2 id="step-step-70-listings-table-view">Step 70 — Listings table view</h2>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Value</th></tr>
+<tr><td>Screenshot</td><td>`Screenshot 2026-05-22 at 10.14.09.png`</td></tr>
+<tr><td>Timestamp</td><td>10:14:09</td></tr>
+<tr><td>Section</td><td>post</td></tr>
+<tr><td>Screen type</td><td>dashboard</td></tr>
+<tr><td>Primary CTA</td><td>—</td></tr>
+<tr><td>Next enabled when</td><td>always</td></tr>
+</tbody></table>
+<p><strong>Goal:</strong> Table view of all listings with status.</p>
+<p><strong>Copy (PT):</strong></p>
+<ul>
+<li>Experimente a Paella Valenciana</li>
+</ul>
+<p><strong>Validation / gating:</strong></p>
+<ul>
+<li>always</li>
+</ul>
+<p><strong>UX notes:</strong></p>
+<ul>
+<li>See screenshot for full layout and secondary controls.</li>
+</ul>
+<figure class="screenshot"><img src="Screenshot 2026-05-22 at 10.14.09.png" alt="Step 70" loading="lazy" /><figcaption>Step 70</figcaption></figure>
+<hr />
+</section>
+      <section id="patterns" class="chapter"><h2>Patterns to borrow</h2>
+<table class="meta"><tbody>
+<tr><th>Pattern</th><th>Airbnb example</th><th>Design intent</th><th>Eleva application ideas</th></tr>
+<tr><td>**Listing type fork**</td><td>Alojamento / Experiência / Serviço (property doc)</td><td>Route different products early</td><td>Expert vs Team vs Academy vs Space</td></tr>
+<tr><td>**Category drill-down**</td><td>5 categories → food sub-chips</td><td>Taxonomy before wizard</td><td>Specialty → sub-specialty before profile wizard</td></tr>
+<tr><td>**City before wizard**</td><td>Search + suggestions modal</td><td>Geo context for review/compliance</td><td>Practice city before multi-step profile</td></tr>
+<tr><td>**Team-review intro**</td><td>“Equipa irá analisar” + **Comece já**</td><td>Set expectation: not instant publish</td><td>Expert application review vs self-serve Space</td></tr>
+<tr><td>**Dark sidebar sections**</td><td>7 modules with icons</td><td>Chunk long flow; jump between sections</td><td>Chapter nav for expert onboarding</td></tr>
+<tr><td>**Section progress label**</td><td>`Passo N de 7` in header</td><td>Local progress within module</td><td>Per-chapter step counts</td></tr>
+<tr><td>**Save and exit**</td><td>`Gravar e sair`</td><td>Async completion</td><td>Draft on all onboarding routes</td></tr>
+<tr><td>**Field-specific experience years**</td><td>Gastronomy years stepper</td><td>Copy matches category</td><td>Dynamic labels from org type / specialty</td></tr>
+<tr><td>**Credential cards**</td><td>Apresentação / Qualificações / Reconhecimento</td><td>Build trust incrementally</td><td>Bio blocks with min lengths</td></tr>
+<tr><td>**Tips modals**</td><td>Obter dicas on title/credentials</td><td>Reduce blank-field anxiety</td><td>Example copy for expert headline</td></tr>
+<tr><td>**Char limits surfaced**</td><td>40 / 150 / 90 / 50 / 200 / 35 / 30</td><td>No surprise truncation</td><td>Inline counters on public text</td></tr>
+<tr><td>**Internal-only profile links**</td><td>LinkedIn — not on listing</td><td>Fraud/validation without exposing PII</td><td>Verify credentials off-public-profile</td></tr>
+<tr><td>**Residential vs meeting address**</td><td>Home address private; meeting public</td><td>Compliance vs guest-facing location</td><td>Clinic address vs session location</td></tr>
+<tr><td>**Hard photo minimum**</td><td>5 unique experience photos</td><td>Prevent weak merchandising</td><td>Min gallery for expert profile</td></tr>
+<tr><td>**Itinerary as nested wizard**</td><td>Per-activity modal chain</td><td>Complex structured content</td><td>Session plan / visit steps</td></tr>
+<tr><td>**Activity cap**</td><td>Up to 10 activities</td><td>Bound scope</td><td>Max phases in a program template</td></tr>
+<tr><td>**Earnings preview**</td><td>€16 → host €13</td><td>Fee transparency</td><td>Member price vs platform fee</td></tr>
+<tr><td>**Private group minimum**</td><td>€150 minimum + Saltar</td><td>Optional B2B/private pricing</td><td>Corporate package floor</td></tr>
+<tr><td>**Discount modals**</td><td>Limited / early bird / large group</td><td>Optional promos at launch</td><td>Launch offers default-off</td></tr>
+<tr><td>**Compliance Yes/No block**</td><td>Transport, kitchen, alcohol</td><td>Regulatory routing</td><td>Licensed practice / telehealth flags</td></tr>
+<tr><td>**Terms gate**</td><td>Concordo before review</td><td>Legal acceptance</td><td>Terms + privacy on submit</td></tr>
+<tr><td>**Review screen**</td><td>Dark **Publicar** + checklist</td><td>Final confidence check</td><td>Pre-submit summary for expert application</td></tr>
+<tr><td>**Request publish**</td><td>**Pedir para publicar** (not live)</td><td>Human review queue</td><td>Submit for Eleva review</td></tr>
+<tr><td>**Status badges**</td><td>**Enviado** / **Em curso**</td><td>At-a-glance pipeline</td><td>Application states on dashboard</td></tr>
+<tr><td>**Post-submit checklist**</td><td>Passos para publicar sidebar</td><td>Draft ≠ approved</td><td>Onboarding checklist after submit</td></tr>
+</tbody></table>
+<hr />
+<h2>Implied data model</h2>
+<h3 id="step-experience-listing-root">Experience listing (root)</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`listing_category`</td><td>enum</td><td>Pre</td><td>experience (from global fork)</td></tr>
+<tr><td>`experience_category`</td><td>enum</td><td>Step 1</td><td>art, food, sport, history, nature</td></tr>
+<tr><td>`experience_subcategory`</td><td>enum</td><td>Step 2</td><td>e.g. gastronomic_tasting</td></tr>
+<tr><td>`city`</td><td>string</td><td>Steps 3–4</td><td>Public city label</td></tr>
+<tr><td>`status`</td><td>enum</td><td>Post</td><td>draft · submitted · under_review · published</td></tr>
+<tr><td>`title`</td><td>string(50)</td><td>Step 30</td><td>Public headline</td></tr>
+<tr><td>`description`</td><td>string(200)</td><td>Step 32</td><td>Participant-facing summary</td></tr>
+</tbody></table>
+<h3 id="step-host-profile-sobre-si">Host profile (Sobre si)</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`years_in_field`</td><td>int</td><td>Step 6</td><td>Category-specific label</td></tr>
+<tr><td>`professional_title`</td><td>string(40)</td><td>Steps 8–9</td><td>Apresentação</td></tr>
+<tr><td>`qualifications`</td><td>string(150+)</td><td>Step 12</td><td>Min 150 chars</td></tr>
+<tr><td>`recognition`</td><td>string(90)?</td><td>Step 13</td><td>Optional milestone</td></tr>
+<tr><td>`profile_links[]`</td><td>url[]</td><td>Steps 14–17</td><td>Internal validation</td></tr>
+<tr><td>`host_residential_address`</td><td>Address</td><td>Steps 18–19</td><td>Not shared with guests</td></tr>
+</tbody></table>
+<h3 id="step-location">Location</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`meeting_address`</td><td>Address</td><td>Steps 20–22</td><td>Shown on listing</td></tr>
+<tr><td>`meeting_latitude`</td><td>number</td><td>Step 23</td><td>Map pin</td></tr>
+<tr><td>`meeting_longitude`</td><td>number</td><td>Step 23</td><td></td></tr>
+</tbody></table>
+<h3 id="step-merchandising">Merchandising</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`photos`</td><td>Media[]</td><td>Steps 24–28</td><td>min 5; cover_index</td></tr>
+<tr><td>`itinerary_activities[]`</td><td>Activity[]</td><td>Steps 33–43</td><td>max 10</td></tr>
+<tr><td>`activity.title`</td><td>string(35)</td><td>Itinerary modal</td><td></td></tr>
+<tr><td>`activity.description`</td><td>string(30+)</td><td>Itinerary modal</td><td>min 30</td></tr>
+<tr><td>`activity.duration_minutes`</td><td>int</td><td>Itinerary modal</td><td></td></tr>
+<tr><td>`activity.photo_id`</td><td>ref</td><td>Itinerary modal</td><td>From experience photos</td></tr>
+</tbody></table>
+<h3 id="step-pricing">Pricing</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`max_group_size`</td><td>int</td><td>Steps 44–45</td><td></td></tr>
+<tr><td>`price_per_person`</td><td>money</td><td>Steps 46–49</td><td>Guest price</td></tr>
+<tr><td>`host_earnings_per_person`</td><td>money</td><td>Step 48</td><td>After service fee</td></tr>
+<tr><td>`private_group_minimum`</td><td>money?</td><td>Steps 51–53</td><td>Optional</td></tr>
+<tr><td>`discounts[]`</td><td>Discount[]</td><td>Steps 55–59</td><td>Optional promos</td></tr>
+</tbody></table>
+<h3 id="step-compliance-submit">Compliance &amp; submit</h3>
+<table class="meta"><tbody>
+<tr><th>Field</th><th>Type</th><th>Collected at</th><th>Notes</th></tr>
+<tr><td>`offers_transport`</td><td>boolean</td><td>Step 60</td><td></td></tr>
+<tr><td>`transport_licensed`</td><td>boolean?</td><td>Step 60</td><td>If transport yes</td></tr>
+<tr><td>`serves_food`</td><td>boolean</td><td>Step 60</td><td></td></tr>
+<tr><td>`authorized_kitchen`</td><td>boolean?</td><td>Step 60</td><td>If food yes</td></tr>
+<tr><td>`serves_alcohol`</td><td>boolean</td><td>Step 60</td><td></td></tr>
+<tr><td>`terms_accepted`</td><td>boolean</td><td>Steps 61–62</td><td></td></tr>
+<tr><td>`submitted_at`</td><td>datetime</td><td>Step 63</td><td>Pedir para publicar</td></tr>
+</tbody></table>
+<hr />
+<h2>Wizard gating rules (summary)</h2>
+<table class="meta"><tbody>
+<tr><th>Rule</th><th>Where</th><th>Behavior</th></tr>
+<tr><td>Category required</td><td>Pre step 1</td><td>Cannot proceed without selection</td></tr>
+<tr><td>Subtype required</td><td>Pre step 2</td><td>Próximo disabled until chip selected</td></tr>
+<tr><td>City required</td><td>Pre steps 3–4</td><td>Próximo disabled until city chosen</td></tr>
+<tr><td>Credential minimums</td><td>Sobre si</td><td>150 chars qualifications; optional recognition</td></tr>
+<tr><td>Photo minimum</td><td>Fotografias</td><td>Próximo disabled until ≥5 photos</td></tr>
+<tr><td>Title/description limits</td><td>Experiência</td><td>Counters enforce 50 / 200</td></tr>
+<tr><td>Activity minimums</td><td>Itinerário</td><td>30 char description; duration + photo per activity</td></tr>
+<tr><td>Price required</td><td>Preços</td><td>Per-person price before continue</td></tr>
+<tr><td>Compliance complete</td><td>Detalhes</td><td>Concordo requires all Yes/No answered</td></tr>
+<tr><td>Team review</td><td>Submit</td><td>Listing not live until approval</td></tr>
+</tbody></table>
+<hr />
+<h2>Comparison with accommodation listing</h2>
+<table class="meta"><tbody>
+<tr><th>Dimension</th><th>Accommodation</th><th>Experience</th></tr>
+<tr><td>Pre-wizard</td><td>Address-first</td><td>Category → subcategory → city</td></tr>
+<tr><td>Progress UI</td><td>3-phase bottom bar</td><td>7-section dark sidebar</td></tr>
+<tr><td>Publish CTA</td><td>Criar anúncio (draft live path)</td><td>Pedir para publicar (team queue)</td></tr>
+<tr><td>Unique blocks</td><td>Capacity, amenities, weekend pricing</td><td>Credentials, itinerary, compliance Q&amp;A</td></tr>
+<tr><td>Post-create</td><td>Portugal registration gates</td><td>Enviado / Em análise checklist</td></tr>
+</tbody></table>
+<hr /></section>
+    </main>
+  </div>
+</body>
+</html>

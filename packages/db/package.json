@@ -11,7 +11,8 @@
     "./schema/audit": "./src/schema/audit/index.ts",
     "./context": "./src/context.ts",
     "./client": "./src/client.ts",
-    "./rls": "./src/rls/index.ts"
+    "./rls": "./src/rls/index.ts",
+    "./queries/admin": "./src/queries/admin.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -36,9 +36,38 @@ export const SyncExistingOnboardingResponseSchema = z.discriminatedUnion(
   ]
 )
 
+export const OrgTypeSchema = z.enum([
+  "personal",
+  "expert",
+  "team",
+  "academy",
+  "staff",
+])
+
 export const CreateOrganizationRequestSchema = z.object({
   name: z.string().min(2).max(100).trim(),
-  type: z.enum(["personal", "expert", "team", "staff"]).default("personal"),
+  type: OrgTypeSchema.default("personal"),
+})
+
+/** Workspace create flow — deliberate work orgs only (not personal onboarding). */
+export const CreateWorkspaceRequestSchema = z.object({
+  name: z.string().min(2).max(100).trim(),
+  type: z.enum(["expert", "team", "academy"]),
+})
+
+export const OrganizationSwitcherItemSchema = z.object({
+  workosOrgId: z.string(),
+  orgId: z.string().uuid(),
+  orgSlug: z.string(),
+  orgType: OrgTypeSchema,
+  name: z.string(),
+  workosRole: z.enum(["admin", "member"]),
+  productLabel: z.string(),
+  isCurrent: z.boolean(),
+})
+
+export const ListOrganizationsMineResponseSchema = z.object({
+  organizations: z.array(OrganizationSwitcherItemSchema),
 })
 
 export const CreateOrganizationResponseSchema = z.object({
@@ -147,6 +176,15 @@ export type SyncExistingOnboardingResponse = z.infer<
 export type CreateOrganizationRequest = z.infer<
   typeof CreateOrganizationRequestSchema
 >
+export type CreateWorkspaceRequest = z.infer<
+  typeof CreateWorkspaceRequestSchema
+>
+export type OrganizationSwitcherItem = z.infer<
+  typeof OrganizationSwitcherItemSchema
+>
+export type ListOrganizationsMineResponse = z.infer<
+  typeof ListOrganizationsMineResponseSchema
+>
 export type CreateOrganizationResponse = z.infer<
   typeof CreateOrganizationResponseSchema
 >
@@ -220,6 +258,55 @@ export const InvoicingRequestSchema = z.object({
 })
 
 export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
+
+export const EnsureExpertProfileRequestSchema = z.object({
+  orgSlug: z.string().min(1).max(30),
+  displayName: z.string().min(1).max(200),
+})
+
+export type EnsureExpertProfileRequest = z.infer<
+  typeof EnsureExpertProfileRequestSchema
+>
+
+export const EnsureExpertProfileResponseSchema = z.object({
+  ok: z.literal(true),
+  profile: z.object({
+    id: z.string().uuid(),
+    orgId: z.string().uuid(),
+    userId: z.string().uuid(),
+    username: z.string(),
+    displayName: z.string(),
+    status: z.string(),
+    metadata: z.record(z.string(), z.unknown()).nullable().optional(),
+  }),
+})
+
+export type EnsureExpertProfileResponse = z.infer<
+  typeof EnsureExpertProfileResponseSchema
+>
+
+/** All completable expert onboarding / setup steps (API + metadata SSOT). */
+export const ExpertOnboardingStepSchema = z.enum([
+  "profile",
+  "connect",
+  "identity",
+  "invoicing",
+  "schedule",
+  "event-types",
+  "calendars",
+  "review",
+])
+
+export type ExpertOnboardingStep = z.infer<typeof ExpertOnboardingStepSchema>
+
+/** Ordered steps shown in the expert onboarding wizard UI. */
+export const EXPERT_WIZARD_STEPS = [
+  "profile",
+  "connect",
+  "identity",
+  "invoicing",
+  "schedule",
+] as const satisfies readonly ExpertOnboardingStep[]
 
 // ── Schedule ────────────────────────────────────────────────────────
 
@@ -402,6 +489,12 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     organizations: {
+      listMine() {
+        return request<ListOrganizationsMineResponse>(
+          "GET",
+          "/organizations/mine"
+        )
+      },
       create(data: CreateOrganizationRequest) {
         return request<CreateOrganizationResponse>(
           "POST",
@@ -479,6 +572,13 @@ export function createApiClient(options: ApiClientOptions) {
 
     experts: {
       profile: {
+        ensure(data: EnsureExpertProfileRequest) {
+          return request<EnsureExpertProfileResponse>(
+            "POST",
+            "/experts/profile/ensure",
+            data
+          )
+        },
         patch(data: PatchExpertProfileRequest) {
           return request<{ ok: true }>("PATCH", "/experts/profile", data)
         },

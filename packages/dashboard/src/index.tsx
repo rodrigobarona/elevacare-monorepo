@@ -8,7 +8,8 @@ export { NavThemeMenu } from "./nav-theme-menu"
 export { DashboardProviders } from "./dashboard-providers"
 export { ElevaThemeProvider } from "./eleva-theme-provider"
 export { useResolvedAppearance } from "./use-resolved-appearance"
-export { OrgSwitcherWidget } from "./org-switcher-widget"
+export { OrgSwitcher } from "./org-switcher"
+export { resolveOrgHomeUrl } from "./resolve-org-home-url"
 export { switchOrganization } from "./switch-org-action"
 export { getDashboardMessages } from "./messages"
 export { buildDashboardConfig } from "./config-helpers"
@@ -17,4 +18,5 @@ export type {
   NavGroup,
   DashboardUser,
   DashboardConfig,
+  OrgSwitcherItem,
 } from "./nav-types"

@@ -1,9 +1,9 @@
 "use server"
 
-import { getWidgetTokenFromSession } from "@eleva/auth/server"
-import { UnauthorizedError, type ProductLabel } from "@eleva/auth"
+import { listUserOrganizations } from "@eleva/auth/organizations"
+import { UnauthorizedError, type ProductLabel } from "@eleva/auth/types"
 import { resolveGatewayUrl } from "@eleva/config/env"
-import type { DashboardConfig, NavGroup } from "./nav-types"
+import type { DashboardConfig, NavGroup, OrgSwitcherItem } from "./nav-types"
 import { resolveProductHomeUrl } from "./resolve-product-home-url"
 
 type BuildDashboardConfigOverrides = Partial<
@@ -15,10 +15,12 @@ type BuildDashboardConfigOverrides = Partial<
 
 interface SessionLike {
   user: {
+    workosUserId: string
     displayName?: string | null
     email: string
     avatarUrl?: string | null
   }
+  workosOrgId?: string | null
   orgSlug?: string | null
   productLabel?: ProductLabel
   capabilities?: readonly string[]
@@ -29,7 +31,7 @@ const GATEWAY_URL = resolveGatewayUrl()
 /**
  * Build a complete DashboardConfig from a session and app-specific nav groups.
  *
- * Centralises the shared defaults (user mapping, URLs, widget token) so app
+ * Centralises the shared defaults (user mapping, URLs, organizations) so app
  * layouts only need to supply `navGroups` and optional overrides.
  */
 export async function buildDashboardConfig(
@@ -38,16 +40,19 @@ export async function buildDashboardConfig(
   overrides?: BuildDashboardConfigOverrides
 ): Promise<DashboardConfig> {
   const { enableOrgSwitcher = true, ...configOverrides } = overrides ?? {}
-  const fetchWidget = enableOrgSwitcher && session.orgSlug != null
-  const widgetToken = fetchWidget
-    ? await getWidgetTokenFromSession().catch((err) => {
+  const fetchOrganizations = enableOrgSwitcher && session.orgSlug != null
+  const organizations: OrgSwitcherItem[] = fetchOrganizations
+    ? await listUserOrganizations({
+        workosUserId: session.user.workosUserId,
+        currentWorkosOrgId: session.workosOrgId ?? null,
+      }).catch((err) => {
         if (!(err instanceof UnauthorizedError)) {
-          console.error("Unexpected error generating widget token", err)
+          console.error("Unexpected error loading organizations", err)
           throw err
         }
-        return null
+        return []
       })
-    : null
+    : []
 
   const homeUrl =
     configOverrides.homeUrl ??
@@ -62,7 +67,7 @@ export async function buildDashboardConfig(
     },
     orgSlug: session.orgSlug,
     capabilities: session.capabilities,
-    widgetToken,
+    organizations,
     accountUrl: `${GATEWAY_URL}/account/settings`,
     homepageUrl: `${GATEWAY_URL}/home`,
     logoutUrl: `${GATEWAY_URL}/logout`,

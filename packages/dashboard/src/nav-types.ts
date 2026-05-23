@@ -1,4 +1,5 @@
 import type { NavIconName } from "@eleva/icons"
+import type { OrgType, ProductLabel } from "@eleva/auth/types"
 
 export interface NavItem {
   title: string
@@ -21,6 +22,17 @@ export interface DashboardUser {
   avatarUrl?: string | null
 }
 
+export interface OrgSwitcherItem {
+  workosOrgId: string
+  orgId: string
+  orgSlug: string
+  orgType: OrgType
+  name: string
+  workosRole: "admin" | "member"
+  productLabel: ProductLabel
+  isCurrent: boolean
+}
+
 export interface DashboardConfig {
   /** Navigation groups rendered in the sidebar */
   navGroups: NavGroup[]
@@ -32,8 +44,8 @@ export interface DashboardConfig {
   homeUrl?: string
   /** User capabilities for gating nav items */
   capabilities?: readonly string[]
-  /** Widget token for the org switcher (null hides switcher; use enableOrgSwitcher: false in buildDashboardConfig) */
-  widgetToken?: string | null
+  /** Organizations for the workspace switcher */
+  organizations?: OrgSwitcherItem[]
   /** Account settings URL */
   accountUrl?: string
   /** Settings page URL (falls back to parent path of accountUrl) */

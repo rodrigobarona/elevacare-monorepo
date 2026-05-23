@@ -17,6 +17,7 @@ function chain(rows: unknown[]) {
   c.values = vi.fn().mockReturnValue(c)
   c.returning = vi.fn().mockReturnValue(rows)
   c.onConflictDoUpdate = vi.fn().mockReturnValue(c)
+  c.onConflictDoNothing = vi.fn().mockReturnValue(c)
   c.set = vi.fn().mockReturnValue(c)
   c.then = vi.fn((resolve: (v: unknown) => void) => resolve(rows))
   return c

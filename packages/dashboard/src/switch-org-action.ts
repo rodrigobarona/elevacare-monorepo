@@ -1,35 +1,29 @@
 "use server"
 
-import { getSignInUrl } from "@workos-inc/authkit-nextjs"
+import { redirect } from "next/navigation"
+import { switchToOrganization } from "@workos-inc/authkit-nextjs"
+import { sanitizeReturnTo } from "@eleva/auth/return-to"
+import { gatewayUrl } from "./gateway-url"
 
-/** Reject absolute URLs, protocol-relative URLs, and scheme-bearing paths. */
-function sanitizeReturnTo(value: string | undefined): string {
-  if (
-    typeof value === "string" &&
-    value.startsWith("/") &&
-    !value.startsWith("//") &&
-    !/^\/.*:/.test(value)
-  ) {
-    return value
-  }
-  return "/"
+function resolveReturnPath(value: string | undefined): string {
+  if (!value) return "/dashboard"
+  return sanitizeReturnTo(value) ?? "/dashboard"
 }
 
 /**
- * Generates a sign-in URL that targets a specific organization.
- * When the user authenticates via this URL, their session will be
- * scoped to the target organization.
- *
- * Returns `{ redirectUrl }` for the client to navigate to.
+ * Switches the WorkOS session to `organizationId`, then redirects through
+ * the gateway to the target org home (multi-zone safe in dev).
  */
 export async function switchOrganization(
   organizationId: string,
   returnTo?: string
-): Promise<{ redirectUrl: string }> {
-  const url = await getSignInUrl({
-    organizationId,
-    returnTo: sanitizeReturnTo(returnTo),
+): Promise<void> {
+  const path = resolveReturnPath(returnTo)
+
+  await switchToOrganization(organizationId, {
+    returnTo: path,
+    revalidationStrategy: "none",
   })
 
-  return { redirectUrl: url }
+  redirect(gatewayUrl(path))
 }

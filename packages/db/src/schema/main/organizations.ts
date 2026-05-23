@@ -14,6 +14,7 @@ export const orgTypeEnum = pgEnum("org_type", [
   "personal",
   "expert",
   "team",
+  "academy",
   "staff",
 ])
 
@@ -29,6 +30,7 @@ export const orgTypeEnum = pgEnum("org_type", [
  *   label lives here.
  * - type='expert' : created on Become-Partner approval (freelance expert).
  * - type='team' : team/clinic signup; team admins hold workos_role='admin'.
+ * - type='academy' : lecturer LMS org; admins hold workos_role='admin'.
  * - type='staff' : single internal org for Eleva staff, with
  *   cross-org capability bundles.
  */

@@ -12,5 +12,52 @@
     "themeLight": "Claro",
     "themeDark": "Oscuro",
     "themeSystem": "Sistema"
+  },
+  "orgSwitcher": {
+    "findWorkspace": "Buscar workspace…",
+    "createWorkspace": "Crear workspace",
+    "createWorkspaceDescription": "Workspace expert, team o academy",
+    "close": "Cerrar",
+    "noResults": "No se encontraron workspaces",
+    "badgePersonal": "Personal",
+    "badgeExpert": "Experto",
+    "badgeTeam": "Team",
+    "badgeAcademy": "Academia",
+    "badgeStaff": "Staff"
+  },
+  "picker": {
+    "title": "Seleccionar un workspace",
+    "description": "Elige a qué workspace quieres acceder."
+  },
+  "createWorkspace": {
+    "pickerTitle": "Crear un workspace",
+    "pickerDescription": "Elige el tipo de workspace que quieres crear.",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "nameLabel": "Nombre del workspace",
+    "namePlaceholder": "Mi workspace",
+    "submit": "Crear workspace",
+    "submitting": "Creando…",
+    "errorGeneric": "No pudimos crear tu workspace. Inténtalo de nuevo.",
+    "types": {
+      "expert": {
+        "title": "Expert",
+        "description": "Gestiona tu consulta independiente en Eleva.",
+        "wizardTitle": "Nombre del workspace expert",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      },
+      "team": {
+        "title": "Team",
+        "description": "Gestiona varios expertos en una sola organización.",
+        "wizardTitle": "Nombre del workspace team",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      },
+      "academy": {
+        "title": "Academy",
+        "description": "Publica y gestiona cursos para tus alumnos.",
+        "wizardTitle": "Nombre del workspace academy",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      }
+    }
   }
 }

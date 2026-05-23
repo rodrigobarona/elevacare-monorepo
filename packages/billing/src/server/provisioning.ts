@@ -14,6 +14,7 @@ const ORG_TYPE_TO_TIER: Record<string, ProductTier> = {
   personal: "member_free",
   expert: "expert_community",
   team: "clinic_starter",
+  academy: "member_free",
   staff: "member_free",
 }
 

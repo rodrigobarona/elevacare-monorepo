@@ -113,14 +113,15 @@ describe("resolveDispatch - admin redirect", () => {
 })
 
 describe("resolveDispatch - org-scoped second segment", () => {
-  it("dispatches /:slug/expert to expert origin", () => {
-    expect(
-      resolveDispatch("/clinica-mota/expert/availability", true, origins)
-    ).toEqual({ kind: "rewrite", origin: "http://expert" })
+  it("dispatches /:slug/team to expert origin (clinic experts)", () => {
+    expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({
+      kind: "rewrite",
+      origin: "http://expert",
+    })
   })
 
-  it("dispatches /:slug/team to team origin", () => {
-    expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({
+  it("dispatches /:slug/admin to team origin (clinic managers)", () => {
+    expect(resolveDispatch("/clinica-mota/admin", true, origins)).toEqual({
       kind: "rewrite",
       origin: "http://team",
     })

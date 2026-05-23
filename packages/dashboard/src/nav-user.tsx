@@ -24,6 +24,7 @@ import {
   getAvatarSeed,
 } from "@eleva/ui/lib/avatar-utils"
 import type { DashboardUser } from "./nav-types"
+import { gatewayUrl } from "./gateway-url"
 import { NavThemeMenu } from "./nav-theme-menu"
 
 interface NavUserProps {
@@ -37,11 +38,6 @@ interface NavUserProps {
 function deriveParentPath(url: string): string {
   const lastSlash = url.lastIndexOf("/")
   return lastSlash > 0 ? url.slice(0, lastSlash) : "/"
-}
-
-function gatewayUrl(path: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "")
-  return base ? `${base}${path}` : path
 }
 
 export function NavUser({

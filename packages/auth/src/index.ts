@@ -20,12 +20,14 @@ export {
   provisionUser,
   provisionOrganization,
   provisionMembership,
+  ensureExpertProfileForOrg,
   completeOnboarding,
   type ProvisionUserInput,
   type ProvisionUserResult,
   type ProvisionOrganizationInput,
   type ProvisionOrganizationResult,
   type ProvisionMembershipInput,
+  type EnsureExpertProfileResult,
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
 } from "./provisioning"
@@ -68,5 +70,14 @@ export {
   scopesForWidget,
   type WidgetComponent,
 } from "./widget-scopes"
+export {
+  listUserOrganizations,
+  createOrganization,
+  type UserOrganizationItem,
+  type ListUserOrganizationsInput,
+  type CreateOrganizationInput,
+  type CreateOrganizationResult,
+} from "./organizations"
+export { getWorkOS } from "./workos-client"
 export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"

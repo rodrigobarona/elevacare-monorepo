@@ -12,5 +12,52 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSystem": "System"
+  },
+  "orgSwitcher": {
+    "findWorkspace": "Find workspace…",
+    "createWorkspace": "Create workspace",
+    "createWorkspaceDescription": "Expert, team, or academy workspace",
+    "close": "Close",
+    "noResults": "No workspaces found",
+    "badgePersonal": "Personal",
+    "badgeExpert": "Expert",
+    "badgeTeam": "Team",
+    "badgeAcademy": "Academy",
+    "badgeStaff": "Staff"
+  },
+  "picker": {
+    "title": "Select a workspace",
+    "description": "Choose which workspace to access."
+  },
+  "createWorkspace": {
+    "pickerTitle": "Create a workspace",
+    "pickerDescription": "Choose the type of workspace you want to create.",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "nameLabel": "Workspace name",
+    "namePlaceholder": "My workspace",
+    "submit": "Create workspace",
+    "submitting": "Creating…",
+    "errorGeneric": "We couldn't create your workspace. Please try again.",
+    "types": {
+      "expert": {
+        "title": "Expert",
+        "description": "Run your independent practice on Eleva.",
+        "wizardTitle": "Name your expert workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      },
+      "team": {
+        "title": "Team",
+        "description": "Manage multiple experts under one organization.",
+        "wizardTitle": "Name your team workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      },
+      "academy": {
+        "title": "Academy",
+        "description": "Publish and manage courses for your learners.",
+        "wizardTitle": "Name your academy workspace",
+        "wizardDescription": "This is how your workspace will appear in Eleva."
+      }
+    }
   }
 }

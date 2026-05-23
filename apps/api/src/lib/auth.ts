@@ -1,4 +1,5 @@
 import { getSession, type ElevaSession, UnauthorizedError } from "@eleva/auth"
+import { secureJson } from "@/lib/security-headers"
 
 export type ApiAuthResult =
   | { type: "session"; session: ElevaSession }
@@ -74,6 +75,21 @@ export async function requireApiCapability(
   return session
 }
 
+/** Map UnauthorizedError to 401/403 JSON for route handlers. */
+export function apiAuthFailure(
+  err: unknown,
+  headers: Record<string, string>
+): Response | null {
+  if (err instanceof UnauthorizedError) {
+    const forbidden = err.code === "missing-capability"
+    return secureJson(
+      { error: forbidden ? "forbidden" : "unauthorized", code: err.code },
+      { status: forbidden ? 403 : 401, headers }
+    )
+  }
+  return null
+}
+
 function sessionFromBearerHeaders(request: Request): ElevaSession | null {
   const headers = request.headers
   const userId = headers.get("x-eleva-user-id")
@@ -82,6 +98,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
   const orgId = headers.get("x-eleva-org-id")
   const workosOrgId = headers.get("x-eleva-workos-org-id")
   const productLabel = headers.get("x-eleva-product-label")
+  const orgType = headers.get("x-eleva-org-type")
   const workosRole = headers.get("x-eleva-workos-role")
 
   if (
@@ -91,6 +108,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
     !orgId ||
     !workosOrgId ||
     !isProductLabel(productLabel) ||
+    !isOrgType(orgType) ||
     !isWorkosRole(workosRole)
   ) {
     return null
@@ -108,6 +126,7 @@ function sessionFromBearerHeaders(request: Request): ElevaSession | null {
     workosOrgId,
     orgSlug: headers.get("x-eleva-org-slug"),
     productLabel,
+    orgType,
     workosRole,
     capabilities: splitHeader(headers.get("x-eleva-capabilities")),
     entitlements: splitHeader(headers.get("x-eleva-entitlements")),
@@ -139,4 +158,14 @@ function isWorkosRole(
   value: string | null
 ): value is ElevaSession["workosRole"] {
   return value === "admin" || value === "member"
+}
+
+function isOrgType(value: string | null): value is ElevaSession["orgType"] {
+  return (
+    value === "personal" ||
+    value === "expert" ||
+    value === "team" ||
+    value === "academy" ||
+    value === "staff"
+  )
 }

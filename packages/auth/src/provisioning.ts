@@ -1,7 +1,13 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { db, main, findExistingOrgSlugs } from "@eleva/db"
+import {
+  _ensureExpertProfileForOrgDetailed,
+  type EnsureExpertProfileResult,
+} from "@eleva/db/queries/admin"
 import { withAudit } from "@eleva/audit"
 import { generateUniqueOrgSlug } from "@eleva/config/slug"
+
+export type { EnsureExpertProfileResult } from "@eleva/db/queries/admin"
 
 /**
  * Provisioning functions for users, organizations, and memberships.
@@ -199,7 +205,7 @@ export async function provisionUser(
 export interface ProvisionOrganizationInput {
   workosOrgId: string
   name: string
-  type?: "personal" | "expert" | "team" | "staff"
+  type?: "personal" | "expert" | "team" | "academy" | "staff"
   slug?: string
   actorUserId?: string | null
 }
@@ -283,6 +289,123 @@ export async function provisionOrganization(
   return { orgId, slug, created: true }
 }
 
+export interface ProvisionOrganizationWithAdminMembershipInput {
+  workosOrgId: string
+  name: string
+  userId: string
+  type?: "personal" | "expert" | "team" | "academy" | "staff"
+  actorUserId: string
+}
+
+/**
+ * Atomically provisions a new organization and admin membership in one audit
+ * transaction. Used by createOrganization to avoid half-provisioned orgs.
+ */
+export async function provisionOrganizationWithAdminMembership(
+  input: ProvisionOrganizationWithAdminMembershipInput
+): Promise<ProvisionOrganizationResult> {
+  const slug = await generateUniqueOrgSlug(input.name, findExistingOrgSlugs)
+  const type = input.type ?? "personal"
+
+  const [existing] = await db()
+    .select({
+      id: main.organizations.id,
+      slug: main.organizations.slug,
+    })
+    .from(main.organizations)
+    .where(eq(main.organizations.workosOrgId, input.workosOrgId))
+    .limit(1)
+
+  if (existing) {
+    let resolvedSlug = existing.slug ?? slug
+    await withAudit(
+      { orgId: existing.id, actorUserId: input.actorUserId },
+      async (tx, ctx) => {
+        if (existing.slug === null) {
+          await tx
+            .update(main.organizations)
+            .set({ slug, updatedAt: new Date() })
+            .where(eq(main.organizations.id, existing.id))
+          resolvedSlug = slug
+        }
+
+        const [existingMembership] = await tx
+          .select({ id: main.memberships.id })
+          .from(main.memberships)
+          .where(
+            and(
+              eq(main.memberships.userId, input.userId),
+              eq(main.memberships.orgId, existing.id)
+            )
+          )
+          .limit(1)
+
+        const [membershipRow] = await tx
+          .insert(main.memberships)
+          .values({
+            userId: input.userId,
+            orgId: existing.id,
+            workosRole: "admin",
+            status: "active",
+          })
+          .onConflictDoUpdate({
+            target: [main.memberships.userId, main.memberships.orgId],
+            set: {
+              workosRole: "admin",
+              status: "active",
+              updatedAt: new Date(),
+            },
+          })
+          .returning({ id: main.memberships.id })
+
+        await ctx.emit({
+          entity: "membership",
+          action: existingMembership ? "updated" : "created",
+          entityId: membershipRow!.id,
+          payload: {
+            userId: input.userId,
+            orgId: existing.id,
+            role: "admin",
+          },
+        })
+      }
+    )
+    return { orgId: existing.id, slug: resolvedSlug, created: false }
+  }
+
+  const orgId = crypto.randomUUID()
+  await withAudit(
+    { orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      await tx.insert(main.organizations).values({
+        id: orgId,
+        workosOrgId: input.workosOrgId,
+        type,
+        slug,
+      })
+      await tx.insert(main.memberships).values({
+        userId: input.userId,
+        orgId,
+        workosRole: "admin",
+        status: "active",
+      })
+      await ctx.emit({
+        entity: "organization",
+        action: "created",
+        entityId: orgId,
+        payload: {
+          type,
+          workosOrgId: input.workosOrgId,
+          slug,
+          membership: { userId: input.userId, role: "admin" },
+        },
+      })
+    }
+  )
+
+  return { orgId, slug, created: true }
+}
+
 export interface ProvisionMembershipInput {
   userId: string
   orgId: string
@@ -338,12 +461,36 @@ export async function provisionMembership(
   )
 }
 
+export async function ensureExpertProfileForOrg(input: {
+  userId: string
+  orgId: string
+  orgSlug: string
+  displayName: string
+  actorUserId: string
+}): Promise<EnsureExpertProfileResult> {
+  return withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      const result = await _ensureExpertProfileForOrgDetailed(input, tx)
+      await ctx.emit({
+        entity: "expert_profile",
+        action: result.created ? "created" : "updated",
+        entityId: result.profile.id,
+        payload: result.created
+          ? { userId: input.userId, orgSlug: input.orgSlug }
+          : { ensured: true },
+      })
+      return result
+    }
+  )
+}
+
 export interface CompleteOnboardingInput {
   workosUserId: string
   workosOrgId: string
   orgName: string
   role: "admin" | "member"
-  orgType?: "personal" | "expert" | "team" | "staff"
+  orgType?: "personal" | "expert" | "team" | "academy" | "staff"
   actorUserId?: string | null
 }
 

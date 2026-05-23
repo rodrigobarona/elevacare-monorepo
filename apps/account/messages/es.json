@@ -65,9 +65,41 @@
     "errorGeneric": "No pudimos completar la configuración. Inténtalo de nuevo."
   },
   "organizations": {
-    "title": "Organizaciones",
-    "description": "Gestiona tus organizaciones, crea nuevas o abandona las existentes.",
-    "placeholder": "Gestión de organizaciones próximamente."
+    "title": "Workspaces",
+    "description": "Gestiona tus workspaces, crea nuevos o cambia entre ellos.",
+    "createWorkspace": "Crear workspace"
+  },
+  "createWorkspace": {
+    "back": "Atrás",
+    "pickerTitle": "Crear un workspace",
+    "pickerDescription": "Elige el tipo de workspace que quieres crear.",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "nameLabel": "Nombre del workspace",
+    "namePlaceholder": "Mi workspace",
+    "submit": "Crear workspace",
+    "submitting": "Creando…",
+    "errorGeneric": "No pudimos crear tu workspace. Inténtalo de nuevo.",
+    "types": {
+      "expert": {
+        "title": "Expert",
+        "description": "Gestiona tu consulta independiente en Eleva.",
+        "wizardTitle": "Nombre del workspace expert",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      },
+      "team": {
+        "title": "Team",
+        "description": "Gestiona varios expertos en una sola organización.",
+        "wizardTitle": "Nombre del workspace team",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      },
+      "academy": {
+        "title": "Academy",
+        "description": "Publica y gestiona cursos para tus alumnos.",
+        "wizardTitle": "Nombre del workspace academy",
+        "wizardDescription": "Así aparecerá tu workspace en Eleva."
+      }
+    }
   },
   "billing": {
     "title": "Facturación",

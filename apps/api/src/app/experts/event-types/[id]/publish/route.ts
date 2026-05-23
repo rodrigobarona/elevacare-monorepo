@@ -1,9 +1,8 @@
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
-import { UnauthorizedError } from "@eleva/auth"
 import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateEventType } from "@eleva/db"
 
@@ -22,11 +21,10 @@ export async function PATCH(
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireApiCapability(request, "events:manage")
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const authFailure = apiAuthFailure(err, headers)
+    if (authFailure) return authFailure
     throw err
   }
 
@@ -47,7 +45,7 @@ export async function PATCH(
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
-      { error: "not_found", message: "no expert profile" },
+      { error: "not found", message: "no expert profile" },
       { status: 404, headers }
     )
   }

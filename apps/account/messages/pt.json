@@ -65,9 +65,41 @@
     "errorGeneric": "Não foi possível concluir a configuração. Tente novamente."
   },
   "organizations": {
-    "title": "Organizações",
-    "description": "Gerir as suas organizações, criar novas ou sair das existentes.",
-    "placeholder": "Gestão de organizações em breve."
+    "title": "Workspaces",
+    "description": "Gira os seus workspaces, crie novos ou alterne entre eles.",
+    "createWorkspace": "Criar workspace"
+  },
+  "createWorkspace": {
+    "back": "Voltar",
+    "pickerTitle": "Criar um workspace",
+    "pickerDescription": "Escolha o tipo de workspace que pretende criar.",
+    "continue": "Continuar",
+    "cancel": "Cancelar",
+    "nameLabel": "Nome do workspace",
+    "namePlaceholder": "O meu workspace",
+    "submit": "Criar workspace",
+    "submitting": "A criar…",
+    "errorGeneric": "Não foi possível criar o workspace. Tente novamente.",
+    "types": {
+      "expert": {
+        "title": "Especialista",
+        "description": "Gerencie a sua prática independente na Eleva.",
+        "wizardTitle": "Nome do workspace de especialista",
+        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+      },
+      "team": {
+        "title": "Team",
+        "description": "Gerencie vários especialistas numa única organização.",
+        "wizardTitle": "Nome do workspace team",
+        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+      },
+      "academy": {
+        "title": "Academia",
+        "description": "Publique e gira cursos para os seus formandos.",
+        "wizardTitle": "Nome do workspace de academia",
+        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+      }
+    }
   },
   "billing": {
     "title": "Faturação",
