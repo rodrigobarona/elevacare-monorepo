@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings Forge · Eleva Design Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'IBM Plex Sans', sans-serif; }
+    .row-expand { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+    .row-expand.open { max-height: 280px; }
+  </style>
+</head>
+<body class="min-h-screen bg-stone-100 text-stone-900">
+  <div class="mx-auto flex min-h-screen max-w-4xl">
+    <aside class="hidden w-48 shrink-0 border-r border-stone-200 bg-white p-4 md:block">
+      <p class="text-xs font-semibold uppercase text-stone-400">Expert Space</p>
+      <nav class="mt-4 space-y-1 text-sm">
+        <p class="rounded-md bg-stone-900 px-3 py-2 font-medium text-white">Setup</p>
+        <p class="px-3 py-2 text-stone-500">Profile</p>
+        <p class="px-3 py-2 text-stone-500">Payouts</p>
+      </nav>
+    </aside>
+    <main class="flex-1 p-6 md:p-10">
+      <a href="/expert-onboarding" class="text-sm text-stone-500 hover:text-stone-800">← Design Lab</a>
+      <h1 class="mt-4 text-2xl font-semibold">Finish setting up</h1>
+      <p class="mt-1 text-sm text-stone-500">Podia / Whop-style inline editors · L8</p>
+      <div id="rows" class="mt-8 space-y-2"></div>
+      <div class="mt-10 rounded-xl border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500">
+        <span id="progress">0</span> of 6 complete · Publish unlocks when required rows are done
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const SLUG = 'settings-forge';
+    function labLoad(){try{var r=localStorage.getItem('eleva-lab:'+SLUG);return r?JSON.parse(r):{}}catch(e){return{}}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+
+    let draft = labLoad();
+    let openRow = null;
+
+    const ROWS = [
+      { key: 'photo', label: 'Profile photo', required: true, status: () => draft.photosDone ? 'complete' : 'pending',
+        editor: () => `<button type="button" class="upload-btn rounded-lg bg-stone-900 px-4 py-2 text-sm text-white">Upload mock photo</button>` },
+      { key: 'session', label: 'First bookable session', required: true, status: () => draft.sessionTitle ? 'complete' : 'pending',
+        editor: () => `<input id="sess" value="${draft.sessionTitle||''}" placeholder="Session title" class="w-full rounded-lg border px-3 py-2" /><input id="price" type="number" value="${draft.eventPrice||''}" placeholder="Price €" class="mt-2 w-full rounded-lg border px-3 py-2" />` },
+      { key: 'payout', label: 'Payout commission', required: true, status: () => draft.payoutPercent != null ? 'complete' : 'pending',
+        editor: () => `<label class="text-sm">Platform fee % <input id="pct" type="range" min="5" max="20" value="${draft.payoutPercent||12}" class="ml-2 w-48" /><span id="pctVal">${draft.payoutPercent||12}%</span></label>` },
+      { key: 'mfa', label: 'Two-factor authentication', required: false, status: () => draft.mfaEnabled ? 'complete' : 'optional',
+        editor: () => `<label class="flex items-center gap-2 text-sm"><input id="mfa" type="checkbox" ${draft.mfaEnabled?'checked':''} /> Enable authenticator app</label>` },
+      { key: 'stripe', label: 'Stripe Connect', required: true, status: () => draft.stripeDone ? 'complete' : 'pending',
+        editor: () => `<button type="button" class="stripe-btn rounded-lg border px-4 py-2 text-sm">Connect Stripe (mock)</button>` },
+      { key: 'compliance', label: 'Compliance gate', required: true, status: () => draft.complianceDone ? 'complete' : 'pending',
+        editor: () => `<label class="flex items-start gap-2 text-sm"><input id="comp" type="checkbox" ${draft.complianceDone?'checked':''} /> I confirm license scope and independent practice for ${draft.practiceCountry||'PT'}</label>` },
+    ];
+
+    function chip(status) {
+      const map = { complete: 'bg-emerald-100 text-emerald-800', pending: 'bg-amber-100 text-amber-900', optional: 'bg-stone-200 text-stone-600' };
+      const labels = { complete: 'Complete', pending: 'Required', optional: 'Optional' };
+      return `<span class="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase ${map[status]}">${labels[status]}</span>`;
+    }
+
+    function render() {
+      const done = ROWS.filter(r => r.status() === 'complete').length;
+      document.getElementById('progress').textContent = done;
+      document.getElementById('rows').innerHTML = ROWS.map((row, i) => {
+        const st = row.status();
+        const isOpen = openRow === i;
+        return `
+          <div class="rounded-xl border border-stone-200 bg-white overflow-hidden">
+            <button type="button" data-i="${i}" class="row-toggle flex w-full items-center justify-between px-5 py-4 text-left hover:bg-stone-50">
+              <span class="font-medium">${row.label}</span>
+              <span class="flex items-center gap-2">${chip(st)}<span class="text-stone-400">${isOpen?'−':'+'}</span></span>
+            </button>
+            <div class="row-expand ${isOpen?'open':''} border-t border-stone-100 px-5 pb-4">
+              <div class="pt-4">${row.editor()}</div>
+              <button type="button" data-save="${i}" class="mt-3 rounded-lg bg-stone-900 px-4 py-2 text-sm text-white">Save</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      document.querySelectorAll('.row-toggle').forEach(btn => {
+        btn.onclick = () => { openRow = openRow === +btn.dataset.i ? null : +btn.dataset.i; render(); };
+      });
+      document.querySelectorAll('[data-save]').forEach(btn => {
+        btn.onclick = () => {
+          const i = +btn.dataset.save;
+          const key = ROWS[i].key;
+          if (key === 'photo') draft.photosDone = true;
+          if (key === 'session') { draft.sessionTitle = document.getElementById('sess')?.value; draft.eventPrice = document.getElementById('price')?.value; }
+          if (key === 'payout') draft.payoutPercent = +document.getElementById('pct')?.value;
+          if (key === 'mfa') draft.mfaEnabled = document.getElementById('mfa')?.checked;
+          if (key === 'stripe') draft.stripeDone = true;
+          if (key === 'compliance') draft.complianceDone = document.getElementById('comp')?.checked;
+          if (!draft.practiceCountry) draft.practiceCountry = 'PT';
+          labSave(draft);
+          openRow = null;
+          render();
+        };
+      });
+      const pct = document.getElementById('pct');
+      if (pct) pct.oninput = e => { document.getElementById('pctVal').textContent = e.target.value + '%'; };
+    }
+
+    render();
+  </script>
+</body>
+</html>

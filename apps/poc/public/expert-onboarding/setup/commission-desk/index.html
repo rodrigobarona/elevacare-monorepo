@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Commission Desk · S10</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+</head>
+<body class="min-h-screen bg-stone-900 text-white">
+  <div id="gate"></div>
+  <div id="app" class="hidden">
+    <main class="mx-auto max-w-lg px-6 py-12 pb-28">
+      <a href="/expert-onboarding" class="text-sm text-stone-400">← Hub</a>
+      <p class="mt-6 text-xs uppercase tracking-widest text-stone-500">S10 · Commission desk</p>
+      <h1 class="mt-4 text-3xl font-semibold">Payout & promos</h1>
+      <label class="mt-8 block text-sm">Platform fee % <span id="pctVal" class="ml-2 text-xl">12%</span></label>
+      <input id="pct" type="range" min="5" max="20" value="12" class="mt-2 w-full" />
+      <label class="mt-8 flex items-center gap-3 text-sm"><input id="intro" type="checkbox" /> Enable intro session offers</label>
+    </main>
+    <footer class="fixed bottom-0 inset-x-0 border-t border-stone-700 bg-stone-900/95 px-6 py-4">
+      <button id="save" type="button" class="w-full rounded-xl bg-white py-3 font-medium text-stone-900">Save commission settings</button>
+    </footer>
+  </div>
+  <script>
+    const SLUG='commission-desk';
+    const SEED={spaceCreated:true,workspaceName:"Ana's Expert Space",payoutPercent:12};
+    function labLoad(){try{var r=localStorage.getItem('eleva-lab:'+SLUG);return r?{...SEED,...JSON.parse(r)}:SEED}catch(e){return SEED}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    let draft=labLoad();
+    const pct=document.getElementById('pct'), val=document.getElementById('pctVal');
+    pct.oninput=()=>{val.textContent=pct.value+'%';draft.payoutPercent=+pct.value;labSave(draft)};
+    document.getElementById('save').onclick=()=>{draft.introOffers=document.getElementById('intro').checked;labSave(draft);alert('Saved (mock)')};
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{
+      draft={...SEED,...labLoad(),spaceCreated:true}; labSave(draft);
+      document.getElementById('app').classList.remove('hidden');
+      if(draft.payoutPercent) pct.value=draft.payoutPercent;
+    });
+  </script>
+</body>
+</html>

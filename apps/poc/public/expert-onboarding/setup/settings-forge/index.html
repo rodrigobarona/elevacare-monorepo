@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings Forge · S1</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+</head>
+<body class="min-h-screen bg-stone-100">
+  <div id="gate"></div>
+  <div id="app" class="hidden">
+    <main class="mx-auto max-w-4xl p-6 md:p-10">
+      <a href="/expert-onboarding" class="text-sm text-stone-500">← Hub</a>
+      <h1 class="mt-4 text-2xl font-semibold">Finish setting up</h1>
+      <p class="text-sm text-stone-500">S1 · Settings forge · inline expand editors</p>
+      <div id="rows" class="mt-8 space-y-2"></div>
+    </main>
+  </div>
+  <script>
+    const SLUG='settings-forge';
+    const SEED={spaceCreated:true,workspaceName:"Ana's Expert Space",specialty:'Clinical nutrition',practiceCountry:'PT',sessionTitle:'Intro consultation',eventPrice:65};
+    function labLoad(){try{var r=localStorage.getItem('eleva-lab:'+SLUG);return r?{...SEED,...JSON.parse(r)}:SEED}catch(e){return SEED}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    let draft=labLoad(), openRow=null;
+    const ROWS=[
+      {k:'photos',l:'Profile photos',done:()=>draft.photosDone,save:()=>{draft.photosDone=true}},
+      {k:'stripe',l:'Stripe Connect',done:()=>draft.stripeDone,save:()=>{draft.stripeDone=true}},
+      {k:'compliance',l:'Compliance gate',done:()=>draft.complianceDone,save:()=>{draft.complianceDone=true}},
+    ];
+    function render(){
+      document.getElementById('rows').innerHTML=ROWS.map((r,i)=>`<div class="rounded-xl border bg-white"><button type="button" data-i="${i}" class="row flex w-full justify-between px-5 py-4"><span>${r.l}</span><span>${r.done()?'✓':'○'}</span></button></div>`).join('');
+      document.querySelectorAll('.row').forEach(b=>b.onclick=()=>{ROWS[+b.dataset.i].save();labSave(draft);render()});
+    }
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{
+      draft={...SEED,...labLoad(),spaceCreated:true}; labSave(draft);
+      document.getElementById('app').classList.remove('hidden'); render();
+    });
+  </script>
+</body>
+</html>

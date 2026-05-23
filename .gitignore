@@ -23,8 +23,9 @@ package-lock.json
 # Testing
 coverage
 
-# Turbo
-.turbo
+# Turbo (keep team link config; ignore local cache + run artifacts)
+.turbo/*
+!.turbo/config.json
 
 # Vercel (keep .vercel/repo.json and README.txt for monorepo linking;
 # ignore per-project secrets in .vercel/project.json).
@@ -48,3 +49,6 @@ npm-debug.log*
 *.pem
 _context/Postman OAuth2 Credentials.json
 .vercel
+
+# Turborepo
+.turbo

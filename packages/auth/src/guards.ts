@@ -1,8 +1,22 @@
 import { redirect } from "next/navigation"
+import { resolveGatewayUrl } from "@eleva/config/env"
+import { sanitizeReturnTo } from "./return-to"
 import { getSession, getSessionForOrg } from "./server"
 import type { ElevaSession } from "./types"
 
 export const LOGIN_PATH = "/login" as const
+
+/** Absolute gateway login URL with a sanitized relative return path. */
+export function buildGatewayLoginUrl(returnTo?: string | null): string {
+  const gateway = resolveGatewayUrl().replace(/\/$/, "")
+  const path = sanitizeReturnTo(returnTo ?? undefined) ?? "/dashboard"
+  return `${gateway}${LOGIN_PATH}?returnTo=${encodeURIComponent(path)}`
+}
+
+/** Redirect unauthenticated users to gateway login (multi-zone safe). */
+export function redirectToGatewayLogin(returnTo?: string | null): never {
+  redirect(buildGatewayLoginUrl(returnTo))
+}
 
 /**
  * Page/layout guard -- redirects to the login page when there is no
@@ -14,7 +28,7 @@ export const LOGIN_PATH = "/login" as const
  */
 export async function guardSession(): Promise<ElevaSession> {
   const session = await getSession()
-  if (!session) redirect(LOGIN_PATH)
+  if (!session) redirectToGatewayLogin("/dashboard")
   return session
 }
 
@@ -27,6 +41,6 @@ export async function guardSessionForOrg(
   orgSlug: string
 ): Promise<ElevaSession> {
   const session = await getSessionForOrg(orgSlug)
-  if (!session) redirect(LOGIN_PATH)
+  if (!session) redirectToGatewayLogin(`/${orgSlug}`)
   return session
 }

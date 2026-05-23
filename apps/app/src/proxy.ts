@@ -1,4 +1,5 @@
 import { createAuthProxy } from "@eleva/auth/proxy"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { withHeaders } from "@eleva/observability/proxy"
 import {
   MEMBER_APP_UNAUTHENTICATED_PATHS,
@@ -13,6 +14,7 @@ import {
  */
 export default withHeaders(
   createAuthProxy({
+    redirect: { kind: "gateway", baseUrl: resolveGatewayUrl() },
     unauthenticatedPaths: MEMBER_APP_UNAUTHENTICATED_PATHS,
     onAuthenticated: trackLastActiveOrg,
   })

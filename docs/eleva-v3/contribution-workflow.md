@@ -67,7 +67,11 @@ Keep sprint PRs under this limit:
 
 - Reduce counted files via `.coderabbit.yaml` → `reviews.path_filters`
   (excludes lockfiles, `.next/`, `dist/`, `coverage/`, `.turbo/`,
-  generated types, Husky shims, Cursor state, `_context/`).
+  generated types, Husky shims, Cursor state, `_context/`, the PoC demo
+  app `apps/poc/`, and PoC specs `_context/PoCs/`).
+- `apps/poc` is also excluded from CI lint, typecheck, and build
+  (`turbo --filter=!@eleva/poc`) and from pre-commit eslint — it is an
+  internal playground, not a production app.
 - If a sprint's scope genuinely exceeds 150 reviewable files, **split
   the PR** along sub-step boundaries (S1.1, S1.2 … ) so each land
   gets its own review. Track the split in the sprint's plan.

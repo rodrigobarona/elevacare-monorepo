@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trust Clinic · Eleva Design Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Source Sans 3', sans-serif; }
+    .serif { font-family: 'Fraunces', serif; }
+    .otp-box:focus { outline: 2px solid #059669; outline-offset: 2px; }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f4f7f4] text-stone-800">
+  <header class="border-b border-emerald-900/10 bg-white px-6 py-4">
+    <div class="mx-auto flex max-w-xl items-center justify-between">
+      <span class="serif text-xl text-emerald-900">eleva care</span>
+      <a href="/expert-onboarding" class="text-sm text-stone-500 hover:text-emerald-800">Design Lab</a>
+    </div>
+  </header>
+
+  <main id="main" class="mx-auto max-w-xl px-6 py-12"></main>
+
+  <script>
+    const SLUG = 'trust-clinic';
+    function labLoad(){try{var r=localStorage.getItem('eleva-lab:'+SLUG);return r?JSON.parse(r):{}}catch(e){return{}}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+
+    let step = 0;
+    let draft = labLoad();
+
+    const screens = [
+      () => `
+        <p class="text-xs font-semibold uppercase tracking-widest text-emerald-700">Clinical onboarding</p>
+        <h1 class="serif mt-4 text-3xl text-emerald-950">Verify your professional email</h1>
+        <p class="mt-3 text-stone-600">We sent a 6-digit code to <strong>a***@clinic.pt</strong></p>
+        <div class="mt-8 flex justify-center gap-2" id="otp">
+          ${[0,1,2,3,4,5].map(i => `<input maxlength="1" class="otp-box size-12 rounded-lg border border-stone-300 bg-white text-center text-xl" data-i="${i}" inputmode="numeric" />`).join('')}
+        </div>
+        <p class="mt-6 text-center text-sm text-stone-500">Didn't receive it? <button type="button" class="text-emerald-700 underline">Resend in 0:42</button></p>
+        <button type="button" id="verifyBtn" class="mt-10 w-full rounded-lg bg-emerald-800 py-3.5 font-medium text-white hover:bg-emerald-900">Verify & continue</button>
+      `,
+      () => `
+        <p class="text-xs font-semibold uppercase tracking-widest text-emerald-700">Your practice</p>
+        <h1 class="serif mt-4 text-3xl text-emerald-950">What is your specialty?</h1>
+        <input id="spec" value="${draft.specialty||''}" class="mt-8 w-full border-b-2 border-stone-300 bg-transparent py-2 text-2xl serif outline-none focus:border-emerald-600" placeholder="Clinical psychology" />
+        <button type="button" id="practiceBtn" class="mt-10 w-full rounded-lg bg-emerald-800 py-3.5 font-medium text-white">Continue</button>
+      `,
+      () => `
+        <p class="text-xs font-semibold uppercase tracking-widest text-emerald-700">Security</p>
+        <h1 class="serif mt-4 text-3xl text-emerald-950">Protect member data</h1>
+        <p class="mt-3 text-stone-600">Two-factor authentication is recommended for all healthcare experts on Eleva.</p>
+        <div class="mt-8 rounded-xl border border-stone-200 bg-white p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="font-medium">Authenticator app</p>
+              <p class="text-sm text-stone-500">Status: <span id="mfaStatus" class="font-medium ${draft.mfaEnabled?'text-emerald-700':'text-amber-600'}">${draft.mfaEnabled?'Enabled':'Not enabled'}</span></p>
+            </div>
+            <button type="button" id="mfaBtn" class="rounded-lg border border-emerald-200 px-4 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-50">${draft.mfaEnabled?'Manage':'Enable'}</button>
+          </div>
+          <p class="mt-4 text-xs text-stone-400">Read-only: expert@clinic.pt · Required before publishing to members</p>
+        </div>
+        <button type="button" id="finishBtn" class="mt-10 w-full rounded-lg bg-emerald-800 py-3.5 font-medium text-white">Go to dashboard checklist</button>
+      `,
+      () => `
+        <h1 class="serif text-3xl text-emerald-950">Setup checklist</h1>
+        <ul class="mt-8 space-y-3">
+          <li class="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm"><span class="text-emerald-600">✓</span> Email verified</li>
+          <li class="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm"><span class="${draft.mfaEnabled?'text-emerald-600':'text-stone-300'}">${draft.mfaEnabled?'✓':'○'}</span> Two-factor authentication</li>
+          <li class="flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm"><span class="text-stone-300">○</span> Stripe Connect & compliance gate</li>
+        </ul>
+        <a href="/expert-onboarding" class="mt-8 inline-block text-emerald-700 hover:underline">← Design Lab</a>
+      `,
+    ];
+
+    function render() {
+      document.getElementById('main').innerHTML = screens[step]();
+      if (step === 0) {
+        const boxes = document.querySelectorAll('.otp-box');
+        boxes.forEach((box, i) => {
+          box.oninput = () => {
+            if (box.value && i < 5) boxes[i+1].focus();
+          };
+        });
+        document.getElementById('verifyBtn').onclick = () => { step++; render(); };
+      }
+      if (step === 1) {
+        document.getElementById('practiceBtn').onclick = () => {
+          draft.specialty = document.getElementById('spec').value;
+          labSave(draft);
+          step++;
+          render();
+        };
+      }
+      if (step === 2) {
+        document.getElementById('mfaBtn').onclick = () => {
+          draft.mfaEnabled = !draft.mfaEnabled;
+          labSave(draft);
+          render();
+        };
+        document.getElementById('finishBtn').onclick = () => { step++; render(); };
+      }
+    }
+
+    render();
+  </script>
+</body>
+</html>

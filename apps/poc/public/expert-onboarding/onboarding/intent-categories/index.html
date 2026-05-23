@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intent Categories · O4</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+</head>
+<body class="min-h-screen bg-amber-50 text-stone-900">
+  <div id="gate"></div>
+  <div id="app" class="hidden">
+    <header class="px-6 py-4"><a href="/expert-onboarding" class="text-sm text-stone-500">← Hub</a></header>
+    <main id="stage" class="mx-auto max-w-2xl px-6 py-12"></main>
+  </div>
+  <script>
+    const SLUG='intent-categories';
+    const CATS=['Nutrition & diet','Mental wellbeing','Movement & rehab','Sleep & recovery','Women\'s health'];
+    function labLoad(){try{return JSON.parse(localStorage.getItem('eleva-lab:'+SLUG)||'{}')}catch(e){return{}}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    let step=0,draft=labLoad();
+    function render(){
+      const el=document.getElementById('stage');
+      if(step===0){
+        el.innerHTML=`<p class="text-xs uppercase tracking-widest text-amber-700">O4 · Intent categories</p><h1 class="mt-4 text-3xl font-semibold">What best describes your practice?</h1><div class="mt-8 grid gap-3 sm:grid-cols-2">${CATS.map(c=>`<button type="button" data-cat="${c}" class="cat rounded-2xl border-2 bg-white p-6 text-left hover:border-amber-400">${c}</button>`).join('')}</div>`;
+        document.querySelectorAll('.cat').forEach(b=>b.onclick=()=>{draft.specialty=b.dataset.cat;labSave(draft);step=1;render()});
+      } else if(step===1){
+        el.innerHTML=`<h1 class="text-3xl font-semibold">Name your Expert Space</h1><input id="ws" value="${draft.workspaceName||''}" class="mt-6 w-full rounded-xl border px-4 py-3 text-lg" placeholder="Ana's Expert Space" /><button id="cont" class="mt-6 rounded-full bg-stone-900 px-8 py-3 text-white">Continue</button>`;
+        document.getElementById('cont').onclick=()=>{draft.workspaceName=document.getElementById('ws').value;labSave(draft);step=2;render()};
+      } else {
+        el.innerHTML=`<h1 class="text-3xl font-semibold">Headline for members</h1><input id="hl" value="${draft.headline||''}" class="mt-6 w-full rounded-xl border px-4 py-3" placeholder="Outcome-focused headline" /><button id="done" class="mt-6 rounded-full bg-stone-900 px-8 py-3 text-white">Save draft</button>`;
+        document.getElementById('done').onclick=()=>{draft.headline=document.getElementById('hl').value;labSave(draft);el.innerHTML=`<div class="rounded-2xl bg-white p-8 shadow"><p class="text-xs uppercase text-amber-700">Draft saved</p><h2 class="mt-2 text-2xl font-semibold">${draft.workspaceName||'Expert Space'}</h2><p class="mt-2 text-stone-600">${draft.specialty}</p><a href="/expert-onboarding#setting-up" class="mt-6 inline-block underline">Explore setting up gallery</a></div>`};
+      }
+    }
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{document.getElementById('app').classList.remove('hidden');render()});
+  </script>
+</body>
+</html>

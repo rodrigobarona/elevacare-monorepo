@@ -1,10 +1,12 @@
 import path from "node:path"
 
-/** Skip `_context/` snapshots — they use their own eslint configs without root deps. */
+/** Skip `_context/` snapshots and the internal PoC playground. */
 function repoFilesOnly(filenames) {
   return filenames.filter((f) => {
     const normalized = f.split(path.sep).join("/")
-    return !normalized.includes("/_context/")
+    return (
+      !normalized.includes("/_context/") && !normalized.startsWith("apps/poc/")
+    )
   })
 }
 

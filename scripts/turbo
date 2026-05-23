@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# Run the repo-pinned Turbo CLI (package.json devDependency), not a global install.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+turbo_bin="$repo_root/node_modules/.bin/turbo"
+
+if [[ ! -x "$turbo_bin" ]]; then
+  echo "error: local turbo not found. Run 'pnpm install' in the repo root first." >&2
+  exit 1
+fi
+
+exec "$turbo_bin" "$@"

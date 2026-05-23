@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { requirePermission } from "./session"
+import { capabilitiesFor } from "./capabilities"
+import { requirePermission, resolveSessionCapabilities } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
 const mockSession: ElevaSession = {
@@ -12,6 +13,47 @@ const mockSession: ElevaSession = {
   workosRole: "admin",
   capabilities: ["events:manage", "bookings:manage_own"],
 }
+
+describe("resolveSessionCapabilities", () => {
+  const derivedExpert = capabilitiesFor("expert")
+
+  it("uses derived capabilities when JWT org does not match picked org", () => {
+    expect(
+      resolveSessionCapabilities("expert", derivedExpert, {
+        jwtMatchesPicked: false,
+        jwtPermissions: ["appointments:view_own"],
+      })
+    ).toEqual(derivedExpert)
+  })
+
+  it("uses derived capabilities when JWT permissions are empty", () => {
+    expect(
+      resolveSessionCapabilities("expert", derivedExpert, {
+        jwtMatchesPicked: true,
+        jwtPermissions: [],
+      })
+    ).toEqual(derivedExpert)
+  })
+
+  it("falls back to derived when stale JWT lacks required expert capability", () => {
+    expect(
+      resolveSessionCapabilities("expert", derivedExpert, {
+        jwtMatchesPicked: true,
+        jwtPermissions: ["payouts:view_own"],
+      })
+    ).toEqual(derivedExpert)
+  })
+
+  it("trusts JWT permissions when required expert capabilities are present", () => {
+    const jwtPermissions = ["events:manage", "payouts:view_own"]
+    expect(
+      resolveSessionCapabilities("expert", derivedExpert, {
+        jwtMatchesPicked: true,
+        jwtPermissions,
+      })
+    ).toEqual(jwtPermissions)
+  })
+})
 
 describe("requirePermission", () => {
   it("throws no-session when session is null", () => {
@@ -41,7 +83,6 @@ describe("requirePermission", () => {
   it("narrows the session type after assertion", () => {
     const session: ElevaSession | null = mockSession
     requirePermission(session, "events:manage")
-    // Post-assertion, session is ElevaSession (not null).
     expect(session.orgId).toBe("org-1")
   })
 })
