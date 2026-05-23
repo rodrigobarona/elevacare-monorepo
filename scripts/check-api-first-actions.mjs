@@ -7,8 +7,6 @@ import path from "node:path"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
 const APPS_DIR = path.join(ROOT, "apps")
-/** Internal playground — not subject to production guardrails. */
-const SKIP_APP_DIRS = new Set(["poc"])
 
 const BANNED = [
   "updateExpertProfile",
@@ -32,7 +30,6 @@ async function walk(dir) {
     const full = path.join(dir, entry.name)
     if (entry.isDirectory()) {
       if (entry.name === "node_modules" || entry.name === ".next") continue
-      if (dir === APPS_DIR && SKIP_APP_DIRS.has(entry.name)) continue
       files.push(...(await walk(full)))
     } else if (entry.name === "actions.ts") {
       files.push(full)
