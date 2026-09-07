@@ -31,7 +31,14 @@ In:
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
   `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
-  `auth.reset_password`, `auth.two_factor_otp`, `auth.org_invitation`. **Boundary:** this phase
+  `auth.reset_password`, `auth.two_factor_otp`, `auth.org_invitation`. Kinds are a closed
+  union exported as the `NOTIFICATION_KINDS` const from `@eleva/notifications` (each kind
+  declares its default channels, urgency and template id); **later phases extend the const in
+  their own PR** together with the template, channel policy, i18n copy and a delivery test —
+  the owning phase per kind: Phase 10 `crm.follow_up_due`; Phase 11 `team.invitation`,
+  `team.member_joined`; Phase 12 `partner.approved`, `partner.rejected`,
+  `partner.needs_changes`; Phase 14 `calendar.reconnect_required`, `migration.welcome`. A kind
+  that is not in the const does not compile. **Boundary:** this phase
   makes `@eleva/email` renderer-only (React Email templates, no `resend` import — boundary lint)
   and rewires the Better Auth `sendMagicLink` / `sendVerificationEmail` / `sendResetPassword` /
   OTP / invitation callbacks (Phase 2 sent them through `@eleva/email` + Resend directly as a
@@ -175,7 +182,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    notifications row; the same idempotencyKey sent twice -> one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
-   payout.approval_required (staff), invoice.issued, invoice.failed. Twilio client configured with
+   payout.approval_required (staff), invoice.issued, invoice.failed, plus the auth.* kinds.
+   Export NOTIFICATION_KINDS as a const object { kind: { channels, urgency, templateId } } and
+   derive the Kind type from it; sendNotification only accepts Kind. Document in the package
+   README that Phases 10/11/12/14 append crm.follow_up_due, team.invitation, team.member_joined,
+   partner.approved|rejected|needs_changes, calendar.reconnect_required and migration.welcome in
+   their own PRs (kind + template + channel policy + test each). Twilio client configured with
    region ie1 / edge dublin and TWILIO_MESSAGING_SERVICE_SID; SMS only if phone verified and
    sms channel enabled. verifyPhoneStart/verifyPhoneConfirm with OTP (6 digits, 10 min, hashed).
    Lane 2 stub: syncMarketingContact(userId) to Resend Audiences only with marketing consent and

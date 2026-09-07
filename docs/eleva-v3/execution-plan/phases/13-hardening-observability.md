@@ -24,7 +24,10 @@ In:
   `/workflows/*` (QStash `Receiver.verify`), Better Auth `/auth/*` (own rate limiting). The
   coverage checker encodes that allowlist; Upstash rate limits per route class from
   `security-hardening-checklist.md` (auth 10/min/IP, public reads 120/min/IP, mutations
-  60/min/user, admin 300/min/user); strict CSP with nonces composed in `@eleva/observability`
+  60/min/user for authenticated callers, `publicMutation` 20/min per `route + client IP` for the
+  guest-callable Phase 4 routes `/bookings/reserve`, `/payments/intent`, `/bookings/confirm` —
+  plus a per-reservation sub-limit of 10/min keyed by `reservationId` so one IP cannot hammer
+  many reservations and one reservation cannot be hammered from many IPs — admin 300/min/user); strict CSP with nonces composed in `@eleva/observability`
   and applied in every `proxy.ts` via shared helper (`report-uri` to Sentry), HSTS preload,
   `Permissions-Policy`, `Referrer-Policy`, `X-Frame-Options: DENY` everywhere (it cannot
   express a cross-origin allow-list; `ALLOW-FROM` is obsolete) — Stripe/Daily iframes that _we_
@@ -199,8 +202,14 @@ PR 13.1 — security + observability + analytics:
    route: routePolicyForPathname("api", pathname). Start report-only
    on staging (env CSP_REPORT_ONLY=true), enforce after 48h clean.
 2. Rate limits: apps/api/src/lib/rate-limit.ts exposes classes auth (10/min/IP), publicRead
-   (120/min/IP), mutation (60/min/user), admin (300/min/user), webhook (none, signature only);
-   every route declares its class; test asserting every route file imports a rate limit and an
+   (120/min/IP), mutation (60/min/user — requires a session/API-key principal; throws at startup
+   if a route without an auth model declares it), publicMutation (20/min keyed by route + client
+   IP from the Vercel-provided x-real-ip / x-vercel-forwarded-for, never x-forwarded-for from the
+   body; plus an optional second key such as reservationId at 10/min — used by the guest-callable
+   /bookings/reserve, /payments/intent, /bookings/confirm; never a single global bucket), admin
+   (300/min/user), webhook (none, signature only); every route declares its class; tests: guest
+   traffic to /bookings/reserve from one IP is limited at 20/min, two IPs get independent
+   buckets, 11 calls for one reservationId from different IPs -> 429; test asserting every route file imports a rate limit and an
    auth model (static analysis script scripts/check-route-guards.mjs added to CI). BotID: guard
    every browser- or user-originated public POST (reserve, payments intent, sign-up proxies,
    become-partner submit, contact, AI endpoints); two exemption classes, both declared in one

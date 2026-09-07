@@ -42,7 +42,7 @@ https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and
   - Product: `pt/en/es` copy reviewed by a native speaker; pricing page matches Stripe products;
     `feature-flag-rollout-plan.md` production defaults set (`ff.toconline_invoicing_enabled` on,
     `ff.ai_reports_beta` off, `ff.session_recording` off).
-- **Cutover** (operated from `operator-tasks/cutover-runbook.md`): T-48h TTL lowering + comms
+- **Cutover** (operated from `docs/eleva-v3/operator-tasks/cutover-runbook.md`): T-48h TTL lowering + comms
   banner on MVP; T-2h MVP read-only + booking disabled; final `--since` migration run; verify;
   Vercel domains move (`eleva.care`, `www`, `api`, `admin`, `sessions`) to v3 projects; Stripe
   webhook switch (disable MVP endpoint after v3 endpoint confirmed receiving); QStash schedules
@@ -66,8 +66,9 @@ Out: Spain launch, Academy content (Phase 16).
 2. Production configuration scripts applied (`stripe:setup:webhooks`, `stripe:setup:portal`,
    `qstash:setup`, `flags:sync`, `betterstack` monitors) with recorded ids in `infra/*/README.md`.
 3. `e2e/production-smoke.spec.ts` (read-only + gated 1 EUR booking with `E2E_ALLOW_LIVE_PAYMENT`).
-4. Cutover log `operator-tasks/cutover-log-<date>.md` (timeline, verifications, issues).
-5. 7-day SLO report `docs/eleva-v3/reports/launch-slo-<date>.md`.
+4. Cutover log `docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md`, one per UTC day
+   (timeline, verifications, issues, `CUTOVER_TS`).
+5. 7-day SLO report `docs/eleva-v3/reports/launch-slo-YYYY-MM-DD.md`, one per UTC day.
 6. Decommission checklist executed (dated) in `decision-log.md`.
 
 ## Acceptance criteria
@@ -96,7 +97,7 @@ Out: Spain launch, Academy content (Phase 16).
 ## Local references
 
 - `docs/eleva-v3/{launch-readiness-checklist,compliance-data-governance,service-level-objectives,support-escalation-matrix,feature-flag-rollout-plan,environment-matrix}.md`, ADR-012, ADR-019.
-- `operator-tasks/cutover-runbook.md` (Phase 14), `infra/**/README.md`, `.github/workflows/e2e.yml`.
+- `docs/eleva-v3/operator-tasks/cutover-runbook.md` (Phase 14), `infra/**/README.md`, `.github/workflows/e2e.yml`.
 - MVP Vercel project + DNS provider settings (operator access).
 
 ## External docs
@@ -119,13 +120,15 @@ You are a senior engineer working in the Eleva.care v3 monorepo at the repositor
 (the directory containing pnpm-workspace.yaml). Work autonomously for the code and documentation parts;
 STOP and ask the repository owner (@rodrigobarona) for explicit go-ahead before each production
 mutation step (DNS, Stripe live webhook switch, migration --apply against production, WorkOS
-cancellation). Record each go-ahead in operator-tasks/cutover-log-<date>.md.
+cancellation). Record each go-ahead in docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md — one
+file per calendar day (UTC), created on first write; "the cutover log" below always means the
+file for the current UTC day.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
-   operator-tasks/cutover-runbook.md and launch-readiness-checklist.md.
+   docs/eleva-v3/operator-tasks/cutover-runbook.md and docs/eleva-v3/launch-readiness-checklist.md.
 3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
    through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
@@ -175,24 +178,28 @@ B. Production configuration (with go-ahead per step): set all env vars in the 8 
    sessions.eleva.care CNAME, Resend domain verification, Twilio sender. Run a live 1 EUR booking
    with an internal expert end to end (payment, payout scheduled, Tier 1 + Tier 2 invoices,
    notifications, room) and refund it (credit note). Paste evidence.
-C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md): T-48h lower DNS
+C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutover-runbook.md): T-48h lower DNS
    TTL to 300s and show the MVP maintenance banner; T-2h MVP read-only + booking disabled, verify
-   zero pending Multibanco; final pnpm migration:run --apply --target production --since <last
-   rehearsal ts> (from infra/migration, read-only MVP role; the Phase 14 guard requires
-   MIGRATION_CONFIRM_PRODUCTION=<today YYYY-MM-DD UTC> in the environment and the operator typing
+   zero pending Multibanco; final pnpm migration:run --apply --target production --since
+   "$LAST_REHEARSAL_TS" (LAST_REHEARSAL_TS = the `completed_at` of the last successful
+   `migration_runs` row, printed by pnpm migration:verify and copied into the cutover log before
+   this step; from infra/migration, read-only MVP role; the Phase 14 guard requires
+   MIGRATION_CONFIRM_PRODUCTION=$(date -u +%F) in the environment and the operator typing
    the v3 production Neon project id at the interactive prompt — record both in the cutover log),
    pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); move domains
    eleva.care, www, api, admin, sessions to the v3 Vercel projects; confirm Stripe live webhook
    receives events on v3 then disable the MVP endpoint; run production-smoke; send welcome wave 1
    (experts) then wave 2 (members) within 48h; queue calendar.reconnect_required notifications.
-   Log every step with timestamps in operator-tasks/cutover-log-<date>.md.
+   Log every step with timestamps in the cutover log. The moment the DNS switch is executed,
+   record the ISO-8601 UTC timestamp as CUTOVER_TS in the cutover log and export it in the
+   operator shell (export CUTOVER_TS=2026-..T..Z) — every --since below reads it from there.
    Rollback criteria: P1 > 30 min, payment success < 95%, auth error rate > 5%, data
    inconsistency. Rollback procedure (rehearsed on staging before C starts; written in
    cutover-runbook.md section "Rollback"): (1) freeze v3 writes (ff.booking_enabled=false,
    apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export every
    v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
    notifications_outbox, users created via magic link) with pnpm migration:reverse-export
-   --since <cutover ts> to a signed JSON file; (3) reconcile against Stripe as the source of truth
+   --since "$CUTOVER_TS" to a signed JSON file; (3) reconcile against Stripe as the source of truth
    for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
    booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
    MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
@@ -203,7 +210,7 @@ C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md)
    Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
    and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production
    mutation.
-D. Watch 7 days: daily entry in docs/eleva-v3/reports/launch-slo-<date>.md with API availability,
+D. Watch 7 days: daily entry in docs/eleva-v3/reports/launch-slo-$(date -u +%F).md with API availability,
    booking and payment success rates, webhook p95 lag, transfer/invoice success, notification
    delivery, sign-in rate of migrated experts (target >= 95% active experts in 7 days), incidents.
 E. Decommission (with go-ahead): after the 7-day watch and a final records checksum verification,

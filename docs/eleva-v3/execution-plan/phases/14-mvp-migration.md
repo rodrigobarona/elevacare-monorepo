@@ -99,7 +99,7 @@ Out: cutover itself (Phase 15).
 4. Redirect map + tests.
 5. Three committed rehearsal reports; finance-approved grandfather mapping table
    (`infra/migration/GRANDFATHER.md`).
-6. Runbook `operator-tasks/cutover-runbook.md` (used by Phase 15).
+6. Runbook `docs/eleva-v3/operator-tasks/cutover-runbook.md` (used by Phase 15).
 
 ## Acceptance criteria
 
@@ -117,7 +117,9 @@ Out: cutover itself (Phase 15).
 - [ ] Records decrypt for the owning expert in `apps/expert`; member sees published ones.
 - [ ] Stripe verification step passes for 100% of Connect accounts and customers.
 - [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze,
-      `pnpm migration:reverse-export --since <ts>` produces a signed JSON of post-cutover v3 rows,
+      `pnpm migration:reverse-export --since "$CUTOVER_TS"` produces a signed JSON of every
+      post-cutover v3 row (schema-derived table inventory), each entity class restored per the
+      five-action table in the runbook,
       Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
       once (idempotent on `stripe_payment_intent_id`), MVP webhook re-enabled, DNS revert + MVP
       unfreeze. Zero duplicates and zero lost paid bookings in the rehearsal report.
@@ -129,7 +131,7 @@ Out: cutover itself (Phase 15).
 
 ## Docs to update
 
-- ADR-019 (final), `operator-tasks/cutover-runbook.md`, `launch-readiness-checklist.md`,
+- ADR-019 (final), `docs/eleva-v3/operator-tasks/cutover-runbook.md`, `docs/eleva-v3/launch-readiness-checklist.md`,
   `data-retention-export-matrix.md` (legacy audit), `decision-log.md`.
 
 ## Local references
@@ -272,17 +274,30 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    routes -> v3 (appointments -> /app/*, expert dashboard -> /expert/*, legacy locale paths),
    with tests; keep /[locale]/[username] and /[locale]/[username]/[eventSlug] identical.
 7. Rehearsals: run pnpm migration:rehearse three times (fixing mappers between runs), commit
-   infra/migration/reports/*.md, and time the run. Write operator-tasks/cutover-runbook.md with
+   infra/migration/reports/*.md, and time the run. Write docs/eleva-v3/operator-tasks/cutover-runbook.md with
    the freeze procedure (MVP read-only banner + booking disabled, verify no pending Multibanco,
    final --since delta run, verify, DNS switch, Stripe webhook switch, welcome wave 1) and a
    "Rollback" section that preserves post-cutover writes: freeze v3 writes -> pnpm
-   migration:reverse-export --since <cutover ts> (implement in infra/migration: dumps v3 rows
-   created after the timestamp — bookings, payment_intents, payout_states, invoices,
-   notifications_outbox, magic-link-created users — to a JSON file signed with an HMAC under
-   MIGRATION_CHECKSUM_KEY) -> reconcile with Stripe as source of truth (every succeeded
-   PaymentIntent exists in exactly one system; replay missing ones into MVP via its booking
-   importer keyed on stripe_payment_intent_id; never auto-refund) -> re-enable MVP Stripe
-   webhook -> DNS revert -> MVP unfreeze. Include owners and expected durations for every step.
+   migration:reverse-export --since "$CUTOVER_TS" (implement in infra/migration: dumps EVERY
+   tenant table's rows with created_at or updated_at after the timestamp, plus soft-deletes, to a
+   JSON file signed with an HMAC under MIGRATION_CHECKSUM_KEY; the entity inventory is generated
+   from the Drizzle schema so a new table cannot be forgotten, and a unit test fails if a table
+   with created_at/updated_at is missing from the export). Restore per entity class, in this
+   order: (1) identity — auth.user/account/organization/member created after cutover are
+   re-created in the MVP through the WorkOS Management API (createUser + organization membership)
+   and receive a magic link; (2) money — bookings, booking_payments, payout_states, invoices
+   reconciled with Stripe as source of truth (every succeeded PaymentIntent has exactly one
+   canonical active booking, replayed into MVP via its booking importer keyed on
+   stripe_payment_intent_id; never auto-refund); (3) bookings state — cancellations and
+   reschedules applied to the MVP rows by booking id map; (4) profiles, preferences, consents
+   upserted into the MVP tables that exist for them; (5) entity types with no MVP equivalent
+   (records, session_documents, session_participants, CRM, notifications) are NOT restored into
+   the MVP — they stay in the read-only v3 database and the signed export, and are re-imported
+   when v3 relaunches with a forward --since run. The runbook lists this per-entity action table
+   explicitly and the acceptance criterion is: zero lost paid bookings, every post-cutover row
+   present in the signed export, and each entity class mapped to one of the five actions above.
+   -> re-enable MVP Stripe webhook -> DNS revert -> MVP unfreeze. Include owners and expected
+   durations for every step.
 8. Tests: mapping unit tests (roles, org types, payout states, slug preservation, checksum
    round trip), redirect map tests. Docs: ADR-019 final, launch-readiness-checklist.md,
    data-retention-export-matrix.md (legacy audit retention), decision-log.md.

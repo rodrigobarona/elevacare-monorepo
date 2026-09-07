@@ -40,7 +40,8 @@ Out: ADRs, code changes, CI changes (Phase 1).
 2. 17 phase files (`00` to `16`) following the same template: header table, why, scope, deliverables,
    acceptance criteria, tests, docs to update, local references, external docs (Context7 IDs),
    risks, copy-paste prompt.
-3. `build-html.mjs` (uses the already-installed `marked`) that concatenates README + phases into
+3. `build-html.mjs` (uses `marked`, which this phase adds to the root `package.json`
+   `devDependencies` — the only new dependency) that concatenates README + phases into
    `index.html` with a sidebar, anchors, and a copy button for each prompt block.
 4. `package.json` scripts:
    - `"review": "coderabbit review --uncommitted --include-untracked"`
@@ -159,8 +160,8 @@ Deliverables, in order:
    a "Copy" button on every ```text prompt block implemented with navigator.clipboard, no
    external network requests, Eleva brand-neutral light theme). Deterministic output.
 4. package.json root scripts: review, review:branch, review:agent, docs:execution-plan:html
-   (exact commands in the phase file). Do not add new dependencies except `marked` if it is not
-   already resolvable from the root (check node_modules/.pnpm first; add via catalog if needed).
+   (exact commands in the phase file). The only new dependency is `marked` in the root
+   package.json devDependencies (pnpm add -Dw marked); nothing else.
 5. .cursor/skills/coderabbit-review/SKILL.md (when to use, exact commands, how to triage findings,
    how to enumerate PR review threads with gh, when a finding may be declined) and
    .cursor/rules/coderabbit-review.mdc (alwaysApply: false, globs: none, description: "Run the
