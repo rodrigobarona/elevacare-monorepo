@@ -40,6 +40,7 @@ describe("repo-wide proxy matcher consistency", () => {
     "web", // gateway: includes trpc, uses string form
     "api", // api-only: uses /:path*
     "app", // member app: no api exclusion
+    "poc", // unauthenticated design POC: no proxy.ts at all
   ])
 
   const appNames = readdirSync(appsDir, { withFileTypes: true })
