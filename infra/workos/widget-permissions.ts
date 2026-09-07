@@ -71,7 +71,7 @@ export function widgetPermissionDisplayName(slug: string): string {
   const match = /^widgets:([a-z0-9-]+):(read|manage)$/.exec(slug)
   if (!match) return slug.slice(0, 48)
 
-  const [, resource, action] = match
+  const [, resource = "", action] = match
   const title = resource
     .split("-")
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
