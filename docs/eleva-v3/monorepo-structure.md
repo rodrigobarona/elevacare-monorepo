@@ -190,7 +190,7 @@ Phase 1 first milestone:
 │   └── storybook/            # later — UI verification
 ├── packages/
 │   ├── config/               # env validation, URL helpers, shared constants
-│   ├── auth/                 # WorkOS, session, RBAC, org resolution
+│   ├── auth/                 # session, RBAC, org resolution — Better Auth (ADR-017; WorkOS until Phase 2/3 land)
 │   ├── db/                   # Drizzle schema, migrations, withOrgContext()
 │   ├── ui/                   # shared design system (shadcn aria-luma on React Aria Components)
 │   ├── compliance/           # consent, audit events, retention/export
@@ -204,7 +204,7 @@ Phase 1 first milestone:
 │   ├── workflows/            # Vercel Workflows DevKit step definitions and shared primitives
 │   ├── flags/                # Vercel Flags SDK + Edge Config boundary
 │   ├── audit/                # audit log writers, correlation ID propagation
-│   ├── encryption/           # WorkOS Vault helpers, crypto-shredding
+│   ├── encryption/           # envelope encryption (KEK/DEK, ADR-020; no vault), crypto-shredding
 │   ├── mobile/               # later — mobile-safe client contracts, sync/share DTOs
 │   ├── analytics/            # later — PostHog and GA4 wrappers
 │   ├── observability/        # later — Sentry and BetterStack wrappers
