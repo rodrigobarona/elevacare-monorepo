@@ -39,9 +39,14 @@ In:
   update RLS helper `withOrgContext` to accept the active org from the session; regenerate
   migrations; update seeds (`db:seed:demo`).
 - `apps/api/src/app/auth/[...all]/route.ts` mounting `toNextJsHandler(auth)`; CORS allow-list
-  from `trustedOrigins`; `apps/api/src/lib/auth.ts` `requireApiAuth()` accepting session cookie,
-  `Authorization: Bearer <session token>` (bearer plugin), API key header (`x-api-key`), or JWT
-  (jwt plugin, verified against `/auth/jwks`); remove `x-eleva-workos-*` bridge headers.
+  from `trustedOrigins`; `apps/api/src/lib/auth.ts` `requireApiAuth()` accepting, in this order and with an explicit discriminator per
+  mode: session cookie; `Authorization: Bearer <token>` where a compact JWS (three base64url
+  segments with a `kid` header) is verified as a JWT against `/auth/jwks` (jwt plugin) and any
+  other opaque value is verified as a Better Auth session token (bearer plugin) — the two never
+  share a verifier; API keys only via the `x-api-key` header (apiKey plugin), never as Bearer.
+  Tests cover cross-mode rejection (session token sent where a JWT is required and vice versa,
+  API key sent as Bearer -> 401 with a distinct error code). Remove `x-eleva-workos-*` bridge
+  headers.
 - `apps/api/src/app/organizations/*`, `memberships/*`, `onboarding/*`, `users/avatar`: call
   `auth.api.*` (createOrganization, setActiveOrganization, addMember, etc.) inside `withAudit`;
   OpenAPI merge of Better Auth's `openAPI` plugin spec into `GET /openapi.json`.
@@ -89,7 +94,9 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
       Google sign-in links to the same user when email matches (`trustedProviders`).
 - [ ] `requireApiAuth()` accepts: cookie session; `Authorization: Bearer <session token>`;
       `x-api-key` created via `apiKey` plugin scoped to an org; JWT from `/auth/token` verified
-      via JWKS. Unit tests for all four.
+      via JWKS (Bearer value routed by shape: compact JWS -> JWT verifier, anything else ->
+      session-token verifier). Unit tests for all four plus cross-mode rejection (JWT where a
+      session token is expected and vice versa, API key as Bearer -> 401).
 - [ ] RLS isolation test green on Neon branch in CI; `db:seed:demo` works from empty DB.
 - [ ] Playwright `auth.spec.ts` green on the PR preview or local stack.
 - [ ] Cookies set on `.eleva.care` in staging (verify via browser devtools on `dev.eleva.care`).
@@ -143,7 +150,7 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (especially better-auth.mdc, api-first-agentic.mdc,
@@ -160,7 +167,7 @@ Workflow (mandatory):
   (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review -> fix -> repeat until clean. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main using the PR body template from
+- git push -u origin HEAD && gh pr create --base main using the PR body template from
   docs/eleva-v3/execution-plan/README.md section 8.
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green.
   Request approval from @rodrigobarona. gh pr merge --squash --delete-branch. Repeat for 02.2.
@@ -204,7 +211,9 @@ PR 02.1 — server + schema + API:
    }).
    Provision personal Space in the user.create.after hook: idempotent (check by ownerUserId +
    type=personal), name `${firstName}'s Space`, slug from user id, wrapped in withAudit
-   (entity "organization", action "created"). Emails go through @eleva/email (Resend) with
+   (entity "organization", action "created"). Emails go through @eleva/email (Resend client
+   inside @eleva/email is TEMPORARY: Phase 8 makes @eleva/email renderer-only and routes auth
+   mail through @eleva/notifications — do not add other Resend call sites) with
    localized templates (pt/en/es) — add templates verify-email, reset-password, magic-link,
    organization-invitation, two-factor-otp.
 3. packages/auth/src/permissions.ts: createAccessControl statements for org, members,
@@ -228,9 +237,12 @@ PR 02.1 — server + schema + API:
 5. apps/api: create src/app/auth/[...all]/route.ts exporting { GET, POST } = toNextJsHandler(auth)
    with CORS allow-list from trustedOrigins (credentials true). Rewrite src/lib/auth.ts
    requireApiAuth() to resolve identity from (a) session cookie via auth.api.getSession({ headers }),
-   (b) Authorization: Bearer <session token> (bearer plugin), (c) x-api-key (apiKey plugin ->
-   referenceId = orgId), (d) Authorization: Bearer <JWT> verified with JWKS from /auth/jwks;
-   return { userId, orgId, roles, capabilities, authMode }. Remove x-eleva-workos-* headers.
+   (b) Authorization: Bearer <token>: if the value is a compact JWS (three base64url segments,
+   kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as
+   a Better Auth session token (bearer plugin) — one discriminator, two verifiers, never both;
+   (c) x-api-key (apiKey plugin -> referenceId = orgId; an API key sent as Bearer is rejected);
+   return { userId, orgId, roles, capabilities, authMode }. Unit tests: each mode succeeds, each
+   cross-mode combination is rejected with a distinct error code. Remove x-eleva-workos-* headers.
    Update organizations, organizations/mine, memberships, onboarding/complete,
    onboarding/sync-existing (delete if obsolete), users/avatar to call auth.api.* inside
    withAudit; register/adjust Zod schemas in src/lib/openapi.ts and merge the Better Auth

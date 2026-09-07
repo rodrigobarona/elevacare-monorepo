@@ -131,7 +131,7 @@ supersedes sprints".
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
@@ -149,7 +149,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review -> fix all findings -> repeat until clean. Commit (Conventional Commits).
 - Run: pnpm review:branch -> fix -> repeat until clean.
-- git push -u origin <branch> && gh pr create --base main using the PR body template in
+- git push -u origin HEAD && gh pr create --base main using the PR body template in
   docs/eleva-v3/execution-plan/README.md section 8.
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green.
   Request human approval from @rodrigobarona. gh pr merge --squash --delete-branch.

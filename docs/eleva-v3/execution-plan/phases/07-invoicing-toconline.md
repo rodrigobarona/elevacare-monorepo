@@ -84,9 +84,11 @@ connected|disconnected`).
 
 ## Acceptance criteria
 
-- [ ] Paid booking on staging -> after transfer, `platform_fee_invoices` row `issued` with
-      TOConline document number in `ELEVA-FEE-2026`, PDF URL works, AT communication response
-      stored (test/sandbox mode if available; otherwise a clearly separate test series).
+- [ ] Paid booking on staging -> immediately after `payment_intent.succeeded` (before any
+      transfer; also verified with a payout left in `approval_required`), `platform_fee_invoices`
+      row `issued` with TOConline document number in `ELEVA-FEE-2026`, PDF URL works, AT
+      communication response stored (test/sandbox mode if available; otherwise a clearly
+      separate test series).
 - [ ] Refund after invoice -> credit note issued and linked.
 - [ ] Expert in Auto mode (TOConline) -> `expert_invoices` `issued` with external id; Moloni path
       tested with mocked HTTP; Manual mode -> `manual_pending`, visible in session page and in the
@@ -142,7 +144,7 @@ connected|disconnected`).
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (toconline-integration, api-first-agentic, audit-wiring,
@@ -163,7 +165,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 

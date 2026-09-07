@@ -103,7 +103,7 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, blob-storage, eleva-icons,
@@ -119,7 +119,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 

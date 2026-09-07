@@ -139,7 +139,7 @@ Out: cutover itself (Phase 15).
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (encryption, audit-wiring, api-first-agentic, better-auth)
@@ -156,7 +156,7 @@ Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 - Never run --apply against production in this phase. Rehearsals run on Neon branches only.
@@ -182,11 +182,18 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    --size <k>. Env: MVP_DATABASE_URL (read-only role), TARGET_DATABASE_URL, WORKOS_API_KEY
    (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_ALLOWED_TARGET_HOSTS.
    Production guard (implement in infra/migration/src/guard.ts with unit tests): --apply defaults
-   to --target branch and refuses to run unless the TARGET_DATABASE_URL host is in
-   MIGRATION_ALLOWED_TARGET_HOSTS (rehearsal project branch endpoints); --target production
-   additionally requires MIGRATION_CONFIRM_PRODUCTION to equal today's date (YYYY-MM-DD, UTC) and
-   an interactive prompt where the operator types the target Neon project id; any mismatch exits 2
-   before opening a connection. migration:rehearse never accepts --target production.
+   to --target branch. In branch mode the guard resolves the TARGET_DATABASE_URL host through the
+   Neon API (NEON_API_KEY, NEON_PROJECT_ID = the v3 production project — the same project the
+   rehearsal branches are created in) and requires (a) the endpoint to belong to that project,
+   (b) its branch to be a non-default branch (never the primary/production branch), and (c) the
+   host to appear in MIGRATION_ALLOWED_TARGET_HOSTS, which migration:rehearse appends with the
+   endpoint host it just created (so the allowlist and the rehearsal target always agree).
+   --target production requires the host to be the project's default-branch endpoint,
+   MIGRATION_CONFIRM_PRODUCTION to equal today's date (YYYY-MM-DD, UTC) and an interactive prompt
+   where the operator types the Neon project id; any mismatch exits 2 before opening a
+   connection. Unit tests cover: rehearsal branch accepted, default branch rejected in branch
+   mode, foreign project rejected, production without confirmation rejected.
+   migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
    since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
    unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256,

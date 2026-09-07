@@ -58,12 +58,13 @@ and run the standard loop from README section 4.
 This prompt is a **promotion template**: the only two placeholders are `<N>` (the backlog number
 from the table above, e.g. `4`) and `<slug>` (kebab-case of the item title, e.g.
 `marketplace-search-v2`). Replace both everywhere before pasting; everything else is fixed. The
-first line of the task restates the item title and its Origin documents from the table so the
-pasted prompt identifies the work without this file.
+task section embeds the full backlog table (title, origin, notes) so the pasted prompt identifies
+the work without this file; when you add or change a backlog row, update the embedded list in the
+same commit.
 
 ````text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
@@ -83,7 +84,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits (scope p16.<N>). Run: pnpm review:branch -> fix -> repeat until clean.
-- git push -u origin <branch> && gh pr create --base main with the PR body template from
+- git push -u origin HEAD && gh pr create --base main with the PR body template from
   docs/eleva-v3/execution-plan/README.md section 8.
 - Loop: wait for CodeRabbit GitHub App review + CI; for each comment fix+push or reply
   "Not actionable because ..."; re-run pnpm review:branch; continue until zero unresolved
@@ -99,10 +100,53 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 
 PHASE 16 TASK — Promote backlog item 16.<N> into a phase and deliver it on one branch / one PR.
 
-Item: row 16.<N> of the backlog table in
-docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md (title, Origin documents and Notes
-are authoritative; copy the title verbatim into the new phase file heading). Phase 16 is a
-backlog, not a build phase. Deliver in this order, all on branch phase-16.<N>/<slug>:
+Item: row 16.<N> of this backlog (copied here so the prompt stands alone; the table in
+docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md is the SSOT if they ever differ;
+copy the title verbatim into the new phase file heading):
+  16.1  Spain launch (es-ES legal texts, Spanish IVA rules, health-sector disclaimers, Stripe
+        payment methods for ES, pricing localisation) — origin market-expansion-playbook.md,
+        ADR-012; needs accountant sign-off for ES IVA; Tier 1 invoices to ES experts use
+        intra-EU reverse charge.
+  16.2  Brazil (pt-BR) content + payments discovery — origin market-expansion-playbook.md;
+        Stripe BR is a separate platform account; discovery only.
+  16.3  Academy content platform (apps/academy, @eleva/academy: courses, lessons, enrolments,
+        certificates, Stripe products for courses) — origin academy-* specs; reuse Tier 1/2
+        invoicing + payout engine; recorded lessons on Vercel Blob private + signed URLs or Mux
+        (new ADR).
+  16.4  Marketplace search + discovery v2 (Typesense/Meilisearch or Neon pg_search; filters by
+        specialty/language/price/availability; ranking) — origin Phase 4 simple SQL search;
+        new ADR for the engine; EU hosting required.
+  16.5  Notifications Lane 2 (marketing/lifecycle campaigns: onboarding drip, re-engagement,
+        digests, consent-gated) — origin notifications-architecture.md; Resend Broadcasts or
+        Customer.io EU; strict consent gating via PostHog cohorts.
+  16.6  Mobile apps (Expo + Better Auth expo plugin, Daily React Native SDK) — origin product
+        roadmap; needs the API key/bearer flows from Phase 2.
+  16.7  AI reports GA (graduate ff.ai_reports_beta; structured templates per specialty;
+        member-facing summaries; evaluation harness) — origin Phase 10 beta; DPIA update, consent
+        copy review, AI Gateway model pinning.
+  16.8  Session recording + transcription (Daily cloud recording to EU storage, consent flow,
+        retention) — origin Phase 9 (off by ff.session_recording); recordings must land in an EU
+        bucket; retention per matrix.
+  16.9  Clinic advanced features (rooms/locations, intake forms, shared calendars, clinic-level
+        reporting, enterprise SSO via Better Auth sso plugin) — origin Phase 11 minimum viable.
+  16.10 Expert marketplace growth tools (referral codes, Stripe Coupons/Promotion Codes, gift sessions,
+        packages/bundles) — origin product roadmap; packages interact with payout eligibility and
+        Tier 2 invoicing (one invoice per package).
+  16.11 Member subscriptions / memberships (recurring plans, credits) — origin product roadmap;
+        hybrid monetization v2; new ADR.
+  16.12 Moloni + additional Tier 2 adapters (InvoiceXpress, Vendus), SAF-T export — origin
+        Phase 7 registry; adapter interface already in @eleva/accounting.
+  16.13 Agentic surfaces (MCP server exposing the apps/api OpenAPI as tools with API-key auth;
+        agent-friendly booking assistant) — origin agentic-first principle; builds on apiKey +
+        openAPI plugins from Phase 2; rate limits per key.
+  16.14 Public status page + trust center (SLOs, subprocessors, security posture) — origin
+        Phase 13; BetterStack status page + apps/docs trust pages.
+  16.15 Tech-debt backlog burn-down — origin tech-debt-backlog.md; review after each launch
+        retro; items with owner + due phase.
+  16.16 MVP decommission finalisation (+30 days: archive Neon branch, delete migration schema,
+        remove redirect-map entries older than 12 months) — origin Phase 15; requires the
+        checksum verification record from Phase 15.
+Phase 16 is a backlog, not a build phase. Deliver in this order, all on branch phase-16.<N>/<slug>:
 
 1. Planning commit (docs(p16.<N>): ...), first on the branch:
    a. Write docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md with the same structure as the

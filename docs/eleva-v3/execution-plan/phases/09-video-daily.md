@@ -21,14 +21,20 @@ In:
 - `packages/video` (`@eleva/video`, sole `@daily-co/*` importer; server = REST via `fetch` with
   `DAILY_API_KEY`, client = `@daily-co/daily-react` + `@daily-co/daily-js`):
   `createSessionRoom({ bookingId, startAt, endAt })` -> private room, random name (HIPAA mode
-  forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`, `max_participants: 2`
-  (+1 for supervisor later), `enable_prejoin_ui: true`, `enable_chat: true`,
+  forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`, `max_participants: 2 + count(delegated
+  participants)` (recomputed via Daily room update when a delegate is added, so every authorised
+  participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
   `enable_screenshare: true`, `enable_recording: false` (Phase 10 behind consent),
   `eject_at_room_exp: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled`), `started_at`, `ended_at`, `participants jsonb`
-  (join/leave timestamps, no names), RLS for expert org + buyer org.
+  (join/leave history only — never used for authorization), RLS for expert org + buyer org.
+- `session_participants` table (the **authorization** contract for delegated participants):
+  `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, unique
+  (`booking_id`, `user_id`); RLS expert org + the participant's own row; written only by
+  `POST /sessions/[bookingId]/participants` (assigned expert only, audited
+  `session.participant_added`) and `DELETE …/participants/[userId]` (`session.participant_removed`).
 - Workflow: on booking confirmed -> `ensureSessionRoom(bookingId)` (idempotent; also run by a
   QStash sweep 1h before start for bookings without a room); on cancel -> `deleteRoom`.
 - API: `POST /sessions/[bookingId]/join` -> checks the caller is the booking's assigned expert,
@@ -57,8 +63,11 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 ## Deliverables
 
 1. `packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}` + tests.
-2. Migration: `sessions`; RLS; audit unions (`session: room_created|joined|started|ended|room_deleted`).
-3. Workflows + QStash sweep; API routes + OpenAPI + client.
+2. Migration: `sessions` + `session_participants`; RLS; audit unions (`session: room_created|joined|
+   started|ended|room_deleted|participant_added|participant_removed`).
+3. Workflows + QStash sweep; API routes (`join`, `participants` add/remove, Daily webhook) +
+   OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
+   the room capacity.
 4. Join pages in `apps/app` and `apps/expert` with `pt/en/es` messages.
 5. CSP update + boundary lint + env (`DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET`).
 6. Playwright `e2e/video-join.spec.ts` (mocks Daily JS or uses a fake media device profile).
@@ -112,7 +121,7 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (daily-video, api-first-agentic, audit-wiring, eleva-icons)
@@ -128,7 +137,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -145,7 +154,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    "./webhooks"; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
    against https://api.daily.co/v1 with DAILY_API_KEY, never log the key): createSessionRoom({
    bookingId, startAt, endAt }) -> POST /rooms { privacy: "private", properties: { nbf: startAt-15m,
-   exp: endAt+30m, max_participants: 2, enable_prejoin_ui: true, enable_chat: true,
+   exp: endAt+30m, max_participants: 2 + delegated participant count (updateRoom when a delegate
+   is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, eject_at_room_exp: true, enable_knocking:
    false, lang: from booking locale } } (no custom name: HIPAA), returns { name, url } with url
    rewritten to https://${DAILY_DOMAIN}/${name} when DAILY_DOMAIN is a custom domain;
@@ -161,9 +171,12 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    webhook verification.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled, room_created_at,
-   started_at, ended_at, participants jsonb [{ role, joined_at, left_at }], created_at,
-   updated_at). RLS: expert org and buyer org read; API writes. Audit unions session:
-   room_created|joined|started|ended|room_deleted.
+   started_at, ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
+   authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
+   role delegate|supervisor, added_by, added_at, unique(booking_id, user_id)) — the only source of
+   delegated-join authorization. RLS: expert org and buyer org read sessions; session_participants
+   readable by the expert org and by the participant; API writes. Audit unions session:
+   room_created|joined|started|ended|room_deleted|participant_added|participant_removed.
 3. Workflows: packages/workflows/src/video/ensure-session-room.ts (idempotent: returns existing
    room) invoked from emitDomainEvent("booking.confirmed") and by a QStash sweep every 15 min for
    bookings starting within 2h without a room (route POST /workflows/video-room-sweep;

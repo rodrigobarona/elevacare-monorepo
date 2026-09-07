@@ -41,15 +41,18 @@ In:
   revenue, seats), members (list, roles, invite, remove), schedule view (read-only across
   experts), bookings (list/filter by expert), billing (plan, seats, invoices, portal button),
   settings (profile, public page, branding), notifications inbox (Phase 8 component).
-- **Clinic public page** (`apps/web/[locale]/[username]` shared namespace, enforced by the single
-  `public_handles` table — see deliverable 1): clinic profile with
-  experts grid; booking any expert routes to that expert's event types with `attribution =
-clinic` so `computeApplicationFee` returns 0 bps and payout goes to the clinic's or the
+- **Clinic public page** at `apps/web/[locale]/[clinicSlug]` (same `/[locale]/[handle]` slot that
+  Phase 4 gives experts; `public_handles` decides whether a handle renders an expert or a clinic —
+  see deliverable 1): clinic profile with experts grid; **canonical clinic booking route** =
+  `/[locale]/[clinicSlug]/[expertUsername]/[eventSlug]` (locale-prefixed like every `apps/web`
+  route; Phase 4 owns `/[locale]/[username]/[eventSlug]` for marketplace bookings), which sets
+  `attribution = clinic` so `computeApplicationFee` returns 0 bps and payout goes to the clinic's or the
   expert's Connect account per `clinic_profiles.payout_mode` (`clinic|expert`) — default `expert`
   in v1; `clinic` mode requires clinic Connect account (reuse Phase 6 onboarding for orgs).
 - **Attribution** on `bookings.attributed_org_id` + `booking_payments.applied_commission_bps = 0`,
-  set only from the booking source (clinic page path or signed clinic parameter) — never inferred
-  from the expert's clinic membership. Direct `/[username]` bookings of clinic experts pay the
+  set only from the booking source (the canonical clinic route above, or a signed clinic parameter
+  carried to `/[locale]/[username]/[eventSlug]`) — never inferred from the expert's clinic
+  membership. Direct `/[locale]/[username]/[eventSlug]` bookings of clinic experts pay the
   standard commission.
 - Playwright `e2e/team.spec.ts`.
 
@@ -122,7 +125,7 @@ created|verified|member_invited|member_joined|member_removed|seats_synced`; `sub
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (stripe-webhooks, better-auth, api-first-agentic,
@@ -141,7 +144,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -187,10 +190,13 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    ff.toconline_invoicing_enabled). hasFeature(orgId, feature) reads Stripe Entitlements with
    cache.
 4. Attribution: set bookings.attributed_org_id ONLY when the booking originates from the clinic
-   surface — path /[clinicSlug]/[expertUsername]/[eventSlug] or a signed clinic attribution
-   parameter issued by the clinic page (validate the clinic is active, the expert is a current
+   surface — the canonical route /[locale]/[clinicSlug]/[expertUsername]/[eventSlug] (all
+   apps/web routes are locale-prefixed; link generation, attribution parsing and the e2e test use
+   exactly this shape) or a signed clinic attribution parameter issued by the clinic page and
+   carried to the Phase 4 route /[locale]/[username]/[eventSlug] (validate the clinic is active, the expert is a current
    member of that clinic, and the parameter is not older than 24h). The expert's
-   clinic_org_id membership alone NEVER sets attribution: a direct booking on /[username] of a
+   clinic_org_id membership alone NEVER sets attribution: a direct booking on
+   /[locale]/[username]/[eventSlug] of a
    clinic-affiliated expert is a marketplace booking and pays the normal commission. Pass
    buyerContext { attributedOrgId } to computeApplicationFee -> 0 bps only for attributed
    bookings; add unit tests for both paths; destination Connect account = expert's (payout_mode expert) or clinic's (payout_mode
@@ -209,8 +215,9 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    Stripe + clinic_saas_invoices, Embedded Checkout mount for first purchase, Portal button),
    settings (profile, public page preview, branding logo upload to PUBLIC store, payout mode).
    Messages pt/en/es.
-8. apps/web: clinic public page at /[locale]/[clinicSlug] (profile + experts grid) and expert
-   booking path with clinic attribution; sitemap entries.
+8. apps/web: clinic public page at /[locale]/[clinicSlug] (profile + experts grid; the [handle]
+   segment resolves via public_handles to expert or clinic) and the canonical clinic booking
+   route /[locale]/[clinicSlug]/[expertUsername]/[eventSlug] with attribution; sitemap entries.
 9. Tests: seat sync + limits, attribution -> 0 bps, webhook handlers, Tier 1b idempotency,
    RLS for clinic bookings view. e2e/team.spec.ts: create team -> checkout (test card) -> invite ->
    accept -> member visible -> book clinic expert -> 0 fee.

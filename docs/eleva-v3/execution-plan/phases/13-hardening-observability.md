@@ -24,15 +24,20 @@ In:
   and applied in every `proxy.ts` via shared helper (`report-uri` to Sentry), HSTS preload,
   `Permissions-Policy`, `Referrer-Policy`, `X-Frame-Options: DENY` everywhere (it cannot
   express a cross-origin allow-list; `ALLOW-FROM` is obsolete) — Stripe/Daily iframes that _we_
-  embed are governed by CSP `frame-src`, and the few pages that must be embeddable by a
-  third-party (none at launch) would get a route-specific CSP `frame-ancestors` instead; Better Auth `rateLimit` rules for `/sign-in/*`, `/magic-link`,
+  embed are governed by CSP `frame-src`; **third-party embedding of Eleva pages is unsupported at
+  launch** — any future embeddable route needs an ADR and must both drop `X-Frame-Options` and
+  set a route-specific CSP `frame-ancestors` (DENY + relaxed frame-ancestors is contradictory);
+  the helper is route-aware (`{ route: { mediaCapture, embeddable } }`) so Permissions-Policy
+  grants camera/microphone only on join routes; Better Auth `rateLimit` rules for `/sign-in/*`, `/magic-link`,
   `/two-factor/*`; `useSecureCookies` + `sameSite: "lax"`; secret rotation runbook
   (`BETTER_AUTH_SECRET` dual-key, KEK v2 via `rotateKek`, Stripe webhook secret, Daily webhook
   secret, TOConline tokens); dependency audit (`pnpm audit --prod`, Renovate/Dependabot config);
   CORS allow-list audit; OpenAPI exposure review (`/openapi.json` public but admin tag hidden).
 - **Observability**: Sentry EU DSN per app with `tracesSampleRate`, `beforeSend` scrubbing (PHI
-  and names removed; emails replaced by a keyed HMAC-SHA256 with `SENTRY_USER_HASH_KEY`, a secret
-  Sentry never receives — a plain hash is a stable, dictionary-recoverable identifier), release tagging via Vercel git SHA, source maps; structured logging (`pino` or
+  and names removed; on server/edge runtimes emails are replaced by a keyed HMAC-SHA256 with
+  `SENTRY_USER_HASH_KEY`, a secret Sentry never receives — a plain hash is a stable,
+  dictionary-recoverable identifier; on the client runtime the secret must never ship, so the
+  browser `beforeSend` drops email/name entirely and sets `user.id` only), release tagging via Vercel git SHA, source maps; structured logging (`pino` or
   console JSON) with correlation id propagated from `x-request-id` through `withAudit`;
   BetterStack heartbeats for every QStash job (each workflow route pings on success), uptime
   monitors for `eleva.care`, `api.eleva.care/health`, `admin.eleva.care`, `sessions.eleva.care`;
@@ -122,7 +127,7 @@ Out: penetration test (external vendor, scheduled before Phase 15 — record as 
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, eleva-icons, better-auth,
@@ -143,7 +148,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity && pnpm e2e
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -166,9 +171,14 @@ PR 13.1 — security + observability + analytics:
    vercel-storage.com; media-src self blob: *.daily.co; report-uri Sentry), HSTS preload,
    Permissions-Policy (camera/microphone/display-capture only on join routes), Referrer-Policy
    strict-origin-when-cross-origin, X-Content-Type-Options nosniff, X-Frame-Options DENY plus CSP
-   frame-ancestors 'none' (never ALLOW-FROM; frame-src above covers the iframes we embed; a
-   route-specific frame-ancestors override is the only allowed relaxation). Apply from every apps/*/src/proxy.ts via
-   one helper call (keep proxies < 50 LOC) and in apps/api security-headers.ts. Start report-only
+   frame-ancestors 'none' on every route (never ALLOW-FROM; frame-src above covers the iframes
+   we embed; third-party embedding is unsupported at launch — a future embeddable route must, via
+   a new ADR, pass { route: { embeddable: true } } which OMITS X-Frame-Options and sets the
+   route-specific frame-ancestors, never both). The helper takes a route policy
+   { mediaCapture: boolean; embeddable: boolean } derived from the pathname in each proxy
+   (mediaCapture only for /sessions/[bookingId]/join) and has unit tests for join, embeddable
+   and normal routes. Apply from every apps/*/src/proxy.ts via one helper call (keep proxies
+   < 50 LOC) and in apps/api security-headers.ts. Start report-only
    on staging (env CSP_REPORT_ONLY=true), enforce after 48h clean.
 2. Rate limits: apps/api/src/lib/rate-limit.ts exposes classes auth (10/min/IP), publicRead
    (120/min/IP), mutation (60/min/user), admin (300/min/user), webhook (none, signature only);
@@ -182,9 +192,12 @@ PR 13.1 — security + observability + analytics:
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).
 3. Observability: @eleva/observability Sentry init for server/edge/client per app (EU DSN env
    SENTRY_DSN_<APP>, tracesSampleRate 0.1, replays off in apps handling PHI, beforeSend scrubbing:
-   drop names and record bodies, replace emails with HMAC-SHA256(SENTRY_USER_HASH_KEY, email)
-   (never a plain or unsalted hash), unit test that rejects raw emails, plain sha256 of an email
-   and any base64/hex that decodes to an email; release = VERCEL_GIT_COMMIT_SHA; source maps upload in
+   drop names and record bodies; on server/edge replace emails with
+   HMAC-SHA256(SENTRY_USER_HASH_KEY, email) (never a plain or unsalted hash; the key is a
+   server-only env var, never NEXT_PUBLIC_); on the client drop email and name entirely and keep
+   only user.id (the secret must not reach the browser bundle — add a test that the client Sentry
+   config has no reference to SENTRY_USER_HASH_KEY); unit tests reject raw emails, plain sha256 of
+   an email and any base64/hex that decodes to an email; release = VERCEL_GIT_COMMIT_SHA; source maps upload in
    build), request correlation id (x-request-id generated in proxy, propagated to API, stored on
    audit rows and logs), structured JSON logger with redaction, BetterStack: infra/betterstack/
    setup-monitors.ts registering uptime monitors (eleva.care, api/health, admin, sessions) and one

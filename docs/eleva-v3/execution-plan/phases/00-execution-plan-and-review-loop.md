@@ -101,7 +101,7 @@ Out: ADRs, code changes, CI changes (Phase 1).
 
 ````text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
@@ -118,7 +118,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
-- git push -u origin <branch> && gh pr create --base main with the PR body template from
+- git push -u origin HEAD && gh pr create --base main with the PR body template from
   docs/eleva-v3/execution-plan/README.md section 8.
 - Loop: wait for CodeRabbit GitHub App review + CI; for each comment fix+push or reply
   "Not actionable because ..."; re-run pnpm review:branch; continue until zero unresolved

@@ -36,7 +36,11 @@ In:
     metadata `reservationId`, `bookingId`; idempotency key = reservationId). Destination
     charges are rejected because payouts are delayed until eligibility (Phase 6).
   - `POST /bookings/confirm` (called from webhook `payment_intent.succeeded` path and client
-    return; converts reservation -> booking `confirmed`; guest -> Better Auth user created with
+    return; binds the PaymentIntent to the reservation before anything else: retrieve it from
+    Stripe and require `status = succeeded`, `metadata.reservationId === reservationId`,
+    `amount` and `currency` equal to the reservation price, and `stripe_payment_intent_id` not
+    already used (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`, audited; only then converts
+    reservation -> booking `confirmed`; guest -> Better Auth user created with
     `emailVerified=false` + magic link activation; member's personal Space is the buyer org).
   - `POST /bookings/[id]/cancel`, `POST /bookings/[id]/reschedule` with rules from
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
@@ -144,7 +148,7 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, stripe-webhooks,
@@ -163,7 +167,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -219,7 +223,11 @@ PR 04.2 — funnel + payment + marketing/legal:
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
    applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
    idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
-   idempotent — verifies intent status with Stripe, converts reservation to confirmed booking,
+   idempotent — retrieves the intent from Stripe and requires status succeeded AND
+   metadata.reservationId === reservationId AND amount/currency equal to the reservation price
+   AND the intent id unused (unique index on booking_payments.stripe_payment_intent_id); any
+   mismatch -> 409 PAYMENT_MISMATCH (audited) so a valid intent cannot be replayed against another
+   reservation; then converts reservation to confirmed booking,
    creates the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for
    passwordless: use magicLink sendMagicLink with a callback to /account/activate) and links the
    booking to the member's personal Space; POST /bookings/[id]/cancel and /reschedule enforcing

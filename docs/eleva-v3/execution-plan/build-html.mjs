@@ -75,7 +75,33 @@ async function loadDocs() {
 /** @param {string} markdown */
 function firstHeading(markdown) {
   const match = markdown.match(/^#\s+(.+)$/m)
-  return match ? match[1].trim() : "Untitled"
+  // Sidebar labels are plain text: drop inline-code backticks from the heading.
+  return match ? match[1].trim().replaceAll("`", "") : "Untitled"
+}
+
+/**
+ * Rewrite a Markdown link so it resolves from index.html (which lives in execution-plan/,
+ * next to README.md and one level above phases/). Cross-document links become in-page
+ * anchors, preserving any heading fragment as the namespaced heading id.
+ * @param {string} href
+ * @param {string} docId
+ */
+function rewriteLink(href, docId) {
+  if (/^(https?:)?\/\//.test(href) || href.startsWith("#") || href.startsWith("mailto:")) {
+    return href
+  }
+  const phaseLink = href.match(/(?:^|\/)phases\/(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i)
+  if (phaseLink) {
+    return phaseLink[2] ? `#${phaseLink[1]}--${phaseLink[2]}` : `#${phaseLink[1]}`
+  }
+  const readmeLink = href.match(/^(?:\.\/|\.\.\/)?README\.md(?:#(.*))?$/)
+  if (readmeLink) {
+    return readmeLink[1] ? `#readme--${readmeLink[1]}` : "#readme"
+  }
+  if (docId === "readme") return href
+  // Links inside phases/*.md are relative to phases/. From index.html, "../x" is still
+  // "../x" (both hop to docs/eleva-v3/), while a sibling "x" must become "phases/x".
+  return href.startsWith("../") ? href : `phases/${href.replace(/^\.\//, "")}`
 }
 
 /**
@@ -122,18 +148,7 @@ function createRenderer(doc, headings, promptCounter) {
       },
       link({ href, title, tokens }) {
         const text = this.parser.parseInline(tokens)
-        // Cross-document links become in-page anchors. Relative links to the handbook are
-        // rewritten so they resolve from index.html (which lives next to README.md, one
-        // level above phases/).
-        let target = href
-        const phaseLink = href.match(
-          /(?:^|\/)phases\/(\d{2}[a-z0-9-]*)\.md(#.*)?$/i
-        )
-        if (phaseLink) target = `#${phaseLink[1]}`
-        else if (/^(\.\/|\.\.\/)?README\.md(#.*)?$/.test(href))
-          target = "#readme"
-        else if (doc.id !== "readme" && href.startsWith("../"))
-          target = href.slice(3)
+        const target = rewriteLink(href, doc.id)
         const t = title ? ` title="${escapeHtml(title)}"` : ""
         const external = /^https?:\/\//.test(target)
           ? ` target="_blank" rel="noreferrer noopener"`

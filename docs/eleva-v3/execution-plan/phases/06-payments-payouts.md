@@ -40,8 +40,8 @@ In:
 - **Payout engine** (port from MVP `process-expert-transfers`, `process-pending-payouts`,
   `check-upcoming-payouts`, `transfer-utils.ts`): `payout_states` table (booking_payment_id,
   status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed`,
-  `eligible_at`, `scheduled_for`, `stripe_transfer_id`, `stripe_payout_id`, `hold_reason`,
-  `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
+  `eligible_at`, `scheduled_for`, `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
+  `stripe_payout_id`, `hold_reason`, `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
   `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
   (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
@@ -142,13 +142,16 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 - Transfer timing vs Stripe available balance: use `source_transaction` and handle
   `balance_insufficient` with retry.
-- Double-transfer on retries: idempotency keys = `payout_state.id` + attempt.
+- Double-transfer on retries: one stable idempotency key per transfer operation
+  (`payout_states.transfer_idempotency_key`, generated once when the payout is scheduled and
+  reused on every retry) — never key by attempt number, or a lost response followed by a retry
+  creates a second transfer.
 
 ## Copy-paste prompt
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (stripe-webhooks, api-first-agentic, audit-wiring) and
@@ -167,7 +170,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -207,7 +210,8 @@ PR 06.1 — Connect onboarding hardening:
 PR 06.2 — payout engine, refunds, disputes, finance UI:
 5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, status enum
    pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
-   scheduled_for, amount_cents, stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
+   scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
+   stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
    approved_at, attempts, last_error, created_at, updated_at); booking_payments additions
    refunded_cents, dispute_status, stripe_charge_id; RLS (expert org read; API writes); audit
    unions per the phase file.
@@ -217,7 +221,11 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    account, amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS env (default 50000; inclusive — add a
    unit test at exactly the threshold), open dispute, manual hold); executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
    destination, transfer_group: bookingId, source_transaction: chargeId, metadata },
-   { idempotencyKey: `${payoutStateId}:${attempts}` }) with retry/backoff and DLQ table
+   { idempotencyKey: payoutState.transfer_idempotency_key }) — a UUID column written once when
+   the row enters scheduled and reused on every retry (Stripe returns the original transfer for
+   the same key), so a lost response can never produce a second transfer; a new key is only
+   minted by an admin action after a reversed transfer; test: two calls with a simulated lost
+   response yield one transfer — with retry/backoff and DLQ table
    workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
    reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
    the ledger fee reduced proportionally (no application fee object exists in this funds flow);

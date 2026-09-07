@@ -19,7 +19,7 @@ everything else composes the data endpoints built in Phases 6-11.
 In:
 
 - **Access**: `admin.eleva.care` only for users with platform role in `admin` plugin
-  (`platform_admin`, `staff_support`, `staff_finance`); `apps/admin/proxy.ts` optimistic check +
+  (`platform_admin`, `staff_support`, `staff_finance`); `apps/admin/src/proxy.ts` optimistic check +
   server `requireStaff(role[])`; every admin API route under `apps/api/src/app/admin/*` with
   `requireApiAuth({ staffRoles })` and rate limits; all writes `withAudit({ actorUserId,
 reason })` with a mandatory `reason` field on destructive actions.
@@ -118,7 +118,7 @@ commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_vie
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (better-auth, api-first-agentic, audit-wiring,
@@ -137,7 +137,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 

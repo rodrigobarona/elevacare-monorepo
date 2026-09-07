@@ -25,8 +25,13 @@ In:
   (idempotent on key + channel). Kinds: `booking.confirmed`, `booking.reminder_24h`,
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
-  `invoice.failed` (expert), `account.magic_link` etc. (auth mails already via `@eleva/email`;
-  reuse the same renderer).
+  `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
+  `auth.reset_password`, `auth.two_factor_otp`, `auth.org_invitation`. **Boundary:** this phase
+  makes `@eleva/email` renderer-only (React Email templates, no `resend` import — boundary lint)
+  and rewires the Better Auth `sendMagicLink` / `sendVerificationEmail` / `sendResetPassword` /
+  OTP / invitation callbacks (Phase 2 sent them through `@eleva/email` + Resend directly as a
+  temporary measure) to `sendNotification({ kind: "auth.*" })`, so every mail — auth included —
+  gets the same idempotency, suppression list, delivery log and audit.
 - `@eleva/email`: templates per kind with `pt/en/es` copy, shared layout, brand from
   `docs/eleva-v3/brand-book`; `apps/email` runs the React Email preview server.
 - Twilio EU (region `ie1`), sender from `TWILIO_MESSAGING_SERVICE_SID`; SMS only when the user
@@ -104,7 +109,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, eleva-icons) and
@@ -121,7 +126,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 

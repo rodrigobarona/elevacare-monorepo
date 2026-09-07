@@ -113,7 +113,7 @@ Out: Spain launch, Academy content (Phase 16).
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously for the code and documentation parts;
+(the directory containing pnpm-workspace.yaml). Work autonomously for the code and documentation parts;
 STOP and ask the repository owner (@rodrigobarona) for explicit go-ahead before each production
 mutation step (DNS, Stripe live webhook switch, migration --apply against production, WorkOS
 cancellation). Record each go-ahead in operator-tasks/cutover-log-<date>.md.
@@ -131,7 +131,7 @@ Workflow (mandatory) for the code/doc PR:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 

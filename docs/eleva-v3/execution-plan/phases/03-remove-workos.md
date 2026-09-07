@@ -31,9 +31,13 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   scopes `calendar.readonly` + `calendar.events`; Microsoft `Calendars.ReadWrite`; store the
   Better Auth `account.id` on `expert_integrations` (replace `workos_user_id`).
 - `packages/workflows/src/scheduling/calendar-event-sync.ts` uses the new credential manager.
-- `@eleva/billing` `provisioning.ts`: seat counting from Better Auth `member` rows via
-  `organizationHooks.afterAddMember/afterRemoveMember` (registered in Phase 2 as stubs) ->
-  `syncSeatQuantity(orgId)`; remove WorkOS meter.
+- `@eleva/billing` `provisioning.ts`: `syncSeatQuantity(orgId)` implements the single seat rule
+  that Phase 11 relies on — billable seat = a membership of the clinic org (any role, owner
+  included) whose user has >= 1 *published* event type in that clinic; owner/admin accounts
+  without published event types are free. Triggered from `organizationHooks.afterAddMember/
+  afterRemoveMember` (registered in Phase 2 as stubs) **and** from the event-type publish/
+  unpublish path in `@eleva/scheduling`; until Phase 11 creates team subscriptions the function
+  is a no-op for orgs without a `billing_subscriptions` row. Remove the WorkOS meter.
 - `apps/api/src/app/workos/sync` deleted; `infra/qstash/setup-workos-sync.ts` deleted and
   `setup-all.ts` updated; QStash schedule removed in Upstash (`pnpm qstash:list` to verify).
 - `infra/workos/` deleted; root scripts `workos:*` removed; `infra/stripe/backfill-org-customers.ts`
@@ -117,7 +121,7 @@ Out: records/PHI features (Phase 10); MVP record re-encryption (Phase 14).
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (better-auth.mdc, encryption.mdc, audit-wiring.mdc,
@@ -134,7 +138,7 @@ Workflow (mandatory):
   phase-03.2/infra-cleanup if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -175,13 +179,18 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    apps/expert integrations page: Connect Google / Connect Microsoft buttons call the linkSocial
    flow via @eleva/auth/client with callbackURL back to the integrations page; status badge reads
    expert_integrations. apps/api experts/integrations routes: remove WorkOS references.
-3. @eleva/billing provisioning.ts: seat sync from Better Auth members. Implement
-   syncSeatQuantity(orgId) that counts active members with role in (owner, admin, member) for
-   organization.type = team and updates the Stripe subscription item quantity (proration per
-   payments-payouts-spec.md); wire it into the organization plugin hooks afterAddMember /
+3. @eleva/billing provisioning.ts: seat sync with the single seat rule shared with Phase 11.
+   Implement syncSeatQuantity(orgId) = count of memberships of the team org (any role, owner
+   included) whose user has >= 1 published event type in that org (join auth.member ->
+   event_types where org_id = team org and status = published); owner/admin accounts without
+   published event types are not seats; no-op when the org has no billing_subscriptions row;
+   otherwise update the Stripe subscription seat item quantity (proration per
+   payments-payouts-spec.md). Wire it into the organization plugin hooks afterAddMember /
    afterRemoveMember / afterAcceptInvitation defined in packages/auth/src/server/auth.ts (import
    from @eleva/billing/server — check for circular deps; if needed, publish an event through
-   @eleva/workflows). Tests with a mocked Stripe client.
+   @eleva/workflows) AND into the event-type publish/unpublish mutation in @eleva/scheduling.
+   Tests with a mocked Stripe client: owner without event types = 0 seats; publish -> +1;
+   unpublish -> -1; remove member -> -1.
 4. Deletions: apps/api/src/app/workos/, infra/workos/ (whole package), infra/qstash/
    setup-workos-sync.ts (+ update setup-all.ts, README, root scripts qstash:setup:workos-sync,
    workos:rbac:generate, workos:widgets:generate), apps/account/src/components/

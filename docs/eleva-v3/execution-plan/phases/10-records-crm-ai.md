@@ -32,9 +32,18 @@ In:
   versioned legal texts in `packages/compliance/legal/*.md` per locale.
 - **Retention** (`data-retention-export-matrix.md`): QStash jobs `retention-sweep` (daily):
   transcripts 2y, AI drafts 90d unpublished, session documents per policy, reservations 24h,
-  notification deliveries 1y; crypto-shred completes account deletion (Phase 5) after the grace
-  period via `shredOrgKeys` for personal Spaces + row deletion; DSAR collectors for records
-  (decrypt only the member's published records + documents they own).
+  notification deliveries 1y. **Member account deletion (Phase 5 request, finalised here)**
+  after the grace period: (a) `shredOrgKeys(personalSpaceOrgId)` + delete the member's own rows
+  (profile, preferences, consents, CRM contact rows that reference the user); (b) `session_documents`
+  uploaded by the member (`uploaded_by = member`) or with scope `shared` uploaded for them:
+  delete the private Blob object **and** the row; (c) expert-authored `records` about the member
+  (encrypted under the *expert* org key, so the member-key shred does not cover them) fall under
+  the **legal clinical-record retention exception** in `data-retention-export-matrix.md`: keep
+  them for the statutory period, replace `member_user_id` with a tombstone id (`deleted_users`
+  row holding only a salted hash), strip member identity from `metadata_encrypted`, and hard-delete
+  when the retention period ends via the sweep — the exception, its period and the legal basis are
+  written into the matrix and the DPIA in this phase; DSAR collectors for records (decrypt only
+  the member's published records + documents they own).
 - **Expert UI** (`apps/expert`): member list (`/[orgSlug]/members` — from bookings), member
   detail (sessions timeline, notes, documents, reports), session notes editor (in the Phase 9 call
   side panel and post-call), report composer (rich text -> sanitized HTML/Markdown) with
@@ -129,7 +138,7 @@ created|updated|published|unpublished|deleted`; `document: uploaded|deleted`; `c
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
-(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
+(the directory containing pnpm-workspace.yaml). Work autonomously and finish the phase end to end.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (encryption, blob-storage, daily-video, api-first-agentic,
@@ -147,7 +156,7 @@ Workflow (mandatory):
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
-- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
@@ -183,7 +192,12 @@ PR 10.1 — records, documents, consent, retention:
    data-retention-export-matrix.md — transcripts 2y, unpublished ai_draft 90d, session_documents
    per matrix, slot reservations 24h, notification_deliveries 1y) run by POST /workflows/
    retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script); finalize
-   account deletion: after grace period -> shredOrgKeys(personal space) + delete rows + audit;
+   account deletion: after grace period -> shredOrgKeys(personal space) + delete the member's rows
+   + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
+   tombstone member_user_id on expert-authored records (deleted_users salted-hash row; strip
+   identity from metadata_encrypted) which stay under the clinical-record retention exception
+   until the sweep hard-deletes them at the end of the statutory period (document period + legal
+   basis in data-retention-export-matrix.md and the DPIA) + audit;
    DSAR collector for records/documents (member's published records decrypted, owned documents
    listed with fresh signed URLs). Tests with seeded expired rows.
 4. apps/expert: /[orgSlug]/members (list from bookings, search), /[orgSlug]/members/[userId]
