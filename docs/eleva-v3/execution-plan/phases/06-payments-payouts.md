@@ -249,7 +249,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    refund/reversal, reconciliation and retry code read only the snapshot — status enum
    pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
    scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
-   stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
+   stripe_transfer_id, stripe_payout_id, hold_reasons text[] NOT NULL DEFAULT '{}' (values
+   dispute|manual), held_from_status, approved_by,
    approved_at, attempts, last_error, created_at, updated_at); booking_payments additions
    refunded_cents, dispute_status, stripe_charge_id; RLS (expert org read; API writes); audit
    unions per the phase file.

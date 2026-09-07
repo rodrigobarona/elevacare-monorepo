@@ -190,9 +190,10 @@ PR 12.1 — access, users, partners, experts, bookings:
    approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at, reason) created on
    expert onboarding completion (update Phase 6/7 completion route). GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: identity verified, Connect charges+payouts,
-   invoicing choice, profile completeness, ERS bio check flags), POST /approve { reason } ->
+   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R] { reason } ->
    expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved,
-   POST /reject { reason } -> Lane 1 partner.rejected, POST /needs-changes { reason, items }.
+   POST /reject [R] { reason } -> Lane 1 partner.rejected, POST /needs-changes [R] { reason,
+   items }.
    Clinic verification queue: GET /admin/clinics/verifications, POST
    /admin/clinics/verifications/[id]/approve [R] { reason } (sets verification_status verified +
    revalidates the clinic page; Lane 1 kind clinic.verified), POST .../reject [R] { reason }
@@ -202,11 +203,16 @@ PR 12.1 — access, users, partners, experts, bookings:
    suspend/unsuspend, cancel booking, refund, payout approve/hold/release/retry, clinic
    approve/reject, invoice retry -> 400 REASON_REQUIRED).
 4. Experts & orgs: GET /admin/experts?q&status, GET /admin/organizations?q&type, PATCH
-   /admin/experts/[orgId] { categories, visibility, topExpertOverride, commissionOverrideBps,
-   commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend|unsuspend { reason }.
-   Categories CRUD /admin/categories. Bookings: GET /admin/bookings?q&status&from&to, GET
-   /admin/bookings/[id] (payment, payout, session, invoices), POST /admin/bookings/[id]/cancel
-   { reason, refundPolicy full|partial|none, amountCents? }.
+   /admin/experts/[orgId] [R] { categories, visibility, topExpertOverride, commissionOverrideBps,
+   commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend [R] and
+   /unsuspend [R] { reason }. Categories CRUD /admin/categories [O]. Bookings: GET
+   /admin/bookings?q&status&from&to, GET /admin/bookings/[id] (payment, payout, session,
+   invoices), POST /admin/bookings/[id]/cancel [R] { reason, refundPolicy full|partial|none,
+   amountCents? }. The [R]/[O] markers in this list ARE the policy: implement them as one
+   exported ADMIN_ROUTE_POLICY table in apps/api (path pattern -> "required" | "optional"),
+   have adminRoute read its reason mode from that table (a route missing from the table fails
+   at startup), and drive the missing-reason test from the same table so the route list, the
+   handler policy and the tests cannot drift.
 5. apps/admin UI (@eleva/dashboard shell, enableOrgSwitcher false, nav: Overview, Users,
    Partners, Experts, Clinics, Bookings, Money, Accounting, Ops, Content, Flags): DataTable with
    server pagination/filters, detail drawers, action dialogs with mandatory reason, command

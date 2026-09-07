@@ -3387,7 +3387,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    refund/reversal, reconciliation and retry code read only the snapshot — status enum
    pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
    scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
-   stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
+   stripe_transfer_id, stripe_payout_id, hold_reasons text[] NOT NULL DEFAULT &#39;{}&#39; (values
+   dispute|manual), held_from_status, approved_by,
    approved_at, attempts, last_error, created_at, updated_at); booking_payments additions
    refunded_cents, dispute_status, stripe_charge_id; RLS (expert org read; API writes); audit
    unions per the phase file.
@@ -3816,7 +3817,13 @@ Audiences, PHI-free).</p>
 <code>sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })</code> — the
 one contract (this signature is copied verbatim into the prompt below and into
 <code>notifications-spec.md</code>; urgency is <strong>not</strong> a parameter, it is a property of the kind in
-<code>NOTIFICATION_KINDS</code>; <code>channelsOverride</code> may only narrow the kind&#39;s default channels) — where
+<code>NOTIFICATION_KINDS</code>; <code>channelsOverride</code> may only narrow the kind&#39;s default channels;
+<code>orgId</code> is optional only in the type&#39;s top-level shape — <code>NOTIFICATION_KINDS[kind].scope</code> is
+<code>&quot;org&quot; | &quot;user&quot;</code>, the exported signature is an overload that makes <code>orgId</code> <strong>required</strong> for
+every org-scoped kind, and the runtime Zod refine rejects a missing <code>orgId</code> for an org-scoped
+kind with <code>ORG_CONTEXT_REQUIRED</code> before any inbox or delivery write, so no tenant row is ever
+written without RLS + audit context; test: org-scoped kind without orgId -&gt; throws, zero
+rows) — where
 <code>recipient</code> is a discriminated union <code>{ userId }</code> <strong>or</strong> <code>{ email, locale? }</code> — the e-mail
 mode exists for recipients who have no account yet (<code>auth.org_invitation</code> to a new address,
 guest booking confirmations before activation) and is <strong>email-only</strong>: no preferences lookup,
@@ -3838,13 +3845,20 @@ ever exists without a lease and a crash before the provider call is reclaimed by
 recipient-delivery guarantee): Resend gets an <code>Idempotency-Key</code> header equal to the row id
 and deduplicates the same key for 24 h, so a crash between provider accept and the update
 leaves a <code>queued</code> row that the retry re-claims and re-sends with the same key without a
-second e-mail; retries older than 24 h go through the same reconciliation as SMS (Resend
-<code>emails.list</code> by recipient + tag <code>deliveryId</code>). <strong>SMS is at-least-once</strong> and is documented and tested as such: Twilio
+second e-mail; every Resend request also carries <code>tags: [{ name: &quot;deliveryId&quot;, value: row.id }]</code>, and retries older than 24 h reconcile before re-sending: <code>emails.list</code> filtered to the
+recipient and the window since <code>first_attempt_at</code>, then <code>emails.get</code> on each candidate (the
+list view does not expose tags) — a candidate whose <code>deliveryId</code> tag equals the row id is
+adopted as <code>sent</code>; test: accepted e-mail, update lost, retry after 24 h -&gt; adopted, zero new
+sends. Both providers reconcile from <code>notification_deliveries.first_attempt_at</code> (set once,
+immediately before the FIRST provider call, never overwritten by a re-claim — <code>claimed_at</code>
+moves on every re-claim and is therefore never a reconciliation bound). <strong>SMS is
+at-least-once</strong> and is documented and tested as such: Twilio
 has no idempotency key, so every SMS carries a <code>StatusCallback</code> URL
 <code>POST /webhooks/twilio/status?deliveryId=&lt;rowId&gt;</code> (Twilio signature validated) that marks the
 row <code>sent</code> with the Message SID even when the sending process died; before re-sending a stale
 <code>queued</code> SMS row the worker reconciles by listing Twilio messages to that number sent after
-<code>claimed_at</code> and adopts a message only when its body equals the row&#39;s rendered body — every
+<code>first_attempt_at</code> (<code>dateSentAfter</code>; stable across re-claims) and adopts a message only when
+its body equals the row&#39;s rendered body — every
 SMS body ends with a per-delivery reference <code>Ref &lt;8-char base32 of the row id&gt;</code>, so the
 rendered text (<code>sms_body_hash</code> stored at claim time) is unique per delivery row and a match
 identifies exactly this send; two rows can never share a body, a message with a different
@@ -3904,7 +3918,7 @@ status; suppress future sends on hard bounce.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
 before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on <masked
-                                            number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
+                                                    number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
 instructions; the ICS <code>LOCATION</code> follows the same rule.</li>
 <li><input disabled="" type="checkbox"> Booking confirmation email arrives in the member&#39;s locale with ICS attached; expert receives
 &quot;new booking&quot;; in-app rows created for both.</li>
@@ -3994,7 +4008,9 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    sms|in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id,
    lease_owner text NOT NULL, claimed_at timestamptz NOT NULL (written by the INSERT — the first
    claim — and by every re-claim; the reclaim UPDATE requires claimed_at &lt; now() - 60 s),
-   sms_body_hash text nullable
+   first_attempt_at timestamptz nullable (set once, immediately before the FIRST provider call,
+   never overwritten — the stable lower bound for Resend/Twilio reconciliation), sms_body_hash
+   text nullable
    (sha256 of the rendered SMS body, used by the Twilio reconciliation match),
    error, created_at, updated_at, unique(idempotency_key, coalesce(user_id::text, recipient_email),
    channel) as a unique expression index — the recipient is part of the key because one event (a
@@ -4006,7 +4022,9 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind, recipient,
    orgId?, ctx, idempotencyKey, channelsOverride? }) with recipient: { userId: string } |
    { email: string; locale?: Locale }; urgency (normal|urgent) comes from NOTIFICATION_KINDS[kind],
-   never from the caller; channelsOverride may only narrow the kind&#39;s channels (Zod refine).
+   never from the caller; channelsOverride may only narrow the kind&#39;s channels (Zod refine);
+   NOTIFICATION_KINDS[kind].scope is &quot;org&quot; | &quot;user&quot; and orgId is required (overloaded signature +
+   Zod refine, error ORG_CONTEXT_REQUIRED, checked before any write) for every org-scoped kind.
    userId mode -&gt; load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list -&gt;
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app -&gt;
@@ -4019,7 +4037,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    claimed_at = :claimedAt — zero rows means the lease was taken over by a newer worker, so the
    stale worker logs and exits WITHOUT touching the row (it never overwrites the newer result;
    test: a provider call that outlives the 60 s lease + a reclaiming worker -&gt; exactly one final
-   state, the newer one). Never send before the row exists. E-mail: Resend Idempotency-Key = row id
+   state, the newer one). Never send before the row exists; set first_attempt_at = now() (only
+   when NULL) right before the first provider call and reconcile from it, never from claimed_at.
+   E-mail: Resend Idempotency-Key = row id plus tags [{ name: &quot;deliveryId&quot;, value: rowId }];
+   rows older than 24 h reconcile first (emails.list for the recipient since first_attempt_at,
+   emails.get per candidate, adopt the one whose deliveryId tag matches; test: accepted e-mail,
+   lost update, retry after 24 h -&gt; adopted, zero new sends)
    (idempotent provider submission — Resend deduplicates the same key for 24 h; test: kill the
    process between provider accept and the update (mock), retry -&gt; one provider call with the
    same key, one sent row). SMS: at-least-once — Twilio StatusCallback
@@ -4141,7 +4164,7 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 <code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
 <li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
-the API types and the state machine), <code>room_create_attempt_at</code>, <code>room_request_id</code>,
+the API types and the state machine), <code>room_create_attempt_at</code>, <code>room_request_ids</code> (append-only),
 <code>last_event_at</code>, <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>
 (join/leave history only — never used for authorization), RLS for expert org + buyer org.</li>
 <li><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
@@ -4312,18 +4335,27 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
    webhook verification. Room creation has no client idempotency key at Daily, so
    ensureSessionRoom is made safe against lost responses: (a) before POST /rooms it writes
-   sessions.room_create_attempt_at and a random room_request_id stored in the Daily room
+   sessions.room_create_attempt_at and appends a random room_request_id to
+   sessions.room_request_ids, the same id stored in the Daily room
    properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
    call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
    it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
-   room whose meta.room_request_id matches; (d) if none matches it retries once with a new
-   room_request_id, and if that also fails to resolve it records status = room_unresolved,
-   emits session.room_unresolved and alerts — the sweep never re-creates blindly and admins
-   resolve from Phase 12; deleteRoom on cancel also runs over any adopted duplicate. Test:
-   lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one room.
+   room whose meta.room_request_id is in sessions.room_request_ids (an append-only text[] —
+   every id ever sent for this booking is kept, none is replaced); (d) if none matches it
+   waits 30 s and reconciles ONCE more (Daily list visibility can lag), then appends a new
+   room_request_id and retries the POST once; before that second POST and again after it, the
+   reconciliation matches against ALL ids in the array, so a first room that became visible late
+   is adopted and any surplus room is deleted; if the second attempt also fails to resolve it
+   records status = room_unresolved, emits session.room_unresolved and alerts — the sweep
+   never re-creates blindly and admins resolve from Phase 12 (the admin resolver also matches on
+   the full array); deleteRoom on cancel runs over every room whose meta id is in the array.
+   Tests: lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one
+   room; delayed visibility (room appears only after the second POST) -&gt; the late room is
+   adopted or deleted, exactly one room remains.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
-   room_created_at, room_create_attempt_at, room_request_id, last_event_at, started_at,
+   room_created_at, room_create_attempt_at, room_request_ids text[] NOT NULL DEFAULT &#39;{}&#39;,
+   last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
    role delegate|supervisor, added_by, added_at, revoked_at nullable, ejected_at nullable,
@@ -4356,8 +4388,10 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    guard: apply only when payload event time &gt; sessions.last_event_at, status transitions are
    monotonic scheduled -&gt; live -&gt; ended; test the sequence meeting.ended then a delayed
    meeting.started -&gt; status stays ended -&gt; update sessions + emitDomainEvent). DELETE
-   .../participants/[userId] deletes the row inside withAudit, then calls Daily
-   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live) and
+   .../participants/[userId] never hard-deletes: it sets session_participants.revoked_at inside
+   withAudit (the row is kept as history and as the retry record), then calls Daily
+   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live), sets
+   ejected_at on success and
    returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
    true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
    join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST
@@ -4498,15 +4532,24 @@ The read-compare-update is serialized per booking <strong>without holding a lock
 provider call</strong>: step 1 (short transaction, <code>SELECT ... FOR UPDATE</code> on the <code>sessions</code> row)
 re-reads both consents, computes <code>desired</code>, writes <code>recording_desired = desired</code> and
 increments <code>recording_state_version</code> (v), commits; step 2 calls Daily <code>updateRoom</code> with a
-10 s timeout and no lock held; step 3 persists <code>recording_enabled = desired</code> with a
-compare-and-swap <code>WHERE recording_state_version = v</code> — zero rows means a newer desired state
-superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
-therefore never blocks consent writes or joins on a row lock. The <code>join</code> route refuses to mint
-a token while <code>recording_desired &lt;&gt; recording_enabled</code> (it re-runs the sync first, and returns
-503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
-recording state is unknown. Tests: grant/withdraw race (withdrawal committed last) -&gt; final
-Daily state and row both <code>false</code>; Daily timeout during step 2 -&gt; consent write completes in
-&lt; 100 ms and join returns 503 rather than minting.
+10 s timeout and no DB lock held, <strong>fenced</strong> two ways so an older call can never land after a
+newer one: (a) provider calls for one booking are single-flight behind a Redis mutex
+<code>recording-sync:{bookingId}</code> (15 s TTL, held only around the Daily call — consent writes and
+joins never wait on it) and a worker that acquires the mutex re-reads the current version and
+applies the CURRENT desired state, not the one it started with; (b) every <code>updateRoom</code> also
+writes <code>properties.meta.recording_state_version = v</code>, and Daily&#39;s response (or a <code>GET /rooms/{name}</code> read-back) is accepted only if its meta version is &gt;= v; step 3 persists
+<code>recording_enabled = desired</code> with a compare-and-swap <code>WHERE recording_state_version = v</code> —
+zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
+instead of writing. A Daily outage therefore never blocks consent writes or joins on a row
+lock. The <code>join</code> route refuses to mint a token while <code>recording_desired &lt;&gt; recording_enabled</code>
+or while the room&#39;s <code>meta.recording_state_version</code> (read back from Daily) is lower than the
+row&#39;s version (it re-runs the sync first, and returns 503 RECORDING_STATE_PENDING if Daily is
+still unreachable), so nobody joins a room whose provider-side recording state is unknown or
+stale. Tests: grant/withdraw race (withdrawal committed last) -&gt; final Daily state and row
+both <code>false</code>; out-of-order completion (older enable call finishes after the newer withdraw
+call) -&gt; Daily ends <code>false</code>, join before the read-back matches returns 503, never a token;
+Daily timeout during step 2 -&gt; consent write completes in &lt; 100 ms and join returns 503
+rather than minting.
 Daily <code>enable_recording: &quot;cloud&quot;</code> + transcription webhook <code>transcript.ready</code>/<code>recording.ready-to-download</code>
 -&gt; fetch -&gt; store encrypted (<code>records.kind = transcript</code>) -&gt; <code>draftSessionReport(transcriptId)</code>
 with versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
@@ -4525,8 +4568,16 @@ walk the <strong>entire</strong> event recursively (<code>message</code>, <code>
 <code>breadcrumbs[].data/message</code>, transaction name, spans data) and redact any value that is a
 <code>Decrypted</code> marker or matches an AI output key (<code>summary</code>, <code>observations</code>, <code>recommendations</code>,
 or any key of the <code>draftSessionReport</code> output schema, derived from the Zod schema so new
-fields are covered automatically); unknown top-level fields are dropped (explicit allow-list
-of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level tests feed
+fields are covered automatically); (4) <strong>free-form strings</strong> are scrubbed too, not only
+keyed fields: <code>decryptForOrg</code> and the AI draft step register every plaintext they produce in
+a request-scoped PHI registry (<code>AsyncLocalStorage</code>; values are kept as the first 64 chars
+plus a SHA-256 of the whole, never stored elsewhere) and <code>redactString</code> replaces any
+occurrence of a registered value (exact or prefix match) with <code>[phi]</code> in every string the
+walk visits — <code>Error.message</code>, breadcrumb messages, request bodies, tags, span data — in
+addition to the pattern scrubbers (e-mail, phone, NIF, token shapes); in workers without a
+request scope the registry is job-scoped. Unknown top-level fields are dropped (explicit
+allow-list of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level
+tests feed
 a full decrypted record and a full AI draft through logger and Sentry via <strong>each</strong> of those
 locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
 a span attribute) and assert zero PHI substrings in the output. Because <code>Decrypted&lt;T&gt;</code> serializes to <code>&quot;[redacted]&quot;</code>, API
@@ -4727,8 +4778,14 @@ PR 10.1 — records, documents, consent, retention:
    status, modelId, tokenCount, durationMs) and drops unknown keys at runtime; Sentry
    beforeSend/beforeBreadcrumb drop events carrying a Decrypted marker or any key of the
    draftSessionReport Zod output schema (derive the key list from the schema — never hand-write
-   it) plus body, body_encrypted, transcript, notes, title. Object-level tests: log a full
-   decrypted record and a full AI draft through the logger and through Sentry&#39;s beforeSend, assert
+   it) plus body, body_encrypted, transcript, notes, title, AND redact free-form strings:
+   decryptForOrg and the AI draft step register every produced plaintext in a request-scoped
+   (AsyncLocalStorage; job-scoped in workers) PHI registry and redactString replaces any
+   registered value found in Error.message, breadcrumb messages, request data, tags or span
+   data with &quot;[phi]&quot; on top of the e-mail/phone/NIF/token pattern scrubbers. Object-level
+   tests: log a full decrypted record and a full AI draft through the logger and through
+   Sentry&#39;s beforeSend via EACH location (thrown Error whose message embeds the record,
+   breadcrumb, request data, tag, span attribute), assert
    the output contains none of the fixture&#39;s PHI strings. API responses never serialize a
    Decrypted&lt;T&gt; (it would print &quot;[redacted]&quot; to an authorized viewer): add
    toRecordResponse(decrypted, viewer) in @eleva/records returning a plain DTO validated by a Zod
@@ -4755,10 +4812,14 @@ PR 10.2 — CRM + AI reports beta:
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
    updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } }) and persist
    the new value with the three-step protocol from the Scope section (claim desired +
-   version under a short FOR UPDATE, call Daily lock-free with a 10 s timeout, CAS on the
-   version; join refuses to mint while recording_desired &lt;&gt; recording_enabled) (idempotent — no
-   call when unchanged; race test: grant/withdraw concurrently -&gt; final state false; Daily
-   timeout test -&gt; consent write &lt; 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
+   version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
+   behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
+   with meta.recording_state_version = v on the room and a read-back that must be &gt;= v; CAS on
+   the version; join refuses to mint while recording_desired &lt;&gt; recording_enabled or the room&#39;s
+   meta version is behind the row) (idempotent — no call when unchanged; race test:
+   grant/withdraw concurrently -&gt; final state false; out-of-order completion test -&gt; Daily ends
+   false and join returns 503 until the read-back matches; Daily timeout test -&gt; consent write
+   &lt; 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
    the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
    minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
@@ -5311,9 +5372,10 @@ PR 12.1 — access, users, partners, experts, bookings:
    approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at, reason) created on
    expert onboarding completion (update Phase 6/7 completion route). GET /admin/partners?status,
    GET /admin/partners/[id] (checklist computed: identity verified, Connect charges+payouts,
-   invoicing choice, profile completeness, ERS bio check flags), POST /approve { reason } -&gt;
+   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R] { reason } -&gt;
    expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved,
-   POST /reject { reason } -&gt; Lane 1 partner.rejected, POST /needs-changes { reason, items }.
+   POST /reject [R] { reason } -&gt; Lane 1 partner.rejected, POST /needs-changes [R] { reason,
+   items }.
    Clinic verification queue: GET /admin/clinics/verifications, POST
    /admin/clinics/verifications/[id]/approve [R] { reason } (sets verification_status verified +
    revalidates the clinic page; Lane 1 kind clinic.verified), POST .../reject [R] { reason }
@@ -5323,11 +5385,16 @@ PR 12.1 — access, users, partners, experts, bookings:
    suspend/unsuspend, cancel booking, refund, payout approve/hold/release/retry, clinic
    approve/reject, invoice retry -&gt; 400 REASON_REQUIRED).
 4. Experts &amp; orgs: GET /admin/experts?q&amp;status, GET /admin/organizations?q&amp;type, PATCH
-   /admin/experts/[orgId] { categories, visibility, topExpertOverride, commissionOverrideBps,
-   commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend|unsuspend { reason }.
-   Categories CRUD /admin/categories. Bookings: GET /admin/bookings?q&amp;status&amp;from&amp;to, GET
-   /admin/bookings/[id] (payment, payout, session, invoices), POST /admin/bookings/[id]/cancel
-   { reason, refundPolicy full|partial|none, amountCents? }.
+   /admin/experts/[orgId] [R] { categories, visibility, topExpertOverride, commissionOverrideBps,
+   commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend [R] and
+   /unsuspend [R] { reason }. Categories CRUD /admin/categories [O]. Bookings: GET
+   /admin/bookings?q&amp;status&amp;from&amp;to, GET /admin/bookings/[id] (payment, payout, session,
+   invoices), POST /admin/bookings/[id]/cancel [R] { reason, refundPolicy full|partial|none,
+   amountCents? }. The [R]/[O] markers in this list ARE the policy: implement them as one
+   exported ADMIN_ROUTE_POLICY table in apps/api (path pattern -&gt; &quot;required&quot; | &quot;optional&quot;),
+   have adminRoute read its reason mode from that table (a route missing from the table fails
+   at startup), and drive the missing-reason test from the same table so the route list, the
+   handler policy and the tests cannot drift.
 5. apps/admin UI (@eleva/dashboard shell, enableOrgSwitcher false, nav: Overview, Users,
    Partners, Experts, Clinics, Bookings, Money, Accounting, Ops, Content, Flags): DataTable with
    server pagination/filters, detail drawers, action dialogs with mandatory reason, command
@@ -5923,8 +5990,10 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    glob returns nothing on this branch; a deliberate `import &quot;@workos-inc/node&quot;` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
-   the commands below run as written): pnpm migration:run --dry-run|--apply
-   [--target branch|production] [--since &quot;$LAST_RUN_TS&quot;] (ISO-8601; omitted = full run; the
+   the commands below run as written): pnpm migration:run --dry-run --target branch (rehearsal
+   preview), pnpm migration:run --apply --target branch (rehearsal), and the same two with
+   --since &quot;$LAST_RUN_TS&quot; for a delta run; --target production is used only by Phase 15 (ISO-8601;
+   --since omitted = full run; the
    watermark is a **commit-ordered source** boundary, never the target run end time: the CLI
    opens one REPEATABLE READ snapshot on the MVP database at the start of the run, records the
    snapshot&#39;s `now()` as `source_watermark` and `pg_export_snapshot()` as `source_snapshot_id`
@@ -6312,8 +6381,10 @@ B. Production configuration — ADR-019: **one gate per production mutation**, e
        pnpm resend:setup -- --apply; evidence includes the region field.
    B.8 Twilio production messaging service (EU) + status callback URL: pnpm cutover:gate B.8 --
        pnpm twilio:setup -- --apply.
-   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- pnpm exec playwright
-       test e2e/production-smoke.spec.ts (E2E_ALLOW_LIVE_PAYMENT=true; 1 EUR booking with an
+   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- env
+       E2E_ALLOW_LIVE_PAYMENT=true pnpm exec playwright test e2e/production-smoke.spec.ts (the
+       flag is set inside the gated command — without it the spec skips the live charge; 1 EUR
+       booking with an
        internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
        notifications, room), then the refund (credit note) through the same gate as B.9r. Paste
        evidence.

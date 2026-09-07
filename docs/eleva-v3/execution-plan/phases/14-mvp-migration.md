@@ -224,8 +224,10 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    glob returns nothing on this branch; a deliberate `import "@workos-inc/node"` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
-   the commands below run as written): pnpm migration:run --dry-run|--apply
-   [--target branch|production] [--since "$LAST_RUN_TS"] (ISO-8601; omitted = full run; the
+   the commands below run as written): pnpm migration:run --dry-run --target branch (rehearsal
+   preview), pnpm migration:run --apply --target branch (rehearsal), and the same two with
+   --since "$LAST_RUN_TS" for a delta run; --target production is used only by Phase 15 (ISO-8601;
+   --since omitted = full run; the
    watermark is a **commit-ordered source** boundary, never the target run end time: the CLI
    opens one REPEATABLE READ snapshot on the MVP database at the start of the run, records the
    snapshot's `now()` as `source_watermark` and `pg_export_snapshot()` as `source_snapshot_id`

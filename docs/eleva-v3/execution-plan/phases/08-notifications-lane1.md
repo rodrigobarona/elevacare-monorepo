@@ -22,7 +22,13 @@ In:
   `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` — the
   one contract (this signature is copied verbatim into the prompt below and into
   `notifications-spec.md`; urgency is **not** a parameter, it is a property of the kind in
-  `NOTIFICATION_KINDS`; `channelsOverride` may only narrow the kind's default channels) — where
+  `NOTIFICATION_KINDS`; `channelsOverride` may only narrow the kind's default channels;
+  `orgId` is optional only in the type's top-level shape — `NOTIFICATION_KINDS[kind].scope` is
+  `"org" | "user"`, the exported signature is an overload that makes `orgId` **required** for
+  every org-scoped kind, and the runtime Zod refine rejects a missing `orgId` for an org-scoped
+  kind with `ORG_CONTEXT_REQUIRED` before any inbox or delivery write, so no tenant row is ever
+  written without RLS + audit context; test: org-scoped kind without orgId -> throws, zero
+  rows) — where
   `recipient` is a discriminated union `{ userId }` **or** `{ email, locale? }` — the e-mail
   mode exists for recipients who have no account yet (`auth.org_invitation` to a new address,
   guest booking confirmations before activation) and is **email-only**: no preferences lookup,
@@ -45,13 +51,21 @@ WHERE id = :id AND status = 'queued' AND claimed_at < now() - interval '60 s' RE
   recipient-delivery guarantee): Resend gets an `Idempotency-Key` header equal to the row id
   and deduplicates the same key for 24 h, so a crash between provider accept and the update
   leaves a `queued` row that the retry re-claims and re-sends with the same key without a
-  second e-mail; retries older than 24 h go through the same reconciliation as SMS (Resend
-  `emails.list` by recipient + tag `deliveryId`). **SMS is at-least-once** and is documented and tested as such: Twilio
+  second e-mail; every Resend request also carries `tags: [{ name: "deliveryId", value: row.id
+  }]`, and retries older than 24 h reconcile before re-sending: `emails.list` filtered to the
+  recipient and the window since `first_attempt_at`, then `emails.get` on each candidate (the
+  list view does not expose tags) — a candidate whose `deliveryId` tag equals the row id is
+  adopted as `sent`; test: accepted e-mail, update lost, retry after 24 h -> adopted, zero new
+  sends. Both providers reconcile from `notification_deliveries.first_attempt_at` (set once,
+  immediately before the FIRST provider call, never overwritten by a re-claim — `claimed_at`
+  moves on every re-claim and is therefore never a reconciliation bound). **SMS is
+  at-least-once** and is documented and tested as such: Twilio
   has no idempotency key, so every SMS carries a `StatusCallback` URL
   `POST /webhooks/twilio/status?deliveryId=<rowId>` (Twilio signature validated) that marks the
   row `sent` with the Message SID even when the sending process died; before re-sending a stale
   `queued` SMS row the worker reconciles by listing Twilio messages to that number sent after
-  `claimed_at` and adopts a message only when its body equals the row's rendered body — every
+  `first_attempt_at` (`dateSentAfter`; stable across re-claims) and adopts a message only when
+  its body equals the row's rendered body — every
   SMS body ends with a per-delivery reference `Ref <8-char base32 of the row id>`, so the
   rendered text (`sms_body_hash` stored at claim time) is unique per delivery row and a match
   identifies exactly this send; two rows can never share a body, a message with a different
@@ -112,7 +126,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on <masked
-                                                  number>", in person -> location name, address, "Open in Maps" link and the location's
+                                                              number>", in person -> location name, address, "Open in Maps" link and the location's
       instructions; the ICS `LOCATION` follows the same rule.
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
@@ -204,7 +218,9 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    sms|in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id,
    lease_owner text NOT NULL, claimed_at timestamptz NOT NULL (written by the INSERT — the first
    claim — and by every re-claim; the reclaim UPDATE requires claimed_at < now() - 60 s),
-   sms_body_hash text nullable
+   first_attempt_at timestamptz nullable (set once, immediately before the FIRST provider call,
+   never overwritten — the stable lower bound for Resend/Twilio reconciliation), sms_body_hash
+   text nullable
    (sha256 of the rendered SMS body, used by the Twilio reconciliation match),
    error, created_at, updated_at, unique(idempotency_key, coalesce(user_id::text, recipient_email),
    channel) as a unique expression index — the recipient is part of the key because one event (a
@@ -216,7 +232,9 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind, recipient,
    orgId?, ctx, idempotencyKey, channelsOverride? }) with recipient: { userId: string } |
    { email: string; locale?: Locale }; urgency (normal|urgent) comes from NOTIFICATION_KINDS[kind],
-   never from the caller; channelsOverride may only narrow the kind's channels (Zod refine).
+   never from the caller; channelsOverride may only narrow the kind's channels (Zod refine);
+   NOTIFICATION_KINDS[kind].scope is "org" | "user" and orgId is required (overloaded signature +
+   Zod refine, error ORG_CONTEXT_REQUIRED, checked before any write) for every org-scoped kind.
    userId mode -> load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list ->
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app ->
@@ -229,7 +247,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    claimed_at = :claimedAt — zero rows means the lease was taken over by a newer worker, so the
    stale worker logs and exits WITHOUT touching the row (it never overwrites the newer result;
    test: a provider call that outlives the 60 s lease + a reclaiming worker -> exactly one final
-   state, the newer one). Never send before the row exists. E-mail: Resend Idempotency-Key = row id
+   state, the newer one). Never send before the row exists; set first_attempt_at = now() (only
+   when NULL) right before the first provider call and reconcile from it, never from claimed_at.
+   E-mail: Resend Idempotency-Key = row id plus tags [{ name: "deliveryId", value: rowId }];
+   rows older than 24 h reconcile first (emails.list for the recipient since first_attempt_at,
+   emails.get per candidate, adopt the one whose deliveryId tag matches; test: accepted e-mail,
+   lost update, retry after 24 h -> adopted, zero new sends)
    (idempotent provider submission — Resend deduplicates the same key for 24 h; test: kill the
    process between provider accept and the update (mock), retry -> one provider call with the
    same key, one sent row). SMS: at-least-once — Twilio StatusCallback

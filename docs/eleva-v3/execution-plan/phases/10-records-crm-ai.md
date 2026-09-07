@@ -86,15 +86,25 @@ In:
   provider call**: step 1 (short transaction, `SELECT ... FOR UPDATE` on the `sessions` row)
   re-reads both consents, computes `desired`, writes `recording_desired = desired` and
   increments `recording_state_version` (v), commits; step 2 calls Daily `updateRoom` with a
-  10 s timeout and no lock held; step 3 persists `recording_enabled = desired` with a
-  compare-and-swap `WHERE recording_state_version = v` — zero rows means a newer desired state
-  superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
-  therefore never blocks consent writes or joins on a row lock. The `join` route refuses to mint
-  a token while `recording_desired <> recording_enabled` (it re-runs the sync first, and returns
-  503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
-  recording state is unknown. Tests: grant/withdraw race (withdrawal committed last) -> final
-  Daily state and row both `false`; Daily timeout during step 2 -> consent write completes in
-  < 100 ms and join returns 503 rather than minting.
+  10 s timeout and no DB lock held, **fenced** two ways so an older call can never land after a
+  newer one: (a) provider calls for one booking are single-flight behind a Redis mutex
+  `recording-sync:{bookingId}` (15 s TTL, held only around the Daily call — consent writes and
+  joins never wait on it) and a worker that acquires the mutex re-reads the current version and
+  applies the CURRENT desired state, not the one it started with; (b) every `updateRoom` also
+  writes `properties.meta.recording_state_version = v`, and Daily's response (or a `GET
+/rooms/{name}` read-back) is accepted only if its meta version is >= v; step 3 persists
+  `recording_enabled = desired` with a compare-and-swap `WHERE recording_state_version = v` —
+  zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
+  instead of writing. A Daily outage therefore never blocks consent writes or joins on a row
+  lock. The `join` route refuses to mint a token while `recording_desired <> recording_enabled`
+  or while the room's `meta.recording_state_version` (read back from Daily) is lower than the
+  row's version (it re-runs the sync first, and returns 503 RECORDING_STATE_PENDING if Daily is
+  still unreachable), so nobody joins a room whose provider-side recording state is unknown or
+  stale. Tests: grant/withdraw race (withdrawal committed last) -> final Daily state and row
+  both `false`; out-of-order completion (older enable call finishes after the newer withdraw
+  call) -> Daily ends `false`, join before the read-back matches returns 503, never a token;
+  Daily timeout during step 2 -> consent write completes in < 100 ms and join returns 503
+  rather than minting.
   Daily `enable_recording: "cloud"` + transcription webhook `transcript.ready`/`recording.ready-to-download`
   -> fetch -> store encrypted (`records.kind = transcript`) -> `draftSessionReport(transcriptId)`
   with versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
@@ -113,8 +123,16 @@ In:
   `breadcrumbs[].data/message`, transaction name, spans data) and redact any value that is a
   `Decrypted` marker or matches an AI output key (`summary`, `observations`, `recommendations`,
   or any key of the `draftSessionReport` output schema, derived from the Zod schema so new
-  fields are covered automatically); unknown top-level fields are dropped (explicit allow-list
-  of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level tests feed
+  fields are covered automatically); (4) **free-form strings** are scrubbed too, not only
+  keyed fields: `decryptForOrg` and the AI draft step register every plaintext they produce in
+  a request-scoped PHI registry (`AsyncLocalStorage`; values are kept as the first 64 chars
+  plus a SHA-256 of the whole, never stored elsewhere) and `redactString` replaces any
+  occurrence of a registered value (exact or prefix match) with `[phi]` in every string the
+  walk visits — `Error.message`, breadcrumb messages, request bodies, tags, span data — in
+  addition to the pattern scrubbers (e-mail, phone, NIF, token shapes); in workers without a
+  request scope the registry is job-scoped. Unknown top-level fields are dropped (explicit
+  allow-list of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level
+  tests feed
   a full decrypted record and a full AI draft through logger and Sentry via **each** of those
   locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
   a span attribute) and assert zero PHI substrings in the output. Because `Decrypted<T>` serializes to `"[redacted]"`, API
@@ -318,8 +336,14 @@ PR 10.1 — records, documents, consent, retention:
    status, modelId, tokenCount, durationMs) and drops unknown keys at runtime; Sentry
    beforeSend/beforeBreadcrumb drop events carrying a Decrypted marker or any key of the
    draftSessionReport Zod output schema (derive the key list from the schema — never hand-write
-   it) plus body, body_encrypted, transcript, notes, title. Object-level tests: log a full
-   decrypted record and a full AI draft through the logger and through Sentry's beforeSend, assert
+   it) plus body, body_encrypted, transcript, notes, title, AND redact free-form strings:
+   decryptForOrg and the AI draft step register every produced plaintext in a request-scoped
+   (AsyncLocalStorage; job-scoped in workers) PHI registry and redactString replaces any
+   registered value found in Error.message, breadcrumb messages, request data, tags or span
+   data with "[phi]" on top of the e-mail/phone/NIF/token pattern scrubbers. Object-level
+   tests: log a full decrypted record and a full AI draft through the logger and through
+   Sentry's beforeSend via EACH location (thrown Error whose message embeds the record,
+   breadcrumb, request data, tag, span attribute), assert
    the output contains none of the fixture's PHI strings. API responses never serialize a
    Decrypted<T> (it would print "[redacted]" to an authorized viewer): add
    toRecordResponse(decrypted, viewer) in @eleva/records returning a plain DTO validated by a Zod
@@ -346,10 +370,14 @@ PR 10.2 — CRM + AI reports beta:
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
    updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } }) and persist
    the new value with the three-step protocol from the Scope section (claim desired +
-   version under a short FOR UPDATE, call Daily lock-free with a 10 s timeout, CAS on the
-   version; join refuses to mint while recording_desired <> recording_enabled) (idempotent — no
-   call when unchanged; race test: grant/withdraw concurrently -> final state false; Daily
-   timeout test -> consent write < 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
+   version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
+   behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
+   with meta.recording_state_version = v on the room and a read-back that must be >= v; CAS on
+   the version; join refuses to mint while recording_desired <> recording_enabled or the room's
+   meta version is behind the row) (idempotent — no call when unchanged; race test:
+   grant/withdraw concurrently -> final state false; out-of-order completion test -> Daily ends
+   false and join returns 503 until the read-back matches; Daily timeout test -> consent write
+   < 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
    the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
    minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent

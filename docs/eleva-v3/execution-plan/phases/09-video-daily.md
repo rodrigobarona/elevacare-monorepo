@@ -36,7 +36,7 @@ In:
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
-  the API types and the state machine), `room_create_attempt_at`, `room_request_id`,
+  the API types and the state machine), `room_create_attempt_at`, `room_request_ids` (append-only),
   `last_event_at`, `started_at`, `ended_at`, `participants jsonb`
   (join/leave history only — never used for authorization), RLS for expert org + buyer org.
 - `session_participants` table (the **authorization** contract for delegated participants):
@@ -212,18 +212,27 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
    webhook verification. Room creation has no client idempotency key at Daily, so
    ensureSessionRoom is made safe against lost responses: (a) before POST /rooms it writes
-   sessions.room_create_attempt_at and a random room_request_id stored in the Daily room
+   sessions.room_create_attempt_at and appends a random room_request_id to
+   sessions.room_request_ids, the same id stored in the Daily room
    properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
    call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
    it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
-   room whose meta.room_request_id matches; (d) if none matches it retries once with a new
-   room_request_id, and if that also fails to resolve it records status = room_unresolved,
-   emits session.room_unresolved and alerts — the sweep never re-creates blindly and admins
-   resolve from Phase 12; deleteRoom on cancel also runs over any adopted duplicate. Test:
-   lost response after Daily created the room -> reconciliation adopts it -> exactly one room.
+   room whose meta.room_request_id is in sessions.room_request_ids (an append-only text[] —
+   every id ever sent for this booking is kept, none is replaced); (d) if none matches it
+   waits 30 s and reconciles ONCE more (Daily list visibility can lag), then appends a new
+   room_request_id and retries the POST once; before that second POST and again after it, the
+   reconciliation matches against ALL ids in the array, so a first room that became visible late
+   is adopted and any surplus room is deleted; if the second attempt also fails to resolve it
+   records status = room_unresolved, emits session.room_unresolved and alerts — the sweep
+   never re-creates blindly and admins resolve from Phase 12 (the admin resolver also matches on
+   the full array); deleteRoom on cancel runs over every room whose meta id is in the array.
+   Tests: lost response after Daily created the room -> reconciliation adopts it -> exactly one
+   room; delayed visibility (room appears only after the second POST) -> the late room is
+   adopted or deleted, exactly one room remains.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
-   room_created_at, room_create_attempt_at, room_request_id, last_event_at, started_at,
+   room_created_at, room_create_attempt_at, room_request_ids text[] NOT NULL DEFAULT '{}',
+   last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
    role delegate|supervisor, added_by, added_at, revoked_at nullable, ejected_at nullable,
@@ -256,8 +265,10 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    guard: apply only when payload event time > sessions.last_event_at, status transitions are
    monotonic scheduled -> live -> ended; test the sequence meeting.ended then a delayed
    meeting.started -> status stays ended -> update sessions + emitDomainEvent). DELETE
-   .../participants/[userId] deletes the row inside withAudit, then calls Daily
-   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live) and
+   .../participants/[userId] never hard-deletes: it sets session_participants.revoked_at inside
+   withAudit (the row is kept as history and as the retry record), then calls Daily
+   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live), sets
+   ejected_at on success and
    returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
    true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
    join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST

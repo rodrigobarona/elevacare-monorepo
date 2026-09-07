@@ -53,7 +53,8 @@ Orchestrated by Vercel Workflows DevKit. Sends through Resend email + Twilio EU 
 sendNotification({
   kind,                 // Kind — closed union derived from NOTIFICATION_KINDS
   recipient,            // { userId } | { email, locale? } (email mode: email channel only)
-  orgId?,               // tenant context for RLS + audit when the kind is org-scoped
+  orgId?,               // REQUIRED when NOTIFICATION_KINDS[kind].scope === "org" (overload +
+                        // Zod refine -> ORG_CONTEXT_REQUIRED before any write); absent for user kinds
   ctx,                  // typed per-kind context
   idempotencyKey,       // e.g. `booking_confirmed:${booking_id}`
   channelsOverride?     // may only narrow NOTIFICATION_KINDS[kind].channels

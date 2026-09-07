@@ -116,9 +116,11 @@ Resolve threads in the GitHub UI (or via GraphQL `resolveReviewThread`) once add
 The CodeRabbit GitHub App skips PRs with more than 100 reviewable files (the
 one active cap; execution-plan README section 4 rule 1 targets <= 30 files / 400 lines
 and splits above 60 /
-800). Check with `git diff --name-only main...HEAD | wc -l` (after
-`path_filters`) and split into `phase-NN.1/...`, `phase-NN.2/...` before file
-101 — each split gets the full loop.
+800). Check with `git diff --name-only main...HEAD | wc -l` — this is the raw
+count, an upper bound: the App applies `.coderabbit.yaml` `path_filters` after
+it, so the reviewable count is lower or equal — and split into
+`phase-NN.1/...`, `phase-NN.2/...` before the raw count passes 100; each split
+gets the full loop.
 
 ## Report format (end of a phase)
 
