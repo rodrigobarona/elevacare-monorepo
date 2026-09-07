@@ -56,6 +56,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-014-multi-zone-rewrites.md`](./ADR-014-multi-zone-rewrites.md) — Single canonical public domain (`eleva.care`) with Vercel multi-zone rewrites; gateway app owns root; authenticated app served at root (no `/app` prefix), API on `api.eleva.care` subdomain (no `/api` prefix), docs at `/docs`; internal Vercel URLs redirected/noindexed
 - [`ADR-015-multi-app-split.md`](./ADR-015-multi-app-split.md) — Split `apps/app` into role-focused micro-apps (member, account, expert, team, admin, academy) on `eleva.care` via gateway proxy rewrites + subdomains; Vercel Microfrontends rejected on cost
 - [`ADR-016-subscription-ux-direction.md`](./ADR-016-subscription-ux-direction.md) — Embedded Checkout for SaaS subscription purchase + Customer Portal for management as the steady-state ("embedded widgets, no custom UI" paradigm consistent with WorkOS Widgets); multi-admin audit closed via `withAudit` on Portal session-mint correlated with webhook events; custom in-app management UI is contingency-only, not a planned migration; supersedes ADR-005's UX subsection; `payment_method_types` for subscriptions is `card + sepa_debit` only (MB WAY/Multibanco are one-time-only)
+- ADR-017..021 — reserved for the v3 execution plan Phase 1 (Identity, Video, Migration, Encryption, RBAC); see [`../decision-log.md`](../decision-log.md)
 
 ## ADR Template
 

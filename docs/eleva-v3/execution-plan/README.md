@@ -230,10 +230,10 @@ Key contracts every prompt must respect:
 
 Every phase prompt starts with this block, specialised per phase: the branch name is filled in,
 the rules/skills list names the ones relevant to the files that phase touches, and "this phase
-file" is spelled out as a path. The steps, order and hard constraints must stay identical. Two
-exceptions by design: Phase 15 adds a "stop and ask before each production mutation" clause, and
-Phase 16 is a backlog whose prompt promotes an item into a new phase file instead of building.
-When you change this block, update every `phases/*.md` prompt in the same PR.
+file" is spelled out as a path. The steps, order and hard constraints must stay identical. One
+exception by design: Phase 15 adds a "stop and ask before each production mutation" clause.
+Phase 16 (backlog) keeps the preamble and adds a planning commit before implementation. When you
+change this block, update every `phases/*.md` prompt in the same PR.
 
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root

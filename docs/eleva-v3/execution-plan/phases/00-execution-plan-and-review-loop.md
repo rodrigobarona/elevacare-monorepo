@@ -1,12 +1,12 @@
 # Phase 0 — Execution plan + CodeRabbit CLI review loop
 
-| Field      | Value                                                                                                                                                                                                                  |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-00/execution-plan-and-review-loop`                                                                                                                                                                              |
-| Depends on | —                                                                                                                                                                                                                      |
-| Effort     | 1-2 days                                                                                                                                                                                                               |
-| Touches    | `docs/eleva-v3/execution-plan/**`, `package.json`, `.cursor/skills/coderabbit-review/`, `.cursor/rules/coderabbit-review.mdc`, `docs/eleva-v3/contribution-workflow.md`, `docs/eleva-v3/README.md`, `.coderabbit.yaml` |
-| Exit gate  | `pnpm review` and `pnpm review:branch` work locally; `pnpm docs:execution-plan:html` regenerates `index.html`; plan merged to `main`                                                                                   |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-00/execution-plan-and-review-loop`                                                                                                                                                                                                                                                                                                                     |
+| Depends on | —                                                                                                                                                                                                                                                                                                                                                             |
+| Effort     | 1-2 days                                                                                                                                                                                                                                                                                                                                                      |
+| Touches    | `docs/eleva-v3/execution-plan/**`, `package.json`, `pnpm-lock.yaml` (adds `marked`), `commitlint.config.mjs`, `.cursor/skills/coderabbit-review/`, `.cursor/rules/coderabbit-review.mdc`, `.cursor/rules/commit-message-format.mdc`, `docs/eleva-v3/contribution-workflow.md`, `docs/eleva-v3/README.md`, `docs/eleva-v3/decision-log.md`, `.coderabbit.yaml` |
+| Exit gate  | `pnpm review` and `pnpm review:branch` work locally; `pnpm docs:execution-plan:html` regenerates `index.html`; plan merged to `main`                                                                                                                                                                                                                          |
 
 ## Why this phase exists
 
@@ -50,6 +50,10 @@ Out: ADRs, code changes, CI changes (Phase 1).
      exist. Verify flags with `coderabbit review --help` and Context7 before changing them.)
    - `"docs:execution-plan:html": "node docs/eleva-v3/execution-plan/build-html.mjs"`
 5. Skill + rule for the review loop; contribution workflow + handbook README updated.
+6. `commitlint.config.mjs` + `.cursor/rules/commit-message-format.mdc`: add scopes `plan`,
+   `p0`-`p16`, `p16.1`-`p16.16`; mark sprint scopes as legacy.
+7. `docs/eleva-v3/decision-log.md`: entries "execution plan supersedes roadmap/sprints" and the
+   provisional ADR-017..021 direction (plus the staff-only `en`+`pt` exception for `apps/admin`).
 
 ## Acceptance criteria
 
@@ -161,7 +165,11 @@ Deliverables, in order:
    docs/eleva-v3/README.md (pointer to execution-plan/README.md as sequencing SSOT). Add a
    path_instructions entry in .coderabbit.yaml for docs/eleva-v3/execution-plan/** asking the
    reviewer to flag prompts that are not self-contained or that contradict README section 2.
-7. Run pnpm docs:execution-plan:html and commit index.html.
+7. commitlint.config.mjs + .cursor/rules/commit-message-format.mdc: add scopes plan, p0-p16,
+   p16.1-p16.16 (sprint scopes stay as legacy). docs/eleva-v3/decision-log.md: dated entries for
+   "execution plan supersedes roadmap/sprints" and the provisional ADR-017..021 direction
+   (including the staff-only en+pt locale exception for apps/admin).
+8. Run pnpm docs:execution-plan:html and commit index.html.
 
 Acceptance: pnpm review works (after coderabbit auth login), pnpm review:branch works,
 index.html opens offline with working sidebar + copy buttons, every phase file ends with a

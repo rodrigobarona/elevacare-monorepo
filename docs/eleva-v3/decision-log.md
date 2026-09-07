@@ -255,6 +255,28 @@ Each entry should include:
 - Reference: [`api-first-architecture.md`](./api-first-architecture.md)
 - Primary affected artifacts: `apps/api/src/lib/auth.ts` (requireApiAuth), `apps/api/src/lib/rate-limit.ts`, `apps/api/src/lib/bot-protection.ts`, `apps/api/src/lib/openapi.ts`, `packages/api-client` schemas
 
+### 2026-09-07: Execution plan supersedes roadmap and sprint plan for sequencing
+
+- Owner: engineering
+- Status: active
+- Supersedes: `roadmap-and-milestones.md` and `implementation-sprints.md` as the sequencing source of truth (both kept for history).
+- Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
+
+### 2026-09-07: Identity, video, encryption, RBAC and migration direction for v3 (provisional until ADR-017..021 land in Phase 1)
+
+- Owner: engineering
+- Status: provisional (ADRs written and accepted in Phase 1 of the execution plan; this entry records the direction the plan is built on)
+- Supersedes (once ADRs are accepted): ADR-004 (WorkOS identity), ADR-015 (WorkOS multi-app), the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`, and the "Google Meet links" assumption for sessions.
+- Summary:
+  - **ADR-017 Identity**: self-hosted Better Auth in `apps/api` (`api.eleva.care/auth/*`), Drizzle adapter, `auth` schema on the main Neon project, plugins `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`; session cookie on `.eleva.care`; frontend apps never instantiate the auth server. Neon managed Better Auth rejected (Beta, partial organization plugin, no MFA/hooks).
+  - **ADR-018 Video**: Daily.co only (HIPAA-enabled domain, branded `sessions.eleva.care`); Google/Microsoft calendars remain for busy-time and destination sync.
+  - **ADR-019 Migration**: import MVP data (users, orgs, experts, bookings, payout ledger, records) into v3 with a DNS cutover; same Stripe platform account.
+  - **ADR-020 Encryption**: envelope encryption in `@eleva/encryption` (AES-256-GCM, per-org DEK wrapped by a versioned KEK from env, `org_data_keys`, crypto-shred = delete DEK); OAuth tokens encrypted by Better Auth.
+  - **ADR-021 RBAC**: single source of truth in code (`packages/auth/src/permissions.ts`); product label derived from `(organization.type, member.role)`.
+  - **Staff-only locale exception**: `apps/admin` ships `en` + `pt` only (Eleva staff surface); all member/expert/clinic-facing surfaces keep `pt`/`en`/`es`.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 2, [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

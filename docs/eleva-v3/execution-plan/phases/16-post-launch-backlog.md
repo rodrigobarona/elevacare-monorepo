@@ -40,11 +40,13 @@ and run the standard loop from README section 4.
 
 1. Create `docs/eleva-v3/execution-plan/phases/16-N-<slug>.md` using the template in
    `phases/00-execution-plan-and-review-loop.md` (section "Phase file template").
-2. Add the row to README section 5 with branch `phase-16.N/<slug>` and dependencies. The
-   planning PR itself lands on `phase-16.N/<slug>-plan`; the build PR uses `phase-16.N/<slug>`.
+2. Add the row to README section 5 with branch `phase-16.N/<slug>` and dependencies.
 3. If the item changes a locked decision, add a `decision-log.md` entry and a new ADR first.
 4. Run `pnpm docs:execution-plan:html` and commit the regenerated `index.html` with the phase file.
-5. Execute the standard loop (README section 4).
+5. One branch, one PR (README section 4 rule 1): the phase file, README row, decision-log/ADR
+   changes and the regenerated `index.html` are the **first commit** (`docs(p16.N): ...`) on
+   `phase-16.N/<slug>`; the implementation commits follow on the same branch and the single PR
+   goes through the standard loop. Do not open a separate planning PR.
 
 ## Local references
 
@@ -53,24 +55,68 @@ and run the standard loop from README section 4.
 
 ## Copy-paste prompt
 
-```text
-You are a senior engineer working in the Eleva.care v3 monorepo. Phase 16 is a backlog, not a
-build phase. Your task is to PROMOTE one backlog item into a fully specified phase file.
+````text
+You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
+(/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
 
-1. Read AGENTS.md, docs/eleva-v3/execution-plan/README.md (sections 2, 4, 5, 6, 7) and
-   docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md.
-2. Pick item 16.<N> (given by the requester). Read its "Origin" documents and the earlier phase
-   files it depends on.
-3. Write docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md with the same structure as the
-   other phase files: metadata table (branch phase-16.<N>/<slug>, depends on, effort, touches,
-   exit gate), why it exists, scope (in/out), deliverables, acceptance criteria, tests, docs to
-   update, local references, external docs (Context7 library IDs), risks, and a copy-paste prompt
-   that starts with the universal preamble from README section 7.
-4. If the item changes a locked decision (README section 2), write the decision-log.md entry
-   and a new ADR under docs/eleva-v3/adrs/ first, and reference them from the phase file.
-5. Add the row to README section 5; run pnpm docs:execution-plan:html; commit on branch
-   phase-16.<N>/<slug>-plan as docs(plan): ... (the build PR that follows uses
-   phase-16.<N>/<slug>); run pnpm review and pnpm review:branch; open the
-   PR with the README section 8 template; loop on CodeRabbit until zero unresolved findings;
-   request approval from @rodrigobarona; merge with squash.
-```
+Before writing code:
+1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
+   you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 5, 6, 7, 8 and this phase file in
+   full (docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md).
+3. Read every file under "Local references" of this phase and the "Origin" documents of the item
+   you are promoting. Pull every library the promoted item needs through Context7
+   (resolve-library-id then query-docs) and prefer those docs over memory for Next.js 16, Better
+   Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
+   CodeRabbit.
+
+Workflow (mandatory):
+- git checkout main && git pull --ff-only && git checkout -b phase-16.<N>/<slug>
+- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
+  into phase-16.<N>.1 / phase-16.<N>.2 branches if needed.
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits (scope p16.<N>). Run: pnpm review:branch -> fix -> repeat until clean.
+- git push -u origin <branch> && gh pr create --base main with the PR body template from
+  docs/eleva-v3/execution-plan/README.md section 8.
+- Loop: wait for CodeRabbit GitHub App review + CI; for each comment fix+push or reply
+  "Not actionable because ..."; re-run pnpm review:branch; continue until zero unresolved
+  comments and all checks green. Request human approval from @rodrigobarona.
+- gh pr merge --squash --delete-branch; git checkout main && git pull.
+
+Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
+JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
+POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
+package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
+"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+(pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
+
+PHASE 16 TASK — Promote backlog item 16.<N> into a phase and deliver it on one branch / one PR.
+
+Phase 16 is a backlog, not a build phase. Item 16.<N> is given by the requester. Deliver in
+this order, all on branch phase-16.<N>/<slug>:
+
+1. Planning commit (docs(p16.<N>): ...), first on the branch:
+   a. Write docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md with the same structure as the
+      other phase files: metadata table (Branch phase-16.<N>/<slug>, Depends on, Effort, Touches,
+      Exit gate), Why this phase exists, Scope (in/out), Deliverables with exact file paths,
+      Acceptance criteria checklist, Tests, Docs to update, Local references, External docs
+      (Context7 library IDs), Risks, and a "## Copy-paste prompt" ```text block that follows the
+      universal preamble from README section 7 (same steps, order and hard constraints) followed
+      by the item-specific task.
+   b. If the item changes a locked decision (README section 2), add the decision-log.md entry
+      and a new ADR under docs/eleva-v3/adrs/ (next free number) and reference both from the
+      phase file.
+   c. Add the row to README section 5 (branch, effort, dependencies, file link); run
+      pnpm docs:execution-plan:html and commit the regenerated index.html.
+2. Implementation commits: execute the prompt you just wrote, end to end, on the same branch.
+3. Open the single PR with the README section 8 template; the PR body links the new phase file
+   and ticks its acceptance criteria.
+
+Acceptance: the new phase file exists and renders in index.html; README section 5 lists it; any
+decision change has a decision-log entry + ADR; the item's own acceptance criteria are met; CLI
+and GitHub App reviews are clean; PR merged through the full loop.
+
+Report: new phase file path, decision-log/ADR links (if any), CodeRabbit CLI finding counts per
+run, PR URL, and anything you could not complete with the reason.
+````
