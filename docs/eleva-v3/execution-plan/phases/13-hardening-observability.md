@@ -157,8 +157,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 13 TASK" section fur
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-13.1/security-observability
-  (second PR: phase-13.2/i18n-performance-e2e). Each under 150 reviewable files (message JSON
-  files count — split further by app if needed).
+- Second PR (opened after the first merges): phase-13.2/i18n-performance-e2e. Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); message JSON files count — split further by app if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity && pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean

@@ -104,11 +104,14 @@ Rules:
    up-to-date `main` = one PR.
 2. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build`
    before `pnpm review`; the CLI should review working code.
-3. Fix every CLI finding, or record it as declined with a reason in the
-   PR body ("CodeRabbit CLI" section of the template in
-   `execution-plan/README.md` section 8). Never weaken a rule to silence
-   a finding. Security, RLS, audit, vendor-boundary and PHI-in-logs
-   findings are never declined.
+3. Fix every Critical/Major CLI finding before merge — they are never
+   deferred. Minor/Trivial findings left at the review cap
+   (`execution-plan/README.md` section 4 rule 4) may be **deferred** with
+   a one-line reason in the PR body "Deferred findings" table (template in
+   section 8), or **declined** with a reason when they are wrong about the
+   code or contradict a locked decision. Never weaken a rule to silence a
+   finding. Security, RLS, audit, vendor-boundary and PHI-in-logs findings
+   are never deferred or declined.
 4. On the PR, loop until **zero unresolved CodeRabbit comments and all
    CI checks green**, then request one human approval and merge with
    `gh pr merge --squash --delete-branch`.

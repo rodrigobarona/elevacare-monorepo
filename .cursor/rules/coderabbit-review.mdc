@@ -31,6 +31,7 @@ Full manual: `.cursor/skills/coderabbit-review/SKILL.md`. Sequencing SSOT:
   test, or adding a `.coderabbit.yaml` filter for the file being reviewed.
 - Security, RLS/`withOrgContext`, `withAudit`, vendor-SDK boundary and PHI-in-logs findings are
   never declined.
-- One phase = one branch `phase-NN/<slug>` = one PR. Split above 150 reviewable files.
+- One phase = one branch `phase-NN/<slug>` = one PR. Target <= 30 files / 400 lines; split
+  above 60 files / 800 lines and always before 100 reviewable files (the App skips at 100).
 - `pnpm review` needs `coderabbit auth login` once per machine; if the CLI is not authenticated,
   stop and ask the user to authenticate rather than skipping the gate.

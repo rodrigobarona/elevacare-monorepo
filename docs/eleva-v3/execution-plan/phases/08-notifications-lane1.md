@@ -19,7 +19,10 @@ Audiences, PHI-free).
 In:
 
 - `@eleva/notifications` (sole importer of `resend` and `twilio`):
-  `sendNotification({ kind, recipient, orgId, ctx, idempotencyKey, channelsOverride? })` where
+  `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` — the
+  one contract (this signature is copied verbatim into the prompt below and into
+  `notifications-spec.md`; urgency is **not** a parameter, it is a property of the kind in
+  `NOTIFICATION_KINDS`; `channelsOverride` may only narrow the kind's default channels) — where
   `recipient` is a discriminated union `{ userId }` **or** `{ email, locale? }` — the e-mail
   mode exists for recipients who have no account yet (`auth.org_invitation` to a new address,
   guest booking confirmations before activation) and is **email-only**: no preferences lookup,
@@ -30,11 +33,32 @@ In:
   is `user_id` or, for e-mail mode, `recipient_email`). The delivery row is **claimed before the
   provider is called**: insert `status = queued` (the unique key makes a concurrent/retried call
   hit the conflict and return the existing row — if it is `sent`, stop; if `queued` older than
-  60 s, re-claim), then call Resend/Twilio with a provider idempotency key equal to the row id
-  (Resend `Idempotency-Key` header; Twilio has none, so the claimed row is the only guard), then
-  update to `sent`/`failed` with `provider_id`. A crash between provider accept and the update
-  leaves a `queued` row that the retry re-claims and re-sends **with the same provider
-  idempotency key**, so the provider deduplicates instead of the user receiving two e-mails. Kinds: `booking.confirmed`, `booking.reminder_24h`,
+  60 s, re-claim with an atomic lease: `UPDATE ... SET lease_owner = :runId, claimed_at = now()
+WHERE id = :id AND status = 'queued' AND claimed_at < now() - interval '60 s' RETURNING id` —
+  no row means another worker holds it; the completion update is likewise guarded by
+  `WHERE lease_owner = :runId AND claimed_at = :claimedAt`, so a worker whose lease was taken
+  over never overwrites the newer result; the first claim is the INSERT itself, which always
+  writes `lease_owner = :runId, claimed_at = now()` (both columns NOT NULL), so no `queued` row
+  ever exists without a lease and a crash before the provider call is reclaimed by the same
+  60 s rule), then call the provider, then update to
+  `sent`/`failed` with `provider_id`. **E-mail is an idempotent provider submission** (not a
+  recipient-delivery guarantee): Resend gets an `Idempotency-Key` header equal to the row id
+  and deduplicates the same key for 24 h, so a crash between provider accept and the update
+  leaves a `queued` row that the retry re-claims and re-sends with the same key without a
+  second e-mail; retries older than 24 h go through the same reconciliation as SMS (Resend
+  `emails.list` by recipient + tag `deliveryId`). **SMS is at-least-once** and is documented and tested as such: Twilio
+  has no idempotency key, so every SMS carries a `StatusCallback` URL
+  `POST /webhooks/twilio/status?deliveryId=<rowId>` (Twilio signature validated) that marks the
+  row `sent` with the Message SID even when the sending process died; before re-sending a stale
+  `queued` SMS row the worker reconciles by listing Twilio messages to that number sent after
+  `claimed_at` and adopts a message only when its body equals the row's rendered body — every
+  SMS body ends with a per-delivery reference `Ref <8-char base32 of the row id>`, so the
+  rendered text (`sms_body_hash` stored at claim time) is unique per delivery row and a match
+  identifies exactly this send; two rows can never share a body, a message with a different
+  body is never adopted, and if no identical message exists the row is re-sent (the documented
+  at-least-once duplicate); SMS templates are written to be
+  harmless if received twice (no one-time codes without expiry, reminders idempotent in
+  wording). Kinds: `booking.confirmed`, `booking.reminder_24h`,
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
   `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
@@ -43,7 +67,7 @@ In:
   declares its default channels, urgency and template id); **later phases extend the const in
   their own PR** together with the template, channel policy, i18n copy and a delivery test —
   the owning phase per kind: Phase 10 `crm.follow_up_due`; Phase 11 `team.invitation`,
-  `team.member_joined`; Phase 12 `partner.approved`, `partner.rejected`,
+  `team.member_joined`, `clinic.verified`, `clinic.rejected`; Phase 12 `partner.approved`, `partner.rejected`,
   `partner.needs_changes`; Phase 14 `calendar.reconnect_required`, `migration.welcome`. A kind
   that is not in the const does not compile. **Boundary:** this phase
   makes `@eleva/email` renderer-only (React Email templates, no `resend` import — boundary lint)
@@ -88,7 +112,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on <masked
-                          number>", in person -> location name, address, "Open in Maps" link and the location's
+                                                  number>", in person -> location name, address, "Open in Maps" link and the location's
       instructions; the ICS `LOCATION` follows the same rule.
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
@@ -178,6 +202,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    created_at), notification_deliveries (id, idempotency_key, kind, user_id nullable,
    recipient_email nullable, CHECK (num_nonnulls(user_id, recipient_email) = 1), channel email|
    sms|in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id,
+   lease_owner text NOT NULL, claimed_at timestamptz NOT NULL (written by the INSERT — the first
+   claim — and by every re-claim; the reclaim UPDATE requires claimed_at < now() - 60 s),
+   sms_body_hash text nullable
+   (sha256 of the rendered SMS body, used by the Twilio reconciliation match),
    error, created_at, updated_at, unique(idempotency_key, coalesce(user_id::text, recipient_email),
    channel) as a unique expression index — the recipient is part of the key because one event (a
    booking confirmation) fans out to member AND expert; callers pass a per-event idempotencyKey
@@ -186,16 +214,33 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    created_at), phone_verifications (user_id, phone_e164, code_hash, expires_at, verified_at).
    RLS by user/org; audit unions (notification: sent|failed|suppressed; phone: verified).
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind, recipient,
-   orgId, ctx, idempotencyKey, urgency normal|urgent }) with recipient: { userId: string } |
-   { email: string; locale?: Locale }. userId mode -> load user locale, preferences (Phase 5
+   orgId?, ctx, idempotencyKey, channelsOverride? }) with recipient: { userId: string } |
+   { email: string; locale?: Locale }; urgency (normal|urgent) comes from NOTIFICATION_KINDS[kind],
+   never from the caller; channelsOverride may only narrow the kind's channels (Zod refine).
+   userId mode -> load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list ->
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app ->
-   CLAIM the notification_deliveries row FIRST (insert status queued; on unique conflict read the
-   existing row: sent -> return it, queued older than 60 s -> re-claim, otherwise return) -> call
-   the provider with a provider idempotency key = the row id (Resend Idempotency-Key header; Twilio
-   has none, the claimed row is the guard) -> update the row to sent|failed with provider_id. Never
-   send before the row exists. Test: kill the process between provider accept and the update
-   (mock), retry -> one provider call with the same Idempotency-Key, one sent row. email mode (recipient has no account yet — used by
+   CLAIM the notification_deliveries row FIRST (INSERT status queued WITH lease_owner = runId
+   and claimed_at = now() — both NOT NULL, the insert is the first claim; on unique conflict
+   read the existing row: sent -> return it, queued with claimed_at older than 60 s -> re-claim
+   with the atomic lease UPDATE (lease_owner, claimed_at; zero rows => another worker owns it,
+   return), otherwise return) -> call the provider -> complete with a compare-and-swap: UPDATE
+   ... SET status = sent|failed, provider_id WHERE id = :id AND lease_owner = :runId AND
+   claimed_at = :claimedAt — zero rows means the lease was taken over by a newer worker, so the
+   stale worker logs and exits WITHOUT touching the row (it never overwrites the newer result;
+   test: a provider call that outlives the 60 s lease + a reclaiming worker -> exactly one final
+   state, the newer one). Never send before the row exists. E-mail: Resend Idempotency-Key = row id
+   (idempotent provider submission — Resend deduplicates the same key for 24 h; test: kill the
+   process between provider accept and the update (mock), retry -> one provider call with the
+   same key, one sent row). SMS: at-least-once — Twilio StatusCallback
+   POST /webhooks/twilio/status?deliveryId=<rowId> (validate X-Twilio-Signature; marks sent +
+   Message SID even if the sender crashed); before re-sending a stale queued SMS row, list
+   Twilio messages to that number with dateSentAfter = claimed_at and adopt one only when
+   sha256(body) === sms_body_hash — bodies are unique per row because every SMS ends with
+   "Ref <8-char base32 of the row id>" (never a different body; none => re-send); tests:
+   (a) crash after Twilio accept + callback arrives -> row sent, no second send; (b) crash and
+   no callback -> reconciliation finds the SID -> no second send; (c) reconciliation finds
+   nothing -> one re-send (documented duplicate). email mode (recipient has no account yet — used by
    auth.org_invitation when the invitee e-mail is unknown to auth.user, and by guest booking
    confirmations before activation) -> email channel only, locale from the argument or the org
    default, suppression list applied, no preferences/SMS/in-app, row keyed by recipient_email.

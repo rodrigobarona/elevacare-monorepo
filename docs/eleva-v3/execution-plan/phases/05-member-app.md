@@ -36,7 +36,10 @@ In:
     scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
     future bookings with 100% refund — see prompt deliverable 3).
 - `apps/api`: `GET /me` (profile + preferences), `PATCH /me`, `GET /me/bookings`,
-  `GET /me/payments`, `PUT /me/notification-preferences`, `POST /privacy/dsar`,
+  `GET /me/payments`, `PUT /me/notification-preferences`, `GET /me/consents` (every consent
+  kind with version, granted_at, withdrawn_at), `PUT /me/consents` (grant or withdraw one kind;
+  withdrawal of `health_data_processing` is refused with 409 while a confirmed future booking
+  exists, audited `consent: granted|withdrawn`), `POST /privacy/dsar`,
   `GET /privacy/dsar/[id]`, `POST /privacy/delete-account`; workflow routes
   `POST /workflows/dsar-export` and `POST /workflows/account-deletion-sweep` (QStash triggered).
 - `@eleva/compliance`: `dsarExport(userId)` built on a **collector registry** — this phase
@@ -70,6 +73,11 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
       Phase 6); reschedule moves the booking and releases the old slot.
 - [ ] Receipt URL opens Stripe-hosted receipt; payments list matches `booking_payments`.
 - [ ] Preferences persist and are returned by `GET /me`.
+- [ ] `GET /me/consents` lists every kind with its version; `PUT /me/consents` withdraws
+      `marketing` immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend
+      Audience removal) and returns 409 for `health_data_processing` while a confirmed future
+      booking exists. (`analytics` joins `CONSENT_KINDS` in Phase 13, which adds the PostHog
+      opt-out check to this route's tests.)
 - [ ] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
       (signed URL) after 24h; audit rows present.
 - [ ] Delete-account request schedules deletion and blocks new bookings at the API before money
@@ -80,8 +88,9 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Tests
 
-- vitest: preferences validation, DSAR export content shape (no PHI leak beyond the user's own),
-  cancel/reschedule policy edge cases.
+- vitest: preferences validation, consent grant/withdraw transitions (409 guard, version bump
+  re-prompt), DSAR export content shape (no PHI leak beyond the user's own), cancel/reschedule
+  policy edge cases.
 - Playwright: `member.spec.ts`.
 
 ## Docs to update

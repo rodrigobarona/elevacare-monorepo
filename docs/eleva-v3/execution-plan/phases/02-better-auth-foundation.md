@@ -176,7 +176,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 2 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-02.1/auth-server-schema
-  (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
+- Second PR (opened after the first merges): phase-02.2/auth-clients-account-ui. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -302,9 +302,22 @@ PR 02.2 — clients, proxy, account UI, dashboard:
     workos-widgets-messages.ts, workos-widgets-overrides.css, workos-widgets-pt-PT.json and their
     imports; rewrite switch-org-action.ts to call the API (setActive) and revalidate; nav-user.tsx
     and org-switcher*.tsx read the Better Auth session shape. Remove dead CSS from sources.css.
-11. e2e/auth.spec.ts (Playwright): sign up -> verify (use a dev-only verification bypass endpoint
-    guarded by E2E_AUTH_BYPASS_TOKEN or a mail catcher) -> personal Space visible -> create Expert
-    workspace -> switch -> sign out -> magic link sign in. Use data-testid selectors.
+11. e2e/auth.spec.ts (Playwright): sign up -> verify -> personal Space visible -> create Expert
+    workspace -> switch -> sign out -> magic link sign in. Use data-testid selectors. Verification
+    in tests reads the token from the Better Auth `verification` table through a Playwright DB
+    fixture (local Postgres and the staging Neon branch), so no bypass is needed in
+    production-like stacks. The optional bypass route POST /auth/e2e/verify-email is
+    development/preview only and fails closed: the module
+    is excluded from the production bundle (registered only when process.env.VERCEL_ENV !==
+    "production" AND process.env.E2E_AUTH_BYPASS_TOKEN is set; missing token => route not
+    mounted, request => 404), it compares the token with timingSafeEqual, it is rate limited,
+    and every call is audited (entity "user", action "email_verified", payload { via: "e2e" }).
+    Guards: an apps/api startup assertion (apps/api/src/lib/env.ts) throws when
+    E2E_AUTH_BYPASS_TOKEN is present while VERCEL_ENV === "production"; environment-matrix.md
+    lists the variable in a new "development/preview only — never production" table and the
+    Phase 15 gate checklist verifies with `vercel env ls --environment production` that it is
+    absent; unit test: with VERCEL_ENV=production the route table has no /auth/e2e/* path, and
+    a request to it returns 404.
 12. Docs: identity-rbac-spec.md final field names, api-contract-spec.md auth section,
     AGENTS.md facts, decision-log.md entry.
 

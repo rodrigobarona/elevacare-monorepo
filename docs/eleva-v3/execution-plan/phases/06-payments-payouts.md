@@ -39,7 +39,14 @@ In:
   `booking_payments.applied_commission_bps`.
 - **Payout engine** (port from MVP `process-expert-transfers`, `process-pending-payouts`,
   `check-upcoming-payouts`, `transfer-utils.ts`): `payout_states` table (booking_payment_id,
-  status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed`,
+  status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` (this
+  union is the SSOT — `payments-payouts-spec.md` "Payout States" is rewritten to it in this
+  phase), `hold_reasons text[]` (set semantics, values `dispute|manual`; a hold ADDS its reason,
+  a dispute won or a staff release REMOVES its reason, and only when the set becomes empty does
+  the row leave `held`) + `held_from_status` (the status the row had when the FIRST reason was
+  added; restored when the set empties, then cleared; there is no separate `released` state;
+  tests apply dispute-then-manual and manual-then-dispute and assert the payout stays `held`
+  until both are cleared),
   `eligible_at`, `scheduled_for`, `destination_org_id` + `destination_connect_account_id`
   (immutable snapshot written when the row is created — the expert's org/account in this phase;
   Phase 11 writes the clinic's when `payout_mode = clinic`; transfers, refunds, reconciliation
@@ -49,8 +56,10 @@ In:
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
   `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
   (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
-  the tests), first payout for an account,
-  dispute open, or manual hold; retries with backoff and DLQ.
+  the tests) or first payout for an account — those are the only two `approval_required`
+  reasons; an open dispute or a manual hold puts the row in `held` (with `held_from_status`),
+  never in `approval_required`, and `approve` on a row whose payment has `dispute_status =
+  open` is refused with 409 DISPUTE_OPEN; retries with backoff and DLQ.
 - **Workflows** (`packages/workflows/src/payments/*`, routes under `apps/api/src/app/workflows/*`,
   QStash schedules in `infra/qstash`): `process-expert-transfers` (every 2h),
   `process-pending-payouts` (06:00), `check-upcoming-payouts` (daily notice), `cleanup-expired-
@@ -60,13 +69,17 @@ reservations` (every 15 min, existing), `stripe-stuck-events` (existing).
   already made, and reduce the ledger fee proportionally — there is no Stripe application fee
   object in this funds flow);
   webhook handlers for `charge.refunded`, `charge.dispute.created/closed`, `transfer.created/
-reversed`, `payout.paid/failed`, `account.updated`, `identity.verification_session.verified/
-requires_input`, `payment_intent.succeeded/payment_failed/canceled` — all added to **both**
+reversed`, `payout.paid/failed`, `account.updated`, `capability.updated`,
+  `identity.verification_session.verified/requires_input`,
+  `payment_intent.succeeded/payment_failed/canceled` — all added to **both**
   `packages/billing/src/server/webhook.ts` and `infra/stripe/setup-webhooks.ts`.
 - **Expert finance UI** (`apps/expert/[orgSlug]/finance`): earnings summary, per-booking table
   (gross, fee, net, state, eligible date), payouts (Embedded Payouts component), export CSV.
 - **Admin hooks** (data only; UI in Phase 12): approval endpoint `POST /payouts/[id]/approve`,
-  `POST /payouts/[id]/hold`, `GET /payouts?status=`.
+  `POST /payouts/[id]/hold` (adds `manual` to `hold_reasons`), `POST /payouts/[id]/release`
+  (staff-only; removes `manual`; the row returns to `held_from_status` only if no other reason
+  remains — with an open dispute it stays `held` and the response says so; audited
+  `payout: released`), `GET /payouts?status=`.
 - Stripe test clocks / fixtures for tests; `infra/stripe/README.md` updated.
 
 Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Phase 12).
@@ -75,8 +88,11 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 1. Migration: `payout_states`, `booking_payments` additions (`applied_commission_bps`,
    `refunded_cents`, `dispute_status`), `billing_customers.connect_*` status fields; RLS + audit
-   unions (`payout: scheduled|approval_required|approved|held|transferred|paid_out|failed|reversed`;
-   `refund: requested|succeeded|failed`; `dispute: opened|closed`).
+   unions (`payout: scheduled|approval_required|approved|held|released|transferred|paid_out|failed|reversed`;
+   `refund: requested|succeeded|failed`; `dispute: opened|closed`); `billing_customers`
+   Connect capability columns (`connect_capabilities` jsonb — card_payments/transfers status —
+   written by the `capability.updated` handler) and the parity acceptance criterion below covers
+   that event.
 2. `@eleva/billing/server`: `commission.ts` (SSOT + tests), `payouts.ts` (eligibility, schedule,
    transfer, approval), `refunds.ts`, `connect.ts` updates (controller, requirements),
    `webhook.ts` handlers + tests, `identity.ts` updates.
@@ -96,7 +112,11 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
       appears in the expert's Embedded Payouts component; `payout.paid` marks `paid_out`.
 - [ ] Refund before transfer: charge refunded, ledger fee reduced, state `reversed`; refund after
       transfer: `reverse_transfer` executed; ledger consistent; audit rows present.
-- [ ] Dispute opened -> payout `held`; dispute closed won -> released; lost -> `reversed`.
+- [ ] Dispute opened -> payout `held`, `hold_reasons = {dispute}`, `held_from_status` recorded;
+      dispute closed won -> `dispute` removed and, if the set is empty, status restored to
+      `held_from_status` (e.g. back to `scheduled`, or `paid_out` when funds had already moved)
+      and the column cleared; with a manual hold also present the row stays `held`; lost ->
+      `reversed` (transfer reversed when one exists). Both hold orders tested.
 - [ ] Approval-required path: first payout goes to `approval_required`; `POST /payouts/[id]/approve`
       schedules it; audited with actor.
 - [ ] `WEBHOOK_EVENTS` in `infra/stripe/setup-webhooks.ts` equals the dispatcher switch cases
@@ -172,7 +192,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 6 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-06.1/connect-onboarding-hardening
-  (second PR: phase-06.2/payout-engine-refunds). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -237,7 +257,13 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    sessionEnd+24h) snapped to next 04:00 Europe/Lisbon (use Temporal polyfill or date-fns-tz;
    tests for DST); schedulePayout(bookingPaymentId) (approval_required when: first payout of the
    account, amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS env (default 50000; inclusive — add a
-   unit test at exactly the threshold), open dispute, manual hold); executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
+   unit test at exactly the threshold) — the only two reasons; dispute open and manual hold go to
+   held with held_from_status, and approve returns 409 DISPUTE_OPEN while a dispute is open);
+   holds are a set: hold_reasons text[] {dispute|manual}; applyHold(id, reason) adds the reason
+   (the first one records held_from_status), clearHold(id, reason) removes it and restores
+   held_from_status only when the set is empty; releaseHold(payoutStateId) = clearHold(id,
+   "manual") and reports the remaining reasons; tests for both application orders;
+   executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
    destination: payoutState.destination_connect_account_id, transfer_group: bookingId,
    source_transaction: chargeId, metadata },
    { idempotencyKey: payoutState.transfer_idempotency_key }) — a UUID column written once when
@@ -248,7 +274,9 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
    reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
    the ledger fee reduced proportionally (no application fee object exists in this funds flow);
-   dispute handling sets held / reversed.
+   dispute handling: charge.dispute.created = applyHold(id, "dispute"); closed won =
+   clearHold(id, "dispute"); closed lost sets reversed (reverse_transfer when a transfer exists);
+   state-machine test covers every transition in the union above.
 7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.payment_failed, payment_intent.canceled,
    charge.refunded, charge.dispute.created, charge.dispute.closed, transfer.created,
@@ -262,9 +290,10 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
 9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund for the owning
    expert org, or staff capability admin_payouts:refund), GET /payouts?status&orgId (expert sees
    own org only — orgId must equal the session's active org or 403; staff with
-   admin_payouts:read see all), POST /payouts/[id]/approve and POST /payouts/[id]/hold
-   ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles: ["platform_admin",
-   "staff_finance"] }) + capability admin_payouts:approve / admin_payouts:hold from
+   admin_payouts:read see all), POST /payouts/[id]/approve, POST /payouts/[id]/hold and POST
+   /payouts/[id]/release ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles:
+   ["platform_admin", "staff_finance"] }) + capability admin_payouts:approve / admin_payouts:hold
+   (hold and release share it) from
    packages/auth/src/permissions.ts (add both), reason required (400 when empty), withAudit with
    actor + reason + previous/next payout state; experts and members get 403 (table-driven test
    covering member, expert owner, staff_support, staff_finance, platform_admin). GET

@@ -59,7 +59,10 @@ In:
     reservation snapshot — plus a `booking_payments` row with `status = intent_pending` and
     `stripe_idempotency_key = pi:<reservationId>`, and commits, so `bookingId` exists **before**
     Stripe is called; **step 2** creates the PaymentIntent outside any transaction: amount =
-    reservation `price_cents`, currency EUR, charged on the **platform** account — Stripe
+    reservation `price_cents`, currency = reservation `currency` (the snapshot, never a constant
+    — offers may be priced in any currency the expert's Connect account supports and
+    `POST /bookings/confirm` compares the intent against that same snapshot), charged on the
+    **platform** account — Stripe
     "separate charges and transfers" funds flow, so **no** `transfer_data` and **no**
     `application_fee_amount`; the platform fee from the `@eleva/billing` commission SSOT is
     stored in the ledger as `booking_payments.application_fee_cents` and the payout engine
@@ -286,7 +289,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 4 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-04.1/public-api-and-explorer
-  (second PR: phase-04.2/booking-funnel-payment). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-04.2/booking-funnel-payment. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -423,13 +426,19 @@ PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name,phone?} or session; body also carries
    eventTypeModeId, language, memberCountry and optional linkToken; runs assertModeBookable
    BEFORE the slot lock -> 422 MODE_NOT_AVAILABLE_IN_COUNTRY | MODE_LANGUAGE_MISMATCH; when a
-   linkToken is present the link is the credential for the whole private flow: inside the reserve
-   transaction and before the slot lock, claim a use atomically with a single conditional
-   `UPDATE booking_links SET use_count = use_count + 1 WHERE token_hash = sha256(token) AND
-   revoked_at IS NULL AND expires_at > now() AND use_count < max_uses AND (recipient_email IS NULL
-   OR recipient_email = :email) RETURNING id` — no row returned => 404 (same body as a bad link,
-   never reveal which check failed); the reservation-expiry sweep and reservation cancel
-   decrement use_count for unconfirmed reservations that hold a booking_link_id (never below 0);
+   linkToken is present the link is the credential for the whole private flow. Ordering: (a)
+   validate the link read-only (token_hash = sha256(token), revoked_at IS NULL, expires_at >
+   now(), use_count < max_uses, recipient match) -> 404 on any failure (same body as a bad
+   link, never reveal which check failed); (b) acquire the Redis slot lock (reserveSlot); (c)
+   ONLY THEN, inside the single durable reservation transaction that INSERTs slot_reservations,
+   claim the use atomically with the conditional `UPDATE booking_links SET use_count =
+   use_count + 1 WHERE id = :id AND revoked_at IS NULL AND expires_at > now() AND use_count <
+   max_uses AND (recipient_email IS NULL OR recipient_email = :email) RETURNING id` — no row =>
+   the transaction rolls back, the slot lock is released and the caller gets 404. The use and the
+   reservation therefore commit or fail together: a lost lock race or a DB error never consumes
+   a use without a reservation to compensate it. The reservation-expiry sweep and reservation
+   cancel decrement use_count for unconfirmed reservations that hold a booking_link_id (never
+   below 0); test: lock acquisition fails after link validation -> use_count unchanged;
    /payments/intent and /bookings/confirm re-check revoked_at on the stored booking_link_id and
    reject with 404 when revoked meanwhile; snapshots
    mode, location_id, language, member_country, booking_link_id and the link price override onto
@@ -455,7 +464,8 @@ PR 04.2 — funnel + payment + marketing/legal:
    "pi:" + reservationId, then COMMITS so bookingId exists before Stripe is called; step 2 (no
    transaction) creates the Stripe PaymentIntent via @eleva/billing with that idempotency key:
    amount = reservation price_cents,
-   currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
+   currency = reservation currency (the snapshot — never a constant), automatic_payment_methods
+   enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make

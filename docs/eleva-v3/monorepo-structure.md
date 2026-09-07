@@ -407,8 +407,13 @@ Owns:
 - webhook subscription + external-change reconciliation
 - busy-calendar vs destination-calendar distinctions (cal.com-inspired)
 
-Tokens stored via `packages/encryption` (`encryptForOrg` envelope encryption, ADR-020) in
-`calendar_connections`. Never env-based, never in a third-party vault.
+Does not own OAuth credentials: Google/Microsoft tokens live in Better Auth `account` rows and
+reach this package only through `getProviderAccessToken` from `@eleva/auth`
+(`createCredentialManager({ getProviderAccessToken })`, ADR-017; `@eleva/calendar` never imports
+`better-auth`). `calendar_connections` stores the link to the `account` row and sync metadata
+only — never tokens. Envelope encryption via `packages/encryption` (ADR-020) covers other
+per-org secrets (ICS feed tokens, webhook channel secrets), never env-based, never a third-party
+vault.
 
 ### `packages/billing`
 

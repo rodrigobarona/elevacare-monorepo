@@ -82,6 +82,19 @@ In:
   value differs from `sessions.recording_enabled`; it runs on every consent change and again in
   the `join` route before the token is minted, so the state is correct whenever anyone enters
   — a room is never re-created and a withdrawn consent flips it back to `false` the same way.
+  The read-compare-update is serialized per booking **without holding a lock across the
+  provider call**: step 1 (short transaction, `SELECT ... FOR UPDATE` on the `sessions` row)
+  re-reads both consents, computes `desired`, writes `recording_desired = desired` and
+  increments `recording_state_version` (v), commits; step 2 calls Daily `updateRoom` with a
+  10 s timeout and no lock held; step 3 persists `recording_enabled = desired` with a
+  compare-and-swap `WHERE recording_state_version = v` — zero rows means a newer desired state
+  superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
+  therefore never blocks consent writes or joins on a row lock. The `join` route refuses to mint
+  a token while `recording_desired <> recording_enabled` (it re-runs the sync first, and returns
+  503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
+  recording state is unknown. Tests: grant/withdraw race (withdrawal committed last) -> final
+  Daily state and row both `false`; Daily timeout during step 2 -> consent write completes in
+  < 100 ms and join returns 503 rather than minting.
   Daily `enable_recording: "cloud"` + transcription webhook `transcript.ready`/`recording.ready-to-download`
   -> fetch -> store encrypted (`records.kind = transcript`) -> `draftSessionReport(transcriptId)`
   with versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
@@ -95,11 +108,16 @@ In:
   **allow-list** of scalar metadata (`recordId`, `kind`, `orgId`, `bookingId`, `status`,
   `modelId`, `tokenCount`, `durationMs`) — its TypeScript type rejects any other key and a unit
   test asserts unknown keys are dropped at runtime; (3) Sentry `beforeSend`/`beforeBreadcrumb`
-  drop any event whose `extra`/`contexts` contain a `Decrypted` marker or an AI output object
-  (`summary`, `observations`, `recommendations`, or any key of the `draftSessionReport` output
-  schema, derived from the Zod schema so new fields are covered automatically). Object-level
-  tests feed a full decrypted record and a full AI draft through logger and Sentry and assert
-  zero PHI substrings in the output. Because `Decrypted<T>` serializes to `"[redacted]"`, API
+  walk the **entire** event recursively (`message`, `exception.values[].value` and stack frame
+  `vars`, `request` (url, query, headers, data, cookies), `user`, `tags`, `extra`, `contexts`,
+  `breadcrumbs[].data/message`, transaction name, spans data) and redact any value that is a
+  `Decrypted` marker or matches an AI output key (`summary`, `observations`, `recommendations`,
+  or any key of the `draftSessionReport` output schema, derived from the Zod schema so new
+  fields are covered automatically); unknown top-level fields are dropped (explicit allow-list
+  of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level tests feed
+  a full decrypted record and a full AI draft through logger and Sentry via **each** of those
+  locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
+  a span attribute) and assert zero PHI substrings in the output. Because `Decrypted<T>` serializes to `"[redacted]"`, API
   responses **never return it directly**: every authorized read maps it through an explicit
   response DTO (`toRecordResponse(decrypted, viewer)` in `@eleva/records`, plain object, Zod
   response schema registered in OpenAPI) that copies exactly the fields the viewer may see; the
@@ -200,7 +218,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 10 TASK" section fur
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-10.1/records-consent-retention
-  (second PR: phase-10.2/crm-ai-reports). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -321,10 +339,18 @@ PR 10.2 — CRM + AI reports beta:
    follow-up list). RLS + audit.
 7. Recording/transcription behind flags: Phase 9 rooms are created at confirmation with
    enable_recording false and consent arrives later on the join page, so add
-   syncRoomRecording(bookingId) to @eleva/video: desired = ff.session_recording on AND both
+   syncRoomRecording(bookingId) to @eleva/video (this phase's migration adds
+   sessions.recording_enabled boolean default false, sessions.recording_desired boolean default
+   false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
+   ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
    updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } }) and persist
-   the new value (idempotent — no call when unchanged); invoke it from the consent write path
+   the new value with the three-step protocol from the Scope section (claim desired +
+   version under a short FOR UPDATE, call Daily lock-free with a 10 s timeout, CAS on the
+   version; join refuses to mint while recording_desired <> recording_enabled) (idempotent — no
+   call when unchanged; race test: grant/withdraw concurrently -> final state false; Daily
+   timeout test -> consent write < 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
+   the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
    minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
    after room creation -> exactly one updateRoom call; withdrawn consent -> flipped back; join with

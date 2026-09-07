@@ -277,7 +277,7 @@ traffic depends on v3 before cutover.</p>
 <p>Rules of the loop:</p>
 <ol>
 <li><strong>Branch name</strong> is <code>phase-NN/&lt;slug&gt;</code> from an up-to-date <code>main</code>. One phase = one PR. If a phase
-would exceed the CodeRabbit 150-reviewable-file cap, split into <code>phase-NN.1/...</code>,
+would exceed the CodeRabbit 100-reviewable-file cap, split before file 101 into <code>phase-NN.1/...</code>,
 <code>phase-NN.2/...</code> in the order given by the phase file, each with the full loop. <strong>Prefer small
 PRs</strong>: target &lt;= 400 changed lines and &lt;= 30 files per PR; a PR above 800 lines or 60 files
 must be split (the phase files already mark the split points as <code>PR NN.1</code>, <code>PR NN.2</code>). Small
@@ -615,8 +615,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE &lt;N&gt; TASK&
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b &lt;branch from this phase&gt;
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
-  into phase-NN.1 / phase-NN.2 branches if needed.
+- Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -880,8 +879,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 0 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-00/execution-plan-and-review-loop
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
-  into phase-NN.1 / phase-NN.2 branches if needed.
+- Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
   install the CodeRabbit CLI from the official docs (https://docs.coderabbit.ai/cli): download
@@ -1127,8 +1125,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 1 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-01/rebaseline-adrs-ci
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; if the
-  docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.
+- Implement the deliverables in the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); if the docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review -&gt; fix all findings -&gt; repeat until clean or the review cap is reached (README
   section 4 rule 4: max 3 rounds, zero Critical/Major left, remaining Minor/Trivial listed in the
@@ -1481,7 +1478,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 2 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-02.1/auth-server-schema
-  (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
+- Second PR (opened after the first merges): phase-02.2/auth-clients-account-ui. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -1607,9 +1604,22 @@ PR 02.2 — clients, proxy, account UI, dashboard:
     workos-widgets-messages.ts, workos-widgets-overrides.css, workos-widgets-pt-PT.json and their
     imports; rewrite switch-org-action.ts to call the API (setActive) and revalidate; nav-user.tsx
     and org-switcher*.tsx read the Better Auth session shape. Remove dead CSS from sources.css.
-11. e2e/auth.spec.ts (Playwright): sign up -&gt; verify (use a dev-only verification bypass endpoint
-    guarded by E2E_AUTH_BYPASS_TOKEN or a mail catcher) -&gt; personal Space visible -&gt; create Expert
-    workspace -&gt; switch -&gt; sign out -&gt; magic link sign in. Use data-testid selectors.
+11. e2e/auth.spec.ts (Playwright): sign up -&gt; verify -&gt; personal Space visible -&gt; create Expert
+    workspace -&gt; switch -&gt; sign out -&gt; magic link sign in. Use data-testid selectors. Verification
+    in tests reads the token from the Better Auth `verification` table through a Playwright DB
+    fixture (local Postgres and the staging Neon branch), so no bypass is needed in
+    production-like stacks. The optional bypass route POST /auth/e2e/verify-email is
+    development/preview only and fails closed: the module
+    is excluded from the production bundle (registered only when process.env.VERCEL_ENV !==
+    &quot;production&quot; AND process.env.E2E_AUTH_BYPASS_TOKEN is set; missing token =&gt; route not
+    mounted, request =&gt; 404), it compares the token with timingSafeEqual, it is rate limited,
+    and every call is audited (entity &quot;user&quot;, action &quot;email_verified&quot;, payload { via: &quot;e2e&quot; }).
+    Guards: an apps/api startup assertion (apps/api/src/lib/env.ts) throws when
+    E2E_AUTH_BYPASS_TOKEN is present while VERCEL_ENV === &quot;production&quot;; environment-matrix.md
+    lists the variable in a new &quot;development/preview only — never production&quot; table and the
+    Phase 15 gate checklist verifies with `vercel env ls --environment production` that it is
+    absent; unit test: with VERCEL_ENV=production the route table has no /auth/e2e/* path, and
+    a request to it returns 404.
 12. Docs: identity-rbac-spec.md final field names, api-contract-spec.md auth section,
     AGENTS.md facts, decision-log.md entry.
 
@@ -1788,8 +1798,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 3 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-03/remove-workos
-- Keep under 150 reviewable files (deletions count); split into phase-03.1/encryption-calendar and
-  phase-03.2/infra-cleanup if needed.
+- Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); deletions count. Split into phase-03.1/encryption-calendar and phase-03.2/infra-cleanup if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -1814,7 +1823,7 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 1. @eleva/encryption (packages/encryption): implement envelope encryption.
    - keys.ts: loadKeks() reads ELEVA_KEK_V&lt;n&gt; env vars (base64, 32 bytes), current version =
      highest n; never log key material. getOrCreateOrgDek(orgId) is race-safe: org_data_keys has
-     unique (org_id, dek_version) and a partial unique index on org_id WHERE active = true; the
+     unique (org_id, key_version) and a partial unique index on org_id WHERE retired_at IS NULL; the
      function reads the active row (RLS via withOrgContext) and returns it, otherwise generates a
      32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12 bytes, aad =
      orgId:key_version) and INSERTs ... ON CONFLICT DO NOTHING with withAudit (entity
@@ -1984,7 +1993,10 @@ the durable booking identity — a <code>bookings</code> row with <code>status =
 reservation snapshot — plus a <code>booking_payments</code> row with <code>status = intent_pending</code> and
 <code>stripe_idempotency_key = pi:&lt;reservationId&gt;</code>, and commits, so <code>bookingId</code> exists <strong>before</strong>
 Stripe is called; <strong>step 2</strong> creates the PaymentIntent outside any transaction: amount =
-reservation <code>price_cents</code>, currency EUR, charged on the <strong>platform</strong> account — Stripe
+reservation <code>price_cents</code>, currency = reservation <code>currency</code> (the snapshot, never a constant
+— offers may be priced in any currency the expert&#39;s Connect account supports and
+<code>POST /bookings/confirm</code> compares the intent against that same snapshot), charged on the
+<strong>platform</strong> account — Stripe
 &quot;separate charges and transfers&quot; funds flow, so <strong>no</strong> <code>transfer_data</code> and <strong>no</strong>
 <code>application_fee_amount</code>; the platform fee from the <code>@eleva/billing</code> commission SSOT is
 stored in the ledger as <code>booking_payments.application_fee_cents</code> and the payout engine
@@ -2211,7 +2223,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 4 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04.1/public-api-and-explorer
-  (second PR: phase-04.2/booking-funnel-payment). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-04.2/booking-funnel-payment. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -2348,13 +2360,19 @@ PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name,phone?} or session; body also carries
    eventTypeModeId, language, memberCountry and optional linkToken; runs assertModeBookable
    BEFORE the slot lock -&gt; 422 MODE_NOT_AVAILABLE_IN_COUNTRY | MODE_LANGUAGE_MISMATCH; when a
-   linkToken is present the link is the credential for the whole private flow: inside the reserve
-   transaction and before the slot lock, claim a use atomically with a single conditional
-   `UPDATE booking_links SET use_count = use_count + 1 WHERE token_hash = sha256(token) AND
-   revoked_at IS NULL AND expires_at &gt; now() AND use_count &lt; max_uses AND (recipient_email IS NULL
-   OR recipient_email = :email) RETURNING id` — no row returned =&gt; 404 (same body as a bad link,
-   never reveal which check failed); the reservation-expiry sweep and reservation cancel
-   decrement use_count for unconfirmed reservations that hold a booking_link_id (never below 0);
+   linkToken is present the link is the credential for the whole private flow. Ordering: (a)
+   validate the link read-only (token_hash = sha256(token), revoked_at IS NULL, expires_at &gt;
+   now(), use_count &lt; max_uses, recipient match) -&gt; 404 on any failure (same body as a bad
+   link, never reveal which check failed); (b) acquire the Redis slot lock (reserveSlot); (c)
+   ONLY THEN, inside the single durable reservation transaction that INSERTs slot_reservations,
+   claim the use atomically with the conditional `UPDATE booking_links SET use_count =
+   use_count + 1 WHERE id = :id AND revoked_at IS NULL AND expires_at &gt; now() AND use_count &lt;
+   max_uses AND (recipient_email IS NULL OR recipient_email = :email) RETURNING id` — no row =&gt;
+   the transaction rolls back, the slot lock is released and the caller gets 404. The use and the
+   reservation therefore commit or fail together: a lost lock race or a DB error never consumes
+   a use without a reservation to compensate it. The reservation-expiry sweep and reservation
+   cancel decrement use_count for unconfirmed reservations that hold a booking_link_id (never
+   below 0); test: lock acquisition fails after link validation -&gt; use_count unchanged;
    /payments/intent and /bookings/confirm re-check revoked_at on the stored booking_link_id and
    reject with 404 when revoked meanwhile; snapshots
    mode, location_id, language, member_country, booking_link_id and the link price override onto
@@ -2380,7 +2398,8 @@ PR 04.2 — funnel + payment + marketing/legal:
    &quot;pi:&quot; + reservationId, then COMMITS so bookingId exists before Stripe is called; step 2 (no
    transaction) creates the Stripe PaymentIntent via @eleva/billing with that idempotency key:
    amount = reservation price_cents,
-   currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
+   currency = reservation currency (the snapshot — never a constant), automatic_payment_methods
+   enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
@@ -2688,9 +2707,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 4B TASK&quot; section further down is
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b
-  phase-04b.1/practice-locations-schedules-calendars (second PR:
-  phase-04b.2/event-type-builder-links-editor). Each under 150 reviewable files.
+- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04b.1/practice-locations-schedules-calendars
+- Second PR (opened after the first merges): phase-04b.2/event-type-builder-links-editor. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -2748,8 +2766,12 @@ PR 04b.1 — practice scope, locations, schedules, Eleva calendar, connected cal
    (expert_integration: connected|updated|disconnected; calendar_busy_source: updated;
    calendar_destination: updated; calendar_feed_token: rotated|revoked). Update @eleva/api-client.
 2. @eleva/calendar: BusyTimeProvider reads every enabled calendar_busy_sources row in parallel
-   (Promise.all, 5-min Redis cache per calendar), tolerates one failing provider (log + mark the
-   integration reconnect_required, continue); destination resolution order mode destination
+   with Promise.allSettled (5-min Redis cache per calendar); each rejected result is logged
+   (no token material), marks the integration reconnect_required inside withAudit
+   (expert_integration: updated) and is dropped, while every fulfilled result is merged — the
+   fan-out itself never rejects and the response carries `degradedSources: string[]` so the UI
+   can warn; test: one provider throws -&gt; the other providers&#39; busy intervals are still applied
+   and the failing integration is flagged; destination resolution order mode destination
    override &gt; event type destination override &gt; calendar_destinations default &gt; ICS e-mail
    fallback (Phase 8 sends);
    feed generator generateIcsFeed({ expertProfileId }) with stable UIDs (bookingId@eleva.care).
@@ -2919,7 +2941,10 @@ future bookings with 100% refund — see prompt deliverable 3).</li>
 </ul>
 </li>
 <li><code>apps/api</code>: <code>GET /me</code> (profile + preferences), <code>PATCH /me</code>, <code>GET /me/bookings</code>,
-<code>GET /me/payments</code>, <code>PUT /me/notification-preferences</code>, <code>POST /privacy/dsar</code>,
+<code>GET /me/payments</code>, <code>PUT /me/notification-preferences</code>, <code>GET /me/consents</code> (every consent
+kind with version, granted_at, withdrawn_at), <code>PUT /me/consents</code> (grant or withdraw one kind;
+withdrawal of <code>health_data_processing</code> is refused with 409 while a confirmed future booking
+exists, audited <code>consent: granted|withdrawn</code>), <code>POST /privacy/dsar</code>,
 <code>GET /privacy/dsar/[id]</code>, <code>POST /privacy/delete-account</code>; workflow routes
 <code>POST /workflows/dsar-export</code> and <code>POST /workflows/account-deletion-sweep</code> (QStash triggered).</li>
 <li><code>@eleva/compliance</code>: <code>dsarExport(userId)</code> built on a <strong>collector registry</strong> — this phase
@@ -2952,6 +2977,11 @@ booking.</li>
 Phase 6); reschedule moves the booking and releases the old slot.</li>
 <li><input disabled="" type="checkbox"> Receipt URL opens Stripe-hosted receipt; payments list matches <code>booking_payments</code>.</li>
 <li><input disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
+<li><input disabled="" type="checkbox"> <code>GET /me/consents</code> lists every kind with its version; <code>PUT /me/consents</code> withdraws
+<code>marketing</code> immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend
+Audience removal) and returns 409 for <code>health_data_processing</code> while a confirmed future
+booking exists. (<code>analytics</code> joins <code>CONSENT_KINDS</code> in Phase 13, which adds the PostHog
+opt-out check to this route&#39;s tests.)</li>
 <li><input disabled="" type="checkbox"> DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
 (signed URL) after 24h; audit rows present.</li>
 <li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API before money
@@ -2962,8 +2992,9 @@ cancelled with refund_pending by the deletion sweep; audited.</li>
 </ul>
 <h2 id="05-member-app--tests"><a class="anchor" href="#05-member-app--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
-<li>vitest: preferences validation, DSAR export content shape (no PHI leak beyond the user&#39;s own),
-cancel/reschedule policy edge cases.</li>
+<li>vitest: preferences validation, consent grant/withdraw transitions (409 guard, version bump
+re-prompt), DSAR export content shape (no PHI leak beyond the user&#39;s own), cancel/reschedule
+policy edge cases.</li>
 <li>Playwright: <code>member.spec.ts</code>.</li>
 </ul>
 <h2 id="05-member-app--docs-to-update"><a class="anchor" href="#05-member-app--docs-to-update" aria-label="Link to section">#</a>Docs to update</h2>
@@ -3152,7 +3183,14 @@ the platform fee (<code>15%</code> default, <code>8%</code> Top Expert, <code>0%
 <code>booking_payments.applied_commission_bps</code>.</li>
 <li><strong>Payout engine</strong> (port from MVP <code>process-expert-transfers</code>, <code>process-pending-payouts</code>,
 <code>check-upcoming-payouts</code>, <code>transfer-utils.ts</code>): <code>payout_states</code> table (booking_payment_id,
-status <code>pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed</code>,
+status <code>pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed</code> (this
+union is the SSOT — <code>payments-payouts-spec.md</code> &quot;Payout States&quot; is rewritten to it in this
+phase), <code>hold_reasons text[]</code> (set semantics, values <code>dispute|manual</code>; a hold ADDS its reason,
+a dispute won or a staff release REMOVES its reason, and only when the set becomes empty does
+the row leave <code>held</code>) + <code>held_from_status</code> (the status the row had when the FIRST reason was
+added; restored when the set empties, then cleared; there is no separate <code>released</code> state;
+tests apply dispute-then-manual and manual-then-dispute and assert the payout stays <code>held</code>
+until both are cleared),
 <code>eligible_at</code>, <code>scheduled_for</code>, <code>destination_org_id</code> + <code>destination_connect_account_id</code>
 (immutable snapshot written when the row is created — the expert&#39;s org/account in this phase;
 Phase 11 writes the clinic&#39;s when <code>payout_mode = clinic</code>; transfers, refunds, reconciliation
@@ -3161,8 +3199,9 @@ and retries read <strong>only</strong> this snapshot, never the current profile 
 <code>stripe_payout_id</code>, <code>hold_reason</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
 <code>source_transaction</code>; approval required when <code>amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS</code>
 (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
-the tests), first payout for an account,
-dispute open, or manual hold; retries with backoff and DLQ.</li>
+the tests) or first payout for an account — those are the only two <code>approval_required</code>
+reasons; an open dispute or a manual hold puts the row in <code>held</code> (with <code>held_from_status</code>),
+never in <code>approval_required</code>, and <code>approve</code> on a row whose payment has <code>dispute_status = open</code> is refused with 409 DISPUTE_OPEN; retries with backoff and DLQ.</li>
 <li><strong>Workflows</strong> (<code>packages/workflows/src/payments/*</code>, routes under <code>apps/api/src/app/workflows/*</code>,
 QStash schedules in <code>infra/qstash</code>): <code>process-expert-transfers</code> (every 2h),
 <code>process-pending-payouts</code> (06:00), <code>check-upcoming-payouts</code> (daily notice), <code>cleanup-expired- reservations</code> (every 15 min, existing), <code>stripe-stuck-events</code> (existing).</li>
@@ -3170,12 +3209,17 @@ QStash schedules in <code>infra/qstash</code>): <code>process-expert-transfers</
 full or partial; refund the platform charge, <code>reverse_transfer: true</code> when a transfer was
 already made, and reduce the ledger fee proportionally — there is no Stripe application fee
 object in this funds flow);
-webhook handlers for <code>charge.refunded</code>, <code>charge.dispute.created/closed</code>, <code>transfer.created/ reversed</code>, <code>payout.paid/failed</code>, <code>account.updated</code>, <code>identity.verification_session.verified/ requires_input</code>, <code>payment_intent.succeeded/payment_failed/canceled</code> — all added to <strong>both</strong>
+webhook handlers for <code>charge.refunded</code>, <code>charge.dispute.created/closed</code>, <code>transfer.created/ reversed</code>, <code>payout.paid/failed</code>, <code>account.updated</code>, <code>capability.updated</code>,
+<code>identity.verification_session.verified/requires_input</code>,
+<code>payment_intent.succeeded/payment_failed/canceled</code> — all added to <strong>both</strong>
 <code>packages/billing/src/server/webhook.ts</code> and <code>infra/stripe/setup-webhooks.ts</code>.</li>
 <li><strong>Expert finance UI</strong> (<code>apps/expert/[orgSlug]/finance</code>): earnings summary, per-booking table
 (gross, fee, net, state, eligible date), payouts (Embedded Payouts component), export CSV.</li>
 <li><strong>Admin hooks</strong> (data only; UI in Phase 12): approval endpoint <code>POST /payouts/[id]/approve</code>,
-<code>POST /payouts/[id]/hold</code>, <code>GET /payouts?status=</code>.</li>
+<code>POST /payouts/[id]/hold</code> (adds <code>manual</code> to <code>hold_reasons</code>), <code>POST /payouts/[id]/release</code>
+(staff-only; removes <code>manual</code>; the row returns to <code>held_from_status</code> only if no other reason
+remains — with an open dispute it stays <code>held</code> and the response says so; audited
+<code>payout: released</code>), <code>GET /payouts?status=</code>.</li>
 <li>Stripe test clocks / fixtures for tests; <code>infra/stripe/README.md</code> updated.</li>
 </ul>
 <p>Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Phase 12).</p>
@@ -3183,8 +3227,11 @@ webhook handlers for <code>charge.refunded</code>, <code>charge.dispute.created/
 <ol>
 <li>Migration: <code>payout_states</code>, <code>booking_payments</code> additions (<code>applied_commission_bps</code>,
 <code>refunded_cents</code>, <code>dispute_status</code>), <code>billing_customers.connect_*</code> status fields; RLS + audit
-unions (<code>payout: scheduled|approval_required|approved|held|transferred|paid_out|failed|reversed</code>;
-<code>refund: requested|succeeded|failed</code>; <code>dispute: opened|closed</code>).</li>
+unions (<code>payout: scheduled|approval_required|approved|held|released|transferred|paid_out|failed|reversed</code>;
+<code>refund: requested|succeeded|failed</code>; <code>dispute: opened|closed</code>); <code>billing_customers</code>
+Connect capability columns (<code>connect_capabilities</code> jsonb — card_payments/transfers status —
+written by the <code>capability.updated</code> handler) and the parity acceptance criterion below covers
+that event.</li>
 <li><code>@eleva/billing/server</code>: <code>commission.ts</code> (SSOT + tests), <code>payouts.ts</code> (eligibility, schedule,
 transfer, approval), <code>refunds.ts</code>, <code>connect.ts</code> updates (controller, requirements),
 <code>webhook.ts</code> handlers + tests, <code>identity.ts</code> updates.</li>
@@ -3204,7 +3251,11 @@ Lisbon; <code>process-expert-transfers</code> creates a Stripe Transfer with <co
 appears in the expert&#39;s Embedded Payouts component; <code>payout.paid</code> marks <code>paid_out</code>.</li>
 <li><input disabled="" type="checkbox"> Refund before transfer: charge refunded, ledger fee reduced, state <code>reversed</code>; refund after
 transfer: <code>reverse_transfer</code> executed; ledger consistent; audit rows present.</li>
-<li><input disabled="" type="checkbox"> Dispute opened -&gt; payout <code>held</code>; dispute closed won -&gt; released; lost -&gt; <code>reversed</code>.</li>
+<li><input disabled="" type="checkbox"> Dispute opened -&gt; payout <code>held</code>, <code>hold_reasons = {dispute}</code>, <code>held_from_status</code> recorded;
+dispute closed won -&gt; <code>dispute</code> removed and, if the set is empty, status restored to
+<code>held_from_status</code> (e.g. back to <code>scheduled</code>, or <code>paid_out</code> when funds had already moved)
+and the column cleared; with a manual hold also present the row stays <code>held</code>; lost -&gt;
+<code>reversed</code> (transfer reversed when one exists). Both hold orders tested.</li>
 <li><input disabled="" type="checkbox"> Approval-required path: first payout goes to <code>approval_required</code>; <code>POST /payouts/[id]/approve</code>
 schedules it; audited with actor.</li>
 <li><input disabled="" type="checkbox"> <code>WEBHOOK_EVENTS</code> in <code>infra/stripe/setup-webhooks.ts</code> equals the dispatcher switch cases
@@ -3278,7 +3329,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 6 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-06.1/connect-onboarding-hardening
-  (second PR: phase-06.2/payout-engine-refunds). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -3343,7 +3394,13 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    sessionEnd+24h) snapped to next 04:00 Europe/Lisbon (use Temporal polyfill or date-fns-tz;
    tests for DST); schedulePayout(bookingPaymentId) (approval_required when: first payout of the
    account, amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS env (default 50000; inclusive — add a
-   unit test at exactly the threshold), open dispute, manual hold); executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
+   unit test at exactly the threshold) — the only two reasons; dispute open and manual hold go to
+   held with held_from_status, and approve returns 409 DISPUTE_OPEN while a dispute is open);
+   holds are a set: hold_reasons text[] {dispute|manual}; applyHold(id, reason) adds the reason
+   (the first one records held_from_status), clearHold(id, reason) removes it and restores
+   held_from_status only when the set is empty; releaseHold(payoutStateId) = clearHold(id,
+   &quot;manual&quot;) and reports the remaining reasons; tests for both application orders;
+   executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
    destination: payoutState.destination_connect_account_id, transfer_group: bookingId,
    source_transaction: chargeId, metadata },
    { idempotencyKey: payoutState.transfer_idempotency_key }) — a UUID column written once when
@@ -3354,7 +3411,9 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
    reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
    the ledger fee reduced proportionally (no application fee object exists in this funds flow);
-   dispute handling sets held / reversed.
+   dispute handling: charge.dispute.created = applyHold(id, &quot;dispute&quot;); closed won =
+   clearHold(id, &quot;dispute&quot;); closed lost sets reversed (reverse_transfer when a transfer exists);
+   state-machine test covers every transition in the union above.
 7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.payment_failed, payment_intent.canceled,
    charge.refunded, charge.dispute.created, charge.dispute.closed, transfer.created,
@@ -3368,9 +3427,10 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
 9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund for the owning
    expert org, or staff capability admin_payouts:refund), GET /payouts?status&amp;orgId (expert sees
    own org only — orgId must equal the session&#39;s active org or 403; staff with
-   admin_payouts:read see all), POST /payouts/[id]/approve and POST /payouts/[id]/hold
-   ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles: [&quot;platform_admin&quot;,
-   &quot;staff_finance&quot;] }) + capability admin_payouts:approve / admin_payouts:hold from
+   admin_payouts:read see all), POST /payouts/[id]/approve, POST /payouts/[id]/hold and POST
+   /payouts/[id]/release ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles:
+   [&quot;platform_admin&quot;, &quot;staff_finance&quot;] }) + capability admin_payouts:approve / admin_payouts:hold
+   (hold and release share it) from
    packages/auth/src/permissions.ts (add both), reason required (400 when empty), withAudit with
    actor + reason + previous/next payout state; experts and members get 403 (table-driven test
    covering member, expert owner, staff_support, staff_finance, platform_admin). GET
@@ -3510,8 +3570,7 @@ audit unions (<code>invoice: issued|failed|credited|manual_marked</code>; <code>
 <ul>
 <li><input disabled="" type="checkbox"> Paid booking on staging -&gt; <code>platform_fee_invoices</code> row is <code>pending</code> synchronously in the
 <code>payment_intent.succeeded</code> handler and <code>issued</code> by the workflow worker within <strong>60 s</strong>
-(SLA asserted by the test with polling; the QStash job retries with backoff and a
-<code>failed</code> status + alert after 5 attempts). Issuance is a hard precondition of the expert
+(SLA asserted by the test with polling). Retry policy — fast stage: QStash retries the issuance job with exponential backoff up to <strong>5 attempts</strong>, then sets <code>status = failed</code> and alerts (Sentry + ops e-mail); slow stage: <code>invoicing-retry</code> (every 30 min) re-processes <code>failed</code> rows with backoff up to <strong>10 further attempts</strong>, then sets <code>status = dead_lettered</code>, writes <code>workflow_dead_letters</code> and raises the admin flag (Phase 12 queue). One policy, referenced by the workflow, the tests and <code>operator-tasks/toconline-setup.md</code>. Issuance is a hard precondition of the expert
 transfer: the Phase 6 payout engine refuses to create a Stripe transfer while the
 booking&#39;s fee invoice is not <code>issued</code> (also verified with a payout left in
 <code>approval_required</code>, where the invoice must still reach <code>issued</code> without any transfer).
@@ -3590,7 +3649,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 7 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.1/tier1-platform-fee-invoices
-  (second PR: phase-07.2/tier2-expert-adapters). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-07.2/tier2-expert-adapters. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -3629,15 +3688,21 @@ PR 07.1 — Tier 1 (Eleva platform):
    (staging uses TEST-ELEVA-FEE), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
 2. packages/db: platform_fee_invoices (booking_payment_id PK, expert_org_id, series, number,
    toconline_document_id, amount_cents, iva_rate_bps, iva_regime pt_standard|eu_reverse_charge|
-   eu_standard|non_eu_zero, status pending|issued|failed|credited, pdf_url, at_status, issued_at,
+   eu_standard|non_eu_zero, status pending|issued|failed|dead_lettered|credited (the retry
+   policy in item 3 uses pending -&gt; issued | failed -&gt; dead_lettered; credited after a credit
+   note; manual_pending belongs to expert_invoices only), pdf_url, at_status, issued_at,
    error, attempts), platform_fee_credit_notes, clinic_saas_invoices (subscription_id +
    period_start PK, ...), accounting_reconciliation_runs (month, stripe_fee_total_cents,
    invoiced_total_cents, mismatch_bps, status, details jsonb, created_at). RLS; audit unions.
 3. Trigger: in the payment_intent.succeeded webhook handler (@eleva/billing), after the ledger row
    is written, insert the platform_fee_invoices row as pending in the same transaction and enqueue
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
-   event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
-   with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
+   event must not create a second invoice). Completion SLA: issued within 60 s. Retry policy
+   (single SSOT, same wording as the acceptance criteria): fast stage = QStash exponential
+   backoff, max 5 attempts, then status failed + alert (Sentry + ops email); slow stage =
+   invoicing-retry sweep (item 4) re-processes failed rows every 30 min, max 10 further attempts,
+   then status dead_lettered + workflow_dead_letters row + admin flag. platform_fee_invoices
+   status union: pending|issued|failed|dead_lettered|credited (item 2).
    Domain events (transactional outbox): the domain_events_outbox table, emitDomainEvent(tx,
    event) in packages/workflows/src/domain-events.ts and POST /workflows/domain-events-publisher
    (FOR UPDATE SKIP LOCKED, subscriber registry, dead-letter after 10) already exist from Phase 4
@@ -3655,8 +3720,9 @@ PR 07.1 — Tier 1 (Eleva platform):
    this phase. On refund or transfer
    reversal with an issued invoice -&gt; issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
-4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
-   failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-
+4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min; slow stage of
+   the retry policy in item 3: re-processes failed rows with backoff, max 10 further attempts,
+   then dead_lettered + workflow_dead_letters + admin flag; test the 5 + 10 boundary), stripe-toconline-
    reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
    per expert net of refunds — there is NO Stripe application-fee object in the separate charges
    and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
@@ -3746,7 +3812,10 @@ Audiences, PHI-free).</p>
 <p>In:</p>
 <ul>
 <li><code>@eleva/notifications</code> (sole importer of <code>resend</code> and <code>twilio</code>):
-<code>sendNotification({ kind, recipient, orgId, ctx, idempotencyKey, channelsOverride? })</code> where
+<code>sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })</code> — the
+one contract (this signature is copied verbatim into the prompt below and into
+<code>notifications-spec.md</code>; urgency is <strong>not</strong> a parameter, it is a property of the kind in
+<code>NOTIFICATION_KINDS</code>; <code>channelsOverride</code> may only narrow the kind&#39;s default channels) — where
 <code>recipient</code> is a discriminated union <code>{ userId }</code> <strong>or</strong> <code>{ email, locale? }</code> — the e-mail
 mode exists for recipients who have no account yet (<code>auth.org_invitation</code> to a new address,
 guest booking confirmations before activation) and is <strong>email-only</strong>: no preferences lookup,
@@ -3757,11 +3826,31 @@ preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders
 is <code>user_id</code> or, for e-mail mode, <code>recipient_email</code>). The delivery row is <strong>claimed before the
 provider is called</strong>: insert <code>status = queued</code> (the unique key makes a concurrent/retried call
 hit the conflict and return the existing row — if it is <code>sent</code>, stop; if <code>queued</code> older than
-60 s, re-claim), then call Resend/Twilio with a provider idempotency key equal to the row id
-(Resend <code>Idempotency-Key</code> header; Twilio has none, so the claimed row is the only guard), then
-update to <code>sent</code>/<code>failed</code> with <code>provider_id</code>. A crash between provider accept and the update
-leaves a <code>queued</code> row that the retry re-claims and re-sends <strong>with the same provider
-idempotency key</strong>, so the provider deduplicates instead of the user receiving two e-mails. Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</code>,
+60 s, re-claim with an atomic lease: <code>UPDATE ... SET lease_owner = :runId, claimed_at = now() WHERE id = :id AND status = &#39;queued&#39; AND claimed_at &lt; now() - interval &#39;60 s&#39; RETURNING id</code> —
+no row means another worker holds it; the completion update is likewise guarded by
+<code>WHERE lease_owner = :runId AND claimed_at = :claimedAt</code>, so a worker whose lease was taken
+over never overwrites the newer result; the first claim is the INSERT itself, which always
+writes <code>lease_owner = :runId, claimed_at = now()</code> (both columns NOT NULL), so no <code>queued</code> row
+ever exists without a lease and a crash before the provider call is reclaimed by the same
+60 s rule), then call the provider, then update to
+<code>sent</code>/<code>failed</code> with <code>provider_id</code>. <strong>E-mail is an idempotent provider submission</strong> (not a
+recipient-delivery guarantee): Resend gets an <code>Idempotency-Key</code> header equal to the row id
+and deduplicates the same key for 24 h, so a crash between provider accept and the update
+leaves a <code>queued</code> row that the retry re-claims and re-sends with the same key without a
+second e-mail; retries older than 24 h go through the same reconciliation as SMS (Resend
+<code>emails.list</code> by recipient + tag <code>deliveryId</code>). <strong>SMS is at-least-once</strong> and is documented and tested as such: Twilio
+has no idempotency key, so every SMS carries a <code>StatusCallback</code> URL
+<code>POST /webhooks/twilio/status?deliveryId=&lt;rowId&gt;</code> (Twilio signature validated) that marks the
+row <code>sent</code> with the Message SID even when the sending process died; before re-sending a stale
+<code>queued</code> SMS row the worker reconciles by listing Twilio messages to that number sent after
+<code>claimed_at</code> and adopts a message only when its body equals the row&#39;s rendered body — every
+SMS body ends with a per-delivery reference <code>Ref &lt;8-char base32 of the row id&gt;</code>, so the
+rendered text (<code>sms_body_hash</code> stored at claim time) is unique per delivery row and a match
+identifies exactly this send; two rows can never share a body, a message with a different
+body is never adopted, and if no identical message exists the row is re-sent (the documented
+at-least-once duplicate); SMS templates are written to be
+harmless if received twice (no one-time codes without expiry, reminders idempotent in
+wording). Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</code>,
 <code>booking.reminder_1h</code>, <code>booking.cancelled</code>, <code>booking.rescheduled</code>, <code>payment.failed</code>,
 <code>payment.receipt</code>, <code>payout.paid</code>, <code>payout.approval_required</code> (staff), <code>invoice.issued</code>,
 <code>invoice.failed</code> (expert), and the auth kinds <code>auth.magic_link</code>, <code>auth.verify_email</code>,
@@ -3770,7 +3859,7 @@ union exported as the <code>NOTIFICATION_KINDS</code> const from <code>@eleva/no
 declares its default channels, urgency and template id); <strong>later phases extend the const in
 their own PR</strong> together with the template, channel policy, i18n copy and a delivery test —
 the owning phase per kind: Phase 10 <code>crm.follow_up_due</code>; Phase 11 <code>team.invitation</code>,
-<code>team.member_joined</code>; Phase 12 <code>partner.approved</code>, <code>partner.rejected</code>,
+<code>team.member_joined</code>, <code>clinic.verified</code>, <code>clinic.rejected</code>; Phase 12 <code>partner.approved</code>, <code>partner.rejected</code>,
 <code>partner.needs_changes</code>; Phase 14 <code>calendar.reconnect_required</code>, <code>migration.welcome</code>. A kind
 that is not in the const does not compile. <strong>Boundary:</strong> this phase
 makes <code>@eleva/email</code> renderer-only (React Email templates, no <code>resend</code> import — boundary lint)
@@ -3814,7 +3903,7 @@ status; suppress future sends on hard bounce.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
 before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on <masked
-                    number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
+                                        number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
 instructions; the ICS <code>LOCATION</code> follows the same rule.</li>
 <li><input disabled="" type="checkbox"> Booking confirmation email arrives in the member&#39;s locale with ICS attached; expert receives
 &quot;new booking&quot;; in-app rows created for both.</li>
@@ -3902,6 +3991,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    created_at), notification_deliveries (id, idempotency_key, kind, user_id nullable,
    recipient_email nullable, CHECK (num_nonnulls(user_id, recipient_email) = 1), channel email|
    sms|in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id,
+   lease_owner text NOT NULL, claimed_at timestamptz NOT NULL (written by the INSERT — the first
+   claim — and by every re-claim; the reclaim UPDATE requires claimed_at &lt; now() - 60 s),
+   sms_body_hash text nullable
+   (sha256 of the rendered SMS body, used by the Twilio reconciliation match),
    error, created_at, updated_at, unique(idempotency_key, coalesce(user_id::text, recipient_email),
    channel) as a unique expression index — the recipient is part of the key because one event (a
    booking confirmation) fans out to member AND expert; callers pass a per-event idempotencyKey
@@ -3910,16 +4003,33 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    created_at), phone_verifications (user_id, phone_e164, code_hash, expires_at, verified_at).
    RLS by user/org; audit unions (notification: sent|failed|suppressed; phone: verified).
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind, recipient,
-   orgId, ctx, idempotencyKey, urgency normal|urgent }) with recipient: { userId: string } |
-   { email: string; locale?: Locale }. userId mode -&gt; load user locale, preferences (Phase 5
+   orgId?, ctx, idempotencyKey, channelsOverride? }) with recipient: { userId: string } |
+   { email: string; locale?: Locale }; urgency (normal|urgent) comes from NOTIFICATION_KINDS[kind],
+   never from the caller; channelsOverride may only narrow the kind&#39;s channels (Zod refine).
+   userId mode -&gt; load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list -&gt;
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app -&gt;
-   CLAIM the notification_deliveries row FIRST (insert status queued; on unique conflict read the
-   existing row: sent -&gt; return it, queued older than 60 s -&gt; re-claim, otherwise return) -&gt; call
-   the provider with a provider idempotency key = the row id (Resend Idempotency-Key header; Twilio
-   has none, the claimed row is the guard) -&gt; update the row to sent|failed with provider_id. Never
-   send before the row exists. Test: kill the process between provider accept and the update
-   (mock), retry -&gt; one provider call with the same Idempotency-Key, one sent row. email mode (recipient has no account yet — used by
+   CLAIM the notification_deliveries row FIRST (INSERT status queued WITH lease_owner = runId
+   and claimed_at = now() — both NOT NULL, the insert is the first claim; on unique conflict
+   read the existing row: sent -&gt; return it, queued with claimed_at older than 60 s -&gt; re-claim
+   with the atomic lease UPDATE (lease_owner, claimed_at; zero rows =&gt; another worker owns it,
+   return), otherwise return) -&gt; call the provider -&gt; complete with a compare-and-swap: UPDATE
+   ... SET status = sent|failed, provider_id WHERE id = :id AND lease_owner = :runId AND
+   claimed_at = :claimedAt — zero rows means the lease was taken over by a newer worker, so the
+   stale worker logs and exits WITHOUT touching the row (it never overwrites the newer result;
+   test: a provider call that outlives the 60 s lease + a reclaiming worker -&gt; exactly one final
+   state, the newer one). Never send before the row exists. E-mail: Resend Idempotency-Key = row id
+   (idempotent provider submission — Resend deduplicates the same key for 24 h; test: kill the
+   process between provider accept and the update (mock), retry -&gt; one provider call with the
+   same key, one sent row). SMS: at-least-once — Twilio StatusCallback
+   POST /webhooks/twilio/status?deliveryId=&lt;rowId&gt; (validate X-Twilio-Signature; marks sent +
+   Message SID even if the sender crashed); before re-sending a stale queued SMS row, list
+   Twilio messages to that number with dateSentAfter = claimed_at and adopt one only when
+   sha256(body) === sms_body_hash — bodies are unique per row because every SMS ends with
+   &quot;Ref &lt;8-char base32 of the row id&gt;&quot; (never a different body; none =&gt; re-send); tests:
+   (a) crash after Twilio accept + callback arrives -&gt; row sent, no second send; (b) crash and
+   no callback -&gt; reconciliation finds the SID -&gt; no second send; (c) reconciliation finds
+   nothing -&gt; one re-send (documented duplicate). email mode (recipient has no account yet — used by
    auth.org_invitation when the invitee e-mail is unknown to auth.user, and by guest booking
    confirmations before activation) -&gt; email channel only, locale from the argument or the org
    default, suppression list applied, no preferences/SMS/in-app, row keyed by recipient_email.
@@ -4029,13 +4139,28 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 <code>eject_at_room_exp: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
 <code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
 <li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
-(<code>scheduled|live|ended|no_show|cancelled</code>), <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>
+(<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
+the API types and the state machine), <code>room_create_attempt_at</code>, <code>room_request_id</code>,
+<code>last_event_at</code>, <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>
 (join/leave history only — never used for authorization), RLS for expert org + buyer org.</li>
 <li><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
-<code>booking_id</code>, <code>user_id</code>, <code>role</code> (<code>delegate|supervisor</code>), <code>added_by</code>, <code>added_at</code>, unique
-(<code>booking_id</code>, <code>user_id</code>); RLS expert org + the participant&#39;s own row; written only by
+<code>booking_id</code>, <code>user_id</code>, <code>role</code> (<code>delegate|supervisor</code>), <code>added_by</code>, <code>added_at</code>, <code>revoked_at</code>,
+<code>ejected_at</code>, unique (<code>booking_id</code>, <code>user_id</code>); RLS expert org + the participant&#39;s own row;
+written only by
 <code>POST /sessions/[bookingId]/participants</code> (assigned expert only, audited
-<code>session.participant_added</code>) and <code>DELETE …/participants/[userId]</code> (<code>session.participant_removed</code>).</li>
+<code>session.participant_added</code>) and <code>DELETE …/participants/[userId]</code> (<code>session.participant_removed</code>).
+Daily meeting tokens are signed JWTs and cannot be revoked, so removal is a two-phase
+operation that is safe in both failure directions: phase 1 (transaction) sets
+<code>session_participants.revoked_at = now()</code> (a deny state — <code>join</code> requires <code>revoked_at IS NULL</code>, so no new token can be minted from this instant) inside withAudit
+<code>session.participant_removed</code>; phase 2 calls Daily <code>POST /rooms/{name}/eject</code> with
+<code>user_ids: [userId]</code> and <code>ban: true</code> (idempotent — no live participant is a no-op) with a
+10 s timeout and bounded retry, then sets <code>ejected_at</code>; the route returns 200 when both
+phases succeeded and 202 <code>{ ejectionPending: true }</code> when Daily failed — the row stays revoked
+and <code>POST /workflows/video-eject-retry</code> (QStash, every minute while rows have <code>revoked_at</code>
+and no <code>ejected_at</code>) completes the ejection. Rows are never hard-deleted while the session
+exists (revoked rows are history). Tests: Daily 5xx -&gt; row revoked, join 403, retry job ejects;
+DB failure after a successful eject cannot re-authorize because the eject is only attempted
+after phase 1 committed; mint -&gt; remove -&gt; rejoin 403.</li>
 <li>Workflow: on booking confirmed -&gt; <code>ensureSessionRoom(bookingId)</code> (idempotent; returns early
 unless the booking&#39;s snapshotted <code>mode = &#39;online&#39;</code>; also run by a QStash sweep 1h before start
 for online bookings without a room — the sweep query itself filters <code>mode = &#39;online&#39;</code>); on
@@ -4043,9 +4168,14 @@ cancel -&gt; <code>deleteRoom</code> (no-op when no room).</li>
 <li>API: <code>POST /sessions/[bookingId]/join</code> -&gt; checks the caller is the booking&#39;s assigned expert,
 the booking&#39;s member, or an explicitly delegated participant of that booking (never &quot;any
 member of the expert org&quot;; non-participants get 403 <code>NOT_A_PARTICIPANT</code>) and that now is
-within <code>[startAt-15m, endAt+30m]</code>, mints a token, returns <code>{ roomUrl, token, expiresAt }</code> (rate limited, audited <code>session.joined</code>); <code>POST /webhooks/daily</code> handles
+within <code>[startAt-15m, endAt+30m]</code>, mints a token, returns <code>{ roomUrl, token, expiresAt }</code> (rate-limited, audited <code>session.joined</code>); <code>POST /webhooks/daily</code> handles
 <code>meeting.started</code>, <code>meeting.ended</code>, <code>participant.joined</code>, <code>participant.left</code> (Daily webhook
-payloads; verify signature; idempotent by event id) -&gt; session status + <code>emitDomainEvent</code>.</li>
+payloads; verify signature; idempotent by event id <strong>and ordered by event time</strong>: Daily
+delivers roughly, not strictly, in order, so the handler persists the payload&#39;s event
+timestamp on <code>sessions.last_event_at</code> and applies a transition only when the incoming
+timestamp is newer — a late <code>meeting.started</code> can never overwrite <code>ended</code>; <code>sessions.status</code>
+is a monotonic machine <code>scheduled -&gt; live -&gt; ended</code>, and <code>participant.*</code> events after <code>ended</code>
+only append history) -&gt; session status + <code>emitDomainEvent</code>.</li>
 <li>Join pages: <code>apps/app/[orgSlug]/sessions/[bookingId]/join</code> and
 <code>apps/expert/[orgSlug]/sessions/[bookingId]/join</code> using <code>@eleva/video/client</code> components:
 prejoin device check, waiting room (&quot;Your expert will join shortly&quot;), in-call UI (mute, camera,
@@ -4179,15 +4309,30 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    selection + preview, waiting state until the other participant joins, controls (mic, camera,
    screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification.
+   webhook verification. Room creation has no client idempotency key at Daily, so
+   ensureSessionRoom is made safe against lost responses: (a) before POST /rooms it writes
+   sessions.room_create_attempt_at and a random room_request_id stored in the Daily room
+   properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
+   call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
+   it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
+   room whose meta.room_request_id matches; (d) if none matches it retries once with a new
+   room_request_id, and if that also fails to resolve it records status = room_unresolved,
+   emits session.room_unresolved and alerts — the sweep never re-creates blindly and admins
+   resolve from Phase 12; deleteRoom on cancel also runs over any adopted duplicate. Test:
+   lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one room.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
-   unique, daily_room_url, status scheduled|live|ended|no_show|cancelled, room_created_at,
-   started_at, ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
+   unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
+   room_created_at, room_create_attempt_at, room_request_id, last_event_at, started_at,
+   ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
-   role delegate|supervisor, added_by, added_at, unique(booking_id, user_id)) — the only source of
-   delegated-join authorization. RLS: expert org and buyer org read sessions; session_participants
+   role delegate|supervisor, added_by, added_at, revoked_at nullable, ejected_at nullable,
+   unique(booking_id, user_id)) — the only source of delegated-join authorization (a row with
+   revoked_at set is a deny). RLS: expert org and buyer org read sessions; session_participants
    readable by the expert org and by the participant; API writes. Audit unions session:
-   room_created|joined|started|ended|room_deleted|participant_added|participant_removed.
+   room_created|joined|started|ended|room_deleted|participant_added|participant_removed|
+   room_unresolved. daily_webhook_events (event_id text PK, type, received_at, processed_at,
+   payload jsonb; 90-day retention sweep; RLS staff-only, no tenant rows) — the idempotency
+   table used by POST /webhooks/daily in item 4; fixture with a replayed meeting.ended.
 3. Workflows: packages/workflows/src/video/ensure-session-room.ts (idempotent: returns existing
    room; guard first: load the booking and return { skipped: &quot;not_online&quot; | &quot;not_confirmed&quot; }
    unless its snapshotted mode = &#39;online&#39; AND status = &#39;confirmed&#39;) invoked from
@@ -4206,8 +4351,17 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    including other members of the expert&#39;s organization, gets 403 NOT_A_PARTICIPANT; window
    [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
    roomExp); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
-   signature -&gt; 401 on failure; idempotency table daily_webhook_events keyed by event id -&gt;
-   update sessions + emitDomainEvent). OpenAPI + client.
+   signature -&gt; 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
+   guard: apply only when payload event time &gt; sessions.last_event_at, status transitions are
+   monotonic scheduled -&gt; live -&gt; ended; test the sequence meeting.ended then a delayed
+   meeting.started -&gt; status stays ended -&gt; update sessions + emitDomainEvent). DELETE
+   .../participants/[userId] deletes the row inside withAudit, then calls Daily
+   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live) and
+   returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
+   true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
+   join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST
+   /workflows/video-eject-retry every minute until ejected_at is set); tests for Daily 5xx and
+   for mint -&gt; remove -&gt; rejoin 403. OpenAPI + client.
 5. Join pages: apps/app/src/app/[orgSlug]/sessions/[bookingId]/join/page.tsx and the expert
    equivalent — server component fetches booking, renders &lt;JoinClient&gt; that calls the join
    endpoint via @eleva/api-client and mounts &lt;ElevaCall&gt;. Add &quot;Join session&quot; buttons (enabled in
@@ -4339,6 +4493,19 @@ calls Daily <code>updateRoom(name, { properties: { enable_recording } })</code> 
 value differs from <code>sessions.recording_enabled</code>; it runs on every consent change and again in
 the <code>join</code> route before the token is minted, so the state is correct whenever anyone enters
 — a room is never re-created and a withdrawn consent flips it back to <code>false</code> the same way.
+The read-compare-update is serialized per booking <strong>without holding a lock across the
+provider call</strong>: step 1 (short transaction, <code>SELECT ... FOR UPDATE</code> on the <code>sessions</code> row)
+re-reads both consents, computes <code>desired</code>, writes <code>recording_desired = desired</code> and
+increments <code>recording_state_version</code> (v), commits; step 2 calls Daily <code>updateRoom</code> with a
+10 s timeout and no lock held; step 3 persists <code>recording_enabled = desired</code> with a
+compare-and-swap <code>WHERE recording_state_version = v</code> — zero rows means a newer desired state
+superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
+therefore never blocks consent writes or joins on a row lock. The <code>join</code> route refuses to mint
+a token while <code>recording_desired &lt;&gt; recording_enabled</code> (it re-runs the sync first, and returns
+503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
+recording state is unknown. Tests: grant/withdraw race (withdrawal committed last) -&gt; final
+Daily state and row both <code>false</code>; Daily timeout during step 2 -&gt; consent write completes in
+&lt; 100 ms and join returns 503 rather than minting.
 Daily <code>enable_recording: &quot;cloud&quot;</code> + transcription webhook <code>transcript.ready</code>/<code>recording.ready-to-download</code>
 -&gt; fetch -&gt; store encrypted (<code>records.kind = transcript</code>) -&gt; <code>draftSessionReport(transcriptId)</code>
 with versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
@@ -4352,11 +4519,16 @@ name</strong>: (1) <code>decryptForOrg</code> returns a <code>Decrypted&lt;T&gt;
 <strong>allow-list</strong> of scalar metadata (<code>recordId</code>, <code>kind</code>, <code>orgId</code>, <code>bookingId</code>, <code>status</code>,
 <code>modelId</code>, <code>tokenCount</code>, <code>durationMs</code>) — its TypeScript type rejects any other key and a unit
 test asserts unknown keys are dropped at runtime; (3) Sentry <code>beforeSend</code>/<code>beforeBreadcrumb</code>
-drop any event whose <code>extra</code>/<code>contexts</code> contain a <code>Decrypted</code> marker or an AI output object
-(<code>summary</code>, <code>observations</code>, <code>recommendations</code>, or any key of the <code>draftSessionReport</code> output
-schema, derived from the Zod schema so new fields are covered automatically). Object-level
-tests feed a full decrypted record and a full AI draft through logger and Sentry and assert
-zero PHI substrings in the output. Because <code>Decrypted&lt;T&gt;</code> serializes to <code>&quot;[redacted]&quot;</code>, API
+walk the <strong>entire</strong> event recursively (<code>message</code>, <code>exception.values[].value</code> and stack frame
+<code>vars</code>, <code>request</code> (url, query, headers, data, cookies), <code>user</code>, <code>tags</code>, <code>extra</code>, <code>contexts</code>,
+<code>breadcrumbs[].data/message</code>, transaction name, spans data) and redact any value that is a
+<code>Decrypted</code> marker or matches an AI output key (<code>summary</code>, <code>observations</code>, <code>recommendations</code>,
+or any key of the <code>draftSessionReport</code> output schema, derived from the Zod schema so new
+fields are covered automatically); unknown top-level fields are dropped (explicit allow-list
+of Sentry event keys), so a new SDK field can never smuggle payloads. Object-level tests feed
+a full decrypted record and a full AI draft through logger and Sentry via <strong>each</strong> of those
+locations (a thrown Error whose message embeds the record, a breadcrumb, request data, a tag,
+a span attribute) and assert zero PHI substrings in the output. Because <code>Decrypted&lt;T&gt;</code> serializes to <code>&quot;[redacted]&quot;</code>, API
 responses <strong>never return it directly</strong>: every authorized read maps it through an explicit
 response DTO (<code>toRecordResponse(decrypted, viewer)</code> in <code>@eleva/records</code>, plain object, Zod
 response schema registered in OpenAPI) that copies exactly the fields the viewer may see; the
@@ -4454,7 +4626,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 10 TASK&quot; s
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
-  (second PR: phase-10.2/crm-ai-reports). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -4575,10 +4747,18 @@ PR 10.2 — CRM + AI reports beta:
    follow-up list). RLS + audit.
 7. Recording/transcription behind flags: Phase 9 rooms are created at confirmation with
    enable_recording false and consent arrives later on the join page, so add
-   syncRoomRecording(bookingId) to @eleva/video: desired = ff.session_recording on AND both
+   syncRoomRecording(bookingId) to @eleva/video (this phase&#39;s migration adds
+   sessions.recording_enabled boolean default false, sessions.recording_desired boolean default
+   false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
+   ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
    updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } }) and persist
-   the new value (idempotent — no call when unchanged); invoke it from the consent write path
+   the new value with the three-step protocol from the Scope section (claim desired +
+   version under a short FOR UPDATE, call Daily lock-free with a 10 s timeout, CAS on the
+   version; join refuses to mint while recording_desired &lt;&gt; recording_enabled) (idempotent — no
+   call when unchanged; race test: grant/withdraw concurrently -&gt; final state false; Daily
+   timeout test -&gt; consent write &lt; 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
+   the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
    minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
    after room creation -&gt; exactly one updateRoom call; withdrawn consent -&gt; flipped back; join with
@@ -4688,7 +4868,14 @@ experts), bookings (list/filter by expert), billing (plan, seats, invoices, port
 settings (profile, public page, branding), notifications inbox (Phase 8 component).</li>
 <li><strong>Clinic public page</strong> at <code>apps/web/[locale]/[clinicSlug]</code> (same <code>/[locale]/[handle]</code> slot that
 Phase 4 gives experts; <code>public_handles</code> decides whether a handle renders an expert or a clinic —
-see deliverable 1): clinic profile with experts grid; <strong>canonical clinic booking route</strong> =
+see deliverable 1), <strong>gated twice</strong>: the whole clinic public surface (page, booking route,
+sitemap entries, signed clinic attribution) renders only when the rollout flag
+<code>ff.clinic_public_pages</code> is on <strong>and</strong> <code>clinic_profiles.verification_status = &#39;verified&#39;</code>;
+<code>pending</code>/<code>rejected</code> clinics return 404 from the page and the booking route, are excluded from
+the sitemap and from <code>public_handles</code> resolution for public rendering, and
+<code>POST /bookings/reserve</code> rejects <code>attribution = clinic</code> for them with 404 (never reveal the
+status); test: pending clinic -&gt; page 404, sitemap omits it, reserve with clinic attribution
+404; verified + flag on -&gt; all three succeed: clinic profile with experts grid; <strong>canonical clinic booking route</strong> =
 <code>/[locale]/[clinicSlug]/[expertUsername]/[eventSlug]</code> (locale-prefixed like every <code>apps/web</code>
 route; Phase 4 owns <code>/[locale]/[username]/[eventSlug]</code> for marketplace bookings), which sets
 <code>attribution = clinic</code> so <code>computeApplicationFee</code> returns 0 bps and payout goes to the clinic&#39;s or the
@@ -4786,7 +4973,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 11 TASK&quot; s
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-11/team-clinics
-- Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if &gt; 150 files.
+- Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap). Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -4900,6 +5087,13 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
 8. apps/web: clinic public page at /[locale]/[clinicSlug] (profile + experts grid; the [handle]
    segment resolves via public_handles to expert or clinic) and the canonical clinic booking
    route /[locale]/[clinicSlug]/[expertUsername]/[eventSlug] with attribution; sitemap entries.
+   Extend NOTIFICATION_KINDS with team.invitation (email mode — the invitee may have no
+   account), team.member_joined, clinic.verified and clinic.rejected (owner-facing e-mail +
+   in-app), each with template pt/en/es, channel policy and delivery test — the Phase 8 contract
+   assigns all four to this phase; clinic.* are consumed by the Phase 12 verification queue.
+   Every one of these (page, booking route, sitemap, attribution on reserve) is gated by
+   ff.clinic_public_pages AND clinic_profiles.verification_status = &#39;verified&#39;; pending/rejected
+   -&gt; 404 and no sitemap entry; tests for both gates.
 9. Tests: seat sync + limits, attribution -&gt; 0 bps, webhook handlers, Tier 1b idempotency,
    RLS for clinic bookings view. e2e/team.spec.ts: create team -&gt; checkout (test card) -&gt; invite -&gt;
    accept -&gt; member visible -&gt; book clinic expert -&gt; 0 fee.
@@ -5063,7 +5257,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 12 TASK&quot; s
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-12.1/admin-users-partners
-  (second PR: phase-12.2/admin-money-ops). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-12.2/admin-money-ops. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -5095,7 +5289,8 @@ PR 12.1 — access, users, partners, experts, bookings:
    that wraps withAudit with actor (+ impersonation context) and reason; reason: &quot;required&quot; rejects (400) any
    POST/PATCH/DELETE without a non-empty reason and is used by every destructive or
    member-affecting write (ban, impersonate, schedule-deletion, approve/reject/needs-changes,
-   commission override, suspend/unsuspend, cancel booking, refund, payout approve/hold);
+   commission override, suspend/unsuspend, cancel booking, refund, payout
+   approve/hold/release/retry, clinic verification approve/reject, Tier 1 invoice retry);
    reason: &quot;optional&quot; is used by the low-impact writes (unban, revoke-sessions, disable-2fa,
    resend-verification, stop-impersonating) which still audit actor, target and route as
    metadata. The route list below marks each with [R] or [O] and the UI dialogs follow the same
@@ -5118,7 +5313,14 @@ PR 12.1 — access, users, partners, experts, bookings:
    invoicing choice, profile completeness, ERS bio check flags), POST /approve { reason } -&gt;
    expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved,
    POST /reject { reason } -&gt; Lane 1 partner.rejected, POST /needs-changes { reason, items }.
-   Clinic verification queue: GET/POST /admin/clinics/verifications/[id]/approve|reject.
+   Clinic verification queue: GET /admin/clinics/verifications, POST
+   /admin/clinics/verifications/[id]/approve [R] { reason } (sets verification_status verified +
+   revalidates the clinic page; Lane 1 kind clinic.verified), POST .../reject [R] { reason }
+   (Lane 1 kind clinic.rejected with reason) — both kinds are registered by Phase 11 in
+   NOTIFICATION_KINDS (template, channel policy, i18n copy, delivery test). Missing-reason test for every [R] route in this phase (table-driven over the route
+   list: ban, impersonate, schedule-deletion, approve/reject/needs-changes, commission override,
+   suspend/unsuspend, cancel booking, refund, payout approve/hold/release/retry, clinic
+   approve/reject, invoice retry -&gt; 400 REASON_REQUIRED).
 4. Experts &amp; orgs: GET /admin/experts?q&amp;status, GET /admin/organizations?q&amp;type, PATCH
    /admin/experts/[orgId] { categories, visibility, topExpertOverride, commissionOverrideBps,
    commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend|unsuspend { reason }.
@@ -5132,10 +5334,19 @@ PR 12.1 — access, users, partners, experts, bookings:
 
 PR 12.2 — money, accounting, ops, flags:
 6. Money: pages and routes over Phase 6/7/11 endpoints: payouts queue (approval_required, held,
-   failed) with approve/hold/retry; refunds dialog (full/partial, reason); disputes list;
+   failed) with approve/hold/release/retry — POST /admin/payouts/[id]/approve [R], /hold [R],
+   /release [R] (removes the manual hold reason; the row leaves held only when no dispute hold
+   remains — the response reports the remaining reasons), /retry [R]
+   { reason } (retry re-uses the existing transfer_idempotency_key — Stripe returns the original
+   transfer for the same key, so a lost response can never double-transfer; a NEW key is minted
+   only in the Phase 6 case, after a confirmed reversed transfer, or when the route first
+   reconciles with `stripe.transfers.list({ transfer_group: bookingId })` and proves no transfer
+   exists for that payout — a failed state alone never mints a key; test both branches);
+   refunds dialog (full/partial, reason) [R]; disputes list;
    subscriptions (teams) with Stripe dashboard deep links (test/live aware). Roles: staff_finance
    and platform_admin only (table-driven test).
-7. Accounting: Tier 1 invoices list + retry, Tier 2 invoices list (status per expert), failed
+7. Accounting: Tier 1 invoices list + retry (POST /admin/invoices/[id]/retry [R] { reason }),
+   Tier 2 invoices list (status per expert), failed
    invoices, reconciliation runs with mismatch details, CSV export (private Blob signed URL).
 8. Ops: GET /admin/ops/stripe-events?status&amp;type + POST /admin/ops/stripe-events/[id]/replay
    (re-run processStripeEvent; idempotent), GET /admin/ops/dlq + POST /replay, GET
@@ -5335,8 +5546,7 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 13 TASK&quot; s
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-13.1/security-observability
-  (second PR: phase-13.2/i18n-performance-e2e). Each under 150 reviewable files (message JSON
-  files count — split further by app if needed).
+- Second PR (opened after the first merges): phase-13.2/i18n-performance-e2e. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); message JSON files count — split further by app if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity &amp;&amp; pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -5713,9 +5923,25 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
    the commands below run as written): pnpm migration:run --dry-run|--apply
-   [--target branch|production] [--since &quot;$LAST_RUN_TS&quot;] (ISO-8601; omitted = full run; the CLI
-   writes the run&#39;s end timestamp to infra/migration/reports/last-run.json and the operator
-   exports it as LAST_RUN_TS before a delta run) [--report FILE] (default
+   [--target branch|production] [--since &quot;$LAST_RUN_TS&quot;] (ISO-8601; omitted = full run; the
+   watermark is a **commit-ordered source** boundary, never the target run end time: the CLI
+   opens one REPEATABLE READ snapshot on the MVP database at the start of the run, records the
+   snapshot&#39;s `now()` as `source_watermark` and `pg_export_snapshot()` as `source_snapshot_id`
+   (the snapshot identity every reader worker imports with SET TRANSACTION SNAPSHOT so all
+   tables are read from the same consistent view; `pg_current_wal_lsn()` is also stored as
+   `source_wal_lsn` but is **informational only** — it is the current write position, not the
+   snapshot boundary, and is never used as a delta or cutover boundary), and reads every table
+   from that snapshot; because a row&#39;s `updated_at` is
+   set at statement time while its commit can land after the snapshot, a delta run selects
+   `updated_at &gt;= source_watermark - MIGRATION_DELTA_OVERLAP` (default 15 min) and relies on the
+   idempotent upsert mappers to make the overlap harmless, and the CLI asserts at snapshot time
+   that no MVP transaction older than the overlap is in flight
+   (`pg_stat_activity.xact_start`, read-only role) — otherwise it aborts with the offending pid
+   so the operator widens the overlap; the **final** cutover delta is exact by construction
+   because Phase 15 runs it only after the MVP is read-only (writes frozen, so no in-flight
+   commit can be missed). The same two values are written to
+   infra/migration/reports/last-run.json; the operator exports source_watermark as LAST_RUN_TS
+   before a delta run) [--report FILE] (default
    infra/migration/reports/run-$(date -u +%Y%m%dT%H%M%SZ).md);
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
@@ -5742,7 +5968,10 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    mode, foreign project rejected, production without confirmation rejected.
    migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
-   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
+   since, source_watermark timestamptz NOT NULL, source_snapshot_id text NOT NULL (both from the
+   MVP snapshot in item 1; printed by migration:verify and included in every report — Phase 15
+   reads source_watermark as LAST_REHEARSAL_TS and applies the same overlap), source_wal_lsn
+   pg_lsn (informational only), overlap_seconds int NOT NULL, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
    target_kind, target_id, unique(source_table, source_id, target_table, target_kind) —
    target_kind is a mapper-defined discriminator, e.g. &quot;user&quot;, &quot;account:credential&quot;,
    &quot;account:google&quot;, &quot;member:personal-space&quot;, so a source row that fans out into several target
@@ -5923,7 +6152,12 @@ verification and 7-day watch; Novu already retired; remove migration schema afte
 <li>Ticked <code>launch-readiness-checklist.md</code> with evidence links; updated DPIA in
 <code>compliance-data-governance.md</code>; <code>apps/docs</code> compliance pages.</li>
 <li>Production configuration scripts applied (<code>stripe:setup:webhooks</code>, <code>stripe:setup:portal</code>,
-<code>qstash:setup</code>, <code>flags:sync</code>, <code>betterstack</code> monitors) with recorded ids in <code>infra/*/README.md</code>.</li>
+<code>qstash:setup</code>, <code>flags:sync</code>, <code>betterstack:setup</code>, <code>daily:setup</code>, <code>resend:setup</code>,
+<code>twilio:setup</code> — each <code>--apply</code> script exists or is added in this phase, dry-run by default)
+with recorded ids in <code>infra/*/README.md</code>, every one executed through <code>scripts/cutover-gate.mjs</code>
+(<code>pnpm cutover:gate</code>, new in this phase: refuses to run a wrapped command unless the dated
+cutover log holds an owner-committed approval line for that step, then appends the execution
+line; unit tests for missing, stale and foreign-author approvals).</li>
 <li><code>e2e/production-smoke.spec.ts</code> (read-only + gated 1 EUR booking with <code>E2E_ALLOW_LIVE_PAYMENT</code>).</li>
 <li>Cutover log <code>docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md</code>, one per UTC day
 (timeline, verifications, issues, <code>CUTOVER_TS</code>).</li>
@@ -5975,11 +6209,16 @@ reconcile, then DNS revert) — never a bare DNS flip.</li>
 <h2 id="15-launch-cutover--copy-paste-prompt"><a class="anchor" href="#15-launch-cutover--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
 <div class="prompt"><div class="prompt-bar"><span>Copy-paste prompt</span><button type="button" class="copy" data-target="prompt-15-launch-cutover-1">Copy</button></div><pre id="prompt-15-launch-cutover-1"><code>You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
 (the directory containing pnpm-workspace.yaml). Work autonomously for the code and documentation parts;
-STOP and ask the repository owner (@rodrigobarona) for explicit go-ahead before each production
-mutation step (DNS, Stripe live webhook switch, migration --apply against production, WorkOS
-cancellation). Record each go-ahead in docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md — one
-file per calendar day (UTC), created on first write; &quot;the cutover log&quot; below always means the
-file for the current UTC day.
+STOP before each production mutation step (every B.n sub-step, each C step: DNS records,
+Stripe live webhook switch, migration --apply against production, WorkOS cancellation): print
+the step id and the exact command, then wait until the repository owner (@rodrigobarona) has
+COMMITTED an approval line `&lt;step&gt; | approved | @rodrigobarona | &lt;ISO-8601 UTC&gt;` to
+docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md — one file per calendar day (UTC),
+created on first write; &quot;the cutover log&quot; below always means the file for the current UTC day.
+Run every mutation through `pnpm cutover:gate &lt;step&gt; -- &lt;command&gt;` (section B defines it); the
+gate refuses without a fresh owner-authored approval line, so a chat message is never an
+approval. (These angle-bracket tokens are the log grammar the gate parses, not prompt
+placeholders.)
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
@@ -5996,7 +6235,7 @@ what you implement at the &quot;Implement the deliverables&quot; step. Read the 
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-15/launch-cutover
 - Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
-  the order listed. Keep the PR under 150 reviewable files.
+  the order listed. Keep the PR at &lt;= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap).
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -6034,25 +6273,67 @@ A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item
    with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
    recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one
    1 EUR booking only when E2E_ALLOW_LIVE_PAYMENT=true) and a workflow dispatchable manually.
-B. Production configuration (with go-ahead per step): set all env vars in the 8 Vercel projects
-   per environment-matrix.md (list them and confirm); pnpm stripe:setup:webhooks -- --url
-   https://api.eleva.care/webhooks/stripe --apply (record endpoint id), pnpm stripe:setup:portal
-   -- --apply, pnpm qstash:setup (production QStash), BetterStack monitors, Daily webhook +
-   sessions.eleva.care CNAME, Resend domain verification, Twilio sender. Run a live 1 EUR booking
-   with an internal expert end to end (payment, payout scheduled, Tier 1 + Tier 2 invoices,
-   notifications, room) and refund it (credit note). Paste evidence.
-C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutover-runbook.md): T-48h lower DNS
-   TTL to 300s and show the MVP maintenance banner; T-2h MVP read-only + booking disabled, verify
-   zero pending Multibanco; final pnpm migration:run --apply --target production --since
-   &quot;$LAST_REHEARSAL_TS&quot; (LAST_REHEARSAL_TS = the `completed_at` of the last successful
-   `migration_runs` row, printed by pnpm migration:verify and copied into the cutover log before
+B. Production configuration — ADR-019: **one gate per production mutation**, enforced by the
+   repository, not by chat. Add scripts/cutover-gate.mjs (root script pnpm cutover:gate) in this
+   phase: `pnpm cutover:gate &lt;step&gt; -- &lt;command...&gt;` reads the dated cutover log
+   (docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md), requires a line matching
+   `&lt;step&gt; | approved | @rodrigobarona | &lt;ISO-8601 UTC&gt;`, resolves the commit that INTRODUCED
+   that exact line (`git blame -L` on the line -&gt; sha; the file&#39;s latest commit is irrelevant),
+   and accepts it only if `gh api repos/rodrigobarona/elevacare-monorepo/commits/&lt;sha&gt;` reports
+   `author.login == &quot;rodrigobarona&quot;` AND `commit.verification.verified == true` (GPG/SSH-signed
+   by a key registered on that GitHub account; a local author e-mail is never trusted) and the
+   commit&#39;s committer date is not older than 4 h, and only then runs the wrapped
+   command, appending `&lt;step&gt; | executed | &lt;ISO-8601 UTC&gt; | &lt;command&gt; | &lt;evidence path&gt;` to the
+   same file; without a fresh approval line the command is refused with exit 2. For each
+   sub-step: print the exact command and affected system, STOP until the owner has committed
+   the approval line, run it through the gate, paste evidence, then print the next sub-step.
+   Never batch two sub-steps under one approval line. (The angle-bracket tokens in this
+   paragraph are the gate&#39;s log grammar, not prompt placeholders.)
+   B.1.a-B.1.h Vercel production env vars, ONE gate per project (web, app, expert, team,
+       academy, account, admin, api — one letter each): `pnpm cutover:gate B.1.a -- pnpm
+       vercel:env:apply -- --project elevacare-web --environment production`
+       (scripts/vercel-env-apply.mjs, added in this phase: diffs environment-matrix.md against
+       `vercel env ls` and applies only the listed keys, one project per invocation, dry-run
+       by default; values come from the operator&#39;s 1Password vault, never from the repo). Evidence:
+       `vercel env ls --environment production` output per project.
+   B.2 Stripe live webhook: pnpm cutover:gate B.2 -- pnpm stripe:setup:webhooks -- --url
+       https://api.eleva.care/webhooks/stripe --apply; record the endpoint id in
+       infra/stripe/README.md.
+   B.3 Stripe customer portal: pnpm cutover:gate B.3 -- pnpm stripe:setup:portal -- --apply.
+   B.4 QStash production schedules: pnpm cutover:gate B.4 -- pnpm qstash:setup -- --apply;
+       evidence: schedule list.
+   B.5 BetterStack monitors and status page: pnpm cutover:gate B.5 -- pnpm betterstack:setup --
+       --apply.
+   B.6 Daily production webhook endpoint: pnpm cutover:gate B.6 -- pnpm daily:setup -- --apply
+       (registers POST https://api.eleva.care/webhooks/daily); the sessions.eleva.care CNAME is
+       a DNS mutation and is gated separately as C.0 in section C.
+   B.7 Resend production domain verification (EU region — hard gate): pnpm cutover:gate B.7 --
+       pnpm resend:setup -- --apply; evidence includes the region field.
+   B.8 Twilio production messaging service (EU) + status callback URL: pnpm cutover:gate B.8 --
+       pnpm twilio:setup -- --apply.
+   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- pnpm exec playwright
+       test e2e/production-smoke.spec.ts (E2E_ALLOW_LIVE_PAYMENT=true; 1 EUR booking with an
+       internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
+       notifications, room), then the refund (credit note) through the same gate as B.9r. Paste
+       evidence.
+C. Cutover (one owner-committed approval line and one `pnpm cutover:gate C.n -- ...` per step,
+   following docs/eleva-v3/operator-tasks/cutover-runbook.md; the step ids below are the gate
+   ids): C.0 sessions.eleva.care CNAME to Daily; C.1 T-48h lower DNS TTL to 300s and show the
+   MVP maintenance banner; C.2 T-2h MVP read-only + booking disabled, verify zero pending
+   Multibanco; C.3 final pnpm migration:run --apply --target production --since
+   &quot;$LAST_REHEARSAL_TS&quot; (LAST_REHEARSAL_TS = the `source_watermark` of the last successful
+   `migration_runs` row — the MVP snapshot time recorded by Phase 14, never `completed_at`; the
+   CLI applies the Phase 14 MIGRATION_DELTA_OVERLAP automatically and this final delta is exact
+   because the MVP is already read-only from C.2 — printed by pnpm migration:verify and copied
+   into the cutover log before
    this step; from infra/migration, read-only MVP role; the Phase 14 guard requires
    MIGRATION_CONFIRM_PRODUCTION=$(date -u +%F) in the environment and the operator typing
    the v3 production Neon project id at the interactive prompt — record both in the cutover log),
-   pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); move domains
-   eleva.care, www, api, admin, sessions to the v3 Vercel projects; confirm Stripe live webhook
-   receives events on v3 then disable the MVP endpoint; run production-smoke; send welcome wave 1
-   (experts) then wave 2 (members) within 48h; queue calendar.reconnect_required notifications.
+   pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); C.4 move
+   domains eleva.care, www, api, admin to the v3 Vercel projects (one gate per domain: C.4.a-d);
+   C.5 confirm Stripe live webhook receives events on v3 then disable the MVP endpoint; C.6 run
+   production-smoke; C.7 send welcome wave 1 (experts) then C.8 wave 2 (members) within 48h;
+   C.9 queue calendar.reconnect_required notifications.
    Log every step with timestamps in the cutover log. The moment the DNS switch is executed,
    record the ISO-8601 UTC timestamp as CUTOVER_TS in the cutover log and export it in the
    operator shell (export CUTOVER_TS=2026-..T..Z) — every --since below reads it from there.
@@ -6255,7 +6536,10 @@ Acceptance criteria, Tests, Docs to update, Local references, External docs, Ris
 prompt — the structure defined in Phase 0 prompt deliverable 2 and spelled out again in step 1a
 of the prompt below; copy <code>phases/05-member-app.md</code> as the starting skeleton).</li>
 <li>Add the row to README section 5 with branch <code>phase-16.N/&lt;slug&gt;</code> and dependencies.</li>
-<li>If the item changes a locked decision, add a <code>decision-log.md</code> entry and a new ADR first.</li>
+<li>Add a <code>docs/eleva-v3/decision-log.md</code> entry for <strong>every</strong> promoted item (date, item id, what it
+operationalizes, the phase file link). A new ADR is required only when the item changes
+architecture or a locked decision (README section 2); then the ADR is written first and the
+log entry references it.</li>
 <li>Run <code>pnpm docs:execution-plan:html</code> and commit the regenerated <code>index.html</code> with the phase file.</li>
 <li>One branch, one PR (README section 4 rule 1): the phase file, README row, decision-log/ADR
 changes and the regenerated <code>index.html</code> are the <strong>first commit</strong> (<code>docs(p16.N): ...</code>) on
@@ -6296,7 +6580,8 @@ first command; run the checks and both review loops only AFTER the task work exi
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-16.&lt;N&gt;/&lt;slug&gt;
 - Implement the deliverables of the PHASE 16 TASK below in the order listed (planning commit
   first, then implementation). One branch, one PR — no split branches: if the promoted item
-  cannot fit under 150 reviewable files, split the *backlog item* into 16.&lt;N&gt;a / 16.&lt;N&gt;b rows in
+  cannot stay &lt;= 60 files / 800 lines (and never &gt;= 100 reviewable files), split the *backlog
+  item* into 16.&lt;N&gt;a / 16.&lt;N&gt;b rows in
   the table first (each with its own phase file, branch and PR), never the branch.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -6422,9 +6707,10 @@ its own docs branch; stop and report. The implementation PR stays tokens-only in
       (Context7 library IDs), Risks, and a &quot;## Copy-paste prompt&quot; ```text block that follows the
       universal preamble from README section 7 (same steps, order and hard constraints) followed
       by the item-specific task.
-   b. If the item changes a locked decision (README section 2), add the decision-log.md entry
-      and a new ADR under docs/eleva-v3/adrs/ (next free number) and reference both from the
-      phase file.
+   b. Add the docs/eleva-v3/decision-log.md entry for the promoted item (mandatory for every item: date, id,
+      what it operationalizes, link to the phase file). Only if the item changes architecture or
+      a locked decision (README section 2), also add a new ADR under docs/eleva-v3/adrs/ (next
+      free number) first and reference it from the log entry and the phase file.
    c. Add the row to README section 5 (branch, effort, dependencies, file link); run
       pnpm docs:execution-plan:html and commit the regenerated index.html.
 2. Implementation commits: execute the prompt you just wrote, end to end, on the same branch.

@@ -103,8 +103,7 @@ connected|disconnected`).
 
 - [ ] Paid booking on staging -> `platform_fee_invoices` row is `pending` synchronously in the
       `payment_intent.succeeded` handler and `issued` by the workflow worker within **60 s**
-      (SLA asserted by the test with polling; the QStash job retries with backoff and a
-      `failed` status + alert after 5 attempts). Issuance is a hard precondition of the expert
+      (SLA asserted by the test with polling). Retry policy — fast stage: QStash retries the issuance job with exponential backoff up to **5 attempts**, then sets `status = failed` and alerts (Sentry + ops e-mail); slow stage: `invoicing-retry` (every 30 min) re-processes `failed` rows with backoff up to **10 further attempts**, then sets `status = dead_lettered`, writes `workflow_dead_letters` and raises the admin flag (Phase 12 queue). One policy, referenced by the workflow, the tests and `operator-tasks/toconline-setup.md`. Issuance is a hard precondition of the expert
       transfer: the Phase 6 payout engine refuses to create a Stripe transfer while the
       booking's fee invoice is not `issued` (also verified with a payout left in
       `approval_required`, where the invoice must still reach `issued` without any transfer).
@@ -185,7 +184,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 7 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-07.1/tier1-platform-fee-invoices
-  (second PR: phase-07.2/tier2-expert-adapters). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-07.2/tier2-expert-adapters. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -224,15 +223,21 @@ PR 07.1 — Tier 1 (Eleva platform):
    (staging uses TEST-ELEVA-FEE), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
 2. packages/db: platform_fee_invoices (booking_payment_id PK, expert_org_id, series, number,
    toconline_document_id, amount_cents, iva_rate_bps, iva_regime pt_standard|eu_reverse_charge|
-   eu_standard|non_eu_zero, status pending|issued|failed|credited, pdf_url, at_status, issued_at,
+   eu_standard|non_eu_zero, status pending|issued|failed|dead_lettered|credited (the retry
+   policy in item 3 uses pending -> issued | failed -> dead_lettered; credited after a credit
+   note; manual_pending belongs to expert_invoices only), pdf_url, at_status, issued_at,
    error, attempts), platform_fee_credit_notes, clinic_saas_invoices (subscription_id +
    period_start PK, ...), accounting_reconciliation_runs (month, stripe_fee_total_cents,
    invoiced_total_cents, mismatch_bps, status, details jsonb, created_at). RLS; audit unions.
 3. Trigger: in the payment_intent.succeeded webhook handler (@eleva/billing), after the ledger row
    is written, insert the platform_fee_invoices row as pending in the same transaction and enqueue
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
-   event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
-   with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
+   event must not create a second invoice). Completion SLA: issued within 60 s. Retry policy
+   (single SSOT, same wording as the acceptance criteria): fast stage = QStash exponential
+   backoff, max 5 attempts, then status failed + alert (Sentry + ops email); slow stage =
+   invoicing-retry sweep (item 4) re-processes failed rows every 30 min, max 10 further attempts,
+   then status dead_lettered + workflow_dead_letters row + admin flag. platform_fee_invoices
+   status union: pending|issued|failed|dead_lettered|credited (item 2).
    Domain events (transactional outbox): the domain_events_outbox table, emitDomainEvent(tx,
    event) in packages/workflows/src/domain-events.ts and POST /workflows/domain-events-publisher
    (FOR UPDATE SKIP LOCKED, subscriber registry, dead-letter after 10) already exist from Phase 4
@@ -250,8 +255,9 @@ PR 07.1 — Tier 1 (Eleva platform):
    this phase. On refund or transfer
    reversal with an issued invoice -> issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
-4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
-   failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-
+4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min; slow stage of
+   the retry policy in item 3: re-processes failed rows with backoff, max 10 further attempts,
+   then dead_lettered + workflow_dead_letters + admin flag; test the 5 + 10 boundary), stripe-toconline-
    reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
    per expert net of refunds — there is NO Stripe application-fee object in the separate charges
    and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge

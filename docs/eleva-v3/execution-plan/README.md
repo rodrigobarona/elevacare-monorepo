@@ -114,7 +114,7 @@ flowchart LR
 Rules of the loop:
 
 1. **Branch name** is `phase-NN/<slug>` from an up-to-date `main`. One phase = one PR. If a phase
-   would exceed the CodeRabbit 150-reviewable-file cap, split into `phase-NN.1/...`,
+   would exceed the CodeRabbit 100-reviewable-file cap, split before file 101 into `phase-NN.1/...`,
    `phase-NN.2/...` in the order given by the phase file, each with the full loop. **Prefer small
    PRs**: target <= 400 changed lines and <= 30 files per PR; a PR above 800 lines or 60 files
    must be split (the phase files already mark the split points as `PR NN.1`, `PR NN.2`). Small
@@ -322,8 +322,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE <N> TASK" section fu
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b <branch from this phase>
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
-  into phase-NN.1 / phase-NN.2 branches if needed.
+- Implement the deliverables in the order listed. Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); split into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,

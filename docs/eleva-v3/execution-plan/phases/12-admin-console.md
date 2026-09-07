@@ -137,7 +137,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 12 TASK" section fur
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-12.1/admin-users-partners
-  (second PR: phase-12.2/admin-money-ops). Each under 150 reviewable files.
+- Second PR (opened after the first merges): phase-12.2/admin-money-ops. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -169,7 +169,8 @@ PR 12.1 — access, users, partners, experts, bookings:
    that wraps withAudit with actor (+ impersonation context) and reason; reason: "required" rejects (400) any
    POST/PATCH/DELETE without a non-empty reason and is used by every destructive or
    member-affecting write (ban, impersonate, schedule-deletion, approve/reject/needs-changes,
-   commission override, suspend/unsuspend, cancel booking, refund, payout approve/hold);
+   commission override, suspend/unsuspend, cancel booking, refund, payout
+   approve/hold/release/retry, clinic verification approve/reject, Tier 1 invoice retry);
    reason: "optional" is used by the low-impact writes (unban, revoke-sessions, disable-2fa,
    resend-verification, stop-impersonating) which still audit actor, target and route as
    metadata. The route list below marks each with [R] or [O] and the UI dialogs follow the same
@@ -192,7 +193,14 @@ PR 12.1 — access, users, partners, experts, bookings:
    invoicing choice, profile completeness, ERS bio check flags), POST /approve { reason } ->
    expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved,
    POST /reject { reason } -> Lane 1 partner.rejected, POST /needs-changes { reason, items }.
-   Clinic verification queue: GET/POST /admin/clinics/verifications/[id]/approve|reject.
+   Clinic verification queue: GET /admin/clinics/verifications, POST
+   /admin/clinics/verifications/[id]/approve [R] { reason } (sets verification_status verified +
+   revalidates the clinic page; Lane 1 kind clinic.verified), POST .../reject [R] { reason }
+   (Lane 1 kind clinic.rejected with reason) — both kinds are registered by Phase 11 in
+   NOTIFICATION_KINDS (template, channel policy, i18n copy, delivery test). Missing-reason test for every [R] route in this phase (table-driven over the route
+   list: ban, impersonate, schedule-deletion, approve/reject/needs-changes, commission override,
+   suspend/unsuspend, cancel booking, refund, payout approve/hold/release/retry, clinic
+   approve/reject, invoice retry -> 400 REASON_REQUIRED).
 4. Experts & orgs: GET /admin/experts?q&status, GET /admin/organizations?q&type, PATCH
    /admin/experts/[orgId] { categories, visibility, topExpertOverride, commissionOverrideBps,
    commissionOverrideExpiresAt, reason }, POST /admin/experts/[orgId]/suspend|unsuspend { reason }.
@@ -206,10 +214,19 @@ PR 12.1 — access, users, partners, experts, bookings:
 
 PR 12.2 — money, accounting, ops, flags:
 6. Money: pages and routes over Phase 6/7/11 endpoints: payouts queue (approval_required, held,
-   failed) with approve/hold/retry; refunds dialog (full/partial, reason); disputes list;
+   failed) with approve/hold/release/retry — POST /admin/payouts/[id]/approve [R], /hold [R],
+   /release [R] (removes the manual hold reason; the row leaves held only when no dispute hold
+   remains — the response reports the remaining reasons), /retry [R]
+   { reason } (retry re-uses the existing transfer_idempotency_key — Stripe returns the original
+   transfer for the same key, so a lost response can never double-transfer; a NEW key is minted
+   only in the Phase 6 case, after a confirmed reversed transfer, or when the route first
+   reconciles with `stripe.transfers.list({ transfer_group: bookingId })` and proves no transfer
+   exists for that payout — a failed state alone never mints a key; test both branches);
+   refunds dialog (full/partial, reason) [R]; disputes list;
    subscriptions (teams) with Stripe dashboard deep links (test/live aware). Roles: staff_finance
    and platform_admin only (table-driven test).
-7. Accounting: Tier 1 invoices list + retry, Tier 2 invoices list (status per expert), failed
+7. Accounting: Tier 1 invoices list + retry (POST /admin/invoices/[id]/retry [R] { reason }),
+   Tier 2 invoices list (status per expert), failed
    invoices, reconciliation runs with mismatch details, CSV export (private Blob signed URL).
 8. Ops: GET /admin/ops/stripe-events?status&type + POST /admin/ops/stripe-events/[id]/replay
    (re-run processStripeEvent; idempotent), GET /admin/ops/dlq + POST /replay, GET

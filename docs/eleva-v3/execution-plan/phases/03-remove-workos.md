@@ -150,8 +150,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 3 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-03/remove-workos
-- Keep under 150 reviewable files (deletions count); split into phase-03.1/encryption-calendar and
-  phase-03.2/infra-cleanup if needed.
+- Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap); deletions count. Split into phase-03.1/encryption-calendar and phase-03.2/infra-cleanup if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -176,7 +175,7 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 1. @eleva/encryption (packages/encryption): implement envelope encryption.
    - keys.ts: loadKeks() reads ELEVA_KEK_V<n> env vars (base64, 32 bytes), current version =
      highest n; never log key material. getOrCreateOrgDek(orgId) is race-safe: org_data_keys has
-     unique (org_id, dek_version) and a partial unique index on org_id WHERE active = true; the
+     unique (org_id, key_version) and a partial unique index on org_id WHERE retired_at IS NULL; the
      function reads the active row (RLS via withOrgContext) and returns it, otherwise generates a
      32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12 bytes, aad =
      orgId:key_version) and INSERTs ... ON CONFLICT DO NOTHING with withAudit (entity

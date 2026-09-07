@@ -49,7 +49,14 @@ In:
   settings (profile, public page, branding), notifications inbox (Phase 8 component).
 - **Clinic public page** at `apps/web/[locale]/[clinicSlug]` (same `/[locale]/[handle]` slot that
   Phase 4 gives experts; `public_handles` decides whether a handle renders an expert or a clinic —
-  see deliverable 1): clinic profile with experts grid; **canonical clinic booking route** =
+  see deliverable 1), **gated twice**: the whole clinic public surface (page, booking route,
+  sitemap entries, signed clinic attribution) renders only when the rollout flag
+  `ff.clinic_public_pages` is on **and** `clinic_profiles.verification_status = 'verified'`;
+  `pending`/`rejected` clinics return 404 from the page and the booking route, are excluded from
+  the sitemap and from `public_handles` resolution for public rendering, and
+  `POST /bookings/reserve` rejects `attribution = clinic` for them with 404 (never reveal the
+  status); test: pending clinic -> page 404, sitemap omits it, reserve with clinic attribution
+  404; verified + flag on -> all three succeed: clinic profile with experts grid; **canonical clinic booking route** =
   `/[locale]/[clinicSlug]/[expertUsername]/[eventSlug]` (locale-prefixed like every `apps/web`
   route; Phase 4 owns `/[locale]/[username]/[eventSlug]` for marketplace bookings), which sets
   `attribution = clinic` so `computeApplicationFee` returns 0 bps and payout goes to the clinic's or the
@@ -151,7 +158,7 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 11 TASK" section fur
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-11/team-clinics
-- Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if > 150 files.
+- Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap). Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -265,6 +272,13 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
 8. apps/web: clinic public page at /[locale]/[clinicSlug] (profile + experts grid; the [handle]
    segment resolves via public_handles to expert or clinic) and the canonical clinic booking
    route /[locale]/[clinicSlug]/[expertUsername]/[eventSlug] with attribution; sitemap entries.
+   Extend NOTIFICATION_KINDS with team.invitation (email mode — the invitee may have no
+   account), team.member_joined, clinic.verified and clinic.rejected (owner-facing e-mail +
+   in-app), each with template pt/en/es, channel policy and delivery test — the Phase 8 contract
+   assigns all four to this phase; clinic.* are consumed by the Phase 12 verification queue.
+   Every one of these (page, booking route, sitemap, attribution on reserve) is gated by
+   ff.clinic_public_pages AND clinic_profiles.verification_status = 'verified'; pending/rejected
+   -> 404 and no sitemap entry; tests for both gates.
 9. Tests: seat sync + limits, attribution -> 0 bps, webhook handlers, Tier 1b idempotency,
    RLS for clinic bookings view. e2e/team.spec.ts: create team -> checkout (test card) -> invite ->
    accept -> member visible -> book clinic expert -> 0 fee.

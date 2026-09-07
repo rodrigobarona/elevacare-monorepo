@@ -64,7 +64,12 @@ Out: Spain launch, Academy content (Phase 16).
 1. Ticked `launch-readiness-checklist.md` with evidence links; updated DPIA in
    `compliance-data-governance.md`; `apps/docs` compliance pages.
 2. Production configuration scripts applied (`stripe:setup:webhooks`, `stripe:setup:portal`,
-   `qstash:setup`, `flags:sync`, `betterstack` monitors) with recorded ids in `infra/*/README.md`.
+   `qstash:setup`, `flags:sync`, `betterstack:setup`, `daily:setup`, `resend:setup`,
+   `twilio:setup` — each `--apply` script exists or is added in this phase, dry-run by default)
+   with recorded ids in `infra/*/README.md`, every one executed through `scripts/cutover-gate.mjs`
+   (`pnpm cutover:gate`, new in this phase: refuses to run a wrapped command unless the dated
+   cutover log holds an owner-committed approval line for that step, then appends the execution
+   line; unit tests for missing, stale and foreign-author approvals).
 3. `e2e/production-smoke.spec.ts` (read-only + gated 1 EUR booking with `E2E_ALLOW_LIVE_PAYMENT`).
 4. Cutover log `docs/eleva-v3/operator-tasks/cutover-log-YYYY-MM-DD.md`, one per UTC day
    (timeline, verifications, issues, `CUTOVER_TS`).
@@ -118,11 +123,16 @@ Out: Spain launch, Academy content (Phase 16).
 ```text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
 (the directory containing pnpm-workspace.yaml). Work autonomously for the code and documentation parts;
-STOP and ask the repository owner (@rodrigobarona) for explicit go-ahead before each production
-mutation step (DNS, Stripe live webhook switch, migration --apply against production, WorkOS
-cancellation). Record each go-ahead in docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md — one
-file per calendar day (UTC), created on first write; "the cutover log" below always means the
-file for the current UTC day.
+STOP before each production mutation step (every B.n sub-step, each C step: DNS records,
+Stripe live webhook switch, migration --apply against production, WorkOS cancellation): print
+the step id and the exact command, then wait until the repository owner (@rodrigobarona) has
+COMMITTED an approval line `<step> | approved | @rodrigobarona | <ISO-8601 UTC>` to
+docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md — one file per calendar day (UTC),
+created on first write; "the cutover log" below always means the file for the current UTC day.
+Run every mutation through `pnpm cutover:gate <step> -- <command>` (section B defines it); the
+gate refuses without a fresh owner-authored approval line, so a chat message is never an
+approval. (These angle-bracket tokens are the log grammar the gate parses, not prompt
+placeholders.)
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
@@ -139,7 +149,7 @@ what you implement at the "Implement the deliverables" step. Read the whole prom
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
 - Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
-  the order listed. Keep the PR under 150 reviewable files.
+  the order listed. Keep the PR at <= 30 files / 400 lines where possible; split above 60 files / 800 lines and always before 100 reviewable files (the review cap).
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -177,25 +187,67 @@ A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item
    with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
    recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one
    1 EUR booking only when E2E_ALLOW_LIVE_PAYMENT=true) and a workflow dispatchable manually.
-B. Production configuration (with go-ahead per step): set all env vars in the 8 Vercel projects
-   per environment-matrix.md (list them and confirm); pnpm stripe:setup:webhooks -- --url
-   https://api.eleva.care/webhooks/stripe --apply (record endpoint id), pnpm stripe:setup:portal
-   -- --apply, pnpm qstash:setup (production QStash), BetterStack monitors, Daily webhook +
-   sessions.eleva.care CNAME, Resend domain verification, Twilio sender. Run a live 1 EUR booking
-   with an internal expert end to end (payment, payout scheduled, Tier 1 + Tier 2 invoices,
-   notifications, room) and refund it (credit note). Paste evidence.
-C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutover-runbook.md): T-48h lower DNS
-   TTL to 300s and show the MVP maintenance banner; T-2h MVP read-only + booking disabled, verify
-   zero pending Multibanco; final pnpm migration:run --apply --target production --since
-   "$LAST_REHEARSAL_TS" (LAST_REHEARSAL_TS = the `completed_at` of the last successful
-   `migration_runs` row, printed by pnpm migration:verify and copied into the cutover log before
+B. Production configuration — ADR-019: **one gate per production mutation**, enforced by the
+   repository, not by chat. Add scripts/cutover-gate.mjs (root script pnpm cutover:gate) in this
+   phase: `pnpm cutover:gate <step> -- <command...>` reads the dated cutover log
+   (docs/eleva-v3/operator-tasks/cutover-log-$(date -u +%F).md), requires a line matching
+   `<step> | approved | @rodrigobarona | <ISO-8601 UTC>`, resolves the commit that INTRODUCED
+   that exact line (`git blame -L` on the line -> sha; the file's latest commit is irrelevant),
+   and accepts it only if `gh api repos/rodrigobarona/elevacare-monorepo/commits/<sha>` reports
+   `author.login == "rodrigobarona"` AND `commit.verification.verified == true` (GPG/SSH-signed
+   by a key registered on that GitHub account; a local author e-mail is never trusted) and the
+   commit's committer date is not older than 4 h, and only then runs the wrapped
+   command, appending `<step> | executed | <ISO-8601 UTC> | <command> | <evidence path>` to the
+   same file; without a fresh approval line the command is refused with exit 2. For each
+   sub-step: print the exact command and affected system, STOP until the owner has committed
+   the approval line, run it through the gate, paste evidence, then print the next sub-step.
+   Never batch two sub-steps under one approval line. (The angle-bracket tokens in this
+   paragraph are the gate's log grammar, not prompt placeholders.)
+   B.1.a-B.1.h Vercel production env vars, ONE gate per project (web, app, expert, team,
+       academy, account, admin, api — one letter each): `pnpm cutover:gate B.1.a -- pnpm
+       vercel:env:apply -- --project elevacare-web --environment production`
+       (scripts/vercel-env-apply.mjs, added in this phase: diffs environment-matrix.md against
+       `vercel env ls` and applies only the listed keys, one project per invocation, dry-run
+       by default; values come from the operator's 1Password vault, never from the repo). Evidence:
+       `vercel env ls --environment production` output per project.
+   B.2 Stripe live webhook: pnpm cutover:gate B.2 -- pnpm stripe:setup:webhooks -- --url
+       https://api.eleva.care/webhooks/stripe --apply; record the endpoint id in
+       infra/stripe/README.md.
+   B.3 Stripe customer portal: pnpm cutover:gate B.3 -- pnpm stripe:setup:portal -- --apply.
+   B.4 QStash production schedules: pnpm cutover:gate B.4 -- pnpm qstash:setup -- --apply;
+       evidence: schedule list.
+   B.5 BetterStack monitors and status page: pnpm cutover:gate B.5 -- pnpm betterstack:setup --
+       --apply.
+   B.6 Daily production webhook endpoint: pnpm cutover:gate B.6 -- pnpm daily:setup -- --apply
+       (registers POST https://api.eleva.care/webhooks/daily); the sessions.eleva.care CNAME is
+       a DNS mutation and is gated separately as C.0 in section C.
+   B.7 Resend production domain verification (EU region — hard gate): pnpm cutover:gate B.7 --
+       pnpm resend:setup -- --apply; evidence includes the region field.
+   B.8 Twilio production messaging service (EU) + status callback URL: pnpm cutover:gate B.8 --
+       pnpm twilio:setup -- --apply.
+   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- pnpm exec playwright
+       test e2e/production-smoke.spec.ts (E2E_ALLOW_LIVE_PAYMENT=true; 1 EUR booking with an
+       internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
+       notifications, room), then the refund (credit note) through the same gate as B.9r. Paste
+       evidence.
+C. Cutover (one owner-committed approval line and one `pnpm cutover:gate C.n -- ...` per step,
+   following docs/eleva-v3/operator-tasks/cutover-runbook.md; the step ids below are the gate
+   ids): C.0 sessions.eleva.care CNAME to Daily; C.1 T-48h lower DNS TTL to 300s and show the
+   MVP maintenance banner; C.2 T-2h MVP read-only + booking disabled, verify zero pending
+   Multibanco; C.3 final pnpm migration:run --apply --target production --since
+   "$LAST_REHEARSAL_TS" (LAST_REHEARSAL_TS = the `source_watermark` of the last successful
+   `migration_runs` row — the MVP snapshot time recorded by Phase 14, never `completed_at`; the
+   CLI applies the Phase 14 MIGRATION_DELTA_OVERLAP automatically and this final delta is exact
+   because the MVP is already read-only from C.2 — printed by pnpm migration:verify and copied
+   into the cutover log before
    this step; from infra/migration, read-only MVP role; the Phase 14 guard requires
    MIGRATION_CONFIRM_PRODUCTION=$(date -u +%F) in the environment and the operator typing
    the v3 production Neon project id at the interactive prompt — record both in the cutover log),
-   pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); move domains
-   eleva.care, www, api, admin, sessions to the v3 Vercel projects; confirm Stripe live webhook
-   receives events on v3 then disable the MVP endpoint; run production-smoke; send welcome wave 1
-   (experts) then wave 2 (members) within 48h; queue calendar.reconnect_required notifications.
+   pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); C.4 move
+   domains eleva.care, www, api, admin to the v3 Vercel projects (one gate per domain: C.4.a-d);
+   C.5 confirm Stripe live webhook receives events on v3 then disable the MVP endpoint; C.6 run
+   production-smoke; C.7 send welcome wave 1 (experts) then C.8 wave 2 (members) within 48h;
+   C.9 queue calendar.reconnect_required notifications.
    Log every step with timestamps in the cutover log. The moment the DNS switch is executed,
    record the ISO-8601 UTC timestamp as CUTOVER_TS in the cutover log and export it in the
    operator shell (export CUTOVER_TS=2026-..T..Z) — every --since below reads it from there.

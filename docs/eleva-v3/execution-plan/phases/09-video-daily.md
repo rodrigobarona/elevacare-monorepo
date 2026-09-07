@@ -35,13 +35,29 @@ In:
   `eject_at_room_exp: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
-  (`scheduled|live|ended|no_show|cancelled`), `started_at`, `ended_at`, `participants jsonb`
+  (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
+  the API types and the state machine), `room_create_attempt_at`, `room_request_id`,
+  `last_event_at`, `started_at`, `ended_at`, `participants jsonb`
   (join/leave history only — never used for authorization), RLS for expert org + buyer org.
 - `session_participants` table (the **authorization** contract for delegated participants):
-  `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, unique
-  (`booking_id`, `user_id`); RLS expert org + the participant's own row; written only by
+  `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,
+  `ejected_at`, unique (`booking_id`, `user_id`); RLS expert org + the participant's own row;
+  written only by
   `POST /sessions/[bookingId]/participants` (assigned expert only, audited
   `session.participant_added`) and `DELETE …/participants/[userId]` (`session.participant_removed`).
+  Daily meeting tokens are signed JWTs and cannot be revoked, so removal is a two-phase
+  operation that is safe in both failure directions: phase 1 (transaction) sets
+  `session_participants.revoked_at = now()` (a deny state — `join` requires `revoked_at IS
+NULL`, so no new token can be minted from this instant) inside withAudit
+  `session.participant_removed`; phase 2 calls Daily `POST /rooms/{name}/eject` with
+  `user_ids: [userId]` and `ban: true` (idempotent — no live participant is a no-op) with a
+  10 s timeout and bounded retry, then sets `ejected_at`; the route returns 200 when both
+  phases succeeded and 202 `{ ejectionPending: true }` when Daily failed — the row stays revoked
+  and `POST /workflows/video-eject-retry` (QStash, every minute while rows have `revoked_at`
+  and no `ejected_at`) completes the ejection. Rows are never hard-deleted while the session
+  exists (revoked rows are history). Tests: Daily 5xx -> row revoked, join 403, retry job ejects;
+  DB failure after a successful eject cannot re-authorize because the eject is only attempted
+  after phase 1 committed; mint -> remove -> rejoin 403.
 - Workflow: on booking confirmed -> `ensureSessionRoom(bookingId)` (idempotent; returns early
   unless the booking's snapshotted `mode = 'online'`; also run by a QStash sweep 1h before start
   for online bookings without a room — the sweep query itself filters `mode = 'online'`); on
@@ -50,9 +66,14 @@ In:
   the booking's member, or an explicitly delegated participant of that booking (never "any
   member of the expert org"; non-participants get 403 `NOT_A_PARTICIPANT`) and that now is
   within `[startAt-15m, endAt+30m]`, mints a token, returns `{ roomUrl,
-token, expiresAt }` (rate limited, audited `session.joined`); `POST /webhooks/daily` handles
+token, expiresAt }` (rate-limited, audited `session.joined`); `POST /webhooks/daily` handles
   `meeting.started`, `meeting.ended`, `participant.joined`, `participant.left` (Daily webhook
-  payloads; verify signature; idempotent by event id) -> session status + `emitDomainEvent`.
+  payloads; verify signature; idempotent by event id **and ordered by event time**: Daily
+  delivers roughly, not strictly, in order, so the handler persists the payload's event
+  timestamp on `sessions.last_event_at` and applies a transition only when the incoming
+  timestamp is newer — a late `meeting.started` can never overwrite `ended`; `sessions.status`
+  is a monotonic machine `scheduled -> live -> ended`, and `participant.*` events after `ended`
+  only append history) -> session status + `emitDomainEvent`.
 - Join pages: `apps/app/[orgSlug]/sessions/[bookingId]/join` and
   `apps/expert/[orgSlug]/sessions/[bookingId]/join` using `@eleva/video/client` components:
   prejoin device check, waiting room ("Your expert will join shortly"), in-call UI (mute, camera,
@@ -189,15 +210,30 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    selection + preview, waiting state until the other participant joins, controls (mic, camera,
    screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification.
+   webhook verification. Room creation has no client idempotency key at Daily, so
+   ensureSessionRoom is made safe against lost responses: (a) before POST /rooms it writes
+   sessions.room_create_attempt_at and a random room_request_id stored in the Daily room
+   properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
+   call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
+   it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
+   room whose meta.room_request_id matches; (d) if none matches it retries once with a new
+   room_request_id, and if that also fails to resolve it records status = room_unresolved,
+   emits session.room_unresolved and alerts — the sweep never re-creates blindly and admins
+   resolve from Phase 12; deleteRoom on cancel also runs over any adopted duplicate. Test:
+   lost response after Daily created the room -> reconciliation adopts it -> exactly one room.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
-   unique, daily_room_url, status scheduled|live|ended|no_show|cancelled, room_created_at,
-   started_at, ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
+   unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
+   room_created_at, room_create_attempt_at, room_request_id, last_event_at, started_at,
+   ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
-   role delegate|supervisor, added_by, added_at, unique(booking_id, user_id)) — the only source of
-   delegated-join authorization. RLS: expert org and buyer org read sessions; session_participants
+   role delegate|supervisor, added_by, added_at, revoked_at nullable, ejected_at nullable,
+   unique(booking_id, user_id)) — the only source of delegated-join authorization (a row with
+   revoked_at set is a deny). RLS: expert org and buyer org read sessions; session_participants
    readable by the expert org and by the participant; API writes. Audit unions session:
-   room_created|joined|started|ended|room_deleted|participant_added|participant_removed.
+   room_created|joined|started|ended|room_deleted|participant_added|participant_removed|
+   room_unresolved. daily_webhook_events (event_id text PK, type, received_at, processed_at,
+   payload jsonb; 90-day retention sweep; RLS staff-only, no tenant rows) — the idempotency
+   table used by POST /webhooks/daily in item 4; fixture with a replayed meeting.ended.
 3. Workflows: packages/workflows/src/video/ensure-session-room.ts (idempotent: returns existing
    room; guard first: load the booking and return { skipped: "not_online" | "not_confirmed" }
    unless its snapshotted mode = 'online' AND status = 'confirmed') invoked from
@@ -216,8 +252,17 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    including other members of the expert's organization, gets 403 NOT_A_PARTICIPANT; window
    [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
    roomExp); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
-   signature -> 401 on failure; idempotency table daily_webhook_events keyed by event id ->
-   update sessions + emitDomainEvent). OpenAPI + client.
+   signature -> 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
+   guard: apply only when payload event time > sessions.last_event_at, status transitions are
+   monotonic scheduled -> live -> ended; test the sequence meeting.ended then a delayed
+   meeting.started -> status stays ended -> update sessions + emitDomainEvent). DELETE
+   .../participants/[userId] deletes the row inside withAudit, then calls Daily
+   POST /rooms/{name}/eject { user_ids: [userId], ban: true } (no-op when nobody is live) and
+   returns 200 after eject succeeded (or the room does not exist yet) and 202 { ejectionPending:
+   true } when Daily failed — two-phase per the Scope section: revoked_at first (deny state,
+   join checks revoked_at IS NULL), eject second (10 s timeout, retry via POST
+   /workflows/video-eject-retry every minute until ejected_at is set); tests for Daily 5xx and
+   for mint -> remove -> rejoin 403. OpenAPI + client.
 5. Join pages: apps/app/src/app/[orgSlug]/sessions/[bookingId]/join/page.tsx and the expert
    equivalent — server component fetches booking, renders <JoinClient> that calls the join
    endpoint via @eleva/api-client and mounts <ElevaCall>. Add "Join session" buttons (enabled in

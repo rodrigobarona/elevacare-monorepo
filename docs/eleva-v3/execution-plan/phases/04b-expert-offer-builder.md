@@ -202,9 +202,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the "PHASE 4B TASK" section further down is
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main && git pull --ff-only && git checkout -b
-  phase-04b.1/practice-locations-schedules-calendars (second PR:
-  phase-04b.2/event-type-builder-links-editor). Each under 150 reviewable files.
+- git checkout main && git pull --ff-only && git checkout -b phase-04b.1/practice-locations-schedules-calendars
+- Second PR (opened after the first merges): phase-04b.2/event-type-builder-links-editor. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -262,8 +261,12 @@ PR 04b.1 — practice scope, locations, schedules, Eleva calendar, connected cal
    (expert_integration: connected|updated|disconnected; calendar_busy_source: updated;
    calendar_destination: updated; calendar_feed_token: rotated|revoked). Update @eleva/api-client.
 2. @eleva/calendar: BusyTimeProvider reads every enabled calendar_busy_sources row in parallel
-   (Promise.all, 5-min Redis cache per calendar), tolerates one failing provider (log + mark the
-   integration reconnect_required, continue); destination resolution order mode destination
+   with Promise.allSettled (5-min Redis cache per calendar); each rejected result is logged
+   (no token material), marks the integration reconnect_required inside withAudit
+   (expert_integration: updated) and is dropped, while every fulfilled result is merged — the
+   fan-out itself never rejects and the response carries `degradedSources: string[]` so the UI
+   can warn; test: one provider throws -> the other providers' busy intervals are still applied
+   and the failing integration is flagged; destination resolution order mode destination
    override > event type destination override > calendar_destinations default > ICS e-mail
    fallback (Phase 8 sends);
    feed generator generateIcsFeed({ expertProfileId }) with stable UIDs (bookingId@eleva.care).

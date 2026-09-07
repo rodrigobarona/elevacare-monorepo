@@ -46,7 +46,10 @@ and run the standard loop from README section 4.
    prompt — the structure defined in Phase 0 prompt deliverable 2 and spelled out again in step 1a
    of the prompt below; copy `phases/05-member-app.md` as the starting skeleton).
 2. Add the row to README section 5 with branch `phase-16.N/<slug>` and dependencies.
-3. If the item changes a locked decision, add a `decision-log.md` entry and a new ADR first.
+3. Add a `docs/eleva-v3/decision-log.md` entry for **every** promoted item (date, item id, what it
+   operationalizes, the phase file link). A new ADR is required only when the item changes
+   architecture or a locked decision (README section 2); then the ADR is written first and the
+   log entry references it.
 4. Run `pnpm docs:execution-plan:html` and commit the regenerated `index.html` with the phase file.
 5. One branch, one PR (README section 4 rule 1): the phase file, README row, decision-log/ADR
    changes and the regenerated `index.html` are the **first commit** (`docs(p16.N): ...`) on
@@ -90,7 +93,8 @@ first command; run the checks and both review loops only AFTER the task work exi
 - git checkout main && git pull --ff-only && git checkout -b phase-16.<N>/<slug>
 - Implement the deliverables of the PHASE 16 TASK below in the order listed (planning commit
   first, then implementation). One branch, one PR — no split branches: if the promoted item
-  cannot fit under 150 reviewable files, split the *backlog item* into 16.<N>a / 16.<N>b rows in
+  cannot stay <= 60 files / 800 lines (and never >= 100 reviewable files), split the *backlog
+  item* into 16.<N>a / 16.<N>b rows in
   the table first (each with its own phase file, branch and PR), never the branch.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -216,9 +220,10 @@ its own docs branch; stop and report. The implementation PR stays tokens-only in
       (Context7 library IDs), Risks, and a "## Copy-paste prompt" ```text block that follows the
       universal preamble from README section 7 (same steps, order and hard constraints) followed
       by the item-specific task.
-   b. If the item changes a locked decision (README section 2), add the decision-log.md entry
-      and a new ADR under docs/eleva-v3/adrs/ (next free number) and reference both from the
-      phase file.
+   b. Add the docs/eleva-v3/decision-log.md entry for the promoted item (mandatory for every item: date, id,
+      what it operationalizes, link to the phase file). Only if the item changes architecture or
+      a locked decision (README section 2), also add a new ADR under docs/eleva-v3/adrs/ (next
+      free number) first and reference it from the log entry and the phase file.
    c. Add the row to README section 5 (branch, effort, dependencies, file link); run
       pnpm docs:execution-plan:html and commit the regenerated index.html.
 2. Implementation commits: execute the prompt you just wrote, end to end, on the same branch.

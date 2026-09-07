@@ -225,9 +225,25 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
    the commands below run as written): pnpm migration:run --dry-run|--apply
-   [--target branch|production] [--since "$LAST_RUN_TS"] (ISO-8601; omitted = full run; the CLI
-   writes the run's end timestamp to infra/migration/reports/last-run.json and the operator
-   exports it as LAST_RUN_TS before a delta run) [--report FILE] (default
+   [--target branch|production] [--since "$LAST_RUN_TS"] (ISO-8601; omitted = full run; the
+   watermark is a **commit-ordered source** boundary, never the target run end time: the CLI
+   opens one REPEATABLE READ snapshot on the MVP database at the start of the run, records the
+   snapshot's `now()` as `source_watermark` and `pg_export_snapshot()` as `source_snapshot_id`
+   (the snapshot identity every reader worker imports with SET TRANSACTION SNAPSHOT so all
+   tables are read from the same consistent view; `pg_current_wal_lsn()` is also stored as
+   `source_wal_lsn` but is **informational only** — it is the current write position, not the
+   snapshot boundary, and is never used as a delta or cutover boundary), and reads every table
+   from that snapshot; because a row's `updated_at` is
+   set at statement time while its commit can land after the snapshot, a delta run selects
+   `updated_at >= source_watermark - MIGRATION_DELTA_OVERLAP` (default 15 min) and relies on the
+   idempotent upsert mappers to make the overlap harmless, and the CLI asserts at snapshot time
+   that no MVP transaction older than the overlap is in flight
+   (`pg_stat_activity.xact_start`, read-only role) — otherwise it aborts with the offending pid
+   so the operator widens the overlap; the **final** cutover delta is exact by construction
+   because Phase 15 runs it only after the MVP is read-only (writes frozen, so no in-flight
+   commit can be missed). The same two values are written to
+   infra/migration/reports/last-run.json; the operator exports source_watermark as LAST_RUN_TS
+   before a delta run) [--report FILE] (default
    infra/migration/reports/run-$(date -u +%Y%m%dT%H%M%SZ).md);
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
@@ -254,7 +270,10 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    mode, foreign project rejected, production without confirmation rejected.
    migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
-   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
+   since, source_watermark timestamptz NOT NULL, source_snapshot_id text NOT NULL (both from the
+   MVP snapshot in item 1; printed by migration:verify and included in every report — Phase 15
+   reads source_watermark as LAST_REHEARSAL_TS and applies the same overlap), source_wal_lsn
+   pg_lsn (informational only), overlap_seconds int NOT NULL, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
    target_kind, target_id, unique(source_table, source_id, target_table, target_kind) —
    target_kind is a mapper-defined discriminator, e.g. "user", "account:credential",
    "account:google", "member:personal-space", so a source row that fans out into several target
