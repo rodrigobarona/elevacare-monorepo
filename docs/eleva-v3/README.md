@@ -16,6 +16,13 @@ This handbook is based on the master planning work captured in the Eleva v3 proj
 
 ## How To Use This Handbook
 
+> **Building or shipping v3? Start with the [Execution Plan](./execution-plan/README.md).**
+> It is the sequencing SSOT: locked decisions (ADR-017..021, Better Auth replaces WorkOS,
+> Daily.co for video), the branch → PR → CodeRabbit CLI → merge loop, and one file per phase
+> (`execution-plan/phases/NN-*.md`) ending in a copy-paste prompt. A single-page offline HTML
+> version is generated at `execution-plan/index.html` (`pnpm docs:execution-plan:html`).
+> `roadmap-and-milestones.md` and `implementation-sprints.md` are superseded for sequencing.
+
 Read these documents in order when onboarding a developer, designer, PM, or agent to the project:
 
 1. [`master-architecture.md`](./master-architecture.md)
@@ -140,8 +147,9 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`operator-tasks/`](./operator-tasks/): one-shot cutover and provisioning checklists tied to specific releases ([Sprint 0 Vercel setup](./operator-tasks/s0-vercel-setup.md), [Stripe Phase 1+2 cutover](./operator-tasks/stripe-phase-1-2-cutover.md), [Operator scripts catalog](./operator-tasks/scripts-catalog.md))
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md): schema ownership, migration discipline, and rollout safety rules
 - [`testing-strategy.md`](./testing-strategy.md): test layering, critical-flow coverage, and validation priorities
-- [`roadmap-and-milestones.md`](./roadmap-and-milestones.md): milestone-based delivery sequencing and exit criteria
-- [`implementation-sprints.md`](./implementation-sprints.md): tactical 8-week weekly sprint plan with two-track parallelization, MCP/CLI usage, and Context7 pulls per sprint
+- [`execution-plan/README.md`](./execution-plan/README.md): **authoritative** phase-by-phase build plan (phases 0-16), review loop, and copy-paste prompts; `execution-plan/index.html` is the generated single-page version
+- [`roadmap-and-milestones.md`](./roadmap-and-milestones.md): milestone-based delivery sequencing and exit criteria (superseded for sequencing by the execution plan; kept for history)
+- [`implementation-sprints.md`](./implementation-sprints.md): tactical 8-week weekly sprint plan with two-track parallelization, MCP/CLI usage, and Context7 pulls per sprint (superseded for sequencing by the execution plan; kept for history)
 - [`dependency-map.md`](./dependency-map.md): high-level dependency structure across workstreams
 - [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md): staged rollout guidance for risky features
 - [`release-versioning-strategy.md`](./release-versioning-strategy.md): release discipline, rollout control, and versioning expectations

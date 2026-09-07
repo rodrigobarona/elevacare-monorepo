@@ -1,0 +1,187 @@
+# Phase 15 — PT launch gate + production cutover
+
+| Field      | Value                                                                                                                                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-15/launch-cutover` (code: gate fixes, final config; the cutover itself is an operated runbook)                                                                                                                                         |
+| Depends on | Phase 14                                                                                                                                                                                                                                      |
+| Effort     | 1 week + 7-day watch                                                                                                                                                                                                                          |
+| Touches    | `docs/eleva-v3/launch-readiness-checklist.md`, `apps/docs` (compliance pages), `infra/**` (production apply scripts), Vercel project settings (domains, env), DNS, Stripe webhook endpoints, Daily/Resend/Twilio production keys              |
+| Exit gate  | Production traffic on v3 at `eleva.care`; migrated experts sign in and see history; 7-day SLO >= 99.9% API availability, zero P1 incidents; rollback documented and rehearsed; WorkOS cancelled only after final record checksum verification |
+
+## Why this phase exists
+
+ADR-012 (Portugal-first) and ADR-019 (cutover) require a formal gate. This phase verifies every
+launch-readiness item, executes the freeze/migrate/switch runbook from Phase 14, and watches SLOs.
+
+## Scope
+
+In:
+
+- **Launch gate** (`launch-readiness-checklist.md` — every item ticked with evidence):
+  - Compliance: ERS Portugal pages live in `apps/docs/compliance/portugal/*` and linked from
+    `apps/web` footer; privacy/health-data/terms final and versioned; DPIA updated (WorkOS removed,
+    Daily added, Better Auth self-hosted, AI Gateway); subprocessor list; DSAR export within 10
+    minutes verified in production-like data; crypto-shred test on a staging org; EU data
+    residency confirmations (Neon EU, Upstash EU, Vercel region `fra1`/`cdg1`, Daily EU, Resend EU
+    region if available, Sentry EU, PostHog EU).
+  - Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
+    statement descriptor); live webhook endpoint created with `pnpm stripe:setup:webhooks -- --url
+https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and OAuth app;
+    IVA sign-off recorded; test a 1 EUR live booking + refund + invoices with an internal expert.
+  - Video: Daily HIPAA domain confirmed, webhook secret set, `sessions.eleva.care` CNAME live.
+  - Notifications: Resend domain verified (DKIM/SPF/DMARC), Twilio EU sender approved.
+  - Security: penetration test findings closed (high/critical), CSP enforced, rate limits live,
+    secrets rotated post pen-test, `BETTER_AUTH_SECRET` production unique, KEK v1 stored in
+    Vercel + offline escrow.
+  - Ops: on-call rotation, status page, alerts tested, backups (Neon PITR window >= 7 days),
+    runbooks reviewed, support macros ready, DNS TTL lowered to 300s 48h before.
+  - Product: `pt/en/es` copy reviewed by a native speaker; pricing page matches Stripe products;
+    `feature-flag-rollout-plan.md` production defaults set (`ff.toconline_invoicing_enabled` on,
+    `ff.ai_reports_beta` off, `ff.session_recording` off).
+- **Cutover** (operated from `operator-tasks/cutover-runbook.md`): T-48h TTL lowering + comms
+  banner on MVP; T-2h MVP read-only + booking disabled; final `--since` migration run; verify;
+  Vercel domains move (`eleva.care`, `www`, `api`, `admin`, `sessions`) to v3 projects; Stripe
+  webhook switch (disable MVP endpoint after v3 endpoint confirmed receiving); QStash schedules
+  applied to production (`pnpm qstash:setup`); flags applied; smoke E2E against production
+  (read-only spec + one 1 EUR booking); welcome wave 1 (experts), wave 2 (members) over 48h;
+  calendar reconnect notifications.
+- **Watch**: 7 days: SLO dashboard (API availability, booking success rate, payment success
+  rate, webhook lag, transfer success, invoice success, notification delivery), daily report;
+  rollback trigger criteria (P1 > 30 min, payment success < 95%, data inconsistency).
+- **Decommission**: MVP kept read-only 30 days; WorkOS cancelled after final record checksum
+  verification and 7-day watch; Novu already retired; remove migration schema after 30 days.
+
+Out: Spain launch, Academy content (Phase 16).
+
+## Deliverables
+
+1. Ticked `launch-readiness-checklist.md` with evidence links; updated DPIA in
+   `compliance-data-governance.md`; `apps/docs` compliance pages.
+2. Production configuration scripts applied (`stripe:setup:webhooks`, `stripe:setup:portal`,
+   `qstash:setup`, `flags:sync`, `betterstack` monitors) with recorded ids in `infra/*/README.md`.
+3. `e2e/production-smoke.spec.ts` (read-only + gated 1 EUR booking with `E2E_ALLOW_LIVE_PAYMENT`).
+4. Cutover log `operator-tasks/cutover-log-<date>.md` (timeline, verifications, issues).
+5. 7-day SLO report `docs/eleva-v3/reports/launch-slo-<date>.md`.
+6. Decommission checklist executed (dated) in `decision-log.md`.
+
+## Acceptance criteria
+
+- [ ] Every checklist item ticked with a link (PR, dashboard screenshot, or doc).
+- [ ] Live 1 EUR booking: payment succeeded, payout scheduled, Tier 1 invoice issued, Tier 2
+      manual/auto recorded, notifications delivered, session room created; refund + credit note.
+- [ ] DNS switched; `https://eleva.care`, `/experts`, `/[username]`, `/app`, `/expert`,
+      `api.eleva.care/health`, `admin.eleva.care` all green; old MVP URLs redirect (sample 20).
+- [ ] Migrated experts: >= 95% of active experts signed in within 7 days (tracked); support tickets
+      triaged.
+- [ ] 7-day SLO report: API availability >= 99.9%, payment success >= 98%, webhook p95 lag < 60s,
+      zero P1.
+- [ ] Rollback plan rehearsed before cutover (staging) and not needed — or executed and documented.
+- [ ] WorkOS cancelled only after checksum verification sign-off; recorded in `decision-log.md`.
+
+## Tests
+
+- Production smoke E2E; synthetic monitors; manual live booking.
+
+## Docs to update
+
+- `launch-readiness-checklist.md`, `compliance-data-governance.md` (DPIA), `environment-matrix.md`
+  (production hosts final), `decision-log.md` (go/no-go, cutover, decommission), `owner-map.md`.
+
+## Local references
+
+- `docs/eleva-v3/{launch-readiness-checklist,compliance-data-governance,service-level-objectives,support-escalation-matrix,feature-flag-rollout-plan,environment-matrix}.md`, ADR-012, ADR-019.
+- `operator-tasks/cutover-runbook.md` (Phase 14), `infra/**/README.md`, `.github/workflows/e2e.yml`.
+- MVP Vercel project + DNS provider settings (operator access).
+
+## External docs
+
+- Vercel domains/DNS + project domain moves `/vercel/vercel` docs; Stripe live mode go-live
+  checklist `/websites/stripe`; Neon PITR `/websites/neon_com_docs`; Daily custom domain docs;
+  Resend domain verification.
+
+## Risks
+
+- DNS propagation and cookie domain mismatches: keep MVP responding read-only; monitor auth error
+  rate; rollback = DNS revert.
+- Multibanco pending payments on MVP: verify zero pending at freeze; if any, wait for expiry.
+
+## Copy-paste prompt
+
+```text
+You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
+(/Users/<you>/…/elevacare-monorepo). Work autonomously for the code and documentation parts;
+STOP and ask the repository owner (@rodrigobarona) for explicit go-ahead before each production
+mutation step (DNS, Stripe live webhook switch, migration --apply against production, WorkOS
+cancellation). Record each go-ahead in operator-tasks/cutover-log-<date>.md.
+
+Before writing code:
+1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
+   docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
+   operator-tasks/cutover-runbook.md and launch-readiness-checklist.md.
+3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
+   through Context7.
+
+Workflow (mandatory) for the code/doc PR:
+- git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e
+- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- git push -u origin <branch> && gh pr create --base main (PR body template README section 8).
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+  approval from @rodrigobarona; gh pr merge --squash --delete-branch.
+
+Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
+JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
+POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
+package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
+"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+(pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
+secrets, ids of live customers, or PHI into the repo; evidence files must be redacted.
+
+PHASE 15 TASK — Launch gate, production cutover, 7-day watch, decommission (ADR-012, ADR-019).
+
+A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item by item; for each
+   item either link evidence (PR, screenshot path under docs/eleva-v3/reports/evidence/, dashboard
+   URL) or fix the gap in this PR. Required items: ERS compliance pages in apps/docs (compliance/
+   portugal: licensing statement, complaint book link, professional registration display rules,
+   no-diagnosis disclaimers) linked from the apps/web footer; final versioned legal texts in all
+   locales; DPIA update in compliance-data-governance.md (WorkOS removed, Daily/Better Auth/AI
+   Gateway added, subprocessor table); DSAR timing test; crypto-shred test on a staging org;
+   EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Resend, Sentry EU,
+   PostHog EU) with links; pen-test findings closed; CSP enforced; production flag defaults
+   (ff.toconline_invoicing_enabled on, ff.ai_reports_beta off, ff.session_recording off) applied
+   with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
+   recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one
+   1 EUR booking only when E2E_ALLOW_LIVE_PAYMENT=true) and a workflow dispatchable manually.
+B. Production configuration (with go-ahead per step): set all env vars in the 8 Vercel projects
+   per environment-matrix.md (list them and confirm); pnpm stripe:setup:webhooks -- --url
+   https://api.eleva.care/webhooks/stripe --apply (record endpoint id), pnpm stripe:setup:portal
+   -- --apply, pnpm qstash:setup (production QStash), BetterStack monitors, Daily webhook +
+   sessions.eleva.care CNAME, Resend domain verification, Twilio sender. Run a live 1 EUR booking
+   with an internal expert end to end (payment, payout scheduled, Tier 1 + Tier 2 invoices,
+   notifications, room) and refund it (credit note). Paste evidence.
+C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md): T-48h lower DNS
+   TTL to 300s and show the MVP maintenance banner; T-2h MVP read-only + booking disabled, verify
+   zero pending Multibanco; final pnpm migration:run --apply --since <last rehearsal ts> against
+   production (from infra/migration, read-only MVP role), pnpm migration:verify (counts, checksums
+   100%, FK orphans 0); move domains eleva.care, www, api, admin, sessions to the v3 Vercel
+   projects; confirm Stripe live webhook receives events on v3 then disable the MVP endpoint;
+   run production-smoke; send welcome wave 1 (experts) then wave 2 (members) within 48h; queue
+   calendar.reconnect_required notifications. Log every step with timestamps in
+   operator-tasks/cutover-log-<date>.md. Rollback criteria: P1 > 30 min, payment success < 95%,
+   auth error rate > 5%, data inconsistency -> revert DNS to MVP + unfreeze MVP + announce.
+D. Watch 7 days: daily entry in docs/eleva-v3/reports/launch-slo-<date>.md with API availability,
+   booking and payment success rates, webhook p95 lag, transfer/invoice success, notification
+   delivery, sign-in rate of migrated experts (target >= 95% active experts in 7 days), incidents.
+E. Decommission (with go-ahead): after the 7-day watch and a final records checksum verification,
+   cancel WorkOS; keep MVP read-only for 30 days then archive (Neon branch snapshot retained per
+   retention matrix); schedule removal of the migration schema at +30 days; record everything in
+   decision-log.md and update owner-map.md.
+
+Acceptance: checklist fully evidenced; live 1 EUR cycle; DNS switched with all surfaces green and
+20 sample redirects; migrated expert sign-in rate tracked; 7-day SLO report meets targets;
+rollback rehearsed; WorkOS cancelled only after sign-off.
+
+Report: gate gaps fixed, production ids (webhook endpoint, monitors), cutover log link, SLO report
+link, open incidents, CodeRabbit CLI counts, PR URL.
+```

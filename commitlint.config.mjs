@@ -27,6 +27,11 @@ export default {
         ...Array.from({ length: 9 }, (_, i) => i).flatMap((sprint) =>
           Array.from({ length: 16 }, (_, j) => `s${sprint}.${j + 1}`)
         ),
+        // Execution-plan scopes (docs/eleva-v3/execution-plan): the plan itself
+        // and phases p0..p16 plus post-launch backlog items p16.1..p16.16
+        "plan",
+        ...Array.from({ length: 17 }, (_, i) => `p${i}`),
+        ...Array.from({ length: 16 }, (_, j) => `p16.${j + 1}`),
         // App scopes
         "web",
         "app",

@@ -79,6 +79,38 @@ Keep sprint PRs under this limit:
   (scaffolding 4 apps + 16 empty packages in one go). Post-S0 sprint
   PRs should not repeat this.
 
+### CodeRabbit CLI loop (local gate before the PR gate)
+
+The GitHub App review above is the **PR gate**. Before a PR exists,
+every branch also runs CodeRabbit from the **CLI** so that findings are
+fixed before anyone else sees them. The loop is defined in
+[`execution-plan/README.md`](./execution-plan/README.md) section 4 and
+operated through the
+[`coderabbit-review` skill](../../.cursor/skills/coderabbit-review/SKILL.md).
+
+| Script               | Command                                                  | When                                                                        |
+| -------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm review`        | `coderabbit review --plain --type uncommitted`           | Before every commit                                                         |
+| `pnpm review:branch` | `coderabbit review --plain --type committed --base main` | Before `git push` / `gh pr create`, and after every fix batch on an open PR |
+| `pnpm review:agent`  | `coderabbit review --agent --type all --base main`       | When an agent needs structured findings                                     |
+
+Rules:
+
+1. One phase (or feature) = one branch `phase-NN/<slug>` from an
+   up-to-date `main` = one PR.
+2. Run `pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build`
+   before `pnpm review`; the CLI should review working code.
+3. Fix every CLI finding, or record it as declined with a reason in the
+   PR body ("CodeRabbit CLI" section of the template in
+   `execution-plan/README.md` section 8). Never weaken a rule to silence
+   a finding. Security, RLS, audit, vendor-boundary and PHI-in-logs
+   findings are never declined.
+4. On the PR, loop until **zero unresolved CodeRabbit comments and all
+   CI checks green**, then request one human approval and merge with
+   `gh pr merge --squash --delete-branch`.
+5. The CLI needs `coderabbit auth login` once per machine (CI does not
+   run it; the GitHub App remains the required status check).
+
 ### Branch-protection summary
 
 On `main`:
@@ -93,6 +125,7 @@ On `main`:
 ## Related Docs
 
 - [`README.md`](./README.md)
+- [`execution-plan/README.md`](./execution-plan/README.md) — phase sequencing SSOT and review loop
 - [`implementation-sprints.md`](./implementation-sprints.md)
 - [`testing-strategy.md`](./testing-strategy.md)
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
