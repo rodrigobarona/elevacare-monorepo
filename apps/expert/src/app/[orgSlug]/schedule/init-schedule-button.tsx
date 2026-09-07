@@ -42,7 +42,7 @@ export function InitScheduleButton({ timezone }: { timezone: string }) {
       <SettingsFieldsetFooter>
         <SettingsFieldsetStatus />
         <SettingsFieldsetActions>
-          <Button size="sm" onClick={handleClick} disabled={isPending}>
+          <Button size="sm" onPress={handleClick} isDisabled={isPending}>
             {isPending ? t("creating") : t("createSchedule")}
           </Button>
         </SettingsFieldsetActions>

@@ -10,7 +10,6 @@ import {
 import { Button } from "@eleva/ui/components/button"
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -70,51 +69,47 @@ export function AICopilotPanel({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-6 sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <SparkleIcon
-              className="size-5 text-eleva-primary"
+    <Dialog
+      isOpen={open}
+      onOpenChange={onOpenChange}
+      className="gap-6 sm:max-w-md"
+    >
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2">
+          <SparkleIcon className="size-5 text-eleva-primary" weight="duotone" />
+          Eleva AI writing assist
+        </DialogTitle>
+        <DialogDescription>
+          Powered by GPT via Vercel AI Gateway — keeps your voice consistent
+          across EN, PT, and ES.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="grid gap-2">
+        {ACTIONS.map(({ id, label, icon: Icon, result }) => (
+          <Button
+            key={id}
+            type="button"
+            variant="outline"
+            className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
+            isDisabled={loading !== null}
+            onPress={() => run(id, result)}
+          >
+            <Icon
+              className="size-5 shrink-0 text-eleva-primary"
               weight="duotone"
             />
-            Eleva AI writing assist
-          </DialogTitle>
-          <DialogDescription>
-            Powered by GPT via Vercel AI Gateway — keeps your voice consistent
-            across EN, PT, and ES.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-2">
-          {ACTIONS.map(({ id, label, icon: Icon, result }) => (
-            <Button
-              key={id}
-              type="button"
-              variant="outline"
-              className="h-auto justify-start gap-3 rounded-xl px-4 py-3 text-left"
-              disabled={loading !== null}
-              onClick={() => run(id, result)}
-            >
-              <Icon
-                className="size-5 shrink-0 text-eleva-primary"
-                weight="duotone"
-              />
-              <span className="flex flex-col gap-0.5">
-                <span className="font-medium">{label}</span>
-                {loading === id ? (
-                  <span className="text-xs text-muted-foreground">
-                    Drafting…
-                  </span>
-                ) : null}
-              </span>
-            </Button>
-          ))}
-        </div>
-        <p className="text-center text-xs text-muted-foreground">
-          Mock demo — production uses streaming Plate AI + rate-limited API
-          route.
-        </p>
-      </DialogContent>
+            <span className="flex flex-col gap-0.5">
+              <span className="font-medium">{label}</span>
+              {loading === id ? (
+                <span className="text-xs text-muted-foreground">Drafting…</span>
+              ) : null}
+            </span>
+          </Button>
+        ))}
+      </div>
+      <p className="text-center text-xs text-muted-foreground">
+        Mock demo — production uses streaming Plate AI + rate-limited API route.
+      </p>
     </Dialog>
   )
 }

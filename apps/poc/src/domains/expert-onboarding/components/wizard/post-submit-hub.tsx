@@ -6,7 +6,7 @@ import {
   GlobeIcon,
   ShieldIcon,
 } from "@eleva/icons"
-import { Button } from "@eleva/ui/components/button"
+import { LinkButton } from "@eleva/ui/components/button"
 import type { ExpertDraft } from "@/domains/expert-onboarding/lib/types"
 
 interface PostSubmitHubProps {
@@ -65,9 +65,9 @@ export function PostSubmitHub({ draft }: PostSubmitHubProps) {
           </li>
         ))}
       </ul>
-      <Button className="mt-10" variant="outline" asChild>
-        <a href="/">Back to gallery</a>
-      </Button>
+      <LinkButton className="mt-10" variant="outline" href="/">
+        Back to gallery
+      </LinkButton>
     </div>
   )
 }

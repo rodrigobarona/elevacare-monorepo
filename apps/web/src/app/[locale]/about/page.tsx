@@ -1,4 +1,4 @@
-import { Button } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button"
 import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
@@ -107,12 +107,10 @@ function AboutContent() {
               {t("about.ctaDescription")}
             </p>
             <div className="mt-8 flex justify-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/">
-                  {t("about.cta")}
-                  <ArrowRightIcon data-icon="inline-end" />
-                </Link>
-              </Button>
+              <Link href="/" className={buttonVariants({ size: "lg" })}>
+                {t("about.cta")}
+                <ArrowRightIcon data-icon="inline-end" />
+              </Link>
             </div>
           </div>
         </section>

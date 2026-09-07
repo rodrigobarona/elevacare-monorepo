@@ -121,8 +121,8 @@ export function LocalizedFieldEditor({
           variant="outline"
           size="default"
           className="gap-2"
-          disabled={translating || activeValue.trim().length < 3}
-          onClick={handleTranslate}
+          isDisabled={translating || activeValue.trim().length < 3}
+          onPress={handleTranslate}
         >
           <TranslateIcon className="size-4" weight="duotone" />
           {translating ? "Translating…" : "Translate other languages with AI"}
@@ -133,7 +133,7 @@ export function LocalizedFieldEditor({
             variant="ghost"
             size="default"
             className="gap-2"
-            onClick={onSuggest}
+            onPress={onSuggest}
           >
             <SparkleIcon
               className="size-4 text-eleva-primary"

@@ -16,6 +16,10 @@ import { updateLanguagePreference } from "./actions"
 
 export const LANGUAGE_PREFERENCE_FORM_ID = "language-preference-form"
 
+function isLocale(value: string): value is Locale {
+  return (locales as readonly string[]).includes(value)
+}
+
 interface LanguagePreferenceProps {
   preferredLocale: Locale | null
   onPendingChange?: (pending: boolean) => void
@@ -67,21 +71,20 @@ export function LanguagePreference({
       action={formAction}
       className="flex flex-col items-end gap-2"
     >
-      <input type="hidden" name="locale" value={locale} />
       <Select
-        value={locale}
-        onValueChange={(value) => setLocale(value as Locale)}
+        name="locale"
+        aria-label={t("language.title")}
+        selectedKey={locale}
+        onSelectionChange={(key) => {
+          if (typeof key === "string" && isLocale(key)) setLocale(key)
+        }}
       >
-        <SelectTrigger
-          id="locale"
-          className="w-44"
-          aria-label={t("language.title")}
-        >
+        <SelectTrigger id="locale" className="w-44">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
           {locales.map((loc) => (
-            <SelectItem key={loc} value={loc}>
+            <SelectItem key={loc} id={loc}>
               {localeNames[loc as Locale]}
             </SelectItem>
           ))}

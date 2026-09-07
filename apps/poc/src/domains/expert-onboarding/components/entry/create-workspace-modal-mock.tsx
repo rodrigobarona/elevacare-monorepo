@@ -7,7 +7,6 @@ import { ElevaIcon } from "@eleva/icons/client"
 import { Button } from "@eleva/ui/components/button"
 import {
   Dialog,
-  DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
@@ -51,76 +50,78 @@ export function CreateWorkspaceModalMock({
   >(null)
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="gap-8 p-8 sm:max-w-4xl">
-        <DialogHeader className="items-center text-center sm:pr-0">
-          <DialogTitle className="text-2xl font-semibold tracking-tight">
-            Create a workspace
-          </DialogTitle>
-          <DialogDescription className="text-base">
-            Choose the type of workspace you want to create.
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog
+      isOpen={open}
+      onOpenChange={onOpenChange}
+      className="gap-8 p-8 sm:max-w-4xl"
+    >
+      <DialogHeader className="items-center text-center sm:pr-0">
+        <DialogTitle className="text-2xl font-semibold tracking-tight">
+          Create a workspace
+        </DialogTitle>
+        <DialogDescription className="text-base">
+          Choose the type of workspace you want to create.
+        </DialogDescription>
+      </DialogHeader>
 
-        <div className="grid gap-6 sm:grid-cols-3">
-          {workspaceTypes.map(({ type, icon, title, description }) => {
-            const isSelected = selected === type
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setSelected(type)}
-                className={cn(
-                  "flex flex-col items-center gap-6 rounded-2xl border p-8 text-center transition-all duration-200",
-                  isSelected
-                    ? "border-primary bg-primary/5 shadow-lg ring-2 shadow-primary/5 ring-primary/20"
-                    : "border-border hover:border-primary/40 hover:bg-accent/40"
-                )}
-              >
-                <ElevaIcon
-                  icon={icon}
-                  weight={isSelected ? "fill" : "duotone"}
-                  className="size-20 text-eleva-primary"
-                  duotoneColor="rgb(var(--eleva-primary-light))"
-                />
-                <span className="max-w-[14rem] space-y-2">
-                  <span className="block text-base font-medium">{title}</span>
-                  <span className="block text-sm leading-relaxed text-muted-foreground">
-                    {description}
-                  </span>
+      <div className="grid gap-6 sm:grid-cols-3">
+        {workspaceTypes.map(({ type, icon, title, description }) => {
+          const isSelected = selected === type
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => setSelected(type)}
+              className={cn(
+                "flex flex-col items-center gap-6 rounded-2xl border p-8 text-center transition-all duration-200",
+                isSelected
+                  ? "border-primary bg-primary/5 shadow-lg ring-2 shadow-primary/5 ring-primary/20"
+                  : "border-border hover:border-primary/40 hover:bg-accent/40"
+              )}
+            >
+              <ElevaIcon
+                icon={icon}
+                weight={isSelected ? "fill" : "duotone"}
+                className="size-20 text-eleva-primary"
+                duotoneColor="rgb(var(--eleva-primary-light))"
+              />
+              <span className="max-w-[14rem] space-y-2">
+                <span className="block text-base font-medium">{title}</span>
+                <span className="block text-sm leading-relaxed text-muted-foreground">
+                  {description}
                 </span>
-              </button>
-            )
-          })}
-        </div>
+              </span>
+            </button>
+          )
+        })}
+      </div>
 
-        <div className="flex justify-end gap-3 border-t border-border pt-6">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            disabled={selected !== "expert"}
-            onClick={() => {
-              if (selected === "expert") {
-                onOpenChange(false)
-                onExpertContinue()
-              }
-            }}
-          >
-            Continue
-          </Button>
-        </div>
-        {selected && selected !== "expert" ? (
-          <p className="text-center text-xs text-muted-foreground">
-            This POC demo covers the Expert path only.
-          </p>
-        ) : null}
-      </DialogContent>
+      <div className="flex justify-end gap-3 border-t border-border pt-6">
+        <Button
+          type="button"
+          variant="outline"
+          onPress={() => onOpenChange(false)}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          isDisabled={selected !== "expert"}
+          onPress={() => {
+            if (selected === "expert") {
+              onOpenChange(false)
+              onExpertContinue()
+            }
+          }}
+        >
+          Continue
+        </Button>
+      </div>
+      {selected && selected !== "expert" ? (
+        <p className="text-center text-xs text-muted-foreground">
+          This POC demo covers the Expert path only.
+        </p>
+      ) : null}
     </Dialog>
   )
 }

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { cn } from "@eleva/ui/lib/utils"
 import { Avatar, AvatarFallback } from "@eleva/ui/components/avatar"
+import { Button } from "@eleva/ui/components/button"
 import { CaretDownIcon } from "@eleva/icons"
 import { OrgTypeBadge } from "./org-type-badge"
 import type { OrgSwitcherItem } from "./nav-types"
@@ -14,19 +15,24 @@ function orgInitials(name: string): string {
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase()
 }
 
-interface OrgSwitcherTriggerProps extends React.ComponentPropsWithoutRef<"button"> {
+interface OrgSwitcherTriggerProps {
   organization: OrgSwitcherItem
   homeUrl: string
   open: boolean
+  className?: string
 }
 
-export const OrgSwitcherTrigger = React.forwardRef<
-  HTMLButtonElement,
-  OrgSwitcherTriggerProps
->(function OrgSwitcherTrigger(
-  { organization, homeUrl, open, className, ...props },
-  ref
-) {
+/**
+ * Sidebar org row: the name links to the org home, the caret opens the
+ * switcher popover. The caret is a React Aria `Button` so the surrounding
+ * `PopoverTrigger` can wire press + anchoring through context.
+ */
+export function OrgSwitcherTrigger({
+  organization,
+  homeUrl,
+  open,
+  className,
+}: OrgSwitcherTriggerProps) {
   return (
     <div
       className={cn(
@@ -49,18 +55,14 @@ export const OrgSwitcherTrigger = React.forwardRef<
         </span>
         <OrgTypeBadge orgType={organization.orgType} />
       </a>
-      <button
-        ref={ref}
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-xs"
         aria-label="Open organization menu"
-        className="flex shrink-0 cursor-pointer items-center rounded-sm p-1 focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
-        {...props}
+        className="shrink-0 rounded-sm text-sidebar-foreground/70 hover:bg-transparent hover:text-sidebar-foreground"
       >
-        <CaretDownIcon
-          className="size-4 text-sidebar-foreground/70"
-          aria-hidden
-        />
-      </button>
+        <CaretDownIcon className="size-4" aria-hidden />
+      </Button>
     </div>
   )
-})
+}

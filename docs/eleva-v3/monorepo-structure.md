@@ -192,7 +192,7 @@ Phase 1 first milestone:
 │   ├── config/               # env validation, URL helpers, shared constants
 │   ├── auth/                 # WorkOS, session, RBAC, org resolution
 │   ├── db/                   # Drizzle schema, migrations, withOrgContext()
-│   ├── ui/                   # shared shadcn-based design system
+│   ├── ui/                   # shared design system (shadcn aria-luma on React Aria Components)
 │   ├── compliance/           # consent, audit events, retention/export
 │   ├── scheduling/           # event types, schedules, availability, slot logic
 │   ├── calendar/             # Google + Microsoft OAuth and sync

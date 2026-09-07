@@ -4,10 +4,10 @@
  * gateway proxy rewrite to the account zone. Internal SPA navigation
  * would bypass the cross-zone rewrite and hit a 404.
  *
- * The file-level eslint-disable above is a block comment so it survives
- * Prettier (line comments don't work as file-scoped disables anyway).
+ * `LinkButton` renders a native `<a>`; `apps/web` does not mount a React Aria
+ * `RouterProvider`, so no client-side routing is attempted.
  */
-import { Button } from "@eleva/ui/components/button"
+import { LinkButton } from "@eleva/ui/components/button"
 
 interface SignedOutButtonsProps {
   loginLabel: string
@@ -20,12 +20,12 @@ export function SignedOutButtons({
 }: SignedOutButtonsProps) {
   return (
     <>
-      <Button variant="ghost" size="sm" asChild>
-        <a href="/login">{loginLabel}</a>
-      </Button>
-      <Button size="sm" asChild>
-        <a href="/signup">{getStartedLabel}</a>
-      </Button>
+      <LinkButton variant="ghost" size="sm" href="/login">
+        {loginLabel}
+      </LinkButton>
+      <LinkButton size="sm" href="/signup">
+        {getStartedLabel}
+      </LinkButton>
     </>
   )
 }

@@ -83,7 +83,7 @@ export function PlateEditorMock({
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled
+            isDisabled
           >
             <TextBIcon className="size-4" />
           </Button>
@@ -92,7 +92,7 @@ export function PlateEditorMock({
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled
+            isDisabled
           >
             <TextItalicIcon className="size-4" />
           </Button>
@@ -101,7 +101,7 @@ export function PlateEditorMock({
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled
+            isDisabled
           >
             <ListBulletsIcon className="size-4" />
           </Button>
@@ -112,7 +112,7 @@ export function PlateEditorMock({
                 variant="ghost"
                 size="sm"
                 className="gap-1.5 text-eleva-primary hover:text-eleva-primary"
-                onClick={() => setAiOpen(true)}
+                onPress={() => setAiOpen(true)}
               >
                 <SparkleIcon className="size-4" weight="duotone" />
                 AI assist

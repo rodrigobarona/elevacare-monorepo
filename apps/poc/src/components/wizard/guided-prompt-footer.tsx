@@ -54,14 +54,14 @@ export function GuidedPromptFooter({
         <div className="flex w-full items-center justify-between gap-3">
           <div className="min-w-[5rem]">
             {showBack ? (
-              <Button type="button" variant="ghost" onClick={onBack}>
+              <Button type="button" variant="ghost" onPress={onBack}>
                 Back
               </Button>
             ) : null}
           </div>
           <div className="flex items-center gap-2">
             {optional && onSkip ? (
-              <Button type="button" variant="ghost" onClick={onSkip}>
+              <Button type="button" variant="ghost" onPress={onSkip}>
                 Skip
               </Button>
             ) : null}
@@ -69,8 +69,8 @@ export function GuidedPromptFooter({
               type="button"
               size="lg"
               className="min-w-[10rem]"
-              onClick={onNext}
-              disabled={!canNext}
+              onPress={onNext}
+              isDisabled={!canNext}
             >
               {nextLabel}
             </Button>

@@ -10,7 +10,7 @@ import {
   SidebarMenuButton,
 } from "@eleva/ui/components/sidebar"
 import type { NavGroup } from "./nav-types"
-import { NavMenuItemLink } from "./nav-menu-item-link"
+import { NavMenuItemContent } from "./nav-menu-item-content"
 
 interface NavMainProps {
   groups: NavGroup[]
@@ -44,17 +44,19 @@ export function NavMain({ groups, capabilities = [] }: NavMainProps) {
                   return (
                     <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton
-                        asChild
+                        href={item.url}
                         isActive={isActive}
                         tooltip={item.title}
                       >
-                        <NavMenuItemLink
-                          href={item.url}
-                          title={item.title}
-                          icon={item.icon}
-                          active={isActive}
-                          shortcut={item.shortcut}
-                        />
+                        {({ isHovered, isFocusVisible }) => (
+                          <NavMenuItemContent
+                            title={item.title}
+                            icon={item.icon}
+                            active={isActive}
+                            hovered={isHovered || isFocusVisible}
+                            shortcut={item.shortcut}
+                          />
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

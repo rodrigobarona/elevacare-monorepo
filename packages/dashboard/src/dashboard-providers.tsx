@@ -1,5 +1,6 @@
 "use client"
 
+import { AppRouterProvider } from "@eleva/ui/components/router-provider"
 import { Toaster } from "@eleva/ui/components/sonner"
 import type { ThemePreference } from "@eleva/config/theme"
 import { ElevaThemeProvider } from "./eleva-theme-provider"
@@ -27,7 +28,7 @@ export function DashboardProviders({
 }) {
   return (
     <ElevaThemeProvider initialTheme={initialTheme}>
-      {children}
+      <AppRouterProvider>{children}</AppRouterProvider>
       <DashboardToaster />
     </ElevaThemeProvider>
   )

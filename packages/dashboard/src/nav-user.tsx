@@ -1,12 +1,10 @@
 "use client"
 
-import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { GlobeIcon, SignOutIcon, UserIcon, GearIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -54,24 +52,21 @@ export function NavUser({
   const fallbackStyle = getAvatarFallbackStyle(avatarSeed)
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar key={user.avatarUrl ?? "fallback"} className="size-7">
-            {user.avatarUrl ? (
-              <AvatarImage src={user.avatarUrl} alt={displayName} />
-            ) : null}
-            <AvatarFallback
-              delayMs={0}
-              className="text-[10px] font-semibold text-white"
-              style={fallbackStyle}
-            >
-              {initials}
-            </AvatarFallback>
-          </Avatar>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-56 rounded-lg p-1" align="end">
+    <DropdownMenuTrigger>
+      <Button variant="ghost" size="icon" className="rounded-full">
+        <Avatar key={user.avatarUrl ?? "fallback"} className="size-7">
+          {user.avatarUrl ? (
+            <AvatarImage src={user.avatarUrl} alt={displayName} />
+          ) : null}
+          <AvatarFallback
+            className="text-[10px] font-semibold text-white"
+            style={fallbackStyle}
+          >
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      </Button>
+      <DropdownMenu className="min-w-56 rounded-lg p-1" placement="bottom end">
         <DropdownMenuLabel className="p-0 font-normal">
           <div className="flex items-center gap-2 px-2 py-1 text-left text-sm">
             <Avatar key={user.avatarUrl ?? "fallback-menu"} className="size-8">
@@ -79,7 +74,6 @@ export function NavUser({
                 <AvatarImage src={user.avatarUrl} alt={displayName} />
               ) : null}
               <AvatarFallback
-                delayMs={0}
                 className="text-xs font-semibold text-white"
                 style={fallbackStyle}
               >
@@ -96,36 +90,44 @@ export function NavUser({
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup className="p-0">
-          <DropdownMenuItem asChild className="py-1">
-            <Link href={accountUrl}>
-              <UserIcon className="size-4" />
-              {t("profile")}
-            </Link>
+          <DropdownMenuItem
+            href={accountUrl}
+            textValue={t("profile")}
+            className="py-1"
+          >
+            <UserIcon className="size-4" />
+            {t("profile")}
           </DropdownMenuItem>
-          <DropdownMenuItem asChild className="py-1">
-            <Link href={settingsUrl ?? deriveParentPath(accountUrl)}>
-              <GearIcon className="size-4" />
-              {t("settings")}
-            </Link>
+          <DropdownMenuItem
+            href={settingsUrl ?? deriveParentPath(accountUrl)}
+            textValue={t("settings")}
+            className="py-1"
+          >
+            <GearIcon className="size-4" />
+            {t("settings")}
           </DropdownMenuItem>
           <NavThemeMenu />
           {homepageUrl && (
-            <DropdownMenuItem asChild className="py-1">
-              <a href={homepageUrl}>
-                <GlobeIcon className="size-4" />
-                {t("homepage")}
-              </a>
+            <DropdownMenuItem
+              href={homepageUrl}
+              textValue={t("homepage")}
+              className="py-1"
+            >
+              <GlobeIcon className="size-4" />
+              {t("homepage")}
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild className="py-1">
-          <a href={logoutUrl}>
-            <SignOutIcon className="size-4" />
-            {t("signOut")}
-          </a>
+        <DropdownMenuItem
+          href={logoutUrl}
+          textValue={t("signOut")}
+          className="py-1"
+        >
+          <SignOutIcon className="size-4" />
+          {t("signOut")}
         </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+    </DropdownMenuTrigger>
   )
 }

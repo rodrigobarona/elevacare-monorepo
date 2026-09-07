@@ -121,8 +121,8 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleDisconnect(cal.id)}
-                    disabled={pending}
+                    onPress={() => handleDisconnect(cal.id)}
+                    isDisabled={pending}
                   >
                     {t("disconnect")}
                   </Button>

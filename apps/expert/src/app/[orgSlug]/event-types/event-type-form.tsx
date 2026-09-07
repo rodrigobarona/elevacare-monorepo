@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@eleva/ui/components/select"
-import { Checkbox } from "@eleva/ui/components/checkbox"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import {
   Card,
@@ -34,6 +34,16 @@ interface Props {
   eventTypeId?: string
   defaultValues?: Partial<EventTypeFormData>
   workspaceBase: string
+}
+
+type SessionMode = "online" | "in_person" | "phone"
+const SESSION_MODES: readonly SessionMode[] = ["online", "in_person", "phone"]
+
+function isSessionMode(value: unknown): value is SessionMode {
+  return (
+    typeof value === "string" &&
+    (SESSION_MODES as readonly string[]).includes(value)
+  )
 }
 
 const LOCALES = ["en", "pt", "es"] as const
@@ -67,10 +77,10 @@ export function EventTypeForm({
   const [price, setPrice] = React.useState(
     String((defaultValues?.priceAmount ?? 0) / 100)
   )
-  const [currency, setCurrency] = React.useState(
+  const [currency, setCurrency] = React.useState<string>(
     defaultValues?.currency ?? "eur"
   )
-  const [sessionMode, setSessionMode] = React.useState(
+  const [sessionMode, setSessionMode] = React.useState<SessionMode>(
     defaultValues?.sessionMode ?? "online"
   )
   const [languages, setLanguages] = React.useState<string[]>(
@@ -132,7 +142,7 @@ export function EventTypeForm({
       priceAmount: Math.round((Number(price) || 0) * 100),
       currency,
       languages,
-      sessionMode: sessionMode as "online" | "in_person" | "phone",
+      sessionMode,
       bookingWindowDays: bookingWindow ? Number(bookingWindow) : null,
       minimumNoticeMinutes: minimumNotice === "" ? 60 : Number(minimumNotice),
       bufferBeforeMinutes: Number(bufferBefore) || 0,
@@ -287,33 +297,40 @@ export function EventTypeForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Label>Currency</Label>
-              <Select value={currency} onValueChange={setCurrency}>
+              <Select
+                selectedKey={currency}
+                onSelectionChange={(key) => {
+                  if (typeof key === "string") setCurrency(key)
+                }}
+              >
+                <Label>Currency</Label>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="eur">EUR</SelectItem>
-                  <SelectItem value="usd">USD</SelectItem>
-                  <SelectItem value="gbp">GBP</SelectItem>
+                  <SelectItem id="eur">EUR</SelectItem>
+                  <SelectItem id="usd">USD</SelectItem>
+                  <SelectItem id="gbp">GBP</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Session mode</Label>
             <Select
-              value={sessionMode}
-              onValueChange={(v) => setSessionMode(v as typeof sessionMode)}
+              selectedKey={sessionMode}
+              onSelectionChange={(key) => {
+                if (isSessionMode(key)) setSessionMode(key)
+              }}
             >
+              <Label>Session mode</Label>
               <SelectTrigger className="max-w-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="online">Online (video)</SelectItem>
-                <SelectItem value="in_person">In person</SelectItem>
-                <SelectItem value="phone">Phone</SelectItem>
+                <SelectItem id="online">Online (video)</SelectItem>
+                <SelectItem id="in_person">In person</SelectItem>
+                <SelectItem id="phone">Phone</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -322,13 +339,13 @@ export function EventTypeForm({
             <Label>Languages supported</Label>
             <div className="flex gap-4">
               {LOCALES.map((lang) => (
-                <label key={lang} className="flex items-center gap-2 text-sm">
-                  <Checkbox
-                    checked={languages.includes(lang)}
-                    onCheckedChange={() => toggleLanguage(lang)}
-                  />
-                  {LOCALE_LABELS[lang]}
-                </label>
+                <CheckboxField
+                  key={lang}
+                  id={`event-type-lang-${lang}`}
+                  label={LOCALE_LABELS[lang]}
+                  isSelected={languages.includes(lang)}
+                  onChange={() => toggleLanguage(lang)}
+                />
               ))}
             </div>
           </div>
@@ -419,26 +436,24 @@ export function EventTypeForm({
           </div>
 
           <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={requiresApproval}
-                onCheckedChange={(v) => setRequiresApproval(!!v)}
-              />
-              Require manual approval for bookings
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox
-                checked={worldwideMode}
-                onCheckedChange={(v) => setWorldwideMode(!!v)}
-              />
-              Worldwide mode (bypass country-license validation)
-            </label>
+            <CheckboxField
+              id="event-type-requires-approval"
+              label="Require manual approval for bookings"
+              isSelected={requiresApproval}
+              onChange={setRequiresApproval}
+            />
+            <CheckboxField
+              id="event-type-worldwide-mode"
+              label="Worldwide mode (bypass country-license validation)"
+              isSelected={worldwideMode}
+              onChange={setWorldwideMode}
+            />
           </div>
         </CardContent>
       </Card>
 
       <div className="flex gap-3">
-        <Button type="submit" disabled={pending || !title.en}>
+        <Button type="submit" isDisabled={pending || !title.en}>
           {pending
             ? "Saving..."
             : mode === "create"
@@ -448,7 +463,7 @@ export function EventTypeForm({
         <Button
           type="button"
           variant="outline"
-          onClick={() => router.push(`${workspaceBase}/event-types`)}
+          onPress={() => router.push(`${workspaceBase}/event-types`)}
         >
           Cancel
         </Button>

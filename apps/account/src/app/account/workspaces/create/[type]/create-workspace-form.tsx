@@ -40,7 +40,7 @@ export function CreateWorkspaceForm({ type }: CreateWorkspaceFormProps) {
       {state && !state.ok ? (
         <p className="text-sm text-destructive">{t("errorGeneric")}</p>
       ) : null}
-      <Button type="submit" disabled={pending || name.trim().length < 2}>
+      <Button type="submit" isDisabled={pending || name.trim().length < 2}>
         {pending ? t("submitting") : t("submit")}
       </Button>
     </form>
