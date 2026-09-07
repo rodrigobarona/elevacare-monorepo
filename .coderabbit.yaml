@@ -23,7 +23,8 @@ reviews:
       - "^phase-.*"
   changed_files_summary: true
   sequence_diagrams: false
-  # Keep large PRs under the 150-file Pro-plan cap by excluding low-signal
+  # Keep large PRs under the 100-file review cap (observed on PR #20: "Review
+  # skipped: 109 files exceed the limit of 100") by excluding low-signal
   # auto-generated / boilerplate files from the review scope. Sprint PRs
   # should still aim for <150 actual reviewable files per
   # docs/eleva-v3/contribution-workflow.md.

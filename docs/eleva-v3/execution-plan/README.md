@@ -140,6 +140,11 @@ Rules of the loop:
    - The cap is per PR slice (`phase-NN.1`, `phase-NN.2`), not per phase. It is not dynamic by
      effort: the same numbers apply to code and docs-only PRs; docs-only PRs hit the
      diminishing-returns exit more often because wording findings are generative.
+   - **Allowance**: CLI rounds and GitHub App reviews draw from the same per-developer hourly
+     allowance (Team plan: 8 reviews/dev/hour, Sep 7-21 2026; Essentials afterwards unless
+     renewed: 5). A "Review limit reached" comment is not a failure — wait for the window the
+     comment states, then comment `@coderabbitai review` on the PR. Do not burn rounds on
+     trivial re-runs; batch fixes, then review once.
 5. **PR**: `gh pr create --base main --fill` plus a body that contains: phase number and link
    to the phase file, summary, checklist of acceptance criteria, list of CodeRabbit CLI findings
    addressed or declined with reasons, and test evidence.
@@ -388,16 +393,17 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-<slug>.md
 
 ## 9. Risks carried across phases
 
-| Risk                                                                   | Mitigation                                                                                                | Phase |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----- |
-| Auth swap breaks every app at once                                     | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR | 2-3   |
-| Cross-subdomain cookies on preview deployments                         | Previews point at staging API; documented in `environment-matrix.md`                                      | 1, 2  |
-| WorkOS Vault records must be decrypted before WorkOS is cancelled      | Export + checksum in Phase 14 before any WorkOS account closure                                           | 14    |
-| Better Auth plugin package churn                                       | Pin in catalog; verify via Context7 at Phase 2 start                                                      | 2     |
-| Daily HIPAA mode disables features (custom room names, live streaming) | Random room names + meeting tokens from day one                                                           | 9     |
-| Commission SSOT vs grandfathered MVP plans                             | Mapping table reviewed with finance before Phase 14                                                       | 6, 14 |
-| IVA/TOConline matrix needs accountant sign-off                         | Sign-off is an entry gate of Phase 7, not Phase 15                                                        | 7     |
-| CodeRabbit 150-file cap skips review                                   | Split PRs; `path_filters` keep generated files out                                                        | all   |
+| Risk                                                                   | Mitigation                                                                                                  | Phase |
+| ---------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----- |
+| Auth swap breaks every app at once                                     | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR   | 2-3   |
+| Cross-subdomain cookies on preview deployments                         | Previews point at staging API; documented in `environment-matrix.md`                                        | 1, 2  |
+| WorkOS Vault records must be decrypted before WorkOS is cancelled      | Export + checksum in Phase 14 before any WorkOS account closure                                             | 14    |
+| Better Auth plugin package churn                                       | Pin in catalog; verify via Context7 at Phase 2 start                                                        | 2     |
+| Daily HIPAA mode disables features (custom room names, live streaming) | Random room names + meeting tokens from day one                                                             | 9     |
+| Commission SSOT vs grandfathered MVP plans                             | Mapping table reviewed with finance before Phase 14                                                         | 6, 14 |
+| IVA/TOConline matrix needs accountant sign-off                         | Sign-off is an entry gate of Phase 7, not Phase 15                                                          | 7     |
+| CodeRabbit 100-file cap skips review                                   | Split PRs (target <= 30 files); `path_filters` keep generated files out                                     | all   |
+| CodeRabbit hourly review allowance exhausted ("Review limit reached")  | Team plan (8 reviews/dev/h, Sep 7-21 2026); space CLI rounds; `@coderabbitai review` when the window resets | all   |
 
 ## 10. Related documents
 

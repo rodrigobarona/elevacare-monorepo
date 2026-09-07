@@ -303,6 +303,11 @@ with a one-line reason and, when real work, a Phase 16 backlog row.</li>
 <li>The cap is per PR slice (<code>phase-NN.1</code>, <code>phase-NN.2</code>), not per phase. It is not dynamic by
 effort: the same numbers apply to code and docs-only PRs; docs-only PRs hit the
 diminishing-returns exit more often because wording findings are generative.</li>
+<li><strong>Allowance</strong>: CLI rounds and GitHub App reviews draw from the same per-developer hourly
+allowance (Team plan: 8 reviews/dev/hour, Sep 7-21 2026; Essentials afterwards unless
+renewed: 5). A &quot;Review limit reached&quot; comment is not a failure — wait for the window the
+comment states, then comment <code>@coderabbitai review</code> on the PR. Do not burn rounds on
+trivial re-runs; batch fixes, then review once.</li>
 </ul>
 </li>
 <li><strong>PR</strong>: <code>gh pr create --base main --fill</code> plus a body that contains: phase number and link
@@ -718,8 +723,13 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-&lt;slug&gt;.md
 <td>7</td>
 </tr>
 <tr>
-<td>CodeRabbit 150-file cap skips review</td>
-<td>Split PRs; <code>path_filters</code> keep generated files out</td>
+<td>CodeRabbit 100-file cap skips review</td>
+<td>Split PRs (target &lt;= 30 files); <code>path_filters</code> keep generated files out</td>
+<td>all</td>
+</tr>
+<tr>
+<td>CodeRabbit hourly review allowance exhausted (&quot;Review limit reached&quot;)</td>
+<td>Team plan (8 reviews/dev/h, Sep 7-21 2026); space CLI rounds; <code>@coderabbitai review</code> when the window resets</td>
 <td>all</td>
 </tr>
 </tbody></table>
@@ -3804,7 +3814,7 @@ status; suppress future sends on hard bounce.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
 before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on <masked
-                number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
+                    number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
 instructions; the ICS <code>LOCATION</code> follows the same rule.</li>
 <li><input disabled="" type="checkbox"> Booking confirmation email arrives in the member&#39;s locale with ICS attached; expert receives
 &quot;new booking&quot;; in-app rows created for both.</li>

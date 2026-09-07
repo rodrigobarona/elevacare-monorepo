@@ -71,7 +71,11 @@ implement -> pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-ac
   means the PR is too big: split it and restart the loop on the smaller slice.
 - Leftover Minor/Trivial findings go to the PR body "Deferred findings" table (README section 8)
   with a reason each; real work becomes a Phase 16 backlog row.
-- Small PRs are the lever: target <= 400 changed lines / <= 30 files; split above 800 / 60.
+- Small PRs are the lever: target <= 400 changed lines / <= 30 files; split above 800 / 60. The
+  GitHub App skips PRs above 100 files outright.
+- Allowance: CLI rounds and App reviews share one per-developer hourly allowance (Team plan:
+  8/h during Sep 7-21 2026; Essentials: 5/h). On "Review limit reached" / `Review rate limited`,
+  wait for the stated window, then comment `@coderabbitai review`. Batch fixes; review once.
 
 ## Triage rules for findings
 
