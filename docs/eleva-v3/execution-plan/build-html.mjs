@@ -96,7 +96,7 @@ function rewriteLink(href, docId) {
     return `#${docId}--${slugify(decodeURIComponent(href.slice(1)))}`
   }
   const phaseLink = href.match(
-    /(?:^|\/)phases\/(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i
+    /(?:^|\/)(?:phases\/)?(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i
   )
   if (phaseLink) {
     return phaseLink[2]
@@ -140,7 +140,7 @@ function createRenderer(doc, headings, promptCounter) {
         return `<h${depth} id="${base}"><a class="anchor" href="#${base}" aria-label="Link to section">#</a>${text}</h${depth}>\n`
       },
       code({ text, lang }) {
-        const language = (lang ?? "").trim()
+        const language = (lang ?? "").trim().split(/\s+/)[0]
         if (language === "text") {
           promptCounter.count += 1
           const id = `prompt-${doc.id}-${promptCounter.count}`

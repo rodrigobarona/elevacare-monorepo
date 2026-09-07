@@ -122,8 +122,7 @@ You are a senior engineer working in the Eleva.care v3 monorepo at the repositor
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, eleva-icons) and
-   .cursor/skills/{api-first-agentic,audit-wiring,coderabbit-review}/SKILL.md, plus
-   ~/.claude/skills/{resend,react-email,email-best-practices}/SKILL.md if present.
+   .cursor/skills/{api-first-agentic,audit-wiring,coderabbit-review}/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md in full.
 3. Read every file under "Local references". Pull Resend, React Email, Twilio (EU region), QStash

@@ -36,9 +36,11 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   `organization.type = 'team'` (the product label is "Team (Clinic)"; `team` is the only
   seat-billed type — never `personal` or `expert`) (any role, owner included) whose user has at
   least one _published_ event type in that org; owner/admin accounts without published event
-  types are free. Triggered from `organizationHooks.afterAddMember` and
-  `organizationHooks.afterRemoveMember` (registered in Phase 2 as stubs) **and** from the
-  event-type publish/unpublish path in `@eleva/scheduling`; until Phase 11 creates team
+  types are free. Triggered from `organizationHooks.afterAddMember`,
+  `organizationHooks.afterAcceptInvitation` and `organizationHooks.afterRemoveMember` (registered
+  in Phase 2 as stubs) **and** from the event-type publish/unpublish path in `@eleva/scheduling`
+  (test: a member with a published event type who is removed and re-invited drops the quantity on
+  removal and restores it on `afterAcceptInvitation` without any publish); until Phase 11 creates team
   subscriptions the function is a no-op for orgs without a `billing_subscriptions` row. Remove
   the WorkOS meter.
 - `apps/api/src/app/workos/sync` deleted; `infra/qstash/setup-workos-sync.ts` deleted and

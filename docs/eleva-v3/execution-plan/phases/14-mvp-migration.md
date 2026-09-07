@@ -163,8 +163,7 @@ You are a senior engineer working in the Eleva.care v3 monorepo at the repositor
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (encryption, audit-wiring, api-first-agentic, better-auth)
-   and .cursor/skills/{audit-wiring,coderabbit-review}/SKILL.md; ~/.claude/skills/{neon-postgres,
-   drizzle-migrations,gdpr-data-handling}/SKILL.md when present.
+   and .cursor/skills/{audit-wiring,coderabbit-review}/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/14-mvp-migration.md in full.
 3. Read every file under "Local references" — the MVP drizzle/schema.ts end to end and the v3

@@ -39,7 +39,8 @@ Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/com
 
 Should own:
 
-- base primitives (regenerated from the shadcn registry, never hand-forked)
+- base primitives (regenerated from the shadcn registry; local edits only as `// eleva:`-marked
+  patches per [ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md) decision 7)
 - semantic components
 - layout helpers
 - form building blocks

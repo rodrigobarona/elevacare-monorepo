@@ -25,8 +25,12 @@ In:
   `encryptForOrg(expertOrgId)`; naming convention `<field>_encrypted` everywhere),
   `published_at` (member-visible when set), `version`, `created_by`, timestamps;
   `session_documents`: private Blob pathname, mime, size, `metadata_encrypted`, uploaded_by,
-  scope `expert_only|shared`), RLS: expert org full; member reads only `published_at IS NOT NULL`
-  rows for their own user id (second policy via `eleva.user_id` setting).
+  scope `expert_only|shared`). RLS — two different member-read predicates because the tables
+  have different visibility columns: `records`: expert org full; member reads only
+  `published_at IS NOT NULL AND member_user_id = current_setting('eleva.user_id')`.
+  `session_documents`: expert org full; member reads only `scope = 'shared'` rows of bookings
+  where they are the member (`session_documents` has **no** `published_at`). Both member
+  policies use the `eleva.user_id` setting.
 - **Consent**: `consents` kinds extended (`health_data_processing`, `session_recording`,
   `ai_processing`) captured at booking (Phase 4 form) and at session start (join page banner);
   versioned legal texts in `packages/compliance/legal/*.md` per locale.

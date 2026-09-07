@@ -137,9 +137,7 @@ You are a senior engineer working in the Eleva.care v3 monorepo at the repositor
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc (api-first-agentic, audit-wiring, eleva-icons, better-auth,
-   daily-video) and .cursor/skills/{api-first-agentic,coderabbit-review}/SKILL.md; also
-   ~/.claude/skills/{secure-headers-csp-builder,rate-limiting-implementation,posthog-instrumentation,
-   core-web-vitals,playwright-e2e-testing}/SKILL.md when present.
+   daily-video) and .cursor/skills/{api-first-agentic,coderabbit-review}/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/13-hardening-observability.md in full.
 3. Read every file under "Local references". Pull Sentry Next.js, PostHog JS (EU), Next.js 16 CSP/
