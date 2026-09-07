@@ -284,6 +284,27 @@ Each entry should include:
 - Summary: `@eleva/ui` regenerated from the shadcn `aria-luma` style on `react-aria-components`; `radix-ui`, `cmdk`, `react-hook-form` dropped; `navigation-menu`/`form` deleted, `field` + `checkbox-field` added. `@eleva/dashboard` mounts `AppRouterProvider` (relative hrefs → `router.push`, absolute → hard navigation for cross-zone). Consumers in `apps/web`, `apps/account`, `apps/expert`, `apps/poc` migrated to React Aria props (`isDisabled`, `onPress`, `isOpen`, `selectedKey`). Done before Phase 2 so all new v3 UI is written once against the final primitive layer.
 - Reference: [`adrs/ADR-022-react-aria-ui-primitives.md`](./adrs/ADR-022-react-aria-ui-primitives.md), [`design-system-spec.md`](./design-system-spec.md)
 
+### 2026-09-07: Rich text = Plate in a single `@eleva/editor` package (ADR-023, authored in Phase 1)
+
+- Owner: engineering + product
+- Status: accepted
+- Summary: every rich-text surface (expert bios, event-type descriptions, location instructions, clinical notes, reports, the template library, clinic pages) uses Plate through `packages/editor`; Plate JSON stored in `jsonb` with server-derived sanitized HTML and plain text; `platejs`/`@platejs/*`/`slate*` are importable only inside `packages/editor`, and `@radix-ui/*` is allowed there as an ADR-022 exception (the other ADR-022 exception, `@radix-ui/themes` as the WorkOS Widgets peer, is transitional and ends in Phase 3). AI writing help (improve, shorten, fix grammar, translate) runs through `@eleva/ai` over the Vercel AI Gateway with the `approved-models` allow-list; the clinical context is enabled only in Phase 10 with zero-retention models. Tiptap (Pro licensing for AI/comments), Lexical (thinner ecosystem) and per-app Markdown textareas were rejected.
+- Reference: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md), [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`monorepo-structure.md`](./monorepo-structure.md)
+
+### 2026-09-07: Offer model — event type = service, delivery modes carry how/where/language/price/schedule
+
+- Owner: product + engineering
+- Status: accepted
+- Summary: health licences are national while video consultations are not, and one practice mixes online, phone and several physical addresses with different calendars and prices. `event_types` keeps the service (kind `clinical|non_clinical`, defaults, policies, visibility); one or more `event_type_modes` carry `mode online|phone|in_person`, location, schedule, price/duration overrides, `country_scope` (worldwide or ISO list) and `languages`. Expert practice scope (`practice_country`, `service_countries`, `languages`, `worldwide_remote`, `accepting_bookings`) is the legal universe modes must fit; invariants live in `@eleva/scheduling` and are enforced on publish and at booking time (`assertModeBookable`). Busy time is shared across all modes of one expert. Private booking links (`booking_links`, hashed token, expiry, uses, schedule and price overrides) bypass a closed agenda but never the invariants. Experts own an Eleva calendar with a read-only ICS feed and may connect zero or many external calendars (per-calendar busy toggle; destination default overridable per event type and per mode). Supersedes the single `session_mode`/`worldwide_mode`/`languages` columns on `event_types` and the per-event-type `event_locations` table (folded into `expert_practice_locations`).
+- Reference: [`scheduling-booking-spec.md`](./scheduling-booking-spec.md), [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md), [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
+
+### 2026-09-07: CodeRabbit review loop cap and PR size targets
+
+- Owner: engineering
+- Status: accepted
+- Summary: the CLI loop is bounded — `pnpm review` max 3 rounds, `pnpm review:branch` max 2, GitHub App max 2 fix-and-push rounds. Exit early on a clean round or when fewer than 3 Minor/Trivial findings remain; exit at the cap only with zero Critical/Major (a Critical/Major still open at the cap means the PR is too big: split and restart). Leftover Minor/Trivial go to the PR body "Deferred findings" table and, when real work, a Phase 16 row. PR size target <= 400 changed lines / <= 30 files; split above 800 / 60. Rationale: after 14 rounds on the plan PR each round kept surfacing 8-10 wording findings on freshly touched text; reviews are generative on large diffs and never reach a literal zero, while small PRs converge in 1-2 rounds. The design quality bar (rule 10) was recorded in the same change.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 4 rules 1, 4, 6, 10; [`contribution-workflow.md`](./contribution-workflow.md); `.cursor/skills/coderabbit-review/SKILL.md`
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

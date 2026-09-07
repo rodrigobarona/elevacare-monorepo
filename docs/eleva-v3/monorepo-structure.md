@@ -528,9 +528,25 @@ Owns:
 - prompt contracts (versioned)
 - transcript summarization pipeline
 - AI report drafting pipeline
+- editor writing assistance (`editorAssist`: improve, shorten, fix grammar, translate) and `translateMessages` i18n drafting (drafts are human-reviewed before merge)
+- `approved-models.ts` allow-list (fail closed; PHI-bearing calls require `zeroRetention: true` entries)
 - consent and retention enforcement for AI artifacts
 
 CI rule: no direct LLM provider SDKs outside this package.
+
+### `packages/editor`
+
+Owns (ADR-023):
+
+- the single rich-text editor: Plate (`platejs`, `@platejs/*`) wrapped as `RichTextEditor`, `RichTextViewer`, `LocalizedRichTextField`
+- the storage contract: Plate JSON in `jsonb` plus server-derived sanitized HTML and plain text; clients never send HTML
+- Plate UI registry components (restyled with `@eleva/ui` tokens and Phosphor icons); `@radix-ui/*` is permitted here as an ADR-022 exception (the other, `@radix-ui/themes` as the WorkOS Widgets peer, is transitional until Phase 3)
+- the sanitizer allow-list and its XSS tests
+- AI actions delegated to `@eleva/ai` through `POST /ai/editor` in `apps/api`
+
+Consumers: expert bios, event-type descriptions and location instructions (Phase 4B), clinical notes, reports and the template library (Phase 10), clinic pages (Phase 11).
+
+CI rule: `platejs`, `@platejs/*`, `slate*`, `@radix-ui/*` importable only inside this package.
 
 ### `packages/mobile` later
 
@@ -615,6 +631,7 @@ Packages:
 - `packages/audit`
 - `packages/encryption`
 - `packages/ai`
+- `packages/editor`
 - `packages/eslint-config` (migrated + renamed)
 - `packages/typescript-config` (migrated + renamed)
 

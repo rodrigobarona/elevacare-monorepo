@@ -50,23 +50,102 @@ Examples:
 - coaching call
 - tutoring session
 
+An event type is the **service**; how, where, in which language and for whom it is delivered lives
+in one or more **delivery modes** (next section). One event type always has at least one mode.
+
 Fields include:
 
-- `title` (localized per PT/EN/ES)
+- `title` (localized per PT/EN/ES, rich text via `@eleva/editor` for `description`)
 - `description` (localized)
 - `slug` — URL segment, lowercase `[a-z0-9-]`, case-insensitive unique per expert (e.g., `first-consultation`, `coaching-call-30`)
-- `duration`
-- `price`
-- `language_support`
-- `session_mode` (`online` / `in_person` / `phone`)
-- `event_location` (for in-person)
-- `booking_window`
-- `minimum_notice`
-- `buffers` (before / after)
-- `cancellation_rules`
-- `reschedule_rules`
-- `worldwide_mode` (for coaching / chat / non-clinical sessions)
+- `kind` — `clinical` | `non_clinical`. Clinical services are bound by the expert's licence
+  countries (see Expert Practice Scope); non-clinical services (coaching, chat, tutoring, courses)
+  may be offered worldwide.
+- `duration` (default; a mode may override)
+- `price` (`price_cents` + `currency`, default; a mode may override)
+- `booking_window`, `minimum_notice`, `buffers` (before / after)
+- `cancellation_rules`, `reschedule_rules`
+- `visibility` — `public` (listed on the profile and explorer) | `unlisted` (reachable by URL only) |
+  `private` (reachable only through a private booking link)
+- `intake_questions` (optional, structured; the Plate-based form builder is post-launch — Phase 16)
 - `active` / `published` state
+
+### Delivery Mode (`event_type_modes`)
+
+A delivery mode is one concrete way to receive the service. It carries **its own schedule, price,
+geographic scope and languages**. This is what makes the following real-world offers expressible:
+
+- _Quick chat_: worldwide, four languages, **online** on schedule A; **by phone** on schedule B and
+  only callable in European countries.
+- _Physiotherapy_: _first visit_ **online** (worldwide within licence countries); _follow-up_
+  **in person** at three clinics, each clinic with its own schedule and its own price.
+
+Fields:
+
+- `mode` — `online` | `phone` | `in_person`
+- `location_id` — required when `mode = in_person` (see Location), forbidden otherwise
+- `schedule_id` — the availability schedule this mode books against (required; defaults to the
+  expert's default schedule when created)
+- `price_cents`, `currency` — optional override of the event type default
+- `duration_minutes` — optional override
+- `country_scope` — `worldwide` **or** an explicit list of ISO 3166-1 alpha-2 codes. In-person
+  modes are always the location's country. Phone modes list the countries the expert will call.
+- `languages` — BCP-47 list, non-empty, subset of the expert's `languages`
+- `label` (localized, optional) — shown when the member picks between modes ("Lisbon clinic",
+  "Video call")
+- `sort_order`, `active`
+
+Invariants (enforced in `@eleva/scheduling`, tested):
+
+1. `event_types.kind = clinical` => every mode's `country_scope` is a non-empty subset of the
+   expert's `service_countries`; `worldwide` is rejected.
+2. `event_types.kind = non_clinical` => an explicit `country_scope` list must be a non-empty subset
+   of the expert's `service_countries` (same rule as clinical); `worldwide` is allowed only when
+   the expert's `worldwide_remote` flag is set. An empty explicit list is rejected for every kind.
+3. `mode = in_person` => `country_scope = [location.country]` and `location.country` is in
+   `service_countries`.
+4. Two modes of one event type may share a schedule; one expert is one human, so **busy time is
+   shared across every mode and every event type** when slots are computed.
+5. A booking snapshots `event_type_mode_id`, `mode`, `location_id`, `language`, `member_country`,
+   `price_cents`, `currency`, `duration_minutes` (the mode override when set, else the event type
+   duration), `timezone` at reservation time; later edits to the mode never change an existing
+   booking, and every later read — confirmation e-mails, calendar events, the busy-time check for
+   other slots, the Daily room window — uses the snapshot, never the current mode configuration.
+
+The public funnel shows a "How do you want to meet?" step only when the event type has more than
+one **bookable** mode for the member's declared country and chosen language; otherwise it is
+skipped and the single mode is preselected.
+
+### Private Booking Link (`booking_links`)
+
+Experts must be able to invite one person to book even when their agenda is closed (event type
+`private`, profile `accepting_bookings = false`, or no public slots in the requested window).
+
+- `token_hash` (SHA-256 of a 32-byte random token; the token appears only in the URL
+  `eleva.care/[locale]/book/[token]` and is shown once at creation), `event_type_id`, optional
+  `event_type_mode_id` (pin one mode), optional `schedule_id` override (a private window that is
+  not on the public schedule), optional `recipient_email` (lock the link to one address), optional
+  `price_cents` override (discount or free), `expires_at`, `max_uses` (default 1), `use_count`,
+  `note`, `created_by`, `revoked_at`.
+- A link bypasses visibility and `accepting_bookings` but **never** the legal invariants above, the
+  busy-time check or the reservation/payment flow.
+- Authorization is **link-scoped, not anonymous**: the token is the credential. Every mutation in
+  the private flow (reserve, payment intent, confirm) must present it; the API re-validates
+  `token_hash`, `revoked_at`, `expires_at`, `max_uses` and the `recipient_email` lock on each call
+  and the reservation stores `booking_link_id` so confirm cannot be replayed against a different
+  link. A use is claimed atomically at reservation time
+  (`UPDATE booking_links SET use_count = use_count + 1 WHERE ... AND use_count < max_uses
+RETURNING id`; no row => 404) and released when the reservation expires or is cancelled before
+  confirmation. Rate limiting (`publicMutation` class) and BotID stay on as defense in depth, like
+  the rest of the funnel, not as the authorization mechanism.
+
+### Location (`expert_locations`)
+
+An in-person place owned by the expert (or, for clinics, by the clinic org):
+
+- `name`, structured address (`line1`, `line2`, `postal_code`, `city`, `region`, `country`),
+  optional geo point, `timezone`, `instructions` (localized), `active`
+- Displayed on the booking step, the confirmation, the ICS event and reminders.
 
 ### Public URL shape (multi-zone gateway — ADR-014)
 
@@ -116,19 +195,41 @@ Supported providers at launch:
 - Google Calendar
 - Microsoft Outlook calendar
 
-**OAuth credential management**: WorkOS Pipes manages connect flows, token storage, and refresh for Google Calendar and Microsoft Outlook Calendar (see ADR-004 amendment). `packages/calendar` owns the `CalendarAdapter` interface for direct API calls.
+**OAuth credential management**: Better Auth `linkSocial` (Google / Microsoft with calendar scopes)
+stores and refreshes the tokens (ADR-017, ADR-020); `packages/calendar` owns the `CalendarAdapter`
+interface and receives tokens through `getProviderAccessToken` injected from `@eleva/auth`
+(Phase 3). WorkOS Pipes is gone.
 
-**No-calendar fallback**: When no destination calendar is configured, the system sends `.ics` email invites (with JSON-LD for Gmail rich cards) to the expert for each booking lifecycle event.
+**Eleva calendar first**: the expert app has its own calendar (`/[orgSlug]/calendar`, week and month
+views of every booking across all modes, blocked time, and date overrides). Experts who never connect
+an external calendar lose nothing: they can subscribe any calendar app to a **read-only ICS feed**
+(`GET /calendar/feed/[token].ics`, per-expert secret token, revocable) and receive `.ics` invites by
+email (with JSON-LD for Gmail rich cards) for each booking lifecycle event.
 
-### Expert Practice Location
+**One or more external calendars**: an expert may connect several accounts (one Google, one Microsoft,
+or many of each). Per connected calendar: `use_for_busy` (read free/busy) on/off. One **destination**
+calendar per expert by default, overridable per event type and per delivery mode (e.g. clinic
+bookings written to the clinic's shared calendar, online bookings to the personal one). Token
+failures raise `calendar.reconnect_required` (Phase 8) and fall back to the ICS path until fixed.
 
-Each expert profile carries practice-location metadata that scopes which bookings are legally valid:
+### Expert Practice Scope
 
-- `country` — country of licensed practice
-- `license_scope` — clinic / coach / tutor / etc.
-- `worldwide_mode_flag` — when set, non-clinical sessions (coaching, chat, tutoring) are bookable from any country regardless of clinical license scope
+Collected in expert onboarding (Phase 4B) and stored on `expert_profiles`; it is the legal universe
+every delivery mode must fit into:
 
-Clinical event types enforce `country` match between expert practice and patient location at booking time. Non-clinical event types with `worldwide_mode_flag` skip that check.
+- `practice_country` — country of licensed practice (ISO 3166-1 alpha-2, required)
+- `service_countries` — countries the expert may serve (always contains `practice_country`; each
+  extra country is a declaration the expert makes and is shown in the admin partner review)
+- `languages` — BCP-47 list the expert works in (at least one)
+- `license_scope` — clinic / coach / tutor / etc. (drives the default `event_types.kind`)
+- `worldwide_remote` — when set, non-clinical modes may use `country_scope = worldwide`
+- `accepting_bookings` — global "agenda open/closed" switch; private booking links bypass it
+
+At booking time the member declares their country (pre-filled from the request geo header, always
+editable) and picks a language; `@eleva/scheduling` `assertModeBookable(mode, memberCountry,
+language)` rejects a mode whose `country_scope` or `languages` do not match with a typed error the
+funnel renders as "This option is not available in <country> / in <language>", offering the other
+modes instead.
 
 ### Busy Calendars
 
@@ -168,10 +269,12 @@ The first build should support:
 - multiple event types per expert
 - optional calendar connections (multiple per expert when connected)
 - busy-time detection from selected calendars (when connected)
-- one destination calendar per expert or per event type (when connected); `.ics` email fallback when not connected
-- weekly availability rules
+- one destination calendar per expert, per event type or per delivery mode (when connected); `.ics` email fallback and read-only ICS feed when not connected
+- weekly availability rules on named schedules (several per expert)
 - date overrides/blocked dates
-- online / in-person / phone location types
+- online / in-person / phone delivery modes, each with its own schedule, price, country scope and languages
+- expert practice scope (licence country, service countries, languages) enforced at booking time
+- private booking links that bypass a closed agenda
 - booking windows
 - minimum notice
 - before/after buffers
@@ -226,16 +329,25 @@ Must support:
 
 ## Availability Calculation Model
 
-Slot generation should be based on:
+Slot generation is computed **per delivery mode**. The API layer first resolves the request into a
+`ResolvedOffer` (`resolveOffer({ eventTypeModeId, linkToken? })` validates the link — hash,
+revocation, expiry, uses, recipient lock — and returns `{ mode, scheduleId, priceCents,
+durationMinutes, bookingLinkId? }` where `scheduleId` is the link's override when present, else
+the mode's schedule). `getAvailableSlots(resolved, { from, to, timezone })` and `reserveSlot(resolved,
+…)` both consume that same object, so slot generation and the reservation always run against
+identical schedule, price and duration data (tested: private link with an override schedule shows
+and books private-only windows; a link without an override behaves like the public mode). The
+calculation is based on:
 
-1. event type rules
-2. assigned schedule
-3. availability rules
+1. event type rules (duration, notice, window) with the mode's overrides applied
+2. the resolved schedule (see above)
+3. availability rules of that schedule
 4. date overrides
 5. blocked dates
-6. existing Eleva sessions
-7. busy-time calendar signals
-8. buffers
+6. existing Eleva bookings of the expert — **across every mode and event type** (one human)
+7. busy-time calendar signals from every connected calendar with `use_for_busy`
+8. before/after buffers (applied exactly once, here, around every busy interval from steps 6-7
+   and around each candidate slot — never again in step 1)
 9. minimum notice
 10. booking window constraints
 
@@ -243,7 +355,8 @@ Slot generation should be based on:
 
 ```mermaid
 flowchart TD
-    eventType[EventTypeRules] --> schedule[AssignedSchedule]
+    eventType[EventTypeRules] --> mode[DeliveryModeOverridesAndScope]
+    mode --> schedule[AssignedSchedule]
     schedule --> availability[AvailabilityRules]
     availability --> overrides[DateOverridesAndBlockedDates]
     overrides --> busy[ExternalBusyTimesAndInternalSessions]

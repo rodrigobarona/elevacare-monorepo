@@ -28,10 +28,14 @@ export default {
           Array.from({ length: 16 }, (_, j) => `s${sprint}.${j + 1}`)
         ),
         // Execution-plan scopes (docs/eleva-v3/execution-plan): the plan itself
-        // and phases p0..p16 plus post-launch backlog items p16.1..p16.16
+        // and phases p0..p16 (+ p4b) plus post-launch backlog items p16.1..p16.18
+        // and their split rows p16.<N>a / p16.<N>b (Phase 16 "one branch, one PR" rule)
         "plan",
         ...Array.from({ length: 17 }, (_, i) => `p${i}`),
-        ...Array.from({ length: 16 }, (_, j) => `p16.${j + 1}`),
+        "p4b",
+        ...Array.from({ length: 18 }, (_, j) => `p16.${j + 1}`),
+        ...Array.from({ length: 18 }, (_, j) => `p16.${j + 1}a`),
+        ...Array.from({ length: 18 }, (_, j) => `p16.${j + 1}b`),
         // App scopes
         "web",
         "app",

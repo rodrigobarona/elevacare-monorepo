@@ -10,8 +10,9 @@
 
 ## Why this phase exists
 
-ADR-018: Daily.co is the only video provider (HIPAA-enabled domain). Every confirmed booking needs
-a room created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
+ADR-018: Daily.co is the only video provider (HIPAA-enabled domain). Every confirmed **online**
+booking (snapshotted `mode = online`; phone and in-person bookings never get a room) needs a room
+created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
 drive session status, notifications and (Phase 10) transcripts.
 
 ## Scope
@@ -20,7 +21,13 @@ In:
 
 - `packages/video` (`@eleva/video`, sole `@daily-co/*` importer; server = REST via `fetch` with
   `DAILY_API_KEY`, client = `@daily-co/daily-react` + `@daily-co/daily-js`):
-  `createSessionRoom({ bookingId, startAt, endAt })` -> private room, random name (HIPAA mode
+  `createSessionRoom({ bookingId, startAt, endAt })` — called **only for bookings whose
+  snapshotted `mode = online`** (`event_type_modes`, Phase 4); `phone` bookings get no room (the
+  session page shows the member's masked number to the expert and "your expert will call you" to
+  the member) and `in_person` bookings show the location card instead of a join button; both
+  `ensureSessionRoom` and the no-room sweep below filter on the snapshotted `mode = 'online'`
+  before creating or scheduling anything, so phone and in-person bookings never reach Daily ->
+  private room, random name (HIPAA mode
   forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`,
   `max_participants` = 2 + number of delegated participants (recomputed via Daily room update
   when a delegate is added, so every authorised participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
@@ -35,8 +42,10 @@ In:
   (`booking_id`, `user_id`); RLS expert org + the participant's own row; written only by
   `POST /sessions/[bookingId]/participants` (assigned expert only, audited
   `session.participant_added`) and `DELETE …/participants/[userId]` (`session.participant_removed`).
-- Workflow: on booking confirmed -> `ensureSessionRoom(bookingId)` (idempotent; also run by a
-  QStash sweep 1h before start for bookings without a room); on cancel -> `deleteRoom`.
+- Workflow: on booking confirmed -> `ensureSessionRoom(bookingId)` (idempotent; returns early
+  unless the booking's snapshotted `mode = 'online'`; also run by a QStash sweep 1h before start
+  for online bookings without a room — the sweep query itself filters `mode = 'online'`); on
+  cancel -> `deleteRoom` (no-op when no room).
 - API: `POST /sessions/[bookingId]/join` -> checks the caller is the booking's assigned expert,
   the booking's member, or an explicitly delegated participant of that booking (never "any
   member of the expert org"; non-participants get 403 `NOT_A_PARTICIPANT`) and that now is
@@ -77,7 +86,8 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 
 ## Acceptance criteria
 
-- [ ] Confirmed booking has a room within seconds (workflow) and the sweep catches missing rooms.
+- [ ] Confirmed online booking has a room within seconds (workflow) and the sweep catches missing
+      rooms; phone and in-person bookings never get one (both paths tested).
 - [ ] Expert token is `is_owner: true`; member token is not; token `exp` <= room `exp`.
 - [ ] Join outside the window -> 403 `SESSION_NOT_OPEN`; non-participant (including another
       expert of the same organization) -> 403 `NOT_A_PARTICIPANT`; delegated participant -> 200.
@@ -142,9 +152,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -185,8 +199,12 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    readable by the expert org and by the participant; API writes. Audit unions session:
    room_created|joined|started|ended|room_deleted|participant_added|participant_removed.
 3. Workflows: packages/workflows/src/video/ensure-session-room.ts (idempotent: returns existing
-   room) invoked from emitDomainEvent("booking.confirmed") and by a QStash sweep every 15 min for
-   bookings starting within 2h without a room (route POST /workflows/video-room-sweep;
+   room; guard first: load the booking and return { skipped: "not_online" | "not_confirmed" }
+   unless its snapshotted mode = 'online' AND status = 'confirmed') invoked from
+   emitDomainEvent("booking.confirmed") and by a QStash sweep every 15 min for CONFIRMED ONLINE
+   bookings (WHERE mode = 'online' AND status = 'confirmed') starting within 2h without a room
+   (route POST /workflows/video-room-sweep; tests: phone and in_person bookings create no room in
+   either path; pending_payment and cancelled online bookings create no room in either path;
    infra/qstash/setup-video.ts + root script + setup:all); on booking.cancelled -> deleteRoom.
 4. apps/api: POST /sessions/[bookingId]/join (requireApiAuth; caller must be exactly one of:
    the booking's assigned expert (bookings.expert_user_id — the FK auth.user column Phase 4 sets

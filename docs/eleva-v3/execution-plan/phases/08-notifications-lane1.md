@@ -86,6 +86,10 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Acceptance criteria
 
+- [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
+      before the session" + join CTA (Phase 9), phone -> "your expert will call you on <masked
+                          number>", in person -> location name, address, "Open in Maps" link and the location's
+      instructions; the ICS `LOCATION` follows the same rule.
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
@@ -151,9 +155,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,

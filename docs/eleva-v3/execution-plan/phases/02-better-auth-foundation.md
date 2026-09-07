@@ -179,10 +179,14 @@ first command; run the checks and both review loops only AFTER the task work exi
   (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main using the PR body template from
   docs/eleva-v3/execution-plan/README.md section 8.
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green.
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6).
   Request approval from @rodrigobarona. gh pr merge --squash --delete-branch. Repeat for 02.2.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,

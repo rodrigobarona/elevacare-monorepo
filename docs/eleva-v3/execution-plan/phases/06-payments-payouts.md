@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                               |
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-06/payments-payouts` (split: `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`)                                                                                                                                                                                                  |
-| Depends on | Phase 4                                                                                                                                                                                                                                                                                                             |
+| Depends on | Phase 4, Phase 4B (onboarding wizard registry)                                                                                                                                                                                                                                                                      |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                             |
 | Touches    | `packages/billing/**`, `packages/workflows/src/payments/**`, `packages/db/src/schema/main/{billing,booking-payments,payout-states}.ts`, `apps/api/src/app/{stripe,payments,payouts,workflows,webhooks}/**`, `infra/stripe/**`, `infra/qstash/**`, `apps/expert/**` (finance + onboarding), `packages/api-client/**` |
 | Exit gate  | Pay -> confirm -> eligible -> transfer -> payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the two-file contract; expert Connect onboarding completes with Embedded Components and Identity                           |
@@ -176,9 +176,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -205,7 +209,9 @@ PR 06.1 — Connect onboarding hardening:
    packages/billing/src/server/webhook.ts and infra/stripe/setup-webhooks.ts (two-file contract);
    handlers update billing_customers inside withAudit; add the parity unit test that asserts the
    dispatcher's handled event set equals WEBHOOK_EVENTS.
-3. apps/expert onboarding: step "Payments" renders Embedded Account Onboarding; step "Identity"
+3. apps/expert onboarding (append steps to the Phase 4B onboarding-steps.ts registry rendered by
+   @eleva/dashboard OnboardingShell — never a second wizard): step "Payments" renders Embedded
+   Account Onboarding; step "Identity"
    renders the Identity flow; status page shows requirements due with plain-language next actions
    (pt/en/es). Gate: POST /experts/event-types/[id]/publish returns 409 CONNECT_INCOMPLETE until
    charges_enabled && payouts_enabled && identity verified; UI shows the reason.

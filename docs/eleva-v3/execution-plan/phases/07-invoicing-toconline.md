@@ -189,9 +189,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -281,7 +285,7 @@ PR 07.2 — Tier 2 (expert -> member):
     /accounting/callback (extend existing for provider + state), GET /accounting/status,
     POST /accounting/disconnect, POST /invoicing/expert/[bookingId]/retry, POST /invoicing/expert/
     [bookingId]/mark-manual, GET /invoicing/exports/saft?month= (CSV + XML zip via private Blob).
-11. apps/expert: onboarding step "Invoicing" (Auto: connect TOConline or Moloni; Manual:
+11. apps/expert: onboarding step "Invoicing" appended to the Phase 4B onboarding-steps.ts registry (Auto: connect TOConline or Moloni; Manual:
     acknowledgment checkbox with legal text pt/en/es) required before Become-Partner completes
     (update experts/profile/steps/[step]/complete); session detail shows invoice status with
     Retry and "Mark as issued manually"; /[orgSlug]/finance/invoices lists expert_invoices with

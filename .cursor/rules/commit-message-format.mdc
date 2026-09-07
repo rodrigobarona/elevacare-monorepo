@@ -37,7 +37,7 @@ body (wrap lines at 200 chars max)
 
 **Sprint scopes (legacy):** `s0`–`s8`, `s1-a`, `s1-b`, `s2-a`, `s2-b`, `s3-a`, `s3-b`, `s4-a`, `s4-b`, `s5-a`, `s5-b`, `s0.1`–`s8.16`
 
-**Execution-plan scopes:** `plan` (the plan documents themselves), `p0`–`p16` (one per phase in `docs/eleva-v3/execution-plan/phases/`), `p16.1`–`p16.16` (post-launch backlog items). Prefer the app/package scope when a commit touches one area (e.g. `feat(auth): ...`); use the phase scope for cross-cutting phase commits (e.g. `chore(p3): remove WorkOS infra scripts`).
+**Execution-plan scopes:** `plan` (the plan documents themselves), `p0`–`p16` plus `p4b` (one per phase in `docs/eleva-v3/execution-plan/phases/`), `p16.1`–`p16.18` (post-launch backlog items) and `p16.<N>a`/`p16.<N>b` (split backlog rows). Prefer the app/package scope when a commit touches one area (e.g. `feat(auth): ...`); use the phase scope for cross-cutting phase commits (e.g. `chore(p3): remove WorkOS infra scripts`).
 
 **Cross-cutting:** `ci`, `deps`, `release`
 

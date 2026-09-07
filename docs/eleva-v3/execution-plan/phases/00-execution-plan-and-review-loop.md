@@ -37,7 +37,7 @@ Out: ADRs, code changes, CI changes (Phase 1).
 ## Deliverables
 
 1. `docs/eleva-v3/execution-plan/README.md` with sections 1-10 as in this repo.
-2. 17 phase files (`00` to `16`) following the same template: header table, why, scope, deliverables,
+2. 18 phase files (`00` to `16` plus `04b`) following the same template: header table, why, scope, deliverables,
    acceptance criteria, tests, docs to update, local references, external docs (Context7 IDs),
    risks, copy-paste prompt.
 3. `build-html.mjs` (uses `marked`, which this phase adds to the root `package.json`
@@ -52,9 +52,10 @@ Out: ADRs, code changes, CI changes (Phase 1).
    - `"docs:execution-plan:html": "node docs/eleva-v3/execution-plan/build-html.mjs"`
 5. Skill + rule for the review loop; contribution workflow + handbook README updated.
 6. `commitlint.config.mjs` + `.cursor/rules/commit-message-format.mdc`: add scopes `plan`,
-   `p0`-`p16`, `p16.1`-`p16.16`; mark sprint scopes as legacy.
-7. `docs/eleva-v3/decision-log.md`: entries "execution plan supersedes roadmap/sprints" and the
-   provisional ADR-017..021 direction (plus the staff-only `en`+`pt` exception for `apps/admin`).
+   `p0`-`p16`, `p4b`, `p16.1`-`p16.18`; mark sprint scopes as legacy.
+7. `docs/eleva-v3/decision-log.md`: entries "execution plan supersedes roadmap/sprints", the
+   provisional ADR-017..021 direction (plus the staff-only `en`+`pt` exception for `apps/admin`),
+   the CodeRabbit review cap, and the ADR-022/023 directions.
 
 ## Acceptance criteria
 
@@ -67,7 +68,8 @@ Out: ADRs, code changes, CI changes (Phase 1).
       section 7 preamble (same steps, order and hard constraints; branch and relevant skills
       filled in) followed by phase-specific instructions.
 - [ ] `docs/eleva-v3/README.md` and `contribution-workflow.md` reference the plan and the CLI loop.
-- [ ] PR merged after the full loop (CLI clean, GitHub App zero unresolved comments, CI green).
+- [ ] PR merged after the full loop (CLI clean or at the review cap with zero Critical/Major and a
+      filled "Deferred findings" table, GitHub App zero unresolved comments, CI green).
 
 ## Tests
 
@@ -131,12 +133,16 @@ first command; run the checks and both review loops only AFTER the task work exi
   `coderabbit review --committed --base main` wherever it says pnpm review:branch. Once the root
   scripts exist, switch to them for the remaining loops so the scripts themselves are exercised.
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main with the PR body template from
   docs/eleva-v3/execution-plan/README.md section 8.
 - Loop: wait for CodeRabbit GitHub App review + CI; for each comment fix+push or reply
   "Not actionable because ..."; re-run pnpm review:branch; continue until zero unresolved
-  comments and all checks green. Request human approval from @rodrigobarona.
+  comments and all checks green, or after 2 App rounds escalate the leftovers to the reviewer
+  (README section 4 rule 6). Request human approval from @rodrigobarona.
 - gh pr merge --squash --delete-branch; git checkout main && git pull.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -154,11 +160,14 @@ and the local CodeRabbit CLI review loop that every later phase uses.
 
 Deliverables, in order:
 1. docs/eleva-v3/execution-plan/README.md — sections: what we build (surfaces table), locked
-   decisions ADR-017..021 table, current state + WorkOS blast radius, the phase loop (mermaid +
-   9 rules), phase index table (phases 0-16 with branch names, effort, dependencies), target
+   decisions ADR-017..023 table, current state + WorkOS blast radius, the phase loop (mermaid +
+   10 rules including the review cap — pnpm review max 3 rounds, pnpm review:branch max 2, GitHub
+   App max 2, exit at the cap only with zero Critical/Major, Minor/Trivial leftovers to a "Deferred
+   findings" PR table — and the design quality bar), phase index table (phases 0-16 plus 4B with
+   branch names, effort, dependencies), target
    architecture mermaid + key contracts, universal prompt preamble, PR body template, risks,
    related docs.
-2. docs/eleva-v3/execution-plan/phases/NN-slug.md for NN = 00..16. Template for each: header
+2. docs/eleva-v3/execution-plan/phases/NN-slug.md for NN = 00..16 plus 04b. Template for each: header
    table (Branch, Depends on, Effort, Touches, Exit gate), Why, Scope in/out, Deliverables with
    exact file paths, Acceptance criteria checklist, Tests, Docs to update, Local references,
    External docs (Context7 IDs), Risks, "## Copy-paste prompt" containing the README section 7
@@ -173,7 +182,8 @@ Deliverables, in order:
    (exact commands in the phase file). The only new dependency is `marked` in the root
    package.json devDependencies (pnpm add -Dw marked); nothing else.
 5. .cursor/skills/coderabbit-review/SKILL.md (when to use, exact commands, how to triage findings,
-   how to enumerate PR review threads with gh, when a finding may be declined) and
+   the review cap and its exit rules, how to enumerate PR review threads with gh, when a finding
+   may be declined) and
    .cursor/rules/coderabbit-review.mdc (alwaysApply: false, globs: none, description: "Run the
    CodeRabbit CLI loop before committing and before opening a PR").
 6. Update docs/eleva-v3/contribution-workflow.md (new "CodeRabbit CLI loop" subsection) and
@@ -181,9 +191,10 @@ Deliverables, in order:
    path_instructions entry in .coderabbit.yaml for docs/eleva-v3/execution-plan/** asking the
    reviewer to flag prompts that are not self-contained or that contradict README section 2.
 7. commitlint.config.mjs + .cursor/rules/commit-message-format.mdc: add scopes plan, p0-p16,
-   p16.1-p16.16 (sprint scopes stay as legacy). docs/eleva-v3/decision-log.md: dated entries for
-   "execution plan supersedes roadmap/sprints" and the provisional ADR-017..021 direction
-   (including the staff-only en+pt locale exception for apps/admin).
+   p4b, p16.1-p16.18 (sprint scopes stay as legacy). docs/eleva-v3/decision-log.md: dated entries for
+   "execution plan supersedes roadmap/sprints", the provisional ADR-017..021 direction
+   (including the staff-only en+pt locale exception for apps/admin), the review cap, and the
+   ADR-022/023 directions (React Aria primitives; Plate rich-text editor in @eleva/editor).
 8. Run pnpm docs:execution-plan:html and commit index.html.
 
 Acceptance: pnpm review works (after coderabbit auth login), pnpm review:branch works,

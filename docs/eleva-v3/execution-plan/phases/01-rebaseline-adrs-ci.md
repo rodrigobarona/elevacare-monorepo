@@ -1,4 +1,4 @@
-# Phase 1 — Re-baseline: ADR-017..021, handbook, rules, CI foundations
+# Phase 1 — Re-baseline: ADR-017..021 + ADR-023, handbook, rules, CI foundations
 
 | Field      | Value                                                                                                                                                                                                                |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -6,7 +6,7 @@
 | Depends on | Phase 0                                                                                                                                                                                                              |
 | Effort     | 1 week                                                                                                                                                                                                               |
 | Touches    | `docs/eleva-v3/**`, `AGENTS.md`, `.cursor/rules/**`, `.cursor/skills/**`, `.coderabbit.yaml`, `.github/workflows/**`, `e2e/**`, `playwright.config.ts`, `packages/db/drizzle/audit/**`, `.env.example`, `turbo.json` |
-| Exit gate  | Handbook has zero WorkOS-as-decision statements; ADR-017..021 accepted; CI runs lint/typecheck/build/vitest/e2e-smoke/rls-isolation on a Neon branch per PR; audit DB migrations committed                           |
+| Exit gate  | Handbook has zero WorkOS-as-decision statements; ADR-017..021 + ADR-023 accepted; CI runs lint/typecheck/build/vitest/e2e-smoke/rls-isolation on a Neon branch per PR; audit DB migrations committed                 |
 
 ## Why this phase exists
 
@@ -20,7 +20,8 @@ audit migrations) are needed by Phase 2's acceptance tests.
 In:
 
 - ADR-017 Better Auth, ADR-018 Daily-only video, ADR-019 MVP migration + cutover, ADR-020
-  envelope encryption, ADR-021 RBAC SSOT in code. Update `adrs/README.md` index; mark ADR-004
+  envelope encryption, ADR-021 RBAC SSOT in code, ADR-023 Plate rich-text editor in
+  `@eleva/editor` (ADR-022 React Aria already exists). Update `adrs/README.md` index; mark ADR-004
   (Pipes section) and ADR-015 (one WorkOS application) as superseded-in-part with pointers.
 - Rewrite `identity-rbac-spec.md` for Better Auth (tables, plugins, roles, product labels,
   session model, cross-subdomain cookies, agent auth via API keys/JWT).
@@ -65,6 +66,7 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 3. `docs/eleva-v3/adrs/ADR-019-mvp-migration-and-cutover.md`
 4. `docs/eleva-v3/adrs/ADR-020-envelope-encryption.md`
 5. `docs/eleva-v3/adrs/ADR-021-rbac-ssot-in-code.md`
+   5b. `docs/eleva-v3/adrs/ADR-023-plate-rich-text-editor.md`
 6. Handbook edits listed above; `identity-rbac-spec.md` rewritten.
 7. `AGENTS.md`, `.cursor/rules/*`, `.cursor/skills/*`, `.coderabbit.yaml` updated.
 8. `.github/workflows/e2e.yml`, `.github/workflows/neon-branch.yml` (or jobs inside `ci.yml`),
@@ -79,7 +81,7 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 - [ ] `rg -n "WorkOS" docs/eleva-v3 --glob '!**/decision-log.md' --glob '!**/adrs/**' --glob '!**/execution-plan/**'`
       returns only historical mentions explicitly marked "(removed, see ADR-017)". The execution
       plan is excluded on purpose: its blast-radius section and Phase 3 describe the removal.
-- [ ] `adrs/README.md` lists ADR-017..021 as Accepted with dates.
+- [ ] `adrs/README.md` lists ADR-017..021 and ADR-023 as Accepted with dates.
 - [ ] CI on this PR shows jobs: lockfile-guard, install, lint, typecheck, build, test, e2e-smoke,
       neon-branch-migrate-and-rls, i18n-parity — all green.
 - [ ] Neon branch is created on PR open and deleted on PR close (verify in Neon console or via
@@ -95,7 +97,7 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 
 ## Docs to update
 
-All listed in Scope. Add `decision-log.md` entries dated for ADR-017..021 and for "execution plan
+All listed in Scope. Add `decision-log.md` entries dated for ADR-017..021, ADR-023 and for "execution plan
 supersedes sprints".
 
 ## Local references
@@ -149,11 +151,14 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; if the
   docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
-- Run: pnpm review -> fix all findings -> repeat until clean. Commit (Conventional Commits).
-- Run: pnpm review:branch -> fix -> repeat until clean.
+- Run: pnpm review -> fix all findings -> repeat until clean or the review cap is reached (README
+  section 4 rule 4: max 3 rounds, zero Critical/Major left, remaining Minor/Trivial listed in the
+  PR body "Deferred findings" table with a reason each). Commit (Conventional Commits).
+- Run: pnpm review:branch -> fix -> repeat until clean or the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main using the PR body template in
   docs/eleva-v3/execution-plan/README.md section 8.
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green.
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved comments and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6).
   Request human approval from @rodrigobarona. gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -209,6 +214,21 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
      schedule, records, reports, invoicing, admin.*) and roles; product labels derived from
      (organization.type, member.role) exactly as today; capability bundles in capabilities.ts
      derive from permissions.ts; infra/workos JSON files retired in Phase 3.
+   - ADR-023-plate-rich-text-editor.md: every rich-text surface (expert bios, event-type
+     descriptions, location instructions, clinical notes, reports, the template library, clinic
+     pages) uses Plate (platejs) through ONE package @eleva/editor (packages/editor) created in
+     Phase 4B; value stored as Plate JSON in jsonb + server-derived sanitized HTML + plain text
+     (clients never send HTML); Plate UI components come from the Plate shadcn registry into
+     packages/editor/src/components/ui and are restyled with @eleva/ui tokens; boundary lint:
+     platejs, @platejs/*, slate* are importable only inside packages/editor, and @radix-ui/* is
+     allowed there as an ADR-022 exception (alongside the transitional @radix-ui/themes WorkOS
+     Widgets peer that Phase 3 removes); AI writing help (improve, shorten, fix grammar,
+     translate pt/en/es) runs through @eleva/ai over the Vercel AI Gateway with the
+     approved-models allow-list (clinical context only with zeroRetention models, Phase 10);
+     alternatives: Tiptap (rejected: Pro extensions licensing for AI/comments), Lexical
+     (rejected: thinner React ecosystem, no shadcn registry), per-app Markdown textareas
+     (rejected: no templates, no AI, inconsistent UX). Consequences: one editor to theme, test and
+     sanitize; Radix confined to one package; template library in Phase 10 is Plate JSON.
    Update docs/eleva-v3/adrs/README.md index. Add "Superseded in part by ADR-017/018/020" banners to
    ADR-004 (Pipes/Meet) and ADR-015 (single WorkOS Application). Add decision-log.md entries.
 
@@ -282,7 +302,7 @@ G. .env.example and turbo.json globalEnv: add the new variables listed in B; ann
 
 Acceptance: rg -n "WorkOS" docs/eleva-v3 --glob '!**/decision-log.md' --glob '!**/adrs/**'
 --glob '!**/execution-plan/**' shows only entries marked "(removed, see ADR-017)" (the
-execution plan is excluded on purpose; do not rewrite it to satisfy the grep); adrs/README.md lists ADR-017..021 Accepted; CI shows e2e-smoke,
+execution plan is excluded on purpose; do not rewrite it to satisfy the grep); adrs/README.md lists ADR-017..021 and ADR-023 Accepted; CI shows e2e-smoke,
 neon-branch-migrate-and-rls, i18n-parity green; packages/db audit migrations committed;
 .cursor/rules has better-auth.mdc, daily-video.mdc, encryption.mdc and no workos-*.mdc.
 

@@ -48,11 +48,25 @@ In:
   - `ProfilesTable`, `CategoriesTable`, `ExpertSetupTable`, `ExpertApplicationsTable` ->
     `expert_profiles`, `expert_categories`, `expert_listings`, `become_partner_applications`
     (status mapped), `billing_customers` (Stripe Connect account id, customer id, identity status).
-  - `EventsTable` -> `event_types` (slug preserved for URL compatibility), `SchedulesTable` +
+  - `EventsTable` -> `event_types` **plus exactly one `event_type_modes` row** per event (MVP
+    events are single-mode: `online` unless the MVP location field says otherwise; for a physical
+    MVP location the migrator first resolves or creates the matching `expert_practice_locations`
+    row from the MVP address fields — keyed in `migration_id_map` by the MVP location string — and
+    sets `location_id` on the `in_person` mode; an address that cannot be parsed into
+    `(country, city, address_line)` is a hard mapping error listed in the rehearsal report, never a
+    location-less in-person mode; `schedule_id` = the expert's default schedule; `country_scope` =
+    `[practice_country]` for clinical, `worldwide` for non-clinical, `[location.country]` for
+    in-person; languages = the MVP event languages; fixture: one online, one phone and one
+    physical-location MVP event), `expert_profiles.practice_country` /
+    `service_countries` / `languages` from the MVP profile (slug preserved for URL compatibility),
+    `SchedulesTable` +
     `ScheduleAvailabilitiesTable` -> `schedules` + `availability_rules`, `BlockedDatesTable` ->
     `date_overrides`, `SchedulingSettingsTable` -> expert scheduling defaults.
-  - `MeetingsTable` -> `bookings` (+ `sessions` for future meetings; Meet links dropped; Daily rooms
-    created by the Phase 9 sweep after cutover) + `booking_payments` (payment intent id, amounts,
+  - `MeetingsTable` -> `bookings` (each booking snapshots the resolved mode of its event —
+    `event_type_mode_id`, `mode` (`online|phone|in_person`), `location_id`, `language` — so the
+    Phase 8 templates and the Phase 9 online-only room sweep read the right values; fixtures cover
+    all three modes; + `sessions` for future **online** meetings only; Meet links dropped; Daily
+    rooms created by the Phase 9 sweep after cutover) + `booking_payments` (payment intent id, amounts,
     fee), `PaymentTransfersTable` + `TransactionCommissionsTable` -> `payout_states` (status
     mapping, transfer ids, `applied_commission_bps` from the ledger), `SlotReservationsTable`
     dropped (expired), `SubscriptionPlansTable` + `SubscriptionEventsTable` +
@@ -180,9 +194,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 - Never run --apply against production in this phase. Rehearsals run on Neon branches only.
 
@@ -256,7 +274,10 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    clinic -> team) + memberships -> auth.member, expert profiles/categories/listings/applications
    -> expert_profiles, expert_categories, expert_listings, become_partner_applications (status
    map), billing_customers (Connect account id, customer id, identity status — verify with Stripe
-   accounts.retrieve/customers.retrieve; report missing), events -> event_types (slug preserved),
+   accounts.retrieve/customers.retrieve; report missing), events -> event_types + one
+   event_type_modes row each (mode from the MVP location field, default schedule, country scope
+   from kind — see Scope) and MVP profile country/languages -> expert_profiles practice scope
+   (slug preserved),
    schedules + availabilities -> schedules + availability_rules, blocked dates -> date_overrides,
    scheduling settings -> expert defaults, meetings -> bookings (+ sessions for future ones,
    status map; drop Meet links) + booking_payments, payment transfers + transaction commissions ->

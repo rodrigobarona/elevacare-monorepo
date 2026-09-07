@@ -51,15 +51,27 @@ with the architecture rules in `AGENTS.md`.
 
 ```text
 implement -> pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
-          -> pnpm review        (fix every finding, re-run until "no findings")
+          -> pnpm review        (fix every finding, re-run until "no findings" — max 3 rounds)
           -> git commit (Conventional Commits)
-          -> pnpm review:branch (fix, commit, re-run until clean)
+          -> pnpm review:branch (fix, commit, re-run until clean — max 2 rounds)
           -> git push -u origin <branch> && gh pr create --base main
           -> GitHub App review + CI
           -> for each comment: fix + push, or reply "Not actionable because ..."
           -> pnpm review:branch after each fix batch
           -> zero unresolved comments + all checks green -> request human approval -> squash merge
+             (max 2 App rounds; leftovers are summarised for the human reviewer)
 ```
+
+## Review cap (SSOT: execution-plan README section 4 rule 4 and rule 6)
+
+- `pnpm review`: max 3 rounds. `pnpm review:branch`: max 2 rounds. GitHub App: max 2 rounds.
+- Exit early when a round is clean, or when every remaining finding is Minor/Trivial and the
+  round produced fewer than 3 of them.
+- Exit at the cap **only** with zero Critical/Major left. A Critical/Major still open at the cap
+  means the PR is too big: split it and restart the loop on the smaller slice.
+- Leftover Minor/Trivial findings go to the PR body "Deferred findings" table (README section 8)
+  with a reason each; real work becomes a Phase 16 backlog row.
+- Small PRs are the lever: target <= 400 changed lines / <= 30 files; split above 800 / 60.
 
 ## Triage rules for findings
 
@@ -103,6 +115,7 @@ CodeRabbit Pro skips PRs with more than 150 reviewable files. Check with
 
 ## Report format (end of a phase)
 
-- CLI runs: `pnpm review` x N (findings: a, b, ... , 0), `pnpm review:branch` x M (...).
+- CLI runs: `pnpm review` x N of 3 (findings: a, b, ...), `pnpm review:branch` x M of 2 (...);
+  deferred Minor/Trivial: `<count, in PR body table>`.
 - GitHub App: N comments, all resolved; declined: `<none | list with reasons>`.
 - CI: all green at `<sha>`. PR: `<url>`. Merged: `<yes/no>`.

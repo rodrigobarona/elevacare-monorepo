@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                                     |
-| Depends on | Phase 9                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list)                                                                                                                                                                                                                                                                                                                                                          |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/video` (recording/transcript behind flag), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from a transcript reviewed and published by the expert; no PHI in Sentry/logs                                                                                                 |
@@ -50,8 +50,21 @@ In:
   the member's published records + documents they own).
 - **Expert UI** (`apps/expert`): member list (`/[orgSlug]/members` — from bookings), member
   detail (sessions timeline, notes, documents, reports), session notes editor (in the Phase 9 call
-  side panel and post-call), report composer (rich text -> sanitized HTML/Markdown) with
-  "Publish to member" (audited); document upload with `uploadBlobClient` from
+  side panel and post-call) and report composer, both on `@eleva/editor` `RichTextEditor`
+  (ADR-023; Plate JSON encrypted at rest, sanitized HTML derived server-side **after** decrypt for
+  the member view — never stored in clear) with "Publish to member" (audited);
+  **template library** (`/[orgSlug]/templates`): `record_templates` (per expert org, `kind`
+  `note|report|consultation|message`, localized title, Plate JSON body with placeholders
+  `{{member.firstName}}`, `{{session.date}}`, `{{expert.name}}`, tags, `is_default`, version) —
+  "Start from template" in the notes editor and report composer, "Save as template" from any
+  record, duplicate, archive; Eleva ships a starter set per specialty as seed data
+  (`packages/db/src/seed/record-templates.ts`, `pt/en/es`); templates are **not** PHI (no member
+  data allowed — the server-side save flow strips filled placeholders back to tokens, then runs a
+  PHI scrubber over the remaining text — exact member identifiers from the source booking (name,
+  e-mail, phone, date of birth, appointment date/time, location) plus pattern detectors for
+  e-mails, phone numbers, dates, national ID/NIF formats and free-text clinical findings copied
+  from the source record — and refuses the save with the offending spans highlighted; nothing is
+  persisted until the scrubber passes; tests cover every detector class); document upload with `uploadBlobClient` from
   `@eleva/storage/blob-upload-client` in the browser and `handleBlobUpload` from
   `@eleva/storage/blob-upload-handler` in the `apps/api` Route Handler, to the **private** store
   with server-side authorization (never `@vercel/blob` directly).
@@ -108,6 +121,10 @@ created|updated|published|unpublished|deleted`; `document: uploaded|deleted`; `c
    `/documents/[id]/url`, `/crm/contacts`, `/crm/follow-ups`, `/ai/session-report/[transcriptId]`
    - OpenAPI + client.
 6. Expert + member UI with `pt/en/es` messages; flags `ff.session_recording`, `ff.ai_reports_beta`.
+7. Template library: `record_templates` migration (RLS, audit `record_template:
+created|updated|archived`), API `/records/templates` CRUD + `POST /records/templates/[id]/apply`
+   (server-side placeholder fill, returns Plate JSON), starter seed, UI, tests (placeholder fill,
+   PHI-refusal on save).
 
 ## Acceptance criteria
 
@@ -142,7 +159,8 @@ created|updated|published|unpublished|deleted`; `document: uploaded|deleted`; `c
 
 ## Local references
 
-- ADR-009, ADR-020, `docs/eleva-v3/{ai-reporting-spec,crm-spec,compliance-data-governance,data-retention-export-matrix}.md`.
+- ADR-009, ADR-020, ADR-023, `docs/eleva-v3/{ai-reporting-spec,crm-spec,compliance-data-governance,data-retention-export-matrix}.md`.
+- `packages/editor/src/**` and `packages/ai/src/{approved-models,editor-assist}.ts` (Phase 4B).
 - `packages/encryption/src/*` (Phase 3), `packages/storage/src/**`, `.cursor/rules/blob-storage.mdc`,
   `packages/compliance/src/**` (Phase 5), `packages/video/src/**` (Phase 9), `packages/flags/src/**`,
   `packages/observability/src/**`.
@@ -186,9 +204,13 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
-- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
+  or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
+  remaining Minor/Trivial listed in the PR body "Deferred findings" table with a reason each).
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean or
+  the cap (max 2 rounds, same exit rule).
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
-- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
+- Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
+  (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
@@ -248,9 +270,27 @@ PR 10.1 — records, documents, consent, retention:
    listed with fresh signed URLs). Tests with seeded expired rows.
 4. apps/expert: /[orgSlug]/members (list from bookings, search), /[orgSlug]/members/[userId]
    (timeline of sessions, notes, documents, reports), notes editor in the Phase 9 call side panel
-   and post-call page (autosave encrypted drafts), report composer (Markdown editor with preview,
-   sanitized) with Publish (confirmation dialog; audited), document upload (private store, browser
-   side uses uploadBlobClient from @eleva/storage/blob-upload-client).
+   and post-call page (autosave encrypted drafts) and report composer, both using @eleva/editor
+   RichTextEditor with ai.context = "clinical" (ADR-023; Plate JSON is the encrypted payload —
+   body_encrypted (the field defined in deliverable 1) holds the JSON, the sanitized HTML for the member view is derived server-side
+   after decrypt on read, never persisted in clear; toPlainText feeds nothing outside the
+   encrypted row) with Publish (confirmation dialog; audited), document upload (private store,
+   browser side uses uploadBlobClient from @eleva/storage/blob-upload-client).
+   Template library: packages/db record_templates (id, org_id, kind note|report|consultation|
+   message, title jsonb, body_json jsonb Plate value with {{member.firstName}}, {{session.date}},
+   {{expert.name}} placeholders, tags text[], is_default, version, archived_at; RLS by org; audit
+   record_template: created|updated|archived), starter seed packages/db/src/seed/record-templates.ts
+   (pt/en/es, per specialty); API /records/templates CRUD + POST /records/templates/[id]/apply
+   ({ bookingId }) -> server fills placeholders and returns Plate JSON for the editor; UI
+   /[orgSlug]/templates (gallery with kind filter, preview, duplicate, archive), "Start from
+   template" in notes/report composers, "Save as template" from any record (server-side: strips
+   filled placeholders back to tokens, then a PHI scrubber rejects the save when the remaining
+   text contains any identifier of the source booking's member — name, e-mail, phone, date of
+   birth, appointment date/time, location — or matches pattern detectors for e-mails, phones,
+   dates, NIF/national IDs or clinical sentences copied verbatim from the source record; the UI
+   highlights the offending spans; nothing persists until it passes — templates must never carry
+   PHI). Tests: placeholder fill, PHI refusal for each detector class (non-name PHI included),
+   tokenised templates still save, RLS.
    apps/app: /[orgSlug]/reports (published records) and /[orgSlug]/reports/[id], documents with
    signed download, consent banner on the join page for session_recording + ai_processing.
    Messages pt/en/es; "members" wording.
@@ -296,10 +336,12 @@ PR 10.2 — CRM + AI reports beta:
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
    Report({ transcriptRecordId }) using generateObject via the gateway with model id from
-   AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: keep an allow-list
-   packages/ai/src/approved-models.ts of { modelId, provider, zeroRetention: true, evidenceUrl }
-   entries verified against the provider's zero-data-retention terms through the AI Gateway
-   (record the evidence in compliance-data-governance.md); draftSessionReport refuses to run
+   AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: EXTEND the
+   allow-list packages/ai/src/approved-models.ts introduced in Phase 4B so that every entry used
+   for PHI-bearing calls (session reports, the editor's "clinical" context — enable it here by
+   lifting the Phase 4B rejection) has { zeroRetention: true, evidenceUrl } verified against the
+   provider's zero-data-retention terms through the AI Gateway (record the evidence in
+   compliance-data-governance.md); draftSessionReport refuses to run
    (typed error AI_MODEL_NOT_APPROVED, audited) when the configured model is not on the list or
    the gateway response does not confirm the no-retention providerOptions were applied — never
    send PHI "where supported"; tokens/latency logged without content; result stored as records.kind = ai_draft
