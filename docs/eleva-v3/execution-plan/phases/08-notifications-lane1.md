@@ -105,7 +105,26 @@ WHERE id = :id AND status = 'queued' AND claimed_at < now() - interval '60 s' RE
   with `domain_events_outbox` and the `/workflows/domain-events-publisher` route, extended by
   Phase 7); this phase
   registers `sendNotification` as a publisher subscriber (idempotent on the event
-  `idempotency_key`) and extends the event union with booking/payment/payout types.
+  `idempotency_key`) and extends the event union with booking/payment/payout types. Subscriber
+  state is **per subscriber** (`domain_event_deliveries`, Phase 4): the notification subscriber's
+  failure never re-runs the invoicing or guest-activation subscribers of the same event, and the
+  event is complete only when every registered subscriber succeeded.
+- **Content and privacy rules** (tested by a template lint in `apps/email`): subjects, SMS bodies
+  and push-style previews never carry specialty, diagnosis, report content, notes or the session
+  topic — only "your session with <expert first name>" and the time; ICS attachments contain
+  time, mode, location or "link follows", and the expert's public name — never notes or member
+  phone numbers (privacy review recorded in `notifications-spec.md`); guest e-mails are worded
+  identically whether or not an account exists for the address (no enumeration); `@eleva/auth`
+  never imports `@eleva/notifications` and vice versa — Better Auth e-mail hooks call a thin
+  `packages/notifications/src/auth-mailer.ts` adapter injected at server construction.
+- **Twilio hardening**: EU regional credentials (`TWILIO_REGION=ie1`, `TWILIO_EDGE=dublin`);
+  status-callback signature validation reconstructs the exact public URL — scheme + host from
+  `PUBLIC_API_URL`, then the request path and the **raw** query string byte-for-byte (never
+  sorted, re-encoded or re-serialized: Twilio signs the URL exactly as it requested it) — rather
+  than trusting `x-forwarded-*` headers, and validates with the Twilio SDK's
+  `validateRequest`/`validateRequestWithBody` (POST form params included); fixtures: a recorded
+  Twilio signature, a URL with percent-encoded query values, and a URL whose parameters are in
+  non-alphabetical order — all three must validate; a sorted/re-encoded reconstruction must fail.
 - Lane 2 stub: `syncMarketingContact(userId)` to Resend Audiences only when `marketing` consent
   granted; no PHI fields.
 - Resend webhooks (`/webhooks/resend`: delivered, bounced, complained) -> `notification_deliveries`
@@ -125,8 +144,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 ## Acceptance criteria
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
-      before the session" + join CTA (Phase 9), phone -> "your expert will call you on <masked
-                                                                  number>", in person -> location name, address, "Open in Maps" link and the location's
+      before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number, in person -> location name, address, "Open in Maps" link and the location's
       instructions; the ICS `LOCATION` follows the same rule.
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
@@ -138,7 +156,12 @@ Out: push (Expo) — post-launch; Novu (retired).
       `idempotencyKey` for member and expert (booking.confirmed) -> both delivered (test both).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.
 - [ ] Hard bounce suppresses further emails to that address; visible in delivery table.
-- [ ] Every template renders in `pt/en/es` in `apps/email` preview; no PHI in subjects or SMS.
+- [ ] Every template renders in `pt/en/es` in `apps/email` preview; the template lint fails on any
+      specialty/diagnosis/notes token in a subject or SMS body; ICS contents match the privacy rule.
+- [ ] Guest e-mail copy is byte-identical for "account exists" and "no account" cases (test).
+- [ ] Boundary lint: no import edge between `@eleva/auth` and `@eleva/notifications`.
+- [ ] A failing notification delivery leaves the same event's other subscribers `succeeded` and
+      untouched (per-subscriber outbox test).
 
 ## Tests
 
@@ -296,7 +319,19 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
    paid/approval required) to call emitDomainEvent(tx, ...) inside the same transaction as the
    state change — never from after() alone. The subscriber passes the outbox idempotency_key
-   straight through as the notification idempotency key, so publisher retries never duplicate.
+   straight through as the notification idempotency key, so publisher retries never duplicate;
+   it is registered under subscriber_id "notifications" in domain_event_deliveries so its
+   retries never re-run the invoicing or guest-activation subscribers (test). Content rules:
+   add apps/email/scripts/lint-templates.ts (fails on specialty, diagnosis, notes, report, topic
+   fields in any subject or SMS template; run in pnpm test), keep ICS to time/mode/location/
+   expert public name, word guest e-mails identically for existing and new accounts, and wire
+   EVERY Better Auth mail callback — sendVerificationEmail, sendMagicLink, sendResetPassword,
+   sendChangeEmailVerification, the twoFactor OTP sender and the organization
+   sendInvitationEmail — through packages/notifications/src/auth-mailer.ts injected into
+   createAuth() so @eleva/auth never imports @eleva/notifications (boundary lint edge + one test
+   per callback asserting a notification_deliveries row with kind auth.* and no direct resend
+   call; rg -n "resend" packages/auth returns nothing). Twilio: TWILIO_REGION/TWILIO_EDGE for EU, and validateRequest
+   against the URL rebuilt from PUBLIC_API_URL + path + sorted query (fixture test).
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,

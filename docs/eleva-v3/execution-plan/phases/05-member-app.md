@@ -1,12 +1,12 @@
 # Phase 5 — Member app (`apps/app`)
 
-| Field      | Value                                                                                                                                                                                                                                                        |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Branch     | `phase-05/member-app`                                                                                                                                                                                                                                        |
-| Depends on | Phase 4                                                                                                                                                                                                                                                      |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                    |
-| Touches    | `apps/app/**`, `apps/api/src/app/{me,bookings,payments,privacy}/**`, `packages/dashboard/**`, `packages/api-client/**`, `packages/compliance/**` (DSAR export), `packages/db` (notification_preferences, dsar_requests, account_deletion_requests, consents) |
-| Exit gate  | A member activated from a guest booking signs in, sees the booking, downloads the receipt, updates preferences, requests a DSAR export, and cancels/reschedules within policy                                                                                |
+| Field      | Value                                                                                                                                                                                                                                                           |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-05/member-app`                                                                                                                                                                                                                                           |
+| Depends on | Phase 4 — work may start on **PR 04.1** (consents, `public_handles`, tables), the booking views and `e2e/member.spec.ts` need **PR 04.2** merged. Entry gate: D-12 (deletion vs legal retention) recorded in `decision-log.md` before the account-deletion work |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                       |
+| Touches    | `apps/app/**`, `apps/api/src/app/{me,bookings,payments,privacy}/**`, `packages/dashboard/**`, `packages/api-client/**`, `packages/compliance/**` (DSAR export), `packages/db` (notification_preferences, dsar_requests, account_deletion_requests, consents)    |
+| Exit gate  | A member activated from a guest booking signs in, sees the booking, downloads the receipt, updates preferences, requests a DSAR export, and cancels/reschedules within policy                                                                                   |
 
 ## Why this phase exists
 
@@ -34,7 +34,14 @@ In:
     handled by `@eleva/compliance` `dsarExport` job -> private Blob zip + email link; 10-minute
     target from `data-retention-export-matrix.md`), account deletion request (soft-delete +
     scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
-    future bookings with 100% refund — see prompt deliverable 3).
+    future bookings with 100% refund — see prompt deliverable 3). **Deletion vs legal retention
+    (D-12)**: member-authored data (profile, preferences, consents metadata, CRM notes written by
+    the member) is erased on the schedule; **expert-authored clinical records stay under the
+    expert organization's legal retention duty** — they are pseudonymised (member identity
+    replaced by a retention token) and kept for the period the DPO records in
+    `data-retention-export-matrix.md` (working default until signed: the Portuguese clinical
+    record minimum, owner: legal/DPO), then crypto-shredded by the Phase 10 job. The member
+    deletion UI says so in plain language.
 - `apps/api`: `GET /me` (profile + preferences), `PATCH /me`, `GET /me/bookings`,
   `GET /me/payments`, `PUT /me/notification-preferences`, `GET /me/consents` (every consent
   kind with version, granted_at, withdrawn_at), `PUT /me/consents` (grant or withdraw one kind;
@@ -59,8 +66,10 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 1. `apps/app` pages, layouts, `proxy.ts` (< 50 LOC), messages `pt/en/es`.
 2. API routes above + OpenAPI + api-client.
-3. DB migration: `notification_preferences`, `dsar_requests`, `account_deletion_requests`,
-   `consents` (if not already present), each with RLS policies and audit unions.
+3. DB migration: `notification_preferences`, `dsar_requests`, `account_deletion_requests`, each
+   with RLS policies and audit unions. `consents` **exists since Phase 4 PR 04.1** (funnel writes
+   it); this phase adds the `marketing` kind, the member view/withdraw API and UI, and the
+   `withdrawn_at` flows — it does not create or reshape the table.
 4. `@eleva/compliance` implementation + tests; QStash schedule/trigger registration in
    `infra/qstash` if periodic.
 5. `e2e/member.spec.ts`.
@@ -95,8 +104,9 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Docs to update
 
-- `data-retention-export-matrix.md`, `compliance-data-governance.md` (DSAR runbook),
-  `api-contract-spec.md`, `notifications-spec.md` (preferences model), `decision-log.md`.
+- `data-retention-export-matrix.md` (D-12 retention period + pseudonymisation rule),
+  `compliance-data-governance.md` (DSAR runbook), `api-contract-spec.md`, `notifications-spec.md`
+  (preferences model), `decision-log.md` (D-12).
 
 ## Local references
 
@@ -162,10 +172,14 @@ PHASE 5 TASK — Build the member product in apps/app.
 
 1. packages/db: tables notification_preferences (user_id FK auth.user, channel email|sms|in_app,
    category booking|reminder|payment|marketing|system, enabled bool, quiet_hours_start/end time,
-   timezone), consents (user_id, kind, version, granted_at, withdrawn_at, source) where kind is
+   timezone); consents ALREADY EXISTS (Phase 4 PR 04.1: subject_kind, user_id, guest_email_hash,
+   kind, document_version, locale, source, reservation_id, booking_id, granted_at, withdrawn_at)
+   — here only extend the kind enum and, on guest activation, re-key the guest rows to the new
+   user_id (subscriber in Phase 4's outbox does it; test it here) where kind is
    the pg enum consent_kind generated from the CONSENT_KINDS const exported by
    @eleva/compliance (terms | privacy | health_data_processing | marketing; Phase 10 appends
-   session_recording and ai_processing, Phase 13 appends analytics — each in its own PR, to the
+   ai_processing, Phase 13 appends analytics, backlog item 16.8 appends session_recording when
+   recording ships — each in its own PR, to the
    same const, regenerating the enum — never a second spelling such as health_data, and never
    reuse marketing for analytics), dsar_requests (id, user_id, status pending|processing|ready|expired|
    failed, blob_pathname, expires_at, requested_at, completed_at), account_deletion_requests
@@ -182,7 +196,10 @@ PHASE 5 TASK — Build the member product in apps/app.
    JSON + CSV files zipped and uploaded to the PRIVATE Blob store via @eleva/storage with a 24h
    signed URL; scheduleAccountDeletion(userId, days per data-retention-export-matrix.md) that
    marks the user (auth.user.deletion_scheduled_at) and enqueues crypto-shred (Phase 10
-   completes). Booking eligibility is enforced where bookings are created and BEFORE any money
+   completes) — scoped by D-12: member-authored data is shredded on schedule; expert-authored
+   clinical records are pseudonymised (member FK replaced by a retention token, PII columns
+   nulled) and kept for the legal retention period from data-retention-export-matrix.md, then
+   shredded by Phase 10's retention job; the /privacy copy explains this in plain language. Booking eligibility is enforced where bookings are created and BEFORE any money
    moves, not only in the UI: add assertMemberCanBook(userId) to @eleva/scheduling (throws
    BookingError "ACCOUNT_DELETION_SCHEDULED" -> 409) and call it inside reserveSlot, in POST
    /bookings/reserve and in POST /payments/intent before tx A (Phase 4 routes; update them in

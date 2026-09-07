@@ -13,6 +13,18 @@
 Before migrating real users, the platform must be secure, observable and measurable. Most items
 already exist in scattered form; this phase closes gaps and wires enforcement into CI.
 
+**Verify, do not introduce (P0-9).** The security baseline is built where the risk is created —
+Phase 1 (RLS policy-class taxonomy + class test suite, secret scanning, the security
+traceability skeleton), Phase 2 (cookie/CSRF threat model, session model, `requireApiAuth`
+modes), Phase 4 (`ROUTE_POLICY` declarations + `check-route-guards`, BotID + rate-limit classes
+on the funnel, `check-no-phi-logs`), Phase 10 (PHI redaction, KEK controls), Phase 12 (step-up, dual
+control). This phase **audits** those controls end to end, closes the gaps it finds, adds the
+cross-cutting pieces that only make sense once every surface exists (CSP with nonces per app,
+unified headers, Sentry release tagging, heartbeats, analytics consent), and produces the
+evidence the `/trust/*` pages and Phase 15 gates cite. If an audit here finds a control that a
+previous phase should have shipped, the fix is a regression fix against that phase's acceptance
+criteria — and the phase file gets the missing line so the plan learns.
+
 ## Scope
 
 In:
@@ -56,12 +68,14 @@ In:
   bridge optional); consent banner in `apps/web` and first-login consent in apps (categories:
   necessary, analytics, marketing) stored in `consents` and honored by GA4/PostHog/Resend Lane 2.
   `analytics` is a **distinct consent kind**: this phase appends `analytics` to `CONSENT_KINDS`
-  in `@eleva/compliance` (Phase 5 const; Phase 10 appended `session_recording`/`ai_processing`),
+  in `@eleva/compliance` (Phase 5 const; Phase 10 appended `ai_processing`; `session_recording`
+  arrives only with Phase 16.8 behind D-08 — this phase must not add it),
   regenerates the `consent_kind` pg enum with a migration, extends the `/me/consents` Zod
   schemas and adds tests — `marketing` consent never implies analytics and vice versa
   ("necessary" is not stored; it is not a choice).
 - **i18n**: parity CI already exists (Phase 1); this phase fills every missing key in `pt/en/es`
-  (and `pt-BR` if kept), translates legal pages, email templates per locale, error messages from
+  (`pt-BR` is retired — D-01; the parity checker fails on any `pt-BR` file, never add one),
+  translates legal pages, email templates per locale, error messages from
   API error codes -> localized copy map in `@eleva/i18n`; `hreflang` and locale switch tested.
 - **Performance**: budgets in `lighthouserc` (LCP < 2.5s, CLS < 0.1, INP < 200ms on profile and
   explorer), `use cache` on explorer/profile/categories, image optimization (`next/image` with
@@ -74,7 +88,18 @@ In:
 - **Runbooks**: incident response, on-call rotation, backup/restore drill (Neon PITR), DR
   checklist.
 
-Out: penetration test (external vendor, scheduled before Phase 15 — record as an operator task).
+- **Compliance evidence pack** (feeds Phase 15 gate A and `/trust/*`): DPIA for the booking +
+  records processing (drafted in Phase 4/10, **finalised and signed by the DPO here**), records of
+  processing activities, sub-processor list with DPAs (Stripe, Daily, Resend, Twilio, Neon,
+  Vercel, Upstash, Sentry, PostHog, TOConline, AI Gateway providers), data-flow diagram, the
+  cookie/CSRF threat model (Phase 2) and the KEK custody procedure (Phase 10) reviewed — each
+  item has owner, approver, evidence link and review date in `compliance-data-governance.md`.
+- **Traceability**: `docs/eleva-v3/security-traceability.md` maps every control in
+  `security-hardening-checklist.md` to the phase that introduced it, the test or CI check that
+  enforces it, and the evidence link; CI fails when a checklist row has no enforcing check.
+
+Out: penetration test (external vendor, scheduled before Phase 15 — record as an operator task;
+its scope is the surface this phase's evidence pack describes).
 
 ## Deliverables
 
@@ -91,7 +116,11 @@ Out: penetration test (external vendor, scheduled before Phase 15 — record as 
 
 ## Acceptance criteria
 
-- [ ] `security-hardening-checklist.md` items all ticked with links to code/CI.
+- [ ] `security-hardening-checklist.md` items all ticked with links to code/CI, and
+      `security-traceability.md` maps each to its introducing phase + enforcing check (CI fails on
+      an unmapped row).
+- [ ] DPIA signed by the DPO; sub-processor list with DPAs complete; evidence pack referenced from
+      `/trust/*` copy (no claim without an evidence link).
 - [ ] CSP report-only run on staging for 48h shows zero violations from first-party code; then
       enforced.
 - [ ] Rate-limit tests hit 429 at the configured thresholds for each class.
@@ -136,6 +165,8 @@ Out: penetration test (external vendor, scheduled before Phase 15 — record as 
 ## Risks
 
 - CSP breaking Stripe/Daily embeds: use report-only first; keep allow-lists in one place.
+- Phase 13 becoming a dumping ground: anything found here that belongs to an earlier phase is
+  fixed as a regression against that phase and back-filled into its acceptance criteria.
 
 ## Copy-paste prompt
 
@@ -179,6 +210,18 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 13 TASK — Harden, observe, localize, speed up, and test the whole platform.
+
+Rule for this phase: verify, do not introduce. RLS classes + secret scanning (Phase 1), the
+cookie/CSRF model (Phase 2), route guards + BotID/rate-limit classes (Phase 4), PHI redaction +
+KEK controls (Phase 10), step-up + dual control (Phase 12) were built where the risk was
+created. Here you audit them (run every existing check, read every ROUTE_POLICY, replay the RLS
+class suites, fire test events through redaction), close the gaps, add the cross-cutting layers
+(CSP nonces, headers, Sentry releases, heartbeats, analytics consent) and produce evidence.
+Write docs/eleva-v3/security-traceability.md (control -> introducing phase -> enforcing test/CI
+-> evidence link) and scripts/check-security-traceability.mjs that fails CI when a
+security-hardening-checklist.md row has no enforcing check. Finalise the DPIA and sub-processor
+list (with DPA links) in compliance-data-governance.md for DPO signature — every /trust/* claim
+must point at an item in this pack.
 
 PR 13.1 — security + observability + analytics:
 1. Security headers: in @eleva/observability add buildSecurityHeaders({ app, nonce, reportOnly, route })
@@ -268,7 +311,8 @@ PR 13.2 — i18n, performance, E2E:
    REQUIRED_LOCALES_BY_APP) across apps (check:i18n-parity must be clean with no
    placeholder values), legal pages in all locales, email templates verified per locale, API error
    code -> localized message map in @eleva/i18n used by apps for toasts; locale switch e2e.
-   Decide pt-BR (alias or full) per decision-log.
+   pt-BR is retired (D-01, locked): assert the /pt-BR/* -> /pt/* 301 from Phase 4 still holds
+   and never add pt-BR keys or files.
 7. Performance: lighthouserc.json with budgets (LCP 2.5s, CLS 0.1, INP 200ms, TBT 300ms) on
    apps/web home, explorer, profile; .github/workflows/lighthouse.yml against the Vercel preview
    URL; use cache + cacheTag on explorer/profile/categories; next/image with Blob loader;

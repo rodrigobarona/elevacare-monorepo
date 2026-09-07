@@ -27,8 +27,9 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 Eleva.care is an EU-first, Portugal-first digital health marketplace and community. Experts
 (clinicians, educators) sell sessions to **members**; clinics (**Teams**) run several experts under
 one organization on a per-seat SaaS plan; **Academy** is the education surface. Everything is
-multilingual (`pt`, `en`, `es` at launch; `pt-BR` pending the Phase 4 alias-vs-full-locale
-decision recorded in `decision-log.md`), API-first and agentic-first, and built to
+multilingual (`pt`, `en`, `es` at launch; `pt-BR` is **retired** as a locale — D-01: `/pt-BR/*`
+301s to `/pt/*`, Brazil returns as a content + payments discovery item in Phase 16.2), API-first
+and agentic-first, and built to
 HIPAA/GDPR/ERS-Portugal standards.
 
 End state of this plan (production, `eleva.care` DNS switched from the MVP):
@@ -167,7 +168,11 @@ Rules of the loop:
    outside its owning package; Zod validation on all request bodies and Server Actions; rate limit
    and explicit auth model on every non-internal route; i18n keys added for `pt`, `en`, `es`;
    docs updated (`decision-log.md` entry if a decision changed); no dead code, legacy files, or
-   empty folders left behind.
+   empty folders left behind. **No external API call inside a database transaction** (Stripe,
+   Daily, TOConline, Resend, Twilio, Google): commit the intent (a state row, attempt marker or
+   outbox event) first, call the vendor outside any `tx`, then record the result in a second
+   short transaction with compare-and-set on the row version, and let a reconciler repair lost
+   responses — the pattern Phase 4 uses for PaymentIntents and Phase 9 for Daily rooms.
 10. **Design quality bar (every phase that touches UI)**. Eleva competes on experience; a
     screen that "works" but looks or reads like an admin table is not done. Before the PR:
     - Build from `@eleva/ui` primitives and `design-system-spec.md` tokens only (no ad-hoc
@@ -188,35 +193,84 @@ Rules of the loop:
     - Palette or type-scale changes are a decision, not a drive-by: propose in
       `decision-log.md` + `design-system-spec.md` (see Phase 16 item 16.18), never inside a
       feature PR.
+11. **Spike PRs** (`phase-NN.0/spike-<slug>`): when a phase depends on a vendor behaviour the
+    plan asserts but has not proven (Stripe separate charges + reversals, TOConline hostnames and
+    OAuth, Daily HIPAA account state), the phase opens with a spike PR whose deliverable is
+    **evidence**, not code: a report under `docs/eleva-v3/spikes/NN-<slug>.md` (what was tested,
+    in which test account, what the API returned, what the plan must change), any throwaway code
+    deleted before the next PR, and the decision-log entry the spike unblocks. Spikes run in test
+    mode only, follow the same loop (rules 1-8) and are capped at 2 days; the phase's next PR
+    cannot open until the spike is merged. Current spikes: 02.0, 06.0, 07.0, 09.0.
+12. **Approval gates** are decisions people outside engineering must sign before a PR opens
+    (finance, legal/DPO, security owner, founder). Each is a `D-NN` row in
+    `docs/eleva-v3/decision-log.md` with owner, date and evidence link; the phase file names
+    which PR is blocked. The agent does **not** wait on a gate silently: it implements every PR
+    that does not depend on it, then stops at the gated PR and reports the missing entry.
+
+    | Gate | Decision                                                         | Owner             | Blocks                  |
+    | ---- | ---------------------------------------------------------------- | ----------------- | ----------------------- |
+    | D-01 | `pt-BR` retired, 301 to `pt`; no `fr` now                        | product           | PR 04.2                 |
+    | D-02 | EUR-only launch (`CHECK (currency = 'EUR')`)                     | founder + finance | PR 04.2                 |
+    | D-03 | Commission VAT basis (VAT-inclusive, expert nets the headline)   | finance           | PR 06.1                 |
+    | D-04 | Processing-fee bearer (Eleva marketplace; clinic on 0% bookings) | finance           | PR 06.1                 |
+    | D-05 | Connect capability = `transfers` only; Identity behind flag      | finance + legal   | PR 06.1                 |
+    | D-06 | Refund, dispute and no-show policy                               | finance + product | PR 06.2                 |
+    | D-07 | Daily HIPAA domain + BAA/DPA, EU processing position             | founder + DPO     | Phase 9                 |
+    | D-08 | Recording storage (S3 EU landing zone -> private Blob)           | DPO + founder     | 16.8                    |
+    | D-09 | Historical MVP invoices: `legacy` / `legacy_missing`, no reissue | accountant        | PR 07.1                 |
+    | D-10 | Public-site parity dispositions (quiz, help, community, legal)   | product           | PR 04.2                 |
+    | D-11 | Clinical access model (author; clinic opt-in; staff never)       | DPO + product     | PR 10.1                 |
+    | D-12 | Deletion vs legal retention of clinical records                  | DPO + legal       | Phase 5 (deletion flow) |
+    | D-13 | Cookie / CSRF / subdomain threat model                           | security owner    | PR 04.2                 |
+    | D-14 | Launch payment-method set (card, wallets, Link, MB WAY)          | finance + product | PR 04.2                 |
+
+13. **Environment mutation rules** (staging from Phase 1, production from Phase 15). Any command
+    that changes external state — Neon migrations, Stripe/WorkOS/Daily/TOConline/Resend/Twilio
+    configuration scripts, Vercel env or DNS, Upstash — must: name the target environment
+    explicitly (`--env staging|production` or the equivalent env var; never infer it from
+    whichever `.env` happens to be loaded); dry-run by default and mutate only with `--apply`;
+    fail closed when the environment identity is missing or the credentials do not match the
+    named target (scripts assert the account/project id they are about to touch); require an
+    interactive confirmation for destructive operations (drop, delete, reset, reissue) and
+    `MIGRATION_CONFIRM_PRODUCTION=<today>` for production; and record ids and evidence (before /
+    after, dashboard links) in the PR body or the cutover runbook. The agent never mutates
+    production on its own — production commands are run by the operator from the Phase 15
+    runbook, one step at a time. CodeRabbit is a code-quality gate and does not substitute for
+    the domain, finance, privacy, security or operator approvals the D-gates and runbooks name.
 
 ## 5. Phase index
 
-| Phase | Title                                                                                                                 | Branch                                    | Effort               | Depends on | File                                                                                           |
-| ----- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------- | ---------- | ---------------------------------------------------------------------------------------------- |
-| 0     | Execution plan + CodeRabbit CLI review loop                                                                           | `phase-00/execution-plan-and-review-loop` | 1-2 days             | —          | [`phases/00-execution-plan-and-review-loop.md`](./phases/00-execution-plan-and-review-loop.md) |
-| 1     | Re-baseline: ADR-017..021 + ADR-023, handbook, rules, CI foundations                                                  | `phase-01/rebaseline-adrs-ci`             | 1 week               | 0          | [`phases/01-rebaseline-adrs-ci.md`](./phases/01-rebaseline-adrs-ci.md)                         |
-| 2     | Better Auth foundation (server, schema, client, account UI)                                                           | `phase-02/better-auth-foundation`         | 2 weeks              | 1          | [`phases/02-better-auth-foundation.md`](./phases/02-better-auth-foundation.md)                 |
-| 3     | WorkOS removal: envelope encryption, calendar credentials, billing seats, dashboard, infra                            | `phase-03/remove-workos`                  | 1.5 weeks            | 2          | [`phases/03-remove-workos.md`](./phases/03-remove-workos.md)                                   |
-| 4     | Public marketplace + booking funnel (`apps/web` + API)                                                                | `phase-04/public-marketplace-booking`     | 2 weeks              | 3          | [`phases/04-public-marketplace-booking.md`](./phases/04-public-marketplace-booking.md)         |
-| 4B    | Expert offer builder: practice scope, locations, schedules, delivery modes, private links, calendars, `@eleva/editor` | `phase-04b/expert-offer-builder`          | 2 weeks              | 3, 4       | [`phases/04b-expert-offer-builder.md`](./phases/04b-expert-offer-builder.md)                   |
-| 5     | Member app (`apps/app`)                                                                                               | `phase-05/member-app`                     | 1.5 weeks            | 4          | [`phases/05-member-app.md`](./phases/05-member-app.md)                                         |
-| 6     | Payments: Stripe Connect hardening, payout engine, refunds, schedules                                                 | `phase-06/payments-payouts`               | 2 weeks              | 4, 4B      | [`phases/06-payments-payouts.md`](./phases/06-payments-payouts.md)                             |
-| 7     | Invoicing: TOConline Tier 1 platform-fee invoices + Tier 2 expert invoices                                            | `phase-07/invoicing-toconline`            | 1.5 weeks            | 6          | [`phases/07-invoicing-toconline.md`](./phases/07-invoicing-toconline.md)                       |
-| 8     | Notifications Lane 1 + reminder workflows                                                                             | `phase-08/notifications-lane1`            | 1.5 weeks            | 5, 6, 7    | [`phases/08-notifications-lane1.md`](./phases/08-notifications-lane1.md)                       |
-| 9     | Video with Daily.co (`@eleva/video`, join pages, webhooks)                                                            | `phase-09/video-daily`                    | 1.5 weeks            | 5, 8       | [`phases/09-video-daily.md`](./phases/09-video-daily.md)                                       |
-| 10    | Records/PHI, CRM, AI reports beta                                                                                     | `phase-10/records-crm-ai`                 | 2 weeks              | 9          | [`phases/10-records-crm-ai.md`](./phases/10-records-crm-ai.md)                                 |
-| 11    | Clinics: `apps/team` SaaS                                                                                             | `phase-11/team-clinics`                   | 2 weeks              | 6, 7       | [`phases/11-team-clinics.md`](./phases/11-team-clinics.md)                                     |
-| 12    | Admin console (`apps/admin`)                                                                                          | `phase-12/admin-console`                  | 2 weeks              | 7, 10, 11  | [`phases/12-admin-console.md`](./phases/12-admin-console.md)                                   |
-| 13    | Hardening, observability, i18n parity, performance, full E2E                                                          | `phase-13/hardening-observability`        | 1.5 weeks            | 12         | [`phases/13-hardening-observability.md`](./phases/13-hardening-observability.md)               |
-| 14    | MVP data migration scripts + rehearsals                                                                               | `phase-14/mvp-migration`                  | 2 weeks              | 13         | [`phases/14-mvp-migration.md`](./phases/14-mvp-migration.md)                                   |
-| 15    | PT launch gate + production cutover                                                                                   | `phase-15/launch-cutover`                 | 1 week + 7-day watch | 14         | [`phases/15-launch-cutover.md`](./phases/15-launch-cutover.md)                                 |
-| 16    | Post-launch backlog (not a PR phase)                                                                                  | —                                         | —                    | 15         | [`phases/16-post-launch-backlog.md`](./phases/16-post-launch-backlog.md)                       |
+| Phase | Title                                                                                                                 | Branch                                    | Effort               | Depends on                             | File                                                                                           |
+| ----- | --------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | -------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 0     | Execution plan + CodeRabbit CLI review loop                                                                           | `phase-00/execution-plan-and-review-loop` | 1-2 days             | —                                      | [`phases/00-execution-plan-and-review-loop.md`](./phases/00-execution-plan-and-review-loop.md) |
+| 1     | Re-baseline: ADR-017..021 + ADR-023, handbook, rules, CI foundations                                                  | `phase-01/rebaseline-adrs-ci`             | 1 week               | 0                                      | [`phases/01-rebaseline-adrs-ci.md`](./phases/01-rebaseline-adrs-ci.md)                         |
+| 2     | Better Auth foundation (server, schema, client, account UI)                                                           | `phase-02/better-auth-foundation`         | 2 weeks              | 1 (02.0 spike first)                   | [`phases/02-better-auth-foundation.md`](./phases/02-better-auth-foundation.md)                 |
+| 3     | WorkOS removal: envelope encryption, calendar credentials, billing seats, dashboard, infra                            | `phase-03/remove-workos`                  | 1.5 weeks            | 2                                      | [`phases/03-remove-workos.md`](./phases/03-remove-workos.md)                                   |
+| 4     | Public marketplace + booking funnel (`apps/web` + API)                                                                | `phase-04/public-marketplace-booking`     | 2 weeks              | 3                                      | [`phases/04-public-marketplace-booking.md`](./phases/04-public-marketplace-booking.md)         |
+| 4B    | Expert offer builder: practice scope, locations, schedules, delivery modes, private links, calendars, `@eleva/editor` | `phase-04b/expert-offer-builder`          | 2 weeks              | 3, PR 04.1                             | [`phases/04b-expert-offer-builder.md`](./phases/04b-expert-offer-builder.md)                   |
+| 5     | Member app (`apps/app`)                                                                                               | `phase-05/member-app`                     | 1.5 weeks            | PR 04.1 (04.2 for booking views)       | [`phases/05-member-app.md`](./phases/05-member-app.md)                                         |
+| 6     | Payments: Stripe Connect hardening, payout engine, refunds, schedules                                                 | `phase-06/payments-payouts`               | 2 weeks              | 4, 4B (06.0 spike after 04.2)          | [`phases/06-payments-payouts.md`](./phases/06-payments-payouts.md)                             |
+| 7     | Invoicing: TOConline Tier 1 platform-fee invoices + Tier 2 expert invoices                                            | `phase-07/invoicing-toconline`            | 1.5 weeks            | 6 (07.0 spike with 06.1)               | [`phases/07-invoicing-toconline.md`](./phases/07-invoicing-toconline.md)                       |
+| 8     | Notifications Lane 1 + reminder workflows                                                                             | `phase-08/notifications-lane1`            | 1.5 weeks            | 5, 6, 7                                | [`phases/08-notifications-lane1.md`](./phases/08-notifications-lane1.md)                       |
+| 9     | Video with Daily.co (`@eleva/video`, join pages, webhooks)                                                            | `phase-09/video-daily`                    | 1.5 weeks            | 5, 8 (09.0 pre-check any time after 4) | [`phases/09-video-daily.md`](./phases/09-video-daily.md)                                       |
+| 10    | Records/PHI, CRM, AI reports beta                                                                                     | `phase-10/records-crm-ai`                 | 2 weeks              | 9                                      | [`phases/10-records-crm-ai.md`](./phases/10-records-crm-ai.md)                                 |
+| 11    | Clinics: `apps/team` SaaS                                                                                             | `phase-11/team-clinics`                   | 2 weeks              | 6, 7, 10 (D-11 toggle)                 | [`phases/11-team-clinics.md`](./phases/11-team-clinics.md)                                     |
+| 12    | Admin console (`apps/admin`)                                                                                          | `phase-12/admin-console`                  | 2 weeks              | 7, 10, 11                              | [`phases/12-admin-console.md`](./phases/12-admin-console.md)                                   |
+| 13    | Hardening, observability, i18n parity, performance, full E2E                                                          | `phase-13/hardening-observability`        | 1.5 weeks            | 12                                     | [`phases/13-hardening-observability.md`](./phases/13-hardening-observability.md)               |
+| 14    | MVP data migration scripts + rehearsals                                                                               | `phase-14/mvp-migration`                  | 2 weeks              | 13                                     | [`phases/14-mvp-migration.md`](./phases/14-mvp-migration.md)                                   |
+| 15    | PT launch gate + production cutover                                                                                   | `phase-15/launch-cutover`                 | 1 week + 7-day watch | 14                                     | [`phases/15-launch-cutover.md`](./phases/15-launch-cutover.md)                                 |
+| 16    | Post-launch backlog (not a PR phase)                                                                                  | —                                         | —                    | 15                                     | [`phases/16-post-launch-backlog.md`](./phases/16-post-launch-backlog.md)                       |
 
-Parallelism allowed: 4B and 5 after 4 (4B also needs 3); 6 after 4 **and** 4B (its onboarding
-steps plug into the 4B wizard registry); 7 after 6; 8 after 5, 6 **and** 7 (it consumes Phase 7
-invoice events and Phase 5 member surfaces); 11 after 7; 9 after 5 **and** 8. The "Depends on"
-column of the table above is the SSOT — this sentence only names which phases may run
-concurrently. Everything else is sequential. Never start a phase whose dependencies are not merged.
+Parallelism allowed (PR-level, not phase-level — the dependency edges are between PRs): 4B
+starts after **PR 04.1** (tables, `public_handles`, public reads) and needs 3; 5 after PR 04.1
+as well (its consents/DSAR work extends 04.1 tables; its booking views need 04.2); 6 after 4
+**and** 4B (its onboarding steps plug into the 4B wizard registry) — PR 06.0 (spike) may start as
+soon as 04.2 is merged; 7 after 6 — PR 07.0 (spike) may start with 06.1; 8 after 5, 6 **and** 7
+(it consumes Phase 7 invoice events and Phase 5 member surfaces); 11 after 7 and 10 (D-11 toggle
+only); 9 after 5 **and** 8 — PR 09.0 (pre-check) may start any time after 4. The "Depends on"
+column of the table above is the SSOT — this paragraph only names which PRs may run
+concurrently. Everything else is sequential. Never open a PR whose dependency PRs are not merged
+or whose approval gate (section 4 rule 12) has no decision-log entry.
 
 ## 6. Target architecture (reference for all prompts)
 
@@ -393,17 +447,21 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-<slug>.md
 
 ## 9. Risks carried across phases
 
-| Risk                                                                   | Mitigation                                                                                                                                       | Phase |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----- |
-| Auth swap breaks every app at once                                     | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR                                        | 2-3   |
-| Cross-subdomain cookies on preview deployments                         | Previews point at staging API; documented in `environment-matrix.md`                                                                             | 1, 2  |
-| WorkOS Vault records must be decrypted before WorkOS is cancelled      | Export + checksum in Phase 14 before any WorkOS account closure                                                                                  | 14    |
-| Better Auth plugin package churn                                       | Pin in catalog; verify via Context7 at Phase 2 start                                                                                             | 2     |
-| Daily HIPAA mode disables features (custom room names, live streaming) | Random room names + meeting tokens from day one                                                                                                  | 9     |
-| Commission SSOT vs grandfathered MVP plans                             | Mapping table reviewed with finance before Phase 14                                                                                              | 6, 14 |
-| IVA/TOConline matrix needs accountant sign-off                         | Sign-off is an entry gate of Phase 7, not Phase 15                                                                                               | 7     |
-| CodeRabbit 100-file cap skips review                                   | Split PRs (target <= 30 files); `path_filters` keep generated files out                                                                          | all   |
-| CodeRabbit hourly review allowance exhausted ("Review limit reached")  | Advanced trial (10 reviews/dev/h) until 21 Sep 2026, then Team 8 / Essentials 5; space CLI rounds; `@coderabbitai review` when the window resets | all   |
+| Risk                                                                       | Mitigation                                                                                                                                       | Phase     |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | --------- |
+| Auth swap breaks every app at once                                         | Phases 2-3 while v3 has no traffic; Playwright auth spec before Phase 3 merge; WorkOS deletable in one PR                                        | 2-3       |
+| Cross-subdomain cookies on preview deployments                             | Previews point at staging API; documented in `environment-matrix.md`                                                                             | 1, 2      |
+| WorkOS Vault records must be decrypted before WorkOS is cancelled          | Export + checksum in Phase 14 before any WorkOS account closure                                                                                  | 14        |
+| Better Auth plugin package churn                                           | Pin in catalog; verify via Context7 at Phase 2 start                                                                                             | 2         |
+| Daily HIPAA mode disables features (custom room names, live streaming)     | Random room names + meeting tokens from day one                                                                                                  | 9         |
+| Commission SSOT vs grandfathered MVP plans                                 | Mapping table reviewed with finance before Phase 14                                                                                              | 6, 14     |
+| IVA/TOConline matrix needs accountant sign-off                             | Sign-off is an entry gate of Phase 7, not Phase 15                                                                                               | 7         |
+| Vendor behaviour asserted, not proven (Stripe reversals, TOConline, Daily) | Spike PRs 06.0 / 07.0 / 09.0 produce evidence before implementation (rule 11)                                                                    | 6, 7, 9   |
+| Approval gates decided late block PRs mid-phase                            | Gate table (rule 12) names owner + blocked PR; agent finishes ungated PRs and stops at the gate with a report                                    | all       |
+| Rollback claimed beyond what money movement allows                         | Acceptance point T+48 h / first payout run; after it, fix-forward only (Phases 14-15)                                                            | 14, 15    |
+| Recording pipeline dragging Phase 10 into an S3/BAA dependency             | Recording lives only in 16.8, gated on D-07/D-08; Phase 10 = notes, documents, CRM, AI from typed notes                                          | 9, 10, 16 |
+| CodeRabbit 100-file cap skips review                                       | Split PRs (target <= 30 files); `path_filters` keep generated files out                                                                          | all       |
+| CodeRabbit hourly review allowance exhausted ("Review limit reached")      | Advanced trial (10 reviews/dev/h) until 21 Sep 2026, then Team 8 / Essentials 5; space CLI rounds; `@coderabbitai review` when the window resets | all       |
 
 ## 10. Related documents
 
@@ -411,3 +469,6 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-<slug>.md
 - `docs/eleva-v3/contribution-workflow.md` — PR policy; Phase 0 adds the CLI loop to it.
 - `docs/eleva-v3/decision-log.md`, `docs/eleva-v3/adrs/` — where decisions are recorded.
 - `.cursor/skills/coderabbit-review/SKILL.md` — how agents run the review loop.
+- `reviews/` — external reviews of this plan kept verbatim, each with a response document that
+  records the disposition of every finding (adopted / already resolved / declined) and where in
+  the plan it landed. First entry: `2026-09-07-review-response.md`.

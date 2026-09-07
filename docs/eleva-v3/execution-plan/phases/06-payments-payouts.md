@@ -1,12 +1,13 @@
 # Phase 6 — Payments: Stripe Connect hardening, payout engine, refunds, schedules
 
-| Field      | Value                                                                                                                                                                                                                                                                                                               |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-06/payments-payouts` (split: `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`)                                                                                                                                                                                                  |
-| Depends on | Phase 4, Phase 4B (onboarding wizard registry)                                                                                                                                                                                                                                                                      |
-| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                             |
-| Touches    | `packages/billing/**`, `packages/workflows/src/payments/**`, `packages/db/src/schema/main/{billing,booking-payments,payout-states}.ts`, `apps/api/src/app/{stripe,payments,payouts,workflows,webhooks}/**`, `infra/stripe/**`, `infra/qstash/**`, `apps/expert/**` (finance + onboarding), `packages/api-client/**` |
-| Exit gate  | Pay -> confirm -> eligible -> transfer -> payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the two-file contract; expert Connect onboarding completes with Embedded Components and Identity                           |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                     |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-06/payments-payouts` (split: `phase-06.0/spike-stripe-funds-flow`, `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`)                                                                                                                                                                                                                                                  |
+| Depends on | Phase 4, Phase 4B (onboarding wizard registry)                                                                                                                                                                                                                                                                                                                                                            |
+| Entry gate | Before PR 06.1 opens, finance has approved in `decision-log.md`: the settlement matrix (D-03 VAT basis of the commission, D-04 processing-fee bearer for marketplace and clinic bookings) and the Connect capability/verification requirement (D-05). Before PR 06.2 opens: the refund, dispute and no-show policy (D-06). PR 06.0 (spike, test mode) produces the evidence those approvals are based on. |
+| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Touches    | `packages/billing/**`, `packages/workflows/src/payments/**`, `packages/db/src/schema/main/{billing,booking-payments,payout-states}.ts`, `apps/api/src/app/{stripe,payments,payouts,workflows,webhooks}/**`, `infra/stripe/**`, `infra/qstash/**`, `apps/expert/**` (finance + onboarding), `packages/api-client/**`                                                                                       |
+| Exit gate  | Pay -> confirm -> eligible -> transfer -> payout observable end to end in Stripe test mode with a pilot expert; refunds (full/partial) and disputes update ledger; every Stripe event in the two-file contract (platform + Connect endpoints); expert Connect onboarding completes with Embedded Components                                                                                               |
 
 ## Why this phase exists
 
@@ -21,10 +22,17 @@ In:
 
 - **Connect onboarding hardening** (`apps/expert` + `@eleva/billing`): Express account creation
   with `controller` settings per `payments-payouts-spec.md`, Embedded Components (Account
-  Onboarding, Account Management, Payouts, Notification Banner) via Account Sessions, Stripe
-  Identity verification step, requirements polling (`account.updated` webhook -> `billing_customers`/
-  `expert_profiles.connect_status`), gating: an expert cannot publish event types until
-  `charges_enabled && payouts_enabled && identity_verified`; clear status UI with next actions.
+  Onboarding, Account Management, Payouts, Notification Banner) via Account Sessions,
+  requirements polling (`account.updated` webhook -> `billing_customers`/
+  `expert_profiles.connect_status`). **Capabilities (D-05, working decision pending Stripe/legal
+  confirmation in PR 06.0)**: with separate charges and transfers the connected account only
+  **receives transfers**, so request the `transfers` capability only — no `card_payments`, so
+  `charges_enabled` is irrelevant and never gates anything; Connect's own KYC is the identity
+  check. Gating: an expert cannot publish event types until `details_submitted &&
+payouts_enabled && capabilities.transfers = active`. Stripe Identity stays implemented behind
+  `ff.expert_identity_verification` (default **off**) for the case legal requires a second
+  verification for clinical experts; it is not part of the launch gate. Clear status UI with next
+  actions.
 - **Funds flow (locked, shared with Phase 4)**: Stripe **separate charges and transfers**. The
   member's PaymentIntent is charged on the platform account (no `transfer_data`, no
   `application_fee_amount`); the platform fee lives in the ledger
@@ -33,10 +41,22 @@ In:
   rejected because they move funds at payment time and cannot express the delayed schedule; the
   MVP mixed both flows and this phase removes that ambiguity. Record the choice in
   `decision-log.md` and `payments-payouts-spec.md`.
-- **Commission SSOT**: `packages/billing/src/server/commission.ts` is the only place computing
-  the platform fee (`15%` default, `8%` Top Expert, `0%` clinic-member bookings); used by
-  `POST /payments/intent` (Phase 4) and by reconciliation; store the applied rate on
-  `booking_payments.applied_commission_bps`.
+- **Commission SSOT and settlement matrix**: `packages/billing/src/server/commission.ts` is the
+  only place computing money splits. `computeSettlement({ grossCents, commissionBps, vatRateBps,
+vatTreatment, processingFeeCents, feeBearer })` returns the **financial calculation contract**
+  (D-03/D-04, accountant-approved before PR 06.1): `bookingGross`, `platformFeeGross` (the
+  advertised commission — `15%` default, `8%` Top Expert, `0%` clinic-member bookings — is
+  **VAT-inclusive**: the expert always nets what the marketing says, so 100 EUR -> fee gross
+  15.00 -> expert transfer 85.00), `platformFeeNet` and `vatOnPlatformFee` derived from the
+  Phase 7 IVA matrix (PT B2B: 15.00 = 12.20 net + 2.80 IVA; intra-EU reverse charge: 15.00 net,
+  0 IVA), `paymentProcessingFee` (Stripe's actual `balance_transaction.fee`), `expertTransfer`
+  (= gross − fee gross for marketplace bookings, Eleva absorbs processing out of its fee; = gross
+  − processing fee for clinic `0%` bookings, the clinic bears processing — working default for
+  D-04), `creditNoteAllocation` (proportional on partial refunds), rounding (half-up on cents,
+  applied once, on the fee), `currency` (`EUR`). Every amount the ledger, the transfer, the
+  Tier 1 invoice and the expert finance UI show comes from this one function; store
+  `applied_commission_bps`, `platform_fee_net_cents`, `platform_fee_vat_cents`,
+  `processing_fee_cents` on `booking_payments`.
 - **Payout engine** (port from MVP `process-expert-transfers`, `process-pending-payouts`,
   `check-upcoming-payouts`, `transfer-utils.ts`): `payout_states` table (booking_payment_id,
   status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` (this
@@ -52,22 +72,38 @@ In:
   Phase 11 writes the clinic's when `payout_mode = clinic`; transfers, refunds, reconciliation
   and retries read **only** this snapshot, never the current profile settings),
   `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
-  `stripe_payout_id`, `hold_reasons text[]` (set, `dispute|manual`), `held_from_status`, `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
+  `stripe_payout_id`, `approved_by`, `approved_at`, attempts, last_error — plus the `hold_reasons`
+  - `held_from_status` pair defined above); eligibility = `max(paid_at + 7 days,
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
-  `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
-  (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
-  the tests) or first payout for an account — those are the only two `approval_required`
-  reasons; an open dispute or a manual hold puts the row in `held` (with `held_from_status`),
-  never in `approval_required`, and `approve` on a row whose payment has `dispute_status =
+    `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
+    (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
+    the tests) or first payout for an account — those are the only two `approval_required`
+    reasons; an open dispute or a manual hold puts the row in `held` (with `held_from_status`),
+    never in `approval_required`, and `approve` on a row whose payment has `dispute_status =
   open` is refused with 409 DISPUTE_OPEN; retries with backoff and DLQ.
 - **Workflows** (`packages/workflows/src/payments/*`, routes under `apps/api/src/app/workflows/*`,
   QStash schedules in `infra/qstash`): `process-expert-transfers` (every 2h),
   `process-pending-payouts` (06:00), `check-upcoming-payouts` (daily notice), `cleanup-expired-
 reservations` (every 15 min, existing), `stripe-stuck-events` (existing).
-- **Refunds and disputes**: `POST /payments/[bookingPaymentId]/refund` (admin or policy-driven;
-  full or partial; refund the platform charge, `reverse_transfer: true` when a transfer was
-  already made, and reduce the ledger fee proportionally — there is no Stripe application fee
-  object in this funds flow);
+- **Refunds and disputes (P0-1 corrected)**: `POST /payments/[bookingPaymentId]/refund` (admin or
+  policy-driven; full or partial). With separate charges and transfers a refund and a transfer
+  reversal are **two Stripe operations with two ledger states**, never one `reverse_transfer`
+  flag (that belongs to destination charges): (1) `stripe.refunds.create({ payment_intent, amount
+  }, { idempotencyKey: refund:<bookingPaymentId>:<n> })` -> `refunds` row `succeeded|failed`;
+  (2) if `payout_states.stripe_transfer_id` exists, `stripe.transfers.createReversal(transferId,
+  { amount: proportional share, metadata })` with its own idempotency key -> `transfer_reversals`
+  row; partial refunds reverse a **cumulative** share — `round(refundedToDate / gross *
+  transferred) - reversedToDate` — so repeated partials never leave residual cents or exceed
+  the transfer, a full refund reverses exactly the remainder, and `CHECK (reversed_cents <=
+  amount_cents)` on `payout_states` enforces it (test: 33.33 + 33.33 + 33.34 on 100.00 /
+  85.00 -> 28.33 + 28.33 + 28.34, cumulative 85.00; 3 x 33.33 alone -> 84.99 and the last
+  0.01 is reversed only if the remaining 0.01 is refunded); a refund that succeeds while the
+  reversal fails (`balance_insufficient` on the connected account, network) leaves the payout in
+  `reversal_pending` with retries + alert and is reconciled by `transfer.reversed` — the member
+  is never made to wait on the expert's balance; a reversal never mints a new
+  `transfer_idempotency_key`; the Tier 1 credit note (Phase 7) is issued from the **completed**
+  refund, not from the request; ledger fee reduced by `computeSettlement` on the refunded amount
+  (there is no Stripe application fee object in this funds flow);
   webhook handlers for `charge.refunded`, `charge.dispute.created/closed`, `transfer.created/
 reversed`, `payout.paid/failed`, `account.updated`, `capability.updated`,
   `identity.verification_session.verified/requires_input`,
@@ -105,13 +141,23 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 ## Acceptance criteria
 
-- [ ] New expert completes Connect onboarding + Identity in Embedded Components; `account.updated`
-      flips `connect_status` and unlocks publishing.
+- [ ] New expert completes Connect onboarding in Embedded Components; `account.updated` /
+      `capability.updated` flip `connect_status` and unlock publishing once `transfers` is active
+      and `payouts_enabled`; no `card_payments` capability is requested.
+- [ ] PR 06.0 spike report committed under `docs/eleva-v3/spikes/06-stripe-funds-flow.md`: test-mode
+      evidence for platform PaymentIntent, delayed transfer with `source_transaction`, full +
+      partial refund, transfer reversal, dispute hold, connected-account webhooks, clinic 0% flow.
 - [ ] Test booking paid at T: `payout_states.eligible_at = max(T+7d, session_end+24h)` at 04:00
       Lisbon; `process-expert-transfers` creates a Stripe Transfer with `transfer_group`; payout
       appears in the expert's Embedded Payouts component; `payout.paid` marks `paid_out`.
 - [ ] Refund before transfer: charge refunded, ledger fee reduced, state `reversed`; refund after
-      transfer: `reverse_transfer` executed; ledger consistent; audit rows present.
+      transfer: `refunds.create` **then** `transfers.createReversal` as two audited steps;
+      partial refund reverses the proportional share; simulated reversal failure leaves
+      `reversal_pending` with an alert and is closed by `transfer.reversed`; ledger consistent.
+- [ ] `computeSettlement` unit tests reproduce the approved matrix row by row (100 EUR PT B2B,
+      intra-EU reverse charge, Top Expert, clinic 0% with processing fee, partial refund).
+- [ ] Connect webhook endpoint (`connect: true`) receives `payout.paid|failed`, `account.updated`,
+      `capability.updated` from connected accounts; parity test covers both endpoints.
 - [ ] Dispute opened -> payout `held`, `hold_reasons = {dispute}`, `held_from_status` recorded;
       dispute closed won -> `dispute` removed and, if the set is empty, status restored to
       `held_from_status` (e.g. back to `scheduled`, or `paid_out` when funds had already moved)
@@ -156,9 +202,10 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 - Stripe `/websites/stripe`: Connect Express + controller properties, Account Sessions + Embedded
   Components (account_onboarding, account_management, payouts, notification_banner), Identity,
   separate charges and transfers (the chosen funds flow; read destination charges only to
-  understand why they are rejected), `transfer_group`, `source_transaction`, refunds with
-  `reverse_transfer`, disputes, payouts, test clocks,
-  webhook best practices, idempotency.
+  understand why they are rejected), `transfer_group`, `source_transaction`, refunds
+  (`refunds.create`) and **transfer reversals** (`transfers.createReversal`), Connect webhook
+  endpoints (`connect: true`), capabilities (`transfers` vs `card_payments`), disputes, payouts,
+  test clocks, webhook best practices, idempotency.
 - QStash `/upstash/qstash-js` (schedules, signature verification).
 - `@stripe/connect-js` / `@stripe/react-connect-js` docs.
 
@@ -183,8 +230,9 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/06-payments-payouts.md in full.
 3. Read every file under "Local references" including the MVP payout code. Pull Stripe docs
-   (Connect Express controller, Account Sessions + Embedded Components, Identity, separate
-   charges and transfers, refunds with reverse_transfer, disputes, payouts, test clocks) and QStash
+   (Connect Express controller, Account Sessions + Embedded Components, capabilities, separate
+   charges and transfers, refunds + transfer reversals, Connect webhook endpoints, disputes,
+   payouts, test clocks) and QStash
    docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
@@ -215,15 +263,28 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 
 PHASE 6 TASK — Make Stripe Connect smooth and build the payout engine.
 
+PR 06.0 — spike (test mode, throwaway code under packages/billing/spikes/, evidence is the
+deliverable): against the staging Stripe account prove and record in
+docs/eleva-v3/spikes/06-stripe-funds-flow.md (ids, screenshots, event payloads): platform
+PaymentIntent with payment_method_configuration; connected Express account with ONLY the
+transfers capability (confirm the account can receive transfers and pay out without
+card_payments — if Stripe requires more, record it and update D-05); delayed transfer with
+source_transaction; full and partial refund followed by transfers.createReversal; reversal with
+insufficient connected balance; dispute created/closed on a transferred charge; connected-account
+webhooks (payout.paid, account.updated, capability.updated) on a Connect endpoint; clinic 0%
+booking where the processing fee is deducted from the transfer. Fill the settlement matrix rows
+with real numbers and hand them to finance (D-03, D-04). Delete the spike code before PR 06.1.
+
 PR 06.1 — Connect onboarding hardening:
 1. @eleva/billing connect.ts: create Express accounts with controller settings from
    payments-payouts-spec.md (fees payer application, losses collector application, stripe dashboard
    type express), country from expert profile (PT first), business_type individual|company,
-   capabilities card_payments + transfers; store account id + status fields on billing_customers
-   (charges_enabled, payouts_enabled, details_submitted, requirements_currently_due jsonb,
-   identity_status). account-session.ts: enable components account_onboarding,
-   account_management, payouts, notification_banner, balances (read the current allow-list and
-   extend). identity.ts: verification session creation + status mapping.
+   capability transfers ONLY (D-05; no card_payments — the platform charges the member); store
+   account id + status fields on billing_customers (payouts_enabled, details_submitted,
+   requirements_currently_due jsonb, connect_capabilities jsonb, identity_status nullable).
+   account-session.ts: enable components account_onboarding, account_management, payouts,
+   notification_banner, balances (read the current allow-list and extend). identity.ts stays,
+   behind ff.expert_identity_verification (default off).
 2. Webhook: add account.updated, identity.verification_session.verified,
    identity.verification_session.requires_input, capability.updated to BOTH
    packages/billing/src/server/webhook.ts and infra/stripe/setup-webhooks.ts (two-file contract);
@@ -231,15 +292,27 @@ PR 06.1 — Connect onboarding hardening:
    dispatcher's handled event set equals WEBHOOK_EVENTS.
 3. apps/expert onboarding (append steps to the Phase 4B onboarding-steps.ts registry rendered by
    @eleva/dashboard OnboardingShell — never a second wizard): step "Payments" renders Embedded
-   Account Onboarding; step "Identity"
-   renders the Identity flow; status page shows requirements due with plain-language next actions
-   (pt/en/es). Gate: POST /experts/event-types/[id]/publish returns 409 CONNECT_INCOMPLETE until
-   charges_enabled && payouts_enabled && identity verified; UI shows the reason.
+   Account Onboarding; step "Identity" renders only when ff.expert_identity_verification is on;
+   status page shows requirements due with plain-language next actions (pt/en/es). Gate: POST
+   /expert/event-types/[id]/publish returns 409 CONNECT_INCOMPLETE until details_submitted &&
+   payouts_enabled && connect_capabilities.transfers === "active" (plus identity when the flag is
+   on); UI shows the reason.
 4. Commission SSOT: packages/billing/src/server/commission.ts exports computeApplicationFee({
    amountCents, expertOrgId, buyerContext }) using expert plan tier (default 1500 bps, top_expert
    800 bps, clinic-member booking 0 bps, optional grandfathered override stored on
-   billing_customers.commission_override_bps with expiry). Store applied bps on
-   booking_payments.applied_commission_bps at intent creation (update Phase 4 route). Tests.
+   billing_customers.commission_override_bps with expiry) AND computeSettlement({ grossCents,
+   commissionBps, vatRateBps, vatTreatment: pt_b2b | eu_reverse_charge | eu_b2c | non_eu,
+   processingFeeCents, feeBearer: platform | destination }) -> { bookingGross,
+   platformFeeGross, platformFeeNet, vatOnPlatformFee, paymentProcessingFee, expertTransfer,
+   creditNoteAllocation(refundCents), rounding: "half-up-cents-on-fee", currency: "EUR" }. The
+   commission is VAT-INCLUSIVE (fee gross = advertised %; PT B2B splits it into net + 23% IVA;
+   reverse charge keeps it as net) and the processing fee is borne by the platform for
+   marketplace bookings and by the destination for clinic 0% bookings — these are the D-03/D-04
+   working defaults; the accountant-approved matrix in payments-payouts-spec.md is the SSOT and
+   the tests are written from it row by row. Store applied_commission_bps,
+   platform_fee_net_cents, platform_fee_vat_cents and processing_fee_cents on booking_payments
+   at intent creation / charge time (update the Phase 4 route). No other module may add,
+   subtract or round money.
 
 PR 06.2 — payout engine, refunds, disputes, finance UI:
 5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, destination_org_id
@@ -247,7 +320,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    and never updated (DB trigger or CHECK via an immutable-columns helper + unit test); this phase
    writes the expert's org/account, Phase 11 writes the clinic's for payout_mode clinic; transfer,
    refund/reversal, reconciliation and retry code read only the snapshot — status enum
-   pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
+   pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed,
+   reversed_cents int default 0 CHECK (reversed_cents <= amount_cents), eligible_at,
    scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
    stripe_transfer_id, stripe_payout_id, hold_reasons text[] NOT NULL DEFAULT '{}' (values
    dispute|manual), held_from_status, approved_by,
@@ -272,17 +346,38 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    the same key), so a lost response can never produce a second transfer; a new key is only
    minted by an admin action after a reversed transfer; test: two calls with a simulated lost
    response yield one transfer — with retry/backoff and DLQ table
-   workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
-   reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
-   the ledger fee reduced proportionally (no application fee object exists in this funds flow);
-   dispute handling: charge.dispute.created = applyHold(id, "dispute"); closed won =
-   clearHold(id, "dispute"); closed lost sets reversed (reverse_transfer when a transfer exists);
-   state-machine test covers every transition in the union above.
+   workflow_dead_letters (reuse if exists); refunds.ts (P0-1 contract): refundBookingPayment({
+   id, amountCents?, reason }) = step 1 stripe.refunds.create({ payment_intent, amount },
+   { idempotencyKey: "refund:" + id + ":" + refundSeq }) persisted in a refunds table (id,
+   booking_payment_id, stripe_refund_id, amount_cents, status pending|succeeded|failed, reason,
+   created_at) and reflected on booking_payments.refunded_cents; step 2 ONLY when
+   payout_states.stripe_transfer_id exists: stripe.transfers.createReversal(transferId, {
+   amount: round(refundedToDate * transferred / gross) - reversedToDate (cumulative, never
+   per-refund — see Scope; CHECK (reversed_cents <= amount_cents) on payout_states), metadata },
+   { idempotencyKey: "reversal:" + refundId }) persisted in transfer_reversals (id, payout_state_id, refund_id,
+   stripe_reversal_id, amount_cents, status pending|succeeded|failed, last_error); payout_states
+   moves to reversal_pending until transfer.reversed confirms, then reversed (full) or stays in
+   its prior status with reversed_cents (partial); a failed reversal (balance_insufficient) is
+   retried with backoff, alerts finance, and never blocks or undoes the member refund; never
+   mint a new transfer_idempotency_key here; the Tier 1 credit note is emitted by Phase 7 from
+   the refund succeeded event, not from the request. Dispute handling: charge.dispute.created =
+   applyHold(id, "dispute"); closed won = clearHold(id, "dispute"); closed lost = record the
+   dispute loss, then the same two-step reversal path when a transfer exists (the charge is
+   already reversed by Stripe); state-machine test covers every transition in the union above
+   plus reversal_pending.
 7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
-   creates payout_states pending), payment_intent.payment_failed, payment_intent.canceled,
-   charge.refunded, charge.dispute.created, charge.dispute.closed, transfer.created,
-   transfer.reversed, payout.paid, payout.failed. Re-run pnpm stripe:setup:webhooks -- --url
-   <staging url> --apply and record the endpoint id in infra/stripe/README.md.
+   creates payout_states pending), payment_intent.processing (async_short hold extension from
+   Phase 4), payment_intent.payment_failed, payment_intent.canceled, charge.refunded,
+   refund.updated (failed refunds), charge.dispute.created, charge.dispute.closed,
+   transfer.created, transfer.updated, transfer.reversed (platform-owned transfers -> platform
+   endpoint) on /webhooks/stripe; payout.paid, payout.failed, account.updated, capability.updated
+   on the Connect endpoint. Connected-account events (payout.*, account.updated, capability.updated)
+   only arrive on a Connect webhook endpoint: extend infra/stripe/setup-webhooks.ts to manage TWO
+   endpoints (platform and connect: true, each with its own event list and secret
+   STRIPE_WEBHOOK_SECRET / STRIPE_CONNECT_WEBHOOK_SECRET; the route picks the secret by path
+   /webhooks/stripe vs /webhooks/stripe/connect) and make the parity test cover both lists.
+   Re-run pnpm stripe:setup:webhooks -- --url <staging url> --apply and record both endpoint ids
+   in infra/stripe/README.md.
 8. Workflows: packages/workflows/src/payments/{process-expert-transfers,process-pending-payouts,
    check-upcoming-payouts}.ts and routes apps/api/src/app/workflows/<name>/route.ts verifying the
    QStash signature; infra/qstash/setup-payouts.ts registering schedules (transfers every 2h,
@@ -303,16 +398,20 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
     table with payout state + eligible date, Embedded Payouts component, CSV export (server
     action -> API). Messages pt/en/es.
 11. Tests: eligibility incl. DST, schedule/approval rules, transfer idempotency with mocked
-    Stripe, refund before/after transfer, dispute transitions, webhook parity, replay safety
+    Stripe, refund before/after transfer (two-step, partial share, reversal failure path),
+    settlement matrix rows, dispute transitions, webhook parity for both endpoints, replay safety
     using pnpm stripe:replay:event on staging.
-12. Docs: payments-payouts-spec.md state machine + thresholds, integration-runbooks.md (stuck
-    transfer, failed payout), admin-operator-playbooks.md (approve/hold), infra/stripe/README.md,
-    infra/qstash/README.md, decision-log.md (commission SSOT).
+12. Docs: payments-payouts-spec.md (state machine + thresholds, refund/reversal contract,
+    settlement matrix as approved, capabilities), integration-runbooks.md (stuck transfer, failed
+    payout, failed reversal), admin-operator-playbooks.md (approve/hold), infra/stripe/README.md
+    (two endpoints), infra/qstash/README.md, decision-log.md (commission SSOT; D-03, D-04, D-05
+    marked approved with the approver).
 
-Acceptance (paste evidence): expert completes Connect + Identity and publishing unlocks; full
-cycle pay -> eligible -> transfer -> payout in test mode; refund before/after transfer; dispute
-hold/release; approval path audited; parity test; replay does not double-transfer; commission
-tests.
+Acceptance (paste evidence): spike report committed; expert completes Connect (transfers
+capability) and publishing unlocks; full cycle pay -> eligible -> transfer -> payout in test
+mode; refund before/after transfer as two steps incl. partial and failed-reversal path; dispute
+hold/release; approval path audited; parity test for both endpoints; replay does not
+double-transfer; settlement matrix tests.
 
 Report: migrations, endpoints, schedules registered, webhook endpoint id, tests, CodeRabbit CLI
 counts, PR URLs, deferred items.

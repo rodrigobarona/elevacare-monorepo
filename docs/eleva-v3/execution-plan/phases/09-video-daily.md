@@ -1,19 +1,19 @@
 # Phase 9 — Video with Daily.co (`@eleva/video`, join pages, webhooks)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-09/video-daily`                                                                                                                                                                                                                                                                                                                                        |
-| Depends on | Phases 5, 8                                                                                                                                                                                                                                                                                                                                                   |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                     |
-| Touches    | `packages/video/**` (new), `packages/db/src/schema/main/sessions.ts`, `packages/workflows/src/video/**`, `apps/api/src/app/{sessions,webhooks/daily,workflows}/**`, `apps/app/**` + `apps/expert/**` join pages, `packages/observability` (CSP), `packages/eslint-config/boundaries.js`, `apps/web/vercel.json` or gateway rewrites for `sessions.eleva.care` |
-| Exit gate  | Expert and member join the same private Daily room via per-participant meeting tokens from their apps; unauthorized token rejected; room expires automatically; `meeting.started/ended` webhooks update the session; no PHI in logs                                                                                                                           |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-09/video-daily`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Depends on | Phases 5, 8. **Pre-check PR 09.0** (`phase-09.0/spike-daily-account`, docs + evidence only) must be merged before 09 opens: Daily HIPAA domain enabled and BAA/DPA executed with Daily (owner: founder + DPO; record in `decision-log.md` as D-07 with the Daily plan tier), EU data-processing position documented (Daily media servers are region-routed; TURN/media residency stated as Daily documents it — no stronger claim on `/trust`), custom domain `sessions.eleva.care` verified, webhook secret issued, meeting-token claims verified against the current API in staging, and the recording feature confirmed **off** for the domain (recording moves to Phase 16.8, not Phase 10). Evidence in `docs/eleva-v3/spikes/09-daily-account.md`. |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Touches    | `packages/video/**` (new), `packages/db/src/schema/main/sessions.ts`, `packages/workflows/src/video/**`, `apps/api/src/app/{sessions,webhooks/daily,workflows}/**`, `apps/app/**` + `apps/expert/**` join pages, `packages/observability` (CSP), `packages/eslint-config/boundaries.js`, `apps/web/vercel.json` or gateway rewrites for `sessions.eleva.care`                                                                                                                                                                                                                                                                                                                                                                                            |
+| Exit gate  | Expert and member join the same private Daily room via per-participant meeting tokens from their apps; unauthorized token rejected; room expires automatically; `meeting.started/ended` webhooks update the session; no PHI in logs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Why this phase exists
 
 ADR-018: Daily.co is the only video provider (HIPAA-enabled domain). Every confirmed **online**
 booking (snapshotted `mode = online`; phone and in-person bookings never get a room) needs a room
 created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
-drive session status, notifications and (Phase 10) transcripts.
+drive session status and notifications (recording and transcripts: Phase 16.8 only).
 
 ## Scope
 
@@ -31,13 +31,21 @@ In:
   forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`,
   `max_participants` = 2 + number of delegated participants (recomputed via Daily room update
   when a delegate is added, so every authorised participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
-  `enable_screenshare: true`, `enable_recording: false` (Phase 10 behind consent),
+  `enable_screenshare: true`, `enable_recording: false` (recording is Phase 16.8, gated on D-07/D-08),
   `eject_at_room_exp: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
-  the API types and the state machine), `room_create_attempt_at`, `room_request_ids` (append-only),
-  `last_event_at`, `started_at`, `ended_at`, `participants jsonb`
+  the API types and the state machine), `attendance` nullable (`both|expert_only|member_only|nobody`,
+  written once from `meeting.ended`), `room_create_attempt_at`, `room_attempt_seq int` (the
+  deterministic Daily room name is `eleva-<booking_id>-<room_attempt_seq>` — Daily room
+  properties are a closed set with no `meta` field, so the **name** is the only thing that ties a
+  Daily room to a booking; Daily rejects a duplicate name with 400, which is the idempotency
+  mechanism — name character rules and length limit verified in PR 09.0), `last_event_at`,
+  `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: on
+  `meeting.ended` (or the sweep at `end_at + 15 min` when Daily sent nothing) with `attendance <>
+'both'` the status becomes `no_show`, else `ended`; both transitions are in the state-machine
+  table and tested
   (join/leave history only — never used for authorization), RLS for expert org + buyer org.
 - `session_participants` table (the **authorization** contract for delegated participants):
   `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,
@@ -64,7 +72,10 @@ NULL`, so no new token can be minted from this instant) inside withAudit
   cancel -> `deleteRoom` (no-op when no room).
 - API: `POST /sessions/[bookingId]/join` -> checks the caller is the booking's assigned expert,
   the booking's member, or an explicitly delegated participant of that booking (never "any
-  member of the expert org"; non-participants get 403 `NOT_A_PARTICIPANT`) and that now is
+  member of the expert org"; non-participants get 403 `NOT_A_PARTICIPANT`), that
+  `sessions.status IN ('scheduled','live')` (a `cancelled`/`ended`/`no_show` session gets 410
+  `SESSION_NOT_ACTIVE` even if the Daily `deleteRoom` failed or is still pending — the DB status,
+  not the room's existence, is the authority) and that now is
   within `[startAt-15m, endAt+30m]`, mints a token, returns `{ roomUrl,
 token, expiresAt }` (rate-limited, audited `session.joined`); `POST /webhooks/daily` handles
   `meeting.started`, `meeting.ended`, `participant.joined`, `participant.left` (Daily webhook
@@ -88,7 +99,21 @@ token, expiresAt }` (rate-limited, audited `session.joined`); `POST /webhooks/da
 - Notifications: `booking.reminder_1h` and confirmation include the join link (deep link to the
   app join page, not the raw room URL).
 
-Out: recording/transcription (Phase 10), group sessions, dial-in.
+- **Payment ↔ session state**: a room is created only for `bookings.status = confirmed` (paid);
+  `payment_intent.payment_failed` / `refund succeeded` before `startAt` set `sessions.status =
+cancelled` and delete the room in the same workflow that releases the slot; a refund after the
+  session leaves `sessions` untouched (history) — the state machine is drawn in
+  `scheduling-booking-spec.md` and every transition has a test. No-show: `meeting.ended` with a
+  single participant (or none) for the whole window marks `sessions.attendance = expert_only |
+member_only | nobody` (both present -> `both`) and the status `no_show` (see the schema bullet); the no-show **policy** (refund/keep/partial) is a Phase 6 refund-policy
+  input decided by finance, this phase only records attendance.
+- **Session-token hygiene**: meeting tokens are minted at join time only, `exp = min(now + 2h,
+room exp)`, never stored, never logged, never placed in a URL the browser can bookmark (the
+  join page fetches it via `POST /sessions/[bookingId]/join` and hands it to `daily-js` in
+  memory); `session.joined` audit rows carry `userId` and `roomName` only.
+
+Out: **recording and transcription (moved to Phase 16.8 — not Phase 10; Daily HIPAA recording
+requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
 
 ## Deliverables
 
@@ -118,6 +143,11 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 - [ ] Webhook signature failure -> 401; replay same event -> no duplicate transitions.
 - [ ] Logs and audit payloads contain room name and ids only (no names, no emails).
 - [ ] CSP allows the call to run without console violations.
+- [ ] Payment failure / refund before `startAt` cancels the session and deletes the room; refund
+      after the session leaves the session record intact (state-machine tests).
+- [ ] PR 09.0 evidence file exists and D-07 (Daily HIPAA + BAA) is recorded before this PR opens.
+- [ ] Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
+      over fixtures + `check-no-phi-logs` extension).
 
 ## Tests
 
@@ -148,7 +178,10 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 ## Risks
 
 - HIPAA mode restrictions (no custom room names, no live streaming, limited recording types):
-  designed in from the start; verify the account has HIPAA enabled (operator task).
+  designed in from the start; the account state is verified **before** the phase starts (PR
+  09.0), not discovered during implementation.
+- Daily BAA/DPA or plan tier not in place: 09.0 blocks the phase; the fallback is to ship phone
+  and in-person modes first (they need no room) and keep online bookings unpublishable.
 - Browser permissions on iOS Safari: test on device before Phase 15.
 
 ## Copy-paste prompt
@@ -162,7 +195,9 @@ Before writing code:
    and .cursor/skills/{api-first-agentic,audit-wiring,coderabbit-review}/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
-3. Read every file under "Local references". Pull Daily REST API (rooms, meeting tokens,
+3. Read every file under "Local references" and docs/eleva-v3/spikes/09-daily-account.md (PR
+   09.0 evidence: if it is missing or D-07 is not in decision-log.md, stop and report — this
+   phase must not start). Pull Daily REST API (rooms, meeting tokens,
    webhooks, HIPAA, custom domain), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
@@ -210,31 +245,36 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    selection + preview, waiting state until the other participant joins, controls (mic, camera,
    screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification. Room creation has no client idempotency key at Daily, so
-   ensureSessionRoom is made safe against lost responses: (a) before POST /rooms it writes
-   sessions.room_create_attempt_at and appends a random room_request_id to
-   sessions.room_request_ids, the same id stored in the Daily room
-   properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
-   call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
-   it reconciles with GET /rooms?limit=100 followed through EVERY page with starting_after
-   (Daily lists are cursor-paginated; stop only when a page returns fewer than limit rows),
-   filtered by the last attempt window, and adopts the
-   room whose meta.room_request_id is in sessions.room_request_ids (an append-only text[] —
-   every id ever sent for this booking is kept, none is replaced); (d) if none matches it
-   waits 30 s and reconciles ONCE more (Daily list visibility can lag), then appends a new
-   room_request_id and retries the POST once; before that second POST and again after it, the
-   reconciliation walks ALL pages and matches against ALL ids in the array, so a first room that
-   became visible late is adopted and any surplus room is deleted (test: the matching room sits
-   on the second page of a mocked list -> adopted, no duplicate created); if the second attempt also fails to resolve it
-   records status = room_unresolved, emits session.room_unresolved and alerts — the sweep
-   never re-creates blindly and admins resolve from Phase 12 (the admin resolver also matches on
-   the full array); deleteRoom on cancel runs over every room whose meta id is in the array.
+   webhook verification. Room creation has no client idempotency key at Daily and room
+   properties accept no custom metadata (the schema is additionalProperties: false — never
+   send properties.meta), so ensureSessionRoom relies on Daily's ONE idempotent handle, the
+   unique room name: (a) inside a short transaction it increments sessions.room_attempt_seq,
+   writes room_create_attempt_at and derives daily_room_name = "eleva-" + booking_id + "-" +
+   room_attempt_seq (persisted BEFORE the vendor call; the row is the record of intent); (b) the
+   POST /rooms { name, privacy: "private", properties } uses a bounded timeout (10 s) and no
+   automatic retry; (c) on timeout/5xx/network error it reconciles with GET /rooms/{name}: 200 ->
+   adopt (persist url/created_at, status stays scheduled); 404 -> wait 30 s and GET once more
+   (creation visibility can lag), still 404 -> retry the POST with the SAME name once; a 400
+   "already exists" on any POST is treated as success and followed by the GET; (d) if the second
+   attempt also fails to resolve it records status = room_unresolved, emits
+   session.room_unresolved and alerts — the sweep never re-creates blindly and admins resolve
+   from Phase 12 (the admin resolver runs the same GET-by-name). A new name is generated only
+   when the previous room was deleted on purpose (cancel + re-book, reschedule that requires a
+   new room) — never to "get around" an unknown state, so at most one live room can exist per
+   booking and there is nothing to list or paginate; deleteRoom on cancel is DELETE
+   /rooms/{daily_room_name}, 404 = already gone = success. Tests with a mocked Daily client:
+   lost response then GET 200 -> adopted, zero extra POSTs; lost response, GET 404 twice, second
+   POST 400 already-exists -> adopted; two concurrent ensureSessionRoom calls for one booking ->
+   one POST (the row transaction serializes the attempt seq), one adoption; cancel with DELETE
+   404 -> treated as success.
    Tests: lost response after Daily created the room -> reconciliation adopts it -> exactly one
    room; delayed visibility (room appears only after the second POST) -> the late room is
    adopted or deleted, exactly one room remains.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
-   room_created_at, room_create_attempt_at, room_request_ids text[] NOT NULL DEFAULT '{}',
+   attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status ->
+   no_show when attendance <> both, else ended; sweep at end_at + 15 min if no webhook),
+   room_created_at, room_create_attempt_at, room_attempt_seq int NOT NULL DEFAULT 0,
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -261,7 +301,10 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    (bookings.member_user_id), or a user listed in session_participants for that booking with a
    delegated role (added by the assigned expert via POST /sessions/[bookingId]/participants,
    audited session.participant_added; clinic admins are NOT implicitly allowed) — anyone else,
-   including other members of the expert's organization, gets 403 NOT_A_PARTICIPANT; window
+   including other members of the expert's organization, gets 403 NOT_A_PARTICIPANT; requires
+   sessions.status IN ('scheduled','live') else 410 SESSION_NOT_ACTIVE (checked BEFORE the window
+   and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
+   cancel with deleteRoom mocked to fail -> join 410, the room-cleanup retry later succeeds); window
    [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
    roomExp); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
    signature -> 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
@@ -295,8 +338,17 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two
    browsers; paste screenshots in the PR.
-8. Docs: scheduling-booking-spec.md sessions section, security-hardening-checklist.md CSP,
-   integration-runbooks.md (Daily outage: fall back to reschedule + notify), decision-log.md.
+8. Payment <-> session state machine: rooms only for bookings.status confirmed; subscribe the
+   video workflow to payment.failed and refund.succeeded events — before startAt they set
+   sessions.status cancelled and deleteRoom in the same workflow run that releases the slot;
+   after the session they do nothing to sessions. meeting.ended with <2 distinct participants
+   sets sessions.attendance (expert_only|member_only|nobody) — attendance only, no refund
+   decision here. Tokens: minted in POST /sessions/[bookingId]/join only, returned in the JSON
+   body, held in memory by the join page, never in URLs, logs, audit payloads or columns; extend
+   scripts/check-no-phi-logs with a meeting-token JWT pattern.
+9. Docs: scheduling-booking-spec.md sessions section + state machine diagram,
+   security-hardening-checklist.md CSP, integration-runbooks.md (Daily outage: fall back to
+   reschedule + notify), decision-log.md (D-07 reference).
 
 Acceptance (paste evidence): room created on confirm + sweep; token claims (expert is_owner);
 403 outside window / non-participant; two-browser call works on staging; webhooks update status,

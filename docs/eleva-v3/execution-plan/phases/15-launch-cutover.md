@@ -28,6 +28,14 @@ In:
     transfer mechanism (SCCs / DPF), the subprocessor entry, minimisation (no PHI in email
     bodies, transactional only) and the retention setting — a missing EU region is never silently
     skipped.
+  - **Approval gates carried forward** (each recorded in `decision-log.md` with owner + date;
+    the launch checklist links the entry): D-01 `pt-BR` retirement, D-02 EUR-only, D-03/D-04
+    settlement matrix (finance), D-05 Connect capability model, D-06 refund + dispute policy
+    incl. no-show, D-07 Daily HIPAA + BAA, D-08 recording storage (gates 16.8, not launch — the
+    entry must exist with status `proposed` or `active`), D-09 historical invoices, D-10 public-site parity,
+    D-11 clinical access model, D-12 deletion vs retention, D-13 cookie/CSRF threat model,
+    D-14 payment-method set; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test
+    findings closed or accepted with a named owner. A missing entry is a failed gate.
   - Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
     statement descriptor); live webhook endpoint created with `pnpm stripe:setup:webhooks -- --url
 https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and OAuth app;
@@ -35,8 +43,9 @@ https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and
   - Video: Daily HIPAA domain confirmed, webhook secret set, `sessions.eleva.care` CNAME live.
   - Notifications: Resend domain verified (DKIM/SPF/DMARC), Twilio EU sender approved.
   - Security: penetration test findings closed (high/critical), CSP enforced, rate limits live,
-    secrets rotated post pen-test, `BETTER_AUTH_SECRET` production unique, KEK v1 stored in
-    Vercel + offline escrow.
+    secrets rotated post pen-test, `BETTER_AUTH_SECRET` production unique, `ELEVA_KEK_V1` set
+    as a Vercel **sensitive** (write-only) env var from the offline escrow under the two-person
+    rule (Phase 10 custody contract), escrow entry verified.
   - Ops: on-call rotation, status page, alerts tested, backups (Neon PITR window >= 7 days),
     runbooks reviewed, support macros ready, DNS TTL lowered to 300s 48h before.
   - Product: `pt/en/es` copy reviewed by a native speaker; pricing page matches Stripe products;
@@ -52,8 +61,11 @@ https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and
 - **Watch**: 7 days: SLO dashboard (API availability, booking success rate, payment success
   rate, webhook lag, transfer success, invoice success, notification delivery), daily report;
   rollback trigger criteria (P1 > 30 min, payment success < 95%, auth error rate > 5%, data
-  inconsistency); rollback preserves post-cutover writes (v3 write freeze, reverse export,
-  Stripe-driven reconciliation) before DNS reverts — see the prompt, step C.
+  inconsistency) **evaluated only until the acceptance point** (`CUTOVER_ACCEPTANCE_TS` = T+48 h
+  or the first post-cutover payout executed (first `payout_states.status = transferred`), whichever is first — Phase 14, P0-8); inside the window
+  rollback preserves post-cutover writes (v3 write freeze, reverse export, Stripe-driven
+  reconciliation) before DNS reverts — see the prompt, step C; **after the acceptance point the
+  same triggers open an incident and a fix-forward, never a rollback** (money has moved).
 - **Decommission**: MVP kept read-only 30 days; WorkOS cancelled after final record checksum
   verification and 7-day watch; Novu already retired; remove migration schema after 30 days.
 
@@ -87,7 +99,10 @@ Out: Spain launch, Academy content (Phase 16).
       triaged.
 - [ ] 7-day SLO report: API availability >= 99.9%, payment success >= 98%, webhook p95 lag < 60s,
       zero P1.
-- [ ] Rollback plan rehearsed before cutover (staging) and not needed — or executed and documented.
+- [ ] Rollback plan rehearsed before cutover (staging) and not needed — or executed and documented
+      inside the acceptance window; `CUTOVER_ACCEPTANCE_TS` written to the cutover log at C.4 and
+      the go/no-go at that timestamp recorded ("accepted" closes the rollback option).
+- [ ] Every D-01..D-14 decision has a dated `decision-log.md` entry linked from the checklist.
 - [ ] WorkOS cancelled only after checksum verification sign-off; recorded in `decision-log.md`.
 
 ## Tests
@@ -182,7 +197,9 @@ A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item
    Gateway added, subprocessor table); DSAR timing test; crypto-shred test on a staging org;
    EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Sentry EU,
    PostHog EU, and Resend: EU region evidence OR the DPIA-approved transfer mechanism +
-   subprocessor + minimisation + retention entries — otherwise the gate fails) with links; pen-test findings closed; CSP enforced; production flag defaults
+   subprocessor + minimisation + retention entries — otherwise the gate fails) with links;
+   decision-log.md entries D-01..D-14 present and dated (fail the gate on any missing one, list
+   which); Phase 13 evidence pack signed; pen-test findings closed; CSP enforced; production flag defaults
    (ff.toconline_invoicing_enabled on, ff.ai_reports_beta off, ff.session_recording off) applied
    with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
    recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one
@@ -252,8 +269,14 @@ C. Cutover (one owner-committed approval line and one `pnpm cutover:gate C.n -- 
    Log every step with timestamps in the cutover log. The moment the DNS switch is executed,
    record the ISO-8601 UTC timestamp as CUTOVER_TS in the cutover log and export it in the
    operator shell (export CUTOVER_TS=2026-..T..Z) — every --since below reads it from there.
-   Rollback criteria: P1 > 30 min, payment success < 95%, auth error rate > 5%, data
-   inconsistency. Rollback procedure (rehearsed on staging before C starts; written in
+   At C.4 record CUTOVER_ACCEPTANCE_TS = CUTOVER_TS + 48h in the cutover log; if a post-cutover
+   payout EXECUTES before that (first payout_states row with status = transferred and a Stripe
+   transfer id — a scheduled-but-not-executed run does not move the point; test:
+   `acceptance-point.test.ts` with a scheduled, delayed and executed run), overwrite
+   CUTOVER_ACCEPTANCE_TS with that transfer's created timestamp and log why. Rollback criteria: P1 > 30 min, payment success < 95%, auth error rate
+   > 5%, data inconsistency — evaluated ONLY before CUTOVER_ACCEPTANCE_TS; at that timestamp
+   hold a go/no-go, write "accepted" (or execute rollback) in the log, and from then on the same
+   triggers mean incident + fix-forward, never rollback. Rollback procedure (rehearsed on staging before C starts; written in
    cutover-runbook.md section "Rollback"): (1) freeze v3 writes (ff.booking_enabled=false,
    apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export the
    COMPLETE post-cutover mutation set — every v3 row created OR updated since cutover across all

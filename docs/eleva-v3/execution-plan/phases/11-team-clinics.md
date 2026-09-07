@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                             |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-11/team-clinics`                                                                                                                                                                                                                                                                                                                                           |
-| Depends on | Phases 6, 7                                                                                                                                                                                                                                                                                                                                                       |
+| Depends on | Phases 6, 7 and **10** (the clinic shared-records toggle only flips the D-11 access model Phase 10 enforces)                                                                                                                                                                                                                                                      |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                           |
 | Touches    | `apps/team/**`, `apps/web` (clinic public page), `packages/billing/src/server/{subscriptions,provisioning}.ts`, `packages/accounting` (Tier 1b activation), `packages/db/src/schema/main/{clinic-profiles,clinic-members}.ts`, `apps/api/src/app/{teams,billing}/**`, `packages/auth` (invitations, team roles), `infra/stripe/**` (products/prices/entitlements) |
 | Exit gate  | A clinic admin creates a Team, subscribes (Embedded Checkout), invites 3 experts who accept and appear on the clinic page; members book a clinic expert with 0% commission; seat changes update Stripe; monthly SaaS invoice (`ELEVA-SAAS-{YYYY}`) fires on `invoice.finalized`; Customer Portal manages the plan                                                 |
@@ -71,6 +71,14 @@ In:
   carried to `/[locale]/[username]/[eventSlug]`) — never inferred from the expert's clinic
   membership. Direct `/[locale]/[username]/[eventSlug]` bookings of clinic experts pay the
   standard commission.
+- **Clinic clinical access (D-11, toggles only)**: the access model is defined and enforced by
+  Phase 10 RLS (authoring expert; same-clinic experts only when `organizations.clinic_shared_records`
+  is on and the member has not opted out; staff never in plaintext). This phase adds the **clinic
+  admin toggle** (`PATCH /teams/[id]/settings { clinicSharedRecords }`, default **off**, reason
+  required, audited `team: shared_records_enabled|disabled`, and a member-facing notice + opt-out
+  in `apps/app` privacy settings that writes `record_access_optouts`). No new RLS policy is
+  written here; the Phase 10 class tests are re-run with the toggle on and off.
+- **Clinic public page** resolves through `public_handles` (owner_kind `clinic`, created in Phase 4) — this phase only inserts clinic owners into the existing table.
 - Playwright `e2e/team.spec.ts`.
 
 Out: Enterprise SSO (post-launch), three-party revenue (`ff.three_party_revenue` off), clinic ->
@@ -78,8 +86,8 @@ expert invoices (out of scope per spec).
 
 ## Deliverables
 
-1. Migrations: `clinic_profiles`, `clinic_verifications`, `bookings.attributed_org_id`, `billing_subscriptions` fields; RLS; audit unions (`team:
-created|verified|member_invited|member_joined|member_removed|seats_synced`; `subscription: ...`).
+1. Migrations: `clinic_profiles`, `clinic_verifications`, `bookings.attributed_org_id`, `billing_subscriptions` fields, `organizations.clinic_shared_records boolean default false`, `record_access_optouts` (`member_user_id`, `org_id`, `created_at`, PK both); RLS; audit unions (`team:
+created|verified|member_invited|member_joined|member_removed|seats_synced|shared_records_enabled|shared_records_disabled`; `subscription: ...`).
 2. API: `/teams` (create/update profile), `/teams/[id]/members`, `/teams/[id]/invitations`,
    `/teams/[id]/bookings`, `/teams/[id]/schedule`, `/billing/checkout` + `/billing/portal`
    extended, webhook handlers; OpenAPI + client.
@@ -103,11 +111,20 @@ created|verified|member_invited|member_joined|member_removed|seats_synced`; `sub
 - [ ] Portal opens; plan change reflected by webhook within 1 min.
 - [ ] Clinic dashboard shows cross-expert sessions with RLS respected (clinic org sees only its
       experts' bookings).
+- [ ] Clinical access (D-11): a new clinic has `clinic_shared_records = false` and a same-clinic
+      expert reading another expert's record gets 0 rows; `PATCH /teams/[id]/settings` without a
+      reason -> 400, with a reason -> toggle on + `team: shared_records_enabled` audit row with the
+      actor and reason; toggle on -> same-clinic read returns the record; member opt-out
+      (`record_access_optouts` row) -> that member's records return 0 rows to other clinic experts
+      while the toggle stays on; toggle off -> back to 0 rows; staff role never decrypts in any
+      state; the Phase 10 `rls-classes.test.ts` suite passes with the toggle on and off.
 - [ ] `e2e/team.spec.ts` green.
 
 ## Tests
 
-- vitest: seat sync math, seat limit, attribution -> 0 bps, webhook handlers, Tier 1b idempotency.
+- vitest: seat sync math, seat limit, attribution -> 0 bps, webhook handlers, Tier 1b idempotency;
+  `clinic-shared-records.test.ts` (Neon branch): default off, reason required + audit, toggle
+  on/off, member opt-out, staff never — every case in the D-11 acceptance row above.
 - Playwright: `team.spec.ts`.
 
 ## Docs to update

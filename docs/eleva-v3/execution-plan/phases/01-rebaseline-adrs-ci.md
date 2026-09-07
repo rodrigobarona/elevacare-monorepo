@@ -51,6 +51,26 @@ In:
   `messages/{pt,en,es}.json` for every app); delete-branch job on PR close.
 - Root Playwright: `playwright.config.ts`, `e2e/smoke.spec.ts` (web home 200, api `/health` 200,
   `/openapi.json` valid JSON).
+- **Security baseline that belongs at the start (review P0-9)** — documentation + CI only, no
+  runtime change:
+  - **RLS policy-class taxonomy** in `schema-and-migration-rules.md`: `tenant-owned`,
+    `dual-organization`, `owner-user-visible`, `participant-visible`, `staff-only`,
+    `public-read`, `service-only` — each with its canonical `CREATE POLICY` template, the
+    `eleva.*` session settings it reads, and the test shape. Every existing tenant table is
+    assigned a class in a table in that doc; every future migration declares its class in the
+    header comment. `packages/db/src/__tests__/rls-classes.test.ts` is the **class suite**: one
+    parametrised test per class that later phases extend by adding rows to a fixture list, never
+    by writing bespoke tests.
+  - **Secret scanning**: `gitleaks` job in `ci.yml` (default rules + Eleva allow-list for
+    `.env.example` placeholders) and a `pre-commit` hook via the existing husky setup.
+  - **Security traceability skeleton**: `docs/eleva-v3/security-traceability.md` with the
+    columns `control | introducing phase | enforcing test/CI | evidence` and the rows for the
+    controls this phase owns; Phases 2, 4, 10, 12 append rows; Phase 13 adds
+    `check-security-traceability` that fails CI on a checklist row without an enforcing check.
+  - **Localized column contract** documented (code lands in Phase 4 PR 04.1): `LocalizedText` /
+    `LocalizedRichText` JSONB keyed by the `Locale` union in `packages/db/src/schema/main/shared.ts`
+    is the single type; the duplicate `LocalizedString` in `expert-categories.ts` is marked for
+    removal in 04.1 (`schema-and-migration-rules.md` row + tech-debt entry).
 - Audit DB: run `pnpm --filter=@eleva/db db:generate:audit` (create the script if missing) and
   commit the migrations folder; document in `schema-and-migration-rules.md`.
 - `.env.example` + `turbo.json` `globalEnv`: add `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`,
@@ -89,6 +109,10 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 - [ ] `packages/db/drizzle/audit` exists with at least the initial migration and journal.
 - [ ] `.cursor/rules` contains `better-auth.mdc`, `daily-video.mdc`, `encryption.mdc` and no
       `workos-*.mdc`.
+- [ ] `schema-and-migration-rules.md` lists the seven RLS policy classes with templates and
+      assigns every existing tenant table a class; `rls-classes.test.ts` runs in the Neon-branch
+      job with at least the `tenant-owned` and `public-read` fixtures.
+- [ ] `gitleaks` job green; `security-traceability.md` exists with this phase's rows.
 
 ## Tests
 
@@ -286,9 +310,20 @@ E. CI foundations.
    - scripts/check-i18n-parity.mjs: for every apps/*/messages directory read the app's
      required-locale list from packages/config/src/i18n-locales.ts (REQUIRED_LOCALES_BY_APP:
      default ["pt","en","es"]; apps/admin ["pt","en"] per the decision-log staff-only exception —
-     the checker never hardcodes the list) and compare the key sets of those locale files (plus
-     pt-BR.json when present); exit 1 on missing keys; add root script check:i18n-parity and a CI
-     job; unit test: an app with es.json missing fails unless its list omits es.
+     the checker never hardcodes the list) and compare the key sets of those locale files; exit 1
+     on missing keys or on any locale file outside the Locale union (e.g. a stray pt-BR.json); add root script check:i18n-parity and a CI
+     job; unit test: an app with es.json missing fails unless its list omits es. There is no
+     pt-BR.json anywhere (D-01 retires the locale; Phase 4 adds the /pt-BR/* -> /pt/* 301).
+   - Security baseline (docs + CI only): write the RLS policy-class taxonomy (tenant-owned,
+     dual-organization, owner-user-visible, participant-visible, staff-only, public-read,
+     service-only) with CREATE POLICY templates into schema-and-migration-rules.md and assign
+     every existing tenant table a class; create packages/db/src/__tests__/rls-classes.test.ts
+     as a parametrised suite driven by a fixture list (seed it with the existing tables) and run
+     it in the Neon-branch job; add a gitleaks job to ci.yml (+ husky pre-commit) with an
+     allow-list for .env.example placeholders; create docs/eleva-v3/security-traceability.md
+     (control | introducing phase | enforcing test/CI | evidence) with this phase's rows;
+     document the LocalizedText/LocalizedRichText single-type contract and flag the duplicate
+     LocalizedString in expert-categories.ts for removal in Phase 4 PR 04.1.
    - Update ci.yml comments (remove the "placeholder jobs" block) and contribution-workflow.md
      required checks list.
 

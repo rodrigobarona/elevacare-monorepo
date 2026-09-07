@@ -160,10 +160,11 @@ and the local CodeRabbit CLI review loop that every later phase uses.
 Deliverables, in order:
 1. docs/eleva-v3/execution-plan/README.md — sections: what we build (surfaces table), locked
    decisions ADR-017..023 table, current state + WorkOS blast radius, the phase loop (mermaid +
-   10 rules including the review cap — pnpm review max 3 rounds, pnpm review:branch max 2, GitHub
+   13 rules including the review cap — pnpm review max 3 rounds, pnpm review:branch max 2, GitHub
    App max 2, exit at the cap only with zero Critical/Major, Minor/Trivial leftovers to a "Deferred
-   findings" PR table — and the design quality bar), phase index table (phases 0-16 plus 4B with
-   branch names, effort, dependencies), target
+   findings" PR table —, the design quality bar, spike PRs (phase-NN.0, evidence not code) and
+   the approval-gates table D-01..D-14 with owner and blocked PR), phase index table (phases 0-16
+   plus 4B with branch names, effort, PR-level dependencies), target
    architecture mermaid + key contracts, universal prompt preamble, PR body template, risks,
    related docs.
 2. docs/eleva-v3/execution-plan/phases/NN-slug.md for NN = 00..16 plus 04b. Template for each: header

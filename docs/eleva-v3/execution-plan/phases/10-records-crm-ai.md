@@ -1,12 +1,12 @@
 # Phase 10 — Records/PHI, CRM, AI reports beta
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                                     |
-| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list)                                                                                                                                                                                                                                                                                                                                                          |
-| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/video` (recording/transcript behind flag), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
-| Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from a transcript reviewed and published by the expert; no PHI in Sentry/logs                                                                                                 |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                             |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                            |
+| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list)                                                                                                                                                                                                                                                                                                                                                 |
+| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
+| Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
 
 ## Why this phase exists
 
@@ -19,23 +19,32 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 In:
 
 - **Records** (`records`: id, expert_org_id, member_user_id, booking_id nullable, kind
-  `note|report|document_ref|transcript|ai_draft` (one shared `RECORD_KINDS` const in
+  `note|report|document_ref|ai_draft` (`transcript` is added by Phase 16.8; one shared `RECORD_KINDS` const in
   `packages/db/src/schema/main/records.ts`, reused by the migration enum, API Zod schemas,
   `@eleva/audit` unions and tests), `title_encrypted` + `body_encrypted` (envelope,
   `encryptForOrg(expertOrgId)`; naming convention `<field>_encrypted` everywhere),
   `published_at` (member-visible when set), `version`, `created_by`, timestamps;
   `session_documents`: private Blob pathname, mime, size, `metadata_encrypted`, uploaded_by,
   scope `expert_only|shared`). RLS — two different member-read predicates because the tables
-  have different visibility columns: `records`: expert org full; member reads only
+  have different visibility columns. Expert-side read is **one policy (A) shared by both
+  tables and it is the D-11 model, not "whole org"**: `expert_org_id = eleva.org_id AND
+(<author> = eleva.user_id OR (organizations.clinic_shared_records AND NOT EXISTS
+record_access_optouts(member_user_id, expert_org_id)))` where the author column is
+  `created_by` on `records` and `uploaded_by` on `session_documents` (same predicate shape, two
+  concrete policies — one per table, each with its own rls-classes test) — in a solo Expert org
+  that collapses to the author; in a clinic it opens to peers only behind the Phase 11 toggle and
+  the member's opt-out; writes are author-only (`created_by` / `uploaded_by` respectively). Member
+  read (B) differs per table: `records`: only
   `published_at IS NOT NULL AND member_user_id = current_setting('eleva.user_id')`.
-  `session_documents`: expert org full; member reads only `scope = 'shared'` rows of bookings
+  `session_documents`: only `scope = 'shared'` rows of bookings
   where they are the member (`session_documents` has **no** `published_at`). Both member
   policies use the `eleva.user_id` setting.
-- **Consent**: `consents` kinds extended (`health_data_processing`, `session_recording`,
-  `ai_processing`) captured at booking (Phase 4 form) and at session start (join page banner);
+- **Consent**: `consents` (table from Phase 4, marketing kind from Phase 5) gains `ai_processing`,
+  captured at booking (Phase 4 form) and at session start (join page banner); `session_recording`
+  is **not** added here — it arrives with the recording pipeline in Phase 16.8;
   versioned legal texts in `packages/compliance/legal/*.md` per locale.
 - **Retention** (`data-retention-export-matrix.md`): QStash jobs `retention-sweep` (daily):
-  transcripts 2y, AI drafts 90d unpublished, session documents per policy, reservations 24h,
+  AI drafts 90d unpublished, session documents per policy, reservations 24h,
   notification deliveries 1y. **Member account deletion (Phase 5 request, finalised here)**
   after the grace period: (a) `shredOrgKeys(personalSpaceOrgId)` + delete the member's own rows
   (profile, preferences, consents, CRM contact rows that reference the user); (b) `session_documents`
@@ -73,45 +82,38 @@ In:
 - **CRM** (`@eleva/crm`): `contacts` (per expert org, derived from members who booked + manual),
   `lifecycle_stage` (`lead|active|dormant|churned`), `follow_ups` (due_at, kind, note, done_at),
   tags; endpoints + expert UI (`/[orgSlug]/crm`), reminders via Lane 1 kind `crm.follow_up_due`.
-- **AI reports beta** (`@eleva/ai`, Vercel AI Gateway only): recording + transcription in
-  `@eleva/video` behind `ff.session_recording` and both consents (expert + member). Phase 9
-  creates the room at booking confirmation with `enable_recording: false`, and consent is
-  captured on the join page, so recording is enabled by an **idempotent room update**, not at
-  creation: `syncRoomRecording(bookingId)` in `@eleva/video` reads the flag + both consents and
-  calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } })`
-  — the consent boolean maps to Daily's recording mode string, never passed raw — only when the desired
-  value differs from `sessions.recording_enabled`; it runs on every consent change and again in
-  the `join` route before the token is minted, so the state is correct whenever anyone enters
-  — a room is never re-created and a withdrawn consent flips it back to `false` the same way.
-  The read-compare-update is serialized per booking **without holding a lock across the
-  provider call**: step 1 (short transaction, `SELECT ... FOR UPDATE` on the `sessions` row)
-  re-reads both consents, computes `desired`, writes `recording_desired = desired` and
-  increments `recording_state_version` (v), commits; step 2 calls Daily `updateRoom` with a
-  10 s timeout and no DB lock held, **fenced** two ways so an older call can never land after a
-  newer one: (a) provider calls for one booking are single-flight behind a Redis mutex
-  `recording-sync:{bookingId}` (15 s TTL, held only around the Daily call — consent writes and
-  joins never wait on it) and a worker that acquires the mutex re-reads the current version and
-  applies the CURRENT desired state, not the one it started with; (b) every `updateRoom` also
-  writes `properties.meta.recording_state_version = v`, and Daily's response (or a `GET
-/rooms/{name}` read-back) is accepted only if its meta version is >= v; step 3 persists
-  `recording_enabled = desired` with a compare-and-swap `WHERE recording_state_version = v` —
-  zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
-  instead of writing. A Daily outage therefore never blocks consent writes or joins on a row
-  lock. The `join` route refuses to mint a token while `recording_desired <> recording_enabled`
-  or while the room's `meta.recording_state_version` (read back from Daily) is lower than the
-  row's version (it re-runs the sync first, and returns 503 RECORDING_STATE_PENDING if Daily is
-  still unreachable), so nobody joins a room whose provider-side recording state is unknown or
-  stale. Tests: grant/withdraw race (withdrawal committed last) -> final Daily state and row
-  both `false`; out-of-order completion (older enable call finishes after the newer withdraw
-  call) -> Daily ends `false`, join before the read-back matches returns 503, never a token;
-  Daily timeout during step 2 -> consent write completes in < 100 ms and join returns 503
-  rather than minting.
-  Daily `enable_recording: "cloud"` + transcription webhook `transcript.ready`/`recording.ready-to-download`
-  -> fetch -> store encrypted (`records.kind = transcript`) -> `draftSessionReport(transcriptId)`
-  with versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
+- **AI reports beta** (`@eleva/ai`, Vercel AI Gateway only) — **from typed notes, not from
+  recordings**: `draftSessionReport({ noteRecordIds })` takes the expert's encrypted session
+  notes (and, optionally, the intake answers the member typed at booking) as the only input, with
+  versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
-  publishes. PHI stays inside the request to the gateway with data-retention off (verify provider
-  settings), prompts logged without content, model pinned via config.
+  publishes. PHI stays inside the request to the gateway with **zero data retention verified per
+  model** (the `PHI_APPROVED_MODELS` allow-list below), prompts logged without content, model
+  pinned via config. **Recording and transcription are not in this phase**: Daily's HIPAA
+  recording requires a customer-owned S3 landing zone and its own consent kind; the whole
+  recording -> transcript -> draft pipeline (including the `syncRoomRecording` fencing design
+  written for it) lives in **Phase 16.8** and is gated on the storage decision D-08. Nothing in
+  Phase 10 writes `sessions.recording_*` columns or calls Daily.
+- **Encryption key controls (ADR-009 operations, P1)**: `packages/encryption` gains the operating
+  rules this phase depends on — the KEK custody contract is the one Phase 1 / ADR-009 and Phase
+  15 share: each KEK version is a Vercel **sensitive** environment variable `ELEVA_KEK_V<n>`
+  (write-only — never readable back from the dashboard, CLI or `vercel env pull`), set from an
+  offline escrow (vault entry under a two-person rule) and never in `.env*` files, logs, Sentry
+  or CI; there is no separate KMS in the stack. DEKs are
+  per organization and wrapped by the KEK version recorded on the row (`dek_kek_version`), KEK
+  rotation is a documented job (`pnpm encryption:rotate-kek` re-wraps DEKs, never re-encrypts
+  data; runbook + test with two KEK versions live at once), DEK rotation per org is available but
+  not scheduled at launch, envelope helpers refuse to run when `ENCRYPTION_KEK_VERSION` does not
+  match an unwrap-able key, and access to decrypt is audited (`record: decrypted` with viewer +
+  purpose, sampled 100% for staff, 1% for the owning expert). Key custody (who can read the KEK,
+  break-glass procedure, two-person rule) is written into `admin-operator-playbooks.md` and
+  reviewed in Phase 13 — Phase 13 verifies, it does not introduce.
+- **Clinical access model (D-11, working decision)**: expert-authored `records` are readable by
+  the authoring expert, by other experts of the same clinic organization **only** when the clinic
+  admin has enabled `clinic_shared_records` for that organization and the member has not opted
+  out, and by Eleva staff **never** in plaintext (staff see metadata; break-glass decrypt is a
+  Phase 12 dual-control action). The RLS policies below implement exactly this and the class tests
+  cover all four viewers; Phase 11 (clinics) only toggles the flag, it does not add policies.
 - Observability: PHI never reaches logs or Sentry, enforced **structurally, not by field
   name**: (1) `decryptForOrg` returns a `Decrypted<T>` branded object whose `toJSON` and
   `[util.inspect.custom]` yield `"[redacted]"`, so accidental `logger.info({ record })` or
@@ -153,11 +155,12 @@ created|updated|published|unpublished|deleted`; `document: uploaded|deleted`; `c
    `crm_contact`, `follow_up`; `ai_draft: requested|generated|failed`).
 2. `@eleva/compliance` retention jobs + DSAR record collector + legal texts; QStash schedule.
 3. `@eleva/crm`, `@eleva/ai` implementations + tests (gateway mocked).
-4. `@eleva/video` recording/transcript support behind flags + webhook handlers.
+4. `packages/encryption` key controls: `dek_kek_version`, KEK keyring, `pnpm encryption:rotate-kek`,
+   decrypt audit; clinical access model RLS (D-11) with class tests.
 5. API routes: `/records`, `/records/[id]`, `/records/[id]/publish`, `/documents/upload-token`,
-   `/documents/[id]/url`, `/crm/contacts`, `/crm/follow-ups`, `/ai/session-report/[transcriptId]`
+   `/documents/[id]/url`, `/crm/contacts`, `/crm/follow-ups`, `/ai/session-report`
    - OpenAPI + client.
-6. Expert + member UI with `pt/en/es` messages; flags `ff.session_recording`, `ff.ai_reports_beta`.
+6. Expert + member UI with `pt/en/es` messages; flag `ff.ai_reports_beta`.
 7. Template library: `record_templates` migration (RLS, audit `record_template:
 created|updated|archived`), API `/records/templates` CRUD + `POST /records/templates/[id]/apply`
    (server-side placeholder fill, returns Plate JSON), starter seed, UI, tests (placeholder fill,
@@ -169,14 +172,16 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
       authorized roles; member sees only published records.
 - [ ] Documents live in the private Blob store; direct URL without signature 403; signed URL
       expires (<= 15 min).
-- [ ] Consent required to record: without both consents `enable_recording` stays false and the UI
-      hides the record button; both consents given after the room exists -> `syncRoomRecording`
-      updates the existing room (idempotent, asserted via a mocked Daily `updateRoom` called once);
-      a withdrawn consent flips it back.
-- [ ] Retention sweep deletes an expired unpublished AI draft and an expired transcript in a
+- [ ] `pnpm encryption:rotate-kek` re-wraps every DEK with two KEK versions live; ciphertext
+      unchanged; decrypt works before, during and after; `record: decrypted` audit rows present.
+- [ ] Clinical access matrix: authoring expert reads; clinic colleague reads only with
+      `clinic_shared_records` on and no member opt-out; staff never see `body_encrypted`.
+- [ ] No `@daily-co/*`, `sessions.recording_*` or `transcript` kind touched in this phase (grep
+      check in the PR body).
+- [ ] Retention sweep deletes an expired unpublished AI draft in a
       seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
       records and owned documents.
-- [ ] AI draft generated from a fixture transcript through the AI Gateway (mock in tests, real on
+- [ ] AI draft generated from fixture typed notes through the AI Gateway (mock in tests, real on
       staging) validates against the Zod schema; publishing requires expert action; audit trail
       complete.
 - [ ] Sentry test event with a record payload arrives redacted.
@@ -207,15 +212,15 @@ created|updated|archived`), API `/records/templates` CRUD + `POST /records/templ
 ## External docs
 
 - Vercel AI SDK + AI Gateway `/vercel/ai` (structured output with Zod, provider options,
-  gateway model ids); Daily recording + transcription `/websites/daily_co_reference_rest-api`;
+  gateway model ids, zero-data-retention provider options);
   Vercel Blob private store `/vercel/storage`; Sentry `beforeSend` `/getsentry/sentry-javascript`.
 
 ## Risks
 
-- Transcript accuracy in `pt-PT`: pin a model/provider validated on staging; keep human review
-  mandatory.
-- Storage of recordings: keep in Daily's storage only until transcript is ready, then delete
-  (unless `ff.session_recording_keep` later).
+- AI draft quality in `pt-PT` from terse notes: pin a model validated on staging; keep human
+  review mandatory; never auto-publish.
+- KEK custody: a lost or leaked KEK is unrecoverable/catastrophic — the keyring + rotation job
+  and the two-person rule exist so the response is "rotate", not "rebuild".
 
 ## Copy-paste prompt
 
@@ -229,7 +234,7 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md in full.
 3. Read every file under "Local references". Pull Vercel AI SDK/AI Gateway (generateObject with
-   Zod, gateway provider), Daily recording/transcription, Vercel Blob private store and Sentry
+   Zod, gateway provider, zero-retention provider options), Vercel Blob private store and Sentry
    beforeSend docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
@@ -262,22 +267,26 @@ PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report draft
 
 PR 10.1 — records, documents, consent, retention:
 1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
-   shared RECORD_KINDS const = note|report|document_ref|transcript|ai_draft (single enum reused by
+   shared RECORD_KINDS const = note|report|document_ref|ai_draft (transcript joins in 16.8; single enum reused by
    the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
    blob_pathname unique, mime, size_bytes, metadata_encrypted, scope expert_only|shared,
-   uploaded_by, created_at, deleted_at). RLS, per table: records — policy A expert org via
-   eleva.org_id; policy B member read where member_user_id = current_setting('eleva.user_id')
+   uploaded_by, created_at, deleted_at). RLS, per table: records — policy A (expert-side, D-11):
+   expert_org_id = eleva.org_id AND (created_by = eleva.user_id OR (the org's
+   clinic_shared_records is true AND no record_access_optouts row for (member_user_id,
+   expert_org_id))) — never "whole org"; INSERT/UPDATE only where created_by = eleva.user_id;
+   policy B member read where member_user_id = current_setting('eleva.user_id')
    AND published_at IS NOT NULL AND deleted_at IS NULL. session_documents has no published_at;
-   its visibility field is scope — policy A expert org via eleva.org_id; policy B member read
+   its visibility field is scope — the SAME policy A (uploaded_by as author); policy B member read
    where member_user_id = current_setting('eleva.user_id') AND scope = 'shared' AND deleted_at IS
    NULL (documents the member uploaded are always scope = 'shared'; expert_only documents are
    never visible to the member). Add withUserContext(userId, fn) in @eleva/db that sets
    eleva.user_id; RLS tests cover: unpublished record hidden, published record visible,
    expert_only document hidden, shared document visible, other member's rows hidden.
-   Consent kinds: append session_recording and ai_processing to CONSENT_KINDS in
-   @eleva/compliance (health_data_processing exists since Phase 5) and regenerate the pg enum;
+   Consent kinds: append ai_processing to CONSENT_KINDS in @eleva/compliance
+   (health_data_processing exists since Phase 4, marketing since Phase 5; session_recording is
+   Phase 16.8's) and regenerate the pg enum;
    versioned texts in
    packages/compliance/legal/<kind>.<locale>.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/
@@ -288,7 +297,7 @@ PR 10.1 — records, documents, consent, retention:
    /me/consents extended. All bodies encrypted with encryptForOrg(expertOrgId) before insert;
    decrypt only after authorization. OpenAPI + client.
 3. @eleva/compliance: retention jobs (packages/compliance/src/retention.ts: policies from
-   data-retention-export-matrix.md — transcripts 2y, unpublished ai_draft 90d, session_documents
+   data-retention-export-matrix.md — unpublished ai_draft 90d, session_documents
    per matrix, slot reservations 24h, notification_deliveries 1y) run by POST /workflows/
    retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script). Every
    session_documents expiry deletes the PRIVATE Blob object first through @eleva/storage
@@ -329,7 +338,7 @@ PR 10.1 — records, documents, consent, retention:
    PHI). Tests: placeholder fill, PHI refusal for each detector class (non-name PHI included),
    tokenised templates still save, RLS.
    apps/app: /[orgSlug]/reports (published records) and /[orgSlug]/reports/[id], documents with
-   signed download, consent banner on the join page for session_recording + ai_processing.
+   signed download, consent banner on the join page for ai_processing.
    Messages pt/en/es; "members" wording.
 5. Observability (structural, not field-name based): decryptForOrg returns Decrypted<T> whose
    toJSON and util.inspect.custom yield "[redacted]"; @eleva/records exports recordLogger whose
@@ -362,35 +371,31 @@ PR 10.2 — CRM + AI reports beta:
    /crm/follow-ups, POST /crm/follow-ups/[id]/done; daily job flags due follow-ups -> Lane 1 kind
    crm.follow_up_due. apps/expert /[orgSlug]/crm (table with stage filter, contact drawer,
    follow-up list). RLS + audit.
-7. Recording/transcription behind flags: Phase 9 rooms are created at confirmation with
-   enable_recording false and consent arrives later on the join page, so add
-   syncRoomRecording(bookingId) to @eleva/video (this phase's migration adds
-   sessions.recording_enabled boolean default false, sessions.recording_desired boolean default
-   false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
-   ff.session_recording on AND both
-   consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
-   updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } }) and persist
-   the new value with the three-step protocol from the Scope section (claim desired +
-   version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
-   behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
-   with meta.recording_state_version = v on the room and a read-back that must be >= v; CAS on
-   the version; join refuses to mint while recording_desired <> recording_enabled or the room's
-   meta version is behind the row) (idempotent — no call when unchanged; race test:
-   grant/withdraw concurrently -> final state false; out-of-order completion test -> Daily ends
-   false and join returns 503 until the read-back matches; Daily timeout test -> consent write
-   < 100 ms, join 503 RECORDING_STATE_PENDING); invoke it from
-   the consent write path
-   (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
-   minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
-   after room creation -> exactly one updateRoom call; withdrawn consent -> flipped back; join with
-   state already correct -> zero Daily calls. Handle webhooks recording.ready-to-download and transcript.ready (signature verified,
-   idempotent) -> download transcript via Daily API -> store as records.kind = transcript
-   (encrypted) -> delete the Daily recording after transcript stored (unless a keep flag) ->
-   emitDomainEvent("transcript.ready").
+7. Encryption key controls (ADR-009 operations): in packages/encryption add dek_kek_version to
+   every wrapped-DEK row, ENCRYPTION_KEK_VERSION + a keyring of unwrap-able KEK versions read
+   from Vercel SENSITIVE environment variables ELEVA_KEK_V<n> (the custody contract in Scope,
+   ADR-009 and the Phase 15 launch gate — write-only in the dashboard, set from offline escrow
+   under the two-person rule, never in .env files, previews or CI; there is NO separate KMS or
+   secret manager in the stack, and security-hardening-checklist.md must say the same — fix it if
+   it still names one; document the break-glass path), pnpm encryption:rotate-kek
+   (re-wraps every DEK under the current version in batches, idempotent, never touches
+   ciphertext; test with two KEK versions live), refuse to start when the configured version is
+   not unwrap-able, and audit record: decrypted (viewer, purpose) on every decryptForOrg call
+   (100% for staff sessions, 1% sampled for the owning expert). Runbook in
+   integration-runbooks.md + admin-operator-playbooks.md (custody, two-person rule).
+   Clinical access model (D-11) — this IS policy A above, stated once: read for the authoring
+   expert; for other experts of the same clinic org only when organizations.clinic_shared_records
+   is true AND no record_access_optouts row exists for (member_user_id, org_id); staff never read
+   body_encrypted (column-level policy: staff role sees metadata columns only). Class tests for
+   all four viewers. No recording, transcription, sessions.recording_* columns or Daily calls in
+   this phase — that pipeline is Phase 16.8 (see that file for the fencing design already
+   written for it).
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
-   Report({ transcriptRecordId }) using generateObject via the gateway with model id from
+   Report({ noteRecordIds, bookingId }) — input is the expert's decrypted typed notes for that
+   booking (plus the member's typed intake answers when present), never a transcript — using
+   generateObject via the gateway with model id from
    AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: EXTEND the
    allow-list packages/ai/src/approved-models.ts introduced in Phase 4B so that every entry used
    for PHI-bearing calls (session reports, the editor's "clinical" context — enable it here by
@@ -401,21 +406,23 @@ PR 10.2 — CRM + AI reports beta:
    the gateway response does not confirm the no-retention providerOptions were applied — never
    send PHI "where supported"; tokens/latency logged without content; result stored as records.kind = ai_draft
    (encrypted, unpublished) + audit ai_draft.generated; failures audited. Endpoint POST
-   /ai/session-report/[transcriptRecordId] (expert only, flag ff.ai_reports_beta, rate limited
+   /ai/session-report { bookingId, noteRecordIds } (expert only, flag ff.ai_reports_beta, rate limited
    5/h/org) and GET status. Expert UI: "Draft with AI" on the session page -> draft appears in
    the report composer for editing -> Publish. Never auto-publish.
-9. Flags in packages/flags: ff.session_recording, ff.ai_reports_beta (default off; on for staging
+9. Flags in packages/flags: ff.ai_reports_beta (default off; on for staging
    pilot org). Env: AI_GATEWAY_API_KEY (or Vercel OIDC), AI_GATEWAY_MODEL_SESSION_REPORT.
 10. Tests: encryption at rest, RLS A/B, signed URL expiry, retention selection, deletion finalize,
-    AI schema validation with a fixture transcript (gateway mocked), prompt contract snapshot,
+    KEK rotation with two live versions, clinical access matrix (4 viewers), AI schema
+    validation with fixture typed notes (gateway mocked), prompt contract snapshot,
     CRM transitions. Playwright: expert note -> publish -> member reads.
 11. Docs: ai-reporting-spec.md, crm-spec.md, compliance-data-governance.md,
     data-retention-export-matrix.md, feature-flag-rollout-plan.md, ops-observability-spec.md,
     decision-log.md.
 
 Acceptance (paste evidence): ciphertext at rest; member sees only published; private documents
-with expiring signed URLs; consent gating for recording; retention + deletion finalize + DSAR
-tests; AI draft from fixture validates and requires expert publish; Sentry redaction; CRM
+with expiring signed URLs; KEK rotation proof; clinical access matrix; retention + deletion
+finalize + DSAR tests; AI draft from fixture notes validates and requires expert publish; Sentry
+redaction; CRM
 follow-up notification.
 
 Report: migrations, endpoints, flags, tests, CodeRabbit CLI counts, PR URLs, deferred items.
