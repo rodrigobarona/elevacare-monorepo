@@ -43,8 +43,9 @@ In:
 - Reminder workflows: on booking confirm schedule QStash messages (not cron) for 24h and 1h with
   `notBefore`; cancellation deletes/ignores them (check booking status at send time);
   `packages/workflows/src/notifications/reminders.ts`, route `POST /workflows/booking-reminder`.
-- Hook points: Phase 4/6/7 emit events via a tiny in-process dispatcher in `@eleva/workflows`
-  (`emitDomainEvent`) that calls `sendNotification` inside `after()` from Next.js.
+- Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events via the
+  in-process dispatcher `emitDomainEvent` in `@eleva/workflows` (introduced in Phase 7); this
+  phase registers `sendNotification` as its subscriber, running inside `after()` from Next.js.
 - Lane 2 stub: `syncMarketingContact(userId)` to Resend Audiences only when `marketing` consent
   granted; no PHI fields.
 - Resend webhooks (`/webhooks/resend`: delivered, bounced, complained) -> `notification_deliveries`
@@ -69,7 +70,8 @@ Out: push (Expo) — post-launch; Novu (retired).
       or a shortened test schedule); cancelled booking -> reminders skipped.
 - [ ] Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
       (`booking.reminder_1h`) bypass.
-- [ ] Same `idempotencyKey` twice -> one delivery per channel.
+- [ ] Same `idempotencyKey` twice for the same recipient -> one delivery per channel; the same
+      `idempotencyKey` for member and expert (booking.confirmed) -> both delivered (test both).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.
 - [ ] Hard bounce suppresses further emails to that address; visible in delivery table.
 - [ ] Every template renders in `pt/en/es` in `apps/email` preview; no PHI in subjects or SMS.
@@ -143,7 +145,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 1. packages/db: notifications (id, user_id, org_id, kind, title, body, href, data jsonb, read_at,
    created_at), notification_deliveries (id, idempotency_key, kind, user_id, channel email|sms|
    in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id, error,
-   created_at, updated_at, unique(idempotency_key, channel)), email_suppressions (email, reason,
+   created_at, updated_at, unique(idempotency_key, user_id, channel) — the recipient is part of
+   the key because one event (a booking confirmation) fans out to member AND expert; callers pass
+   a per-event idempotencyKey such as booking:<id>:confirmed and the library derives the row key
+   per recipient, so the second recipient is never suppressed by the first), email_suppressions (email, reason,
    created_at), phone_verifications (user_id, phone_e164, code_hash, expires_at, verified_at).
    RLS by user/org; audit unions (notification: sent|failed|suppressed; phone: verified).
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind,
@@ -164,9 +169,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 4. Workflows: packages/workflows/src/notifications/reminders.ts scheduling QStash messages at
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
-   not need to delete messages. emitDomainEvent(event) helper in @eleva/workflows used by Phase
-   4/6/7 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
-   paid/approval required, invoice issued/failed) inside Next.js after().
+   not need to delete messages. emitDomainEvent(event) in @eleva/workflows already exists from
+   Phase 7 (typed union + in-process subscriber registry); this phase extends the union with the
+   booking/payment/payout event types, registers sendNotification as a subscriber, and wires the
+   Phase 4/6 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
+   paid/approval required) to call it inside Next.js after(); invoice issued/failed/credited
+   already arrive from Phase 7 with an idempotencyKey the subscriber passes straight through.
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,

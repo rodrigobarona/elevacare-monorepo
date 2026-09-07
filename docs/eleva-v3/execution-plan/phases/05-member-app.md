@@ -67,7 +67,9 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 - [ ] Preferences persist and are returned by `GET /me`.
 - [ ] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
       (signed URL) after 24h; audit rows present.
-- [ ] Delete-account request schedules deletion and blocks new bookings; audited.
+- [ ] Delete-account request schedules deletion and blocks new bookings at the API (POST
+      /bookings/reserve and /confirm -> 409 ACCOUNT_DELETION_SCHEDULED via
+      assertMemberCanBook inside reserveSlot); audited.
 - [ ] `e2e/member.spec.ts` green; `check:i18n-parity` green.
 
 ## Tests
@@ -153,7 +155,14 @@ PHASE 5 TASK — Build the member product in apps/app.
    profile, bookings, payments, consents, notification preferences; Phase 10 adds records) ->
    JSON + CSV files zipped and uploaded to the PRIVATE Blob store via @eleva/storage with a 24h
    signed URL; scheduleAccountDeletion(userId, days per data-retention-export-matrix.md) that
-   marks the user (blocks new bookings) and enqueues crypto-shred (Phase 10 completes). Tests.
+   marks the user (auth.user.deletion_scheduled_at) and enqueues crypto-shred (Phase 10
+   completes). Booking eligibility is enforced where bookings are created, not only in the UI:
+   add assertMemberCanBook(userId) to @eleva/scheduling (throws BookingError
+   "ACCOUNT_DELETION_SCHEDULED" -> 409) and call it inside reserveSlot and in POST
+   /bookings/reserve and POST /bookings/confirm (Phase 4 routes; update them in this phase) so a
+   member with a pending deletion — or a banned user — cannot create or confirm a reservation.
+   Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets 409 on
+   reserve and confirm; cancel request -> reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,
    Privacy; NavIconName strings; org switcher hidden when the user has only the personal Space),
    proxy.ts < 50 LOC using @eleva/auth/proxy. Pages under /[orgSlug]: dashboard (upcoming with

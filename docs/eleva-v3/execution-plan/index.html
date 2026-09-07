@@ -428,8 +428,9 @@ empty folders left behind.</li>
 <td><a href="#16-post-launch-backlog"><code>phases/16-post-launch-backlog.md</code></a></td>
 </tr>
 </tbody></table>
-<p>Parallelism allowed: 5 and 6 after 4; 7 and 8 after 6; 11 after 7; 9 after 8. Everything else is
-sequential. Never start a phase whose dependencies are not merged.</p>
+<p>Parallelism allowed: 5 and 6 after 4; 7 after 6; 8 after 7 (it consumes Phase 7 invoice events);
+11 after 7; 9 after 8. Everything else is sequential. Never start a phase whose dependencies are
+not merged.</p>
 <h2 id="readme--6-target-architecture-reference-for-all-prompts"><a class="anchor" href="#readme--6-target-architecture-reference-for-all-prompts" aria-label="Link to section">#</a>6. Target architecture (reference for all prompts)</h2>
 <figure class="mermaid"><figcaption>Diagram (Mermaid source — paste into any Mermaid renderer)</figcaption><pre><code>flowchart LR
   subgraph edge [eleva.care gateway - apps/web proxy.ts]
@@ -1493,13 +1494,13 @@ Better Auth <code>account.id</code> on <code>expert_integrations</code> (replace
 <li><code>@eleva/billing</code> <code>provisioning.ts</code>: <code>syncSeatQuantity(orgId)</code> implements the single seat rule
 that Phase 11 relies on — billable seat = a membership of an organization with
 <code>organization.type = &#39;team&#39;</code> (the product label is &quot;Team (Clinic)&quot;; <code>team</code> is the only
-seat-billed type — never <code>personal</code> or <code>expert</code>) (any role, owner included) whose user has<blockquote>
-<p>= 1 <em>published</em> event type in that org; owner/admin accounts
-without published event types are free. Triggered from <code>organizationHooks.afterAddMember/ afterRemoveMember</code> (registered in Phase 2 as stubs) <strong>and</strong> from the event-type publish/
-unpublish path in <code>@eleva/scheduling</code>; until Phase 11 creates team subscriptions the function
-is a no-op for orgs without a <code>billing_subscriptions</code> row. Remove the WorkOS meter.</p>
-</blockquote>
-</li>
+seat-billed type — never <code>personal</code> or <code>expert</code>) (any role, owner included) whose user has at
+least one <em>published</em> event type in that org; owner/admin accounts without published event
+types are free. Triggered from <code>organizationHooks.afterAddMember</code> and
+<code>organizationHooks.afterRemoveMember</code> (registered in Phase 2 as stubs) <strong>and</strong> from the
+event-type publish/unpublish path in <code>@eleva/scheduling</code>; until Phase 11 creates team
+subscriptions the function is a no-op for orgs without a <code>billing_subscriptions</code> row. Remove
+the WorkOS meter.</li>
 <li><code>apps/api/src/app/workos/sync</code> deleted; <code>infra/qstash/setup-workos-sync.ts</code> deleted and
 <code>setup-all.ts</code> updated; QStash schedule removed in Upstash (<code>pnpm qstash:list</code> to verify).</li>
 <li><code>infra/workos/</code> deleted; root scripts <code>workos:*</code> removed; <code>infra/stripe/backfill-org-customers.ts</code>
@@ -1625,8 +1626,13 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
      &quot;v1:&lt;kek_v&gt;:&lt;dek_v&gt;:&lt;iv_b64&gt;:&lt;tag_b64&gt;:&lt;data_b64&gt;&quot;; decryptForOrg(orgId, ciphertext, aad?)
      parses, unwraps the referenced DEK version, decrypts, throws typed EncryptionError on tag
      mismatch or missing key. rotateKek(from, to) re-wraps every active DEK (batch, idempotent).
-     shredOrgKeys(orgId) sets retired_at and deletes wrapped_dek for all org DEKs (audited,
-     entity &quot;org_data_key&quot;, action &quot;shredded&quot;).
+     shredOrgKeys(orgId) DELETES every org_data_keys row for the org inside one transaction
+     (ADR-020 crypto-shred = delete DEK rows; nothing is retained, not even a tombstone with a
+     null wrapped_dek) and emits one audit event per deleted key version (entity &quot;org_data_key&quot;,
+     action &quot;shredded&quot;, payload { orgId, keyVersion, kekVersion } — the audit trail, not the
+     table, is the evidence). decryptForOrg on ciphertext whose DEK row no longer exists throws
+     EncryptionError(&quot;KEY_SHREDDED&quot;) — never a generic tag mismatch — so callers can render the
+     &quot;content permanently deleted&quot; state.
    - records.ts: encryptRecordFields(orgId, obj, fields[]) / decryptRecordFields for PHI objects.
    - Delete vault.ts, client.ts, tokens.ts (if Vault-backed) and their tests; README rewritten.
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
@@ -1646,10 +1652,14 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 3. @eleva/billing provisioning.ts: seat sync with the single seat rule shared with Phase 11.
    Implement syncSeatQuantity(orgId): no-op unless organization.type = &#39;team&#39; (the only
    seat-billed type; personal/expert orgs return early). Seats = count of memberships of that
-   team org (any role, owner included) whose user has &gt;= 1 published event type in that org
-   (join auth.member -&gt; event_types where org_id = the team org and status = published);
-   owner/admin accounts without
-   published event types are not seats; no-op when the org has no billing_subscriptions row;
+   team org (any role, owner included) whose user has &gt;= 1 published event type in that org.
+   Put the SQL in one @eleva/db query helper countBillableSeats(orgId) that joins per member —
+   auth.member -&gt; expert_profiles (org_id = team org, user_id = member) -&gt; event_types
+   (expert_profile_id = profile, org_id = team org, published = true, active = true) and counts
+   DISTINCT user_id — never an org-level &quot;any published event type exists&quot; check, which would
+   bill every member once one publishes. Owner/admin accounts without their own published event
+   types are not seats (test the zero-seat owner case); no-op when the org has no
+   billing_subscriptions row;
    otherwise update the Stripe subscription seat item quantity (proration per
    payments-payouts-spec.md). Wire it into the organization plugin hooks afterAddMember /
    afterRemoveMember / afterAcceptInvitation defined in packages/auth/src/server/auth.ts (import
@@ -2069,7 +2079,9 @@ Phase 6); reschedule moves the booking and releases the old slot.</li>
 <li><input disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
 <li><input disabled="" type="checkbox"> DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
 (signed URL) after 24h; audit rows present.</li>
-<li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings; audited.</li>
+<li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API (POST
+/bookings/reserve and /confirm -&gt; 409 ACCOUNT_DELETION_SCHEDULED via
+assertMemberCanBook inside reserveSlot); audited.</li>
 <li><input disabled="" type="checkbox"> <code>e2e/member.spec.ts</code> green; <code>check:i18n-parity</code> green.</li>
 </ul>
 <h2 id="05-member-app--tests"><a class="anchor" href="#05-member-app--tests" aria-label="Link to section">#</a>Tests</h2>
@@ -2153,7 +2165,14 @@ PHASE 5 TASK — Build the member product in apps/app.
    profile, bookings, payments, consents, notification preferences; Phase 10 adds records) -&gt;
    JSON + CSV files zipped and uploaded to the PRIVATE Blob store via @eleva/storage with a 24h
    signed URL; scheduleAccountDeletion(userId, days per data-retention-export-matrix.md) that
-   marks the user (blocks new bookings) and enqueues crypto-shred (Phase 10 completes). Tests.
+   marks the user (auth.user.deletion_scheduled_at) and enqueues crypto-shred (Phase 10
+   completes). Booking eligibility is enforced where bookings are created, not only in the UI:
+   add assertMemberCanBook(userId) to @eleva/scheduling (throws BookingError
+   &quot;ACCOUNT_DELETION_SCHEDULED&quot; -&gt; 409) and call it inside reserveSlot and in POST
+   /bookings/reserve and POST /bookings/confirm (Phase 4 routes; update them in this phase) so a
+   member with a pending deletion — or a banned user — cannot create or confirm a reservation.
+   Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets 409 on
+   reserve and confirm; cancel request -&gt; reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,
    Privacy; NavIconName strings; org switcher hidden when the user has only the personal Space),
    proxy.ts &lt; 50 LOC using @eleva/auth/proxy. Pages under /[orgSlug]: dashboard (upcoming with
@@ -2432,10 +2451,16 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    QStash signature; infra/qstash/setup-payouts.ts registering schedules (transfers every 2h,
    pending payouts 06:00 Europe/Lisbon, upcoming payouts daily 08:00) + root script
    qstash:setup:payouts and inclusion in setup:all. Each step idempotent.
-9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund or
-   admin_payouts:*), GET /payouts?status&amp;orgId (expert sees own; staff see all), POST /payouts/
-   [id]/approve, POST /payouts/[id]/hold ({ reason }), GET /me/finance/summary for experts.
-   OpenAPI + @eleva/api-client.
+9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund for the owning
+   expert org, or staff capability admin_payouts:refund), GET /payouts?status&amp;orgId (expert sees
+   own org only — orgId must equal the session&#39;s active org or 403; staff with
+   admin_payouts:read see all), POST /payouts/[id]/approve and POST /payouts/[id]/hold
+   ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles: [&quot;platform_admin&quot;,
+   &quot;staff_finance&quot;] }) + capability admin_payouts:approve / admin_payouts:hold from
+   packages/auth/src/permissions.ts (add both), reason required (400 when empty), withAudit with
+   actor + reason + previous/next payout state; experts and members get 403 (table-driven test
+   covering member, expert owner, staff_support, staff_finance, platform_admin). GET
+   /me/finance/summary for experts. OpenAPI + @eleva/api-client.
 10. apps/expert /[orgSlug]/finance: summary cards (gross, fees, net, pending, paid), bookings
     table with payout state + eligible date, Embedded Payouts component, CSV export (server
     action -&gt; API). Messages pt/en/es.
@@ -2478,7 +2503,7 @@ counts, PR URLs, deferred items.</code></pre></div>
 </tr>
 <tr>
 <td>Touches</td>
-<td><code>packages/accounting/**</code>, <code>packages/workflows/src/invoicing/**</code>, <code>packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts</code>, <code>apps/api/src/app/{accounting,invoicing,workflows}/**</code>, <code>apps/expert/**</code> (invoicing onboarding + session invoice status), <code>infra/qstash/**</code>, <code>packages/flags/**</code></td>
+<td><code>packages/accounting/**</code>, <code>packages/workflows/src/{invoicing/**,domain-events.ts}</code>, <code>packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts</code>, <code>apps/api/src/app/{accounting,invoicing,workflows}/**</code>, <code>apps/expert/**</code> (invoicing onboarding + session invoice status), <code>infra/qstash/**</code>, <code>packages/flags/**</code></td>
 </tr>
 <tr>
 <td>Exit gate</td>
@@ -2513,6 +2538,16 @@ from <code>expert_profiles</code> + <code>expert_practice_location</code>), crea
 fee, IVA per matrix (PT 23%; EU VIES valid -&gt; reverse charge; non-EU zero-rated), finalizes,
 communicates to AT, emails the PDF; idempotent via <code>platform_fee_invoices(booking_payment_id PK, toconline_document_id, series, number, status, issued_at, pdf_url, error)</code>. Credit note on
 refund/reversal (<code>issuePlatformFeeCreditNote</code>).</li>
+<li><strong>Invoice domain events</strong> (consumed by Phase 8): every committed status transition of
+<code>platform_fee_invoices</code> and <code>expert_invoices</code> calls <code>emitDomainEvent</code> from <code>@eleva/workflows</code>
+(this phase adds the helper as a typed in-process dispatcher; Phase 8 attaches
+<code>sendNotification</code> to it) with <code>invoice.issued</code> | <code>invoice.failed</code> | <code>invoice.credited</code> and a
+payload of <code>invoiceKind</code> (<code>platform_fee</code> | <code>expert_service</code>), <code>invoiceId</code>, <code>bookingPaymentId</code>
+or <code>bookingId</code>, <code>expertOrgId</code>, <code>number</code>, optional <code>pdfUrl</code> / <code>error</code>, and <code>idempotencyKey</code>
+(<code>invoice:&lt;kind&gt;:&lt;id&gt;:&lt;status&gt;</code>). Emit <strong>after</strong> the transaction commits (the status write returns, then <code>emitDomainEvent</code> runs
+inside Next.js <code>after()</code>); the idempotency key lets Phase 8 dedupe QStash retries. Until Phase 8
+lands the only subscriber is a structured logger. Test: replaying the same
+<code>payment_intent.succeeded</code> twice yields one invoice row and one <code>invoice.issued</code> event.</li>
 <li>Tier 1b groundwork: <code>issueClinicSaasInvoice(subscriptionPeriod)</code> table + function, triggered by
 <code>invoice.finalized</code> (activated in Phase 11).</li>
 <li>Tier 2: on <code>booking_payments.status = succeeded</code> -&gt; <code>issueExpertServiceInvoice(bookingId)</code>
@@ -2675,6 +2710,13 @@ PR 07.1 — Tier 1 (Eleva platform):
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
    event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
    with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
+   Domain events: add emitDomainEvent(event) to @eleva/workflows (typed union of event names +
+   payloads; in-process subscriber registry; Phase 8 registers sendNotification). After every
+   committed status change of platform_fee_invoices / expert_invoices call, inside Next.js
+   after(), emitDomainEvent({ type: &quot;invoice.issued&quot; | &quot;invoice.failed&quot; | &quot;invoice.credited&quot;,
+   invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId, number, pdfUrl?, error?,
+   idempotencyKey: `invoice:${kind}:${id}:${status}` }); register a structured-log subscriber
+   now. Test: the same webhook replayed twice -&gt; one row, one event.
    Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
    platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
    skip (not fail) the payout run for that booking until it is — add that check and its test in
@@ -2794,8 +2836,9 @@ inbox in <code>@eleva/dashboard</code> (<code>NavBell</code>, <code>/[orgSlug]/n
 <li>Reminder workflows: on booking confirm schedule QStash messages (not cron) for 24h and 1h with
 <code>notBefore</code>; cancellation deletes/ignores them (check booking status at send time);
 <code>packages/workflows/src/notifications/reminders.ts</code>, route <code>POST /workflows/booking-reminder</code>.</li>
-<li>Hook points: Phase 4/6/7 emit events via a tiny in-process dispatcher in <code>@eleva/workflows</code>
-(<code>emitDomainEvent</code>) that calls <code>sendNotification</code> inside <code>after()</code> from Next.js.</li>
+<li>Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events via the
+in-process dispatcher <code>emitDomainEvent</code> in <code>@eleva/workflows</code> (introduced in Phase 7); this
+phase registers <code>sendNotification</code> as its subscriber, running inside <code>after()</code> from Next.js.</li>
 <li>Lane 2 stub: <code>syncMarketingContact(userId)</code> to Resend Audiences only when <code>marketing</code> consent
 granted; no PHI fields.</li>
 <li>Resend webhooks (<code>/webhooks/resend</code>: delivered, bounced, complained) -&gt; <code>notification_deliveries</code>
@@ -2819,7 +2862,8 @@ status; suppress future sends on hard bounce.</li>
 or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
 <li><input disabled="" type="checkbox"> Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
 (<code>booking.reminder_1h</code>) bypass.</li>
-<li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice -&gt; one delivery per channel.</li>
+<li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice for the same recipient -&gt; one delivery per channel; the same
+<code>idempotencyKey</code> for member and expert (booking.confirmed) -&gt; both delivered (test both).</li>
 <li><input disabled="" type="checkbox"> SMS sent only with verified phone + opt-in; Twilio EU region used.</li>
 <li><input disabled="" type="checkbox"> Hard bounce suppresses further emails to that address; visible in delivery table.</li>
 <li><input disabled="" type="checkbox"> Every template renders in <code>pt/en/es</code> in <code>apps/email</code> preview; no PHI in subjects or SMS.</li>
@@ -2891,7 +2935,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 1. packages/db: notifications (id, user_id, org_id, kind, title, body, href, data jsonb, read_at,
    created_at), notification_deliveries (id, idempotency_key, kind, user_id, channel email|sms|
    in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id, error,
-   created_at, updated_at, unique(idempotency_key, channel)), email_suppressions (email, reason,
+   created_at, updated_at, unique(idempotency_key, user_id, channel) — the recipient is part of
+   the key because one event (a booking confirmation) fans out to member AND expert; callers pass
+   a per-event idempotencyKey such as booking:&lt;id&gt;:confirmed and the library derives the row key
+   per recipient, so the second recipient is never suppressed by the first), email_suppressions (email, reason,
    created_at), phone_verifications (user_id, phone_e164, code_hash, expires_at, verified_at).
    RLS by user/org; audit unions (notification: sent|failed|suppressed; phone: verified).
 2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind,
@@ -2912,9 +2959,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 4. Workflows: packages/workflows/src/notifications/reminders.ts scheduling QStash messages at
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
-   not need to delete messages. emitDomainEvent(event) helper in @eleva/workflows used by Phase
-   4/6/7 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
-   paid/approval required, invoice issued/failed) inside Next.js after().
+   not need to delete messages. emitDomainEvent(event) in @eleva/workflows already exists from
+   Phase 7 (typed union + in-process subscriber registry); this phase extends the union with the
+   booking/payment/payout event types, registers sendNotification as a subscriber, and wires the
+   Phase 4/6 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
+   paid/approval required) to call it inside Next.js after(); invoice issued/failed/credited
+   already arrive from Phase 7 with an idempotencyKey the subscriber passes straight through.
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,
@@ -2978,8 +3028,9 @@ drive session status, notifications and (Phase 10) transcripts.</p>
 <li><code>packages/video</code> (<code>@eleva/video</code>, sole <code>@daily-co/*</code> importer; server = REST via <code>fetch</code> with
 <code>DAILY_API_KEY</code>, client = <code>@daily-co/daily-react</code> + <code>@daily-co/daily-js</code>):
 <code>createSessionRoom({ bookingId, startAt, endAt })</code> -&gt; private room, random name (HIPAA mode
-forbids custom names), <code>nbf = startAt - 15 min</code>, <code>exp = endAt + 30 min</code>, <code>max_participants: 2 + count(delegated participants)</code> (recomputed via Daily room update when a delegate is added, so every authorised
-participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
+forbids custom names), <code>nbf = startAt - 15 min</code>, <code>exp = endAt + 30 min</code>,
+<code>max_participants</code> = 2 + number of delegated participants (recomputed via Daily room update
+when a delegate is added, so every authorised participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
 <code>enable_screenshare: true</code>, <code>enable_recording: false</code> (Phase 10 behind consent),
 <code>eject_at_room_exp: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
 <code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
@@ -3017,7 +3068,8 @@ app join page, not the raw room URL).</li>
 <h2 id="09-video-daily--deliverables"><a class="anchor" href="#09-video-daily--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li><code>packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}</code> + tests.</li>
-<li>Migration: <code>sessions</code> + <code>session_participants</code>; RLS; audit unions (<code>session: room_created|joined| started|ended|room_deleted|participant_added|participant_removed</code>).</li>
+<li>Migration: <code>sessions</code> + <code>session_participants</code>; RLS; audit unions (<code>session:</code> <code>room_created</code>,
+<code>joined</code>, <code>started</code>, <code>ended</code>, <code>room_deleted</code>, <code>participant_added</code>, <code>participant_removed</code>).</li>
 <li>Workflows + QStash sweep; API routes (<code>join</code>, <code>participants</code> add/remove, Daily webhook) +
 OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
 the room capacity.</li>
@@ -3368,9 +3420,15 @@ PR 10.1 — records, documents, consent, retention:
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
    blob_pathname unique, mime, size_bytes, metadata_encrypted, scope expert_only|shared,
-   uploaded_by, created_at, deleted_at). RLS: policy A expert org via eleva.org_id; policy B member
-   read where member_user_id = current_setting(&#39;eleva.user_id&#39;) and published_at is not null (add
-   withUserContext(userId, fn) helper in @eleva/db that sets eleva.user_id, RLS tests for both).
+   uploaded_by, created_at, deleted_at). RLS, per table: records — policy A expert org via
+   eleva.org_id; policy B member read where member_user_id = current_setting(&#39;eleva.user_id&#39;)
+   AND published_at IS NOT NULL AND deleted_at IS NULL. session_documents has no published_at;
+   its visibility field is scope — policy A expert org via eleva.org_id; policy B member read
+   where member_user_id = current_setting(&#39;eleva.user_id&#39;) AND scope = &#39;shared&#39; AND deleted_at IS
+   NULL (documents the member uploaded are always scope = &#39;shared&#39;; expert_only documents are
+   never visible to the member). Add withUserContext(userId, fn) in @eleva/db that sets
+   eleva.user_id; RLS tests cover: unpublished record hidden, published record visible,
+   expert_only document hidden, shared document visible, other member&#39;s rows hidden.
    Consent kinds: health_data_processing, session_recording, ai_processing with versioned texts in
    packages/compliance/legal/&lt;kind&gt;.&lt;locale&gt;.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/
@@ -3644,8 +3702,18 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
 3. @eleva/billing: subscriptions.ts createTeamCheckoutSession(orgId, planKey) for Embedded
    Checkout (ui_mode embedded, return_url to apps/team billing), createPortalSession(orgId);
    provisioning.ts syncSeatQuantity(orgId) = count of clinic memberships (any role, owner included)
-   whose user has &gt;= 1 published event type in that clinic — the single seat rule; owner/admin
-   accounts without published event types are free; called from event-type publish/unpublish and
+   whose user has &gt;= 1 published event type in that clinic — the single seat rule. Implement it
+   as a per-member join, never an org-level existence check: SELECT count(DISTINCT m.user_id)
+   FROM auth.member m JOIN expert_profiles ep ON ep.org_id = m.organization_id AND ep.user_id =
+   m.user_id JOIN event_types et ON et.expert_profile_id = ep.id AND et.org_id =
+   m.organization_id AND et.published = true AND et.active = true WHERE m.organization_id =
+   $orgId (event_types is keyed by expert_profile_id, which links to the user through
+   expert_profiles.user_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
+   a Drizzle query helper countBillableSeats(orgId) in @eleva/db owns the SQL and is the only
+   implementation both Phase 3 and this phase call). Owner/admin accounts without their own
+   published event types are free; tests: owner + 1 publishing member = 1 seat; owner with a
+   published event type + 2 idle members = 1 seat; two publishing members = 2 seats. Called from
+   event-type publish/unpublish and
    member removal hooks; update payments-payouts-spec.md (drop the &quot;last 30 days&quot; qualifier) and
    add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
    unlimited) at event-type publish time in the clinic context -&gt; 409 SEAT_LIMIT_REACHED; the
@@ -3866,16 +3934,24 @@ PR 12.1 — access, users, partners, experts, bookings:
    redirects non-authenticated to account login with return-to; server layout calls
    requireStaff([&quot;platform_admin&quot;,&quot;staff_support&quot;,&quot;staff_finance&quot;]) from @eleva/auth/server
    (reads admin plugin role on the user); apps/api/src/lib/auth.ts requireApiAuth gains
-   { staffRoles } option; helper adminRoute(handler, { roles, auditReason: true }) that enforces a
-   non-empty reason string on POST/PATCH/DELETE bodies and wraps withAudit with actor + reason.
+   { staffRoles } option; helper adminRoute(handler, { roles, reason: &quot;required&quot; | &quot;optional&quot; })
+   that wraps withAudit with actor (+ impersonation context) and reason; reason: &quot;required&quot; rejects (400) any
+   POST/PATCH/DELETE without a non-empty reason and is used by every destructive or
+   member-affecting write (ban, impersonate, schedule-deletion, approve/reject/needs-changes,
+   commission override, suspend/unsuspend, cancel booking, refund, payout approve/hold);
+   reason: &quot;optional&quot; is used by the low-impact writes (unban, revoke-sessions, disable-2fa,
+   resend-verification, stop-impersonating) which still audit actor, target and route as
+   metadata. The route list below marks each with [R] or [O] and the UI dialogs follow the same
+   split (reason field mandatory vs optional).
    Admin routes tagged &quot;admin&quot; in OpenAPI and hidden from the public docs listing unless the
    requester is staff.
 2. Users: GET /admin/users?q&amp;cursor (auth.api.listUsers), GET /admin/users/[id] (profile, orgs +
    roles, sessions, 2FA/passkeys flags, bookings summary, payments summary), POST
-   /admin/users/[id]/ban { reason, expiresAt? } (auth.api.banUser + revokeUserSessions), POST
-   /unban, POST /revoke-sessions, POST /disable-2fa, POST /resend-verification, POST /impersonate
-   { reason } (auth.api.impersonateUser; refuse if target has a staff role; impersonation_sessions
-   row; 1h), POST /stop-impersonating, POST /schedule-deletion. @eleva/dashboard:
+   /admin/users/[id]/ban [R] { reason, expiresAt? } (auth.api.banUser + revokeUserSessions),
+   POST /unban [O], POST /revoke-sessions [O], POST /disable-2fa [O], POST /resend-verification
+   [O], POST /impersonate [R] { reason } (auth.api.impersonateUser; refuse if target has a staff
+   role; impersonation_sessions row; 1h), POST /stop-impersonating [O], POST /schedule-deletion
+   [R] { reason }. @eleva/dashboard:
    &lt;ImpersonationBanner /&gt; rendered in every app shell when session.impersonatedBy is set, with a
    Stop button calling the API.
 3. Partners: become_partner_applications (id, expert_org_id, submitted_at, status pending|
@@ -3965,8 +4041,12 @@ already exist in scattered form; this phase closes gaps and wires enforcement in
 <h2 id="13-hardening-observability--scope"><a class="anchor" href="#13-hardening-observability--scope" aria-label="Link to section">#</a>Scope</h2>
 <p>In:</p>
 <ul>
-<li><strong>Security</strong>: BotID on every public POST (booking reserve, payments intent, signup, become-
-partner, contact forms, AI endpoints); Upstash rate limits per route class from
+<li><strong>Security</strong>: BotID on every public POST that a browser or end user originates (booking
+reserve, payments intent, signup, become-partner, contact forms, AI endpoints). Signed
+machine-to-machine endpoints are explicitly <strong>out of BotID scope</strong> and authenticate by
+signature only: <code>/webhooks/stripe</code>, <code>/webhooks/daily</code>, <code>/webhooks/resend</code>, <code>/webhooks/twilio</code>,
+<code>/workflows/*</code> (QStash <code>Receiver.verify</code>), Better Auth <code>/auth/*</code> (own rate limiting). The
+coverage checker encodes that allowlist; Upstash rate limits per route class from
 <code>security-hardening-checklist.md</code> (auth 10/min/IP, public reads 120/min/IP, mutations
 60/min/user, admin 300/min/user); strict CSP with nonces composed in <code>@eleva/observability</code>
 and applied in every <code>proxy.ts</code> via shared helper (<code>report-uri</code> to Sentry), HSTS preload,
@@ -4135,9 +4215,13 @@ PR 13.1 — security + observability + analytics:
    (120/min/IP), mutation (60/min/user), admin (300/min/user), webhook (none, signature only);
    every route declares its class; test asserting every route file imports a rate limit and an
    auth model (static analysis script scripts/check-route-guards.mjs added to CI). BotID: guard
-   every public POST (reserve, payments intent, sign-up proxies, become-partner submit, contact,
-   AI endpoints); add scripts/check-botid-coverage.mjs to CI. Better Auth rateLimit customRules
-   for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
+   every browser- or user-originated public POST (reserve, payments intent, sign-up proxies,
+   become-partner submit, contact, AI endpoints); signed M2M routes are exempt by allowlist —
+   /webhooks/* (provider signature), /workflows/* (QStash Receiver.verify), /auth/* (Better Auth
+   rate limiting) — and the exemption list lives in one place: scripts/check-botid-coverage.mjs
+   (added to CI) fails when a public POST is neither BotID-guarded nor on that allowlist, and
+   fails when an allowlisted route lacks its signature verifier import. Better Auth rateLimit
+   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).
@@ -4233,8 +4317,12 @@ role), target = v3 Neon branch or production. <strong>Production guard</strong>:
 <code>--target production</code> <strong>and</strong> <code>MIGRATION_CONFIRM_PRODUCTION=&lt;today&#39;s date YYYY-MM-DD&gt;</code> <strong>and</strong>
 an interactive typed confirmation of the target Neon project id; without <code>--target production</code>
 the CLI refuses any <code>TARGET_DATABASE_URL</code> whose host is not a Neon <em>branch</em> endpoint of the
-staging/rehearsal project (<code>MIGRATION_ALLOWED_TARGET_HOSTS</code> allowlist). Rehearsals therefore
-cannot write to production by accident.</li>
+<strong>v3 production Neon project</strong> (<code>NEON_PROJECT_ID</code>) on a <strong>non-default branch</strong> — rehearsal
+branches are created in the production project so they carry the real schema, roles and
+extensions; the staging project is never a migration target — and that also appears in the
+<code>MIGRATION_ALLOWED_TARGET_HOSTS</code> allowlist. Rehearsals therefore cannot write to the production
+(default) branch by accident. One project, one guard: the same <code>NEON_PROJECT_ID</code> is used by the
+guard, the env docs, <code>migration:rehearse</code> and the guard tests.</li>
 <li><strong>Entity mapping</strong> (MVP <code>drizzle/schema.ts</code> -&gt; v3):<ul>
 <li><code>UsersTable</code> -&gt; <code>auth.user</code> (email, emailVerified, name, image, <code>locale</code>, <code>country</code>,
 <code>timezone</code>, createdAt) + <code>auth.account</code> provider <code>credential</code> <strong>without</strong> password (forces
@@ -4290,7 +4378,9 @@ verification, DNS switch.</li>
 <h2 id="14-mvp-migration--deliverables"><a class="anchor" href="#14-mvp-migration--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li><code>infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}</code>.</li>
-<li><code>migration_runs</code>, <code>migration_id_map</code> (unique on source table + source id), <code>migration_checksums</code>
+<li><code>migration_runs</code>, <code>migration_id_map</code> (unique on source table + source id + target table +
+target kind, because one MVP row can fan out into several v3 rows — e.g. <code>UsersTable</code> -&gt;
+<code>auth.user</code> + <code>auth.account/credential</code> + optional <code>auth.account/google</code>), <code>migration_checksums</code>
 (unique on target table + target id, upserted) tables in a <code>migration</code> schema on v3, dropped
 after Phase 15 + 30 days.</li>
 <li>Welcome campaign template + sender script (<code>migration:send-welcome --wave n</code>).</li>
@@ -4314,7 +4404,8 @@ exits 2 before connecting; <code>--target production</code> without today&#39;s
 availability, past bookings, payout history; public URL <code>/[username]/[eventSlug]</code> resolves.</li>
 <li><input disabled="" type="checkbox"> Records decrypt for the owning expert in <code>apps/expert</code>; member sees published ones.</li>
 <li><input disabled="" type="checkbox"> Stripe verification step passes for 100% of Connect accounts and customers.</li>
-<li><input disabled="" type="checkbox"> Rollback rehearsal on staging equivalents, timed: v3 write freeze, <code>pnpm migration:reverse-export --since &lt;ts&gt;</code> produces a signed JSON of post-cutover v3 rows,
+<li><input disabled="" type="checkbox"> Rollback rehearsal on staging equivalents, timed: v3 write freeze,
+<code>pnpm migration:reverse-export --since &lt;ts&gt;</code> produces a signed JSON of post-cutover v3 rows,
 Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
 once (idempotent on <code>stripe_payment_intent_id</code>), MVP webhook re-enabled, DNS revert + MVP
 unfreeze. Zero duplicates and zero lost paid bookings in the rehearsal report.</li>
@@ -4413,12 +4504,17 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    mode, foreign project rejected, production without confirmation rejected.
    migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
-   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
-   unique(source_table, source_id)), migration_checksums (target_table, target_id, hmac_sha256,
-   key_version, unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
-   --apply is a no-op for checksums too). Every mapper is idempotent through migration_id_map
-   (upsert by source id); a test runs --apply twice on a fixture and asserts identical row counts
-   in every target table including migration_checksums.
+   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
+   target_kind, target_id, unique(source_table, source_id, target_table, target_kind) —
+   target_kind is a mapper-defined discriminator, e.g. &quot;user&quot;, &quot;account:credential&quot;,
+   &quot;account:google&quot;, &quot;member:personal-space&quot;, so a source row that fans out into several target
+   rows has one map row per output), migration_checksums (target_table, target_id, hmac_sha256,
+   key_version, unique(target_table, target_id) — checksum rows are upserted on that key so a
+   repeated --apply is a no-op for checksums too). Every mapper is idempotent through
+   migration_id_map (lookup by the full key before insert; upsert on conflict); tests run --apply
+   twice on a fixture and assert identical row counts in every target table including
+   migration_checksums, and specifically that a user with credential + google accounts yields
+   exactly one auth.user and two auth.account rows after both runs.
 3. Mappers in src/map/*.ts, run in dependency order: users (UsersTable -&gt; auth.user + auth.account
    credential row without password + google account when identity exists; roles -&gt; admin plugin
    role platform_admin for admin/superadmin; locale/country/timezone), organizations
@@ -4729,7 +4825,7 @@ link, open incidents, CodeRabbit CLI counts, PR URL.</code></pre></div>
 <p>Everything that was deliberately deferred to reach the Portugal launch lives here so it is not
 lost and so that nobody re-opens it inside an earlier phase. When an item is picked up, copy the
 structure of any earlier phase file (scope, deliverables, acceptance criteria, local references,
-external docs, copy-paste prompt) into <code>phases/16-N-&lt;slug&gt;.md</code>, add it to the README phase index,
+external docs, copy-paste prompt) into <code>phases/16-&lt;N&gt;-&lt;slug&gt;.md</code>, add it to the README phase index,
 and run the standard loop from README section 4.</p>
 <h2 id="16-post-launch-backlog--backlog-ordered-by-expected-priority"><a class="anchor" href="#16-post-launch-backlog--backlog-ordered-by-expected-priority" aria-label="Link to section">#</a>Backlog (ordered by expected priority)</h2>
 <table>
@@ -4840,7 +4936,7 @@ and run the standard loop from README section 4.</p>
 </tbody></table>
 <h2 id="16-post-launch-backlog--how-to-promote-an-item"><a class="anchor" href="#16-post-launch-backlog--how-to-promote-an-item" aria-label="Link to section">#</a>How to promote an item</h2>
 <ol>
-<li>Create <code>docs/eleva-v3/execution-plan/phases/16-N-&lt;slug&gt;.md</code> using the template in
+<li>Create <code>docs/eleva-v3/execution-plan/phases/16-&lt;N&gt;-&lt;slug&gt;.md</code> using the template in
 <code>phases/00-execution-plan-and-review-loop.md</code> (section &quot;Phase file template&quot;).</li>
 <li>Add the row to README section 5 with branch <code>phase-16.N/&lt;slug&gt;</code> and dependencies.</li>
 <li>If the item changes a locked decision, add a <code>decision-log.md</code> entry and a new ADR first.</li>

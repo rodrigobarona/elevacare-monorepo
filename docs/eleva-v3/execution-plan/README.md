@@ -142,7 +142,7 @@ Rules of the loop:
 | 5     | Member app (`apps/app`)                                               | `phase-05/member-app`                     | 1.5 weeks            | 4          | [`phases/05-member-app.md`](./phases/05-member-app.md)                                         |
 | 6     | Payments: Stripe Connect hardening, payout engine, refunds, schedules | `phase-06/payments-payouts`               | 2 weeks              | 4          | [`phases/06-payments-payouts.md`](./phases/06-payments-payouts.md)                             |
 | 7     | Invoicing: TOConline Tier 1 fee invoices + Tier 2 expert invoices     | `phase-07/invoicing-toconline`            | 1.5 weeks            | 6          | [`phases/07-invoicing-toconline.md`](./phases/07-invoicing-toconline.md)                       |
-| 8     | Notifications Lane 1 + reminder workflows                             | `phase-08/notifications-lane1`            | 1.5 weeks            | 5, 6, 7     | [`phases/08-notifications-lane1.md`](./phases/08-notifications-lane1.md)                       |
+| 8     | Notifications Lane 1 + reminder workflows                             | `phase-08/notifications-lane1`            | 1.5 weeks            | 5, 6, 7    | [`phases/08-notifications-lane1.md`](./phases/08-notifications-lane1.md)                       |
 | 9     | Video with Daily.co (`@eleva/video`, join pages, webhooks)            | `phase-09/video-daily`                    | 1.5 weeks            | 5, 8       | [`phases/09-video-daily.md`](./phases/09-video-daily.md)                                       |
 | 10    | Records/PHI, CRM, AI reports beta                                     | `phase-10/records-crm-ai`                 | 2 weeks              | 9          | [`phases/10-records-crm-ai.md`](./phases/10-records-crm-ai.md)                                 |
 | 11    | Clinics: `apps/team` SaaS                                             | `phase-11/team-clinics`                   | 2 weeks              | 6, 7       | [`phases/11-team-clinics.md`](./phases/11-team-clinics.md)                                     |
@@ -152,8 +152,9 @@ Rules of the loop:
 | 15    | PT launch gate + production cutover                                   | `phase-15/launch-cutover`                 | 1 week + 7-day watch | 14         | [`phases/15-launch-cutover.md`](./phases/15-launch-cutover.md)                                 |
 | 16    | Post-launch backlog (not a PR phase)                                  | —                                         | —                    | 15         | [`phases/16-post-launch-backlog.md`](./phases/16-post-launch-backlog.md)                       |
 
-Parallelism allowed: 5 and 6 after 4; 7 and 8 after 6; 11 after 7; 9 after 8. Everything else is
-sequential. Never start a phase whose dependencies are not merged.
+Parallelism allowed: 5 and 6 after 4; 7 after 6; 8 after 7 (it consumes Phase 7 invoice events);
+11 after 7; 9 after 8. Everything else is sequential. Never start a phase whose dependencies are
+not merged.
 
 ## 6. Target architecture (reference for all prompts)
 

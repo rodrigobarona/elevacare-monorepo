@@ -34,12 +34,13 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
 - `@eleva/billing` `provisioning.ts`: `syncSeatQuantity(orgId)` implements the single seat rule
   that Phase 11 relies on — billable seat = a membership of an organization with
   `organization.type = 'team'` (the product label is "Team (Clinic)"; `team` is the only
-  seat-billed type — never `personal` or `expert`) (any role, owner included) whose user has
-  >= 1 *published* event type in that org; owner/admin accounts
-  without published event types are free. Triggered from `organizationHooks.afterAddMember/
-  afterRemoveMember` (registered in Phase 2 as stubs) **and** from the event-type publish/
-  unpublish path in `@eleva/scheduling`; until Phase 11 creates team subscriptions the function
-  is a no-op for orgs without a `billing_subscriptions` row. Remove the WorkOS meter.
+  seat-billed type — never `personal` or `expert`) (any role, owner included) whose user has at
+  least one _published_ event type in that org; owner/admin accounts without published event
+  types are free. Triggered from `organizationHooks.afterAddMember` and
+  `organizationHooks.afterRemoveMember` (registered in Phase 2 as stubs) **and** from the
+  event-type publish/unpublish path in `@eleva/scheduling`; until Phase 11 creates team
+  subscriptions the function is a no-op for orgs without a `billing_subscriptions` row. Remove
+  the WorkOS meter.
 - `apps/api/src/app/workos/sync` deleted; `infra/qstash/setup-workos-sync.ts` deleted and
   `setup-all.ts` updated; QStash schedule removed in Upstash (`pnpm qstash:list` to verify).
 - `infra/workos/` deleted; root scripts `workos:*` removed; `infra/stripe/backfill-org-customers.ts`
@@ -168,8 +169,13 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
      "v1:<kek_v>:<dek_v>:<iv_b64>:<tag_b64>:<data_b64>"; decryptForOrg(orgId, ciphertext, aad?)
      parses, unwraps the referenced DEK version, decrypts, throws typed EncryptionError on tag
      mismatch or missing key. rotateKek(from, to) re-wraps every active DEK (batch, idempotent).
-     shredOrgKeys(orgId) sets retired_at and deletes wrapped_dek for all org DEKs (audited,
-     entity "org_data_key", action "shredded").
+     shredOrgKeys(orgId) DELETES every org_data_keys row for the org inside one transaction
+     (ADR-020 crypto-shred = delete DEK rows; nothing is retained, not even a tombstone with a
+     null wrapped_dek) and emits one audit event per deleted key version (entity "org_data_key",
+     action "shredded", payload { orgId, keyVersion, kekVersion } — the audit trail, not the
+     table, is the evidence). decryptForOrg on ciphertext whose DEK row no longer exists throws
+     EncryptionError("KEY_SHREDDED") — never a generic tag mismatch — so callers can render the
+     "content permanently deleted" state.
    - records.ts: encryptRecordFields(orgId, obj, fields[]) / decryptRecordFields for PHI objects.
    - Delete vault.ts, client.ts, tokens.ts (if Vault-backed) and their tests; README rewritten.
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
@@ -189,10 +195,14 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 3. @eleva/billing provisioning.ts: seat sync with the single seat rule shared with Phase 11.
    Implement syncSeatQuantity(orgId): no-op unless organization.type = 'team' (the only
    seat-billed type; personal/expert orgs return early). Seats = count of memberships of that
-   team org (any role, owner included) whose user has >= 1 published event type in that org
-   (join auth.member -> event_types where org_id = the team org and status = published);
-   owner/admin accounts without
-   published event types are not seats; no-op when the org has no billing_subscriptions row;
+   team org (any role, owner included) whose user has >= 1 published event type in that org.
+   Put the SQL in one @eleva/db query helper countBillableSeats(orgId) that joins per member —
+   auth.member -> expert_profiles (org_id = team org, user_id = member) -> event_types
+   (expert_profile_id = profile, org_id = team org, published = true, active = true) and counts
+   DISTINCT user_id — never an org-level "any published event type exists" check, which would
+   bill every member once one publishes. Owner/admin accounts without their own published event
+   types are not seats (test the zero-seat owner case); no-op when the org has no
+   billing_subscriptions row;
    otherwise update the Stripe subscription seat item quantity (proration per
    payments-payouts-spec.md). Wire it into the organization plugin hooks afterAddMember /
    afterRemoveMember / afterAcceptInvitation defined in packages/auth/src/server/auth.ts (import

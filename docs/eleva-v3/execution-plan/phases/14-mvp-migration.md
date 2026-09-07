@@ -24,8 +24,12 @@ In:
   `--target production` **and** `MIGRATION_CONFIRM_PRODUCTION=<today's date YYYY-MM-DD>` **and**
   an interactive typed confirmation of the target Neon project id; without `--target production`
   the CLI refuses any `TARGET_DATABASE_URL` whose host is not a Neon _branch_ endpoint of the
-  staging/rehearsal project (`MIGRATION_ALLOWED_TARGET_HOSTS` allowlist). Rehearsals therefore
-  cannot write to production by accident.
+  **v3 production Neon project** (`NEON_PROJECT_ID`) on a **non-default branch** — rehearsal
+  branches are created in the production project so they carry the real schema, roles and
+  extensions; the staging project is never a migration target — and that also appears in the
+  `MIGRATION_ALLOWED_TARGET_HOSTS` allowlist. Rehearsals therefore cannot write to the production
+  (default) branch by accident. One project, one guard: the same `NEON_PROJECT_ID` is used by the
+  guard, the env docs, `migration:rehearse` and the guard tests.
 - **Entity mapping** (MVP `drizzle/schema.ts` -> v3):
   - `UsersTable` -> `auth.user` (email, emailVerified, name, image, `locale`, `country`,
     `timezone`, createdAt) + `auth.account` provider `credential` **without** password (forces
@@ -80,7 +84,9 @@ Out: cutover itself (Phase 15).
 ## Deliverables
 
 1. `infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}`.
-2. `migration_runs`, `migration_id_map` (unique on source table + source id), `migration_checksums`
+2. `migration_runs`, `migration_id_map` (unique on source table + source id + target table +
+   target kind, because one MVP row can fan out into several v3 rows — e.g. `UsersTable` ->
+   `auth.user` + `auth.account/credential` + optional `auth.account/google`), `migration_checksums`
    (unique on target table + target id, upserted) tables in a `migration` schema on v3, dropped
    after Phase 15 + 30 days.
 3. Welcome campaign template + sender script (`migration:send-welcome --wave n`).
@@ -104,8 +110,8 @@ Out: cutover itself (Phase 15).
       availability, past bookings, payout history; public URL `/[username]/[eventSlug]` resolves.
 - [ ] Records decrypt for the owning expert in `apps/expert`; member sees published ones.
 - [ ] Stripe verification step passes for 100% of Connect accounts and customers.
-- [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze, `pnpm
-      migration:reverse-export --since <ts>` produces a signed JSON of post-cutover v3 rows,
+- [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze,
+      `pnpm migration:reverse-export --since <ts>` produces a signed JSON of post-cutover v3 rows,
       Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
       once (idempotent on `stripe_payment_intent_id`), MVP webhook re-enabled, DNS revert + MVP
       unfreeze. Zero duplicates and zero lost paid bookings in the rehearsal report.
@@ -206,12 +212,17 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    mode, foreign project rejected, production without confirmation rejected.
    migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
-   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
-   unique(source_table, source_id)), migration_checksums (target_table, target_id, hmac_sha256,
-   key_version, unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
-   --apply is a no-op for checksums too). Every mapper is idempotent through migration_id_map
-   (upsert by source id); a test runs --apply twice on a fixture and asserts identical row counts
-   in every target table including migration_checksums.
+   since, stats jsonb, status), migration_id_map (source_table, source_id, target_table,
+   target_kind, target_id, unique(source_table, source_id, target_table, target_kind) —
+   target_kind is a mapper-defined discriminator, e.g. "user", "account:credential",
+   "account:google", "member:personal-space", so a source row that fans out into several target
+   rows has one map row per output), migration_checksums (target_table, target_id, hmac_sha256,
+   key_version, unique(target_table, target_id) — checksum rows are upserted on that key so a
+   repeated --apply is a no-op for checksums too). Every mapper is idempotent through
+   migration_id_map (lookup by the full key before insert; upsert on conflict); tests run --apply
+   twice on a fixture and assert identical row counts in every target table including
+   migration_checksums, and specifically that a user with credential + google accounts yields
+   exactly one auth.user and two auth.account rows after both runs.
 3. Mappers in src/map/*.ts, run in dependency order: users (UsersTable -> auth.user + auth.account
    credential row without password + google account when identity exists; roles -> admin plugin
    role platform_admin for admin/superadmin; locale/country/timezone), organizations

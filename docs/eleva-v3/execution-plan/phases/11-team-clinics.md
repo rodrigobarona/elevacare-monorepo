@@ -179,8 +179,18 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
 3. @eleva/billing: subscriptions.ts createTeamCheckoutSession(orgId, planKey) for Embedded
    Checkout (ui_mode embedded, return_url to apps/team billing), createPortalSession(orgId);
    provisioning.ts syncSeatQuantity(orgId) = count of clinic memberships (any role, owner included)
-   whose user has >= 1 published event type in that clinic — the single seat rule; owner/admin
-   accounts without published event types are free; called from event-type publish/unpublish and
+   whose user has >= 1 published event type in that clinic — the single seat rule. Implement it
+   as a per-member join, never an org-level existence check: SELECT count(DISTINCT m.user_id)
+   FROM auth.member m JOIN expert_profiles ep ON ep.org_id = m.organization_id AND ep.user_id =
+   m.user_id JOIN event_types et ON et.expert_profile_id = ep.id AND et.org_id =
+   m.organization_id AND et.published = true AND et.active = true WHERE m.organization_id =
+   $orgId (event_types is keyed by expert_profile_id, which links to the user through
+   expert_profiles.user_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
+   a Drizzle query helper countBillableSeats(orgId) in @eleva/db owns the SQL and is the only
+   implementation both Phase 3 and this phase call). Owner/admin accounts without their own
+   published event types are free; tests: owner + 1 publishing member = 1 seat; owner with a
+   published event type + 2 idle members = 1 seat; two publishing members = 2 seats. Called from
+   event-type publish/unpublish and
    member removal hooks; update payments-payouts-spec.md (drop the "last 30 days" qualifier) and
    add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
    unlimited) at event-type publish time in the clinic context -> 409 SEAT_LIMIT_REACHED; the

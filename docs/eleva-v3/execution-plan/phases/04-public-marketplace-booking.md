@@ -39,7 +39,7 @@ In:
     return; binds the PaymentIntent to the reservation before anything else: retrieve it from
     Stripe and require `status = succeeded`, `metadata.reservationId === reservationId`,
     `amount` and `currency` equal to the reservation price, and `stripe_payment_intent_id` not
-    already bound to a *different* reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
+    already bound to a _different_ reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
     audited. Idempotent for the same reservation: webhook and client-return both call this
     endpoint, so a retry whose intent is already bound to this reservation returns the existing
     booking (200) instead of failing; the bind + convert runs in one transaction and a

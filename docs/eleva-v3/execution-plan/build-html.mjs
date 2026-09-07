@@ -87,16 +87,27 @@ function firstHeading(markdown) {
  * @param {string} docId
  */
 function rewriteLink(href, docId) {
-  if (/^(https?:)?\/\//.test(href) || href.startsWith("#") || href.startsWith("mailto:")) {
+  if (/^(https?:)?\/\//.test(href) || href.startsWith("mailto:")) {
     return href
   }
-  const phaseLink = href.match(/(?:^|\/)phases\/(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i)
+  // Headings are rendered with `${docId}--${slug}` ids, so a same-document `#fragment`
+  // must be namespaced (and normalised with the same slugify) to hit an element.
+  if (href.startsWith("#")) {
+    return `#${docId}--${slugify(decodeURIComponent(href.slice(1)))}`
+  }
+  const phaseLink = href.match(
+    /(?:^|\/)phases\/(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i
+  )
   if (phaseLink) {
-    return phaseLink[2] ? `#${phaseLink[1]}--${phaseLink[2]}` : `#${phaseLink[1]}`
+    return phaseLink[2]
+      ? `#${phaseLink[1]}--${slugify(decodeURIComponent(phaseLink[2]))}`
+      : `#${phaseLink[1]}`
   }
   const readmeLink = href.match(/^(?:\.\/|\.\.\/)?README\.md(?:#(.*))?$/)
   if (readmeLink) {
-    return readmeLink[1] ? `#readme--${readmeLink[1]}` : "#readme"
+    return readmeLink[1]
+      ? `#readme--${slugify(decodeURIComponent(readmeLink[1]))}`
+      : "#readme"
   }
   if (docId === "readme") return href
   // Links inside phases/*.md are relative to phases/. From index.html, "../x" is still

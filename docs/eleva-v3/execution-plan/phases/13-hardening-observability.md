@@ -17,8 +17,12 @@ already exist in scattered form; this phase closes gaps and wires enforcement in
 
 In:
 
-- **Security**: BotID on every public POST (booking reserve, payments intent, signup, become-
-  partner, contact forms, AI endpoints); Upstash rate limits per route class from
+- **Security**: BotID on every public POST that a browser or end user originates (booking
+  reserve, payments intent, signup, become-partner, contact forms, AI endpoints). Signed
+  machine-to-machine endpoints are explicitly **out of BotID scope** and authenticate by
+  signature only: `/webhooks/stripe`, `/webhooks/daily`, `/webhooks/resend`, `/webhooks/twilio`,
+  `/workflows/*` (QStash `Receiver.verify`), Better Auth `/auth/*` (own rate limiting). The
+  coverage checker encodes that allowlist; Upstash rate limits per route class from
   `security-hardening-checklist.md` (auth 10/min/IP, public reads 120/min/IP, mutations
   60/min/user, admin 300/min/user); strict CSP with nonces composed in `@eleva/observability`
   and applied in every `proxy.ts` via shared helper (`report-uri` to Sentry), HSTS preload,
@@ -190,9 +194,13 @@ PR 13.1 — security + observability + analytics:
    (120/min/IP), mutation (60/min/user), admin (300/min/user), webhook (none, signature only);
    every route declares its class; test asserting every route file imports a rate limit and an
    auth model (static analysis script scripts/check-route-guards.mjs added to CI). BotID: guard
-   every public POST (reserve, payments intent, sign-up proxies, become-partner submit, contact,
-   AI endpoints); add scripts/check-botid-coverage.mjs to CI. Better Auth rateLimit customRules
-   for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
+   every browser- or user-originated public POST (reserve, payments intent, sign-up proxies,
+   become-partner submit, contact, AI endpoints); signed M2M routes are exempt by allowlist —
+   /webhooks/* (provider signature), /workflows/* (QStash Receiver.verify), /auth/* (Better Auth
+   rate limiting) — and the exemption list lives in one place: scripts/check-botid-coverage.mjs
+   (added to CI) fails when a public POST is neither BotID-guarded nor on that allowlist, and
+   fails when an allowlisted route lacks its signature verifier import. Better Auth rateLimit
+   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).

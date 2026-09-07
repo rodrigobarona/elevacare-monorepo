@@ -21,9 +21,9 @@ In:
 - `packages/video` (`@eleva/video`, sole `@daily-co/*` importer; server = REST via `fetch` with
   `DAILY_API_KEY`, client = `@daily-co/daily-react` + `@daily-co/daily-js`):
   `createSessionRoom({ bookingId, startAt, endAt })` -> private room, random name (HIPAA mode
-  forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`, `max_participants: 2 + count(delegated
-  participants)` (recomputed via Daily room update when a delegate is added, so every authorised
-  participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
+  forbids custom names), `nbf = startAt - 15 min`, `exp = endAt + 30 min`,
+  `max_participants` = 2 + number of delegated participants (recomputed via Daily room update
+  when a delegate is added, so every authorised participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
   `enable_screenshare: true`, `enable_recording: false` (Phase 10 behind consent),
   `eject_at_room_exp: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
@@ -63,8 +63,8 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 ## Deliverables
 
 1. `packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}` + tests.
-2. Migration: `sessions` + `session_participants`; RLS; audit unions (`session: room_created|joined|
-   started|ended|room_deleted|participant_added|participant_removed`).
+2. Migration: `sessions` + `session_participants`; RLS; audit unions (`session:` `room_created`,
+   `joined`, `started`, `ended`, `room_deleted`, `participant_added`, `participant_removed`).
 3. Workflows + QStash sweep; API routes (`join`, `participants` add/remove, Daily webhook) +
    OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
    the room capacity.

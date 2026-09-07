@@ -156,16 +156,24 @@ PR 12.1 — access, users, partners, experts, bookings:
    redirects non-authenticated to account login with return-to; server layout calls
    requireStaff(["platform_admin","staff_support","staff_finance"]) from @eleva/auth/server
    (reads admin plugin role on the user); apps/api/src/lib/auth.ts requireApiAuth gains
-   { staffRoles } option; helper adminRoute(handler, { roles, auditReason: true }) that enforces a
-   non-empty reason string on POST/PATCH/DELETE bodies and wraps withAudit with actor + reason.
+   { staffRoles } option; helper adminRoute(handler, { roles, reason: "required" | "optional" })
+   that wraps withAudit with actor (+ impersonation context) and reason; reason: "required" rejects (400) any
+   POST/PATCH/DELETE without a non-empty reason and is used by every destructive or
+   member-affecting write (ban, impersonate, schedule-deletion, approve/reject/needs-changes,
+   commission override, suspend/unsuspend, cancel booking, refund, payout approve/hold);
+   reason: "optional" is used by the low-impact writes (unban, revoke-sessions, disable-2fa,
+   resend-verification, stop-impersonating) which still audit actor, target and route as
+   metadata. The route list below marks each with [R] or [O] and the UI dialogs follow the same
+   split (reason field mandatory vs optional).
    Admin routes tagged "admin" in OpenAPI and hidden from the public docs listing unless the
    requester is staff.
 2. Users: GET /admin/users?q&cursor (auth.api.listUsers), GET /admin/users/[id] (profile, orgs +
    roles, sessions, 2FA/passkeys flags, bookings summary, payments summary), POST
-   /admin/users/[id]/ban { reason, expiresAt? } (auth.api.banUser + revokeUserSessions), POST
-   /unban, POST /revoke-sessions, POST /disable-2fa, POST /resend-verification, POST /impersonate
-   { reason } (auth.api.impersonateUser; refuse if target has a staff role; impersonation_sessions
-   row; 1h), POST /stop-impersonating, POST /schedule-deletion. @eleva/dashboard:
+   /admin/users/[id]/ban [R] { reason, expiresAt? } (auth.api.banUser + revokeUserSessions),
+   POST /unban [O], POST /revoke-sessions [O], POST /disable-2fa [O], POST /resend-verification
+   [O], POST /impersonate [R] { reason } (auth.api.impersonateUser; refuse if target has a staff
+   role; impersonation_sessions row; 1h), POST /stop-impersonating [O], POST /schedule-deletion
+   [R] { reason }. @eleva/dashboard:
    <ImpersonationBanner /> rendered in every app shell when session.impersonatedBy is set, with a
    Stop button calling the API.
 3. Partners: become_partner_applications (id, expert_org_id, submitted_at, status pending|

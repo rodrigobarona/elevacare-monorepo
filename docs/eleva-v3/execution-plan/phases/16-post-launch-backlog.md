@@ -12,7 +12,7 @@
 Everything that was deliberately deferred to reach the Portugal launch lives here so it is not
 lost and so that nobody re-opens it inside an earlier phase. When an item is picked up, copy the
 structure of any earlier phase file (scope, deliverables, acceptance criteria, local references,
-external docs, copy-paste prompt) into `phases/16-N-<slug>.md`, add it to the README phase index,
+external docs, copy-paste prompt) into `phases/16-<N>-<slug>.md`, add it to the README phase index,
 and run the standard loop from README section 4.
 
 ## Backlog (ordered by expected priority)
@@ -38,7 +38,7 @@ and run the standard loop from README section 4.
 
 ## How to promote an item
 
-1. Create `docs/eleva-v3/execution-plan/phases/16-N-<slug>.md` using the template in
+1. Create `docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md` using the template in
    `phases/00-execution-plan-and-review-loop.md` (section "Phase file template").
 2. Add the row to README section 5 with branch `phase-16.N/<slug>` and dependencies.
 3. If the item changes a locked decision, add a `decision-log.md` entry and a new ADR first.

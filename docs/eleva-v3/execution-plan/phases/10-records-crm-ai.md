@@ -37,7 +37,7 @@ In:
   (profile, preferences, consents, CRM contact rows that reference the user); (b) `session_documents`
   uploaded by the member (`uploaded_by = member`) or with scope `shared` uploaded for them:
   delete the private Blob object **and** the row; (c) expert-authored `records` about the member
-  (encrypted under the *expert* org key, so the member-key shred does not cover them) fall under
+  (encrypted under the _expert_ org key, so the member-key shred does not cover them) fall under
   the **legal clinical-record retention exception** in `data-retention-export-matrix.md`: keep
   them for the statutory period, replace `member_user_id` with a tombstone id (`deleted_users`
   row holding only a salted hash), strip member identity from `metadata_encrypted`, and hard-delete
@@ -179,9 +179,15 @@ PR 10.1 — records, documents, consent, retention:
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
    blob_pathname unique, mime, size_bytes, metadata_encrypted, scope expert_only|shared,
-   uploaded_by, created_at, deleted_at). RLS: policy A expert org via eleva.org_id; policy B member
-   read where member_user_id = current_setting('eleva.user_id') and published_at is not null (add
-   withUserContext(userId, fn) helper in @eleva/db that sets eleva.user_id, RLS tests for both).
+   uploaded_by, created_at, deleted_at). RLS, per table: records — policy A expert org via
+   eleva.org_id; policy B member read where member_user_id = current_setting('eleva.user_id')
+   AND published_at IS NOT NULL AND deleted_at IS NULL. session_documents has no published_at;
+   its visibility field is scope — policy A expert org via eleva.org_id; policy B member read
+   where member_user_id = current_setting('eleva.user_id') AND scope = 'shared' AND deleted_at IS
+   NULL (documents the member uploaded are always scope = 'shared'; expert_only documents are
+   never visible to the member). Add withUserContext(userId, fn) in @eleva/db that sets
+   eleva.user_id; RLS tests cover: unpublished record hidden, published record visible,
+   expert_only document hidden, shared document visible, other member's rows hidden.
    Consent kinds: health_data_processing, session_recording, ai_processing with versioned texts in
    packages/compliance/legal/<kind>.<locale>.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/

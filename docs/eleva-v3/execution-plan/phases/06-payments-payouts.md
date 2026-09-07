@@ -241,10 +241,16 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    QStash signature; infra/qstash/setup-payouts.ts registering schedules (transfers every 2h,
    pending payouts 06:00 Europe/Lisbon, upcoming payouts daily 08:00) + root script
    qstash:setup:payouts and inclusion in setup:all. Each step idempotent.
-9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund or
-   admin_payouts:*), GET /payouts?status&orgId (expert sees own; staff see all), POST /payouts/
-   [id]/approve, POST /payouts/[id]/hold ({ reason }), GET /me/finance/summary for experts.
-   OpenAPI + @eleva/api-client.
+9. apps/api: POST /payments/[bookingPaymentId]/refund (capability billing:refund for the owning
+   expert org, or staff capability admin_payouts:refund), GET /payouts?status&orgId (expert sees
+   own org only — orgId must equal the session's active org or 403; staff with
+   admin_payouts:read see all), POST /payouts/[id]/approve and POST /payouts/[id]/hold
+   ({ reason }) are STAFF-ONLY: requireApiAuth({ staffRoles: ["platform_admin",
+   "staff_finance"] }) + capability admin_payouts:approve / admin_payouts:hold from
+   packages/auth/src/permissions.ts (add both), reason required (400 when empty), withAudit with
+   actor + reason + previous/next payout state; experts and members get 403 (table-driven test
+   covering member, expert owner, staff_support, staff_finance, platform_admin). GET
+   /me/finance/summary for experts. OpenAPI + @eleva/api-client.
 10. apps/expert /[orgSlug]/finance: summary cards (gross, fees, net, pending, paid), bookings
     table with payout state + eligible date, Embedded Payouts component, CSV export (server
     action -> API). Messages pt/en/es.
