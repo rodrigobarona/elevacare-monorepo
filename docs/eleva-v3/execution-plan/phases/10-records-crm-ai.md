@@ -64,10 +64,18 @@ In:
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
   publishes. PHI stays inside the request to the gateway with data-retention off (verify provider
   settings), prompts logged without content, model pinned via config.
-- Observability: Sentry `beforeSend` scrubbing of record bodies; structured logs never include
-  decrypted content (lint rule/grep in CI for `decryptForOrg(` results being logged is not
-  feasible — add code review checklist + unit test that the logger redacts keys `body`,
-  `transcript`, `notes`).
+- Observability: PHI never reaches logs or Sentry, enforced **structurally, not by field
+  name**: (1) `decryptForOrg` returns a `Decrypted<T>` branded object whose `toJSON` and
+  `[util.inspect.custom]` yield `"[redacted]"`, so accidental `logger.info({ record })` or
+  `JSON.stringify` prints nothing; (2) the record/AI logger in `@eleva/records` accepts only an
+  **allow-list** of scalar metadata (`recordId`, `kind`, `orgId`, `bookingId`, `status`,
+  `modelId`, `tokenCount`, `durationMs`) — its TypeScript type rejects any other key and a unit
+  test asserts unknown keys are dropped at runtime; (3) Sentry `beforeSend`/`beforeBreadcrumb`
+  drop any event whose `extra`/`contexts` contain a `Decrypted` marker or an AI output object
+  (`summary`, `observations`, `recommendations`, or any key of the `draftSessionReport` output
+  schema, derived from the Zod schema so new fields are covered automatically). Object-level
+  tests feed a full decrypted record and a full AI draft through logger and Sentry and assert
+  zero PHI substrings in the output.
 
 Out: group sessions, member-authored records, AI for anything beyond session reports.
 
@@ -219,8 +227,15 @@ PR 10.1 — records, documents, consent, retention:
    apps/app: /[orgSlug]/reports (published records) and /[orgSlug]/reports/[id], documents with
    signed download, consent banner on the join page for session_recording + ai_processing.
    Messages pt/en/es; "members" wording.
-5. Observability: Sentry beforeSend/beforeBreadcrumb scrubbing keys body, body_encrypted,
-   transcript, notes, title; logger redaction unit test; docs ops-observability-spec.md.
+5. Observability (structural, not field-name based): decryptForOrg returns Decrypted<T> whose
+   toJSON and util.inspect.custom yield "[redacted]"; @eleva/records exports recordLogger whose
+   payload type is an allow-list of scalar metadata only (recordId, kind, orgId, bookingId,
+   status, modelId, tokenCount, durationMs) and drops unknown keys at runtime; Sentry
+   beforeSend/beforeBreadcrumb drop events carrying a Decrypted marker or any key of the
+   draftSessionReport Zod output schema (derive the key list from the schema — never hand-write
+   it) plus body, body_encrypted, transcript, notes, title. Object-level tests: log a full
+   decrypted record and a full AI draft through the logger and through Sentry's beforeSend, assert
+   the output contains none of the fixture's PHI strings; docs ops-observability-spec.md.
 
 PR 10.2 — CRM + AI reports beta:
 6. @eleva/crm + packages/db: crm_contacts (id, expert_org_id, member_user_id nullable, name,

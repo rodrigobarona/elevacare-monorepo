@@ -33,7 +33,13 @@ In:
 - **Entity mapping** (MVP `drizzle/schema.ts` -> v3):
   - `UsersTable` -> `auth.user` (email, emailVerified, name, image, `locale`, `country`,
     `timezone`, createdAt) + `auth.account` provider `credential` **without** password (forces
-    set-password) and provider `google` when the MVP has a Google identity (by verified email);
+    set-password) and provider `google` **only when the original Google subject is known**: the
+    export step calls WorkOS `userManagement.getUserIdentities(workosUserId)` (while WorkOS is
+    still live) and stores `{ provider: "GoogleOAuth", idp_id }` in the source snapshot; the
+    mapper writes `auth.account { providerId: "google", accountId: idp_id }` from that subject —
+    **never** by matching the e-mail. Users whose snapshot has no identity get no `google` row;
+    they sign in with the magic link and Better Auth `accountLinking` (`trustedProviders:
+["google"]`, verified e-mail required) links Google explicitly at their next Google sign-in;
     MVP roles (`user`, `top_expert`, `community_expert`, `admin`, `superadmin`) -> admin plugin role
     (`platform_admin` for superadmin/admin) + expert profile flags.
   - `OrganizationsTable` + `UserOrgMembershipsTable` -> `auth.organization` (`patient_personal`
@@ -83,7 +89,7 @@ Out: cutover itself (Phase 15).
 
 ## Deliverables
 
-1. `infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}`.
+1. `infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}`; `source.ts` also exports WorkOS user identities (`getUserIdentities`) into the snapshot while WorkOS is still reachable.
 2. `migration_runs`, `migration_id_map` (unique on source table + source id + target table +
    target kind, because one MVP row can fan out into several v3 rows — e.g. `UsersTable` ->
    `auth.user` + `auth.account/credential` + optional `auth.account/google`), `migration_checksums`
@@ -224,7 +230,9 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    migration_checksums, and specifically that a user with credential + google accounts yields
    exactly one auth.user and two auth.account rows after both runs.
 3. Mappers in src/map/*.ts, run in dependency order: users (UsersTable -> auth.user + auth.account
-   credential row without password + google account when identity exists; roles -> admin plugin
+   credential row without password + google account ONLY from the exported WorkOS identity
+   idp_id as accountId — no e-mail matching; missing identity -> no row, rely on Better Auth
+   accountLinking trustedProviders ["google"] at first sign-in; roles -> admin plugin
    role platform_admin for admin/superadmin; locale/country/timezone), organizations
    (patient_personal -> personal Space `${firstName}'s Space`; expert_individual -> expert;
    clinic -> team) + memberships -> auth.member, expert profiles/categories/listings/applications
@@ -248,7 +256,9 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    (issue magic links for 5 experts on staging and assert session creation via the API), public
    URL resolution test for 20 random /[username]/[eventSlug]. report.ts renders JSON + Markdown.
 5. Welcome campaign: @eleva/email template migration.welcome (pt/en/es): explains the new
-   platform, set-password/magic link, Google sign-in note, calendar reconnect; sender in waves
+   platform, set-password/magic link, Google sign-in note (works immediately when the subject was
+   migrated, otherwise sign in with the magic link once and Google links on the next sign-in),
+   calendar reconnect; sender in waves
    with suppression of bounced addresses; dry-run prints recipients only.
 6. URL compatibility: redirect map module in @eleva/config (or apps/web next.config) for MVP
    routes -> v3 (appointments -> /app/*, expert dashboard -> /expert/*, legacy locale paths),

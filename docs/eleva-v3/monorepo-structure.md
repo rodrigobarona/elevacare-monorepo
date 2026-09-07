@@ -351,7 +351,7 @@ Owns:
 
 Owns:
 
-- WorkOS integration
+- Better Auth server/client (ADR-017; WorkOS remains only until Phase 2/3 of the execution plan land)
 - session model
 - organization resolution
 - RBAC helpers
@@ -407,7 +407,8 @@ Owns:
 - webhook subscription + external-change reconciliation
 - busy-calendar vs destination-calendar distinctions (cal.com-inspired)
 
-Tokens stored via `packages/encryption` → WorkOS Vault. Never env-based.
+Tokens stored via `packages/encryption` (`encryptForOrg` envelope encryption, ADR-020) in
+`calendar_connections`. Never env-based, never in a third-party vault.
 
 ### `packages/billing`
 
@@ -433,7 +434,7 @@ Owns:
 - Tier 1 (Eleva → Expert/Clinic) invoicing via TOConline adapter
 - Tier 2 (Expert → Patient) adapter registry (cal.com-style app-store pattern)
 - shared `ExpertInvoicingAdapter` interface
-- per-expert credential store (Neon `expert_integration_credentials` + WorkOS Vault)
+- per-expert credential store (Neon `expert_integration_credentials`, columns encrypted with `packages/encryption` `encryptForOrg`, ADR-020)
 - IVA/VAT matrix logic
 - reconciliation helpers (Stripe ↔ TOConline)
 
@@ -512,11 +513,12 @@ Owns:
 
 Owns:
 
-- WorkOS Vault primitives (`vaultPut`, `vaultGet`)
-- domain helpers (`encryptRecord`, `encryptOAuthToken`)
-- crypto-shredding on org deletion
+- envelope encryption (ADR-020): per-org DEKs in `org_data_keys`, wrapped by versioned KEKs from `ELEVA_KEK_V<n>`; primitives `encryptForOrg(orgId, plaintext, aad?)`, `decryptForOrg(orgId, ciphertext, aad?)`, `getOrCreateOrgDek(orgId)`
+- key lifecycle: `rotateKek(fromVersion, toVersion)` re-wraps DEKs without touching ciphertext
+- crypto-shredding on org deletion: `shredOrgKeys(orgId)` deletes the `org_data_keys` rows, making every ciphertext for that org unrecoverable
+- no external vault service; there is no WorkOS Vault dependency
 
-CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere.
+CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere; `ELEVA_KEK_V*` read only inside this package.
 
 ### `packages/ai`
 

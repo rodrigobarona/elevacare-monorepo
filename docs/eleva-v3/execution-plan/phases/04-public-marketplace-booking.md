@@ -36,26 +36,40 @@ In:
     `slot_reservations.user_id` is set, the session `userId` to equal it — otherwise 404 (not
     403, to avoid confirming the id exists); one PaymentIntent per reservation (new unique
     nullable `slot_reservations.stripe_payment_intent_id`, idempotency key = reservationId, so a
-    race returns the same intent). Creates the PaymentIntent for the reservation: amount from event type
+    race returns the same intent). Inside one transaction it first creates the durable booking
+    identity — a `bookings` row with `status = pending_payment`, `reservation_id`, expert org,
+    event type, times and price copied from the reservation — so `bookingId` exists **before**
+    the intent; then creates the PaymentIntent: amount from event type
     price, currency EUR, charged on the **platform** account — Stripe "separate charges and
     transfers" funds flow, so **no** `transfer_data` and **no** `application_fee_amount`; the
     platform fee from the `@eleva/billing` commission SSOT is stored in the ledger as
     `booking_payments.application_fee_cents` and the payout engine (Phase 6) later transfers
-    `amount - fee` to the expert; `transfer_group = bookingId`, `automatic_payment_methods`,
-    metadata `reservationId`, `bookingId`; idempotency key = reservationId). Destination
-    charges are rejected because payouts are delayed until eligibility (Phase 6).
-  - `POST /bookings/confirm` (called from the webhook `payment_intent.succeeded` path — trusted,
-    no token — and from the client return with `{ reservationId, reservationToken }` validated
-    exactly like `/payments/intent`; binds the PaymentIntent to the reservation before anything
-    else: retrieve it from
+    `amount - fee` to the expert; `transfer_group = bookingId` (the pending booking's id, which
+    is the same id the payout engine uses later), `automatic_payment_methods`, metadata
+    `reservationId`, `bookingId`, `expertOrgId`; idempotency key = reservationId; the intent id
+    is written to `booking_payments` (status `requires_payment`) and
+    `slot_reservations.stripe_payment_intent_id` in that same transaction. Pending bookings whose
+    reservation expires are set to `cancelled` by the existing `slot-reservation-expiry`
+    workflow. Destination charges are rejected because payouts are delayed until eligibility
+    (Phase 6).
+  - Confirmation is one domain function, `confirmBookingPayment({ reservationId,
+paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry points that
+    never share a route**: (a) the Stripe webhook handler for `payment_intent.succeeded`
+    (`/webhooks/stripe`, trusted only after `constructEvent` signature verification, takes ids
+    from the event) and (b) the public `POST /bookings/confirm` (client return) whose body is
+    `{ reservationId, reservationToken, paymentIntentId }` with `reservationToken` **required
+    by the Zod schema** and validated exactly like `/payments/intent` — there is no tokenless
+    branch on the public route. The domain function binds the PaymentIntent to the reservation
+    before anything else: retrieve it from
     Stripe and require `status = succeeded`, `metadata.reservationId === reservationId`,
     `amount` and `currency` equal to the reservation price, and `stripe_payment_intent_id` not
     already bound to a _different_ reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
-    audited. Idempotent for the same reservation: webhook and client-return both call this
-    endpoint, so a retry whose intent is already bound to this reservation returns the existing
-    booking (200) instead of failing; the bind + convert runs in one transaction and a
-    unique-violation race is caught and resolved by re-reading the existing booking; only then
-    converts reservation -> booking `confirmed`; guest -> Better Auth user created with
+    audited. Idempotent for the same reservation: webhook and client-return both call the same
+    domain function, so a retry whose intent is already bound to this reservation returns the
+    existing booking (200) instead of failing; the bind + status flip runs in one transaction and
+    a unique-violation race is caught and resolved by re-reading the existing booking; only then
+    moves the pending booking to `confirmed` (and the reservation to `converted`); guest ->
+    Better Auth user created with
     `emailVerified=false` + magic link activation; member's personal Space is the buyer org).
   - `POST /bookings/[id]/cancel`, `POST /bookings/[id]/reschedule` with rules from
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
@@ -112,8 +126,11 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
       same email reuses the user.
 - [ ] Concurrency test passes; expired reservations are released by the existing
       `slot-reservation-expiry` workflow.
-- [ ] Every POST route has BotID + rate limit; every route registered in OpenAPI; api-client
-      typechecks.
+- [ ] Every browser-originated public POST route (`/bookings/reserve`, `/payments/intent`,
+      `/bookings/confirm`, cancel/reschedule) has BotID + rate limit; `/webhooks/stripe` has
+      **no** BotID and is guarded by signature verification only (BotID would reject Stripe
+      deliveries — see Phase 13 exemption classes); every route registered in OpenAPI;
+      api-client typechecks.
 - [ ] `check:i18n-parity` green; Lighthouse (mobile) on profile page >= 90 performance on staging.
 
 ## Tests
@@ -241,32 +258,41 @@ PR 04.2 — funnel + payment + marketing/legal:
    POST /payments/intent ({ reservationId, reservationToken }) — first authorize:
    sha256(reservationToken) must equal capability_hash AND, if slot_reservations.user_id is set,
    the session userId must equal it; any failure -> 404 (not 403). One intent per reservation via
-   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. Then create the Stripe PaymentIntent via
-   @eleva/billing: amount from event type,
+   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. In one
+   transaction: insert the bookings row with status pending_payment (reservation_id, expert_org_id,
+   event_type_id, start_at/end_at, timezone, price_cents, currency copied from the reservation) so
+   bookingId exists before the intent, then create the Stripe PaymentIntent via @eleva/billing:
+   amount from event type,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
-   applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
-   idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId,
-   reservationToken? }) idempotent — the webhook path (payment_intent.succeeded, signature
-   verified) calls it internally without a token; the client-return path must pass
-   reservationToken and is authorized exactly like /payments/intent. It then retrieves the intent
-   from Stripe and requires status succeeded AND
+   applied_commission_bps, transfer_group = bookingId (the pending booking id), metadata
+   { reservationId, bookingId, expertOrgId }, idempotencyKey = reservationId; persist the intent id
+   in booking_payments (status requires_payment) and slot_reservations.stripe_payment_intent_id in
+   the same transaction; the existing slot-reservation-expiry workflow must also cancel
+   pending_payment bookings whose reservation expired (and cancel the intent if still cancelable).
+   Confirmation: implement confirmBookingPayment({ reservationId, paymentIntentId }) in
+   @eleva/scheduling and expose it through TWO entry points that do not share a route: (a) the
+   /webhooks/stripe handler for payment_intent.succeeded calls it after constructEvent signature
+   verification using ids from the event metadata; (b) public POST /bookings/confirm
+   ({ reservationId, reservationToken, paymentIntentId }) with reservationToken REQUIRED in the Zod
+   schema (no optional/tokenless branch) and authorized exactly like /payments/intent. The domain
+   function retrieves the intent from Stripe and requires status succeeded AND
    metadata.reservationId === reservationId AND amount/currency equal to the reservation price
    AND the intent id not bound to a different reservation (unique index on
    booking_payments.stripe_payment_intent_id); any mismatch -> 409 PAYMENT_MISMATCH (audited) so a
    valid intent cannot be replayed against another reservation. Same-reservation retries are
-   idempotent: if booking_payments already holds this intent for this reservationId, return the
-   existing confirmed booking with 200 (both the webhook path and the client-return path call this
-   endpoint, and Stripe redelivers webhooks). Do the bind + reservation->booking conversion in a
-   single transaction; on a unique-violation race (two concurrent confirms for the same
+   idempotent: if booking_payments already holds this intent for this reservationId and the
+   booking is confirmed, return it with 200 (both entry points reach the same function, and Stripe
+   redelivers webhooks). Do the bind + pending_payment -> confirmed flip (and reservation ->
+   converted) in a single transaction; on a unique-violation race (two concurrent confirms for the same
    reservation) catch the constraint error, re-read the booking and return it — never surface the
    constraint error. Test: sequential double confirm -> 200/200 same bookingId; concurrent double
    confirm -> both 200, one booking row; confirm with an intent bound to another reservation ->
-   409. Then converts reservation to confirmed booking,
-   creates the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for
+   409; POST /bookings/confirm without reservationToken -> 400 from Zod. After the flip,
+   create the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for
    passwordless: use magicLink sendMagicLink with a callback to /account/activate) and links the
    booking to the member's personal Space; POST /bookings/[id]/cancel and /reschedule enforcing
    scheduling-booking-spec.md rules (member cancel >= 24h full refund; < 24h per policy; expert

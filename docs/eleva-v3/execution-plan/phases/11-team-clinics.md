@@ -27,8 +27,11 @@ In:
   expert may also keep a solo org). **Seat rule (single definition used by schema, code, tests
   and acceptance):** a billable seat is a clinic membership — any role, owner included — whose
   user has at least one _published_ event type in that clinic; owner/admin accounts without
-  published event types are free. `syncSeatQuantity` (Phase 3 hook, re-run on event-type
-  publish/unpublish and member removal) pushes that count to the Stripe subscription quantity;
+  published event types are free. `syncSeatQuantity` (Phase 3 hook; keeps its
+  `afterAddMember` / `afterAcceptInvitation` / `afterRemoveMember` triggers and is additionally
+  re-run on event-type publish/unpublish) pushes that count to the Stripe subscription quantity —
+  a joining member who already has a published event type in that clinic (e.g. re-invited after
+  removal) becomes billable at join time, not at the next publish;
   plan caps (Starter 5, Growth 20, Enterprise custom) are enforced when the cap would be
   exceeded by a publish -> `409 SEAT_LIMIT_REACHED`.
 - **Billing**: plans from `infra/stripe/seed-products.ts` (Starter 99 + 39/seat, Growth 199 +
@@ -189,9 +192,11 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    a Drizzle query helper countBillableSeats(orgId) in @eleva/db owns the SQL and is the only
    implementation both Phase 3 and this phase call). Owner/admin accounts without their own
    published event types are free; tests: owner + 1 publishing member = 1 seat; owner with a
-   published event type + 2 idle members = 1 seat; two publishing members = 2 seats. Called from
-   event-type publish/unpublish and
-   member removal hooks; update payments-payouts-spec.md (drop the "last 30 days" qualifier) and
+   published event type + 2 idle members = 1 seat; two publishing members = 2 seats; member with
+   a published event type removed and re-added -> quantity drops to N-1 on removal and returns to
+   N on afterAcceptInvitation without any publish. Called from event-type publish/unpublish AND
+   from the Phase 3 organization hooks afterAddMember / afterAcceptInvitation / afterRemoveMember
+   (keep them — do not narrow the triggers to publish events); update payments-payouts-spec.md (drop the "last 30 days" qualifier) and
    add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
    unlimited) at event-type publish time in the clinic context -> 409 SEAT_LIMIT_REACHED; the
    same rule in the schema check, the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,

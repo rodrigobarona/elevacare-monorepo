@@ -19,10 +19,15 @@ Audiences, PHI-free).
 In:
 
 - `@eleva/notifications` (sole importer of `resend` and `twilio`):
-  `sendNotification({ kind, recipientUserId, orgId, ctx, idempotencyKey, channelsOverride? })`
-  -> resolves preferences + quiet hours + locale -> renders `@eleva/email` template (React
-  Email) / SMS text / in-app payload -> delivers -> writes `notification_deliveries`
-  (idempotent on key + channel). Kinds: `booking.confirmed`, `booking.reminder_24h`,
+  `sendNotification({ kind, recipient, orgId, ctx, idempotencyKey, channelsOverride? })` where
+  `recipient` is a discriminated union `{ userId }` **or** `{ email, locale? }` — the e-mail
+  mode exists for recipients who have no account yet (`auth.org_invitation` to a new address,
+  guest booking confirmations before activation) and is **email-only**: no preferences lookup,
+  no SMS, no in-app row, suppression list still applied; the `{ userId }` mode resolves
+  preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders the
+  `@eleva/email` template (React Email) / SMS text / in-app payload -> delivers -> writes
+  `notification_deliveries` (idempotent on key + recipient + channel, where the recipient column
+  is `user_id` or, for e-mail mode, `recipient_email`). Kinds: `booking.confirmed`, `booking.reminder_24h`,
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
   `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
@@ -145,19 +150,28 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workflows (ADR-006).
 
 1. packages/db: notifications (id, user_id, org_id, kind, title, body, href, data jsonb, read_at,
-   created_at), notification_deliveries (id, idempotency_key, kind, user_id, channel email|sms|
-   in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id, error,
-   created_at, updated_at, unique(idempotency_key, user_id, channel) — the recipient is part of
-   the key because one event (a booking confirmation) fans out to member AND expert; callers pass
-   a per-event idempotencyKey such as booking:<id>:confirmed and the library derives the row key
-   per recipient, so the second recipient is never suppressed by the first), email_suppressions (email, reason,
+   created_at), notification_deliveries (id, idempotency_key, kind, user_id nullable,
+   recipient_email nullable, CHECK (num_nonnulls(user_id, recipient_email) = 1), channel email|
+   sms|in_app, status queued|sent|delivered|bounced|complained|failed|suppressed, provider_id,
+   error, created_at, updated_at, unique(idempotency_key, coalesce(user_id::text, recipient_email),
+   channel) as a unique expression index — the recipient is part of the key because one event (a
+   booking confirmation) fans out to member AND expert; callers pass a per-event idempotencyKey
+   such as booking:<id>:confirmed and the library derives the row key per recipient, so the
+   second recipient is never suppressed by the first), email_suppressions (email, reason,
    created_at), phone_verifications (user_id, phone_e164, code_hash, expires_at, verified_at).
    RLS by user/org; audit unions (notification: sent|failed|suppressed; phone: verified).
-2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind,
-   recipientUserId, orgId, ctx, idempotencyKey, urgency normal|urgent }) -> load user locale,
-   preferences (Phase 5 table), quiet hours (defer non-urgent to window end via QStash notBefore),
-   suppression list -> render via @eleva/email (React Email) for email, short template for SMS,
-   payload for in-app -> deliver -> record notification_deliveries. Kinds: booking.confirmed
+2. @eleva/notifications (only importer of resend and twilio): sendNotification({ kind, recipient,
+   orgId, ctx, idempotencyKey, urgency normal|urgent }) with recipient: { userId: string } |
+   { email: string; locale?: Locale }. userId mode -> load user locale, preferences (Phase 5
+   table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list ->
+   render via @eleva/email (React Email) for email, short template for SMS, payload for in-app ->
+   deliver -> record notification_deliveries. email mode (recipient has no account yet — used by
+   auth.org_invitation when the invitee e-mail is unknown to auth.user, and by guest booking
+   confirmations before activation) -> email channel only, locale from the argument or the org
+   default, suppression list applied, no preferences/SMS/in-app, row keyed by recipient_email.
+   The Better Auth invitation callback resolves the invitee: existing user -> { userId }, otherwise
+   -> { email }. Test: invitation to an unknown address delivers exactly one e-mail and writes no
+   notifications row; the same idempotencyKey sent twice -> one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
    payout.approval_required (staff), invoice.issued, invoice.failed. Twilio client configured with

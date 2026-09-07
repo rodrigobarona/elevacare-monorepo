@@ -32,7 +32,9 @@ In:
   launch** — any future embeddable route needs an ADR and must both drop `X-Frame-Options` and
   set a route-specific CSP `frame-ancestors` (DENY + relaxed frame-ancestors is contradictory);
   the helper is route-aware (`{ route: { mediaCapture, embeddable } }`) so Permissions-Policy
-  grants camera/microphone only on join routes; Better Auth `rateLimit` rules for `/sign-in/*`, `/magic-link`,
+  grants camera/microphone only on the two join routes (`apps/app` and `apps/expert`); CSP
+  `frame-src`/`connect-src`/`media-src` include the branded Daily domain (`DAILY_DOMAIN`) when
+  configured; Better Auth `rateLimit` rules for `/sign-in/*`, `/magic-link`,
   `/two-factor/*`; `useSecureCookies` + `sameSite: "lax"`; secret rotation runbook
   (`BETTER_AUTH_SECRET` dual-key, KEK v2 via `rotateKek`, Stripe webhook secret, Daily webhook
   secret, TOConline tokens); dependency audit (`pnpm audit --prod`, Renovate/Dependabot config);
@@ -174,8 +176,11 @@ PR 13.1 — security + observability + analytics:
    https://connect-js.stripe.com https://eu.i.posthog.com (apps) https://www.googletagmanager.com
    (web only); connect-src self api host, wss/https *.daily.co, sessions.eleva.care,
    https://api.stripe.com, PostHog EU, Sentry EU; frame-src https://js.stripe.com
-   https://connect-js.stripe.com https://*.daily.co; img-src self data: blob: *.public.blob.
-   vercel-storage.com; media-src self blob: *.daily.co; report-uri Sentry), HSTS preload,
+   https://connect-js.stripe.com https://*.daily.co plus the branded Daily domain when configured
+   (DAILY_DOMAIN, e.g. https://sessions.eleva.care — the helper reads it from @eleva/env, so
+   frame-src, connect-src and media-src all include it); img-src self data: blob: *.public.blob.
+   vercel-storage.com; media-src self blob: *.daily.co and the branded domain; report-uri Sentry),
+   HSTS preload,
    Permissions-Policy (camera/microphone/display-capture only on join routes), Referrer-Policy
    strict-origin-when-cross-origin, X-Content-Type-Options nosniff, X-Frame-Options DENY plus CSP
    frame-ancestors 'none' on every route (never ALLOW-FROM; frame-src above covers the iframes
@@ -183,10 +188,13 @@ PR 13.1 — security + observability + analytics:
    a new ADR, pass { route: { embeddable: true } } which OMITS X-Frame-Options and sets the
    route-specific frame-ancestors, never both). route is
    { mediaCapture: boolean; embeddable: boolean }, computed by an exported
-   routePolicyForPathname(app, pathname) helper (mediaCapture only for
-   /sessions/[bookingId]/join in apps/app; embeddable always false at launch) so proxies never
-   hand-write the policy; unit tests cover join, embeddable and normal routes and assert that
-   X-Frame-Options and frame-ancestors are consistent. Apply from every apps/*/src/proxy.ts via
+   routePolicyForPathname(app, pathname) helper (mediaCapture true for the Phase 9 join pages in
+   BOTH apps — /[orgSlug]/sessions/[bookingId]/join in apps/app AND in apps/expert — and false
+   everywhere else; embeddable always false at launch) so proxies never hand-write the policy;
+   unit tests cover the app join route, the expert join route, an embeddable route and a normal
+   route, assert that X-Frame-Options and frame-ancestors are consistent, and assert frame-src
+   contains the branded Daily domain when DAILY_DOMAIN is set and only *.daily.co when it is
+   not. Apply from every apps/*/src/proxy.ts via
    one helper call (keep proxies < 50 LOC) and in apps/api security-headers.ts with
    route: routePolicyForPathname("api", pathname). Start report-only
    on staging (env CSP_REPORT_ONLY=true), enforce after 48h clean.

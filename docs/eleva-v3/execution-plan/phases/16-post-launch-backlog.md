@@ -17,24 +17,24 @@ and run the standard loop from README section 4.
 
 ## Backlog (ordered by expected priority)
 
-| #     | Item                                                                                                                                                            | Origin                                  | Notes                                                                                                                      |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 16.1  | **Spain launch** (`es-ES` legal texts, Spanish IVA rules, health-sector disclaimers, Stripe payment methods for ES, pricing localisation)                       | `market-expansion-playbook.md`, ADR-012 | Requires accountant sign-off for ES IVA; Tier 1 invoices to ES experts (intra-EU reverse charge).                          |
-| 16.2  | **Brazil (`pt-BR`) content + payments discovery**                                                                                                               | `market-expansion-playbook.md`          | Stripe BR is a separate platform account; do not assume Connect parity. Discovery only.                                    |
-| 16.3  | **Academy content platform** (`apps/academy`, `@eleva/academy`: courses, lessons, enrolments, certificates, Stripe products for courses)                        | `academy-*` specs in handbook           | Reuse Tier 1/2 invoicing and payout engine; recorded lessons hosted on Vercel Blob private + signed URLs or Mux (new ADR). |
-| 16.4  | **Marketplace search + discovery v2** (Typesense/Meilisearch or Neon `pg_search`, filters by specialty/language/price/availability, ranking)                    | Phase 4 kept simple SQL search          | New ADR for search engine choice; EU hosting required.                                                                     |
-| 16.5  | **Notifications Lane 2** (marketing/lifecycle campaigns: onboarding drip, re-engagement, digest emails, consent-gated)                                          | `notifications-architecture.md`         | Resend Broadcasts or Customer.io EU; strict consent gating (PostHog cohorts).                                              |
-| 16.6  | **Mobile apps** (Expo + Better Auth `expo` plugin, Daily React Native SDK)                                                                                      | Product roadmap                         | Better Auth `expo` plugin and Daily RN SDK both exist; needs API key/bearer flows from Phase 2.                            |
-| 16.7  | **AI reports GA** (graduate `ff.ai_reports_beta`; structured templates per specialty; member-facing summaries; evaluation harness)                              | Phase 10 beta                           | Requires DPIA update and consent copy review; Vercel AI Gateway model pinning.                                             |
-| 16.8  | **Session recording + transcription** (Daily cloud recording to EU storage, consent flow, retention)                                                            | Phase 9 left off by flag                | `ff.session_recording`; Daily recordings must land in EU bucket; retention per matrix.                                     |
-| 16.9  | **Clinic advanced features** (rooms/locations, intake forms, shared calendars, clinic-level reporting, SSO for enterprise clinics via Better Auth `sso` plugin) | Phase 11 minimum viable                 | SSO plugin brings back part of what WorkOS offered, only for clinics that need it.                                         |
-| 16.10 | **Expert marketplace growth tools** (referral codes, coupons via Stripe Coupons/Promotion Codes, gift sessions, packages/bundles)                               | Product roadmap                         | Packages interact with payout eligibility and Tier 2 invoicing (one invoice per package).                                  |
-| 16.11 | **Member subscriptions / memberships** (recurring member plans, credits)                                                                                        | Product roadmap                         | Hybrid monetization v2; new ADR.                                                                                           |
-| 16.12 | **Moloni + additional Tier 2 adapters** (InvoiceXpress, Vendus), SAF-T export                                                                                   | Phase 7 registry                        | Adapter interface already in `@eleva/accounting`; each adapter is a small PR.                                              |
-| 16.13 | **Agentic surfaces** (MCP server exposing `apps/api` OpenAPI as tools with API-key auth; agent-friendly booking assistant)                                      | Agentic-first principle                 | Builds on `apiKey` + `openAPI` plugins from Phase 2; rate limits per key.                                                  |
-| 16.14 | **Public status page + trust center** (SLOs, subprocessors, security posture)                                                                                   | Phase 13                                | BetterStack status page + `apps/docs` trust pages.                                                                         |
-| 16.15 | **Tech-debt backlog burn-down**                                                                                                                                 | `tech-debt-backlog.md`                  | Review after each launch retro; items with owner + due phase.                                                              |
-| 16.16 | **MVP decommission finalisation** (+30 days: archive Neon branch, delete migration schema, remove redirect map entries older than 12 months)                    | Phase 15                                | Requires checksum verification record from Phase 15.                                                                       |
+| #     | Item                                                                                                                                                            | Origin                                                                                                                                                      | Notes                                                                                                                      |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 16.1  | **Spain launch** (`es-ES` legal texts, Spanish IVA rules, health-sector disclaimers, Stripe payment methods for ES, pricing localisation)                       | `docs/eleva-v3/adrs/ADR-012-portugal-first-launch.md` (ES expansion section), `docs/eleva-v3/roadmap-and-milestones.md`                                     | Requires accountant sign-off for ES IVA; Tier 1 invoices to ES experts (intra-EU reverse charge).                          |
+| 16.2  | **Brazil (`pt-BR`) content + payments discovery**                                                                                                               | `docs/eleva-v3/decision-log.md` (pt-BR alias decision), `docs/eleva-v3/adrs/ADR-012-portugal-first-launch.md`                                               | Stripe BR is a separate platform account; do not assume Connect parity. Discovery only.                                    |
+| 16.3  | **Academy content platform** (`apps/academy`, `@eleva/academy`: courses, lessons, enrolments, certificates, Stripe products for courses)                        | `docs/eleva-v3/academy-strategy-spec.md`, `docs/eleva-v3/roadmap-and-milestones.md`                                                                         | Reuse Tier 1/2 invoicing and payout engine; recorded lessons hosted on Vercel Blob private + signed URLs or Mux (new ADR). |
+| 16.4  | **Marketplace search + discovery v2** (Typesense/Meilisearch or Neon `pg_search`, filters by specialty/language/price/availability, ranking)                    | `docs/eleva-v3/search-and-discovery-spec.md`, `docs/eleva-v3/execution-plan/phases/04-public-marketplace-booking.md` (SQL search kept simple)               | New ADR for search engine choice; EU hosting required.                                                                     |
+| 16.5  | **Notifications Lane 2** (marketing/lifecycle campaigns: onboarding drip, re-engagement, digest emails, consent-gated)                                          | `docs/eleva-v3/notifications-spec.md`, `docs/eleva-v3/adrs/ADR-006-notifications-two-lane.md`                                                               | Resend Broadcasts or Customer.io EU; strict consent gating (PostHog cohorts).                                              |
+| 16.6  | **Mobile apps** (Expo + Better Auth `expo` plugin, Daily React Native SDK)                                                                                      | `docs/eleva-v3/mobile-integration-spec.md`, `docs/eleva-v3/roadmap-and-milestones.md` (Milestone 7)                                                         | Better Auth `expo` plugin and Daily RN SDK both exist; needs API key/bearer flows from Phase 2.                            |
+| 16.7  | **AI reports GA** (graduate `ff.ai_reports_beta`; structured templates per specialty; member-facing summaries; evaluation harness)                              | `docs/eleva-v3/ai-reporting-spec.md`, `docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md` (beta flag)                                                | Requires DPIA update and consent copy review; Vercel AI Gateway model pinning.                                             |
+| 16.8  | **Session recording + transcription** (Daily cloud recording to EU storage, consent flow, retention)                                                            | `docs/eleva-v3/execution-plan/phases/09-video-daily.md` (recording off by flag), `docs/eleva-v3/compliance-data-governance.md`                              | `ff.session_recording`; Daily recordings must land in EU bucket; retention per matrix.                                     |
+| 16.9  | **Clinic advanced features** (rooms/locations, intake forms, shared calendars, clinic-level reporting, SSO for enterprise clinics via Better Auth `sso` plugin) | `docs/eleva-v3/organization-and-clinic-model.md`, `docs/eleva-v3/execution-plan/phases/11-team-clinics.md`                                                  | SSO plugin brings back part of what WorkOS offered, only for clinics that need it.                                         |
+| 16.10 | **Expert marketplace growth tools** (referral codes, coupons via Stripe Coupons/Promotion Codes, gift sessions, packages/bundles)                               | `docs/eleva-v3/roadmap-and-milestones.md`, `docs/eleva-v3/payments-payouts-spec.md`                                                                         | Packages interact with payout eligibility and Tier 2 invoicing (one invoice per package).                                  |
+| 16.11 | **Member subscriptions / memberships** (recurring member plans, credits)                                                                                        | `docs/eleva-v3/roadmap-and-milestones.md` (pack/subscription baseline), `docs/eleva-v3/payments-payouts-spec.md`                                            | Hybrid monetization v2; new ADR.                                                                                           |
+| 16.12 | **Moloni + additional Tier 2 adapters** (InvoiceXpress, Vendus), SAF-T export                                                                                   | `docs/eleva-v3/execution-plan/phases/07-invoicing-toconline.md` (adapter registry), `docs/eleva-v3/toconline-api-reference.md`                              | Adapter interface already in `@eleva/accounting`; each adapter is a small PR.                                              |
+| 16.13 | **Agentic surfaces** (MCP server exposing `apps/api` OpenAPI as tools with API-key auth; agent-friendly booking assistant)                                      | `docs/eleva-v3/api-first-architecture.md`, `docs/eleva-v3/api-contract-spec.md`                                                                             | Builds on `apiKey` + `openAPI` plugins from Phase 2; rate limits per key.                                                  |
+| 16.14 | **Public status page + trust center** (SLOs, subprocessors, security posture)                                                                                   | `docs/eleva-v3/execution-plan/phases/13-hardening-observability.md`, `docs/eleva-v3/service-level-objectives.md`, `docs/eleva-v3/ops-observability-spec.md` | BetterStack status page + `apps/docs` trust pages.                                                                         |
+| 16.15 | **Tech-debt backlog burn-down**                                                                                                                                 | `docs/eleva-v3/tech-debt-backlog.md`                                                                                                                        | Review after each launch retro; items with owner + due phase.                                                              |
+| 16.16 | **MVP decommission finalisation** (+30 days: archive Neon branch, delete migration schema, remove redirect map entries older than 12 months)                    | `docs/eleva-v3/execution-plan/phases/15-launch-cutover.md`, `docs/eleva-v3/execution-plan/phases/14-mvp-migration.md`                                       | Requires checksum verification record from Phase 15.                                                                       |
 
 ## How to promote an item
 
@@ -50,7 +50,8 @@ and run the standard loop from README section 4.
 
 ## Local references
 
-- `docs/eleva-v3/{market-expansion-playbook,notifications-architecture,tech-debt-backlog,feature-flag-rollout-plan}.md`
+- `docs/eleva-v3/{tech-debt-backlog,feature-flag-rollout-plan,roadmap-and-milestones,notifications-spec}.md`,
+  `docs/eleva-v3/adrs/{ADR-006-notifications-two-lane,ADR-012-portugal-first-launch}.md`
 - `docs/eleva-v3/execution-plan/phases/{04,07,09,10,11,13,15}-*.md` (origins of deferred items)
 
 ## Copy-paste prompt
@@ -71,8 +72,9 @@ Before writing code:
    you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 5, 6, 7, 8 and this phase file in
    full (docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md).
-3. Read every file under "Local references" of this phase and the "Origin" documents listed in
-   the backlog table row 16.<N> of that file. Pull every library the promoted item needs through Context7
+3. Read every file under "Local references" of this phase and every repository path listed in
+   the "Origin" column of backlog row 16.<N> (all origins are repository-relative file paths;
+   a parenthesised note after a path names the section to focus on). Pull every library the promoted item needs through Context7
    (resolve-library-id then query-docs) and prefer those docs over memory for Next.js 16, Better
    Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
    CodeRabbit.
@@ -96,7 +98,10 @@ JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate lim
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
 "Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
-(pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
+(pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
+secrets, ids of live customers, or PHI into the repo; evidence files (screenshots, logs, exports
+attached to the PR) must be redacted; any script that can touch production data must carry the
+Phase 14 production guard and require --target production plus interactive confirmation.
 
 PHASE 16 TASK — Promote backlog item 16.<N> into a phase and deliver it on one branch / one PR.
 
@@ -104,47 +109,66 @@ Item: row 16.<N> of this backlog (copied here so the prompt stands alone; the ta
 docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md is the SSOT if they ever differ;
 copy the title verbatim into the new phase file heading):
   16.1  Spain launch (es-ES legal texts, Spanish IVA rules, health-sector disclaimers, Stripe
-        payment methods for ES, pricing localisation) — origin market-expansion-playbook.md,
-        ADR-012; needs accountant sign-off for ES IVA; Tier 1 invoices to ES experts use
+        payment methods for ES, pricing localisation) — origin
+        docs/eleva-v3/adrs/ADR-012-portugal-first-launch.md (ES expansion section),
+        docs/eleva-v3/roadmap-and-milestones.md; needs accountant sign-off for ES IVA; Tier 1 invoices to ES experts use
         intra-EU reverse charge.
-  16.2  Brazil (pt-BR) content + payments discovery — origin market-expansion-playbook.md;
+  16.2  Brazil (pt-BR) content + payments discovery — origin docs/eleva-v3/decision-log.md
+        (pt-BR alias decision), docs/eleva-v3/adrs/ADR-012-portugal-first-launch.md;
         Stripe BR is a separate platform account; discovery only.
   16.3  Academy content platform (apps/academy, @eleva/academy: courses, lessons, enrolments,
-        certificates, Stripe products for courses) — origin academy-* specs; reuse Tier 1/2
+        certificates, Stripe products for courses) — origin
+        docs/eleva-v3/academy-strategy-spec.md, docs/eleva-v3/roadmap-and-milestones.md; reuse Tier 1/2
         invoicing + payout engine; recorded lessons on Vercel Blob private + signed URLs or Mux
         (new ADR).
   16.4  Marketplace search + discovery v2 (Typesense/Meilisearch or Neon pg_search; filters by
-        specialty/language/price/availability; ranking) — origin Phase 4 simple SQL search;
+        specialty/language/price/availability; ranking) — origin
+        docs/eleva-v3/search-and-discovery-spec.md,
+        docs/eleva-v3/execution-plan/phases/04-public-marketplace-booking.md (simple SQL search);
         new ADR for the engine; EU hosting required.
   16.5  Notifications Lane 2 (marketing/lifecycle campaigns: onboarding drip, re-engagement,
-        digests, consent-gated) — origin notifications-architecture.md; Resend Broadcasts or
+        digests, consent-gated) — origin docs/eleva-v3/notifications-spec.md,
+        docs/eleva-v3/adrs/ADR-006-notifications-two-lane.md; Resend Broadcasts or
         Customer.io EU; strict consent gating via PostHog cohorts.
-  16.6  Mobile apps (Expo + Better Auth expo plugin, Daily React Native SDK) — origin product
-        roadmap; needs the API key/bearer flows from Phase 2.
+  16.6  Mobile apps (Expo + Better Auth expo plugin, Daily React Native SDK) — origin
+        docs/eleva-v3/mobile-integration-spec.md, docs/eleva-v3/roadmap-and-milestones.md
+        (Milestone 7); needs the API key/bearer flows from Phase 2.
   16.7  AI reports GA (graduate ff.ai_reports_beta; structured templates per specialty;
-        member-facing summaries; evaluation harness) — origin Phase 10 beta; DPIA update, consent
+        member-facing summaries; evaluation harness) — origin docs/eleva-v3/ai-reporting-spec.md,
+        docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md (beta flag); DPIA update, consent
         copy review, AI Gateway model pinning.
   16.8  Session recording + transcription (Daily cloud recording to EU storage, consent flow,
-        retention) — origin Phase 9 (off by ff.session_recording); recordings must land in an EU
+        retention) — origin docs/eleva-v3/execution-plan/phases/09-video-daily.md (off by
+        ff.session_recording), docs/eleva-v3/compliance-data-governance.md; recordings must land in an EU
         bucket; retention per matrix.
   16.9  Clinic advanced features (rooms/locations, intake forms, shared calendars, clinic-level
-        reporting, enterprise SSO via Better Auth sso plugin) — origin Phase 11 minimum viable.
+        reporting, enterprise SSO via Better Auth sso plugin) — origin
+        docs/eleva-v3/organization-and-clinic-model.md,
+        docs/eleva-v3/execution-plan/phases/11-team-clinics.md (minimum viable).
   16.10 Expert marketplace growth tools (referral codes, Stripe Coupons/Promotion Codes, gift sessions,
-        packages/bundles) — origin product roadmap; packages interact with payout eligibility and
+        packages/bundles) — origin docs/eleva-v3/roadmap-and-milestones.md,
+        docs/eleva-v3/payments-payouts-spec.md; packages interact with payout eligibility and
         Tier 2 invoicing (one invoice per package).
-  16.11 Member subscriptions / memberships (recurring plans, credits) — origin product roadmap;
-        hybrid monetization v2; new ADR.
+  16.11 Member subscriptions / memberships (recurring plans, credits) — origin
+        docs/eleva-v3/roadmap-and-milestones.md (pack/subscription baseline),
+        docs/eleva-v3/payments-payouts-spec.md; hybrid monetization v2; new ADR.
   16.12 Moloni + additional Tier 2 adapters (InvoiceXpress, Vendus), SAF-T export — origin
-        Phase 7 registry; adapter interface already in @eleva/accounting.
+        docs/eleva-v3/execution-plan/phases/07-invoicing-toconline.md (adapter registry),
+        docs/eleva-v3/toconline-api-reference.md; adapter interface already in @eleva/accounting.
   16.13 Agentic surfaces (MCP server exposing the apps/api OpenAPI as tools with API-key auth;
-        agent-friendly booking assistant) — origin agentic-first principle; builds on apiKey +
+        agent-friendly booking assistant) — origin docs/eleva-v3/api-first-architecture.md,
+        docs/eleva-v3/api-contract-spec.md; builds on apiKey +
         openAPI plugins from Phase 2; rate limits per key.
   16.14 Public status page + trust center (SLOs, subprocessors, security posture) — origin
-        Phase 13; BetterStack status page + apps/docs trust pages.
-  16.15 Tech-debt backlog burn-down — origin tech-debt-backlog.md; review after each launch
+        docs/eleva-v3/execution-plan/phases/13-hardening-observability.md,
+        docs/eleva-v3/service-level-objectives.md, docs/eleva-v3/ops-observability-spec.md;
+        BetterStack status page + apps/docs trust pages.
+  16.15 Tech-debt backlog burn-down — origin docs/eleva-v3/tech-debt-backlog.md; review after each launch
         retro; items with owner + due phase.
   16.16 MVP decommission finalisation (+30 days: archive Neon branch, delete migration schema,
-        remove redirect-map entries older than 12 months) — origin Phase 15; requires the
+        remove redirect-map entries older than 12 months) — origin
+        docs/eleva-v3/execution-plan/phases/15-launch-cutover.md,
+        docs/eleva-v3/execution-plan/phases/14-mvp-migration.md; requires the
         checksum verification record from Phase 15.
 Phase 16 is a backlog, not a build phase. Deliver in this order, all on branch phase-16.<N>/<slug>:
 
