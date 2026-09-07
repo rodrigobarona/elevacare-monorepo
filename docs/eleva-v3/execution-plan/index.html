@@ -683,9 +683,11 @@ risks, copy-paste prompt.</li>
 <li><code>build-html.mjs</code> (uses the already-installed <code>marked</code>) that concatenates README + phases into
 <code>index.html</code> with a sidebar, anchors, and a copy button for each prompt block.</li>
 <li><code>package.json</code> scripts:<ul>
-<li><code>&quot;review&quot;: &quot;coderabbit review --plain --type uncommitted&quot;</code></li>
-<li><code>&quot;review:branch&quot;: &quot;coderabbit review --plain --type committed --base main&quot;</code></li>
-<li><code>&quot;review:agent&quot;: &quot;coderabbit review --agent --type all --base main&quot;</code></li>
+<li><code>&quot;review&quot;: &quot;coderabbit review --uncommitted --include-untracked&quot;</code></li>
+<li><code>&quot;review:branch&quot;: &quot;coderabbit review --committed --base main&quot;</code></li>
+<li><code>&quot;review:agent&quot;: &quot;coderabbit review --agent --base main&quot;</code>
+(CodeRabbit CLI &gt;= 0.7: plain text is the default output; <code>--plain</code>/<code>--type</code> no longer
+exist. Verify flags with <code>coderabbit review --help</code> and Context7 before changing them.)</li>
 <li><code>&quot;docs:execution-plan:html&quot;: &quot;node docs/eleva-v3/execution-plan/build-html.mjs&quot;</code></li>
 </ul>
 </li>
@@ -724,7 +726,8 @@ sequencing; keep for history, mark as superseded in Phase 1).</li>
 </ul>
 <h2 id="00-execution-plan-and-review-loop--external-docs"><a class="anchor" href="#00-execution-plan-and-review-loop--external-docs" aria-label="Link to section">#</a>External docs</h2>
 <ul>
-<li>CodeRabbit CLI: Context7 <code>/websites/coderabbit_ai</code> (search &quot;CLI review --plain --agent --base&quot;).</li>
+<li>CodeRabbit CLI: Context7 <code>/websites/coderabbit_ai</code> (search &quot;CLI review --committed --uncommitted
+--agent --base&quot;; reference page <code>docs.coderabbit.ai/cli/reference</code>).</li>
 <li><code>marked</code> (HTML generation): <code>/markedjs/marked</code>.</li>
 </ul>
 <h2 id="00-execution-plan-and-review-loop--risks"><a class="anchor" href="#00-execution-plan-and-review-loop--risks" aria-label="Link to section">#</a>Risks</h2>

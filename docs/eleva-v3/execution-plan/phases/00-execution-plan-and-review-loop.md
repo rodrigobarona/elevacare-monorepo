@@ -43,9 +43,11 @@ Out: ADRs, code changes, CI changes (Phase 1).
 3. `build-html.mjs` (uses the already-installed `marked`) that concatenates README + phases into
    `index.html` with a sidebar, anchors, and a copy button for each prompt block.
 4. `package.json` scripts:
-   - `"review": "coderabbit review --plain --type uncommitted"`
-   - `"review:branch": "coderabbit review --plain --type committed --base main"`
-   - `"review:agent": "coderabbit review --agent --type all --base main"`
+   - `"review": "coderabbit review --uncommitted --include-untracked"`
+   - `"review:branch": "coderabbit review --committed --base main"`
+   - `"review:agent": "coderabbit review --agent --base main"`
+     (CodeRabbit CLI >= 0.7: plain text is the default output; `--plain`/`--type` no longer
+     exist. Verify flags with `coderabbit review --help` and Context7 before changing them.)
    - `"docs:execution-plan:html": "node docs/eleva-v3/execution-plan/build-html.mjs"`
 5. Skill + rule for the review loop; contribution workflow + handbook README updated.
 
@@ -82,7 +84,8 @@ Out: ADRs, code changes, CI changes (Phase 1).
 
 ## External docs
 
-- CodeRabbit CLI: Context7 `/websites/coderabbit_ai` (search "CLI review --plain --agent --base").
+- CodeRabbit CLI: Context7 `/websites/coderabbit_ai` (search "CLI review --committed --uncommitted
+  --agent --base"; reference page `docs.coderabbit.ai/cli/reference`).
 - `marked` (HTML generation): `/markedjs/marked`.
 
 ## Risks

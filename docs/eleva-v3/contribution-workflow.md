@@ -88,11 +88,14 @@ fixed before anyone else sees them. The loop is defined in
 operated through the
 [`coderabbit-review` skill](../../.cursor/skills/coderabbit-review/SKILL.md).
 
-| Script               | Command                                                  | When                                                                        |
-| -------------------- | -------------------------------------------------------- | --------------------------------------------------------------------------- |
-| `pnpm review`        | `coderabbit review --plain --type uncommitted`           | Before every commit                                                         |
-| `pnpm review:branch` | `coderabbit review --plain --type committed --base main` | Before `git push` / `gh pr create`, and after every fix batch on an open PR |
-| `pnpm review:agent`  | `coderabbit review --agent --type all --base main`       | When an agent needs structured findings                                     |
+| Script               | Command                                               | When                                                                        |
+| -------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------- |
+| `pnpm review`        | `coderabbit review --uncommitted --include-untracked` | Before every commit                                                         |
+| `pnpm review:branch` | `coderabbit review --committed --base main`           | Before `git push` / `gh pr create`, and after every fix batch on an open PR |
+| `pnpm review:agent`  | `coderabbit review --agent --base main`               | When an agent needs structured findings (JSON lines)                        |
+
+Plain-text output is the CLI default (CodeRabbit CLI >= 0.7). Keep the CLI current with
+`coderabbit update`; flags changed between 0.4 and 0.7 (`--plain`/`--type` were removed).
 
 Rules:
 

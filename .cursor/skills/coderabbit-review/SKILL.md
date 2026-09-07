@@ -32,14 +32,17 @@ GitHub App (`.github/workflows/coderabbit.yml` + `.coderabbit.yaml`) is the PR g
 
 ## Commands (root `package.json`)
 
-| Script               | Command                                                  | Scope                                                    |
-| -------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
-| `pnpm review`        | `coderabbit review --plain --type uncommitted`           | Staged + unstaged changes only                           |
-| `pnpm review:branch` | `coderabbit review --plain --type committed --base main` | All commits on the branch vs `main`                      |
-| `pnpm review:agent`  | `coderabbit review --agent --type all --base main`       | Structured findings for agents (committed + uncommitted) |
+| Script               | Command                                               | Scope                                                               |
+| -------------------- | ----------------------------------------------------- | ------------------------------------------------------------------- |
+| `pnpm review`        | `coderabbit review --uncommitted --include-untracked` | Staged + unstaged + new files (not yet committed)                   |
+| `pnpm review:branch` | `coderabbit review --committed --base main`           | All commits on the branch vs `main`                                 |
+| `pnpm review:agent`  | `coderabbit review --agent --base main`               | Structured JSON-lines findings for agents (tracked changes vs main) |
 
-Useful flags: `--files <paths...>` to narrow scope, `--config AGENTS.md` to pass extra
-instructions, `--dir <path>` to review one workspace, `--prompt-only` to print agent prompts.
+Plain text is the default output (CLI >= 0.7; `--plain` and `--type` were removed — run
+`coderabbit update` if a script fails with "unknown option"). Useful flags: `--light` for a
+cheaper pass, `-c AGENTS.md .cursor/rules/<rule>.mdc` to pass extra instructions, `--dir <path>`
+to review one workspace, `--base-commit <sha>` instead of a branch, `--show-prompts` to print the
+prompts of the last review, `coderabbit review findings` to re-print the last findings.
 
 The CLI reads `.coderabbit.yaml` (`path_instructions`, `path_filters`) — keep those in sync
 with the architecture rules in `AGENTS.md`.
