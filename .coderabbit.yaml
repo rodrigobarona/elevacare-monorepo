@@ -14,8 +14,13 @@ reviews:
   auto_review:
     enabled: true
     drafts: false
+    # Stacked PRs (a phase PR based on a split-out feature branch so each side
+    # stays under the 100-file review limit) must be reviewed too. Regex list.
     base_branches:
       - main
+      - "^feat/.*"
+      - "^fix/.*"
+      - "^phase-.*"
   changed_files_summary: true
   sequence_diagrams: false
   # Keep large PRs under the 150-file Pro-plan cap by excluding low-signal
