@@ -247,13 +247,25 @@ Not collapsed into booking status.
 
 ## Payout States
 
-- `not_eligible`
-- `eligible`
-- `awaiting_approval`
-- `approved`
-- `transferred`
-- `failed`
-- `reversed` (if needed later)
+SSOT for `payout_states.status` (implemented in execution-plan Phase 6; the phase file and
+this list must stay identical):
+
+- `pending` — payment succeeded, `eligible_at` not yet reached
+- `scheduled` — eligible and queued for the next transfer run
+- `approval_required` — first payout or amount at or above the approval threshold (the only two
+  reasons); leaves via admin approve (-> `scheduled`; refused with 409 while the payment has an
+  open dispute) or hold (-> `held`)
+- `transferred` — Stripe Transfer created (`stripe_transfer_id`)
+- `paid_out` — Stripe Payout paid on the connected account
+- `failed` — transfer or payout failed after retries; DLQ + admin flag
+- `held` — `hold_reasons` set (`dispute`, `manual`; never `approval_required`);
+  `held_from_status` records the status before the first reason; dispute won removes `dispute`,
+  staff `release` removes `manual`, and the row returns to `held_from_status` only when the set
+  is empty; dispute lost -> `reversed`
+- `reversed` — refund before/after transfer or dispute lost (transfer reversed when one exists)
+
+Holds compose: a payout leaves `held` only when every hold reason has been cleared; there is
+no separate "released" state.
 
 ## Refunds
 

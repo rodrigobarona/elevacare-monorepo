@@ -149,7 +149,7 @@ Each entry should include:
 
 - Owner: platform
 - Status: active
-- Summary: Daily.co EU region for video sessions and transcripts. Transcripts are Eleva-owned records encrypted at rest via WorkOS Vault references. Transcript content never leaks into notifications, analytics, or AI-gateway logs.
+- Summary: Daily.co EU region for video sessions and transcripts. Transcripts are Eleva-owned records encrypted at rest (originally via WorkOS Vault references; **superseded in part 2026-09-07** — now `@eleva/encryption` envelope encryption per ADR-020). Transcript content never leaks into notifications, analytics, or AI-gateway logs.
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-009
 
 ### 2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes (reaffirmed)
@@ -204,7 +204,7 @@ Each entry should include:
 ### 2026-04-22: RBAC backbone — WorkOS `admin`/`member` defaults + capability bundles
 
 - Owner: platform
-- Status: active
+- Status: superseded in part (2026-09-07, ADR-021): the `admin`/`member` seniority model and `(org_type, role)` label derivation stay; WorkOS as the role store and `infra/workos/rbac-config.json` are replaced by Better Auth `organization` roles + `packages/auth/src/permissions.ts`
 - Summary: Eleva uses WorkOS's default `admin` and `member` roles as **org-seniority** (not product labels). Product labels are derived from `(org_type, workos_role)` plus capability bundles loaded from `infra/workos/rbac-config.json`. Patient = `admin` of personal org; solo expert = `admin` of solo org; clinic admin = `admin` of clinic org; expert-in-clinic = `member` of clinic org; Eleva staff = `admin` of a single internal `eleva-operator` org with cross-org capability grants.
 - Reference: [`identity-rbac-spec.md`](./identity-rbac-spec.md), ADR-003
 
@@ -225,7 +225,7 @@ Each entry should include:
 ### 2026-05-06: Calendar OAuth — WorkOS Pipes for credential management (supersedes 2026-04-22)
 
 - Owner: platform
-- Status: active
+- Status: superseded in part (2026-09-07, ADR-017): credential management moves from WorkOS Pipes to Better Auth `account` rows (`getProviderAccessToken` in `@eleva/auth`); `packages/calendar` still owns the Google/Microsoft API surface
 - Supersedes: [2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes](#2026-04-22-calendar-oauth-ownership--eleva-not-workos-pipes-reaffirmed)
 - Summary: Calendar OAuth credential management (token storage, refresh, revocation) is delegated to WorkOS Pipes. `packages/calendar` retains ownership of the Google/Microsoft API surface (event create/read/delete, freebusy, webhook subscriptions) but no longer manages raw tokens directly — instead it requests access tokens from WorkOS Pipes via the user's `workosUserId` and provider slug. This aligns with the ADR-004 amendment (2026-05) and the scheduling-booking-spec §Calendar Integration. The April decision's rationale about needing fidelity for booking-critical flows remains valid for the API layer; the change is purely about who stores/refreshes the OAuth credentials, not who calls the calendar APIs.
 - Reference: [`adrs/ADR-004-scheduling-and-calendar-oauth.md`](./adrs/ADR-004-scheduling-and-calendar-oauth.md) (amended 2026-05), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
@@ -255,12 +255,62 @@ Each entry should include:
 - Reference: [`api-first-architecture.md`](./api-first-architecture.md)
 - Primary affected artifacts: `apps/api/src/lib/auth.ts` (requireApiAuth), `apps/api/src/lib/rate-limit.ts`, `apps/api/src/lib/bot-protection.ts`, `apps/api/src/lib/openapi.ts`, `packages/api-client` schemas
 
+### 2026-09-07: Execution plan supersedes roadmap and sprint plan for sequencing
+
+- Owner: engineering
+- Status: active
+- Supersedes: `roadmap-and-milestones.md` and `implementation-sprints.md` as the sequencing source of truth (both kept for history).
+- Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
+
+### 2026-09-07: Identity, video, encryption, RBAC and migration direction for v3 (ADR-017..021 authored in Phase 1)
+
+- Owner: engineering
+- Status: **accepted** — decided 2026-09-07 and locked for the execution plan; Phase 1 only writes the ADR documents (ADR-017..021) that formalise it, it does not reopen the decision. Earlier entries that assume WorkOS are superseded in part **as of this entry**, not once the ADRs land: [2026-04-22 Video — Daily.co EU region](#2026-04-22-video--dailyco-eu-region) (transcripts encrypted with `@eleva/encryption` envelope encryption, not WorkOS Vault; ADR-009 references to WorkOS Vault read as ADR-020), [2026-04-22 RBAC backbone](#2026-04-22-rbac-backbone--workos-adminmember-defaults--capability-bundles) (roles/capabilities come from Better Auth `organization` + `packages/auth/src/permissions.ts`, not `infra/workos/rbac-config.json`), and [2026-05-06 Calendar OAuth — WorkOS Pipes](#2026-05-06-calendar-oauth--workos-pipes-for-credential-management-supersedes-2026-04-22) (tokens now managed by Better Auth `account` rows).
+- Supersedes **in part**: ADR-004 — only its WorkOS Pipes credential transport and its Google Meet link assumption; the Eleva-owned Google/Microsoft calendar OAuth and the cal.com-inspired scheduling model stay and Phase 4 builds on them; ADR-015 — only the "single WorkOS Application" assumption; the role-focused multi-app split stays; plus the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`. Phase 1 adds "Superseded in part by ADR-017/018/020" banners to ADR-004 and ADR-015 rather than retiring them.
+- Summary:
+  - **ADR-017 Identity**: self-hosted Better Auth in `apps/api` (`api.eleva.care/auth/*`), Drizzle adapter, `auth` schema on the main Neon project, plugins `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`; session cookie on `.eleva.care`; frontend apps never instantiate the auth server. Neon managed Better Auth rejected (Beta, partial organization plugin, no MFA/hooks).
+  - **ADR-018 Video**: Daily.co only (HIPAA-enabled domain, branded `sessions.eleva.care`); Google/Microsoft calendars remain for busy-time and destination sync.
+  - **ADR-019 Migration**: import MVP data (users, orgs, experts, bookings, payout ledger, records) into v3 with a DNS cutover; same Stripe platform account.
+  - **ADR-020 Encryption**: envelope encryption in `@eleva/encryption` (AES-256-GCM, per-org DEK wrapped by a versioned KEK from env, `org_data_keys`, crypto-shred = delete DEK); OAuth tokens encrypted by Better Auth.
+  - **ADR-021 RBAC**: single source of truth in code (`packages/auth/src/permissions.ts`); product label derived from `(organization.type, member.role)`.
+  - **Staff-only locale exception**: `apps/admin` ships `en` + `pt` only (Eleva staff surface); all member/expert/clinic-facing surfaces keep `pt`/`en`/`es`. Enforcement lives in `packages/config/src/i18n-locales.ts` (`REQUIRED_LOCALES_BY_APP`), which `scripts/check-i18n-parity.mjs` (Phase 1) reads instead of assuming `pt`/`en`/`es`; the universal prompt hard constraint in `execution-plan/README.md` section 7 names this exception.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 2, [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
 ### 2026-09-07: `@eleva/ui` primitives move from Radix UI to React Aria Components (ADR-022)
 
 - Owner: engineering
 - Status: active
 - Summary: `@eleva/ui` regenerated from the shadcn `aria-luma` style on `react-aria-components`; `radix-ui`, `cmdk`, `react-hook-form` dropped; `navigation-menu`/`form` deleted, `field` + `checkbox-field` added. `@eleva/dashboard` mounts `AppRouterProvider` (relative hrefs → `router.push`, absolute → hard navigation for cross-zone). Consumers in `apps/web`, `apps/account`, `apps/expert`, `apps/poc` migrated to React Aria props (`isDisabled`, `onPress`, `isOpen`, `selectedKey`). Done before Phase 2 so all new v3 UI is written once against the final primitive layer.
 - Reference: [`adrs/ADR-022-react-aria-ui-primitives.md`](./adrs/ADR-022-react-aria-ui-primitives.md), [`design-system-spec.md`](./design-system-spec.md)
+
+### 2026-09-07: Rich text = Plate in a single `@eleva/editor` package (ADR-023, authored in Phase 1)
+
+- Owner: engineering + product
+- Status: accepted
+- Summary: every rich-text surface (expert bios, event-type descriptions, location instructions, clinical notes, reports, the template library, clinic pages) uses Plate through `packages/editor`; Plate JSON stored in `jsonb` with server-derived sanitized HTML and plain text; `platejs`/`@platejs/*`/`slate*` are importable only inside `packages/editor`, and `@radix-ui/*` is allowed there as an ADR-022 exception (the other ADR-022 exception, `@radix-ui/themes` as the WorkOS Widgets peer, is transitional and ends in Phase 3). AI writing help (improve, shorten, fix grammar, translate) runs through `@eleva/ai` over the Vercel AI Gateway with the `approved-models` allow-list; the clinical context is enabled only in Phase 10 with zero-retention models. Tiptap (Pro licensing for AI/comments), Lexical (thinner ecosystem) and per-app Markdown textareas were rejected.
+- Reference: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md), [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`monorepo-structure.md`](./monorepo-structure.md)
+
+### 2026-09-07: Offer model — event type = service, delivery modes carry how/where/language/price/schedule
+
+- Owner: product + engineering
+- Status: accepted
+- Summary: health licences are national while video consultations are not, and one practice mixes online, phone and several physical addresses with different calendars and prices. `event_types` keeps the service (kind `clinical|non_clinical`, defaults, policies, visibility); one or more `event_type_modes` carry `mode online|phone|in_person`, location, schedule, price/duration overrides, `country_scope` (worldwide or ISO list) and `languages`. Expert practice scope (`practice_country`, `service_countries`, `languages`, `worldwide_remote`, `accepting_bookings`) is the legal universe modes must fit; invariants live in `@eleva/scheduling` and are enforced on publish and at booking time (`assertModeBookable`). Busy time is shared across all modes of one expert. Private booking links (`booking_links`, hashed token, expiry, uses, schedule and price overrides) bypass a closed agenda but never the invariants. Experts own an Eleva calendar with a read-only ICS feed and may connect zero or many external calendars (per-calendar busy toggle; destination default overridable per event type and per mode). Supersedes the single `session_mode`/`worldwide_mode`/`languages` columns on `event_types` and the per-event-type `event_locations` table (folded into `expert_practice_locations`).
+- Reference: [`scheduling-booking-spec.md`](./scheduling-booking-spec.md), [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md), [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
+
+### 2026-09-07: CodeRabbit review loop cap and PR size targets
+
+- Owner: engineering
+- Status: accepted
+- Summary: the CLI loop is bounded — `pnpm review` max 3 rounds, `pnpm review:branch` max 2, GitHub App max 2 fix-and-push rounds. Exit early on a clean round or when fewer than 3 Minor/Trivial findings remain; exit at the cap only with zero Critical/Major (a Critical/Major still open at the cap means the PR is too big: split and restart). Leftover Minor/Trivial go to the PR body "Deferred findings" table and, when real work, a Phase 16 row. PR size target <= 400 changed lines / <= 30 files; split above 800 / 60. Rationale: after 14 rounds on the plan PR each round kept surfacing 8-10 wording findings on freshly touched text; reviews are generative on large diffs and never reach a literal zero, while small PRs converge in 1-2 rounds. The design quality bar (rule 10) was recorded in the same change.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 4 rules 1, 4, 6, 10; [`contribution-workflow.md`](./contribution-workflow.md); `.cursor/skills/coderabbit-review/SKILL.md`
+
+### 2026-09-07: Execution-plan contract tightenings from the Phase 0 review loop
+
+- Owner: engineering
+- Status: accepted
+- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` is the SSOT (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles via `room_request_id` in room `meta` before any retry and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
+- Reference: execution-plan phases 4, 6, 7, 8, 9, 12, 14, 15; [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Payout States"; [`notifications-spec.md`](./notifications-spec.md) entrypoint.
 
 ## Related Docs
 

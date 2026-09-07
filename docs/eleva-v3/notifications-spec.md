@@ -51,19 +51,34 @@ Orchestrated by Vercel Workflows DevKit. Sends through Resend email + Twilio EU 
 
 ```ts
 sendNotification({
-  kind,                 // typed event kind (see event catalog below)
-  userId,               // Eleva user
+  kind,                 // Kind — closed union derived from NOTIFICATION_KINDS
+  recipient,            // { userId } | { email, locale? } (email mode: email channel only)
+  orgId?,               // REQUIRED when NOTIFICATION_KINDS[kind].scope === "org" (overload +
+                        // Zod refine -> ORG_CONTEXT_REQUIRED before any write); absent for user kinds
   ctx,                  // typed per-kind context
-  idempotencyKey        // e.g. `booking_confirmed:${booking_id}`
+  idempotencyKey,       // e.g. `booking_confirmed:${booking_id}`
+  channelsOverride?     // may only narrow NOTIFICATION_KINDS[kind].channels
 })
 ```
 
-Responsibilities:
+Urgency is a property of the kind (`NOTIFICATION_KINDS[kind].urgency`), never a call argument.
+Delivery guarantees: e-mail = idempotent provider submission (Resend `Idempotency-Key` =
+delivery row id, deduplicated by Resend for 24 h — not a recipient-delivery guarantee); SMS =
+at-least-once (Twilio status callback + per-delivery `Ref` body fingerprint reconciliation
+before any re-send) — see execution-plan Phase 8.
+
+Responsibilities (`{ userId }` mode):
 
 - resolve user preferences (`notification_preferences(user_id, kind, email, sms, in_app, push, quiet_hours_tz, quiet_hours)`)
 - resolve locale + timezone
 - render React Email template per channel
 - fan out to enabled channels in order: in-app (always), email, SMS, push
+
+`{ email, locale? }` mode (recipient without an account — invitations to unknown addresses, guest
+booking confirmations before activation) is the explicit exception: no preferences lookup, no
+quiet hours, no in-app row, no SMS/push; the e-mail channel only, with the suppression list still
+applied and `notification_deliveries.recipient_email` as the delivery key.
+
 - write inbox row in Neon
 - propagate correlation ID to Sentry + audit log + Resend/Twilio metadata
 - enforce idempotency: same `idempotencyKey` must not fan out twice
@@ -88,9 +103,9 @@ Orchestrated inside Resend (dashboard or `resend.automations.create`); triggered
 
 ```ts
 triggerAutomation({
-  event,                // e.g. 'welcome.expert', 'pack.expiring'
-  userId,               // Eleva user
-  marketingPayload      // PHI-free: first_name, locale, plan_tier, generic_booking_count
+  event, // e.g. 'welcome.expert', 'pack.expiring'
+  userId, // Eleva user
+  marketingPayload, // PHI-free: first_name, locale, plan_tier, generic_booking_count
 })
 ```
 

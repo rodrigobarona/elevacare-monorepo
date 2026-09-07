@@ -35,11 +35,12 @@ The design system should support:
 
 ### `packages/ui`
 
-Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) via the shadcn `aria-luma` style ([ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md)). Radix UI is not a primitive source; `@radix-ui/themes` exists only as the WorkOS Widgets peer.
+Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) via the shadcn React Aria base ([ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md)). Radix UI is not a primitive source; `@radix-ui/themes` exists only as the transitional WorkOS Widgets peer, removed in [Phase 3](./execution-plan/phases/03-remove-workos.md) per [ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md) decision 6.
 
 Should own:
 
-- base primitives (regenerated from the shadcn registry, never hand-forked)
+- base primitives (regenerated from the shadcn registry; local edits only as `// eleva:`-marked
+  patches per [ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md) decision 7)
 - semantic components
 - layout helpers
 - form building blocks

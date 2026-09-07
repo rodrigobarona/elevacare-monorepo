@@ -190,7 +190,7 @@ Phase 1 first milestone:
 │   └── storybook/            # later — UI verification
 ├── packages/
 │   ├── config/               # env validation, URL helpers, shared constants
-│   ├── auth/                 # WorkOS, session, RBAC, org resolution
+│   ├── auth/                 # session, RBAC, org resolution — Better Auth (ADR-017; WorkOS until Phase 2/3 land)
 │   ├── db/                   # Drizzle schema, migrations, withOrgContext()
 │   ├── ui/                   # shared design system (shadcn aria-luma on React Aria Components)
 │   ├── compliance/           # consent, audit events, retention/export
@@ -204,7 +204,7 @@ Phase 1 first milestone:
 │   ├── workflows/            # Vercel Workflows DevKit step definitions and shared primitives
 │   ├── flags/                # Vercel Flags SDK + Edge Config boundary
 │   ├── audit/                # audit log writers, correlation ID propagation
-│   ├── encryption/           # WorkOS Vault helpers, crypto-shredding
+│   ├── encryption/           # envelope encryption (KEK/DEK, ADR-020; no vault), crypto-shredding
 │   ├── mobile/               # later — mobile-safe client contracts, sync/share DTOs
 │   ├── analytics/            # later — PostHog and GA4 wrappers
 │   ├── observability/        # later — Sentry and BetterStack wrappers
@@ -351,7 +351,7 @@ Owns:
 
 Owns:
 
-- WorkOS integration
+- Better Auth server/client (ADR-017; WorkOS remains only until Phase 2/3 of the execution plan land)
 - session model
 - organization resolution
 - RBAC helpers
@@ -407,7 +407,13 @@ Owns:
 - webhook subscription + external-change reconciliation
 - busy-calendar vs destination-calendar distinctions (cal.com-inspired)
 
-Tokens stored via `packages/encryption` → WorkOS Vault. Never env-based.
+Does not own OAuth credentials: Google/Microsoft tokens live in Better Auth `account` rows and
+reach this package only through `getProviderAccessToken` from `@eleva/auth`
+(`createCredentialManager({ getProviderAccessToken })`, ADR-017; `@eleva/calendar` never imports
+`better-auth`). `calendar_connections` stores the link to the `account` row and sync metadata
+only — never tokens. Envelope encryption via `packages/encryption` (ADR-020) covers other
+per-org secrets (ICS feed tokens, webhook channel secrets), never env-based, never a third-party
+vault.
 
 ### `packages/billing`
 
@@ -433,7 +439,7 @@ Owns:
 - Tier 1 (Eleva → Expert/Clinic) invoicing via TOConline adapter
 - Tier 2 (Expert → Patient) adapter registry (cal.com-style app-store pattern)
 - shared `ExpertInvoicingAdapter` interface
-- per-expert credential store (Neon `expert_integration_credentials` + WorkOS Vault)
+- per-expert credential store (Neon `expert_integration_credentials`, columns encrypted with `packages/encryption` `encryptForOrg`, ADR-020)
 - IVA/VAT matrix logic
 - reconciliation helpers (Stripe ↔ TOConline)
 
@@ -512,11 +518,12 @@ Owns:
 
 Owns:
 
-- WorkOS Vault primitives (`vaultPut`, `vaultGet`)
-- domain helpers (`encryptRecord`, `encryptOAuthToken`)
-- crypto-shredding on org deletion
+- envelope encryption (ADR-020): per-org DEKs in `org_data_keys`, wrapped by versioned KEKs from `ELEVA_KEK_V<n>`; primitives `encryptForOrg(orgId, plaintext, aad?)`, `decryptForOrg(orgId, ciphertext, aad?)`, `getOrCreateOrgDek(orgId)`
+- key lifecycle: `rotateKek(fromVersion, toVersion)` re-wraps DEKs without touching ciphertext
+- crypto-shredding on org deletion: `shredOrgKeys(orgId)` deletes the `org_data_keys` rows, making every ciphertext for that org unrecoverable
+- no external vault service; there is no WorkOS Vault dependency
 
-CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere.
+CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere; `ELEVA_KEK_V*` read only inside this package.
 
 ### `packages/ai`
 
@@ -526,9 +533,25 @@ Owns:
 - prompt contracts (versioned)
 - transcript summarization pipeline
 - AI report drafting pipeline
+- editor writing assistance (`editorAssist`: improve, shorten, fix grammar, translate) and `translateMessages` i18n drafting (drafts are human-reviewed before merge)
+- `approved-models.ts` allow-list (fail closed; PHI-bearing calls require `zeroRetention: true` entries)
 - consent and retention enforcement for AI artifacts
 
 CI rule: no direct LLM provider SDKs outside this package.
+
+### `packages/editor`
+
+Owns (ADR-023):
+
+- the single rich-text editor: Plate (`platejs`, `@platejs/*`) wrapped as `RichTextEditor`, `RichTextViewer`, `LocalizedRichTextField`
+- the storage contract: Plate JSON in `jsonb` plus server-derived sanitized HTML and plain text; clients never send HTML
+- Plate UI registry components (restyled with `@eleva/ui` tokens and Phosphor icons); `@radix-ui/*` is permitted here as an ADR-022 exception (the other, `@radix-ui/themes` as the WorkOS Widgets peer, is transitional until Phase 3)
+- the sanitizer allow-list and its XSS tests
+- AI actions delegated to `@eleva/ai` through `POST /ai/editor` in `apps/api`
+
+Consumers: expert bios, event-type descriptions and location instructions (Phase 4B), clinical notes, reports and the template library (Phase 10), clinic pages (Phase 11).
+
+CI rule: `platejs`, `@platejs/*`, `slate*`, `@radix-ui/*` importable only inside this package.
 
 ### `packages/mobile` later
 
@@ -613,6 +636,7 @@ Packages:
 - `packages/audit`
 - `packages/encryption`
 - `packages/ai`
+- `packages/editor`
 - `packages/eslint-config` (migrated + renamed)
 - `packages/typescript-config` (migrated + renamed)
 

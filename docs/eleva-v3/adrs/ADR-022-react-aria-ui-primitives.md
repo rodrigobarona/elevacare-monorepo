@@ -64,4 +64,4 @@ Negative / costs:
 - [`ADR-014-multi-zone-rewrites.md`](ADR-014-multi-zone-rewrites.md)
 - [`.cursor/rules/react-aria-ui.mdc`](../../../.cursor/rules/react-aria-ui.mdc)
 - [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html)
-- [shadcn/ui aria-luma style](https://ui.shadcn.com)
+- [shadcn/ui React Aria base (July 2026 changelog; Luma style)](https://ui.shadcn.com/docs/changelog/2026-07-react-aria) and per-component docs under [`/docs/components/aria/*`](https://ui.shadcn.com/docs/components/aria/button)

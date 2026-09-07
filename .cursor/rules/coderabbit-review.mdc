@@ -1,0 +1,40 @@
+---
+description: Run the CodeRabbit CLI loop before committing and before opening a PR. Apply when finishing an implementation step, committing, pushing, opening a PR, or handling PR review comments on any branch.
+alwaysApply: false
+---
+
+# CodeRabbit CLI Loop — Local Gate Before the PR Gate
+
+Full manual: `.cursor/skills/coderabbit-review/SKILL.md`. Sequencing SSOT:
+`docs/eleva-v3/execution-plan/README.md` section 4.
+
+## Order of operations
+
+1. `pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build`
+2. `pnpm review` — CodeRabbit CLI on uncommitted changes. Fix every finding. Re-run until clean
+   or the cap (max 3 rounds; exit at the cap only with zero Critical/Major; leftover Minor/Trivial
+   go to the PR body "Deferred findings" table).
+3. Commit (Conventional Commits, see `commit-message-format.mdc`).
+4. `pnpm review:branch` — CodeRabbit CLI on all commits vs `main`. Fix, commit, re-run until clean
+   or the cap (max 2 rounds, same exit rule).
+5. `git push -u origin <branch>` and `gh pr create --base main` with the PR body template
+   (README section 8). Body must list CLI finding counts and any declined findings with reasons.
+6. On the PR: for every CodeRabbit GitHub App comment, fix + push or reply
+   `Not actionable because ...`. Re-run `pnpm review:branch` after each fix batch. Max 2 App
+   rounds; then summarise leftovers in one comment for the human reviewer.
+7. Merge only when there are zero unresolved CodeRabbit comments, every CI check is green and a
+   human has approved: `gh pr merge --squash --delete-branch`.
+
+## Hard rules
+
+- Never silence a finding by weakening a rule, disabling a lint, loosening a schema, deleting a
+  test, or adding a `.coderabbit.yaml` filter for the file being reviewed.
+- Security, RLS/`withOrgContext`, `withAudit`, vendor-SDK boundary and PHI-in-logs findings are
+  never declined.
+- One phase = one branch `phase-NN/<slug>` = one PR. When a phase prompt defines split slices
+  (`phase-NN.1/...`, `phase-NN.2/...`), each slice is its own branch and PR with the full loop;
+  the second slice branches from `main` after the first has merged. Target <= 30 files / 400
+  lines; split above 60 files / 800 lines and always before 100 reviewable files (the App skips
+  at 100).
+- `pnpm review` needs `coderabbit auth login` once per machine; if the CLI is not authenticated,
+  stop and ask the user to authenticate rather than skipping the gate.
