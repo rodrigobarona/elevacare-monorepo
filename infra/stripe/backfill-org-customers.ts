@@ -30,7 +30,7 @@ import { db, main as schema, withPlatformAdminContext } from "@eleva/db"
 interface OrgRow {
   id: string
   workosOrgId: string
-  type: "personal" | "expert" | "team" | "staff"
+  type: "personal" | "expert" | "team" | "academy" | "staff"
   name: string | null
 }
 
