@@ -111,7 +111,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/05-member-app.md in full.
 3. Read every file under "Local references". Pull Stripe receipts, Vercel Blob, Next.js 16 and
-   QStash docs through Context7.
+   QStash docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-05/member-app

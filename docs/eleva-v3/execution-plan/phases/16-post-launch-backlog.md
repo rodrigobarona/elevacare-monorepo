@@ -55,6 +55,12 @@ and run the standard loop from README section 4.
 
 ## Copy-paste prompt
 
+This prompt is a **promotion template**: the only two placeholders are `<N>` (the backlog number
+from the table above, e.g. `4`) and `<slug>` (kebab-case of the item title, e.g.
+`marketplace-search-v2`). Replace both everywhere before pasting; everything else is fixed. The
+first line of the task restates the item title and its Origin documents from the table so the
+pasted prompt identifies the work without this file.
+
 ````text
 You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
 (/Users/<you>/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
@@ -64,8 +70,8 @@ Before writing code:
    you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 5, 6, 7, 8 and this phase file in
    full (docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md).
-3. Read every file under "Local references" of this phase and the "Origin" documents of the item
-   you are promoting. Pull every library the promoted item needs through Context7
+3. Read every file under "Local references" of this phase and the "Origin" documents listed in
+   the backlog table row 16.<N> of that file. Pull every library the promoted item needs through Context7
    (resolve-library-id then query-docs) and prefer those docs over memory for Next.js 16, Better
    Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
    CodeRabbit.
@@ -93,8 +99,10 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 
 PHASE 16 TASK — Promote backlog item 16.<N> into a phase and deliver it on one branch / one PR.
 
-Phase 16 is a backlog, not a build phase. Item 16.<N> is given by the requester. Deliver in
-this order, all on branch phase-16.<N>/<slug>:
+Item: row 16.<N> of the backlog table in
+docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md (title, Origin documents and Notes
+are authoritative; copy the title verbatim into the new phase file heading). Phase 16 is a
+backlog, not a build phase. Deliver in this order, all on branch phase-16.<N>/<slug>:
 
 1. Planning commit (docs(p16.<N>): ...), first on the branch:
    a. Write docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md with the same structure as the

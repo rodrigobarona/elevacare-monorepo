@@ -22,8 +22,12 @@ In:
     `apps/web` footer; privacy/health-data/terms final and versioned; DPIA updated (WorkOS removed,
     Daily added, Better Auth self-hosted, AI Gateway); subprocessor list; DSAR export within 10
     minutes verified in production-like data; crypto-shred test on a staging org; EU data
-    residency confirmations (Neon EU, Upstash EU, Vercel region `fra1`/`cdg1`, Daily EU, Resend EU
-    region if available, Sentry EU, PostHog EU).
+    residency confirmations (Neon EU, Upstash EU, Vercel region `fra1`/`cdg1`, Daily EU, Sentry EU,
+    PostHog EU) — each a hard gate; **Resend**: EU region enabled on the account is the gate; if
+    Resend cannot process in the EU, launch is blocked until the DPIA records the approved
+    transfer mechanism (SCCs / DPF), the subprocessor entry, minimisation (no PHI in email
+    bodies, transactional only) and the retention setting — a missing EU region is never silently
+    skipped.
   - Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
     statement descriptor); live webhook endpoint created with `pnpm stripe:setup:webhooks -- --url
 https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and OAuth app;
@@ -120,7 +124,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
    operator-tasks/cutover-runbook.md and launch-readiness-checklist.md.
 3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
-   through Context7.
+   through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory) for the code/doc PR:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
@@ -147,8 +152,9 @@ A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item
    no-diagnosis disclaimers) linked from the apps/web footer; final versioned legal texts in all
    locales; DPIA update in compliance-data-governance.md (WorkOS removed, Daily/Better Auth/AI
    Gateway added, subprocessor table); DSAR timing test; crypto-shred test on a staging org;
-   EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Resend, Sentry EU,
-   PostHog EU) with links; pen-test findings closed; CSP enforced; production flag defaults
+   EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Sentry EU,
+   PostHog EU, and Resend: EU region evidence OR the DPIA-approved transfer mechanism +
+   subprocessor + minimisation + retention entries — otherwise the gate fails) with links; pen-test findings closed; CSP enforced; production flag defaults
    (ff.toconline_invoicing_enabled on, ff.ai_reports_beta off, ff.session_recording off) applied
    with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
    recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one

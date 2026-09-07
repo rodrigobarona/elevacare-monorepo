@@ -31,8 +31,10 @@ In:
   `@eleva/encryption`), `src/eleva-platform/` (Tier 1 TOConline client: OAuth PKCE, customers,
   services, sales documents v1, PDF URL, AT communication, email), `src/expert-apps/adapters/
 {toconline,moloni,manual}` implementing `ExpertInvoicingAdapter`, `src/registry.ts` kept.
-- Tier 1: `issuePlatformFeeInvoice(bookingPaymentId)` — triggered when `payout_states` becomes
-  `transferred` (fee is final) — creates/updates the expert as TOConline customer (NIF, address
+- Tier 1: `issuePlatformFeeInvoice(bookingPaymentId)` — triggered by the `payment_intent.succeeded`
+  handler (the fee is fixed at charge time in `booking_payments.application_fee_cents`; a later
+  refund or reversal issues a credit note) so that every paid booking gets an invoice regardless
+  of payout state (`approval_required`, `held`, `failed`) — creates/updates the expert as TOConline customer (NIF, address
   from `expert_profiles` + `expert_practice_location`), creates a sales document in series
   `ELEVA-FEE-{YYYY}` with one line `Platform service fee — booking #<short id>` at the applied
   fee, IVA per matrix (PT 23%; EU VIES valid -> reverse charge; non-EU zero-rated), finalizes,
@@ -55,7 +57,8 @@ status, installed_at)` encrypted with `encryptForOrg`; OAuth PKCE callback route
   or Manual (acknowledge legal obligation); Become-Partner cannot complete without one; session
   page shows invoice status with retry and "mark as issued manually".
 - Workflows: `invoicing-retry` DLQ processor (every 30 min) and `stripe-toconline-reconciliation`
-  (monthly, 1st at 05:00 Lisbon) comparing Stripe application fees per expert vs Tier 1 totals;
+  (monthly, 1st at 05:00 Lisbon) comparing ledger platform fees (`booking_payments.application_fee_cents`,
+  net of refunds) per expert vs Tier 1 invoice minus credit-note totals;
   mismatch > 0.1% -> BetterStack alert + `accounting_reconciliation_runs` row for admin.
 - Flags: `ff.toconline_invoicing_enabled`, `ff.expert_invoicing_apps_enabled`,
   `ff.invoicing.toconline`, `ff.invoicing.moloni` via `@eleva/flags`.
@@ -103,7 +106,8 @@ connected|disconnected`).
 
 ## Docs to update
 
-- `payments-payouts-spec.md` (Tier 1 trigger = transfer, not `settled`), `toconline-api-reference.md`
+- `payments-payouts-spec.md` (Tier 1 trigger = `payment_intent.succeeded`, credit note on refund;
+  not `settled` or transfer), `toconline-api-reference.md`
   (any verified corrections), `integration-runbooks.md` (TOConline token expiry, AT failures),
   `admin-operator-playbooks.md`, `operator-tasks/toconline-setup.md`, `feature-flag-rollout-plan.md`,
   `decision-log.md` (accountant sign-off).
@@ -147,7 +151,9 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/07-invoicing-toconline.md in full.
 3. Read every file under "Local references" (toconline-api-reference.md end to end). Pull Vercel
-   Flags, QStash docs through Context7; use the local TOConline reference for endpoints.
+   Flags, QStash docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory; use the local TOConline
+   reference for endpoints.
 4. Entry gate: confirm decision-log.md contains the accountant sign-off of the IVA matrix. If it
    is missing, implement PR 07.2 first and stop before Tier 1 issuance code, reporting the block.
 
@@ -190,9 +196,10 @@ PR 07.1 — Tier 1 (Eleva platform):
    error, attempts), platform_fee_credit_notes, clinic_saas_invoices (subscription_id +
    period_start PK, ...), accounting_reconciliation_runs (month, stripe_fee_total_cents,
    invoiced_total_cents, mismatch_bps, status, details jsonb, created_at). RLS; audit unions.
-3. Trigger: in @eleva/billing payouts when payout_states -> transferred, enqueue
-   issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id). On refund
-   with an issued invoice -> credit note. Flag gate ff.toconline_invoicing_enabled (default off;
+3. Trigger: in the payment_intent.succeeded webhook handler (@eleva/billing), after the ledger row
+   is written, enqueue issuePlatformFeeInvoice via @eleva/workflows (idempotent on
+   booking_payment_id; a replayed event must not create a second invoice). On refund or transfer
+   reversal with an issued invoice -> issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
    failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-

@@ -113,7 +113,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md in full.
 3. Read every file under "Local references". Pull Resend, React Email, Twilio (EU region), QStash
-   and Next.js after() docs through Context7 / twilio docs tools.
+   and Next.js after() docs through Context7
+   (resolve-library-id then query-docs) or the Twilio docs tools; prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-08/notifications-lane1

@@ -28,9 +28,13 @@ In:
   - `POST /bookings/reserve` (guest or member; `reserveSlot` 5-minute TTL; returns
     `reservationId`).
   - `POST /payments/intent` (creates PaymentIntent for the reservation: amount from event type
-    price, currency EUR, `application_fee_amount` from `@eleva/billing` commission SSOT,
-    `transfer_data.destination` = expert Connect account, `automatic_payment_methods`, metadata
-    `reservationId`, `bookingId`; idempotency key = reservationId).
+    price, currency EUR, charged on the **platform** account — Stripe "separate charges and
+    transfers" funds flow, so **no** `transfer_data` and **no** `application_fee_amount`; the
+    platform fee from the `@eleva/billing` commission SSOT is stored in the ledger as
+    `booking_payments.application_fee_cents` and the payout engine (Phase 6) later transfers
+    `amount - fee` to the expert; `transfer_group = bookingId`, `automatic_payment_methods`,
+    metadata `reservationId`, `bookingId`; idempotency key = reservationId). Destination
+    charges are rejected because payouts are delayed until eligibility (Phase 6).
   - `POST /bookings/confirm` (called from webhook `payment_intent.succeeded` path and client
     return; converts reservation -> booking `confirmed`; guest -> Better Auth user created with
     `emailVerified=false` + magic link activation; member's personal Space is the buyer org).
@@ -122,8 +126,9 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 ## External docs
 
-- Stripe `/websites/stripe`: Payment Element, Dynamic Payment Methods, MB WAY, Connect destination
-  charges with `application_fee_amount`, idempotency keys.
+- Stripe `/websites/stripe`: Payment Element, Dynamic Payment Methods, MB WAY, Connect "separate
+  charges and transfers" funds flow (platform charge, `transfer_group`, later `transfers.create`
+  with `source_transaction`), idempotency keys.
 - Next.js 16 `/vercel/next.js`: `use cache`, `cacheTag`/`revalidateTag`, `generateMetadata`,
   `sitemap.ts`, `opengraph-image`.
 - next-intl v4 `/amannn/next-intl`.
@@ -148,8 +153,9 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/04-public-marketplace-booking.md in full.
 3. Read every file under "Local references" (including the MVP funnel files under
    _context/clone-repo/eleva-care-app for parity). Pull Stripe (Payment Element, Dynamic Payment
-   Methods, Connect destination charges), Next.js 16 (use cache, metadata, sitemap), next-intl v4
-   and BotID docs through Context7.
+   Methods, Connect separate charges and transfers), Next.js 16 (use cache, metadata, sitemap), next-intl v4
+   and BotID docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-04.1/public-api-and-explorer
@@ -207,9 +213,11 @@ PR 04.2 — funnel + payment + marketing/legal:
    TTL; returns reservationId + expiresAt; 409 on conflict), POST /payments/intent
    ({ reservationId }) creating a Stripe PaymentIntent via @eleva/billing: amount from event type,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
-   application_fee_amount from the commission SSOT (packages/billing/src/server/commission.ts —
-   make it the single function used everywhere), transfer_data.destination = expert Connect
-   account, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
+   charged on the platform account (separate charges and transfers: NO transfer_data and NO
+   application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
+   platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
+   it the single function used everywhere) and stored as booking_payments.application_fee_cents +
+   applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
    idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
    idempotent — verifies intent status with Stripe, converts reservation to confirmed booking,
    creates the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for

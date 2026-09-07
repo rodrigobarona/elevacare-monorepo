@@ -24,8 +24,13 @@ In:
   `admin|member`, expiry 7d, email via Lane 1 kind `team.invitation`), accept flow in
   `apps/account`, member roles: `owner` (billing), `admin` (manage), `member` (expert working
   inside the clinic); expert-in-clinic profile link (`expert_profiles.clinic_org_id` nullable, an
-  expert may also keep a solo org); seat sync (Phase 3 hook) updates Stripe subscription
-  quantity; seat limit enforcement by plan (Starter 5, Growth 20, Enterprise custom).
+  expert may also keep a solo org). **Seat rule (single definition used by schema, code, tests
+  and acceptance):** a billable seat is a clinic membership — any role, owner included — whose
+  user has at least one _published_ event type in that clinic; owner/admin accounts without
+  published event types are free. `syncSeatQuantity` (Phase 3 hook, re-run on event-type
+  publish/unpublish and member removal) pushes that count to the Stripe subscription quantity;
+  plan caps (Starter 5, Growth 20, Enterprise custom) are enforced when the cap would be
+  exceeded by a publish -> `409 SEAT_LIMIT_REACHED`.
 - **Billing**: plans from `infra/stripe/seed-products.ts` (Starter 99 + 39/seat, Growth 199 +
   29/seat, Enterprise contact) with Entitlements features (`team.members`, `team.branding`,
   `team.reports`); Embedded Checkout (`POST /billing/checkout` exists — extend for team plans) and
@@ -36,7 +41,8 @@ In:
   revenue, seats), members (list, roles, invite, remove), schedule view (read-only across
   experts), bookings (list/filter by expert), billing (plan, seats, invoices, portal button),
   settings (profile, public page, branding), notifications inbox (Phase 8 component).
-- **Clinic public page** (`apps/web/[locale]/[username]` shared namespace): clinic profile with
+- **Clinic public page** (`apps/web/[locale]/[username]` shared namespace, enforced by the single
+  `public_handles` table — see deliverable 1): clinic profile with
   experts grid; booking any expert routes to that expert's event types with `attribution =
 clinic` so `computeApplicationFee` returns 0 bps and payout goes to the clinic's or the
   expert's Connect account per `clinic_profiles.payout_mode` (`clinic|expert`) — default `expert`
@@ -67,9 +73,11 @@ created|verified|member_invited|member_joined|member_removed|seats_synced`; `sub
 
 - [ ] Create Team -> subscribe Starter via Embedded Checkout (test card) -> `billing_subscriptions`
       active, entitlements readable via `@eleva/billing` `hasFeature`.
-- [ ] Invite 3 experts -> accept -> `member` rows -> Stripe quantity 3 (+ owner if counted per
-      spec) -> remove one -> quantity decremented.
-- [ ] Seat limit: 6th invite on Starter -> 409 `SEAT_LIMIT_REACHED` with upgrade CTA.
+- [ ] Invite 3 experts -> accept -> `member` rows -> each publishes one event type -> Stripe
+      quantity 3 (the owner has no published event type and is not counted) -> remove one ->
+      quantity 2; unpublishing the last event type of a member also decrements.
+- [ ] Seat limit: the 6th billable expert publishing an event type on Starter -> 409
+      `SEAT_LIMIT_REACHED` with upgrade CTA (invitations themselves are not capped).
 - [ ] Member books a clinic expert from the clinic page -> `applied_commission_bps = 0`,
       `attributed_org_id = clinic`; payout to the expert's account (default mode).
 - [ ] `invoice.finalized` -> `clinic_saas_invoices` row issued in `ELEVA-SAAS-2026` (test series).
@@ -106,8 +114,9 @@ created|verified|member_invited|member_joined|member_removed|seats_synced`; `sub
 
 ## Risks
 
-- Seat counting semantics (owner counted?) — decide from `payments-payouts-spec.md`; record in
-  `decision-log.md`.
+- Seat rule ambiguity is closed by this phase (see Scope): billable seat = membership with >= 1
+  published event type in the clinic, role-independent; `payments-payouts-spec.md` "published in
+  the last 30 days" qualifier is dropped as non-deterministic. Record in `decision-log.md`.
 
 ## Copy-paste prompt
 
@@ -123,7 +132,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/11-team-clinics.md in full.
 3. Read every file under "Local references". Pull Stripe (subscriptions quantity, Embedded
    Checkout, Customer Portal, Entitlements, invoice.finalized) and Better Auth organization
-   (invitations, hooks) docs through Context7.
+   (invitations, hooks) docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-11/team-clinics
@@ -144,10 +154,15 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 
 PHASE 11 TASK — Clinic (Team) SaaS product.
 
-1. packages/db: clinic_profiles (org_id PK FK auth.organization type team, legal_name, nif,
-   billing_address jsonb, logo_url, public_slug unique (shared username namespace with experts —
-   enforce via a usernames view or shared table), description, specialties text[], payout_mode
-   clinic|expert default expert, verification_status pending|verified|rejected, created_at),
+1. packages/db: public_handles (handle citext PK, owner_kind expert|clinic, owner_id, created_at)
+   — the ONE table that owns the /[username] namespace: expert usernames (migrate
+   expert_profiles.username to reference it) and clinic slugs are both inserted here in the same
+   transaction that creates the profile, so uniqueness across experts and clinics is a real
+   constraint, not a view; include the reserved-word list (system routes) as a check; RLS public
+   read. clinic_profiles (org_id PK FK auth.organization type team, legal_name, nif,
+   billing_address jsonb, logo_url, public_slug FK public_handles.handle, description,
+   specialties text[], payout_mode clinic|expert default expert, verification_status
+   pending|verified|rejected, created_at),
    clinic_verifications (id, org_id, submitted_at, reviewed_by, reviewed_at, status, notes),
    expert_profiles.clinic_org_id nullable FK, bookings.attributed_org_id nullable,
    billing_subscriptions additions (seat_quantity, plan_key starter|growth|enterprise,
@@ -159,10 +174,13 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    configuration via infra/stripe/setup-portal.ts allows plan switch and quantity view only.
 3. @eleva/billing: subscriptions.ts createTeamCheckoutSession(orgId, planKey) for Embedded
    Checkout (ui_mode embedded, return_url to apps/team billing), createPortalSession(orgId);
-   provisioning.ts syncSeatQuantity(orgId) counts members with role in (owner, admin, member) — if
-   payments-payouts-spec.md says owner is not a seat, implement that and record in decision-log;
-   enforce seat limits per plan (Starter 5, Growth 20, Enterprise unlimited) in the invitation
-   endpoint -> 409 SEAT_LIMIT_REACHED. Webhooks (two-file contract): customer.subscription.created,
+   provisioning.ts syncSeatQuantity(orgId) = count of clinic memberships (any role, owner included)
+   whose user has >= 1 published event type in that clinic — the single seat rule; owner/admin
+   accounts without published event types are free; called from event-type publish/unpublish and
+   member removal hooks; update payments-payouts-spec.md (drop the "last 30 days" qualifier) and
+   add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
+   unlimited) at event-type publish time in the clinic context -> 409 SEAT_LIMIT_REACHED; the
+   same rule in the schema check, the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -> billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag

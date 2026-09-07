@@ -19,7 +19,9 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 In:
 
 - **Records** (`records`: id, expert_org_id, member_user_id, booking_id nullable, kind
-  `note|report|document_ref|ai_draft`, `title_encrypted` + `body_encrypted` (envelope,
+  `note|report|document_ref|transcript|ai_draft` (one shared `RECORD_KINDS` const in
+  `packages/db/src/schema/main/records.ts`, reused by the migration enum, API Zod schemas,
+  `@eleva/audit` unions and tests), `title_encrypted` + `body_encrypted` (envelope,
   `encryptForOrg(expertOrgId)`; naming convention `<field>_encrypted` everywhere),
   `published_at` (member-visible when set), `version`, `created_by`, timestamps;
   `session_documents`: private Blob pathname, mime, size, `metadata_encrypted`, uploaded_by,
@@ -136,7 +138,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md in full.
 3. Read every file under "Local references". Pull Vercel AI SDK/AI Gateway (generateObject with
    Zod, gateway provider), Daily recording/transcription, Vercel Blob private store and Sentry
-   beforeSend docs through Context7.
+   beforeSend docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-10.1/records-consent-retention
@@ -158,8 +161,9 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report drafting (ADR-009, ADR-020).
 
 PR 10.1 — records, documents, consent, retention:
-1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind note|report|
-   transcript|ai_draft, title_encrypted, body_encrypted (text, envelope ciphertext), format
+1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
+   shared RECORD_KINDS const = note|report|document_ref|transcript|ai_draft (single enum reused by
+   the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
    blob_pathname unique, mime, size_bytes, metadata_encrypted, scope expert_only|shared,
@@ -211,8 +215,13 @@ PR 10.2 — CRM + AI reports beta:
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
    Report({ transcriptRecordId }) using generateObject via the gateway with model id from
-   AI_GATEWAY_MODEL_SESSION_REPORT (pinned), providerOptions to disable data retention where
-   supported, tokens/latency logged without content; result stored as records.kind = ai_draft
+   AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: keep an allow-list
+   packages/ai/src/approved-models.ts of { modelId, provider, zeroRetention: true, evidenceUrl }
+   entries verified against the provider's zero-data-retention terms through the AI Gateway
+   (record the evidence in compliance-data-governance.md); draftSessionReport refuses to run
+   (typed error AI_MODEL_NOT_APPROVED, audited) when the configured model is not on the list or
+   the gateway response does not confirm the no-retention providerOptions were applied — never
+   send PHI "where supported"; tokens/latency logged without content; result stored as records.kind = ai_draft
    (encrypted, unpublished) + audit ai_draft.generated; failures audited. Endpoint POST
    /ai/session-report/[transcriptRecordId] (expert only, flag ff.ai_reports_beta, rate limited
    5/h/org) and GET status. Expert UI: "Draft with AI" on the session page -> draft appears in

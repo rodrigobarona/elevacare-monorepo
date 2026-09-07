@@ -127,8 +127,9 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/12-admin-console.md in full.
 3. Read every file under "Local references" including the MVP admin routes for parity. Pull Better
-   Auth admin plugin docs and QStash REST docs through Context7; use the shadcn MCP for DataTable
-   examples.
+   Auth admin plugin docs and QStash REST docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory; use the shadcn MCP for
+   DataTable examples.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-12.1/admin-users-partners

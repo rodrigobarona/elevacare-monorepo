@@ -98,7 +98,8 @@ Phase 0 is merged (<code>pnpm review</code>, <code>pnpm review:branch</code>, Co
 <p>Eleva.care is an EU-first, Portugal-first digital health marketplace and community. Experts
 (clinicians, educators) sell sessions to <strong>members</strong>; clinics (<strong>Teams</strong>) run several experts under
 one organization on a per-seat SaaS plan; <strong>Academy</strong> is the education surface. Everything is
-multilingual (<code>pt</code>, <code>en</code>, <code>es</code>, <code>pt-BR</code> at launch), API-first and agentic-first, and built to
+multilingual (<code>pt</code>, <code>en</code>, <code>es</code> at launch; <code>pt-BR</code> pending the Phase 4 alias-vs-full-locale
+decision recorded in <code>decision-log.md</code>), API-first and agentic-first, and built to
 HIPAA/GDPR/ERS-Portugal standards.</p>
 <p>End state of this plan (production, <code>eleva.care</code> DNS switched from the MVP):</p>
 <table>
@@ -1552,7 +1553,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/03-remove-workos.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Better Auth (getAccessToken, linkSocial,
-   organization hooks), Drizzle, Stripe subscriptions docs through Context7.
+   organization hooks), Drizzle, Stripe subscriptions docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-03/remove-workos
@@ -1590,8 +1592,10 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
      readable, shred makes it unreadable, KEK missing -&gt; clear error.
 2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth. getProviderToken
-   ({ userId, provider }) -&gt; auth.api.getAccessToken({ providerId: provider, userId }) (auto
-   refresh); expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
+   ({ userId, provider, accountId }) -&gt; auth.api.getAccessToken({ providerId: provider, accountId,
+   userId }) (auto refresh) where accountId = expert_integrations.auth_account_id — always pass it
+   so a user with several linked accounts for the same provider gets the calendar they connected;
+   expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
    google https://www.googleapis.com/auth/calendar.readonly + calendar.events; microsoft
    Calendars.ReadWrite offline_access). expert_integrations: replace workos_user_id with
    auth_account_id (FK auth.account.id); migration in packages/db. Update adapters only where they
@@ -1683,9 +1687,13 @@ external busy-time cache from calendar adapters; 5-minute cache).</li>
 <li><code>POST /bookings/reserve</code> (guest or member; <code>reserveSlot</code> 5-minute TTL; returns
 <code>reservationId</code>).</li>
 <li><code>POST /payments/intent</code> (creates PaymentIntent for the reservation: amount from event type
-price, currency EUR, <code>application_fee_amount</code> from <code>@eleva/billing</code> commission SSOT,
-<code>transfer_data.destination</code> = expert Connect account, <code>automatic_payment_methods</code>, metadata
-<code>reservationId</code>, <code>bookingId</code>; idempotency key = reservationId).</li>
+price, currency EUR, charged on the <strong>platform</strong> account — Stripe &quot;separate charges and
+transfers&quot; funds flow, so <strong>no</strong> <code>transfer_data</code> and <strong>no</strong> <code>application_fee_amount</code>; the
+platform fee from the <code>@eleva/billing</code> commission SSOT is stored in the ledger as
+<code>booking_payments.application_fee_cents</code> and the payout engine (Phase 6) later transfers
+<code>amount - fee</code> to the expert; <code>transfer_group = bookingId</code>, <code>automatic_payment_methods</code>,
+metadata <code>reservationId</code>, <code>bookingId</code>; idempotency key = reservationId). Destination
+charges are rejected because payouts are delayed until eligibility (Phase 6).</li>
 <li><code>POST /bookings/confirm</code> (called from webhook <code>payment_intent.succeeded</code> path and client
 return; converts reservation -&gt; booking <code>confirmed</code>; guest -&gt; Better Auth user created with
 <code>emailVerified=false</code> + magic link activation; member&#39;s personal Space is the buyer org).</li>
@@ -1780,8 +1788,9 @@ patterns.</li>
 </ul>
 <h2 id="04-public-marketplace-booking--external-docs"><a class="anchor" href="#04-public-marketplace-booking--external-docs" aria-label="Link to section">#</a>External docs</h2>
 <ul>
-<li>Stripe <code>/websites/stripe</code>: Payment Element, Dynamic Payment Methods, MB WAY, Connect destination
-charges with <code>application_fee_amount</code>, idempotency keys.</li>
+<li>Stripe <code>/websites/stripe</code>: Payment Element, Dynamic Payment Methods, MB WAY, Connect &quot;separate
+charges and transfers&quot; funds flow (platform charge, <code>transfer_group</code>, later <code>transfers.create</code>
+with <code>source_transaction</code>), idempotency keys.</li>
 <li>Next.js 16 <code>/vercel/next.js</code>: <code>use cache</code>, <code>cacheTag</code>/<code>revalidateTag</code>, <code>generateMetadata</code>,
 <code>sitemap.ts</code>, <code>opengraph-image</code>.</li>
 <li>next-intl v4 <code>/amannn/next-intl</code>.</li>
@@ -1804,8 +1813,9 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/04-public-marketplace-booking.md in full.
 3. Read every file under &quot;Local references&quot; (including the MVP funnel files under
    _context/clone-repo/eleva-care-app for parity). Pull Stripe (Payment Element, Dynamic Payment
-   Methods, Connect destination charges), Next.js 16 (use cache, metadata, sitemap), next-intl v4
-   and BotID docs through Context7.
+   Methods, Connect separate charges and transfers), Next.js 16 (use cache, metadata, sitemap), next-intl v4
+   and BotID docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04.1/public-api-and-explorer
@@ -1863,9 +1873,11 @@ PR 04.2 — funnel + payment + marketing/legal:
    TTL; returns reservationId + expiresAt; 409 on conflict), POST /payments/intent
    ({ reservationId }) creating a Stripe PaymentIntent via @eleva/billing: amount from event type,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
-   application_fee_amount from the commission SSOT (packages/billing/src/server/commission.ts —
-   make it the single function used everywhere), transfer_data.destination = expert Connect
-   account, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
+   charged on the platform account (separate charges and transfers: NO transfer_data and NO
+   application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
+   platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
+   it the single function used everywhere) and stored as booking_payments.application_fee_cents +
+   applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
    idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
    idempotent — verifies intent status with Stripe, converts reservation to confirmed booking,
    creates the guest&#39;s Better Auth user if missing (auth.api.signUpEmail is not appropriate for
@@ -2031,7 +2043,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/05-member-app.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Stripe receipts, Vercel Blob, Next.js 16 and
-   QStash docs through Context7.
+   QStash docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-05/member-app
@@ -2136,6 +2149,14 @@ Onboarding, Account Management, Payouts, Notification Banner) via Account Sessio
 Identity verification step, requirements polling (<code>account.updated</code> webhook -&gt; <code>billing_customers</code>/
 <code>expert_profiles.connect_status</code>), gating: an expert cannot publish event types until
 <code>charges_enabled &amp;&amp; payouts_enabled &amp;&amp; identity_verified</code>; clear status UI with next actions.</li>
+<li><strong>Funds flow (locked, shared with Phase 4)</strong>: Stripe <strong>separate charges and transfers</strong>. The
+member&#39;s PaymentIntent is charged on the platform account (no <code>transfer_data</code>, no
+<code>application_fee_amount</code>); the platform fee lives in the ledger
+(<code>booking_payments.application_fee_cents</code>); the payout engine below creates one
+<code>stripe.transfers.create</code> of <code>amount - fee</code> per booking once eligible. Destination charges are
+rejected because they move funds at payment time and cannot express the delayed schedule; the
+MVP mixed both flows and this phase removes that ambiguity. Record the choice in
+<code>decision-log.md</code> and <code>payments-payouts-spec.md</code>.</li>
 <li><strong>Commission SSOT</strong>: <code>packages/billing/src/server/commission.ts</code> is the only place computing
 the platform fee (<code>15%</code> default, <code>8%</code> Top Expert, <code>0%</code> clinic-member bookings); used by
 <code>POST /payments/intent</code> (Phase 4) and by reconciliation; store the applied rate on
@@ -2153,7 +2174,9 @@ dispute open, or manual hold; retries with backoff and DLQ.</li>
 QStash schedules in <code>infra/qstash</code>): <code>process-expert-transfers</code> (every 2h),
 <code>process-pending-payouts</code> (06:00), <code>check-upcoming-payouts</code> (daily notice), <code>cleanup-expired- reservations</code> (every 15 min, existing), <code>stripe-stuck-events</code> (existing).</li>
 <li><strong>Refunds and disputes</strong>: <code>POST /payments/[bookingPaymentId]/refund</code> (admin or policy-driven;
-full or partial; <code>reverse_transfer</code> + <code>refund_application_fee</code> when transfer already made);
+full or partial; refund the platform charge, <code>reverse_transfer: true</code> when a transfer was
+already made, and reduce the ledger fee proportionally — there is no Stripe application fee
+object in this funds flow);
 webhook handlers for <code>charge.refunded</code>, <code>charge.dispute.created/closed</code>, <code>transfer.created/ reversed</code>, <code>payout.paid/failed</code>, <code>account.updated</code>, <code>identity.verification_session.verified/ requires_input</code>, <code>payment_intent.succeeded/payment_failed/canceled</code> — all added to <strong>both</strong>
 <code>packages/billing/src/server/webhook.ts</code> and <code>infra/stripe/setup-webhooks.ts</code>.</li>
 <li><strong>Expert finance UI</strong> (<code>apps/expert/[orgSlug]/finance</code>): earnings summary, per-booking table
@@ -2186,7 +2209,7 @@ flips <code>connect_status</code> and unlocks publishing.</li>
 <li><input disabled="" type="checkbox"> Test booking paid at T: <code>payout_states.eligible_at = max(T+7d, session_end+24h)</code> at 04:00
 Lisbon; <code>process-expert-transfers</code> creates a Stripe Transfer with <code>transfer_group</code>; payout
 appears in the expert&#39;s Embedded Payouts component; <code>payout.paid</code> marks <code>paid_out</code>.</li>
-<li><input disabled="" type="checkbox"> Refund before transfer: charge refunded, fee refunded, state <code>reversed</code>; refund after
+<li><input disabled="" type="checkbox"> Refund before transfer: charge refunded, ledger fee reduced, state <code>reversed</code>; refund after
 transfer: <code>reverse_transfer</code> executed; ledger consistent; audit rows present.</li>
 <li><input disabled="" type="checkbox"> Dispute opened -&gt; payout <code>held</code>; dispute closed won -&gt; released; lost -&gt; <code>reversed</code>.</li>
 <li><input disabled="" type="checkbox"> Approval-required path: first payout goes to <code>approval_required</code>; <code>POST /payouts/[id]/approve</code>
@@ -2227,8 +2250,9 @@ finance).</li>
 <ul>
 <li>Stripe <code>/websites/stripe</code>: Connect Express + controller properties, Account Sessions + Embedded
 Components (account_onboarding, account_management, payouts, notification_banner), Identity,
-destination charges, separate charges and transfers, <code>transfer_group</code>, <code>source_transaction</code>,
-refunds with <code>reverse_transfer</code>/<code>refund_application_fee</code>, disputes, payouts, test clocks,
+separate charges and transfers (the chosen funds flow; read destination charges only to
+understand why they are rejected), <code>transfer_group</code>, <code>source_transaction</code>, refunds with
+<code>reverse_transfer</code>, disputes, payouts, test clocks,
 webhook best practices, idempotency.</li>
 <li>QStash <code>/upstash/qstash-js</code> (schedules, signature verification).</li>
 <li><code>@stripe/connect-js</code> / <code>@stripe/react-connect-js</code> docs.</li>
@@ -2249,9 +2273,10 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/06-payments-payouts.md in full.
 3. Read every file under &quot;Local references&quot; including the MVP payout code. Pull Stripe docs
-   (Connect Express controller, Account Sessions + Embedded Components, Identity, destination
-   charges, transfers, refunds with reverse_transfer, disputes, payouts, test clocks) and QStash
-   docs through Context7.
+   (Connect Express controller, Account Sessions + Embedded Components, Identity, separate
+   charges and transfers, refunds with reverse_transfer, disputes, payouts, test clocks) and QStash
+   docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-06.1/connect-onboarding-hardening
@@ -2311,7 +2336,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    destination, transfer_group: bookingId, source_transaction: chargeId, metadata },
    { idempotencyKey: `${payoutStateId}:${attempts}` }) with retry/backoff and DLQ table
    workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
-   reason }) using refund_application_fee true and reverse_transfer true when a transfer exists;
+   reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
+   the ledger fee reduced proportionally (no application fee object exists in this funds flow);
    dispute handling sets held / reversed.
 7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.payment_failed, payment_intent.canceled,
@@ -2395,8 +2421,10 @@ the expert invoices the member for the service (Tier 2, the expert&#39;s own fis
 <code>src/core/</code> (IVA rules, VIES check with 24h cache, invoice types, credential store using
 <code>@eleva/encryption</code>), <code>src/eleva-platform/</code> (Tier 1 TOConline client: OAuth PKCE, customers,
 services, sales documents v1, PDF URL, AT communication, email), <code>src/expert-apps/adapters/ {toconline,moloni,manual}</code> implementing <code>ExpertInvoicingAdapter</code>, <code>src/registry.ts</code> kept.</li>
-<li>Tier 1: <code>issuePlatformFeeInvoice(bookingPaymentId)</code> — triggered when <code>payout_states</code> becomes
-<code>transferred</code> (fee is final) — creates/updates the expert as TOConline customer (NIF, address
+<li>Tier 1: <code>issuePlatformFeeInvoice(bookingPaymentId)</code> — triggered by the <code>payment_intent.succeeded</code>
+handler (the fee is fixed at charge time in <code>booking_payments.application_fee_cents</code>; a later
+refund or reversal issues a credit note) so that every paid booking gets an invoice regardless
+of payout state (<code>approval_required</code>, <code>held</code>, <code>failed</code>) — creates/updates the expert as TOConline customer (NIF, address
 from <code>expert_profiles</code> + <code>expert_practice_location</code>), creates a sales document in series
 <code>ELEVA-FEE-{YYYY}</code> with one line <code>Platform service fee — booking #&lt;short id&gt;</code> at the applied
 fee, IVA per matrix (PT 23%; EU VIES valid -&gt; reverse charge; non-EU zero-rated), finalizes,
@@ -2416,7 +2444,8 @@ XML skeleton).</li>
 or Manual (acknowledge legal obligation); Become-Partner cannot complete without one; session
 page shows invoice status with retry and &quot;mark as issued manually&quot;.</li>
 <li>Workflows: <code>invoicing-retry</code> DLQ processor (every 30 min) and <code>stripe-toconline-reconciliation</code>
-(monthly, 1st at 05:00 Lisbon) comparing Stripe application fees per expert vs Tier 1 totals;
+(monthly, 1st at 05:00 Lisbon) comparing ledger platform fees (<code>booking_payments.application_fee_cents</code>,
+net of refunds) per expert vs Tier 1 invoice minus credit-note totals;
 mismatch &gt; 0.1% -&gt; BetterStack alert + <code>accounting_reconciliation_runs</code> row for admin.</li>
 <li>Flags: <code>ff.toconline_invoicing_enabled</code>, <code>ff.expert_invoicing_apps_enabled</code>,
 <code>ff.invoicing.toconline</code>, <code>ff.invoicing.moloni</code> via <code>@eleva/flags</code>.</li>
@@ -2462,7 +2491,8 @@ adapter registry dispatch, manual export shape, reconciliation math.</li>
 </ul>
 <h2 id="07-invoicing-toconline--docs-to-update"><a class="anchor" href="#07-invoicing-toconline--docs-to-update" aria-label="Link to section">#</a>Docs to update</h2>
 <ul>
-<li><code>payments-payouts-spec.md</code> (Tier 1 trigger = transfer, not <code>settled</code>), <code>toconline-api-reference.md</code>
+<li><code>payments-payouts-spec.md</code> (Tier 1 trigger = <code>payment_intent.succeeded</code>, credit note on refund;
+not <code>settled</code> or transfer), <code>toconline-api-reference.md</code>
 (any verified corrections), <code>integration-runbooks.md</code> (TOConline token expiry, AT failures),
 <code>admin-operator-playbooks.md</code>, <code>operator-tasks/toconline-setup.md</code>, <code>feature-flag-rollout-plan.md</code>,
 <code>decision-log.md</code> (accountant sign-off).</li>
@@ -2504,7 +2534,9 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/07-invoicing-toconline.md in full.
 3. Read every file under &quot;Local references&quot; (toconline-api-reference.md end to end). Pull Vercel
-   Flags, QStash docs through Context7; use the local TOConline reference for endpoints.
+   Flags, QStash docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory; use the local TOConline
+   reference for endpoints.
 4. Entry gate: confirm decision-log.md contains the accountant sign-off of the IVA matrix. If it
    is missing, implement PR 07.2 first and stop before Tier 1 issuance code, reporting the block.
 
@@ -2547,9 +2579,10 @@ PR 07.1 — Tier 1 (Eleva platform):
    error, attempts), platform_fee_credit_notes, clinic_saas_invoices (subscription_id +
    period_start PK, ...), accounting_reconciliation_runs (month, stripe_fee_total_cents,
    invoiced_total_cents, mismatch_bps, status, details jsonb, created_at). RLS; audit unions.
-3. Trigger: in @eleva/billing payouts when payout_states -&gt; transferred, enqueue
-   issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id). On refund
-   with an issued invoice -&gt; credit note. Flag gate ff.toconline_invoicing_enabled (default off;
+3. Trigger: in the payment_intent.succeeded webhook handler (@eleva/billing), after the ledger row
+   is written, enqueue issuePlatformFeeInvoice via @eleva/workflows (idempotent on
+   booking_payment_id; a replayed event must not create a second invoice). On refund or transfer
+   reversal with an issued invoice -&gt; issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
    failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-
@@ -2731,7 +2764,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Resend, React Email, Twilio (EU region), QStash
-   and Next.js after() docs through Context7 / twilio docs tools.
+   and Next.js after() docs through Context7
+   (resolve-library-id then query-docs) or the Twilio docs tools; prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-08/notifications-lane1
@@ -2936,7 +2970,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Daily REST API (rooms, meeting tokens,
-   webhooks, HIPAA, custom domain), daily-react and Next.js CSP docs through Context7.
+   webhooks, HIPAA, custom domain), daily-react and Next.js CSP docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-09/video-daily
@@ -3060,7 +3095,9 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 <p>In:</p>
 <ul>
 <li><strong>Records</strong> (<code>records</code>: id, expert_org_id, member_user_id, booking_id nullable, kind
-<code>note|report|document_ref|ai_draft</code>, <code>title_encrypted</code> + <code>body_encrypted</code> (envelope,
+<code>note|report|document_ref|transcript|ai_draft</code> (one shared <code>RECORD_KINDS</code> const in
+<code>packages/db/src/schema/main/records.ts</code>, reused by the migration enum, API Zod schemas,
+<code>@eleva/audit</code> unions and tests), <code>title_encrypted</code> + <code>body_encrypted</code> (envelope,
 <code>encryptForOrg(expertOrgId)</code>; naming convention <code>&lt;field&gt;_encrypted</code> everywhere),
 <code>published_at</code> (member-visible when set), <code>version</code>, <code>created_by</code>, timestamps;
 <code>session_documents</code>: private Blob pathname, mime, size, <code>metadata_encrypted</code>, uploaded_by,
@@ -3175,7 +3212,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/10-records-crm-ai.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Vercel AI SDK/AI Gateway (generateObject with
    Zod, gateway provider), Daily recording/transcription, Vercel Blob private store and Sentry
-   beforeSend docs through Context7.
+   beforeSend docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
@@ -3197,8 +3235,9 @@ package, no dead code left behind, members not &quot;patients&quot; in customer-
 PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report drafting (ADR-009, ADR-020).
 
 PR 10.1 — records, documents, consent, retention:
-1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind note|report|
-   transcript|ai_draft, title_encrypted, body_encrypted (text, envelope ciphertext), format
+1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
+   shared RECORD_KINDS const = note|report|document_ref|transcript|ai_draft (single enum reused by
+   the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
    markdown|json, version int, published_at nullable, created_by, created_at, updated_at,
    deleted_at), session_documents (id, expert_org_id, member_user_id, booking_id nullable,
    blob_pathname unique, mime, size_bytes, metadata_encrypted, scope expert_only|shared,
@@ -3250,8 +3289,13 @@ PR 10.2 — CRM + AI reports beta:
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
    Report({ transcriptRecordId }) using generateObject via the gateway with model id from
-   AI_GATEWAY_MODEL_SESSION_REPORT (pinned), providerOptions to disable data retention where
-   supported, tokens/latency logged without content; result stored as records.kind = ai_draft
+   AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: keep an allow-list
+   packages/ai/src/approved-models.ts of { modelId, provider, zeroRetention: true, evidenceUrl }
+   entries verified against the provider&#39;s zero-data-retention terms through the AI Gateway
+   (record the evidence in compliance-data-governance.md); draftSessionReport refuses to run
+   (typed error AI_MODEL_NOT_APPROVED, audited) when the configured model is not on the list or
+   the gateway response does not confirm the no-retention providerOptions were applied — never
+   send PHI &quot;where supported&quot;; tokens/latency logged without content; result stored as records.kind = ai_draft
    (encrypted, unpublished) + audit ai_draft.generated; failures audited. Endpoint POST
    /ai/session-report/[transcriptRecordId] (expert only, flag ff.ai_reports_beta, rate limited
    5/h/org) and GET status. Expert UI: &quot;Draft with AI&quot; on the session page -&gt; draft appears in
@@ -3316,8 +3360,13 @@ Become-Partner-like review for clinics (<code>clinic_verifications</code> queue 
 <code>admin|member</code>, expiry 7d, email via Lane 1 kind <code>team.invitation</code>), accept flow in
 <code>apps/account</code>, member roles: <code>owner</code> (billing), <code>admin</code> (manage), <code>member</code> (expert working
 inside the clinic); expert-in-clinic profile link (<code>expert_profiles.clinic_org_id</code> nullable, an
-expert may also keep a solo org); seat sync (Phase 3 hook) updates Stripe subscription
-quantity; seat limit enforcement by plan (Starter 5, Growth 20, Enterprise custom).</li>
+expert may also keep a solo org). <strong>Seat rule (single definition used by schema, code, tests
+and acceptance):</strong> a billable seat is a clinic membership — any role, owner included — whose
+user has at least one <em>published</em> event type in that clinic; owner/admin accounts without
+published event types are free. <code>syncSeatQuantity</code> (Phase 3 hook, re-run on event-type
+publish/unpublish and member removal) pushes that count to the Stripe subscription quantity;
+plan caps (Starter 5, Growth 20, Enterprise custom) are enforced when the cap would be
+exceeded by a publish -&gt; <code>409 SEAT_LIMIT_REACHED</code>.</li>
 <li><strong>Billing</strong>: plans from <code>infra/stripe/seed-products.ts</code> (Starter 99 + 39/seat, Growth 199 +
 29/seat, Enterprise contact) with Entitlements features (<code>team.members</code>, <code>team.branding</code>,
 <code>team.reports</code>); Embedded Checkout (<code>POST /billing/checkout</code> exists — extend for team plans) and
@@ -3328,7 +3377,8 @@ the two-file contract; Tier 1b <code>issueClinicSaasInvoice</code> activated on 
 revenue, seats), members (list, roles, invite, remove), schedule view (read-only across
 experts), bookings (list/filter by expert), billing (plan, seats, invoices, portal button),
 settings (profile, public page, branding), notifications inbox (Phase 8 component).</li>
-<li><strong>Clinic public page</strong> (<code>apps/web/[locale]/[username]</code> shared namespace): clinic profile with
+<li><strong>Clinic public page</strong> (<code>apps/web/[locale]/[username]</code> shared namespace, enforced by the single
+<code>public_handles</code> table — see deliverable 1): clinic profile with
 experts grid; booking any expert routes to that expert&#39;s event types with <code>attribution = clinic</code> so <code>computeApplicationFee</code> returns 0 bps and payout goes to the clinic&#39;s or the
 expert&#39;s Connect account per <code>clinic_profiles.payout_mode</code> (<code>clinic|expert</code>) — default <code>expert</code>
 in v1; <code>clinic</code> mode requires clinic Connect account (reuse Phase 6 onboarding for orgs).</li>
@@ -3356,9 +3406,11 @@ messages <code>pt/en/es</code>.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Create Team -&gt; subscribe Starter via Embedded Checkout (test card) -&gt; <code>billing_subscriptions</code>
 active, entitlements readable via <code>@eleva/billing</code> <code>hasFeature</code>.</li>
-<li><input disabled="" type="checkbox"> Invite 3 experts -&gt; accept -&gt; <code>member</code> rows -&gt; Stripe quantity 3 (+ owner if counted per
-spec) -&gt; remove one -&gt; quantity decremented.</li>
-<li><input disabled="" type="checkbox"> Seat limit: 6th invite on Starter -&gt; 409 <code>SEAT_LIMIT_REACHED</code> with upgrade CTA.</li>
+<li><input disabled="" type="checkbox"> Invite 3 experts -&gt; accept -&gt; <code>member</code> rows -&gt; each publishes one event type -&gt; Stripe
+quantity 3 (the owner has no published event type and is not counted) -&gt; remove one -&gt;
+quantity 2; unpublishing the last event type of a member also decrements.</li>
+<li><input disabled="" type="checkbox"> Seat limit: the 6th billable expert publishing an event type on Starter -&gt; 409
+<code>SEAT_LIMIT_REACHED</code> with upgrade CTA (invitations themselves are not capped).</li>
 <li><input disabled="" type="checkbox"> Member books a clinic expert from the clinic page -&gt; <code>applied_commission_bps = 0</code>,
 <code>attributed_org_id = clinic</code>; payout to the expert&#39;s account (default mode).</li>
 <li><input disabled="" type="checkbox"> <code>invoice.finalized</code> -&gt; <code>clinic_saas_invoices</code> row issued in <code>ELEVA-SAAS-2026</code> (test series).</li>
@@ -3395,8 +3447,9 @@ hooks.</li>
 </ul>
 <h2 id="11-team-clinics--risks"><a class="anchor" href="#11-team-clinics--risks" aria-label="Link to section">#</a>Risks</h2>
 <ul>
-<li>Seat counting semantics (owner counted?) — decide from <code>payments-payouts-spec.md</code>; record in
-<code>decision-log.md</code>.</li>
+<li>Seat rule ambiguity is closed by this phase (see Scope): billable seat = membership with &gt;= 1
+published event type in the clinic, role-independent; <code>payments-payouts-spec.md</code> &quot;published in
+the last 30 days&quot; qualifier is dropped as non-deterministic. Record in <code>decision-log.md</code>.</li>
 </ul>
 <h2 id="11-team-clinics--copy-paste-prompt"><a class="anchor" href="#11-team-clinics--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
 <div class="prompt"><div class="prompt-bar"><span>Copy-paste prompt</span><button type="button" class="copy" data-target="prompt-11-team-clinics-1">Copy</button></div><pre id="prompt-11-team-clinics-1"><code>You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
@@ -3410,7 +3463,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/11-team-clinics.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Stripe (subscriptions quantity, Embedded
    Checkout, Customer Portal, Entitlements, invoice.finalized) and Better Auth organization
-   (invitations, hooks) docs through Context7.
+   (invitations, hooks) docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-11/team-clinics
@@ -3431,10 +3485,15 @@ package, no dead code left behind, members not &quot;patients&quot; in customer-
 
 PHASE 11 TASK — Clinic (Team) SaaS product.
 
-1. packages/db: clinic_profiles (org_id PK FK auth.organization type team, legal_name, nif,
-   billing_address jsonb, logo_url, public_slug unique (shared username namespace with experts —
-   enforce via a usernames view or shared table), description, specialties text[], payout_mode
-   clinic|expert default expert, verification_status pending|verified|rejected, created_at),
+1. packages/db: public_handles (handle citext PK, owner_kind expert|clinic, owner_id, created_at)
+   — the ONE table that owns the /[username] namespace: expert usernames (migrate
+   expert_profiles.username to reference it) and clinic slugs are both inserted here in the same
+   transaction that creates the profile, so uniqueness across experts and clinics is a real
+   constraint, not a view; include the reserved-word list (system routes) as a check; RLS public
+   read. clinic_profiles (org_id PK FK auth.organization type team, legal_name, nif,
+   billing_address jsonb, logo_url, public_slug FK public_handles.handle, description,
+   specialties text[], payout_mode clinic|expert default expert, verification_status
+   pending|verified|rejected, created_at),
    clinic_verifications (id, org_id, submitted_at, reviewed_by, reviewed_at, status, notes),
    expert_profiles.clinic_org_id nullable FK, bookings.attributed_org_id nullable,
    billing_subscriptions additions (seat_quantity, plan_key starter|growth|enterprise,
@@ -3446,10 +3505,13 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    configuration via infra/stripe/setup-portal.ts allows plan switch and quantity view only.
 3. @eleva/billing: subscriptions.ts createTeamCheckoutSession(orgId, planKey) for Embedded
    Checkout (ui_mode embedded, return_url to apps/team billing), createPortalSession(orgId);
-   provisioning.ts syncSeatQuantity(orgId) counts members with role in (owner, admin, member) — if
-   payments-payouts-spec.md says owner is not a seat, implement that and record in decision-log;
-   enforce seat limits per plan (Starter 5, Growth 20, Enterprise unlimited) in the invitation
-   endpoint -&gt; 409 SEAT_LIMIT_REACHED. Webhooks (two-file contract): customer.subscription.created,
+   provisioning.ts syncSeatQuantity(orgId) = count of clinic memberships (any role, owner included)
+   whose user has &gt;= 1 published event type in that clinic — the single seat rule; owner/admin
+   accounts without published event types are free; called from event-type publish/unpublish and
+   member removal hooks; update payments-payouts-spec.md (drop the &quot;last 30 days&quot; qualifier) and
+   add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
+   unlimited) at event-type publish time in the clinic context -&gt; 409 SEAT_LIMIT_REACHED; the
+   same rule in the schema check, the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -&gt; billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag
@@ -3633,8 +3695,9 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/12-admin-console.md in full.
 3. Read every file under &quot;Local references&quot; including the MVP admin routes for parity. Pull Better
-   Auth admin plugin docs and QStash REST docs through Context7; use the shadcn MCP for DataTable
-   examples.
+   Auth admin plugin docs and QStash REST docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory; use the shadcn MCP for
+   DataTable examples.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-12.1/admin-users-partners
@@ -3764,14 +3827,17 @@ partner, contact forms, AI endpoints); Upstash rate limits per route class from
 <code>security-hardening-checklist.md</code> (auth 10/min/IP, public reads 120/min/IP, mutations
 60/min/user, admin 300/min/user); strict CSP with nonces composed in <code>@eleva/observability</code>
 and applied in every <code>proxy.ts</code> via shared helper (<code>report-uri</code> to Sentry), HSTS preload,
-<code>Permissions-Policy</code>, <code>Referrer-Policy</code>, <code>X-Frame-Options</code> (allow framing only for Stripe
-embedded/ Daily where needed); Better Auth <code>rateLimit</code> rules for <code>/sign-in/*</code>, <code>/magic-link</code>,
+<code>Permissions-Policy</code>, <code>Referrer-Policy</code>, <code>X-Frame-Options: DENY</code> everywhere (it cannot
+express a cross-origin allow-list; <code>ALLOW-FROM</code> is obsolete) — Stripe/Daily iframes that <em>we</em>
+embed are governed by CSP <code>frame-src</code>, and the few pages that must be embeddable by a
+third-party (none at launch) would get a route-specific CSP <code>frame-ancestors</code> instead; Better Auth <code>rateLimit</code> rules for <code>/sign-in/*</code>, <code>/magic-link</code>,
 <code>/two-factor/*</code>; <code>useSecureCookies</code> + <code>sameSite: &quot;lax&quot;</code>; secret rotation runbook
 (<code>BETTER_AUTH_SECRET</code> dual-key, KEK v2 via <code>rotateKek</code>, Stripe webhook secret, Daily webhook
 secret, TOConline tokens); dependency audit (<code>pnpm audit --prod</code>, Renovate/Dependabot config);
 CORS allow-list audit; OpenAPI exposure review (<code>/openapi.json</code> public but admin tag hidden).</li>
-<li><strong>Observability</strong>: Sentry EU DSN per app with <code>tracesSampleRate</code>, <code>beforeSend</code> scrubbing (PHI,
-emails hashed), release tagging via Vercel git SHA, source maps; structured logging (<code>pino</code> or
+<li><strong>Observability</strong>: Sentry EU DSN per app with <code>tracesSampleRate</code>, <code>beforeSend</code> scrubbing (PHI
+and names removed; emails replaced by a keyed HMAC-SHA256 with <code>SENTRY_USER_HASH_KEY</code>, a secret
+Sentry never receives — a plain hash is a stable, dictionary-recoverable identifier), release tagging via Vercel git SHA, source maps; structured logging (<code>pino</code> or
 console JSON) with correlation id propagated from <code>x-request-id</code> through <code>withAudit</code>;
 BetterStack heartbeats for every QStash job (each workflow route pings on success), uptime
 monitors for <code>eleva.care</code>, <code>api.eleva.care/health</code>, <code>admin.eleva.care</code>, <code>sessions.eleva.care</code>;
@@ -3869,7 +3935,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/13-hardening-observability.md in full.
 3. Read every file under &quot;Local references&quot;. Pull Sentry Next.js, PostHog JS (EU), Next.js 16 CSP/
    optimizePackageImports/next-image, Lighthouse CI, Playwright sharding, Upstash Ratelimit and
-   BotID docs through Context7.
+   BotID docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-13.1/security-observability
@@ -3900,7 +3967,9 @@ PR 13.1 — security + observability + analytics:
    https://connect-js.stripe.com https://*.daily.co; img-src self data: blob: *.public.blob.
    vercel-storage.com; media-src self blob: *.daily.co; report-uri Sentry), HSTS preload,
    Permissions-Policy (camera/microphone/display-capture only on join routes), Referrer-Policy
-   strict-origin-when-cross-origin, X-Content-Type-Options. Apply from every apps/*/src/proxy.ts via
+   strict-origin-when-cross-origin, X-Content-Type-Options nosniff, X-Frame-Options DENY plus CSP
+   frame-ancestors &#39;none&#39; (never ALLOW-FROM; frame-src above covers the iframes we embed; a
+   route-specific frame-ancestors override is the only allowed relaxation). Apply from every apps/*/src/proxy.ts via
    one helper call (keep proxies &lt; 50 LOC) and in apps/api security-headers.ts. Start report-only
    on staging (env CSP_REPORT_ONLY=true), enforce after 48h clean.
 2. Rate limits: apps/api/src/lib/rate-limit.ts exposes classes auth (10/min/IP), publicRead
@@ -3914,8 +3983,10 @@ PR 13.1 — security + observability + analytics:
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).
 3. Observability: @eleva/observability Sentry init for server/edge/client per app (EU DSN env
-   SENTRY_DSN_&lt;APP&gt;, tracesSampleRate 0.1, replays off in apps handling PHI, beforeSend scrubbing
-   emails (hash), names, record bodies; release = VERCEL_GIT_COMMIT_SHA; source maps upload in
+   SENTRY_DSN_&lt;APP&gt;, tracesSampleRate 0.1, replays off in apps handling PHI, beforeSend scrubbing:
+   drop names and record bodies, replace emails with HMAC-SHA256(SENTRY_USER_HASH_KEY, email)
+   (never a plain or unsalted hash), unit test that rejects raw emails, plain sha256 of an email
+   and any base64/hex that decodes to an email; release = VERCEL_GIT_COMMIT_SHA; source maps upload in
    build), request correlation id (x-request-id generated in proxy, propagated to API, stored on
    audit rows and logs), structured JSON logger with redaction, BetterStack: infra/betterstack/
    setup-monitors.ts registering uptime monitors (eleva.care, api/health, admin, sessions) and one
@@ -4053,8 +4124,9 @@ verification, DNS switch.</li>
 <h2 id="14-mvp-migration--deliverables"><a class="anchor" href="#14-mvp-migration--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li><code>infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}</code>.</li>
-<li><code>migration_runs</code>, <code>migration_id_map</code> (source table, source id, target id), <code>migration_checksums</code>
-tables (in a <code>migration</code> schema on v3, dropped after Phase 15 + 30 days).</li>
+<li><code>migration_runs</code>, <code>migration_id_map</code> (unique on source table + source id), <code>migration_checksums</code>
+(unique on target table + target id, upserted) tables in a <code>migration</code> schema on v3, dropped
+after Phase 15 + 30 days.</li>
 <li>Welcome campaign template + sender script (<code>migration:send-welcome --wave n</code>).</li>
 <li>Redirect map + tests.</li>
 <li>Three committed rehearsal reports; finance-approved grandfather mapping table
@@ -4123,7 +4195,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/14-mvp-migration.md in full.
 3. Read every file under &quot;Local references&quot; — the MVP drizzle/schema.ts end to end and the v3
    schema. Pull Neon branching/PITR, Stripe retrieve APIs, WorkOS Vault decrypt and Better Auth
-   account linking docs through Context7.
+   account linking docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-14/mvp-migration
@@ -4147,9 +4220,11 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    Vault decrypt ONLY here — add an eslint boundary exception scoped to this package and a CI
    guard that this package is never imported by apps/packages). CLI: pnpm migration:run
    --dry-run|--apply [--target branch|production] --since &lt;iso&gt; --report &lt;path&gt;;
-   pnpm migration:verify; pnpm migration:rehearse (creates Neon branch from the latest v3 staging
-   snapshot, restores the MVP dump into schema legacy via pg_restore, runs run --apply --target
-   branch, then verify, then writes reports/&lt;date&gt;.md); pnpm migration:send-welcome --wave &lt;n&gt;
+   pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
+   project — empty of tenant data before cutover, so the branch carries the real production
+   schema, roles and extensions — restores a fresh pg_dump of the MVP production database (taken
+   with the read-only role) into schema legacy via pg_restore, runs run --apply --target branch,
+   then verify, then writes reports/&lt;date&gt;.md; staging snapshots are never a rehearsal input); pnpm migration:send-welcome --wave &lt;n&gt;
    --size &lt;k&gt;. Env: MVP_DATABASE_URL (read-only role), TARGET_DATABASE_URL, WORKOS_API_KEY
    (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_ALLOWED_TARGET_HOSTS.
    Production guard (implement in infra/migration/src/guard.ts with unit tests): --apply defaults
@@ -4160,8 +4235,11 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    before opening a connection. migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
    since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
-   unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256).
-   Every mapper is idempotent through migration_id_map (upsert by source id).
+   unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256,
+   unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
+   --apply is a no-op for checksums too). Every mapper is idempotent through migration_id_map
+   (upsert by source id); a test runs --apply twice on a fixture and asserts identical row counts
+   in every target table including migration_checksums.
 3. Mappers in src/map/*.ts, run in dependency order: users (UsersTable -&gt; auth.user + auth.account
    credential row without password + google account when identity exists; roles -&gt; admin plugin
    role platform_admin for admin/superadmin; locale/country/timezone), organizations
@@ -4249,8 +4327,12 @@ launch-readiness item, executes the freeze/migrate/switch runbook from Phase 14,
 <code>apps/web</code> footer; privacy/health-data/terms final and versioned; DPIA updated (WorkOS removed,
 Daily added, Better Auth self-hosted, AI Gateway); subprocessor list; DSAR export within 10
 minutes verified in production-like data; crypto-shred test on a staging org; EU data
-residency confirmations (Neon EU, Upstash EU, Vercel region <code>fra1</code>/<code>cdg1</code>, Daily EU, Resend EU
-region if available, Sentry EU, PostHog EU).</li>
+residency confirmations (Neon EU, Upstash EU, Vercel region <code>fra1</code>/<code>cdg1</code>, Daily EU, Sentry EU,
+PostHog EU) — each a hard gate; <strong>Resend</strong>: EU region enabled on the account is the gate; if
+Resend cannot process in the EU, launch is blocked until the DPIA records the approved
+transfer mechanism (SCCs / DPF), the subprocessor entry, minimisation (no PHI in email
+bodies, transactional only) and the retention setting — a missing EU region is never silently
+skipped.</li>
 <li>Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
 statement descriptor); live webhook endpoint created with <code>pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply</code>; TOConline production series and OAuth app;
 IVA sign-off recorded; test a 1 EUR live booking + refund + invoices with an internal expert.</li>
@@ -4345,7 +4427,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
    operator-tasks/cutover-runbook.md and launch-readiness-checklist.md.
 3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
-   through Context7.
+   through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory) for the code/doc PR:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-15/launch-cutover
@@ -4372,8 +4455,9 @@ A. Launch gate (PR): go through docs/eleva-v3/launch-readiness-checklist.md item
    no-diagnosis disclaimers) linked from the apps/web footer; final versioned legal texts in all
    locales; DPIA update in compliance-data-governance.md (WorkOS removed, Daily/Better Auth/AI
    Gateway added, subprocessor table); DSAR timing test; crypto-shred test on a staging org;
-   EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Resend, Sentry EU,
-   PostHog EU) with links; pen-test findings closed; CSP enforced; production flag defaults
+   EU residency table (Neon, Upstash, Vercel region fra1/cdg1 functions, Daily EU, Sentry EU,
+   PostHog EU, and Resend: EU region evidence OR the DPIA-approved transfer mechanism +
+   subprocessor + minimisation + retention entries — otherwise the gate fails) with links; pen-test findings closed; CSP enforced; production flag defaults
    (ff.toconline_invoicing_enabled on, ff.ai_reports_beta off, ff.session_recording off) applied
    with pnpm flags:sync; pricing page vs Stripe products check script; native-speaker copy review
    recorded. Add e2e/production-smoke.spec.ts (read-only checks on every public surface + one
@@ -4568,6 +4652,11 @@ goes through the standard loop. Do not open a separate planning PR.</li>
 <li><code>docs/eleva-v3/execution-plan/phases/{04,07,09,10,11,13,15}-*.md</code> (origins of deferred items)</li>
 </ul>
 <h2 id="16-post-launch-backlog--copy-paste-prompt"><a class="anchor" href="#16-post-launch-backlog--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
+<p>This prompt is a <strong>promotion template</strong>: the only two placeholders are <code>&lt;N&gt;</code> (the backlog number
+from the table above, e.g. <code>4</code>) and <code>&lt;slug&gt;</code> (kebab-case of the item title, e.g.
+<code>marketplace-search-v2</code>). Replace both everywhere before pasting; everything else is fixed. The
+first line of the task restates the item title and its Origin documents from the table so the
+pasted prompt identifies the work without this file.</p>
 <div class="prompt"><div class="prompt-bar"><span>Copy-paste prompt</span><button type="button" class="copy" data-target="prompt-16-post-launch-backlog-1">Copy</button></div><pre id="prompt-16-post-launch-backlog-1"><code>You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
 (/Users/&lt;you&gt;/…/elevacare-monorepo). Work autonomously and finish the phase end to end.
 
@@ -4576,8 +4665,8 @@ Before writing code:
    you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 5, 6, 7, 8 and this phase file in
    full (docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md).
-3. Read every file under &quot;Local references&quot; of this phase and the &quot;Origin&quot; documents of the item
-   you are promoting. Pull every library the promoted item needs through Context7
+3. Read every file under &quot;Local references&quot; of this phase and the &quot;Origin&quot; documents listed in
+   the backlog table row 16.&lt;N&gt; of that file. Pull every library the promoted item needs through Context7
    (resolve-library-id then query-docs) and prefer those docs over memory for Next.js 16, Better
    Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
    CodeRabbit.
@@ -4605,8 +4694,10 @@ package, no dead code left behind, members not &quot;patients&quot; in customer-
 
 PHASE 16 TASK — Promote backlog item 16.&lt;N&gt; into a phase and deliver it on one branch / one PR.
 
-Phase 16 is a backlog, not a build phase. Item 16.&lt;N&gt; is given by the requester. Deliver in
-this order, all on branch phase-16.&lt;N&gt;/&lt;slug&gt;:
+Item: row 16.&lt;N&gt; of the backlog table in
+docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md (title, Origin documents and Notes
+are authoritative; copy the title verbatim into the new phase file heading). Phase 16 is a
+backlog, not a build phase. Deliver in this order, all on branch phase-16.&lt;N&gt;/&lt;slug&gt;:
 
 1. Planning commit (docs(p16.&lt;N&gt;): ...), first on the branch:
    a. Write docs/eleva-v3/execution-plan/phases/16-&lt;N&gt;-&lt;slug&gt;.md with the same structure as the

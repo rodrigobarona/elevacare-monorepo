@@ -76,8 +76,9 @@ Out: cutover itself (Phase 15).
 ## Deliverables
 
 1. `infra/migration/{package.json,README.md,src/{cli.ts,source.ts,target.ts,map/*.ts,verify.ts,report.ts},reports/}`.
-2. `migration_runs`, `migration_id_map` (source table, source id, target id), `migration_checksums`
-   tables (in a `migration` schema on v3, dropped after Phase 15 + 30 days).
+2. `migration_runs`, `migration_id_map` (unique on source table + source id), `migration_checksums`
+   (unique on target table + target id, upserted) tables in a `migration` schema on v3, dropped
+   after Phase 15 + 30 days.
 3. Welcome campaign template + sender script (`migration:send-welcome --wave n`).
 4. Redirect map + tests.
 5. Three committed rehearsal reports; finance-approved grandfather mapping table
@@ -148,7 +149,8 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/14-mvp-migration.md in full.
 3. Read every file under "Local references" — the MVP drizzle/schema.ts end to end and the v3
    schema. Pull Neon branching/PITR, Stripe retrieve APIs, WorkOS Vault decrypt and Better Auth
-   account linking docs through Context7.
+   account linking docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
@@ -172,9 +174,11 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    Vault decrypt ONLY here — add an eslint boundary exception scoped to this package and a CI
    guard that this package is never imported by apps/packages). CLI: pnpm migration:run
    --dry-run|--apply [--target branch|production] --since <iso> --report <path>;
-   pnpm migration:verify; pnpm migration:rehearse (creates Neon branch from the latest v3 staging
-   snapshot, restores the MVP dump into schema legacy via pg_restore, runs run --apply --target
-   branch, then verify, then writes reports/<date>.md); pnpm migration:send-welcome --wave <n>
+   pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
+   project — empty of tenant data before cutover, so the branch carries the real production
+   schema, roles and extensions — restores a fresh pg_dump of the MVP production database (taken
+   with the read-only role) into schema legacy via pg_restore, runs run --apply --target branch,
+   then verify, then writes reports/<date>.md; staging snapshots are never a rehearsal input); pnpm migration:send-welcome --wave <n>
    --size <k>. Env: MVP_DATABASE_URL (read-only role), TARGET_DATABASE_URL, WORKOS_API_KEY
    (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_ALLOWED_TARGET_HOSTS.
    Production guard (implement in infra/migration/src/guard.ts with unit tests): --apply defaults
@@ -185,8 +189,11 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    before opening a connection. migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
    since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
-   unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256).
-   Every mapper is idempotent through migration_id_map (upsert by source id).
+   unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256,
+   unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
+   --apply is a no-op for checksums too). Every mapper is idempotent through migration_id_map
+   (upsert by source id); a test runs --apply twice on a fixture and asserts identical row counts
+   in every target table including migration_checksums.
 3. Mappers in src/map/*.ts, run in dependency order: users (UsersTable -> auth.user + auth.account
    credential row without password + google account when identity exists; roles -> admin plugin
    role platform_admin for admin/superadmin; locale/country/timezone), organizations

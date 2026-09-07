@@ -125,7 +125,8 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/03-remove-workos.md in full.
 3. Read every file under "Local references". Pull Better Auth (getAccessToken, linkSocial,
-   organization hooks), Drizzle, Stripe subscriptions docs through Context7.
+   organization hooks), Drizzle, Stripe subscriptions docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-03/remove-workos
@@ -163,8 +164,10 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
      readable, shred makes it unreadable, KEK missing -> clear error.
 2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth. getProviderToken
-   ({ userId, provider }) -> auth.api.getAccessToken({ providerId: provider, userId }) (auto
-   refresh); expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
+   ({ userId, provider, accountId }) -> auth.api.getAccessToken({ providerId: provider, accountId,
+   userId }) (auto refresh) where accountId = expert_integrations.auth_account_id — always pass it
+   so a user with several linked accounts for the same provider gets the calendar they connected;
+   expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
    google https://www.googleapis.com/auth/calendar.readonly + calendar.events; microsoft
    Calendars.ReadWrite offline_access). expert_integrations: replace workos_user_id with
    auth_account_id (FK auth.account.id); migration in packages/db. Update adapters only where they

@@ -82,7 +82,11 @@ reviews:
         depend on chat context, contradict the locked decisions in
         README.md section 2 (ADR-017..021), skip the review loop in
         section 4, or reference files that do not exist in the repo.
-        Flag a phase file change without a regenerated index.html.
+        Exception: phases/16-post-launch-backlog.md is a promotion
+        template whose prompt may contain exactly two placeholders,
+        <N> and <slug>, resolved from its backlog table; flag any other
+        placeholder. Flag a phase file change without a regenerated
+        index.html.
     - path: "**/*.md"
       instructions: >-
         Docs change reviews: flag any silent contradiction with an

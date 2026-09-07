@@ -25,6 +25,14 @@ In:
   Identity verification step, requirements polling (`account.updated` webhook -> `billing_customers`/
   `expert_profiles.connect_status`), gating: an expert cannot publish event types until
   `charges_enabled && payouts_enabled && identity_verified`; clear status UI with next actions.
+- **Funds flow (locked, shared with Phase 4)**: Stripe **separate charges and transfers**. The
+  member's PaymentIntent is charged on the platform account (no `transfer_data`, no
+  `application_fee_amount`); the platform fee lives in the ledger
+  (`booking_payments.application_fee_cents`); the payout engine below creates one
+  `stripe.transfers.create` of `amount - fee` per booking once eligible. Destination charges are
+  rejected because they move funds at payment time and cannot express the delayed schedule; the
+  MVP mixed both flows and this phase removes that ambiguity. Record the choice in
+  `decision-log.md` and `payments-payouts-spec.md`.
 - **Commission SSOT**: `packages/billing/src/server/commission.ts` is the only place computing
   the platform fee (`15%` default, `8%` Top Expert, `0%` clinic-member bookings); used by
   `POST /payments/intent` (Phase 4) and by reconciliation; store the applied rate on
@@ -44,7 +52,9 @@ session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_grou
   `process-pending-payouts` (06:00), `check-upcoming-payouts` (daily notice), `cleanup-expired-
 reservations` (every 15 min, existing), `stripe-stuck-events` (existing).
 - **Refunds and disputes**: `POST /payments/[bookingPaymentId]/refund` (admin or policy-driven;
-  full or partial; `reverse_transfer` + `refund_application_fee` when transfer already made);
+  full or partial; refund the platform charge, `reverse_transfer: true` when a transfer was
+  already made, and reduce the ledger fee proportionally — there is no Stripe application fee
+  object in this funds flow);
   webhook handlers for `charge.refunded`, `charge.dispute.created/closed`, `transfer.created/
 reversed`, `payout.paid/failed`, `account.updated`, `identity.verification_session.verified/
 requires_input`, `payment_intent.succeeded/payment_failed/canceled` — all added to **both**
@@ -80,7 +90,7 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 - [ ] Test booking paid at T: `payout_states.eligible_at = max(T+7d, session_end+24h)` at 04:00
       Lisbon; `process-expert-transfers` creates a Stripe Transfer with `transfer_group`; payout
       appears in the expert's Embedded Payouts component; `payout.paid` marks `paid_out`.
-- [ ] Refund before transfer: charge refunded, fee refunded, state `reversed`; refund after
+- [ ] Refund before transfer: charge refunded, ledger fee reduced, state `reversed`; refund after
       transfer: `reverse_transfer` executed; ledger consistent; audit rows present.
 - [ ] Dispute opened -> payout `held`; dispute closed won -> released; lost -> `reversed`.
 - [ ] Approval-required path: first payout goes to `approval_required`; `POST /payouts/[id]/approve`
@@ -121,8 +131,9 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 - Stripe `/websites/stripe`: Connect Express + controller properties, Account Sessions + Embedded
   Components (account_onboarding, account_management, payouts, notification_banner), Identity,
-  destination charges, separate charges and transfers, `transfer_group`, `source_transaction`,
-  refunds with `reverse_transfer`/`refund_application_fee`, disputes, payouts, test clocks,
+  separate charges and transfers (the chosen funds flow; read destination charges only to
+  understand why they are rejected), `transfer_group`, `source_transaction`, refunds with
+  `reverse_transfer`, disputes, payouts, test clocks,
   webhook best practices, idempotency.
 - QStash `/upstash/qstash-js` (schedules, signature verification).
 - `@stripe/connect-js` / `@stripe/react-connect-js` docs.
@@ -145,9 +156,10 @@ Before writing code:
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/06-payments-payouts.md in full.
 3. Read every file under "Local references" including the MVP payout code. Pull Stripe docs
-   (Connect Express controller, Account Sessions + Embedded Components, Identity, destination
-   charges, transfers, refunds with reverse_transfer, disputes, payouts, test clocks) and QStash
-   docs through Context7.
+   (Connect Express controller, Account Sessions + Embedded Components, Identity, separate
+   charges and transfers, refunds with reverse_transfer, disputes, payouts, test clocks) and QStash
+   docs through Context7
+   (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-06.1/connect-onboarding-hardening
@@ -207,7 +219,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    destination, transfer_group: bookingId, source_transaction: chargeId, metadata },
    { idempotencyKey: `${payoutStateId}:${attempts}` }) with retry/backoff and DLQ table
    workflow_dead_letters (reuse if exists); refunds.ts: refundBookingPayment({ id, amountCents?,
-   reason }) using refund_application_fee true and reverse_transfer true when a transfer exists;
+   reason }) refunding the platform charge, with reverse_transfer true when a transfer exists and
+   the ledger fee reduced proportionally (no application fee object exists in this funds flow);
    dispute handling sets held / reversed.
 7. Webhook handlers (two-file contract, idempotent, withAudit): payment_intent.succeeded (also
    creates payout_states pending), payment_intent.payment_failed, payment_intent.canceled,

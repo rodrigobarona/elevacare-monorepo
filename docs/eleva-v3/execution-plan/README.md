@@ -18,7 +18,8 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 Eleva.care is an EU-first, Portugal-first digital health marketplace and community. Experts
 (clinicians, educators) sell sessions to **members**; clinics (**Teams**) run several experts under
 one organization on a per-seat SaaS plan; **Academy** is the education surface. Everything is
-multilingual (`pt`, `en`, `es`, `pt-BR` at launch), API-first and agentic-first, and built to
+multilingual (`pt`, `en`, `es` at launch; `pt-BR` pending the Phase 4 alias-vs-full-locale
+decision recorded in `decision-log.md`), API-first and agentic-first, and built to
 HIPAA/GDPR/ERS-Portugal standards.
 
 End state of this plan (production, `eleva.care` DNS switched from the MVP):
