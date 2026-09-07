@@ -188,7 +188,9 @@ PR 10.1 — records, documents, consent, retention:
    never visible to the member). Add withUserContext(userId, fn) in @eleva/db that sets
    eleva.user_id; RLS tests cover: unpublished record hidden, published record visible,
    expert_only document hidden, shared document visible, other member's rows hidden.
-   Consent kinds: health_data_processing, session_recording, ai_processing with versioned texts in
+   Consent kinds: append session_recording and ai_processing to CONSENT_KINDS in
+   @eleva/compliance (health_data_processing exists since Phase 5) and regenerate the pg enum;
+   versioned texts in
    packages/compliance/legal/<kind>.<locale>.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/
    publish|unpublish, GET /me/records (member, published only), POST /documents/upload-token

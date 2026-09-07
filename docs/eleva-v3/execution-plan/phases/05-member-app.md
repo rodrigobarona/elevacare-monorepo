@@ -140,8 +140,11 @@ PHASE 5 TASK — Build the member product in apps/app.
 
 1. packages/db: tables notification_preferences (user_id FK auth.user, channel email|sms|in_app,
    category booking|reminder|payment|marketing|system, enabled bool, quiet_hours_start/end time,
-   timezone), consents (user_id, kind terms|privacy|health_data|marketing, version, granted_at,
-   withdrawn_at, source), dsar_requests (id, user_id, status pending|processing|ready|expired|
+   timezone), consents (user_id, kind, version, granted_at, withdrawn_at, source) where kind is
+   the pg enum consent_kind generated from the CONSENT_KINDS const exported by
+   @eleva/compliance (terms | privacy | health_data_processing | marketing; Phase 10 appends
+   session_recording and ai_processing to the same const — never a second spelling such as
+   health_data), dsar_requests (id, user_id, status pending|processing|ready|expired|
    failed, blob_pathname, expires_at, requested_at, completed_at), account_deletion_requests
    (user_id, requested_at, scheduled_for, status). RLS by user (personal Space org) and audit
    unions (consent granted|withdrawn; dsar requested|ready; account deletion requested|cancelled).

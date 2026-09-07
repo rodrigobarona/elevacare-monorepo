@@ -69,8 +69,9 @@ Out: records/PHI features (Phase 10); MVP record re-encryption (Phase 14).
 3. `packages/billing/src/server/provisioning.ts` seat sync from Better Auth members + test.
 4. Deletions: `apps/api/src/app/workos/`, `infra/workos/`, `infra/qstash/setup-workos-sync.ts`,
    `packages/encryption/src/{vault,client}.ts`, `apps/account/src/components/workos-widgets-provider.tsx`,
-   `apps/account/src/app/account/(shell)/settings/settings-widgets.tsx`, `packages/auth/README.md`
-   WorkOS sections, `.cursor` leftovers.
+   `apps/account/src/app/account/(shell)/settings/settings-widgets.tsx`, `.cursor` leftovers.
+   `packages/auth/README.md` is kept and rewritten (WorkOS sections removed, Better Auth
+   sections from Phase 2 stay) — see "Docs to update".
 5. Boundary lint + CI guard.
 6. Env/docs updates.
 

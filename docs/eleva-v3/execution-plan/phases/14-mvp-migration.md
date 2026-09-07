@@ -168,7 +168,7 @@ Before writing code:
 
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).

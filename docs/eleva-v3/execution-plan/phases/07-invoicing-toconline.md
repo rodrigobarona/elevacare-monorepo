@@ -1,12 +1,12 @@
 # Phase 7 — Invoicing: TOConline Tier 1 platform-fee invoices + Tier 2 expert invoices
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                         |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-07/invoicing-toconline` (split: `phase-07.1/tier1-platform-fee-invoices`, `phase-07.2/tier2-expert-adapters`)                                                                                                                                                                                                                                          |
-| Depends on | Phase 6 (and accountant sign-off of the IVA matrix — entry gate)                                                                                                                                                                                                                                                                                              |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                     |
-| Touches    | `packages/accounting/**`, `packages/workflows/src/{invoicing/**,domain-events.ts}`, `packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts`, `apps/api/src/app/{accounting,invoicing,workflows}/**`, `apps/expert/**` (invoicing onboarding + session invoice status), `infra/qstash/**`, `packages/flags/**` |
-| Exit gate  | Every paid booking yields (1) an Eleva -> expert TOConline invoice in series `ELEVA-FEE-{YYYY}` for the platform fee, and (2) an expert -> member invoice through the expert's connected adapter (TOConline, Moloni) or a manual-mode record with monthly SAF-T/CSV export; monthly reconciliation job flags mismatches                                       |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-07/invoicing-toconline` (split: `phase-07.1/tier1-platform-fee-invoices`, `phase-07.2/tier2-expert-adapters`)                                                                                                                                                                                                                                                                                                   |
+| Depends on | Phase 6 (and accountant sign-off of the IVA matrix — entry gate)                                                                                                                                                                                                                                                                                                                                                       |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Touches    | `packages/accounting/**`, `packages/workflows/src/{invoicing/**,domain-events.ts}`, `apps/api/src/app/workflows/domain-events-publisher/**`, `packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts`, `apps/api/src/app/{accounting,invoicing,workflows}/**`, `apps/expert/**` (invoicing onboarding + session invoice status), `infra/qstash/**`, `packages/flags/**` |
+| Exit gate  | Every paid booking yields (1) an Eleva -> expert TOConline invoice in series `ELEVA-FEE-{YYYY}` for the platform fee, and (2) an expert -> member invoice through the expert's connected adapter (TOConline, Moloni) or a manual-mode record with monthly SAF-T/CSV export; monthly reconciliation job flags mismatches                                                                                                |
 
 ## Why this phase exists
 
@@ -41,16 +41,22 @@ In:
   communicates to AT, emails the PDF; idempotent via `platform_fee_invoices(booking_payment_id PK,
 toconline_document_id, series, number, status, issued_at, pdf_url, error)`. Credit note on
   refund/reversal (`issuePlatformFeeCreditNote`).
-- **Invoice domain events** (consumed by Phase 8): every committed status transition of
-  `platform_fee_invoices` and `expert_invoices` calls `emitDomainEvent` from `@eleva/workflows`
-  (this phase adds the helper as a typed in-process dispatcher; Phase 8 attaches
-  `sendNotification` to it) with `invoice.issued` | `invoice.failed` | `invoice.credited` and a
-  payload of `invoiceKind` (`platform_fee` | `expert_service`), `invoiceId`, `bookingPaymentId`
-  or `bookingId`, `expertOrgId`, `number`, optional `pdfUrl` / `error`, and `idempotencyKey`
-  (`invoice:<kind>:<id>:<status>`). Emit **after** the transaction commits (the status write returns, then `emitDomainEvent` runs
-  inside Next.js `after()`); the idempotency key lets Phase 8 dedupe QStash retries. Until Phase 8
-  lands the only subscriber is a structured logger. Test: replaying the same
-  `payment_intent.succeeded` twice yields one invoice row and one `invoice.issued` event.
+- **Invoice domain events** (consumed by Phase 8) use a **transactional outbox**, not an
+  in-process dispatcher: this phase adds `domain_events_outbox` (`id`, `type`, `payload jsonb`,
+  `idempotency_key` unique, `created_at`, `published_at` nullable, `attempts`) in `@eleva/db` and
+  `emitDomainEvent(tx, event)` in `@eleva/workflows`, which **inserts the outbox row inside the
+  same Drizzle transaction** as the status change of `platform_fee_invoices` / `expert_invoices`
+  (so a crash between commit and publish cannot lose or double an event). Event types:
+  `invoice.issued` | `invoice.failed` | `invoice.credited`; payload `invoiceKind`
+  (`platform_fee` | `expert_service`), `invoiceId`, `bookingPaymentId` or `bookingId`,
+  `expertOrgId`, `number`, optional `pdfUrl` / `error`; `idempotency_key` =
+  `invoice:<kind>:<id>:<status>`. A publisher workflow `POST /workflows/domain-events-publisher`
+  (QStash schedule every minute, plus a best-effort immediate kick via Next.js `after()`) reads
+  unpublished rows, dispatches to registered subscribers, and sets `published_at`; subscribers
+  must be idempotent on `idempotency_key` (Phase 8 registers `sendNotification`; until then the
+  only subscriber is a structured logger). Test: replaying the same `payment_intent.succeeded`
+  twice yields one invoice row and one outbox row; killing the process after commit and before
+  publish still results in exactly one delivered event.
 - Tier 1b groundwork: `issueClinicSaasInvoice(subscriptionPeriod)` table + function, triggered by
   `invoice.finalized` (activated in Phase 11).
 - Tier 2: on `booking_payments.status = succeeded` -> `issueExpertServiceInvoice(bookingId)`
@@ -219,13 +225,19 @@ PR 07.1 — Tier 1 (Eleva platform):
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
    event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
    with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
-   Domain events: add emitDomainEvent(event) to @eleva/workflows (typed union of event names +
-   payloads; in-process subscriber registry; Phase 8 registers sendNotification). After every
-   committed status change of platform_fee_invoices / expert_invoices call, inside Next.js
-   after(), emitDomainEvent({ type: "invoice.issued" | "invoice.failed" | "invoice.credited",
-   invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId, number, pdfUrl?, error?,
-   idempotencyKey: `invoice:${kind}:${id}:${status}` }); register a structured-log subscriber
-   now. Test: the same webhook replayed twice -> one row, one event.
+   Domain events (transactional outbox): migration domain_events_outbox (id, type, payload jsonb,
+   idempotency_key unique, created_at, published_at nullable, attempts); add
+   emitDomainEvent(tx, event) to @eleva/workflows (typed union of event names + payloads) that
+   INSERTs the outbox row inside the same Drizzle transaction as the invoice status change — never
+   emit from after() alone. Add POST /workflows/domain-events-publisher (QStash Receiver.verify,
+   scheduled every minute; also kicked best-effort from after() right after commit) that selects
+   unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry, sets published_at,
+   increments attempts and dead-letters after 10. Event types invoice.issued | invoice.failed |
+   invoice.credited with payload { invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId,
+   number, pdfUrl?, error? } and idempotency_key `invoice:${kind}:${id}:${status}`; register a
+   structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
+   Tests: the same webhook replayed twice -> one invoice row, one outbox row; a simulated crash
+   after commit and before publish -> exactly one delivered event on the next publisher run.
    Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
    platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
    skip (not fail) the payout run for that booking until it is — add that check and its test in

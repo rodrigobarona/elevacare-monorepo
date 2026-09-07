@@ -43,9 +43,11 @@ In:
 - Reminder workflows: on booking confirm schedule QStash messages (not cron) for 24h and 1h with
   `notBefore`; cancellation deletes/ignores them (check booking status at send time);
   `packages/workflows/src/notifications/reminders.ts`, route `POST /workflows/booking-reminder`.
-- Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events via the
-  in-process dispatcher `emitDomainEvent` in `@eleva/workflows` (introduced in Phase 7); this
-  phase registers `sendNotification` as its subscriber, running inside `after()` from Next.js.
+- Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events through the
+  transactional outbox `emitDomainEvent(tx, event)` in `@eleva/workflows` (introduced in Phase 7
+  with `domain_events_outbox` and the `/workflows/domain-events-publisher` route); this phase
+  registers `sendNotification` as a publisher subscriber (idempotent on the event
+  `idempotency_key`) and extends the event union with booking/payment/payout types.
 - Lane 2 stub: `syncMarketingContact(userId)` to Resend Audiences only when `marketing` consent
   granted; no PHI fields.
 - Resend webhooks (`/webhooks/resend`: delivered, bounced, complained) -> `notification_deliveries`
@@ -169,12 +171,14 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 4. Workflows: packages/workflows/src/notifications/reminders.ts scheduling QStash messages at
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
-   not need to delete messages. emitDomainEvent(event) in @eleva/workflows already exists from
-   Phase 7 (typed union + in-process subscriber registry); this phase extends the union with the
-   booking/payment/payout event types, registers sendNotification as a subscriber, and wires the
-   Phase 4/6 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
-   paid/approval required) to call it inside Next.js after(); invoice issued/failed/credited
-   already arrive from Phase 7 with an idempotencyKey the subscriber passes straight through.
+   not need to delete messages. emitDomainEvent(tx, event) and the domain_events_outbox table +
+   POST /workflows/domain-events-publisher already exist from Phase 7 (transactional outbox, typed
+   event union, subscriber registry); this phase extends the union with the booking/payment/payout
+   event types, registers sendNotification as a publisher subscriber, and wires the Phase 4/6
+   code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
+   paid/approval required) to call emitDomainEvent(tx, ...) inside the same transaction as the
+   state change — never from after() alone. The subscriber passes the outbox idempotency_key
+   straight through as the notification idempotency key, so publisher retries never duplicate.
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,

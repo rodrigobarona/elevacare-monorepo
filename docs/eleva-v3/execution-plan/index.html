@@ -317,7 +317,7 @@ empty folders left behind.</li>
 </tr>
 <tr>
 <td>3</td>
-<td>WorkOS removal: encryption, calendar, billing seats, dashboard, infra</td>
+<td>WorkOS removal: envelope encryption, calendar credentials, billing seats, dashboard, infra</td>
 <td><code>phase-03/remove-workos</code></td>
 <td>1.5 weeks</td>
 <td>2</td>
@@ -349,7 +349,7 @@ empty folders left behind.</li>
 </tr>
 <tr>
 <td>7</td>
-<td>Invoicing: TOConline Tier 1 fee invoices + Tier 2 expert invoices</td>
+<td>Invoicing: TOConline Tier 1 platform-fee invoices + Tier 2 expert invoices</td>
 <td><code>phase-07/invoicing-toconline</code></td>
 <td>1.5 weeks</td>
 <td>6</td>
@@ -428,9 +428,10 @@ empty folders left behind.</li>
 <td><a href="#16-post-launch-backlog"><code>phases/16-post-launch-backlog.md</code></a></td>
 </tr>
 </tbody></table>
-<p>Parallelism allowed: 5 and 6 after 4; 7 after 6; 8 after 7 (it consumes Phase 7 invoice events);
-11 after 7; 9 after 8. Everything else is sequential. Never start a phase whose dependencies are
-not merged.</p>
+<p>Parallelism allowed: 5 and 6 after 4; 7 after 6; 8 after 5, 6 <strong>and</strong> 7 (it consumes Phase 7
+invoice events and Phase 5 member surfaces); 11 after 7; 9 after 5 <strong>and</strong> 8. The &quot;Depends on&quot;
+column of the table above is the SSOT — this sentence only names which phases may run
+concurrently. Everything else is sequential. Never start a phase whose dependencies are not merged.</p>
 <h2 id="readme--6-target-architecture-reference-for-all-prompts"><a class="anchor" href="#readme--6-target-architecture-reference-for-all-prompts" aria-label="Link to section">#</a>6. Target architecture (reference for all prompts)</h2>
 <figure class="mermaid"><figcaption>Diagram (Mermaid source — paste into any Mermaid renderer)</figcaption><pre><code>flowchart LR
   subgraph edge [eleva.care gateway - apps/web proxy.ts]
@@ -1039,7 +1040,7 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
      schedule, records, reports, invoicing, admin.*) and roles; product labels derived from
      (organization.type, member.role) exactly as today; capability bundles in capabilities.ts
      derive from permissions.ts; infra/workos JSON files retired in Phase 3.
-   Update docs/eleva-v3/adrs/README.md index. Add &quot;Superseded in part by ADR-017/018&quot; banners to
+   Update docs/eleva-v3/adrs/README.md index. Add &quot;Superseded in part by ADR-017/018/020&quot; banners to
    ADR-004 (Pipes/Meet) and ADR-015 (single WorkOS Application). Add decision-log.md entries.
 
 B. Handbook rewrite (docs/eleva-v3/). Rewrite identity-rbac-spec.md for Better Auth (tables user,
@@ -1528,8 +1529,9 @@ rotation/shred tests.</li>
 <li><code>packages/billing/src/server/provisioning.ts</code> seat sync from Better Auth members + test.</li>
 <li>Deletions: <code>apps/api/src/app/workos/</code>, <code>infra/workos/</code>, <code>infra/qstash/setup-workos-sync.ts</code>,
 <code>packages/encryption/src/{vault,client}.ts</code>, <code>apps/account/src/components/workos-widgets-provider.tsx</code>,
-<code>apps/account/src/app/account/(shell)/settings/settings-widgets.tsx</code>, <code>packages/auth/README.md</code>
-WorkOS sections, <code>.cursor</code> leftovers.</li>
+<code>apps/account/src/app/account/(shell)/settings/settings-widgets.tsx</code>, <code>.cursor</code> leftovers.
+<code>packages/auth/README.md</code> is kept and rewritten (WorkOS sections removed, Better Auth
+sections from Phase 2 stay) — see &quot;Docs to update&quot;.</li>
 <li>Boundary lint + CI guard.</li>
 <li>Env/docs updates.</li>
 </ol>
@@ -1742,8 +1744,17 @@ cursor pagination; cached with <code>use cache</code>/<code>revalidateTag</code>
 <li><code>GET /public/experts/[username]/event-types/[slug]/slots?from&amp;to&amp;tz</code> (availability engine +
 external busy-time cache from calendar adapters; 5-minute cache).</li>
 <li><code>POST /bookings/reserve</code> (guest or member; <code>reserveSlot</code> 5-minute TTL; returns
-<code>reservationId</code>).</li>
-<li><code>POST /payments/intent</code> (creates PaymentIntent for the reservation: amount from event type
+<code>reservationId</code> <strong>and</strong> a <code>reservationToken</code> — 32 random bytes returned once to the caller;
+only <code>sha256(token)</code> is persisted in a new <code>slot_reservations.capability_hash</code> column, next
+to a new nullable <code>slot_reservations.user_id</code> set when the caller is signed in. It is the
+capability every later step must present; never logged, never placed in a URL. The existing
+<code>hold_token</code> column stays as the Redis lock owner and is <strong>not</strong> exposed to clients).</li>
+<li><code>POST /payments/intent</code> (body <code>{ reservationId, reservationToken }</code>; the route resolves the
+reservation, requires <code>sha256(reservationToken) = capability_hash</code> <strong>and</strong>, when
+<code>slot_reservations.user_id</code> is set, the session <code>userId</code> to equal it — otherwise 404 (not
+403, to avoid confirming the id exists); one PaymentIntent per reservation (new unique
+nullable <code>slot_reservations.stripe_payment_intent_id</code>, idempotency key = reservationId, so a
+race returns the same intent). Creates the PaymentIntent for the reservation: amount from event type
 price, currency EUR, charged on the <strong>platform</strong> account — Stripe &quot;separate charges and
 transfers&quot; funds flow, so <strong>no</strong> <code>transfer_data</code> and <strong>no</strong> <code>application_fee_amount</code>; the
 platform fee from the <code>@eleva/billing</code> commission SSOT is stored in the ledger as
@@ -1751,8 +1762,10 @@ platform fee from the <code>@eleva/billing</code> commission SSOT is stored in t
 <code>amount - fee</code> to the expert; <code>transfer_group = bookingId</code>, <code>automatic_payment_methods</code>,
 metadata <code>reservationId</code>, <code>bookingId</code>; idempotency key = reservationId). Destination
 charges are rejected because payouts are delayed until eligibility (Phase 6).</li>
-<li><code>POST /bookings/confirm</code> (called from webhook <code>payment_intent.succeeded</code> path and client
-return; binds the PaymentIntent to the reservation before anything else: retrieve it from
+<li><code>POST /bookings/confirm</code> (called from the webhook <code>payment_intent.succeeded</code> path — trusted,
+no token — and from the client return with <code>{ reservationId, reservationToken }</code> validated
+exactly like <code>/payments/intent</code>; binds the PaymentIntent to the reservation before anything
+else: retrieve it from
 Stripe and require <code>status = succeeded</code>, <code>metadata.reservationId === reservationId</code>,
 <code>amount</code> and <code>currency</code> equal to the reservation price, and <code>stripe_payment_intent_id</code> not
 already bound to a <em>different</em> reservation (unique) — any mismatch -&gt; 409 <code>PAYMENT_MISMATCH</code>,
@@ -1769,8 +1782,9 @@ converts reservation -&gt; booking <code>confirmed</code>; guest -&gt; Better Au
 <li><code>packages/db</code>: <code>bookings</code> finalize fields (<code>status</code> enum, <code>guest_email</code>, <code>buyer_org_id</code>,
 <code>expert_org_id</code>, <code>event_type_id</code>, <code>start_at</code>, <code>end_at</code>, <code>timezone</code>, <code>price_cents</code>,
 <code>currency</code>, <code>reservation_id</code>, <code>cancellation_reason</code>), <code>booking_payments</code> (payment intent id,
-status, amount, fee, transfer group), indexes, RLS for both orgs (expert org and buyer org can
-read).</li>
+status, amount, fee, transfer group), <code>slot_reservations</code> additions (<code>capability_hash</code>,
+nullable <code>user_id</code>, nullable unique <code>stripe_payment_intent_id</code>), indexes, RLS for both orgs
+(expert org and buyer org can read).</li>
 <li><code>@eleva/scheduling</code>: <code>getAvailableSlots()</code> combining availability rules, date overrides,
 existing bookings, buffers (10 min before default), minimum notice (24h default), slot interval
 (30 min default), booking window (60 days default), timezone conversion; external busy-time
@@ -1909,7 +1923,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,
    amount_cents, application_fee_cents, transfer_group, payment_method_type, paid_at,
-   refunded_cents, created_at). RLS: expert org and buyer org may read; only API (service role via
+   refunded_cents, created_at); extend slot_reservations with capability_hash (char(64), not
+   null), user_id (nullable FK auth.user) and stripe_payment_intent_id (nullable, unique). RLS:
+   expert org and buyer org may read; only API (service role via
    withOrgContext of the expert org) writes. Migration + rls-isolation test extension. Extend
    @eleva/audit entity/action unions (booking: reserved|confirmed|cancelled|rescheduled;
    booking_payment: created|succeeded|failed|refunded).
@@ -1936,16 +1952,27 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
 
 PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name} or session; calls reserveSlot with 5-min
-   TTL; returns reservationId + expiresAt; 409 on conflict), POST /payments/intent
-   ({ reservationId }) creating a Stripe PaymentIntent via @eleva/billing: amount from event type,
+   TTL; generates a 32-byte random reservationToken and persists only sha256(token) in a new
+   slot_reservations.capability_hash column (migration in @eleva/db; also add nullable user_id set
+   from the session when signed in, and nullable unique stripe_payment_intent_id); returns
+   { reservationId, reservationToken, expiresAt }; 409 on conflict; never log the token or place it
+   in a URL; the existing hold_token stays internal to the Redis lock and is never returned),
+   POST /payments/intent ({ reservationId, reservationToken }) — first authorize:
+   sha256(reservationToken) must equal capability_hash AND, if slot_reservations.user_id is set,
+   the session userId must equal it; any failure -&gt; 404 (not 403). One intent per reservation via
+   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. Then create the Stripe PaymentIntent via
+   @eleva/billing: amount from event type,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
    applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
-   idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
-   idempotent — retrieves the intent from Stripe and requires status succeeded AND
+   idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId,
+   reservationToken? }) idempotent — the webhook path (payment_intent.succeeded, signature
+   verified) calls it internally without a token; the client-return path must pass
+   reservationToken and is authorized exactly like /payments/intent. It then retrieves the intent
+   from Stripe and requires status succeeded AND
    metadata.reservationId === reservationId AND amount/currency equal to the reservation price
    AND the intent id not bound to a different reservation (unique index on
    booking_payments.stripe_payment_intent_id); any mismatch -&gt; 409 PAYMENT_MISMATCH (audited) so a
@@ -1969,8 +1996,9 @@ PR 04.2 — funnel + payment + marketing/legal:
    infra/stripe/setup-webhooks.ts and re-run pnpm stripe:setup:webhooks -- --url &lt;url&gt; --apply
    on staging).
 6. apps/web /[locale]/[username]/[eventSlug]: 4-step funnel (SlotPicker with month/week view and
-   TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy, health-data
-   processing; Payment step using Stripe Payment Element from @eleva/billing/client with
+   TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy and
+   health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const; Phase 5 owns the
+   consents table); Payment step using Stripe Payment Element from @eleva/billing/client with
    Dynamic Payment Methods; confirmation with ICS download from @eleva/calendar ics-generator and
    CTA to activate the account). Reservation countdown visible; expired -&gt; restart. Components in
    @eleva/ui (SlotPicker, TimezoneSelect, PriceTag, ConsentCheckbox, BookingSummary).
@@ -2150,8 +2178,11 @@ PHASE 5 TASK — Build the member product in apps/app.
 
 1. packages/db: tables notification_preferences (user_id FK auth.user, channel email|sms|in_app,
    category booking|reminder|payment|marketing|system, enabled bool, quiet_hours_start/end time,
-   timezone), consents (user_id, kind terms|privacy|health_data|marketing, version, granted_at,
-   withdrawn_at, source), dsar_requests (id, user_id, status pending|processing|ready|expired|
+   timezone), consents (user_id, kind, version, granted_at, withdrawn_at, source) where kind is
+   the pg enum consent_kind generated from the CONSENT_KINDS const exported by
+   @eleva/compliance (terms | privacy | health_data_processing | marketing; Phase 10 appends
+   session_recording and ai_processing to the same const — never a second spelling such as
+   health_data), dsar_requests (id, user_id, status pending|processing|ready|expired|
    failed, blob_pathname, expires_at, requested_at, completed_at), account_deletion_requests
    (user_id, requested_at, scheduled_for, status). RLS by user (personal Space org) and audit
    unions (consent granted|withdrawn; dsar requested|ready; account deletion requested|cancelled).
@@ -2503,7 +2534,7 @@ counts, PR URLs, deferred items.</code></pre></div>
 </tr>
 <tr>
 <td>Touches</td>
-<td><code>packages/accounting/**</code>, <code>packages/workflows/src/{invoicing/**,domain-events.ts}</code>, <code>packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts</code>, <code>apps/api/src/app/{accounting,invoicing,workflows}/**</code>, <code>apps/expert/**</code> (invoicing onboarding + session invoice status), <code>infra/qstash/**</code>, <code>packages/flags/**</code></td>
+<td><code>packages/accounting/**</code>, <code>packages/workflows/src/{invoicing/**,domain-events.ts}</code>, <code>apps/api/src/app/workflows/domain-events-publisher/**</code>, <code>packages/db/src/schema/main/{platform-fee-invoices,expert-invoices,expert-integration-credentials}.ts</code>, <code>apps/api/src/app/{accounting,invoicing,workflows}/**</code>, <code>apps/expert/**</code> (invoicing onboarding + session invoice status), <code>infra/qstash/**</code>, <code>packages/flags/**</code></td>
 </tr>
 <tr>
 <td>Exit gate</td>
@@ -2538,16 +2569,22 @@ from <code>expert_profiles</code> + <code>expert_practice_location</code>), crea
 fee, IVA per matrix (PT 23%; EU VIES valid -&gt; reverse charge; non-EU zero-rated), finalizes,
 communicates to AT, emails the PDF; idempotent via <code>platform_fee_invoices(booking_payment_id PK, toconline_document_id, series, number, status, issued_at, pdf_url, error)</code>. Credit note on
 refund/reversal (<code>issuePlatformFeeCreditNote</code>).</li>
-<li><strong>Invoice domain events</strong> (consumed by Phase 8): every committed status transition of
-<code>platform_fee_invoices</code> and <code>expert_invoices</code> calls <code>emitDomainEvent</code> from <code>@eleva/workflows</code>
-(this phase adds the helper as a typed in-process dispatcher; Phase 8 attaches
-<code>sendNotification</code> to it) with <code>invoice.issued</code> | <code>invoice.failed</code> | <code>invoice.credited</code> and a
-payload of <code>invoiceKind</code> (<code>platform_fee</code> | <code>expert_service</code>), <code>invoiceId</code>, <code>bookingPaymentId</code>
-or <code>bookingId</code>, <code>expertOrgId</code>, <code>number</code>, optional <code>pdfUrl</code> / <code>error</code>, and <code>idempotencyKey</code>
-(<code>invoice:&lt;kind&gt;:&lt;id&gt;:&lt;status&gt;</code>). Emit <strong>after</strong> the transaction commits (the status write returns, then <code>emitDomainEvent</code> runs
-inside Next.js <code>after()</code>); the idempotency key lets Phase 8 dedupe QStash retries. Until Phase 8
-lands the only subscriber is a structured logger. Test: replaying the same
-<code>payment_intent.succeeded</code> twice yields one invoice row and one <code>invoice.issued</code> event.</li>
+<li><strong>Invoice domain events</strong> (consumed by Phase 8) use a <strong>transactional outbox</strong>, not an
+in-process dispatcher: this phase adds <code>domain_events_outbox</code> (<code>id</code>, <code>type</code>, <code>payload jsonb</code>,
+<code>idempotency_key</code> unique, <code>created_at</code>, <code>published_at</code> nullable, <code>attempts</code>) in <code>@eleva/db</code> and
+<code>emitDomainEvent(tx, event)</code> in <code>@eleva/workflows</code>, which <strong>inserts the outbox row inside the
+same Drizzle transaction</strong> as the status change of <code>platform_fee_invoices</code> / <code>expert_invoices</code>
+(so a crash between commit and publish cannot lose or double an event). Event types:
+<code>invoice.issued</code> | <code>invoice.failed</code> | <code>invoice.credited</code>; payload <code>invoiceKind</code>
+(<code>platform_fee</code> | <code>expert_service</code>), <code>invoiceId</code>, <code>bookingPaymentId</code> or <code>bookingId</code>,
+<code>expertOrgId</code>, <code>number</code>, optional <code>pdfUrl</code> / <code>error</code>; <code>idempotency_key</code> =
+<code>invoice:&lt;kind&gt;:&lt;id&gt;:&lt;status&gt;</code>. A publisher workflow <code>POST /workflows/domain-events-publisher</code>
+(QStash schedule every minute, plus a best-effort immediate kick via Next.js <code>after()</code>) reads
+unpublished rows, dispatches to registered subscribers, and sets <code>published_at</code>; subscribers
+must be idempotent on <code>idempotency_key</code> (Phase 8 registers <code>sendNotification</code>; until then the
+only subscriber is a structured logger). Test: replaying the same <code>payment_intent.succeeded</code>
+twice yields one invoice row and one outbox row; killing the process after commit and before
+publish still results in exactly one delivered event.</li>
 <li>Tier 1b groundwork: <code>issueClinicSaasInvoice(subscriptionPeriod)</code> table + function, triggered by
 <code>invoice.finalized</code> (activated in Phase 11).</li>
 <li>Tier 2: on <code>booking_payments.status = succeeded</code> -&gt; <code>issueExpertServiceInvoice(bookingId)</code>
@@ -2710,13 +2747,19 @@ PR 07.1 — Tier 1 (Eleva platform):
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
    event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
    with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
-   Domain events: add emitDomainEvent(event) to @eleva/workflows (typed union of event names +
-   payloads; in-process subscriber registry; Phase 8 registers sendNotification). After every
-   committed status change of platform_fee_invoices / expert_invoices call, inside Next.js
-   after(), emitDomainEvent({ type: &quot;invoice.issued&quot; | &quot;invoice.failed&quot; | &quot;invoice.credited&quot;,
-   invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId, number, pdfUrl?, error?,
-   idempotencyKey: `invoice:${kind}:${id}:${status}` }); register a structured-log subscriber
-   now. Test: the same webhook replayed twice -&gt; one row, one event.
+   Domain events (transactional outbox): migration domain_events_outbox (id, type, payload jsonb,
+   idempotency_key unique, created_at, published_at nullable, attempts); add
+   emitDomainEvent(tx, event) to @eleva/workflows (typed union of event names + payloads) that
+   INSERTs the outbox row inside the same Drizzle transaction as the invoice status change — never
+   emit from after() alone. Add POST /workflows/domain-events-publisher (QStash Receiver.verify,
+   scheduled every minute; also kicked best-effort from after() right after commit) that selects
+   unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry, sets published_at,
+   increments attempts and dead-letters after 10. Event types invoice.issued | invoice.failed |
+   invoice.credited with payload { invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId,
+   number, pdfUrl?, error? } and idempotency_key `invoice:${kind}:${id}:${status}`; register a
+   structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
+   Tests: the same webhook replayed twice -&gt; one invoice row, one outbox row; a simulated crash
+   after commit and before publish -&gt; exactly one delivered event on the next publisher run.
    Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
    platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
    skip (not fail) the payout run for that booking until it is — add that check and its test in
@@ -2836,9 +2879,11 @@ inbox in <code>@eleva/dashboard</code> (<code>NavBell</code>, <code>/[orgSlug]/n
 <li>Reminder workflows: on booking confirm schedule QStash messages (not cron) for 24h and 1h with
 <code>notBefore</code>; cancellation deletes/ignores them (check booking status at send time);
 <code>packages/workflows/src/notifications/reminders.ts</code>, route <code>POST /workflows/booking-reminder</code>.</li>
-<li>Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events via the
-in-process dispatcher <code>emitDomainEvent</code> in <code>@eleva/workflows</code> (introduced in Phase 7); this
-phase registers <code>sendNotification</code> as its subscriber, running inside <code>after()</code> from Next.js.</li>
+<li>Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events through the
+transactional outbox <code>emitDomainEvent(tx, event)</code> in <code>@eleva/workflows</code> (introduced in Phase 7
+with <code>domain_events_outbox</code> and the <code>/workflows/domain-events-publisher</code> route); this phase
+registers <code>sendNotification</code> as a publisher subscriber (idempotent on the event
+<code>idempotency_key</code>) and extends the event union with booking/payment/payout types.</li>
 <li>Lane 2 stub: <code>syncMarketingContact(userId)</code> to Resend Audiences only when <code>marketing</code> consent
 granted; no PHI fields.</li>
 <li>Resend webhooks (<code>/webhooks/resend</code>: delivered, bounced, complained) -&gt; <code>notification_deliveries</code>
@@ -2959,12 +3004,14 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
 4. Workflows: packages/workflows/src/notifications/reminders.ts scheduling QStash messages at
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
-   not need to delete messages. emitDomainEvent(event) in @eleva/workflows already exists from
-   Phase 7 (typed union + in-process subscriber registry); this phase extends the union with the
-   booking/payment/payout event types, registers sendNotification as a subscriber, and wires the
-   Phase 4/6 code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
-   paid/approval required) to call it inside Next.js after(); invoice issued/failed/credited
-   already arrive from Phase 7 with an idempotencyKey the subscriber passes straight through.
+   not need to delete messages. emitDomainEvent(tx, event) and the domain_events_outbox table +
+   POST /workflows/domain-events-publisher already exist from Phase 7 (transactional outbox, typed
+   event union, subscriber registry); this phase extends the union with the booking/payment/payout
+   event types, registers sendNotification as a publisher subscriber, and wires the Phase 4/6
+   code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
+   paid/approval required) to call emitDomainEvent(tx, ...) inside the same transaction as the
+   state change — never from after() alone. The subscriber passes the outbox idempotency_key
+   straight through as the notification idempotency key, so publisher retries never duplicate.
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,
@@ -3429,7 +3476,9 @@ PR 10.1 — records, documents, consent, retention:
    never visible to the member). Add withUserContext(userId, fn) in @eleva/db that sets
    eleva.user_id; RLS tests cover: unpublished record hidden, published record visible,
    expert_only document hidden, shared document visible, other member&#39;s rows hidden.
-   Consent kinds: health_data_processing, session_recording, ai_processing with versioned texts in
+   Consent kinds: append session_recording and ai_processing to CONSENT_KINDS in
+   @eleva/compliance (health_data_processing exists since Phase 5) and regenerate the pg enum;
+   versioned texts in
    packages/compliance/legal/&lt;kind&gt;.&lt;locale&gt;.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/
    publish|unpublish, GET /me/records (member, published only), POST /documents/upload-token
@@ -3847,7 +3896,9 @@ unless staff) + client.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Non-staff user hitting <code>admin.eleva.care</code> -&gt; redirected to gateway with 403 page; staff with
 <code>staff_support</code> cannot access money routes (403), <code>staff_finance</code> can.</li>
-<li><input disabled="" type="checkbox"> Ban user -&gt; sessions revoked -&gt; user cannot sign in; unban restores; both audited with reason.</li>
+<li><input disabled="" type="checkbox"> Ban user -&gt; sessions revoked -&gt; user cannot sign in; unban restores; both audited with
+actor, target and route — ban with a mandatory reason (<code>[R]</code>), unban with an optional one
+(<code>[O]</code>), matching the <code>adminRoute</code> reason policy in the implementation prompt.</li>
 <li><input disabled="" type="checkbox"> Impersonate -&gt; banner visible in <code>apps/app</code>; actions performed carry <code>actorUserId = staff</code>
 and <code>impersonatedUserId</code> in audit; auto-expires in 1h; cannot impersonate staff.</li>
 <li><input disabled="" type="checkbox"> Become-Partner approve -&gt; expert listed publicly within 1 min (cache tag revalidated);
@@ -4216,12 +4267,18 @@ PR 13.1 — security + observability + analytics:
    every route declares its class; test asserting every route file imports a rate limit and an
    auth model (static analysis script scripts/check-route-guards.mjs added to CI). BotID: guard
    every browser- or user-originated public POST (reserve, payments intent, sign-up proxies,
-   become-partner submit, contact, AI endpoints); signed M2M routes are exempt by allowlist —
-   /webhooks/* (provider signature), /workflows/* (QStash Receiver.verify), /auth/* (Better Auth
-   rate limiting) — and the exemption list lives in one place: scripts/check-botid-coverage.mjs
-   (added to CI) fails when a public POST is neither BotID-guarded nor on that allowlist, and
-   fails when an allowlisted route lacks its signature verifier import. Better Auth rateLimit
-   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
+   become-partner submit, contact, AI endpoints); two exemption classes, both declared in one
+   place (scripts/check-botid-coverage.mjs, added to CI): (1) signed M2M routes — /webhooks/*
+   (provider signature) and /workflows/* (QStash Receiver.verify) — for which the script fails
+   unless the route file both imports the trusted verifier (verifyStripeSignature /
+   Receiver.verify from the shared helpers, not a local reimplementation) and calls it before any
+   body parsing or side effect (AST check, not a string match), and unless a colocated test sends
+   an invalid signature and asserts 401 with no side effect; (2) /auth/* — the single Better Auth
+   catch-all handler, exempt because Better Auth applies its own rate limiting — for which the
+   script instead asserts that packages/auth/src/server/auth.ts enables rateLimit with
+   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password (and a
+   unit test exercises the limiter). The script fails when a public POST is neither
+   BotID-guarded nor in one of those two classes. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).
@@ -4460,7 +4517,7 @@ Before writing code:
 
 Workflow (mandatory):
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-14/mvp-migration
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm build
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -&gt; fix -&gt; repeat until clean.
 - git push -u origin HEAD &amp;&amp; gh pr create --base main (PR body template README section 8).
@@ -4718,7 +4775,8 @@ Before writing code:
 
 Workflow (mandatory) for the code/doc PR:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-15/launch-cutover
-- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm build &amp;&amp; pnpm e2e
+- Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
+  pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -&gt; fix -&gt; repeat until clean.
 - git push -u origin HEAD &amp;&amp; gh pr create --base main (PR body template README section 8).

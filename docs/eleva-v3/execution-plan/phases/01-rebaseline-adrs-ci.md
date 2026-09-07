@@ -203,7 +203,7 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
      schedule, records, reports, invoicing, admin.*) and roles; product labels derived from
      (organization.type, member.role) exactly as today; capability bundles in capabilities.ts
      derive from permissions.ts; infra/workos JSON files retired in Phase 3.
-   Update docs/eleva-v3/adrs/README.md index. Add "Superseded in part by ADR-017/018" banners to
+   Update docs/eleva-v3/adrs/README.md index. Add "Superseded in part by ADR-017/018/020" banners to
    ADR-004 (Pipes/Meet) and ADR-015 (single WorkOS Application). Add decision-log.md entries.
 
 B. Handbook rewrite (docs/eleva-v3/). Rewrite identity-rbac-spec.md for Better Auth (tables user,

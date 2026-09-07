@@ -26,8 +26,17 @@ In:
   - `GET /public/experts/[username]/event-types/[slug]/slots?from&to&tz` (availability engine +
     external busy-time cache from calendar adapters; 5-minute cache).
   - `POST /bookings/reserve` (guest or member; `reserveSlot` 5-minute TTL; returns
-    `reservationId`).
-  - `POST /payments/intent` (creates PaymentIntent for the reservation: amount from event type
+    `reservationId` **and** a `reservationToken` — 32 random bytes returned once to the caller;
+    only `sha256(token)` is persisted in a new `slot_reservations.capability_hash` column, next
+    to a new nullable `slot_reservations.user_id` set when the caller is signed in. It is the
+    capability every later step must present; never logged, never placed in a URL. The existing
+    `hold_token` column stays as the Redis lock owner and is **not** exposed to clients).
+  - `POST /payments/intent` (body `{ reservationId, reservationToken }`; the route resolves the
+    reservation, requires `sha256(reservationToken) = capability_hash` **and**, when
+    `slot_reservations.user_id` is set, the session `userId` to equal it — otherwise 404 (not
+    403, to avoid confirming the id exists); one PaymentIntent per reservation (new unique
+    nullable `slot_reservations.stripe_payment_intent_id`, idempotency key = reservationId, so a
+    race returns the same intent). Creates the PaymentIntent for the reservation: amount from event type
     price, currency EUR, charged on the **platform** account — Stripe "separate charges and
     transfers" funds flow, so **no** `transfer_data` and **no** `application_fee_amount`; the
     platform fee from the `@eleva/billing` commission SSOT is stored in the ledger as
@@ -35,8 +44,10 @@ In:
     `amount - fee` to the expert; `transfer_group = bookingId`, `automatic_payment_methods`,
     metadata `reservationId`, `bookingId`; idempotency key = reservationId). Destination
     charges are rejected because payouts are delayed until eligibility (Phase 6).
-  - `POST /bookings/confirm` (called from webhook `payment_intent.succeeded` path and client
-    return; binds the PaymentIntent to the reservation before anything else: retrieve it from
+  - `POST /bookings/confirm` (called from the webhook `payment_intent.succeeded` path — trusted,
+    no token — and from the client return with `{ reservationId, reservationToken }` validated
+    exactly like `/payments/intent`; binds the PaymentIntent to the reservation before anything
+    else: retrieve it from
     Stripe and require `status = succeeded`, `metadata.reservationId === reservationId`,
     `amount` and `currency` equal to the reservation price, and `stripe_payment_intent_id` not
     already bound to a _different_ reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
@@ -51,8 +62,9 @@ In:
 - `packages/db`: `bookings` finalize fields (`status` enum, `guest_email`, `buyer_org_id`,
   `expert_org_id`, `event_type_id`, `start_at`, `end_at`, `timezone`, `price_cents`,
   `currency`, `reservation_id`, `cancellation_reason`), `booking_payments` (payment intent id,
-  status, amount, fee, transfer group), indexes, RLS for both orgs (expert org and buyer org can
-  read).
+  status, amount, fee, transfer group), `slot_reservations` additions (`capability_hash`,
+  nullable `user_id`, nullable unique `stripe_payment_intent_id`), indexes, RLS for both orgs
+  (expert org and buyer org can read).
 - `@eleva/scheduling`: `getAvailableSlots()` combining availability rules, date overrides,
   existing bookings, buffers (10 min before default), minimum notice (24h default), slot interval
   (30 min default), booking window (60 days default), timezone conversion; external busy-time
@@ -192,7 +204,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,
    amount_cents, application_fee_cents, transfer_group, payment_method_type, paid_at,
-   refunded_cents, created_at). RLS: expert org and buyer org may read; only API (service role via
+   refunded_cents, created_at); extend slot_reservations with capability_hash (char(64), not
+   null), user_id (nullable FK auth.user) and stripe_payment_intent_id (nullable, unique). RLS:
+   expert org and buyer org may read; only API (service role via
    withOrgContext of the expert org) writes. Migration + rls-isolation test extension. Extend
    @eleva/audit entity/action unions (booking: reserved|confirmed|cancelled|rescheduled;
    booking_payment: created|succeeded|failed|refunded).
@@ -219,16 +233,27 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
 
 PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name} or session; calls reserveSlot with 5-min
-   TTL; returns reservationId + expiresAt; 409 on conflict), POST /payments/intent
-   ({ reservationId }) creating a Stripe PaymentIntent via @eleva/billing: amount from event type,
+   TTL; generates a 32-byte random reservationToken and persists only sha256(token) in a new
+   slot_reservations.capability_hash column (migration in @eleva/db; also add nullable user_id set
+   from the session when signed in, and nullable unique stripe_payment_intent_id); returns
+   { reservationId, reservationToken, expiresAt }; 409 on conflict; never log the token or place it
+   in a URL; the existing hold_token stays internal to the Redis lock and is never returned),
+   POST /payments/intent ({ reservationId, reservationToken }) — first authorize:
+   sha256(reservationToken) must equal capability_hash AND, if slot_reservations.user_id is set,
+   the session userId must equal it; any failure -> 404 (not 403). One intent per reservation via
+   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. Then create the Stripe PaymentIntent via
+   @eleva/billing: amount from event type,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
    applied_commission_bps, transfer_group = bookingId, metadata { reservationId, bookingId, expertOrgId },
-   idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
-   idempotent — retrieves the intent from Stripe and requires status succeeded AND
+   idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId,
+   reservationToken? }) idempotent — the webhook path (payment_intent.succeeded, signature
+   verified) calls it internally without a token; the client-return path must pass
+   reservationToken and is authorized exactly like /payments/intent. It then retrieves the intent
+   from Stripe and requires status succeeded AND
    metadata.reservationId === reservationId AND amount/currency equal to the reservation price
    AND the intent id not bound to a different reservation (unique index on
    booking_payments.stripe_payment_intent_id); any mismatch -> 409 PAYMENT_MISMATCH (audited) so a
@@ -252,8 +277,9 @@ PR 04.2 — funnel + payment + marketing/legal:
    infra/stripe/setup-webhooks.ts and re-run pnpm stripe:setup:webhooks -- --url <url> --apply
    on staging).
 6. apps/web /[locale]/[username]/[eventSlug]: 4-step funnel (SlotPicker with month/week view and
-   TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy, health-data
-   processing; Payment step using Stripe Payment Element from @eleva/billing/client with
+   TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy and
+   health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const; Phase 5 owns the
+   consents table); Payment step using Stripe Payment Element from @eleva/billing/client with
    Dynamic Payment Methods; confirmation with ICS download from @eleva/calendar ics-generator and
    CTA to activate the account). Reservation countdown visible; expired -> restart. Components in
    @eleva/ui (SlotPicker, TimezoneSelect, PriceTag, ConsentCheckbox, BookingSummary).

@@ -195,12 +195,18 @@ PR 13.1 — security + observability + analytics:
    every route declares its class; test asserting every route file imports a rate limit and an
    auth model (static analysis script scripts/check-route-guards.mjs added to CI). BotID: guard
    every browser- or user-originated public POST (reserve, payments intent, sign-up proxies,
-   become-partner submit, contact, AI endpoints); signed M2M routes are exempt by allowlist —
-   /webhooks/* (provider signature), /workflows/* (QStash Receiver.verify), /auth/* (Better Auth
-   rate limiting) — and the exemption list lives in one place: scripts/check-botid-coverage.mjs
-   (added to CI) fails when a public POST is neither BotID-guarded nor on that allowlist, and
-   fails when an allowlisted route lacks its signature verifier import. Better Auth rateLimit
-   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password. CORS allow-list
+   become-partner submit, contact, AI endpoints); two exemption classes, both declared in one
+   place (scripts/check-botid-coverage.mjs, added to CI): (1) signed M2M routes — /webhooks/*
+   (provider signature) and /workflows/* (QStash Receiver.verify) — for which the script fails
+   unless the route file both imports the trusted verifier (verifyStripeSignature /
+   Receiver.verify from the shared helpers, not a local reimplementation) and calls it before any
+   body parsing or side effect (AST check, not a string match), and unless a colocated test sends
+   an invalid signature and asserts 401 with no side effect; (2) /auth/* — the single Better Auth
+   catch-all handler, exempt because Better Auth applies its own rate limiting — for which the
+   script instead asserts that packages/auth/src/server/auth.ts enables rateLimit with
+   customRules for /sign-in/*, /sign-up/*, /magic-link, /two-factor/*, /forget-password (and a
+   unit test exercises the limiter). The script fails when a public POST is neither
+   BotID-guarded nor in one of those two classes. CORS allow-list
    review. Dependabot or Renovate config for weekly grouped updates; pnpm audit --prod in CI
    (fail on high). Secret rotation runbook in integration-runbooks.md (BETTER_AUTH_SECRET,
    ELEVA_KEK_V2 with rotateKek, Stripe/Daily/Resend webhook secrets, TOConline).

@@ -67,7 +67,9 @@ commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_vie
 
 - [ ] Non-staff user hitting `admin.eleva.care` -> redirected to gateway with 403 page; staff with
       `staff_support` cannot access money routes (403), `staff_finance` can.
-- [ ] Ban user -> sessions revoked -> user cannot sign in; unban restores; both audited with reason.
+- [ ] Ban user -> sessions revoked -> user cannot sign in; unban restores; both audited with
+      actor, target and route — ban with a mandatory reason (`[R]`), unban with an optional one
+      (`[O]`), matching the `adminRoute` reason policy in the implementation prompt.
 - [ ] Impersonate -> banner visible in `apps/app`; actions performed carry `actorUserId = staff`
       and `impersonatedUserId` in audit; auto-expires in 1h; cannot impersonate staff.
 - [ ] Become-Partner approve -> expert listed publicly within 1 min (cache tag revalidated);

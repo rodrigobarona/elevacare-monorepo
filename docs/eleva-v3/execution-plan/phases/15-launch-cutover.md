@@ -132,7 +132,8 @@ Before writing code:
 
 Workflow (mandatory) for the code/doc PR:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
-- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e
+- Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
+  pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
