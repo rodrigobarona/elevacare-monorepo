@@ -30,7 +30,8 @@ h1{font-size:30px;line-height:1.2;margin:0 0 12px}
 h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:17px;margin:28px 0 8px}
 h1 .anchor,h2 .anchor,h3 .anchor,h4 .anchor{opacity:0;margin-right:6px;text-decoration:none;color:var(--muted);font-weight:400}
-h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{opacity:1}
+h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor,.anchor:focus-visible{opacity:1}
+.anchor:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 table{border-collapse:collapse;width:100%;margin:12px 0 20px;font-size:14px;display:block;overflow-x:auto}
 th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top;text-align:left}
 th{background:#f6f5f1}
@@ -91,8 +92,14 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 <li>Markdown is the SSOT. <code>index.html</code> is generated from these files with
 <code>pnpm docs:execution-plan:html</code> (do not edit the HTML by hand).</li>
 <li>Each phase lives in <code>phases/NN-slug.md</code> and ends with a <code>## Copy-paste prompt</code> section.</li>
-<li>The prompts assume the repo is checked out at the monorepo root and that the tooling in
-Phase 0 is merged (<code>pnpm review</code>, <code>pnpm review:branch</code>, CodeRabbit CLI authenticated).</li>
+<li>The prompts for Phases 1–16 assume the repo is checked out at the monorepo root and that the
+tooling in Phase 0 is merged (<code>pnpm review</code>, <code>pnpm review:branch</code>, CodeRabbit CLI
+authenticated). Phase 0 bootstraps that tooling, so on a fresh checkout its prompt runs the
+CodeRabbit CLI directly until its own scripts exist: install with
+<code>curl -fsSL https://cli.coderabbit.ai/install.sh | sh</code>, authenticate with
+<code>coderabbit auth login</code>, then use <code>coderabbit review --uncommitted --include-untracked</code> where
+later phases say <code>pnpm review</code> and <code>coderabbit review --committed --base main</code> where they say
+<code>pnpm review:branch</code> — the Phase 0 prompt states this explicitly.</li>
 </ul>
 <h2 id="readme--1-what-we-are-building"><a class="anchor" href="#readme--1-what-we-are-building" aria-label="Link to section">#</a>1. What we are building</h2>
 <p>Eleva.care is an EU-first, Portugal-first digital health marketplace and community. Experts
@@ -768,6 +775,12 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
   into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
+- Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
+  install the CodeRabbit CLI with `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, run
+  `coderabbit auth login` once, and until deliverable 3 lands use
+  `coderabbit review --uncommitted --include-untracked` wherever this prompt says pnpm review and
+  `coderabbit review --committed --base main` wherever it says pnpm review:branch. Once the root
+  scripts exist, switch to them for the remaining loops so the scripts themselves are exercised.
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -&gt; fix -&gt; repeat until clean.
 - git push -u origin HEAD &amp;&amp; gh pr create --base main with the PR body template from
@@ -1492,7 +1505,7 @@ PR URLs, and any env vars the owner must set in Vercel (all eight projects).</co
 </tr>
 <tr>
 <td>Exit gate</td>
-<td><code>rg -n &quot;workos&quot; -i --glob &#39;!_context/**&#39; --glob &#39;!docs/eleva-v3/adrs/**&#39; --glob &#39;!docs/eleva-v3/decision-log.md&#39; --glob &#39;!docs/eleva-v3/execution-plan/**&#39;</code> returns nothing; CI guard blocks <code>@workos-inc</code> imports; calendar connect works via Better Auth tokens; envelope encryption tests green</td>
+<td><code>rg -n &quot;workos&quot; -i --glob &#39;!_context/**&#39; --glob &#39;!docs/eleva-v3/adrs/**&#39; --glob &#39;!docs/eleva-v3/decision-log.md&#39; --glob &#39;!docs/eleva-v3/execution-plan/**&#39; --glob &#39;!pnpm-lock.yaml&#39; --glob &#39;!.github/workflows/**&#39;</code> returns nothing; CI guard blocks <code>@workos-inc</code> imports; calendar connect works via Better Auth tokens; envelope encryption tests green</td>
 </tr>
 </tbody></table>
 <h2 id="03-remove-workos--why-this-phase-exists"><a class="anchor" href="#03-remove-workos--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -1543,7 +1556,7 @@ and the <code>import &quot;@radix-ui/themes/styles.css&quot;</code> lines in org
 return only ADR/decision-log history); catalog entries removed;
 <code>packages/eslint-config/boundaries.js</code> forbids <code>@workos-inc/*</code> everywhere and enforces
 <code>better-auth</code> only in <code>packages/auth</code>.</li>
-<li><code>.github/workflows/ci.yml</code>: <code>no-workos</code> guard step (<code>rg</code> returns non-zero).</li>
+<li><code>.github/workflows/ci.yml</code>: <code>legacy-idp-guard</code> step (<code>rg</code> returns non-zero).</li>
 <li><code>.env.example</code>, <code>turbo.json</code>, <code>environment-matrix.md</code>: remove <code>WORKOS_*</code>; add <code>ELEVA_KEK_V1</code>.</li>
 <li>Expert integrations UI (<code>apps/expert</code>): connect Google/Microsoft buttons call <code>linkSocial</code> with
 calendar scopes and return to the integrations page; status reads from <code>expert_integrations</code>.</li>
@@ -1574,7 +1587,7 @@ booking (manual verification on staging).</li>
 <li><input disabled="" type="checkbox"> Adding/removing a member in a Team org updates Stripe subscription quantity (test with
 Stripe test clock or mocked client).</li>
 <li><input disabled="" type="checkbox"> QStash <code>workos-sync</code> schedule gone (<code>pnpm qstash:list</code>).</li>
-<li><input disabled="" type="checkbox"> CI <code>no-workos</code> guard green; boundary lint fails on a deliberate <code>@workos-inc</code> import (verify
+<li><input disabled="" type="checkbox"> CI <code>legacy-idp-guard</code> step green; boundary lint fails on a deliberate <code>@workos-inc</code> import (verify
 locally, then remove).</li>
 </ul>
 <h2 id="03-remove-workos--tests"><a class="anchor" href="#03-remove-workos--tests" aria-label="Link to section">#</a>Tests</h2>
@@ -1723,9 +1736,12 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    infra/qstash scripts and verify with pnpm qstash:list.
 5. Guards: packages/eslint-config/boundaries.js -&gt; forbid @workos-inc/* everywhere; allow
    better-auth only in packages/auth; allow @daily-co/* only in packages/video (prepare).
-   .github/workflows/ci.yml -&gt; step &quot;no-workos&quot;: `! rg -n -i &quot;workos&quot; --glob &#39;!_context/**&#39;
+   .github/workflows/ci.yml -&gt; step &quot;legacy-idp-guard&quot;: `! rg -n -i &quot;workos&quot; --glob &#39;!_context/**&#39;
    --glob &#39;!docs/eleva-v3/adrs/**&#39; --glob &#39;!docs/eleva-v3/decision-log.md&#39;
-   --glob &#39;!docs/eleva-v3/execution-plan/**&#39; --glob &#39;!pnpm-lock.yaml&#39;`.
+   --glob &#39;!docs/eleva-v3/execution-plan/**&#39; --glob &#39;!pnpm-lock.yaml&#39;
+   --glob &#39;!.github/workflows/**&#39;` — the workflow file itself contains the literal (step name and
+   pattern), so without the last glob the guard matches itself and fails on every run; the step
+   name deliberately avoids the literal too. Same glob list in the exit-gate command above.
 6. Env + docs: remove WORKOS_* from .env.example, turbo.json globalEnv, environment-matrix.md and
    AGENTS.md; add ELEVA_KEK_V1 (generation command: openssl rand -base64 32) and a KEK rotation
    runbook in integration-runbooks.md; update calendar-integration-spec.md,
@@ -1735,7 +1751,7 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 Acceptance: exit-gate grep empty; lockfile has no @workos-inc; encryption tests (round trip,
 tamper, aad, rotate, shred) green; Google Calendar connect -&gt; busy sources -&gt; destination -&gt;
 event sync verified on staging; member add/remove updates Stripe seat quantity (test); QStash
-workos-sync schedule removed; CI no-workos guard and boundary lint green.
+workos-sync schedule removed; CI legacy-idp-guard step and boundary lint green.
 
 Report: files deleted/changed, migrations, test results, CodeRabbit CLI counts, PR URL(s), and the
 Vercel env var changes required.</code></pre></div>
@@ -1853,7 +1869,9 @@ event, which Phases 7 and 8 extend with their own event types and subscribers.)<
 </li>
 <li><code>packages/db</code>: <code>bookings</code> finalize fields (<code>status</code> enum, <code>guest_email</code>, <code>buyer_org_id</code>,
 <code>expert_org_id</code>, <code>event_type_id</code>, <code>start_at</code>, <code>end_at</code>, <code>timezone</code>, <code>price_cents</code>,
-<code>currency</code>, <code>reservation_id</code>, <code>cancellation_reason</code>), <code>booking_payments</code> (payment intent id,
+<code>currency</code>, <code>reservation_id</code> <strong>unique</strong> — the booking identity is keyed by the reservation,
+so concurrent <code>/payments/intent</code> calls converge on one row via <code>ON CONFLICT DO NOTHING</code> +
+re-read — <code>cancellation_reason</code>), <code>booking_payments</code> (unique <code>booking_id</code>, payment intent id,
 status, amount, fee, transfer group), <code>slot_reservations</code> additions (<code>capability_hash</code>,
 nullable <code>user_id</code>, nullable unique <code>stripe_payment_intent_id</code>), indexes, RLS for both orgs
 (expert org and buyer org can read).</li>
@@ -1995,8 +2013,13 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 PHASE 4 TASK — Public marketplace and booking funnel with payment.
 
 PR 04.1 — data, scheduling engine, public API, explorer + profile:
-1. packages/db: finalize bookings (id, reservation_id, expert_org_id, buyer_org_id nullable until
-   activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
+1. packages/db: finalize bookings (id, reservation_id UNIQUE — one durable booking identity per
+   reservation: tx A of /payments/intent uses INSERT ... ON CONFLICT (reservation_id) DO NOTHING
+   and re-reads the winner, so two concurrent calls share one bookingId and the intent&#39;s
+   metadata.bookingId/transfer_group can only point at that row; booking_payments.booking_id is
+   UNIQUE for the same reason; test: two parallel /payments/intent calls for one reservation -&gt;
+   one bookings row, one booking_payments row, one intent id — expert_org_id, buyer_org_id
+   nullable until activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
    timezone, price_cents, currency, status enum reserved|pending_payment|confirmed|cancelled|
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,
@@ -3712,7 +3735,13 @@ PR 10.1 — records, documents, consent, retention:
 3. @eleva/compliance: retention jobs (packages/compliance/src/retention.ts: policies from
    data-retention-export-matrix.md — transcripts 2y, unpublished ai_draft 90d, session_documents
    per matrix, slot reservations 24h, notification_deliveries 1y) run by POST /workflows/
-   retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script); finalize
+   retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script). Every
+   session_documents expiry deletes the PRIVATE Blob object first through @eleva/storage
+   (deleteBlob(pathname), idempotent: a 404 from the store counts as deleted) and only then the
+   row, in that order, so a crash never leaves an orphaned PHI object; a failed object deletion
+   leaves the row with retention_error + attempts for the next sweep and alerts after 3 failures;
+   test: expired document -&gt; store mock receives one delete, row gone; store failure -&gt; row kept
+   and flagged; second sweep after store recovery -&gt; both gone. Finalize
    account deletion: after grace period -&gt; shredOrgKeys(personal space) + delete the member&#39;s rows
    + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
    tombstone member_user_id on expert-authored records (deleted_users salted-hash row; strip
@@ -4853,11 +4882,11 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
 
 1. Create infra/migration (@eleva/infra-migration, tsx, isolated deps incl. @workos-inc/node for
    Vault decrypt and identity export ONLY here). Update the Phase 3 guards for this single
-   exception: (a) .github/workflows/ci.yml step &quot;no-workos&quot; adds --glob &#39;!infra/migration/**&#39; to
+   exception: (a) .github/workflows/ci.yml step &quot;legacy-idp-guard&quot; (Phase 3) adds --glob &#39;!infra/migration/**&#39; to
    its rg command (and nothing else); (b) packages/eslint-config/boundaries.js keeps forbidding
    @workos-inc/* everywhere and adds an allow entry scoped to infra/migration/**; (c) a new CI step
    &quot;no-migration-imports&quot; fails if any file under apps/** or packages/** imports
-   @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
+   @eleva/infra-migration or anything under infra/migration. Tests: the legacy-idp-guard rg with the new
    glob returns nothing on this branch; a deliberate `import &quot;@workos-inc/node&quot;` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
@@ -4947,10 +4976,16 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    each tagged op = insert|update by comparing created_at with the timestamp), soft-deletes, and
    hard deletes reconstructed from audit_events rows with action deleted after the timestamp
    (tagged op = delete with the entity id) — to a JSON file signed with an HMAC under
-   MIGRATION_CHECKSUM_KEY; the restore side replays each record idempotently by the
-   migration_id_map (upsert for insert|update, delete-or-tombstone for delete; re-running the
-   replay is a no-op) — a rehearsal test edits and deletes pre-cutover rows in v3 and asserts the
-   MVP copy reflects both after replay; the entity inventory is generated
+   MIGRATION_CHECKSUM_KEY; the restore side needs a stable MVP key for EVERY exported record, so
+   add rollback_id_map (v3_table, v3_id, mvp_table, mvp_id, unique on the v3 pair and on the MVP
+   pair): rows migrated forward are seeded by inverting migration_id_map at cutover; a v3 insert
+   with no MVP source gets its MVP id assigned on first replay and recorded there, so the second
+   replay of the same record finds the mapping and upserts instead of inserting again; updates
+   and deletes resolve their MVP target through the same map (never by e-mail or by natural
+   keys). Replay = upsert for insert|update, delete-or-tombstone for delete; re-running the
+   replay is a no-op precisely because rollback_id_map is consulted first — a rehearsal test
+   inserts, edits and deletes v3 rows, replays twice, and asserts one MVP row per v3 row and the
+   final state reflected; the entity inventory is generated
    from the Drizzle schema so a new table cannot be forgotten, and a unit test fails if a table
    with created_at/updated_at is missing from the export). Restore per entity class, in this
    order: (1) identity — auth.user/account/organization/member created after cutover are
@@ -5203,12 +5238,15 @@ C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutov
    pnpm migration:reverse-export --since &quot;$CUTOVER_TS&quot; to a signed JSON file, and replay it into
    the MVP idempotently by the id map (upsert / delete-or-tombstone; a second replay is a no-op)
    so a pre-cutover booking cancelled or rescheduled in v3 is never restored stale; (3) reconcile against Stripe as the source of truth
-   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
-   booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
-   MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
-   second booking. Replay intents missing from MVP with the MVP booking importer as an idempotent
-   upsert on stripe_payment_intent_id (re-running the import is a no-op), never refund
-   automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
+   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical booking,
+   keyed by stripe_payment_intent_id, in whatever state v3 last recorded for it (confirmed,
+   completed, cancelled, refunded or refund_pending — a cancelled-and-refunded booking is still
+   the canonical one; &quot;active&quot; is not required), and after rollback that canonical booking with
+   its payment, refund and cancellation state lives in MVP; the exported v3 rows are retained
+   read-only as an audit copy and are NOT counted as a second booking. Replay intents missing
+   from MVP with the MVP booking importer as an idempotent upsert on stripe_payment_intent_id
+   that also writes the recorded status, refunded_cents and cancellation reason (re-running the
+   import is a no-op), never refund automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
    the rollback report; (4) re-enable the MVP
    Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
    and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production

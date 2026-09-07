@@ -10,8 +10,14 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 - Markdown is the SSOT. `index.html` is generated from these files with
   `pnpm docs:execution-plan:html` (do not edit the HTML by hand).
 - Each phase lives in `phases/NN-slug.md` and ends with a `## Copy-paste prompt` section.
-- The prompts assume the repo is checked out at the monorepo root and that the tooling in
-  Phase 0 is merged (`pnpm review`, `pnpm review:branch`, CodeRabbit CLI authenticated).
+- The prompts for Phases 1–16 assume the repo is checked out at the monorepo root and that the
+  tooling in Phase 0 is merged (`pnpm review`, `pnpm review:branch`, CodeRabbit CLI
+  authenticated). Phase 0 bootstraps that tooling, so on a fresh checkout its prompt runs the
+  CodeRabbit CLI directly until its own scripts exist: install with
+  `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, authenticate with
+  `coderabbit auth login`, then use `coderabbit review --uncommitted --include-untracked` where
+  later phases say `pnpm review` and `coderabbit review --committed --base main` where they say
+  `pnpm review:branch` — the Phase 0 prompt states this explicitly.
 
 ## 1. What we are building
 

@@ -92,7 +92,9 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
 - `packages/db`: `bookings` finalize fields (`status` enum, `guest_email`, `buyer_org_id`,
   `expert_org_id`, `event_type_id`, `start_at`, `end_at`, `timezone`, `price_cents`,
-  `currency`, `reservation_id`, `cancellation_reason`), `booking_payments` (payment intent id,
+  `currency`, `reservation_id` **unique** — the booking identity is keyed by the reservation,
+  so concurrent `/payments/intent` calls converge on one row via `ON CONFLICT DO NOTHING` +
+  re-read — `cancellation_reason`), `booking_payments` (unique `booking_id`, payment intent id,
   status, amount, fee, transfer group), `slot_reservations` additions (`capability_hash`,
   nullable `user_id`, nullable unique `stripe_payment_intent_id`), indexes, RLS for both orgs
   (expert org and buyer org can read).
@@ -235,8 +237,13 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 PHASE 4 TASK — Public marketplace and booking funnel with payment.
 
 PR 04.1 — data, scheduling engine, public API, explorer + profile:
-1. packages/db: finalize bookings (id, reservation_id, expert_org_id, buyer_org_id nullable until
-   activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
+1. packages/db: finalize bookings (id, reservation_id UNIQUE — one durable booking identity per
+   reservation: tx A of /payments/intent uses INSERT ... ON CONFLICT (reservation_id) DO NOTHING
+   and re-reads the winner, so two concurrent calls share one bookingId and the intent's
+   metadata.bookingId/transfer_group can only point at that row; booking_payments.booking_id is
+   UNIQUE for the same reason; test: two parallel /payments/intent calls for one reservation ->
+   one bookings row, one booking_payments row, one intent id — expert_org_id, buyer_org_id
+   nullable until activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
    timezone, price_cents, currency, status enum reserved|pending_payment|confirmed|cancelled|
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,

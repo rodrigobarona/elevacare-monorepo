@@ -6,7 +6,7 @@
 | Depends on | Phase 2                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | Touches    | `packages/encryption/**`, `packages/calendar/**`, `packages/billing/src/server/provisioning.ts`, `packages/workflows/src/scheduling/calendar-event-sync.ts`, `packages/dashboard/**`, `packages/eslint-config/boundaries.js`, `apps/api/src/app/workos/**`, `apps/expert/**` (integrations UI), `infra/workos/**`, `infra/qstash/**`, `infra/stripe/**`, `pnpm-workspace.yaml`, `.env.example`, `turbo.json`, `.github/workflows/ci.yml` |
-| Exit gate  | `rg -n "workos" -i --glob '!_context/**' --glob '!docs/eleva-v3/adrs/**' --glob '!docs/eleva-v3/decision-log.md' --glob '!docs/eleva-v3/execution-plan/**'` returns nothing; CI guard blocks `@workos-inc` imports; calendar connect works via Better Auth tokens; envelope encryption tests green                                                                                                                                       |
+| Exit gate  | `rg -n "workos" -i --glob '!_context/**' --glob '!docs/eleva-v3/adrs/**' --glob '!docs/eleva-v3/decision-log.md' --glob '!docs/eleva-v3/execution-plan/**' --glob '!pnpm-lock.yaml' --glob '!.github/workflows/**'` returns nothing; CI guard blocks `@workos-inc` imports; calendar connect works via Better Auth tokens; envelope encryption tests green                                                                               |
 
 ## Why this phase exists
 
@@ -60,7 +60,7 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   return only ADR/decision-log history); catalog entries removed;
   `packages/eslint-config/boundaries.js` forbids `@workos-inc/*` everywhere and enforces
   `better-auth` only in `packages/auth`.
-- `.github/workflows/ci.yml`: `no-workos` guard step (`rg` returns non-zero).
+- `.github/workflows/ci.yml`: `legacy-idp-guard` step (`rg` returns non-zero).
 - `.env.example`, `turbo.json`, `environment-matrix.md`: remove `WORKOS_*`; add `ELEVA_KEK_V1`.
 - Expert integrations UI (`apps/expert`): connect Google/Microsoft buttons call `linkSocial` with
   calendar scopes and return to the integrations page; status reads from `expert_integrations`.
@@ -92,7 +92,7 @@ Out: records/PHI features (Phase 10); MVP record re-encryption (Phase 14).
 - [ ] Adding/removing a member in a Team org updates Stripe subscription quantity (test with
       Stripe test clock or mocked client).
 - [ ] QStash `workos-sync` schedule gone (`pnpm qstash:list`).
-- [ ] CI `no-workos` guard green; boundary lint fails on a deliberate `@workos-inc` import (verify
+- [ ] CI `legacy-idp-guard` step green; boundary lint fails on a deliberate `@workos-inc` import (verify
       locally, then remove).
 
 ## Tests
@@ -243,9 +243,12 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    infra/qstash scripts and verify with pnpm qstash:list.
 5. Guards: packages/eslint-config/boundaries.js -> forbid @workos-inc/* everywhere; allow
    better-auth only in packages/auth; allow @daily-co/* only in packages/video (prepare).
-   .github/workflows/ci.yml -> step "no-workos": `! rg -n -i "workos" --glob '!_context/**'
+   .github/workflows/ci.yml -> step "legacy-idp-guard": `! rg -n -i "workos" --glob '!_context/**'
    --glob '!docs/eleva-v3/adrs/**' --glob '!docs/eleva-v3/decision-log.md'
-   --glob '!docs/eleva-v3/execution-plan/**' --glob '!pnpm-lock.yaml'`.
+   --glob '!docs/eleva-v3/execution-plan/**' --glob '!pnpm-lock.yaml'
+   --glob '!.github/workflows/**'` — the workflow file itself contains the literal (step name and
+   pattern), so without the last glob the guard matches itself and fails on every run; the step
+   name deliberately avoids the literal too. Same glob list in the exit-gate command above.
 6. Env + docs: remove WORKOS_* from .env.example, turbo.json globalEnv, environment-matrix.md and
    AGENTS.md; add ELEVA_KEK_V1 (generation command: openssl rand -base64 32) and a KEK rotation
    runbook in integration-runbooks.md; update calendar-integration-spec.md,
@@ -255,7 +258,7 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 Acceptance: exit-gate grep empty; lockfile has no @workos-inc; encryption tests (round trip,
 tamper, aad, rotate, shred) green; Google Calendar connect -> busy sources -> destination ->
 event sync verified on staging; member add/remove updates Stripe seat quantity (test); QStash
-workos-sync schedule removed; CI no-workos guard and boundary lint green.
+workos-sync schedule removed; CI legacy-idp-guard step and boundary lint green.
 
 Report: files deleted/changed, migrations, test results, CodeRabbit CLI counts, PR URL(s), and the
 Vercel env var changes required.

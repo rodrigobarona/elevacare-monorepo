@@ -198,7 +198,8 @@ h1{font-size:30px;line-height:1.2;margin:0 0 12px}
 h2{font-size:22px;margin:40px 0 12px;padding-top:8px;border-top:1px solid var(--line)}
 h3{font-size:17px;margin:28px 0 8px}
 h1 .anchor,h2 .anchor,h3 .anchor,h4 .anchor{opacity:0;margin-right:6px;text-decoration:none;color:var(--muted);font-weight:400}
-h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor{opacity:1}
+h1:hover .anchor,h2:hover .anchor,h3:hover .anchor,h4:hover .anchor,.anchor:focus-visible{opacity:1}
+.anchor:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 table{border-collapse:collapse;width:100%;margin:12px 0 20px;font-size:14px;display:block;overflow-x:auto}
 th,td{border:1px solid var(--line);padding:6px 10px;vertical-align:top;text-align:left}
 th{background:#f6f5f1}

@@ -231,7 +231,13 @@ PR 10.1 — records, documents, consent, retention:
 3. @eleva/compliance: retention jobs (packages/compliance/src/retention.ts: policies from
    data-retention-export-matrix.md — transcripts 2y, unpublished ai_draft 90d, session_documents
    per matrix, slot reservations 24h, notification_deliveries 1y) run by POST /workflows/
-   retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script); finalize
+   retention-sweep daily 03:00 Lisbon (infra/qstash/setup-compliance.ts + root script). Every
+   session_documents expiry deletes the PRIVATE Blob object first through @eleva/storage
+   (deleteBlob(pathname), idempotent: a 404 from the store counts as deleted) and only then the
+   row, in that order, so a crash never leaves an orphaned PHI object; a failed object deletion
+   leaves the row with retention_error + attempts for the next sweep and alerts after 3 failures;
+   test: expired document -> store mock receives one delete, row gone; store failure -> row kept
+   and flagged; second sweep after store recovery -> both gone. Finalize
    account deletion: after grace period -> shredOrgKeys(personal space) + delete the member's rows
    + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
    tombstone member_user_id on expert-authored records (deleted_users salted-hash row; strip

@@ -206,12 +206,15 @@ C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutov
    pnpm migration:reverse-export --since "$CUTOVER_TS" to a signed JSON file, and replay it into
    the MVP idempotently by the id map (upsert / delete-or-tombstone; a second replay is a no-op)
    so a pre-cutover booking cancelled or rescheduled in v3 is never restored stale; (3) reconcile against Stripe as the source of truth
-   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
-   booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
-   MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
-   second booking. Replay intents missing from MVP with the MVP booking importer as an idempotent
-   upsert on stripe_payment_intent_id (re-running the import is a no-op), never refund
-   automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
+   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical booking,
+   keyed by stripe_payment_intent_id, in whatever state v3 last recorded for it (confirmed,
+   completed, cancelled, refunded or refund_pending — a cancelled-and-refunded booking is still
+   the canonical one; "active" is not required), and after rollback that canonical booking with
+   its payment, refund and cancellation state lives in MVP; the exported v3 rows are retained
+   read-only as an audit copy and are NOT counted as a second booking. Replay intents missing
+   from MVP with the MVP booking importer as an idempotent upsert on stripe_payment_intent_id
+   that also writes the recorded status, refunded_cents and cancellation reason (re-running the
+   import is a no-op), never refund automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
    the rollback report; (4) re-enable the MVP
    Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
    and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production

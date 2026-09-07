@@ -53,8 +53,11 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 26. [`integration-runbooks.md`](./integration-runbooks.md)
 27. [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 28. [`testing-strategy.md`](./testing-strategy.md)
-29. [`roadmap-and-milestones.md`](./roadmap-and-milestones.md)
-    29a. [`implementation-sprints.md`](./implementation-sprints.md)
+29. [`execution-plan/README.md`](./execution-plan/README.md) — the sequencing SSOT (phases,
+    review loop, prompts). Historical only, not part of the canonical order:
+    [`roadmap-and-milestones.md`](./roadmap-and-milestones.md) and
+    [`implementation-sprints.md`](./implementation-sprints.md) are superseded by it and kept
+    for context.
 30. [`dependency-map.md`](./dependency-map.md)
 31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
 32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)

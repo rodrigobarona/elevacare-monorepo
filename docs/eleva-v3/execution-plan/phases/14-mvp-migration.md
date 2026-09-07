@@ -198,11 +198,11 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
 
 1. Create infra/migration (@eleva/infra-migration, tsx, isolated deps incl. @workos-inc/node for
    Vault decrypt and identity export ONLY here). Update the Phase 3 guards for this single
-   exception: (a) .github/workflows/ci.yml step "no-workos" adds --glob '!infra/migration/**' to
+   exception: (a) .github/workflows/ci.yml step "legacy-idp-guard" (Phase 3) adds --glob '!infra/migration/**' to
    its rg command (and nothing else); (b) packages/eslint-config/boundaries.js keeps forbidding
    @workos-inc/* everywhere and adds an allow entry scoped to infra/migration/**; (c) a new CI step
    "no-migration-imports" fails if any file under apps/** or packages/** imports
-   @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
+   @eleva/infra-migration or anything under infra/migration. Tests: the legacy-idp-guard rg with the new
    glob returns nothing on this branch; a deliberate `import "@workos-inc/node"` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
    Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
@@ -292,10 +292,16 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    each tagged op = insert|update by comparing created_at with the timestamp), soft-deletes, and
    hard deletes reconstructed from audit_events rows with action deleted after the timestamp
    (tagged op = delete with the entity id) — to a JSON file signed with an HMAC under
-   MIGRATION_CHECKSUM_KEY; the restore side replays each record idempotently by the
-   migration_id_map (upsert for insert|update, delete-or-tombstone for delete; re-running the
-   replay is a no-op) — a rehearsal test edits and deletes pre-cutover rows in v3 and asserts the
-   MVP copy reflects both after replay; the entity inventory is generated
+   MIGRATION_CHECKSUM_KEY; the restore side needs a stable MVP key for EVERY exported record, so
+   add rollback_id_map (v3_table, v3_id, mvp_table, mvp_id, unique on the v3 pair and on the MVP
+   pair): rows migrated forward are seeded by inverting migration_id_map at cutover; a v3 insert
+   with no MVP source gets its MVP id assigned on first replay and recorded there, so the second
+   replay of the same record finds the mapping and upserts instead of inserting again; updates
+   and deletes resolve their MVP target through the same map (never by e-mail or by natural
+   keys). Replay = upsert for insert|update, delete-or-tombstone for delete; re-running the
+   replay is a no-op precisely because rollback_id_map is consulted first — a rehearsal test
+   inserts, edits and deletes v3 rows, replays twice, and asserts one MVP row per v3 row and the
+   final state reflected; the entity inventory is generated
    from the Drizzle schema so a new table cannot be forgotten, and a unit test fails if a table
    with created_at/updated_at is missing from the export). Restore per entity class, in this
    order: (1) identity — auth.user/account/organization/member created after cutover are

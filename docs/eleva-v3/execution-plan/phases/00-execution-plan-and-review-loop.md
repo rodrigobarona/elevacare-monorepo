@@ -121,6 +121,12 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
   into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
+- Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
+  install the CodeRabbit CLI with `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, run
+  `coderabbit auth login` once, and until deliverable 3 lands use
+  `coderabbit review --uncommitted --include-untracked` wherever this prompt says pnpm review and
+  `coderabbit review --committed --base main` wherever it says pnpm review:branch. Once the root
+  scripts exist, switch to them for the remaining loops so the scripts themselves are exercised.
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main with the PR body template from
