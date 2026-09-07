@@ -170,7 +170,9 @@ Before writing code:
    prefer those docs over memory. Verify the current Better Auth package layout (core vs split
    plugin packages) and pin versions in the pnpm catalog.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 2 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-02.1/auth-server-schema
   (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build

@@ -142,7 +142,9 @@ Before writing code:
    organization hooks), Drizzle, Stripe subscriptions docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 3 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-03/remove-workos
 - Keep under 150 reviewable files (deletions count); split into phase-03.1/encryption-calendar and
   phase-03.2/infra-cleanup if needed.

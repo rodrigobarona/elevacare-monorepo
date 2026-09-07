@@ -38,8 +38,11 @@ and run the standard loop from README section 4.
 
 ## How to promote an item
 
-1. Create `docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md` using the template in
-   `phases/00-execution-plan-and-review-loop.md` (section "Phase file template").
+1. Create `docs/eleva-v3/execution-plan/phases/16-<N>-<slug>.md` with the same section structure
+   as every other phase file (metadata table, Why this phase exists, Scope, Deliverables,
+   Acceptance criteria, Tests, Docs to update, Local references, External docs, Risks, Copy-paste
+   prompt — the structure defined in Phase 0 prompt deliverable 2 and spelled out again in step 1a
+   of the prompt below; copy `phases/05-member-app.md` as the starting skeleton).
 2. Add the row to README section 5 with branch `phase-16.N/<slug>` and dependencies.
 3. If the item changes a locked decision, add a `decision-log.md` entry and a new ADR first.
 4. Run `pnpm docs:execution-plan:html` and commit the regenerated `index.html` with the phase file.
@@ -79,10 +82,14 @@ Before writing code:
    Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
    CodeRabbit.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 16 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-16.<N>/<slug>
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
-  into phase-16.<N>.1 / phase-16.<N>.2 branches if needed.
+- Implement the deliverables of the PHASE 16 TASK below in the order listed (planning commit
+  first, then implementation). One branch, one PR — no split branches: if the promoted item
+  cannot fit under 150 reviewable files, split the *backlog item* into 16.<N>a / 16.<N>b rows in
+  the table first (each with its own phase file, branch and PR), never the branch.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits (scope p16.<N>). Run: pnpm review:branch -> fix -> repeat until clean.

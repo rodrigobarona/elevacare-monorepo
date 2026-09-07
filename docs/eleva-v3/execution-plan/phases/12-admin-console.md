@@ -133,7 +133,9 @@ Before writing code:
    (resolve-library-id then query-docs); prefer those docs over memory; use the shadcn MCP for
    DataTable examples.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 12 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-12.1/admin-users-partners
   (second PR: phase-12.2/admin-money-ops). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&

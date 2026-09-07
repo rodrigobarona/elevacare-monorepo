@@ -112,7 +112,9 @@ Before writing code:
    over memory for Next.js 16, Better Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl,
    Vercel Flags/Workflows, Playwright, CodeRabbit.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 0 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-00/execution-plan-and-review-loop
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build

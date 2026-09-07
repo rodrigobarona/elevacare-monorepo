@@ -142,7 +142,9 @@ Before writing code:
    "External docs" through Context7 (resolve-library-id then query-docs) and prefer those docs
    over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 1 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-01/rebaseline-adrs-ci
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; if the
   docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.

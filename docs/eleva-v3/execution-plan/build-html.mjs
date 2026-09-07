@@ -32,7 +32,7 @@ function slugify(value) {
   return value
     .toLowerCase()
     .replace(/<[^>]+>/g, "")
-    .replace(/&[a-z]+;/g, "")
+    .replace(/&(?:[a-z]+|#\d+|#x[0-9a-f]+);/g, "")
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-")

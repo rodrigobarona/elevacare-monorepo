@@ -520,7 +520,9 @@ Before writing code:
    over memory for Next.js 16, Better Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl,
    Vercel Flags/Workflows, Playwright, CodeRabbit.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE &lt;N&gt; TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b &lt;branch from this phase&gt;
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
   into phase-NN.1 / phase-NN.2 branches if needed.
@@ -756,7 +758,9 @@ Before writing code:
    over memory for Next.js 16, Better Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl,
    Vercel Flags/Workflows, Playwright, CodeRabbit.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 0 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-00/execution-plan-and-review-loop
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
@@ -979,7 +983,9 @@ Before writing code:
    &quot;External docs&quot; through Context7 (resolve-library-id then query-docs) and prefer those docs
    over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 1 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-01/rebaseline-adrs-ci
 - Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; if the
   docs rewrite plus CI exceed it, split into phase-01.1/adrs-handbook and phase-01.2/ci-foundations.
@@ -1304,7 +1310,9 @@ Before writing code:
    prefer those docs over memory. Verify the current Better Auth package layout (core vs split
    plugin packages) and pin versions in the pnpm catalog.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 2 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-02.1/auth-server-schema
   (second PR: phase-02.2/auth-clients-account-ui). Each PR under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
@@ -1600,7 +1608,9 @@ Before writing code:
    organization hooks), Drizzle, Stripe subscriptions docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 3 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-03/remove-workos
 - Keep under 150 reviewable files (deletions count); split into phase-03.1/encryption-calendar and
   phase-03.2/infra-cleanup if needed.
@@ -1914,7 +1924,9 @@ Before writing code:
    and BotID docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 4 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-04.1/public-api-and-explorer
   (second PR: phase-04.2/booking-funnel-payment). Each under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -2184,7 +2196,9 @@ Before writing code:
    QStash docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 5 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-05/member-app
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
@@ -2432,7 +2446,9 @@ Before writing code:
    docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 6 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-06.1/connect-onboarding-hardening
   (second PR: phase-06.2/payout-engine-refunds). Each under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -2729,7 +2745,9 @@ Before writing code:
 4. Entry gate: confirm decision-log.md contains the accountant sign-off of the IVA matrix. If it
    is missing, implement PR 07.2 first and stop before Tier 1 issuance code, reporting the block.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 7 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.1/tier1-platform-fee-invoices
   (second PR: phase-07.2/tier2-expert-adapters). Each under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -2989,7 +3007,9 @@ Before writing code:
    and Next.js after() docs through Context7
    (resolve-library-id then query-docs) or the Twilio docs tools; prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 8 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-08/notifications-lane1
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
@@ -3222,7 +3242,9 @@ Before writing code:
    webhooks, HIPAA, custom domain), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 9 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-09/video-daily
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
@@ -3492,7 +3514,9 @@ Before writing code:
    beforeSend docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 10 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
   (second PR: phase-10.2/crm-ai-reports). Each under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -3772,7 +3796,9 @@ Before writing code:
    (invitations, hooks) docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 11 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-11/team-clinics
 - Split into phase-11.1/team-core-billing and phase-11.2/team-dashboard-public if &gt; 150 files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -4024,7 +4050,9 @@ Before writing code:
    (resolve-library-id then query-docs); prefer those docs over memory; use the shadcn MCP for
    DataTable examples.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 12 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-12.1/admin-users-partners
   (second PR: phase-12.2/admin-money-ops). Each under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -4281,7 +4309,9 @@ Before writing code:
    BotID docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 13 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-13.1/security-observability
   (second PR: phase-13.2/i18n-performance-e2e). Each under 150 reviewable files (message JSON
   files count — split further by app if needed).
@@ -4589,7 +4619,9 @@ Before writing code:
    account linking docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 14 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-14/mvp-migration
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -4609,8 +4641,15 @@ package, no dead code left behind, members not &quot;patients&quot; in customer-
 PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-019).
 
 1. Create infra/migration (@eleva/infra-migration, tsx, isolated deps incl. @workos-inc/node for
-   Vault decrypt ONLY here — add an eslint boundary exception scoped to this package and a CI
-   guard that this package is never imported by apps/packages). CLI: pnpm migration:run
+   Vault decrypt and identity export ONLY here). Update the Phase 3 guards for this single
+   exception: (a) .github/workflows/ci.yml step &quot;no-workos&quot; adds --glob &#39;!infra/migration/**&#39; to
+   its rg command (and nothing else); (b) packages/eslint-config/boundaries.js keeps forbidding
+   @workos-inc/* everywhere and adds an allow entry scoped to infra/migration/**; (c) a new CI step
+   &quot;no-migration-imports&quot; fails if any file under apps/** or packages/** imports
+   @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
+   glob returns nothing on this branch; a deliberate `import &quot;@workos-inc/node&quot;` in packages/auth
+   fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
+   Phase 16.16 removes the package and both exceptions. CLI: pnpm migration:run
    --dry-run|--apply [--target branch|production] --since &lt;iso&gt; --report &lt;path&gt;;
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
@@ -4851,8 +4890,12 @@ Before writing code:
    through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory) for the code/doc PR:
+Workflow (mandatory) for the code/doc PR — this is the outer loop; the &quot;PHASE 15 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-15/launch-cutover
+- Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
+  the order listed. Keep the PR under 150 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -4910,8 +4953,13 @@ C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md)
    v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
    notifications_outbox, users created via magic link) with pnpm migration:reverse-export
    --since &lt;cutover ts&gt; to a signed JSON file; (3) reconcile against Stripe as the source of truth
-   for money: every succeeded PaymentIntent must exist in exactly one system — replay missing ones
-   into MVP with the MVP booking importer, never refund automatically; (4) re-enable the MVP
+   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
+   booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
+   MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
+   second booking. Replay intents missing from MVP with the MVP booking importer as an idempotent
+   upsert on stripe_payment_intent_id (re-running the import is a no-op), never refund
+   automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
+   the rollback report; (4) re-enable the MVP
    Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
    and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production
    mutation.
@@ -5072,8 +5120,11 @@ and run the standard loop from README section 4.</p>
 </tbody></table>
 <h2 id="16-post-launch-backlog--how-to-promote-an-item"><a class="anchor" href="#16-post-launch-backlog--how-to-promote-an-item" aria-label="Link to section">#</a>How to promote an item</h2>
 <ol>
-<li>Create <code>docs/eleva-v3/execution-plan/phases/16-&lt;N&gt;-&lt;slug&gt;.md</code> using the template in
-<code>phases/00-execution-plan-and-review-loop.md</code> (section &quot;Phase file template&quot;).</li>
+<li>Create <code>docs/eleva-v3/execution-plan/phases/16-&lt;N&gt;-&lt;slug&gt;.md</code> with the same section structure
+as every other phase file (metadata table, Why this phase exists, Scope, Deliverables,
+Acceptance criteria, Tests, Docs to update, Local references, External docs, Risks, Copy-paste
+prompt — the structure defined in Phase 0 prompt deliverable 2 and spelled out again in step 1a
+of the prompt below; copy <code>phases/05-member-app.md</code> as the starting skeleton).</li>
 <li>Add the row to README section 5 with branch <code>phase-16.N/&lt;slug&gt;</code> and dependencies.</li>
 <li>If the item changes a locked decision, add a <code>decision-log.md</code> entry and a new ADR first.</li>
 <li>Run <code>pnpm docs:execution-plan:html</code> and commit the regenerated <code>index.html</code> with the phase file.</li>
@@ -5110,10 +5161,14 @@ Before writing code:
    Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl, Vercel Flags/Workflows, Playwright,
    CodeRabbit.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the &quot;PHASE 16 TASK&quot; section further down is
+what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-16.&lt;N&gt;/&lt;slug&gt;
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
-  into phase-16.&lt;N&gt;.1 / phase-16.&lt;N&gt;.2 branches if needed.
+- Implement the deliverables of the PHASE 16 TASK below in the order listed (planning commit
+  first, then implementation). One branch, one PR — no split branches: if the promoted item
+  cannot fit under 150 reviewable files, split the *backlog item* into 16.&lt;N&gt;a / 16.&lt;N&gt;b rows in
+  the table first (each with its own phase file, branch and PR), never the branch.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
 - Commit with Conventional Commits (scope p16.&lt;N&gt;). Run: pnpm review:branch -&gt; fix -&gt; repeat until clean.

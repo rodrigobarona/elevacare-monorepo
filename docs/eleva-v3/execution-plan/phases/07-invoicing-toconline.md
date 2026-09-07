@@ -180,7 +180,9 @@ Before writing code:
 4. Entry gate: confirm decision-log.md contains the accountant sign-off of the IVA matrix. If it
    is missing, implement PR 07.2 first and stop before Tier 1 issuance code, reporting the block.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 7 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-07.1/tier1-platform-fee-invoices
   (second PR: phase-07.2/tier2-expert-adapters). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&

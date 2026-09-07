@@ -130,8 +130,12 @@ Before writing code:
    through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory) for the code/doc PR:
+Workflow (mandatory) for the code/doc PR — this is the outer loop; the "PHASE 15 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
+- Implement the deliverables of the PHASE 15 TASK below (runbook, scripts, gate report, docs) in
+  the order listed. Keep the PR under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm e2e
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -189,8 +193,13 @@ C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md)
    v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
    notifications_outbox, users created via magic link) with pnpm migration:reverse-export
    --since <cutover ts> to a signed JSON file; (3) reconcile against Stripe as the source of truth
-   for money: every succeeded PaymentIntent must exist in exactly one system — replay missing ones
-   into MVP with the MVP booking importer, never refund automatically; (4) re-enable the MVP
+   for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
+   booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
+   MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
+   second booking. Replay intents missing from MVP with the MVP booking importer as an idempotent
+   upsert on stripe_payment_intent_id (re-running the import is a no-op), never refund
+   automatically, and record for each intent {intentId, mvpBookingId, v3BookingId, action} in
+   the rollback report; (4) re-enable the MVP
    Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
    and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production
    mutation.

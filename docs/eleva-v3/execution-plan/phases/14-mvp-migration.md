@@ -171,7 +171,9 @@ Before writing code:
    account linking docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
-Workflow (mandatory):
+Workflow (mandatory) — this is the outer loop; the "PHASE 14 TASK" section further down is
+what you implement at the "Implement the deliverables" step. Read the whole prompt before the
+first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -191,8 +193,15 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019).
 
 1. Create infra/migration (@eleva/infra-migration, tsx, isolated deps incl. @workos-inc/node for
-   Vault decrypt ONLY here — add an eslint boundary exception scoped to this package and a CI
-   guard that this package is never imported by apps/packages). CLI: pnpm migration:run
+   Vault decrypt and identity export ONLY here). Update the Phase 3 guards for this single
+   exception: (a) .github/workflows/ci.yml step "no-workos" adds --glob '!infra/migration/**' to
+   its rg command (and nothing else); (b) packages/eslint-config/boundaries.js keeps forbidding
+   @workos-inc/* everywhere and adds an allow entry scoped to infra/migration/**; (c) a new CI step
+   "no-migration-imports" fails if any file under apps/** or packages/** imports
+   @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
+   glob returns nothing on this branch; a deliberate `import "@workos-inc/node"` in packages/auth
+   fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
+   Phase 16.16 removes the package and both exceptions. CLI: pnpm migration:run
    --dry-run|--apply [--target branch|production] --since <iso> --report <path>;
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
