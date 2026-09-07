@@ -72,14 +72,14 @@ vatTreatment, processingFeeCents, feeBearer })` returns the **financial calculat
   Phase 11 writes the clinic's when `payout_mode = clinic`; transfers, refunds, reconciliation
   and retries read **only** this snapshot, never the current profile settings),
   `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
-  `stripe_payout_id`, `approved_by`, `approved_at`, attempts, last_error — plus the `hold_reasons`
-  - `held_from_status` pair defined above); eligibility = `max(paid_at + 7 days,
+  `stripe_payout_id`, `approved_by`, `approved_at`, attempts, last_error — plus the
+  `hold_reasons` / `held_from_status` pair defined above); eligibility = `max(paid_at + 7 days,
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
-    `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
-    (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
-    the tests) or first payout for an account — those are the only two `approval_required`
-    reasons; an open dispute or a manual hold puts the row in `held` (with `held_from_status`),
-    never in `approval_required`, and `approve` on a row whose payment has `dispute_status =
+  `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
+  (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
+  the tests) or first payout for an account — those are the only two `approval_required`
+  reasons; an open dispute or a manual hold puts the row in `held` (with `held_from_status`),
+  never in `approval_required`, and `approve` on a row whose payment has `dispute_status =
   open` is refused with 409 DISPUTE_OPEN; retries with backoff and DLQ.
 - **Workflows** (`packages/workflows/src/payments/*`, routes under `apps/api/src/app/workflows/*`,
   QStash schedules in `infra/qstash`): `process-expert-transfers` (every 2h),

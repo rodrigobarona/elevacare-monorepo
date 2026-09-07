@@ -83,7 +83,9 @@ record_access_optouts(member_user_id, expert_org_id)))` where the author column 
   `lifecycle_stage` (`lead|active|dormant|churned`), `follow_ups` (due_at, kind, note, done_at),
   tags; endpoints + expert UI (`/[orgSlug]/crm`), reminders via Lane 1 kind `crm.follow_up_due`.
 - **AI reports beta** (`@eleva/ai`, Vercel AI Gateway only) — **from typed notes, not from
-  recordings**: `draftSessionReport({ noteRecordIds })` takes the expert's encrypted session
+  recordings**: `draftSessionReport({ bookingId, noteRecordIds })` (one signature everywhere —
+  Scope, prompt, tests, `@eleva/api-client`; `bookingId` authorizes: every note id must belong to
+  that booking and to the caller's org, checked before any decryption) takes the expert's encrypted session
   notes (and, optionally, the intake answers the member typed at booking) as the only input, with
   versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
@@ -393,7 +395,9 @@ PR 10.2 — CRM + AI reports beta:
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
-   Report({ noteRecordIds, bookingId }) — input is the expert's decrypted typed notes for that
+   Report({ bookingId, noteRecordIds }) (the one signature — validate that every note belongs to
+   bookingId and the caller's org BEFORE decrypting; mismatch -> 403, no decryption) — input is
+   the expert's decrypted typed notes for that
    booking (plus the member's typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from
    AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: EXTEND the

@@ -37,11 +37,14 @@ In:
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
   the API types and the state machine), `attendance` nullable (`both|expert_only|member_only|nobody`,
-  written once from `meeting.ended`), `room_create_attempt_at`, `room_attempt_seq int` (the
-  deterministic Daily room name is `eleva-<booking_id>-<room_attempt_seq>` — Daily room
-  properties are a closed set with no `meta` field, so the **name** is the only thing that ties a
-  Daily room to a booking; Daily rejects a duplicate name with 400, which is the idempotency
-  mechanism — name character rules and length limit verified in PR 09.0), `last_event_at`,
+  written once from `meeting.ended`), `room_create_attempt_at`, `room_attempt_seq int`,
+  `room_fingerprint_exp` (Daily gives us **no** idempotency handle: HIPAA mode replaces any custom
+  room name with a random string and rejects a `name` in the request, and room properties are a
+  closed set with no `meta`. The only booking-specific values a room carries are `nbf` and `exp`,
+  so each attempt sets `exp = endAt + 30 min + <attempt-specific offset of 0–599 s>` stored in
+  `room_fingerprint_exp` and reconciles a lost response by listing rooms created inside the
+  attempt window whose `config.nbf`/`config.exp` equal the stored pair — details in the prompt;
+  verified in PR 09.0), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: on
   `meeting.ended` (or the sweep at `end_at + 15 min` when Daily sent nothing) with `attendance <>
 'both'` the status becomes `no_show`, else `ended`; both transitions are in the state-machine
@@ -230,8 +233,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 1. Create packages/video (@eleva/video): package.json with exports "." (server), "./client",
    "./webhooks"; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
    against https://api.daily.co/v1 with DAILY_API_KEY, never log the key): createSessionRoom({
-   bookingId, startAt, endAt }) -> POST /rooms { privacy: "private", properties: { nbf: startAt-15m,
-   exp: endAt+30m, max_participants: 2 + delegated participant count (updateRoom when a delegate
+   bookingId, startAt, endAt, fingerprintExp }) -> POST /rooms { privacy: "private" (NO name —
+   HIPAA mode rejects it), properties: { nbf: startAt-15m,
+   exp: fingerprintExp (= endAt+30m + 0..599 s, see ensureSessionRoom), max_participants: 2 + delegated participant count (updateRoom when a delegate
    is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, eject_at_room_exp: true, enable_knocking:
    false, lang: from booking locale } } (no custom name: HIPAA), returns { name, url } with url
@@ -245,28 +249,37 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    selection + preview, waiting state until the other participant joins, controls (mic, camera,
    screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification. Room creation has no client idempotency key at Daily and room
-   properties accept no custom metadata (the schema is additionalProperties: false — never
-   send properties.meta), so ensureSessionRoom relies on Daily's ONE idempotent handle, the
-   unique room name: (a) inside a short transaction it increments sessions.room_attempt_seq,
-   writes room_create_attempt_at and derives daily_room_name = "eleva-" + booking_id + "-" +
-   room_attempt_seq (persisted BEFORE the vendor call; the row is the record of intent); (b) the
-   POST /rooms { name, privacy: "private", properties } uses a bounded timeout (10 s) and no
-   automatic retry; (c) on timeout/5xx/network error it reconciles with GET /rooms/{name}: 200 ->
-   adopt (persist url/created_at, status stays scheduled); 404 -> wait 30 s and GET once more
-   (creation visibility can lag), still 404 -> retry the POST with the SAME name once; a 400
-   "already exists" on any POST is treated as success and followed by the GET; (d) if the second
-   attempt also fails to resolve it records status = room_unresolved, emits
-   session.room_unresolved and alerts — the sweep never re-creates blindly and admins resolve
-   from Phase 12 (the admin resolver runs the same GET-by-name). A new name is generated only
-   when the previous room was deleted on purpose (cancel + re-book, reschedule that requires a
-   new room) — never to "get around" an unknown state, so at most one live room can exist per
-   booking and there is nothing to list or paginate; deleteRoom on cancel is DELETE
-   /rooms/{daily_room_name}, 404 = already gone = success. Tests with a mocked Daily client:
-   lost response then GET 200 -> adopted, zero extra POSTs; lost response, GET 404 twice, second
-   POST 400 already-exists -> adopted; two concurrent ensureSessionRoom calls for one booking ->
-   one POST (the row transaction serializes the attempt seq), one adoption; cancel with DELETE
-   404 -> treated as success.
+   webhook verification. Room creation has no client idempotency key at Daily, HIPAA mode
+   REJECTS a custom room name (Daily assigns a random one — persist the returned name, never
+   send one) and room properties accept no custom metadata (schema is additionalProperties:
+   false — never send properties.meta), so ensureSessionRoom must reconcile from Eleva-owned
+   state plus the only booking-specific room values Daily keeps, nbf and exp: (a) inside a
+   short transaction it increments sessions.room_attempt_seq, writes room_create_attempt_at =
+   now() and room_fingerprint_exp = endAt + 30 min + offset, where offset = 0..599 s derived from
+   (booking_id, room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of
+   intent — the extra seconds are invisible to users because the join window ends at endAt+30m
+   in our authorization, not at room exp); (b) POST /rooms { privacy: "private", properties: {
+   nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
+   automatic retry; on 200 persist daily_room_name/url from the response; (c) on
+   timeout/5xx/network error it reconciles: GET /rooms?limit=100 followed through every page
+   with ending_before/starting_after until created_at < room_create_attempt_at - 60 s (Daily
+   lists newest first), and collects rooms whose config.nbf and config.exp equal the stored
+   pair exactly (second resolution — the fingerprint) and whose created_at is within
+   [room_create_attempt_at - 60 s, now]; exactly one match -> adopt it (persist name/url);
+   zero -> wait 30 s and list once more (visibility lag), still zero -> a NEW attempt (seq + 1,
+   new fingerprint) and one retry of the POST; more than one match, or the retry also fails to
+   resolve -> status = room_unresolved, emit session.room_unresolved and alert — the sweep never
+   re-creates blindly and admins resolve from Phase 12 (the resolver shows the candidate rooms
+   with their created_at/nbf/exp and lets staff adopt one and delete the rest). Orphan sweep
+   (hourly): any private room older than 10 min whose name is not in sessions.daily_room_name
+   and whose exp is in the future is deleted (rooms are unreachable without a token we mint, so
+   an orphan is a cost, not a risk). deleteRoom on cancel is DELETE /rooms/{daily_room_name}
+   (404 = already gone = success). Tests with a mocked Daily client: lost response then one
+   fingerprint match on the second page -> adopted, zero extra POSTs; lost response, no match
+   twice -> exactly one more POST with seq 2; two matches -> room_unresolved, no POST; two
+   concurrent ensureSessionRoom calls -> one POST (the row transaction serializes the attempt);
+   cancel with DELETE 404 -> success; orphan sweep deletes an unreferenced room and never a
+   referenced one.
    Tests: lost response after Daily created the room -> reconciliation adopts it -> exactly one
    room; delayed visibility (room appears only after the second POST) -> the late room is
    adopted or deleted, exactly one room remains.
@@ -275,6 +288,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status ->
    no_show when attendance <> both, else ended; sweep at end_at + 15 min if no webhook),
    room_created_at, room_create_attempt_at, room_attempt_seq int NOT NULL DEFAULT 0,
+   room_fingerprint_exp timestamptz nullable,
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,

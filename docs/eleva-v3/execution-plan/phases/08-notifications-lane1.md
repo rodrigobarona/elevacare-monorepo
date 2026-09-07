@@ -331,7 +331,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    createAuth() so @eleva/auth never imports @eleva/notifications (boundary lint edge + one test
    per callback asserting a notification_deliveries row with kind auth.* and no direct resend
    call; rg -n "resend" packages/auth returns nothing). Twilio: TWILIO_REGION/TWILIO_EDGE for EU, and validateRequest
-   against the URL rebuilt from PUBLIC_API_URL + path + sorted query (fixture test).
+   against the URL rebuilt from PUBLIC_API_URL origin + request path + the RAW query string
+   byte-for-byte (never sorted or re-encoded — Twilio signs the URL exactly as requested);
+   fixtures: recorded signature, percent-encoded values, non-alphabetical parameter order (all
+   valid) and a sorted reconstruction (must fail).
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,

@@ -2640,7 +2640,7 @@ confirmation, <code>processing</code> status), Connect &quot;separate charges an
 (platform charge, <code>transfer_group</code>, later <code>transfers.create</code> with <code>source_transaction</code>),
 idempotency keys.</li>
 <li>PostgreSQL exclusion constraints with <code>btree_gist</code> (<code>/websites/postgresql</code>) and Drizzle
-<code>/drizzle-team/drizzle-orm-docs</code> for expression indexes / custom SQL in migrations.</li>
+<code>/drizzle-team/drizzle-orm</code> for expression indexes / custom SQL in migrations.</li>
 <li>Next.js 16 <code>/vercel/next.js</code>: <code>use cache</code>, <code>cacheTag</code>/<code>revalidateTag</code>, <code>generateMetadata</code>,
 <code>sitemap.ts</code>, <code>opengraph-image</code>.</li>
 <li>next-intl v4 <code>/amannn/next-intl</code>.</li>
@@ -3788,15 +3788,13 @@ until both are cleared),
 Phase 11 writes the clinic&#39;s when <code>payout_mode = clinic</code>; transfers, refunds, reconciliation
 and retries read <strong>only</strong> this snapshot, never the current profile settings),
 <code>transfer_idempotency_key</code> (uuid, set once), <code>stripe_transfer_id</code>,
-<code>stripe_payout_id</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error — plus the <code>hold_reasons</code><ul>
-<li><code>held_from_status</code> pair defined above); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
+<code>stripe_payout_id</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error — plus the
+<code>hold_reasons</code> / <code>held_from_status</code> pair defined above); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
 <code>source_transaction</code>; approval required when <code>amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS</code>
 (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
 the tests) or first payout for an account — those are the only two <code>approval_required</code>
 reasons; an open dispute or a manual hold puts the row in <code>held</code> (with <code>held_from_status</code>),
 never in <code>approval_required</code>, and <code>approve</code> on a row whose payment has <code>dispute_status = open</code> is refused with 409 DISPUTE_OPEN; retries with backoff and DLQ.</li>
-</ul>
-</li>
 <li><strong>Workflows</strong> (<code>packages/workflows/src/payments/*</code>, routes under <code>apps/api/src/app/workflows/*</code>,
 QStash schedules in <code>infra/qstash</code>): <code>process-expert-transfers</code> (every 2h),
 <code>process-pending-payouts</code> (06:00), <code>check-upcoming-payouts</code> (daily notice), <code>cleanup-expired- reservations</code> (every 15 min, existing), <code>stripe-stuck-events</code> (existing).</li>
@@ -4831,7 +4829,10 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    createAuth() so @eleva/auth never imports @eleva/notifications (boundary lint edge + one test
    per callback asserting a notification_deliveries row with kind auth.* and no direct resend
    call; rg -n &quot;resend&quot; packages/auth returns nothing). Twilio: TWILIO_REGION/TWILIO_EDGE for EU, and validateRequest
-   against the URL rebuilt from PUBLIC_API_URL + path + sorted query (fixture test).
+   against the URL rebuilt from PUBLIC_API_URL origin + request path + the RAW query string
+   byte-for-byte (never sorted or re-encoded — Twilio signs the URL exactly as requested);
+   fixtures: recorded signature, percent-encoded values, non-alphabetical parameter order (all
+   valid) and a sorted reconstruction (must fail).
 5. apps/api: GET /notifications?unread, POST /notifications/[id]/read, POST /notifications/
    read-all, POST /me/phone/verify-start, POST /me/phone/verify-confirm, POST /webhooks/resend
    (svix signature verification with RESEND_WEBHOOK_SECRET; events email.delivered, email.bounced,
@@ -4912,11 +4913,14 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 <li><p><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
 the API types and the state machine), <code>attendance</code> nullable (<code>both|expert_only|member_only|nobody</code>,
-written once from <code>meeting.ended</code>), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code> (the
-deterministic Daily room name is <code>eleva-&lt;booking_id&gt;-&lt;room_attempt_seq&gt;</code> — Daily room
-properties are a closed set with no <code>meta</code> field, so the <strong>name</strong> is the only thing that ties a
-Daily room to a booking; Daily rejects a duplicate name with 400, which is the idempotency
-mechanism — name character rules and length limit verified in PR 09.0), <code>last_event_at</code>,
+written once from <code>meeting.ended</code>), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
+<code>room_fingerprint_exp</code> (Daily gives us <strong>no</strong> idempotency handle: HIPAA mode replaces any custom
+room name with a random string and rejects a <code>name</code> in the request, and room properties are a
+closed set with no <code>meta</code>. The only booking-specific values a room carries are <code>nbf</code> and <code>exp</code>,
+so each attempt sets <code>exp = endAt + 30 min + &lt;attempt-specific offset of 0–599 s&gt;</code> stored in
+<code>room_fingerprint_exp</code> and reconciles a lost response by listing rooms created inside the
+attempt window whose <code>config.nbf</code>/<code>config.exp</code> equal the stored pair — details in the prompt;
+verified in PR 09.0), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: on
 <code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) with <code>attendance &lt;&gt; &#39;both&#39;</code> the status becomes <code>no_show</code>, else <code>ended</code>; both transitions are in the state-machine
 table and tested
@@ -5106,8 +5110,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 1. Create packages/video (@eleva/video): package.json with exports &quot;.&quot; (server), &quot;./client&quot;,
    &quot;./webhooks&quot;; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
    against https://api.daily.co/v1 with DAILY_API_KEY, never log the key): createSessionRoom({
-   bookingId, startAt, endAt }) -&gt; POST /rooms { privacy: &quot;private&quot;, properties: { nbf: startAt-15m,
-   exp: endAt+30m, max_participants: 2 + delegated participant count (updateRoom when a delegate
+   bookingId, startAt, endAt, fingerprintExp }) -&gt; POST /rooms { privacy: &quot;private&quot; (NO name —
+   HIPAA mode rejects it), properties: { nbf: startAt-15m,
+   exp: fingerprintExp (= endAt+30m + 0..599 s, see ensureSessionRoom), max_participants: 2 + delegated participant count (updateRoom when a delegate
    is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, eject_at_room_exp: true, enable_knocking:
    false, lang: from booking locale } } (no custom name: HIPAA), returns { name, url } with url
@@ -5121,28 +5126,37 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    selection + preview, waiting state until the other participant joins, controls (mic, camera,
    screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
    with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification. Room creation has no client idempotency key at Daily and room
-   properties accept no custom metadata (the schema is additionalProperties: false — never
-   send properties.meta), so ensureSessionRoom relies on Daily&#39;s ONE idempotent handle, the
-   unique room name: (a) inside a short transaction it increments sessions.room_attempt_seq,
-   writes room_create_attempt_at and derives daily_room_name = &quot;eleva-&quot; + booking_id + &quot;-&quot; +
-   room_attempt_seq (persisted BEFORE the vendor call; the row is the record of intent); (b) the
-   POST /rooms { name, privacy: &quot;private&quot;, properties } uses a bounded timeout (10 s) and no
-   automatic retry; (c) on timeout/5xx/network error it reconciles with GET /rooms/{name}: 200 -&gt;
-   adopt (persist url/created_at, status stays scheduled); 404 -&gt; wait 30 s and GET once more
-   (creation visibility can lag), still 404 -&gt; retry the POST with the SAME name once; a 400
-   &quot;already exists&quot; on any POST is treated as success and followed by the GET; (d) if the second
-   attempt also fails to resolve it records status = room_unresolved, emits
-   session.room_unresolved and alerts — the sweep never re-creates blindly and admins resolve
-   from Phase 12 (the admin resolver runs the same GET-by-name). A new name is generated only
-   when the previous room was deleted on purpose (cancel + re-book, reschedule that requires a
-   new room) — never to &quot;get around&quot; an unknown state, so at most one live room can exist per
-   booking and there is nothing to list or paginate; deleteRoom on cancel is DELETE
-   /rooms/{daily_room_name}, 404 = already gone = success. Tests with a mocked Daily client:
-   lost response then GET 200 -&gt; adopted, zero extra POSTs; lost response, GET 404 twice, second
-   POST 400 already-exists -&gt; adopted; two concurrent ensureSessionRoom calls for one booking -&gt;
-   one POST (the row transaction serializes the attempt seq), one adoption; cancel with DELETE
-   404 -&gt; treated as success.
+   webhook verification. Room creation has no client idempotency key at Daily, HIPAA mode
+   REJECTS a custom room name (Daily assigns a random one — persist the returned name, never
+   send one) and room properties accept no custom metadata (schema is additionalProperties:
+   false — never send properties.meta), so ensureSessionRoom must reconcile from Eleva-owned
+   state plus the only booking-specific room values Daily keeps, nbf and exp: (a) inside a
+   short transaction it increments sessions.room_attempt_seq, writes room_create_attempt_at =
+   now() and room_fingerprint_exp = endAt + 30 min + offset, where offset = 0..599 s derived from
+   (booking_id, room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of
+   intent — the extra seconds are invisible to users because the join window ends at endAt+30m
+   in our authorization, not at room exp); (b) POST /rooms { privacy: &quot;private&quot;, properties: {
+   nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
+   automatic retry; on 200 persist daily_room_name/url from the response; (c) on
+   timeout/5xx/network error it reconciles: GET /rooms?limit=100 followed through every page
+   with ending_before/starting_after until created_at &lt; room_create_attempt_at - 60 s (Daily
+   lists newest first), and collects rooms whose config.nbf and config.exp equal the stored
+   pair exactly (second resolution — the fingerprint) and whose created_at is within
+   [room_create_attempt_at - 60 s, now]; exactly one match -&gt; adopt it (persist name/url);
+   zero -&gt; wait 30 s and list once more (visibility lag), still zero -&gt; a NEW attempt (seq + 1,
+   new fingerprint) and one retry of the POST; more than one match, or the retry also fails to
+   resolve -&gt; status = room_unresolved, emit session.room_unresolved and alert — the sweep never
+   re-creates blindly and admins resolve from Phase 12 (the resolver shows the candidate rooms
+   with their created_at/nbf/exp and lets staff adopt one and delete the rest). Orphan sweep
+   (hourly): any private room older than 10 min whose name is not in sessions.daily_room_name
+   and whose exp is in the future is deleted (rooms are unreachable without a token we mint, so
+   an orphan is a cost, not a risk). deleteRoom on cancel is DELETE /rooms/{daily_room_name}
+   (404 = already gone = success). Tests with a mocked Daily client: lost response then one
+   fingerprint match on the second page -&gt; adopted, zero extra POSTs; lost response, no match
+   twice -&gt; exactly one more POST with seq 2; two matches -&gt; room_unresolved, no POST; two
+   concurrent ensureSessionRoom calls -&gt; one POST (the row transaction serializes the attempt);
+   cancel with DELETE 404 -&gt; success; orphan sweep deletes an unreferenced room and never a
+   referenced one.
    Tests: lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one
    room; delayed visibility (room appears only after the second POST) -&gt; the late room is
    adopted or deleted, exactly one room remains.
@@ -5151,6 +5165,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status -&gt;
    no_show when attendance &lt;&gt; both, else ended; sweep at end_at + 15 min if no webhook),
    room_created_at, room_create_attempt_at, room_attempt_seq int NOT NULL DEFAULT 0,
+   room_fingerprint_exp timestamptz nullable,
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -5335,7 +5350,9 @@ download via signed URLs (short-lived), consent management extended.</li>
 <code>lifecycle_stage</code> (<code>lead|active|dormant|churned</code>), <code>follow_ups</code> (due_at, kind, note, done_at),
 tags; endpoints + expert UI (<code>/[orgSlug]/crm</code>), reminders via Lane 1 kind <code>crm.follow_up_due</code>.</li>
 <li><strong>AI reports beta</strong> (<code>@eleva/ai</code>, Vercel AI Gateway only) — <strong>from typed notes, not from
-recordings</strong>: <code>draftSessionReport({ noteRecordIds })</code> takes the expert&#39;s encrypted session
+recordings</strong>: <code>draftSessionReport({ bookingId, noteRecordIds })</code> (one signature everywhere —
+Scope, prompt, tests, <code>@eleva/api-client</code>; <code>bookingId</code> authorizes: every note id must belong to
+that booking and to the caller&#39;s org, checked before any decryption) takes the expert&#39;s encrypted session
 notes (and, optionally, the intake answers the member typed at booking) as the only input, with
 versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
@@ -5642,7 +5659,9 @@ PR 10.2 — CRM + AI reports beta:
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
-   Report({ noteRecordIds, bookingId }) — input is the expert&#39;s decrypted typed notes for that
+   Report({ bookingId, noteRecordIds }) (the one signature — validate that every note belongs to
+   bookingId and the caller&#39;s org BEFORE decrypting; mismatch -&gt; 403, no decryption) — input is
+   the expert&#39;s decrypted typed notes for that
    booking (plus the member&#39;s typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from
    AI_GATEWAY_MODEL_SESSION_REPORT (pinned) and fail closed on data retention: EXTEND the

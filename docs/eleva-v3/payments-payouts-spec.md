@@ -205,7 +205,7 @@ Architecture:
 - `/api/stripe/account-session` mints short-lived `AccountSession` tokens with precise component permissions; RBAC-gated
 - `appearance` API maps Eleva design tokens (brand colors, radius, fonts) → Stripe widget theme; dark-mode supported
 - `locale` prop wired to next-intl (`pt` / `en` / `es`)
-- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com` in `script-src` and `frame-src`; `billing.stripe.com` appears only in `form-action` (Customer Portal is a full-page navigation, never framed — see the hosted exception above)
+- CSP is per Stripe's published guidance and carries **no wildcard**: `script-src js.stripe.com connect-js.stripe.com`; `frame-src js.stripe.com connect-js.stripe.com hooks.stripe.com` (Elements, Connect embedded components and 3DS challenge frames); `connect-src api.stripe.com`; `billing.stripe.com` appears only in `form-action` (Customer Portal is a full-page navigation, never framed — see the hosted exception above); the CSP test asserts `*.stripe.com` is absent from every directive
 - error UX: components wrapped in Eleva error boundary; `onExit` / `onLoadError` handled with consistent retry CTA
 
 Account type locked: **Stripe Connect Express + Embedded Components** (not Custom). Express supports all embedded components we need without Custom's extra compliance and fee load.

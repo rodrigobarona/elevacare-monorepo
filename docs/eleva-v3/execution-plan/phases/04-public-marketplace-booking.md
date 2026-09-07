@@ -369,7 +369,7 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
   (platform charge, `transfer_group`, later `transfers.create` with `source_transaction`),
   idempotency keys.
 - PostgreSQL exclusion constraints with `btree_gist` (`/websites/postgresql`) and Drizzle
-  `/drizzle-team/drizzle-orm-docs` for expression indexes / custom SQL in migrations.
+  `/drizzle-team/drizzle-orm` for expression indexes / custom SQL in migrations.
 - Next.js 16 `/vercel/next.js`: `use cache`, `cacheTag`/`revalidateTag`, `generateMetadata`,
   `sitemap.ts`, `opengraph-image`.
 - next-intl v4 `/amannn/next-intl`.
