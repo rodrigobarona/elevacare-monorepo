@@ -110,9 +110,11 @@ function rewriteLink(href, docId) {
       : "#readme"
   }
   if (docId === "readme") return href
-  // Links inside phases/*.md are relative to phases/. From index.html, "../x" is still
-  // "../x" (both hop to docs/eleva-v3/), while a sibling "x" must become "phases/x".
-  return href.startsWith("../") ? href : `phases/${href.replace(/^\.\//, "")}`
+  // Links inside phases/*.md are relative to phases/, one level below index.html:
+  // drop one "../" hop, and turn a sibling "x" into "phases/x".
+  return href.startsWith("../")
+    ? href.slice(3)
+    : `phases/${href.replace(/^\.\//, "")}`
 }
 
 /**

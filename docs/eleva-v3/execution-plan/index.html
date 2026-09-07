@@ -752,7 +752,8 @@ key. Mitigation: the CLI loop is a local/agent gate; the GitHub App remains the 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
    you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
-2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and this phase file in full.
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and this phase file in full
+   (docs/eleva-v3/execution-plan/phases/00-execution-plan-and-review-loop.md).
 3. Read every file under &quot;Local references&quot; of this phase. Pull every library under
    &quot;External docs&quot; through Context7 (resolve-library-id then query-docs) and prefer those docs
    over memory for Next.js 16, Better Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl,
@@ -762,7 +763,8 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 0 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-00/execution-plan-and-review-loop
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files.
+- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
+  into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -&gt; fix -&gt; repeat until clean.
@@ -1632,10 +1634,15 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 
 1. @eleva/encryption (packages/encryption): implement envelope encryption.
    - keys.ts: loadKeks() reads ELEVA_KEK_V&lt;n&gt; env vars (base64, 32 bytes), current version =
-     highest n; never log key material. getOrCreateOrgDek(orgId) reads org_data_keys (RLS via
-     withOrgContext) or generates a 32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12
-     bytes, aad = orgId:key_version), inserts with withAudit (entity &quot;org_data_key&quot;, action
-     &quot;created&quot;).
+     highest n; never log key material. getOrCreateOrgDek(orgId) is race-safe: org_data_keys has
+     unique (org_id, dek_version) and a partial unique index on org_id WHERE active = true; the
+     function reads the active row (RLS via withOrgContext) and returns it, otherwise generates a
+     32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12 bytes, aad =
+     orgId:key_version) and INSERTs ... ON CONFLICT DO NOTHING with withAudit (entity
+     &quot;org_data_key&quot;, action &quot;created&quot;), then re-reads the active row and returns the winner —
+     so two first-use requests never end up with different DEKs and never surface a unique
+     violation. Test: 20 concurrent getOrCreateOrgDek(orgId) calls resolve to one row and one
+     audit event.
    - envelope.ts: encryptForOrg(orgId, plaintext: Uint8Array|string, aad?) -&gt;
      &quot;v1:&lt;kek_v&gt;:&lt;dek_v&gt;:&lt;iv_b64&gt;:&lt;tag_b64&gt;:&lt;data_b64&gt;&quot;; decryptForOrg(orgId, ciphertext, aad?)
      parses, unwraps the referenced DEK version, decrypts, throws typed EncryptionError on tag
@@ -3682,8 +3689,11 @@ Become-Partner-like review for clinics (<code>clinic_verifications</code> queue 
 <li><strong>Members &amp; seats</strong>: invite by email (Better Auth <code>organization.inviteMember</code>, role
 <code>admin|member</code>, expiry 7d, email via Lane 1 kind <code>team.invitation</code>), accept flow in
 <code>apps/account</code>, member roles: <code>owner</code> (billing), <code>admin</code> (manage), <code>member</code> (expert working
-inside the clinic); expert-in-clinic profile link (<code>expert_profiles.clinic_org_id</code> nullable, an
-expert may also keep a solo org). <strong>Seat rule (single definition used by schema, code, tests
+inside the clinic); expert-in-clinic profile = a <strong>second <code>expert_profiles</code> row with
+<code>org_id = clinic org</code></strong> (existing schema: unique <code>(user_id, org_id)</code>, team experts share the
+clinic&#39;s <code>org_id</code> — see <code>packages/db/src/schema/main/expert-profiles.ts</code>); an expert may also
+keep a solo <code>expert</code> org with its own row. There is <strong>no</strong> <code>clinic_org_id</code> column — clinic
+affiliation is the membership plus the per-org profile row. <strong>Seat rule (single definition used by schema, code, tests
 and acceptance):</strong> a billable seat is a clinic membership — any role, owner included — whose
 user has at least one <em>published</em> event type in that clinic; owner/admin accounts without
 published event types are free. <code>syncSeatQuantity</code> (Phase 3 hook; keeps its
@@ -3722,8 +3732,7 @@ standard commission.</li>
 expert invoices (out of scope per spec).</p>
 <h2 id="11-team-clinics--deliverables"><a class="anchor" href="#11-team-clinics--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
-<li>Migrations: <code>clinic_profiles</code>, <code>clinic_verifications</code>, <code>expert_profiles.clinic_org_id</code>,
-<code>bookings.attributed_org_id</code>, <code>billing_subscriptions</code> fields; RLS; audit unions (<code>team: created|verified|member_invited|member_joined|member_removed|seats_synced</code>; <code>subscription: ...</code>).</li>
+<li>Migrations: <code>clinic_profiles</code>, <code>clinic_verifications</code>, <code>bookings.attributed_org_id</code>, <code>billing_subscriptions</code> fields; RLS; audit unions (<code>team: created|verified|member_invited|member_joined|member_removed|seats_synced</code>; <code>subscription: ...</code>).</li>
 <li>API: <code>/teams</code> (create/update profile), <code>/teams/[id]/members</code>, <code>/teams/[id]/invitations</code>,
 <code>/teams/[id]/bookings</code>, <code>/teams/[id]/schedule</code>, <code>/billing/checkout</code> + <code>/billing/portal</code>
 extended, webhook handlers; OpenAPI + client.</li>
@@ -3828,7 +3837,8 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    specialties text[], payout_mode clinic|expert default expert, verification_status
    pending|verified|rejected, created_at),
    clinic_verifications (id, org_id, submitted_at, reviewed_by, reviewed_at, status, notes),
-   expert_profiles.clinic_org_id nullable FK, bookings.attributed_org_id nullable,
+   bookings.attributed_org_id nullable (no expert_profiles.clinic_org_id — a clinic expert is a
+   second expert_profiles row with org_id = clinic org, existing unique (user_id, org_id)),
    billing_subscriptions additions (seat_quantity, plan_key starter|growth|enterprise,
    current_period_end, cancel_at_period_end). RLS; audit unions per phase file.
 2. Stripe: extend infra/stripe/seed-products.ts + seed-entitlements.ts with team plans (Starter
@@ -3844,19 +3854,30 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    FROM auth.member m JOIN expert_profiles ep ON ep.org_id = m.organization_id AND ep.user_id =
    m.user_id JOIN event_types et ON et.expert_profile_id = ep.id AND et.org_id =
    m.organization_id AND et.published = true AND et.active = true WHERE m.organization_id =
-   $orgId (event_types is keyed by expert_profile_id, which links to the user through
-   expert_profiles.user_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
+   $orgId. This join is correct because a clinic expert&#39;s profile IS the expert_profiles row
+   whose org_id is the clinic (unique (user_id, org_id)); the same user&#39;s solo-org profile and
+   solo-org event types have a different org_id and are deliberately excluded (event_types is
+   keyed by expert_profile_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
    a Drizzle query helper countBillableSeats(orgId) in @eleva/db owns the SQL and is the only
    implementation both Phase 3 and this phase call). Owner/admin accounts without their own
    published event types are free; tests: owner + 1 publishing member = 1 seat; owner with a
    published event type + 2 idle members = 1 seat; two publishing members = 2 seats; member with
    a published event type removed and re-added -&gt; quantity drops to N-1 on removal and returns to
-   N on afterAcceptInvitation without any publish. Called from event-type publish/unpublish AND
+   N on afterAcceptInvitation without any publish; an expert with a solo org (published event
+   types there) AND a clinic membership whose clinic profile has no published event type = 0 seats
+   for the clinic, 1 seat once they publish a clinic event type. Called from event-type
+   publish/unpublish AND
    from the Phase 3 organization hooks afterAddMember / afterAcceptInvitation / afterRemoveMember
    (keep them — do not narrow the triggers to publish events); update payments-payouts-spec.md (drop the &quot;last 30 days&quot; qualifier) and
    add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
-   unlimited) at event-type publish time in the clinic context -&gt; 409 SEAT_LIMIT_REACHED; the
-   same rule in the schema check, the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   unlimited) at event-type publish time in the clinic context, concurrency-safe: inside the
+   publish transaction SELECT ... FROM billing_subscriptions WHERE org_id = $orgId FOR UPDATE (the
+   authoritative row — serialises concurrent publishes for one clinic), then run
+   countBillableSeats(orgId) counting the publishing member as billable, and if it would exceed
+   the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
+   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, five
+   billable members, two idle members publish concurrently -&gt; exactly one succeeds and one gets
+   409; the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -&gt; billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag
@@ -3867,8 +3888,8 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    apps/web routes are locale-prefixed; link generation, attribution parsing and the e2e test use
    exactly this shape) or a signed clinic attribution parameter issued by the clinic page and
    carried to the Phase 4 route /[locale]/[username]/[eventSlug] (validate the clinic is active, the expert is a current
-   member of that clinic, and the parameter is not older than 24h). The expert&#39;s
-   clinic_org_id membership alone NEVER sets attribution: a direct booking on
+   member of that clinic, and the parameter is not older than 24h). The expert&#39;s clinic
+   membership alone NEVER sets attribution: a direct booking on
    /[locale]/[username]/[eventSlug] of a
    clinic-affiliated expert is a marketplace booking and pays the normal commission. Pass
    buyerContext { attributedOrgId } to computeApplicationFee -&gt; 0 bps only for attributed

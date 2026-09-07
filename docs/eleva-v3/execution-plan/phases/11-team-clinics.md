@@ -23,8 +23,11 @@ In:
 - **Members & seats**: invite by email (Better Auth `organization.inviteMember`, role
   `admin|member`, expiry 7d, email via Lane 1 kind `team.invitation`), accept flow in
   `apps/account`, member roles: `owner` (billing), `admin` (manage), `member` (expert working
-  inside the clinic); expert-in-clinic profile link (`expert_profiles.clinic_org_id` nullable, an
-  expert may also keep a solo org). **Seat rule (single definition used by schema, code, tests
+  inside the clinic); expert-in-clinic profile = a **second `expert_profiles` row with
+  `org_id = clinic org`** (existing schema: unique `(user_id, org_id)`, team experts share the
+  clinic's `org_id` — see `packages/db/src/schema/main/expert-profiles.ts`); an expert may also
+  keep a solo `expert` org with its own row. There is **no** `clinic_org_id` column — clinic
+  affiliation is the membership plus the per-org profile row. **Seat rule (single definition used by schema, code, tests
   and acceptance):** a billable seat is a clinic membership — any role, owner included — whose
   user has at least one _published_ event type in that clinic; owner/admin accounts without
   published event types are free. `syncSeatQuantity` (Phase 3 hook; keeps its
@@ -64,8 +67,7 @@ expert invoices (out of scope per spec).
 
 ## Deliverables
 
-1. Migrations: `clinic_profiles`, `clinic_verifications`, `expert_profiles.clinic_org_id`,
-   `bookings.attributed_org_id`, `billing_subscriptions` fields; RLS; audit unions (`team:
+1. Migrations: `clinic_profiles`, `clinic_verifications`, `bookings.attributed_org_id`, `billing_subscriptions` fields; RLS; audit unions (`team:
 created|verified|member_invited|member_joined|member_removed|seats_synced`; `subscription: ...`).
 2. API: `/teams` (create/update profile), `/teams/[id]/members`, `/teams/[id]/invitations`,
    `/teams/[id]/bookings`, `/teams/[id]/schedule`, `/billing/checkout` + `/billing/portal`
@@ -173,7 +175,8 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    specialties text[], payout_mode clinic|expert default expert, verification_status
    pending|verified|rejected, created_at),
    clinic_verifications (id, org_id, submitted_at, reviewed_by, reviewed_at, status, notes),
-   expert_profiles.clinic_org_id nullable FK, bookings.attributed_org_id nullable,
+   bookings.attributed_org_id nullable (no expert_profiles.clinic_org_id — a clinic expert is a
+   second expert_profiles row with org_id = clinic org, existing unique (user_id, org_id)),
    billing_subscriptions additions (seat_quantity, plan_key starter|growth|enterprise,
    current_period_end, cancel_at_period_end). RLS; audit unions per phase file.
 2. Stripe: extend infra/stripe/seed-products.ts + seed-entitlements.ts with team plans (Starter
@@ -189,19 +192,30 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    FROM auth.member m JOIN expert_profiles ep ON ep.org_id = m.organization_id AND ep.user_id =
    m.user_id JOIN event_types et ON et.expert_profile_id = ep.id AND et.org_id =
    m.organization_id AND et.published = true AND et.active = true WHERE m.organization_id =
-   $orgId (event_types is keyed by expert_profile_id, which links to the user through
-   expert_profiles.user_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
+   $orgId. This join is correct because a clinic expert's profile IS the expert_profiles row
+   whose org_id is the clinic (unique (user_id, org_id)); the same user's solo-org profile and
+   solo-org event types have a different org_id and are deliberately excluded (event_types is
+   keyed by expert_profile_id — see packages/db/src/schema/main/{event-types,expert-profiles}.ts;
    a Drizzle query helper countBillableSeats(orgId) in @eleva/db owns the SQL and is the only
    implementation both Phase 3 and this phase call). Owner/admin accounts without their own
    published event types are free; tests: owner + 1 publishing member = 1 seat; owner with a
    published event type + 2 idle members = 1 seat; two publishing members = 2 seats; member with
    a published event type removed and re-added -> quantity drops to N-1 on removal and returns to
-   N on afterAcceptInvitation without any publish. Called from event-type publish/unpublish AND
+   N on afterAcceptInvitation without any publish; an expert with a solo org (published event
+   types there) AND a clinic membership whose clinic profile has no published event type = 0 seats
+   for the clinic, 1 seat once they publish a clinic event type. Called from event-type
+   publish/unpublish AND
    from the Phase 3 organization hooks afterAddMember / afterAcceptInvitation / afterRemoveMember
    (keep them — do not narrow the triggers to publish events); update payments-payouts-spec.md (drop the "last 30 days" qualifier) and
    add the decision-log entry. Enforce seat caps per plan (Starter 5, Growth 20, Enterprise
-   unlimited) at event-type publish time in the clinic context -> 409 SEAT_LIMIT_REACHED; the
-   same rule in the schema check, the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   unlimited) at event-type publish time in the clinic context, concurrency-safe: inside the
+   publish transaction SELECT ... FROM billing_subscriptions WHERE org_id = $orgId FOR UPDATE (the
+   authoritative row — serialises concurrent publishes for one clinic), then run
+   countBillableSeats(orgId) counting the publishing member as billable, and if it would exceed
+   the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
+   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, five
+   billable members, two idle members publish concurrently -> exactly one succeeds and one gets
+   409; the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -> billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag
@@ -212,8 +226,8 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    apps/web routes are locale-prefixed; link generation, attribution parsing and the e2e test use
    exactly this shape) or a signed clinic attribution parameter issued by the clinic page and
    carried to the Phase 4 route /[locale]/[username]/[eventSlug] (validate the clinic is active, the expert is a current
-   member of that clinic, and the parameter is not older than 24h). The expert's
-   clinic_org_id membership alone NEVER sets attribution: a direct booking on
+   member of that clinic, and the parameter is not older than 24h). The expert's clinic
+   membership alone NEVER sets attribution: a direct booking on
    /[locale]/[username]/[eventSlug] of a
    clinic-affiliated expert is a marketplace booking and pays the normal commission. Pass
    buyerContext { attributedOrgId } to computeApplicationFee -> 0 bps only for attributed

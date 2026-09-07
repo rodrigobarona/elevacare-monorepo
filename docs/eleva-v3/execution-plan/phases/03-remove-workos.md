@@ -166,10 +166,15 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
 
 1. @eleva/encryption (packages/encryption): implement envelope encryption.
    - keys.ts: loadKeks() reads ELEVA_KEK_V<n> env vars (base64, 32 bytes), current version =
-     highest n; never log key material. getOrCreateOrgDek(orgId) reads org_data_keys (RLS via
-     withOrgContext) or generates a 32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12
-     bytes, aad = orgId:key_version), inserts with withAudit (entity "org_data_key", action
-     "created").
+     highest n; never log key material. getOrCreateOrgDek(orgId) is race-safe: org_data_keys has
+     unique (org_id, dek_version) and a partial unique index on org_id WHERE active = true; the
+     function reads the active row (RLS via withOrgContext) and returns it, otherwise generates a
+     32-byte DEK, wraps it with the current KEK (AES-256-GCM, iv 12 bytes, aad =
+     orgId:key_version) and INSERTs ... ON CONFLICT DO NOTHING with withAudit (entity
+     "org_data_key", action "created"), then re-reads the active row and returns the winner —
+     so two first-use requests never end up with different DEKs and never surface a unique
+     violation. Test: 20 concurrent getOrCreateOrgDek(orgId) calls resolve to one row and one
+     audit event.
    - envelope.ts: encryptForOrg(orgId, plaintext: Uint8Array|string, aad?) ->
      "v1:<kek_v>:<dek_v>:<iv_b64>:<tag_b64>:<data_b64>"; decryptForOrg(orgId, ciphertext, aad?)
      parses, unwraps the referenced DEK version, decrypts, throws typed EncryptionError on tag

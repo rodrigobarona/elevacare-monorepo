@@ -106,7 +106,8 @@ You are a senior engineer working in the Eleva.care v3 monorepo at the repositor
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and the skills under .cursor/skills/ that match the files
    you will touch (api-first-agentic, audit-wiring, stripe-webhooks, eleva-icons, coderabbit-review).
-2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and this phase file in full.
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and this phase file in full
+   (docs/eleva-v3/execution-plan/phases/00-execution-plan-and-review-loop.md).
 3. Read every file under "Local references" of this phase. Pull every library under
    "External docs" through Context7 (resolve-library-id then query-docs) and prefer those docs
    over memory for Next.js 16, Better Auth, Drizzle, Stripe, Daily, Resend, Twilio, next-intl,
@@ -116,7 +117,8 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 0 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-00/execution-plan-and-review-loop
-- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files.
+- Implement the deliverables in the order listed. Keep the PR under 150 reviewable files; split
+  into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
 - Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
