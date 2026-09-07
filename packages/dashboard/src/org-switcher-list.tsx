@@ -22,13 +22,11 @@ function orgInitials(name: string): string {
   return `${parts[0]![0] ?? ""}${parts[1]![0] ?? ""}`.toUpperCase()
 }
 
-function orgSwitcherFilter(value: string, search: string): number {
-  if (!search) return 1
-  const haystack = value.toLowerCase()
-  const needle = search.toLowerCase().trim()
-  return haystack.includes(needle) ? 1 : 0
-}
-
+/**
+ * Searchable text for an org row. React Aria's default `contains` filter runs
+ * against each item's `textValue`, so name, slug and product label are all
+ * matched without a custom filter function.
+ */
 function orgSearchValue(org: OrgSwitcherItem, badgeLabel: string): string {
   return [org.name, org.orgSlug, badgeLabel].filter(Boolean).join(" ")
 }
@@ -50,24 +48,27 @@ export function OrgSwitcherList({
 
   return (
     <div className="flex flex-col bg-popover">
-      <Command
-        filter={orgSwitcherFilter}
-        className="gap-0 rounded-none bg-popover p-0 [&_[data-slot=command-item][data-selected=true]]:bg-accent/40"
-      >
-        <CommandInput variant="plain" placeholder={t("findWorkspace")} />
-        <CommandList className="max-h-72 p-1">
-          <CommandEmpty className="py-8 text-muted-foreground">
-            {t("noResults")}
-          </CommandEmpty>
+      <Command className="gap-0 rounded-none bg-popover p-0">
+        <CommandInput placeholder={t("findWorkspace")} />
+        <CommandList
+          aria-label={t("findWorkspace")}
+          className="max-h-72 p-1"
+          renderEmptyState={() => (
+            <CommandEmpty className="py-8 text-muted-foreground">
+              {t("noResults")}
+            </CommandEmpty>
+          )}
+        >
           {organizations.map((org) => {
             const badgeLabel = getOrgTypeBadgeLabel(org.orgType, t)
             return (
               <CommandItem
                 key={org.workosOrgId}
-                value={orgSearchValue(org, badgeLabel)}
-                disabled={switchingId === org.workosOrgId}
-                onSelect={() => onSwitch(org)}
-                className="gap-2 rounded-md px-2.5 py-2 data-selected:bg-accent/40 [&>svg.ml-auto]:hidden"
+                id={org.workosOrgId}
+                textValue={orgSearchValue(org, badgeLabel)}
+                isDisabled={switchingId === org.workosOrgId}
+                onAction={() => onSwitch(org)}
+                className="gap-2 rounded-md px-2.5 py-2 data-focused:bg-accent/40 [&>svg.ml-auto]:hidden"
               >
                 <Avatar className="size-7 shrink-0">
                   <AvatarFallback className="border border-border/60 bg-background text-[10px] font-medium text-foreground">

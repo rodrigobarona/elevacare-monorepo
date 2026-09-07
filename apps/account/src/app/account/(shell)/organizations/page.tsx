@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { Button } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button"
 import {
   SettingsFieldset,
   SettingsFieldsetContent,
@@ -22,9 +22,9 @@ export default async function OrganizationsPage() {
             {t("description")}
           </SettingsFieldsetDescription>
           <div className="mt-6">
-            <Button asChild>
-              <Link href="/account/workspaces/new">{t("createWorkspace")}</Link>
-            </Button>
+            <Link href="/account/workspaces/new" className={buttonVariants()}>
+              {t("createWorkspace")}
+            </Link>
           </div>
         </SettingsFieldsetContent>
       </SettingsFieldset>

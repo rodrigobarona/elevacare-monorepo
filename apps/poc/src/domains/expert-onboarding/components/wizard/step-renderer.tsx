@@ -6,7 +6,7 @@ import { MinusIcon, PlusIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
-import { Checkbox } from "@eleva/ui/components/checkbox"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { cn } from "@eleva/ui/lib/utils"
 import { PhaseInterstitialContent } from "@/components/wizard/phase-interstitial"
 import { ChapterCover } from "@/components/wizard/chapter-cover"
@@ -378,10 +378,10 @@ export function StepRenderer({
             variant="outline"
             size="icon"
             className="size-14 rounded-full"
-            onClick={() =>
+            onPress={() =>
               setValue(Math.max(min, value - (isDuration ? 5 : 1)))
             }
-            disabled={value <= min}
+            isDisabled={value <= min}
           >
             <MinusIcon className="size-5" />
           </Button>
@@ -394,10 +394,10 @@ export function StepRenderer({
             variant="outline"
             size="icon"
             className="size-14 rounded-full"
-            onClick={() =>
+            onPress={() =>
               setValue(Math.min(max, value + (isDuration ? 5 : 1)))
             }
-            disabled={value >= max}
+            isDisabled={value >= max}
           >
             <PlusIcon className="size-5" />
           </Button>
@@ -616,19 +616,22 @@ export function StepRenderer({
   if (step.kind === "terms") {
     return (
       <StepFrame title={step.title} helper={step.helper}>
-        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-border/60 p-4">
-          <Checkbox
-            checked={draft.termsAccepted && draft.complianceAck}
-            onCheckedChange={(checked) =>
-              onChange({ termsAccepted: !!checked, complianceAck: !!checked })
-            }
-          />
-          <span className="text-sm leading-relaxed text-muted-foreground">
-            I confirm my credentials are accurate and I agree to Eleva&apos;s
-            expert terms and privacy policy for{" "}
-            {COUNTRY_LABELS[draft.practiceCountry]}.
-          </span>
-        </label>
+        <CheckboxField
+          id="wizard-terms"
+          className="w-full items-start gap-3 rounded-2xl border border-border/60 p-4"
+          labelClassName="cursor-pointer text-sm leading-relaxed text-muted-foreground"
+          isSelected={draft.termsAccepted && draft.complianceAck}
+          onChange={(checked) =>
+            onChange({ termsAccepted: checked, complianceAck: checked })
+          }
+          label={
+            <>
+              I confirm my credentials are accurate and I agree to Eleva&apos;s
+              expert terms and privacy policy for{" "}
+              {COUNTRY_LABELS[draft.practiceCountry]}.
+            </>
+          }
+        />
       </StepFrame>
     )
   }

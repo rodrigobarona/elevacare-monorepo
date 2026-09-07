@@ -35,9 +35,11 @@ The design system should support:
 
 ### `packages/ui`
 
+Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) via the shadcn `aria-luma` style ([ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md)). Radix UI is not a primitive source; `@radix-ui/themes` exists only as the WorkOS Widgets peer.
+
 Should own:
 
-- base primitives
+- base primitives (regenerated from the shadcn registry, never hand-forked)
 - semantic components
 - layout helpers
 - form building blocks

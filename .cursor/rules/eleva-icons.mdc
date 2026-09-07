@@ -36,4 +36,4 @@ alwaysApply: false
 
 ## shadcn
 
-[`packages/ui/components.json`](../../packages/ui/components.json) uses `"iconLibrary": "phosphor"`. Regenerate UI primitives with the CLI when adding shadcn components.
+[`packages/ui/components.json`](../../packages/ui/components.json) uses `"iconLibrary": "phosphor"` and `"style": "aria-luma"` (React Aria Components — see `react-aria-ui.mdc`). Regenerate UI primitives with the CLI when adding shadcn components; the generator emits `@phosphor-icons/react` imports, so rewrite them to `@eleva/icons` and add any missing icon to `packages/icons/src/icons.tsx`.

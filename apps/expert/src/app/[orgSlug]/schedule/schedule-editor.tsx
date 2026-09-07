@@ -7,7 +7,7 @@ import { PlusIcon, XIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
-import { Checkbox } from "@eleva/ui/components/checkbox"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import {
   Select,
   SelectContent,
@@ -285,13 +285,19 @@ export function ScheduleEditor({
           <CardTitle>{t("timezone")}</CardTitle>
         </CardHeader>
         <CardContent>
-          <Select value={timezone} onValueChange={setTimezone}>
+          <Select
+            aria-label={t("timezone")}
+            selectedKey={timezone}
+            onSelectionChange={(key) => {
+              if (typeof key === "string") setTimezone(key)
+            }}
+          >
             <SelectTrigger className="max-w-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="max-h-60">
               {ALL_TIMEZONES.map((tz) => (
-                <SelectItem key={tz} value={tz}>
+                <SelectItem key={tz} id={tz}>
                   {tz.replace(/_/g, " ")}
                 </SelectItem>
               ))}
@@ -311,19 +317,19 @@ export function ScheduleEditor({
             return (
               <div key={idx} className="space-y-2">
                 <div className="flex items-center gap-4">
-                  <label className="flex w-28 items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={day.enabled}
-                      onCheckedChange={(v) => toggleDay(idx, !!v)}
-                    />
-                    {dayLabel}
-                  </label>
+                  <CheckboxField
+                    id={`schedule-day-${idx}`}
+                    className="w-28"
+                    label={dayLabel}
+                    isSelected={day.enabled}
+                    onChange={(v) => toggleDay(idx, v)}
+                  />
                   {day.enabled && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => addWindow(idx)}
+                      onPress={() => addWindow(idx)}
                       className="ml-auto"
                     >
                       <PlusIcon className="mr-1 h-3 w-3" />
@@ -362,7 +368,7 @@ export function ScheduleEditor({
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => removeWindow(idx, wIdx)}
+                          onPress={() => removeWindow(idx, wIdx)}
                         >
                           <XIcon className="h-3 w-3" />
                         </Button>
@@ -396,8 +402,8 @@ export function ScheduleEditor({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleRemoveOverride(ov.id)}
-                    disabled={pending}
+                    onPress={() => handleRemoveOverride(ov.id)}
+                    isDisabled={pending}
                   >
                     {t("remove")}
                   </Button>
@@ -416,13 +422,13 @@ export function ScheduleEditor({
                 className="w-40"
               />
             </div>
-            <label className="flex items-center gap-2 self-center text-sm">
-              <Checkbox
-                checked={newBlocked}
-                onCheckedChange={(v) => setNewBlocked(!!v)}
-              />
-              {t("overrideBlockDay")}
-            </label>
+            <CheckboxField
+              id="schedule-override-blocked"
+              className="self-center"
+              label={t("overrideBlockDay")}
+              isSelected={newBlocked}
+              onChange={setNewBlocked}
+            />
             {!newBlocked && (
               <>
                 <div className="space-y-1.5">
@@ -446,8 +452,8 @@ export function ScheduleEditor({
               </>
             )}
             <Button
-              onClick={handleAddOverride}
-              disabled={pending || !newDate}
+              onPress={handleAddOverride}
+              isDisabled={pending || !newDate}
               variant="outline"
               size="sm"
             >
@@ -457,7 +463,7 @@ export function ScheduleEditor({
         </CardContent>
       </Card>
 
-      <Button onClick={handleSave} disabled={pending}>
+      <Button onPress={handleSave} isDisabled={pending}>
         {pending ? t("saving") : t("save")}
       </Button>
     </div>

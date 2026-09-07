@@ -48,6 +48,7 @@ export {
   SidebarIcon,
   SignOutIcon,
   SparkleIcon,
+  SpinnerIcon,
   SquaresFourIcon,
   SunIcon,
   TagIcon,
@@ -61,6 +62,7 @@ export {
   WalletIcon,
   WarningIcon,
   WarningOctagonIcon,
+  XCircleIcon,
   XIcon,
 } from "@phosphor-icons/react/ssr"
 

@@ -98,7 +98,7 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
             .
           </span>
         </div>
-        <Button size="sm" onClick={onDone}>
+        <Button size="sm" onPress={onDone}>
           Continue
         </Button>
       </div>
@@ -139,8 +139,8 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
               <Button
                 size="sm"
                 variant={adapter.slug === "manual" ? "outline" : "default"}
-                disabled={pending || adapter.disabled}
-                onClick={() => handleSelect(adapter.slug)}
+                isDisabled={pending || adapter.disabled}
+                onPress={() => handleSelect(adapter.slug)}
               >
                 {adapter.slug === "manual"
                   ? "Acknowledge manual invoicing"

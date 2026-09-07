@@ -1,10 +1,9 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { useTranslations } from "next-intl"
 import { cn } from "@eleva/ui/lib/utils"
-import { Button } from "@eleva/ui/components/button"
+import { Button, LinkButton } from "@eleva/ui/components/button"
 import { BookOpenIcon, UserIcon, UsersIcon } from "@eleva/icons"
 import { ElevaIcon } from "@eleva/icons/client"
 import { gatewayUrl } from "./gateway-url"
@@ -115,11 +114,11 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
         )}
       >
         {mode === "page" ? (
-          <Button type="button" variant="outline" asChild>
-            <Link href="/account/organizations">{t("cancel")}</Link>
-          </Button>
+          <LinkButton variant="outline" href="/account/organizations">
+            {t("cancel")}
+          </LinkButton>
         ) : null}
-        <Button type="button" disabled={!selected} onClick={handleContinue}>
+        <Button type="button" isDisabled={!selected} onPress={handleContinue}>
           {t("continue")}
         </Button>
       </div>

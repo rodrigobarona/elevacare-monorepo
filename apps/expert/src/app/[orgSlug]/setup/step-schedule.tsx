@@ -86,7 +86,7 @@ export function StepSchedule({ onDone }: Props) {
         availability rules, and calendar integration will be available soon.
       </p>
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" isDisabled={pending}>
         {pending ? "Saving..." : "Complete onboarding"}
       </Button>
     </form>

@@ -129,7 +129,6 @@ export function AvatarUpload({
                 <AvatarImage src={avatarUrl} alt={displayName} />
               ) : null}
               <AvatarFallback
-                delayMs={0}
                 className="text-3xl leading-none font-semibold text-white"
                 style={fallbackStyle}
               >
@@ -172,8 +171,8 @@ export function AvatarUpload({
               variant="ghost"
               size="sm"
               className="cursor-pointer"
-              disabled={busy}
-              onClick={handleRemove}
+              isDisabled={busy}
+              onPress={handleRemove}
             >
               <Trash2 className="mr-1.5 size-3.5" />
               {t("avatar.remove")}

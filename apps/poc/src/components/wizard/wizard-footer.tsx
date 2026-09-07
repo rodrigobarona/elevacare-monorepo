@@ -49,7 +49,7 @@ export function WizardFooter({
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-5 sm:px-8 sm:py-6">
         <div className="min-w-[6rem]">
           {showBack ? (
-            <Button type="button" variant="ghost" size="lg" onClick={onBack}>
+            <Button type="button" variant="ghost" size="lg" onPress={onBack}>
               Back
             </Button>
           ) : null}
@@ -61,7 +61,7 @@ export function WizardFooter({
         ) : null}
         <div className="flex items-center gap-3">
           {optional && onSkip ? (
-            <Button type="button" variant="ghost" size="lg" onClick={onSkip}>
+            <Button type="button" variant="ghost" size="lg" onPress={onSkip}>
               Skip
             </Button>
           ) : null}
@@ -69,8 +69,8 @@ export function WizardFooter({
             type="button"
             size="lg"
             className={cn("min-w-[8rem]", isChapterCover && "px-8")}
-            onClick={onNext}
-            disabled={!canNext}
+            onPress={onNext}
+            isDisabled={!canNext}
           >
             {nextLabel}
           </Button>

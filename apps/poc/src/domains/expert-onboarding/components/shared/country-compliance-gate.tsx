@@ -2,7 +2,7 @@
 
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
-import { Checkbox } from "@eleva/ui/components/checkbox"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { cn } from "@eleva/ui/lib/utils"
 import type {
   ExpertDraft,
@@ -115,29 +115,22 @@ function ComplianceQuestions({
 }) {
   return (
     <div className="space-y-4 rounded-2xl border border-border/60 p-4">
-      <label className="flex items-start gap-3 text-sm">
-        <Checkbox
-          checked={ack}
-          onCheckedChange={(v) => onAck(v === true)}
-          className="mt-0.5"
-        />
-        <span>
-          I hold valid professional registration and professional liability
-          coverage for my practice area, and I deliver care independently —
-          Eleva provides the platform only.
-        </span>
-      </label>
-      <label className="flex items-start gap-3 text-sm">
-        <Checkbox
-          checked={terms}
-          onCheckedChange={(v) => onTerms(v === true)}
-          className="mt-0.5"
-        />
-        <span>
-          I agree to the Expert Terms, privacy policy, and understand my profile
-          will be reviewed before going live.
-        </span>
-      </label>
+      <CheckboxField
+        id="compliance-ack"
+        className="items-start gap-3"
+        labelClassName="text-sm leading-relaxed"
+        isSelected={ack}
+        onChange={onAck}
+        label="I hold valid professional registration and professional liability coverage for my practice area, and I deliver care independently — Eleva provides the platform only."
+      />
+      <CheckboxField
+        id="compliance-terms"
+        className="items-start gap-3"
+        labelClassName="text-sm leading-relaxed"
+        isSelected={terms}
+        onChange={onTerms}
+        label="I agree to the Expert Terms, privacy policy, and understand my profile will be reviewed before going live."
+      />
     </div>
   )
 }

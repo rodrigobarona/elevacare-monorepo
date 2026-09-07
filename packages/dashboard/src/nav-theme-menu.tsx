@@ -38,7 +38,7 @@ export function NavThemeMenu() {
 
   return (
     <DropdownMenuSub>
-      <DropdownMenuSubTrigger className="gap-2 py-1">
+      <DropdownMenuSubTrigger className="gap-2 py-1" textValue={t("theme")}>
         <SunIcon className="size-4" />
         {t("theme")}
       </DropdownMenuSubTrigger>
@@ -46,8 +46,10 @@ export function NavThemeMenu() {
         {THEME_OPTIONS.map(({ value, icon: Icon, labelKey }) => (
           <DropdownMenuItem
             key={value}
+            id={value}
+            textValue={t(labelKey)}
             className="py-1"
-            onClick={() => {
+            onAction={() => {
               if (!isThemePreference(value)) return
               selectTheme(value)
             }}

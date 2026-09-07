@@ -6,7 +6,6 @@ import { locales, localeNames, type Locale } from "@eleva/config/i18n"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@eleva/ui/components/dropdown-menu"
@@ -26,20 +25,23 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          aria-label="Change language"
-          disabled={isPending}
-        >
-          <GlobeIcon className="size-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+    <DropdownMenuTrigger>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label="Change language"
+        isDisabled={isPending}
+      >
+        <GlobeIcon className="size-4" />
+      </Button>
+      <DropdownMenu placement="bottom end">
         {locales.map((l) => (
-          <DropdownMenuItem key={l} onClick={() => handleSelect(l)}>
+          <DropdownMenuItem
+            key={l}
+            id={l}
+            textValue={localeNames[l]}
+            onAction={() => handleSelect(l)}
+          >
             {l === locale && <CheckIcon className="size-3.5" />}
             <span className={l === locale ? "font-medium" : ""}>
               {localeNames[l]}
@@ -49,7 +51,7 @@ export function LanguageSwitcher() {
             </span>
           </DropdownMenuItem>
         ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+    </DropdownMenuTrigger>
   )
 }

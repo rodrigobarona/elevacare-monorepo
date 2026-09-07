@@ -5,9 +5,9 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@eleva/ui/components/avatar"
+import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -26,6 +26,11 @@ interface UserMenuProps {
   signOutUrl: string
 }
 
+/**
+ * Menu items use plain `href`s. `apps/web` does not mount a React Aria
+ * `RouterProvider`, so these render as native anchors and the browser does a
+ * full navigation — required for the gateway to rewrite into the account zone.
+ */
 export function UserMenu({
   initials,
   firstName,
@@ -37,35 +42,44 @@ export function UserMenu({
   signOutUrl,
 }: UserMenuProps) {
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring">
+    <DropdownMenuTrigger>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={firstName ?? email}
+        className="rounded-full"
+      >
         <Avatar className="size-8">
           {avatarUrl && (
             <AvatarImage src={avatarUrl} alt={firstName ?? email} />
           )}
           <AvatarFallback className="text-xs">{initials}</AvatarFallback>
         </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48">
+      </Button>
+      <DropdownMenu placement="bottom end" className="w-48">
         <DropdownMenuLabel className="font-normal">
           <p className="text-sm font-medium">{firstName ?? email}</p>
           <p className="text-xs text-muted-foreground">{email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={dashboardUrl}>
-            <LayoutDashboard />
-            {dashboardLabel}
-          </a>
+        <DropdownMenuItem
+          id="dashboard"
+          href={dashboardUrl}
+          textValue={dashboardLabel}
+        >
+          <LayoutDashboard />
+          {dashboardLabel}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <a href={signOutUrl}>
-            <LogOut />
-            {signOutLabel}
-          </a>
+        <DropdownMenuItem
+          id="sign-out"
+          href={signOutUrl}
+          textValue={signOutLabel}
+        >
+          <LogOut />
+          {signOutLabel}
         </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      </DropdownMenu>
+    </DropdownMenuTrigger>
   )
 }
