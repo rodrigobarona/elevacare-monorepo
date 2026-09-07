@@ -274,7 +274,7 @@ Each entry should include:
   - **ADR-019 Migration**: import MVP data (users, orgs, experts, bookings, payout ledger, records) into v3 with a DNS cutover; same Stripe platform account.
   - **ADR-020 Encryption**: envelope encryption in `@eleva/encryption` (AES-256-GCM, per-org DEK wrapped by a versioned KEK from env, `org_data_keys`, crypto-shred = delete DEK); OAuth tokens encrypted by Better Auth.
   - **ADR-021 RBAC**: single source of truth in code (`packages/auth/src/permissions.ts`); product label derived from `(organization.type, member.role)`.
-  - **Staff-only locale exception**: `apps/admin` ships `en` + `pt` only (Eleva staff surface); all member/expert/clinic-facing surfaces keep `pt`/`en`/`es`.
+  - **Staff-only locale exception**: `apps/admin` ships `en` + `pt` only (Eleva staff surface); all member/expert/clinic-facing surfaces keep `pt`/`en`/`es`. Enforcement lives in `packages/config/src/i18n-locales.ts` (`REQUIRED_LOCALES_BY_APP`), which `scripts/check-i18n-parity.mjs` (Phase 1) reads instead of assuming `pt`/`en`/`es`; the universal prompt hard constraint in `execution-plan/README.md` section 7 names this exception.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 2, [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
 
 ### 2026-09-07: `@eleva/ui` primitives move from Radix UI to React Aria Components (ADR-022)

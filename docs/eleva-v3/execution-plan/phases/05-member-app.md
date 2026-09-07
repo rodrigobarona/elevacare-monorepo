@@ -33,14 +33,19 @@ In:
   - `/privacy`: consents (view/withdraw), DSAR export request (creates `dsar_requests` row,
     handled by `@eleva/compliance` `dsarExport` job -> private Blob zip + email link; 10-minute
     target from `data-retention-export-matrix.md`), account deletion request (soft-delete +
-    scheduled crypto-shred per policy).
+    scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
+    future bookings with 100% refund — see prompt deliverable 3).
 - `apps/api`: `GET /me` (profile + preferences), `PATCH /me`, `GET /me/bookings`,
   `GET /me/payments`, `PUT /me/notification-preferences`, `POST /privacy/dsar`,
-  `GET /privacy/dsar/[id]`, `POST /privacy/delete-account`; workflow route
-  `POST /workflows/dsar-export` (QStash triggered).
-- `@eleva/compliance`: `dsarExport(userId)` collecting user, bookings, payments, consents,
-  notifications (records in Phase 10 extend it), producing JSON + CSV zip in the private Blob
-  store; `scheduleAccountDeletion(userId)`.
+  `GET /privacy/dsar/[id]`, `POST /privacy/delete-account`; workflow routes
+  `POST /workflows/dsar-export` and `POST /workflows/account-deletion-sweep` (QStash triggered).
+- `@eleva/compliance`: `dsarExport(userId)` built on a **collector registry** — this phase
+  registers user, bookings, payments, consents and notification preferences; later phases
+  register their own collectors in their own PR (Phase 8 notifications + deliveries, Phase 10
+  records) so the export is complete at every point of the plan without depending on tables
+  that do not exist yet (test: export with only the Phase 5 collectors, and with a fake extra
+  collector registered) — producing a JSON + CSV zip in the private Blob store;
+  `scheduleAccountDeletion(userId)`.
 - `packages/dashboard`: member nav config (`NavIconName`s), `enableOrgSwitcher: false` for
   personal Spaces unless the user belongs to more orgs.
 - Playwright `e2e/member.spec.ts`.
@@ -67,9 +72,10 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 - [ ] Preferences persist and are returned by `GET /me`.
 - [ ] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
       (signed URL) after 24h; audit rows present.
-- [ ] Delete-account request schedules deletion and blocks new bookings at the API (POST
-      /bookings/reserve and /confirm -> 409 ACCOUNT_DELETION_SCHEDULED via
-      assertMemberCanBook inside reserveSlot); audited.
+- [ ] Delete-account request schedules deletion and blocks new bookings at the API before money
+      moves (POST /bookings/reserve and POST /payments/intent -> 409 ACCOUNT_DELETION_SCHEDULED
+      via assertMemberCanBook); a payment that already succeeded still confirms and is then
+      cancelled with refund_pending by the deletion sweep; audited.
 - [ ] `e2e/member.spec.ts` green; `check:i18n-parity` green.
 
 ## Tests
@@ -135,7 +141,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 5 TASK — Build the member product in apps/app.
@@ -145,8 +152,9 @@ PHASE 5 TASK — Build the member product in apps/app.
    timezone), consents (user_id, kind, version, granted_at, withdrawn_at, source) where kind is
    the pg enum consent_kind generated from the CONSENT_KINDS const exported by
    @eleva/compliance (terms | privacy | health_data_processing | marketing; Phase 10 appends
-   session_recording and ai_processing to the same const — never a second spelling such as
-   health_data), dsar_requests (id, user_id, status pending|processing|ready|expired|
+   session_recording and ai_processing, Phase 13 appends analytics — each in its own PR, to the
+   same const, regenerating the enum — never a second spelling such as health_data, and never
+   reuse marketing for analytics), dsar_requests (id, user_id, status pending|processing|ready|expired|
    failed, blob_pathname, expires_at, requested_at, completed_at), account_deletion_requests
    (user_id, requested_at, scheduled_for, status). RLS by user (personal Space org) and audit
    unions (consent granted|withdrawn; dsar requested|ready; account deletion requested|cancelled).
@@ -161,13 +169,22 @@ PHASE 5 TASK — Build the member product in apps/app.
    JSON + CSV files zipped and uploaded to the PRIVATE Blob store via @eleva/storage with a 24h
    signed URL; scheduleAccountDeletion(userId, days per data-retention-export-matrix.md) that
    marks the user (auth.user.deletion_scheduled_at) and enqueues crypto-shred (Phase 10
-   completes). Booking eligibility is enforced where bookings are created, not only in the UI:
-   add assertMemberCanBook(userId) to @eleva/scheduling (throws BookingError
-   "ACCOUNT_DELETION_SCHEDULED" -> 409) and call it inside reserveSlot and in POST
-   /bookings/reserve and POST /bookings/confirm (Phase 4 routes; update them in this phase) so a
-   member with a pending deletion — or a banned user — cannot create or confirm a reservation.
-   Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets 409 on
-   reserve and confirm; cancel request -> reserve succeeds again.
+   completes). Booking eligibility is enforced where bookings are created and BEFORE any money
+   moves, not only in the UI: add assertMemberCanBook(userId) to @eleva/scheduling (throws
+   BookingError "ACCOUNT_DELETION_SCHEDULED" -> 409) and call it inside reserveSlot, in POST
+   /bookings/reserve and in POST /payments/intent before tx A (Phase 4 routes; update them in
+   this phase) so a member with a pending deletion — or a banned user — cannot reserve or create a
+   PaymentIntent. Do NOT add the guard to POST /bookings/confirm: a succeeded intent must always
+   bind and confirm (otherwise the payment is orphaned). Instead scheduleAccountDeletion itself
+   cleans up in one transaction after marking the user: pending_payment bookings -> cancelled and
+   their intents cancelled via Stripe when still cancelable (intent_pending rows are left to the
+   Phase 4 expiry sweep); confirmed future bookings -> cancelled with booking_payments.status =
+   refund_pending and reason account_deletion (100% refund, executed by Phase 6) + audit; a
+   payment that succeeds after the mark (race) is confirmed by the webhook and then cancelled by
+   the same rule on the next deletion sweep run (POST /workflows/account-deletion-sweep, QStash,
+   hourly). Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
+   409 on reserve and on intent; confirm with a succeeded intent still returns 201 and the sweep
+   cancels it with refund_pending; cancel request -> reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,
    Privacy; NavIconName strings; org switcher hidden when the user has only the personal Space),
    proxy.ts < 50 LOC using @eleva/auth/proxy. Pages under /[orgSlug]: dashboard (upcoming with

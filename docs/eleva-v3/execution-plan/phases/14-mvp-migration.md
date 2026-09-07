@@ -79,7 +79,7 @@ In:
 - **Rehearsals**: `pnpm migration:rehearse` = create Neon branch from production snapshot (MVP
   db exported to a v3-side branch or direct cross-DB read), run full migration, run verification
   (`pnpm migration:verify` -> row counts per table, checksum matches, orphan FK check, sample
-  logins via magic link in staging), produce report under `infra/migration/reports/<date>.md`
+  logins via magic link in staging), produce report under `infra/migration/reports/rehearsal-YYYY-MM-DD.md`
   (committed). Three rehearsals required; the last within 3 days of cutover.
 - **Freeze plan** (executed in Phase 15): MVP read-only banner + disabled booking, drain pending
   Multibanco (> 8 days rule means none should exist within 24h — verify), final delta run,
@@ -95,7 +95,8 @@ Out: cutover itself (Phase 15).
    `auth.user` + `auth.account/credential` + optional `auth.account/google`), `migration_checksums`
    (unique on target table + target id, upserted) tables in a `migration` schema on v3, dropped
    after Phase 15 + 30 days.
-3. Welcome campaign template + sender script (`migration:send-welcome --wave n`).
+3. Welcome campaign template + sender script (`migration:send-welcome --wave 1 --size 500`;
+   waves persisted in `migration_welcome_waves` so re-running a wave is a no-op).
 4. Redirect map + tests.
 5. Three committed rehearsal reports; finance-approved grandfather mapping table
    (`infra/migration/GRANDFATHER.md`).
@@ -117,8 +118,8 @@ Out: cutover itself (Phase 15).
 - [ ] Records decrypt for the owning expert in `apps/expert`; member sees published ones.
 - [ ] Stripe verification step passes for 100% of Connect accounts and customers.
 - [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze,
-      `pnpm migration:reverse-export --since "$CUTOVER_TS"` produces a signed JSON of every
-      post-cutover v3 row (schema-derived table inventory), each entity class restored per the
+      `pnpm migration:reverse-export --since "$CUTOVER_TS"` produces a signed JSON of the complete
+      post-cutover mutation set (inserts, updates and deletes; schema-derived table inventory), each entity class restored per the
       five-action table in the runbook,
       Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
       once (idempotent on `stripe_payment_intent_id`), MVP webhook re-enabled, DNS revert + MVP
@@ -189,7 +190,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019).
@@ -203,14 +205,20 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
    glob returns nothing on this branch; a deliberate `import "@workos-inc/node"` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
-   Phase 16.16 removes the package and both exceptions. CLI: pnpm migration:run
-   --dry-run|--apply [--target branch|production] --since <iso> --report <path>;
+   Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
+   the commands below run as written): pnpm migration:run --dry-run|--apply
+   [--target branch|production] [--since "$LAST_RUN_TS"] (ISO-8601; omitted = full run; the CLI
+   writes the run's end timestamp to infra/migration/reports/last-run.json and the operator
+   exports it as LAST_RUN_TS before a delta run) [--report FILE] (default
+   infra/migration/reports/run-$(date -u +%Y%m%dT%H%M%SZ).md);
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
    schema, roles and extensions — restores a fresh pg_dump of the MVP production database (taken
    with the read-only role) into schema legacy via pg_restore, runs run --apply --target branch,
-   then verify, then writes reports/<date>.md; staging snapshots are never a rehearsal input);
-   pnpm migration:send-welcome --wave <n> --size <k>. Env: MVP_DATABASE_URL (read-only role),
+   then verify, then writes infra/migration/reports/rehearsal-$(date -u +%F).md; staging
+   snapshots are never a rehearsal input); pnpm migration:send-welcome --wave 1 --size 500
+   (--wave is the 1-based wave number persisted in migration_welcome_waves so a re-run of the same
+   wave is a no-op; --size defaults to 500). Env: MVP_DATABASE_URL (read-only role),
    TARGET_DATABASE_URL, WORKOS_API_KEY
    (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_CHECKSUM_KEY (32 random bytes,
    generated per migration, stored only in the operator vault), MIGRATION_ALLOWED_TARGET_HOSTS.
@@ -278,9 +286,16 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    the freeze procedure (MVP read-only banner + booking disabled, verify no pending Multibanco,
    final --since delta run, verify, DNS switch, Stripe webhook switch, welcome wave 1) and a
    "Rollback" section that preserves post-cutover writes: freeze v3 writes -> pnpm
-   migration:reverse-export --since "$CUTOVER_TS" (implement in infra/migration: dumps EVERY
-   tenant table's rows with created_at or updated_at after the timestamp, plus soft-deletes, to a
-   JSON file signed with an HMAC under MIGRATION_CHECKSUM_KEY; the entity inventory is generated
+   migration:reverse-export --since "$CUTOVER_TS" (implement in infra/migration: dumps the COMPLETE
+   post-cutover mutation set — EVERY tenant table's rows with created_at or updated_at after the
+   timestamp (so updates to pre-cutover bookings, users, invoices and payment state are included,
+   each tagged op = insert|update by comparing created_at with the timestamp), soft-deletes, and
+   hard deletes reconstructed from audit_events rows with action deleted after the timestamp
+   (tagged op = delete with the entity id) — to a JSON file signed with an HMAC under
+   MIGRATION_CHECKSUM_KEY; the restore side replays each record idempotently by the
+   migration_id_map (upsert for insert|update, delete-or-tombstone for delete; re-running the
+   replay is a no-op) — a rehearsal test edits and deletes pre-cutover rows in v3 and asserts the
+   MVP copy reflects both after replay; the entity inventory is generated
    from the Drizzle schema so a new table cannot be forgotten, and a unit test fails if a table
    with created_at/updated_at is missing from the export). Restore per entity class, in this
    order: (1) identity — auth.user/account/organization/member created after cutover are

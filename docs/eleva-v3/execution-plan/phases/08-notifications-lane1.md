@@ -27,7 +27,14 @@ In:
   preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders the
   `@eleva/email` template (React Email) / SMS text / in-app payload -> delivers -> writes
   `notification_deliveries` (idempotent on key + recipient + channel, where the recipient column
-  is `user_id` or, for e-mail mode, `recipient_email`). Kinds: `booking.confirmed`, `booking.reminder_24h`,
+  is `user_id` or, for e-mail mode, `recipient_email`). The delivery row is **claimed before the
+  provider is called**: insert `status = queued` (the unique key makes a concurrent/retried call
+  hit the conflict and return the existing row — if it is `sent`, stop; if `queued` older than
+  60 s, re-claim), then call Resend/Twilio with a provider idempotency key equal to the row id
+  (Resend `Idempotency-Key` header; Twilio has none, so the claimed row is the only guard), then
+  update to `sent`/`failed` with `provider_id`. A crash between provider accept and the update
+  leaves a `queued` row that the retry re-claims and re-sends **with the same provider
+  idempotency key**, so the provider deduplicates instead of the user receiving two e-mails. Kinds: `booking.confirmed`, `booking.reminder_24h`,
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
   `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
@@ -56,8 +63,9 @@ In:
   `notBefore`; cancellation deletes/ignores them (check booking status at send time);
   `packages/workflows/src/notifications/reminders.ts`, route `POST /workflows/booking-reminder`.
 - Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events through the
-  transactional outbox `emitDomainEvent(tx, event)` in `@eleva/workflows` (introduced in Phase 7
-  with `domain_events_outbox` and the `/workflows/domain-events-publisher` route); this phase
+  transactional outbox `emitDomainEvent(tx, event)` in `@eleva/workflows` (introduced in Phase 4
+  with `domain_events_outbox` and the `/workflows/domain-events-publisher` route, extended by
+  Phase 7); this phase
   registers `sendNotification` as a publisher subscriber (idempotent on the event
   `idempotency_key`) and extends the event union with booking/payment/payout types.
 - Lane 2 stub: `syncMarketingContact(userId)` to Resend Audiences only when `marketing` consent
@@ -152,7 +160,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workflows (ADR-006).
@@ -173,7 +182,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    { email: string; locale?: Locale }. userId mode -> load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list ->
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app ->
-   deliver -> record notification_deliveries. email mode (recipient has no account yet — used by
+   CLAIM the notification_deliveries row FIRST (insert status queued; on unique conflict read the
+   existing row: sent -> return it, queued older than 60 s -> re-claim, otherwise return) -> call
+   the provider with a provider idempotency key = the row id (Resend Idempotency-Key header; Twilio
+   has none, the claimed row is the guard) -> update the row to sent|failed with provider_id. Never
+   send before the row exists. Test: kill the process between provider accept and the update
+   (mock), retry -> one provider call with the same Idempotency-Key, one sent row. email mode (recipient has no account yet — used by
    auth.org_invitation when the invitee e-mail is unknown to auth.user, and by guest booking
    confirmations before activation) -> email channel only, locale from the argument or the org
    default, suppression list applied, no preferences/SMS/in-app, row keyed by recipient_email.
@@ -199,8 +213,8 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
    not need to delete messages. emitDomainEvent(tx, event) and the domain_events_outbox table +
-   POST /workflows/domain-events-publisher already exist from Phase 7 (transactional outbox, typed
-   event union, subscriber registry); this phase extends the union with the booking/payment/payout
+   POST /workflows/domain-events-publisher already exist from Phase 4 (extended by Phase 7;
+   transactional outbox, typed event union, subscriber registry); this phase extends the union with the booking/payment/payout
    event types, registers sendNotification as a publisher subscriber, and wires the Phase 4/6
    code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
    paid/approval required) to call emitDomainEvent(tx, ...) inside the same transaction as the

@@ -1,12 +1,12 @@
 # Phase 4 — Public marketplace + booking funnel (`apps/web` + API)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                         |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-04/public-marketplace-booking` (split: `phase-04.1/public-api-and-explorer`, `phase-04.2/booking-funnel-payment`)                                                                                                                                                                                                      |
-| Depends on | Phase 3                                                                                                                                                                                                                                                                                                                       |
-| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                       |
-| Touches    | `apps/web/**`, `apps/api/src/app/{public,bookings,payments}/**`, `packages/scheduling/**`, `packages/billing/src/server/{payments,commission}.ts`, `packages/db/src/schema/main/{bookings,booking-payments}.ts`, `packages/api-client/**`, `packages/ui/**` (booking components), `packages/config/src/reserved-usernames.ts` |
-| Exit gate  | An unauthenticated visitor finds an expert, picks a slot, pays with a Stripe test card and MB WAY (test), receives a confirmation page and email stub; 100 concurrent reservations of the same slot -> exactly one winner                                                                                                     |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-04/public-marketplace-booking` (split: `phase-04.1/public-api-and-explorer`, `phase-04.2/booking-funnel-payment`)                                                                                                                                                                                                                                                                                                                                                                 |
+| Depends on | Phase 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Touches    | `apps/web/**`, `apps/api/src/app/{public,bookings,payments}/**`, `packages/scheduling/**`, `packages/billing/src/server/{payments,commission}.ts`, `packages/workflows/src/domain-events.ts`, `apps/api/src/app/workflows/domain-events-publisher/**`, `packages/db/src/schema/main/domain-events-outbox.ts`, `packages/db/src/schema/main/{bookings,booking-payments}.ts`, `packages/api-client/**`, `packages/ui/**` (booking components), `packages/config/src/reserved-usernames.ts` |
+| Exit gate  | An unauthenticated visitor finds an expert, picks a slot, pays with a Stripe test card and MB WAY (test), receives a confirmation page and email stub; 100 concurrent reservations of the same slot -> exactly one winner                                                                                                                                                                                                                                                                |
 
 ## Why this phase exists
 
@@ -30,28 +30,39 @@ In:
     only `sha256(token)` is persisted in a new `slot_reservations.capability_hash` column, next
     to a new nullable `slot_reservations.user_id` set when the caller is signed in. It is the
     capability every later step must present; never logged, never placed in a URL. The existing
-    `hold_token` column stays as the Redis lock owner and is **not** exposed to clients).
+    `hold_token` column stays as the Redis lock owner and is **not** exposed to clients. The
+    reservation also snapshots the price once — new `slot_reservations.price_cents` +
+    `currency` copied from the event type at reserve time — and that snapshot is the **only**
+    amount used by the booking row, the PaymentIntent, the fee computation and the confirmation
+    checks; an expert changing the event-type price after a reservation never affects it).
   - `POST /payments/intent` (body `{ reservationId, reservationToken }`; the route resolves the
     reservation, requires `sha256(reservationToken) = capability_hash` **and**, when
     `slot_reservations.user_id` is set, the session `userId` to equal it — otherwise 404 (not
     403, to avoid confirming the id exists); one PaymentIntent per reservation (new unique
-    nullable `slot_reservations.stripe_payment_intent_id`, idempotency key = reservationId, so a
-    race returns the same intent). Inside one transaction it first creates the durable booking
-    identity — a `bookings` row with `status = pending_payment`, `reservation_id`, expert org,
-    event type, times and price copied from the reservation — so `bookingId` exists **before**
-    the intent; then creates the PaymentIntent: amount from event type
-    price, currency EUR, charged on the **platform** account — Stripe "separate charges and
-    transfers" funds flow, so **no** `transfer_data` and **no** `application_fee_amount`; the
-    platform fee from the `@eleva/billing` commission SSOT is stored in the ledger as
-    `booking_payments.application_fee_cents` and the payout engine (Phase 6) later transfers
-    `amount - fee` to the expert; `transfer_group = bookingId` (the pending booking's id, which
-    is the same id the payout engine uses later), `automatic_payment_methods`, metadata
-    `reservationId`, `bookingId`, `expertOrgId`; idempotency key = reservationId; the intent id
-    is written to `booking_payments` (status `requires_payment`) and
-    `slot_reservations.stripe_payment_intent_id` in that same transaction. Pending bookings whose
-    reservation expires are set to `cancelled` by the existing `slot-reservation-expiry`
-    workflow. Destination charges are rejected because payouts are delayed until eligibility
-    (Phase 6).
+    nullable `slot_reservations.stripe_payment_intent_id`, Stripe idempotency key =
+    `pi:<reservationId>`, so a race returns the same intent). The Stripe call is **never inside a
+    database transaction** — it is a two-step, reconcilable sequence: **step 1 (tx A)** creates
+    the durable booking identity — a `bookings` row with `status = pending_payment`,
+    `reservation_id`, expert org, event type, times, `price_cents`/`currency` copied from the
+    reservation snapshot — plus a `booking_payments` row with `status = intent_pending` and
+    `stripe_idempotency_key = pi:<reservationId>`, and commits, so `bookingId` exists **before**
+    Stripe is called; **step 2** creates the PaymentIntent outside any transaction: amount =
+    reservation `price_cents`, currency EUR, charged on the **platform** account — Stripe
+    "separate charges and transfers" funds flow, so **no** `transfer_data` and **no**
+    `application_fee_amount`; the platform fee from the `@eleva/billing` commission SSOT is
+    stored in the ledger as `booking_payments.application_fee_cents` and the payout engine
+    (Phase 6) later transfers `amount - fee` to the expert; `transfer_group = bookingId` (the
+    same id the payout engine uses later), `automatic_payment_methods`, metadata
+    `reservationId`, `bookingId`, `expertOrgId`; **step 3 (tx B)** writes the intent id to
+    `booking_payments` (status `requires_payment`) and
+    `slot_reservations.stripe_payment_intent_id`. If step 2 times out or step 3 fails, the row
+    stays `intent_pending`; the next call for the same reservation (and the
+    `slot-reservation-expiry` sweep) re-issues the **same** idempotency key, so Stripe returns
+    the existing intent instead of creating an orphan, and the sweep finalizes or cancels it —
+    no PaymentIntent can exist without a `booking_payments` row that owns its idempotency key.
+    Pending bookings whose reservation expires are set to `cancelled` by the existing
+    `slot-reservation-expiry` workflow (which also cancels a still-cancelable intent).
+    Destination charges are rejected because payouts are delayed until eligibility (Phase 6).
   - Confirmation is one domain function, `confirmBookingPayment({ reservationId,
 paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry points that
     never share a route**: (a) the Stripe webhook handler for `payment_intent.succeeded`
@@ -66,11 +77,17 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
     already bound to a _different_ reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
     audited. Idempotent for the same reservation: webhook and client-return both call the same
     domain function, so a retry whose intent is already bound to this reservation returns the
-    existing booking (200) instead of failing; the bind + status flip runs in one transaction and
+    existing booking (200, `alreadyConfirmed: true`; first confirmation 201) instead of failing; the bind + status flip runs in one transaction and
     a unique-violation race is caught and resolved by re-reading the existing booking; only then
-    moves the pending booking to `confirmed` (and the reservation to `converted`); guest ->
-    Better Auth user created with
-    `emailVerified=false` + magic link activation; member's personal Space is the buyer org).
+    moves the pending booking to `confirmed` (and the reservation to `converted`). Guest
+    activation is **not** in that transaction: the commit also inserts a
+    `domain_events_outbox` row `booking.guest_activation_required` (idempotency key
+    `booking:<id>:guest-activation`), and the subscriber creates the Better Auth user with
+    `emailVerified=false`, sends the magic-link activation and links the booking to the new
+    member's personal Space (buyer org) with retries — a Better Auth or e-mail outage can never
+    leave a paid, confirmed booking without an activation path. Until Phase 8 ships the
+    publisher, Phase 4 ships the outbox table + a minimal QStash-triggered publisher for this one
+    event, which Phases 7 and 8 extend with their own event types and subscribers.)
   - `POST /bookings/[id]/cancel`, `POST /bookings/[id]/reschedule` with rules from
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
 - `packages/db`: `bookings` finalize fields (`status` enum, `guest_email`, `buyer_org_id`,
@@ -211,7 +228,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 4 TASK — Public marketplace and booking funnel with payment.
@@ -237,7 +255,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    (Europe/Lisbon 2026-03-29 and 2026-10-25), override closes a day, buffer prevents adjacent
    slot, viewer in America/Sao_Paulo sees converted times.
 3. apps/api routes (Zod bodies/queries, OpenAPI registration, rate limit, requireApiAuth optional
-   for public GETs, BotID on all POSTs): GET /public/experts (filters category, language, minPrice,
+   for public GETs, BotID on every browser-originated public POST — /webhooks/stripe is exempt
+   because it is authenticated by Stripe signature verification, see acceptance criteria): GET
+   /public/experts (filters category, language, minPrice,
    maxPrice, availableWithinDays, sort relevance|price|rating; cursor pagination; use cache with
    cacheTag("public-experts") revalidated by profile/event-type mutations), GET /public/experts/
    [username], GET /public/experts/[username]/event-types/[slug]/slots?from&to&tz. Reserved
@@ -254,27 +274,38 @@ PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name} or session; calls reserveSlot with 5-min
    TTL; generates a 32-byte random reservationToken and persists only sha256(token) in a new
    slot_reservations.capability_hash column (migration in @eleva/db; also add nullable user_id set
-   from the session when signed in, and nullable unique stripe_payment_intent_id); returns
+   from the session when signed in, nullable unique stripe_payment_intent_id, and price_cents +
+   currency snapshotted from the event type at reserve time — the single immutable amount for the
+   booking row, the PaymentIntent, the fee and the confirmation checks; a later event-type price
+   change never touches an existing reservation — test it); returns
    { reservationId, reservationToken, expiresAt }; 409 on conflict; never log the token or place it
    in a URL; the existing hold_token stays internal to the Redis lock and is never returned),
    POST /payments/intent ({ reservationId, reservationToken }) — first authorize:
    sha256(reservationToken) must equal capability_hash AND, if slot_reservations.user_id is set,
    the session userId must equal it; any failure -> 404 (not 403). One intent per reservation via
-   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. In one
-   transaction: insert the bookings row with status pending_payment (reservation_id, expert_org_id,
-   event_type_id, start_at/end_at, timezone, price_cents, currency copied from the reservation) so
-   bookingId exists before the intent, then create the Stripe PaymentIntent via @eleva/billing:
-   amount from event type,
+   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. NEVER
+   call Stripe inside a database transaction — use the two-step reconcilable sequence: tx A
+   inserts the bookings row with status pending_payment (reservation_id, expert_org_id,
+   event_type_id, start_at/end_at, timezone, price_cents, currency copied from the reservation
+   snapshot) and a booking_payments row with status intent_pending and stripe_idempotency_key =
+   "pi:" + reservationId, then COMMITS so bookingId exists before Stripe is called; step 2 (no
+   transaction) creates the Stripe PaymentIntent via @eleva/billing with that idempotency key:
+   amount = reservation price_cents,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
    applied_commission_bps, transfer_group = bookingId (the pending booking id), metadata
-   { reservationId, bookingId, expertOrgId }, idempotencyKey = reservationId; persist the intent id
-   in booking_payments (status requires_payment) and slot_reservations.stripe_payment_intent_id in
-   the same transaction; the existing slot-reservation-expiry workflow must also cancel
-   pending_payment bookings whose reservation expired (and cancel the intent if still cancelable).
+   { reservationId, bookingId, expertOrgId }; tx B persists the intent id in booking_payments
+   (status requires_payment) and slot_reservations.stripe_payment_intent_id. If step 2 times out
+   or tx B fails the row stays intent_pending and the next call for the same reservation re-sends
+   the SAME idempotency key so Stripe returns the existing intent (no orphan); the existing
+   slot-reservation-expiry workflow must reconcile intent_pending rows (retrieve by idempotency
+   key via a Stripe search on metadata.reservationId; finalize or cancel) and cancel
+   pending_payment bookings whose reservation expired (cancelling the intent if still cancelable).
+   Tests: Stripe timeout after creation -> retry returns the same intent id and tx B completes;
+   tx B failure -> sweep finalizes; no row -> no intent.
    Confirmation: implement confirmBookingPayment({ reservationId, paymentIntentId }) in
    @eleva/scheduling and expose it through TWO entry points that do not share a route: (a) the
    /webhooks/stripe handler for payment_intent.succeeded calls it after constructEvent signature
@@ -287,23 +318,35 @@ PR 04.2 — funnel + payment + marketing/legal:
    booking_payments.stripe_payment_intent_id); any mismatch -> 409 PAYMENT_MISMATCH (audited) so a
    valid intent cannot be replayed against another reservation. Same-reservation retries are
    idempotent: if booking_payments already holds this intent for this reservationId and the
-   booking is confirmed, return it with 200 (both entry points reach the same function, and Stripe
-   redelivers webhooks). Do the bind + pending_payment -> confirmed flip (and reservation ->
+   booking is confirmed, return it with 200 and `alreadyConfirmed: true` (first confirmation returns
+   201; both entry points reach the same function, and Stripe redelivers webhooks). Do the bind + pending_payment -> confirmed flip (and reservation ->
    converted) in a single transaction; on a unique-violation race (two concurrent confirms for the same
    reservation) catch the constraint error, re-read the booking and return it — never surface the
    constraint error. Test: sequential double confirm -> 200/200 same bookingId; concurrent double
    confirm -> both 200, one booking row; confirm with an intent bound to another reservation ->
-   409; POST /bookings/confirm without reservationToken -> 400 from Zod. After the flip,
-   create the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for
-   passwordless: use magicLink sendMagicLink with a callback to /account/activate) and links the
-   booking to the member's personal Space; POST /bookings/[id]/cancel and /reschedule enforcing
+   409; POST /bookings/confirm without reservationToken -> 400 from Zod. Guest activation is
+   durable, not inline: in the same transaction as the flip insert a domain_events_outbox row
+   booking.guest_activation_required (idempotency key booking:<id>:guest-activation). This phase
+   OWNS the transactional outbox that Phases 7 and 8 later extend: migration domain_events_outbox
+   (id, type, payload jsonb, idempotency_key unique, created_at, published_at nullable, attempts),
+   emitDomainEvent(tx, event) in packages/workflows/src/domain-events.ts (typed union of event
+   names + payloads, starting with booking.guest_activation_required; INSERT inside the caller's
+   Drizzle transaction, never from after() alone), and POST /workflows/domain-events-publisher
+   (QStash Receiver.verify, scheduled every minute and kicked best-effort from after() after
+   commit; selects unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry,
+   sets published_at, increments attempts, dead-letters after 10); the subscriber creates the guest's Better Auth user if missing
+   (auth.api.signUpEmail is not appropriate for passwordless: use magicLink sendMagicLink with a
+   callback to /account/activate) and links the booking to the member's personal Space —
+   idempotent on user email + booking id. Test: subscriber failure -> booking stays confirmed,
+   outbox row retried, single user created after 3 attempts. POST /bookings/[id]/cancel and /reschedule enforcing
    scheduling-booking-spec.md rules (member cancel >= 24h full refund; < 24h per policy; expert
    cancel always 100% refund). Refund execution itself is Phase 6 — here only record the intent
    (booking_payments.status = refund_pending) and emit audit. Also handle
    payment_intent.succeeded / payment_intent.payment_failed in packages/billing/src/server/
    webhook.ts to confirm/fail the booking (two-file contract: also add the events to
-   infra/stripe/setup-webhooks.ts and re-run pnpm stripe:setup:webhooks -- --url <url> --apply
-   on staging).
+   infra/stripe/setup-webhooks.ts and re-run
+   pnpm stripe:setup:webhooks -- --url "https://api.dev.eleva.care/webhooks/stripe" --apply
+   against the staging Stripe account; production is re-run in Phase 15).
 6. apps/web /[locale]/[username]/[eventSlug]: 4-step funnel (SlotPicker with month/week view and
    TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy and
    health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const; Phase 5 owns the

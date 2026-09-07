@@ -104,7 +104,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
 secrets, ids of live customers, or PHI into the repo; evidence files (screenshots, logs, exports
 attached to the PR) must be redacted; any script that can touch production data must carry the

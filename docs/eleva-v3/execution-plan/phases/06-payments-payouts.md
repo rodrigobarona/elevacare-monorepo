@@ -40,7 +40,11 @@ In:
 - **Payout engine** (port from MVP `process-expert-transfers`, `process-pending-payouts`,
   `check-upcoming-payouts`, `transfer-utils.ts`): `payout_states` table (booking_payment_id,
   status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed`,
-  `eligible_at`, `scheduled_for`, `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
+  `eligible_at`, `scheduled_for`, `destination_org_id` + `destination_connect_account_id`
+  (immutable snapshot written when the row is created — the expert's org/account in this phase;
+  Phase 11 writes the clinic's when `payout_mode = clinic`; transfers, refunds, reconciliation
+  and retries read **only** this snapshot, never the current profile settings),
+  `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
   `stripe_payout_id`, `hold_reason`, `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
   `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
@@ -181,7 +185,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 6 TASK — Make Stripe Connect smooth and build the payout engine.
@@ -211,7 +216,11 @@ PR 06.1 — Connect onboarding hardening:
    booking_payments.applied_commission_bps at intent creation (update Phase 4 route). Tests.
 
 PR 06.2 — payout engine, refunds, disputes, finance UI:
-5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, status enum
+5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, destination_org_id
+   not null, destination_connect_account_id not null — both snapshotted when the row is created
+   and never updated (DB trigger or CHECK via an immutable-columns helper + unit test); this phase
+   writes the expert's org/account, Phase 11 writes the clinic's for payout_mode clinic; transfer,
+   refund/reversal, reconciliation and retry code read only the snapshot — status enum
    pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
    scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
    stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
@@ -223,7 +232,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    tests for DST); schedulePayout(bookingPaymentId) (approval_required when: first payout of the
    account, amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS env (default 50000; inclusive — add a
    unit test at exactly the threshold), open dispute, manual hold); executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
-   destination, transfer_group: bookingId, source_transaction: chargeId, metadata },
+   destination: payoutState.destination_connect_account_id, transfer_group: bookingId,
+   source_transaction: chargeId, metadata },
    { idempotencyKey: payoutState.transfer_idempotency_key }) — a UUID column written once when
    the row enters scheduled and reused on every retry (Stripe returns the original transfer for
    the same key), so a lost response can never produce a second transfer; a new key is only

@@ -126,7 +126,8 @@ file for the current UTC day.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
-2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6, 7 (universal preamble this
+   prompt follows) and 8 (PR body template used below), and
    docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
    docs/eleva-v3/operator-tasks/cutover-runbook.md and docs/eleva-v3/launch-readiness-checklist.md.
 3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
@@ -151,7 +152,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
 secrets, ids of live customers, or PHI into the repo; evidence files must be redacted.
 
@@ -196,10 +198,14 @@ C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutov
    Rollback criteria: P1 > 30 min, payment success < 95%, auth error rate > 5%, data
    inconsistency. Rollback procedure (rehearsed on staging before C starts; written in
    cutover-runbook.md section "Rollback"): (1) freeze v3 writes (ff.booking_enabled=false,
-   apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export every
-   v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
-   notifications_outbox, users created via magic link) with pnpm migration:reverse-export
-   --since "$CUTOVER_TS" to a signed JSON file; (3) reconcile against Stripe as the source of truth
+   apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export the
+   COMPLETE post-cutover mutation set — every v3 row created OR updated since cutover across all
+   tenant tables (bookings, booking_payments, payout_states, invoices, domain_events_outbox,
+   notifications, consents, profiles, users created via magic link ...), plus soft-deletes and
+   hard deletes reconstructed from audit_events, each tagged insert|update|delete — with
+   pnpm migration:reverse-export --since "$CUTOVER_TS" to a signed JSON file, and replay it into
+   the MVP idempotently by the id map (upsert / delete-or-tombstone; a second replay is a no-op)
+   so a pre-cutover booking cancelled or rescheduled in v3 is never restored stale; (3) reconcile against Stripe as the source of truth
    for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
    booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
    MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a

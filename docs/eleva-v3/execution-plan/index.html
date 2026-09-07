@@ -540,7 +540,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.</code></pre></div>
 <h2 id="readme--8-pr-body-template"><a class="anchor" href="#readme--8-pr-body-template" aria-label="Link to section">#</a>8. PR body template</h2>
 <pre><code class="language-markdown">## Phase NN — &lt;title&gt;
@@ -780,7 +781,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 0 TASK — Execution plan + CodeRabbit CLI review loop
@@ -1004,7 +1006,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 1 TASK — Re-baseline docs, rules, and CI for the Better Auth / Daily / envelope-encryption
@@ -1034,7 +1037,10 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
    - ADR-019-mvp-migration-and-cutover.md: migrate live MVP data (Neon) into v3 with idempotent
      dry-run-first scripts in infra/migration; same Stripe platform account (Connect accounts,
      customers, subscriptions carried over); passwords cannot leave WorkOS -&gt; magic-link/set-
-     password welcome campaign; Google accounts auto-linked by verified email; WorkOS Vault
+     password welcome campaign; Google accounts are linked ONLY from the WorkOS identity subject
+     (idp_id) exported while WorkOS is live, never by e-mail matching; users without a stored
+     subject sign in with the magic link and link Google through Better Auth accountLinking
+     (trustedProviders [&quot;google&quot;], verified e-mail required); WorkOS Vault
      records decrypted before WorkOS cancellation and re-encrypted with @eleva/encryption; URL
      compatibility for /[username] and /[username]/[eventSlug]; DNS switch with rollback = DNS
      revert + MVP unfreeze.
@@ -1104,9 +1110,12 @@ E. CI foundations.
      RLS isolation vitest in packages/db (create packages/db/src/__tests__/rls-isolation.test.ts
      if missing: two orgs, cross-org read returns zero rows under withOrgContext). Add a job that
      deletes the branch on pull_request closed (neondatabase/delete-branch-action).
-   - scripts/check-i18n-parity.mjs: for every apps/*/messages directory compare key sets of
-     pt.json, en.json, es.json (and pt-BR.json when present); exit 1 on missing keys; add root
-     script check:i18n-parity and a CI job.
+   - scripts/check-i18n-parity.mjs: for every apps/*/messages directory read the app&#39;s
+     required-locale list from packages/config/src/i18n-locales.ts (REQUIRED_LOCALES_BY_APP:
+     default [&quot;pt&quot;,&quot;en&quot;,&quot;es&quot;]; apps/admin [&quot;pt&quot;,&quot;en&quot;] per the decision-log staff-only exception —
+     the checker never hardcodes the list) and compare the key sets of those locale files (plus
+     pt-BR.json when present); exit 1 on missing keys; add root script check:i18n-parity and a CI
+     job; unit test: an app with es.json missing fails unless its list omits es.
    - Update ci.yml comments (remove the &quot;placeholder jobs&quot; block) and contribution-workflow.md
      required checks list.
 
@@ -1232,7 +1241,8 @@ membership/onboarding routes, OpenAPI merge.</li>
 <li><code>apps/account</code> auth pages + settings security section; <code>packages/dashboard</code> cleanup.</li>
 <li><code>e2e/auth.spec.ts</code>.</li>
 <li><code>.env.example</code>, <code>turbo.json</code>, Vercel project env docs (<code>environment-matrix.md</code>): <code>BETTER_AUTH_SECRET</code>,
-<code>BETTER_AUTH_URL</code>, <code>GOOGLE_OAUTH_*</code>.</li>
+<code>BETTER_AUTH_URL</code>, <code>ELEVA_COOKIE_DOMAIN</code>, <code>ELEVA_TRUSTED_ORIGINS</code>, <code>GOOGLE_OAUTH_CLIENT_ID/SECRET</code>,
+<code>MICROSOFT_OAUTH_CLIENT_ID/SECRET</code>, <code>PASSKEY_RP_ID</code>, <code>PASSKEY_ORIGIN</code>.</li>
 </ol>
 <h2 id="02-better-auth-foundation--acceptance-criteria"><a class="anchor" href="#02-better-auth-foundation--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <ul>
@@ -1330,7 +1340,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 2 TASK — Stand up self-hosted Better Auth as the identity system (ADR-017, ADR-021).
@@ -1497,9 +1508,13 @@ can be cancelled after the Phase 14 record export.</p>
 in Phase 2); ciphertext format <code>v1:&lt;kek_v&gt;:&lt;dek_v&gt;:&lt;iv&gt;:&lt;tag&gt;:&lt;data&gt;</code>; delete <code>vault.ts</code>,
 <code>client.ts</code> (WorkOS), <code>tokens.ts</code> if it wraps Vault; keep a <code>records.ts</code> helper API for PHI
 fields (<code>encryptRecordFields</code>, <code>decryptRecordFields</code>).</li>
-<li><code>@eleva/calendar</code> <code>credential-manager.ts</code>: get access tokens with
-<code>auth.api.getAccessToken({ providerId, accountId, userId })</code> (Better Auth auto-refreshes), start
-scope upgrades with <code>linkSocial({ provider, scopes })</code> from the expert integrations UI; Google
+<li><code>@eleva/auth</code> exports <code>getProviderAccessToken({ providerId, accountId, userId })</code> (wraps
+<code>auth.api.getAccessToken</code>, Better Auth auto-refreshes) — the <strong>only</strong> place the Better Auth
+token API is called, so the <code>better-auth</code>-only-in-<code>packages/auth</code> boundary holds.
+<code>@eleva/calendar</code> <code>credential-manager.ts</code> receives that function by injection
+(<code>createCredentialManager({ getProviderAccessToken })</code>) and never imports <code>better-auth</code>; scope
+upgrades start with the <code>@eleva/auth/client</code> <code>linkSocial({ provider, scopes })</code> wrapper from
+the expert integrations UI; Google
 scopes <code>calendar.readonly</code> + <code>calendar.events</code>; Microsoft <code>Calendars.ReadWrite</code>; store the
 Better Auth <code>account.id</code> on <code>expert_integrations</code> (replace <code>workos_user_id</code>).</li>
 <li><code>packages/workflows/src/scheduling/calendar-event-sync.ts</code> uses the new credential manager.</li>
@@ -1628,7 +1643,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
@@ -1659,11 +1675,17 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    - Delete vault.ts, client.ts, tokens.ts (if Vault-backed) and their tests; README rewritten.
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
      readable, shred makes it unreadable, KEK missing -&gt; clear error.
-2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth. getProviderToken
-   ({ userId, provider, accountId }) -&gt; auth.api.getAccessToken({ providerId: provider, accountId,
-   userId }) (auto refresh) where accountId = expert_integrations.auth_account_id — always pass it
-   so a user with several linked accounts for the same provider gets the calendar they connected;
-   expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
+2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth WITHOUT importing
+   better-auth in packages/calendar (boundary: better-auth only in packages/auth). Add to
+   @eleva/auth: getProviderAccessToken({ providerId, accountId, userId }) wrapping
+   auth.api.getAccessToken (auto refresh) — the single call site of that API. In @eleva/calendar
+   export createCredentialManager({ getProviderAccessToken }) (dependency injection; apps/api and
+   @eleva/workflows construct it with the @eleva/auth function) whose getProviderToken
+   ({ userId, provider, accountId }) delegates to it with accountId =
+   expert_integrations.auth_account_id — always pass it so a user with several linked accounts
+   for the same provider gets the calendar they connected; unit tests use a fake
+   getProviderAccessToken. Expose startScopeUpgradeUrl(provider) from @eleva/auth/client for the
+   UI (linkSocial with calendar scopes:
    google https://www.googleapis.com/auth/calendar.readonly + calendar.events; microsoft
    Calendars.ReadWrite offline_access). expert_integrations: replace workos_user_id with
    auth_account_id (FK auth.account.id); migration in packages/db. Update adapters only where they
@@ -1742,7 +1764,7 @@ Vercel env var changes required.</code></pre></div>
 </tr>
 <tr>
 <td>Touches</td>
-<td><code>apps/web/**</code>, <code>apps/api/src/app/{public,bookings,payments}/**</code>, <code>packages/scheduling/**</code>, <code>packages/billing/src/server/{payments,commission}.ts</code>, <code>packages/db/src/schema/main/{bookings,booking-payments}.ts</code>, <code>packages/api-client/**</code>, <code>packages/ui/**</code> (booking components), <code>packages/config/src/reserved-usernames.ts</code></td>
+<td><code>apps/web/**</code>, <code>apps/api/src/app/{public,bookings,payments}/**</code>, <code>packages/scheduling/**</code>, <code>packages/billing/src/server/{payments,commission}.ts</code>, <code>packages/workflows/src/domain-events.ts</code>, <code>apps/api/src/app/workflows/domain-events-publisher/**</code>, <code>packages/db/src/schema/main/domain-events-outbox.ts</code>, <code>packages/db/src/schema/main/{bookings,booking-payments}.ts</code>, <code>packages/api-client/**</code>, <code>packages/ui/**</code> (booking components), <code>packages/config/src/reserved-usernames.ts</code></td>
 </tr>
 <tr>
 <td>Exit gate</td>
@@ -1768,28 +1790,39 @@ external busy-time cache from calendar adapters; 5-minute cache).</li>
 only <code>sha256(token)</code> is persisted in a new <code>slot_reservations.capability_hash</code> column, next
 to a new nullable <code>slot_reservations.user_id</code> set when the caller is signed in. It is the
 capability every later step must present; never logged, never placed in a URL. The existing
-<code>hold_token</code> column stays as the Redis lock owner and is <strong>not</strong> exposed to clients).</li>
+<code>hold_token</code> column stays as the Redis lock owner and is <strong>not</strong> exposed to clients. The
+reservation also snapshots the price once — new <code>slot_reservations.price_cents</code> +
+<code>currency</code> copied from the event type at reserve time — and that snapshot is the <strong>only</strong>
+amount used by the booking row, the PaymentIntent, the fee computation and the confirmation
+checks; an expert changing the event-type price after a reservation never affects it).</li>
 <li><code>POST /payments/intent</code> (body <code>{ reservationId, reservationToken }</code>; the route resolves the
 reservation, requires <code>sha256(reservationToken) = capability_hash</code> <strong>and</strong>, when
 <code>slot_reservations.user_id</code> is set, the session <code>userId</code> to equal it — otherwise 404 (not
 403, to avoid confirming the id exists); one PaymentIntent per reservation (new unique
-nullable <code>slot_reservations.stripe_payment_intent_id</code>, idempotency key = reservationId, so a
-race returns the same intent). Inside one transaction it first creates the durable booking
-identity — a <code>bookings</code> row with <code>status = pending_payment</code>, <code>reservation_id</code>, expert org,
-event type, times and price copied from the reservation — so <code>bookingId</code> exists <strong>before</strong>
-the intent; then creates the PaymentIntent: amount from event type
-price, currency EUR, charged on the <strong>platform</strong> account — Stripe &quot;separate charges and
-transfers&quot; funds flow, so <strong>no</strong> <code>transfer_data</code> and <strong>no</strong> <code>application_fee_amount</code>; the
-platform fee from the <code>@eleva/billing</code> commission SSOT is stored in the ledger as
-<code>booking_payments.application_fee_cents</code> and the payout engine (Phase 6) later transfers
-<code>amount - fee</code> to the expert; <code>transfer_group = bookingId</code> (the pending booking&#39;s id, which
-is the same id the payout engine uses later), <code>automatic_payment_methods</code>, metadata
-<code>reservationId</code>, <code>bookingId</code>, <code>expertOrgId</code>; idempotency key = reservationId; the intent id
-is written to <code>booking_payments</code> (status <code>requires_payment</code>) and
-<code>slot_reservations.stripe_payment_intent_id</code> in that same transaction. Pending bookings whose
-reservation expires are set to <code>cancelled</code> by the existing <code>slot-reservation-expiry</code>
-workflow. Destination charges are rejected because payouts are delayed until eligibility
-(Phase 6).</li>
+nullable <code>slot_reservations.stripe_payment_intent_id</code>, Stripe idempotency key =
+<code>pi:&lt;reservationId&gt;</code>, so a race returns the same intent). The Stripe call is <strong>never inside a
+database transaction</strong> — it is a two-step, reconcilable sequence: <strong>step 1 (tx A)</strong> creates
+the durable booking identity — a <code>bookings</code> row with <code>status = pending_payment</code>,
+<code>reservation_id</code>, expert org, event type, times, <code>price_cents</code>/<code>currency</code> copied from the
+reservation snapshot — plus a <code>booking_payments</code> row with <code>status = intent_pending</code> and
+<code>stripe_idempotency_key = pi:&lt;reservationId&gt;</code>, and commits, so <code>bookingId</code> exists <strong>before</strong>
+Stripe is called; <strong>step 2</strong> creates the PaymentIntent outside any transaction: amount =
+reservation <code>price_cents</code>, currency EUR, charged on the <strong>platform</strong> account — Stripe
+&quot;separate charges and transfers&quot; funds flow, so <strong>no</strong> <code>transfer_data</code> and <strong>no</strong>
+<code>application_fee_amount</code>; the platform fee from the <code>@eleva/billing</code> commission SSOT is
+stored in the ledger as <code>booking_payments.application_fee_cents</code> and the payout engine
+(Phase 6) later transfers <code>amount - fee</code> to the expert; <code>transfer_group = bookingId</code> (the
+same id the payout engine uses later), <code>automatic_payment_methods</code>, metadata
+<code>reservationId</code>, <code>bookingId</code>, <code>expertOrgId</code>; <strong>step 3 (tx B)</strong> writes the intent id to
+<code>booking_payments</code> (status <code>requires_payment</code>) and
+<code>slot_reservations.stripe_payment_intent_id</code>. If step 2 times out or step 3 fails, the row
+stays <code>intent_pending</code>; the next call for the same reservation (and the
+<code>slot-reservation-expiry</code> sweep) re-issues the <strong>same</strong> idempotency key, so Stripe returns
+the existing intent instead of creating an orphan, and the sweep finalizes or cancels it —
+no PaymentIntent can exist without a <code>booking_payments</code> row that owns its idempotency key.
+Pending bookings whose reservation expires are set to <code>cancelled</code> by the existing
+<code>slot-reservation-expiry</code> workflow (which also cancels a still-cancelable intent).
+Destination charges are rejected because payouts are delayed until eligibility (Phase 6).</li>
 <li>Confirmation is one domain function, <code>confirmBookingPayment({ reservationId, paymentIntentId })</code> in <code>@eleva/scheduling</code>, reached by <strong>two separate entry points that
 never share a route</strong>: (a) the Stripe webhook handler for <code>payment_intent.succeeded</code>
 (<code>/webhooks/stripe</code>, trusted only after <code>constructEvent</code> signature verification, takes ids
@@ -1803,11 +1836,17 @@ Stripe and require <code>status = succeeded</code>, <code>metadata.reservationId
 already bound to a <em>different</em> reservation (unique) — any mismatch -&gt; 409 <code>PAYMENT_MISMATCH</code>,
 audited. Idempotent for the same reservation: webhook and client-return both call the same
 domain function, so a retry whose intent is already bound to this reservation returns the
-existing booking (200) instead of failing; the bind + status flip runs in one transaction and
+existing booking (200, <code>alreadyConfirmed: true</code>; first confirmation 201) instead of failing; the bind + status flip runs in one transaction and
 a unique-violation race is caught and resolved by re-reading the existing booking; only then
-moves the pending booking to <code>confirmed</code> (and the reservation to <code>converted</code>); guest -&gt;
-Better Auth user created with
-<code>emailVerified=false</code> + magic link activation; member&#39;s personal Space is the buyer org).</li>
+moves the pending booking to <code>confirmed</code> (and the reservation to <code>converted</code>). Guest
+activation is <strong>not</strong> in that transaction: the commit also inserts a
+<code>domain_events_outbox</code> row <code>booking.guest_activation_required</code> (idempotency key
+<code>booking:&lt;id&gt;:guest-activation</code>), and the subscriber creates the Better Auth user with
+<code>emailVerified=false</code>, sends the magic-link activation and links the booking to the new
+member&#39;s personal Space (buyer org) with retries — a Better Auth or e-mail outage can never
+leave a paid, confirmed booking without an activation path. Until Phase 8 ships the
+publisher, Phase 4 ships the outbox table + a minimal QStash-triggered publisher for this one
+event, which Phases 7 and 8 extend with their own event types and subscribers.)</li>
 <li><code>POST /bookings/[id]/cancel</code>, <code>POST /bookings/[id]/reschedule</code> with rules from
 <code>scheduling-booking-spec.md</code> (notice windows, 100% refund on expert conflict).</li>
 </ul>
@@ -1949,7 +1988,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 4 TASK — Public marketplace and booking funnel with payment.
@@ -1975,7 +2015,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    (Europe/Lisbon 2026-03-29 and 2026-10-25), override closes a day, buffer prevents adjacent
    slot, viewer in America/Sao_Paulo sees converted times.
 3. apps/api routes (Zod bodies/queries, OpenAPI registration, rate limit, requireApiAuth optional
-   for public GETs, BotID on all POSTs): GET /public/experts (filters category, language, minPrice,
+   for public GETs, BotID on every browser-originated public POST — /webhooks/stripe is exempt
+   because it is authenticated by Stripe signature verification, see acceptance criteria): GET
+   /public/experts (filters category, language, minPrice,
    maxPrice, availableWithinDays, sort relevance|price|rating; cursor pagination; use cache with
    cacheTag(&quot;public-experts&quot;) revalidated by profile/event-type mutations), GET /public/experts/
    [username], GET /public/experts/[username]/event-types/[slug]/slots?from&amp;to&amp;tz. Reserved
@@ -1992,27 +2034,38 @@ PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name} or session; calls reserveSlot with 5-min
    TTL; generates a 32-byte random reservationToken and persists only sha256(token) in a new
    slot_reservations.capability_hash column (migration in @eleva/db; also add nullable user_id set
-   from the session when signed in, and nullable unique stripe_payment_intent_id); returns
+   from the session when signed in, nullable unique stripe_payment_intent_id, and price_cents +
+   currency snapshotted from the event type at reserve time — the single immutable amount for the
+   booking row, the PaymentIntent, the fee and the confirmation checks; a later event-type price
+   change never touches an existing reservation — test it); returns
    { reservationId, reservationToken, expiresAt }; 409 on conflict; never log the token or place it
    in a URL; the existing hold_token stays internal to the Redis lock and is never returned),
    POST /payments/intent ({ reservationId, reservationToken }) — first authorize:
    sha256(reservationToken) must equal capability_hash AND, if slot_reservations.user_id is set,
    the session userId must equal it; any failure -&gt; 404 (not 403). One intent per reservation via
-   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. In one
-   transaction: insert the bookings row with status pending_payment (reservation_id, expert_org_id,
-   event_type_id, start_at/end_at, timezone, price_cents, currency copied from the reservation) so
-   bookingId exists before the intent, then create the Stripe PaymentIntent via @eleva/billing:
-   amount from event type,
+   the unique stripe_payment_intent_id, so a concurrent duplicate returns the same intent. NEVER
+   call Stripe inside a database transaction — use the two-step reconcilable sequence: tx A
+   inserts the bookings row with status pending_payment (reservation_id, expert_org_id,
+   event_type_id, start_at/end_at, timezone, price_cents, currency copied from the reservation
+   snapshot) and a booking_payments row with status intent_pending and stripe_idempotency_key =
+   &quot;pi:&quot; + reservationId, then COMMITS so bookingId exists before Stripe is called; step 2 (no
+   transaction) creates the Stripe PaymentIntent via @eleva/billing with that idempotency key:
+   amount = reservation price_cents,
    currency EUR, automatic_payment_methods enabled (never hardcode payment_method_types),
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
    it the single function used everywhere) and stored as booking_payments.application_fee_cents +
    applied_commission_bps, transfer_group = bookingId (the pending booking id), metadata
-   { reservationId, bookingId, expertOrgId }, idempotencyKey = reservationId; persist the intent id
-   in booking_payments (status requires_payment) and slot_reservations.stripe_payment_intent_id in
-   the same transaction; the existing slot-reservation-expiry workflow must also cancel
-   pending_payment bookings whose reservation expired (and cancel the intent if still cancelable).
+   { reservationId, bookingId, expertOrgId }; tx B persists the intent id in booking_payments
+   (status requires_payment) and slot_reservations.stripe_payment_intent_id. If step 2 times out
+   or tx B fails the row stays intent_pending and the next call for the same reservation re-sends
+   the SAME idempotency key so Stripe returns the existing intent (no orphan); the existing
+   slot-reservation-expiry workflow must reconcile intent_pending rows (retrieve by idempotency
+   key via a Stripe search on metadata.reservationId; finalize or cancel) and cancel
+   pending_payment bookings whose reservation expired (cancelling the intent if still cancelable).
+   Tests: Stripe timeout after creation -&gt; retry returns the same intent id and tx B completes;
+   tx B failure -&gt; sweep finalizes; no row -&gt; no intent.
    Confirmation: implement confirmBookingPayment({ reservationId, paymentIntentId }) in
    @eleva/scheduling and expose it through TWO entry points that do not share a route: (a) the
    /webhooks/stripe handler for payment_intent.succeeded calls it after constructEvent signature
@@ -2025,23 +2078,35 @@ PR 04.2 — funnel + payment + marketing/legal:
    booking_payments.stripe_payment_intent_id); any mismatch -&gt; 409 PAYMENT_MISMATCH (audited) so a
    valid intent cannot be replayed against another reservation. Same-reservation retries are
    idempotent: if booking_payments already holds this intent for this reservationId and the
-   booking is confirmed, return it with 200 (both entry points reach the same function, and Stripe
-   redelivers webhooks). Do the bind + pending_payment -&gt; confirmed flip (and reservation -&gt;
+   booking is confirmed, return it with 200 and `alreadyConfirmed: true` (first confirmation returns
+   201; both entry points reach the same function, and Stripe redelivers webhooks). Do the bind + pending_payment -&gt; confirmed flip (and reservation -&gt;
    converted) in a single transaction; on a unique-violation race (two concurrent confirms for the same
    reservation) catch the constraint error, re-read the booking and return it — never surface the
    constraint error. Test: sequential double confirm -&gt; 200/200 same bookingId; concurrent double
    confirm -&gt; both 200, one booking row; confirm with an intent bound to another reservation -&gt;
-   409; POST /bookings/confirm without reservationToken -&gt; 400 from Zod. After the flip,
-   create the guest&#39;s Better Auth user if missing (auth.api.signUpEmail is not appropriate for
-   passwordless: use magicLink sendMagicLink with a callback to /account/activate) and links the
-   booking to the member&#39;s personal Space; POST /bookings/[id]/cancel and /reschedule enforcing
+   409; POST /bookings/confirm without reservationToken -&gt; 400 from Zod. Guest activation is
+   durable, not inline: in the same transaction as the flip insert a domain_events_outbox row
+   booking.guest_activation_required (idempotency key booking:&lt;id&gt;:guest-activation). This phase
+   OWNS the transactional outbox that Phases 7 and 8 later extend: migration domain_events_outbox
+   (id, type, payload jsonb, idempotency_key unique, created_at, published_at nullable, attempts),
+   emitDomainEvent(tx, event) in packages/workflows/src/domain-events.ts (typed union of event
+   names + payloads, starting with booking.guest_activation_required; INSERT inside the caller&#39;s
+   Drizzle transaction, never from after() alone), and POST /workflows/domain-events-publisher
+   (QStash Receiver.verify, scheduled every minute and kicked best-effort from after() after
+   commit; selects unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry,
+   sets published_at, increments attempts, dead-letters after 10); the subscriber creates the guest&#39;s Better Auth user if missing
+   (auth.api.signUpEmail is not appropriate for passwordless: use magicLink sendMagicLink with a
+   callback to /account/activate) and links the booking to the member&#39;s personal Space —
+   idempotent on user email + booking id. Test: subscriber failure -&gt; booking stays confirmed,
+   outbox row retried, single user created after 3 attempts. POST /bookings/[id]/cancel and /reschedule enforcing
    scheduling-booking-spec.md rules (member cancel &gt;= 24h full refund; &lt; 24h per policy; expert
    cancel always 100% refund). Refund execution itself is Phase 6 — here only record the intent
    (booking_payments.status = refund_pending) and emit audit. Also handle
    payment_intent.succeeded / payment_intent.payment_failed in packages/billing/src/server/
    webhook.ts to confirm/fail the booking (two-file contract: also add the events to
-   infra/stripe/setup-webhooks.ts and re-run pnpm stripe:setup:webhooks -- --url &lt;url&gt; --apply
-   on staging).
+   infra/stripe/setup-webhooks.ts and re-run
+   pnpm stripe:setup:webhooks -- --url &quot;https://api.dev.eleva.care/webhooks/stripe&quot; --apply
+   against the staging Stripe account; production is re-run in Phase 15).
 6. apps/web /[locale]/[username]/[eventSlug]: 4-step funnel (SlotPicker with month/week view and
    TimezoneSelect; details form with Zod + consent checkboxes for terms, privacy and
    health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const; Phase 5 owns the
@@ -2119,16 +2184,21 @@ quiet hours) stored in <code>notification_preferences</code> (consumed by Phase 
 <li><code>/privacy</code>: consents (view/withdraw), DSAR export request (creates <code>dsar_requests</code> row,
 handled by <code>@eleva/compliance</code> <code>dsarExport</code> job -&gt; private Blob zip + email link; 10-minute
 target from <code>data-retention-export-matrix.md</code>), account deletion request (soft-delete +
-scheduled crypto-shred per policy).</li>
+scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
+future bookings with 100% refund — see prompt deliverable 3).</li>
 </ul>
 </li>
 <li><code>apps/api</code>: <code>GET /me</code> (profile + preferences), <code>PATCH /me</code>, <code>GET /me/bookings</code>,
 <code>GET /me/payments</code>, <code>PUT /me/notification-preferences</code>, <code>POST /privacy/dsar</code>,
-<code>GET /privacy/dsar/[id]</code>, <code>POST /privacy/delete-account</code>; workflow route
-<code>POST /workflows/dsar-export</code> (QStash triggered).</li>
-<li><code>@eleva/compliance</code>: <code>dsarExport(userId)</code> collecting user, bookings, payments, consents,
-notifications (records in Phase 10 extend it), producing JSON + CSV zip in the private Blob
-store; <code>scheduleAccountDeletion(userId)</code>.</li>
+<code>GET /privacy/dsar/[id]</code>, <code>POST /privacy/delete-account</code>; workflow routes
+<code>POST /workflows/dsar-export</code> and <code>POST /workflows/account-deletion-sweep</code> (QStash triggered).</li>
+<li><code>@eleva/compliance</code>: <code>dsarExport(userId)</code> built on a <strong>collector registry</strong> — this phase
+registers user, bookings, payments, consents and notification preferences; later phases
+register their own collectors in their own PR (Phase 8 notifications + deliveries, Phase 10
+records) so the export is complete at every point of the plan without depending on tables
+that do not exist yet (test: export with only the Phase 5 collectors, and with a fake extra
+collector registered) — producing a JSON + CSV zip in the private Blob store;
+<code>scheduleAccountDeletion(userId)</code>.</li>
 <li><code>packages/dashboard</code>: member nav config (<code>NavIconName</code>s), <code>enableOrgSwitcher: false</code> for
 personal Spaces unless the user belongs to more orgs.</li>
 <li>Playwright <code>e2e/member.spec.ts</code>.</li>
@@ -2154,9 +2224,10 @@ Phase 6); reschedule moves the booking and releases the old slot.</li>
 <li><input disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
 <li><input disabled="" type="checkbox"> DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
 (signed URL) after 24h; audit rows present.</li>
-<li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API (POST
-/bookings/reserve and /confirm -&gt; 409 ACCOUNT_DELETION_SCHEDULED via
-assertMemberCanBook inside reserveSlot); audited.</li>
+<li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API before money
+moves (POST /bookings/reserve and POST /payments/intent -&gt; 409 ACCOUNT_DELETION_SCHEDULED
+via assertMemberCanBook); a payment that already succeeded still confirms and is then
+cancelled with refund_pending by the deletion sweep; audited.</li>
 <li><input disabled="" type="checkbox"> <code>e2e/member.spec.ts</code> green; <code>check:i18n-parity</code> green.</li>
 </ul>
 <h2 id="05-member-app--tests"><a class="anchor" href="#05-member-app--tests" aria-label="Link to section">#</a>Tests</h2>
@@ -2220,7 +2291,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 5 TASK — Build the member product in apps/app.
@@ -2230,8 +2302,9 @@ PHASE 5 TASK — Build the member product in apps/app.
    timezone), consents (user_id, kind, version, granted_at, withdrawn_at, source) where kind is
    the pg enum consent_kind generated from the CONSENT_KINDS const exported by
    @eleva/compliance (terms | privacy | health_data_processing | marketing; Phase 10 appends
-   session_recording and ai_processing to the same const — never a second spelling such as
-   health_data), dsar_requests (id, user_id, status pending|processing|ready|expired|
+   session_recording and ai_processing, Phase 13 appends analytics — each in its own PR, to the
+   same const, regenerating the enum — never a second spelling such as health_data, and never
+   reuse marketing for analytics), dsar_requests (id, user_id, status pending|processing|ready|expired|
    failed, blob_pathname, expires_at, requested_at, completed_at), account_deletion_requests
    (user_id, requested_at, scheduled_for, status). RLS by user (personal Space org) and audit
    unions (consent granted|withdrawn; dsar requested|ready; account deletion requested|cancelled).
@@ -2246,13 +2319,22 @@ PHASE 5 TASK — Build the member product in apps/app.
    JSON + CSV files zipped and uploaded to the PRIVATE Blob store via @eleva/storage with a 24h
    signed URL; scheduleAccountDeletion(userId, days per data-retention-export-matrix.md) that
    marks the user (auth.user.deletion_scheduled_at) and enqueues crypto-shred (Phase 10
-   completes). Booking eligibility is enforced where bookings are created, not only in the UI:
-   add assertMemberCanBook(userId) to @eleva/scheduling (throws BookingError
-   &quot;ACCOUNT_DELETION_SCHEDULED&quot; -&gt; 409) and call it inside reserveSlot and in POST
-   /bookings/reserve and POST /bookings/confirm (Phase 4 routes; update them in this phase) so a
-   member with a pending deletion — or a banned user — cannot create or confirm a reservation.
-   Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets 409 on
-   reserve and confirm; cancel request -&gt; reserve succeeds again.
+   completes). Booking eligibility is enforced where bookings are created and BEFORE any money
+   moves, not only in the UI: add assertMemberCanBook(userId) to @eleva/scheduling (throws
+   BookingError &quot;ACCOUNT_DELETION_SCHEDULED&quot; -&gt; 409) and call it inside reserveSlot, in POST
+   /bookings/reserve and in POST /payments/intent before tx A (Phase 4 routes; update them in
+   this phase) so a member with a pending deletion — or a banned user — cannot reserve or create a
+   PaymentIntent. Do NOT add the guard to POST /bookings/confirm: a succeeded intent must always
+   bind and confirm (otherwise the payment is orphaned). Instead scheduleAccountDeletion itself
+   cleans up in one transaction after marking the user: pending_payment bookings -&gt; cancelled and
+   their intents cancelled via Stripe when still cancelable (intent_pending rows are left to the
+   Phase 4 expiry sweep); confirmed future bookings -&gt; cancelled with booking_payments.status =
+   refund_pending and reason account_deletion (100% refund, executed by Phase 6) + audit; a
+   payment that succeeds after the mark (race) is confirmed by the webhook and then cancelled by
+   the same rule on the next deletion sweep run (POST /workflows/account-deletion-sweep, QStash,
+   hourly). Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
+   409 on reserve and on intent; confirm with a succeeded intent still returns 201 and the sweep
+   cancels it with refund_pending; cancel request -&gt; reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,
    Privacy; NavIconName strings; org switcher hidden when the user has only the personal Space),
    proxy.ts &lt; 50 LOC using @eleva/auth/proxy. Pages under /[orgSlug]: dashboard (upcoming with
@@ -2337,7 +2419,11 @@ the platform fee (<code>15%</code> default, <code>8%</code> Top Expert, <code>0%
 <li><strong>Payout engine</strong> (port from MVP <code>process-expert-transfers</code>, <code>process-pending-payouts</code>,
 <code>check-upcoming-payouts</code>, <code>transfer-utils.ts</code>): <code>payout_states</code> table (booking_payment_id,
 status <code>pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed</code>,
-<code>eligible_at</code>, <code>scheduled_for</code>, <code>transfer_idempotency_key</code> (uuid, set once), <code>stripe_transfer_id</code>,
+<code>eligible_at</code>, <code>scheduled_for</code>, <code>destination_org_id</code> + <code>destination_connect_account_id</code>
+(immutable snapshot written when the row is created — the expert&#39;s org/account in this phase;
+Phase 11 writes the clinic&#39;s when <code>payout_mode = clinic</code>; transfers, refunds, reconciliation
+and retries read <strong>only</strong> this snapshot, never the current profile settings),
+<code>transfer_idempotency_key</code> (uuid, set once), <code>stripe_transfer_id</code>,
 <code>stripe_payout_id</code>, <code>hold_reason</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
 <code>source_transaction</code>; approval required when <code>amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS</code>
 (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
@@ -2471,7 +2557,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 6 TASK — Make Stripe Connect smooth and build the payout engine.
@@ -2501,7 +2588,11 @@ PR 06.1 — Connect onboarding hardening:
    booking_payments.applied_commission_bps at intent creation (update Phase 4 route). Tests.
 
 PR 06.2 — payout engine, refunds, disputes, finance UI:
-5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, status enum
+5. packages/db: payout_states (id, booking_payment_id unique, expert_org_id, destination_org_id
+   not null, destination_connect_account_id not null — both snapshotted when the row is created
+   and never updated (DB trigger or CHECK via an immutable-columns helper + unit test); this phase
+   writes the expert&#39;s org/account, Phase 11 writes the clinic&#39;s for payout_mode clinic; transfer,
+   refund/reversal, reconciliation and retry code read only the snapshot — status enum
    pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed, eligible_at,
    scheduled_for, amount_cents, transfer_idempotency_key uuid not null default gen_random_uuid(),
    stripe_transfer_id, stripe_payout_id, hold_reason, approved_by,
@@ -2513,7 +2604,8 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
    tests for DST); schedulePayout(bookingPaymentId) (approval_required when: first payout of the
    account, amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS env (default 50000; inclusive — add a
    unit test at exactly the threshold), open dispute, manual hold); executeTransfer(payoutStateId) creating stripe.transfers.create({ amount, currency,
-   destination, transfer_group: bookingId, source_transaction: chargeId, metadata },
+   destination: payoutState.destination_connect_account_id, transfer_group: bookingId,
+   source_transaction: chargeId, metadata },
    { idempotencyKey: payoutState.transfer_idempotency_key }) — a UUID column written once when
    the row enters scheduled and reused on every retry (Stripe returns the original transfer for
    the same key), so a lost response can never produce a second transfer; a new key is only
@@ -2620,11 +2712,12 @@ from <code>expert_profiles</code> + <code>expert_practice_location</code>), crea
 fee, IVA per matrix (PT 23%; EU VIES valid -&gt; reverse charge; non-EU zero-rated), finalizes,
 communicates to AT, emails the PDF; idempotent via <code>platform_fee_invoices(booking_payment_id PK, toconline_document_id, series, number, status, issued_at, pdf_url, error)</code>. Credit note on
 refund/reversal (<code>issuePlatformFeeCreditNote</code>).</li>
-<li><strong>Invoice domain events</strong> (consumed by Phase 8) use a <strong>transactional outbox</strong>, not an
-in-process dispatcher: this phase adds <code>domain_events_outbox</code> (<code>id</code>, <code>type</code>, <code>payload jsonb</code>,
-<code>idempotency_key</code> unique, <code>created_at</code>, <code>published_at</code> nullable, <code>attempts</code>) in <code>@eleva/db</code> and
-<code>emitDomainEvent(tx, event)</code> in <code>@eleva/workflows</code>, which <strong>inserts the outbox row inside the
-same Drizzle transaction</strong> as the status change of <code>platform_fee_invoices</code> / <code>expert_invoices</code>
+<li><strong>Invoice domain events</strong> (consumed by Phase 8) use the <strong>transactional outbox</strong> created in
+Phase 4 (<code>domain_events_outbox</code> — <code>id</code>, <code>type</code>, <code>payload jsonb</code>, <code>idempotency_key</code> unique,
+<code>created_at</code>, <code>published_at</code> nullable, <code>attempts</code> — plus <code>emitDomainEvent(tx, event)</code> in
+<code>@eleva/workflows</code> and the <code>/workflows/domain-events-publisher</code> route), not an in-process
+dispatcher: this phase <strong>extends the typed event union</strong> with the invoice events and
+<code>emitDomainEvent</code> <strong>inserts the outbox row inside the same Drizzle transaction</strong> as the status change of <code>platform_fee_invoices</code> / <code>expert_invoices</code>
 (so a crash between commit and publish cannot lose or double an event). Event types:
 <code>invoice.issued</code> | <code>invoice.failed</code> | <code>invoice.credited</code>; payload <code>invoiceKind</code>
 (<code>platform_fee</code> | <code>expert_service</code>), <code>invoiceId</code>, <code>bookingPaymentId</code> or <code>bookingId</code>,
@@ -2770,7 +2863,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 7 TASK — Two-tier invoicing (ADR-013): Eleva -&gt; expert platform-fee invoice on TOConline for
@@ -2800,14 +2894,12 @@ PR 07.1 — Tier 1 (Eleva platform):
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
    event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
    with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
-   Domain events (transactional outbox): migration domain_events_outbox (id, type, payload jsonb,
-   idempotency_key unique, created_at, published_at nullable, attempts); add
-   emitDomainEvent(tx, event) to @eleva/workflows (typed union of event names + payloads) that
-   INSERTs the outbox row inside the same Drizzle transaction as the invoice status change — never
-   emit from after() alone. Add POST /workflows/domain-events-publisher (QStash Receiver.verify,
-   scheduled every minute; also kicked best-effort from after() right after commit) that selects
-   unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry, sets published_at,
-   increments attempts and dead-letters after 10. Event types invoice.issued | invoice.failed |
+   Domain events (transactional outbox): the domain_events_outbox table, emitDomainEvent(tx,
+   event) in packages/workflows/src/domain-events.ts and POST /workflows/domain-events-publisher
+   (FOR UPDATE SKIP LOCKED, subscriber registry, dead-letter after 10) already exist from Phase 4
+   — do NOT recreate them; extend the typed event union and call emitDomainEvent inside the same
+   Drizzle transaction as the invoice status change — never emit from after() alone. New event
+   types invoice.issued | invoice.failed |
    invoice.credited with payload { invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId,
    number, pdfUrl?, error? } and idempotency_key `invoice:${kind}:${id}:${status}`; register a
    structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
@@ -2916,7 +3008,14 @@ no SMS, no in-app row, suppression list still applied; the <code>{ userId }</cod
 preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders the
 <code>@eleva/email</code> template (React Email) / SMS text / in-app payload -&gt; delivers -&gt; writes
 <code>notification_deliveries</code> (idempotent on key + recipient + channel, where the recipient column
-is <code>user_id</code> or, for e-mail mode, <code>recipient_email</code>). Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</code>,
+is <code>user_id</code> or, for e-mail mode, <code>recipient_email</code>). The delivery row is <strong>claimed before the
+provider is called</strong>: insert <code>status = queued</code> (the unique key makes a concurrent/retried call
+hit the conflict and return the existing row — if it is <code>sent</code>, stop; if <code>queued</code> older than
+60 s, re-claim), then call Resend/Twilio with a provider idempotency key equal to the row id
+(Resend <code>Idempotency-Key</code> header; Twilio has none, so the claimed row is the only guard), then
+update to <code>sent</code>/<code>failed</code> with <code>provider_id</code>. A crash between provider accept and the update
+leaves a <code>queued</code> row that the retry re-claims and re-sends <strong>with the same provider
+idempotency key</strong>, so the provider deduplicates instead of the user receiving two e-mails. Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</code>,
 <code>booking.reminder_1h</code>, <code>booking.cancelled</code>, <code>booking.rescheduled</code>, <code>payment.failed</code>,
 <code>payment.receipt</code>, <code>payout.paid</code>, <code>payout.approval_required</code> (staff), <code>invoice.issued</code>,
 <code>invoice.failed</code> (expert), and the auth kinds <code>auth.magic_link</code>, <code>auth.verify_email</code>,
@@ -2945,8 +3044,9 @@ inbox in <code>@eleva/dashboard</code> (<code>NavBell</code>, <code>/[orgSlug]/n
 <code>notBefore</code>; cancellation deletes/ignores them (check booking status at send time);
 <code>packages/workflows/src/notifications/reminders.ts</code>, route <code>POST /workflows/booking-reminder</code>.</li>
 <li>Hook points: Phase 4/6 code paths and the Phase 7 invoice transitions emit events through the
-transactional outbox <code>emitDomainEvent(tx, event)</code> in <code>@eleva/workflows</code> (introduced in Phase 7
-with <code>domain_events_outbox</code> and the <code>/workflows/domain-events-publisher</code> route); this phase
+transactional outbox <code>emitDomainEvent(tx, event)</code> in <code>@eleva/workflows</code> (introduced in Phase 4
+with <code>domain_events_outbox</code> and the <code>/workflows/domain-events-publisher</code> route, extended by
+Phase 7); this phase
 registers <code>sendNotification</code> as a publisher subscriber (idempotent on the event
 <code>idempotency_key</code>) and extends the event union with booking/payment/payout types.</li>
 <li>Lane 2 stub: <code>syncMarketingContact(userId)</code> to Resend Audiences only when <code>marketing</code> consent
@@ -3038,7 +3138,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workflows (ADR-006).
@@ -3059,7 +3160,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    { email: string; locale?: Locale }. userId mode -&gt; load user locale, preferences (Phase 5
    table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list -&gt;
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app -&gt;
-   deliver -&gt; record notification_deliveries. email mode (recipient has no account yet — used by
+   CLAIM the notification_deliveries row FIRST (insert status queued; on unique conflict read the
+   existing row: sent -&gt; return it, queued older than 60 s -&gt; re-claim, otherwise return) -&gt; call
+   the provider with a provider idempotency key = the row id (Resend Idempotency-Key header; Twilio
+   has none, the claimed row is the guard) -&gt; update the row to sent|failed with provider_id. Never
+   send before the row exists. Test: kill the process between provider accept and the update
+   (mock), retry -&gt; one provider call with the same Idempotency-Key, one sent row. email mode (recipient has no account yet — used by
    auth.org_invitation when the invitee e-mail is unknown to auth.user, and by guest booking
    confirmations before activation) -&gt; email channel only, locale from the argument or the org
    default, suppression list applied, no preferences/SMS/in-app, row keyed by recipient_email.
@@ -3085,8 +3191,8 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    T-24h and T-1h on booking confirmation (deduplication id = bookingId:kind), the handler route
    POST /workflows/booking-reminder re-checks booking status before sending; cancellation does
    not need to delete messages. emitDomainEvent(tx, event) and the domain_events_outbox table +
-   POST /workflows/domain-events-publisher already exist from Phase 7 (transactional outbox, typed
-   event union, subscriber registry); this phase extends the union with the booking/payment/payout
+   POST /workflows/domain-events-publisher already exist from Phase 4 (extended by Phase 7;
+   transactional outbox, typed event union, subscriber registry); this phase extends the union with the booking/payment/payout
    event types, registers sendNotification as a publisher subscriber, and wires the Phase 4/6
    code paths (booking confirmed/cancelled/rescheduled, payment failed/succeeded, payout
    paid/approval required) to call emitDomainEvent(tx, ...) inside the same transaction as the
@@ -3195,8 +3301,11 @@ app join page, not the raw room URL).</li>
 <h2 id="09-video-daily--deliverables"><a class="anchor" href="#09-video-daily--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
 <li><code>packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}</code> + tests.</li>
-<li>Migration: <code>sessions</code> + <code>session_participants</code>; RLS; audit unions (<code>session:</code> <code>room_created</code>,
-<code>joined</code>, <code>started</code>, <code>ended</code>, <code>room_deleted</code>, <code>participant_added</code>, <code>participant_removed</code>).</li>
+<li>Migration: <code>sessions</code> + <code>session_participants</code> + <code>daily_webhook_events</code> (<code>event_id</code> unique,
+<code>type</code>, <code>received_at</code>, <code>processed_at</code>, <code>payload jsonb</code>; 90-day retention sweep; RLS
+staff-only — no tenant rows; test fixture with a replayed <code>meeting.ended</code>); RLS; audit unions
+(<code>session:</code> <code>room_created</code>, <code>joined</code>, <code>started</code>, <code>ended</code>, <code>room_deleted</code>,
+<code>participant_added</code>, <code>participant_removed</code>).</li>
 <li>Workflows + QStash sweep; API routes (<code>join</code>, <code>participants</code> add/remove, Daily webhook) +
 OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
 the room capacity.</li>
@@ -3278,7 +3387,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 9 TASK — Daily.co video sessions (ADR-018).
@@ -3336,7 +3446,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (elevacare.daily.co or sessions.eleva.care),
    DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator tasks doc
    operator-tasks/daily-setup.md: enable HIPAA on the Daily domain, create the webhook pointing to
-   https://api.&lt;env&gt;/webhooks/daily with the secret, configure the custom domain
+   https://api.dev.eleva.care/webhooks/daily (staging; Phase 15 repeats it for
+   https://api.eleva.care/webhooks/daily) with the secret, configure the custom domain
    sessions.eleva.care (CNAME) and the corresponding Vercel DNS record.
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two
@@ -3433,8 +3544,15 @@ download via signed URLs (short-lived), consent management extended.</li>
 <code>lifecycle_stage</code> (<code>lead|active|dormant|churned</code>), <code>follow_ups</code> (due_at, kind, note, done_at),
 tags; endpoints + expert UI (<code>/[orgSlug]/crm</code>), reminders via Lane 1 kind <code>crm.follow_up_due</code>.</li>
 <li><strong>AI reports beta</strong> (<code>@eleva/ai</code>, Vercel AI Gateway only): recording + transcription in
-<code>@eleva/video</code> behind <code>ff.session_recording</code> and both consents (expert + member) — Daily
-<code>enable_recording: &quot;cloud&quot;</code> + transcription webhook <code>transcript.ready</code>/<code>recording.ready-to-download</code>
+<code>@eleva/video</code> behind <code>ff.session_recording</code> and both consents (expert + member). Phase 9
+creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
+captured on the join page, so recording is enabled by an <strong>idempotent room update</strong>, not at
+creation: <code>syncRoomRecording(bookingId)</code> in <code>@eleva/video</code> reads the flag + both consents and
+calls Daily <code>updateRoom(name, { properties: { enable_recording } })</code> only when the desired
+value differs from <code>sessions.recording_enabled</code>; it runs on every consent change and again in
+the <code>join</code> route before the token is minted, so the state is correct whenever anyone enters
+— a room is never re-created and a withdrawn consent flips it back to <code>false</code> the same way.
+Daily <code>enable_recording: &quot;cloud&quot;</code> + transcription webhook <code>transcript.ready</code>/<code>recording.ready-to-download</code>
 -&gt; fetch -&gt; store encrypted (<code>records.kind = transcript</code>) -&gt; <code>draftSessionReport(transcriptId)</code>
 with versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
@@ -3451,7 +3569,12 @@ drop any event whose <code>extra</code>/<code>contexts</code> contain a <code>De
 (<code>summary</code>, <code>observations</code>, <code>recommendations</code>, or any key of the <code>draftSessionReport</code> output
 schema, derived from the Zod schema so new fields are covered automatically). Object-level
 tests feed a full decrypted record and a full AI draft through logger and Sentry and assert
-zero PHI substrings in the output.</li>
+zero PHI substrings in the output. Because <code>Decrypted&lt;T&gt;</code> serializes to <code>&quot;[redacted]&quot;</code>, API
+responses <strong>never return it directly</strong>: every authorized read maps it through an explicit
+response DTO (<code>toRecordResponse(decrypted, viewer)</code> in <code>@eleva/records</code>, plain object, Zod
+response schema registered in OpenAPI) that copies exactly the fields the viewer may see; the
+two serialization paths are tested separately (DTO -&gt; full authorized content; logger/Sentry -&gt;
+redacted) and an ESLint rule forbids <code>NextResponse.json</code> with a <code>Decrypted</code> argument.</li>
 </ul>
 <p>Out: group sessions, member-authored records, AI for anything beyond session reports.</p>
 <h2 id="10-records-crm-ai--deliverables"><a class="anchor" href="#10-records-crm-ai--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
@@ -3476,7 +3599,9 @@ authorized roles; member sees only published records.</li>
 <li><input disabled="" type="checkbox"> Documents live in the private Blob store; direct URL without signature 403; signed URL
 expires (&lt;= 15 min).</li>
 <li><input disabled="" type="checkbox"> Consent required to record: without both consents <code>enable_recording</code> stays false and the UI
-hides the record button.</li>
+hides the record button; both consents given after the room exists -&gt; <code>syncRoomRecording</code>
+updates the existing room (idempotent, asserted via a mocked Daily <code>updateRoom</code> called once);
+a withdrawn consent flips it back.</li>
 <li><input disabled="" type="checkbox"> Retention sweep deletes an expired unpublished AI draft and an expired transcript in a
 seeded test; account deletion after grace period shreds keys and rows; DSAR includes published
 records and owned documents.</li>
@@ -3551,7 +3676,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report drafting (ADR-009, ADR-020).
@@ -3611,7 +3737,13 @@ PR 10.1 — records, documents, consent, retention:
    draftSessionReport Zod output schema (derive the key list from the schema — never hand-write
    it) plus body, body_encrypted, transcript, notes, title. Object-level tests: log a full
    decrypted record and a full AI draft through the logger and through Sentry&#39;s beforeSend, assert
-   the output contains none of the fixture&#39;s PHI strings; docs ops-observability-spec.md.
+   the output contains none of the fixture&#39;s PHI strings. API responses never serialize a
+   Decrypted&lt;T&gt; (it would print &quot;[redacted]&quot; to an authorized viewer): add
+   toRecordResponse(decrypted, viewer) in @eleva/records returning a plain DTO validated by a Zod
+   response schema registered in OpenAPI, use it in every record/report route, add an ESLint rule
+   in packages/eslint-config that forbids passing a Decrypted value to NextResponse.json, and test
+   both paths separately (DTO carries the full authorized body; logger/Sentry output is
+   redacted); docs ops-observability-spec.md.
 
 PR 10.2 — CRM + AI reports beta:
 6. @eleva/crm + packages/db: crm_contacts (id, expert_org_id, member_user_id nullable, name,
@@ -3622,9 +3754,16 @@ PR 10.2 — CRM + AI reports beta:
    /crm/follow-ups, POST /crm/follow-ups/[id]/done; daily job flags due follow-ups -&gt; Lane 1 kind
    crm.follow_up_due. apps/expert /[orgSlug]/crm (table with stage filter, contact drawer,
    follow-up list). RLS + audit.
-7. Recording/transcription behind flags: @eleva/video createSessionRoom accepts { recording:
-   boolean } -&gt; enable_recording &quot;cloud&quot; only when ff.session_recording is on AND both consents
-   granted; handle webhooks recording.ready-to-download and transcript.ready (signature verified,
+7. Recording/transcription behind flags: Phase 9 rooms are created at confirmation with
+   enable_recording false and consent arrives later on the join page, so add
+   syncRoomRecording(bookingId) to @eleva/video: desired = ff.session_recording on AND both
+   consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
+   updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } }) and persist
+   the new value (idempotent — no call when unchanged); invoke it from the consent write path
+   (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
+   minting the token; createSessionRoom keeps { recording: false } at creation. Tests: consent
+   after room creation -&gt; exactly one updateRoom call; withdrawn consent -&gt; flipped back; join with
+   state already correct -&gt; zero Daily calls. Handle webhooks recording.ready-to-download and transcript.ready (signature verified,
    idempotent) -&gt; download transcript via Daily API -&gt; store as records.kind = transcript
    (encrypted) -&gt; delete the Daily recording after transcript stored (unless a keep flag) -&gt;
    emitDomainEvent(&quot;transcript.ready&quot;).
@@ -3733,7 +3872,11 @@ see deliverable 1): clinic profile with experts grid; <strong>canonical clinic b
 route; Phase 4 owns <code>/[locale]/[username]/[eventSlug]</code> for marketplace bookings), which sets
 <code>attribution = clinic</code> so <code>computeApplicationFee</code> returns 0 bps and payout goes to the clinic&#39;s or the
 expert&#39;s Connect account per <code>clinic_profiles.payout_mode</code> (<code>clinic|expert</code>) — default <code>expert</code>
-in v1; <code>clinic</code> mode requires clinic Connect account (reuse Phase 6 onboarding for orgs).</li>
+in v1; <code>clinic</code> mode requires clinic Connect account (reuse Phase 6 onboarding for orgs). The
+destination is <strong>resolved once, when the payment is confirmed</strong>, and written to the Phase 6
+snapshot columns <code>payout_states.destination_org_id</code> / <code>destination_connect_account_id</code>;
+transfers, refunds, reconciliation and retries use only that snapshot, so a clinic flipping
+<code>payout_mode</code> after a booking is paid never redirects money already owed.</li>
 <li><strong>Attribution</strong> on <code>bookings.attributed_org_id</code> + <code>booking_payments.applied_commission_bps = 0</code>,
 set only from the booking source (the canonical clinic route above, or a signed clinic parameter
 carried to <code>/[locale]/[username]/[eventSlug]</code>) — never inferred from the expert&#39;s clinic
@@ -3835,7 +3978,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 11 TASK — Clinic (Team) SaaS product.
@@ -3906,8 +4050,14 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    /[locale]/[username]/[eventSlug] of a
    clinic-affiliated expert is a marketplace booking and pays the normal commission. Pass
    buyerContext { attributedOrgId } to computeApplicationFee -&gt; 0 bps only for attributed
-   bookings; add unit tests for both paths; destination Connect account = expert&#39;s (payout_mode expert) or clinic&#39;s (payout_mode
-   clinic requires clinic Connect onboarding — reuse Phase 6 flows for org accounts).
+   bookings; add unit tests for both paths. Payout destination: resolve it exactly once in
+   confirmBookingPayment when the payout_states row is created — expert&#39;s org + Connect account
+   (payout_mode expert) or the clinic&#39;s (payout_mode clinic; requires clinic Connect onboarding —
+   reuse Phase 6 flows for org accounts, and refuse to publish clinic event types while the clinic
+   account is not chargeable) — and write it to the immutable Phase 6 snapshot columns
+   destination_org_id / destination_connect_account_id; executeTransfer, refunds and
+   reconciliation never re-read clinic_profiles.payout_mode. Test: flip payout_mode after payment
+   -&gt; transfer still goes to the snapshotted account.
 5. apps/api: POST/PATCH /teams (profile), POST /teams/[id]/submit-verification, GET /teams/[id]/
    members, POST /teams/[id]/invitations (Better Auth inviteMember + Lane 1 kind team.invitation),
    DELETE /teams/[id]/members/[userId], GET /teams/[id]/bookings?expertId, GET /teams/[id]/
@@ -4101,7 +4251,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 12 TASK — Build the Eleva staff admin console.
@@ -4255,7 +4406,12 @@ public status page (<code>status.eleva.care</code>); alert routing to on-call.</
 <li><strong>Analytics</strong>: GA4 on <code>apps/web</code> only; PostHog EU (<code>eu.i.posthog.com</code>) in authenticated apps via
 <code>@eleva/analytics</code> (server + client helpers, <code>identify</code> with user id only, no PHI, feature flag
 bridge optional); consent banner in <code>apps/web</code> and first-login consent in apps (categories:
-necessary, analytics, marketing) stored in <code>consents</code> and honored by GA4/PostHog/Resend Lane 2.</li>
+necessary, analytics, marketing) stored in <code>consents</code> and honored by GA4/PostHog/Resend Lane 2.
+<code>analytics</code> is a <strong>distinct consent kind</strong>: this phase appends <code>analytics</code> to <code>CONSENT_KINDS</code>
+in <code>@eleva/compliance</code> (Phase 5 const; Phase 10 appended <code>session_recording</code>/<code>ai_processing</code>),
+regenerates the <code>consent_kind</code> pg enum with a migration, extends the <code>/me/consents</code> Zod
+schemas and adds tests — <code>marketing</code> consent never implies analytics and vice versa
+(&quot;necessary&quot; is not stored; it is not a choice).</li>
 <li><strong>i18n</strong>: parity CI already exists (Phase 1); this phase fills every missing key in <code>pt/en/es</code>
 (and <code>pt-BR</code> if kept), translates legal pages, email templates per locale, error messages from
 API error codes -&gt; localized copy map in <code>@eleva/i18n</code>; <code>hreflang</code> and locale switch tested.</li>
@@ -4364,7 +4520,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 13 TASK — Harden, observe, localize, speed up, and test the whole platform.
@@ -4440,14 +4597,21 @@ PR 13.1 — security + observability + analytics:
    status.eleva.care documented; alert policy to on-call email/SMS.
 4. Analytics: packages/analytics (@eleva/analytics): PostHog EU client/server helpers (identify by
    user id only, group by org id, no PHI, autocapture off, feature flag bridge optional), consent
-   gate reading the analytics consent; GA4 only in apps/web after consent. Consent banner
-   component in @eleva/ui used by apps/web (necessary/analytics/marketing) and a first-login
-   consent step in apps (stored in consents table; Lane 2 marketing sync respects it).
+   gate reading the analytics consent; GA4 only in apps/web after consent. Add the distinct
+   consent kind first: append analytics to CONSENT_KINDS in @eleva/compliance (never reuse
+   marketing), regenerate the consent_kind pg enum via a @eleva/db migration, extend the
+   GET/PUT /me/consents Zod schemas + OpenAPI + @eleva/api-client, versioned text
+   packages/compliance/legal/analytics.&lt;locale&gt;.md, and tests (granting marketing does not enable
+   PostHog; granting analytics does; withdrawing stops events). Consent banner component in
+   @eleva/ui used by apps/web (necessary/analytics/marketing; necessary is informational, not
+   stored) and a first-login consent step in apps (stored in consents table; Lane 2 marketing sync
+   respects marketing only).
 5. Docs: security-hardening-checklist.md ticked with links, ops-observability-spec.md,
    service-level-objectives.md, environment-matrix.md, decision-log.md.
 
 PR 13.2 — i18n, performance, E2E:
-6. i18n: fill every missing key for pt/en/es across apps (check:i18n-parity must be clean with no
+6. i18n: fill every missing key for each app&#39;s required locales (pt/en/es; apps/admin pt/en per
+   REQUIRED_LOCALES_BY_APP) across apps (check:i18n-parity must be clean with no
    placeholder values), legal pages in all locales, email templates verified per locale, API error
    code -&gt; localized message map in @eleva/i18n used by apps for toasts; locale switch e2e.
    Decide pt-BR (alias or full) per decision-log.
@@ -4573,7 +4737,7 @@ each customer id exists; no object creation; update webhook endpoint at cutover 
 <li><strong>Rehearsals</strong>: <code>pnpm migration:rehearse</code> = create Neon branch from production snapshot (MVP
 db exported to a v3-side branch or direct cross-DB read), run full migration, run verification
 (<code>pnpm migration:verify</code> -&gt; row counts per table, checksum matches, orphan FK check, sample
-logins via magic link in staging), produce report under <code>infra/migration/reports/&lt;date&gt;.md</code>
+logins via magic link in staging), produce report under <code>infra/migration/reports/rehearsal-YYYY-MM-DD.md</code>
 (committed). Three rehearsals required; the last within 3 days of cutover.</li>
 <li><strong>Freeze plan</strong> (executed in Phase 15): MVP read-only banner + disabled booking, drain pending
 Multibanco (&gt; 8 days rule means none should exist within 24h — verify), final delta run,
@@ -4588,7 +4752,8 @@ target kind, because one MVP row can fan out into several v3 rows — e.g. <code
 <code>auth.user</code> + <code>auth.account/credential</code> + optional <code>auth.account/google</code>), <code>migration_checksums</code>
 (unique on target table + target id, upserted) tables in a <code>migration</code> schema on v3, dropped
 after Phase 15 + 30 days.</li>
-<li>Welcome campaign template + sender script (<code>migration:send-welcome --wave n</code>).</li>
+<li>Welcome campaign template + sender script (<code>migration:send-welcome --wave 1 --size 500</code>;
+waves persisted in <code>migration_welcome_waves</code> so re-running a wave is a no-op).</li>
 <li>Redirect map + tests.</li>
 <li>Three committed rehearsal reports; finance-approved grandfather mapping table
 (<code>infra/migration/GRANDFATHER.md</code>).</li>
@@ -4610,8 +4775,8 @@ availability, past bookings, payout history; public URL <code>/[username]/[event
 <li><input disabled="" type="checkbox"> Records decrypt for the owning expert in <code>apps/expert</code>; member sees published ones.</li>
 <li><input disabled="" type="checkbox"> Stripe verification step passes for 100% of Connect accounts and customers.</li>
 <li><input disabled="" type="checkbox"> Rollback rehearsal on staging equivalents, timed: v3 write freeze,
-<code>pnpm migration:reverse-export --since &quot;$CUTOVER_TS&quot;</code> produces a signed JSON of every
-post-cutover v3 row (schema-derived table inventory), each entity class restored per the
+<code>pnpm migration:reverse-export --since &quot;$CUTOVER_TS&quot;</code> produces a signed JSON of the complete
+post-cutover mutation set (inserts, updates and deletes; schema-derived table inventory), each entity class restored per the
 five-action table in the runbook,
 Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
 once (idempotent on <code>stripe_payment_intent_id</code>), MVP webhook re-enabled, DNS revert + MVP
@@ -4680,7 +4845,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-019).
@@ -4694,14 +4860,20 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    @eleva/infra-migration or anything under infra/migration. Tests: the no-workos rg with the new
    glob returns nothing on this branch; a deliberate `import &quot;@workos-inc/node&quot;` in packages/auth
    fails boundary lint; a deliberate import of infra/migration from apps/api fails the new step.
-   Phase 16.16 removes the package and both exceptions. CLI: pnpm migration:run
-   --dry-run|--apply [--target branch|production] --since &lt;iso&gt; --report &lt;path&gt;;
+   Phase 16.16 removes the package and both exceptions. CLI (every flag has a concrete default so
+   the commands below run as written): pnpm migration:run --dry-run|--apply
+   [--target branch|production] [--since &quot;$LAST_RUN_TS&quot;] (ISO-8601; omitted = full run; the CLI
+   writes the run&#39;s end timestamp to infra/migration/reports/last-run.json and the operator
+   exports it as LAST_RUN_TS before a delta run) [--report FILE] (default
+   infra/migration/reports/run-$(date -u +%Y%m%dT%H%M%SZ).md);
    pnpm migration:verify; pnpm migration:rehearse (creates a Neon branch of the v3 *production*
    project — empty of tenant data before cutover, so the branch carries the real production
    schema, roles and extensions — restores a fresh pg_dump of the MVP production database (taken
    with the read-only role) into schema legacy via pg_restore, runs run --apply --target branch,
-   then verify, then writes reports/&lt;date&gt;.md; staging snapshots are never a rehearsal input);
-   pnpm migration:send-welcome --wave &lt;n&gt; --size &lt;k&gt;. Env: MVP_DATABASE_URL (read-only role),
+   then verify, then writes infra/migration/reports/rehearsal-$(date -u +%F).md; staging
+   snapshots are never a rehearsal input); pnpm migration:send-welcome --wave 1 --size 500
+   (--wave is the 1-based wave number persisted in migration_welcome_waves so a re-run of the same
+   wave is a no-op; --size defaults to 500). Env: MVP_DATABASE_URL (read-only role),
    TARGET_DATABASE_URL, WORKOS_API_KEY
    (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_CHECKSUM_KEY (32 random bytes,
    generated per migration, stored only in the operator vault), MIGRATION_ALLOWED_TARGET_HOSTS.
@@ -4769,9 +4941,16 @@ PHASE 14 TASK — MVP -&gt; v3 data migration tooling and three rehearsals (ADR-
    the freeze procedure (MVP read-only banner + booking disabled, verify no pending Multibanco,
    final --since delta run, verify, DNS switch, Stripe webhook switch, welcome wave 1) and a
    &quot;Rollback&quot; section that preserves post-cutover writes: freeze v3 writes -&gt; pnpm
-   migration:reverse-export --since &quot;$CUTOVER_TS&quot; (implement in infra/migration: dumps EVERY
-   tenant table&#39;s rows with created_at or updated_at after the timestamp, plus soft-deletes, to a
-   JSON file signed with an HMAC under MIGRATION_CHECKSUM_KEY; the entity inventory is generated
+   migration:reverse-export --since &quot;$CUTOVER_TS&quot; (implement in infra/migration: dumps the COMPLETE
+   post-cutover mutation set — EVERY tenant table&#39;s rows with created_at or updated_at after the
+   timestamp (so updates to pre-cutover bookings, users, invoices and payment state are included,
+   each tagged op = insert|update by comparing created_at with the timestamp), soft-deletes, and
+   hard deletes reconstructed from audit_events rows with action deleted after the timestamp
+   (tagged op = delete with the entity id) — to a JSON file signed with an HMAC under
+   MIGRATION_CHECKSUM_KEY; the restore side replays each record idempotently by the
+   migration_id_map (upsert for insert|update, delete-or-tombstone for delete; re-running the
+   replay is a no-op) — a rehearsal test edits and deletes pre-cutover rows in v3 and asserts the
+   MVP copy reflects both after replay; the entity inventory is generated
    from the Drizzle schema so a new table cannot be forgotten, and a unit test fails if a table
    with created_at/updated_at is missing from the export). Restore per entity class, in this
    order: (1) identity — auth.user/account/organization/member created after cutover are
@@ -4944,7 +5123,8 @@ file for the current UTC day.
 
 Before writing code:
 1. Read AGENTS.md, .cursor/rules/*.mdc and .cursor/skills/coderabbit-review/SKILL.md.
-2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
+2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6, 7 (universal preamble this
+   prompt follows) and 8 (PR body template used below), and
    docs/eleva-v3/execution-plan/phases/15-launch-cutover.md in full, plus
    docs/eleva-v3/operator-tasks/cutover-runbook.md and docs/eleva-v3/launch-readiness-checklist.md.
 3. Pull Vercel domains, Stripe go-live, Neon PITR, Daily custom domain and Resend domain docs
@@ -4969,7 +5149,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
 secrets, ids of live customers, or PHI into the repo; evidence files must be redacted.
 
@@ -5014,10 +5195,14 @@ C. Cutover (with go-ahead per step, following docs/eleva-v3/operator-tasks/cutov
    Rollback criteria: P1 &gt; 30 min, payment success &lt; 95%, auth error rate &gt; 5%, data
    inconsistency. Rollback procedure (rehearsed on staging before C starts; written in
    cutover-runbook.md section &quot;Rollback&quot;): (1) freeze v3 writes (ff.booking_enabled=false,
-   apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export every
-   v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
-   notifications_outbox, users created via magic link) with pnpm migration:reverse-export
-   --since &quot;$CUTOVER_TS&quot; to a signed JSON file; (3) reconcile against Stripe as the source of truth
+   apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export the
+   COMPLETE post-cutover mutation set — every v3 row created OR updated since cutover across all
+   tenant tables (bookings, booking_payments, payout_states, invoices, domain_events_outbox,
+   notifications, consents, profiles, users created via magic link ...), plus soft-deletes and
+   hard deletes reconstructed from audit_events, each tagged insert|update|delete — with
+   pnpm migration:reverse-export --since &quot;$CUTOVER_TS&quot; to a signed JSON file, and replay it into
+   the MVP idempotently by the id map (upsert / delete-or-tombstone; a second replay is a no-op)
+   so a pre-cutover booking cancelled or rescheduled in v3 is never restored stale; (3) reconcile against Stripe as the source of truth
    for money — invariant: every succeeded PaymentIntent has exactly ONE canonical active
    booking, keyed by the PaymentIntent id, and after rollback that canonical booking lives in
    MVP; the exported v3 rows are retained read-only as an audit copy and are NOT counted as a
@@ -5248,7 +5433,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not &quot;patients&quot; in customer-facing copy, Spaces not
-&quot;Workspaces&quot; for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+&quot;Workspaces&quot; for personal orgs, i18n keys for every app&#39;s required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only. Never commit production
 secrets, ids of live customers, or PHI into the repo; evidence files (screenshots, logs, exports
 attached to the PR) must be redacted; any script that can touch production data must carry the

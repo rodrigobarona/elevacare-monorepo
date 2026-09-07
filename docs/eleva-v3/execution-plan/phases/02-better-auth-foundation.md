@@ -87,7 +87,8 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
 6. `apps/account` auth pages + settings security section; `packages/dashboard` cleanup.
 7. `e2e/auth.spec.ts`.
 8. `.env.example`, `turbo.json`, Vercel project env docs (`environment-matrix.md`): `BETTER_AUTH_SECRET`,
-   `BETTER_AUTH_URL`, `GOOGLE_OAUTH_*`.
+   `BETTER_AUTH_URL`, `ELEVA_COOKIE_DOMAIN`, `ELEVA_TRUSTED_ORIGINS`, `GOOGLE_OAUTH_CLIENT_ID/SECRET`,
+   `MICROSOFT_OAUTH_CLIENT_ID/SECRET`, `PASSKEY_RP_ID`, `PASSKEY_ORIGIN`.
 
 ## Acceptance criteria
 
@@ -187,7 +188,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 2 TASK — Stand up self-hosted Better Auth as the identity system (ADR-017, ADR-021).

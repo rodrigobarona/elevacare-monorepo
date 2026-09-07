@@ -41,11 +41,12 @@ In:
   communicates to AT, emails the PDF; idempotent via `platform_fee_invoices(booking_payment_id PK,
 toconline_document_id, series, number, status, issued_at, pdf_url, error)`. Credit note on
   refund/reversal (`issuePlatformFeeCreditNote`).
-- **Invoice domain events** (consumed by Phase 8) use a **transactional outbox**, not an
-  in-process dispatcher: this phase adds `domain_events_outbox` (`id`, `type`, `payload jsonb`,
-  `idempotency_key` unique, `created_at`, `published_at` nullable, `attempts`) in `@eleva/db` and
-  `emitDomainEvent(tx, event)` in `@eleva/workflows`, which **inserts the outbox row inside the
-  same Drizzle transaction** as the status change of `platform_fee_invoices` / `expert_invoices`
+- **Invoice domain events** (consumed by Phase 8) use the **transactional outbox** created in
+  Phase 4 (`domain_events_outbox` — `id`, `type`, `payload jsonb`, `idempotency_key` unique,
+  `created_at`, `published_at` nullable, `attempts` — plus `emitDomainEvent(tx, event)` in
+  `@eleva/workflows` and the `/workflows/domain-events-publisher` route), not an in-process
+  dispatcher: this phase **extends the typed event union** with the invoice events and
+  `emitDomainEvent` **inserts the outbox row inside the same Drizzle transaction** as the status change of `platform_fee_invoices` / `expert_invoices`
   (so a crash between commit and publish cannot lose or double an event). Event types:
   `invoice.issued` | `invoice.failed` | `invoice.credited`; payload `invoiceKind`
   (`platform_fee` | `expert_service`), `invoiceId`, `bookingPaymentId` or `bookingId`,
@@ -197,7 +198,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 7 TASK — Two-tier invoicing (ADR-013): Eleva -> expert platform-fee invoice on TOConline for
@@ -227,14 +229,12 @@ PR 07.1 — Tier 1 (Eleva platform):
    issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
    event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
    with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
-   Domain events (transactional outbox): migration domain_events_outbox (id, type, payload jsonb,
-   idempotency_key unique, created_at, published_at nullable, attempts); add
-   emitDomainEvent(tx, event) to @eleva/workflows (typed union of event names + payloads) that
-   INSERTs the outbox row inside the same Drizzle transaction as the invoice status change — never
-   emit from after() alone. Add POST /workflows/domain-events-publisher (QStash Receiver.verify,
-   scheduled every minute; also kicked best-effort from after() right after commit) that selects
-   unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry, sets published_at,
-   increments attempts and dead-letters after 10. Event types invoice.issued | invoice.failed |
+   Domain events (transactional outbox): the domain_events_outbox table, emitDomainEvent(tx,
+   event) in packages/workflows/src/domain-events.ts and POST /workflows/domain-events-publisher
+   (FOR UPDATE SKIP LOCKED, subscriber registry, dead-letter after 10) already exist from Phase 4
+   — do NOT recreate them; extend the typed event union and call emitDomainEvent inside the same
+   Drizzle transaction as the invoice status change — never emit from after() alone. New event
+   types invoice.issued | invoice.failed |
    invoice.credited with payload { invoiceKind, invoiceId, bookingPaymentId|bookingId, expertOrgId,
    number, pdfUrl?, error? } and idempotency_key `invoice:${kind}:${id}:${status}`; register a
    structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).

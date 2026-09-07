@@ -63,8 +63,11 @@ Out: recording/transcription (Phase 10), group sessions, dial-in.
 ## Deliverables
 
 1. `packages/video/{package.json,src/server/*,src/client/*,src/webhooks.ts,README.md}` + tests.
-2. Migration: `sessions` + `session_participants`; RLS; audit unions (`session:` `room_created`,
-   `joined`, `started`, `ended`, `room_deleted`, `participant_added`, `participant_removed`).
+2. Migration: `sessions` + `session_participants` + `daily_webhook_events` (`event_id` unique,
+   `type`, `received_at`, `processed_at`, `payload jsonb`; 90-day retention sweep; RLS
+   staff-only — no tenant rows; test fixture with a replayed `meeting.ended`); RLS; audit unions
+   (`session:` `room_created`, `joined`, `started`, `ended`, `room_deleted`,
+   `participant_added`, `participant_removed`).
 3. Workflows + QStash sweep; API routes (`join`, `participants` add/remove, Daily webhook) +
    OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
    the room capacity.
@@ -148,7 +151,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 9 TASK — Daily.co video sessions (ADR-018).
@@ -206,7 +210,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (elevacare.daily.co or sessions.eleva.care),
    DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator tasks doc
    operator-tasks/daily-setup.md: enable HIPAA on the Daily domain, create the webhook pointing to
-   https://api.<env>/webhooks/daily with the secret, configure the custom domain
+   https://api.dev.eleva.care/webhooks/daily (staging; Phase 15 repeats it for
+   https://api.eleva.care/webhooks/daily) with the secret, configure the custom domain
    sessions.eleva.care (CNAME) and the corresponding Vercel DNS record.
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two

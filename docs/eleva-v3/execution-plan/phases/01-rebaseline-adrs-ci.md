@@ -160,7 +160,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 1 TASK — Re-baseline docs, rules, and CI for the Better Auth / Daily / envelope-encryption
@@ -190,7 +191,10 @@ A. ADRs (docs/eleva-v3/adrs/). Use the existing ADR format (Status, Date, Contex
    - ADR-019-mvp-migration-and-cutover.md: migrate live MVP data (Neon) into v3 with idempotent
      dry-run-first scripts in infra/migration; same Stripe platform account (Connect accounts,
      customers, subscriptions carried over); passwords cannot leave WorkOS -> magic-link/set-
-     password welcome campaign; Google accounts auto-linked by verified email; WorkOS Vault
+     password welcome campaign; Google accounts are linked ONLY from the WorkOS identity subject
+     (idp_id) exported while WorkOS is live, never by e-mail matching; users without a stored
+     subject sign in with the magic link and link Google through Better Auth accountLinking
+     (trustedProviders ["google"], verified e-mail required); WorkOS Vault
      records decrypted before WorkOS cancellation and re-encrypted with @eleva/encryption; URL
      compatibility for /[username] and /[username]/[eventSlug]; DNS switch with rollback = DNS
      revert + MVP unfreeze.
@@ -260,9 +264,12 @@ E. CI foundations.
      RLS isolation vitest in packages/db (create packages/db/src/__tests__/rls-isolation.test.ts
      if missing: two orgs, cross-org read returns zero rows under withOrgContext). Add a job that
      deletes the branch on pull_request closed (neondatabase/delete-branch-action).
-   - scripts/check-i18n-parity.mjs: for every apps/*/messages directory compare key sets of
-     pt.json, en.json, es.json (and pt-BR.json when present); exit 1 on missing keys; add root
-     script check:i18n-parity and a CI job.
+   - scripts/check-i18n-parity.mjs: for every apps/*/messages directory read the app's
+     required-locale list from packages/config/src/i18n-locales.ts (REQUIRED_LOCALES_BY_APP:
+     default ["pt","en","es"]; apps/admin ["pt","en"] per the decision-log staff-only exception —
+     the checker never hardcodes the list) and compare the key sets of those locale files (plus
+     pt-BR.json when present); exit 1 on missing keys; add root script check:i18n-parity and a CI
+     job; unit test: an app with es.json missing fails unless its list omits es.
    - Update ci.yml comments (remove the "placeholder jobs" block) and contribution-workflow.md
      required checks list.
 

@@ -55,6 +55,11 @@ In:
   `@eleva/analytics` (server + client helpers, `identify` with user id only, no PHI, feature flag
   bridge optional); consent banner in `apps/web` and first-login consent in apps (categories:
   necessary, analytics, marketing) stored in `consents` and honored by GA4/PostHog/Resend Lane 2.
+  `analytics` is a **distinct consent kind**: this phase appends `analytics` to `CONSENT_KINDS`
+  in `@eleva/compliance` (Phase 5 const; Phase 10 appended `session_recording`/`ai_processing`),
+  regenerates the `consent_kind` pg enum with a migration, extends the `/me/consents` Zod
+  schemas and adds tests — `marketing` consent never implies analytics and vice versa
+  ("necessary" is not stored; it is not a choice).
 - **i18n**: parity CI already exists (Phase 1); this phase fills every missing key in `pt/en/es`
   (and `pt-BR` if kept), translates legal pages, email templates per locale, error messages from
   API error codes -> localized copy map in `@eleva/i18n`; `hreflang` and locale switch tested.
@@ -166,7 +171,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 13 TASK — Harden, observe, localize, speed up, and test the whole platform.
@@ -242,14 +248,21 @@ PR 13.1 — security + observability + analytics:
    status.eleva.care documented; alert policy to on-call email/SMS.
 4. Analytics: packages/analytics (@eleva/analytics): PostHog EU client/server helpers (identify by
    user id only, group by org id, no PHI, autocapture off, feature flag bridge optional), consent
-   gate reading the analytics consent; GA4 only in apps/web after consent. Consent banner
-   component in @eleva/ui used by apps/web (necessary/analytics/marketing) and a first-login
-   consent step in apps (stored in consents table; Lane 2 marketing sync respects it).
+   gate reading the analytics consent; GA4 only in apps/web after consent. Add the distinct
+   consent kind first: append analytics to CONSENT_KINDS in @eleva/compliance (never reuse
+   marketing), regenerate the consent_kind pg enum via a @eleva/db migration, extend the
+   GET/PUT /me/consents Zod schemas + OpenAPI + @eleva/api-client, versioned text
+   packages/compliance/legal/analytics.<locale>.md, and tests (granting marketing does not enable
+   PostHog; granting analytics does; withdrawing stops events). Consent banner component in
+   @eleva/ui used by apps/web (necessary/analytics/marketing; necessary is informational, not
+   stored) and a first-login consent step in apps (stored in consents table; Lane 2 marketing sync
+   respects marketing only).
 5. Docs: security-hardening-checklist.md ticked with links, ops-observability-spec.md,
    service-level-objectives.md, environment-matrix.md, decision-log.md.
 
 PR 13.2 — i18n, performance, E2E:
-6. i18n: fill every missing key for pt/en/es across apps (check:i18n-parity must be clean with no
+6. i18n: fill every missing key for each app's required locales (pt/en/es; apps/admin pt/en per
+   REQUIRED_LOCALES_BY_APP) across apps (check:i18n-parity must be clean with no
    placeholder values), legal pages in all locales, email templates verified per locale, API error
    code -> localized message map in @eleva/i18n used by apps for toasts; locale switch e2e.
    Decide pt-BR (alias or full) per decision-log.

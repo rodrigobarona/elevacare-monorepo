@@ -54,7 +54,11 @@ In:
   route; Phase 4 owns `/[locale]/[username]/[eventSlug]` for marketplace bookings), which sets
   `attribution = clinic` so `computeApplicationFee` returns 0 bps and payout goes to the clinic's or the
   expert's Connect account per `clinic_profiles.payout_mode` (`clinic|expert`) — default `expert`
-  in v1; `clinic` mode requires clinic Connect account (reuse Phase 6 onboarding for orgs).
+  in v1; `clinic` mode requires clinic Connect account (reuse Phase 6 onboarding for orgs). The
+  destination is **resolved once, when the payment is confirmed**, and written to the Phase 6
+  snapshot columns `payout_states.destination_org_id` / `destination_connect_account_id`;
+  transfers, refunds, reconciliation and retries use only that snapshot, so a clinic flipping
+  `payout_mode` after a booking is paid never redirects money already owed.
 - **Attribution** on `bookings.attributed_org_id` + `booking_payments.applied_commission_bps = 0`,
   set only from the booking source (the canonical clinic route above, or a signed clinic parameter
   carried to `/[locale]/[username]/[eventSlug]`) — never inferred from the expert's clinic
@@ -160,7 +164,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 11 TASK — Clinic (Team) SaaS product.
@@ -231,8 +236,14 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    /[locale]/[username]/[eventSlug] of a
    clinic-affiliated expert is a marketplace booking and pays the normal commission. Pass
    buyerContext { attributedOrgId } to computeApplicationFee -> 0 bps only for attributed
-   bookings; add unit tests for both paths; destination Connect account = expert's (payout_mode expert) or clinic's (payout_mode
-   clinic requires clinic Connect onboarding — reuse Phase 6 flows for org accounts).
+   bookings; add unit tests for both paths. Payout destination: resolve it exactly once in
+   confirmBookingPayment when the payout_states row is created — expert's org + Connect account
+   (payout_mode expert) or the clinic's (payout_mode clinic; requires clinic Connect onboarding —
+   reuse Phase 6 flows for org accounts, and refuse to publish clinic event types while the clinic
+   account is not chargeable) — and write it to the immutable Phase 6 snapshot columns
+   destination_org_id / destination_connect_account_id; executeTransfer, refunds and
+   reconciliation never re-read clinic_profiles.payout_mode. Test: flip payout_mode after payment
+   -> transfer still goes to the snapshotted account.
 5. apps/api: POST/PATCH /teams (profile), POST /teams/[id]/submit-verification, GET /teams/[id]/
    members, POST /teams/[id]/invitations (Better Auth inviteMember + Lane 1 kind team.invitation),
    DELETE /teams/[id]/members/[userId], GET /teams/[id]/bookings?expertId, GET /teams/[id]/

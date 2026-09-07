@@ -25,9 +25,13 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   in Phase 2); ciphertext format `v1:<kek_v>:<dek_v>:<iv>:<tag>:<data>`; delete `vault.ts`,
   `client.ts` (WorkOS), `tokens.ts` if it wraps Vault; keep a `records.ts` helper API for PHI
   fields (`encryptRecordFields`, `decryptRecordFields`).
-- `@eleva/calendar` `credential-manager.ts`: get access tokens with
-  `auth.api.getAccessToken({ providerId, accountId, userId })` (Better Auth auto-refreshes), start
-  scope upgrades with `linkSocial({ provider, scopes })` from the expert integrations UI; Google
+- `@eleva/auth` exports `getProviderAccessToken({ providerId, accountId, userId })` (wraps
+  `auth.api.getAccessToken`, Better Auth auto-refreshes) — the **only** place the Better Auth
+  token API is called, so the `better-auth`-only-in-`packages/auth` boundary holds.
+  `@eleva/calendar` `credential-manager.ts` receives that function by injection
+  (`createCredentialManager({ getProviderAccessToken })`) and never imports `better-auth`; scope
+  upgrades start with the `@eleva/auth/client` `linkSocial({ provider, scopes })` wrapper from
+  the expert integrations UI; Google
   scopes `calendar.readonly` + `calendar.events`; Microsoft `Calendars.ReadWrite`; store the
   Better Auth `account.id` on `expert_integrations` (replace `workos_user_id`).
 - `packages/workflows/src/scheduling/calendar-event-sync.ts` uses the new credential manager.
@@ -159,7 +163,8 @@ Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bea
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
 POSTs), withAudit on every write, RLS on every tenant table, vendor SDKs only inside their owning
 package, no dead code left behind, members not "patients" in customer-facing copy, Spaces not
-"Workspaces" for personal orgs, i18n keys for pt/en/es, cataloged dependency versions
+"Workspaces" for personal orgs, i18n keys for every app's required locales (pt/en/es; apps/admin
+pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
@@ -190,11 +195,17 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    - Delete vault.ts, client.ts, tokens.ts (if Vault-backed) and their tests; README rewritten.
    - Tests: known-vector round trip, tamper detection, aad mismatch, rotation keeps old ciphertext
      readable, shred makes it unreadable, KEK missing -> clear error.
-2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth. getProviderToken
-   ({ userId, provider, accountId }) -> auth.api.getAccessToken({ providerId: provider, accountId,
-   userId }) (auto refresh) where accountId = expert_integrations.auth_account_id — always pass it
-   so a user with several linked accounts for the same provider gets the calendar they connected;
-   expose startScopeUpgradeUrl(provider) for the UI (linkSocial with calendar scopes:
+2. @eleva/calendar credential-manager.ts: replace WorkOS Pipes with Better Auth WITHOUT importing
+   better-auth in packages/calendar (boundary: better-auth only in packages/auth). Add to
+   @eleva/auth: getProviderAccessToken({ providerId, accountId, userId }) wrapping
+   auth.api.getAccessToken (auto refresh) — the single call site of that API. In @eleva/calendar
+   export createCredentialManager({ getProviderAccessToken }) (dependency injection; apps/api and
+   @eleva/workflows construct it with the @eleva/auth function) whose getProviderToken
+   ({ userId, provider, accountId }) delegates to it with accountId =
+   expert_integrations.auth_account_id — always pass it so a user with several linked accounts
+   for the same provider gets the calendar they connected; unit tests use a fake
+   getProviderAccessToken. Expose startScopeUpgradeUrl(provider) from @eleva/auth/client for the
+   UI (linkSocial with calendar scopes:
    google https://www.googleapis.com/auth/calendar.readonly + calendar.events; microsoft
    Calendars.ReadWrite offline_access). expert_integrations: replace workos_user_id with
    auth_account_id (FK auth.account.id); migration in packages/db. Update adapters only where they
