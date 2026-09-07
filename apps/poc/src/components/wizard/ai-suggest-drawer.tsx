@@ -5,7 +5,6 @@ import { SparkleIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import {
   Sheet,
-  SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
@@ -61,33 +60,31 @@ export function AiSuggestDrawer({
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-md">
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2">
-            <SparkleIcon
-              className="size-4 text-eleva-primary"
-              weight="duotone"
-            />
-            Suggest with AI
-          </SheetTitle>
-          <SheetDescription>
-            A draft for this field only. Review and edit before continuing.
-          </SheetDescription>
-        </SheetHeader>
-        <div className="mt-6 rounded-2xl border border-border/60 bg-muted/30 p-4">
-          <p className="text-sm leading-relaxed text-foreground">
-            {suggestion}
-          </p>
-        </div>
-        <Button
-          className="mt-6 w-full"
-          onClick={handleApply}
-          disabled={loading}
-        >
-          {loading ? "Applying…" : "Use this suggestion"}
-        </Button>
-      </SheetContent>
+    <Sheet
+      isOpen={open}
+      onOpenChange={onOpenChange}
+      side="right"
+      className="w-full p-6 sm:max-w-md"
+    >
+      <SheetHeader>
+        <SheetTitle className="flex items-center gap-2">
+          <SparkleIcon className="size-4 text-eleva-primary" weight="duotone" />
+          Suggest with AI
+        </SheetTitle>
+        <SheetDescription>
+          A draft for this field only. Review and edit before continuing.
+        </SheetDescription>
+      </SheetHeader>
+      <div className="mt-6 rounded-2xl border border-border/60 bg-muted/30 p-4">
+        <p className="text-sm leading-relaxed text-foreground">{suggestion}</p>
+      </div>
+      <Button
+        className="mt-6 w-full"
+        onPress={handleApply}
+        isDisabled={loading}
+      >
+        {loading ? "Applying…" : "Use this suggestion"}
+      </Button>
     </Sheet>
   )
 }

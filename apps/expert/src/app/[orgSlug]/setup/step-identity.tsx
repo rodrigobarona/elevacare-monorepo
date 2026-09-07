@@ -63,8 +63,8 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
         </div>
         <Button
           size="sm"
-          disabled={loading}
-          onClick={async () => {
+          isDisabled={loading}
+          onPress={async () => {
             setLoading(true)
             setError(null)
             try {
@@ -93,7 +93,7 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
             Your verification is being reviewed. This may take a few minutes.
           </span>
         </div>
-        <Button variant="outline" size="sm" onClick={onDone}>
+        <Button variant="outline" size="sm" onPress={onDone}>
           Continue for now
         </Button>
       </div>
@@ -114,7 +114,7 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
         needed.
       </p>
 
-      <Button onClick={handleStartVerification} disabled={loading}>
+      <Button onPress={handleStartVerification} isDisabled={loading}>
         {loading ? "Loading..." : "Start identity verification"}
       </Button>
     </div>

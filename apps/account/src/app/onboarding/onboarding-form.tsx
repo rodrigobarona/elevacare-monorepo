@@ -91,7 +91,7 @@ export function OnboardingForm({ defaultName, apiBaseUrl, locale }: Props) {
             {isPending ? t("processingHint") : null}
           </SettingsFieldsetStatus>
           <SettingsFieldsetActions>
-            <Button type="submit" size="sm" disabled={isPending}>
+            <Button type="submit" size="sm" isDisabled={isPending}>
               {isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               {isPending ? t("submitting") : t("submit")}
             </Button>

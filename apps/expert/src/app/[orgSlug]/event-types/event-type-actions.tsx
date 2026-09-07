@@ -6,14 +6,12 @@ import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import {
   DropdownMenu,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@eleva/ui/components/dropdown-menu"
 import {
   AlertDialog,
   AlertDialogCancel,
-  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
@@ -85,58 +83,64 @@ export function EventTypeActions({
           {error}
         </p>
       )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={pending}
-            aria-label={t("actions.ariaLabel")}
-          >
-            &#x2022;&#x2022;&#x2022;
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
+      <DropdownMenuTrigger>
+        <Button
+          variant="ghost"
+          size="sm"
+          isDisabled={pending}
+          aria-label={t("actions.ariaLabel")}
+        >
+          &#x2022;&#x2022;&#x2022;
+        </Button>
+        <DropdownMenu placement="bottom end">
           <DropdownMenuItem
-            onSelect={() =>
+            id="edit"
+            textValue={t("actions.edit")}
+            onAction={() =>
               router.push(`${workspaceBase}/event-types/${eventTypeId}`)
             }
           >
             {t("actions.edit")}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleTogglePublish}>
+          <DropdownMenuItem
+            id="toggle-publish"
+            textValue={
+              published ? t("actions.unpublish") : t("actions.publish")
+            }
+            onAction={handleTogglePublish}
+          >
             {published ? t("actions.unpublish") : t("actions.publish")}
           </DropdownMenuItem>
           <DropdownMenuItem
-            onSelect={() => setDeleteOpen(true)}
-            className="text-destructive"
+            id="delete"
+            variant="destructive"
+            textValue={t("actions.delete")}
+            onAction={() => setDeleteOpen(true)}
           >
             {t("actions.delete")}
           </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        </DropdownMenu>
+      </DropdownMenuTrigger>
 
-      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t("actions.deleteTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("actions.deleteDescription")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>
-              {t("actions.cancel")}
-            </AlertDialogCancel>
-            <Button
-              onClick={handleDeleteConfirm}
-              disabled={pending}
-              variant="destructive"
-            >
-              {pending ? t("actions.deleting") : t("actions.delete")}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
+      <AlertDialog isOpen={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t("actions.deleteTitle")}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t("actions.deleteDescription")}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel isDisabled={pending}>
+            {t("actions.cancel")}
+          </AlertDialogCancel>
+          <Button
+            onPress={handleDeleteConfirm}
+            isDisabled={pending}
+            variant="destructive"
+          >
+            {pending ? t("actions.deleting") : t("actions.delete")}
+          </Button>
+        </AlertDialogFooter>
       </AlertDialog>
     </>
   )

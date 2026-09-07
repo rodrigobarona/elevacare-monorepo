@@ -175,16 +175,16 @@ export function BillingClient({ apiBaseUrl, stripePublishableKey }: Props) {
         <CardFooter className="gap-3">
           <Button
             type="button"
-            onClick={() => void startCheckout()}
-            disabled={loading === "checkout"}
+            onPress={() => void startCheckout()}
+            isDisabled={loading === "checkout"}
           >
             {loading === "checkout" ? "Starting..." : "Start checkout"}
           </Button>
           <Button
             type="button"
             variant="outline"
-            onClick={() => void openPortal()}
-            disabled={loading === "portal"}
+            onPress={() => void openPortal()}
+            isDisabled={loading === "portal"}
           >
             {loading === "portal" ? "Opening..." : "Manage in portal"}
           </Button>

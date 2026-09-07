@@ -60,7 +60,7 @@ pnpm dev        # starts all apps in parallel via Turborepo
 
 | Package                    | Purpose                                                                   |
 | -------------------------- | ------------------------------------------------------------------------- |
-| `@eleva/ui`                | shadcn/Radix component library, hooks, and `globals.css`                  |
+| `@eleva/ui`                | shadcn `aria-luma` (React Aria Components) library, hooks, `globals.css`  |
 | `@eleva/eslint-config`     | Shared ESLint presets (`base`, `next-js`, `react-internal`, `boundaries`) |
 | `@eleva/typescript-config` | Shared TypeScript configs                                                 |
 
@@ -88,11 +88,14 @@ Run from the repo root — Turborepo handles cross-package orchestration.
 
 ## Adding UI components
 
-Add shadcn components from the repo root:
+Primitives are built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) (shadcn `aria-luma` style — see `.cursor/rules/react-aria-ui.mdc`). Add or regenerate components from `packages/ui`:
 
 ```bash
-pnpm dlx shadcn@latest add button -c apps/web
+cd packages/ui
+pnpm exec shadcn add --overwrite button
 ```
+
+Afterwards rewrite generated imports to `@eleva/ui/lib/utils` (`cn`) and `@eleva/icons` (icons).
 
 Components are placed in `packages/ui/src/components` and imported as:
 

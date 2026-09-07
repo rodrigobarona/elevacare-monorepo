@@ -4,7 +4,7 @@ import * as React from "react"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
-import { Checkbox } from "@eleva/ui/components/checkbox"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import { saveProfileStep } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
@@ -116,18 +116,13 @@ export function StepProfile({ profile, onDone }: Props) {
         <legend className="text-sm font-medium">Languages</legend>
         <div className="flex flex-wrap gap-3">
           {LANGUAGE_OPTIONS.map((opt) => (
-            <label
+            <CheckboxField
               key={opt.value}
-              className="flex items-center gap-1.5 text-sm"
-            >
-              <Checkbox
-                checked={languages.includes(opt.value)}
-                onCheckedChange={() =>
-                  setLanguages(toggleItem(languages, opt.value))
-                }
-              />
-              {opt.label}
-            </label>
+              id={`profile-lang-${opt.value}`}
+              label={opt.label}
+              isSelected={languages.includes(opt.value)}
+              onChange={() => setLanguages(toggleItem(languages, opt.value))}
+            />
           ))}
         </div>
       </fieldset>
@@ -136,50 +131,42 @@ export function StepProfile({ profile, onDone }: Props) {
         <legend className="text-sm font-medium">Practice countries</legend>
         <div className="flex flex-wrap gap-3">
           {COUNTRY_OPTIONS.map((opt) => (
-            <label
+            <CheckboxField
               key={opt.value}
-              className="flex items-center gap-1.5 text-sm"
-            >
-              <Checkbox
-                checked={countries.includes(opt.value)}
-                onCheckedChange={() =>
-                  setCountries(toggleItem(countries, opt.value))
-                }
-              />
-              {opt.label}
-            </label>
+              id={`profile-country-${opt.value}`}
+              label={opt.label}
+              isSelected={countries.includes(opt.value)}
+              onChange={() => setCountries(toggleItem(countries, opt.value))}
+            />
           ))}
         </div>
-        <label className="mt-2 flex items-center gap-1.5 text-sm">
-          <Checkbox
-            checked={worldwideMode}
-            onCheckedChange={(v) => setWorldwideMode(v === true)}
-          />
-          Worldwide mode (non-clinical sessions only)
-        </label>
+        <CheckboxField
+          id="profile-worldwide-mode"
+          className="mt-2"
+          label="Worldwide mode (non-clinical sessions only)"
+          isSelected={worldwideMode}
+          onChange={setWorldwideMode}
+        />
       </fieldset>
 
       <fieldset className="space-y-2">
         <legend className="text-sm font-medium">Session modes</legend>
         <div className="flex flex-wrap gap-3">
           {SESSION_MODE_OPTIONS.map((opt) => (
-            <label
+            <CheckboxField
               key={opt.value}
-              className="flex items-center gap-1.5 text-sm"
-            >
-              <Checkbox
-                checked={sessionModes.includes(opt.value)}
-                onCheckedChange={() =>
-                  setSessionModes(toggleItem(sessionModes, opt.value))
-                }
-              />
-              {opt.label}
-            </label>
+              id={`profile-session-mode-${opt.value}`}
+              label={opt.label}
+              isSelected={sessionModes.includes(opt.value)}
+              onChange={() =>
+                setSessionModes(toggleItem(sessionModes, opt.value))
+              }
+            />
           ))}
         </div>
       </fieldset>
 
-      <Button type="submit" disabled={pending}>
+      <Button type="submit" isDisabled={pending}>
         {pending ? "Saving..." : "Save & continue"}
       </Button>
     </form>

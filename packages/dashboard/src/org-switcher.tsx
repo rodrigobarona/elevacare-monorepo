@@ -3,11 +3,7 @@
 import * as React from "react"
 import { isRedirectError } from "next/dist/client/components/redirect-error"
 import { useTranslations } from "next-intl"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@eleva/ui/components/popover"
+import { Popover, PopoverTrigger } from "@eleva/ui/components/popover"
 import { CreateWorkspaceModal } from "./create-workspace-modal"
 import { OrgSwitcherList } from "./org-switcher-list"
 import { OrgSwitcherTrigger } from "./org-switcher-trigger"
@@ -65,21 +61,16 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
 
   return (
     <>
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <OrgSwitcherTrigger
-            organization={current}
-            homeUrl={currentHomeUrl}
-            open={open}
-          />
-        </PopoverTrigger>
-        <PopoverContent
-          side="bottom"
-          align="start"
-          sideOffset={6}
-          collisionPadding={8}
-          className="w-80 min-w-80 gap-0 !rounded-lg border border-border bg-popover p-0 shadow-md"
-          onOpenAutoFocus={(event) => event.preventDefault()}
+      <PopoverTrigger isOpen={open} onOpenChange={setOpen}>
+        <OrgSwitcherTrigger
+          organization={current}
+          homeUrl={currentHomeUrl}
+          open={open}
+        />
+        <Popover
+          placement="bottom start"
+          offset={6}
+          className="w-80 min-w-80 gap-0 rounded-lg! border border-border bg-popover p-0 shadow-md"
         >
           <OrgSwitcherList
             organizations={organizations}
@@ -90,8 +81,8 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
               setCreateWorkspaceOpen(true)
             }}
           />
-        </PopoverContent>
-      </Popover>
+        </Popover>
+      </PopoverTrigger>
       <CreateWorkspaceModal
         open={createWorkspaceOpen}
         onOpenChange={setCreateWorkspaceOpen}

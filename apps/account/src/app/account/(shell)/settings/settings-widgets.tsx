@@ -96,7 +96,7 @@ export function SettingsWidgets({
               type="submit"
               form={LANGUAGE_PREFERENCE_FORM_ID}
               size="sm"
-              disabled={languagePending}
+              isDisabled={languagePending}
             >
               {languagePending ? t("profile.saving") : t("profile.save")}
             </Button>
