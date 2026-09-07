@@ -52,7 +52,7 @@ In:
   Phase 11 writes the clinic's when `payout_mode = clinic`; transfers, refunds, reconciliation
   and retries read **only** this snapshot, never the current profile settings),
   `transfer_idempotency_key` (uuid, set once), `stripe_transfer_id`,
-  `stripe_payout_id`, `hold_reason`, `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
+  `stripe_payout_id`, `hold_reasons text[]` (set, `dispute|manual`), `held_from_status`, `approved_by`, `approved_at`, attempts, last_error); eligibility = `max(paid_at + 7 days,
 session_end + 24h)` snapped to 04:00 Europe/Lisbon; transfers use `transfer_group` and
   `source_transaction`; approval required when `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS`
   (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and

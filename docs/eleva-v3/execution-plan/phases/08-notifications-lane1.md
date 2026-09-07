@@ -126,7 +126,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on <masked
-                                                              number>", in person -> location name, address, "Open in Maps" link and the location's
+                                                                  number>", in person -> location name, address, "Open in Maps" link and the location's
       instructions; the ICS `LOCATION` follows the same rule.
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
@@ -258,7 +258,8 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    same key, one sent row). SMS: at-least-once — Twilio StatusCallback
    POST /webhooks/twilio/status?deliveryId=<rowId> (validate X-Twilio-Signature; marks sent +
    Message SID even if the sender crashed); before re-sending a stale queued SMS row, list
-   Twilio messages to that number with dateSentAfter = claimed_at and adopt one only when
+   Twilio messages to that number with dateSentAfter = first_attempt_at (stable across
+   re-claims; claimed_at moves on every reclaim and would miss the first attempt) and adopt one only when
    sha256(body) === sms_body_hash — bodies are unique per row because every SMS ends with
    "Ref <8-char base32 of the row id>" (never a different body; none => re-send); tests:
    (a) crash after Twilio accept + callback arrives -> row sent, no second send; (b) crash and

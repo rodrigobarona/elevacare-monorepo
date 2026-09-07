@@ -3197,7 +3197,7 @@ until both are cleared),
 Phase 11 writes the clinic&#39;s when <code>payout_mode = clinic</code>; transfers, refunds, reconciliation
 and retries read <strong>only</strong> this snapshot, never the current profile settings),
 <code>transfer_idempotency_key</code> (uuid, set once), <code>stripe_transfer_id</code>,
-<code>stripe_payout_id</code>, <code>hold_reason</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
+<code>stripe_payout_id</code>, <code>hold_reasons text[]</code> (set, <code>dispute|manual</code>), <code>held_from_status</code>, <code>approved_by</code>, <code>approved_at</code>, attempts, last_error); eligibility = <code>max(paid_at + 7 days, session_end + 24h)</code> snapped to 04:00 Europe/Lisbon; transfers use <code>transfer_group</code> and
 <code>source_transaction</code>; approval required when <code>amount_cents &gt;= PAYOUT_APPROVAL_THRESHOLD_CENTS</code>
 (inclusive; default 50000; the single boundary rule used by the state machine, the prompt and
 the tests) or first payout for an account — those are the only two <code>approval_required</code>
@@ -3918,7 +3918,7 @@ status; suppress future sends on hard bounce.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
 before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on <masked
-                                                    number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
+                                                        number>&quot;, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
 instructions; the ICS <code>LOCATION</code> follows the same rule.</li>
 <li><input disabled="" type="checkbox"> Booking confirmation email arrives in the member&#39;s locale with ICS attached; expert receives
 &quot;new booking&quot;; in-app rows created for both.</li>
@@ -4048,7 +4048,8 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    same key, one sent row). SMS: at-least-once — Twilio StatusCallback
    POST /webhooks/twilio/status?deliveryId=&lt;rowId&gt; (validate X-Twilio-Signature; marks sent +
    Message SID even if the sender crashed); before re-sending a stale queued SMS row, list
-   Twilio messages to that number with dateSentAfter = claimed_at and adopt one only when
+   Twilio messages to that number with dateSentAfter = first_attempt_at (stable across
+   re-claims; claimed_at moves on every reclaim and would miss the first attempt) and adopt one only when
    sha256(body) === sms_body_hash — bodies are unique per row because every SMS ends with
    &quot;Ref &lt;8-char base32 of the row id&gt;&quot; (never a different body; none =&gt; re-send); tests:
    (a) crash after Twilio accept + callback arrives -&gt; row sent, no second send; (b) crash and
@@ -4339,13 +4340,16 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.room_request_ids, the same id stored in the Daily room
    properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
    call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
-   it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
+   it reconciles with GET /rooms?limit=100 followed through EVERY page with starting_after
+   (Daily lists are cursor-paginated; stop only when a page returns fewer than limit rows),
+   filtered by the last attempt window, and adopts the
    room whose meta.room_request_id is in sessions.room_request_ids (an append-only text[] —
    every id ever sent for this booking is kept, none is replaced); (d) if none matches it
    waits 30 s and reconciles ONCE more (Daily list visibility can lag), then appends a new
    room_request_id and retries the POST once; before that second POST and again after it, the
-   reconciliation matches against ALL ids in the array, so a first room that became visible late
-   is adopted and any surplus room is deleted; if the second attempt also fails to resolve it
+   reconciliation walks ALL pages and matches against ALL ids in the array, so a first room that
+   became visible late is adopted and any surplus room is deleted (test: the matching room sits
+   on the second page of a mocked list -&gt; adopted, no duplicate created); if the second attempt also fails to resolve it
    records status = room_unresolved, emits session.room_unresolved and alerts — the sweep
    never re-creates blindly and admins resolve from Phase 12 (the admin resolver also matches on
    the full array); deleteRoom on cancel runs over every room whose meta id is in the array.
@@ -4524,7 +4528,8 @@ tags; endpoints + expert UI (<code>/[orgSlug]/crm</code>), reminders via Lane 1 
 creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
 captured on the join page, so recording is enabled by an <strong>idempotent room update</strong>, not at
 creation: <code>syncRoomRecording(bookingId)</code> in <code>@eleva/video</code> reads the flag + both consents and
-calls Daily <code>updateRoom(name, { properties: { enable_recording } })</code> only when the desired
+calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } })</code>
+— the consent boolean maps to Daily&#39;s recording mode string, never passed raw — only when the desired
 value differs from <code>sessions.recording_enabled</code>; it runs on every consent change and again in
 the <code>join</code> route before the token is minted, so the state is correct whenever anyone enters
 — a room is never re-created and a withdrawn consent flips it back to <code>false</code> the same way.
@@ -6381,11 +6386,10 @@ B. Production configuration — ADR-019: **one gate per production mutation**, e
        pnpm resend:setup -- --apply; evidence includes the region field.
    B.8 Twilio production messaging service (EU) + status callback URL: pnpm cutover:gate B.8 --
        pnpm twilio:setup -- --apply.
-   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- env
-       E2E_ALLOW_LIVE_PAYMENT=true pnpm exec playwright test e2e/production-smoke.spec.ts (the
-       flag is set inside the gated command — without it the spec skips the live charge; 1 EUR
-       booking with an
-       internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
+   B.9 Live smoke — a real charge, its own gate (one shell line, the flag inside the gated
+       command — without it the spec skips the live charge):
+       pnpm cutover:gate B.9 -- env E2E_ALLOW_LIVE_PAYMENT=true pnpm exec playwright test e2e/production-smoke.spec.ts
+       (1 EUR booking with an internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
        notifications, room), then the refund (credit note) through the same gate as B.9r. Paste
        evidence.
 C. Cutover (one owner-committed approval line and one `pnpm cutover:gate C.n -- ...` per step,

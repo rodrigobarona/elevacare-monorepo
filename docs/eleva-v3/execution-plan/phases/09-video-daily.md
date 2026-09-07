@@ -216,13 +216,16 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.room_request_ids, the same id stored in the Daily room
    properties.meta (allowed on private rooms) — nothing else identifies the booking; (b) the
    call uses a bounded timeout (10 s) and no automatic retry; (c) on timeout/5xx/network error
-   it reconciles with GET /rooms?limit=100 filtered by the last attempt window and adopts the
+   it reconciles with GET /rooms?limit=100 followed through EVERY page with starting_after
+   (Daily lists are cursor-paginated; stop only when a page returns fewer than limit rows),
+   filtered by the last attempt window, and adopts the
    room whose meta.room_request_id is in sessions.room_request_ids (an append-only text[] —
    every id ever sent for this booking is kept, none is replaced); (d) if none matches it
    waits 30 s and reconciles ONCE more (Daily list visibility can lag), then appends a new
    room_request_id and retries the POST once; before that second POST and again after it, the
-   reconciliation matches against ALL ids in the array, so a first room that became visible late
-   is adopted and any surplus room is deleted; if the second attempt also fails to resolve it
+   reconciliation walks ALL pages and matches against ALL ids in the array, so a first room that
+   became visible late is adopted and any surplus room is deleted (test: the matching room sits
+   on the second page of a mocked list -> adopted, no duplicate created); if the second attempt also fails to resolve it
    records status = room_unresolved, emits session.room_unresolved and alerts — the sweep
    never re-creates blindly and admins resolve from Phase 12 (the admin resolver also matches on
    the full array); deleteRoom on cancel runs over every room whose meta id is in the array.

@@ -225,11 +225,10 @@ B. Production configuration — ADR-019: **one gate per production mutation**, e
        pnpm resend:setup -- --apply; evidence includes the region field.
    B.8 Twilio production messaging service (EU) + status callback URL: pnpm cutover:gate B.8 --
        pnpm twilio:setup -- --apply.
-   B.9 Live smoke — a real charge, its own gate: pnpm cutover:gate B.9 -- env
-       E2E_ALLOW_LIVE_PAYMENT=true pnpm exec playwright test e2e/production-smoke.spec.ts (the
-       flag is set inside the gated command — without it the spec skips the live charge; 1 EUR
-       booking with an
-       internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
+   B.9 Live smoke — a real charge, its own gate (one shell line, the flag inside the gated
+       command — without it the spec skips the live charge):
+       pnpm cutover:gate B.9 -- env E2E_ALLOW_LIVE_PAYMENT=true pnpm exec playwright test e2e/production-smoke.spec.ts
+       (1 EUR booking with an internal expert end to end: payment, payout scheduled, Tier 1 + Tier 2 invoices,
        notifications, room), then the refund (credit note) through the same gate as B.9r. Paste
        evidence.
 C. Cutover (one owner-committed approval line and one `pnpm cutover:gate C.n -- ...` per step,

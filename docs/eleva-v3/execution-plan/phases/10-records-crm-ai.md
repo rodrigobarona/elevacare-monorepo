@@ -78,7 +78,8 @@ In:
   creates the room at booking confirmation with `enable_recording: false`, and consent is
   captured on the join page, so recording is enabled by an **idempotent room update**, not at
   creation: `syncRoomRecording(bookingId)` in `@eleva/video` reads the flag + both consents and
-  calls Daily `updateRoom(name, { properties: { enable_recording } })` only when the desired
+  calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } })`
+  — the consent boolean maps to Daily's recording mode string, never passed raw — only when the desired
   value differs from `sessions.recording_enabled`; it runs on every consent change and again in
   the `join` route before the token is minted, so the state is correct whenever anyone enters
   — a room is never re-created and a withdrawn consent flips it back to `false` the same way.
