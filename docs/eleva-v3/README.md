@@ -23,8 +23,12 @@ This handbook is based on the master planning work captured in the Eleva v3 proj
 > version is generated at `execution-plan/index.html` (`pnpm docs:execution-plan:html`).
 > `roadmap-and-milestones.md` and `implementation-sprints.md` are superseded for sequencing.
 
-Read these documents in order when onboarding a developer, designer, PM, or agent to the project:
+Read these documents in order when onboarding a developer, designer, PM, or agent to the project
+(item 0 is the entry point; the rest is the architecture background it links to):
 
+0. [`execution-plan/README.md`](./execution-plan/README.md) — the sequencing SSOT (phases,
+   review loop, copy-paste prompts). `roadmap-and-milestones.md` and
+   `implementation-sprints.md` are superseded by it and kept for history only.
 1. [`master-architecture.md`](./master-architecture.md)
 2. [`monorepo-structure.md`](./monorepo-structure.md)
 3. [`domain-model.md`](./domain-model.md)
@@ -53,21 +57,16 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 26. [`integration-runbooks.md`](./integration-runbooks.md)
 27. [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 28. [`testing-strategy.md`](./testing-strategy.md)
-29. [`execution-plan/README.md`](./execution-plan/README.md) — the sequencing SSOT (phases,
-    review loop, prompts). Historical only, not part of the canonical order:
-    [`roadmap-and-milestones.md`](./roadmap-and-milestones.md) and
-    [`implementation-sprints.md`](./implementation-sprints.md) are superseded by it and kept
-    for context.
-30. [`dependency-map.md`](./dependency-map.md)
-31. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
-32. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
-33. [`contribution-workflow.md`](./contribution-workflow.md)
-34. [`decision-log.md`](./decision-log.md)
-35. [`owner-map.md`](./owner-map.md)
-36. [`environment-matrix.md`](./environment-matrix.md)
-37. [`service-level-objectives.md`](./service-level-objectives.md)
-38. [`support-escalation-matrix.md`](./support-escalation-matrix.md)
-39. [`adrs/README.md`](./adrs/README.md)
+29. [`dependency-map.md`](./dependency-map.md)
+30. [`feature-flag-rollout-plan.md`](./feature-flag-rollout-plan.md)
+31. [`release-versioning-strategy.md`](./release-versioning-strategy.md)
+32. [`contribution-workflow.md`](./contribution-workflow.md)
+33. [`decision-log.md`](./decision-log.md)
+34. [`owner-map.md`](./owner-map.md)
+35. [`environment-matrix.md`](./environment-matrix.md)
+36. [`service-level-objectives.md`](./service-level-objectives.md)
+37. [`support-escalation-matrix.md`](./support-escalation-matrix.md)
+38. [`adrs/README.md`](./adrs/README.md)
 
 **Brand, marketing, and design** should also use [`brand-book/README.md`](./brand-book/README.md) (and its appendices) so voice, visual identity, and partner boundaries stay consistent with the Eleva.care product reference.
 

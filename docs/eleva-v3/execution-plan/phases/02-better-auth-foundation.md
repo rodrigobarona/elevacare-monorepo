@@ -92,7 +92,8 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
 
 ## Acceptance criteria
 
-- [ ] `rg -n "from \"better-auth" --glob '!packages/auth/**'` returns nothing (boundary lint).
+- [ ] `rg -n 'better-auth' -g '!packages/auth/**' -g '!pnpm-lock.yaml' -g '!docs/**' -g '!pnpm-workspace.yaml'`
+      returns nothing (boundary lint; matches `import`, `from` and `require` forms).
 - [ ] `GET https://api.<env>/auth/ok` returns 200; `GET /openapi.json` includes `/auth/*` paths.
 - [ ] Sign up -> email verified -> personal Space exists (`organization.type = personal`) with
       `member.role = owner`, audited (`audit_outbox` row).

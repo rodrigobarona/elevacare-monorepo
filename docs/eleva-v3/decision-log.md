@@ -149,7 +149,7 @@ Each entry should include:
 
 - Owner: platform
 - Status: active
-- Summary: Daily.co EU region for video sessions and transcripts. Transcripts are Eleva-owned records encrypted at rest via WorkOS Vault references. Transcript content never leaks into notifications, analytics, or AI-gateway logs.
+- Summary: Daily.co EU region for video sessions and transcripts. Transcripts are Eleva-owned records encrypted at rest (originally via WorkOS Vault references; **superseded in part 2026-09-07** — now `@eleva/encryption` envelope encryption per ADR-020). Transcript content never leaks into notifications, analytics, or AI-gateway logs.
 - Reference: [`vendor-decision-matrix.md`](./vendor-decision-matrix.md), ADR-009
 
 ### 2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes (reaffirmed)
@@ -204,7 +204,7 @@ Each entry should include:
 ### 2026-04-22: RBAC backbone — WorkOS `admin`/`member` defaults + capability bundles
 
 - Owner: platform
-- Status: active
+- Status: superseded in part (2026-09-07, ADR-021): the `admin`/`member` seniority model and `(org_type, role)` label derivation stay; WorkOS as the role store and `infra/workos/rbac-config.json` are replaced by Better Auth `organization` roles + `packages/auth/src/permissions.ts`
 - Summary: Eleva uses WorkOS's default `admin` and `member` roles as **org-seniority** (not product labels). Product labels are derived from `(org_type, workos_role)` plus capability bundles loaded from `infra/workos/rbac-config.json`. Patient = `admin` of personal org; solo expert = `admin` of solo org; clinic admin = `admin` of clinic org; expert-in-clinic = `member` of clinic org; Eleva staff = `admin` of a single internal `eleva-operator` org with cross-org capability grants.
 - Reference: [`identity-rbac-spec.md`](./identity-rbac-spec.md), ADR-003
 
@@ -225,7 +225,7 @@ Each entry should include:
 ### 2026-05-06: Calendar OAuth — WorkOS Pipes for credential management (supersedes 2026-04-22)
 
 - Owner: platform
-- Status: active
+- Status: superseded in part (2026-09-07, ADR-017): credential management moves from WorkOS Pipes to Better Auth `account` rows (`getProviderAccessToken` in `@eleva/auth`); `packages/calendar` still owns the Google/Microsoft API surface
 - Supersedes: [2026-04-22: Calendar OAuth ownership — Eleva, not WorkOS Pipes](#2026-04-22-calendar-oauth-ownership--eleva-not-workos-pipes-reaffirmed)
 - Summary: Calendar OAuth credential management (token storage, refresh, revocation) is delegated to WorkOS Pipes. `packages/calendar` retains ownership of the Google/Microsoft API surface (event create/read/delete, freebusy, webhook subscriptions) but no longer manages raw tokens directly — instead it requests access tokens from WorkOS Pipes via the user's `workosUserId` and provider slug. This aligns with the ADR-004 amendment (2026-05) and the scheduling-booking-spec §Calendar Integration. The April decision's rationale about needing fidelity for booking-critical flows remains valid for the API layer; the change is purely about who stores/refreshes the OAuth credentials, not who calls the calendar APIs.
 - Reference: [`adrs/ADR-004-scheduling-and-calendar-oauth.md`](./adrs/ADR-004-scheduling-and-calendar-oauth.md) (amended 2026-05), [`scheduling-booking-spec.md`](./scheduling-booking-spec.md)
@@ -263,11 +263,11 @@ Each entry should include:
 - Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
 
-### 2026-09-07: Identity, video, encryption, RBAC and migration direction for v3 (provisional until ADR-017..021 land in Phase 1)
+### 2026-09-07: Identity, video, encryption, RBAC and migration direction for v3 (ADR-017..021 authored in Phase 1)
 
 - Owner: engineering
-- Status: provisional (ADRs written and accepted in Phase 1 of the execution plan; this entry records the direction the plan is built on)
-- Supersedes **in part** (once ADRs are accepted): ADR-004 — only its WorkOS Pipes credential transport and its Google Meet link assumption; the Eleva-owned Google/Microsoft calendar OAuth and the cal.com-inspired scheduling model stay and Phase 4 builds on them; ADR-015 — only the "single WorkOS Application" assumption; the role-focused multi-app split stays; plus the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`. Phase 1 adds "Superseded in part by ADR-017/018/020" banners to ADR-004 and ADR-015 rather than retiring them.
+- Status: **accepted** — decided 2026-09-07 and locked for the execution plan; Phase 1 only writes the ADR documents (ADR-017..021) that formalise it, it does not reopen the decision. Earlier entries that assume WorkOS are superseded in part **as of this entry**, not once the ADRs land: [2026-04-22 Video — Daily.co EU region](#2026-04-22-video--dailyco-eu-region) (transcripts encrypted with `@eleva/encryption` envelope encryption, not WorkOS Vault; ADR-009 references to WorkOS Vault read as ADR-020), [2026-04-22 RBAC backbone](#2026-04-22-rbac-backbone--workos-adminmember-defaults--capability-bundles) (roles/capabilities come from Better Auth `organization` + `packages/auth/src/permissions.ts`, not `infra/workos/rbac-config.json`), and [2026-05-06 Calendar OAuth — WorkOS Pipes](#2026-05-06-calendar-oauth--workos-pipes-for-credential-management-supersedes-2026-04-22) (tokens now managed by Better Auth `account` rows).
+- Supersedes **in part**: ADR-004 — only its WorkOS Pipes credential transport and its Google Meet link assumption; the Eleva-owned Google/Microsoft calendar OAuth and the cal.com-inspired scheduling model stay and Phase 4 builds on them; ADR-015 — only the "single WorkOS Application" assumption; the role-focused multi-app split stays; plus the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`. Phase 1 adds "Superseded in part by ADR-017/018/020" banners to ADR-004 and ADR-015 rather than retiring them.
 - Summary:
   - **ADR-017 Identity**: self-hosted Better Auth in `apps/api` (`api.eleva.care/auth/*`), Drizzle adapter, `auth` schema on the main Neon project, plugins `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`; session cookie on `.eleva.care`; frontend apps never instantiate the auth server. Neon managed Better Auth rejected (Beta, partial organization plugin, no MFA/hooks).
   - **ADR-018 Video**: Daily.co only (HIPAA-enabled domain, branded `sessions.eleva.care`); Google/Microsoft calendars remain for busy-time and destination sync.

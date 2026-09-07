@@ -248,9 +248,11 @@ PR 07.1 — Tier 1 (Eleva platform):
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
    failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-
-   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum Stripe application fees per expert via
-   balance transactions vs platform_fee_invoices; write run row; mismatch > 0.1% -> BetterStack
-   alert through @eleva/observability)}; routes under apps/api/src/app/workflows/*; infra/qstash/
+   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
+   per expert net of refunds — there is NO Stripe application-fee object in the separate charges
+   and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
+   totals against Stripe balance transactions only as a sanity check; write run row; mismatch >
+   0.1% -> BetterStack alert through @eleva/observability)}; routes under apps/api/src/app/workflows/*; infra/qstash/
    setup-invoicing.ts + root script + setup:all.
 5. API (staff capability admin_accounting:read): GET /invoicing/platform-fee?month=,
    GET /accounting/reconciliation, POST /invoicing/platform-fee/[bookingPaymentId]/retry.

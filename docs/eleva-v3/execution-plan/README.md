@@ -13,8 +13,11 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 - The prompts for Phases 1–16 assume the repo is checked out at the monorepo root and that the
   tooling in Phase 0 is merged (`pnpm review`, `pnpm review:branch`, CodeRabbit CLI
   authenticated). Phase 0 bootstraps that tooling, so on a fresh checkout its prompt runs the
-  CodeRabbit CLI directly until its own scripts exist: install with
-  `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, authenticate with
+  CodeRabbit CLI directly until its own scripts exist: install it from the official
+  installation docs (https://docs.coderabbit.ai/cli) — download the installer to a file, read
+  it, verify it against the checksum published with the release and only then run it; never
+  pipe an unpinned remote script to `sh` — or use a CLI already present on the machine; confirm
+  with `coderabbit --version` (>= 0.7) and `coderabbit doctor`, authenticate with
   `coderabbit auth login`, then use `coderabbit review --uncommitted --include-untracked` where
   later phases say `pnpm review` and `coderabbit review --committed --base main` where they say
   `pnpm review:branch` — the Phase 0 prompt states this explicitly.
@@ -224,7 +227,11 @@ Key contracts every prompt must respect:
 - **Only `packages/auth` imports `better-auth`**; only `packages/video` imports `@daily-co/*`;
   only `packages/billing` imports `stripe`/`@stripe/*`; only `packages/accounting` calls
   TOConline/Moloni; only `packages/notifications` imports Resend/Twilio; only `packages/storage`
-  imports `@vercel/blob`; only `packages/ai` calls the AI Gateway.
+  imports `@vercel/blob` — this is the same rule as the repository guideline "never import
+  `@vercel/blob` directly, all blob access goes through `@eleva/storage`": the guideline speaks to
+  consumers, and `packages/eslint-config/boundaries.js` enforces it by banning the SDK in every
+  consumer config while the owning package uses its own local ESLint config without
+  `boundariesConfig`; only `packages/ai` calls the AI Gateway.
 - Frontend apps never instantiate the Better Auth server. They use `@eleva/auth/client`
   (`createAuthClient` pointed at `API_URL/auth`), `@eleva/auth/server` (`getSession()` =
   `React.cache`'d fetch to `/auth/get-session` forwarding cookies) and `@eleva/auth/proxy`

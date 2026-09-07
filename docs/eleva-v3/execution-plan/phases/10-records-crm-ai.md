@@ -286,7 +286,7 @@ PR 10.2 — CRM + AI reports beta:
    updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } }) and persist
    the new value (idempotent — no call when unchanged); invoke it from the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
-   minting the token; createSessionRoom keeps { recording: false } at creation. Tests: consent
+   minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
    after room creation -> exactly one updateRoom call; withdrawn consent -> flipped back; join with
    state already correct -> zero Daily calls. Handle webhooks recording.ready-to-download and transcript.ready (signature verified,
    idempotent) -> download transcript via Daily API -> store as records.kind = transcript

@@ -218,9 +218,9 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    authoritative row — serialises concurrent publishes for one clinic), then run
    countBillableSeats(orgId) counting the publishing member as billable, and if it would exceed
    the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
-   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, five
+   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, four
    billable members, two idle members publish concurrently -> exactly one succeeds and one gets
-   409; the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -> billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag

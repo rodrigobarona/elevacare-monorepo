@@ -80,6 +80,19 @@ function firstHeading(markdown) {
 }
 
 /**
+ * decodeURIComponent that tolerates a bare `%` in a heading fragment (e.g. `#slo-99%`) instead
+ * of failing the whole build with URIError.
+ * @param {string} value
+ */
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
+/**
  * Rewrite a Markdown link so it resolves from index.html (which lives in execution-plan/,
  * next to README.md and one level above phases/). Cross-document links become in-page
  * anchors, preserving any heading fragment as the namespaced heading id.
@@ -93,20 +106,20 @@ function rewriteLink(href, docId) {
   // Headings are rendered with `${docId}--${slug}` ids, so a same-document `#fragment`
   // must be namespaced (and normalised with the same slugify) to hit an element.
   if (href.startsWith("#")) {
-    return `#${docId}--${slugify(decodeURIComponent(href.slice(1)))}`
+    return `#${docId}--${slugify(safeDecode(href.slice(1)))}`
   }
   const phaseLink = href.match(
     /(?:^|\/)(?:phases\/)?(\d{2}[a-z0-9-]*)\.md(?:#(.*))?$/i
   )
   if (phaseLink) {
     return phaseLink[2]
-      ? `#${phaseLink[1]}--${slugify(decodeURIComponent(phaseLink[2]))}`
+      ? `#${phaseLink[1]}--${slugify(safeDecode(phaseLink[2]))}`
       : `#${phaseLink[1]}`
   }
   const readmeLink = href.match(/^(?:\.\/|\.\.\/)?README\.md(?:#(.*))?$/)
   if (readmeLink) {
     return readmeLink[1]
-      ? `#readme--${slugify(decodeURIComponent(readmeLink[1]))}`
+      ? `#readme--${slugify(safeDecode(readmeLink[1]))}`
       : "#readme"
   }
   if (docId === "readme") return href

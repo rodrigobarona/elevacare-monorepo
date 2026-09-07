@@ -95,8 +95,11 @@ branch, one pull request, one CodeRabbit review loop, one merge. Every phase shi
 <li>The prompts for Phases 1–16 assume the repo is checked out at the monorepo root and that the
 tooling in Phase 0 is merged (<code>pnpm review</code>, <code>pnpm review:branch</code>, CodeRabbit CLI
 authenticated). Phase 0 bootstraps that tooling, so on a fresh checkout its prompt runs the
-CodeRabbit CLI directly until its own scripts exist: install with
-<code>curl -fsSL https://cli.coderabbit.ai/install.sh | sh</code>, authenticate with
+CodeRabbit CLI directly until its own scripts exist: install it from the official
+installation docs (<a href="https://docs.coderabbit.ai/cli" target="_blank" rel="noreferrer noopener">https://docs.coderabbit.ai/cli</a>) — download the installer to a file, read
+it, verify it against the checksum published with the release and only then run it; never
+pipe an unpinned remote script to <code>sh</code> — or use a CLI already present on the machine; confirm
+with <code>coderabbit --version</code> (&gt;= 0.7) and <code>coderabbit doctor</code>, authenticate with
 <code>coderabbit auth login</code>, then use <code>coderabbit review --uncommitted --include-untracked</code> where
 later phases say <code>pnpm review</code> and <code>coderabbit review --committed --base main</code> where they say
 <code>pnpm review:branch</code> — the Phase 0 prompt states this explicitly.</li>
@@ -496,7 +499,11 @@ concurrently. Everything else is sequential. Never start a phase whose dependenc
 <li><strong>Only <code>packages/auth</code> imports <code>better-auth</code></strong>; only <code>packages/video</code> imports <code>@daily-co/*</code>;
 only <code>packages/billing</code> imports <code>stripe</code>/<code>@stripe/*</code>; only <code>packages/accounting</code> calls
 TOConline/Moloni; only <code>packages/notifications</code> imports Resend/Twilio; only <code>packages/storage</code>
-imports <code>@vercel/blob</code>; only <code>packages/ai</code> calls the AI Gateway.</li>
+imports <code>@vercel/blob</code> — this is the same rule as the repository guideline &quot;never import
+<code>@vercel/blob</code> directly, all blob access goes through <code>@eleva/storage</code>&quot;: the guideline speaks to
+consumers, and <code>packages/eslint-config/boundaries.js</code> enforces it by banning the SDK in every
+consumer config while the owning package uses its own local ESLint config without
+<code>boundariesConfig</code>; only <code>packages/ai</code> calls the AI Gateway.</li>
 <li>Frontend apps never instantiate the Better Auth server. They use <code>@eleva/auth/client</code>
 (<code>createAuthClient</code> pointed at <code>API_URL/auth</code>), <code>@eleva/auth/server</code> (<code>getSession()</code> =
 <code>React.cache</code>&#39;d fetch to <code>/auth/get-session</code> forwarding cookies) and <code>@eleva/auth/proxy</code>
@@ -776,8 +783,11 @@ first command; run the checks and both review loops only AFTER the task work exi
   into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build
 - Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
-  install the CodeRabbit CLI with `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, run
-  `coderabbit auth login` once, and until deliverable 3 lands use
+  install the CodeRabbit CLI from the official docs (https://docs.coderabbit.ai/cli): download
+  the installer to a file, read it, verify it against the release checksum, then run it — never
+  pipe an unpinned remote script to sh — or use an already-installed CLI; `coderabbit --version`
+  must print &gt;= 0.7 and `coderabbit doctor` must pass; run `coderabbit auth login` once, and
+  until deliverable 3 lands use
   `coderabbit review --uncommitted --include-untracked` wherever this prompt says pnpm review and
   `coderabbit review --committed --base main` wherever it says pnpm review:branch. Once the root
   scripts exist, switch to them for the remaining loops so the scripts themselves are exercised.
@@ -1259,7 +1269,8 @@ membership/onboarding routes, OpenAPI merge.</li>
 </ol>
 <h2 id="02-better-auth-foundation--acceptance-criteria"><a class="anchor" href="#02-better-auth-foundation--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <ul>
-<li><input disabled="" type="checkbox"> <code>rg -n &quot;from \&quot;better-auth&quot; --glob &#39;!packages/auth/**&#39;</code> returns nothing (boundary lint).</li>
+<li><input disabled="" type="checkbox"> <code>rg -n &#39;better-auth&#39; -g &#39;!packages/auth/**&#39; -g &#39;!pnpm-lock.yaml&#39; -g &#39;!docs/**&#39; -g &#39;!pnpm-workspace.yaml&#39;</code>
+returns nothing (boundary lint; matches <code>import</code>, <code>from</code> and <code>require</code> forms).</li>
 <li><input disabled="" type="checkbox"> <code>GET https://api.&lt;env&gt;/auth/ok</code> returns 200; <code>GET /openapi.json</code> includes <code>/auth/*</code> paths.</li>
 <li><input disabled="" type="checkbox"> Sign up -&gt; email verified -&gt; personal Space exists (<code>organization.type = personal</code>) with
 <code>member.role = owner</code>, audited (<code>audit_outbox</code> row).</li>
@@ -1869,7 +1880,8 @@ event, which Phases 7 and 8 extend with their own event types and subscribers.)<
 </li>
 <li><code>packages/db</code>: <code>bookings</code> finalize fields (<code>status</code> enum, <code>guest_email</code>, <code>buyer_org_id</code>,
 <code>expert_org_id</code>, <code>event_type_id</code>, <code>start_at</code>, <code>end_at</code>, <code>timezone</code>, <code>price_cents</code>,
-<code>currency</code>, <code>reservation_id</code> <strong>unique</strong> — the booking identity is keyed by the reservation,
+<code>currency</code>, <code>expert_user_id</code> (assigned expert, from the event type&#39;s <code>expert_profiles.user_id</code>;
+Phase 9 authorizes the join with it), <code>reservation_id</code> <strong>unique</strong> — the booking identity is keyed by the reservation,
 so concurrent <code>/payments/intent</code> calls converge on one row via <code>ON CONFLICT DO NOTHING</code> +
 re-read — <code>cancellation_reason</code>), <code>booking_payments</code> (unique <code>booking_id</code>, payment intent id,
 status, amount, fee, transfer group), <code>slot_reservations</code> additions (<code>capability_hash</code>,
@@ -2019,7 +2031,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    metadata.bookingId/transfer_group can only point at that row; booking_payments.booking_id is
    UNIQUE for the same reason; test: two parallel /payments/intent calls for one reservation -&gt;
    one bookings row, one booking_payments row, one intent id — expert_org_id, buyer_org_id
-   nullable until activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
+   nullable until activation, expert_user_id FK auth.user NOT NULL — the assigned expert, set at
+   reserve time from the event type&#39;s owning expert_profiles.user_id; it is the only identity the
+   Phase 9 join authorization accepts (never expert_org_id membership) — guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
    timezone, price_cents, currency, status enum reserved|pending_payment|confirmed|cancelled|
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,
@@ -2936,9 +2950,11 @@ PR 07.1 — Tier 1 (Eleva platform):
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes
    failed rows with backoff, max 10 attempts then DLQ + admin flag), stripe-toconline-
-   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum Stripe application fees per expert via
-   balance transactions vs platform_fee_invoices; write run row; mismatch &gt; 0.1% -&gt; BetterStack
-   alert through @eleva/observability)}; routes under apps/api/src/app/workflows/*; infra/qstash/
+   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
+   per expert net of refunds — there is NO Stripe application-fee object in the separate charges
+   and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
+   totals against Stripe balance transactions only as a sanity check; write run row; mismatch &gt;
+   0.1% -&gt; BetterStack alert through @eleva/observability)}; routes under apps/api/src/app/workflows/*; infra/qstash/
    setup-invoicing.ts + root script + setup:all.
 5. API (staff capability admin_accounting:read): GET /invoicing/platform-fee?month=,
    GET /accounting/reconciliation, POST /invoicing/platform-fee/[bookingPaymentId]/retry.
@@ -3448,7 +3464,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    bookings starting within 2h without a room (route POST /workflows/video-room-sweep;
    infra/qstash/setup-video.ts + root script + setup:all); on booking.cancelled -&gt; deleteRoom.
 4. apps/api: POST /sessions/[bookingId]/join (requireApiAuth; caller must be exactly one of:
-   the booking&#39;s assigned expert (bookings.expert_user_id), the booking&#39;s member
+   the booking&#39;s assigned expert (bookings.expert_user_id — the FK auth.user column Phase 4 sets
+   at reserve time from the event type&#39;s expert_profiles.user_id; the ONLY assigned-expert
+   identity, never expert_org_id membership), the booking&#39;s member
    (bookings.member_user_id), or a user listed in session_participants for that booking with a
    delegated role (added by the assigned expert via POST /sessions/[bookingId]/participants,
    audited session.participant_added; clinic admins are NOT implicitly allowed) — anyone else,
@@ -3790,7 +3808,7 @@ PR 10.2 — CRM + AI reports beta:
    updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } }) and persist
    the new value (idempotent — no call when unchanged); invoke it from the consent write path
    (PUT /me/consents, expert consent toggle) and from POST /sessions/[bookingId]/join before
-   minting the token; createSessionRoom keeps { recording: false } at creation. Tests: consent
+   minting the token; createSessionRoom keeps enable_recording: false at creation (Phase 9 payload field; there is no separate recording option). Tests: consent
    after room creation -&gt; exactly one updateRoom call; withdrawn consent -&gt; flipped back; join with
    state already correct -&gt; zero Daily calls. Handle webhooks recording.ready-to-download and transcript.ready (signature verified,
    idempotent) -&gt; download transcript via Daily API -&gt; store as records.kind = transcript
@@ -4061,9 +4079,9 @@ PHASE 11 TASK — Clinic (Team) SaaS product.
    authoritative row — serialises concurrent publishes for one clinic), then run
    countBillableSeats(orgId) counting the publishing member as billable, and if it would exceed
    the plan cap roll back and return 409 SEAT_LIMIT_REACHED; a plain CHECK constraint cannot
-   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, five
+   express this cross-table rule, so the lock + count IS the enforcement. Test: cap 5, four
    billable members, two idle members publish concurrently -&gt; exactly one succeeds and one gets
-   409; the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
+   409 (with five billable members both must get 409 — test that too); the same rule drives the unit tests and the acceptance criteria. Webhooks (two-file contract): customer.subscription.created,
    customer.subscription.updated, customer.subscription.deleted, invoice.paid,
    invoice.payment_failed, invoice.finalized -&gt; billing_subscriptions + emitDomainEvent; on
    invoice.finalized call @eleva/accounting issueClinicSaasInvoice (flag

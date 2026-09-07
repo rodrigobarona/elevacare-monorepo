@@ -92,7 +92,8 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
 - `packages/db`: `bookings` finalize fields (`status` enum, `guest_email`, `buyer_org_id`,
   `expert_org_id`, `event_type_id`, `start_at`, `end_at`, `timezone`, `price_cents`,
-  `currency`, `reservation_id` **unique** — the booking identity is keyed by the reservation,
+  `currency`, `expert_user_id` (assigned expert, from the event type's `expert_profiles.user_id`;
+  Phase 9 authorizes the join with it), `reservation_id` **unique** — the booking identity is keyed by the reservation,
   so concurrent `/payments/intent` calls converge on one row via `ON CONFLICT DO NOTHING` +
   re-read — `cancellation_reason`), `booking_payments` (unique `booking_id`, payment intent id,
   status, amount, fee, transfer group), `slot_reservations` additions (`capability_hash`,
@@ -243,7 +244,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    metadata.bookingId/transfer_group can only point at that row; booking_payments.booking_id is
    UNIQUE for the same reason; test: two parallel /payments/intent calls for one reservation ->
    one bookings row, one booking_payments row, one intent id — expert_org_id, buyer_org_id
-   nullable until activation, guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
+   nullable until activation, expert_user_id FK auth.user NOT NULL — the assigned expert, set at
+   reserve time from the event type's owning expert_profiles.user_id; it is the only identity the
+   Phase 9 join authorization accepts (never expert_org_id membership) — guest_email, guest_name, member_user_id nullable, event_type_id, start_at, end_at,
    timezone, price_cents, currency, status enum reserved|pending_payment|confirmed|cancelled|
    completed|no_show|refunded, cancellation_reason, cancelled_by, created_at, updated_at) and
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,

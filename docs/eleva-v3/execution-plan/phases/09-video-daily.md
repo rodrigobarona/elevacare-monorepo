@@ -189,7 +189,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    bookings starting within 2h without a room (route POST /workflows/video-room-sweep;
    infra/qstash/setup-video.ts + root script + setup:all); on booking.cancelled -> deleteRoom.
 4. apps/api: POST /sessions/[bookingId]/join (requireApiAuth; caller must be exactly one of:
-   the booking's assigned expert (bookings.expert_user_id), the booking's member
+   the booking's assigned expert (bookings.expert_user_id — the FK auth.user column Phase 4 sets
+   at reserve time from the event type's expert_profiles.user_id; the ONLY assigned-expert
+   identity, never expert_org_id membership), the booking's member
    (bookings.member_user_id), or a user listed in session_participants for that booking with a
    delegated role (added by the assigned expert via POST /sessions/[bookingId]/participants,
    audited session.participant_added; clinic admins are NOT implicitly allowed) — anyone else,

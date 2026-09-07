@@ -122,8 +122,11 @@ first command; run the checks and both review loops only AFTER the task work exi
   into phase-NN.1 / phase-NN.2 branches if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Bootstrap (Phase 0 only — the pnpm review scripts do not exist until this phase adds them):
-  install the CodeRabbit CLI with `curl -fsSL https://cli.coderabbit.ai/install.sh | sh`, run
-  `coderabbit auth login` once, and until deliverable 3 lands use
+  install the CodeRabbit CLI from the official docs (https://docs.coderabbit.ai/cli): download
+  the installer to a file, read it, verify it against the release checksum, then run it — never
+  pipe an unpinned remote script to sh — or use an already-installed CLI; `coderabbit --version`
+  must print >= 0.7 and `coderabbit doctor` must pass; run `coderabbit auth login` once, and
+  until deliverable 3 lands use
   `coderabbit review --uncommitted --include-untracked` wherever this prompt says pnpm review and
   `coderabbit review --committed --base main` wherever it says pnpm review:branch. Once the root
   scripts exist, switch to them for the remaining loops so the scripts themselves are exercised.
