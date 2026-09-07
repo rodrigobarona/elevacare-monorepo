@@ -84,9 +84,14 @@ connected|disconnected`).
 
 ## Acceptance criteria
 
-- [ ] Paid booking on staging -> immediately after `payment_intent.succeeded` (before any
-      transfer; also verified with a payout left in `approval_required`), `platform_fee_invoices`
-      row `issued` with TOConline document number in `ELEVA-FEE-2026`, PDF URL works, AT
+- [ ] Paid booking on staging -> `platform_fee_invoices` row is `pending` synchronously in the
+      `payment_intent.succeeded` handler and `issued` by the workflow worker within **60 s**
+      (SLA asserted by the test with polling; the QStash job retries with backoff and a
+      `failed` status + alert after 5 attempts). Issuance is a hard precondition of the expert
+      transfer: the Phase 6 payout engine refuses to create a Stripe transfer while the
+      booking's fee invoice is not `issued` (also verified with a payout left in
+      `approval_required`, where the invoice must still reach `issued` without any transfer).
+      Issued row carries the TOConline document number in `ELEVA-FEE-2026`, PDF URL works, AT
       communication response stored (test/sandbox mode if available; otherwise a clearly
       separate test series).
 - [ ] Refund after invoice -> credit note issued and linked.
@@ -164,7 +169,8 @@ Workflow (mandatory):
   (second PR: phase-07.2/tier2-expert-adapters). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -199,8 +205,14 @@ PR 07.1 — Tier 1 (Eleva platform):
    period_start PK, ...), accounting_reconciliation_runs (month, stripe_fee_total_cents,
    invoiced_total_cents, mismatch_bps, status, details jsonb, created_at). RLS; audit unions.
 3. Trigger: in the payment_intent.succeeded webhook handler (@eleva/billing), after the ledger row
-   is written, enqueue issuePlatformFeeInvoice via @eleva/workflows (idempotent on
-   booking_payment_id; a replayed event must not create a second invoice). On refund or transfer
+   is written, insert the platform_fee_invoices row as pending in the same transaction and enqueue
+   issuePlatformFeeInvoice via @eleva/workflows (idempotent on booking_payment_id; a replayed
+   event must not create a second invoice). Completion SLA: issued within 60 s; QStash retries
+   with backoff, after 5 failed attempts set status failed and alert (Sentry + ops email).
+   Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
+   platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
+   skip (not fail) the payout run for that booking until it is — add that check and its test in
+   this phase. On refund or transfer
    reversal with an issued invoice -> issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min, processes

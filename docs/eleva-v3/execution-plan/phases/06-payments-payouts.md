@@ -169,7 +169,8 @@ Workflow (mandatory):
   (second PR: phase-06.2/payout-engine-refunds). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.

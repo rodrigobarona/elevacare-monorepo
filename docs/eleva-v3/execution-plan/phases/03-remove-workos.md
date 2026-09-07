@@ -32,8 +32,10 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   Better Auth `account.id` on `expert_integrations` (replace `workos_user_id`).
 - `packages/workflows/src/scheduling/calendar-event-sync.ts` uses the new credential manager.
 - `@eleva/billing` `provisioning.ts`: `syncSeatQuantity(orgId)` implements the single seat rule
-  that Phase 11 relies on — billable seat = a membership of the clinic org (any role, owner
-  included) whose user has >= 1 *published* event type in that clinic; owner/admin accounts
+  that Phase 11 relies on — billable seat = a membership of an organization with
+  `organization.type = 'team'` (the product label is "Team (Clinic)"; `team` is the only
+  seat-billed type — never `personal` or `expert`) (any role, owner included) whose user has
+  >= 1 *published* event type in that org; owner/admin accounts
   without published event types are free. Triggered from `organizationHooks.afterAddMember/
   afterRemoveMember` (registered in Phase 2 as stubs) **and** from the event-type publish/
   unpublish path in `@eleva/scheduling`; until Phase 11 creates team subscriptions the function
@@ -44,7 +46,11 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
   and `verify-entitlements.ts` updated to read orgs from `auth.organization`;
   `packages/db/scripts/backfill-org-slugs.ts` updated or deleted.
 - `apps/account/src/components/workos-widgets-provider.tsx` and `settings-widgets.tsx` deleted
-  (replaced in Phase 2); `apps/*/package.json` drop `@workos-inc/*`; catalog entries removed;
+  (replaced in Phase 2); `apps/*/package.json` drop `@workos-inc/*` **and** `@radix-ui/themes`
+  (the WorkOS Widgets peer kept transitionally by ADR-022 — also remove it from the
+  `pnpm-workspace.yaml` catalog, delete `packages/dashboard/src/workos-widgets-{config.ts,overrides.css}`
+  and the `import "@radix-ui/themes/styles.css"` lines in org-scoped layouts; `rg radix` must
+  return only ADR/decision-log history); catalog entries removed;
   `packages/eslint-config/boundaries.js` forbids `@workos-inc/*` everywhere and enforces
   `better-auth` only in `packages/auth`.
 - `.github/workflows/ci.yml`: `no-workos` guard step (`rg` returns non-zero).
@@ -137,7 +143,8 @@ Workflow (mandatory):
 - Keep under 150 reviewable files (deletions count); split into phase-03.1/encryption-calendar and
   phase-03.2/infra-cleanup if needed.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -180,9 +187,11 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    flow via @eleva/auth/client with callbackURL back to the integrations page; status badge reads
    expert_integrations. apps/api experts/integrations routes: remove WorkOS references.
 3. @eleva/billing provisioning.ts: seat sync with the single seat rule shared with Phase 11.
-   Implement syncSeatQuantity(orgId) = count of memberships of the team org (any role, owner
-   included) whose user has >= 1 published event type in that org (join auth.member ->
-   event_types where org_id = team org and status = published); owner/admin accounts without
+   Implement syncSeatQuantity(orgId): no-op unless organization.type = 'team' (the only
+   seat-billed type; personal/expert orgs return early). Seats = count of memberships of that
+   team org (any role, owner included) whose user has >= 1 published event type in that org
+   (join auth.member -> event_types where org_id = the team org and status = published);
+   owner/admin accounts without
    published event types are not seats; no-op when the org has no billing_subscriptions row;
    otherwise update the Stripe subscription seat item quantity (proration per
    payments-payouts-spec.md). Wire it into the organization plugin hooks afterAddMember /

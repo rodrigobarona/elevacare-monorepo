@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                          |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-08/notifications-lane1`                                                                                                                                                                                                                                                                 |
-| Depends on | Phases 5, 6                                                                                                                                                                                                                                                                                    |
+| Depends on | Phases 5, 6, 7 (`invoice.*` kinds consume Phase 7 `invoices` events)                                                                                                                                                                                                                           |
 | Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                      |
 | Touches    | `packages/notifications/**`, `packages/email/**`, `apps/email/**` (React Email preview), `packages/workflows/src/notifications/**`, `packages/db/src/schema/main/notifications.ts`, `apps/api/src/app/{notifications,workflows}/**`, `packages/dashboard/**` (bell + inbox), `infra/qstash/**` |
 | Exit gate  | Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, payout paid, invoice issued are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently                                                 |
@@ -125,7 +125,8 @@ Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-08/notifications-lane1
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.

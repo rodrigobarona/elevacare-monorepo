@@ -50,8 +50,12 @@ In:
     (`commission_override_bps` with expiry per finance mapping table).
   - `RecordsTable` -> `records` (kind `note|report`), decrypted from WorkOS Vault using the MVP's
     `@workos-inc` Vault client **in the migration package only** (temporary, isolated dependency)
-    and re-encrypted with `encryptForOrg(expertOrgId)`; checksums (SHA-256 of plaintext) stored in
-    `migration_checksums` for verification, never the plaintext.
+    and re-encrypted with `encryptForOrg(expertOrgId)`; checksums stored in
+    `migration_checksums` as HMAC-SHA-256 of the plaintext under a migration-only key
+    (`MIGRATION_CHECKSUM_KEY`, held outside the database, never `ELEVA_KEK_*`) — a bare SHA-256
+    would let anyone with table access confirm guesses of clinical notes or templates offline; the
+    key is destroyed after the Phase 15 final verification, at which point the rows become
+    unverifiable noise and are dropped with the migration schema at +30 days.
   - `AuditLogsTable` -> appended to the audit Neon project as `legacy_audit_events` via
     `@eleva/audit` bulk import.
   - Google Calendar tokens: dropped (forced re-connect; notification kind `calendar.reconnect_required`).
@@ -100,7 +104,11 @@ Out: cutover itself (Phase 15).
       availability, past bookings, payout history; public URL `/[username]/[eventSlug]` resolves.
 - [ ] Records decrypt for the owning expert in `apps/expert`; member sees published ones.
 - [ ] Stripe verification step passes for 100% of Connect accounts and customers.
-- [ ] Rollback rehearsal: DNS revert + MVP unfreeze steps executed on staging equivalents and timed.
+- [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze, `pnpm
+      migration:reverse-export --since <ts>` produces a signed JSON of post-cutover v3 rows,
+      Stripe-driven reconciliation replays every succeeded PaymentIntent missing from MVP exactly
+      once (idempotent on `stripe_payment_intent_id`), MVP webhook re-enabled, DNS revert + MVP
+      unfreeze. Zero duplicates and zero lost paid bookings in the rehearsal report.
 
 ## Tests
 
@@ -155,7 +163,8 @@ Before writing code:
 Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-14/mvp-migration
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -178,9 +187,11 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    project — empty of tenant data before cutover, so the branch carries the real production
    schema, roles and extensions — restores a fresh pg_dump of the MVP production database (taken
    with the read-only role) into schema legacy via pg_restore, runs run --apply --target branch,
-   then verify, then writes reports/<date>.md; staging snapshots are never a rehearsal input); pnpm migration:send-welcome --wave <n>
-   --size <k>. Env: MVP_DATABASE_URL (read-only role), TARGET_DATABASE_URL, WORKOS_API_KEY
-   (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_ALLOWED_TARGET_HOSTS.
+   then verify, then writes reports/<date>.md; staging snapshots are never a rehearsal input);
+   pnpm migration:send-welcome --wave <n> --size <k>. Env: MVP_DATABASE_URL (read-only role),
+   TARGET_DATABASE_URL, WORKOS_API_KEY
+   (Vault read), STRIPE_SECRET_KEY, ELEVA_KEK_V1, MIGRATION_CHECKSUM_KEY (32 random bytes,
+   generated per migration, stored only in the operator vault), MIGRATION_ALLOWED_TARGET_HOSTS.
    Production guard (implement in infra/migration/src/guard.ts with unit tests): --apply defaults
    to --target branch. In branch mode the guard resolves the TARGET_DATABASE_URL host through the
    Neon API (NEON_API_KEY, NEON_PROJECT_ID = the v3 production project — the same project the
@@ -196,8 +207,8 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    migration:rehearse never accepts --target production.
 2. Tables on the target in schema migration: migration_runs (id, started_at, finished_at, mode,
    since, stats jsonb, status), migration_id_map (source_table, source_id, target_table, target_id,
-   unique(source_table, source_id)), migration_checksums (target_table, target_id, sha256,
-   unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
+   unique(source_table, source_id)), migration_checksums (target_table, target_id, hmac_sha256,
+   key_version, unique(target_table, target_id) — checksum rows are upserted on that key so a repeated
    --apply is a no-op for checksums too). Every mapper is idempotent through migration_id_map
    (upsert by source id); a test runs --apply twice on a fixture and asserts identical row counts
    in every target table including migration_checksums.
@@ -215,8 +226,9 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    payout_states (status map, transfer ids, applied_commission_bps), subscription plans/events/
    annual eligibility -> billing_subscriptions + commission_override_bps/expiry per
    infra/migration/GRANDFATHER.md (write this table and get finance approval recorded in
-   decision-log.md), records -> records (decrypt via WorkOS Vault, sha256 into
-   migration_checksums, re-encrypt with encryptForOrg(expertOrgId), kind note|report), audit logs
+   decision-log.md), records -> records (decrypt via WorkOS Vault, HMAC-SHA-256 of the plaintext
+   with MIGRATION_CHECKSUM_KEY into migration_checksums — never a plain hash —, re-encrypt with
+   encryptForOrg(expertOrgId), kind note|report), audit logs
    -> audit project legacy_audit_events via @eleva/audit bulk import. Google Calendar tokens are
    dropped; queue notification kind calendar.reconnect_required for affected experts (sent at
    cutover).
@@ -233,8 +245,15 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
 7. Rehearsals: run pnpm migration:rehearse three times (fixing mappers between runs), commit
    infra/migration/reports/*.md, and time the run. Write operator-tasks/cutover-runbook.md with
    the freeze procedure (MVP read-only banner + booking disabled, verify no pending Multibanco,
-   final --since delta run, verify, DNS switch, Stripe webhook switch, welcome wave 1, rollback =
-   DNS revert + MVP unfreeze) including owners and expected durations.
+   final --since delta run, verify, DNS switch, Stripe webhook switch, welcome wave 1) and a
+   "Rollback" section that preserves post-cutover writes: freeze v3 writes -> pnpm
+   migration:reverse-export --since <cutover ts> (implement in infra/migration: dumps v3 rows
+   created after the timestamp — bookings, payment_intents, payout_states, invoices,
+   notifications_outbox, magic-link-created users — to a JSON file signed with an HMAC under
+   MIGRATION_CHECKSUM_KEY) -> reconcile with Stripe as source of truth (every succeeded
+   PaymentIntent exists in exactly one system; replay missing ones into MVP via its booking
+   importer keyed on stripe_payment_intent_id; never auto-refund) -> re-enable MVP Stripe
+   webhook -> DNS revert -> MVP unfreeze. Include owners and expected durations for every step.
 8. Tests: mapping unit tests (roles, org types, payout states, slug preservation, checksum
    round trip), redirect map tests. Docs: ADR-019 final, launch-readiness-checklist.md,
    data-retention-export-matrix.md (legacy audit retention), decision-log.md.

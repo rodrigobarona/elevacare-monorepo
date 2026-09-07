@@ -39,8 +39,12 @@ In:
     return; binds the PaymentIntent to the reservation before anything else: retrieve it from
     Stripe and require `status = succeeded`, `metadata.reservationId === reservationId`,
     `amount` and `currency` equal to the reservation price, and `stripe_payment_intent_id` not
-    already used (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`, audited; only then converts
-    reservation -> booking `confirmed`; guest -> Better Auth user created with
+    already bound to a *different* reservation (unique) — any mismatch -> 409 `PAYMENT_MISMATCH`,
+    audited. Idempotent for the same reservation: webhook and client-return both call this
+    endpoint, so a retry whose intent is already bound to this reservation returns the existing
+    booking (200) instead of failing; the bind + convert runs in one transaction and a
+    unique-violation race is caught and resolved by re-reading the existing booking; only then
+    converts reservation -> booking `confirmed`; guest -> Better Auth user created with
     `emailVerified=false` + magic link activation; member's personal Space is the buyer org).
   - `POST /bookings/[id]/cancel`, `POST /bookings/[id]/reschedule` with rules from
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
@@ -166,7 +170,8 @@ Workflow (mandatory):
   (second PR: phase-04.2/booking-funnel-payment). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -225,9 +230,17 @@ PR 04.2 — funnel + payment + marketing/legal:
    idempotencyKey = reservationId; POST /bookings/confirm ({ reservationId, paymentIntentId })
    idempotent — retrieves the intent from Stripe and requires status succeeded AND
    metadata.reservationId === reservationId AND amount/currency equal to the reservation price
-   AND the intent id unused (unique index on booking_payments.stripe_payment_intent_id); any
-   mismatch -> 409 PAYMENT_MISMATCH (audited) so a valid intent cannot be replayed against another
-   reservation; then converts reservation to confirmed booking,
+   AND the intent id not bound to a different reservation (unique index on
+   booking_payments.stripe_payment_intent_id); any mismatch -> 409 PAYMENT_MISMATCH (audited) so a
+   valid intent cannot be replayed against another reservation. Same-reservation retries are
+   idempotent: if booking_payments already holds this intent for this reservationId, return the
+   existing confirmed booking with 200 (both the webhook path and the client-return path call this
+   endpoint, and Stripe redelivers webhooks). Do the bind + reservation->booking conversion in a
+   single transaction; on a unique-violation race (two concurrent confirms for the same
+   reservation) catch the constraint error, re-read the booking and return it — never surface the
+   constraint error. Test: sequential double confirm -> 200/200 same bookingId; concurrent double
+   confirm -> both 200, one booking row; confirm with an intent bound to another reservation ->
+   409. Then converts reservation to confirmed booking,
    creates the guest's Better Auth user if missing (auth.api.signUpEmail is not appropriate for
    passwordless: use magicLink sendMagicLink with a callback to /account/activate) and links the
    booking to the member's personal Space; POST /bookings/[id]/cancel and /reschedule enforcing

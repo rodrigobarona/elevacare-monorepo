@@ -51,7 +51,9 @@ https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and
   calendar reconnect notifications.
 - **Watch**: 7 days: SLO dashboard (API availability, booking success rate, payment success
   rate, webhook lag, transfer success, invoice success, notification delivery), daily report;
-  rollback trigger criteria (P1 > 30 min, payment success < 95%, data inconsistency).
+  rollback trigger criteria (P1 > 30 min, payment success < 95%, auth error rate > 5%, data
+  inconsistency); rollback preserves post-cutover writes (v3 write freeze, reverse export,
+  Stripe-driven reconciliation) before DNS reverts — see the prompt, step C.
 - **Decommission**: MVP kept read-only 30 days; WorkOS cancelled after final record checksum
   verification and 7-day watch; Novu already retired; remove migration schema after 30 days.
 
@@ -106,7 +108,8 @@ Out: Spain launch, Academy content (Phase 16).
 ## Risks
 
 - DNS propagation and cookie domain mismatches: keep MVP responding read-only; monitor auth error
-  rate; rollback = DNS revert.
+  rate; rollback follows the write-preserving procedure in step C (freeze, reverse export,
+  reconcile, then DNS revert) — never a bare DNS flip.
 - Multibanco pending payments on MVP: verify zero pending at freeze; if any, wait for expiry.
 
 ## Copy-paste prompt
@@ -130,7 +133,8 @@ Before writing code:
 Workflow (mandatory) for the code/doc PR:
 - git checkout main && git pull --ff-only && git checkout -b phase-15/launch-cutover
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm e2e
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -168,14 +172,27 @@ B. Production configuration (with go-ahead per step): set all env vars in the 8 
    notifications, room) and refund it (credit note). Paste evidence.
 C. Cutover (with go-ahead per step, following operator-tasks/cutover-runbook.md): T-48h lower DNS
    TTL to 300s and show the MVP maintenance banner; T-2h MVP read-only + booking disabled, verify
-   zero pending Multibanco; final pnpm migration:run --apply --since <last rehearsal ts> against
-   production (from infra/migration, read-only MVP role), pnpm migration:verify (counts, checksums
-   100%, FK orphans 0); move domains eleva.care, www, api, admin, sessions to the v3 Vercel
-   projects; confirm Stripe live webhook receives events on v3 then disable the MVP endpoint;
-   run production-smoke; send welcome wave 1 (experts) then wave 2 (members) within 48h; queue
-   calendar.reconnect_required notifications. Log every step with timestamps in
-   operator-tasks/cutover-log-<date>.md. Rollback criteria: P1 > 30 min, payment success < 95%,
-   auth error rate > 5%, data inconsistency -> revert DNS to MVP + unfreeze MVP + announce.
+   zero pending Multibanco; final pnpm migration:run --apply --target production --since <last
+   rehearsal ts> (from infra/migration, read-only MVP role; the Phase 14 guard requires
+   MIGRATION_CONFIRM_PRODUCTION=<today YYYY-MM-DD UTC> in the environment and the operator typing
+   the v3 production Neon project id at the interactive prompt — record both in the cutover log),
+   pnpm migration:verify --target production (counts, checksums 100%, FK orphans 0); move domains
+   eleva.care, www, api, admin, sessions to the v3 Vercel projects; confirm Stripe live webhook
+   receives events on v3 then disable the MVP endpoint; run production-smoke; send welcome wave 1
+   (experts) then wave 2 (members) within 48h; queue calendar.reconnect_required notifications.
+   Log every step with timestamps in operator-tasks/cutover-log-<date>.md.
+   Rollback criteria: P1 > 30 min, payment success < 95%, auth error rate > 5%, data
+   inconsistency. Rollback procedure (rehearsed on staging before C starts; written in
+   cutover-runbook.md section "Rollback"): (1) freeze v3 writes (ff.booking_enabled=false,
+   apps/api returns 503 on mutating routes, Stripe live webhook paused on v3); (2) export every
+   v3 row created since cutover (bookings, payment_intents, payout_states, invoices,
+   notifications_outbox, users created via magic link) with pnpm migration:reverse-export
+   --since <cutover ts> to a signed JSON file; (3) reconcile against Stripe as the source of truth
+   for money: every succeeded PaymentIntent must exist in exactly one system — replay missing ones
+   into MVP with the MVP booking importer, never refund automatically; (4) re-enable the MVP
+   Stripe webhook endpoint before DNS moves; (5) revert DNS to MVP and unfreeze MVP; (6) announce
+   and keep v3 read-only for post-mortem. Rollback is a go-ahead step like every other production
+   mutation.
 D. Watch 7 days: daily entry in docs/eleva-v3/reports/launch-slo-<date>.md with API availability,
    booking and payment success rates, webhook p95 lag, transfer/invoice success, notification
    delivery, sign-in rate of migrated experts (target >= 95% active experts in 7 days), incidents.

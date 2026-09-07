@@ -47,8 +47,10 @@ In:
 - **Expert UI** (`apps/expert`): member list (`/[orgSlug]/members` — from bookings), member
   detail (sessions timeline, notes, documents, reports), session notes editor (in the Phase 9 call
   side panel and post-call), report composer (rich text -> sanitized HTML/Markdown) with
-  "Publish to member" (audited); document upload via `@eleva/storage` `blob-upload-client` to the
-  **private** store with server-side authorization.
+  "Publish to member" (audited); document upload with `uploadBlobClient` from
+  `@eleva/storage/blob-upload-client` in the browser and `handleBlobUpload` from
+  `@eleva/storage/blob-upload-handler` in the `apps/api` Route Handler, to the **private** store
+  with server-side authorization (never `@vercel/blob` directly).
 - **Member UI** (`apps/app`): `/[orgSlug]/reports` list + detail (published records), document
   download via signed URLs (short-lived), consent management extended.
 - **CRM** (`@eleva/crm`): `contacts` (per expert org, derived from members who booked + manual),
@@ -155,7 +157,8 @@ Workflow (mandatory):
   (second PR: phase-10.2/crm-ai-reports). Each under 150 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -183,8 +186,8 @@ PR 10.1 — records, documents, consent, retention:
    packages/compliance/legal/<kind>.<locale>.md. Audit unions per phase file.
 2. apps/api: GET/POST /records (expert), GET/PATCH/DELETE /records/[id], POST /records/[id]/
    publish|unpublish, GET /me/records (member, published only), POST /documents/upload-token
-   (server-authorized token for the PRIVATE Blob store via @eleva/storage blob-upload-handler with
-   pathname prefix records/<expertOrgId>/<memberUserId>/), POST /documents/complete, GET
+   (server-authorized token for the PRIVATE Blob store via handleBlobUpload from
+   @eleva/storage/blob-upload-handler with pathname prefix records/<expertOrgId>/<memberUserId>/), POST /documents/complete, GET
    /documents/[id]/url (signed URL <= 15 min, audited), DELETE /documents/[id], GET/PUT
    /me/consents extended. All bodies encrypted with encryptForOrg(expertOrgId) before insert;
    decrypt only after authorization. OpenAPI + client.
@@ -203,7 +206,8 @@ PR 10.1 — records, documents, consent, retention:
 4. apps/expert: /[orgSlug]/members (list from bookings, search), /[orgSlug]/members/[userId]
    (timeline of sessions, notes, documents, reports), notes editor in the Phase 9 call side panel
    and post-call page (autosave encrypted drafts), report composer (Markdown editor with preview,
-   sanitized) with Publish (confirmation dialog; audited), document upload (private store).
+   sanitized) with Publish (confirmation dialog; audited), document upload (private store, browser
+   side uses uploadBlobClient from @eleva/storage/blob-upload-client).
    apps/app: /[orgSlug]/reports (published records) and /[orgSlug]/reports/[id], documents with
    signed download, consent banner on the join page for session_recording + ai_processing.
    Messages pt/en/es; "members" wording.

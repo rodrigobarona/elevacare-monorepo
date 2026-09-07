@@ -267,7 +267,7 @@ Each entry should include:
 
 - Owner: engineering
 - Status: provisional (ADRs written and accepted in Phase 1 of the execution plan; this entry records the direction the plan is built on)
-- Supersedes (once ADRs are accepted): ADR-004 (WorkOS identity), ADR-015 (WorkOS multi-app), the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`, and the "Google Meet links" assumption for sessions.
+- Supersedes **in part** (once ADRs are accepted): ADR-004 — only its WorkOS Pipes credential transport and its Google Meet link assumption; the Eleva-owned Google/Microsoft calendar OAuth and the cal.com-inspired scheduling model stay and Phase 4 builds on them; ADR-015 — only the "single WorkOS Application" assumption; the role-focused multi-app split stays; plus the WorkOS Vault/Pipes assumptions in `compliance-data-governance.md` and `calendar-integration-spec.md`. Phase 1 adds "Superseded in part by ADR-017/018/020" banners to ADR-004 and ADR-015 rather than retiring them.
 - Summary:
   - **ADR-017 Identity**: self-hosted Better Auth in `apps/api` (`api.eleva.care/auth/*`), Drizzle adapter, `auth` schema on the main Neon project, plugins `organization`, `admin`, `twoFactor`, `passkey`, `magicLink`, `bearer`, `jwt`, `apiKey`, `openAPI`, `nextCookies`; session cookie on `.eleva.care`; frontend apps never instantiate the auth server. Neon managed Better Auth rejected (Beta, partial organization plugin, no MFA/hooks).
   - **ADR-018 Video**: Daily.co only (HIPAA-enabled domain, branded `sessions.eleva.care`); Google/Microsoft calendars remain for busy-time and destination sync.
@@ -276,6 +276,13 @@ Each entry should include:
   - **ADR-021 RBAC**: single source of truth in code (`packages/auth/src/permissions.ts`); product label derived from `(organization.type, member.role)`.
   - **Staff-only locale exception**: `apps/admin` ships `en` + `pt` only (Eleva staff surface); all member/expert/clinic-facing surfaces keep `pt`/`en`/`es`.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 2, [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
+### 2026-09-07: `@eleva/ui` primitives move from Radix UI to React Aria Components (ADR-022)
+
+- Owner: engineering
+- Status: active
+- Summary: `@eleva/ui` regenerated from the shadcn `aria-luma` style on `react-aria-components`; `radix-ui`, `cmdk`, `react-hook-form` dropped; `navigation-menu`/`form` deleted, `field` + `checkbox-field` added. `@eleva/dashboard` mounts `AppRouterProvider` (relative hrefs → `router.push`, absolute → hard navigation for cross-zone). Consumers in `apps/web`, `apps/account`, `apps/expert`, `apps/poc` migrated to React Aria props (`isDisabled`, `onPress`, `isOpen`, `selectedKey`). Done before Phase 2 so all new v3 UI is written once against the final primitive layer.
+- Reference: [`adrs/ADR-022-react-aria-ui-primitives.md`](./adrs/ADR-022-react-aria-ui-primitives.md), [`design-system-spec.md`](./design-system-spec.md)
 
 ## Related Docs
 

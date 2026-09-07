@@ -147,7 +147,8 @@ Workflow (mandatory):
   files count — split further by app if needed).
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity && pnpm e2e
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -162,7 +163,9 @@ package, no dead code left behind, members not "patients" in customer-facing cop
 PHASE 13 TASK — Harden, observe, localize, speed up, and test the whole platform.
 
 PR 13.1 — security + observability + analytics:
-1. Security headers: in @eleva/observability add buildSecurityHeaders({ app, nonce, reportOnly })
+1. Security headers: in @eleva/observability add buildSecurityHeaders({ app, nonce, reportOnly, route })
+   — the single signature every caller uses; route is the policy object described below and is
+   REQUIRED (no default), so a proxy cannot forget it —
    producing CSP (default-src 'self'; script-src 'self' 'nonce-…' https://js.stripe.com
    https://connect-js.stripe.com https://eu.i.posthog.com (apps) https://www.googletagmanager.com
    (web only); connect-src self api host, wss/https *.daily.co, sessions.eleva.care,
@@ -174,11 +177,14 @@ PR 13.1 — security + observability + analytics:
    frame-ancestors 'none' on every route (never ALLOW-FROM; frame-src above covers the iframes
    we embed; third-party embedding is unsupported at launch — a future embeddable route must, via
    a new ADR, pass { route: { embeddable: true } } which OMITS X-Frame-Options and sets the
-   route-specific frame-ancestors, never both). The helper takes a route policy
-   { mediaCapture: boolean; embeddable: boolean } derived from the pathname in each proxy
-   (mediaCapture only for /sessions/[bookingId]/join) and has unit tests for join, embeddable
-   and normal routes. Apply from every apps/*/src/proxy.ts via one helper call (keep proxies
-   < 50 LOC) and in apps/api security-headers.ts. Start report-only
+   route-specific frame-ancestors, never both). route is
+   { mediaCapture: boolean; embeddable: boolean }, computed by an exported
+   routePolicyForPathname(app, pathname) helper (mediaCapture only for
+   /sessions/[bookingId]/join in apps/app; embeddable always false at launch) so proxies never
+   hand-write the policy; unit tests cover join, embeddable and normal routes and assert that
+   X-Frame-Options and frame-ancestors are consistent. Apply from every apps/*/src/proxy.ts via
+   one helper call (keep proxies < 50 LOC) and in apps/api security-headers.ts with
+   route: routePolicyForPathname("api", pathname). Start report-only
    on staging (env CSP_REPORT_ONLY=true), enforce after 48h clean.
 2. Rate limits: apps/api/src/lib/rate-limit.ts exposes classes auth (10/min/IP), publicRead
    (120/min/IP), mutation (60/min/user), admin (300/min/user), webhook (none, signature only);

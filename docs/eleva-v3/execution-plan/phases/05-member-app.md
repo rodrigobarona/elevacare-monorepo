@@ -24,7 +24,10 @@ In:
     reschedule (policy text shown, calls Phase 4 endpoints), receipt link.
   - `/payments`: list of `booking_payments` with status, receipt PDF/URL from Stripe
     (`charges.receipt_url`), refunds.
-  - `/settings`: profile (name, avatar via `@eleva/storage` upload), language (`ELEVA_LOCALE`),
+  - `/settings`: profile (name, avatar via `uploadBlobClient` from
+    `@eleva/storage/blob-upload-client` in the browser and `handleBlobUpload` from
+    `@eleva/storage/blob-upload-handler` in the `apps/api` Route Handler, public store),
+    language (`ELEVA_LOCALE`),
     theme (`ELEVA_THEME`), timezone, notification preferences (email/SMS/in-app per category,
     quiet hours) stored in `notification_preferences` (consumed by Phase 8).
   - `/privacy`: consents (view/withdraw), DSAR export request (creates `dsar_requests` row,
@@ -118,7 +121,8 @@ Workflow (mandatory):
 - git checkout main && git pull --ff-only && git checkout -b phase-05/member-app
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
-- Run: pnpm review -> fix -> repeat. Conventional Commits. pnpm review:branch -> fix.
+- Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
+- Commit with Conventional Commits. Run: pnpm review:branch -> fix -> repeat until clean.
 - git push -u origin HEAD && gh pr create --base main (PR body template README section 8).
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green; request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
@@ -156,8 +160,10 @@ PHASE 5 TASK — Build the member product in apps/app.
    countdown and disabled Join placeholder, past, "Find an expert" link to apps/web),
    /sessions + /sessions/[bookingId] (details, ICS download, cancel/reschedule dialogs with policy
    copy and confirmation, calling Phase 4 endpoints), /payments (list + receipt links + refund
-   status), /settings (profile + avatar upload via @eleva/storage client, language via ELEVA_LOCALE
-   cookie helper from @eleva/i18n, theme via ELEVA_THEME, timezone, notification preferences
+   status), /settings (profile + avatar upload: uploadBlobClient from
+   @eleva/storage/blob-upload-client in the browser, handleBlobUpload from
+   @eleva/storage/blob-upload-handler in apps/api/src/app/users/avatar/route.ts; language via
+   ELEVA_LOCALE cookie helper from @eleva/i18n, theme via ELEVA_THEME, timezone, notification preferences
    matrix with quiet hours), /privacy (consents with withdraw, DSAR request + status + download,
    delete account with confirmation). Server Actions: Zod validate, authenticate inside, delegate
    to @eleva/api-client. Toasts via @eleva/ui Toaster. Messages pt/en/es with "members" wording.
