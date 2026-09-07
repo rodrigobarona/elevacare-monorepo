@@ -1,7 +1,20 @@
-import { describe, it, expect } from "vitest"
+import { afterAll, beforeAll, describe, it, expect, vi } from "vitest"
 import { getAvailableSlots } from "../src/availability"
 
 describe("getAvailableSlots", () => {
+  // getAvailableSlots filters against the wall clock (minimum notice, booking
+  // window). Pin "now" before every fixture date so the suite stays green after
+  // June 2026.
+  beforeAll(() => {
+    vi.useFakeTimers({
+      now: new Date("2026-06-01T00:00:00Z"),
+      toFake: ["Date"],
+    })
+  })
+  afterAll(() => {
+    vi.useRealTimers()
+  })
+
   const baseInput = {
     eventType: {
       durationMinutes: 60,
