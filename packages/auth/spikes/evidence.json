@@ -1,6 +1,6 @@
 {
   "version": "1.7.3",
-  "generatedAt": "2026-09-08T08:57:55.145Z",
+  "generatedAt": "2026-09-08T10:15:53.386Z",
   "evidence": [
     {
       "id": "01-signup-verify",
@@ -12,13 +12,13 @@
         "path": "/auth/sign-up/email",
         "body": {
           "name": "Rodrigo Spike",
-          "email": "spike.1788857868610@example.com",
+          "email": "spike.1788862547627@example.com",
           "password": "[redacted]"
         },
         "verify": {
           "method": "GET",
           "path": "/auth/verify-email",
-          "token": "eyJhbGci…72JM"
+          "token": "eyJhbGci…aNqQ"
         }
       },
       "response": {
@@ -27,22 +27,22 @@
           "token": null,
           "user": {
             "name": "Rodrigo Spike",
-            "email": "spike.1788857868610@example.com",
+            "email": "spike.1788862547627@example.com",
             "emailVerified": false,
             "image": null,
-            "createdAt": "2026-09-08T08:57:51.502Z",
-            "updatedAt": "2026-09-08T08:57:51.502Z",
+            "createdAt": "2026-09-08T10:15:49.827Z",
+            "updatedAt": "2026-09-08T10:15:49.827Z",
             "role": "user",
             "banned": false,
             "banReason": null,
             "banExpires": null,
             "twoFactorEnabled": false,
-            "id": "68231c35-41b4-4082-a8ab-94f4cecfefe9"
+            "id": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae"
           }
         },
         "verifyStatus": 302,
         "sessionStatus": 200,
-        "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+        "userId": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae",
         "emailVerified": true
       },
       "notes": [
@@ -64,18 +64,18 @@
         "organizations": [
           {
             "name": "Rodrigo's Space",
-            "slug": "space-68231c3541b4",
+            "slug": "space-2c8f4e005c36",
             "logo": null,
-            "createdAt": "2026-09-08T08:57:51.782Z",
+            "createdAt": "2026-09-08T10:15:50.084Z",
             "metadata": null,
             "type": "personal",
-            "id": "78d119c4-3e0d-47a1-a33d-a04f9c49b04a"
+            "id": "ef808a9e-9367-442d-80a9-f53e5be1f155"
           }
         ]
       },
       "notes": [
-        "Hook created Rodrigo's Space (space-68231c3541b4) type=personal.",
-        "Spike audit stand-in (02.1: withAudit): [{\"entity\":\"organization\",\"action\":\"created\",\"entityId\":\"78d119c4-3e0d-47a1-a33d-a04f9c49b04a\",\"payload\":{\"type\":\"personal\",\"name\":\"Rodrigo's Space\"}}]"
+        "Hook created Rodrigo's Space (space-2c8f4e005c36) type=personal.",
+        "withAudit is unproven here: the isolated auth_spike database has no audit_outbox. 02.1 wraps this hook in withAudit from @eleva/audit."
       ]
     },
     {
@@ -88,7 +88,7 @@
         "path": "/auth/organization/create",
         "body": {
           "name": "Rodrigo Expert",
-          "slug": "expert-1788857868610",
+          "slug": "expert-1788862547627",
           "type": "expert"
         }
       },
@@ -96,18 +96,18 @@
         "status": 200,
         "body": {
           "name": "Rodrigo Expert",
-          "slug": "expert-1788857868610",
+          "slug": "expert-1788862547627",
           "logo": null,
-          "createdAt": "2026-09-08T08:57:52.424Z",
+          "createdAt": "2026-09-08T10:15:50.690Z",
           "type": "expert",
-          "id": "da901c84-9740-4fde-9eba-ee925f157da1",
+          "id": "59f4fecc-f5df-4799-b117-a19b4be86492",
           "members": [
             {
-              "organizationId": "da901c84-9740-4fde-9eba-ee925f157da1",
-              "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+              "organizationId": "59f4fecc-f5df-4799-b117-a19b4be86492",
+              "userId": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae",
               "role": "owner",
-              "createdAt": "2026-09-08T08:57:52.466Z",
-              "id": "8dc34670-94c4-40af-ac8f-28c08130b0fa"
+              "createdAt": "2026-09-08T10:15:50.730Z",
+              "id": "93d88d2b-c95b-42b3-b90c-85008ff82095"
             }
           ]
         }
@@ -125,21 +125,21 @@
         "method": "POST",
         "path": "/auth/organization/set-active",
         "body": {
-          "organizationId": "da901c84…7da1"
+          "organizationId": "59f4fecc…6492"
         }
       },
       "response": {
         "setActiveStatus": 200,
         "setActive": {
           "name": "Rodrigo Expert",
-          "slug": "expert-1788857868610",
+          "slug": "expert-1788862547627",
           "logo": null,
-          "createdAt": "2026-09-08T08:57:52.424Z",
+          "createdAt": "2026-09-08T10:15:50.690Z",
           "metadata": null,
           "type": "expert",
-          "id": "da901c84-9740-4fde-9eba-ee925f157da1"
+          "id": "59f4fecc-f5df-4799-b117-a19b4be86492"
         },
-        "activeOrganizationId": "da901c84-9740-4fde-9eba-ee925f157da1"
+        "activeOrganizationId": "59f4fecc-f5df-4799-b117-a19b4be86492"
       },
       "notes": ["session.activeOrganizationId updates after set-active."]
     },
@@ -153,7 +153,7 @@
         "domain": ".dev.eleva.care"
       },
       "response": {
-        "setCookie": "better-auth.session_token=15YYByjz…E%3D; Max-Age=2592000; Domain=.dev.eleva.care; Path=/; HttpOnly; SameSite=Lax"
+        "setCookie": "better-auth.session_token=qXn6VdJs…U%3D; Max-Age=2592000; Domain=.dev.eleva.care; Path=/; HttpOnly; SameSite=Lax"
       },
       "notes": [
         "Header-level Domain=.dev.eleva.care is set. Live browser proof on a real *.dev.eleva.care host is Phase 2 staging, not this spike process."
@@ -178,8 +178,8 @@
       },
       "response": {
         "createStatus": 200,
-        "keyId": "60624768-3995-46a1-8b49-05fcf5c9ff22",
-        "key": "tJbEruQk…bhaf",
+        "keyId": "fd28966e-24d7-48ec-b340-76676b77f6ca",
+        "key": "ZYryoRMB…aNbP",
         "sessionStatus": 200
       },
       "notes": [
@@ -205,9 +205,9 @@
       },
       "response": {
         "signInStatus": 200,
-        "token": "VNu17jop…YSKY",
+        "token": "kPQiUY6B…JFsw",
         "sessionStatus": 200,
-        "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9"
+        "userId": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae"
       },
       "notes": [
         "bearer() plugin returns a session token on sign-in and accepts it as Authorization: Bearer.",
@@ -232,12 +232,12 @@
       },
       "response": {
         "tokenStatus": 200,
-        "jwt": "eyJhbGci…x3Dg",
+        "jwt": "eyJhbGci…pRBA",
         "childExit": 0,
         "child": {
           "alg": "EdDSA",
-          "kid": "e4304fc5-90c4-4b33-842f-bea5431c86f9",
-          "sub": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+          "kid": "d3d2069c-e9a6-42f4-926d-c629c14d8ce3",
+          "sub": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae",
           "claims": [
             "iat",
             "id",
@@ -310,9 +310,9 @@
       },
       "response": {
         "status": 200,
-        "location": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=Bg_7znaep0Fb9CWMXB9CkcXaqEzcwj31&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=OIscbLDnG6-cOEYtzx1ej7iVtspe-DgsfrxR55-CmqA&include_granted_scopes=true",
+        "location": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=n-pNA4OEL4pZuQaS_hBAPXbVVsCeElID&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=cnCWcYtOCFRgIxnKTdZ8KH9WR5kyYfy6MXXkKrjsKZ4&include_granted_scopes=true",
         "body": {
-          "url": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=Bg_7znaep0Fb9CWMXB9CkcXaqEzcwj31&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=OIscbLDnG6-cOEYtzx1ej7iVtspe-DgsfrxR55-CmqA&include_granted_scopes=true",
+          "url": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=n-pNA4OEL4pZuQaS_hBAPXbVVsCeElID&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=cnCWcYtOCFRgIxnKTdZ8KH9WR5kyYfy6MXXkKrjsKZ4&include_granted_scopes=true",
           "redirect": true
         }
       },
@@ -338,6 +338,9 @@
         }
       },
       "response": {
+        "secondSignInStatus": 200,
+        "secondTokenPresent": true,
+        "secondSessionBeforeRevoke": true,
         "revokeStatus": 200,
         "currentCookieSessionAlive": true,
         "otherBearerAlive": false,
@@ -369,15 +372,15 @@
         "backupCodeCount": 10,
         "passkeyStatus": 200,
         "passkey": {
-          "challenge": "jLWE3ij8vwGnBTKG9hI6rdxhB-gxvmE_-NP_NtYHqUE",
+          "challenge": "2sICGtUz302_Hoq5bNiOrKRasLUdXnWJ9rAu_f8tyjM",
           "rp": {
             "name": "Eleva.care",
             "id": "localhost"
           },
           "user": {
-            "id": "dzBqdHcxOGk5bnZjeXhsNmV2eGM4anRtZ2JqZmdlbzc",
-            "name": "spike.1788857868610@example.com",
-            "displayName": "spike.1788857868610@example.com"
+            "id": "ZGNoM2NxNjgyd2N5c3p2b2M1bXY4bG4weThtbzJkeHo",
+            "name": "spike.1788862547627@example.com",
+            "displayName": "spike.1788862547627@example.com"
           },
           "pubKeyCredParams": [
             {
@@ -407,12 +410,12 @@
           "hints": []
         },
         "totpVerify": {
-          "token": "[redacted]",
+          "token": "qXn6VdJs…FGKO",
           "user": {
-            "id": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
-            "createdAt": "2026-09-08T08:57:51.502Z",
-            "updatedAt": "2026-09-08T08:57:51.918Z",
-            "email": "spike.1788857868610@example.com",
+            "id": "2c8f4e00-5c36-418f-ae90-f8a0f04965ae",
+            "createdAt": "2026-09-08T10:15:49.827Z",
+            "updatedAt": "2026-09-08T10:15:50.221Z",
+            "email": "spike.1788862547627@example.com",
             "emailVerified": true,
             "name": "Rodrigo Spike",
             "image": null,

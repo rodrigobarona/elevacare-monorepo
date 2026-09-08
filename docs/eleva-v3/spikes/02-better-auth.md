@@ -54,6 +54,10 @@ slug, userId, type: "personal" } })`.
 - **Absorb:** list is **GET** `/auth/organization/list`, not POST. Hook
   may use `userId` (no session headers). Name is first name only +
   `'s Space`.
+- **Unproven:** `withAudit` / `audit_outbox`. The throwaway `auth_spike`
+  database has no audit tables; wrapping `@eleva/audit` would couple the
+  isolated spike to the main Neon database. 02.1 wraps this hook in
+  `withAudit`.
 
 ### 03 — Expert organization creation — proven
 
@@ -120,6 +124,12 @@ Domain=.dev.eleva.care; Path=/; HttpOnly; SameSite=Lax`.
   `requireApiAuth` must verify via JWKS (jose), never a hardcoded RS256
   key. Discriminator stays: three base64url segments + `kid` → JWT,
   otherwise opaque bearer.
+  JWTs are **short-lived and non-revocable** (`expirationTime` default
+  `15m`). JWKS verify does not consult the `session` table. After
+  `revoke-other-sessions`, cookie and opaque bearer die immediately; a
+  JWT minted before revoke stays valid until `exp`. Privileged mutations
+  use cookie or opaque bearer, never JWT. 02.1 adds the revoke-vs-JWT
+  integration test.
 
 ### 10 — Admin role check — proven
 

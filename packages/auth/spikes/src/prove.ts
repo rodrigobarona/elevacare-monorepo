@@ -6,8 +6,8 @@ import { drizzleAdapter } from "@better-auth/drizzle-adapter"
 import { drizzle } from "drizzle-orm/node-postgres"
 import * as OTPAuth from "otpauth"
 import { BETTER_AUTH_VERSION, pool } from "./auth.ts"
-import { spikeAuditEvents } from "./audit.ts"
 import { lastEmail } from "./inbox.ts"
+import { startSpikeServer } from "./server.ts"
 
 async function wipeSpikeData(): Promise<void> {
   await pool.query(`
@@ -26,7 +26,6 @@ async function wipeSpikeData(): Promise<void> {
     restart identity cascade
   `)
 }
-import { startSpikeServer } from "./server.ts"
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url))
 const PORT = Number(process.env.SPIKE_PORT ?? "8787")
@@ -52,6 +51,12 @@ function redact(value: string | undefined | null): string | undefined {
   if (!value) return undefined
   if (value.length <= 12) return `${value.slice(0, 4)}…`
   return `${value.slice(0, 8)}…${value.slice(-4)}`
+}
+
+function redactTokenField(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value
+  const body = value as { token?: string }
+  return { ...body, token: redact(body.token) }
 }
 
 class CookieJar {
@@ -219,9 +224,19 @@ try {
   )
   const sessionAfterVerify = await call("GET", "/auth/get-session", { jar })
   const sessionUser = (
-    sessionAfterVerify.json as { user?: { id: string; email: string } }
+    sessionAfterVerify.json as {
+      user?: { id: string; email: string; emailVerified?: boolean }
+    }
   )?.user
-  if (!sessionUser?.id) throw new Error("no session after verify")
+  const verifyProven =
+    Boolean(sessionUser?.id) &&
+    sessionUser?.email === email &&
+    sessionUser?.emailVerified === true
+  if (!verifyProven) {
+    throw new Error(
+      `verify incomplete: email=${sessionUser?.email} verified=${sessionUser?.emailVerified}`
+    )
+  }
 
   record({
     id: "01-signup-verify",
@@ -274,16 +289,10 @@ try {
         }
       )?.organizations ?? [])
   const personal = orgList.find((org) => org.type === "personal") ?? orgList[0]
-  const audited = spikeAuditEvents().some(
-    (event) => event.entity === "organization" && event.action === "created"
-  )
   record({
     id: "02-personal-space",
     title: "Personal Space provisioning hook",
-    status:
-      personal?.name?.endsWith("'s Space") && audited
-        ? "proven"
-        : "plan-change",
+    status: personal?.name?.endsWith("'s Space") ? "proven" : "plan-change",
     version: BETTER_AUTH_VERSION,
     request: {
       hook: "databaseHooks.user.create.after -> auth.api.createOrganization",
@@ -294,7 +303,7 @@ try {
       personal
         ? `Hook created ${personal.name} (${personal.slug ?? "no-slug"}) type=${personal.type}.`
         : "No personal organization appeared after user.create.after.",
-      `Spike audit stand-in (02.1: withAudit): ${JSON.stringify(spikeAuditEvents())}`,
+      "withAudit is unproven here: the isolated auth_spike database has no audit_outbox. 02.1 wraps this hook in withAudit from @eleva/audit.",
     ],
   })
 
@@ -551,11 +560,30 @@ try {
     body: { email, password: PASSWORD },
   })
   const secondToken = (second.json as { token?: string })?.token
-  const revoke = await call("POST", "/auth/revoke-other-sessions", { jar })
-  const firstStill = await call("GET", "/auth/get-session", { jar })
-  const secondStill = await call("GET", "/auth/get-session", {
-    bearer: secondToken,
-  })
+  const skippedAuth = {
+    status: 0,
+    json: null,
+    headers: new Headers(),
+    text: "",
+  }
+  const secondBefore =
+    second.status === 200 && secondToken
+      ? await call("GET", "/auth/get-session", { bearer: secondToken })
+      : skippedAuth
+  const secondWasAlive =
+    secondBefore.status === 200 &&
+    Boolean((secondBefore.json as { user?: { id?: string } })?.user?.id)
+
+  const revoke = secondWasAlive
+    ? await call("POST", "/auth/revoke-other-sessions", { jar })
+    : skippedAuth
+  const firstStill = secondWasAlive
+    ? await call("GET", "/auth/get-session", { jar })
+    : skippedAuth
+  const secondStill =
+    secondWasAlive && secondToken
+      ? await call("GET", "/auth/get-session", { bearer: secondToken })
+      : skippedAuth
   const secondAlive =
     secondStill.status === 200 &&
     Boolean((secondStill.json as { user?: { id?: string } })?.user?.id)
@@ -565,22 +593,30 @@ try {
   record({
     id: "12-session-revoke",
     title: "Session revocation propagating to every client",
-    status: firstAlive && !secondAlive ? "proven" : "plan-change",
+    status:
+      secondWasAlive && firstAlive && !secondAlive ? "proven" : "plan-change",
     version: BETTER_AUTH_VERSION,
     request: {
       secondSignIn: { method: "POST", path: "/auth/sign-in/email" },
       revoke: { method: "POST", path: "/auth/revoke-other-sessions" },
     },
     response: {
+      secondSignInStatus: second.status,
+      secondTokenPresent: Boolean(secondToken),
+      secondSessionBeforeRevoke: secondWasAlive,
       revokeStatus: revoke.status,
       currentCookieSessionAlive: firstAlive,
       otherBearerAlive: secondAlive,
       otherSession: secondStill.json,
     },
-    notes: [
-      "revoke-other-sessions keeps the caller and drops the second token.",
-      "cookieCache (300s) can keep a cached cookie view after DB revoke — 02.1 requireApiAuth must not treat cookieCache as a revocation source of truth for sign-out/revoke.",
-    ],
+    notes: secondWasAlive
+      ? [
+          "revoke-other-sessions keeps the caller and drops the second token.",
+          "cookieCache (300s) can keep a cached cookie view after DB revoke — 02.1 requireApiAuth must not treat cookieCache as a revocation source of truth for sign-out/revoke.",
+        ]
+      : [
+          "Second sign-in or pre-revoke get-session failed; revocation not proven.",
+        ],
   })
 
   const enable2fa = await call("POST", "/auth/two-factor/enable", {
@@ -630,7 +666,7 @@ try {
       backupCodeCount: twoFactorBody.backupCodes?.length,
       passkeyStatus: passkeyOptions.status,
       passkey: passkeyOptions.json,
-      totpVerify: totpError,
+      totpVerify: redactTokenField(totpError),
     },
     notes: [
       "TOTP secret came from totpURI and was verified with otpauth in-process.",

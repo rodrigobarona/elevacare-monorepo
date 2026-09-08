@@ -273,7 +273,9 @@ Each entry should include:
   `better-auth`, `@better-auth/passkey`, `@better-auth/api-key`,
   `@better-auth/drizzle-adapter` at 1.7.3. `accountLinking.disableImplicitLinking`
   is required (ADR-017) — the Phase 2 prompt now includes it. Default JWT alg is
-  EdDSA; `GET /auth/ok` is not a vendor route; `adminRoles: ["platform_admin"]`
+  EdDSA; JWTs from `/auth/token` are short-lived (`15m`) and
+  **non-revocable** (JWKS only — no session-table check after verify);
+  `GET /auth/ok` is not a vendor route; `adminRoles: ["platform_admin"]`
   requires `roles.platform_admin`; `@better-auth/cli` 1.4.22 must not generate
   1.7 schema.
 - Reference: [`spikes/02-better-auth.md`](./spikes/02-better-auth.md),

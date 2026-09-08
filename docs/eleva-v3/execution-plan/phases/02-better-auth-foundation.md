@@ -168,7 +168,10 @@ identity tables/columns** (Phase 3).
 - [ ] `requireApiAuth()` accepts: cookie session; `Authorization: Bearer <session token>`;
       `x-api-key` created via `apiKey` plugin scoped to an org; JWT from `/auth/token` verified
       via JWKS (Bearer value routed by shape: compact JWS -> JWT verifier, anything else ->
-      session-token verifier). Unit tests for all four plus cross-mode rejection (JWT where a
+      session-token verifier). JWTs are short-lived (`15m`) and **non-revocable** (JWKS only;
+      no session-table check). After `revoke-other-sessions`, cookie/opaque bearer of that
+      session return 401 and a JWT minted before revoke still verifies until `exp`. Unit tests
+      for all four plus that revoke contract, plus cross-mode rejection (JWT where a
       session token is expected and vice versa, API key as Bearer -> 401) and mixed-source
       rejection (any two or three credential sources on one request -> 400 `AMBIGUOUS_CREDENTIALS`).
 - [ ] RLS isolation test green on Neon branch in CI; `db:seed:demo` works from empty DB.
@@ -306,7 +309,9 @@ PR 02.1 — server + schema + API:
                 admin({ ac: adminAc, roles: adminRoles, defaultRole: "user", adminRoles: ["platform_admin"] }),
                   // 1.7.3 throws if adminRoles names a role missing from `roles`
                 twoFactor({ issuer: "Eleva.care" }), passkey({ rpID, rpName: "Eleva.care", origin }),
-                magicLink({ sendMagicLink }), bearer(), jwt(), apiKey({ enableMetadata: true }),
+                magicLink({ sendMagicLink }), bearer(),
+                jwt({ jwt: { expirationTime: "15m" } }), // short-lived, non-revocable — see requireApiAuth
+                apiKey({ enableMetadata: true }),
                 openAPI({ path: "/reference", disableDefaultReference: true }), nextCookies() ]
    }).
    Provision personal Space in the user.create.after hook: idempotent (check by ownerUserId +
@@ -352,7 +357,15 @@ PR 02.1 — server + schema + API:
    GET /auth/ok — add a 200 JSON health next to the handler. JWT default alg is EdDSA;
    verify GET /auth/token with jose + /auth/jwks (never hardcode RS256). Organization
    list is GET /auth/organization/list. session.cookieCache is not a revoke source of
-   truth — requireApiAuth must call auth.api.getSession. Rewrite src/lib/auth.ts
+   truth — requireApiAuth must call auth.api.getSession. JWTs from `/auth/token` are
+   **short-lived and non-revocable**: `jwt({ jwt: { expirationTime: "15m" } })` (Better
+   Auth 1.7.3 default). The JWT verifier checks signature + `iss`/`aud`/`exp`/`alg`
+   (EdDSA) only — it must **not** look up `session` after JWKS verify. `revoke-other-sessions`
+   and sign-out kill cookie, opaque bearer, and API-key sessions immediately; a JWT minted
+   before revoke stays valid until `exp`. Privileged mutations (sign-out, billing, membership,
+   org switch) MUST use cookie or opaque bearer, never JWT. 02.1 integration test: mint JWT,
+   revoke that session, JWKS verify still succeeds, cookie/bearer of that session return 401.
+   Rewrite src/lib/auth.ts
    requireApiAuth() to resolve identity from (a) session cookie via auth.api.getSession({ headers }),
    (b) Authorization: Bearer <token>: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as

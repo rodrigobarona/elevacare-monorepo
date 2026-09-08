@@ -12,7 +12,6 @@ import {
   twoFactor,
 } from "better-auth/plugins"
 import { Pool } from "pg"
-import { emitSpikeAudit } from "./audit.ts"
 import { captureEmail } from "./inbox.ts"
 
 const databaseUrl = process.env.SPIKE_DATABASE_URL
@@ -89,20 +88,13 @@ export const auth = betterAuth({
         after: async (user) => {
           const firstName = (user.name ?? "Member").split(/\s+/)[0] ?? "Member"
           try {
-            const created = await auth.api.createOrganization({
+            await auth.api.createOrganization({
               body: {
                 name: `${firstName}'s Space`,
                 slug: `space-${user.id.replaceAll("-", "").slice(0, 12)}`,
                 userId: user.id,
                 type: "personal",
               },
-            })
-            // 02.1 replaces this stand-in with withAudit() from @eleva/audit.
-            emitSpikeAudit({
-              entity: "organization",
-              action: "created",
-              entityId: created.id,
-              payload: { type: "personal", name: created.name },
             })
           } catch (error) {
             console.error("provision personal Space failed", error)
