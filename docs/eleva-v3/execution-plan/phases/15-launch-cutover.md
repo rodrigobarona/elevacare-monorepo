@@ -34,8 +34,11 @@ In:
     incl. no-show, D-07 Daily HIPAA + BAA, D-08 recording storage (gates 16.8, not launch — the
     entry must exist with status `proposed` or `active`), D-09 historical invoices, D-10 public-site parity,
     D-11 clinical access model, D-12 deletion vs retention, D-13 cookie/CSRF threat model,
-    D-14 payment-method set; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test
-    findings closed or accepted with a named owner. A missing entry is a failed gate.
+    D-14 payment-method set — each entry must carry Status `accepted`/`active` (D-08 may stay
+    `proposed` because recording is Phase 16.8), owner, date, an evidence/reference link and, for
+    anything still provisional, a review date; a placeholder entry fails the gate the same as a
+    missing one; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test findings closed or
+    accepted with a named owner.
   - Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
     statement descriptor); live webhook endpoint created with `pnpm stripe:setup:webhooks -- --url
 https://api.eleva.care/webhooks/stripe --apply`; TOConline production series and OAuth app;

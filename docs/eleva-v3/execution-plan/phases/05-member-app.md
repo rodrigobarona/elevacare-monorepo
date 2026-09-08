@@ -40,8 +40,14 @@ In:
     expert organization's legal retention duty** — they are pseudonymised (member identity
     replaced by a retention token) and kept for the period the DPO records in
     `data-retention-export-matrix.md` (working default until signed: the Portuguese clinical
-    record minimum, owner: legal/DPO), then crypto-shredded by the Phase 10 job. The member
-    deletion UI says so in plain language.
+    record minimum, owner: legal/DPO), then crypto-shredded by the Phase 10 job. **Consent rows
+    are never erased**: `consents` linked to a booking are pseudonymised on deletion (`user_id`
+    -> NULL, `subject_pseudonym` = HMAC of the former user id under the retention key, email
+    hash removed) and kept for the same legal retention window as the booking they authorise, so
+    historical consent stays provable to a regulator without identifying the person; their
+    audit events keep the pseudonym. This is the D-12 working default written into
+    `data-retention-export-matrix.md` (row "consents"); D-12 sign-off may shorten the window but
+    not switch to erasure. The member deletion UI says so in plain language.
 - `apps/api`: `GET /me` (profile + preferences), `PATCH /me`, `GET /me/bookings`,
   `GET /me/payments`, `PUT /me/notification-preferences`, `GET /me/consents` (every consent
   kind with version, granted_at, withdrawn_at), `PUT /me/consents` (grant or withdraw one kind;

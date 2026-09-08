@@ -85,8 +85,9 @@ In:
   and cookie-tossing are addressed by the `__Secure-`/`__Host-` prefixes and the inventory of
   every `*.eleva.care` DNS record kept in `environment-matrix.md`. Tests: cross-site POST with
   cookie only -> 403 `CSRF_ORIGIN_MISMATCH`; same-site with cookie -> 200; Bearer from any origin
-  -> 200; API key from any origin -> 200. Recorded in `decision-log.md` as D-13; Phase 4 PR 04.2
-  cannot open until it is signed.
+  -> 200; API key from any origin -> 200. Recorded in `decision-log.md` as D-13 (**proposed** —
+  this phase writes the threat model and the tests; the security sign-off is a Phase 4 entry
+  gate: PR 04.2 cannot open until D-13 carries owner, date and evidence).
 - **Expand-and-contract for identity tables (review P1)**: this phase **expands** — creates the
   `auth.*` schema, backfills `auth.user/organization/member` from the current `main.users`,
   `main.organizations`, `main.memberships` (idempotent script under `packages/db/scripts/`),
@@ -295,8 +296,13 @@ PR 02.1 — server + schema + API:
    organization.type first-class. Migrate main schema with EXPAND-AND-CONTRACT — this PR only
    expands: backfill auth.user / auth.organization / auth.member from main.users,
    main.organizations, main.memberships (packages/db/scripts/backfill-auth-identity.ts,
-   idempotent, prints parity counts; a --verify flag runs read-only, prints the same counts and
-   exits non-zero when auth.* and main.* differ — Phase 3 gates its contract migration on it);
+   idempotent, prints parity counts; a --verify flag runs read-only and exits non-zero on ANY
+   of: count mismatch per table; a legacy row (main.users/organizations/memberships) whose
+   mapped auth.* row is missing or has a different email/slug/(user, org, role) tuple — checked
+   key by key, not by count; a repointed FK column anywhere in main.* whose value has no
+   matching auth.user.id / auth.organization.id (orphan scan over every FK listed below, using
+   the information_schema); it prints the offending ids (capped at 50 per check) — Phase 3 gates
+   its contract migration on this exit code);
    every FK that pointed at the legacy tables now points at
    auth.user.id or auth.organization.id (expert_profiles, clinic_profiles, billing_customers,
    billing_subscriptions, expert_integrations, bookings, schedules, event_types, audit_outbox

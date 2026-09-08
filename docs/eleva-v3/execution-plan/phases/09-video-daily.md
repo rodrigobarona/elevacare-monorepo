@@ -49,7 +49,9 @@ In:
   **derived, never written from a single event**: on `meeting.ended` (or the sweep at `end_at +
 15 min` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
   `ended + 2 min` (QStash, idempotent); it recomputes attendance from the full ordered
-  `participants` history (every `participant.joined`/`left` persisted by the webhook, including
+  `participants` history (an empty history — Daily sent nothing — yields `nobody`, so the sweep
+  path always persists a non-NULL attendance before the status transition; every
+  `participant.joined`/`left` persisted by the webhook, including
   those whose event time precedes `meeting.ended` but arrived after it) and only then sets the
   status: `attendance <> 'both'` -> `no_show`, else `ended`; a participant event that arrives
   after finalization with an event time inside the session window re-runs the recompute and may

@@ -1262,7 +1262,10 @@ neon-branch-migrate-and-rls, i18n-parity — all green.</li>
 <code>workos-*.mdc</code>.</li>
 <li><input disabled="" type="checkbox"> <code>schema-and-migration-rules.md</code> lists the seven RLS policy classes with templates and
 assigns every existing tenant table a class; <code>rls-classes.test.ts</code> runs in the Neon-branch
-job with at least the <code>tenant-owned</code> and <code>public-read</code> fixtures.</li>
+job with one fixture + positive/negative assertion <strong>per class</strong> — every class that has at
+least one table today gets a real-table fixture, and a class with no current table gets a
+synthetic <code>_rls_fixture_&lt;class&gt;</code> table created and dropped by the test so the policy
+template itself is proven; the suite fails if a class in the taxonomy has no fixture.</li>
 <li><input disabled="" type="checkbox"> <code>gitleaks</code> job green; <code>security-traceability.md</code> exists with this phase&#39;s rows.</li>
 </ul>
 <h2 id="01-rebaseline-adrs-ci--tests"><a class="anchor" href="#01-rebaseline-adrs-ci--tests" aria-label="Link to section">#</a>Tests</h2>
@@ -1606,8 +1609,9 @@ deployments target the staging API and never mint <code>.eleva.care</code> cooki
 and cookie-tossing are addressed by the <code>__Secure-</code>/<code>__Host-</code> prefixes and the inventory of
 every <code>*.eleva.care</code> DNS record kept in <code>environment-matrix.md</code>. Tests: cross-site POST with
 cookie only -&gt; 403 <code>CSRF_ORIGIN_MISMATCH</code>; same-site with cookie -&gt; 200; Bearer from any origin
--&gt; 200; API key from any origin -&gt; 200. Recorded in <code>decision-log.md</code> as D-13; Phase 4 PR 04.2
-cannot open until it is signed.</p>
+-&gt; 200; API key from any origin -&gt; 200. Recorded in <code>decision-log.md</code> as D-13 (<strong>proposed</strong> —
+this phase writes the threat model and the tests; the security sign-off is a Phase 4 entry
+gate: PR 04.2 cannot open until D-13 carries owner, date and evidence).</p>
 </li>
 <li><p><strong>Expand-and-contract for identity tables (review P1)</strong>: this phase <strong>expands</strong> — creates the
 <code>auth.*</code> schema, backfills <code>auth.user/organization/member</code> from the current <code>main.users</code>,
@@ -1815,8 +1819,13 @@ PR 02.1 — server + schema + API:
    organization.type first-class. Migrate main schema with EXPAND-AND-CONTRACT — this PR only
    expands: backfill auth.user / auth.organization / auth.member from main.users,
    main.organizations, main.memberships (packages/db/scripts/backfill-auth-identity.ts,
-   idempotent, prints parity counts; a --verify flag runs read-only, prints the same counts and
-   exits non-zero when auth.* and main.* differ — Phase 3 gates its contract migration on it);
+   idempotent, prints parity counts; a --verify flag runs read-only and exits non-zero on ANY
+   of: count mismatch per table; a legacy row (main.users/organizations/memberships) whose
+   mapped auth.* row is missing or has a different email/slug/(user, org, role) tuple — checked
+   key by key, not by count; a repointed FK column anywhere in main.* whose value has no
+   matching auth.user.id / auth.organization.id (orphan scan over every FK listed below, using
+   the information_schema); it prints the offending ids (capped at 50 per check) — Phase 3 gates
+   its contract migration on this exit code);
    every FK that pointed at the legacy tables now points at
    auth.user.id or auth.organization.id (expert_profiles, clinic_profiles, billing_customers,
    billing_subscriptions, expert_integrations, bookings, schedules, event_types, audit_outbox
@@ -2281,8 +2290,12 @@ move): <code>POST /bookings/[id]/reschedule</code> runs one transaction that <co
 the reservation, updates <code>start_at</code>/<code>end_at</code>/<code>mode_id</code> in place and lets the exclusion
 constraint re-check the new window — <code>23P01</code> -&gt; 409 <code>SLOT_TAKEN</code> and the booking stays on
 its old time; a concurrency test races a reschedule against a fresh <code>/bookings/reserve</code> on
-the target window and expects exactly one winner. A <code>23P01</code> violation is
-mapped to 409 <code>SLOT_TAKEN</code>; the 100-way concurrency test runs twice — with Redis and with the
+the target window and expects exactly one winner. In <code>reserveSlot</code> AND in the reschedule
+path, a PostgreSQL exclusion violation (<code>23P01</code>) is caught explicitly and mapped to the same
+canonical result as the Redis-detected conflict — <code>{ error: &quot;conflict&quot; }</code> -&gt; 409 <code>SLOT_TAKEN</code>
+— never to the generic <code>db_error</code> branch (unit test: mocked insert throwing <code>23P01</code> -&gt;
+<code>SLOT_TAKEN</code>; integration test on the Neon branch: two inserts on an overlapping window -&gt;
+one 201, one 409); the 100-way concurrency test runs twice — with Redis and with the
 lock disabled (<code>SCHEDULING_DISABLE_REDIS_LOCK=1</code>, test-only) — and expects one 201 both times.
 The body also carries <code>consents: [{ kind, version }]</code> for <code>terms</code>, <code>privacy</code> and
 <code>health_data_processing</code> (all three required by Zod, versions must equal the current
@@ -2427,7 +2440,9 @@ so concurrent <code>/payments/intent</code> calls converge on one row via <code>
 re-read — <code>cancellation_reason</code>), <code>booking_payments</code> (unique <code>booking_id</code>, payment intent id,
 status, amount, fee, transfer group), <code>slot_reservations</code> additions (<code>capability_hash</code>,
 nullable <code>user_id</code>, nullable unique <code>stripe_payment_intent_id</code>, <code>expert_user_id</code>, <code>status</code>
-gains <code>converted|released</code>, the <code>btree_gist</code> exclusion constraint described under
+gains <code>converted|released|released_while_processing</code> (the last one is the bounded-async path
+of the payments spec: MB WAY still <code>processing</code> at hold + 10 min releases the slot; a later
+success re-reserves or auto-refunds with reason <code>slot_lost</code>), the <code>btree_gist</code> exclusion constraint described under
 <code>/bookings/reserve</code>), <strong><code>consents</code></strong> (<code>id</code>, <code>subject_kind user|guest</code>, <code>user_id</code> nullable,
 <code>guest_email_hash</code> nullable (keyed HMAC), <code>kind</code> from <code>CONSENT_KINDS</code>, <code>document_version</code>,
 <code>locale</code>, <code>source funnel|account|import</code>, <code>reservation_id</code> nullable, <code>booking_id</code> nullable,
@@ -2769,7 +2784,10 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    amount_cents, application_fee_cents, transfer_group, payment_method_type, paid_at,
    refunded_cents, created_at); extend slot_reservations with capability_hash (char(64), not
    null), user_id (nullable FK auth.user), stripe_payment_intent_id (nullable, unique),
-   expert_user_id NOT NULL, status values converted|released|expired added, and the FINAL slot
+   expert_user_id NOT NULL, status values converted|released|expired|released_while_processing
+   added (payments spec &quot;payment-method policy&quot;: processing intent past the async window -&gt;
+   release + later payment_intent.succeeded re-reserves or auto-refunds reason slot_lost, test
+   with a recorded late-success event), and the FINAL slot
    consistency boundary: CREATE EXTENSION IF NOT EXISTS btree_gist; ALTER TABLE slot_reservations
    ADD CONSTRAINT slot_reservations_no_overlap EXCLUDE USING gist (expert_user_id WITH =,
    tstzrange(start_at, end_at, &#39;[)&#39;) WITH &amp;&amp;) WHERE (status IN (&#39;reserved&#39;, &#39;converted&#39;)).
@@ -3497,8 +3515,14 @@ the member) is erased on the schedule; <strong>expert-authored clinical records 
 expert organization&#39;s legal retention duty</strong> — they are pseudonymised (member identity
 replaced by a retention token) and kept for the period the DPO records in
 <code>data-retention-export-matrix.md</code> (working default until signed: the Portuguese clinical
-record minimum, owner: legal/DPO), then crypto-shredded by the Phase 10 job. The member
-deletion UI says so in plain language.</li>
+record minimum, owner: legal/DPO), then crypto-shredded by the Phase 10 job. <strong>Consent rows
+are never erased</strong>: <code>consents</code> linked to a booking are pseudonymised on deletion (<code>user_id</code>
+-&gt; NULL, <code>subject_pseudonym</code> = HMAC of the former user id under the retention key, email
+hash removed) and kept for the same legal retention window as the booking they authorise, so
+historical consent stays provable to a regulator without identifying the person; their
+audit events keep the pseudonym. This is the D-12 working default written into
+<code>data-retention-export-matrix.md</code> (row &quot;consents&quot;); D-12 sign-off may shorten the window but
+not switch to erasure. The member deletion UI says so in plain language.</li>
 </ul>
 </li>
 <li><code>apps/api</code>: <code>GET /me</code> (profile + preferences), <code>PATCH /me</code>, <code>GET /me/bookings</code>,
@@ -3775,7 +3799,7 @@ Tier 1 invoice and the expert finance UI show comes from this one function; stor
 <code>processing_fee_cents</code> on <code>booking_payments</code>.</li>
 <li><strong>Payout engine</strong> (port from MVP <code>process-expert-transfers</code>, <code>process-pending-payouts</code>,
 <code>check-upcoming-payouts</code>, <code>transfer-utils.ts</code>): <code>payout_states</code> table (booking_payment_id,
-status <code>pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed</code> (this
+status <code>pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed</code> (this
 union is the SSOT — <code>payments-payouts-spec.md</code> &quot;Payout States&quot; is rewritten to it in this
 phase), <code>hold_reasons text[]</code> (set semantics, values <code>dispute|manual</code>; a hold ADDS its reason,
 a dispute won or a staff release REMOVES its reason, and only when the set becomes empty does
@@ -3849,8 +3873,11 @@ scripts and root scripts (<code>qstash:setup:payouts</code>).</li>
 <h2 id="06-payments-payouts--acceptance-criteria"><a class="anchor" href="#06-payments-payouts--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <ul>
 <li><input disabled="" type="checkbox"> New expert completes Connect onboarding in Embedded Components; <code>account.updated</code> /
-<code>capability.updated</code> flip <code>connect_status</code> and unlock publishing once <code>transfers</code> is active
-and <code>payouts_enabled</code>; no <code>card_payments</code> capability is requested.</li>
+<code>capability.updated</code> flip <code>connect_status</code> and unlock publishing only when
+<code>details_submitted &amp;&amp; payouts_enabled &amp;&amp; capabilities.transfers === &quot;active&quot;</code> (and, when
+<code>ff.expert_identity_verification</code> is on, Identity <code>verified</code>) — the same predicate as the
+Scope and the prompt, tested with each term false in turn; no <code>card_payments</code> capability is
+requested.</li>
 <li><input disabled="" type="checkbox"> PR 06.0 spike report committed under <code>docs/eleva-v3/spikes/06-stripe-funds-flow.md</code>: test-mode
 evidence for platform PaymentIntent, delayed transfer with <code>source_transaction</code>, full +
 partial refund, transfer reversal, dispute hold, connected-account webhooks, clinic 0% flow.</li>
@@ -4007,12 +4034,14 @@ PR 06.1 — Connect onboarding hardening:
    800 bps, clinic-member booking 0 bps, optional grandfathered override stored on
    billing_customers.commission_override_bps with expiry) AND computeSettlement({ grossCents,
    commissionBps, vatRateBps, vatTreatment: pt_b2b | eu_reverse_charge | eu_b2c | non_eu,
-   processingFeeCents, feeBearer: platform | destination }) -&gt; { bookingGross,
+   processingFeeCents, feeBearer: &quot;platform&quot; | &quot;expert&quot; | &quot;clinic&quot; (the SSOT union of
+   payments-payouts-spec.md — never a different spelling) }) -&gt; { bookingGross,
    platformFeeGross, platformFeeNet, vatOnPlatformFee, paymentProcessingFee, expertTransfer,
    creditNoteAllocation(refundCents), rounding: &quot;half-up-cents-on-fee&quot;, currency: &quot;EUR&quot; }. The
    commission is VAT-INCLUSIVE (fee gross = advertised %; PT B2B splits it into net + 23% IVA;
-   reverse charge keeps it as net) and the processing fee is borne by the platform for
-   marketplace bookings and by the destination for clinic 0% bookings — these are the D-03/D-04
+   reverse charge keeps it as net) and the processing fee is borne by the platform
+   (feeBearer = platform) for marketplace bookings and by the clinic (feeBearer = clinic) for
+   clinic 0% bookings, with feeBearer = expert available for D-04 — these are the D-03/D-04
    working defaults; the accountant-approved matrix in payments-payouts-spec.md is the SSOT and
    the tests are written from it row by row. Store applied_commission_bps,
    platform_fee_net_cents, platform_fee_vat_cents and processing_fee_cents on booking_payments
@@ -4928,7 +4957,9 @@ verified in PR 09.0), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
 <strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
 <code>ended + 2 min</code> (QStash, idempotent); it recomputes attendance from the full ordered
-<code>participants</code> history (every <code>participant.joined</code>/<code>left</code> persisted by the webhook, including
+<code>participants</code> history (an empty history — Daily sent nothing — yields <code>nobody</code>, so the sweep
+path always persists a non-NULL attendance before the status transition; every
+<code>participant.joined</code>/<code>left</code> persisted by the webhook, including
 those whose event time precedes <code>meeting.ended</code> but arrived after it) and only then sets the
 status: <code>attendance &lt;&gt; &#39;both&#39;</code> -&gt; <code>no_show</code>, else <code>ended</code>; a participant event that arrives
 after finalization with an event time inside the session window re-runs the recompute and may
@@ -5286,7 +5317,7 @@ operator tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list)</td>
+<td>Phase 9, Phase 4B (<code>@eleva/editor</code>, <code>approved-models</code> allow-list); <strong>D-11 (clinical access model) signed — owner, date and evidence in <code>decision-log.md</code> — before PR 10.1 opens</strong> (entry gate, checked in the prompt)</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5317,7 +5348,11 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 <code>session_documents</code>: private Blob pathname, mime, size, <code>metadata_encrypted</code>, uploaded_by,
 scope <code>expert_only|shared</code>). RLS — two different member-read predicates because the tables
 have different visibility columns. Expert-side read is <strong>one policy (A) shared by both
-tables and it is the D-11 model, not &quot;whole org&quot;</strong>: <code>expert_org_id = eleva.org_id AND (&lt;author&gt; = eleva.user_id OR (organizations.clinic_shared_records AND NOT EXISTS record_access_optouts(member_user_id, expert_org_id)))</code> where the author column is
+tables and it is the D-11 model, not &quot;whole org&quot;</strong>: <code>expert_org_id = eleva.org_id AND (&lt;author&gt; = eleva.user_id OR (organizations.clinic_shared_records AND NOT EXISTS record_access_optouts(member_user_id, expert_org_id)))</code> — the two objects this predicate
+reads, <code>organizations.clinic_shared_records boolean NOT NULL DEFAULT false</code> and
+<code>record_access_optouts(member_user_id, org_id, created_at)</code>, are <strong>created in this phase&#39;s
+PR 10.1 migration</strong> (default off, no UI) so the policy compiles and is tested here; Phase 11
+only adds the clinic toggle, the member notice and the opt-out UI — where the author column is
 <code>created_by</code> on <code>records</code> and <code>uploaded_by</code> on <code>session_documents</code> (same predicate shape, two
 concrete policies — one per table, each with its own rls-classes test) — in a solo Expert org
 that collapses to the author; in a clinic it opens to peers only behind the Phase 11 toggle and
@@ -5372,8 +5407,14 @@ download via signed URLs (short-lived), consent management extended.</li>
 tags; endpoints + expert UI (<code>/[orgSlug]/crm</code>), reminders via Lane 1 kind <code>crm.follow_up_due</code>.</li>
 <li><strong>AI reports beta</strong> (<code>@eleva/ai</code>, Vercel AI Gateway only) — <strong>from typed notes, not from
 recordings</strong>: <code>draftSessionReport({ bookingId, noteRecordIds })</code> (one signature everywhere —
-Scope, prompt, tests, <code>@eleva/api-client</code>; <code>bookingId</code> authorizes: every note id must belong to
-that booking and to the caller&#39;s org, checked before any decryption) takes the expert&#39;s encrypted session
+Scope, prompt, tests, <code>@eleva/api-client</code>). Authorization is <strong>per note and independent of
+D-11 read sharing</strong>: before any decryption every <code>noteRecordId</code> must be <code>kind = note</code>,
+belong to <code>bookingId</code>, to the caller&#39;s org AND have <code>created_by = caller</code> (a clinic peer may
+read a shared note under D-11 but may not send another expert&#39;s PHI to the AI Gateway); any
+failing note rejects the whole request (403, nothing decrypted). Then the <strong>current</strong>
+<code>ai_processing</code> consent of the booking&#39;s member is checked (latest row for the booking or
+the member; absent/withdrawn -&gt; 403 <code>AI_CONSENT_REQUIRED</code>, no decryption, no Gateway call;
+captured at booking for phone/in-person sessions, which have no join page). It takes the expert&#39;s encrypted session
 notes (and, optionally, the intake answers the member typed at booking) as the only input, with
 versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
@@ -5528,6 +5569,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 10 TASK&quot; section further down is
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
+- Entry gate: decision-log.md must contain D-11 (clinical access model) with Status accepted,
+  owner, date and evidence link — if it is still proposed, STOP and report; PR 10.1 cannot open.
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
@@ -5553,6 +5596,10 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report drafting (ADR-009, ADR-020).
 
 PR 10.1 — records, documents, consent, retention:
+0. packages/db: organizations.clinic_shared_records boolean NOT NULL DEFAULT false and
+   record_access_optouts (member_user_id FK, org_id FK, created_at, PK (member_user_id, org_id))
+   — created HERE so policy A below compiles; no UI or endpoint in this phase (Phase 11 adds the
+   toggle, notice and opt-out API); rls-classes test for the clinical-shared class.
 1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
    shared RECORD_KINDS const = note|report|document_ref|ai_draft (transcript joins in 16.8; single enum reused by
    the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
@@ -5681,9 +5728,12 @@ PR 10.2 — CRM + AI reports beta:
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
    Report({ bookingId, noteRecordIds }) (the one signature — BEFORE any decryption: validate
-   that every note belongs to bookingId and the caller&#39;s org (mismatch -&gt; 403) AND that an
-   active ai_processing consent exists for the booking&#39;s member (absent or withdrawn -&gt; 403
-   AI_CONSENT_REQUIRED, no decryption, no Gateway call; test both denials) — input is
+   that every note is kind = note, belongs to bookingId, to the caller&#39;s org AND has
+   created_by = caller (D-11 clinic read-sharing never authorizes AI submission of a peer&#39;s
+   note; any failing note -&gt; 403 for the whole request) AND that the CURRENT ai_processing
+   consent of the booking&#39;s member is granted (absent or withdrawn -&gt; 403 AI_CONSENT_REQUIRED,
+   no decryption, no Gateway call; tests: peer note -&gt; 403, withdrawn consent -&gt; 403, both with
+   zero decrypt calls) — input is
    the expert&#39;s decrypted typed notes for that
    booking (plus the member&#39;s typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from
@@ -5823,7 +5873,7 @@ written here; the Phase 10 class tests are re-run with the toggle on and off.</l
 expert invoices (out of scope per spec).</p>
 <h2 id="11-team-clinics--deliverables"><a class="anchor" href="#11-team-clinics--deliverables" aria-label="Link to section">#</a>Deliverables</h2>
 <ol>
-<li>Migrations: <code>clinic_profiles</code>, <code>clinic_verifications</code>, <code>bookings.attributed_org_id</code>, <code>billing_subscriptions</code> fields, <code>organizations.clinic_shared_records boolean default false</code>, <code>record_access_optouts</code> (<code>member_user_id</code>, <code>org_id</code>, <code>created_at</code>, PK both); RLS; audit unions (<code>team: created|verified|member_invited|member_joined|member_removed|seats_synced|shared_records_enabled|shared_records_disabled</code>; <code>subscription: ...</code>).</li>
+<li>Migrations: <code>clinic_profiles</code>, <code>clinic_verifications</code>, <code>bookings.attributed_org_id</code>, <code>billing_subscriptions</code> fields (<code>organizations.clinic_shared_records</code> and <code>record_access_optouts</code> already exist from Phase 10 PR 10.1 — this phase adds NO clinical-record schema, only the toggle endpoint, the member notice and the opt-out UI/API); RLS; audit unions (<code>team: created|verified|member_invited|member_joined|member_removed|seats_synced|shared_records_enabled|shared_records_disabled</code>; <code>subscription: ...</code>).</li>
 <li>API: <code>/teams</code> (create/update profile), <code>/teams/[id]/members</code>, <code>/teams/[id]/invitations</code>,
 <code>/teams/[id]/bookings</code>, <code>/teams/[id]/schedule</code>, <code>/billing/checkout</code> + <code>/billing/portal</code>
 extended, webhook handlers; OpenAPI + client.</li>
@@ -6283,8 +6333,19 @@ PR 12.1 — access, users, partners, experts, bookings:
    override, partner approval for a clinical specialty, ban expert with future bookings,
    break-glass record decrypt (the only path that lets staff read body_encrypted; audited
    record: decrypted with purpose &quot;break_glass&quot; and both actors).
-   Admin routes tagged &quot;admin&quot; in OpenAPI and hidden from the public docs listing unless the
-   requester is staff.
+   Route -&gt; dual-control kind map (SSOT in packages/auth/src/admin-actions.ts, imported by
+   adminRoute and by the tests; one test per row asserting single-actor attempt -&gt; 202 request
+   row and NO side effect, dual approval -&gt; exactly one side effect):
+   | route | condition | kind |
+   | POST /admin/payments/[id]/refund | amount_cents &gt; ADMIN_DUAL_CONTROL_REFUND_CENTS | payment.refund_large |
+   | POST /admin/payouts/[id]/release | payout_states.status = held | payout.release |
+   | PATCH /admin/experts/[id]/commission | always | expert.commission_override |
+   | POST /admin/partners/[id]/approve | SPECIALTIES[slug].clinical = true | partner.approve_clinical |
+   | POST /admin/experts/[id]/ban | exists booking with start_at &gt; now() | expert.ban_with_future_bookings |
+   | POST /admin/records/[id]/decrypt | always | record.break_glass_decrypt |
+   Any other admin mutation is single-actor with a mandatory reason; adding a kind requires a
+   row here, a test and an audit-union entry. Admin routes tagged &quot;admin&quot; in OpenAPI and hidden
+   from the public docs listing unless the requester is staff.
 2. Users: GET /admin/users?q&amp;cursor (auth.api.listUsers), GET /admin/users/[id] (profile, orgs +
    roles, sessions, 2FA/passkeys flags, bookings summary, payments summary), POST
    /admin/users/[id]/ban [R] { reason, expiresAt? } (auth.api.banUser + revokeUserSessions),
@@ -6864,8 +6925,15 @@ logins via magic link in staging), produce report under <code>infra/migration/re
 the same controller, so the basis is the existing relationship; still, the welcome campaign
 links the updated privacy notice (versioned in <code>CONSENT_DOCUMENTS</code>), the consent rows for
 migrated users are imported with <code>source = import</code> and the MVP acceptance timestamp (never
-re-asserted as fresh), and the DPO signs the migration DPIA addendum before rehearsal 3
-(recorded in <code>decision-log.md</code>).</li>
+re-asserted as fresh) under an explicit <strong>legacy -&gt; v3 consent mapping</strong> (<code>packages/migration/ src/consent-map.ts</code>, deny-by-default, one fixture per legacy combination): MVP terms/privacy
+acceptance -&gt; <code>terms</code> + <code>privacy</code> at the MVP document version tagged <code>legacy</code>; MVP
+<code>marketing_opt_in = true</code> -&gt; <code>marketing</code> granted, otherwise absent; MVP booking-time health
+consent -&gt; <code>health_data_processing</code> for that booking only; <strong><code>analytics</code> is never imported</strong>
+(the MVP had no separate analytics consent — the cookie banner asks fresh, GA4/PostHog stay
+off until then); <code>ai_processing</code> and <code>session_recording</code> never imported. A legacy field with
+no mapping row fails the run (no silent grants). Both migration sites (bulk import and delta
+run) call the same mapper; the DPO signs the mapping with the migration DPIA addendum before
+rehearsal 3 (recorded in <code>decision-log.md</code>).</li>
 <li><strong>Freeze plan</strong> (executed in Phase 15): MVP read-only banner + disabled booking, drain pending
 Multibanco (&gt; 8 days rule means none should exist within 24h — verify), final delta run,
 verification, DNS switch.</li>
@@ -7216,8 +7284,11 @@ settlement matrix (finance), D-05 Connect capability model, D-06 refund + disput
 incl. no-show, D-07 Daily HIPAA + BAA, D-08 recording storage (gates 16.8, not launch — the
 entry must exist with status <code>proposed</code> or <code>active</code>), D-09 historical invoices, D-10 public-site parity,
 D-11 clinical access model, D-12 deletion vs retention, D-13 cookie/CSRF threat model,
-D-14 payment-method set; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test
-findings closed or accepted with a named owner. A missing entry is a failed gate.</li>
+D-14 payment-method set — each entry must carry Status <code>accepted</code>/<code>active</code> (D-08 may stay
+<code>proposed</code> because recording is Phase 16.8), owner, date, an evidence/reference link and, for
+anything still provisional, a review date; a placeholder entry fails the gate the same as a
+missing one; Phase 13 evidence pack signed (DPIA, sub-processors); pen-test findings closed or
+accepted with a named owner.</li>
 <li>Money: Stripe live keys in all projects; Connect platform settings (branding, payout schedule,
 statement descriptor); live webhook endpoint created with <code>pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply</code>; TOConline production series and OAuth app;
 IVA sign-off recorded; test a 1 EUR live booking + refund + invoices with an internal expert.</li>
@@ -7661,21 +7732,30 @@ the external id = our Daily domain name and max session 12 h, attached to the <s
 Daily policy from Daily&#39;s docs (<code>s3:PutObject</code>, <code>s3:ListBucketMultipartUploads</code>,
 <code>s3:AbortMultipartUpload</code>, <code>s3:ListMultipartUploadParts</code> — no <code>GetObject</code>, so Daily can never
 read a recording back; set <code>allow_api_access: false</code> on the <code>recordings_bucket</code> property) and a
-second role for the Eleva workflow (<code>GetObject</code>, <code>DeleteObject</code>, <code>ListBucket</code>). Provisioned by
+second role for the Eleva workflow (<code>GetObject</code>, <code>DeleteObject</code>, <code>ListBucket</code>). SSE-KMS
+completes the contract: the customer-managed key policy names both role principals — Daily&#39;s
+role gets <code>kms:GenerateDataKey</code> (single-part uploads) plus <code>kms:Decrypt</code> (multipart uploads
+re-read parts), the workflow role gets <code>kms:Decrypt</code> (+ <code>kms:GenerateDataKey</code> for nothing —
+it never writes) — and D-08 is signed only after an encrypted upload by Daily&#39;s test probe
+and a download by the workflow role both succeed. Provisioned by
 <code>infra/aws/recordings-landing-zone.ts</code> (idempotent, dry-run default) and validated against the
 permission table in Daily&#39;s custom-S3 guide before D-08 is signed. Recorded as <strong>D-08</strong> with
 the account id, region and role ARNs.</li>
-<li><strong>System of record</strong> — on Daily&#39;s <code>recording.ready-to-download</code> and
-<code>transcript.ready-to-download</code> webhook events (Daily&#39;s exact type names; the handler maps the
-latter to the internal domain event <code>transcript.ready</code> — a recorded fixture of each provider
-payload is a test) a
-<code>@eleva/workflows</code> job (QStash, idempotent on the Daily recording id) pulls the object with the
-workflow role, encrypts the transcript with <code>encryptForOrg(expertOrgId)</code> (envelope, per-org
-DEK), stores it through <code>@eleva/storage</code> in the <strong>private</strong> Vercel Blob store (region confirmed
-EU in D-08), writes <code>records.kind = transcript</code> (add <code>transcript</code> to <code>RECORD_KINDS</code> here), then
-<strong>deletes the S3 object</strong>. The raw video is deleted from S3 after the transcript is stored
-unless <code>ff.session_recording_keep</code> (default off, DPO decision) — nothing PHI-bearing stays in
-S3 beyond the transfer window. Retention: transcripts 2 y (<code>data-retention-export-matrix.md</code>).</li>
+<li><strong>System of record</strong> — two ingestion jobs, because Daily sends two different payloads:
+<code>recording.ready-to-download</code> (<code>recording_id</code>, <code>s3_key</code>) starts <code>ingestRecording</code>, idempotent
+on <code>recording_id</code>; <code>transcript.ready-to-download</code> (<code>id</code>, <code>out_params.s3.key</code>) starts
+<code>ingestTranscript</code>, idempotent on the transcript <code>id</code> (mapped to the internal domain event
+<code>transcript.ready</code>); a recorded fixture of each provider payload is a test and a payload
+routed to the wrong job fails the test. <code>ingestTranscript</code> pulls the object with the workflow
+role, encrypts it with <code>encryptForOrg(expertOrgId)</code> (envelope, per-org DEK), stores it through
+<code>@eleva/storage</code> in the <strong>private</strong> Vercel Blob store (region confirmed EU in D-08), writes
+<code>records.kind = transcript</code> (add <code>transcript</code> to <code>RECORD_KINDS</code> here), then <strong>deletes the S3
+object</strong>. <code>ingestRecording</code> only records the asset (<code>session_recordings</code> row: recording id,
+s3 key, duration, deleted_at) and deletes the raw video from S3 once the transcript is stored
+unless <code>ff.session_recording_keep</code> (default off, DPO decision), in which case it moves the
+video the same encrypted way as <code>records.kind = recording_video</code> — a recording is never
+stored as a transcript. Nothing PHI-bearing stays in S3 beyond the transfer window.
+Retention: transcripts 2 y (<code>data-retention-export-matrix.md</code>).</li>
 <li><strong>Consent</strong> — add <code>session_recording</code> to <code>CONSENT_KINDS</code>; both the expert and the member must
 grant it (join-page banner; withdrawable at any time); the consent boolean drives Daily&#39;s
 recording mode through the fenced sync below, never a raw flag.</li>
@@ -7686,7 +7766,12 @@ recording mode through the fenced sync below, never a raw flag.</li>
 <p>Phase 9 creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
 captured on the join page, so recording is enabled by an <strong>idempotent room update</strong>, not at
 creation: <code>syncRoomRecording(bookingId)</code> in <code>@eleva/video</code> reads the flag + both consents and
-calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } })</code>
+calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : &lt;disabled&gt; } })</code>
+— Daily models &quot;disabled&quot; as the property being unset, so <code>&lt;disabled&gt;</code> is whatever PR 09.0 /
+the 16.8 spike proves the API accepts to clear it (<code>null</code>, <code>false</code> or omitting the key on a
+full properties write), and <code>isRecordingEnabled(config)</code> normalises the read-back:
+<code>config.enable_recording</code> in <code>{&quot;cloud&quot;,&quot;local&quot;,&quot;raw-tracks&quot;}</code> -&gt; true, absent/<code>null</code>/<code>false</code> -&gt;
+false — the worker never compares raw values
 — the consent boolean maps to Daily&#39;s recording mode string, never passed raw — only when the desired
 value differs from <code>sessions.recording_enabled</code>; it runs on every consent change and again in
 the <code>join</code> route before the token is minted, so the state is correct whenever anyone enters
@@ -7713,7 +7798,8 @@ and joins never wait on it) and a worker that acquires the mutex re-reads the cu
 <code>v</code> and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after <code>updateRoom</code> the worker reads the room back (<code>GET /rooms/{name}</code>) and accepts only when
-the returned <code>config.enable_recording</code> equals the desired value it just sent; step 3 persists
+<code>isRecordingEnabled(returned config)</code> equals <code>desired</code> (normalised on both sides — an omitted
+property is &quot;disabled&quot;, never &quot;unknown&quot;); step 3 persists
 <code>recording_enabled = &lt;read-back value&gt;</code>, <code>recording_verified_version = v</code>,
 <code>recording_verified_at = now()</code> with a compare-and-swap <code>WHERE recording_state_version = v</code> —
 zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
@@ -7737,12 +7823,13 @@ rather than minting.</p>
    false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
    ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
-   updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : false } }) and persist
+   updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : &lt;disabled as proven by
+   the spike — Daily models disabled as unset&gt; } }), compare with isRecordingEnabled(config)
+   (cloud|local|raw-tracks -&gt; true; absent|null|false -&gt; false) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
    behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
-   then GET /rooms/{name} read-back accepted only when config.enable_recording equals the value
-   just sent (Daily room properties are a closed set: NO meta field, NO provider-side version —
+   then GET /rooms/{name} read-back accepted only when isRecordingEnabled(config) equals desired (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
    recording_state_version, recording_verified_version, recording_verified_at); CAS on the
    version also sets recording_verified_version = v; join refuses to mint unless
@@ -7902,7 +7989,7 @@ copy the title verbatim into the new phase file heading):
         prompt fragment&quot; of docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md
         VERBATIM into the new phase file (they are its scope, task list and acceptance criteria;
         deliverable paths: packages/video/src/recording.ts, packages/workflows/src/video/
-        recording-ingest.ts, infra/aws/recording-landing-zone.ts, packages/db migration adding
+        recording-ingest.ts, infra/aws/recordings-landing-zone.ts, packages/db migration adding
         sessions.recording_* and records.kind transcript): S3 EU
         landing zone as a mailbox, pull-encrypt-store into the private Blob store, delete the
         S3 object, session_recording consent kind, the syncRoomRecording fencing design,

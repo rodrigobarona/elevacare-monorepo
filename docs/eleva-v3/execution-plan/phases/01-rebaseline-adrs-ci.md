@@ -111,7 +111,10 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
       `workos-*.mdc`.
 - [ ] `schema-and-migration-rules.md` lists the seven RLS policy classes with templates and
       assigns every existing tenant table a class; `rls-classes.test.ts` runs in the Neon-branch
-      job with at least the `tenant-owned` and `public-read` fixtures.
+      job with one fixture + positive/negative assertion **per class** — every class that has at
+      least one table today gets a real-table fixture, and a class with no current table gets a
+      synthetic `_rls_fixture_<class>` table created and dropped by the test so the policy
+      template itself is proven; the suite fails if a class in the taxonomy has no fixture.
 - [ ] `gitleaks` job green; `security-traceability.md` exists with this phase's rows.
 
 ## Tests

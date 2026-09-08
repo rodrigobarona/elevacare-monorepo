@@ -106,8 +106,16 @@ In:
   the same controller, so the basis is the existing relationship; still, the welcome campaign
   links the updated privacy notice (versioned in `CONSENT_DOCUMENTS`), the consent rows for
   migrated users are imported with `source = import` and the MVP acceptance timestamp (never
-  re-asserted as fresh), and the DPO signs the migration DPIA addendum before rehearsal 3
-  (recorded in `decision-log.md`).
+  re-asserted as fresh) under an explicit **legacy -> v3 consent mapping** (`packages/migration/
+src/consent-map.ts`, deny-by-default, one fixture per legacy combination): MVP terms/privacy
+  acceptance -> `terms` + `privacy` at the MVP document version tagged `legacy`; MVP
+  `marketing_opt_in = true` -> `marketing` granted, otherwise absent; MVP booking-time health
+  consent -> `health_data_processing` for that booking only; **`analytics` is never imported**
+  (the MVP had no separate analytics consent — the cookie banner asks fresh, GA4/PostHog stay
+  off until then); `ai_processing` and `session_recording` never imported. A legacy field with
+  no mapping row fails the run (no silent grants). Both migration sites (bulk import and delta
+  run) call the same mapper; the DPO signs the mapping with the migration DPIA addendum before
+  rehearsal 3 (recorded in `decision-log.md`).
 - **Freeze plan** (executed in Phase 15): MVP read-only banner + disabled booking, drain pending
   Multibanco (> 8 days rule means none should exist within 24h — verify), final delta run,
   verification, DNS switch.

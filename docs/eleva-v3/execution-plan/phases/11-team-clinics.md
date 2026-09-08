@@ -86,7 +86,7 @@ expert invoices (out of scope per spec).
 
 ## Deliverables
 
-1. Migrations: `clinic_profiles`, `clinic_verifications`, `bookings.attributed_org_id`, `billing_subscriptions` fields, `organizations.clinic_shared_records boolean default false`, `record_access_optouts` (`member_user_id`, `org_id`, `created_at`, PK both); RLS; audit unions (`team:
+1. Migrations: `clinic_profiles`, `clinic_verifications`, `bookings.attributed_org_id`, `billing_subscriptions` fields (`organizations.clinic_shared_records` and `record_access_optouts` already exist from Phase 10 PR 10.1 — this phase adds NO clinical-record schema, only the toggle endpoint, the member notice and the opt-out UI/API); RLS; audit unions (`team:
 created|verified|member_invited|member_joined|member_removed|seats_synced|shared_records_enabled|shared_records_disabled`; `subscription: ...`).
 2. API: `/teams` (create/update profile), `/teams/[id]/members`, `/teams/[id]/invitations`,
    `/teams/[id]/bookings`, `/teams/[id]/schedule`, `/billing/checkout` + `/billing/portal`

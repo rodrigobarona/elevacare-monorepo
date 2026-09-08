@@ -228,8 +228,19 @@ PR 12.1 — access, users, partners, experts, bookings:
    override, partner approval for a clinical specialty, ban expert with future bookings,
    break-glass record decrypt (the only path that lets staff read body_encrypted; audited
    record: decrypted with purpose "break_glass" and both actors).
-   Admin routes tagged "admin" in OpenAPI and hidden from the public docs listing unless the
-   requester is staff.
+   Route -> dual-control kind map (SSOT in packages/auth/src/admin-actions.ts, imported by
+   adminRoute and by the tests; one test per row asserting single-actor attempt -> 202 request
+   row and NO side effect, dual approval -> exactly one side effect):
+   | route | condition | kind |
+   | POST /admin/payments/[id]/refund | amount_cents > ADMIN_DUAL_CONTROL_REFUND_CENTS | payment.refund_large |
+   | POST /admin/payouts/[id]/release | payout_states.status = held | payout.release |
+   | PATCH /admin/experts/[id]/commission | always | expert.commission_override |
+   | POST /admin/partners/[id]/approve | SPECIALTIES[slug].clinical = true | partner.approve_clinical |
+   | POST /admin/experts/[id]/ban | exists booking with start_at > now() | expert.ban_with_future_bookings |
+   | POST /admin/records/[id]/decrypt | always | record.break_glass_decrypt |
+   Any other admin mutation is single-actor with a mandatory reason; adding a kind requires a
+   row here, a test and an audit-union entry. Admin routes tagged "admin" in OpenAPI and hidden
+   from the public docs listing unless the requester is staff.
 2. Users: GET /admin/users?q&cursor (auth.api.listUsers), GET /admin/users/[id] (profile, orgs +
    roles, sessions, 2FA/passkeys flags, bookings summary, payments summary), POST
    /admin/users/[id]/ban [R] { reason, expiresAt? } (auth.api.banUser + revokeUserSessions),

@@ -59,7 +59,7 @@ vatTreatment, processingFeeCents, feeBearer })` returns the **financial calculat
   `processing_fee_cents` on `booking_payments`.
 - **Payout engine** (port from MVP `process-expert-transfers`, `process-pending-payouts`,
   `check-upcoming-payouts`, `transfer-utils.ts`): `payout_states` table (booking_payment_id,
-  status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` (this
+  status `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` (this
   union is the SSOT — `payments-payouts-spec.md` "Payout States" is rewritten to it in this
   phase), `hold_reasons text[]` (set semantics, values `dispute|manual`; a hold ADDS its reason,
   a dispute won or a staff release REMOVES its reason, and only when the set becomes empty does
@@ -142,8 +142,11 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 ## Acceptance criteria
 
 - [ ] New expert completes Connect onboarding in Embedded Components; `account.updated` /
-      `capability.updated` flip `connect_status` and unlock publishing once `transfers` is active
-      and `payouts_enabled`; no `card_payments` capability is requested.
+      `capability.updated` flip `connect_status` and unlock publishing only when
+      `details_submitted && payouts_enabled && capabilities.transfers === "active"` (and, when
+      `ff.expert_identity_verification` is on, Identity `verified`) — the same predicate as the
+      Scope and the prompt, tested with each term false in turn; no `card_payments` capability is
+      requested.
 - [ ] PR 06.0 spike report committed under `docs/eleva-v3/spikes/06-stripe-funds-flow.md`: test-mode
       evidence for platform PaymentIntent, delayed transfer with `source_transaction`, full +
       partial refund, transfer reversal, dispute hold, connected-account webhooks, clinic 0% flow.
@@ -302,12 +305,14 @@ PR 06.1 — Connect onboarding hardening:
    800 bps, clinic-member booking 0 bps, optional grandfathered override stored on
    billing_customers.commission_override_bps with expiry) AND computeSettlement({ grossCents,
    commissionBps, vatRateBps, vatTreatment: pt_b2b | eu_reverse_charge | eu_b2c | non_eu,
-   processingFeeCents, feeBearer: platform | destination }) -> { bookingGross,
+   processingFeeCents, feeBearer: "platform" | "expert" | "clinic" (the SSOT union of
+   payments-payouts-spec.md — never a different spelling) }) -> { bookingGross,
    platformFeeGross, platformFeeNet, vatOnPlatformFee, paymentProcessingFee, expertTransfer,
    creditNoteAllocation(refundCents), rounding: "half-up-cents-on-fee", currency: "EUR" }. The
    commission is VAT-INCLUSIVE (fee gross = advertised %; PT B2B splits it into net + 23% IVA;
-   reverse charge keeps it as net) and the processing fee is borne by the platform for
-   marketplace bookings and by the destination for clinic 0% bookings — these are the D-03/D-04
+   reverse charge keeps it as net) and the processing fee is borne by the platform
+   (feeBearer = platform) for marketplace bookings and by the clinic (feeBearer = clinic) for
+   clinic 0% bookings, with feeBearer = expert available for D-04 — these are the D-03/D-04
    working defaults; the accountant-approved matrix in payments-payouts-spec.md is the SSOT and
    the tests are written from it row by row. Store applied_commission_bps,
    platform_fee_net_cents, platform_fee_vat_cents and processing_fee_cents on booking_payments

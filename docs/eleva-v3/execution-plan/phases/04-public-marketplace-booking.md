@@ -51,8 +51,12 @@ In:
     the reservation, updates `start_at`/`end_at`/`mode_id` in place and lets the exclusion
     constraint re-check the new window — `23P01` -> 409 `SLOT_TAKEN` and the booking stays on
     its old time; a concurrency test races a reschedule against a fresh `/bookings/reserve` on
-    the target window and expects exactly one winner. A `23P01` violation is
-    mapped to 409 `SLOT_TAKEN`; the 100-way concurrency test runs twice — with Redis and with the
+    the target window and expects exactly one winner. In `reserveSlot` AND in the reschedule
+    path, a PostgreSQL exclusion violation (`23P01`) is caught explicitly and mapped to the same
+    canonical result as the Redis-detected conflict — `{ error: "conflict" }` -> 409 `SLOT_TAKEN`
+    — never to the generic `db_error` branch (unit test: mocked insert throwing `23P01` ->
+    `SLOT_TAKEN`; integration test on the Neon branch: two inserts on an overlapping window ->
+    one 201, one 409); the 100-way concurrency test runs twice — with Redis and with the
     lock disabled (`SCHEDULING_DISABLE_REDIS_LOCK=1`, test-only) — and expects one 201 both times.
     The body also carries `consents: [{ kind, version }]` for `terms`, `privacy` and
     `health_data_processing` (all three required by Zod, versions must equal the current
@@ -197,7 +201,9 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
   re-read — `cancellation_reason`), `booking_payments` (unique `booking_id`, payment intent id,
   status, amount, fee, transfer group), `slot_reservations` additions (`capability_hash`,
   nullable `user_id`, nullable unique `stripe_payment_intent_id`, `expert_user_id`, `status`
-  gains `converted|released`, the `btree_gist` exclusion constraint described under
+  gains `converted|released|released_while_processing` (the last one is the bounded-async path
+  of the payments spec: MB WAY still `processing` at hold + 10 min releases the slot; a later
+  success re-reserves or auto-refunds with reason `slot_lost`), the `btree_gist` exclusion constraint described under
   `/bookings/reserve`), **`consents`** (`id`, `subject_kind user|guest`, `user_id` nullable,
   `guest_email_hash` nullable (keyed HMAC), `kind` from `CONSENT_KINDS`, `document_version`,
   `locale`, `source funnel|account|import`, `reservation_id` nullable, `booking_id` nullable,
@@ -500,7 +506,10 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    amount_cents, application_fee_cents, transfer_group, payment_method_type, paid_at,
    refunded_cents, created_at); extend slot_reservations with capability_hash (char(64), not
    null), user_id (nullable FK auth.user), stripe_payment_intent_id (nullable, unique),
-   expert_user_id NOT NULL, status values converted|released|expired added, and the FINAL slot
+   expert_user_id NOT NULL, status values converted|released|expired|released_while_processing
+   added (payments spec "payment-method policy": processing intent past the async window ->
+   release + later payment_intent.succeeded re-reserves or auto-refunds reason slot_lost, test
+   with a recorded late-success event), and the FINAL slot
    consistency boundary: CREATE EXTENSION IF NOT EXISTS btree_gist; ALTER TABLE slot_reservations
    ADD CONSTRAINT slot_reservations_no_overlap EXCLUDE USING gist (expert_user_id WITH =,
    tstzrange(start_at, end_at, '[)') WITH &&) WHERE (status IN ('reserved', 'converted')).

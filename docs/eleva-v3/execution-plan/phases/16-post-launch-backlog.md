@@ -54,21 +54,30 @@ storage and Cloudflare R2 are **not** accepted destinations, so the compliant de
    Daily policy from Daily's docs (`s3:PutObject`, `s3:ListBucketMultipartUploads`,
    `s3:AbortMultipartUpload`, `s3:ListMultipartUploadParts` — no `GetObject`, so Daily can never
    read a recording back; set `allow_api_access: false` on the `recordings_bucket` property) and a
-   second role for the Eleva workflow (`GetObject`, `DeleteObject`, `ListBucket`). Provisioned by
+   second role for the Eleva workflow (`GetObject`, `DeleteObject`, `ListBucket`). SSE-KMS
+   completes the contract: the customer-managed key policy names both role principals — Daily's
+   role gets `kms:GenerateDataKey` (single-part uploads) plus `kms:Decrypt` (multipart uploads
+   re-read parts), the workflow role gets `kms:Decrypt` (+ `kms:GenerateDataKey` for nothing —
+   it never writes) — and D-08 is signed only after an encrypted upload by Daily's test probe
+   and a download by the workflow role both succeed. Provisioned by
    `infra/aws/recordings-landing-zone.ts` (idempotent, dry-run default) and validated against the
    permission table in Daily's custom-S3 guide before D-08 is signed. Recorded as **D-08** with
    the account id, region and role ARNs.
-2. **System of record** — on Daily's `recording.ready-to-download` and
-   `transcript.ready-to-download` webhook events (Daily's exact type names; the handler maps the
-   latter to the internal domain event `transcript.ready` — a recorded fixture of each provider
-   payload is a test) a
-   `@eleva/workflows` job (QStash, idempotent on the Daily recording id) pulls the object with the
-   workflow role, encrypts the transcript with `encryptForOrg(expertOrgId)` (envelope, per-org
-   DEK), stores it through `@eleva/storage` in the **private** Vercel Blob store (region confirmed
-   EU in D-08), writes `records.kind = transcript` (add `transcript` to `RECORD_KINDS` here), then
-   **deletes the S3 object**. The raw video is deleted from S3 after the transcript is stored
-   unless `ff.session_recording_keep` (default off, DPO decision) — nothing PHI-bearing stays in
-   S3 beyond the transfer window. Retention: transcripts 2 y (`data-retention-export-matrix.md`).
+2. **System of record** — two ingestion jobs, because Daily sends two different payloads:
+   `recording.ready-to-download` (`recording_id`, `s3_key`) starts `ingestRecording`, idempotent
+   on `recording_id`; `transcript.ready-to-download` (`id`, `out_params.s3.key`) starts
+   `ingestTranscript`, idempotent on the transcript `id` (mapped to the internal domain event
+   `transcript.ready`); a recorded fixture of each provider payload is a test and a payload
+   routed to the wrong job fails the test. `ingestTranscript` pulls the object with the workflow
+   role, encrypts it with `encryptForOrg(expertOrgId)` (envelope, per-org DEK), stores it through
+   `@eleva/storage` in the **private** Vercel Blob store (region confirmed EU in D-08), writes
+   `records.kind = transcript` (add `transcript` to `RECORD_KINDS` here), then **deletes the S3
+   object**. `ingestRecording` only records the asset (`session_recordings` row: recording id,
+   s3 key, duration, deleted_at) and deletes the raw video from S3 once the transcript is stored
+   unless `ff.session_recording_keep` (default off, DPO decision), in which case it moves the
+   video the same encrypted way as `records.kind = recording_video` — a recording is never
+   stored as a transcript. Nothing PHI-bearing stays in S3 beyond the transfer window.
+   Retention: transcripts 2 y (`data-retention-export-matrix.md`).
 3. **Consent** — add `session_recording` to `CONSENT_KINDS`; both the expert and the member must
    grant it (join-page banner; withdrawable at any time); the consent boolean drives Daily's
    recording mode through the fenced sync below, never a raw flag.
@@ -80,7 +89,12 @@ storage and Cloudflare R2 are **not** accepted destinations, so the compliant de
 Phase 9 creates the room at booking confirmation with `enable_recording: false`, and consent is
 captured on the join page, so recording is enabled by an **idempotent room update**, not at
 creation: `syncRoomRecording(bookingId)` in `@eleva/video` reads the flag + both consents and
-calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } })`
+calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : <disabled> } })`
+— Daily models "disabled" as the property being unset, so `<disabled>` is whatever PR 09.0 /
+the 16.8 spike proves the API accepts to clear it (`null`, `false` or omitting the key on a
+full properties write), and `isRecordingEnabled(config)` normalises the read-back:
+`config.enable_recording` in `{"cloud","local","raw-tracks"}` -> true, absent/`null`/`false` ->
+false — the worker never compares raw values
 — the consent boolean maps to Daily's recording mode string, never passed raw — only when the desired
 value differs from `sessions.recording_enabled`; it runs on every consent change and again in
 the `join` route before the token is minted, so the state is correct whenever anyone enters
@@ -107,7 +121,8 @@ and joins never wait on it) and a worker that acquires the mutex re-reads the cu
 `v` and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after `updateRoom` the worker reads the room back (`GET /rooms/{name}`) and accepts only when
-the returned `config.enable_recording` equals the desired value it just sent; step 3 persists
+`isRecordingEnabled(returned config)` equals `desired` (normalised on both sides — an omitted
+property is "disabled", never "unknown"); step 3 persists
 `recording_enabled = <read-back value>`, `recording_verified_version = v`,
 `recording_verified_at = now()` with a compare-and-swap `WHERE recording_state_version = v` —
 zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
@@ -135,12 +150,13 @@ Recording/transcription behind flags: Phase 9 rooms are created at confirmation 
    false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
    ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
-   updateRoom(name, { properties: { enable_recording: desired ? "cloud" : false } }) and persist
+   updateRoom(name, { properties: { enable_recording: desired ? "cloud" : <disabled as proven by
+   the spike — Daily models disabled as unset> } }), compare with isRecordingEnabled(config)
+   (cloud|local|raw-tracks -> true; absent|null|false -> false) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
    behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
-   then GET /rooms/{name} read-back accepted only when config.enable_recording equals the value
-   just sent (Daily room properties are a closed set: NO meta field, NO provider-side version —
+   then GET /rooms/{name} read-back accepted only when isRecordingEnabled(config) equals desired (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
    recording_state_version, recording_verified_version, recording_verified_at); CAS on the
    version also sets recording_verified_version = v; join refuses to mint unless
@@ -305,7 +321,7 @@ copy the title verbatim into the new phase file heading):
         prompt fragment" of docs/eleva-v3/execution-plan/phases/16-post-launch-backlog.md
         VERBATIM into the new phase file (they are its scope, task list and acceptance criteria;
         deliverable paths: packages/video/src/recording.ts, packages/workflows/src/video/
-        recording-ingest.ts, infra/aws/recording-landing-zone.ts, packages/db migration adding
+        recording-ingest.ts, infra/aws/recordings-landing-zone.ts, packages/db migration adding
         sessions.recording_* and records.kind transcript): S3 EU
         landing zone as a mailbox, pull-encrypt-store into the private Blob store, delete the
         S3 object, session_recording consent kind, the syncRoomRecording fencing design,

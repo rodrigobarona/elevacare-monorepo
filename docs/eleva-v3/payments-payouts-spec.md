@@ -149,7 +149,14 @@ Starter / Growth / Enterprise per the tier table above.
   Pay), `link`, `mb_way`. Reservation-hold policy per method class lives in
   `packages/billing/src/server/payment-method-policy.ts`: `synchronous` (card, wallets, Link),
   `async_short` (MB WAY — hold extended to 10 min while the intent is `processing`; the expiry
-  sweep never cancels a reservation with a `processing` intent), `excluded`
+  sweep never cancels a reservation with a `processing` intent **inside** that window; the
+  window is bounded: at hold + 10 min the sweep calls `paymentIntents.retrieve` — `succeeded`
+  -> confirm normally (late webhook), `requires_payment_method`/`canceled` -> release, still
+  `processing` -> release the slot anyway and mark the reservation `released_while_processing`;
+  if that intent later succeeds (`payment_intent.succeeded` after release) the handler tries to
+  re-reserve the same window and confirms when it is still free, otherwise refunds in full
+  automatically (`refund reason = slot_lost`) and notifies the member — tested with a recorded
+  late-success event; a `processing` intent older than 24 h is cancelled by the reconciler), `excluded`
 - expected per-country method set at launch (EUR-only, D-02):
   - **PT** → card + **MB WAY** + Apple Pay + Google Pay + Link
   - **everyone else** → card + wallets + Link (SEPA Direct Debit, iDEAL, Bancontact arrive with
@@ -182,7 +189,7 @@ Starter / Growth / Enterprise per the tier table above.
 
 ### Embedded Components UX — fully embedded, no redirects
 
-All Stripe surfaces render inline in Eleva's app. No Stripe-hosted pages in user flows and no popups **opened by Eleva code** — with two documented exceptions. (1) **Connect embedded components' own authentication popups**: onboarding, account management, payouts and documents components open a Stripe-hosted popup for identity verification/authentication steps that Stripe does not allow inline; this is part of Connect.js (pinned version in `@eleva/billing`) and is permitted: the app must not set `Cross-Origin-Opener-Policy` (Stripe states cross-origin isolation is unsupported and it would sever the popup's opener channel), the components render inside an Eleva error boundary with `onLoadError`/`onExit` handlers that show a retry CTA and re-mint the `AccountSession` on `expired` errors, and a blocked-popup state shows an explicit "allow popups for eleva.care" message; browser tests (Playwright) cover Connect onboarding, payouts, Link and 3DS against the pinned Connect.js/Stripe.js versions. (2) **The Stripe Customer Portal for SaaS subscription management** (rows marked "Portal" below). Portal is hosted by Stripe by design (there is no embedded equivalent for plan change, cancellation, invoice history and payment-method update for subscriptions); the controls that make it acceptable are: the portal session is minted server-side (`POST /billing/portal-session`, RBAC-gated to the org owner/billing role, audited `billing.portal_session_created`) with a `return_url` fixed to `/expert/billing` or `/org/billing` on our own origin; the redirect is a full-page navigation, never an iframe (Stripe forbids framing the Portal), so `billing.stripe.com` is listed in the CSP **only** as a navigation target and `form-action`, not in `frame-src`; on return the page re-fetches subscription state from our DB (already updated by `customer.subscription.*` webhooks) and shows a pending state until the webhook has landed rather than trusting query parameters. Any future embedded Stripe component that covers the same surface replaces Portal and removes the exception.
+All Stripe surfaces render inline in Eleva's app. No Stripe-hosted pages in user flows and no popups **opened by Eleva code** — with two documented exceptions. (1) **Connect embedded components' own authentication popups**: onboarding, account management, payouts and documents components open a Stripe-hosted popup for identity verification/authentication steps that Stripe does not allow inline; this is part of Connect.js (pinned version in `@eleva/billing`) and is permitted: the app must not set `Cross-Origin-Opener-Policy` (Stripe states cross-origin isolation is unsupported and it would sever the popup's opener channel), the components render inside an Eleva error boundary with `onLoadError`/`onExit` handlers that show a retry CTA and re-mint the `AccountSession` on `expired` errors, and a blocked-popup state shows an explicit "allow popups for eleva.care" message; browser tests (Playwright) cover Connect onboarding, payouts, Link and 3DS against the pinned Connect.js/Stripe.js versions. (2) **The Stripe Customer Portal for SaaS subscription management** (rows marked "Portal" below). Portal is hosted by Stripe by design (there is no embedded equivalent for plan change, cancellation, invoice history and payment-method update for subscriptions); the controls that make it acceptable are: the portal session is minted server-side (`POST /billing/portal-session`, RBAC-gated to the org owner/billing role, audited `billing.portal_session_created`) with a `return_url` fixed to `/expert/billing` or `/org/billing` on our own origin; the redirect is a full-page navigation, never an iframe (Stripe forbids framing the Portal), so `billing.stripe.com` appears in no CSP directive at all (a server-issued 302 to a top-level navigation is not governed by CSP; nothing is framed and no form posts to it); on return the page re-fetches subscription state from our DB (already updated by `customer.subscription.*` webhooks) and shows a pending state until the webhook has landed rather than trusting query parameters. Any future embedded Stripe component that covers the same surface replaces Portal and removes the exception.
 
 | Surface                                    | Component                                                                                                       | Location                       |
 | ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
@@ -205,6 +212,7 @@ Architecture:
 - `/api/stripe/account-session` mints short-lived `AccountSession` tokens with precise component permissions; RBAC-gated
 - `appearance` API maps Eleva design tokens (brand colors, radius, fonts) → Stripe widget theme; dark-mode supported
 - `locale` prop wired to next-intl (`pt` / `en` / `es`)
+- the current `packages/config` `VENDORS.stripe.frameSrc` still carries `https://*.stripe.com` — Phase 4 PR 04.2 replaces it with the explicit list below (a CSP unit test pins the directive set) and Phase 6 re-verifies it against the pinned Connect.js version
 - CSP is **exactly Stripe's published list for the products we enable** (Stripe.js/Elements + Link, 3DS, Connect embedded components), re-checked against the Stripe CSP docs in the Phase 6 spike and pinned in `@eleva/config` `stripeCsp`: `script-src https://js.stripe.com https://*.js.stripe.com https://connect-js.stripe.com https://maps.googleapis.com` (Address Element); `frame-src https://js.stripe.com https://*.js.stripe.com https://connect-js.stripe.com https://hooks.stripe.com` (3DS); `connect-src https://api.stripe.com https://maps.googleapis.com`; `img-src https://*.stripe.com`; `style-src` with the Connect.js inline-style hash Stripe documents plus its font origins; `billing.stripe.com` only in `form-action` (Customer Portal is a full-page navigation, never framed). The bare `*.stripe.com` never appears in `script-src`/`frame-src`/`connect-src`, and no `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` header is set on any page hosting Stripe (unsupported by Stripe). The CSP test asserts this exact directive set; the browser tests above run in report-only mode first and any violation fails CI
 - error UX: components wrapped in Eleva error boundary; `onExit` / `onLoadError` handled with consistent retry CTA
 
@@ -274,6 +282,8 @@ this list must stay identical):
 - `reversed` — refund before/after transfer or dispute lost (transfer reversed when one exists;
   `reversed_cents` accumulates partial reversals)
 
+The union is therefore `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` — identical in Phase 6 (schema, API types, state machine, audit union `payout.*`) and here.
+
 Holds compose: a payout leaves `held` only when every hold reason has been cleared; there is
 no separate "released" state.
 
@@ -293,8 +303,15 @@ payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` 
   allocation is **cumulative, not per refund**: `reversalCents_n = round(refundedToDate / gross *
   transferred) - reversedToDate`, so independent rounding can neither leave residual cents nor
   exceed the transfer; the final refund that brings `refundedToDate = gross` reverses exactly
-  `transferred - reversedToDate`; `payout_states.reversed_cents` is updated in the same
-  transaction and the DB enforces `CHECK (reversed_cents <= amount_cents)`; Stripe rejects
+  `transferred - reversedToDate`. Sequence (README rule 9 — no vendor call inside a transaction):
+  tx1 inserts the `refunds` row `pending` with its idempotency key and, when a transfer exists,
+  the `transfer_reversals` row `pending` with the computed `reversed_cents`; **outside any
+  transaction** `refunds.create` then `transfers.createReversal` are called with those keys;
+  tx2 records each result by compare-and-set on the row status (`pending -> succeeded|failed`),
+  updates `booking_payments.refunded_cents` and `payout_states.reversed_cents` and moves the
+  payout to `reversal_pending` when the reversal call failed (a lost response is repaired by the
+  reconciler through `refunds.retrieve`/`transfers.listReversals` by idempotency key); the DB
+  enforces `CHECK (reversed_cents <= amount_cents)`; Stripe rejects
   reversals above the unreversed remainder, so the ledger and Stripe agree by construction
   (tests: partial refunds 33.33 + 33.33 + 33.34 on 100.00 gross / 85.00 transferred ->
   reversals 28.33 + 28.33 + 28.34, cumulative 85.00; 3 x 33.33 alone -> 84.99, the residual

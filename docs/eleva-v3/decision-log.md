@@ -310,7 +310,7 @@ Each entry should include:
 
 - Owner: engineering
 - Status: accepted
-- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` is the SSOT (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles lost responses from Eleva-owned intent (`room_create_attempt_at`, `room_attempt_seq`, `room_fingerprint_exp`) matched against the listed rooms' `nbf`/`exp` — Daily HIPAA mode rejects custom room names and room properties have no `meta`, so there is no provider-side handle (supersedes the earlier `room_request_id`-in-`meta` design, 2026-09-07 amendment) — and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
+- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` is the SSOT (`reversal_pending` added by the 2026-09-07 amendment: refund succeeded, transfer reversal not yet confirmed) (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles lost responses from Eleva-owned intent (`room_create_attempt_at`, `room_attempt_seq`, `room_fingerprint_exp`) matched against the listed rooms' `nbf`/`exp` — Daily HIPAA mode rejects custom room names and room properties have no `meta`, so there is no provider-side handle (supersedes the earlier `room_request_id`-in-`meta` design, 2026-09-07 amendment) — and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
 - Reference: execution-plan phases 4, 6, 7, 8, 9, 12, 14, 15; [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Payout States"; [`notifications-spec.md`](./notifications-spec.md) entrypoint.
 
 ### 2026-09-07: Execution-plan amendment from the external engineering review (D-01..D-14)
@@ -335,6 +335,13 @@ Each entry should include:
   that. Sign-off is recorded by editing the status and adding the date and name in place.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 4 rule 12 (gate table)
 
+### 2026-09-07: Phase 1 security baseline contracts (RLS policy classes, secret scanning, traceability, localized columns)
+
+- Owner: engineering (security), DPO informed
+- Status: accepted (documentation + CI contracts; the controls themselves are implemented by the phases named in `security-traceability.md`)
+- Summary: Phase 1 fixes four contracts that later phases build on. (1) **RLS policy classes**: every tenant table declares one of the seven classes in `packages/db/src/rls/policy-classes.ts` (`tenant-owned`, `dual-organization`, `public-read`, `member-owned`, `platform-only`, `append-only-audit`, `clinical-shared`) and `rls-classes.test.ts` proves each class with a fixture and positive/negative assertions. (2) **Secret scanning**: `gitleaks` runs in CI with the repo `.gitleaks.toml`; a hit fails the job. (3) **Security traceability**: `docs/eleva-v3/security-traceability.md` maps every control to the phase that introduces it, the test that enforces it and the evidence link; CI fails when a control row has no enforcing check. (4) **Localized columns**: `LocalizedText` / `LocalizedRichText` (JSONB keyed by `Locale`, one row per entity, Zod-validated, `pt` required) are the only storage shape for translatable content — the duplicate `LocalizedString` type is deleted in PR 04.1.
+- Reference: [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`security-hardening-checklist.md`](./security-hardening-checklist.md)
+
 ### D-01 (2026-09-07): `pt-BR` retired as a locale; alias to `pt`; no `fr` now
 
 - Owner: product (founder)
@@ -352,6 +359,7 @@ Each entry should include:
 
 - Owner: founder + finance
 - Status: proposed (working decision — sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: `CHECK (currency = 'EUR')` on `event_types` and `event_type_modes`; the Stripe call
   still reads `currency` from the reservation snapshot, so lifting the CHECK later is the whole
   multi-currency change on the payment path. Blocks: Phase 4 PR 04.2.
@@ -361,6 +369,7 @@ Each entry should include:
 
 - Owner: finance (accountant)
 - Status: proposed (sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: the advertised commission (15% / 8% / 0%) is the gross platform fee; IVA is carved out
   of it per the Phase 7 IVA matrix (PT B2B 15.00 = 12.20 + 2.80; intra-EU reverse charge 15.00 net).
   100 EUR booking -> 15.00 fee -> 85.00 expert transfer. Implemented once in `computeSettlement`.
@@ -371,6 +380,7 @@ Each entry should include:
 
 - Owner: finance
 - Status: proposed (sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: marketplace bookings — Eleva absorbs Stripe's processing fee out of its commission
   (`expertTransfer = gross − platformFeeGross`); clinic-attributed 0% bookings — the clinic bears
   the processing fee (`expertTransfer = gross − processingFeeCents`). `processing_fee_cents` is
@@ -381,6 +391,7 @@ Each entry should include:
 
 - Owner: finance + legal
 - Status: proposed (confirm with Stripe/legal in PR 06.0, sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: with separate charges and transfers the connected account only receives transfers, so
   request the `transfers` capability only — no `card_payments`; `charges_enabled` never gates
   anything. Connect's own KYC is the identity check. Publish gate = `details_submitted &&
@@ -393,6 +404,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: finance + product
 - Status: proposed (sign before PR 06.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: cancellation-window refund rules, dispute handling (hold payout, reverse on loss) and
   the no-show policy (Phase 9 records attendance only; this decision says refund / keep / partial
   per attendance outcome). Refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` (default 200 EUR) need
@@ -403,6 +415,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: founder + DPO
 - Status: proposed (evidence from PR 09.0; sign before Phase 9 opens)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: the Daily plan tier with HIPAA enabled, the executed BAA/DPA, the documented EU
   media-processing position (stated only as Daily documents it — no stronger claim on `/trust`),
   `sessions.eleva.care` verified, recording confirmed off for the domain. Blocks: Phase 9.
@@ -412,6 +425,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: DPO + founder
 - Status: proposed (decide before Phase 16.8 is promoted)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: Daily HIPAA recording writes only to a customer-owned AWS S3 bucket via IAM role trust;
   Vercel Blob, Neon object storage and Cloudflare R2 are not accepted destinations. Design: a
   disposable EU S3 bucket (SSE-KMS, 72 h lifecycle) as a mailbox, a workflow that pulls, encrypts
@@ -423,6 +437,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: accountant
 - Status: proposed (sign before PR 07.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: migrated MVP paid bookings are imported as `platform_fee_invoices.status = legacy`
   (+ `legacy_document_ref`) or `legacy_missing`; v3 never issues a Tier 1 document for a booking
   paid before cutover; the accountant decides any lawful backfill outside the system. Phase 14
@@ -433,6 +448,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: product (founder)
 - Status: proposed (sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: every surface of the live MVP site has a disposition tested by `e2e/legacy-urls.spec.ts`:
   expert URLs preserved via `public_handles`; `/pt-BR/*` 301; health quiz retired (301 to the
   experts directory); community links kept as external footer links; Help Center replaced by
@@ -445,6 +461,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: DPO + product
 - Status: proposed (sign before PR 10.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: expert-authored records are readable by the authoring expert; by other experts of the
   same clinic organization only when the clinic admin enabled `clinic_shared_records` (default
   off, reason required, audited) and the member has not opted out (`record_access_optouts`);
@@ -456,6 +473,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: DPO + legal
 - Status: proposed (sign before the Phase 5 account-deletion work)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: member-authored data is erased on schedule (grace period, then crypto-shred);
   expert-authored clinical records stay under the expert organization's legal retention duty —
   pseudonymised (identity replaced by a retention token) and kept for the period recorded in
@@ -468,6 +486,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: security owner (engineering lead)
 - Status: proposed (written in Phase 2; sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: `Domain=.eleva.care`, `Secure`, `HttpOnly`, `SameSite=Lax`, `__Secure-` prefix; admin
   console host-only cookie; cookie-authenticated mutations pass the Better Auth origin check
   (`trustedOrigins` explicit list, `Sec-Fetch-Site`) or fail 403 `CSRF_ORIGIN_MISMATCH`; Bearer and
@@ -480,6 +499,7 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 - Owner: finance + product
 - Status: proposed (sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: booking PaymentIntents use a Stripe Payment Method Configuration (`STRIPE_PMC_BOOKING`,
   owned by `infra/stripe/setup-payment-methods.ts`) with `card` (incl. Apple Pay / Google Pay),
   `link`, `mb_way`; Multibanco, SEPA Direct Debit, Klarna and every delayed-notification method are

@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-10/records-crm-ai` (split: `phase-10.1/records-consent-retention`, `phase-10.2/crm-ai-reports`)                                                                                                                                                                                                                                                                                                            |
-| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list)                                                                                                                                                                                                                                                                                                                                                 |
+| Depends on | Phase 9, Phase 4B (`@eleva/editor`, `approved-models` allow-list); **D-11 (clinical access model) signed — owner, date and evidence in `decision-log.md` — before PR 10.1 opens** (entry gate, checked in the prompt)                                                                                                                                                                                             |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Touches    | `packages/db/src/schema/main/{records,session-documents,expert-notes,consents,crm}.ts`, `packages/encryption` (usage), `packages/storage` (private store), `packages/compliance/**` (retention jobs, DSAR collectors), `packages/crm/**`, `packages/ai/**`, `packages/encryption` (KEK/DEK operations), `apps/api/src/app/{records,notes,crm,ai,workflows}/**`, `apps/expert/**`, `apps/app/**`, `packages/flags` |
 | Exit gate  | Expert writes encrypted notes during/after a session, uploads documents to the private store, publishes a report the member can read via the app; retention jobs purge on schedule; consent captured; AI draft (behind `ff.ai_reports_beta`) from typed notes reviewed and published by the expert; KEK rotation job proven; no PHI in Sentry/logs                                                                |
@@ -29,7 +29,11 @@ In:
   have different visibility columns. Expert-side read is **one policy (A) shared by both
   tables and it is the D-11 model, not "whole org"**: `expert_org_id = eleva.org_id AND
 (<author> = eleva.user_id OR (organizations.clinic_shared_records AND NOT EXISTS
-record_access_optouts(member_user_id, expert_org_id)))` where the author column is
+record_access_optouts(member_user_id, expert_org_id)))` — the two objects this predicate
+  reads, `organizations.clinic_shared_records boolean NOT NULL DEFAULT false` and
+  `record_access_optouts(member_user_id, org_id, created_at)`, are **created in this phase's
+  PR 10.1 migration** (default off, no UI) so the policy compiles and is tested here; Phase 11
+  only adds the clinic toggle, the member notice and the opt-out UI — where the author column is
   `created_by` on `records` and `uploaded_by` on `session_documents` (same predicate shape, two
   concrete policies — one per table, each with its own rls-classes test) — in a solo Expert org
   that collapses to the author; in a clinic it opens to peers only behind the Phase 11 toggle and
@@ -84,8 +88,14 @@ record_access_optouts(member_user_id, expert_org_id)))` where the author column 
   tags; endpoints + expert UI (`/[orgSlug]/crm`), reminders via Lane 1 kind `crm.follow_up_due`.
 - **AI reports beta** (`@eleva/ai`, Vercel AI Gateway only) — **from typed notes, not from
   recordings**: `draftSessionReport({ bookingId, noteRecordIds })` (one signature everywhere —
-  Scope, prompt, tests, `@eleva/api-client`; `bookingId` authorizes: every note id must belong to
-  that booking and to the caller's org, checked before any decryption) takes the expert's encrypted session
+  Scope, prompt, tests, `@eleva/api-client`). Authorization is **per note and independent of
+  D-11 read sharing**: before any decryption every `noteRecordId` must be `kind = note`,
+  belong to `bookingId`, to the caller's org AND have `created_by = caller` (a clinic peer may
+  read a shared note under D-11 but may not send another expert's PHI to the AI Gateway); any
+  failing note rejects the whole request (403, nothing decrypted). Then the **current**
+  `ai_processing` consent of the booking's member is checked (latest row for the booking or
+  the member; absent/withdrawn -> 403 `AI_CONSENT_REQUIRED`, no decryption, no Gateway call;
+  captured at booking for phone/in-person sessions, which have no join page). It takes the expert's encrypted session
   notes (and, optionally, the intake answers the member typed at booking) as the only input, with
   versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
@@ -243,6 +253,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the "PHASE 10 TASK" section further down is
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
+- Entry gate: decision-log.md must contain D-11 (clinical access model) with Status accepted,
+  owner, date and evidence link — if it is still proposed, STOP and report; PR 10.1 cannot open.
 - git checkout main && git pull --ff-only && git checkout -b phase-10.1/records-consent-retention
 - Second PR (opened after the first merges): phase-10.2/crm-ai-reports. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
@@ -268,6 +280,10 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 PHASE 10 TASK — Encrypted records, consent, retention, CRM and AI report drafting (ADR-009, ADR-020).
 
 PR 10.1 — records, documents, consent, retention:
+0. packages/db: organizations.clinic_shared_records boolean NOT NULL DEFAULT false and
+   record_access_optouts (member_user_id FK, org_id FK, created_at, PK (member_user_id, org_id))
+   — created HERE so policy A below compiles; no UI or endpoint in this phase (Phase 11 adds the
+   toggle, notice and opt-out API); rls-classes test for the clinical-shared class.
 1. packages/db: records (id, expert_org_id, member_user_id, booking_id nullable, kind from the
    shared RECORD_KINDS const = note|report|document_ref|ai_draft (transcript joins in 16.8; single enum reused by
    the pg enum, Zod schemas, audit unions and tests), title_encrypted, body_encrypted (text, envelope ciphertext), format
@@ -396,9 +412,12 @@ PR 10.2 — CRM + AI reports beta:
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
    Report({ bookingId, noteRecordIds }) (the one signature — BEFORE any decryption: validate
-   that every note belongs to bookingId and the caller's org (mismatch -> 403) AND that an
-   active ai_processing consent exists for the booking's member (absent or withdrawn -> 403
-   AI_CONSENT_REQUIRED, no decryption, no Gateway call; test both denials) — input is
+   that every note is kind = note, belongs to bookingId, to the caller's org AND has
+   created_by = caller (D-11 clinic read-sharing never authorizes AI submission of a peer's
+   note; any failing note -> 403 for the whole request) AND that the CURRENT ai_processing
+   consent of the booking's member is granted (absent or withdrawn -> 403 AI_CONSENT_REQUIRED,
+   no decryption, no Gateway call; tests: peer note -> 403, withdrawn consent -> 403, both with
+   zero decrypt calls) — input is
    the expert's decrypted typed notes for that
    booking (plus the member's typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from
