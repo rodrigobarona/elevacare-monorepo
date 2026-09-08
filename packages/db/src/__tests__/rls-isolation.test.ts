@@ -2,7 +2,9 @@ import { randomUUID } from "node:crypto"
 import { eq, inArray } from "drizzle-orm"
 import { Pool } from "@neondatabase/serverless"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { db } from "../client"
 import { withOrgContext } from "../context"
+import { organization } from "../schema/auth/index"
 import { orgDataKeys } from "../schema/main/org-data-keys"
 import { provisionRlsTestRole } from "./rls-test-role"
 
@@ -32,9 +34,29 @@ describe.skipIf(!enabled || !databaseUrl)("rls-isolation", () => {
     await withOrgContext(orgB, async (tx) => {
       await tx.delete(orgDataKeys).where(eq(orgDataKeys.orgId, orgB))
     })
+    await db()
+      .delete(organization)
+      .where(inArray(organization.id, [orgA, orgB]))
   })
 
   it("cross-org read returns zero rows under eleva.org_id", async () => {
+    await db()
+      .insert(organization)
+      .values([
+        {
+          id: orgA,
+          name: "RLS A",
+          slug: `rls-iso-a-${orgA}`,
+          type: "personal",
+        },
+        {
+          id: orgB,
+          name: "RLS B",
+          slug: `rls-iso-b-${orgB}`,
+          type: "personal",
+        },
+      ])
+
     await withOrgContext(orgA, async (tx) => {
       await tx.insert(orgDataKeys).values({
         orgId: orgA,
