@@ -198,7 +198,7 @@ Supported providers at launch:
 **OAuth credential management**: Better Auth `linkSocial` (Google / Microsoft with calendar scopes)
 stores and refreshes the tokens (ADR-017, ADR-020); `packages/calendar` owns the `CalendarAdapter`
 interface and receives tokens through `getProviderAccessToken({ accountId })` injected from
-`@eleva/auth`, which calls `auth.api.getAccessToken({ body: { accountId } })` for that connection. A
+`@eleva/auth`, which calls `auth.api.getAccessToken({ body: { accountId, userId } })` for that connection. A
 provider-only lookup is forbidden when an expert has more than one account per provider.
 WorkOS Pipes is gone (removed, see ADR-017).
 
