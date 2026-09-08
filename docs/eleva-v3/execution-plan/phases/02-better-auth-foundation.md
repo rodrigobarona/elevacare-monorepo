@@ -82,10 +82,27 @@ In:
   origin check (`Origin`/`Sec-Fetch-Site` against `trustedOrigins`) — the `requireApiAuth`
   single-credential rule already rejects mixed credentials, this adds the cross-site rule for
   the cookie path; `trustedOrigins` is the explicit env list (never a wildcard), preview
-  deployments target the staging API and never mint `.eleva.care` cookies; subdomain takeover
-  and cookie-tossing are addressed by the `__Secure-`/`__Host-` prefixes and the inventory of
-  every `*.eleva.care` DNS record kept in `environment-matrix.md`. Tests: cross-site POST with
-  cookie only -> 403 `CSRF_ORIGIN_MISMATCH`; same-site with cookie -> 200; Bearer from any origin
+  deployments target the staging API and never mint `.eleva.care` cookies. **Cookie tossing is
+  a real exposure of a `Domain=.eleva.care` cookie and the `__Secure-` prefix does NOT close it**
+  (it only forces `Secure`; any `*.eleva.care` host can still set a same-name parent-domain
+  cookie, and `__Host-` is not an option for a cookie that must be shared across the app
+  subdomains). The controls, each with a test: (1) the session cookie value is **signed** by
+  Better Auth with `BETTER_AUTH_SECRET` — an unsigned or foreign-signed value is a 401, never a
+  session; (2) **duplicate-cookie rejection**: if the request carries more than one cookie with
+  the session name (the tossing signature — browsers send both), `requireApiAuth` and the
+  Better Auth session reader treat the request as unauthenticated, answer 401
+  `SESSION_COOKIE_AMBIGUOUS`, clear both (`Max-Age=0` on the parent domain and on the host) and
+  log a security event — they never pick "the first one"; (3) **trusted-subdomain control**: no
+  user-controlled or third-party host may exist under `eleva.care` — org slugs live in paths,
+  never in hostnames; the only non-first-party name is the Daily CNAME `sessions.eleva.care`,
+  which is why it is listed as a named risk in the threat model (a compromised or misbehaving
+  page there could set a `.eleva.care` cookie — controls 1 and 2 are what defend against it) and
+  why every `*.eleva.care` DNS record is inventoried in `environment-matrix.md` with an owner
+  and reviewed each phase; the staff console uses a host-only `__Host-` cookie (Phase 12) because
+  it does not need sharing. Tests: tossed cookie (second same-name cookie from a subdomain,
+  unsigned) -> 401 `SESSION_COOKIE_AMBIGUOUS` + both cleared; forged-signature cookie -> 401;
+  cross-site POST with cookie only -> 403 `CSRF_ORIGIN_MISMATCH`; same-site with cookie -> 200;
+  Bearer from any origin
   -> 200; API key from any origin -> 200. Recorded in `decision-log.md` as D-13 (**proposed** —
   this phase writes the threat model and the tests; the security sign-off is a Phase 4 entry
   gate: PR 04.2 cannot open until D-13 carries owner, date and evidence).
@@ -134,8 +151,10 @@ identity tables/columns** (Phase 3).
       switch active org, `apps/expert` reads `session.activeOrganizationId`.
 - [ ] 2FA TOTP enrol + verify + backup codes; passkey register + sign-in; magic link sign-in;
       Google sign-in links to the same user when email matches (`trustedProviders`).
-- [ ] Cookie/CSRF threat model signed (D-13 in `decision-log.md`); cross-site cookie-only POST ->
-      403 `CSRF_ORIGIN_MISMATCH`; Bearer/API key from any origin -> 200 (tests).
+- [ ] Cookie/CSRF threat model written and recorded as D-13 **proposed** in `decision-log.md`
+      (sign-off is the Phase 4 PR 04.2 entry gate, not a Phase 2 deliverable); cross-site
+      cookie-only POST -> 403 `CSRF_ORIGIN_MISMATCH`; tossed/duplicate session cookie -> 401
+      `SESSION_COOKIE_AMBIGUOUS`; Bearer/API key from any origin -> 200 (tests).
 - [ ] Legacy `main.users/organizations/memberships` still present and read-only after this PR;
       row-count parity script prints `auth.* == main.*` for users, orgs, memberships; every FK
       validated (`pg_constraint.convalidated = true`).
@@ -388,8 +407,12 @@ PR 02.2 — clients, proxy, account UI, dashboard:
     trustedOrigins + Sec-Fetch-Site, error CSRF_ORIGIN_MISMATCH 403; explicit trustedOrigins
     env list, never wildcard; previews never mint .eleva.care cookies; *.eleva.care DNS
     inventory in environment-matrix.md) and implement the origin check in requireApiAuth's
-    cookie path only (Bearer and API-key paths are exempt); tests for the four cases; record
-    D-13 in decision-log.md with the security owner's sign-off — Phase 4 PR 04.2 depends on it.
+    cookie path only (Bearer and API-key paths are exempt); implement duplicate-session-cookie
+    rejection (more than one cookie with the session name -> 401 SESSION_COOKIE_AMBIGUOUS, clear
+    both, security log) and rely on the signed cookie value — __Secure- alone does not stop
+    cookie tossing on a Domain=.eleva.care cookie; tests for the six cases; record D-13 in
+    decision-log.md with Status: proposed, owner: security, review date — do NOT write a
+    sign-off here: the security owner signs it as the Phase 4 PR 04.2 entry gate.
 13. Docs: identity-rbac-spec.md final field names, api-contract-spec.md auth section,
     AGENTS.md facts, decision-log.md entries (D-13 + Better Auth adoption), security-traceability.md rows.
 
