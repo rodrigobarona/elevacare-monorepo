@@ -27,7 +27,7 @@ export function parseCiphertext(ciphertext: string): ParsedCiphertext {
     throw new EncryptionError("INVALID_CIPHERTEXT")
   }
   const [, kekRaw, dekRaw, ivB64, tagB64, dataB64] = parts
-  if (!kekRaw || !dekRaw || !ivB64 || !tagB64 || !dataB64) {
+  if (!kekRaw || !dekRaw || !ivB64 || !tagB64 || dataB64 === undefined) {
     throw new EncryptionError("INVALID_CIPHERTEXT")
   }
   const kekVersion = Number(kekRaw)

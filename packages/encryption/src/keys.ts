@@ -95,21 +95,31 @@ function kekBytes(version: number): Buffer {
   return kek
 }
 
-export function wrapDek(dek: Buffer, kekVersion: number): string {
+export function wrapDek(
+  dek: Buffer,
+  kekVersion: number,
+  aad: { orgId: string; keyVersion: number }
+): string {
   const iv = randomBytes(IV_LENGTH)
   const cipher = createCipheriv(AES_ALGO, kekBytes(kekVersion), iv)
+  cipher.setAAD(Buffer.from(`v2:${aad.orgId}:${aad.keyVersion}`))
   const data = Buffer.concat([cipher.update(dek), cipher.final()])
   const tag = cipher.getAuthTag()
-  return `v1:${iv.toString("base64")}:${tag.toString("base64")}:${data.toString("base64")}`
+  return `v2:${iv.toString("base64")}:${tag.toString("base64")}:${data.toString("base64")}`
 }
 
-export function unwrapDek(wrappedDek: string, kekVersion: number): Buffer {
+export function unwrapDek(
+  wrappedDek: string,
+  kekVersion: number,
+  aad: { orgId: string; keyVersion: number }
+): Buffer {
   const parts = wrappedDek.split(":")
-  if (parts.length !== 4 || parts[0] !== "v1") {
+  const format = parts[0]
+  if (parts.length !== 4 || (format !== "v1" && format !== "v2")) {
     throw new EncryptionError("INVALID_WRAPPED_DEK")
   }
   const [, ivB64, tagB64, dataB64] = parts
-  if (!ivB64 || !tagB64 || !dataB64) {
+  if (!ivB64 || !tagB64 || dataB64 === undefined) {
     throw new EncryptionError("INVALID_WRAPPED_DEK")
   }
   const iv = Buffer.from(ivB64, "base64")
@@ -117,8 +127,12 @@ export function unwrapDek(wrappedDek: string, kekVersion: number): Buffer {
   if (iv.length !== IV_LENGTH || tag.length !== 16) {
     throw new EncryptionError("INVALID_WRAPPED_DEK")
   }
+  const kek = kekBytes(kekVersion)
   try {
-    const decipher = createDecipheriv(AES_ALGO, kekBytes(kekVersion), iv)
+    const decipher = createDecipheriv(AES_ALGO, kek, iv)
+    if (format === "v2") {
+      decipher.setAAD(Buffer.from(`v2:${aad.orgId}:${aad.keyVersion}`))
+    }
     decipher.setAuthTag(tag)
     return Buffer.concat([
       decipher.update(Buffer.from(dataB64, "base64")),
@@ -140,7 +154,10 @@ function parseKekVersion(value: string): number {
 export function unwrapOrgDek(row: OrgDekRow): UnwrappedOrgDek {
   return {
     ...row,
-    dek: unwrapDek(row.wrappedDek, parseKekVersion(row.kekVersion)),
+    dek: unwrapDek(row.wrappedDek, parseKekVersion(row.kekVersion), {
+      orgId: row.orgId,
+      keyVersion: row.keyVersion,
+    }),
   }
 }
 
@@ -275,7 +292,7 @@ export async function getOrCreateOrgDek(
     orgId,
     keyVersion: nextKeyVersion,
     kekVersion: String(kekVersion),
-    wrappedDek: wrapDek(dek, kekVersion),
+    wrappedDek: wrapDek(dek, kekVersion, { orgId, keyVersion: nextKeyVersion }),
   })
   if (created) return { ...created, dek }
 
@@ -314,11 +331,12 @@ async function rotateOrg(
   let rewrapped = 0
   for (const row of rows) {
     if (parseKekVersion(row.kekVersion) === nextVersion) continue
-    const dek = unwrapDek(row.wrappedDek, parseKekVersion(row.kekVersion))
+    const aad = { orgId, keyVersion: row.keyVersion }
+    const dek = unwrapDek(row.wrappedDek, parseKekVersion(row.kekVersion), aad)
     await dekStore.updateWrapped(
       orgId,
       row.keyVersion,
-      wrapDek(dek, nextVersion),
+      wrapDek(dek, nextVersion, aad),
       String(nextVersion)
     )
     rewrapped += 1

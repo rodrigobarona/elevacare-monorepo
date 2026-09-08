@@ -9,6 +9,7 @@ import {
   getOrgDek,
   rotateKek,
   shredOrgKeys,
+  unwrapDek,
 } from "./keys"
 import { decryptRecordFields, encryptRecordFields } from "./records"
 import { decryptOAuthToken, encryptOAuthToken } from "./tokens"
@@ -41,6 +42,19 @@ afterEach(() => {
 })
 
 describe("envelope encryption", () => {
+  it("round-trips an empty plaintext", async () => {
+    const ciphertext = await encryptForOrg(ORG_ID, "")
+    await expect(decryptForOrg(ORG_ID, ciphertext)).resolves.toBe("")
+  })
+
+  it("rejects a wrapped DEK copied to another org", async () => {
+    const first = await getOrCreateOrgDek(ORG_ID)
+    const otherOrg = "22222222-2222-4222-8222-222222222222"
+    expect(() =>
+      unwrapDek(first.wrappedDek, 1, { orgId: otherOrg, keyVersion: 1 })
+    ).toThrowError(/DEK_UNWRAP_FAILED/)
+  })
+
   it("round-trips a known plaintext", async () => {
     const ciphertext = await encryptForOrg(ORG_ID, "hello member")
     expect(ciphertext.startsWith("v1:1:1:")).toBe(true)

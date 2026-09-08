@@ -89,13 +89,24 @@ export async function PUT(
     )
   }
 
-  const accessToken = await credentials.getCalendarToken(
-    session.user.id,
-    provider,
-    requireAuthAccountId(integration.authAccountId)
-  )
-  const adapter = getAdapter(provider)
-  const calendars = await adapter.listCalendars(accessToken)
+  let calendars
+  try {
+    const accessToken = await credentials.getCalendarToken(
+      session.user.id,
+      provider,
+      requireAuthAccountId(integration.authAccountId)
+    )
+    const adapter = getAdapter(provider)
+    calendars = await adapter.listCalendars(accessToken)
+  } catch {
+    return secureJson(
+      {
+        error: "provider_error",
+        message: "failed to fetch calendars from provider",
+      },
+      { status: 502, headers }
+    )
+  }
 
   const matched = calendars.find((c) => c.id === body.data.externalCalendarId)
   if (!matched) {

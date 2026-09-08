@@ -154,6 +154,47 @@ async function loadBookingContext(
   }
 }
 
+async function sendCreateIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string
+): Promise<{ calendarEventId: null }> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) await sendBookingIcsEmail(emailPayload)
+  return { calendarEventId: null }
+}
+
+async function sendRescheduleIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string,
+  newStartTime: Date,
+  newEndTime: Date,
+  previousStartTime: Date
+): Promise<void> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) {
+    await sendRescheduleIcsEmail(
+      {
+        ...emailPayload,
+        startsAt: newStartTime,
+        endsAt: newEndTime,
+        sequence: 1,
+      },
+      previousStartTime
+    )
+  }
+}
+
+async function sendCancellationIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string
+): Promise<void> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) await sendCancellationIcsEmail(emailPayload)
+}
+
 /**
  * Create a calendar event in the expert's destination calendar when a
  * booking is confirmed.
@@ -212,11 +253,7 @@ export async function calendarEventCreate(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendBookingIcsEmail(emailPayload)
-      }
-      return { calendarEventId: null }
+      return sendCreateIcsFallback(orgId, sessionId, bookingId)
     }
 
     const integration = await loadConnectedCalendar(
@@ -224,11 +261,7 @@ export async function calendarEventCreate(params: {
       destination.expertIntegrationId
     )
     if (!integration?.authAccountId) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendBookingIcsEmail(emailPayload)
-      }
-      return { calendarEventId: null }
+      return sendCreateIcsFallback(orgId, sessionId, bookingId)
     }
 
     const { provider, accessToken } = await calendarAccessToken(
@@ -328,16 +361,14 @@ export async function calendarEventUpdate(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        const updated: IcsEmailPayload = {
-          ...emailPayload,
-          startsAt: newStartTime,
-          endsAt: newEndTime,
-          sequence: 1,
-        }
-        await sendRescheduleIcsEmail(updated, previousStartTime)
-      }
+      await sendRescheduleIcsFallback(
+        orgId,
+        sessionId,
+        bookingId,
+        newStartTime,
+        newEndTime,
+        previousStartTime
+      )
       return
     }
 
@@ -348,16 +379,14 @@ export async function calendarEventUpdate(params: {
       destination.expertIntegrationId
     )
     if (!integration?.authAccountId) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        const updated: IcsEmailPayload = {
-          ...emailPayload,
-          startsAt: newStartTime,
-          endsAt: newEndTime,
-          sequence: 1,
-        }
-        await sendRescheduleIcsEmail(updated, previousStartTime)
-      }
+      await sendRescheduleIcsFallback(
+        orgId,
+        sessionId,
+        bookingId,
+        newStartTime,
+        newEndTime,
+        previousStartTime
+      )
       return
     }
 
@@ -430,10 +459,7 @@ export async function calendarEventDelete(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendCancellationIcsEmail(emailPayload)
-      }
+      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
       return
     }
 
@@ -444,10 +470,7 @@ export async function calendarEventDelete(params: {
       destination.expertIntegrationId
     )
     if (!integration?.authAccountId) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendCancellationIcsEmail(emailPayload)
-      }
+      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
       return
     }
 
