@@ -4,7 +4,6 @@ import { headers } from "next/headers"
 import { cookies } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
-import { isLocale, type Locale } from "@eleva/config/i18n"
 
 function getApiBaseUrl(): string {
   return process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
@@ -15,7 +14,7 @@ function getApiBaseUrl(): string {
  * (e.g. they were invited). If so, confirms the local rows and skips
  * the space creation step.
  */
-export async function checkExistingMembership(locale?: string): Promise<{
+export async function checkExistingMembership(_locale?: string): Promise<{
   hasMembership: boolean
 }> {
   const incomingHeaders = await headers()
@@ -25,11 +24,7 @@ export async function checkExistingMembership(locale?: string): Promise<{
     headers: cookie ? { cookie } : undefined,
   })
 
-  const resolvedLocale: Locale | undefined =
-    locale && isLocale(locale) ? locale : undefined
-  const result = await api.onboarding.syncExisting(
-    resolvedLocale ? { locale: resolvedLocale } : undefined
-  )
+  const result = await api.onboarding.syncExisting()
   if (result.hasMembership) {
     const jar = await cookies()
     jar.set(LAST_ACTIVE_ORG_COOKIE, result.slug, {

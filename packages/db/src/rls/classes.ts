@@ -101,9 +101,7 @@ export function classPredicateSql(
         ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
       )
     case "owner-user-visible":
-      return table === "_rls_fixture_owner_user_visible"
-        ? `id::text = current_setting('eleva.user_id', true)`
-        : `user_id::text = current_setting('eleva.user_id', true)`
+      return `user_id::text = current_setting('eleva.user_id', true)`
     case "participant-visible":
       return `member_user_id::text = current_setting('eleva.user_id', true)`
     case "staff-only":
