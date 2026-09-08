@@ -34,11 +34,11 @@ describe("migration journal helpers", () => {
     ).toBe(true)
   })
 
-  it("reads the main journal including 0022", () => {
+  it("reads the main journal including the latest migration", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0022_better_auth_identity")
+    expect(last?.tag).toBe("0023_encryption_calendar_triggers")
     expect(last?.statements.length).toBeGreaterThan(10)
     expect(last?.hash).toHaveLength(64)
   })
