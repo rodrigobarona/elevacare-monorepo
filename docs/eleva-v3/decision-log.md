@@ -624,6 +624,19 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
   gate.
 - Reference: [`execution-plan/phases/03-remove-workos.md`](./execution-plan/phases/03-remove-workos.md), ADR-017, ADR-020
 
+### D-16 (2026-09-09): public_handles is a global namespace
+
+- Owner: platform
+- Status: active
+- Summary: `public_handles` is the public `/[handle]` resolution table. It has no
+  `org_id` because handles are a single citext namespace across experts and (later)
+  clinics. ADR-003 still holds for tenant-scoped tables. This table is the documented
+  split: SELECT is public-read (`USING true`); writes are staff-only
+  (`eleva.platform_admin`). Phase 4B onboarding claims handles through audited domain
+  code, not a tenant WITH CHECK.
+- Reference: [`schema-and-migration-rules.md`](./schema-and-migration-rules.md),
+  ADR-003, [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

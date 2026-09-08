@@ -1,3 +1,11 @@
+export { assertOfferInvariants } from "./offer-invariants"
+export type {
+  CountryScopeType,
+  OfferInvariantError,
+  OfferInvariantInput,
+  OfferKind,
+  OfferMode,
+} from "./offer-invariants"
 export { getAvailableSlots } from "./availability"
 export {
   reserveSlot,

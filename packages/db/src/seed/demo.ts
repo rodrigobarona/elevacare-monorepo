@@ -134,7 +134,9 @@ async function upsertExpertProfile(args: {
       headline: "Available for consultations on Eleva.",
       bio: "Demo seed profile. Replace with real bio in production.",
       languages: ["en", "pt"],
+      practiceCountry: "PT",
       practiceCountries: ["PT"],
+      serviceCountries: ["PT"],
       sessionModes: ["online"],
       status: "active",
     })

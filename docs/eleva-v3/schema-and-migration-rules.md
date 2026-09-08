@@ -122,11 +122,15 @@ CREATE POLICY <table>_tenant_isolation ON <table>
   WITH CHECK (org_id::text = current_setting('eleva.org_id', true));
 ```
 
-`organizations` is tenant-owned with `id` in place of `org_id`. Audit DB `audit_events` is
-the one split-predicate table (still the same seven classes, not an eighth): `SELECT` is
+`organizations` is tenant-owned with `id` in place of `org_id`. Two tables use a split
+predicate (still the same seven classes, not an eighth). Audit DB `audit_events`: `SELECT` is
 `tenant-owned` (matching `eleva.org_id`, plus the `eleva.platform_admin` bypass on the
 policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` only — no platform-admin write).
 `public-read` is one class: published rows are world-readable; writes stay tenant-owned.
+`public_handles` is the documented exception: SELECT is public-read (`USING true`) and
+writes are staff-only (`eleva.platform_admin`). The table has no `org_id` because
+handles are a global namespace (one citext PK), so a tenant-owned WITH CHECK cannot
+be expressed. This is still the same seven classes — a split predicate, not an eighth.
 
 ### Current table assignments
 
@@ -142,6 +146,10 @@ policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` only — 
 | `availability_rules`        | tenant-owned                              |
 | `date_overrides`            | tenant-owned                              |
 | `event_types`               | tenant-owned                              |
+| `event_type_modes`          | tenant-owned                              |
+| `booking_links`             | tenant-owned                              |
+| `calendar_feed_tokens`      | tenant-owned                              |
+| `public_handles`            | staff-only writes + public-read SELECT    |
 | `expert_practice_locations` | tenant-owned                              |
 | `event_locations`           | tenant-owned                              |
 | `calendar_busy_sources`     | tenant-owned                              |

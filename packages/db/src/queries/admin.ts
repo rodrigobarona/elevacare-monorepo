@@ -120,6 +120,9 @@ export async function _ensureExpertProfileForOrgDetailed(
       userId: input.userId,
       username: input.orgSlug,
       displayName: input.displayName,
+      languages: ["en"],
+      practiceCountry: "PT",
+      serviceCountries: ["PT"],
       status: "approved",
     })
     .onConflictDoNothing({

@@ -6,7 +6,7 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/pg-core"
-import { createdAt, pkColumn, updatedAt } from "./shared"
+import { createdAt, pkColumn, updatedAt, type LocalizedText } from "./shared"
 
 /**
  * Public taxonomy of expert categories (Nutrition, Psychology,
@@ -26,8 +26,8 @@ export const expertCategories = pgTable(
   {
     id: pkColumn(),
     slug: varchar("slug", { length: 64 }).notNull(),
-    displayName: jsonb("display_name").$type<LocalizedString>().notNull(),
-    description: jsonb("description").$type<LocalizedString>(),
+    displayName: jsonb("display_name").$type<LocalizedText>().notNull(),
+    description: jsonb("description").$type<LocalizedText>(),
     icon: text("icon"),
     sortOrder: integer("sort_order").notNull().default(0),
     createdAt: createdAt(),
@@ -37,17 +37,6 @@ export const expertCategories = pgTable(
     slugIdx: uniqueIndex("expert_categories_slug_idx").on(t.slug),
   })
 )
-
-/**
- * @deprecated Duplicate of `LocalizedText` in `./shared.ts`. Delete this
- * type and import `LocalizedText` in Phase 4 PR 04.1.
- */
-export interface LocalizedString {
-  en: string
-  pt: string
-  es: string
-  [locale: string]: string | undefined
-}
 
 export type ExpertCategory = typeof expertCategories.$inferSelect
 export type NewExpertCategory = typeof expertCategories.$inferInsert

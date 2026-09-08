@@ -55,6 +55,7 @@ export const schedules = pgTable(
   },
   (t) => ({
     orgIdx: index("schedules_org_idx").on(t.orgId),
+    orgIdKey: uniqueIndex("schedules_org_id_id_key").on(t.orgId, t.id),
     expertIdx: index("schedules_expert_idx").on(t.expertProfileId),
     defaultIdx: uniqueIndex("schedules_expert_default_idx")
       .on(t.expertProfileId, t.isDefault)
