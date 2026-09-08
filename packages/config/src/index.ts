@@ -26,6 +26,11 @@ export {
   type Locale,
   type I18nConfig,
 } from "./i18n"
+export {
+  REQUIRED_LOCALES_BY_APP,
+  requiredLocalesForApp,
+  type AppLocaleKey,
+} from "./i18n-locales"
 export { countryToLocale } from "./country-to-locale"
 export {
   themes,

@@ -21,7 +21,10 @@ function MarketingContent() {
         <p className="mb-4 text-sm font-medium tracking-widest text-primary uppercase">
           {t("home.eyebrow")}
         </p>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+        <h1
+          data-testid="marketing-hero"
+          className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl"
+        >
           {t("home.heading")}
           <span className="text-primary">{t("home.headingAccent")}</span>
         </h1>

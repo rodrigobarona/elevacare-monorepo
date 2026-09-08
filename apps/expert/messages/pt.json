@@ -13,6 +13,92 @@
       "subtitle": "O seu horário, reservas e relatórios estão aqui."
     }
   },
+  "eventTypes": {
+    "title": "Tipos de evento",
+    "description": "Defina os serviços que os membros podem reservar.",
+    "create": "Novo tipo de evento",
+    "createTitle": "Criar tipo de evento",
+    "createDescription": "Crie um novo serviço reservável.",
+    "editTitle": "Editar tipo de evento",
+    "editDescription": "Atualize os detalhes e as regras de reserva deste tipo de evento.",
+    "empty": "Ainda não criou nenhum tipo de evento.",
+    "createFirst": "Crie o seu primeiro tipo de evento",
+    "status": {
+      "published": "Publicado",
+      "draft": "Rascunho"
+    },
+    "error": {
+      "no-profile": "O seu perfil de especialista não foi encontrado.",
+      "toggle-failed": "Não foi possível atualizar o tipo de evento. Tente novamente.",
+      "delete-failed": "Não foi possível eliminar o tipo de evento. Tente novamente.",
+      "generic": "Algo correu mal. Tente novamente."
+    },
+    "actions": {
+      "ariaLabel": "Ações do tipo de evento",
+      "edit": "Editar",
+      "publish": "Publicar",
+      "unpublish": "Despublicar",
+      "delete": "Eliminar",
+      "deleteTitle": "Eliminar tipo de evento?",
+      "deleteDescription": "Esta ação não pode ser anulada. O tipo de evento e todos os dados associados serão eliminados permanentemente.",
+      "cancel": "Cancelar",
+      "deleting": "A eliminar..."
+    }
+  },
+  "schedule": {
+    "title": "Horário",
+    "description": "Defina a disponibilidade semanal e as exceções de data.",
+    "timezone": "Fuso horário",
+    "weeklyHours": "Horário semanal",
+    "dateOverrides": "Exceções de data",
+    "addOverride": "Adicionar exceção",
+    "blocked": "Bloqueado",
+    "save": "Guardar horário",
+    "saving": "A guardar...",
+    "saved": "Horário guardado com sucesso.",
+    "to": "até",
+    "addWindow": "Adicionar intervalo",
+    "remove": "Remover",
+    "overrideDate": "Data",
+    "overrideBlockDay": "Bloquear o dia inteiro",
+    "overrideFrom": "De",
+    "overrideTo": "Até",
+    "days": {
+      "0": "Domingo",
+      "1": "Segunda-feira",
+      "2": "Terça-feira",
+      "3": "Quarta-feira",
+      "4": "Quinta-feira",
+      "5": "Sexta-feira",
+      "6": "Sábado"
+    },
+    "noScheduleTitle": "Ainda não tem um horário definido",
+    "noScheduleDescription": "Crie o horário de disponibilidade predefinido para começar a aceitar reservas.",
+    "createSchedule": "Configurar horário",
+    "creating": "A criar...",
+    "error": {
+      "startBeforeEnd": "{day}: a hora de início tem de ser anterior à hora de fim",
+      "overrideStartBeforeEnd": "A hora de início da exceção tem de ser anterior à hora de fim",
+      "overlappingWindows": "{day}: os intervalos de disponibilidade não se podem sobrepor"
+    }
+  },
+  "calendars": {
+    "backToIntegrations": "Integrações",
+    "title": "Calendários ligados",
+    "description": "Ligue o calendário Google ou Microsoft para evitar reservas em duplicado."
+  },
+  "integrations": {
+    "title": "Integrações",
+    "description": "Ligue calendários, faturação e outros serviços à sua prática Eleva."
+  },
+  "finance": {
+    "title": "Finanças",
+    "description": "Gira os pagamentos, saldos e definições fiscais.",
+    "balance": "Saldo",
+    "payouts": "Pagamentos",
+    "accountDetails": "Dados da conta",
+    "taxSettings": "Definições fiscais"
+  },
   "onboarding": {
     "title": "Onboarding de especialista",
     "description": "Complete todos os passos para ativar o seu perfil de especialista."

@@ -1,0 +1,105 @@
+name: neon-branch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+concurrency:
+  group: neon-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: 24
+
+jobs:
+  neon-branch-migrate-and-rls:
+    name: neon-branch-migrate-and-rls
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve Neon credentials
+        id: neon-creds
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+        run: |
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+              echo "::error::Add GitHub secret NEON_API_KEY and secret or variable NEON_PROJECT_ID (docs/eleva-v3/environment-matrix.md). The neon-branch-migrate-and-rls job must not pass without a live branch."
+              exit 1
+            fi
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping Neon branch on fork PR (credentials unavailable)."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: pnpm/action-setup@v4
+        if: steps.neon-creds.outputs.ready == 'true'
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@v4
+        if: steps.neon-creds.outputs.ready == 'true'
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.neon-creds.outputs.ready == 'true'
+
+      - name: Create Neon branch
+        if: steps.neon-creds.outputs.ready == 'true'
+        id: create-branch
+        uses: neondatabase/create-branch-action@v6
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          branch_name: pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}
+
+      - name: Migrate and apply main RLS
+        if: steps.neon-creds.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+          DATABASE_URL_UNPOOLED: ${{ steps.create-branch.outputs.db_url }}
+        run: |
+          # db:* scripts load ../../.env.local; CI injects DATABASE_URL instead.
+          touch .env.local
+          pnpm --filter=@eleva/db db:migrate
+          pnpm --filter=@eleva/db db:rls:main
+
+      - name: RLS isolation and class suite
+        if: steps.neon-creds.outputs.ready == 'true'
+        env:
+          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
+          DATABASE_URL_UNPOOLED: ${{ steps.create-branch.outputs.db_url }}
+          ELEVA_RLS_INTEGRATION: "1"
+        run: pnpm --filter=@eleva/db exec vitest run src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts
+
+  delete-branch:
+    name: neon-branch-delete
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve Neon credentials
+        id: neon-creds
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+        run: |
+          if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::NEON_API_KEY / NEON_PROJECT_ID are not set. Nothing to delete."
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Delete Neon branch
+        if: steps.neon-creds.outputs.ready == 'true'
+        uses: neondatabase/delete-branch-action@v3
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          branch: pr-${{ github.event.number }}
+          api_key: ${{ secrets.NEON_API_KEY }}

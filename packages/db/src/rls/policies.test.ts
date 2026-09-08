@@ -114,6 +114,13 @@ describe("buildAuditRlsStatements", () => {
       "current_setting('eleva.platform_admin', true) = 'true'"
     )
   })
+
+  it("drainer insert requires eleva.service or platform_admin", () => {
+    const insertPolicy = stmts.find((s) => s.includes("FOR INSERT"))
+    expect(insertPolicy).toContain("eleva.service")
+    expect(insertPolicy).toContain("audit_drainer")
+    expect(insertPolicy).not.toMatch(/WITH CHECK \(true\)/)
+  })
 })
 
 describe("buildAllRlsSql", () => {

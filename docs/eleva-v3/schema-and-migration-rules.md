@@ -123,38 +123,39 @@ CREATE POLICY <table>_tenant_isolation ON <table>
 ```
 
 `organizations` is tenant-owned with `id` in place of `org_id`. Audit DB `audit_events` is
-`service-only` (staff `SELECT` via `eleva.platform_admin`; drainer `INSERT` via
-`eleva.service = 'audit_drainer'`). `public-read` is one class: published rows are
-world-readable; writes stay tenant-owned.
+the one split-predicate table (still the same seven classes, not an eighth): `SELECT` is
+`tenant-owned` (matching `eleva.org_id`, plus the `eleva.platform_admin` bypass on the
+policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` or platform admin).
+`public-read` is one class: published rows are world-readable; writes stay tenant-owned.
 
 ### Current table assignments
 
-| Table                       | Class               |
-| --------------------------- | ------------------- |
-| `organizations`             | tenant-owned (`id`) |
-| `memberships`               | tenant-owned        |
-| `expert_profiles`           | tenant-owned        |
-| `expert_listings`           | public-read         |
-| `clinic_profiles`           | public-read         |
-| `expert_integrations`       | tenant-owned        |
-| `schedules`                 | tenant-owned        |
-| `availability_rules`        | tenant-owned        |
-| `date_overrides`            | tenant-owned        |
-| `event_types`               | tenant-owned        |
-| `expert_practice_locations` | tenant-owned        |
-| `event_locations`           | tenant-owned        |
-| `calendar_busy_sources`     | tenant-owned        |
-| `calendar_destinations`     | tenant-owned        |
-| `slot_reservations`         | tenant-owned        |
-| `bookings`                  | dual-organization   |
-| `sessions`                  | participant-visible |
-| `billing_customers`         | tenant-owned        |
-| `billing_subscriptions`     | tenant-owned        |
-| `audit_outbox`              | service-only        |
-| `stripe_webhook_events`     | service-only        |
-| `users`                     | owner-user-visible  |
-| `expert_categories`         | public-read         |
-| `audit_events` (audit DB)   | service-only        |
+| Table                       | Class                                     |
+| --------------------------- | ----------------------------------------- |
+| `organizations`             | tenant-owned (`id`)                       |
+| `memberships`               | tenant-owned                              |
+| `expert_profiles`           | tenant-owned                              |
+| `expert_listings`           | public-read                               |
+| `clinic_profiles`           | public-read                               |
+| `expert_integrations`       | tenant-owned                              |
+| `schedules`                 | tenant-owned                              |
+| `availability_rules`        | tenant-owned                              |
+| `date_overrides`            | tenant-owned                              |
+| `event_types`               | tenant-owned                              |
+| `expert_practice_locations` | tenant-owned                              |
+| `event_locations`           | tenant-owned                              |
+| `calendar_busy_sources`     | tenant-owned                              |
+| `calendar_destinations`     | tenant-owned                              |
+| `slot_reservations`         | tenant-owned                              |
+| `bookings`                  | dual-organization                         |
+| `sessions`                  | participant-visible                       |
+| `billing_customers`         | tenant-owned                              |
+| `billing_subscriptions`     | tenant-owned                              |
+| `audit_outbox`              | service-only                              |
+| `stripe_webhook_events`     | service-only                              |
+| `users`                     | owner-user-visible                        |
+| `expert_categories`         | public-read                               |
+| `audit_events` (audit DB)   | tenant-owned SELECT + service-only INSERT |
 
 Classes with no current table (`owner-user-visible` is covered by `users`; if a class has
 zero tables the Phase 1.2 suite creates a synthetic `_rls_fixture_<class>`). Future
@@ -181,9 +182,10 @@ Translatable content is **one JSONB column per field**, never rows-per-locale an
 ## Audit database migrations
 
 `packages/db` has a second Drizzle config (`drizzle.config.audit.ts`) pointing at the
-audit Neon project. Scripts `db:generate:audit` / `db:migrate:audit` (Phase 1.2) commit
-SQL under `packages/db/drizzle/audit/`. Never run main-project migrations against the
-audit URL.
+audit Neon project. Scripts `db:generate:audit` / `db:migrate:audit` write SQL under
+`packages/db/src/migrations/audit/` (same layout as `src/migrations/main`). Never run
+main-project migrations against the audit URL. CI applies main migrations with
+`db:migrate` on the per-PR Neon branch.
 
 ## Related Docs
 

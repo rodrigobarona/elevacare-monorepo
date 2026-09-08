@@ -113,7 +113,10 @@ export function buildAuditRlsStatements(): string[] {
   out.push(`DROP POLICY IF EXISTS audit_events_drainer_insert ON audit_events;`)
   out.push(
     `CREATE POLICY audit_events_drainer_insert ON audit_events FOR INSERT ` +
-      `WITH CHECK (true);`
+      `WITH CHECK (` +
+      `  current_setting('eleva.service', true) = 'audit_drainer' ` +
+      `  OR current_setting('eleva.platform_admin', true) = 'true'` +
+      `);`
   )
   return out
 }
