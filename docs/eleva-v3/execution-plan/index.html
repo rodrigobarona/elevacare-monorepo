@@ -1509,7 +1509,7 @@ and any secrets the owner still needs to add.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phase 1. <strong>Spike PR 02.0</strong> (<code>phase-02.0/spike-better-auth</code>, evidence only, max 2 days) must be merged before PR 02.1 opens: a throwaway Better Auth instance on a Neon branch proves sign-up + email verification, personal Space provisioning, expert org creation and switching, cross-subdomain session on <code>*.dev.eleva.care</code>, passkey + TOTP, API key, opaque bearer session, JWT/JWKS, admin role, Google linking and session revocation; report in <code>docs/eleva-v3/spikes/02-better-auth.md</code> with the exact package/plugin versions to pin and any option renames the plan must absorb</td>
+<td>Phase 1. <strong>Spike PR 02.0</strong> (<code>phase-02.0/spike-better-auth</code>, evidence only, max 2 days) must be merged before PR 02.1 opens: a throwaway Better Auth instance on a Neon branch proves sign-up + email verification, personal Space provisioning, expert org creation and switching, cross-subdomain session on <code>*.dev.eleva.care</code>, TOTP + passkey options (attestation is 02.2 Playwright), API key, opaque bearer session, JWT/JWKS, admin role, Google linking and session revocation; report in <code>docs/eleva-v3/spikes/02-better-auth.md</code> with the exact package/plugin versions to pin and any option renames the plan must absorb</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -1535,11 +1535,12 @@ Phase 3.</p>
 <ul>
 <li><p><code>pnpm-workspace.yaml</code> catalog: pin <code>better-auth</code>, <code>@better-auth/passkey</code>,
 <code>@better-auth/api-key</code>, <code>@better-auth/drizzle-adapter</code> at <strong>1.7.3</strong> (spike 02.0).
-<code>@better-auth/stripe</code> is <strong>not</strong> used. <code>@better-auth/cli</code> is lagged at 1.4.22 —
-author <code>packages/db/src/schema/auth</code> from the 1.7.3 table list in
-<code>docs/eleva-v3/spikes/02-better-auth.md</code> (or a 1.7-compatible generate once
-the CLI catches up), then <code>drizzle-kit generate</code>. Do <strong>not</strong> call
-<code>getMigrations</code> against the Drizzle adapter (that API is Kysely-only).</p>
+<code>@better-auth/stripe</code> is <strong>not</strong> used. <code>@better-auth/cli</code> is lagged at 1.4.22
+and <strong>must not</strong> generate the 1.7 Drizzle schema. Author
+<code>packages/db/src/schema/auth</code> from the 1.7.3 table list in
+<code>docs/eleva-v3/spikes/02-better-auth.md</code>, then <code>drizzle-kit generate</code>. Do
+<strong>not</strong> call <code>getMigrations</code> against the Drizzle adapter (that API is
+Kysely-only). Do not wait for a later CLI generate.</p>
 </li>
 <li><p><code>packages/auth/src/server/auth.ts</code>: the only <code>better-auth</code> server import. Options per ADR-017.
 Export <code>auth</code>, <code>type Session</code>, <code>type AuthUser</code>, <code>type AuthOrganization</code>.</p>
@@ -1730,7 +1731,8 @@ rejection (any two or three credential sources on one request -&gt; 400 <code>AM
 <h2 id="02-better-auth-foundation--external-docs"><a class="anchor" href="#02-better-auth-foundation--external-docs" aria-label="Link to section">#</a>External docs</h2>
 <ul>
 <li>Better Auth <code>/better-auth/better-auth</code>: installation, Next.js integration (<code>toNextJsHandler</code>,
-<code>nextCookies</code>), database (Drizzle adapter, <code>schema</code> option, CLI <code>generate</code>), plugins
+<code>nextCookies</code>), database (Drizzle adapter, <code>schema</code> option; author tables from
+the 02.0 list — do not run <code>@better-auth/cli</code> generate), plugins
 organization (access control, hooks, <code>setActive</code>, invitations), admin, two-factor, passkey,
 magic-link, bearer, jwt (JWKS), api-key, open-api, cookies (<code>crossSubDomainCookies</code>,
 <code>getSessionCookie</code>), rate limiting + <code>secondaryStorage</code>, <code>databaseHooks</code>, <code>trustedOrigins</code>,
@@ -1851,8 +1853,11 @@ PR 02.1 — server + schema + API:
    the admin plugin. Port every capability currently in infra/workos/rbac-config.json.
    capabilities.ts derives product labels from (organization.type, member.role) exactly like the
    current implementation; keep capabilities.test.ts green and extend it.
-4. packages/db: run the Better Auth CLI generate for Drizzle, place output in
-   packages/db/src/schema/auth/index.ts using pgSchema(&quot;auth&quot;); make apiKey.referenceId and
+4. packages/db: author Drizzle tables in packages/db/src/schema/auth/index.ts from the
+   1.7.3 list in docs/eleva-v3/spikes/02-better-auth.md (user, session, account,
+   verification, organization, member, invitation, twoFactor, passkey, jwks, apikey)
+   using pgSchema(&quot;auth&quot;) — do **not** run `@better-auth/cli` generate. Then
+   drizzle-kit generate. Make apiKey.referenceId and
    organization.type first-class. Migrate main schema with EXPAND-AND-CONTRACT — this PR only
    expands: backfill auth.user / auth.organization / auth.member from main.users,
    main.organizations, main.memberships (packages/db/scripts/backfill-auth-identity.ts,

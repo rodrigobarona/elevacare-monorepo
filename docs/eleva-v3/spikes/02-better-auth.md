@@ -1,7 +1,7 @@
 # Spike 02.0 — Better Auth 1.7.3
 
-**Status:** 12 proven, 1 plan-change (Google implicit linking — ADR-017,
-not a vendor gap). Passkey attestation is deferred to 02.2 Playwright.
+**Status:** 11 proven, 2 plan-changes (Google implicit linking — ADR-017;
+passkey attestation deferred to 02.2 Playwright). TOTP is proven.
 **Date:** 2026-09-08
 **Neon:** project `raspy-mouse-18304810`, branch `spike-02-better-auth`
 (`br-falling-rice-al22njla`), database `auth_spike` (empty public schema;
@@ -87,15 +87,17 @@ Domain=.dev.eleva.care; Path=/; HttpOnly; SameSite=Lax`.
   (production / staging HTTPS). Live browser proof on a real
   `*.dev.eleva.care` host is 02.2 / staging, not this process.
 
-### 06 — Passkey + TOTP enrol and verify — proven (TOTP full; passkey options)
+### 06 — Passkey + TOTP enrol and verify — plan-change (TOTP proven; passkey options only)
 
 - **Request:** `POST /auth/two-factor/enable` `{ password }` →
   `POST /auth/two-factor/verify-totp` `{ code }` from `otpauth` parsing
   `totpURI`. `GET /auth/passkey/generate-register-options`.
 - **Response:** enable 200, 10 backup codes, TOTP verify 200. Passkey
   options 200 (`rp.id`, challenge, `pubKeyCredParams`).
-- **Absorb:** finish passkey **attestation** in 02.2 with Playwright’s
-  virtual authenticator. Import passkey from `@better-auth/passkey`.
+- **Absorb:** this check is **plan-change**, not proven. Finish passkey
+  **attestation** in 02.2 with Playwright’s virtual authenticator.
+  Import passkey from `@better-auth/passkey`. 02.1 can still mount the
+  plugin; 02.0 does not gate on a browser authenticator.
 
 ### 07 — API key create + authenticate — proven
 

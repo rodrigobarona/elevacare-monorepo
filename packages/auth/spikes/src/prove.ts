@@ -130,6 +130,7 @@ async function call(
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     redirect: "manual",
+    signal: AbortSignal.timeout(15_000),
   })
   const text = await response.text()
   options.jar?.apply(response.headers)
@@ -503,10 +504,14 @@ try {
   const adminUsers = await call("GET", "/auth/admin/list-users?limit=5", {
     jar,
   })
+  const adminPermitted =
+    adminCheck.status === 200 &&
+    (adminCheck.json as { success?: boolean })?.success === true
   record({
     id: "10-admin-role",
     title: "Admin role check",
-    status: adminUsers.status === 200 ? "proven" : "plan-change",
+    status:
+      adminPermitted && adminUsers.status === 200 ? "proven" : "plan-change",
     version: BETTER_AUTH_VERSION,
     request: {
       promote: `UPDATE "user" SET role = 'platform_admin'`,
@@ -647,8 +652,7 @@ try {
   record({
     id: "06-passkey-totp",
     title: "Passkey + TOTP enrolment and verify",
-    status:
-      totpVerified && passkeyOptions.status < 300 ? "proven" : "plan-change",
+    status: "plan-change",
     version: BETTER_AUTH_VERSION,
     request: {
       totp: {
@@ -669,8 +673,10 @@ try {
       totpVerify: redactTokenField(totpError),
     },
     notes: [
-      "TOTP secret came from totpURI and was verified with otpauth in-process.",
-      "Passkey: registration options returned. Completing WebAuthn attestation needs a browser authenticator (Playwright virtual authenticator in 02.2).",
+      totpVerified
+        ? "TOTP secret came from totpURI and was verified with otpauth in-process."
+        : "TOTP enrol/verify failed.",
+      "Passkey attestation is unproven. Registration options returned; completing WebAuthn needs a browser authenticator (Playwright virtual authenticator in 02.2). This row is plan-change until attestation lands.",
     ],
   })
 
@@ -715,8 +721,7 @@ try {
     try {
       await wipeSpikeData()
     } finally {
-      await server.close()
-      await pool.end()
+      await Promise.allSettled([server.close(), pool.end()])
     }
   }
 }

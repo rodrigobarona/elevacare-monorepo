@@ -14,6 +14,7 @@ export function startSpikeServer(port: number): Promise<{
     }
     handler(req, res).catch((error: unknown) => {
       console.error("spike handler error", error)
+      if (res.writableEnded) return
       if (!res.headersSent) {
         res.writeHead(500, { "content-type": "application/json" })
       }
@@ -22,8 +23,15 @@ export function startSpikeServer(port: number): Promise<{
   })
 
   return new Promise((resolve, reject) => {
-    server.once("error", reject)
+    const onStartupError = (error: Error) => {
+      reject(error)
+    }
+    server.once("error", onStartupError)
     server.listen(port, "127.0.0.1", () => {
+      server.off("error", onStartupError)
+      server.on("error", (error) => {
+        console.error("spike server error", error)
+      })
       resolve({
         close: () =>
           new Promise((closeResolve, closeReject) => {
@@ -31,6 +39,7 @@ export function startSpikeServer(port: number): Promise<{
               if (error) closeReject(error)
               else closeResolve()
             })
+            server.closeAllConnections()
           }),
       })
     })

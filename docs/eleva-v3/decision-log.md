@@ -277,7 +277,10 @@ Each entry should include:
   **non-revocable** (JWKS only — no session-table check after verify);
   `GET /auth/ok` is not a vendor route; `adminRoles: ["platform_admin"]`
   requires `roles.platform_admin`; `@better-auth/cli` 1.4.22 must not generate
-  1.7 schema.
+  1.7 schema. The throwaway `packages/auth/spikes/` instance is exempt from
+  `withAudit` (isolated `auth_spike` has no `audit_outbox`); 02.1 deletes the
+  folder and wraps the real hook. Passkey attestation is 02.2, not a 02.0
+  gate.
 - Reference: [`spikes/02-better-auth.md`](./spikes/02-better-auth.md),
   [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
 

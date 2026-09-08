@@ -52,13 +52,18 @@ reviews:
         Keep this file thin (optimistic getSessionCookie + redirects).
         Flag any cross-cutting concern that belongs in an @eleva/* package
         (auth, observability, flags) instead of inline.
-    - path: packages/auth/**
+    - path: packages/auth/src/**
       instructions: >-
         Only place that may import better-auth / @better-auth/*
         (ADR-017). Permissions SSOT is permissions.ts; hooks are
         withAudit-wrapped. Flag new WorkOS imports. Flag trustedOrigins
         wildcards. Flag mixing session cookie, JWT and API key on one
         request.
+    - path: packages/auth/spikes/**
+      instructions: >-
+        Throwaway PR 02.0 spike on isolated Neon database auth_spike
+        (no audit_outbox). Do not require withAudit. Delete this
+        folder before PR 02.1. Flag secrets in committed files.
     - path: packages/video/**
       instructions: >-
         Only @daily-co importer (ADR-018). Random room names; meeting
