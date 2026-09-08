@@ -22,6 +22,10 @@ export interface DecryptedOAuthToken {
   expiresAt: Date | null
 }
 
+function oauthAad(provider: OAuthProvider, userId: string): string {
+  return `oauth:${provider}:${userId}`
+}
+
 export async function encryptOAuthToken(
   input: OAuthTokenInput
 ): Promise<string> {
@@ -31,15 +35,23 @@ export async function encryptOAuthToken(
       accessToken: input.accessToken,
       refreshToken: input.refreshToken ?? null,
       expiresAt: input.expiresAt ? input.expiresAt.toISOString() : null,
-    })
+    }),
+    oauthAad(input.provider, input.userId)
   )
 }
 
 export async function decryptOAuthToken(
   orgId: string,
-  ciphertext: string
+  ciphertext: string,
+  identity: Pick<OAuthTokenInput, "provider" | "userId">
 ): Promise<DecryptedOAuthToken> {
-  const parsed = JSON.parse(await decryptForOrg(orgId, ciphertext)) as {
+  const parsed = JSON.parse(
+    await decryptForOrg(
+      orgId,
+      ciphertext,
+      oauthAad(identity.provider, identity.userId)
+    )
+  ) as {
     accessToken: string
     refreshToken: string | null
     expiresAt: string | null

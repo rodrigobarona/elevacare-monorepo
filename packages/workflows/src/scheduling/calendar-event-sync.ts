@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { getProviderAccessToken } from "@eleva/auth"
 import { auth, db, main } from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
@@ -179,11 +179,25 @@ async function sendRescheduleIcsFallback(
         ...emailPayload,
         startsAt: newStartTime,
         endsAt: newEndTime,
-        sequence: Math.floor(Date.now() / 1000),
+        sequence: await nextIcsSequence(orgId, bookingId),
       },
       previousStartTime
     )
   }
+}
+
+async function nextIcsSequence(
+  orgId: string,
+  bookingId: string
+): Promise<number> {
+  const [row] = await withOrgContext(orgId, async (tx: Tx) => {
+    return tx
+      .update(main.bookings)
+      .set({ updatedAt: sql`clock_timestamp()` })
+      .where(eq(main.bookings.id, bookingId))
+      .returning({ updatedAt: main.bookings.updatedAt })
+  })
+  return row?.updatedAt.getTime() ?? Date.now()
 }
 
 async function sendCancellationIcsFallback(

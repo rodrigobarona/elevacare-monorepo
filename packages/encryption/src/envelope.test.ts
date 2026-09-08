@@ -141,25 +141,39 @@ describe("envelope encryption", () => {
 
 describe("record field helpers", () => {
   it("encrypts and decrypts named fields", async () => {
-    const encrypted = await encryptRecordFields(ORG_ID, {
-      transcript: "session notes",
-      report: "labs",
-    })
+    const encrypted = await encryptRecordFields(
+      ORG_ID,
+      {
+        transcript: "session notes",
+        report: "labs",
+      },
+      { recordId: "rec_1" }
+    )
     expect(encrypted.transcript).not.toBe("session notes")
-    const decrypted = await decryptRecordFields(ORG_ID, encrypted)
+    const decrypted = await decryptRecordFields(ORG_ID, encrypted, {
+      recordId: "rec_1",
+    })
     expect(decrypted).toEqual({ transcript: "session notes", report: "labs" })
   })
 
   it("rejects swapped field ciphertexts", async () => {
-    const encrypted = await encryptRecordFields(ORG_ID, {
-      transcript: "session notes",
-      report: "labs",
-    })
+    const encrypted = await encryptRecordFields(
+      ORG_ID,
+      {
+        transcript: "session notes",
+        report: "labs",
+      },
+      { recordId: "rec_1" }
+    )
     await expect(
-      decryptRecordFields(ORG_ID, {
-        transcript: encrypted.report ?? "",
-        report: encrypted.transcript ?? "",
-      })
+      decryptRecordFields(
+        ORG_ID,
+        {
+          transcript: encrypted.report ?? "",
+          report: encrypted.transcript ?? "",
+        },
+        { recordId: "rec_1" }
+      )
     ).rejects.toBeInstanceOf(EncryptionError)
   })
 
@@ -181,9 +195,27 @@ describe("oauth token helpers", () => {
       refreshToken: "rt",
       expiresAt: new Date("2026-01-01T00:00:00Z"),
     })
-    const got = await decryptOAuthToken(ORG_ID, ciphertext)
+    const got = await decryptOAuthToken(ORG_ID, ciphertext, {
+      provider: "toconline",
+      userId: "user_1",
+    })
     expect(got.accessToken).toBe("at")
     expect(got.refreshToken).toBe("rt")
     expect(got.expiresAt).toEqual(new Date("2026-01-01T00:00:00Z"))
+  })
+
+  it("rejects token ciphertext bound to another user", async () => {
+    const ciphertext = await encryptOAuthToken({
+      provider: "toconline",
+      userId: "user_1",
+      orgId: ORG_ID,
+      accessToken: "at",
+    })
+    await expect(
+      decryptOAuthToken(ORG_ID, ciphertext, {
+        provider: "toconline",
+        userId: "user_2",
+      })
+    ).rejects.toBeInstanceOf(EncryptionError)
   })
 })

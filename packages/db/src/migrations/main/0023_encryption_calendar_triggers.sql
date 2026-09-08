@@ -1,3 +1,10 @@
+DELETE FROM "org_data_keys" d
+WHERE d.ctid NOT IN (
+  SELECT min(k.ctid)
+  FROM "org_data_keys" k
+  GROUP BY k."org_id", k."key_version"
+);
+--> statement-breakpoint
 UPDATE "org_data_keys" d
 SET "retired_at" = now()
 WHERE "retired_at" IS NULL

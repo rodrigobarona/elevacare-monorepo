@@ -53,11 +53,21 @@ export async function syncExpertCalendarAccounts(input: {
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId ?? input.userId },
     async (tx, ctx) => {
+      const linked: Array<{
+        id: string
+        slug: string
+        authAccountId: string
+      }> = []
+
       for (const account of linkable) {
         if (!isCalendarProvider(account.providerId)) continue
         const slug = PROVIDER_TO_SLUG[account.providerId]
         const [existing] = await tx
-          .select({ id: main.expertIntegrations.id })
+          .select({
+            id: main.expertIntegrations.id,
+            authAccountId: main.expertIntegrations.authAccountId,
+            accountIdentifier: main.expertIntegrations.accountIdentifier,
+          })
           .from(main.expertIntegrations)
           .where(
             and(
@@ -71,6 +81,14 @@ export async function syncExpertCalendarAccounts(input: {
           )
           .limit(1)
 
+        if (
+          existing &&
+          existing.authAccountId === account.id &&
+          existing.accountIdentifier === account.accountId
+        ) {
+          continue
+        }
+
         if (existing) {
           await tx
             .update(main.expertIntegrations)
@@ -82,11 +100,10 @@ export async function syncExpertCalendarAccounts(input: {
               updatedAt: new Date(),
             })
             .where(eq(main.expertIntegrations.id, existing.id))
-          await ctx.emit({
-            entity: "expert_integration_credential",
-            action: "connected",
-            entityId: existing.id,
-            payload: { slug, authAccountId: account.id },
+          linked.push({
+            id: existing.id,
+            slug,
+            authAccountId: account.id,
           })
           continue
         }
@@ -107,14 +124,20 @@ export async function syncExpertCalendarAccounts(input: {
           .returning({ id: main.expertIntegrations.id })
         const created = inserted[0]
         if (created) {
-          await ctx.emit({
-            entity: "expert_integration_credential",
-            action: "connected",
-            entityId: created.id,
-            payload: { slug, authAccountId: account.id },
+          linked.push({
+            id: created.id,
+            slug,
+            authAccountId: account.id,
           })
         }
       }
+
+      await ctx.emit({
+        entity: "expert_integration_credential",
+        action: "connected",
+        entityId: linked[0]?.id ?? input.expertProfileId,
+        payload: linked.length > 0 ? { accounts: linked } : { unchanged: true },
+      })
     }
   )
 }

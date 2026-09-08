@@ -195,7 +195,15 @@ const drizzleOrgDekStore: OrgDekStore = {
   async insertIfAbsent(row) {
     return withAudit({ orgId: row.orgId }, async (tx, ctx) => {
       const existing = await findActiveTx(tx, row.orgId)
-      if (existing) return undefined
+      if (existing) {
+        await ctx.emit({
+          entity: "org_data_key",
+          action: "created",
+          entityId: existing.id,
+          payload: { keyVersion: existing.keyVersion, skipped: true },
+        })
+        return undefined
+      }
       const inserted = await tx
         .insert(main.orgDataKeys)
         .values({
@@ -207,7 +215,16 @@ const drizzleOrgDekStore: OrgDekStore = {
         .onConflictDoNothing()
         .returning()
       const created = inserted[0]
-      if (!created) return undefined
+      if (!created) {
+        const raced = await findActiveTx(tx, row.orgId)
+        await ctx.emit({
+          entity: "org_data_key",
+          action: "created",
+          entityId: raced?.id ?? row.orgId,
+          payload: { keyVersion: row.keyVersion, skipped: true },
+        })
+        return undefined
+      }
       await ctx.emit({
         entity: "org_data_key",
         action: "created",
@@ -229,14 +246,12 @@ const drizzleOrgDekStore: OrgDekStore = {
           )
         )
         .returning({ id: main.orgDataKeys.id })
-      if (row) {
-        await ctx.emit({
-          entity: "org_data_key",
-          action: "rotated",
-          entityId: row.id,
-          payload: { keyVersion, kekVersion },
-        })
-      }
+      await ctx.emit({
+        entity: "org_data_key",
+        action: "rotated",
+        entityId: row?.id ?? orgId,
+        payload: { keyVersion, kekVersion, skipped: !row },
+      })
     })
   },
   async deleteAll(orgId) {
@@ -245,16 +260,20 @@ const drizzleOrgDekStore: OrgDekStore = {
         .select()
         .from(main.orgDataKeys)
         .where(eq(main.orgDataKeys.orgId, orgId))
-      if (rows.length === 0) return []
-      await tx.delete(main.orgDataKeys).where(eq(main.orgDataKeys.orgId, orgId))
-      for (const row of rows) {
-        await ctx.emit({
-          entity: "org_data_key",
-          action: "shredded",
-          entityId: row.id,
-          payload: { keyVersion: row.keyVersion },
-        })
+      if (rows.length > 0) {
+        await tx
+          .delete(main.orgDataKeys)
+          .where(eq(main.orgDataKeys.orgId, orgId))
       }
+      await ctx.emit({
+        entity: "org_data_key",
+        action: "shredded",
+        entityId: orgId,
+        payload: {
+          keyVersions: rows.map((row) => row.keyVersion),
+          shredded: rows.length,
+        },
+      })
       return rows
     })
   },

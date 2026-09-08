@@ -53,6 +53,8 @@ interface ToconlineMetadata {
   businessName?: string
   /** Last `/v1/me`-style probe timestamp. */
   lastProbeAt?: string
+  orgId?: string
+  userId?: string
 }
 
 async function buildAuthUrl(input: {
@@ -137,6 +139,7 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
       seriesPrefix: env.TOCONLINE_SERIES_PREFIX,
       seriesId: env.TOCONLINE_SERIES_PREFIX,
       orgId: input.orgId,
+      userId: input.userId,
     },
     expiresAt: expiresAt.toISOString(),
   }
@@ -152,7 +155,8 @@ async function issueInvoice(
 ): Promise<IssueInvoiceResult> {
   const token = await loadAccessToken(
     creds.vaultRef,
-    credsOrgId(creds.metadata, creds.orgId)
+    credsOrgId(creds.metadata, creds.orgId),
+    credsUserId(creds.metadata)
   )
   const env = requireToconlineEnv()
   const meta = (creds.metadata ?? {}) as ToconlineMetadata
@@ -242,7 +246,8 @@ async function status(creds: {
   try {
     const token = await loadAccessToken(
       creds.vaultRef,
-      credsOrgId(creds.metadata, creds.orgId)
+      credsOrgId(creds.metadata, creds.orgId),
+      credsUserId(creds.metadata)
     )
     const env = requireToconlineEnv()
     const res = await fetch(
@@ -301,12 +306,22 @@ function credsOrgId(
   throw new AdapterError("credentials", "TOConline credentials missing orgId")
 }
 
+function credsUserId(metadata?: Record<string, unknown>): string {
+  const userId = metadata?.userId
+  if (typeof userId === "string" && userId.length > 0) return userId
+  throw new AdapterError("credentials", "TOConline credentials missing userId")
+}
+
 async function loadAccessToken(
   ciphertext: string,
-  orgId: string
+  orgId: string,
+  userId: string
 ): Promise<string> {
   try {
-    const decrypted = await decryptOAuthToken(orgId, ciphertext)
+    const decrypted = await decryptOAuthToken(orgId, ciphertext, {
+      provider: "toconline",
+      userId,
+    })
     if (!decrypted.accessToken) {
       throw new AdapterError(
         "credentials",

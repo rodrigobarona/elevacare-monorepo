@@ -211,21 +211,21 @@ function createAuth() {
           }: {
             organization: { id: string }
           }) => {
-            await enqueueTeamSeatSync(organization.id)
+            enqueueTeamSeatSync(organization.id)
           },
           afterRemoveMember: async ({
             organization,
           }: {
             organization: { id: string }
           }) => {
-            await enqueueTeamSeatSync(organization.id)
+            enqueueTeamSeatSync(organization.id)
           },
           afterAcceptInvitation: async ({
             organization,
           }: {
             organization: { id: string }
           }) => {
-            await enqueueTeamSeatSync(organization.id)
+            enqueueTeamSeatSync(organization.id)
           },
         },
       }),
@@ -334,9 +334,12 @@ export interface AuthApi {
   generateOpenAPISchema?: () => Promise<unknown>
 }
 
-async function enqueueTeamSeatSync(orgId: string): Promise<void> {
-  const { enqueueSeatSync } = await import("@eleva/billing/server")
-  await enqueueSeatSync(orgId)
+function enqueueTeamSeatSync(orgId: string): void {
+  void import("@eleva/billing/server")
+    .then(({ enqueueSeatSync }) => enqueueSeatSync(orgId))
+    .catch((error: unknown) => {
+      console.error("[auth] team seat sync failed", error)
+    })
 }
 
 export function getAuthApi(): AuthApi {

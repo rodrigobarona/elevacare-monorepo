@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis"
-import { eq, sql } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   countBillableSeats,
@@ -24,9 +24,11 @@ export interface SyncSeatQuantityDeps {
 }
 
 const inflight = new Map<string, Promise<SyncSeatQuantityResult>>()
-const SEAT_LOCK_TTL_SECONDS = 30
+const SEAT_LOCK_TTL_SECONDS = 180
 const SEAT_LOCK_WAIT_MS = 50
 const SEAT_LOCK_ATTEMPTS = 40
+const RELEASE_LOCK_LUA =
+  "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
 
 function redisClient(): Redis | null {
   const url = process.env.KV_REST_API_URL
@@ -66,33 +68,53 @@ async function defaultUpdateSeatItem(
 
 export async function markSeatSyncPending(
   orgId: string,
-  tx?: Tx
-): Promise<void> {
+  tx?: Tx,
+  generation: number = Date.now()
+): Promise<number> {
   const write = async (dbTx: Tx) => {
     await dbTx
       .update(main.billingSubscriptions)
       .set({
-        metadata: sql`coalesce(${main.billingSubscriptions.metadata}, '{}'::jsonb) || '{"seatSyncPending":true}'::jsonb`,
+        metadata: sql`jsonb_set(
+          jsonb_set(
+            coalesce(${main.billingSubscriptions.metadata}, '{}'::jsonb),
+            '{seatSyncPending}',
+            'true'::jsonb
+          ),
+          '{seatSyncGeneration}',
+          to_jsonb(${generation}::bigint)
+        )`,
         updatedAt: new Date(),
       })
       .where(eq(main.billingSubscriptions.orgId, orgId))
   }
   if (tx) {
     await write(tx)
-    return
+    return generation
   }
   await withOrgContext(orgId, write)
+  return generation
 }
 
-async function clearSeatSyncPending(orgId: string): Promise<void> {
+async function clearSeatSyncPending(
+  orgId: string,
+  generation: number
+): Promise<void> {
   await withOrgContext(orgId, async (tx) => {
     await tx
       .update(main.billingSubscriptions)
       .set({
-        metadata: sql`coalesce(${main.billingSubscriptions.metadata}, '{}'::jsonb) - 'seatSyncPending'`,
+        metadata: sql`coalesce(${main.billingSubscriptions.metadata}, '{}'::jsonb)
+          - 'seatSyncPending'
+          - 'seatSyncGeneration'`,
         updatedAt: new Date(),
       })
-      .where(eq(main.billingSubscriptions.orgId, orgId))
+      .where(
+        and(
+          eq(main.billingSubscriptions.orgId, orgId),
+          sql`(${main.billingSubscriptions.metadata}->>'seatSyncGeneration')::bigint = ${generation}`
+        )
+      )
   })
 }
 
@@ -112,10 +134,10 @@ async function withSharedSeatLock<T>(
     })
     if (acquired) {
       try {
+        await redis.expire(key, SEAT_LOCK_TTL_SECONDS)
         return await fn()
       } finally {
-        const current = await redis.get<string>(key)
-        if (current === token) await redis.del(key)
+        await redis.eval(RELEASE_LOCK_LUA, [key], [token])
       }
     }
     await new Promise((resolve) => setTimeout(resolve, SEAT_LOCK_WAIT_MS))
@@ -213,8 +235,17 @@ export async function enqueueSeatSync(
   orgId: string,
   actorUserId?: string | null
 ): Promise<SyncSeatQuantityResult> {
-  await markSeatSyncPending(orgId)
+  const generation = Date.now()
+  await withAudit({ orgId, actorUserId }, async (tx, ctx) => {
+    await markSeatSyncPending(orgId, tx, generation)
+    await ctx.emit({
+      entity: "billing_subscription",
+      action: "updated",
+      entityId: orgId,
+      payload: { seatSyncPending: true, generation },
+    })
+  })
   const result = await syncSeatQuantityAudited(orgId, actorUserId)
-  await clearSeatSyncPending(orgId)
+  await clearSeatSyncPending(orgId, generation)
   return result
 }
