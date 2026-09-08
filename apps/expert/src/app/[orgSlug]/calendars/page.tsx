@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { getWidgetTokenFromSession } from "@eleva/auth/server"
+import { syncExpertCalendarAccounts } from "@eleva/auth"
 import { listCalendarIntegrations } from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -26,6 +26,13 @@ export default async function CalendarsPage({
   )
   const base = expertWorkspaceBase(session)
 
+  await syncExpertCalendarAccounts({
+    orgId: profile.orgId,
+    expertProfileId: profile.id,
+    userId: session.user.id,
+    actorUserId: session.user.id,
+  })
+
   const integrations = (
     await listCalendarIntegrations(profile.orgId, profile.id)
   ).map((i) => ({
@@ -35,13 +42,6 @@ export default async function CalendarsPage({
     accountIdentifier: i.accountIdentifier,
     status: i.status,
   }))
-
-  let widgetToken: string | null = null
-  try {
-    widgetToken = await getWidgetTokenFromSession()
-  } catch (err) {
-    console.error("[calendars] Failed to get widget token:", err)
-  }
 
   const t = await getTranslations("calendars")
 
@@ -59,7 +59,7 @@ export default async function CalendarsPage({
 
       <CalendarManager
         integrations={integrations}
-        pipesWidgetToken={widgetToken}
+        callbackURL={`${base}/calendars`}
       />
     </div>
   )

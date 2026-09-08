@@ -87,6 +87,8 @@ export {
   type CreateOrganizationInput,
   type CreateOrganizationResult,
 } from "./organizations"
+export { getProviderAccessToken } from "./provider-token"
+export { syncExpertCalendarAccounts } from "./calendar-accounts"
 export { getWorkOS } from "./workos-client"
 export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"

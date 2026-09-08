@@ -1,25 +1,40 @@
-import { vaultDelete, vaultGet, vaultPut, type VaultRef } from "./vault"
+import { openWithDek, parseCiphertext, sealWithDek } from "./envelope"
+import { EncryptionError } from "./errors"
+import { getOrCreateOrgDek, getOrgDek } from "./keys"
 
-/**
- * Encrypted-record helpers used by S5 transcript + report storage.
- * Every sensitive artifact (transcript content, report body, session
- * notes) is stored in Vault; the DB holds only the opaque ref +
- * metadata.
- */
-
-export async function encryptRecord(
-  key: string,
-  payload: unknown,
-  context: Record<string, string> = {}
-): Promise<VaultRef> {
-  return vaultPut(key, JSON.stringify(payload), context)
+export async function encryptRecordFields(
+  orgId: string,
+  fields: Record<string, string>
+): Promise<Record<string, string>> {
+  const orgDek = await getOrCreateOrgDek(orgId)
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => [
+      key,
+      sealWithDek(orgDek, value, `field:${key}`),
+    ])
+  )
 }
 
-export async function decryptRecord<T = unknown>(ref: VaultRef): Promise<T> {
-  const raw = await vaultGet(ref)
-  return JSON.parse(raw) as T
-}
-
-export async function deleteRecord(ref: VaultRef): Promise<void> {
-  await vaultDelete(ref)
+export async function decryptRecordFields(
+  orgId: string,
+  fields: Record<string, string>
+): Promise<Record<string, string>> {
+  const versions = new Set(
+    Object.values(fields).map((value) => parseCiphertext(value).dekVersion)
+  )
+  const deks = new Map(
+    await Promise.all(
+      [...versions].map(async (version) => {
+        return [version, await getOrgDek(orgId, version)] as const
+      })
+    )
+  )
+  return Object.fromEntries(
+    Object.entries(fields).map(([key, value]) => {
+      const parsed = parseCiphertext(value)
+      const orgDek = deks.get(parsed.dekVersion)
+      if (!orgDek) throw new EncryptionError("KEY_SHREDDED")
+      return [key, openWithDek(orgDek, value, `field:${key}`)]
+    })
+  )
 }

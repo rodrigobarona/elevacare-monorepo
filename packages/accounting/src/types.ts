@@ -225,12 +225,17 @@ export interface ExpertInvoicingAdapter {
   }) => Promise<{ url: string; codeVerifier?: string } | null>
   connect: (input: ConnectInput) => Promise<ConnectResult>
   issueInvoice: (
-    creds: { vaultRef: string; metadata?: Record<string, unknown> },
+    creds: {
+      vaultRef: string
+      metadata?: Record<string, unknown>
+      orgId?: string
+    },
     input: IssueInvoiceInput
   ) => Promise<IssueInvoiceResult>
   status: (creds: {
     vaultRef: string
     metadata?: Record<string, unknown>
+    orgId?: string
   }) => Promise<AdapterStatus>
   disconnect: (input: DisconnectInput) => Promise<void>
 }

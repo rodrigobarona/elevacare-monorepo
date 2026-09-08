@@ -1,10 +1,4 @@
-import { vaultDelete, vaultGet, vaultPut, type VaultRef } from "./vault"
-
-/**
- * Typed helpers for the two most common vault use cases:
- * OAuth token storage (calendar, accounting adapters) and generic
- * encrypted records (transcripts, reports in S5).
- */
+import { decryptForOrg, encryptForOrg } from "./envelope"
 
 export type OAuthProvider =
   | "google-calendar"
@@ -22,32 +16,30 @@ export interface OAuthTokenInput {
   expiresAt?: Date
 }
 
-export async function encryptOAuthToken(
-  input: OAuthTokenInput
-): Promise<VaultRef> {
-  const value = JSON.stringify({
-    accessToken: input.accessToken,
-    refreshToken: input.refreshToken ?? null,
-    expiresAt: input.expiresAt ? input.expiresAt.toISOString() : null,
-  })
-  return vaultPut(`oauth/${input.provider}/${input.userId}`, value, {
-    provider: input.provider,
-    userId: input.userId,
-    orgId: input.orgId,
-  })
-}
-
 export interface DecryptedOAuthToken {
   accessToken: string
   refreshToken: string | null
   expiresAt: Date | null
 }
 
+export async function encryptOAuthToken(
+  input: OAuthTokenInput
+): Promise<string> {
+  return encryptForOrg(
+    input.orgId,
+    JSON.stringify({
+      accessToken: input.accessToken,
+      refreshToken: input.refreshToken ?? null,
+      expiresAt: input.expiresAt ? input.expiresAt.toISOString() : null,
+    })
+  )
+}
+
 export async function decryptOAuthToken(
-  ref: VaultRef
+  orgId: string,
+  ciphertext: string
 ): Promise<DecryptedOAuthToken> {
-  const raw = await vaultGet(ref)
-  const parsed = JSON.parse(raw) as {
+  const parsed = JSON.parse(await decryptForOrg(orgId, ciphertext)) as {
     accessToken: string
     refreshToken: string | null
     expiresAt: string | null
@@ -59,6 +51,6 @@ export async function decryptOAuthToken(
   }
 }
 
-export async function revokeOAuthToken(ref: VaultRef): Promise<void> {
-  await vaultDelete(ref)
+export async function revokeOAuthToken(_ciphertext: string): Promise<void> {
+  // Envelope ciphertext lives in the caller row; deleting that row shreds access.
 }

@@ -4,6 +4,7 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
+import { enqueueSeatSync } from "@eleva/billing/server"
 import { getExpertProfileByUserId, updateEventType } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -73,6 +74,13 @@ export async function PATCH(
   } catch (err) {
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })
+  }
+
+  try {
+    await enqueueSeatSync(profile.orgId, session.user.id)
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "seat sync failed"
+    console.error("[event-types] seat sync pending", message)
   }
 
   return secureJson({ ok: true }, { status: 200, headers })

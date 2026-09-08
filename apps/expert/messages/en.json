@@ -85,7 +85,29 @@
   "calendars": {
     "backToIntegrations": "Integrations",
     "title": "Connected Calendars",
-    "description": "Connect your Google or Microsoft calendar to avoid double bookings."
+    "description": "Connect your Google or Microsoft calendar to avoid double bookings.",
+    "connectTitle": "Connect a calendar",
+    "connectDescription": "Grant Eleva access to check availability and write confirmed sessions.",
+    "connectGoogle": "Connect Google Calendar",
+    "connectMicrosoft": "Connect Microsoft Calendar",
+    "reconnectGoogle": "Reconnect Google Calendar",
+    "reconnectMicrosoft": "Reconnect Microsoft Calendar",
+    "connectedTitle": "Connected accounts",
+    "disconnect": "Disconnect",
+    "noCalendarFallback": "No calendar is connected yet. Members can still book; you will receive email invites until you connect one.",
+    "status": {
+      "connecting": "Connecting",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "error": "Error",
+      "expired": "Expired"
+    },
+    "error": {
+      "connect-failed": "Could not start the calendar connection.",
+      "disconnect-failed": "Could not disconnect this calendar.",
+      "validation": "The request was invalid.",
+      "unauthorized-calendar": "You cannot change this calendar."
+    }
   },
   "integrations": {
     "title": "Integrations",

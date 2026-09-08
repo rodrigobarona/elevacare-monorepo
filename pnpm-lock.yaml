@@ -775,6 +775,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.6(react@19.2.6)
+      sonner:
+        specifier: 'catalog:'
+        version: 2.0.7(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -1221,6 +1224,9 @@ importers:
       '@eleva/audit':
         specifier: workspace:*
         version: link:../audit
+      '@eleva/billing':
+        specifier: workspace:*
+        version: link:../billing
       '@eleva/config':
         specifier: workspace:*
         version: link:../config
@@ -1309,6 +1315,9 @@ importers:
       '@stripe/stripe-js':
         specifier: 'catalog:'
         version: 9.5.0
+      '@upstash/redis':
+        specifier: 'catalog:'
+        version: 1.38.0
       '@workos-inc/node':
         specifier: 'catalog:'
         version: 9.3.0
@@ -1345,10 +1354,6 @@ importers:
         version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(vite@8.0.9(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.0)(yaml@2.9.0))
 
   packages/calendar:
-    dependencies:
-      '@workos-inc/node':
-        specifier: 'catalog:'
-        version: 9.3.0
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -1528,12 +1533,18 @@ importers:
 
   packages/encryption:
     dependencies:
+      '@eleva/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@eleva/config':
         specifier: workspace:*
         version: link:../config
-      '@workos-inc/node':
+      '@eleva/db':
+        specifier: workspace:*
+        version: link:../db
+      drizzle-orm:
         specifier: 'catalog:'
-        version: 9.3.0
+        version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)(kysely@0.29.5)
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
@@ -1547,6 +1558,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.6(@opentelemetry/api@1.9.1)(@types/node@25.8.0)(@vitest/coverage-v8@4.1.6)(vite@8.0.9(@types/node@25.8.0)(esbuild@0.28.0)(jiti@2.6.1)(terser@5.46.1)(tsx@4.22.0)(yaml@2.9.0))
 
   packages/eslint-config:
     devDependencies:
@@ -1846,6 +1860,9 @@ importers:
 
   packages/workflows:
     dependencies:
+      '@eleva/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@eleva/calendar':
         specifier: workspace:*
         version: link:../calendar
@@ -1858,9 +1875,6 @@ importers:
       '@eleva/observability':
         specifier: workspace:*
         version: link:../observability
-      '@workos-inc/node':
-        specifier: 'catalog:'
-        version: 9.3.0
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.45.2(@neondatabase/serverless@1.1.0)(@opentelemetry/api@1.9.1)(@types/pg@8.15.6)(@upstash/redis@1.38.0)(kysely@0.29.5)

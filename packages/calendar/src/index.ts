@@ -1,7 +1,12 @@
 export { getAdapter } from "./registry"
 export { GoogleCalendarAdapter } from "./adapters/google"
 export { MicrosoftCalendarAdapter } from "./adapters/microsoft"
-export { getCalendarToken, listConnectedProviders } from "./credential-manager"
+export {
+  createCredentialManager,
+  requireAuthAccountId,
+  type GetProviderAccessToken,
+  type GetProviderAccessTokenInput,
+} from "./credential-manager"
 export {
   CalendarTokenError,
   CalendarAdapterError,

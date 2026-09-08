@@ -21,6 +21,7 @@ import {
   pkColumn,
   updatedAt,
 } from "./shared"
+import { account } from "../auth/index"
 import { organizations } from "./organizations"
 import { expertProfiles } from "./expert-profiles"
 
@@ -82,6 +83,11 @@ export const expertIntegrations = pgTable(
     /** WorkOS user ID for Pipes getAccessToken calls (calendar integrations). */
     workosUserId: text("workos_user_id"),
 
+    /** Better Auth `auth.account.id` for calendar OAuth tokens. */
+    authAccountId: uuid("auth_account_id").references(() => account.id, {
+      onDelete: "cascade",
+    }),
+
     /** WorkOS Vault reference for Eleva-managed OAuth tokens (invoicing). */
     vaultRef: varchar("vault_ref", { length: 255 }),
 
@@ -122,7 +128,7 @@ export const expertIntegrations = pgTable(
     statusIdx: index("expert_integrations_status_idx").on(t.status),
     pipesCheck: check(
       "expert_integrations_pipes_check",
-      sql`connect_type != 'pipes' OR workos_user_id IS NOT NULL`
+      sql`connect_type != 'pipes' OR auth_account_id IS NOT NULL OR workos_user_id IS NOT NULL`
     ),
     oauthCheck: check(
       "expert_integrations_oauth_check",

@@ -3,11 +3,15 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
+import { getProviderAccessToken } from "@eleva/auth"
 import {
+  createCredentialManager,
   getAdapter,
-  getCalendarToken,
+  requireAuthAccountId,
   type CalendarProvider,
 } from "@eleva/calendar"
+
+const credentials = createCredentialManager({ getProviderAccessToken })
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -66,9 +70,10 @@ export async function GET(
   }
 
   try {
-    const accessToken = await getCalendarToken(
-      session.user.workosUserId,
-      provider
+    const accessToken = await credentials.getCalendarToken(
+      session.user.id,
+      provider,
+      requireAuthAccountId(integration.authAccountId)
     )
     const adapter = getAdapter(provider)
     const subCalendars = await adapter.listCalendars(accessToken)

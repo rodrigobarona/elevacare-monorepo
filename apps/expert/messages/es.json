@@ -85,7 +85,29 @@
   "calendars": {
     "backToIntegrations": "Integraciones",
     "title": "Calendarios conectados",
-    "description": "Conecta tu calendario de Google o Microsoft para evitar reservas duplicadas."
+    "description": "Conecta tu calendario de Google o Microsoft para evitar reservas duplicadas.",
+    "connectTitle": "Conectar un calendario",
+    "connectDescription": "Concede a Eleva acceso para comprobar disponibilidad y escribir sesiones confirmadas.",
+    "connectGoogle": "Conectar Google Calendar",
+    "connectMicrosoft": "Conectar Microsoft Calendar",
+    "reconnectGoogle": "Reconectar Google Calendar",
+    "reconnectMicrosoft": "Reconectar Microsoft Calendar",
+    "connectedTitle": "Cuentas conectadas",
+    "disconnect": "Desconectar",
+    "noCalendarFallback": "Aún no hay un calendario conectado. Los miembros pueden reservar; recibirás invitaciones por email hasta que conectes uno.",
+    "status": {
+      "connecting": "Conectando",
+      "connected": "Conectado",
+      "disconnected": "Desconectado",
+      "error": "Error",
+      "expired": "Caducado"
+    },
+    "error": {
+      "connect-failed": "No se pudo iniciar la conexión del calendario.",
+      "disconnect-failed": "No se pudo desconectar este calendario.",
+      "validation": "La solicitud no es válida.",
+      "unauthorized-calendar": "No puedes cambiar este calendario."
+    }
   },
   "integrations": {
     "title": "Integraciones",

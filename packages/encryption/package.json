@@ -14,13 +14,16 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
-    "@workos-inc/node": "catalog:"
+    "@eleva/db": "workspace:*",
+    "drizzle-orm": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "eslint": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

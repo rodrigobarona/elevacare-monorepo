@@ -205,6 +205,29 @@ function createAuth() {
             url: data.invitation.id,
           })
         },
+        organizationHooks: {
+          afterAddMember: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            await enqueueTeamSeatSync(organization.id)
+          },
+          afterRemoveMember: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            await enqueueTeamSeatSync(organization.id)
+          },
+          afterAcceptInvitation: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            await enqueueTeamSeatSync(organization.id)
+          },
+        },
       }),
       admin({
         ac: adminAccess as never,
@@ -305,7 +328,15 @@ export interface AuthApi {
     valid: boolean
     key?: { userId: string; referenceId?: string | null; name?: string | null }
   } | null>
+  getAccessToken: (opts: {
+    body: { accountId: string; userId?: string }
+  }) => Promise<{ accessToken?: string } | null>
   generateOpenAPISchema?: () => Promise<unknown>
+}
+
+async function enqueueTeamSeatSync(orgId: string): Promise<void> {
+  const { enqueueSeatSync } = await import("@eleva/billing/server")
+  await enqueueSeatSync(orgId)
 }
 
 export function getAuthApi(): AuthApi {

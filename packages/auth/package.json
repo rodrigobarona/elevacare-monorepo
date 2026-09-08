@@ -34,6 +34,7 @@
     "@better-auth/passkey": "catalog:",
     "@eleva/api-client": "workspace:*",
     "@eleva/audit": "workspace:*",
+    "@eleva/billing": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",

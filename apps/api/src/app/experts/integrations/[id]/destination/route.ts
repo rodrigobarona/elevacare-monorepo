@@ -9,11 +9,15 @@ import {
   listCalendarIntegrations,
   replaceDestinationCalendar,
 } from "@eleva/db"
+import { getProviderAccessToken } from "@eleva/auth"
 import {
+  createCredentialManager,
   getAdapter,
-  getCalendarToken,
+  requireAuthAccountId,
   type CalendarProvider,
 } from "@eleva/calendar"
+
+const credentials = createCredentialManager({ getProviderAccessToken })
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -85,9 +89,10 @@ export async function PUT(
     )
   }
 
-  const accessToken = await getCalendarToken(
-    session.user.workosUserId,
-    provider
+  const accessToken = await credentials.getCalendarToken(
+    session.user.id,
+    provider,
+    requireAuthAccountId(integration.authAccountId)
   )
   const adapter = getAdapter(provider)
   const calendars = await adapter.listCalendars(accessToken)

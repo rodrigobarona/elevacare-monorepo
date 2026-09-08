@@ -3,6 +3,8 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
+import { authClient, CALENDAR_OAUTH_SCOPES } from "@eleva/auth/client"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -24,76 +26,102 @@ interface CalendarIntegration {
 
 interface Props {
   integrations: CalendarIntegration[]
-  pipesWidgetToken: string | null
+  callbackURL: string
 }
 
-export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
+export function CalendarManager({ integrations, callbackURL }: Props) {
   const router = useRouter()
   const t = useTranslations("calendars")
-  const [pending, setPending] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [pending, setPending] = React.useState<string | null>(null)
+
+  function showError(key: string) {
+    toast.error(t(`error.${key}` as Parameters<typeof t>[0]))
+  }
+
+  async function handleConnect(provider: "google" | "microsoft") {
+    setPending(provider)
+    try {
+      const result = await authClient.linkSocial({
+        provider,
+        callbackURL,
+        scopes: [...CALENDAR_OAUTH_SCOPES[provider]],
+      })
+      if (result.error) {
+        showError("connect-failed")
+        return
+      }
+      if (result.data?.url) {
+        window.location.assign(result.data.url)
+        return
+      }
+      router.refresh()
+    } catch {
+      showError("connect-failed")
+    } finally {
+      setPending(null)
+    }
+  }
 
   async function handleDisconnect(id: string) {
-    setPending(true)
-    setError(null)
+    setPending(id)
     try {
       const result = await disconnectCalendarAction(id)
       if (result.ok) {
         router.refresh()
       } else {
-        setError(result.error)
+        showError(result.error)
       }
     } catch {
-      setError("disconnect-failed")
+      showError("disconnect-failed")
     } finally {
-      setPending(false)
+      setPending(null)
     }
   }
 
   const hasConnectedCalendar = integrations.some(
     (i) => i.status === "connected"
   )
+  const connectedSlugs = new Set(integrations.map((i) => i.slug))
 
   return (
     <div className="space-y-6">
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{t(`error.${error}`)}</AlertDescription>
-        </Alert>
-      )}
-
-      {!hasConnectedCalendar && (
+      {!hasConnectedCalendar ? (
         <Alert>
           <AlertDescription>{t("noCalendarFallback")}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      {pipesWidgetToken ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("connectTitle")}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="mb-4 text-sm text-muted-foreground">
-              {t("connectDescription")}
-            </p>
-            <div
-              data-workos-pipes-widget
-              data-auth-token={pipesWidgetToken}
-              className="min-h-[200px]"
-            />
-            <p className="mt-3 text-xs text-muted-foreground">
-              {t("connectHint")}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <Alert>
-          <AlertDescription>{t("connectUnavailable")}</AlertDescription>
-        </Alert>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("connectTitle")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            {t("connectDescription")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onPress={() => handleConnect("google")}
+              isDisabled={pending !== null}
+            >
+              {connectedSlugs.has("google-calendar")
+                ? t("reconnectGoogle")
+                : t("connectGoogle")}
+            </Button>
+            <Button
+              variant="secondary"
+              onPress={() => handleConnect("microsoft")}
+              isDisabled={pending !== null}
+            >
+              {connectedSlugs.has("microsoft-calendar")
+                ? t("reconnectMicrosoft")
+                : t("connectMicrosoft")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-      {integrations.length > 0 && (
+      {integrations.length > 0 ? (
         <Card>
           <CardHeader>
             <CardTitle>{t("connectedTitle")}</CardTitle>
@@ -116,13 +144,13 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
                       cal.status === "connected" ? "default" : "secondary"
                     }
                   >
-                    {t(`status.${cal.status}`)}
+                    {t(`status.${cal.status}` as Parameters<typeof t>[0])}
                   </Badge>
                   <Button
                     variant="ghost"
                     size="sm"
                     onPress={() => handleDisconnect(cal.id)}
-                    isDisabled={pending}
+                    isDisabled={pending !== null}
                   >
                     {t("disconnect")}
                   </Button>
@@ -131,7 +159,7 @@ export function CalendarManager({ integrations, pipesWidgetToken }: Props) {
             ))}
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   )
 }
