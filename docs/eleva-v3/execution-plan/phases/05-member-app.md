@@ -223,7 +223,12 @@ PHASE 5 TASK — Build the member product in apps/app.
    refund_pending and reason account_deletion (100% refund, executed by Phase 6) + audit; a
    payment that succeeds after the mark (race) is confirmed by the webhook and then cancelled by
    the same rule on the next deletion sweep run (POST /workflows/account-deletion-sweep, QStash,
-   hourly). Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
+   hourly). The sweep's consent step is split in two and never generic: DELETE FROM consents
+   WHERE user_id = $u AND booking_id IS NULL (account scope) and
+   pseudonymiseBookingConsents($u) for booking_id IS NOT NULL (user_id -> NULL, subject_pseudonym
+   = HMAC(retention key, user id), guest_email_hash -> NULL) — the same helper Phase 10's
+   finalizer calls; test: after the sweep, account-scope rows 0, booking-scope row count
+   unchanged and all with user_id IS NULL. Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
    409 on reserve and on intent; confirm with a succeeded intent still returns 201 and the sweep
    cancels it with refund_pending; cancel request -> reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,

@@ -307,13 +307,20 @@ payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` 
   tx1 inserts the `refunds` row `pending` with its idempotency key and, when a transfer exists,
   the `transfer_reversals` row `pending` with the computed `reversed_cents`; **outside any
   transaction** `refunds.create` is called with its key; `transfers.createReversal` is called
-  **only after the refund is confirmed `succeeded`** (response, or `refunds.retrieve` by
-  idempotency key when the response was lost) — a failed or unknown refund never triggers a
+  **only after the refund is confirmed `succeeded`** (from the response, or — when the response
+  was lost — by **replaying the identical `refunds.create` with the same idempotency key**, which
+  Stripe answers with the original result for 24 h, or by the `charge.refunded` /
+  `refund.updated` webhook that carries the refund id; Stripe has no lookup-by-idempotency-key
+  endpoint, so the refund id is persisted on the row the moment any of those paths returns it) — a failed or unknown refund never triggers a
   reversal, so the expert's transfer is never reduced without funds going back to the member;
   tx2 records each result by compare-and-set on the row status (`pending -> succeeded|failed`),
   updates `booking_payments.refunded_cents` and `payout_states.reversed_cents` and moves the
   payout to `reversal_pending` when the reversal call failed (a lost response is repaired by the
-  reconciler through `refunds.retrieve`/`transfers.listReversals` by idempotency key); the DB
+  reconciler the same way: replay the identical POST with the stored idempotency key inside the
+  24 h window, or take the object id from the `charge.refunded` / `transfer.reversed` webhook;
+  after 24 h with neither, the reconciler lists `refunds` by `payment_intent` and `transfers`
+  reversals by the stored `transfer_id` and matches on `metadata.refund_row_id` /
+  `metadata.reversal_row_id`, which every create call sets for exactly this purpose); the DB
   enforces `CHECK (reversed_cents <= amount_cents)`; Stripe rejects
   reversals above the unreversed remainder, so the ledger and Stripe agree by construction
   (tests: partial refunds 33.33 + 33.33 + 33.34 on 100.00 gross / 85.00 transferred ->

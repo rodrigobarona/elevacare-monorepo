@@ -3706,7 +3706,12 @@ PHASE 5 TASK — Build the member product in apps/app.
    refund_pending and reason account_deletion (100% refund, executed by Phase 6) + audit; a
    payment that succeeds after the mark (race) is confirmed by the webhook and then cancelled by
    the same rule on the next deletion sweep run (POST /workflows/account-deletion-sweep, QStash,
-   hourly). Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
+   hourly). The sweep&#39;s consent step is split in two and never generic: DELETE FROM consents
+   WHERE user_id = $u AND booking_id IS NULL (account scope) and
+   pseudonymiseBookingConsents($u) for booking_id IS NOT NULL (user_id -&gt; NULL, subject_pseudonym
+   = HMAC(retention key, user id), guest_email_hash -&gt; NULL) — the same helper Phase 10&#39;s
+   finalizer calls; test: after the sweep, account-scope rows 0, booking-scope row count
+   unchanged and all with user_id IS NULL. Cancelling the deletion request clears the flag. Tests: scheduled-deletion member gets
    409 on reserve and on intent; confirm with a succeeded intent still returns 201 and the sweep
    cancels it with refund_pending; cancel request -&gt; reserve succeeds again.
 4. apps/app: layout with @eleva/dashboard (member nav: Home, Sessions, Payments, Settings,
@@ -4998,7 +5003,8 @@ Daily meeting tokens are signed JWTs and cannot be revoked, so removal is a two-
 operation that is safe in both failure directions: phase 1 (transaction) sets
 <code>session_participants.revoked_at = now()</code> (a deny state — <code>join</code> requires <code>revoked_at IS NULL</code>, so no new token can be minted from this instant) inside withAudit
 <code>session.participant_removed</code>. <strong>Linearization point</strong> — the participant row lock: <code>join</code> runs
-<code>SELECT … FROM session_participants WHERE session_id = $1 AND user_id = $2 FOR UPDATE</code>, checks
+<code>SELECT … FROM session_participants WHERE booking_id = $1 AND user_id = $2 FOR UPDATE</code> (the
+table is keyed by <code>booking_id</code>, the route&#39;s parameter — there is no <code>session_id</code> column), checks
 <code>revoked_at IS NULL</code> and the session status, signs the meeting token (a local HS256 JWT signed
 with the Daily domain API key — no vendor call, so README rule 9 is respected) and inserts the
 <code>session_joins</code> audit row <strong>inside that same transaction</strong>; the revocation <code>UPDATE … SET revoked_at</code> on the same row therefore waits for the join to commit or the join waits for the
@@ -5426,7 +5432,12 @@ versioned legal texts in <code>packages/compliance/legal/*.md</code> per locale.
 AI drafts 90d unpublished, session documents per policy, reservations 24h,
 notification deliveries 1y. <strong>Member account deletion (Phase 5 request, finalised here)</strong>
 after the grace period: (a) <code>shredOrgKeys(personalSpaceOrgId)</code> + delete the member&#39;s own rows
-(profile, preferences, consents, CRM contact rows that reference the user); (b) <code>session_documents</code>
+(profile, preferences, <strong>account-scope</strong> <code>consents</code> — <code>booking_id IS NULL</code> — and CRM contact
+rows that reference the user), while <strong>booking-scope <code>consents</code> (<code>booking_id IS NOT NULL</code>) are
+pseudonymised, never deleted</strong> (<code>user_id -&gt; NULL</code>, <code>subject_pseudonym</code> set, email hash removed
+— the Phase 5 / D-12 rule, one helper <code>pseudonymiseBookingConsents(userId)</code> shared by the
+Phase 5 sweep and this finalizer; test: after finalize, account-scope rows = 0, booking-scope
+rows unchanged in count with <code>user_id IS NULL</code>); (b) <code>session_documents</code>
 uploaded by the member (<code>uploaded_by = member</code>) or with scope <code>shared</code> uploaded for them:
 delete the private Blob object <strong>and</strong> the row; (c) expert-authored <code>records</code> about the member
 (encrypted under the <em>expert</em> org key, so the member-key shred does not cover them) fall under
@@ -5697,7 +5708,9 @@ PR 10.1 — records, documents, consent, retention:
    test: expired document -&gt; store mock receives one delete, row gone; store failure -&gt; row kept
    and flagged; second sweep after store recovery -&gt; both gone. Finalize
    account deletion: after grace period -&gt; shredOrgKeys(personal space) + delete the member&#39;s rows
-   + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
+   EXCEPT booking-scope consents (booking_id IS NOT NULL), which are pseudonymised via
+   pseudonymiseBookingConsents(userId) (Phase 5 / D-12; account-scope consents with booking_id
+   IS NULL are deleted) + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
    tombstone member_user_id on expert-authored records (deleted_users salted-hash row; strip
    identity from metadata_encrypted) which stay under the clinical-record retention exception
    until the sweep hard-deletes them at the end of the statutory period (document period + legal
@@ -7828,8 +7841,12 @@ calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &
 <code>packages/video/src/daily-constants.ts</code>) holds whatever the 16.8 spike proves the API accepts to
 clear it (<code>null</code>, <code>false</code> or omitting the key on a full properties write), and
 <code>isRecordingEnabled(config)</code> normalises the read-back:
-<code>config.enable_recording</code> in <code>{&quot;cloud&quot;,&quot;local&quot;,&quot;raw-tracks&quot;}</code> -&gt; true, absent/<code>null</code>/<code>false</code> -&gt;
-false — the worker never compares raw values
+<code>config.enable_recording</code> in <code>{&quot;cloud&quot;,&quot;cloud-audio-only&quot;,&quot;local&quot;,&quot;raw-tracks&quot;}</code> -&gt; <code>true</code>,
+absent/<code>null</code>/<code>false</code> -&gt; <code>false</code>, <strong>any other value -&gt; <code>unknown</code></strong> (a new Daily mode we have not
+classified): <code>unknown</code> never equals <code>desired</code>, so the read-back is rejected, nothing is persisted,
+an <code>ops</code> alert names the value and joins stay at 503 until a human classifies it — fail closed,
+never silently &quot;disabled&quot;; tests cover each known mode, both disabled shapes (omitted and <code>false</code>)
+and one unknown string — the worker never compares raw values
 — the consent boolean maps to Daily&#39;s recording mode string, never passed raw — only when the desired
 value differs from <code>sessions.recording_enabled</code>; it runs on every consent change and again in
 the <code>join</code> route before the token is minted, so the state is correct whenever anyone enters
@@ -7851,8 +7868,12 @@ is no <code>meta</code> field and no provider-side version, so <strong>all fenci
 <code>sessions</code> row (<code>recording_desired</code>, <code>recording_enabled</code>, <code>recording_state_version</code> — bumped on
 every change of desired state —, <code>recording_verified_version</code> — the version whose provider
 state was last confirmed by read-back —, <code>recording_verified_at</code>): (a) provider calls for one booking are single-flight behind a Redis
-mutex <code>recording-sync:{bookingId}</code> (15 s TTL, held only around the Daily call — consent writes
-and joins never wait on it) and a worker that acquires the mutex re-reads the current version
+mutex <code>recording-sync:{bookingId}</code> (TTL 90 s — longer than the full retry budget of
+3 × 10 s <code>updateRoom</code> + 3 × 10 s read-back + backoff, and renewed (<code>PEXPIRE</code>) before each vendor
+attempt; released explicitly when the worker exits; held only around the Daily calls — consent
+writes and joins never wait on it; a worker that outlives its lease must NOT write: the CAS on
+<code>recording_state_version</code> is the second guard, and a lease-expiry test asserts the stale worker&#39;s
+write is rejected) and a worker that acquires the mutex re-reads the current version
 <code>v</code> and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after <code>updateRoom</code> the worker reads the room back (<code>GET /rooms/{name}</code>) and accepts only when
@@ -7892,10 +7913,12 @@ rather than minting.</p>
    where DAILY_RECORDING_OFF is the single constant in packages/video/src/daily-constants.ts
    holding the representation the 16.8 spike proved clears the property (Daily models &quot;disabled&quot;
    as unset), compare with isRecordingEnabled(config)
-   (cloud|local|raw-tracks -&gt; true; absent|null|false -&gt; false) on read-back, and persist
+   (cloud|cloud-audio-only|local|raw-tracks -&gt; true; absent|null|false -&gt; false; anything else -&gt;
+   unknown = rejected read-back + ops alert, never persisted) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
-   behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
+   behind Redis mutex recording-sync:{bookingId} (90 s TTL, renewed before each vendor attempt,
+   longer than the whole retry budget) applying the CURRENT desired state,
    then GET /rooms/{name} read-back accepted only when isRecordingEnabled(config) equals desired (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
    recording_state_version, recording_verified_version, recording_verified_at); CAS on the

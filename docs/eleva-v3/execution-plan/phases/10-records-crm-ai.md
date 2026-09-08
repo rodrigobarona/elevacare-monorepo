@@ -51,7 +51,12 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   AI drafts 90d unpublished, session documents per policy, reservations 24h,
   notification deliveries 1y. **Member account deletion (Phase 5 request, finalised here)**
   after the grace period: (a) `shredOrgKeys(personalSpaceOrgId)` + delete the member's own rows
-  (profile, preferences, consents, CRM contact rows that reference the user); (b) `session_documents`
+  (profile, preferences, **account-scope** `consents` — `booking_id IS NULL` — and CRM contact
+  rows that reference the user), while **booking-scope `consents` (`booking_id IS NOT NULL`) are
+  pseudonymised, never deleted** (`user_id -> NULL`, `subject_pseudonym` set, email hash removed
+  — the Phase 5 / D-12 rule, one helper `pseudonymiseBookingConsents(userId)` shared by the
+  Phase 5 sweep and this finalizer; test: after finalize, account-scope rows = 0, booking-scope
+  rows unchanged in count with `user_id IS NULL`); (b) `session_documents`
   uploaded by the member (`uploaded_by = member`) or with scope `shared` uploaded for them:
   delete the private Blob object **and** the row; (c) expert-authored `records` about the member
   (encrypted under the _expert_ org key, so the member-key shred does not cover them) fall under
@@ -325,7 +330,9 @@ PR 10.1 — records, documents, consent, retention:
    test: expired document -> store mock receives one delete, row gone; store failure -> row kept
    and flagged; second sweep after store recovery -> both gone. Finalize
    account deletion: after grace period -> shredOrgKeys(personal space) + delete the member's rows
-   + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
+   EXCEPT booking-scope consents (booking_id IS NOT NULL), which are pseudonymised via
+   pseudonymiseBookingConsents(userId) (Phase 5 / D-12; account-scope consents with booking_id
+   IS NULL are deleted) + delete member-uploaded/shared session_documents (Blob object AND row, via @eleva/storage) +
    tombstone member_user_id on expert-authored records (deleted_users salted-hash row; strip
    identity from metadata_encrypted) which stay under the clinical-record retention exception
    until the sweep hard-deletes them at the end of the statutory period (document period + legal

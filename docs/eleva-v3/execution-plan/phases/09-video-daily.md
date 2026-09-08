@@ -76,7 +76,8 @@ In:
   `session_participants.revoked_at = now()` (a deny state — `join` requires `revoked_at IS
 NULL`, so no new token can be minted from this instant) inside withAudit
   `session.participant_removed`. **Linearization point** — the participant row lock: `join` runs
-  `SELECT … FROM session_participants WHERE session_id = $1 AND user_id = $2 FOR UPDATE`, checks
+  `SELECT … FROM session_participants WHERE booking_id = $1 AND user_id = $2 FOR UPDATE` (the
+  table is keyed by `booking_id`, the route's parameter — there is no `session_id` column), checks
   `revoked_at IS NULL` and the session status, signs the meeting token (a local HS256 JWT signed
   with the Daily domain API key — no vendor call, so README rule 9 is respected) and inserts the
   `session_joins` audit row **inside that same transaction**; the revocation `UPDATE … SET

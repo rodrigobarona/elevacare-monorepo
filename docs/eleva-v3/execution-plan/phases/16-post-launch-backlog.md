@@ -94,8 +94,12 @@ calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud
 `packages/video/src/daily-constants.ts`) holds whatever the 16.8 spike proves the API accepts to
 clear it (`null`, `false` or omitting the key on a full properties write), and
 `isRecordingEnabled(config)` normalises the read-back:
-`config.enable_recording` in `{"cloud","local","raw-tracks"}` -> true, absent/`null`/`false` ->
-false — the worker never compares raw values
+`config.enable_recording` in `{"cloud","cloud-audio-only","local","raw-tracks"}` -> `true`,
+absent/`null`/`false` -> `false`, **any other value -> `unknown`** (a new Daily mode we have not
+classified): `unknown` never equals `desired`, so the read-back is rejected, nothing is persisted,
+an `ops` alert names the value and joins stay at 503 until a human classifies it — fail closed,
+never silently "disabled"; tests cover each known mode, both disabled shapes (omitted and `false`)
+and one unknown string — the worker never compares raw values
 — the consent boolean maps to Daily's recording mode string, never passed raw — only when the desired
 value differs from `sessions.recording_enabled`; it runs on every consent change and again in
 the `join` route before the token is minted, so the state is correct whenever anyone enters
@@ -117,8 +121,12 @@ is no `meta` field and no provider-side version, so **all fencing state is Eleva
 `sessions` row (`recording_desired`, `recording_enabled`, `recording_state_version` — bumped on
 every change of desired state —, `recording_verified_version` — the version whose provider
 state was last confirmed by read-back —, `recording_verified_at`): (a) provider calls for one booking are single-flight behind a Redis
-mutex `recording-sync:{bookingId}` (15 s TTL, held only around the Daily call — consent writes
-and joins never wait on it) and a worker that acquires the mutex re-reads the current version
+mutex `recording-sync:{bookingId}` (TTL 90 s — longer than the full retry budget of
+3 × 10 s `updateRoom` + 3 × 10 s read-back + backoff, and renewed (`PEXPIRE`) before each vendor
+attempt; released explicitly when the worker exits; held only around the Daily calls — consent
+writes and joins never wait on it; a worker that outlives its lease must NOT write: the CAS on
+`recording_state_version` is the second guard, and a lease-expiry test asserts the stale worker's
+write is rejected) and a worker that acquires the mutex re-reads the current version
 `v` and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after `updateRoom` the worker reads the room back (`GET /rooms/{name}`) and accepts only when
@@ -162,10 +170,12 @@ Recording/transcription behind flags: Phase 9 rooms are created at confirmation 
    where DAILY_RECORDING_OFF is the single constant in packages/video/src/daily-constants.ts
    holding the representation the 16.8 spike proved clears the property (Daily models "disabled"
    as unset), compare with isRecordingEnabled(config)
-   (cloud|local|raw-tracks -> true; absent|null|false -> false) on read-back, and persist
+   (cloud|cloud-audio-only|local|raw-tracks -> true; absent|null|false -> false; anything else ->
+   unknown = rejected read-back + ops alert, never persisted) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
-   behind Redis mutex recording-sync:{bookingId} (15 s TTL) applying the CURRENT desired state,
+   behind Redis mutex recording-sync:{bookingId} (90 s TTL, renewed before each vendor attempt,
+   longer than the whole retry budget) applying the CURRENT desired state,
    then GET /rooms/{name} read-back accepted only when isRecordingEnabled(config) equals desired (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
    recording_state_version, recording_verified_version, recording_verified_at); CAS on the
