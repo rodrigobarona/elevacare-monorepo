@@ -1,3 +1,3 @@
-import { config } from '@eleva/eslint-config/base';
+import { config } from "@eleva/eslint-config/base"
 
-export default config;
+export default [{ ignores: ["spikes/**"] }, ...config]

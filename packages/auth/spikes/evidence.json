@@ -1,0 +1,449 @@
+{
+  "version": "1.7.3",
+  "generatedAt": "2026-09-08T08:57:55.145Z",
+  "evidence": [
+    {
+      "id": "01-signup-verify",
+      "title": "Sign-up + email verification",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "method": "POST",
+        "path": "/auth/sign-up/email",
+        "body": {
+          "name": "Rodrigo Spike",
+          "email": "spike.1788857868610@example.com",
+          "password": "[redacted]"
+        },
+        "verify": {
+          "method": "GET",
+          "path": "/auth/verify-email",
+          "token": "eyJhbGci…72JM"
+        }
+      },
+      "response": {
+        "signUpStatus": 200,
+        "signUp": {
+          "token": null,
+          "user": {
+            "name": "Rodrigo Spike",
+            "email": "spike.1788857868610@example.com",
+            "emailVerified": false,
+            "image": null,
+            "createdAt": "2026-09-08T08:57:51.502Z",
+            "updatedAt": "2026-09-08T08:57:51.502Z",
+            "role": "user",
+            "banned": false,
+            "banReason": null,
+            "banExpires": null,
+            "twoFactorEnabled": false,
+            "id": "68231c35-41b4-4082-a8ab-94f4cecfefe9"
+          }
+        },
+        "verifyStatus": 302,
+        "sessionStatus": 200,
+        "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+        "emailVerified": true
+      },
+      "notes": [
+        "requireEmailVerification + sendOnSignUp captured the token in-process.",
+        "autoSignInAfterVerification minted a session cookie."
+      ]
+    },
+    {
+      "id": "02-personal-space",
+      "title": "Personal Space provisioning hook",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "hook": "databaseHooks.user.create.after -> auth.api.createOrganization",
+        "expectedName": "Rodrigo's Space"
+      },
+      "response": {
+        "listStatus": 200,
+        "organizations": [
+          {
+            "name": "Rodrigo's Space",
+            "slug": "space-68231c3541b4",
+            "logo": null,
+            "createdAt": "2026-09-08T08:57:51.782Z",
+            "metadata": null,
+            "type": "personal",
+            "id": "78d119c4-3e0d-47a1-a33d-a04f9c49b04a"
+          }
+        ]
+      },
+      "notes": [
+        "Hook created Rodrigo's Space (space-68231c3541b4) type=personal.",
+        "Spike audit stand-in (02.1: withAudit): [{\"entity\":\"organization\",\"action\":\"created\",\"entityId\":\"78d119c4-3e0d-47a1-a33d-a04f9c49b04a\",\"payload\":{\"type\":\"personal\",\"name\":\"Rodrigo's Space\"}}]"
+      ]
+    },
+    {
+      "id": "03-expert-org",
+      "title": "Expert organization creation",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "method": "POST",
+        "path": "/auth/organization/create",
+        "body": {
+          "name": "Rodrigo Expert",
+          "slug": "expert-1788857868610",
+          "type": "expert"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "name": "Rodrigo Expert",
+          "slug": "expert-1788857868610",
+          "logo": null,
+          "createdAt": "2026-09-08T08:57:52.424Z",
+          "type": "expert",
+          "id": "da901c84-9740-4fde-9eba-ee925f157da1",
+          "members": [
+            {
+              "organizationId": "da901c84-9740-4fde-9eba-ee925f157da1",
+              "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+              "role": "owner",
+              "createdAt": "2026-09-08T08:57:52.466Z",
+              "id": "8dc34670-94c4-40af-ac8f-28c08130b0fa"
+            }
+          ]
+        }
+      },
+      "notes": [
+        "additionalFields.type=expert is first-class on createOrganization."
+      ]
+    },
+    {
+      "id": "04-org-switch",
+      "title": "Organization switching (active org on the session)",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "method": "POST",
+        "path": "/auth/organization/set-active",
+        "body": {
+          "organizationId": "da901c84…7da1"
+        }
+      },
+      "response": {
+        "setActiveStatus": 200,
+        "setActive": {
+          "name": "Rodrigo Expert",
+          "slug": "expert-1788857868610",
+          "logo": null,
+          "createdAt": "2026-09-08T08:57:52.424Z",
+          "metadata": null,
+          "type": "expert",
+          "id": "da901c84-9740-4fde-9eba-ee925f157da1"
+        },
+        "activeOrganizationId": "da901c84-9740-4fde-9eba-ee925f157da1"
+      },
+      "notes": ["session.activeOrganizationId updates after set-active."]
+    },
+    {
+      "id": "05-cross-subdomain-cookie",
+      "title": "Cross-subdomain cookie on *.dev.eleva.care",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "option": "advanced.crossSubDomainCookies",
+        "domain": ".dev.eleva.care"
+      },
+      "response": {
+        "setCookie": "better-auth.session_token=15YYByjz…E%3D; Max-Age=2592000; Domain=.dev.eleva.care; Path=/; HttpOnly; SameSite=Lax"
+      },
+      "notes": [
+        "Header-level Domain=.dev.eleva.care is set. Live browser proof on a real *.dev.eleva.care host is Phase 2 staging, not this spike process."
+      ]
+    },
+    {
+      "id": "07-api-key",
+      "title": "API key create + authenticate",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "create": {
+          "method": "POST",
+          "path": "/auth/api-key/create",
+          "name": "spike-agent"
+        },
+        "auth": {
+          "method": "GET",
+          "path": "/auth/get-session",
+          "header": "x-api-key"
+        }
+      },
+      "response": {
+        "createStatus": 200,
+        "keyId": "60624768-3995-46a1-8b49-05fcf5c9ff22",
+        "key": "tJbEruQk…bhaf",
+        "sessionStatus": 200
+      },
+      "notes": [
+        "Key is returned once on create. x-api-key authenticates without a cookie.",
+        "Import is @better-auth/api-key, not better-auth/plugins."
+      ]
+    },
+    {
+      "id": "08-opaque-bearer",
+      "title": "Opaque bearer session token",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "signIn": {
+          "method": "POST",
+          "path": "/auth/sign-in/email"
+        },
+        "auth": {
+          "method": "GET",
+          "path": "/auth/get-session",
+          "header": "Authorization: Bearer <session>"
+        }
+      },
+      "response": {
+        "signInStatus": 200,
+        "token": "VNu17jop…YSKY",
+        "sessionStatus": 200,
+        "userId": "68231c35-41b4-4082-a8ab-94f4cecfefe9"
+      },
+      "notes": [
+        "bearer() plugin returns a session token on sign-in and accepts it as Authorization: Bearer.",
+        "Shape is opaque (not three JWT segments)."
+      ]
+    },
+    {
+      "id": "09-jwt-jwks",
+      "title": "JWT + JWKS verification from a second process",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "token": {
+          "method": "GET",
+          "path": "/auth/token"
+        },
+        "jwks": {
+          "method": "GET",
+          "path": "/auth/jwks"
+        },
+        "verifier": "packages/auth/spikes/src/verify-jwt.ts (jose, child process)"
+      },
+      "response": {
+        "tokenStatus": 200,
+        "jwt": "eyJhbGci…x3Dg",
+        "childExit": 0,
+        "child": {
+          "alg": "EdDSA",
+          "kid": "e4304fc5-90c4-4b33-842f-bea5431c86f9",
+          "sub": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+          "claims": [
+            "iat",
+            "id",
+            "createdAt",
+            "updatedAt",
+            "email",
+            "emailVerified",
+            "name",
+            "image",
+            "role",
+            "banned",
+            "banReason",
+            "banExpires",
+            "twoFactorEnabled",
+            "sub",
+            "exp",
+            "iss",
+            "aud"
+          ]
+        }
+      },
+      "notes": [
+        "jwt plugin issues a compact JWS; jose in a child process verified it against /auth/jwks."
+      ]
+    },
+    {
+      "id": "10-admin-role",
+      "title": "Admin role check",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "promote": "UPDATE \"user\" SET role = 'platform_admin'",
+        "list": {
+          "method": "GET",
+          "path": "/auth/admin/list-users"
+        }
+      },
+      "response": {
+        "hasPermissionStatus": 200,
+        "hasPermission": {
+          "error": null,
+          "success": true
+        },
+        "listStatus": 200,
+        "userCount": 1
+      },
+      "notes": [
+        "roles.platform_admin = adminAc from better-auth/plugins/admin/access; adminRoles: ['platform_admin'] is valid once that role exists.",
+        "02.1 must also define staff_support and staff_finance and promote via auth.api.setRole."
+      ]
+    },
+    {
+      "id": "11-google-linking",
+      "title": "Google account linking by email",
+      "status": "plan-change",
+      "version": "1.7.3",
+      "request": {
+        "method": "POST",
+        "path": "/auth/sign-in/social",
+        "body": {
+          "provider": "google"
+        },
+        "config": {
+          "accountLinking": {
+            "enabled": true,
+            "disableImplicitLinking": true,
+            "trustedProviders": ["google"]
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "location": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=Bg_7znaep0Fb9CWMXB9CkcXaqEzcwj31&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=OIscbLDnG6-cOEYtzx1ej7iVtspe-DgsfrxR55-CmqA&include_granted_scopes=true",
+        "body": {
+          "url": "https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id=spike-google-client-id&state=Bg_7znaep0Fb9CWMXB9CkcXaqEzcwj31&scope=email+profile+openid&redirect_uri=http%3A%2F%2F127.0.0.1%3A8787%2Fauth%2Fcallback%2Fgoogle&prompt=consent&access_type=offline&code_challenge_method=S256&code_challenge=OIscbLDnG6-cOEYtzx1ej7iVtspe-DgsfrxR55-CmqA&include_granted_scopes=true",
+          "redirect": true
+        }
+      },
+      "notes": [
+        "ADR-017 already forbids implicit same-email Google linking. A Google sign-in for an existing email must return account_not_linked unless the user called linkSocial() after a verified session.",
+        "The phase file omitted disableImplicitLinking: true — absorb ADR-017 into PR 02.1 options.",
+        "Live Google round-trip was not run (no real consent screen in this spike). Threat model: never link on unverified email match; disableImplicitLinking closes the account-takeover path."
+      ]
+    },
+    {
+      "id": "12-session-revoke",
+      "title": "Session revocation propagating to every client",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "secondSignIn": {
+          "method": "POST",
+          "path": "/auth/sign-in/email"
+        },
+        "revoke": {
+          "method": "POST",
+          "path": "/auth/revoke-other-sessions"
+        }
+      },
+      "response": {
+        "revokeStatus": 200,
+        "currentCookieSessionAlive": true,
+        "otherBearerAlive": false,
+        "otherSession": null
+      },
+      "notes": [
+        "revoke-other-sessions keeps the caller and drops the second token.",
+        "cookieCache (300s) can keep a cached cookie view after DB revoke — 02.1 requireApiAuth must not treat cookieCache as a revocation source of truth for sign-out/revoke."
+      ]
+    },
+    {
+      "id": "06-passkey-totp",
+      "title": "Passkey + TOTP enrolment and verify",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "totp": {
+          "method": "POST",
+          "path": "/auth/two-factor/enable then /two-factor/verify-totp"
+        },
+        "passkey": {
+          "method": "GET",
+          "path": "/auth/passkey/generate-register-options"
+        }
+      },
+      "response": {
+        "enableStatus": 200,
+        "totpVerified": true,
+        "backupCodeCount": 10,
+        "passkeyStatus": 200,
+        "passkey": {
+          "challenge": "jLWE3ij8vwGnBTKG9hI6rdxhB-gxvmE_-NP_NtYHqUE",
+          "rp": {
+            "name": "Eleva.care",
+            "id": "localhost"
+          },
+          "user": {
+            "id": "dzBqdHcxOGk5bnZjeXhsNmV2eGM4anRtZ2JqZmdlbzc",
+            "name": "spike.1788857868610@example.com",
+            "displayName": "spike.1788857868610@example.com"
+          },
+          "pubKeyCredParams": [
+            {
+              "alg": -8,
+              "type": "public-key"
+            },
+            {
+              "alg": -7,
+              "type": "public-key"
+            },
+            {
+              "alg": -257,
+              "type": "public-key"
+            }
+          ],
+          "timeout": 60000,
+          "attestation": "none",
+          "excludeCredentials": [],
+          "authenticatorSelection": {
+            "residentKey": "preferred",
+            "userVerification": "preferred",
+            "requireResidentKey": false
+          },
+          "extensions": {
+            "credProps": true
+          },
+          "hints": []
+        },
+        "totpVerify": {
+          "token": "[redacted]",
+          "user": {
+            "id": "68231c35-41b4-4082-a8ab-94f4cecfefe9",
+            "createdAt": "2026-09-08T08:57:51.502Z",
+            "updatedAt": "2026-09-08T08:57:51.918Z",
+            "email": "spike.1788857868610@example.com",
+            "emailVerified": true,
+            "name": "Rodrigo Spike",
+            "image": null,
+            "role": "platform_admin",
+            "banned": false,
+            "banReason": null,
+            "banExpires": null,
+            "twoFactorEnabled": false
+          }
+        }
+      },
+      "notes": [
+        "TOTP secret came from totpURI and was verified with otpauth in-process.",
+        "Passkey: registration options returned. Completing WebAuthn attestation needs a browser authenticator (Playwright virtual authenticator in 02.2)."
+      ]
+    },
+    {
+      "id": "13-drizzle-adapter",
+      "title": "@better-auth/drizzle-adapter 1.7.3 constructs",
+      "status": "proven",
+      "version": "1.7.3",
+      "request": {
+        "import": "@better-auth/drizzle-adapter",
+        "call": "drizzleAdapter(drizzle(pool), { provider: \"pg\" })"
+      },
+      "response": {
+        "note": "drizzleAdapter() returned function"
+      },
+      "notes": [
+        "02.1 applies this adapter to the generated auth schema + drizzle-kit, not getMigrations (Kysely-only)."
+      ]
+    }
+  ]
+}
