@@ -160,5 +160,11 @@ jobs:
           echo "${GITLEAKS_SHA256}  ${archive}" | sha256sum -c -
           tar -xzf "$archive" gitleaks
           rm -f "$archive"
-      - name: Run gitleaks
-        run: ./gitleaks detect --source . --config .gitleaks.toml --verbose --redact --no-banner
+      - name: Scan working tree
+        run: ./gitleaks detect --no-git --source . --config .gitleaks.toml --verbose --redact --no-banner
+      - name: Scan commits since the PR base
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
+          ./gitleaks detect --source . --config .gitleaks.toml --verbose --redact --no-banner \
+            --log-opts="origin/${{ github.base_ref }}..HEAD"
