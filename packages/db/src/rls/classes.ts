@@ -111,6 +111,15 @@ export function classPredicateSql(
     case "public-read":
       return `true`
     case "service-only":
+      if (
+        table === "audit_events" ||
+        table === "_rls_fixture_audit_events_split"
+      ) {
+        return (
+          `current_setting('eleva.platform_admin', true) = 'true'` +
+          ` OR current_setting('eleva.service', true) = 'audit_drainer'`
+        )
+      }
       return (
         `current_setting('eleva.platform_admin', true) = 'true'` +
         ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`

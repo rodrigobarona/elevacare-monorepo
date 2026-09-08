@@ -370,9 +370,13 @@ export function resolveMicrosoftOAuth(): {
   clientSecret: string | undefined
 } {
   const e = env()
+  const canonicalClientId = e.MICROSOFT_OAUTH_CLIENT_ID || undefined
+  const canonicalClientSecret = e.MICROSOFT_OAUTH_CLIENT_SECRET || undefined
+  if (canonicalClientId && canonicalClientSecret) {
+    return { clientId: canonicalClientId, clientSecret: canonicalClientSecret }
+  }
   return {
-    clientId: e.MICROSOFT_OAUTH_CLIENT_ID || e.MS_OAUTH_CLIENT_ID || undefined,
-    clientSecret:
-      e.MICROSOFT_OAUTH_CLIENT_SECRET || e.MS_OAUTH_CLIENT_SECRET || undefined,
+    clientId: e.MS_OAUTH_CLIENT_ID || undefined,
+    clientSecret: e.MS_OAUTH_CLIENT_SECRET || undefined,
   }
 }

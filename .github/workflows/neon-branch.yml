@@ -53,17 +53,27 @@ jobs:
       - name: Create Neon branch
         if: steps.neon-creds.outputs.ready == 'true'
         id: create-branch
-        uses: neondatabase/create-branch-action@v6
+        uses: neondatabase/create-branch-action@72ed4f69a12b6be9c16aebfad893f6a21e9aba8b # v6.4.0
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
           branch_name: pr-${{ github.event.number }}
           api_key: ${{ secrets.NEON_API_KEY }}
 
+      - name: Reset Neon branch to parent
+        if: steps.neon-creds.outputs.ready == 'true'
+        id: reset-branch
+        uses: neondatabase/reset-branch-action@470ab8101095ea33737c294d17364a72fd80761b # v1.3.2
+        with:
+          project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
+          branch: pr-${{ github.event.number }}
+          parent: true
+          api_key: ${{ secrets.NEON_API_KEY }}
+
       - name: Migrate and apply main RLS
         if: steps.neon-creds.outputs.ready == 'true'
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
-          DATABASE_URL_UNPOOLED: ${{ steps.create-branch.outputs.db_url }}
+          DATABASE_URL: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
+          DATABASE_URL_UNPOOLED: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
         run: |
           # db:* scripts load ../../.env.local; CI injects DATABASE_URL instead.
           touch .env.local
@@ -73,8 +83,8 @@ jobs:
       - name: RLS isolation and class suite
         if: steps.neon-creds.outputs.ready == 'true'
         env:
-          DATABASE_URL: ${{ steps.create-branch.outputs.db_url }}
-          DATABASE_URL_UNPOOLED: ${{ steps.create-branch.outputs.db_url }}
+          DATABASE_URL: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
+          DATABASE_URL_UNPOOLED: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
           ELEVA_RLS_INTEGRATION: "1"
         run: pnpm --filter=@eleva/db exec vitest run src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts
 
@@ -98,7 +108,7 @@ jobs:
 
       - name: Delete Neon branch
         if: steps.neon-creds.outputs.ready == 'true'
-        uses: neondatabase/delete-branch-action@v3
+        uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3.2.1
         with:
           project_id: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
           branch: pr-${{ github.event.number }}

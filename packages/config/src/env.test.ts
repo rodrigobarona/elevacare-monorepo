@@ -140,4 +140,15 @@ describe("resolveMicrosoftOAuth", () => {
       clientSecret: "legacy-secret",
     })
   })
+
+  it("uses the complete legacy pair when the canonical pair is partial", () => {
+    process.env.MICROSOFT_OAUTH_CLIENT_ID = "canonical-id"
+    delete process.env.MICROSOFT_OAUTH_CLIENT_SECRET
+    process.env.MS_OAUTH_CLIENT_ID = "legacy-id"
+    process.env.MS_OAUTH_CLIENT_SECRET = "legacy-secret"
+    expect(resolveMicrosoftOAuth()).toEqual({
+      clientId: "legacy-id",
+      clientSecret: "legacy-secret",
+    })
+  })
 })

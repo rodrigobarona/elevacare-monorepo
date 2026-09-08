@@ -94,7 +94,13 @@ describe("RLS class taxonomy", () => {
       "audit_drainer"
     )
     expect(classPredicateSql("service-only", "audit_events")).not.toContain(
+      "stripe_webhook"
+    )
+    expect(classPredicateSql("service-only", "audit_events")).not.toContain(
       "eleva.org_id"
+    )
+    expect(classPredicateSql("service-only", "audit_outbox")).toContain(
+      "stripe_webhook"
     )
   })
 })
