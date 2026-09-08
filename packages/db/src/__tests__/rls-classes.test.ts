@@ -228,6 +228,14 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
           case "public-read":
             await expectCount({}, 1)
             await expectCount({ "eleva.org_id": orgB }, 1)
+            await expect(
+              withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
+                await client.query(
+                  `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
+                  [randomUUID(), orgA]
+                )
+              })
+            ).rejects.toThrow()
             break
           case "service-only":
             await expectCount({ "eleva.platform_admin": "true" }, 1)

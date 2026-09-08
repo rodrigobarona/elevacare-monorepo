@@ -85,14 +85,14 @@ export async function checkI18nParity(
         })
         continue
       }
-      const raw = await readFile(filePath, "utf8")
       try {
+        const raw = await readFile(filePath, "utf8")
         const keys = new Set(flattenKeys(parseJsonObject(filePath, raw)))
         keySets.push({ locale, keys })
       } catch (error) {
         issues.push({
           app: entry.name,
-          message: `messages/${locale}.json is not parseable: ${(error as Error).message}`,
+          message: `messages/${locale}.json is not readable or not parseable: ${(error as Error).message}`,
         })
       }
     }

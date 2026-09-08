@@ -9,6 +9,7 @@ export {
   requireToconlineEnv,
   requireBlobEnv,
   requireCronSecret,
+  resolveMicrosoftOAuth,
   type BaseEnv,
   type Env,
   type RequiredStripeEnv,
