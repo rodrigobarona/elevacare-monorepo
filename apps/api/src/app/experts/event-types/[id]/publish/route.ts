@@ -4,7 +4,7 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
-import { enqueueSeatSync } from "@eleva/billing/server"
+import { enqueueSeatSync, markSeatSyncPending } from "@eleva/billing/server"
 import { getExpertProfileByUserId, updateEventType } from "@eleva/db"
 
 export const dynamic = "force-dynamic"
@@ -69,6 +69,7 @@ export async function PATCH(
           entityId: id,
           payload: { published: body.data.published },
         })
+        await markSeatSyncPending(profile.orgId, tx)
       }
     )
   } catch (err) {

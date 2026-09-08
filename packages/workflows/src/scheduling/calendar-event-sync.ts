@@ -179,7 +179,7 @@ async function sendRescheduleIcsFallback(
         ...emailPayload,
         startsAt: newStartTime,
         endsAt: newEndTime,
-        sequence: 1,
+        sequence: Math.floor(Date.now() / 1000),
       },
       previousStartTime
     )

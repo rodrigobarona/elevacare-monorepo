@@ -1,7 +1,13 @@
 import { Redis } from "@upstash/redis"
 import { eq, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { countBillableSeats, db, main, withOrgContext } from "@eleva/db"
+import {
+  countBillableSeats,
+  db,
+  main,
+  withOrgContext,
+  type Tx,
+} from "@eleva/db"
 import { organization } from "@eleva/db/schema/auth"
 import { stripe } from "./client"
 
@@ -58,16 +64,24 @@ async function defaultUpdateSeatItem(
   await stripe().subscriptionItems.update(itemId, { quantity })
 }
 
-async function markSeatSyncPending(orgId: string): Promise<void> {
-  await withOrgContext(orgId, async (tx) => {
-    await tx
+export async function markSeatSyncPending(
+  orgId: string,
+  tx?: Tx
+): Promise<void> {
+  const write = async (dbTx: Tx) => {
+    await dbTx
       .update(main.billingSubscriptions)
       .set({
         metadata: sql`coalesce(${main.billingSubscriptions.metadata}, '{}'::jsonb) || '{"seatSyncPending":true}'::jsonb`,
         updatedAt: new Date(),
       })
       .where(eq(main.billingSubscriptions.orgId, orgId))
-  })
+  }
+  if (tx) {
+    await write(tx)
+    return
+  }
+  await withOrgContext(orgId, write)
 }
 
 async function clearSeatSyncPending(orgId: string): Promise<void> {

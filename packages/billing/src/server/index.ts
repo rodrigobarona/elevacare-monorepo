@@ -23,6 +23,7 @@ export type { ProductTier } from "./subscriptions"
 export { provisionOrgBilling } from "./provisioning"
 export {
   enqueueSeatSync,
+  markSeatSyncPending,
   syncSeatQuantity,
   syncSeatQuantityAudited,
 } from "./seats"
