@@ -19,8 +19,10 @@ Use this:
 
 ## Identity And Access
 
-- [ ] Authentication uses the approved shared identity model.
-- [ ] Capability-based RBAC is enforced server-side.
+- [ ] Authentication uses the approved shared identity model (Better Auth, ADR-017).
+- [ ] Capability-based RBAC is enforced server-side (`permissions.ts`, ADR-021).
+- [ ] Every tenant table declares an RLS policy class (`schema-and-migration-rules.md`).
+- [ ] `security-traceability.md` has an enforcing test for each introduced control.
 - [ ] Sensitive routes and actions require explicit authorization checks.
 - [ ] Organization/workspace context is validated on sensitive operations.
 - [ ] Membership/permission changes are auditable.

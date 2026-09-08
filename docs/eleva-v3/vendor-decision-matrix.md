@@ -50,29 +50,31 @@ Rules:
 
 ### Authentication, organizations, and secure identity
 
-#### WorkOS
+#### Better Auth (self-hosted)
 
-Decision status: **locked**
+Decision status: **locked** (ADR-017)
 
 Expected role:
 
-- authentication and SSO
-- organizations and memberships
-- session model
-- RBAC primitives (combined with Eleva-side permission layer and Neon RLS)
-- Vault for sensitive/encrypted fields (OAuth tokens, encrypted PHI references)
+- authentication (magic link, Google OAuth, passkeys, TOTP)
+- organizations and memberships (`organization` plugin)
+- session cookie on `.eleva.care`
+- RBAC via `createAccessControl` in `packages/auth/src/permissions.ts` (ADR-021)
+- API keys and JWTs for agents
+- OAuth token encryption on `account` rows
 
 Why it fits:
 
-- B2B and organization-aware identity primitives
-- Vault simplifies encrypted-at-rest handling without rolling custom KMS
+- MIT-licensed, runs inside `apps/api` on the same Neon EU project (no new subprocessor)
+- organization types, personal Spaces, hooks, MFA and API keys are first-class
+- permissions version with the code that enforces them
 
-Region: **EU**.
+Region: **EU** (Neon project). WorkOS is removed (removed, see ADR-017).
 
 Open validations:
 
-- final permission-model boundary between WorkOS RBAC, Eleva app permissions, and Neon RLS
-- DPA + subprocessor posture for EU tenants
+- spike PR 02.0 proves cookie domain, hooks and plugin set on a Neon branch
+- D-13 cookie / CSRF / subdomain threat model before Phase 4 PR 04.2
 
 ### Database and core persistence
 
@@ -206,7 +208,7 @@ Region: **EU**.
 
 Rules:
 
-- transcripts are **Eleva-owned records**, encrypted at rest via WorkOS Vault references
+- transcripts are **Eleva-owned records**, encrypted at rest via `@eleva/encryption` (ADR-020). Recording storage is 16.8 / D-08. WorkOS Vault is removed (removed, see ADR-017).
 - transcript retention defined per ADR-009
 - no transcript content leaks into notifications, analytics, or AI-gateway logs
 
@@ -391,7 +393,7 @@ Expected role:
 - Tier 1 — Eleva → Expert/Clinic platform-fee invoicing
 - series `ELEVA-FEE-{YYYY}` for per-booking solo commission invoices
 - series `ELEVA-SAAS-{YYYY}` for monthly clinic SaaS invoices
-- OAuth tokens stored in WorkOS Vault
+- OAuth tokens envelope-encrypted via `@eleva/encryption` (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
 - sandbox environment → Eleva staging, production environment → Eleva production
 
 Rules:
@@ -415,7 +417,7 @@ Expected role:
   - **P3**: Primavera Cloud
   - **Phase-2 ES**: Holded, FacturaDirecta
 - `ExpertInvoicingAdapter` interface: `connect / issueInvoice / status / disconnect`
-- per-expert credentials in Neon `expert_integration_credentials`, encrypted via WorkOS Vault
+- per-expert credentials in Neon `expert_integration_credentials`, envelope-encrypted (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
 
 Rules:
 
@@ -433,11 +435,11 @@ Decision status: **locked**
 Expected role:
 
 - `packages/calendar` owns OAuth flows, token refresh, event read/write, webhook subscription
-- tokens stored in WorkOS Vault
+- tokens stored in Better Auth `account` rows (`encryptOAuthTokens`). WorkOS Vault / Pipes are removed (removed, see ADR-017).
 
 Rules:
 
-- **not** WorkOS Pipes
+- **not** an identity-vendor pipe (removed, see ADR-017)
 - busy-calendar and destination-calendar concepts (per cal.com pattern)
 
 ### Internationalization
@@ -465,7 +467,7 @@ Expected role:
 ## Summary — locked stack
 
 - Package manager: **pnpm** + Turborepo
-- Auth: **WorkOS** (EU)
+- Auth: **Better Auth** (self-hosted, EU Neon). WorkOS is removed (removed, see ADR-017).
 - DB: **Neon** (EU) + **Drizzle**, RLS + two projects
 - Payments: **Stripe** (Connect Express + Subscriptions + Entitlements + Dynamic Payment Methods + Embedded Components, no Multibanco vouchers)
 - Monetization: hybrid (solo=commission, clinic=SaaS)
@@ -483,7 +485,7 @@ Expected role:
 - Feature flags: **Vercel Flags SDK + Edge Config**
 - Accounting Tier 1: **TOConline**
 - Accounting Tier 2: **Adapter registry** (TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T)
-- Calendar OAuth: **Eleva-owned** (`packages/calendar`), not WorkOS Pipes
+- Calendar OAuth: **Eleva-owned** (`packages/calendar`), tokens from Better Auth. WorkOS Pipes is removed (removed, see ADR-017).
 - i18n: **next-intl** (pt/en/es)
 - Docs/CMS: **Fumadocs**
 

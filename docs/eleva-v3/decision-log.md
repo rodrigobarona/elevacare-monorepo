@@ -264,6 +264,26 @@ Each entry should include:
 - Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
 
+### 2026-09-08: Phase 1.1 authored ADR-017..021 and ADR-023
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 1.1 (`phase-01.1/adrs-handbook`) writes the ADR documents that
+  formalise the 2026-09-07 direction (this does not reopen those decisions),
+  rewrites `identity-rbac-spec.md`, updates the handbook Current Canon, replaces
+  WorkOS Cursor rules/skills with Better Auth / Daily / encryption, and adds the
+  RLS taxonomy + localized-column contract + `security-traceability.md` skeleton.
+  Canonical staging host is `dev.eleva.care` (API `api.dev.eleva.care`);
+  `staging.eleva.care` is a historical alias to retire (callbacks, CORS,
+  webhooks). The former `rbacDriftCheck` QStash job is not in the catalog
+  (RBAC is code, ADR-021). Calendar workers persist Better Auth `account.id` and
+  call `auth.api.getAccessToken({ body: { accountId, userId } })`
+  (`calendar-integration-spec.md`). CI foundations (Playwright, Neon branch,
+  gitleaks, i18n parity, audit migrations) are Phase 1.2.
+- Reference: [`adrs/ADR-017-better-auth-identity.md`](./adrs/ADR-017-better-auth-identity.md)
+  through [`ADR-023-plate-rich-text-editor.md`](./adrs/ADR-023-plate-rich-text-editor.md),
+  [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md)
+
 ### 2026-09-07: Identity, video, encryption, RBAC and migration direction for v3 (ADR-017..021 authored in Phase 1)
 
 - Owner: engineering
@@ -339,7 +359,7 @@ Each entry should include:
 
 - Owner: engineering (security), DPO informed
 - Status: accepted (documentation + CI contracts; the controls themselves are implemented by the phases named in `security-traceability.md`)
-- Summary: Phase 1 fixes four contracts that later phases build on. (1) **RLS policy classes**: every tenant table declares one of the seven classes in `packages/db/src/rls/policy-classes.ts` (`tenant-owned`, `dual-organization`, `public-read`, `member-owned`, `platform-only`, `append-only-audit`, `clinical-shared`) and `rls-classes.test.ts` proves each class with a fixture and positive/negative assertions. (2) **Secret scanning**: `gitleaks` runs in CI with the repo `.gitleaks.toml`; a hit fails the job. (3) **Security traceability**: `docs/eleva-v3/security-traceability.md` maps every control to the phase that introduces it, the test that enforces it and the evidence link; CI fails when a control row has no enforcing check. (4) **Localized columns**: `LocalizedText` / `LocalizedRichText` (JSONB keyed by `Locale`, one row per entity, Zod-validated, `pt` required) are the only storage shape for translatable content — the duplicate `LocalizedString` type is deleted in PR 04.1.
+- Summary: Phase 1 fixes four contracts that later phases build on. (1) **RLS policy classes**: every tenant table declares one of the seven classes (`tenant-owned`, `dual-organization`, `owner-user-visible`, `participant-visible`, `staff-only`, `public-read`, `service-only`) documented in `schema-and-migration-rules.md`; `rls-classes.test.ts` (Phase 1.2) proves each class with a fixture and positive/negative assertions. (2) **Secret scanning**: `gitleaks` runs in CI with the repo `.gitleaks.toml`; a hit fails the job (Phase 1.2). (3) **Security traceability**: `docs/eleva-v3/security-traceability.md` maps every control to the phase that introduces it, the test that enforces it and the evidence link; Phase 13 CI fails when a control row has no enforcing check. (4) **Localized columns**: `LocalizedText` / `LocalizedRichText` (JSONB keyed by `Locale`, one row per entity, Zod-validated, sibling `_source_locale`) are the only storage shape — the duplicate `LocalizedString` type is deleted in PR 04.1.
 - Reference: [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`security-hardening-checklist.md`](./security-hardening-checklist.md)
 
 ### 2026-09-07: Admin dual-control kinds, distinct `analytics` consent, imported-consent semantics, rollback acceptance point

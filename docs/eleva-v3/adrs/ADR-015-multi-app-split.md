@@ -1,8 +1,15 @@
 # ADR-015: Multi-App Architecture Split
 
+> **Superseded in part by [ADR-017](ADR-017-better-auth-identity.md) (2026-09-07).**
+> The role-focused micro-app split, gateway rewrites and subdomain boundaries stand. The
+> "one WorkOS Application per environment" and shared AuthKit cookie sections are replaced
+> by one Better Auth server in `apps/api` and a `.eleva.care` session cookie. The Eleva
+> Diary mobile app will use Better Auth token auth, not a second WorkOS Application.
+
 ## Status
 
-Accepted (supersedes ADR-001 topology decision; extends ADR-014 multi-zone rewrites)
+Accepted (supersedes ADR-001 topology decision; extends ADR-014 multi-zone rewrites);
+superseded in part (2026-09-07)
 
 ## Date
 
@@ -17,7 +24,7 @@ ADR-001 chose to start with one authenticated app (`apps/app`) and split later w
 - Platform admin (`(admin)/*`) handles sensitive operations (application approvals, payouts, audit) that benefit from a hard security boundary.
 - Account settings (profile, security, orgs, billing) are cross-cutting concerns that span all product surfaces.
 - Academy (LMS) is a future product surface for lecturers to create and sell courses.
-- The mobile Eleva Diary app will connect via the same WorkOS user pool.
+- The mobile Eleva Diary app will connect via the same Better Auth user pool (Bearer / token auth).
 
 The current single-app architecture makes it harder to:
 
@@ -87,21 +94,25 @@ Two apps live on their own subdomains, deployed as standalone Vercel projects:
 - `admin.eleva.care` -- platform operations (hardest security boundary; can have stricter CSP, WAF rules, IP allowlists)
 - `api.eleva.care` -- server endpoints (already exists)
 
-All share the `.eleva.care` cookie scope for seamless WorkOS session sharing.
+Product apps share the `.eleva.care` cookie scope for Better Auth session sharing (ADR-017).
+From Phase 12, `admin.eleva.care` uses a host-only `__Host-` cookie: the admin `proxy.ts`
+does not accept the shared cookie as sufficient; staff sign in on the admin host and the
+gateway bounce to `/login` stays on that host. Until Phase 12 the shared cookie is
+accepted on admin as well. WorkOS session sharing (removed, see ADR-017).
 
 ### Auth architecture
 
-All apps share one WorkOS application and one `@eleva/auth` package.
+All apps share one Better Auth server in `apps/api` (`/auth/*`) and one `@eleva/auth` package. There is not one WorkOS Application per environment (removed, see ADR-017).
 
 Auth flows are centralized in `apps/account`, served via the gateway proxy at `eleva.care`:
 
-- `/login`, `/signup` -- redirect to WorkOS AuthKit
-- `/callback` -- handle WorkOS callback, set session cookie on `.eleva.care`
+- `/login`, `/signup` -- Better Auth UI / magic link / social / passkey (proxied to `apps/api/auth/*`)
+- `/callback` -- handle Better Auth callback, set session cookie on `.eleva.care`
 - `/logout` -- clear session, redirect to `eleva.care`
 - `/dashboard` -- post-login routing with `returnTo` support
 - `/onboarding` -- create first personal org ("space")
 
-Every other app's `proxy.ts` redirects unauthenticated users to `eleva.care/login?returnTo={current-url}`. After the callback sets the `.eleva.care` cookie, the user is redirected back via `returnTo`.
+Every other app's `proxy.ts` uses `@eleva/auth/proxy` (`getSessionCookie()` optimistic check) and redirects unauthenticated users to `eleva.care/login?returnTo={current-url}`. Authorization is always re-checked server-side. After the callback sets the `.eleva.care` cookie, the user is redirected back via `returnTo`.
 
 ### Organization model
 
@@ -139,7 +150,7 @@ The academy app is scaffolded but not yet active. Key design decisions:
 
 ### Eleva Diary (mobile)
 
-The Diary app connects via the same WorkOS user pool. WorkOS "Multiple Applications" gives Diary its own client ID, redirect URIs, and session policy while sharing users and organizations. Data sync goes through `api.eleva.care` endpoints. The member app (`apps/app`) displays Diary data.
+The Diary app uses Better Auth token auth against the same user pool (not a second WorkOS Application — removed, see ADR-017). Data sync goes through `api.eleva.care` endpoints. The member app (`apps/app`) displays Diary data.
 
 ## Alternatives considered
 

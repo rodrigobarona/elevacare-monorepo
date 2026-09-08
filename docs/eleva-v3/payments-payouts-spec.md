@@ -425,7 +425,7 @@ VIES validation:
 #### Rollout
 
 - behind `ff.toconline_invoicing_enabled` staged (staging → 1 pilot expert/clinic → all PT → default on for PT)
-- OAuth tokens stored encrypted at rest via `packages/encryption` (envelope, ADR-009) in Neon — WorkOS Vault is gone with Phase 3
+- OAuth tokens stored encrypted at rest via `packages/encryption` (envelope, ADR-020) in Neon. WorkOS Vault is removed (removed, see ADR-017).
 
 ### Tier 2 — Expert → Patient (expert's legal obligation, optionally automated)
 
@@ -437,7 +437,7 @@ VIES validation:
 
 - shared interface `ExpertInvoicingAdapter` with `connect / issueInvoice / status / disconnect`
 - per-expert credentials in Neon `expert_integration_credentials(id, expert_id, slug, vault_ref, status, installed_at)`
-- secrets encrypted at rest via `packages/encryption` (envelope, ADR-009); `vault_ref` points at the encrypted row, never at a third-party vault
+- secrets encrypted at rest via `packages/encryption` (envelope, ADR-020); `vault_ref` points at the encrypted row, never at a third-party vault
 
 #### Seed adapter priority
 

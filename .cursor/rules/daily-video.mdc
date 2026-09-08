@@ -1,0 +1,20 @@
+---
+description: Daily.co video boundary. Apply when touching rooms, meeting tokens, or Daily webhooks.
+globs:
+  - packages/video/**
+  - apps/api/src/app/webhooks/daily/**
+alwaysApply: false
+---
+
+# Daily.co video (ADR-018)
+
+- Only `packages/video` imports `@daily-co/*`. Routes in `apps/api` call `@eleva/video`.
+- Rooms: private, **random names** (HIPAA mode rejects custom names), `nbf`/`exp` around
+  the booking, `max_participants` from the booking.
+- Meeting tokens are minted at join time per participant (expert `is_owner`). Never store,
+  log or put tokens in URLs.
+- Verify webhook signatures (`DAILY_WEBHOOK_SECRET`). Process events in event-time order
+  (`sessions.last_event_at`). No PHI in logs or Sentry.
+- Recording / transcription is **not** in Phase 9 or 10 — backlog 16.8, gated on D-07/D-08.
+- Revoke is two-phase: `session_participants.revoked_at` then Daily `eject`.
+- Google Meet / Zoom / Teams links are never created (removed, see ADR-018).

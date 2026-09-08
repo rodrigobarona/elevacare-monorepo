@@ -21,7 +21,7 @@ It should guide:
 - **Experimentation adapter (future)**: **PostHog Feature Flags** — reserved for A/B and experimentation flags once the product has traffic
 - **Boundary**: all flag reads go through `packages/flags`. No direct `@vercel/flags` or PostHog flag SDK calls anywhere else in the codebase. CI verifies the boundary.
 
-Dropped: WorkOS as flag provider (not validated for this role).
+Dropped: WorkOS as flag provider (not validated for this role; removed, see ADR-017). Flag provider decision is ADR-008 (Vercel Flags SDK + Edge Config).
 
 ## Principles
 

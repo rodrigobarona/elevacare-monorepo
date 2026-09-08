@@ -45,15 +45,15 @@ flowchart TD
 
 ### SSOT layers
 
-| Layer                 | File                                                                                 | Responsibility                                              |
-| --------------------- | ------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
-| Path constants        | [`packages/config/src/routing.ts`](../../packages/config/src/routing.ts)             | Reserved slugs, marketing paths, org-scoped segments        |
-| Pure dispatch         | [`packages/config/src/dispatch.ts`](../../packages/config/src/dispatch.ts)           | Path + session → decision (unit-tested)                     |
-| Response builders     | [`apps/web/src/lib/gateway-dispatch.ts`](../../apps/web/src/lib/gateway-dispatch.ts) | Rewrite URLs, login/root/admin redirects, RSC detection     |
-| Gateway orchestration | [`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts)                               | Cookie session, dev redirect vs prod rewrite, intl fallback |
-| Dev static assets     | [`packages/config/src/next-dev.mjs`](../../packages/config/src/next-dev.mjs)         | `/_app`, `/_account`, `/_docs`, … → sibling ports           |
-| Auth proxy factory    | [`packages/auth/src/proxy.ts`](../../packages/auth/src/proxy.ts)                     | WorkOS AuthKit, gateway login bounce, locale                |
-| Security wrapper      | [`packages/observability/src/proxy.ts`](../../packages/observability/src/proxy.ts)   | CSP, HSTS, correlation ID                                   |
+| Layer                 | File                                                                                 | Responsibility                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| Path constants        | [`packages/config/src/routing.ts`](../../packages/config/src/routing.ts)             | Reserved slugs, marketing paths, org-scoped segments           |
+| Pure dispatch         | [`packages/config/src/dispatch.ts`](../../packages/config/src/dispatch.ts)           | Path + session → decision (unit-tested)                        |
+| Response builders     | [`apps/web/src/lib/gateway-dispatch.ts`](../../apps/web/src/lib/gateway-dispatch.ts) | Rewrite URLs, login/root/admin redirects, RSC detection        |
+| Gateway orchestration | [`apps/web/src/proxy.ts`](../../apps/web/src/proxy.ts)                               | Cookie session, dev redirect vs prod rewrite, intl fallback    |
+| Dev static assets     | [`packages/config/src/next-dev.mjs`](../../packages/config/src/next-dev.mjs)         | `/_app`, `/_account`, `/_docs`, … → sibling ports              |
+| Auth proxy factory    | [`packages/auth/src/proxy.ts`](../../packages/auth/src/proxy.ts)                     | Better Auth session cookie check, gateway login bounce, locale |
+| Security wrapper      | [`packages/observability/src/proxy.ts`](../../packages/observability/src/proxy.ts)   | CSP, HSTS, correlation ID                                      |
 
 ### Dispatch priority (current)
 
@@ -79,7 +79,7 @@ flowchart TD
 | Expert / Team / Academy | `apps/*/src/proxy.ts`                                            | Gateway login redirect for unauthenticated users                            |
 | Admin                   | [`apps/admin/src/proxy.ts`](../../apps/admin/src/proxy.ts)       | Subdomain-only; gateway login redirect                                      |
 | Docs / Email / API      | `createPassthroughProxy()`                                       | No auth at edge                                                             |
-| Auth factory            | [`packages/auth/src/proxy.ts`](../../packages/auth/src/proxy.ts) | Shared WorkOS + locale logic                                                |
+| Auth factory            | [`packages/auth/src/proxy.ts`](../../packages/auth/src/proxy.ts) | Shared Better Auth `getSessionCookie()` + locale logic                      |
 
 ---
 

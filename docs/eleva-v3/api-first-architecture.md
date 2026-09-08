@@ -17,7 +17,7 @@ We adopt an **API-first, agentic-first, and secure-by-default** architecture.
 ### Core Principles
 
 1. **API-first**: All mutating business logic is callable via HTTP in `apps/api`. Server Actions in frontend apps are thin proxies.
-2. **Agentic-first**: Every endpoint supports dual auth (session + Bearer), returns JSON, uses deterministic error codes, and is discoverable via OpenAPI spec.
+2. **Agentic-first**: Every endpoint is callable with **exactly one** of the credentials in the matrix below (session cookie, `x-api-key`, Bearer JWT, or internal secret — not “dual auth”), returns JSON, uses deterministic error codes, and is discoverable via OpenAPI spec.
 3. **Secure by default**: Every route handler explicitly declares its auth model. No unauthenticated mutations. Rate limiting and Zod validation required.
 4. **BotID on public routes**: Public-facing POSTs that create resources use Vercel BotID.
 5. **Domain packages own logic**: `@eleva/auth` owns provisioning. `@eleva/db` owns queries. Apps are thin layers.
@@ -27,12 +27,14 @@ We adopt an **API-first, agentic-first, and secure-by-default** architecture.
 
 Dual auth via `resolveApiAuth()`:
 
-| Auth type      | Use case                | Mechanism                                              |
-| -------------- | ----------------------- | ------------------------------------------------------ |
-| Session cookie | Browser apps            | WorkOS AuthKit `wos-session` cookie                    |
-| Bearer API key | AI agents, CLI          | `Authorization: Bearer elk_...` validated via WorkOS   |
-| Bearer M2M JWT | Service-to-service      | `Authorization: Bearer <jwt>` verified via WorkOS JWKS |
-| Secret header  | Internal (cron, QStash) | `Authorization: Bearer ${CRON_SECRET}`                 |
+| Auth type      | Use case                | Mechanism                                                               |
+| -------------- | ----------------------- | ----------------------------------------------------------------------- |
+| Session cookie | Browser apps            | Better Auth session cookie on `.eleva.care` (`requireApiAuth` + origin) |
+| API key        | AI agents, CLI          | `x-api-key` issued by Better Auth (never `Authorization: Bearer`)       |
+| Bearer M2M JWT | Service-to-service      | `Authorization: Bearer <jwt>` issued and verified by Better Auth        |
+| Secret header  | Internal (cron, QStash) | `Authorization: Bearer ${CRON_SECRET}`                                  |
+
+WorkOS AuthKit cookies, WorkOS API keys and WorkOS JWKS (removed, see ADR-017). `requireApiAuth()` accepts exactly one credential per request.
 
 ### Security Layers
 
@@ -56,7 +58,7 @@ Dual auth via `resolveApiAuth()`:
 
 ### Error Format
 
-All errors return JSON: `{ error: string, issues?: ZodIssue[], message?: string }` with HTTP status codes 401, 403, 404, 422, 429, 500.
+All errors return JSON: `{ error: string, issues?: ZodIssue[], message?: string }` with HTTP status codes 400 (exactly-one-credential violation), 401, 403, 404, 422, 429, 500.
 
 ### OpenAPI & Documentation
 

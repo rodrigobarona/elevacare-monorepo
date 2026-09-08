@@ -217,7 +217,7 @@ All subject to accountant + legal review before GA.
 
 The AI pipeline runs as Vercel Workflow DevKit step graphs (ADR-007):
 
-- `transcriptReady` — Daily transcript webhook → store Eleva record (encrypted via Vault) → enqueue draft
+- `transcriptReady` — Daily transcript webhook (`POST /webhooks/daily`) → `withAudit` store Eleva record (encrypted via `@eleva/encryption`, ADR-020) + enqueue draft in the same transaction
 - `aiReportDraft` — call Vercel AI Gateway → persist draft as `report.status = 'draft'` → notify expert for review (Lane 1 `report_available_for_review` notification)
 - `aiReportPublication` — expert approves → `report.status = 'published'` → `report_available` Lane 1 notification with secure signed link
 
@@ -227,7 +227,7 @@ Feature flag: `ff.ai_reports_beta` for staged rollout.
 
 - Vercel AI Gateway is the sole model router (ADR-009)
 - No direct LLM provider SDKs outside `packages/ai`
-- Transcripts are Eleva-owned records encrypted via WorkOS Vault
+- Transcripts are Eleva-owned records encrypted via `@eleva/encryption` (ADR-020). WorkOS Vault (removed, see ADR-017 / ADR-020).
 - Human-in-the-loop is mandatory for any patient-visible report
 
 ## Open Questions

@@ -157,7 +157,7 @@ Some surfaces are not Vercel-hosted and cannot be path-rewritten:
 
 `api.eleva.care` serves the `elevacare-api` Vercel project. It's a dev/server-facing surface (webhooks, OAuth callbacks, session-aware server endpoints); humans don't browse it. CORS configuration:
 
-- `Access-Control-Allow-Origin: https://eleva.care` (exact; `https://staging.eleva.care` in staging; specific `*.preview.eleva.care` host in preview)
+- `Access-Control-Allow-Origin` exact match: production `https://eleva.care` and `https://admin.eleva.care`; staging `https://dev.eleva.care` and `https://admin.dev.eleva.care`; preview a specific `*.preview.eleva.care` host. Never `*`.
 - `Access-Control-Allow-Credentials: true`
 - `robots.txt` disallow (don't index; no HTML anyway)
 
@@ -208,7 +208,7 @@ These exist for operational purposes but are **never shared with users**:
 | Account / settings                                | `https://eleva.care/account` (proxy → `elevacare-account`)                                            |
 | Onboarding                                        | `https://eleva.care/onboarding` (proxy → `elevacare-account`)                                         |
 | Admin ops                                         | `https://admin.eleva.care/` (subdomain)                                                               |
-| WorkOS AuthKit callback                           | `https://eleva.care/callback` (proxy → `elevacare-account`)                                           |
+| Better Auth callback / magic-link landing         | `https://eleva.care/callback` (proxy → `elevacare-account`)                                           |
 | Logout                                            | `https://eleva.care/logout` (proxy → `elevacare-account`)                                             |
 | Docs + ERS PT compliance                          | `https://eleva.care/docs/compliance/portugal`                                                         |
 
@@ -220,10 +220,8 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 | --------------------------------------------------------- | ---------------------------------------------------------- |
 | Stripe webhook (external)                                 | `https://api.eleva.care/webhooks/stripe`                   |
 | Stripe AccountSession (session-aware, CORS + credentials) | `https://api.eleva.care/stripe/account-session`            |
-| Daily transcript webhook                                  | `https://api.eleva.care/daily/transcripts`                 |
-| Daily room events webhook                                 | `https://api.eleva.care/daily/events`                      |
+| Daily webhooks (room events + transcripts)                | `https://api.eleva.care/webhooks/daily`                    |
 | Resend delivery-events webhook                            | `https://api.eleva.care/resend/events`                     |
-| WorkOS events webhook                                     | `https://api.eleva.care/workos/webhook`                    |
 | Calendar OAuth callback (Google)                          | `https://api.eleva.care/calendar/oauth/google/callback`    |
 | Calendar OAuth callback (Microsoft)                       | `https://api.eleva.care/calendar/oauth/microsoft/callback` |
 | TOConline OAuth callback (Tier 1 + expert-side)           | `https://api.eleva.care/accounting/toconline/callback`     |
@@ -240,10 +238,15 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 
 ## Staging URL Matrix
 
-- `staging.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for `/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`; rewrites `/docs/*` to staging `elevacare-docs`)
-- `api.staging.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)
+Canonical **web/API** staging host is **`dev.eleva.care`** (not `staging.eleva.care`).
+Historical `staging.eleva.care` web/API host aliases are retired. The Resend
+staging sender / DKIM domain may remain `staging.eleva.care` until mail DNS is
+renamed in a later ops change.
 
-Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling apps; API preview URL points at the preview `elevacare-api` deployment.
+- `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
+- `api.dev.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)
+
+Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017).
 
 ## Required DNS Records (Vercel-Managed)
 
@@ -301,14 +304,14 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 - API is **not** rewritten; apps call `localhost:3002` directly.
 - Stripe webhooks forwarded via `stripe listen --forward-to localhost:3002/webhooks/stripe`.
 - Daily rooms use the test domain; transcripts use the dev webhook URL (local tunnel when external reachability is needed).
-- WorkOS redirect URI: `http://localhost:3000/callback` (gateway proxies to account app).
+- Better Auth trusted origin: `http://localhost:3000`; callback `http://localhost:3000/callback` (gateway proxies to account app).
 - Calendar OAuth + TOConline OAuth callbacks point at `localhost:3002` (api zone).
 
 ### Staging specifics
 
-- `staging.eleva.care` is the staging gateway; app routes (`/patient`, `/expert`, `/org`, `/admin`, `/settings`, `/callback`, `/logout`) rewritten from gateway to staging app zone; docs at `/docs/*`; API on `api.staging.eleva.care` subdomain (separate project).
+- `dev.eleva.care` is the staging gateway; app routes rewritten from gateway to staging app zone; docs at `/docs/*`; API on `api.dev.eleva.care` subdomain (separate project).
 - **Stripe staging account** (separate from production) with test payment methods + MB WAY test mode.
-- WorkOS staging project (separate tenant).
+- Better Auth on the staging Neon project (`BETTER_AUTH_URL=https://api.dev.eleva.care/auth`). WorkOS is removed (removed, see ADR-017).
 - Neon staging branch of `eleva_v3_main` + `eleva_v3_audit`.
 - Daily staging domain.
 - Resend staging sender domain (`staging.eleva.care` DKIM).
@@ -322,7 +325,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 - `api.eleva.care` is the dedicated server-facing API subdomain; not rewritten from the gateway.
 - Internal Vercel project URLs serve `noindex` or 301-redirect to canonical.
 - **Stripe production account**, separate webhook, Connect, and seed scripts.
-- WorkOS production project (EU).
+- Better Auth on the production Neon project (`BETTER_AUTH_URL=https://api.eleva.care/auth`). WorkOS is removed (removed, see ADR-017).
 - Neon `eleva_v3_main` + `eleva_v3_audit` production (EU region).
 - Daily production (EU).
 - Resend production sender domain (`eleva.care` DKIM, DMARC, BIMI).
@@ -333,33 +336,33 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 ## Integration → Environment Callback Mapping
 
-Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.staging.eleva.care` in staging. WorkOS AuthKit callback lives at `eleva.care/callback` (rewritten from gateway to app zone) because it's part of the human-facing auth flow. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
+Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` subdomain in production and `api.dev.eleva.care` in staging. Better Auth human-facing callback lives at `eleva.care/callback` (rewritten from gateway to account). Preview deployments call the staging API and never mint `.eleva.care` cookies. In local dev the gateway runs on `localhost:3000`, the app on `:3001`, the api on `:3002`; Stripe CLI forwards webhooks.
 
-| Integration                                 | Local                                                | Staging                                                    | Production                                         |
-| ------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------- |
-| Stripe webhook                              | `localhost:3002/webhooks/stripe` via `stripe listen` | `api.staging.eleva.care/webhooks/stripe`                   | `api.eleva.care/webhooks/stripe`                   |
-| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`              | `api.staging.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
-| WorkOS AuthKit callback (human-facing)      | `localhost:3000/callback` (gateway → account app)    | `staging.eleva.care/callback`                              | `eleva.care/callback`                              |
-| WorkOS events webhook (server-to-server)    | `localhost:3002/workos/webhook`                      | `api.staging.eleva.care/workos/webhook`                    | `api.eleva.care/workos/webhook`                    |
-| Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`      | `api.staging.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
-| Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`   | `api.staging.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
-| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.staging.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
-| Daily transcript webhook                    | local tunnel (ngrok) when needed                     | `api.staging.eleva.care/daily/transcripts`                 | `api.eleva.care/daily/transcripts`                 |
-| Resend delivery events                      | local tunnel                                         | `api.staging.eleva.care/resend/events`                     | `api.eleva.care/resend/events`                     |
+| Integration                                 | Local                                                | Staging                                                | Production                                         |
+| ------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------- |
+| Stripe webhook                              | `localhost:3002/webhooks/stripe` via `stripe listen` | `api.dev.eleva.care/webhooks/stripe`                   | `api.eleva.care/webhooks/stripe`                   |
+| Stripe AccountSession (session-aware, CORS) | `localhost:3002/stripe/account-session`              | `api.dev.eleva.care/stripe/account-session`            | `api.eleva.care/stripe/account-session`            |
+| Better Auth callback (human-facing)         | `localhost:3000/callback` (gateway → account app)    | `dev.eleva.care/callback`                              | `eleva.care/callback`                              |
+| Daily webhooks                              | `localhost:3002/webhooks/daily` (tunnel)             | `api.dev.eleva.care/webhooks/daily`                    | `api.eleva.care/webhooks/daily`                    |
+| Google Calendar OAuth                       | `localhost:3002/calendar/oauth/google/callback`      | `api.dev.eleva.care/calendar/oauth/google/callback`    | `api.eleva.care/calendar/oauth/google/callback`    |
+| Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`   | `api.dev.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
+| TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.dev.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
+| Daily transcript webhook (16.8)             | local tunnel when needed                             | `api.dev.eleva.care/webhooks/daily`                    | `api.eleva.care/webhooks/daily`                    |
+| Resend delivery events                      | local tunnel                                         | `api.dev.eleva.care/resend/events`                     | `api.eleva.care/resend/events`                     |
 
 ## Secret Loading Mechanics
 
 - Never share secrets across environments. Each has its own Vercel project with its own env var set.
 - `vercel env pull .env.local` is the only approved way to populate local dev secrets; never check secrets into the repo.
 - Vercel Marketplace integrations (Neon, Upstash, Resend, Sentry, BetterStack) populate env vars automatically when linked.
-- WorkOS Vault holds OAuth tokens (Google, Microsoft, TOConline, Moloni, etc.) — not env vars.
+- Better Auth encrypts Google/Microsoft OAuth tokens on `account` rows. TOConline / Moloni tokens are envelope-encrypted in `@eleva/encryption` (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
 
 ## Preview Environments — Integration Posture
 
 | Integration | Posture in preview                                            |
 | ----------- | ------------------------------------------------------------- |
 | Stripe      | test mode, staging keys                                       |
-| WorkOS      | staging tenant                                                |
+| Better Auth | staging Neon `auth` schema; previews call staging API         |
 | Neon        | ephemeral branch per PR                                       |
 | Daily       | test domain                                                   |
 | Resend      | test key; emails blackholed to internal tester addresses      |
@@ -369,6 +372,22 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 | BetterStack | preview log drain (separate source)                           |
 | PostHog     | preview-tagged events; ff evaluation uses Edge Config staging |
 | GA4         | disabled                                                      |
+
+## Required environment variables (v3 target)
+
+Added in Phase 1 (this PR documents them; values land with Phase 2+). `WORKOS_*` stay in
+`.env.example` annotated "removed in Phase 3 (ADR-017)" until Phase 3 deletes them.
+
+| Variable                                                      | Owner                  | Notes                                                                                                                                                                                           |
+| ------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BETTER_AUTH_SECRET`                                          | `@eleva/auth`          | 32+ bytes; rotating it invalidates sessions                                                                                                                                                     |
+| `BETTER_AUTH_URL`                                             | `@eleva/auth`          | `https://api.<host>/auth`                                                                                                                                                                       |
+| `ELEVA_KEK_V*` (`ELEVA_KEK_V1`, `ELEVA_KEK_V2`, …)            | `@eleva/encryption`    | Every active wrap version. Base64 32 bytes; never logged. After `rotateKek`, keep the previous `ELEVA_KEK_V<n>` until `org_data_keys.kek_version = n` is 0, then delete that env var (ADR-020). |
+| `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET`       | Better Auth + calendar | social login + calendar scopes                                                                                                                                                                  |
+| `MICROSOFT_OAUTH_CLIENT_ID` / `MICROSOFT_OAUTH_CLIENT_SECRET` | calendar               | calendar only                                                                                                                                                                                   |
+| `DAILY_API_KEY` / `DAILY_DOMAIN` / `DAILY_WEBHOOK_SECRET`     | `@eleva/video`         | HIPAA domain; branded `sessions.eleva.care`                                                                                                                                                     |
+
+Neon branch-per-PR (Phase 1.2 CI) needs GitHub secrets `NEON_API_KEY` and `NEON_PROJECT_ID`.
 
 ## Related Docs
 

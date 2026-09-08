@@ -224,7 +224,7 @@ The project should be managed as parallel but coordinated workstreams:
 
 ### Identity and tenancy
 
-- WorkOS auth
+- Better Auth (ADR-017)
 - organizations
 - memberships
 - RBAC
@@ -320,7 +320,7 @@ Deliver:
 
 Deliver:
 
-- WorkOS integration
+- Better Auth foundation (ADR-017). WorkOS (removed, see ADR-017).
 - organization model
 - RBAC
 - audit logging

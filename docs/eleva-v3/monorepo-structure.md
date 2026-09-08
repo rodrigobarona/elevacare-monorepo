@@ -190,7 +190,7 @@ Phase 1 first milestone:
 │   └── storybook/            # later — UI verification
 ├── packages/
 │   ├── config/               # env validation, URL helpers, shared constants
-│   ├── auth/                 # session, RBAC, org resolution — Better Auth (ADR-017; WorkOS until Phase 2/3 land)
+│   ├── auth/                 # session, RBAC, org resolution — Better Auth (ADR-017). Residual WorkOS code deleted in Phase 3 (removed, see ADR-017).
 │   ├── db/                   # Drizzle schema, migrations, withOrgContext()
 │   ├── ui/                   # shared design system (shadcn aria-luma on React Aria Components)
 │   ├── compliance/           # consent, audit events, retention/export
@@ -351,7 +351,7 @@ Owns:
 
 Owns:
 
-- Better Auth server/client (ADR-017; WorkOS remains only until Phase 2/3 of the execution plan land)
+- Better Auth server/client (ADR-017). Residual WorkOS code is deleted in Phase 3 (removed, see ADR-017).
 - session model
 - organization resolution
 - RBAC helpers
@@ -521,7 +521,7 @@ Owns:
 - envelope encryption (ADR-020): per-org DEKs in `org_data_keys`, wrapped by versioned KEKs from `ELEVA_KEK_V<n>`; primitives `encryptForOrg(orgId, plaintext, aad?)`, `decryptForOrg(orgId, ciphertext, aad?)`, `getOrCreateOrgDek(orgId)`
 - key lifecycle: `rotateKek(fromVersion, toVersion)` re-wraps DEKs without touching ciphertext
 - crypto-shredding on org deletion: `shredOrgKeys(orgId)` deletes the `org_data_keys` rows, making every ciphertext for that org unrecoverable
-- no external vault service; there is no WorkOS Vault dependency
+- no external vault service; WorkOS Vault is removed (removed, see ADR-017)
 
 CI rule: no direct `crypto.createCipheriv('aes-256-gcm', …)` outside this package; no `process.env.ENCRYPTION_KEY` anywhere; `ELEVA_KEK_V*` read only inside this package.
 
@@ -545,7 +545,7 @@ Owns (ADR-023):
 
 - the single rich-text editor: Plate (`platejs`, `@platejs/*`) wrapped as `RichTextEditor`, `RichTextViewer`, `LocalizedRichTextField`
 - the storage contract: Plate JSON in `jsonb` plus server-derived sanitized HTML and plain text; clients never send HTML
-- Plate UI registry components (restyled with `@eleva/ui` tokens and Phosphor icons); `@radix-ui/*` is permitted here as an ADR-022 exception (the other, `@radix-ui/themes` as the WorkOS Widgets peer, is transitional until Phase 3)
+- Plate UI registry components (restyled with `@eleva/ui` tokens and Phosphor icons); `@radix-ui/*` is permitted here as an ADR-022 exception (the other, `@radix-ui/themes` as the WorkOS Widgets peer until Phase 3, is removed, see ADR-017) (removed, see ADR-017)
 - the sanitizer allow-list and its XSS tests
 - AI actions delegated to `@eleva/ai` through `POST /ai/editor` in `apps/api`
 
