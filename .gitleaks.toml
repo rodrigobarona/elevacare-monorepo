@@ -12,3 +12,9 @@ regexes = [
   '''re_\.\.\.''',
   '''AC\.\.\.''',
 ]
+
+[[allowlists]]
+description = "Tracked reference snapshots, not product code (also excluded from CodeRabbit path_filters)"
+paths = [
+  '''(^|/)(_context/)''',
+]
