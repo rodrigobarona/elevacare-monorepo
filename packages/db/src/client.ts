@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/neon-http"
 import { requireAuditDbEnv, requireDbEnv } from "@eleva/config/env"
 
 import * as mainSchema from "./schema/main/index"
+import * as authSchema from "./schema/auth/index"
 import * as auditSchema from "./schema/audit/index"
 
 /**
@@ -14,7 +15,9 @@ import * as auditSchema from "./schema/audit/index"
  */
 function buildMainClient() {
   const { DATABASE_URL } = requireDbEnv()
-  return drizzle(neon(DATABASE_URL), { schema: mainSchema })
+  return drizzle(neon(DATABASE_URL), {
+    schema: { ...mainSchema, ...authSchema },
+  })
 }
 
 function buildAuditClient() {
@@ -52,4 +55,4 @@ export function __resetClientsForTests() {
   globalForDb.__elevaAuditDb = undefined
 }
 
-export { mainSchema, auditSchema }
+export { mainSchema, authSchema, auditSchema }

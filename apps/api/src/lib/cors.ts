@@ -10,7 +10,7 @@ export function corsHeaders(
   const headers: Record<string, string> = {
     "Access-Control-Allow-Methods": methods,
     "Access-Control-Allow-Headers":
-      "authorization, content-type, x-correlation-id",
+      "authorization, content-type, x-api-key, x-correlation-id",
     "Access-Control-Max-Age": "600",
     Vary: "Origin",
   }

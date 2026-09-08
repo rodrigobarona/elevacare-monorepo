@@ -1,6 +1,7 @@
 export {
   type ElevaSession,
   type ProductLabel,
+  type ApiAuthMode,
   UnauthorizedError,
 } from "./types"
 export {
@@ -72,7 +73,10 @@ export {
 } from "./widget-scopes"
 export {
   listUserOrganizations,
+  listAuthOrganizations,
   createOrganization,
+  createElevaOrganization,
+  addOrganizationMember,
   type UserOrganizationItem,
   type ListUserOrganizationsInput,
   type CreateOrganizationInput,

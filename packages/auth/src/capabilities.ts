@@ -17,17 +17,24 @@ import type { ProductLabel } from "./types"
  * infra/workos/rbac-config.json. JWT `permissions` are intersected with the
  * derived product bundle in session resolution.
  */
+export type MembershipSeniority = WorkosRole | "owner"
+
+/** Better Auth organization `owner` is the WorkOS `admin` equivalent. */
+export function normalizeMembershipRole(role: MembershipSeniority): WorkosRole {
+  return role === "owner" ? "admin" : role
+}
+
 export function deriveProductLabel(
   orgType: OrgType,
-  workosRole: WorkosRole
+  workosRole: MembershipSeniority
 ): ProductLabel {
+  const role = normalizeMembershipRole(workosRole)
   if (orgType === "staff") return "staff"
-  if (orgType === "personal" && workosRole === "admin") return "member"
-  if (orgType === "expert" && workosRole === "admin") return "expert"
-  if (orgType === "team" && workosRole === "admin") return "team_admin"
-  if (orgType === "team" && workosRole === "member") return "expert"
-  if ((orgType as string) === "academy" && workosRole === "admin")
-    return "lecturer"
+  if (orgType === "personal" && role === "admin") return "member"
+  if (orgType === "expert" && role === "admin") return "expert"
+  if (orgType === "team" && role === "admin") return "team_admin"
+  if (orgType === "team" && role === "member") return "expert"
+  if ((orgType as string) === "academy" && role === "admin") return "lecturer"
   throw new Error(
     `Unsupported (orgType=${orgType}, workosRole=${workosRole}) combination`
   )

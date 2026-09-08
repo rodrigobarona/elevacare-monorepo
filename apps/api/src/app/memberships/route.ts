@@ -1,11 +1,10 @@
 import { z } from "zod"
-import { provisionMembership } from "@eleva/auth"
+import { addOrganizationMember } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { UnauthorizedError } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -21,11 +20,10 @@ export async function POST(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 
@@ -51,7 +49,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await provisionMembership({
+    await addOrganizationMember({
       ...body.data,
       actorUserId: session.user.id,
     })

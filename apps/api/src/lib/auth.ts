@@ -1,69 +1,43 @@
-import { getSession, type ElevaSession, UnauthorizedError } from "@eleva/auth"
+import {
+  requireApiAuth as requireBetterAuth,
+  requireRevocableApiAuth,
+  type ApiIdentity,
+} from "@eleva/auth/api-auth"
+import { UnauthorizedError, type ElevaSession } from "@eleva/auth"
 import { secureJson } from "@/lib/security-headers"
+
+export type { ApiIdentity }
 
 export type ApiAuthResult =
   | { type: "session"; session: ElevaSession }
   | { type: "bearer"; session: ElevaSession }
   | { type: "anonymous" }
 
-/**
- * Resolve the caller's identity from the request. Supports:
- *   1. Bearer token in `Authorization` header (API keys, M2M JWT)
- *   2. WorkOS session cookie fallback (browser apps)
- *   3. Anonymous (no credentials)
- *
- * Route handlers call `requireAuth()` or `requireSession()` instead
- * of using this directly when anonymous access is not allowed.
- */
 export async function resolveApiAuth(request: Request): Promise<ApiAuthResult> {
-  const authHeader = request.headers.get("authorization") ?? ""
-
-  if (authHeader.startsWith("Bearer ")) {
-    const token = authHeader.slice(7)
-    const expected = process.env.ELEVA_API_BEARER_TOKEN
-    if (token && expected && token === expected) {
-      const session = sessionFromBearerHeaders(request)
-      if (session) return { type: "bearer", session }
+  try {
+    const session = await requireBetterAuth(request)
+    if (session.authMode === "cookie") {
+      return { type: "session", session }
     }
+    return { type: "bearer", session }
+  } catch (err) {
+    if (err instanceof UnauthorizedError && err.code === "no-session") {
+      return { type: "anonymous" }
+    }
+    throw err
   }
-
-  const session = await getSession()
-  if (session) {
-    return { type: "session", session }
-  }
-
-  return { type: "anonymous" }
 }
 
-/**
- * Require authentication. Returns the session for session-based auth.
- * For bearer tokens, validates against the expected secret and returns
- * null session (caller must handle bearer-specific logic).
- *
- * Throws 401-style response for anonymous callers.
- */
 export async function requireApiAuth(request: Request): Promise<ElevaSession> {
-  const auth = await resolveApiAuth(request)
-
-  if (auth.type === "session") {
-    return auth.session
-  }
-
-  if (auth.type === "bearer") {
-    return auth.session
-  }
-
-  if (auth.type === "anonymous") {
-    throw new UnauthorizedError("no-session")
-  }
-
-  throw new UnauthorizedError("no-session")
+  return requireBetterAuth(request)
 }
 
-/**
- * Require a session with a specific capability. Use in route handlers
- * that need RBAC beyond "is authenticated".
- */
+export async function requirePrivilegedApiAuth(
+  request: Request
+): Promise<ElevaSession> {
+  return requireRevocableApiAuth(request)
+}
+
 export async function requireApiCapability(
   request: Request,
   capability: string
@@ -75,12 +49,23 @@ export async function requireApiCapability(
   return session
 }
 
-/** Map UnauthorizedError to 401/403 JSON for route handlers. */
 export function apiAuthFailure(
   err: unknown,
   headers: Record<string, string>
 ): Response | null {
   if (err instanceof UnauthorizedError) {
+    if (err.code === "ambiguous-credentials") {
+      return secureJson(
+        { error: "bad_request", code: "AMBIGUOUS_CREDENTIALS" },
+        { status: 400, headers }
+      )
+    }
+    if (err.code === "jwt-not-revocable") {
+      return secureJson(
+        { error: "forbidden", code: err.code },
+        { status: 403, headers }
+      )
+    }
     const forbidden = err.code === "missing-capability"
     return secureJson(
       { error: forbidden ? "forbidden" : "unauthorized", code: err.code },
@@ -88,84 +73,4 @@ export function apiAuthFailure(
     )
   }
   return null
-}
-
-function sessionFromBearerHeaders(request: Request): ElevaSession | null {
-  const headers = request.headers
-  const userId = headers.get("x-eleva-user-id")
-  const workosUserId = headers.get("x-eleva-workos-user-id")
-  const email = headers.get("x-eleva-user-email")
-  const orgId = headers.get("x-eleva-org-id")
-  const workosOrgId = headers.get("x-eleva-workos-org-id")
-  const productLabel = headers.get("x-eleva-product-label")
-  const orgType = headers.get("x-eleva-org-type")
-  const workosRole = headers.get("x-eleva-workos-role")
-
-  if (
-    !userId ||
-    !workosUserId ||
-    !email ||
-    !orgId ||
-    !workosOrgId ||
-    !isProductLabel(productLabel) ||
-    !isOrgType(orgType) ||
-    !isWorkosRole(workosRole)
-  ) {
-    return null
-  }
-
-  return {
-    user: {
-      id: userId,
-      workosUserId,
-      email,
-      displayName: headers.get("x-eleva-user-display-name"),
-      avatarUrl: null,
-    },
-    orgId,
-    workosOrgId,
-    orgSlug: headers.get("x-eleva-org-slug"),
-    productLabel,
-    orgType,
-    workosRole,
-    capabilities: splitHeader(headers.get("x-eleva-capabilities")),
-    entitlements: splitHeader(headers.get("x-eleva-entitlements")),
-  }
-}
-
-function splitHeader(value: string | null): string[] {
-  return value
-    ? value
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean)
-    : []
-}
-
-function isProductLabel(
-  value: string | null
-): value is ElevaSession["productLabel"] {
-  return (
-    value === "member" ||
-    value === "expert" ||
-    value === "team_admin" ||
-    value === "lecturer" ||
-    value === "staff"
-  )
-}
-
-function isWorkosRole(
-  value: string | null
-): value is ElevaSession["workosRole"] {
-  return value === "admin" || value === "member"
-}
-
-function isOrgType(value: string | null): value is ElevaSession["orgType"] {
-  return (
-    value === "personal" ||
-    value === "expert" ||
-    value === "team" ||
-    value === "academy" ||
-    value === "staff"
-  )
 }

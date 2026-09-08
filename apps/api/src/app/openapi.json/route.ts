@@ -1,7 +1,21 @@
+import { betterAuthOpenApiDocument } from "@eleva/auth/server/auth"
 import { generateOpenApiSpec } from "@/lib/openapi"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+
+function prefixAuthPaths(
+  paths: Record<string, unknown>
+): Record<string, unknown> {
+  const prefixed: Record<string, unknown> = {}
+  for (const [path, value] of Object.entries(paths)) {
+    const suffix = path.startsWith("/auth")
+      ? path
+      : `/auth${path.startsWith("/") ? path : `/${path}`}`
+    prefixed[suffix] = value
+  }
+  return prefixed
+}
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -18,7 +32,20 @@ export async function GET(request: Request) {
   if (rateLimited) return rateLimited
 
   if (!cachedSpec) {
-    cachedSpec = generateOpenApiSpec()
+    const spec = generateOpenApiSpec() as {
+      paths?: Record<string, unknown>
+    }
+    try {
+      const ba = (await betterAuthOpenApiDocument()) as {
+        paths?: Record<string, unknown>
+      } | null
+      if (ba?.paths) {
+        spec.paths = { ...spec.paths, ...prefixAuthPaths(ba.paths) }
+      }
+    } catch (err) {
+      console.warn("[openapi] Better Auth spec merge skipped", err)
+    }
+    cachedSpec = spec
   }
 
   return secureJson(cachedSpec, {

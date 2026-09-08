@@ -94,9 +94,9 @@ describe("seedDemo", () => {
       "member.demo@example.test",
       "pat.mota@example.test",
     ])
-    // Three personas * (user + org + membership) = 9 inserts plus
-    // one expert_profiles row (Patricia) + one clinic_profiles row.
-    expect(insert).toHaveBeenCalledTimes(11)
+    // Three personas * (user + org + membership + auth user/org/member)
+    // = 18 inserts plus expert_profiles + clinic_profiles.
+    expect(insert).toHaveBeenCalledTimes(20)
   })
 
   it("is idempotent when all rows already exist", async () => {

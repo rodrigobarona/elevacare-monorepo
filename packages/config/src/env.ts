@@ -127,6 +127,10 @@ const calendarOAuthSchema = z.object({
   MS_OAUTH_CLIENT_SECRET: stringOptional,
   BETTER_AUTH_SECRET: stringOptional,
   BETTER_AUTH_URL: urlOptional,
+  ELEVA_COOKIE_DOMAIN: stringOptional,
+  ELEVA_TRUSTED_ORIGINS: stringOptional,
+  PASSKEY_RP_ID: stringOptional,
+  PASSKEY_ORIGIN: urlOptional,
   ELEVA_KEK_V1: stringOptional,
 })
 

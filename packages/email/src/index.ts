@@ -3,6 +3,7 @@ export {
   renderBookingRescheduled,
   renderBookingCancelled,
 } from "./render"
+export { sendAuthEmail, type AuthEmailKind } from "./send-auth"
 export type { BookingConfirmedProps } from "./templates"
 export type { BookingRescheduledProps } from "./templates"
 export type { BookingCancelledProps } from "./templates"

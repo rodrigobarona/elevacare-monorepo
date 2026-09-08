@@ -37,6 +37,7 @@ export const TENANT_TABLES = [
   "event_locations",
   "billing_customers",
   "billing_subscriptions",
+  "org_data_keys",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]

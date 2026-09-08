@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm"
 import { db } from "../client"
 import * as main from "../schema/main"
+import * as auth from "../schema/auth"
 
 /**
  * Demo seed: one member (member.demo@example.test), one solo expert
@@ -72,6 +73,7 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let userId = existingUser?.id
+  let createdUser = false
   if (!userId) {
     const [inserted] = await client
       .insert(main.users)
@@ -80,6 +82,7 @@ async function upsertPersona(persona: SeedPersona) {
       })
       .returning({ id: main.users.id })
     userId = inserted!.id
+    createdUser = true
   }
 
   const [existingOrg] = await client
@@ -89,6 +92,7 @@ async function upsertPersona(persona: SeedPersona) {
     .limit(1)
 
   let orgId = existingOrg?.id
+  let createdOrg = false
   if (!orgId) {
     const [inserted] = await client
       .insert(main.organizations)
@@ -98,6 +102,7 @@ async function upsertPersona(persona: SeedPersona) {
       })
       .returning({ id: main.organizations.id })
     orgId = inserted!.id
+    createdOrg = true
   }
 
   const [existingMembership] = await client
@@ -117,6 +122,38 @@ async function upsertPersona(persona: SeedPersona) {
       orgId,
       workosRole: persona.workosRole,
       status: "active",
+    })
+  }
+
+  if (createdUser) {
+    await client.insert(auth.user).values({
+      id: userId,
+      name: persona.displayName,
+      email: persona.email,
+      emailVerified: true,
+    })
+  }
+
+  if (createdOrg) {
+    const slug = persona.orgDisplayName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 30)
+    await client.insert(auth.organization).values({
+      id: orgId,
+      name: persona.orgDisplayName,
+      slug: slug || `org-${orgId.replaceAll("-", "").slice(0, 12)}`,
+      type: persona.orgType,
+    })
+  }
+
+  if (!existingMembership) {
+    await client.insert(auth.member).values({
+      id: crypto.randomUUID(),
+      organizationId: orgId,
+      userId,
+      role: persona.workosRole === "admin" ? "owner" : "member",
     })
   }
 
