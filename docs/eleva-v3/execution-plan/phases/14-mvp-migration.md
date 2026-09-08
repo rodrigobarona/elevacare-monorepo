@@ -106,8 +106,7 @@ In:
   the same controller, so the basis is the existing relationship; still, the welcome campaign
   links the updated privacy notice (versioned in `CONSENT_DOCUMENTS`), the consent rows for
   migrated users are imported with `source = import` and the MVP acceptance timestamp (never
-  re-asserted as fresh) under an explicit **legacy -> v3 consent mapping** (`packages/migration/
-src/consent-map.ts`, deny-by-default, one fixture per legacy combination): MVP terms/privacy
+  re-asserted as fresh) under an explicit **legacy -> v3 consent mapping** (`infra/migration/src/map/consents.ts` — one of the `map/*.ts` modules in deliverable 1, deny-by-default, one fixture per legacy combination): MVP terms/privacy
   acceptance -> `terms` + `privacy` at the MVP document version tagged `legacy`; MVP
   `marketing_opt_in = true` -> `marketing` granted, otherwise absent; MVP booking-time health
   consent -> `health_data_processing` for that booking only; **`analytics` is never imported**

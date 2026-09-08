@@ -1596,9 +1596,10 @@ Auth session.</p>
 <li><p>Playwright <code>e2e/auth.spec.ts</code>: sign up, verify email (test inbox or dev bypass), land on personal
 Space, create Expert workspace, switch org, sign out, sign in with magic link.</p>
 </li>
-<li><p><strong>Cookie, CSRF and subdomain threat model (D-13, review P1)</strong> — written before the session code
-and signed off by the security owner (<code>docs/eleva-v3/security/cookie-csrf-threat-model.md</code>,
-linked from <code>identity-rbac-spec.md</code>): the session cookie is <code>Domain=.eleva.care</code>,
+<li><p><strong>Cookie, CSRF and subdomain threat model (D-13, review P1)</strong> — written in this phase, before
+the session code, as <code>docs/eleva-v3/security/cookie-csrf-threat-model.md</code> (linked from
+<code>identity-rbac-spec.md</code>); the security owner&#39;s sign-off is NOT part of this phase (see the end
+of this bullet): the session cookie is <code>Domain=.eleva.care</code>,
 <code>Secure</code>, <code>HttpOnly</code>, <code>SameSite=Lax</code>, <code>__Secure-</code> prefixed; the staff console is the exception
 (<code>admin.eleva.care</code> host-only cookie — Phase 12); every state-changing route requires
 <strong>either</strong> a non-cookie credential (<code>Authorization</code> / <code>x-api-key</code>) <strong>or</strong> the Better Auth
@@ -2446,9 +2447,16 @@ success re-reserves or auto-refunds with reason <code>slot_lost</code>), the <co
 <code>/bookings/reserve</code>), <strong><code>consents</code></strong> (<code>id</code>, <code>subject_kind user|guest</code>, <code>user_id</code> nullable,
 <code>guest_email_hash</code> nullable (keyed HMAC), <code>kind</code> from <code>CONSENT_KINDS</code>, <code>document_version</code>,
 <code>locale</code>, <code>source funnel|account|import</code>, <code>reservation_id</code> nullable, <code>booking_id</code> nullable,
-<code>granted_at</code>, <code>withdrawn_at</code> nullable; <strong>no</strong> IP or user agent unless the DPO approves a keyed
-hash in <code>decision-log.md</code> — default off; RLS class <code>owner-user-visible</code>, staff read for
-DSAR), indexes, RLS for both orgs (expert org and buyer org can read).</p>
+<code>granted_at</code>, <code>withdrawn_at</code> nullable, <code>subject_pseudonym</code> nullable (bytea; HMAC of the former
+<code>user_id</code> under the retention key — written only by the Phase 5 deletion job, which sets
+<code>user_id = NULL</code> and clears <code>guest_email_hash</code> on booking-linked rows; <code>CHECK (user_id IS NOT NULL OR guest_email_hash IS NOT NULL OR subject_pseudonym IS NOT NULL)</code>); <strong>no</strong> IP or user
+agent unless the DPO approves a keyed hash in <code>decision-log.md</code> — default off; RLS class
+<code>owner-user-visible</code>: read = <code>user_id = current user</code> OR org context in (<code>expert_org_id</code>,
+buyer org) OR staff (DSAR/compliance); rows with <code>user_id IS NULL AND subject_pseudonym IS NOT NULL</code> are readable <strong>only</strong> by staff with the <code>compliance</code> capability and by the expert org
+that owns the linked booking (never by any member — a deleted member has no session; another
+member gets zero rows); writes only via the API service role. RLS tests: own rows visible,
+other member -&gt; 0 rows, deleted-member (pseudonymised) rows -&gt; member 0 rows / expert org 1 row
+/ compliance staff 1 row), indexes.</p>
 </li>
 <li><p><code>@eleva/scheduling</code>: <code>resolveOffer({ eventTypeModeId, linkToken? })</code> -&gt; <code>ResolvedOffer</code>
 (<code>{ mode, scheduleId, priceCents, durationMinutes, bookingLinkId? }</code>; validates the link and
@@ -2804,7 +2812,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    @eleva/compliance exports CONSENT_DOCUMENTS = { [kind]: { version, urls: Record&lt;Locale,
    string&gt; } } — the version strings are the legal-approved ids from the entry gate. RLS:
    bookings — expert org and buyer org may read (dual-organization class); consents —
-   owner-user-visible + staff read; only API (service role via
+   owner-user-visible + staff read, with the pseudonymised-row rule (user_id IS NULL AND
+   subject_pseudonym IS NOT NULL -&gt; compliance staff + owning expert org only) and its three
+   tests (member 0 rows / expert org 1 row / compliance staff 1 row); only API (service role via
    withOrgContext of the expert org) writes. Migration + rls-isolation test extension. Extend
    @eleva/audit entity/action unions (booking: reserved|confirmed|cancelled|rescheduled;
    booking_payment: created|succeeded|failed|refunded; consent: granted|withdrawn).
@@ -3510,8 +3520,8 @@ handled by <code>@eleva/compliance</code> <code>dsarExport</code> job -&gt; priv
 target from <code>data-retention-export-matrix.md</code>), account deletion request (soft-delete +
 scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
 future bookings with 100% refund — see prompt deliverable 3). <strong>Deletion vs legal retention
-(D-12)</strong>: member-authored data (profile, preferences, consents metadata, CRM notes written by
-the member) is erased on the schedule; <strong>expert-authored clinical records stay under the
+(D-12)</strong>: member-authored data (profile, preferences, account-scope consents — <code>booking_id IS NULL</code>: marketing, analytics, account terms/privacy — and CRM notes written by the member) is
+erased on the schedule; <strong>expert-authored clinical records stay under the
 expert organization&#39;s legal retention duty</strong> — they are pseudonymised (member identity
 replaced by a retention token) and kept for the period the DPO records in
 <code>data-retention-export-matrix.md</code> (working default until signed: the Portuguese clinical
@@ -3520,9 +3530,13 @@ are never erased</strong>: <code>consents</code> linked to a booking are pseudon
 -&gt; NULL, <code>subject_pseudonym</code> = HMAC of the former user id under the retention key, email
 hash removed) and kept for the same legal retention window as the booking they authorise, so
 historical consent stays provable to a regulator without identifying the person; their
-audit events keep the pseudonym. This is the D-12 working default written into
-<code>data-retention-export-matrix.md</code> (row &quot;consents&quot;); D-12 sign-off may shorten the window but
-not switch to erasure. The member deletion UI says so in plain language.</li>
+audit events keep the pseudonym. So the rule has exactly two scopes, stated the same way in
+D-12, <code>data-retention-export-matrix.md</code> (two rows: &quot;consents — account scope&quot; erased,
+&quot;consents — booking scope&quot; pseudonymised + retained), the deletion workflow and its tests:
+<strong>account-scope consents are erased; booking-scope consents are pseudonymised and retained.</strong>
+This is the D-12 working default and stays <strong>provisional until D-12 is signed</strong> (owner:
+legal/DPO) — the deletion flow cannot ship before that; sign-off may shorten the window but
+switching booking-scope consents to erasure would be a new decision, not a sign-off. The member deletion UI says so in plain language.</li>
 </ul>
 </li>
 <li><code>apps/api</code>: <code>GET /me</code> (profile + preferences), <code>PATCH /me</code>, <code>GET /me/bookings</code>,
@@ -4946,7 +4960,9 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 <li><p><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
 the API types and the state machine), <code>attendance</code> nullable (<code>both|expert_only|member_only|nobody</code>,
-written once from <code>meeting.ended</code>), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
+derived from the full ordered participant history by <code>finalizeAttendance</code> after
+<code>meeting.ended</code> and re-derived by later correction runs when late participant events arrive —
+see the state machine below), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
 <code>room_fingerprint_exp</code> (Daily gives us <strong>no</strong> idempotency handle: HIPAA mode replaces any custom
 room name with a random string and rejects a <code>name</code> in the request, and room properties are a
 closed set with no <code>meta</code>. The only booking-specific values a room carries are <code>nbf</code> and <code>exp</code>,
@@ -4978,7 +4994,18 @@ written only by
 Daily meeting tokens are signed JWTs and cannot be revoked, so removal is a two-phase
 operation that is safe in both failure directions: phase 1 (transaction) sets
 <code>session_participants.revoked_at = now()</code> (a deny state — <code>join</code> requires <code>revoked_at IS NULL</code>, so no new token can be minted from this instant) inside withAudit
-<code>session.participant_removed</code>; phase 2 calls Daily <code>POST /rooms/{name}/eject</code> with
+<code>session.participant_removed</code>. <strong>Linearization point</strong> — the participant row lock: <code>join</code> runs
+<code>SELECT … FROM session_participants WHERE session_id = $1 AND user_id = $2 FOR UPDATE</code>, checks
+<code>revoked_at IS NULL</code> and the session status, signs the meeting token (a local HS256 JWT signed
+with the Daily domain API key — no vendor call, so README rule 9 is respected) and inserts the
+<code>session_joins</code> audit row <strong>inside that same transaction</strong>; the revocation <code>UPDATE … SET revoked_at</code> on the same row therefore waits for the join to commit or the join waits for the
+revocation, never interleaves: either the token is minted before the revoke commits (and the
+eject in phase 2 removes that participant, which is the accepted residual since a Daily JWT
+cannot be invalidated) or the join sees <code>revoked_at</code> and returns 403. No second unlocked
+re-check is used. Race test (two connections): <code>BEGIN join; SELECT … FOR UPDATE</code> held -&gt;
+revoke blocks -&gt; join commits with a token -&gt; revoke commits -&gt; next join 403 -&gt; eject called
+with the minted participant&#39;s user id; and the mirror order (revoke first -&gt; join 403, no
+token, no eject of a phantom); phase 2 calls Daily <code>POST /rooms/{name}/eject</code> with
 <code>user_ids: [userId]</code> and <code>ban: true</code> (idempotent — no live participant is a no-op) with a
 10 s timeout and bounded retry, then sets <code>ejected_at</code>; the route returns 200 when both
 phases succeeded and 202 <code>{ ejectionPending: true }</code> when Daily failed — the row stays revoked
@@ -6339,9 +6366,10 @@ PR 12.1 — access, users, partners, experts, bookings:
    | route | condition | kind |
    | POST /admin/payments/[id]/refund | amount_cents &gt; ADMIN_DUAL_CONTROL_REFUND_CENTS | payment.refund_large |
    | POST /admin/payouts/[id]/release | payout_states.status = held | payout.release |
-   | PATCH /admin/experts/[id]/commission | always | expert.commission_override |
+   | PATCH /admin/experts/[orgId] | body contains commissionOverrideBps or commissionOverrideExpiresAt (field-level condition evaluated by adminRoute on the parsed body; other fields stay single-actor [R]) | expert.commission_override |
    | POST /admin/partners/[id]/approve | SPECIALTIES[slug].clinical = true | partner.approve_clinical |
-   | POST /admin/experts/[id]/ban | exists booking with start_at &gt; now() | expert.ban_with_future_bookings |
+   | POST /admin/experts/[orgId]/suspend | exists booking for that expert org with start_at &gt; now() AND status IN (confirmed, rescheduled) (otherwise single-actor [R]) | expert.ban_with_future_bookings |
+   | POST /admin/users/[id]/ban | user is the owner of an expert org with such future bookings (same predicate through the membership) — a plain member ban stays single-actor [R] | expert.ban_with_future_bookings |
    | POST /admin/records/[id]/decrypt | always | record.break_glass_decrypt |
    Any other admin mutation is single-actor with a mandatory reason; adding a kind requires a
    row here, a test and an audit-union entry. Admin routes tagged &quot;admin&quot; in OpenAPI and hidden
@@ -6925,7 +6953,7 @@ logins via magic link in staging), produce report under <code>infra/migration/re
 the same controller, so the basis is the existing relationship; still, the welcome campaign
 links the updated privacy notice (versioned in <code>CONSENT_DOCUMENTS</code>), the consent rows for
 migrated users are imported with <code>source = import</code> and the MVP acceptance timestamp (never
-re-asserted as fresh) under an explicit <strong>legacy -&gt; v3 consent mapping</strong> (<code>packages/migration/ src/consent-map.ts</code>, deny-by-default, one fixture per legacy combination): MVP terms/privacy
+re-asserted as fresh) under an explicit <strong>legacy -&gt; v3 consent mapping</strong> (<code>infra/migration/src/map/consents.ts</code> — one of the <code>map/*.ts</code> modules in deliverable 1, deny-by-default, one fixture per legacy combination): MVP terms/privacy
 acceptance -&gt; <code>terms</code> + <code>privacy</code> at the MVP document version tagged <code>legacy</code>; MVP
 <code>marketing_opt_in = true</code> -&gt; <code>marketing</code> granted, otherwise absent; MVP booking-time health
 consent -&gt; <code>health_data_processing</code> for that booking only; <strong><code>analytics</code> is never imported</strong>
@@ -7766,10 +7794,11 @@ recording mode through the fenced sync below, never a raw flag.</li>
 <p>Phase 9 creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
 captured on the join page, so recording is enabled by an <strong>idempotent room update</strong>, not at
 creation: <code>syncRoomRecording(bookingId)</code> in <code>@eleva/video</code> reads the flag + both consents and
-calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : &lt;disabled&gt; } })</code>
-— Daily models &quot;disabled&quot; as the property being unset, so <code>&lt;disabled&gt;</code> is whatever PR 09.0 /
-the 16.8 spike proves the API accepts to clear it (<code>null</code>, <code>false</code> or omitting the key on a
-full properties write), and <code>isRecordingEnabled(config)</code> normalises the read-back:
+calls Daily <code>updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : DAILY_RECORDING_OFF } })</code>
+— Daily models &quot;disabled&quot; as the property being unset, so <code>DAILY_RECORDING_OFF</code> (one constant in
+<code>packages/video/src/daily-constants.ts</code>) holds whatever the 16.8 spike proves the API accepts to
+clear it (<code>null</code>, <code>false</code> or omitting the key on a full properties write), and
+<code>isRecordingEnabled(config)</code> normalises the read-back:
 <code>config.enable_recording</code> in <code>{&quot;cloud&quot;,&quot;local&quot;,&quot;raw-tracks&quot;}</code> -&gt; true, absent/<code>null</code>/<code>false</code> -&gt;
 false — the worker never compares raw values
 — the consent boolean maps to Daily&#39;s recording mode string, never passed raw — only when the desired
@@ -7799,7 +7828,12 @@ and joins never wait on it) and a worker that acquires the mutex re-reads the cu
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after <code>updateRoom</code> the worker reads the room back (<code>GET /rooms/{name}</code>) and accepts only when
 <code>isRecordingEnabled(returned config)</code> equals <code>desired</code> (normalised on both sides — an omitted
-property is &quot;disabled&quot;, never &quot;unknown&quot;); step 3 persists
+property is &quot;disabled&quot;, never &quot;unknown&quot;); the read-back has the same 10 s timeout and the same
+bounded retry (3 attempts, exponential backoff) as <code>updateRoom</code>; when it is exhausted the worker
+persists nothing, releases the mutex and re-schedules the sync (QStash, 1 min, then 5, then 15 —
+after that an <code>ops</code> alert), so <code>recording_verified_version</code> stays behind <code>recording_state_version</code>
+and joins keep answering 503 <code>RECORDING_STATE_PENDING</code> with a retry hint until a later run
+converges — fail closed, never fail open; step 3 persists
 <code>recording_enabled = &lt;read-back value&gt;</code>, <code>recording_verified_version = v</code>,
 <code>recording_verified_at = now()</code> with a compare-and-swap <code>WHERE recording_state_version = v</code> —
 zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
@@ -7820,11 +7854,15 @@ rather than minting.</p>
    enable_recording false and consent arrives later on the join page, so add
    syncRoomRecording(bookingId) to @eleva/video (this phase&#39;s migration adds
    sessions.recording_enabled boolean default false, sessions.recording_desired boolean default
-   false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
+   false, sessions.recording_state_version int default 0, sessions.recording_verified_version int
+   NULL and sessions.recording_verified_at timestamptz NULL to the Phase 9 table — NULL means
+   &quot;never verified&quot;, which fails the join guard closed): desired =
    ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
-   updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : &lt;disabled as proven by
-   the spike — Daily models disabled as unset&gt; } }), compare with isRecordingEnabled(config)
+   updateRoom(name, { properties: { enable_recording: desired ? &quot;cloud&quot; : DAILY_RECORDING_OFF } })
+   where DAILY_RECORDING_OFF is the single constant in packages/video/src/daily-constants.ts
+   holding the representation the 16.8 spike proved clears the property (Daily models &quot;disabled&quot;
+   as unset), compare with isRecordingEnabled(config)
    (cloud|local|raw-tracks -&gt; true; absent|null|false -&gt; false) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
@@ -7845,10 +7883,14 @@ rather than minting.</p>
    state already correct -&gt; zero Daily calls. Handle Daily webhooks recording.ready-to-download and
    transcript.ready-to-download (Daily&#39;s exact event type names — map the latter to the internal
    domain event transcript.ready; recorded fixture per provider payload; signature verified,
-   idempotent) -&gt; pull the recording/transcript object from the S3 landing zone (never from a
-   Daily-hosted URL) -&gt; store as records.kind = transcript (encrypted, private Blob store) -&gt;
-   DeleteObject in S3 once stored (video too, unless ff.session_recording_keep) -&gt;
-   emitDomainEvent(&quot;transcript.ready&quot;).
+   idempotent) with TWO handlers, never one: ingestRecording(recording_id, s3_key) — idempotent
+   on recording_id — writes the session_recordings row and, once the transcript is stored,
+   DeleteObject on the video (or moves it encrypted as records.kind = recording_video when
+   ff.session_recording_keep is on); ingestTranscript(id, out_params.s3.key) — idempotent on the
+   transcript id — pulls the object from the S3 landing zone (never from a Daily-hosted URL),
+   stores it as records.kind = transcript (encrypted, private Blob store), DeleteObject in S3,
+   then emitDomainEvent(&quot;transcript.ready&quot;). A test feeds each fixture to the other handler and
+   asserts it is rejected.
    Provision the S3 landing zone with infra/aws/recordings-landing-zone.ts (bucket with
    VERSIONING ENABLED — Daily requires it —, KMS key, lifecycle expiring current + non-current
    versions at 72h and aborting incomplete multipart uploads at 1 day, Daily role trusted by

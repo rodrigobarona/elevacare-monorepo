@@ -72,9 +72,10 @@ In:
 - Playwright `e2e/auth.spec.ts`: sign up, verify email (test inbox or dev bypass), land on personal
   Space, create Expert workspace, switch org, sign out, sign in with magic link.
 
-- **Cookie, CSRF and subdomain threat model (D-13, review P1)** — written before the session code
-  and signed off by the security owner (`docs/eleva-v3/security/cookie-csrf-threat-model.md`,
-  linked from `identity-rbac-spec.md`): the session cookie is `Domain=.eleva.care`,
+- **Cookie, CSRF and subdomain threat model (D-13, review P1)** — written in this phase, before
+  the session code, as `docs/eleva-v3/security/cookie-csrf-threat-model.md` (linked from
+  `identity-rbac-spec.md`); the security owner's sign-off is NOT part of this phase (see the end
+  of this bullet): the session cookie is `Domain=.eleva.care`,
   `Secure`, `HttpOnly`, `SameSite=Lax`, `__Secure-` prefixed; the staff console is the exception
   (`admin.eleva.care` host-only cookie — Phase 12); every state-changing route requires
   **either** a non-cookie credential (`Authorization` / `x-api-key`) **or** the Better Auth

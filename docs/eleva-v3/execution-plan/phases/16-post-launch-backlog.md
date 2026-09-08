@@ -89,10 +89,11 @@ storage and Cloudflare R2 are **not** accepted destinations, so the compliant de
 Phase 9 creates the room at booking confirmation with `enable_recording: false`, and consent is
 captured on the join page, so recording is enabled by an **idempotent room update**, not at
 creation: `syncRoomRecording(bookingId)` in `@eleva/video` reads the flag + both consents and
-calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : <disabled> } })`
-— Daily models "disabled" as the property being unset, so `<disabled>` is whatever PR 09.0 /
-the 16.8 spike proves the API accepts to clear it (`null`, `false` or omitting the key on a
-full properties write), and `isRecordingEnabled(config)` normalises the read-back:
+calls Daily `updateRoom(name, { properties: { enable_recording: desired ? "cloud" : DAILY_RECORDING_OFF } })`
+— Daily models "disabled" as the property being unset, so `DAILY_RECORDING_OFF` (one constant in
+`packages/video/src/daily-constants.ts`) holds whatever the 16.8 spike proves the API accepts to
+clear it (`null`, `false` or omitting the key on a full properties write), and
+`isRecordingEnabled(config)` normalises the read-back:
 `config.enable_recording` in `{"cloud","local","raw-tracks"}` -> true, absent/`null`/`false` ->
 false — the worker never compares raw values
 — the consent boolean maps to Daily's recording mode string, never passed raw — only when the desired
@@ -122,7 +123,12 @@ and joins never wait on it) and a worker that acquires the mutex re-reads the cu
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after `updateRoom` the worker reads the room back (`GET /rooms/{name}`) and accepts only when
 `isRecordingEnabled(returned config)` equals `desired` (normalised on both sides — an omitted
-property is "disabled", never "unknown"); step 3 persists
+property is "disabled", never "unknown"); the read-back has the same 10 s timeout and the same
+bounded retry (3 attempts, exponential backoff) as `updateRoom`; when it is exhausted the worker
+persists nothing, releases the mutex and re-schedules the sync (QStash, 1 min, then 5, then 15 —
+after that an `ops` alert), so `recording_verified_version` stays behind `recording_state_version`
+and joins keep answering 503 `RECORDING_STATE_PENDING` with a retry hint until a later run
+converges — fail closed, never fail open; step 3 persists
 `recording_enabled = <read-back value>`, `recording_verified_version = v`,
 `recording_verified_at = now()` with a compare-and-swap `WHERE recording_state_version = v` —
 zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
@@ -147,11 +153,15 @@ Recording/transcription behind flags: Phase 9 rooms are created at confirmation 
    enable_recording false and consent arrives later on the join page, so add
    syncRoomRecording(bookingId) to @eleva/video (this phase's migration adds
    sessions.recording_enabled boolean default false, sessions.recording_desired boolean default
-   false and sessions.recording_state_version int default 0 to the Phase 9 table): desired =
+   false, sessions.recording_state_version int default 0, sessions.recording_verified_version int
+   NULL and sessions.recording_verified_at timestamptz NULL to the Phase 9 table — NULL means
+   "never verified", which fails the join guard closed): desired =
    ff.session_recording on AND both
    consents (expert + member) granted; if desired !== sessions.recording_enabled call Daily
-   updateRoom(name, { properties: { enable_recording: desired ? "cloud" : <disabled as proven by
-   the spike — Daily models disabled as unset> } }), compare with isRecordingEnabled(config)
+   updateRoom(name, { properties: { enable_recording: desired ? "cloud" : DAILY_RECORDING_OFF } })
+   where DAILY_RECORDING_OFF is the single constant in packages/video/src/daily-constants.ts
+   holding the representation the 16.8 spike proved clears the property (Daily models "disabled"
+   as unset), compare with isRecordingEnabled(config)
    (cloud|local|raw-tracks -> true; absent|null|false -> false) on read-back, and persist
    the new value with the three-step protocol from the fencing design above (claim desired +
    version under a short FOR UPDATE; call Daily with no DB lock, single-flight per booking
@@ -172,10 +182,14 @@ Recording/transcription behind flags: Phase 9 rooms are created at confirmation 
    state already correct -> zero Daily calls. Handle Daily webhooks recording.ready-to-download and
    transcript.ready-to-download (Daily's exact event type names — map the latter to the internal
    domain event transcript.ready; recorded fixture per provider payload; signature verified,
-   idempotent) -> pull the recording/transcript object from the S3 landing zone (never from a
-   Daily-hosted URL) -> store as records.kind = transcript (encrypted, private Blob store) ->
-   DeleteObject in S3 once stored (video too, unless ff.session_recording_keep) ->
-   emitDomainEvent("transcript.ready").
+   idempotent) with TWO handlers, never one: ingestRecording(recording_id, s3_key) — idempotent
+   on recording_id — writes the session_recordings row and, once the transcript is stored,
+   DeleteObject on the video (or moves it encrypted as records.kind = recording_video when
+   ff.session_recording_keep is on); ingestTranscript(id, out_params.s3.key) — idempotent on the
+   transcript id — pulls the object from the S3 landing zone (never from a Daily-hosted URL),
+   stores it as records.kind = transcript (encrypted, private Blob store), DeleteObject in S3,
+   then emitDomainEvent("transcript.ready"). A test feeds each fixture to the other handler and
+   asserts it is rejected.
    Provision the S3 landing zone with infra/aws/recordings-landing-zone.ts (bucket with
    VERSIONING ENABLED — Daily requires it —, KMS key, lifecycle expiring current + non-current
    versions at 72h and aborting incomplete multipart uploads at 1 day, Daily role trusted by

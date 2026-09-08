@@ -207,9 +207,18 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
   `/bookings/reserve`), **`consents`** (`id`, `subject_kind user|guest`, `user_id` nullable,
   `guest_email_hash` nullable (keyed HMAC), `kind` from `CONSENT_KINDS`, `document_version`,
   `locale`, `source funnel|account|import`, `reservation_id` nullable, `booking_id` nullable,
-  `granted_at`, `withdrawn_at` nullable; **no** IP or user agent unless the DPO approves a keyed
-  hash in `decision-log.md` — default off; RLS class `owner-user-visible`, staff read for
-  DSAR), indexes, RLS for both orgs (expert org and buyer org can read).
+  `granted_at`, `withdrawn_at` nullable, `subject_pseudonym` nullable (bytea; HMAC of the former
+  `user_id` under the retention key — written only by the Phase 5 deletion job, which sets
+  `user_id = NULL` and clears `guest_email_hash` on booking-linked rows; `CHECK (user_id IS NOT
+NULL OR guest_email_hash IS NOT NULL OR subject_pseudonym IS NOT NULL)`); **no** IP or user
+  agent unless the DPO approves a keyed hash in `decision-log.md` — default off; RLS class
+  `owner-user-visible`: read = `user_id = current user` OR org context in (`expert_org_id`,
+  buyer org) OR staff (DSAR/compliance); rows with `user_id IS NULL AND subject_pseudonym IS NOT
+NULL` are readable **only** by staff with the `compliance` capability and by the expert org
+  that owns the linked booking (never by any member — a deleted member has no session; another
+  member gets zero rows); writes only via the API service role. RLS tests: own rows visible,
+  other member -> 0 rows, deleted-member (pseudonymised) rows -> member 0 rows / expert org 1 row
+  / compliance staff 1 row), indexes.
 - `@eleva/scheduling`: `resolveOffer({ eventTypeModeId, linkToken? })` -> `ResolvedOffer`
   (`{ mode, scheduleId, priceCents, durationMinutes, bookingLinkId? }`; validates the link and
   picks the link's schedule override or the mode's schedule) consumed by both
@@ -526,7 +535,9 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    @eleva/compliance exports CONSENT_DOCUMENTS = { [kind]: { version, urls: Record<Locale,
    string> } } — the version strings are the legal-approved ids from the entry gate. RLS:
    bookings — expert org and buyer org may read (dual-organization class); consents —
-   owner-user-visible + staff read; only API (service role via
+   owner-user-visible + staff read, with the pseudonymised-row rule (user_id IS NULL AND
+   subject_pseudonym IS NOT NULL -> compliance staff + owning expert org only) and its three
+   tests (member 0 rows / expert org 1 row / compliance staff 1 row); only API (service role via
    withOrgContext of the expert org) writes. Migration + rls-isolation test extension. Extend
    @eleva/audit entity/action unions (booking: reserved|confirmed|cancelled|rescheduled;
    booking_payment: created|succeeded|failed|refunded; consent: granted|withdrawn).

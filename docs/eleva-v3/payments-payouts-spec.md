@@ -306,7 +306,10 @@ payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` 
   `transferred - reversedToDate`. Sequence (README rule 9 — no vendor call inside a transaction):
   tx1 inserts the `refunds` row `pending` with its idempotency key and, when a transfer exists,
   the `transfer_reversals` row `pending` with the computed `reversed_cents`; **outside any
-  transaction** `refunds.create` then `transfers.createReversal` are called with those keys;
+  transaction** `refunds.create` is called with its key; `transfers.createReversal` is called
+  **only after the refund is confirmed `succeeded`** (response, or `refunds.retrieve` by
+  idempotency key when the response was lost) — a failed or unknown refund never triggers a
+  reversal, so the expert's transfer is never reduced without funds going back to the member;
   tx2 records each result by compare-and-set on the row status (`pending -> succeeded|failed`),
   updates `booking_payments.refunded_cents` and `payout_states.reversed_cents` and moves the
   payout to `reversal_pending` when the reversal call failed (a lost response is repaired by the

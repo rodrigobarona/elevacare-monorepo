@@ -37,7 +37,9 @@ In:
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
   the API types and the state machine), `attendance` nullable (`both|expert_only|member_only|nobody`,
-  written once from `meeting.ended`), `room_create_attempt_at`, `room_attempt_seq int`,
+  derived from the full ordered participant history by `finalizeAttendance` after
+  `meeting.ended` and re-derived by later correction runs when late participant events arrive —
+  see the state machine below), `room_create_attempt_at`, `room_attempt_seq int`,
   `room_fingerprint_exp` (Daily gives us **no** idempotency handle: HIPAA mode replaces any custom
   room name with a random string and rejects a `name` in the request, and room properties are a
   closed set with no `meta`. The only booking-specific values a room carries are `nbf` and `exp`,
@@ -70,7 +72,19 @@ In:
   operation that is safe in both failure directions: phase 1 (transaction) sets
   `session_participants.revoked_at = now()` (a deny state — `join` requires `revoked_at IS
 NULL`, so no new token can be minted from this instant) inside withAudit
-  `session.participant_removed`; phase 2 calls Daily `POST /rooms/{name}/eject` with
+  `session.participant_removed`. **Linearization point** — the participant row lock: `join` runs
+  `SELECT … FROM session_participants WHERE session_id = $1 AND user_id = $2 FOR UPDATE`, checks
+  `revoked_at IS NULL` and the session status, signs the meeting token (a local HS256 JWT signed
+  with the Daily domain API key — no vendor call, so README rule 9 is respected) and inserts the
+  `session_joins` audit row **inside that same transaction**; the revocation `UPDATE … SET
+  revoked_at` on the same row therefore waits for the join to commit or the join waits for the
+  revocation, never interleaves: either the token is minted before the revoke commits (and the
+  eject in phase 2 removes that participant, which is the accepted residual since a Daily JWT
+  cannot be invalidated) or the join sees `revoked_at` and returns 403. No second unlocked
+  re-check is used. Race test (two connections): `BEGIN join; SELECT … FOR UPDATE` held ->
+  revoke blocks -> join commits with a token -> revoke commits -> next join 403 -> eject called
+  with the minted participant's user id; and the mirror order (revoke first -> join 403, no
+  token, no eject of a phantom); phase 2 calls Daily `POST /rooms/{name}/eject` with
   `user_ids: [userId]` and `ban: true` (idempotent — no live participant is a no-op) with a
   10 s timeout and bounded retry, then sets `ejected_at`; the route returns 200 when both
   phases succeeded and 202 `{ ejectionPending: true }` when Daily failed — the row stays revoked

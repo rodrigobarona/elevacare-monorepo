@@ -234,9 +234,10 @@ PR 12.1 — access, users, partners, experts, bookings:
    | route | condition | kind |
    | POST /admin/payments/[id]/refund | amount_cents > ADMIN_DUAL_CONTROL_REFUND_CENTS | payment.refund_large |
    | POST /admin/payouts/[id]/release | payout_states.status = held | payout.release |
-   | PATCH /admin/experts/[id]/commission | always | expert.commission_override |
+   | PATCH /admin/experts/[orgId] | body contains commissionOverrideBps or commissionOverrideExpiresAt (field-level condition evaluated by adminRoute on the parsed body; other fields stay single-actor [R]) | expert.commission_override |
    | POST /admin/partners/[id]/approve | SPECIALTIES[slug].clinical = true | partner.approve_clinical |
-   | POST /admin/experts/[id]/ban | exists booking with start_at > now() | expert.ban_with_future_bookings |
+   | POST /admin/experts/[orgId]/suspend | exists booking for that expert org with start_at > now() AND status IN (confirmed, rescheduled) (otherwise single-actor [R]) | expert.ban_with_future_bookings |
+   | POST /admin/users/[id]/ban | user is the owner of an expert org with such future bookings (same predicate through the membership) — a plain member ban stays single-actor [R] | expert.ban_with_future_bookings |
    | POST /admin/records/[id]/decrypt | always | record.break_glass_decrypt |
    Any other admin mutation is single-actor with a mandatory reason; adding a kind requires a
    row here, a test and an audit-union entry. Admin routes tagged "admin" in OpenAPI and hidden

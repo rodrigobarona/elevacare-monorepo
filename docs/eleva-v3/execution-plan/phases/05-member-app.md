@@ -35,8 +35,9 @@ In:
     target from `data-retention-export-matrix.md`), account deletion request (soft-delete +
     scheduled crypto-shred per policy; blocks reserve/intent creation, cancels pending and
     future bookings with 100% refund — see prompt deliverable 3). **Deletion vs legal retention
-    (D-12)**: member-authored data (profile, preferences, consents metadata, CRM notes written by
-    the member) is erased on the schedule; **expert-authored clinical records stay under the
+    (D-12)**: member-authored data (profile, preferences, account-scope consents — `booking_id IS
+NULL`: marketing, analytics, account terms/privacy — and CRM notes written by the member) is
+    erased on the schedule; **expert-authored clinical records stay under the
     expert organization's legal retention duty** — they are pseudonymised (member identity
     replaced by a retention token) and kept for the period the DPO records in
     `data-retention-export-matrix.md` (working default until signed: the Portuguese clinical
@@ -45,9 +46,13 @@ In:
     -> NULL, `subject_pseudonym` = HMAC of the former user id under the retention key, email
     hash removed) and kept for the same legal retention window as the booking they authorise, so
     historical consent stays provable to a regulator without identifying the person; their
-    audit events keep the pseudonym. This is the D-12 working default written into
-    `data-retention-export-matrix.md` (row "consents"); D-12 sign-off may shorten the window but
-    not switch to erasure. The member deletion UI says so in plain language.
+    audit events keep the pseudonym. So the rule has exactly two scopes, stated the same way in
+    D-12, `data-retention-export-matrix.md` (two rows: "consents — account scope" erased,
+    "consents — booking scope" pseudonymised + retained), the deletion workflow and its tests:
+    **account-scope consents are erased; booking-scope consents are pseudonymised and retained.**
+    This is the D-12 working default and stays **provisional until D-12 is signed** (owner:
+    legal/DPO) — the deletion flow cannot ship before that; sign-off may shorten the window but
+    switching booking-scope consents to erasure would be a new decision, not a sign-off. The member deletion UI says so in plain language.
 - `apps/api`: `GET /me` (profile + preferences), `PATCH /me`, `GET /me/bookings`,
   `GET /me/payments`, `PUT /me/notification-preferences`, `GET /me/consents` (every consent
   kind with version, granted_at, withdrawn_at), `PUT /me/consents` (grant or withdraw one kind;
