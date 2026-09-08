@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { buttonVariants } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
   SettingsFieldset,
   SettingsFieldsetContent,

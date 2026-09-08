@@ -1,4 +1,4 @@
-import { buttonVariants } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"

@@ -44,6 +44,7 @@
     "./lib/*": "./src/lib/*.ts",
     "./lib/brand-icon": "./src/lib/brand-icon.tsx",
     "./components/*": "./src/components/*.tsx",
+    "./components/button-variants": "./src/components/button-variants.ts",
     "./hooks/*": "./src/hooks/*.ts"
   }
 }
