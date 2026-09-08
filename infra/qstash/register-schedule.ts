@@ -31,8 +31,7 @@ export interface ScheduleSpec {
   retries?: number
   /**
    * Whether the destination route requires a `Bearer ${WORKFLOWS_DRAIN_SECRET}`
-   * header. Most workflow drainers do; the WorkOS sync route is the current
-   * exception (it relies on a different auth model and accepts unsigned).
+   * header. Most workflow drainers do.
    */
   requireBearer?: boolean
   /** Free-text rationale for the schedule, surfaced in logs. */

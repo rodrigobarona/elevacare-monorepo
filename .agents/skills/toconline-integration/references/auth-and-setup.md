@@ -73,7 +73,7 @@ grant_type=refresh_token
 
 ### Token storage
 
-Store tokens via WorkOS Vault (`packages/encryption`). Never persist tokens in plain text. The `expert_integration_credentials` table in Neon holds vault-encrypted per-expert credentials for Tier 2 adapters.
+Store tokens via envelope encryption (`packages/encryption`). Never persist tokens in plain text. The `expert_integration_credentials` table in Neon holds envelope-encrypted per-expert credentials for Tier 2 adapters.
 
 ## Request Headers
 

@@ -19,8 +19,8 @@ import { elevaConnectAppearance } from "./appearance"
  *
  * Caller SHOULD pass `fetchClientSecret = () => fetch(API_URL +
  * '/stripe/account-session', { credentials: 'include' })...` so the
- * AccountSession endpoint runs server-side with the WorkOS session
- * cookie scoped on `.eleva.care`.
+ * AccountSession endpoint runs server-side with the Better Auth
+ * session cookie scoped on `.eleva.care`.
  */
 
 export interface ConnectProviderProps {

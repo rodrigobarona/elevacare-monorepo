@@ -79,7 +79,7 @@ Goal:
 
 Should include:
 
-- Better Auth identity (ADR-017). WorkOS (removed, see ADR-017).
+- Better Auth identity (ADR-017).
 - organizations and memberships
 - RBAC baseline
 - consent/audit boundaries
@@ -127,7 +127,7 @@ Should include:
   - slot reservation (Redis-backed atomic `reserveSlot`)
   - booking flow with online / in-person (address object) / phone modes
   - per-event language + country-license + optional worldwide-mode
-  - Eleva-owned Google + Microsoft OAuth in `packages/calendar` (not WorkOS (removed, see ADR-017) Pipes)
+  - Eleva-owned Google + Microsoft OAuth in `packages/calendar` (not the previous identity provider (see ADR-017) Pipes)
 - **Stripe setup**:
   - staging + production accounts, API version pinned ≥ 2023-08-16
   - **Connect Express** platform for experts and clinics
@@ -246,7 +246,7 @@ Should include:
 - DSAR workflow (`dsarExport`) verified with 10-minute completion target
 - Envelope crypto-shredding (`orgKeyShredder` / `shredOrgKeys`, ADR-020) test passing
 - Consent banner live (GA4 marketing + PostHog product + Resend marketing consent)
-- Daily, Neon, Resend, Sentry, BetterStack EU regions confirmed contractually. Better Auth is self-hosted. WorkOS (removed, see ADR-017).
+- Daily, Neon, Resend, Sentry, BetterStack EU regions confirmed contractually. Better Auth is self-hosted. the previous identity provider (see ADR-017).
 - **Tier 1 TOConline** production invoicing tested end-to-end with 1 pilot solo expert + 1 pilot clinic
 - Monthly **Stripe ↔ TOConline reconciliation job** running green
 - **Tier 2 invoicing** with at least 2 adapters (TOConline expert-side + Moloni) production-tested

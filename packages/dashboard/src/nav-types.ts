@@ -23,12 +23,11 @@ export interface DashboardUser {
 }
 
 export interface OrgSwitcherItem {
-  workosOrgId: string
   orgId: string
   orgSlug: string
   orgType: OrgType
   name: string
-  workosRole: "admin" | "member"
+  membershipRole: "admin" | "member"
   productLabel: ProductLabel
   isCurrent: boolean
 }

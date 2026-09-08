@@ -20,7 +20,7 @@ import {
   updatedAt,
   type LocalizedText,
 } from "./shared"
-import { organizations } from "./organizations"
+import { organization } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
 import { schedules } from "./schedules"
 
@@ -38,7 +38,7 @@ export const eventTypes = pgTable(
   "event_types",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertProfileId: uuid("expert_profile_id")

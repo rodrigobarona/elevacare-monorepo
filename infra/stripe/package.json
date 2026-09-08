@@ -18,7 +18,6 @@
     "@eleva/billing": "workspace:*",
     "@eleva/db": "workspace:*",
     "@neondatabase/serverless": "catalog:",
-    "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "stripe": "catalog:"
   },

@@ -26,7 +26,7 @@ import type { AuditAction, AuditEntity, AuditRecord } from "./types"
  */
 
 export interface WithAuditOptions {
-  /** WorkOS user id of the actor (null for system actions). */
+  /** Session user id of the actor (null for system actions). */
   actorUserId?: string | null
   /** Tenant id \u2014 feeds withOrgContext + RLS. */
   orgId: string

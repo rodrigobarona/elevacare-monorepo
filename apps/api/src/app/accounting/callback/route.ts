@@ -7,7 +7,7 @@ import {
   InvoicingProviderSlug,
   type ConnectInput,
 } from "@eleva/accounting"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
 import { env, resolveGatewayUrl } from "@eleva/config/env"
 
@@ -124,13 +124,13 @@ export async function GET(request: Request) {
           id: main.expertProfiles.id,
           orgId: main.expertProfiles.orgId,
           userId: main.expertProfiles.userId,
-          orgSlug: main.organizations.slug,
-          orgType: main.organizations.type,
+          orgSlug: auth.organization.slug,
+          orgType: auth.organization.type,
         })
         .from(main.expertProfiles)
         .innerJoin(
-          main.organizations,
-          eq(main.expertProfiles.orgId, main.organizations.id)
+          auth.organization,
+          eq(main.expertProfiles.orgId, auth.organization.id)
         )
         .where(eq(main.expertProfiles.id, expertProfileId))
         .limit(1)

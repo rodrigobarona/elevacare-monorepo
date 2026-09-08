@@ -15,12 +15,12 @@ type BuildDashboardConfigOverrides = Partial<
 
 interface SessionLike {
   user: {
-    workosUserId: string
+    id: string
     displayName?: string | null
     email: string
     avatarUrl?: string | null
   }
-  workosOrgId?: string | null
+  orgId?: string | null
   orgSlug?: string | null
   productLabel?: ProductLabel
   capabilities?: readonly string[]
@@ -43,8 +43,8 @@ export async function buildDashboardConfig(
   const fetchOrganizations = enableOrgSwitcher && session.orgSlug != null
   const organizations: OrgSwitcherItem[] = fetchOrganizations
     ? await listUserOrganizations({
-        workosUserId: session.user.workosUserId,
-        currentWorkosOrgId: session.workosOrgId ?? null,
+        userId: session.user.id,
+        currentOrgId: session.orgId ?? null,
       }).catch((err) => {
         if (!(err instanceof UnauthorizedError)) {
           console.error("Unexpected error loading organizations", err)

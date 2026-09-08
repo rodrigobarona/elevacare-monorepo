@@ -26,7 +26,7 @@ describe("env()", () => {
       "APP_URL",
       "API_URL",
       "DOCS_URL",
-      "WORKOS_API_KEY",
+      "BETTER_AUTH_SECRET",
       "DATABASE_URL",
       "SENTRY_DSN",
     ]) {
@@ -67,12 +67,17 @@ describe("requireAuthEnv / requireDbEnv", () => {
   })
 
   it("requireAuthEnv lists every missing key at once", () => {
-    delete process.env.WORKOS_API_KEY
-    delete process.env.WORKOS_CLIENT_ID
-    delete process.env.WORKOS_COOKIE_PASSWORD
+    delete process.env.BETTER_AUTH_SECRET
+    delete process.env.BETTER_AUTH_URL
     expect(() => requireAuthEnv()).toThrow(
-      /WORKOS_API_KEY.*WORKOS_CLIENT_ID.*WORKOS_COOKIE_PASSWORD/
+      /BETTER_AUTH_SECRET.*BETTER_AUTH_URL/
     )
+  })
+
+  it("requireAuthEnv rejects a short BETTER_AUTH_SECRET", () => {
+    process.env.BETTER_AUTH_SECRET = "too-short"
+    process.env.BETTER_AUTH_URL = "https://api.eleva.care"
+    expect(() => requireAuthEnv()).toThrow(/32 characters/)
   })
 
   it("requireDbEnv throws without DATABASE_URL", () => {

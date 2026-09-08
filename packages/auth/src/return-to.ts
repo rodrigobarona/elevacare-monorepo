@@ -1,5 +1,5 @@
 /**
- * Shared `returnTo` sanitizer for the WorkOS auth flow.
+ * Shared `returnTo` sanitizer for the Better Auth login flow.
  *
  * Used by:
  *   - apps/account/(auth)/login/route.ts        -> entry point

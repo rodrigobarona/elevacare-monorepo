@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation"
-import { withAuth } from "@workos-inc/authkit-nextjs"
 import { getLocale, getTranslations } from "next-intl/server"
+import { LOGIN_PATH } from "@eleva/auth"
+import { getSession } from "@eleva/auth/server"
 import { normalizeLocale } from "@eleva/config/i18n"
 import { checkExistingMembership } from "./actions"
 import { OnboardingForm } from "./onboarding-form"
@@ -9,10 +10,13 @@ export const dynamic = "force-dynamic"
 
 /**
  * Space onboarding page. Shown to users who are authenticated
- * via WorkOS but don't yet have an organization/membership in the DB.
+ * but don't yet have an organization/membership in the DB.
  */
 export default async function OnboardingPage() {
-  const { user } = await withAuth({ ensureSignedIn: true })
+  const session = await getSession()
+  if (!session) {
+    redirect(LOGIN_PATH)
+  }
   const locale = normalizeLocale(await getLocale()) ?? "en"
 
   const { hasMembership } = await checkExistingMembership(locale)
@@ -20,9 +24,9 @@ export default async function OnboardingPage() {
     redirect("/dashboard")
   }
 
-  const displayName =
-    [user.firstName, user.lastName].filter(Boolean).join(" ") || user.email
-  const firstName = user.firstName || user.email
+  const displayName = session.user.displayName || session.user.email
+  const firstName =
+    session.user.displayName?.split(/\s+/)[0] || session.user.email
 
   const t = await getTranslations("onboarding")
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"

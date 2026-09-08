@@ -6,60 +6,44 @@ import * as auth from "../schema/auth"
 /**
  * Demo seed: one member (member.demo@example.test), one solo expert
  * (pat.mota@example.test / username 'patimota'), one clinic
- * (clinic.admin@example.test / slug 'clinicamota') plus a second
- * expert membership of the clinic admin (clinic+admin).
+ * (clinic.admin@example.test / slug 'clinicamota').
  *
- * Idempotent: repeated runs upsert on workos_user_id / workos_org_id.
- *
- * Called from `pnpm --filter=@eleva/db db:seed -- --demo`. WorkOS ids
- * are synthesised (dev_*) because the seed does NOT create real WorkOS
- * records \u2014 that lands in S1-B.1 sign-up flow. The seed only populates
- * Eleva DB for local UI rendering + integration tests.
- *
- * S2 update: this seed now also writes a minimum expert_profiles +
- * clinic_profiles row so /[username] resolution and the explorer
- * have something to render. Categories must be seeded separately via
- * `pnpm --filter=@eleva/db db:seed:categories` before the listing
- * insert can resolve a category slug.
+ * Idempotent: repeated runs upsert on email / org slug.
  */
 
 interface SeedPersona {
-  workosUserId: string
-  workosOrgId: string
   email: string
   displayName: string
   orgType: "personal" | "expert" | "team"
   orgDisplayName: string
-  workosRole: "admin" | "member"
+  orgSlug: string
+  role: "owner" | "member"
 }
 
 const SEEDS: SeedPersona[] = [
   {
-    workosUserId: "dev_user_patricia_mota",
-    workosOrgId: "dev_org_patricia_mota_solo",
     email: "pat.mota@example.test",
     displayName: "Patricia Mota",
     orgType: "expert",
     orgDisplayName: "Patricia Mota (solo)",
-    workosRole: "admin",
+    orgSlug: "patimota",
+    role: "owner",
   },
   {
-    workosUserId: "dev_user_clinic_admin",
-    workosOrgId: "dev_org_clinica_mota",
     email: "clinic.admin@example.test",
     displayName: "Clinic Admin",
     orgType: "team",
     orgDisplayName: "Clinica Mota",
-    workosRole: "admin",
+    orgSlug: "clinicamota",
+    role: "owner",
   },
   {
-    workosUserId: "dev_user_member_demo",
-    workosOrgId: "dev_org_member_demo_personal",
     email: "member.demo@example.test",
     displayName: "Demo Member",
     orgType: "personal",
     orgDisplayName: "Demo Member (personal)",
-    workosRole: "admin",
+    orgSlug: "member-demo",
+    role: "owner",
   },
 ]
 
@@ -67,93 +51,59 @@ async function upsertPersona(persona: SeedPersona) {
   const client = db()
 
   const [existingUser] = await client
-    .select({ id: main.users.id })
-    .from(main.users)
-    .where(eq(main.users.workosUserId, persona.workosUserId))
+    .select({ id: auth.user.id })
+    .from(auth.user)
+    .where(eq(auth.user.email, persona.email))
     .limit(1)
 
   let userId = existingUser?.id
-  let createdUser = false
   if (!userId) {
     const [inserted] = await client
-      .insert(main.users)
+      .insert(auth.user)
       .values({
-        workosUserId: persona.workosUserId,
+        id: crypto.randomUUID(),
+        name: persona.displayName,
+        email: persona.email,
+        emailVerified: true,
       })
-      .returning({ id: main.users.id })
+      .returning({ id: auth.user.id })
     userId = inserted!.id
-    createdUser = true
   }
 
   const [existingOrg] = await client
-    .select({ id: main.organizations.id })
-    .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, persona.workosOrgId))
+    .select({ id: auth.organization.id })
+    .from(auth.organization)
+    .where(eq(auth.organization.slug, persona.orgSlug))
     .limit(1)
 
   let orgId = existingOrg?.id
-  let createdOrg = false
   if (!orgId) {
     const [inserted] = await client
-      .insert(main.organizations)
+      .insert(auth.organization)
       .values({
-        workosOrgId: persona.workosOrgId,
+        id: crypto.randomUUID(),
+        name: persona.orgDisplayName,
+        slug: persona.orgSlug,
         type: persona.orgType,
       })
-      .returning({ id: main.organizations.id })
+      .returning({ id: auth.organization.id })
     orgId = inserted!.id
-    createdOrg = true
   }
 
   const [existingMembership] = await client
-    .select({ id: main.memberships.id })
-    .from(main.memberships)
+    .select({ id: auth.member.id })
+    .from(auth.member)
     .where(
-      and(
-        eq(main.memberships.userId, userId),
-        eq(main.memberships.orgId, orgId)
-      )
+      and(eq(auth.member.userId, userId), eq(auth.member.organizationId, orgId))
     )
     .limit(1)
 
   if (!existingMembership) {
-    await client.insert(main.memberships).values({
-      userId,
-      orgId,
-      workosRole: persona.workosRole,
-      status: "active",
-    })
-  }
-
-  if (createdUser) {
-    await client.insert(auth.user).values({
-      id: userId,
-      name: persona.displayName,
-      email: persona.email,
-      emailVerified: true,
-    })
-  }
-
-  if (createdOrg) {
-    const slug = persona.orgDisplayName
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-      .slice(0, 30)
-    await client.insert(auth.organization).values({
-      id: orgId,
-      name: persona.orgDisplayName,
-      slug: slug || `org-${orgId.replaceAll("-", "").slice(0, 12)}`,
-      type: persona.orgType,
-    })
-  }
-
-  if (!existingMembership) {
     await client.insert(auth.member).values({
       id: crypto.randomUUID(),
-      organizationId: orgId,
       userId,
-      role: persona.workosRole === "admin" ? "owner" : "member",
+      organizationId: orgId,
+      role: persona.role,
     })
   }
 

@@ -28,11 +28,11 @@ All commands run from the repo root.
 | `pnpm stripe:seed:entitlements`  | Seed Stripe Entitlements (mirrors `@eleva/flags` plan matrix).                                                                                                                                                            | Yes                                                                                                               |
 | `pnpm stripe:replay:event evt_…` | Re-fetch one event from Stripe and re-run `processStripeEvent` against it. Resets the row's status before dispatching. Use to recover from `ignored` (re-process after backfill) or `failed` (real bug fix shipped) rows. | Yes                                                                                                               |
 
-`stripe:verify:entitlements` and `stripe:backfill:org-customers` compared WorkOS JWT claims / walked WorkOS orgs (removed, see ADR-017). Phase 6 rewrites entitlement checks against Better Auth session + `@eleva/flags` and provisions Stripe customers on Better Auth org create.
+`stripe:verify:entitlements` and `stripe:backfill:org-customers` compared session entitlements claims / walked organizations (removed, see ADR-017). Phase 6 rewrites entitlement checks against Better Auth session + `@eleva/flags` and provisions Stripe customers on Better Auth org create.
 
-### WorkOS (historical — removed, see ADR-017)
+### the previous identity provider (historical — removed, see ADR-017)
 
-Do not run. `workos:rbac:generate`, `workos:widgets:generate` and `WORKOS_*` env vars are deleted in Phase 3. RBAC SSOT is `packages/auth/src/permissions.ts` (ADR-021).
+Do not run. `identity:rbac:generate`, `identity:widgets:generate` and `legacy identity env vars` env vars are deleted in Phase 3. RBAC SSOT is `packages/auth/src/permissions.ts` (ADR-021).
 
 ### QStash (Upstash)
 
@@ -88,7 +88,7 @@ swap your `.env.local` to the target environment's values.
 | `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands               |
 | `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                         |
 
-WorkOS API keys and WorkOS access-token JWTs (removed, see ADR-017).
+the previous identity provider API keys and session JWTs (removed, see ADR-017).
 
 ## Promoting staging → production
 
@@ -125,11 +125,11 @@ they were initially run on staging is safe.
    Save the printed `bpc_*` ID as `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` on Vercel `elevacare-api`.
 
 5. **Update `STRIPE_WEBHOOK_SECRET`** on Vercel `elevacare-api` Production with the new whsec, then redeploy so the route picks it up.
-6. **Org → Stripe customer**: new Better Auth organizations call `provisionOrgBilling` on create (Phase 6). Do not walk WorkOS orgs (removed, see ADR-017).
+6. **Org → Stripe customer**: new Better Auth organizations call `provisionOrgBilling` on create (Phase 6). Do not walk organizations (removed, see ADR-017).
 
-### WorkOS — staging → production (removed, see ADR-017)
+### the previous identity provider — staging → production (removed, see ADR-017)
 
-Do not apply `infra/workos/rbac-config.json` or widget grants.
+Do not apply `the former identity infra package/rbac-config.json` or widget grants.
 
 ### QStash — same account, target prod URL
 
@@ -168,7 +168,7 @@ Config + PostHog environment.)
 The repo follows a three-tier convention:
 
 - **`infra/<vendor>/`** — Real workspaces (`@eleva/infra-stripe`,
-  `@eleva/infra-qstash`). `@eleva/infra-workos` is historical and deleted in Phase 3 (removed, see ADR-017). Vendor-scoped SDK
+  `@eleva/infra-qstash`). `@eleva/infra-identity-legacy` is historical and deleted in Phase 3 (removed, see ADR-017). Vendor-scoped SDK
   deps stay isolated. One workspace per external system. Add new
   vendors here when you start integrating a new external service that
   needs more than one or two scripts.

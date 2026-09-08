@@ -37,7 +37,7 @@ Read the relevant reference file before answering any integration question or wr
 
 - `@eleva/billing` (`packages/billing/`) — Stripe Connect, webhooks, payouts
 - `@eleva/db` (`packages/db/`) — Neon tables: `platform_fee_invoices`, `clinic_saas_invoices`, `expert_integration_credentials`
-- `@eleva/encryption` (`packages/encryption/`) — WorkOS Vault for OAuth token storage
+- `@eleva/encryption` (`packages/encryption/`) — envelope encryption for TOConline/Moloni integration credentials (calendar OAuth tokens use Better Auth `account.encryptOAuthTokens`)
 - `@eleva/flags` (`packages/flags/`) — `ff.toconline_invoicing_enabled`, `ff.expert_invoicing_apps_enabled`, `ff.invoicing.{provider}`
 - `@eleva/workflows` (`packages/workflows/`) — `issuePlatformFeeInvoice`, `issueClinicSaasInvoice`, `issueExpertServiceInvoice`
 - `@eleva/observability` (`packages/observability/`) — Sentry spans for TOConline API calls

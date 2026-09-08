@@ -592,6 +592,22 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
   subscriptions (ADR-016 carve-out). Blocks: Phase 4 PR 04.2.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Dynamic Payment Methods", `packages/billing/src/server/payment-method-policy.ts`
 
+### D-15 (2026-09-08): Phase 03.2 leftover-identity contract
+
+- Owner: platform
+- Status: active
+- Summary: After the Phase 03.2 exit-gate grep, migration `0024_drop_legacy_identity`
+  drops `main.users` / `organizations` / `memberships` / `roles` / `permissions`,
+  leftover identity-provider columns, and the read-only write triggers. Locale
+  SSOT is the `ELEVA_LOCALE` cookie (`getAuthenticatedLocale`); do not read a
+  leftover IDP `user.locale`. Session fields are `user.id`, `orgId`, and
+  `membershipRole: "admin" | "member"` (Better Auth `owner` maps to `admin`).
+  Keep `apps/account/.../settings-widgets.tsx` — it is the live React Aria
+  settings UI, not leftover widgets. Keep the `org_type` enum. Calendar tokens
+  stay on Better Auth `account` rows. Vercel Hobby deploy checks are not a merge
+  gate.
+- Reference: [`execution-plan/phases/03-remove-workos.md`](./execution-plan/phases/03-remove-workos.md), ADR-017, ADR-020
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

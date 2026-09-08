@@ -65,7 +65,6 @@ export async function POST(request: Request) {
     try {
       await provisionOrgBilling({
         orgId: result.orgId,
-        workosOrgId: result.workosOrgId,
         orgName: body.data.name,
         orgType: body.data.type,
         actorUserId: session.user.id,
@@ -82,7 +81,6 @@ export async function POST(request: Request) {
     {
       orgId: result.orgId,
       slug: result.slug,
-      workosOrgId: result.workosOrgId,
       created: result.created,
     },
     { status: result.created ? 201 : 200, headers }

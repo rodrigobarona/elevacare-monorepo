@@ -20,9 +20,8 @@ import Stripe from "stripe"
  *
  * Uses STRIPE_SECRET_KEY from .env.local (staging by default).
  *
- * Note: the WorkOS Stripe Add-on does NOT support Stripe Sandbox
- * accounts (per ADR-016). For staging/dev, use Stripe test mode on a
- * standard account, not a Sandbox account.
+ * For staging/dev, use Stripe test mode on a standard account, not a
+ * Sandbox account.
  */
 
 const WEBHOOK_EVENTS: Stripe.WebhookEndpointCreateParams.EnabledEvent[] = [

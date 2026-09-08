@@ -20,8 +20,7 @@ import {
   pkColumn,
   updatedAt,
 } from "./shared"
-import { organizations } from "./organizations"
-import { users } from "./users"
+import { organization, user } from "../auth"
 
 const tsvector = customType<{ data: string }>({
   dataType() {
@@ -91,12 +90,12 @@ export const expertProfiles = pgTable(
   "expert_profiles",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     userId: uuid("user_id")
       .notNull()
-      .references(() => users.id, { onDelete: "cascade" }),
+      .references(() => user.id, { onDelete: "cascade" }),
 
     /**
      * Public username (lowercase [a-z0-9-], 3–30 chars). Shared

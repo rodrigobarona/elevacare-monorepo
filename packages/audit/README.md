@@ -80,11 +80,11 @@ await withAudit(
 
 #### Parameters
 
-| Parameter             | Type                                    | Description                                           |
-| --------------------- | --------------------------------------- | ----------------------------------------------------- |
-| `options.orgId`       | `string`                                | Tenant ID — feeds `withOrgContext` for RLS            |
-| `options.actorUserId` | `string \| null`                        | WorkOS user ID of the actor (null for system actions) |
-| `fn`                  | `(tx: Tx, ctx: AuditCtx) => Promise<T>` | Transaction body                                      |
+| Parameter             | Type                                    | Description                                    |
+| --------------------- | --------------------------------------- | ---------------------------------------------- |
+| `options.orgId`       | `string`                                | Tenant ID — feeds `withOrgContext` for RLS     |
+| `options.actorUserId` | `string \| null`                        | user ID of the actor (null for system actions) |
+| `fn`                  | `(tx: Tx, ctx: AuditCtx) => Promise<T>` | Transaction body                               |
 
 #### `AuditCtx` (passed to `fn`)
 

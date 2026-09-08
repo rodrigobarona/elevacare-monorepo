@@ -311,7 +311,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 - `dev.eleva.care` is the staging gateway; app routes rewritten from gateway to staging app zone; docs at `/docs/*`; API on `api.dev.eleva.care` subdomain (separate project).
 - **Stripe staging account** (separate from production) with test payment methods + MB WAY test mode.
-- Better Auth on the staging Neon project (`BETTER_AUTH_URL=https://api.dev.eleva.care/auth`). WorkOS is removed (removed, see ADR-017).
+- Better Auth on the staging Neon project (`BETTER_AUTH_URL=https://api.dev.eleva.care/auth`). the previous identity provider is retired (see ADR-017).
 - Neon staging branch of `eleva_v3_main` + `eleva_v3_audit`.
 - Daily staging domain.
 - Resend staging sender domain (`staging.eleva.care` DKIM).
@@ -325,7 +325,7 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 - `api.eleva.care` is the dedicated server-facing API subdomain; not rewritten from the gateway.
 - Internal Vercel project URLs serve `noindex` or 301-redirect to canonical.
 - **Stripe production account**, separate webhook, Connect, and seed scripts.
-- Better Auth on the production Neon project (`BETTER_AUTH_URL=https://api.eleva.care/auth`). WorkOS is removed (removed, see ADR-017).
+- Better Auth on the production Neon project (`BETTER_AUTH_URL=https://api.eleva.care/auth`). the previous identity provider is retired (see ADR-017).
 - Neon `eleva_v3_main` + `eleva_v3_audit` production (EU region).
 - Daily production (EU).
 - Resend production sender domain (`eleva.care` DKIM, DMARC, BIMI).
@@ -355,7 +355,7 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 - Never share secrets across environments. Each has its own Vercel project with its own env var set.
 - `vercel env pull .env.local` is the only approved way to populate local dev secrets; never check secrets into the repo.
 - Vercel Marketplace integrations (Neon, Upstash, Resend, Sentry, BetterStack) populate env vars automatically when linked.
-- Better Auth encrypts Google/Microsoft OAuth tokens on `account` rows. TOConline / Moloni tokens are envelope-encrypted in `@eleva/encryption` (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
+- Better Auth encrypts Google/Microsoft OAuth tokens on `account` rows. TOConline / Moloni tokens are envelope-encrypted in `@eleva/encryption` (ADR-020).
 
 ## Development / preview only — never production
 
@@ -381,8 +381,9 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Required environment variables (v3 target)
 
-Added in Phase 1 (this PR documents them; values land with Phase 2+). `WORKOS_*` stay in
-`.env.example` annotated "removed in Phase 3 (ADR-017)" until Phase 3 deletes them.
+Added in Phase 1; leftover identity-provider env vars are deleted in Phase 03.2.
+Revoke any leftover identity-provider credentials in Vercel after merge.
+Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `ELEVA_KEK_V1`.
 
 | Variable                                                      | Owner                  | Notes                                                                                                                                                                                           |
 | ------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

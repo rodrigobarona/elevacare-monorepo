@@ -320,7 +320,7 @@ Deliver:
 
 Deliver:
 
-- Better Auth foundation (ADR-017). WorkOS (removed, see ADR-017).
+- Better Auth foundation (ADR-017).
 - organization model
 - RBAC
 - audit logging

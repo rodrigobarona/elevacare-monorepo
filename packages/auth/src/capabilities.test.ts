@@ -4,6 +4,8 @@ import {
   CAPABILITY_BUNDLES,
   deriveProductLabel,
   hasCapability,
+  normalizeMembershipRole,
+  toMembershipSeniority,
 } from "./capabilities"
 
 describe("deriveProductLabel", () => {
@@ -27,10 +29,24 @@ describe("deriveProductLabel", () => {
     expect(() => deriveProductLabel("personal", "member")).toThrow()
     expect(() => deriveProductLabel("expert", "member")).toThrow()
   })
-  it("maps Better Auth owner like WorkOS admin", () => {
+  it("maps Better Auth owner to admin product labels", () => {
     expect(deriveProductLabel("personal", "owner")).toBe("member")
     expect(deriveProductLabel("expert", "owner")).toBe("expert")
     expect(deriveProductLabel("team", "owner")).toBe("team_admin")
+  })
+
+  it("normalizes Better Auth role slugs", () => {
+    expect(toMembershipSeniority("owner")).toBe("owner")
+    expect(toMembershipSeniority("admin")).toBe("admin")
+    expect(toMembershipSeniority("member")).toBe("member")
+    expect(toMembershipSeniority("admin,member")).toBe("admin")
+    expect(toMembershipSeniority(" OWNER , member ")).toBe("owner")
+    expect(toMembershipSeniority("member,owner")).toBe("owner")
+    expect(toMembershipSeniority("")).toBe("member")
+    expect(toMembershipSeniority("viewer")).toBe("member")
+    expect(normalizeMembershipRole("owner")).toBe("admin")
+    expect(normalizeMembershipRole("admin")).toBe("admin")
+    expect(normalizeMembershipRole("member")).toBe("member")
   })
 })
 

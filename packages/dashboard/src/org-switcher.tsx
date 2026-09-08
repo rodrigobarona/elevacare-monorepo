@@ -37,7 +37,7 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
       return
     }
 
-    setSwitchingId(organization.workosOrgId)
+    setSwitchingId(organization.orgId)
     let redirecting = false
     try {
       const homeUrl = resolveOrgHomeUrl({
@@ -45,7 +45,7 @@ export function OrgSwitcher({ organizations }: OrgSwitcherProps) {
         productLabel: organization.productLabel,
         orgType: organization.orgType,
       })
-      await switchOrganization(organization.workosOrgId, homeUrl)
+      await switchOrganization(organization.orgId, homeUrl)
     } catch (err) {
       if (isRedirectError(err)) {
         redirecting = true

@@ -46,4 +46,4 @@ cookies.
 4. OAuth token encryption uses this secret — rotating it requires Better Auth's documented
    re-encrypt path; read current docs before applying.
 
-WorkOS scripts and Widgets are gone after Phase 3 (removed, see ADR-017).
+The previous identity SDK, scripts, and widgets are gone (see ADR-017).

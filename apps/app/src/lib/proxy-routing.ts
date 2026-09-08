@@ -16,7 +16,7 @@ const fixedSegments = new Set<string>([
 
 /**
  * Paths that the member app serves publicly (marketing-shaped routes
- * + the WorkOS auth flow paths). Used both by the proxy (to skip the
+ * + the Better Auth login flow paths). Used both by the proxy (to skip the
  * unauthenticated redirect) AND by `trackLastActiveOrg` (to skip
  * cookie writes on non-org URLs).
  */

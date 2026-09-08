@@ -155,7 +155,7 @@ async function main() {
 
   console.log("[entitlements] Done! All features created and attached.")
   console.log(
-    "[entitlements] WorkOS will now include these in access tokens for subscribed customers."
+    "[entitlements] Subscribed customers will receive these features on the session."
   )
 }
 

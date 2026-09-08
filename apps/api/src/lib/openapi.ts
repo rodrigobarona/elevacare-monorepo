@@ -13,7 +13,6 @@ import {
   SyncExistingOnboardingResponseSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
-  CreateWorkspaceRequestSchema,
   ExpertOnboardingStepSchema,
   ListOrganizationsMineResponseSchema,
   SetActiveOrganizationRequestSchema,
@@ -98,7 +97,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "completeOnboarding",
           summary: "Complete user onboarding",
           description:
-            "Creates a WorkOS organization, membership, and provisions user/org/membership rows in the Eleva DB. Protected by BotID on browser sessions.",
+            "Creates a personal Space and membership in auth.*, then confirms onboarding. Protected by BotID on browser sessions.",
           tags: ["Onboarding"],
           requestBody: {
             required: true,
@@ -155,9 +154,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       "/onboarding/sync-existing": {
         post: {
           operationId: "syncExistingOnboardingMembership",
-          summary: "Sync an existing WorkOS membership into Eleva",
+          summary: "Confirm an existing organization membership",
           description:
-            "Used by account onboarding when a user already has a WorkOS organization membership. Provisions local user/org/membership mirrors through the API boundary.",
+            "Used by account onboarding when a user already has an organization membership. Confirms auth.* membership through the API boundary.",
           tags: ["Onboarding"],
           responses: {
             "200": {
@@ -233,7 +232,6 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": {
                   schema: z.object({
                     id: z.string().uuid(),
-                    workosOrgId: z.string(),
                     slug: z.string().nullable(),
                     type: z.string(),
                   }),

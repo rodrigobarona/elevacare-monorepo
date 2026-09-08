@@ -1,13 +1,13 @@
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { getSession, getAuthenticatedWorkOSLocale } from "@eleva/auth/server"
+import { getSession, getAuthenticatedLocale } from "@eleva/auth/server"
 import { SettingsWidgets } from "./settings-widgets"
 
 export default async function SettingsPage() {
   const t = await getTranslations()
   const [session, preferredLocale] = await Promise.all([
     getSession(),
-    getAuthenticatedWorkOSLocale(),
+    getAuthenticatedLocale(),
   ])
   const avatarUrl = session?.user.avatarUrl ?? null
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"

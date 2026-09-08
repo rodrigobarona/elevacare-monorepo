@@ -55,11 +55,11 @@ pnpm stripe:seed
 
 Each product has an attached Stripe Entitlement Feature with a `lookup_key` matching the entitlement key above. When a customer has an active subscription to a product, the feature is "active" for that customer.
 
-## How WorkOS uses these
+## How Eleva uses these
 
-1. WorkOS Stripe Add-on reads the customer's active entitlements from Stripe
-2. WorkOS includes them in the `entitlements` claim of the access token JWT
-3. `packages/auth` parses the JWT and populates `ElevaSession.entitlements`
+1. Stripe webhooks update `billing_subscriptions` / customer mirrors in Neon
+2. `@eleva/billing` attaches active entitlement lookup keys to the org
+3. `@eleva/auth` populates `ElevaSession.entitlements` from that mirror
 4. `packages/flags` uses `hasEntitlement()` for runtime feature gating
 
 ## Webhook endpoint
@@ -159,9 +159,9 @@ stripe trigger identity.verification_session.verified
 
 Check the API logs for `[stripe-webhook]` output and `stripe_webhook_events` rows for the persisted entries.
 
-### WorkOS Stripe Add-on note
+### Stripe Entitlements note
 
-The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per ADR-016). For staging/dev, use Stripe **test mode** on a standard account, not a Sandbox account. Entitlements and `workos_seat_count` meter integration require this.
+The Stripe Entitlements does NOT support Stripe Sandbox accounts (per ADR-016). For staging/dev, use Stripe **test mode** on a standard account, not a Sandbox account. Entitlements and `seat_count` meter integration require this.
 
 ## Production deployment checklist
 
@@ -174,8 +174,7 @@ The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per ADR-016).
 7. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
 8. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
 9. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
-10. Verify in WorkOS Dashboard: Stripe Add-on connected to the live Stripe account (must be a standard account, not a Sandbox — Sandbox is unsupported)
-11. Trigger a `customer.subscription.created` test event and verify a row appears in the `stripe_webhook_events` table with status='processed'
+10. Trigger a `customer.subscription.created` Stripe CLI fixture and verify a row appears in `stripe_webhook_events` with `status='ignored'` (CLI fixtures have no Eleva organization metadata). To assert `processed`, trigger the event for a provisioned Eleva customer.
 
 ## Idempotency
 

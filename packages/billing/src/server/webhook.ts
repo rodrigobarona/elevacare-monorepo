@@ -34,7 +34,7 @@ import { stripe } from "./client"
  *
  * The processor MUST NOT throw to its caller for "valid but unhandled"
  * events -- Stripe should NOT retry those. It throws only for truly
- * retryable errors (DB outage, transient WorkOS failure) so the route
+ * retryable errors (DB outage, transient Stripe failure) so the route
  * can return non-2xx and let Stripe redeliver.
  */
 

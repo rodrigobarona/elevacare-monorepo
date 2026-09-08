@@ -5,7 +5,7 @@ import { useTheme } from "next-themes"
 import type { ResolvedAppearance } from "@eleva/config/theme"
 
 /**
- * Hydration-safe light/dark for WorkOS widgets and Sonner.
+ * Hydration-safe light/dark for Sonner and dashboard chrome.
  * Returns "light" until mounted, then follows next-themes resolvedTheme.
  */
 export function useResolvedAppearance(): ResolvedAppearance {

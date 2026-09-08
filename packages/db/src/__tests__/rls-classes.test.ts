@@ -407,11 +407,7 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
             .filter(Boolean)
             .join(" ")
           expect(combined, row.table).toContain("eleva.org_id")
-          if (row.table === "organizations") {
-            expect(combined).toContain("id")
-          } else {
-            expect(combined).toContain("org_id")
-          }
+          expect(combined).toContain("org_id")
         }
       } finally {
         client.release()

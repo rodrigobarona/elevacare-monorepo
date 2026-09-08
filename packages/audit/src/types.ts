@@ -18,8 +18,8 @@ export type AuditEntity =
   | "blob"
   // Stripe billing surface (Phase 1 of stripe-foundation-review).
   // billing_customer/billing_subscription mirror Stripe state in our DB
-  // for support tooling; entitlement decisions still come from the WorkOS
-  // access-token entitlements claim (see ADR-016).
+  // for support tooling; entitlement decisions still come from the
+  // session entitlements claim (see ADR-016).
   | "billing_customer"
   | "billing_subscription"
   | "billing_invoice"
@@ -88,7 +88,7 @@ export interface AuditContext {
   auditId: string
   /** Correlation ID from the inbound request (for cross-system tracing). */
   correlationId?: string
-  /** Current WorkOS session user ID (null for anonymous / system actions). */
+  /** Current session user ID (null for anonymous / system actions). */
   actorUserId?: string
   /** Tenant boundary; required except for platform-admin audits. */
   orgId: string

@@ -241,7 +241,7 @@ v3 launches Portugal-first. The following are launch requirements, not phase-2:
 - **Consent banner** wired to GA4 (marketing) + PostHog (product) + Resend marketing consent.
 - **DSAR workflow** verified (`dsarExport` Vercel Workflow: export all user data → Vercel Blob → time-limited signed URL → admin-notified; 10-minute target for completion).
 - **Envelope crypto-shredding** (`shredOrgKeys`, ADR-020) on org deletion, verified by integration test, **except** when a legal-hold or retention flag (D-12) is set: shred is blocked, DSAR still exports (or states hold), and audit records `org.shred_blocked`. After the hold clears, shred runs and audit records `org.shredded`.
-- **Daily/Neon/Resend EU regions** confirmed contractually before production traffic. Better Auth is self-hosted (no extra subprocessor). WorkOS is removed (removed, see ADR-017).
+- **Daily/Neon/Resend EU regions** confirmed contractually before production traffic. Better Auth is self-hosted (no extra subprocessor). The previous identity provider is retired (see ADR-017).
 
 ## Retention And Deletion (locked defaults)
 

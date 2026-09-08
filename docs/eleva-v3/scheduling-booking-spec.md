@@ -200,7 +200,7 @@ stores and refreshes the tokens (ADR-017, ADR-020); `packages/calendar` owns the
 interface and receives tokens through `getProviderAccessToken({ accountId })` injected from
 `@eleva/auth`, which calls `auth.api.getAccessToken({ body: { accountId, userId } })` for that connection. A
 provider-only lookup is forbidden when an expert has more than one account per provider.
-WorkOS Pipes is gone (removed, see ADR-017).
+Calendar OAuth tokens live on Better Auth `account` rows (ADR-017).
 
 **Eleva calendar first**: the expert app has its own calendar (`/[orgSlug]/calendar`, week and month
 views of every booking across all modes, blocked time, and date overrides). Experts who never connect
@@ -488,7 +488,7 @@ Sensitive session-adjacent content should not leak through reminder payloads or 
 ## Closed Decisions
 
 - **SMS is launch-critical** for PT (see ADR-012 + notifications-spec)
-- **Calendar OAuth credential management = Better Auth `account` rows** (ADR-017 amends ADR-004); Eleva retains full CalendarAdapter control. WorkOS Pipes (removed, see ADR-017).
+- **Calendar OAuth credential management = Better Auth `account` rows** (ADR-017 amends ADR-004); Eleva retains full CalendarAdapter control.
 - **Calendar connection is optional** — experts can use Eleva-only scheduling with .ics email fallback (see ADR-004 Calendar-Optional Mode)
 - **Final reminder defaults**: 24h email+SMS, 1h email (SMS opt-in)
 

@@ -20,12 +20,10 @@ export type ProductTier = keyof typeof PRODUCT_KEYS
 
 /**
  * Creates a Stripe Customer for an Eleva organization.
- * This customer is then linked to the WorkOS organization via stripeCustomerId.
  */
 export async function createOrgCustomer(input: {
   orgName: string
   orgId: string
-  workosOrgId: string
   email?: string
 }): Promise<Stripe.Customer> {
   return stripe().customers.create({
@@ -33,7 +31,6 @@ export async function createOrgCustomer(input: {
     email: input.email,
     metadata: {
       eleva_org_id: input.orgId,
-      workos_org_id: input.workosOrgId,
     },
   })
 }
@@ -67,7 +64,7 @@ export async function findTierPrice(tier: ProductTier): Promise<string | null> {
 /**
  * Finds the per-seat price for a given product tier, if one exists.
  * Prefers the metered (`per_seat_metered`) price over the legacy
- * licensed (`per_seat`) price so clinics opt into WorkOS Seat Sync as
+ * licensed (`per_seat`) price so clinics opt into Eleva seat sync as
  * soon as `seed-products.ts --apply` creates the metered price.
  */
 async function findSeatPriceWithType(
@@ -132,12 +129,11 @@ async function buildSubscriptionItems(input: {
 
 export async function getBillingCustomerForOrg(
   orgId: string
-): Promise<{ stripeCustomerId: string; workosOrgId: string } | null> {
+): Promise<{ stripeCustomerId: string } | null> {
   return withPlatformAdminContext(async (tx) => {
     const rows = await tx
       .select({
         stripeCustomerId: main.billingCustomers.stripeCustomerId,
-        workosOrgId: main.billingCustomers.workosOrgId,
       })
       .from(main.billingCustomers)
       .where(eq(main.billingCustomers.orgId, orgId))
@@ -150,11 +146,9 @@ export async function getBillingCustomerForOrg(
  * Creates a subscription for an org on the given tier.
  * Used during provisioning to give every org a subscription from day one.
  *
- * Base tier is always quantity=1. For clinic tiers a metered seat item
- * priced against the WorkOS-managed `workos_seat_count` Billing Meter
- * is attached automatically (per ADR-016 + W5). The application MUST
- * NOT pass `quantity` for metered seat items; WorkOS Seat Sync owns
- * member-count reporting.
+ * Base tier is always quantity=1. For clinic tiers a seat item is
+ * attached automatically (per ADR-016). Seat quantity is owned by
+ * `@eleva/billing` `syncSeatQuantity`.
  *
  * `eleva_org_id` and `eleva_tier` are stamped in subscription metadata
  * so the webhook can resolve the tenant from event metadata even
@@ -185,7 +179,6 @@ export async function createSubscriptionCheckoutSession(input: {
   customerId: string
   tier: ProductTier
   orgId: string
-  workosOrgId: string
   actorUserId: string
   returnUrl: string
   quantity?: number
@@ -208,13 +201,11 @@ export async function createSubscriptionCheckoutSession(input: {
       billing_address_collection: "required",
       metadata: {
         eleva_org_id: input.orgId,
-        workos_org_id: input.workosOrgId,
         eleva_tier: input.tier,
       },
       subscription_data: {
         metadata: {
           eleva_org_id: input.orgId,
-          workos_org_id: input.workosOrgId,
           eleva_tier: input.tier,
         },
       },

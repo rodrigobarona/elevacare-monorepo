@@ -160,7 +160,7 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/clinica-mota", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.status).toBe(307)
@@ -177,7 +177,7 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/barona-expert", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.status).toBe(307)
@@ -197,7 +197,7 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/clinica-mota/team/schedule", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.headers.get("x-middleware-rewrite")).toBe(
@@ -216,7 +216,7 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/clinica-mota/admin", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
       })
     )
     expect(res.headers.get("x-middleware-rewrite")).toBe(
@@ -231,9 +231,9 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
         cookieValues: {
-          "wos-session": "1",
+          "better-auth.session_token": "1",
           "eleva-last-org": "clinica-mota",
         },
         headers: {
@@ -256,7 +256,7 @@ describe("createGatewayProxy integration", () => {
     })
     const res = await proxy(
       makeRequest("/", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
         headers: { RSC: "1", "Sec-Fetch-Mode": "cors" },
       })
     )
@@ -272,7 +272,7 @@ describe("createGatewayProxy integration", () => {
     })
     await proxy(
       makeRequest("/pt", {
-        cookieNames: ["wos-session"],
+        cookieNames: ["better-auth.session_token"],
         headers: {
           "Sec-Fetch-Mode": "navigate",
           "Sec-Fetch-Dest": "document",

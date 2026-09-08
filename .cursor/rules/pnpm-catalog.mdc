@@ -49,12 +49,12 @@ catalog:
 | Types | `@types/react`, `@types/react-dom`, `@types/node` |
 | Build & lint | `typescript`, `eslint`, `@tailwindcss/postcss`, `tailwindcss`, `tsx`, `prettier` |
 | Testing | `vitest`, `@vitest/coverage-v8` |
-| Auth (WorkOS) | `@workos-inc/authkit-nextjs`, `@workos-inc/node`, `@workos-inc/widgets`, `@workos-inc/widgets-i18n` |
+| Auth | `better-auth`, `@better-auth/passkey`, `@better-auth/api-key`, `@better-auth/drizzle-adapter` |
 | Payments (Stripe) | `stripe`, `@stripe/stripe-js` |
 | Email | `resend` |
 | Infrastructure | `@upstash/redis` |
 | Database | `drizzle-orm` |
-| UI | `@phosphor-icons/react`, `@radix-ui/themes`, `sonner`, `zod` |
+| UI | `@phosphor-icons/react`, `sonner`, `zod` |
 
 ## Adding a New Dependency to the Catalog
 

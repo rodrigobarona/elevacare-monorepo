@@ -76,7 +76,7 @@ export const LocaleSchema = z.enum(locales)
 /**
  * Normalize any locale-ish value into Eleva's launch locale set.
  *
- * WorkOS may store BCP-47 values such as "pt-PT" while UI routes and
+ * Accepts BCP-47 values such as "pt-PT" while UI routes and
  * message bundles use only the base launch language ("pt").
  */
 export function normalizeLocale(value: unknown): Locale | null {
@@ -84,10 +84,6 @@ export function normalizeLocale(value: unknown): Locale | null {
 
   const base = value.trim().split("-")[0]?.toLowerCase()
   return base && isLocale(base) ? base : null
-}
-
-export function normalizeWorkOSLocale(value: unknown): Locale | null {
-  return normalizeLocale(value)
 }
 
 export function getLocaleCookieDomain(
@@ -120,8 +116,8 @@ export function getLocaleCookieOptions(
 }
 
 /**
- * Pure unauthenticated locale discovery utility. Authenticated dashboard
- * requests should prefer WorkOS user.locale first, then use this chain.
+ * Pure locale discovery utility. Authenticated dashboard requests
+ * prefer the ELEVA_LOCALE cookie first, then use this chain.
  *
  * Resolution chain:
  * 1. ELEVA_LOCALE cookie (explicit user preference)

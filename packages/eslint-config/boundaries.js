@@ -7,7 +7,8 @@
  *   per-sprint as owning packages come online)
  *
  * Banned imports, by sprint (activate when the owning package lands):
- * - S1: `@workos-inc/node` outside `@eleva/auth`
+ * - leftover IDP SDKs (`@workos-inc/*`) nowhere
+ * - `better-auth` only inside `@eleva/auth`
  * - S1: `@vercel/flags` / `flags` outside `@eleva/flags`
  * - S1: `@neondatabase/serverless` outside `@eleva/db`
  * - S2: `stripe`, `@stripe/stripe-js`, `@stripe/connect-js`,
@@ -85,6 +86,16 @@ export const boundariesConfig = [
             },
           ],
           patterns: [
+            {
+              group: ["better-auth", "better-auth/*", "@better-auth/*"],
+              message:
+                "Import Better Auth only through @eleva/auth (boundary lint).",
+            },
+            {
+              group: ["@workos-inc", "@workos-inc/**"],
+              message:
+                "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
+            },
             // Sprint 2: per-adapter SDKs land in @eleva/accounting.
             // No standalone npm packages today (TOConline + Moloni use
             // raw fetch); patterns ready when a community SDK appears.

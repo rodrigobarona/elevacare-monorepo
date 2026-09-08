@@ -1,6 +1,8 @@
+import { hkdfSync } from "node:crypto"
 import { sealData, unsealData } from "iron-session"
 
 const UPLOAD_TOKEN_TTL_SECONDS = 3600
+const UPLOAD_TOKEN_INFO = "eleva:blob-upload-token:v1"
 
 interface UploadTokenPayload {
   sub: string
@@ -9,16 +11,17 @@ interface UploadTokenPayload {
 }
 
 function getTokenPassword(): string {
-  const pw = process.env.WORKOS_COOKIE_PASSWORD
-  if (!pw)
-    throw new Error("WORKOS_COOKIE_PASSWORD is required for upload tokens")
-  return pw
+  const root = process.env.BETTER_AUTH_SECRET
+  if (!root) throw new Error("BETTER_AUTH_SECRET is required for upload tokens")
+  return Buffer.from(
+    hkdfSync("sha256", root, "", UPLOAD_TOKEN_INFO, 32)
+  ).toString("base64url")
 }
 
 /**
  * Mint a short-lived sealed token that authorises a client-side Vercel
  * Blob upload. The token is encrypted + authenticated via iron-session
- * using the same secret as session cookies (`WORKOS_COOKIE_PASSWORD`).
+ * using an HKDF-derived key from `BETTER_AUTH_SECRET`.
  *
  * Intended flow:
  *   1. Server action reads the session and calls `mintUploadToken(userId)`.

@@ -23,6 +23,23 @@ export const config = [
   },
   {
     rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["better-auth", "better-auth/*", "@better-auth/*"],
+              message:
+                "Import Better Auth only through @eleva/auth (boundary lint).",
+            },
+            {
+              group: ["@workos-inc", "@workos-inc/**"],
+              message:
+                "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
+            },
+          ],
+        },
+      ],
       // Allow `_`-prefixed args and vars to mark intentionally-unused
       // (interface contract, placeholder param, destructure rest, etc).
       "@typescript-eslint/no-unused-vars": [

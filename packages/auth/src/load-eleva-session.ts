@@ -1,6 +1,11 @@
 import { eq } from "drizzle-orm"
 import { auth as authTables, db } from "@eleva/db"
-import { capabilitiesFor, deriveProductLabel } from "./capabilities"
+import {
+  capabilitiesFor,
+  deriveProductLabel,
+  normalizeMembershipRole,
+  toMembershipSeniority,
+} from "./capabilities"
 import type { ElevaSession } from "./types"
 
 export function pickMembershipRow<T extends { orgId: string; orgSlug: string }>(
@@ -32,27 +37,22 @@ function buildSession(
   }
 ): ElevaSession {
   const orgType = preferred.orgType as ElevaSession["orgType"]
-  const workosRole =
-    preferred.role === "member" ? ("member" as const) : ("admin" as const)
-  const productLabel = deriveProductLabel(
-    orgType,
-    preferred.role === "owner" ? "owner" : workosRole
-  )
+  const seniority = toMembershipSeniority(preferred.role)
+  const membershipRole = normalizeMembershipRole(seniority)
+  const productLabel = deriveProductLabel(orgType, seniority)
 
   return {
     user: {
       id: input.userId,
-      workosUserId: input.userId,
       email: input.email,
       displayName: input.name,
       avatarUrl: input.image,
     },
     orgId: preferred.orgId,
-    workosOrgId: preferred.orgId,
     orgSlug: preferred.orgSlug,
     productLabel,
     orgType,
-    workosRole,
+    membershipRole,
     capabilities: capabilitiesFor(productLabel),
   }
 }

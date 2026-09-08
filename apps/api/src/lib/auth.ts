@@ -86,7 +86,8 @@ export function apiAuthFailure(
         { status: 403, headers }
       )
     }
-    const forbidden = err.code === "missing-capability"
+    const forbidden =
+      err.code === "missing-capability" || err.code === "not-a-member"
     return secureJson(
       { error: forbidden ? "forbidden" : "unauthorized", code: err.code },
       { status: forbidden ? 403 : 401, headers }

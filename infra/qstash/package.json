@@ -7,7 +7,6 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "list": "tsx --env-file=../../.env.local list-schedules.ts",
-    "setup:workos-sync": "tsx --env-file=../../.env.local setup-workos-sync.ts",
     "setup:audit-drainer": "tsx --env-file=../../.env.local setup-audit-drainer.ts",
     "setup:stripe-stuck": "tsx --env-file=../../.env.local setup-stripe-stuck-events.ts",
     "setup:all": "tsx --env-file=../../.env.local setup-all.ts"

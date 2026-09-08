@@ -85,7 +85,6 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const result = await createSubscriptionCheckoutSession({
       customerId: customer.stripeCustomerId,
-      workosOrgId: customer.workosOrgId,
       orgId: session.orgId,
       actorUserId: session.user.id,
       tier: parsed.data.tier,

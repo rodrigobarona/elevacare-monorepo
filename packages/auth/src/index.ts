@@ -1,6 +1,7 @@
 export {
   type ElevaSession,
   type ProductLabel,
+  type MembershipRole,
   type ApiAuthMode,
   UnauthorizedError,
 } from "./types"
@@ -10,44 +11,18 @@ export {
   capabilitiesFor,
   hasCapability,
   CAPABILITY_BUNDLES,
+  normalizeMembershipRole,
+  toMembershipSeniority,
 } from "./capabilities"
-export {
-  resolveSessionFromWorkosUser,
-  requirePermission,
-  withSessionContext,
-} from "./session"
+export { requirePermission, withSessionContext } from "./session"
 export {
   ensurePersonalOrg,
   findExistingPersonalOrg,
-  provisionUser,
-  provisionOrganization,
-  provisionMembership,
   ensureExpertProfileForOrg,
   completeOnboarding,
-  type ProvisionUserInput,
-  type ProvisionUserResult,
-  type ProvisionOrganizationInput,
-  type ProvisionOrganizationResult,
-  type ProvisionMembershipInput,
-  type EnsureExpertProfileResult,
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
 } from "./provisioning"
-export {
-  SYNC_EVENTS,
-  type SyncEventType,
-  type ExternalIdWriteBack,
-  processWorkOSEvent,
-  syncUser,
-  softDeleteUser,
-  syncOrganization,
-  softDeleteOrganization,
-  syncMembership,
-  deleteMembership,
-  type WorkOSUserEventData,
-  type WorkOSOrganizationEventData,
-  type WorkOSMembershipEventData,
-} from "./sync"
 export {
   createAuthProxy,
   createPassthroughProxy,
@@ -66,14 +41,9 @@ export {
   requireSession,
   requireOrg,
   getCapabilities,
-  getWidgetToken,
-  getWidgetTokenFromSession,
+  getAuthenticatedLocale,
+  refreshSessionEntitlements,
 } from "./server"
-export {
-  WIDGET_TOKEN_SCOPES,
-  scopesForWidget,
-  type WidgetComponent,
-} from "./widget-scopes"
 export {
   listUserOrganizations,
   listAuthOrganizations,
@@ -83,12 +53,11 @@ export {
   OrganizationForbiddenError,
   addOrganizationMember,
   type UserOrganizationItem,
-  type ListUserOrganizationsInput,
   type CreateOrganizationInput,
   type CreateOrganizationResult,
 } from "./organizations"
 export { getProviderAccessToken } from "./provider-token"
 export { syncExpertCalendarAccounts } from "./calendar-accounts"
-export { getWorkOS } from "./workos-client"
 export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"
+export { SESSION_COOKIE_NAMES } from "./server/credentials"

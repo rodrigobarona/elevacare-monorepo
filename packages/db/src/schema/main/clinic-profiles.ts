@@ -14,7 +14,7 @@ import {
   pkColumn,
   updatedAt,
 } from "./shared"
-import { organizations } from "./organizations"
+import { organization } from "../auth"
 
 /**
  * Public clinic profile. Shares the public username namespace with
@@ -33,7 +33,7 @@ export const clinicProfiles = pgTable(
   "clinic_profiles",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
 

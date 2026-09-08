@@ -35,9 +35,9 @@ pnpm dev        # starts all apps in parallel via Turborepo
 | Package                | Purpose                                                      |
 | ---------------------- | ------------------------------------------------------------ |
 | `@eleva/db`            | Drizzle ORM + Neon — schema, RLS, migrations, seed scripts   |
-| `@eleva/auth`          | WorkOS AuthKit Next.js integration                           |
+| `@eleva/auth`          | Better Auth session, RBAC, org resolution (ADR-017)          |
 | `@eleva/config`        | Shared env validation (Zod), i18n config, reserved usernames |
-| `@eleva/encryption`    | Encryption helpers (WorkOS Vault)                            |
+| `@eleva/encryption`    | Envelope encryption (ADR-020)                                |
 | `@eleva/observability` | Sentry integration and proxy/CSP entrypoints                 |
 | `@eleva/flags`         | Feature flags via Vercel Flags + Edge Config                 |
 | `@eleva/workflows`     | Durable workflow logic over `@eleva/db`                      |
@@ -66,25 +66,26 @@ pnpm dev        # starts all apps in parallel via Turborepo
 
 ### Infrastructure (`infra/`)
 
-| Package               | Purpose                                 |
-| --------------------- | --------------------------------------- |
-| `@eleva/infra-workos` | RBAC role/permission generation scripts |
+| Package               | Purpose                           |
+| --------------------- | --------------------------------- |
+| `@eleva/infra-stripe` | Stripe products, webhooks, portal |
+| `@eleva/infra-qstash` | QStash schedule provisioning      |
 
 ## Scripts
 
 Run from the repo root — Turborepo handles cross-package orchestration.
 
-| Script               | Description                                  |
-| -------------------- | -------------------------------------------- |
-| `pnpm dev`           | Start all apps in development (Turbopack)    |
-| `pnpm build`         | Production build                             |
-| `pnpm lint`          | Lint all packages                            |
-| `pnpm format`        | Format with Prettier                         |
-| `pnpm typecheck`     | TypeScript type checking                     |
-| `pnpm test`          | Run Vitest test suites                       |
-| `pnpm db:seed:demo`  | Seed the database with demo data             |
-| `pnpm rbac:generate` | Generate WorkOS RBAC roles/permissions       |
-| `pnpm flags:sync`    | Sync feature flag definitions to Edge Config |
+| Script              | Description                                  |
+| ------------------- | -------------------------------------------- |
+| `pnpm dev`          | Start all apps in development (Turbopack)    |
+| `pnpm build`        | Production build                             |
+| `pnpm lint`         | Lint all packages                            |
+| `pnpm format`       | Format with Prettier                         |
+| `pnpm typecheck`    | TypeScript type checking                     |
+| `pnpm test`         | Run Vitest test suites                       |
+| `pnpm db:seed:demo` | Seed the database with demo data             |
+| `pnpm qstash:list`  | List QStash schedules                        |
+| `pnpm flags:sync`   | Sync feature flag definitions to Edge Config |
 
 ## Adding UI components
 

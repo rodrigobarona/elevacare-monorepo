@@ -34,18 +34,15 @@
     "stripe:backfill:org-customers": "pnpm --filter=@eleva/infra-stripe backfill:org-customers",
     "stripe:replay:event": "pnpm --filter=@eleva/infra-stripe replay:event",
     "stripe:verify:entitlements": "pnpm --filter=@eleva/infra-stripe verify:entitlements",
-    "workos:rbac:generate": "pnpm --filter=@eleva/infra-workos rbac:generate",
-    "workos:widgets:generate": "pnpm --filter=@eleva/infra-workos widgets:generate",
     "qstash:list": "pnpm --filter=@eleva/infra-qstash run list",
     "qstash:setup": "pnpm --filter=@eleva/infra-qstash run setup:all",
-    "qstash:setup:workos-sync": "pnpm --filter=@eleva/infra-qstash run setup:workos-sync",
     "qstash:setup:audit-drainer": "pnpm --filter=@eleva/infra-qstash run setup:audit-drainer",
     "qstash:setup:stripe-stuck": "pnpm --filter=@eleva/infra-qstash run setup:stripe-stuck",
     "flags:sync": "pnpm --filter=@eleva/flags flags:sync",
     "db:seed:demo": "pnpm --filter=@eleva/db db:seed:demo",
     "db:seed:categories": "pnpm --filter=@eleva/db db:seed:categories",
     "db:fix:stripe-state-machine": "pnpm --filter=@eleva/db db:fix:stripe-state-machine",
-    "db:backfill:org-slugs": "pnpm --filter=@eleva/db db:backfill:org-slugs"
+    "db:backfill:auth-identity": "pnpm --filter=@eleva/db db:backfill:auth-identity -- --verify"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.0.1",

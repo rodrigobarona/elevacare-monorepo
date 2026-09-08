@@ -93,7 +93,7 @@ There is no ad hoc cron route for core product correctness. Anything that must s
 - `ersAuditExport` — periodic ERS-required export (if applicable)
 
 Permissions are TypeScript (ADR-021). The former `rbacDriftCheck` QStash job against
-`infra/workos/rbac-config.json` is not in the catalog (removed, see ADR-017).
+`the former identity infra package/rbac-config.json` is not in the catalog (removed, see ADR-017).
 
 ### Mobile workflows (when mobile ships)
 

@@ -1,6 +1,11 @@
 import { and, eq } from "drizzle-orm"
 import { auth as authTables, db } from "@eleva/db"
-import { capabilitiesFor, deriveProductLabel } from "../capabilities"
+import {
+  capabilitiesFor,
+  deriveProductLabel,
+  normalizeMembershipRole,
+  toMembershipSeniority,
+} from "../capabilities"
 import {
   UnauthorizedError,
   type ApiAuthMode,
@@ -188,31 +193,26 @@ async function buildIdentity(input: {
     .limit(1)
 
   if (!membership) {
-    throw new UnauthorizedError("no-session", "membership not found")
+    throw new UnauthorizedError("not-a-member", "membership not found")
   }
 
   const orgType = membership.orgType as ElevaSession["orgType"]
-  const workosRole =
-    membership.role === "member" ? ("member" as const) : ("admin" as const)
-  const productLabel = deriveProductLabel(
-    orgType,
-    membership.role === "owner" ? "owner" : workosRole
-  )
+  const seniority = toMembershipSeniority(membership.role)
+  const membershipRole = normalizeMembershipRole(seniority)
+  const productLabel = deriveProductLabel(orgType, seniority)
 
   return {
     user: {
       id: input.userId,
-      workosUserId: input.userId,
       email: input.email,
       displayName: input.name,
       avatarUrl: input.image,
     },
     orgId: input.orgId,
-    workosOrgId: input.orgId,
     orgSlug: membership.orgSlug,
     productLabel,
     orgType,
-    workosRole,
+    membershipRole,
     authMode: input.authMode,
     capabilities: capabilitiesFor(productLabel),
   }

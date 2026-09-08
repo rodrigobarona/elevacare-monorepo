@@ -34,7 +34,7 @@ export async function createWorkspace(
   _prev: CreateWorkspaceState | null,
   formData: FormData
 ): Promise<CreateWorkspaceState> {
-  let workosOrgId: string
+  let orgId: string
   let homeUrl: string
 
   try {
@@ -46,7 +46,7 @@ export async function createWorkspace(
     const api = await getAuthedApiClient()
     const result = await api.organizations.create(parsed)
 
-    workosOrgId = result.workosOrgId
+    orgId = result.orgId
     homeUrl = resolveOrgHomeUrl({
       orgSlug: result.slug,
       productLabel: deriveProductLabel(parsed.type, "admin"),
@@ -57,6 +57,6 @@ export async function createWorkspace(
     return { ok: false, error: "create_failed" }
   }
 
-  await switchOrganization(workosOrgId, homeUrl)
+  await switchOrganization(orgId, homeUrl)
   return { ok: true }
 }
