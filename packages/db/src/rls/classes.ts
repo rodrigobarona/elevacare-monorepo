@@ -77,7 +77,7 @@ export type RlsClassFixture = {
  * synthetic table so the suite does not have to seed the full booking graph.
  */
 export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
-  { class: "tenant-owned", table: "organizations", synthetic: false },
+  { class: "tenant-owned", table: "org_data_keys", synthetic: false },
   { class: "dual-organization", table: "bookings", synthetic: false },
   { class: "owner-user-visible", table: "users", synthetic: false },
   { class: "participant-visible", table: "sessions", synthetic: false },

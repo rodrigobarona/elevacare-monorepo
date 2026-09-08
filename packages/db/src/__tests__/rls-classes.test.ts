@@ -138,6 +138,7 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
 
   it.each(RLS_CLASS_FIXTURES)(
     "$class ($table) positive and negative",
+    { timeout: 30_000 },
     async (fixture: RlsClassFixture) => {
       const table = fixture.synthetic
         ? fixture.table

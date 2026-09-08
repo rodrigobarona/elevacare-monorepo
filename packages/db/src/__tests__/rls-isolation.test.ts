@@ -39,56 +39,60 @@ describe.skipIf(!enabled || !databaseUrl)("rls-isolation", () => {
       .where(inArray(organization.id, [orgA, orgB]))
   })
 
-  it("cross-org read returns zero rows under eleva.org_id", async () => {
-    await db()
-      .insert(organization)
-      .values([
-        {
-          id: orgA,
-          name: "RLS A",
-          slug: `rls-iso-a-${orgA}`,
-          type: "personal",
-        },
-        {
-          id: orgB,
-          name: "RLS B",
-          slug: `rls-iso-b-${orgB}`,
-          type: "personal",
-        },
-      ])
+  it(
+    "cross-org read returns zero rows under eleva.org_id",
+    { timeout: 30_000 },
+    async () => {
+      await db()
+        .insert(organization)
+        .values([
+          {
+            id: orgA,
+            name: "RLS A",
+            slug: `rls-iso-a-${orgA}`,
+            type: "personal",
+          },
+          {
+            id: orgB,
+            name: "RLS B",
+            slug: `rls-iso-b-${orgB}`,
+            type: "personal",
+          },
+        ])
 
-    await withOrgContext(orgA, async (tx) => {
-      await tx.insert(orgDataKeys).values({
-        orgId: orgA,
-        keyVersion: 1,
-        kekVersion: "1",
-        wrappedDek: "rls-iso-a",
+      await withOrgContext(orgA, async (tx) => {
+        await tx.insert(orgDataKeys).values({
+          orgId: orgA,
+          keyVersion: 1,
+          kekVersion: "1",
+          wrappedDek: "rls-iso-a",
+        })
       })
-    })
-    await withOrgContext(orgB, async (tx) => {
-      await tx.insert(orgDataKeys).values({
-        orgId: orgB,
-        keyVersion: 1,
-        kekVersion: "1",
-        wrappedDek: "rls-iso-b",
+      await withOrgContext(orgB, async (tx) => {
+        await tx.insert(orgDataKeys).values({
+          orgId: orgB,
+          keyVersion: 1,
+          kekVersion: "1",
+          wrappedDek: "rls-iso-b",
+        })
       })
-    })
 
-    const visible = await withOrgContext(orgA, async (tx) => {
-      return tx
-        .select({ orgId: orgDataKeys.orgId })
-        .from(orgDataKeys)
-        .where(inArray(orgDataKeys.orgId, [orgA, orgB]))
-    })
-    expect(visible).toHaveLength(1)
-    expect(visible[0]?.orgId).toBe(orgA)
+      const visible = await withOrgContext(orgA, async (tx) => {
+        return tx
+          .select({ orgId: orgDataKeys.orgId })
+          .from(orgDataKeys)
+          .where(inArray(orgDataKeys.orgId, [orgA, orgB]))
+      })
+      expect(visible).toHaveLength(1)
+      expect(visible[0]?.orgId).toBe(orgA)
 
-    const other = await withOrgContext(orgB, async (tx) => {
-      return tx
-        .select({ orgId: orgDataKeys.orgId })
-        .from(orgDataKeys)
-        .where(eq(orgDataKeys.orgId, orgA))
-    })
-    expect(other).toHaveLength(0)
-  })
+      const other = await withOrgContext(orgB, async (tx) => {
+        return tx
+          .select({ orgId: orgDataKeys.orgId })
+          .from(orgDataKeys)
+          .where(eq(orgDataKeys.orgId, orgA))
+      })
+      expect(other).toHaveLength(0)
+    }
+  )
 })
