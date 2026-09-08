@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test"
 import {
   ACCOUNT_ORIGIN,
   E2E_PASSWORD,
+  E2E_PASSWORD_WRONG,
   accountUrl,
   apiUrl,
   uniqueEmail,
@@ -51,7 +52,7 @@ test.describe("auth screens", () => {
   test("wrong password shows an error", async ({ page }) => {
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill("nobody@example.com")
-    await page.getByTestId("login-password").fill("Definitely-Wrong-Pass1")
+    await page.getByTestId("login-password").fill(E2E_PASSWORD_WRONG)
     await page.getByTestId("login-submit").click()
     await expect(page.getByTestId("login-error")).toBeVisible({
       timeout: 15_000,

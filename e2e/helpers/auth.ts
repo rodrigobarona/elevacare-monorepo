@@ -22,6 +22,7 @@ export function uniqueEmail(prefix = "e2e"): string {
 
 export const E2E_PASSWORD = "ElevaE2e!pass1"
 export const E2E_PASSWORD_NEXT = "ElevaE2e!pass2"
+export const E2E_PASSWORD_WRONG = "Definitely-Wrong-Pass1"
 
 export type { E2eAuthLinkKind }
 

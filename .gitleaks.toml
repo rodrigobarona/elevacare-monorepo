@@ -19,3 +19,16 @@ paths = [
   '''(^|/)(_context/clone-repo/)''',
   '''(^|/)(_context/Onboarding-exxamples/)''',
 ]
+
+[[allowlists]]
+description = "Playwright auth fixtures used only to sign in or assert rejection (not live credentials)"
+condition = "AND"
+regexTarget = "secret"
+paths = [
+  '''(^|/)e2e/'''
+]
+regexes = [
+  '''Definitely-Wrong-Pass1''',
+  '''ElevaE2e!pass1''',
+  '''ElevaE2e!pass2''',
+]

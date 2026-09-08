@@ -3,6 +3,7 @@ import {
   ACCOUNT_ORIGIN,
   E2E_PASSWORD,
   E2E_PASSWORD_NEXT,
+  E2E_PASSWORD_WRONG,
   apiUrl,
   authHeaders,
   getSession,
@@ -227,7 +228,7 @@ test.describe("Better Auth API extras", () => {
 
     const rejected = await signInEmail(request, {
       email,
-      password: "Definitely-Wrong-Pass1",
+      password: E2E_PASSWORD_WRONG,
     })
     expect(rejected.status()).toBeGreaterThanOrEqual(400)
   })

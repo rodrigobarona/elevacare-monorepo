@@ -41,6 +41,7 @@ describe("repo-wide proxy matcher consistency", () => {
     "api", // api-only: uses /:path*
     "app", // member app: no api exclusion
     "poc", // unauthenticated design POC: no proxy.ts at all
+    "email", // React Email CLI preview: not a Next.js app
   ])
 
   const appNames = readdirSync(appsDir, { withFileTypes: true })
