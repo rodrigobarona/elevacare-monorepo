@@ -5,6 +5,24 @@ export const SESSION_COOKIE_NAMES = [
   "__Secure-better-auth.session_token",
 ] as const
 
+export function hasDuplicateSessionCookie(
+  cookieHeader: string | null
+): boolean {
+  if (!cookieHeader) return false
+  return SESSION_COOKIE_NAMES.some(
+    (name) => countCookieValues(cookieHeader, name) > 1
+  )
+}
+
+export function expiredSessionCookies(): string[] {
+  const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
+  const attrs = "Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+  return SESSION_COOKIE_NAMES.flatMap((name) => [
+    `${name}=; ${attrs}; Domain=${domain}`,
+    `${name}=; ${attrs}`,
+  ])
+}
+
 export function cookieHeaderHasSession(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false
   return SESSION_COOKIE_NAMES.some(

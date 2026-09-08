@@ -63,6 +63,8 @@ export {
   getSession,
   getSessionForOrg,
   requireSession,
+  requireOrg,
+  getCapabilities,
   getWidgetToken,
   getWidgetTokenFromSession,
 } from "./server"
@@ -76,6 +78,7 @@ export {
   listAuthOrganizations,
   createOrganization,
   createElevaOrganization,
+  setActiveElevaOrganization,
   addOrganizationMember,
   type UserOrganizationItem,
   type ListUserOrganizationsInput,

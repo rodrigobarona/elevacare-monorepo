@@ -16,6 +16,8 @@ import {
   CreateWorkspaceRequestSchema,
   ExpertOnboardingStepSchema,
   ListOrganizationsMineResponseSchema,
+  SetActiveOrganizationRequestSchema,
+  SetActiveOrganizationResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -250,6 +252,32 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/organizations/active": {
+        post: {
+          operationId: "setActiveOrganization",
+          summary: "Set the active organization on the current session",
+          tags: ["Organizations"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: SetActiveOrganizationRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Active organization updated",
+              content: {
+                "application/json": {
+                  schema: SetActiveOrganizationResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
           },
         },
       },

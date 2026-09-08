@@ -18,6 +18,7 @@
     "./organizations": "./src/organizations.ts",
     "./org-routing": "./src/org-routing.ts",
     "./permissions": "./src/permissions.ts",
+    "./client": "./src/client.ts",
     "./server/auth": "./src/server/auth.ts",
     "./api-auth": "./src/server/api-auth.ts",
     "./trusted-origins": "./src/trusted-origins.ts"
@@ -31,6 +32,7 @@
     "@better-auth/api-key": "catalog:",
     "@better-auth/drizzle-adapter": "catalog:",
     "@better-auth/passkey": "catalog:",
+    "@eleva/api-client": "workspace:*",
     "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",

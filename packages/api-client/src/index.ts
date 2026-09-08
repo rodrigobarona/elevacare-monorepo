@@ -84,6 +84,37 @@ export const GetOrganizationResponseSchema = z.object({
   type: z.string(),
 })
 
+export const SessionUserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  name: z.string().nullable().optional(),
+  image: z.string().nullable().optional(),
+  emailVerified: z.boolean().optional(),
+})
+
+export const SessionRecordSchema = z.object({
+  id: z.string(),
+  userId: z.string(),
+  activeOrganizationId: z.string().nullable().optional(),
+  expiresAt: z.union([z.string(), z.date()]).optional(),
+})
+
+export const SessionResponseSchema = z
+  .object({
+    session: SessionRecordSchema.nullable(),
+    user: SessionUserSchema.nullable(),
+  })
+  .nullable()
+
+export const SetActiveOrganizationRequestSchema = z.object({
+  organizationId: z.string().uuid(),
+})
+
+export const SetActiveOrganizationResponseSchema = z.object({
+  ok: z.literal(true),
+  organizationId: z.string().uuid(),
+})
+
 export const CreateMembershipRequestSchema = z.object({
   userId: z.string().uuid(),
   orgId: z.string().uuid(),
@@ -190,6 +221,13 @@ export type CreateOrganizationResponse = z.infer<
 >
 export type GetOrganizationResponse = z.infer<
   typeof GetOrganizationResponseSchema
+>
+export type SessionResponse = z.infer<typeof SessionResponseSchema>
+export type SetActiveOrganizationRequest = z.infer<
+  typeof SetActiveOrganizationRequestSchema
+>
+export type SetActiveOrganizationResponse = z.infer<
+  typeof SetActiveOrganizationResponseSchema
 >
 export type CreateMembershipRequest = z.infer<
   typeof CreateMembershipRequestSchema
@@ -488,6 +526,24 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
+    auth: {
+      async getSession() {
+        try {
+          const raw = await request<unknown>("GET", "/auth/get-session")
+          const parsed = SessionResponseSchema.safeParse(raw)
+          return parsed.success ? parsed.data : null
+        } catch (err) {
+          if (
+            err instanceof ApiClientError &&
+            (err.status === 401 || err.status === 403)
+          ) {
+            return null
+          }
+          throw err
+        }
+      },
+    },
+
     organizations: {
       listMine() {
         return request<ListOrganizationsMineResponse>(
@@ -506,6 +562,13 @@ export function createApiClient(options: ApiClientOptions) {
         return request<GetOrganizationResponse>(
           "GET",
           `/organizations?slug=${encodeURIComponent(slug)}`
+        )
+      },
+      setActive(data: SetActiveOrganizationRequest) {
+        return request<SetActiveOrganizationResponse>(
+          "POST",
+          "/organizations/active",
+          data
         )
       },
     },

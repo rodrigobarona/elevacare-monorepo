@@ -155,6 +155,28 @@ export async function listAuthOrganizations(
   })
 }
 
+export async function setActiveElevaOrganization(input: {
+  headers: Headers
+  orgId: string
+  actorUserId: string
+}): Promise<void> {
+  await getAuthApi().setActiveOrganization({
+    headers: input.headers,
+    body: { organizationId: input.orgId },
+  })
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (_tx, ctx) => {
+      await ctx.emit({
+        entity: "organization",
+        action: "updated",
+        entityId: input.orgId,
+        payload: { active: true },
+      })
+    }
+  )
+}
+
 export async function addOrganizationMember(input: {
   userId: string
   orgId: string

@@ -75,6 +75,7 @@ export type AuditAction =
   | "failed"
   // Identity verification.
   | "verified"
+  | "email_verified"
   | "requires_input"
 
 export interface AuditContext {

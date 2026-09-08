@@ -284,6 +284,37 @@ Each entry should include:
 - Reference: [`spikes/02-better-auth.md`](./spikes/02-better-auth.md),
   [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
 
+### 2026-09-08: D-13 cookie/CSRF/subdomain threat model (proposed)
+
+- Owner: security
+- Status: **proposed** (not signed off)
+- Review date: 2026-10-01
+- Summary: Shared Better Auth session cookies use `Domain=.eleva.care`,
+  `Secure`, `HttpOnly`, `SameSite=Lax`, and a `__Secure-` name in production.
+  Cookie-authenticated mutations require a trusted `Origin` and reject
+  `Sec-Fetch-Site: cross-site` (`403 CSRF_ORIGIN_MISMATCH`). Duplicate session
+  cookies are `401 SESSION_COOKIE_AMBIGUOUS` and both values are cleared.
+  `__Secure-` does not stop cookie tossing. Previews never mint `.eleva.care`
+  cookies. Security owner signs this as the Phase 4 PR 04.2 entry gate — this
+  row is not a sign-off.
+- Reference:
+  [`security/cookie-csrf-threat-model.md`](./security/cookie-csrf-threat-model.md)
+
+### 2026-09-08: Better Auth clients and account UI (Phase 02.2)
+
+- Owner: engineering
+- Status: active
+- Summary: Frontends use `@eleva/auth/client` (`createAuthClient` against
+  `${NEXT_PUBLIC_API_URL}/auth`) and `getSession()` via
+  `@eleva/api-client` `GET /auth/get-session`. Proxy optimistic auth uses
+  `getSessionCookie` (no DB). Account hosts `/login`, `/signup`,
+  `/verify-email`, `/reset-password`, `/two-factor`, `/logout`. Org switch
+  calls `POST /organizations/active`. WorkOS Widgets CSS/config is removed
+  from `@eleva/dashboard`. Residual WorkOS provisioning helpers stay until
+  Phase 3.
+- Reference:
+  [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
 ### 2026-09-08: Phase 1.2 CI merge gates
 
 - Owner: engineering

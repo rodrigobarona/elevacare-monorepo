@@ -115,8 +115,13 @@ block product use while pending. Org switch is `organization.setActive`.
 Consumers:
 
 - `@eleva/auth/client` — `createAuthClient` + matching client plugins
-- `@eleva/auth/server` — `getSession()` = `React.cache`'d fetch of `/auth/get-session`
-  forwarding cookies
+- `@eleva/auth/server` — `getSession()` = `React.cache` over
+  `@eleva/api-client` `auth.getSession()` (`GET /auth/get-session`, cookie
+  forwarded). Mapped fields: `user.id` (= `auth.user.id`), `email`, `displayName`,
+  `avatarUrl`; `orgId` / `orgSlug` / `orgType` from `auth.member` +
+  `auth.organization`; `session.activeOrganizationId` selects the active org
+  when present. `workosUserId` / `workosOrgId` remain aliases of those ids until
+  Phase 3.
 - `@eleva/auth/proxy` — `getSessionCookie()` optimistic check in each `proxy.ts`;
   authorization is always re-checked server-side
 

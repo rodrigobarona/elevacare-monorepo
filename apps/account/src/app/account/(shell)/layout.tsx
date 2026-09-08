@@ -2,9 +2,6 @@ import { getTranslations } from "next-intl/server"
 import { guardSession } from "@eleva/auth"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
-import "@radix-ui/themes/styles.css"
-import "@workos-inc/widgets/styles.css"
-import "@eleva/dashboard/workos-widgets-overrides.css"
 
 export default async function SettingsLayout({
   children,

@@ -59,6 +59,22 @@ These are system-facing endpoints such as:
 - inbound messaging hooks
 - partner/admin integrations later
 
+## Auth (Better Auth)
+
+Human sessions are cookies on `.eleva.care`. Agents use exactly one of:
+
+| Mode           | Header / cookie                                                     | Verifier                                    |
+| -------------- | ------------------------------------------------------------------- | ------------------------------------------- |
+| Session cookie | `better-auth.session_token` or `__Secure-better-auth.session_token` | Better Auth `getSession`; CSRF on mutations |
+| Opaque bearer  | `Authorization: Bearer <session token>`                             | Better Auth session (not JWT)               |
+| JWT            | `Authorization: Bearer` compact JWS with `kid`                      | JWKS EdDSA, 15m, non-revocable              |
+| API key        | `x-api-key` only                                                    | apiKey plugin                               |
+
+More than one source → `400 AMBIGUOUS_CREDENTIALS`. Duplicate session cookies →
+`401 SESSION_COOKIE_AMBIGUOUS`. Cookie mutation with an untrusted origin →
+`403 CSRF_ORIGIN_MISMATCH`. Typed client: `@eleva/api-client` (`auth.getSession`,
+`organizations.setActive`). OpenAPI merges Better Auth paths under `/auth`.
+
 ## Recommended Contract Layers
 
 ### Domain layer
