@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto"
 import { eq, inArray } from "drizzle-orm"
-import { afterAll, describe, expect, it } from "vitest"
+import { Pool } from "@neondatabase/serverless"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
 import { withOrgContext, withPlatformAdminContext } from "../context"
 import { organizations } from "../schema/main/organizations"
+import { provisionRlsTestRole } from "./rls-test-role"
 
 const enabled = process.env.ELEVA_RLS_INTEGRATION === "1"
 const databaseUrl =
@@ -11,6 +13,17 @@ const databaseUrl =
 describe.skipIf(!enabled || !databaseUrl)("rls-isolation", () => {
   const orgA = randomUUID()
   const orgB = randomUUID()
+
+  beforeAll(async () => {
+    const pool = new Pool({ connectionString: databaseUrl })
+    const client = await pool.connect()
+    try {
+      await provisionRlsTestRole(client)
+    } finally {
+      client.release()
+      await pool.end()
+    }
+  })
 
   afterAll(async () => {
     await withPlatformAdminContext(async (tx) => {

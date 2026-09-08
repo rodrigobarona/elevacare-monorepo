@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { Pool, type PoolClient } from "@neondatabase/serverless"
-import { afterAll, describe, expect, it } from "vitest"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
+import { provisionRlsTestRole, setLocalRlsTestRole } from "./rls-test-role"
 import {
   RLS_CLASS_FIXTURES,
   RLS_POLICY_CLASSES,
@@ -90,6 +91,7 @@ async function withLocalSettings(
   fn: () => Promise<void>
 ) {
   await client.query("BEGIN")
+  await setLocalRlsTestRole(client)
   for (const [name, value] of Object.entries(settings)) {
     await client.query(`SELECT set_config($1, $2, true)`, [name, value])
   }
@@ -105,6 +107,15 @@ async function withLocalSettings(
 describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
   const pool = new Pool({ connectionString: databaseUrl })
   const created: string[] = []
+
+  beforeAll(async () => {
+    const client = await pool.connect()
+    try {
+      await provisionRlsTestRole(client)
+    } finally {
+      client.release()
+    }
+  })
 
   afterAll(async () => {
     const client = await pool.connect()
@@ -342,158 +353,167 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
     }
   })
 
-  it("installed policies exist on assigned main-db tables", async () => {
-    const client = await pool.connect()
-    try {
-      const managed = new Set<string>(TENANT_TABLES)
-      for (const row of RLS_TABLE_ASSIGNMENTS) {
-        if (row.table === "audit_events") {
-          continue
-        }
+  it(
+    "installed policies exist on assigned main-db tables",
+    { timeout: 30_000 },
+    async () => {
+      const client = await pool.connect()
+      try {
+        const managed = new Set<string>(TENANT_TABLES)
+        for (const row of RLS_TABLE_ASSIGNMENTS) {
+          if (row.table === "audit_events") {
+            continue
+          }
 
-        const exists = await client.query(
-          `SELECT 1 FROM information_schema.tables
+          const exists = await client.query(
+            `SELECT 1 FROM information_schema.tables
            WHERE table_schema = 'public' AND table_name = $1`,
-          [row.table]
-        )
-        expect(exists.rowCount, row.table).toBeGreaterThan(0)
+            [row.table]
+          )
+          expect(exists.rowCount, row.table).toBeGreaterThan(0)
 
-        if (!managed.has(row.table)) {
-          continue
+          if (!managed.has(row.table)) {
+            continue
+          }
+
+          const rel = await client.query<{
+            relrowsecurity: boolean
+            relforcerowsecurity: boolean
+          }>(
+            `SELECT relrowsecurity, relforcerowsecurity
+           FROM pg_class
+           WHERE relname = $1 AND relkind = 'r'`,
+            [row.table]
+          )
+          expect(rel.rows[0]?.relrowsecurity, row.table).toBe(true)
+          expect(rel.rows[0]?.relforcerowsecurity, row.table).toBe(true)
+
+          const policies = await client.query<{
+            using: string | null
+            with_check: string | null
+          }>(
+            `SELECT pg_get_expr(p.polqual, p.polrelid) AS using,
+                  pg_get_expr(p.polwithcheck, p.polrelid) AS with_check
+           FROM pg_policy p
+           JOIN pg_class c ON c.oid = p.polrelid
+           WHERE c.relname = $1`,
+            [row.table]
+          )
+          expect(policies.rowCount, `${row.table} policies`).toBeGreaterThan(0)
+
+          const combined = policies.rows
+            .flatMap((policy) => [policy.using, policy.with_check])
+            .filter(Boolean)
+            .join(" ")
+          expect(combined, row.table).toContain("eleva.org_id")
+          if (row.table === "organizations") {
+            expect(combined).toContain("id")
+          } else {
+            expect(combined).toContain("org_id")
+          }
         }
+      } finally {
+        client.release()
+      }
+    }
+  )
 
+  it(
+    "installed audit_events policies enforce tenant SELECT and drainer INSERT",
+    { timeout: 30_000 },
+    async () => {
+      expect(auditDatabaseUrl, "AUDIT_DATABASE_URL").toBeTruthy()
+      const auditPool = new Pool({ connectionString: auditDatabaseUrl })
+      const client = await auditPool.connect()
+      await provisionRlsTestRole(client)
+      const orgA = randomUUID()
+      const orgB = randomUUID()
+      const auditId = randomUUID()
+      const insertSql = `INSERT INTO audit_events
+      (audit_id, org_id, action, entity, payload)
+      VALUES ($1, $2, 'created', 'organization', '{}'::jsonb)`
+
+      try {
         const rel = await client.query<{
           relrowsecurity: boolean
           relforcerowsecurity: boolean
         }>(
           `SELECT relrowsecurity, relforcerowsecurity
-           FROM pg_class
-           WHERE relname = $1 AND relkind = 'r'`,
-          [row.table]
+         FROM pg_class
+         WHERE relname = 'audit_events' AND relkind = 'r'`
         )
-        expect(rel.rows[0]?.relrowsecurity, row.table).toBe(true)
-        expect(rel.rows[0]?.relforcerowsecurity, row.table).toBe(true)
+        expect(rel.rows[0]?.relrowsecurity).toBe(true)
+        expect(rel.rows[0]?.relforcerowsecurity).toBe(true)
 
         const policies = await client.query<{
+          polname: string
+          polcmd: string
           using: string | null
           with_check: string | null
         }>(
-          `SELECT pg_get_expr(p.polqual, p.polrelid) AS using,
-                  pg_get_expr(p.polwithcheck, p.polrelid) AS with_check
-           FROM pg_policy p
-           JOIN pg_class c ON c.oid = p.polrelid
-           WHERE c.relname = $1`,
-          [row.table]
-        )
-        expect(policies.rowCount, `${row.table} policies`).toBeGreaterThan(0)
-
-        const combined = policies.rows
-          .flatMap((policy) => [policy.using, policy.with_check])
-          .filter(Boolean)
-          .join(" ")
-        expect(combined, row.table).toContain("eleva.org_id")
-        if (row.table === "organizations") {
-          expect(combined).toContain("id")
-        } else {
-          expect(combined).toContain("org_id")
-        }
-      }
-    } finally {
-      client.release()
-    }
-  })
-
-  it("installed audit_events policies enforce tenant SELECT and drainer INSERT", async () => {
-    expect(auditDatabaseUrl, "AUDIT_DATABASE_URL").toBeTruthy()
-    const auditPool = new Pool({ connectionString: auditDatabaseUrl })
-    const client = await auditPool.connect()
-    const orgA = randomUUID()
-    const orgB = randomUUID()
-    const auditId = randomUUID()
-    const insertSql = `INSERT INTO audit_events
-      (audit_id, org_id, action, entity, payload)
-      VALUES ($1, $2, 'created', 'organization', '{}'::jsonb)`
-
-    try {
-      const rel = await client.query<{
-        relrowsecurity: boolean
-        relforcerowsecurity: boolean
-      }>(
-        `SELECT relrowsecurity, relforcerowsecurity
-         FROM pg_class
-         WHERE relname = 'audit_events' AND relkind = 'r'`
-      )
-      expect(rel.rows[0]?.relrowsecurity).toBe(true)
-      expect(rel.rows[0]?.relforcerowsecurity).toBe(true)
-
-      const policies = await client.query<{
-        polname: string
-        polcmd: string
-        using: string | null
-        with_check: string | null
-      }>(
-        `SELECT p.polname,
+          `SELECT p.polname,
                 p.polcmd,
                 pg_get_expr(p.polqual, p.polrelid) AS using,
                 pg_get_expr(p.polwithcheck, p.polrelid) AS with_check
          FROM pg_policy p
          JOIN pg_class c ON c.oid = p.polrelid
          WHERE c.relname = 'audit_events'`
-      )
-      expect(policies.rowCount).toBeGreaterThanOrEqual(2)
-      const selectPolicy = policies.rows.find((row) => row.polcmd === "r")
-      const insertPolicy = policies.rows.find((row) => row.polcmd === "a")
-      expect(selectPolicy?.using).toContain("eleva.org_id")
-      expect(selectPolicy?.using).toContain("platform_admin")
-      expect(insertPolicy?.with_check).toContain("audit_drainer")
-      expect(insertPolicy?.with_check).not.toContain("platform_admin")
+        )
+        expect(policies.rowCount).toBeGreaterThanOrEqual(2)
+        const selectPolicy = policies.rows.find((row) => row.polcmd === "r")
+        const insertPolicy = policies.rows.find((row) => row.polcmd === "a")
+        expect(selectPolicy?.using).toContain("eleva.org_id")
+        expect(selectPolicy?.using).toContain("platform_admin")
+        expect(insertPolicy?.with_check).toContain("audit_drainer")
+        expect(insertPolicy?.with_check).not.toContain("platform_admin")
 
-      await expect(
-        withLocalSettings(
+        await expect(
+          withLocalSettings(
+            client,
+            { "eleva.platform_admin": "true" },
+            async () => {
+              await client.query(insertSql, [randomUUID(), orgA])
+            }
+          )
+        ).rejects.toThrow()
+
+        await withLocalSettings(
           client,
-          { "eleva.platform_admin": "true" },
+          { "eleva.service": "audit_drainer" },
           async () => {
-            await client.query(insertSql, [randomUUID(), orgA])
+            await client.query(insertSql, [auditId, orgA])
           }
         )
-      ).rejects.toThrow()
 
-      await withLocalSettings(
-        client,
-        { "eleva.service": "audit_drainer" },
-        async () => {
-          await client.query(insertSql, [auditId, orgA])
-        }
-      )
-
-      await withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
-        const rows = await client.query(
-          `SELECT audit_id FROM audit_events WHERE audit_id = $1`,
-          [auditId]
-        )
-        expect(rows.rows).toHaveLength(1)
-      })
-      await withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
-        const rows = await client.query(
-          `SELECT audit_id FROM audit_events WHERE audit_id = $1`,
-          [auditId]
-        )
-        expect(rows.rows).toHaveLength(0)
-      })
-      await withLocalSettings(
-        client,
-        { "eleva.platform_admin": "true" },
-        async () => {
+        await withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
           const rows = await client.query(
             `SELECT audit_id FROM audit_events WHERE audit_id = $1`,
             [auditId]
           )
           expect(rows.rows).toHaveLength(1)
-        }
-      )
-    } finally {
-      client.release()
-      await auditPool.end()
+        })
+        await withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
+          const rows = await client.query(
+            `SELECT audit_id FROM audit_events WHERE audit_id = $1`,
+            [auditId]
+          )
+          expect(rows.rows).toHaveLength(0)
+        })
+        await withLocalSettings(
+          client,
+          { "eleva.platform_admin": "true" },
+          async () => {
+            const rows = await client.query(
+              `SELECT audit_id FROM audit_events WHERE audit_id = $1`,
+              [auditId]
+            )
+            expect(rows.rows).toHaveLength(1)
+          }
+        )
+      } finally {
+        client.release()
+        await auditPool.end()
+      }
     }
-  })
+  )
 })
