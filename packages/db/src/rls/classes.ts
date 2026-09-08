@@ -76,9 +76,9 @@ export type RlsClassFixture = {
 }
 
 /**
- * One fixture per class. Classes with a current table use that table.
- * `staff-only` is covered by `public_handles` writes; the suite still proves
- * the predicate on `_rls_fixture_staff_only` (citext PK, no org_id).
+ * One fixture per class. Classes with a current un-split table use that
+ * table. Split-predicate tables (`public_handles`, `audit_events`) cannot
+ * prove a single class, so `staff-only` stays on `_rls_fixture_staff_only`.
  * FK-heavy tables (`bookings`, `sessions`, `expert_listings`) still get a
  * real-table existence check; their predicate is proven on a same-shape
  * synthetic table so the suite does not have to seed the full booking graph.
@@ -92,7 +92,7 @@ export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
     synthetic: true,
   },
   { class: "participant-visible", table: "sessions", synthetic: false },
-  { class: "staff-only", table: "public_handles", synthetic: false },
+  { class: "staff-only", table: "_rls_fixture_staff_only", synthetic: true },
   { class: "public-read", table: "expert_listings", synthetic: false },
   { class: "service-only", table: "audit_outbox", synthetic: false },
 ]

@@ -242,7 +242,7 @@ export const expertProfiles = pgTable(
     ),
     serviceCountriesFormatChk: check(
       "expert_profiles_service_countries_format",
-      sql`NOT EXISTS (SELECT 1 FROM unnest(service_countries) AS c WHERE c !~ '^[A-Z]{2}$')`
+      sql`public.iso3166_alpha2_codes(service_countries)`
     ),
     tenantPolicy: pgPolicy("expert_profiles_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,

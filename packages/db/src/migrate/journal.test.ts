@@ -41,5 +41,8 @@ describe("migration journal helpers", () => {
     expect(last?.tag).toBe("0025_offer_model")
     expect(last?.statements.length).toBeGreaterThan(10)
     expect(last?.hash).toHaveLength(64)
+    const sql = last?.statements.join("\n") ?? ""
+    expect(sql).toContain("public.iso3166_alpha2_codes")
+    expect(sql).not.toContain("SELECT 1 FROM unnest(service_countries)")
   })
 })

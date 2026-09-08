@@ -8,6 +8,7 @@ export type OfferInvariantError =
   | "EMPTY_COUNTRY_LIST"
   | "WORLDWIDE_WITH_COUNTRY_LIST"
   | "IN_PERSON_COUNTRY_MISMATCH"
+  | "IN_PERSON_LOCATION_REQUIRED"
   | "WORLDWIDE_REQUIRES_REMOTE"
   | "LANGUAGE_NOT_ON_PROFILE"
   | "EMPTY_LANGUAGE_LIST"
@@ -62,7 +63,7 @@ export function assertOfferInvariants(
 
   if (input.mode === "in_person") {
     const location = input.locationCountry ? upper(input.locationCountry) : null
-    if (!location) return "IN_PERSON_COUNTRY_MISMATCH"
+    if (!location) return "IN_PERSON_LOCATION_REQUIRED"
     // An in-person visit happens at one address, so a worldwide scope
     // cannot describe it. Require an explicit single-country list.
     if (input.countryScopeType === "worldwide") {

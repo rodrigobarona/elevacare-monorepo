@@ -112,6 +112,10 @@ export const eventTypeModes = pgTable(
       "event_type_modes_country_scope",
       sql`(country_scope_type = 'worldwide' AND cardinality(country_scope_codes) = 0) OR (country_scope_type = 'list' AND cardinality(country_scope_codes) >= 1)`
     ),
+    scopeFormatChk: check(
+      "event_type_modes_country_scope_format",
+      sql`public.iso3166_alpha2_codes(country_scope_codes)`
+    ),
     currencyChk: check(
       "event_type_modes_currency_eur",
       sql`currency IS NULL OR currency = 'EUR'`
@@ -164,6 +168,10 @@ export const bookingLinks = pgTable(
     useCountChk: check(
       "booking_links_use_count",
       sql`use_count >= 0 AND use_count <= max_uses`
+    ),
+    priceChk: check(
+      "booking_links_price_cents",
+      sql`price_cents IS NULL OR price_cents >= 0`
     ),
     eventTypeFk: foreignKey({
       name: "booking_links_event_type_fk",

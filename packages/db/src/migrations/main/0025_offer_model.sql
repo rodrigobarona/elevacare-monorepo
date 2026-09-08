@@ -27,7 +27,10 @@ WHERE cardinality(practice_countries) >= 1
 --> statement-breakpoint
 UPDATE "expert_profiles"
 SET "service_countries" = (
-  SELECT ARRAY(SELECT DISTINCT upper(c) FROM unnest(practice_countries) AS c WHERE c <> '')
+  SELECT ARRAY(
+    SELECT DISTINCT upper(c) FROM unnest(practice_countries) AS c
+    WHERE c ~ '^[A-Za-z]{2}$'
+  )
 )
 WHERE cardinality(practice_countries) >= 1;
 --> statement-breakpoint
@@ -56,15 +59,32 @@ ALTER TABLE "expert_profiles" ADD CONSTRAINT "expert_profiles_service_contains_p
 --> statement-breakpoint
 UPDATE "expert_profiles"
 SET "service_countries" = ARRAY(
-  SELECT DISTINCT upper(c) FROM unnest("service_countries") AS c WHERE c <> ''
+  SELECT DISTINCT upper(c) FROM unnest("service_countries") AS c
+  WHERE c ~ '^[A-Za-z]{2}$'
 );
 --> statement-breakpoint
+CREATE OR REPLACE FUNCTION public.iso3166_alpha2_codes(codes text[])
+RETURNS boolean
+LANGUAGE plpgsql
+IMMUTABLE
+AS $$
+DECLARE
+  c text;
+BEGIN
+  IF codes IS NULL THEN
+    RETURN false;
+  END IF;
+  FOREACH c IN ARRAY codes LOOP
+    IF c IS NULL OR c !~ '^[A-Z]{2}$' THEN
+      RETURN false;
+    END IF;
+  END LOOP;
+  RETURN true;
+END;
+$$;
+--> statement-breakpoint
 ALTER TABLE "expert_profiles" ADD CONSTRAINT "expert_profiles_service_countries_format"
-  CHECK (
-    NOT EXISTS (
-      SELECT 1 FROM unnest(service_countries) AS c WHERE c !~ '^[A-Z]{2}$'
-    )
-  );
+  CHECK (public.iso3166_alpha2_codes(service_countries));
 --> statement-breakpoint
 ALTER TABLE "expert_practice_locations" ADD COLUMN "line2" varchar(200);
 --> statement-breakpoint
@@ -129,6 +149,8 @@ CREATE TABLE "event_type_modes" (
       (country_scope_type = 'worldwide' AND cardinality(country_scope_codes) = 0)
       OR (country_scope_type = 'list' AND cardinality(country_scope_codes) >= 1)
     ),
+  CONSTRAINT "event_type_modes_country_scope_format"
+    CHECK (public.iso3166_alpha2_codes(country_scope_codes)),
   CONSTRAINT "event_type_modes_currency_eur"
     CHECK (currency IS NULL OR currency = 'EUR'),
   CONSTRAINT "event_type_modes_price_cents"
@@ -182,6 +204,8 @@ CREATE TABLE "booking_links" (
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "booking_links_max_uses" CHECK (max_uses >= 1),
   CONSTRAINT "booking_links_use_count" CHECK (use_count >= 0 AND use_count <= max_uses),
+  CONSTRAINT "booking_links_price_cents"
+    CHECK (price_cents IS NULL OR price_cents >= 0),
   CONSTRAINT "booking_links_event_type_fk"
     FOREIGN KEY ("org_id", "event_type_id")
     REFERENCES "event_types"("org_id", "id") ON DELETE CASCADE,

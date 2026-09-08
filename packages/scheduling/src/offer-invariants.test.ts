@@ -123,7 +123,38 @@ describe("assertOfferInvariants", () => {
         mode: "in_person",
         countryScopeCodes: ["PT"],
       })
-    ).toBe("IN_PERSON_COUNTRY_MISMATCH")
+    ).toBe("IN_PERSON_LOCATION_REQUIRED")
+  })
+
+  it("accepts phone with an explicit country list", () => {
+    expect(
+      assertOfferInvariants({
+        ...base,
+        mode: "phone",
+        countryScopeCodes: ["PT", "ES"],
+      })
+    ).toBeNull()
+  })
+
+  it("applies online worldwide rules to phone, not in_person rules", () => {
+    expect(
+      assertOfferInvariants({
+        ...base,
+        mode: "phone",
+        worldwideRemote: false,
+        countryScopeType: "worldwide",
+        countryScopeCodes: [],
+      })
+    ).toBe("WORLDWIDE_REQUIRES_REMOTE")
+    expect(
+      assertOfferInvariants({
+        ...base,
+        mode: "phone",
+        worldwideRemote: true,
+        countryScopeType: "worldwide",
+        countryScopeCodes: [],
+      })
+    ).toBeNull()
   })
 
   it("rejects in_person when the location is outside service_countries", () => {
