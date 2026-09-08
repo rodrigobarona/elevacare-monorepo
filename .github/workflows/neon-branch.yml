@@ -74,22 +74,43 @@ jobs:
           parent: true
           api_key: ${{ secrets.NEON_API_KEY }}
 
-      - name: Migrate and apply main RLS
+      - name: Derive audit database URL
+        if: steps.neon-creds.outputs.ready == 'true'
+        id: audit-url
+        env:
+          DATABASE_URL: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
+        run: |
+          # Same Neon project/branch; second database is `audit` (not a second project).
+          audit_url="$(python3 -c 'import os; from urllib.parse import urlparse, urlunparse; p=urlparse(os.environ["DATABASE_URL"]); print(urlunparse(p._replace(path="/audit")), end="")')"
+          echo "::add-mask::${audit_url}"
+          {
+            echo "db_url<<EOF"
+            echo "${audit_url}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Migrate and apply main + audit RLS
         if: steps.neon-creds.outputs.ready == 'true'
         env:
           DATABASE_URL: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
           DATABASE_URL_UNPOOLED: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
+          AUDIT_DATABASE_URL: ${{ steps.audit-url.outputs.db_url }}
+          AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
         run: |
           # db:* scripts load ../../.env.local; CI injects DATABASE_URL instead.
           touch .env.local
           pnpm --filter=@eleva/db db:migrate
           pnpm --filter=@eleva/db db:rls:main
+          pnpm --filter=@eleva/db db:migrate:audit
+          pnpm --filter=@eleva/db db:rls:audit
 
       - name: RLS isolation and class suite
         if: steps.neon-creds.outputs.ready == 'true'
         env:
           DATABASE_URL: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
           DATABASE_URL_UNPOOLED: ${{ steps.reset-branch.outputs.db_url || steps.create-branch.outputs.db_url }}
+          AUDIT_DATABASE_URL: ${{ steps.audit-url.outputs.db_url }}
+          AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
           ELEVA_RLS_INTEGRATION: "1"
         run: pnpm --filter=@eleva/db exec vitest run src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts
 

@@ -27,6 +27,7 @@
     "db:studio": "tsx --env-file=../../.env.local node_modules/drizzle-kit/bin.cjs studio --config drizzle.config.ts",
     "db:rls": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyAllRls())\"",
     "db:rls:main": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyMainRls())\"",
+    "db:rls:audit": "tsx --env-file=../../.env.local -e \"import('./src/rls/apply-rls.ts').then(m => m.applyAuditRls())\"",
     "db:fts": "tsx --env-file=../../.env.local src/migrations/run-fts.ts",
     "db:seed:demo": "tsx --env-file=../../.env.local src/seed/run-demo.ts",
     "db:seed:categories": "tsx --env-file=../../.env.local src/seed/run-categories.ts",
