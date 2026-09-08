@@ -5063,7 +5063,9 @@ session leaves <code>sessions</code> untouched (history) — the state machine i
 single participant (or none) for the whole window marks <code>sessions.attendance = expert_only | member_only | nobody</code> (both present -&gt; <code>both</code>) and the status <code>no_show</code> (see the schema bullet); the no-show <strong>policy</strong> (refund/keep/partial) is a Phase 6 refund-policy
 input decided by finance, this phase only records attendance.</p>
 </li>
-<li><p><strong>Session-token hygiene</strong>: meeting tokens are minted at join time only, <code>exp = min(now + 2h, room exp)</code>, never stored, never logged, never placed in a URL the browser can bookmark (the
+<li><p><strong>Session-token hygiene</strong>: meeting tokens are minted at join time only, <code>exp = min(now + 2h, endAt + 30 min)</code> — the Eleva join-window end, <strong>never the room <code>exp</code></strong>, which carries the
+fingerprint offset and may be up to 599 s later (boundary test: a token minted at
+<code>endAt + 29 min 59 s</code> expires at exactly <code>endAt + 30 min</code>, not at room <code>exp</code>) — never stored, never logged, never placed in a URL the browser can bookmark (the
 join page fetches it via <code>POST /sessions/[bookingId]/join</code> and hands it to <code>daily-js</code> in
 memory); <code>session.joined</code> audit rows carry <code>userId</code> and <code>roomName</code> only.</p>
 </li>
@@ -5089,7 +5091,7 @@ the room capacity.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Confirmed online booking has a room within seconds (workflow) and the sweep catches missing
 rooms; phone and in-person bookings never get one (both paths tested).</li>
-<li><input disabled="" type="checkbox"> Expert token is <code>is_owner: true</code>; member token is not; token <code>exp</code> &lt;= room <code>exp</code>.</li>
+<li><input disabled="" type="checkbox"> Expert token is <code>is_owner: true</code>; member token is not; token <code>exp</code> &lt;= <code>endAt + 30 min</code> (&lt; room <code>exp</code> whenever the fingerprint offset is &gt; 0) — boundary test included.</li>
 <li><input disabled="" type="checkbox"> Join outside the window -&gt; 403 <code>SESSION_NOT_OPEN</code>; non-participant (including another
 expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; delegated participant -&gt; 200.</li>
 <li><input disabled="" type="checkbox"> Two browsers (expert, member) in staging join and see each other; leaving/ending updates
@@ -5211,11 +5213,23 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    zero rows means another worker holds the lease (or the room already exists): return
    in_progress without calling Daily (the caller&#39;s workflow retries after the lease expires), so
    only ONE POST can be in flight per booking; offset = 0..599 s is ALLOCATED, not derived:
-   sessions.room_fingerprint_exp has a global UNIQUE index, the UPDATE tries offset 0 and on
-   23505 retries with the next offset (same transaction boundary, one statement each) until it
-   commits or all 600 are taken (then status = room_unresolved before any vendor call — a
-   collision test creates two bookings with identical startAt/endAt and asserts distinct exp
-   values; a saturation test fills the 600 offsets and asserts room_unresolved with zero POSTs),
+   sessions.room_fingerprint_exp has a global UNIQUE index and the lease UPDATE picks the offset
+   in the same statement — room_fingerprint_exp = (SELECT $endAt + interval &#39;30 min&#39; + n *
+   interval &#39;1 s&#39; FROM generate_series(0, 599) n WHERE NOT EXISTS (SELECT 1 FROM sessions s2
+   WHERE s2.room_fingerprint_exp = $endAt + interval &#39;30 min&#39; + n * interval &#39;1 s&#39;) ORDER BY n
+   LIMIT 1) — so a single statement normally commits; the unique index is the guarantee for the
+   race where two workers pick the same free second concurrently: that raises 23505, which
+   ABORTS the lease transaction (PostgreSQL leaves no usable transaction after an error), so the
+   caller re-runs the WHOLE lease transaction as a new transaction (never a statement retry
+   inside the aborted one; no savepoint games), at most 3 times, then status = room_unresolved
+   before any vendor call; the subselect returning NULL (all 600 taken) is caught by a CHECK /
+   NOT NULL on the RETURNING row and is the same room_unresolved path. The lease transaction
+   COMMITS before Daily is called (the row is the record of intent) and the vendor result is
+   persisted afterwards in a separate compare-and-set transaction (WHERE room_attempt_seq = $seq
+   AND daily_room_name IS NULL) — README rule 9. Tests: a collision test creates two bookings
+   with identical startAt/endAt and asserts distinct exp values; a saturation test fills the 600
+   offsets and asserts room_unresolved with zero POSTs; a forced-23505 test (mocked unique
+   violation on the first run) asserts one re-run, one commit, one POST,
    so the pair (nbf, exp) is unique across ALL sessions — the fingerprint proves booking identity
    because Eleva allocated it uniquely, not because Daily made it unique (persisted BEFORE the
    vendor call; the row is the record of intent — the extra seconds are invisible to users
@@ -5290,7 +5304,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -&gt; join 410, the room-cleanup retry later succeeds); window
    [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
-   roomExp); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
+   endAt+30m) — NEVER roomExp, which includes the fingerprint offset (boundary test: mint at
+   endAt+29m59s -&gt; token exp = endAt+30m exactly); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
    signature -&gt; 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
    guard: apply only when payload event time &gt; sessions.last_event_at, status transitions are
    monotonic scheduled -&gt; live -&gt; ended; test the sequence meeting.ended then a delayed

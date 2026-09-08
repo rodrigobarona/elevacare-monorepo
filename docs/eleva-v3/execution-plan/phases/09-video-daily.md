@@ -138,7 +138,9 @@ cancelled` and delete the room in the same workflow that releases the slot; a re
 member_only | nobody` (both present -> `both`) and the status `no_show` (see the schema bullet); the no-show **policy** (refund/keep/partial) is a Phase 6 refund-policy
   input decided by finance, this phase only records attendance.
 - **Session-token hygiene**: meeting tokens are minted at join time only, `exp = min(now + 2h,
-room exp)`, never stored, never logged, never placed in a URL the browser can bookmark (the
+endAt + 30 min)` — the Eleva join-window end, **never the room `exp`**, which carries the
+  fingerprint offset and may be up to 599 s later (boundary test: a token minted at
+  `endAt + 29 min 59 s` expires at exactly `endAt + 30 min`, not at room `exp`) — never stored, never logged, never placed in a URL the browser can bookmark (the
   join page fetches it via `POST /sessions/[bookingId]/join` and hands it to `daily-js` in
   memory); `session.joined` audit rows carry `userId` and `roomName` only.
 
@@ -164,7 +166,7 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
 
 - [ ] Confirmed online booking has a room within seconds (workflow) and the sweep catches missing
       rooms; phone and in-person bookings never get one (both paths tested).
-- [ ] Expert token is `is_owner: true`; member token is not; token `exp` <= room `exp`.
+- [ ] Expert token is `is_owner: true`; member token is not; token `exp` <= `endAt + 30 min` (< room `exp` whenever the fingerprint offset is > 0) — boundary test included.
 - [ ] Join outside the window -> 403 `SESSION_NOT_OPEN`; non-participant (including another
       expert of the same organization) -> 403 `NOT_A_PARTICIPANT`; delegated participant -> 200.
 - [ ] Two browsers (expert, member) in staging join and see each other; leaving/ending updates
@@ -288,11 +290,23 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    zero rows means another worker holds the lease (or the room already exists): return
    in_progress without calling Daily (the caller's workflow retries after the lease expires), so
    only ONE POST can be in flight per booking; offset = 0..599 s is ALLOCATED, not derived:
-   sessions.room_fingerprint_exp has a global UNIQUE index, the UPDATE tries offset 0 and on
-   23505 retries with the next offset (same transaction boundary, one statement each) until it
-   commits or all 600 are taken (then status = room_unresolved before any vendor call — a
-   collision test creates two bookings with identical startAt/endAt and asserts distinct exp
-   values; a saturation test fills the 600 offsets and asserts room_unresolved with zero POSTs),
+   sessions.room_fingerprint_exp has a global UNIQUE index and the lease UPDATE picks the offset
+   in the same statement — room_fingerprint_exp = (SELECT $endAt + interval '30 min' + n *
+   interval '1 s' FROM generate_series(0, 599) n WHERE NOT EXISTS (SELECT 1 FROM sessions s2
+   WHERE s2.room_fingerprint_exp = $endAt + interval '30 min' + n * interval '1 s') ORDER BY n
+   LIMIT 1) — so a single statement normally commits; the unique index is the guarantee for the
+   race where two workers pick the same free second concurrently: that raises 23505, which
+   ABORTS the lease transaction (PostgreSQL leaves no usable transaction after an error), so the
+   caller re-runs the WHOLE lease transaction as a new transaction (never a statement retry
+   inside the aborted one; no savepoint games), at most 3 times, then status = room_unresolved
+   before any vendor call; the subselect returning NULL (all 600 taken) is caught by a CHECK /
+   NOT NULL on the RETURNING row and is the same room_unresolved path. The lease transaction
+   COMMITS before Daily is called (the row is the record of intent) and the vendor result is
+   persisted afterwards in a separate compare-and-set transaction (WHERE room_attempt_seq = $seq
+   AND daily_room_name IS NULL) — README rule 9. Tests: a collision test creates two bookings
+   with identical startAt/endAt and asserts distinct exp values; a saturation test fills the 600
+   offsets and asserts room_unresolved with zero POSTs; a forced-23505 test (mocked unique
+   violation on the first run) asserts one re-run, one commit, one POST,
    so the pair (nbf, exp) is unique across ALL sessions — the fingerprint proves booking identity
    because Eleva allocated it uniquely, not because Daily made it unique (persisted BEFORE the
    vendor call; the row is the record of intent — the extra seconds are invisible to users
@@ -367,7 +381,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -> join 410, the room-cleanup retry later succeeds); window
    [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
-   roomExp); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
+   endAt+30m) — NEVER roomExp, which includes the fingerprint offset (boundary test: mint at
+   endAt+29m59s -> token exp = endAt+30m exactly); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
    signature -> 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
    guard: apply only when payload event time > sessions.last_event_at, status transitions are
    monotonic scheduled -> live -> ended; test the sequence meeting.ended then a delayed
