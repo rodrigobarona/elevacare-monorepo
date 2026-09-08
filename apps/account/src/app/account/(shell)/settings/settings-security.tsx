@@ -20,6 +20,7 @@ interface PasskeyRow {
 
 interface SessionRow {
   id: string
+  token: string
   userAgent?: string | null
 }
 
@@ -35,13 +36,19 @@ export function SettingsSecurity() {
   const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    void authClient.passkey.listUserPasskeys().then((result) => {
-      if (result.data) setPasskeys(result.data as PasskeyRow[])
-    })
-    void authClient.listSessions().then((result) => {
-      if (result.data) setSessions(result.data as SessionRow[])
-    })
-  }, [])
+    void authClient.passkey
+      .listUserPasskeys()
+      .then((result) => {
+        if (result.data) setPasskeys(result.data as PasskeyRow[])
+      })
+      .catch(() => setMessage(t("error")))
+    void authClient
+      .listSessions()
+      .then((result) => {
+        if (result.data) setSessions(result.data as SessionRow[])
+      })
+      .catch(() => setMessage(t("error")))
+  }, [t])
 
   async function onChangePassword(e: React.FormEvent) {
     e.preventDefault()
@@ -79,13 +86,21 @@ export function SettingsSecurity() {
   }
 
   async function onRemovePasskey(id: string) {
-    await authClient.passkey.deletePasskey({ id })
+    const { error } = await authClient.passkey.deletePasskey({ id })
+    if (error) {
+      setMessage(error.message ?? t("error"))
+      return
+    }
     setPasskeys((rows) => rows.filter((row) => row.id !== id))
   }
 
-  async function onRevokeSession(token: string) {
-    await authClient.revokeSession({ token })
-    setSessions((rows) => rows.filter((row) => row.id !== token))
+  async function onRevokeSession(session: SessionRow) {
+    const { error } = await authClient.revokeSession({ token: session.token })
+    if (error) {
+      setMessage(error.message ?? t("error"))
+      return
+    }
+    setSessions((rows) => rows.filter((row) => row.id !== session.id))
   }
 
   return (
@@ -211,7 +226,7 @@ export function SettingsSecurity() {
                   type="button"
                   size="xs"
                   variant="ghost"
-                  onPress={() => void onRevokeSession(session.id)}
+                  onPress={() => void onRevokeSession(session)}
                 >
                   {t("revoke")}
                 </Button>

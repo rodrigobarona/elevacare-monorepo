@@ -11,8 +11,16 @@ import { apiKeyClient } from "@better-auth/api-key/client"
 import { passkeyClient } from "@better-auth/passkey/client"
 import { ac, organizationRoles } from "./permissions"
 
+export const MFA_RETURN_TO_STORAGE_KEY = "eleva.mfaReturnTo"
+
 function authBaseUrl(): string {
-  const api = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+  const api = process.env.NEXT_PUBLIC_API_URL
+  if (!api) {
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("NEXT_PUBLIC_API_URL is required in production")
+    }
+    return "http://localhost:3002/auth"
+  }
   return `${api.replace(/\/$/, "")}/auth`
 }
 
@@ -26,7 +34,10 @@ export interface ElevaAuthClient {
       email: string
       password: string
       callbackURL?: string
-    }) => Promise<{ error?: AuthClientError | null }>
+    }) => Promise<{
+      data?: { twoFactorRedirect?: boolean } | null
+      error?: AuthClientError | null
+    }>
     magicLink: (body: {
       email: string
       callbackURL?: string
@@ -61,8 +72,13 @@ export interface ElevaAuthClient {
   passkey: {
     listUserPasskeys: () => Promise<{ data?: unknown }>
     addPasskey: () => Promise<{ error?: AuthClientError | null }>
-    deletePasskey: (body: { id: string }) => Promise<unknown>
+    deletePasskey: (body: {
+      id: string
+    }) => Promise<{ error?: AuthClientError | null }>
   }
+  updateUser: (body: {
+    name: string
+  }) => Promise<{ error?: AuthClientError | null }>
   forgetPassword: (body: {
     email: string
     redirectTo?: string
@@ -76,7 +92,9 @@ export interface ElevaAuthClient {
     newPassword: string
   }) => Promise<{ error?: AuthClientError | null }>
   listSessions: () => Promise<{ data?: unknown }>
-  revokeSession: (body: { token: string }) => Promise<unknown>
+  revokeSession: (body: {
+    token: string
+  }) => Promise<{ error?: AuthClientError | null }>
 }
 
 export const authClient = createAuthClient({
@@ -88,7 +106,17 @@ export const authClient = createAuthClient({
       roles: organizationRoles,
     }),
     adminClient(),
-    twoFactorClient({ twoFactorPage: "/two-factor" }),
+    twoFactorClient({
+      twoFactorPage: "/two-factor",
+      onTwoFactorRedirect() {
+        const returnTo =
+          typeof sessionStorage === "undefined"
+            ? null
+            : sessionStorage.getItem(MFA_RETURN_TO_STORAGE_KEY)
+        const qs = returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""
+        window.location.assign(`/two-factor${qs}`)
+      },
+    }),
     passkeyClient(),
     magicLinkClient(),
     apiKeyClient(),

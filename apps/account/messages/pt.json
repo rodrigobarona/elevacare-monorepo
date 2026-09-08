@@ -11,13 +11,15 @@
     "pageDescription": "Gira o seu perfil, segurança e preferências da sua conta Eleva.",
     "profile": {
       "title": "Perfil",
-      "description": "Atualize o seu nome e dados de conta geridos através do WorkOS.",
+      "description": "Atualize o seu nome e dados de conta.",
       "footerHint": "Alterações de email ou identidade podem exigir verificação.",
       "email": "Email",
       "name": "Nome",
       "language": "Idioma",
       "save": "Guardar",
       "saving": "A guardar...",
+      "profileSaved": "Perfil atualizado.",
+      "profileError": "Não foi possível atualizar o perfil. Tente novamente.",
       "languageSaved": "Preferência de idioma atualizada.",
       "languageError": "Não foi possível atualizar o idioma. Tente novamente."
     },

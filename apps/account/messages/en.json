@@ -11,13 +11,15 @@
     "pageDescription": "Manage your profile, security, and preferences for your Eleva account.",
     "profile": {
       "title": "Profile",
-      "description": "Update your name and account details managed through WorkOS.",
+      "description": "Update your name and account details.",
       "footerHint": "Email and identity changes may require verification.",
       "email": "Email",
       "name": "Name",
       "language": "Language",
       "save": "Save",
       "saving": "Saving...",
+      "profileSaved": "Profile updated.",
+      "profileError": "Could not update profile. Try again.",
       "languageSaved": "Language preference updated.",
       "languageError": "Could not update language. Please try again."
     },

@@ -80,6 +80,7 @@ export {
   createOrganization,
   createElevaOrganization,
   setActiveElevaOrganization,
+  OrganizationForbiddenError,
   addOrganizationMember,
   type UserOrganizationItem,
   type ListUserOrganizationsInput,

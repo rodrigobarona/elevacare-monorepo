@@ -15,12 +15,18 @@ export function hasDuplicateSessionCookie(
 }
 
 export function expiredSessionCookies(): string[] {
-  const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
   const attrs = "Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax"
-  return SESSION_COOKIE_NAMES.flatMap((name) => [
-    `${name}=; ${attrs}; Domain=${domain}`,
-    `${name}=; ${attrs}`,
-  ])
+  const hostOnly = SESSION_COOKIE_NAMES.map((name) => `${name}=; ${attrs}`)
+  if (process.env.VERCEL_ENV !== "production") {
+    return hostOnly
+  }
+  const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
+  return [
+    ...SESSION_COOKIE_NAMES.map(
+      (name) => `${name}=; ${attrs}; Domain=${domain}`
+    ),
+    ...hostOnly,
+  ]
 }
 
 export function cookieHeaderHasSession(cookieHeader: string | null): boolean {

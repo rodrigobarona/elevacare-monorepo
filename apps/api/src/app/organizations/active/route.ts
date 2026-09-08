@@ -1,5 +1,8 @@
 import { SetActiveOrganizationRequestSchema } from "@eleva/api-client"
-import { setActiveElevaOrganization } from "@eleva/auth"
+import {
+  OrganizationForbiddenError,
+  setActiveElevaOrganization,
+} from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -22,7 +25,8 @@ export async function POST(request: Request) {
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated
+    RATE_LIMITS.authenticated,
+    headers
   )
   if (rateLimited) return rateLimited
 
@@ -36,11 +40,21 @@ export async function POST(request: Request) {
     )
   }
 
-  await setActiveElevaOrganization({
-    headers: request.headers,
-    orgId: parsed.data.organizationId,
-    actorUserId: session.user.id,
-  })
+  try {
+    await setActiveElevaOrganization({
+      headers: request.headers,
+      orgId: parsed.data.organizationId,
+      actorUserId: session.user.id,
+    })
+  } catch (err) {
+    if (err instanceof OrganizationForbiddenError) {
+      return secureJson(
+        { error: "forbidden", code: "NOT_ORG_MEMBER" },
+        { status: 403, headers }
+      )
+    }
+    throw err
+  }
 
   return secureJson(
     { ok: true as const, organizationId: parsed.data.organizationId },

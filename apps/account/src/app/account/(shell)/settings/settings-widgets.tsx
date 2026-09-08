@@ -1,8 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { toast } from "sonner"
+import { authClient } from "@eleva/auth/client"
 import { Button } from "@eleva/ui/components/button"
+import { Input } from "@eleva/ui/components/input"
+import { Label } from "@eleva/ui/components/label"
 import {
   SettingsFieldset,
   SettingsFieldsetActions,
@@ -37,7 +42,23 @@ export function SettingsWidgets({
   preferredLocale,
 }: SettingsWidgetsProps) {
   const t = useTranslations("settings")
+  const router = useRouter()
+  const [name, setName] = useState(displayName)
+  const [profilePending, setProfilePending] = useState(false)
   const [languagePending, setLanguagePending] = useState(false)
+
+  async function onSaveProfile(e: React.FormEvent) {
+    e.preventDefault()
+    setProfilePending(true)
+    const { error } = await authClient.updateUser({ name: name.trim() })
+    setProfilePending(false)
+    if (error) {
+      toast.error(error.message ?? t("profile.profileError"))
+      return
+    }
+    toast.success(t("profile.profileSaved"))
+    router.refresh()
+  }
 
   return (
     <div className="space-y-6">
@@ -54,16 +75,27 @@ export function SettingsWidgets({
           <SettingsFieldsetDescription>
             {t("profile.description")}
           </SettingsFieldsetDescription>
-          <dl className="mt-4 space-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{t("profile.email")}</dt>
-              <dd>{email}</dd>
+          <form className="mt-4 space-y-3" onSubmit={onSaveProfile}>
+            <div className="space-y-1.5">
+              <p className="text-sm text-muted-foreground">
+                {t("profile.email")}
+              </p>
+              <p className="text-sm">{email}</p>
             </div>
-            <div>
-              <dt className="text-muted-foreground">{t("profile.name")}</dt>
-              <dd>{displayName}</dd>
+            <div className="space-y-1.5">
+              <Label htmlFor="profile-name">{t("profile.name")}</Label>
+              <Input
+                id="profile-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                required
+              />
             </div>
-          </dl>
+            <Button type="submit" size="sm" isDisabled={profilePending}>
+              {profilePending ? t("profile.saving") : t("profile.save")}
+            </Button>
+          </form>
         </SettingsFieldsetContent>
         <SettingsFieldsetFooter>
           <SettingsFieldsetStatus>

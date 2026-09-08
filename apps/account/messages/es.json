@@ -11,13 +11,15 @@
     "pageDescription": "Gestiona tu perfil, seguridad y preferencias de tu cuenta Eleva.",
     "profile": {
       "title": "Perfil",
-      "description": "Actualiza tu nombre y datos de cuenta gestionados con WorkOS.",
+      "description": "Actualiza tu nombre y datos de cuenta.",
       "footerHint": "Los cambios de email o identidad pueden requerir verificación.",
       "email": "Email",
       "name": "Nombre",
       "language": "Idioma",
       "save": "Guardar",
       "saving": "Guardando...",
+      "profileSaved": "Perfil actualizado.",
+      "profileError": "No se pudo actualizar el perfil. Inténtalo de nuevo.",
       "languageSaved": "Preferencia de idioma actualizada.",
       "languageError": "No se pudo actualizar el idioma. Inténtalo de nuevo."
     },

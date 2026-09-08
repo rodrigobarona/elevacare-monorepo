@@ -13,7 +13,7 @@
     "typecheck": "turbo typecheck",
     "check:api-first-actions": "node scripts/check-api-first-actions.mjs",
     "check:i18n-parity": "node --import tsx/esm scripts/check-i18n-parity.mjs",
-    "e2e": "playwright test",
+    "e2e": "E2E_AUTH_BYPASS_TOKEN=\"${E2E_AUTH_BYPASS_TOKEN:-}\" playwright test",
     "e2e:ui": "playwright test --ui",
     "test": "turbo test",
     "test:watch": "vitest",

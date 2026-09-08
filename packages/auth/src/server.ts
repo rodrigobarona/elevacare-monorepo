@@ -280,7 +280,7 @@ const loadBetterAuthPayload = cache(async () => {
     return await client.auth.getSession()
   } catch (err) {
     if (err instanceof ApiClientError) {
-      if (err.status === 401 || err.status === 403 || err.status >= 500) {
+      if (err.status === 401 || err.status === 403) {
         return null
       }
     }

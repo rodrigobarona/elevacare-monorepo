@@ -1,8 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { authClient } from "@eleva/auth/client"
+import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
+import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { Button } from "@eleva/ui/components/button"
 import {
   Card,
@@ -14,8 +16,17 @@ import {
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 
+function readStoredReturnTo(): string | undefined {
+  try {
+    return sanitizeReturnTo(sessionStorage.getItem(MFA_RETURN_TO_STORAGE_KEY))
+  } catch {
+    return undefined
+  }
+}
+
 export function TwoFactorForm() {
   const t = useTranslations("auth")
+  const searchParams = useSearchParams()
   const [code, setCode] = useState("")
   const [useBackup, setUseBackup] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -29,7 +40,15 @@ export function TwoFactorForm() {
       ? await authClient.twoFactor.verifyBackupCode({ code })
       : await authClient.twoFactor.verifyTotp({ code })
     setPending(false)
-    if (result.error) setError(result.error.message ?? t("errorGeneric"))
+    if (result.error) {
+      setError(result.error.message ?? t("errorGeneric"))
+      return
+    }
+    const next =
+      sanitizeReturnTo(searchParams.get("returnTo")) ??
+      readStoredReturnTo() ??
+      "/dashboard"
+    window.location.assign(next)
   }
 
   return (

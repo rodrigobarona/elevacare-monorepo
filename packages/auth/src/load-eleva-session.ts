@@ -11,10 +11,10 @@ export function pickMembershipRow<T extends { orgId: string; orgSlug: string }>(
   if (input.preferredOrgSlug) {
     return rows.find((row) => row.orgSlug === input.preferredOrgSlug) ?? null
   }
-  return (
-    (input.orgId ? rows.find((row) => row.orgId === input.orgId) : undefined) ??
-    rows[0]!
-  )
+  if (input.orgId) {
+    return rows.find((row) => row.orgId === input.orgId) ?? null
+  }
+  return rows[0]!
 }
 
 function buildSession(

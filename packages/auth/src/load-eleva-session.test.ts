@@ -38,11 +38,18 @@ describe("pickMembershipRow", () => {
     ).toEqual({ orgId: "org-b", orgSlug: "clinic" })
   })
 
-  it("falls back to orgId then first row when no slug is requested", () => {
+  it("returns the matching orgId when no slug is requested", () => {
     expect(pickMembershipRow(rows, { orgId: "org-b" })).toEqual({
       orgId: "org-b",
       orgSlug: "clinic",
     })
+  })
+
+  it("returns null when orgId is supplied and unmatched", () => {
+    expect(pickMembershipRow(rows, { orgId: "missing" })).toBeNull()
+  })
+
+  it("falls back to the first row only when no org hint is supplied", () => {
     expect(pickMembershipRow(rows, { orgId: null })).toEqual(rows[0])
   })
 

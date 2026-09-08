@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { authClient } from "@eleva/auth/client"
+import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import {
@@ -36,12 +36,21 @@ export function LoginForm() {
     e.preventDefault()
     setPending(true)
     setError(null)
-    const { error: result } = await authClient.signIn.email({
+    try {
+      sessionStorage.setItem(MFA_RETURN_TO_STORAGE_KEY, next)
+    } catch {
+      // Private mode or disabled storage — MFA still works without returnTo.
+    }
+    const { error: result, data } = await authClient.signIn.email({
       email,
       password,
       callbackURL: next,
     })
     setPending(false)
+    if (data?.twoFactorRedirect) {
+      window.location.assign(`/two-factor?returnTo=${encodeURIComponent(next)}`)
+      return
+    }
     if (result) setError(result.message ?? t("errorGeneric"))
   }
 

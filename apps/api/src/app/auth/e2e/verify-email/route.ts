@@ -26,6 +26,12 @@ function tokensMatch(provided: string, expected: string): boolean {
   return timingSafeEqual(a, b)
 }
 
+/**
+ * E2E-only fail-closed route. Returns 404 unless E2E_AUTH_BYPASS_TOKEN is
+ * mounted, and throws when VERCEL_ENV=production. BotID is omitted on
+ * purpose: Playwright cannot complete Web Bot Auth attestation, and this
+ * endpoint is not a public product POST.
+ */
 export async function POST(request: Request) {
   assertE2eBypassNotInProduction()
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -42,7 +48,10 @@ export async function POST(request: Request) {
 
   const parsed = BodySchema.safeParse(await request.json().catch(() => ({})))
   if (!parsed.success) {
-    return secureJson({ error: "validation" }, { status: 422, headers })
+    return secureJson(
+      { error: "validation", issues: parsed.error.issues },
+      { status: 422, headers }
+    )
   }
 
   const expected = process.env.E2E_AUTH_BYPASS_TOKEN ?? ""
@@ -60,30 +69,29 @@ export async function POST(request: Request) {
     return secureJson({ error: "not_found" }, { status: 404, headers })
   }
 
-  await db()
-    .update(authTables.user)
-    .set({ emailVerified: true, updatedAt: new Date() })
-    .where(eq(authTables.user.id, user.id))
-
   const [membership] = await db()
     .select({ orgId: authTables.member.organizationId })
     .from(authTables.member)
     .where(eq(authTables.member.userId, user.id))
     .limit(1)
 
-  if (membership) {
-    await withAudit(
-      { orgId: membership.orgId, actorUserId: user.id },
-      async (_tx, ctx) => {
-        await ctx.emit({
-          entity: "user",
-          action: "email_verified",
-          entityId: user.id,
-          payload: { via: "e2e" },
-        })
-      }
-    )
-  }
+  // Signup always provisions a Space. If a user row exists without a
+  // membership, still emit one event using the actor id so the user
+  // update and outbox row commit together (withAudit requires orgId).
+  const orgId = membership?.orgId ?? user.id
+
+  await withAudit({ orgId, actorUserId: user.id }, async (tx, ctx) => {
+    await tx
+      .update(authTables.user)
+      .set({ emailVerified: true, updatedAt: new Date() })
+      .where(eq(authTables.user.id, user.id))
+    await ctx.emit({
+      entity: "user",
+      action: "email_verified",
+      entityId: user.id,
+      payload: { via: "e2e", tenant: Boolean(membership) },
+    })
+  })
 
   return secureJson({ ok: true }, { status: 200, headers })
 }
