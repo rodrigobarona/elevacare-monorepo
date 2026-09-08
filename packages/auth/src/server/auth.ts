@@ -205,6 +205,29 @@ function createAuth() {
             url: data.invitation.id,
           })
         },
+        organizationHooks: {
+          afterAddMember: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            enqueueTeamSeatSync(organization.id)
+          },
+          afterRemoveMember: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            enqueueTeamSeatSync(organization.id)
+          },
+          afterAcceptInvitation: async ({
+            organization,
+          }: {
+            organization: { id: string }
+          }) => {
+            enqueueTeamSeatSync(organization.id)
+          },
+        },
       }),
       admin({
         ac: adminAccess as never,
@@ -305,7 +328,18 @@ export interface AuthApi {
     valid: boolean
     key?: { userId: string; referenceId?: string | null; name?: string | null }
   } | null>
+  getAccessToken: (opts: {
+    body: { accountId: string; userId?: string }
+  }) => Promise<{ accessToken?: string } | null>
   generateOpenAPISchema?: () => Promise<unknown>
+}
+
+function enqueueTeamSeatSync(orgId: string): void {
+  void import("@eleva/billing/server")
+    .then(({ enqueueSeatSync }) => enqueueSeatSync(orgId))
+    .catch((error: unknown) => {
+      console.error("[auth] team seat sync failed", error)
+    })
 }
 
 export function getAuthApi(): AuthApi {

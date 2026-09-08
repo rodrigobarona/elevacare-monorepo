@@ -34,6 +34,7 @@ export type AuditEntity =
   | "identity_verification"
   | "booking_payment"
   | "session"
+  | "org_data_key"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -79,6 +80,8 @@ export type AuditAction =
   | "email_verified"
   | "requires_input"
   | "active_organization_changed"
+  | "shredded"
+  | "rotated"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

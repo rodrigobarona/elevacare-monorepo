@@ -1,11 +1,7 @@
-export {
-  vaultPut,
-  vaultGet,
-  vaultDelete,
-  buildVaultRef,
-  parseVaultRef,
-  type VaultRef,
-} from "./vault"
+export { EncryptionError } from "./errors"
+export { encryptForOrg, decryptForOrg, parseCiphertext } from "./envelope"
+export { getOrCreateOrgDek, rotateKek, shredOrgKeys } from "./keys"
+export { encryptRecordFields, decryptRecordFields } from "./records"
 export {
   encryptOAuthToken,
   decryptOAuthToken,
@@ -14,4 +10,3 @@ export {
   type OAuthTokenInput,
   type DecryptedOAuthToken,
 } from "./tokens"
-export { encryptRecord, decryptRecord, deleteRecord } from "./records"

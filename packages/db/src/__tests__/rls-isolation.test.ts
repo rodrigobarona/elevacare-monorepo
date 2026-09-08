@@ -2,8 +2,10 @@ import { randomUUID } from "node:crypto"
 import { eq, inArray } from "drizzle-orm"
 import { Pool } from "@neondatabase/serverless"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
-import { withOrgContext, withPlatformAdminContext } from "../context"
-import { organizations } from "../schema/main/organizations"
+import { db } from "../client"
+import { withOrgContext } from "../context"
+import { organization } from "../schema/auth/index"
+import { orgDataKeys } from "../schema/main/org-data-keys"
 import { provisionRlsTestRole } from "./rls-test-role"
 
 const enabled = process.env.ELEVA_RLS_INTEGRATION === "1"
@@ -26,36 +28,71 @@ describe.skipIf(!enabled || !databaseUrl)("rls-isolation", () => {
   })
 
   afterAll(async () => {
-    await withPlatformAdminContext(async (tx) => {
-      await tx
-        .delete(organizations)
-        .where(inArray(organizations.id, [orgA, orgB]))
+    await withOrgContext(orgA, async (tx) => {
+      await tx.delete(orgDataKeys).where(eq(orgDataKeys.orgId, orgA))
     })
+    await withOrgContext(orgB, async (tx) => {
+      await tx.delete(orgDataKeys).where(eq(orgDataKeys.orgId, orgB))
+    })
+    await db()
+      .delete(organization)
+      .where(inArray(organization.id, [orgA, orgB]))
   })
 
-  it("cross-org read returns zero rows under eleva.org_id", async () => {
-    await withPlatformAdminContext(async (tx) => {
-      await tx.insert(organizations).values([
-        { id: orgA, workosOrgId: `rls-iso-a-${orgA}`, type: "personal" },
-        { id: orgB, workosOrgId: `rls-iso-b-${orgB}`, type: "personal" },
-      ])
-    })
+  it(
+    "cross-org read returns zero rows under eleva.org_id",
+    { timeout: 30_000 },
+    async () => {
+      await db()
+        .insert(organization)
+        .values([
+          {
+            id: orgA,
+            name: "RLS A",
+            slug: `rls-iso-a-${orgA}`,
+            type: "personal",
+          },
+          {
+            id: orgB,
+            name: "RLS B",
+            slug: `rls-iso-b-${orgB}`,
+            type: "personal",
+          },
+        ])
 
-    const visible = await withOrgContext(orgA, async (tx) => {
-      return tx
-        .select({ id: organizations.id })
-        .from(organizations)
-        .where(inArray(organizations.id, [orgA, orgB]))
-    })
-    expect(visible).toHaveLength(1)
-    expect(visible[0]?.id).toBe(orgA)
+      await withOrgContext(orgA, async (tx) => {
+        await tx.insert(orgDataKeys).values({
+          orgId: orgA,
+          keyVersion: 1,
+          kekVersion: "1",
+          wrappedDek: "rls-iso-a",
+        })
+      })
+      await withOrgContext(orgB, async (tx) => {
+        await tx.insert(orgDataKeys).values({
+          orgId: orgB,
+          keyVersion: 1,
+          kekVersion: "1",
+          wrappedDek: "rls-iso-b",
+        })
+      })
 
-    const other = await withOrgContext(orgB, async (tx) => {
-      return tx
-        .select({ id: organizations.id })
-        .from(organizations)
-        .where(eq(organizations.id, orgA))
-    })
-    expect(other).toHaveLength(0)
-  })
+      const visible = await withOrgContext(orgA, async (tx) => {
+        return tx
+          .select({ orgId: orgDataKeys.orgId })
+          .from(orgDataKeys)
+          .where(inArray(orgDataKeys.orgId, [orgA, orgB]))
+      })
+      expect(visible).toHaveLength(1)
+      expect(visible[0]?.orgId).toBe(orgA)
+
+      const other = await withOrgContext(orgB, async (tx) => {
+        return tx
+          .select({ orgId: orgDataKeys.orgId })
+          .from(orgDataKeys)
+          .where(eq(orgDataKeys.orgId, orgA))
+      })
+      expect(other).toHaveLength(0)
+    }
+  )
 })

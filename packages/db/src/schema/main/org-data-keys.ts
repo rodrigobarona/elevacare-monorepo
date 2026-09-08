@@ -4,6 +4,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
 } from "drizzle-orm/pg-core"
 import { sql } from "drizzle-orm"
 import { createdAt, orgIdColumn, pkColumn } from "./shared"
@@ -23,7 +24,11 @@ export const orgDataKeys = pgTable(
     createdAt: createdAt(),
     retiredAt: timestamp("retired_at", { withTimezone: true, mode: "date" }),
   },
-  (_table) => [
+  (t) => [
+    uniqueIndex("org_data_keys_org_version_uidx").on(t.orgId, t.keyVersion),
+    uniqueIndex("org_data_keys_one_active_uidx")
+      .on(t.orgId)
+      .where(sql`retired_at IS NULL`),
     pgPolicy("org_data_keys_tenant_isolation", {
       for: "all",
       to: "public",

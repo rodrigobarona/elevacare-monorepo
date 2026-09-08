@@ -91,6 +91,14 @@ export interface ElevaAuthClient {
     currentPassword: string
     newPassword: string
   }) => Promise<{ error?: AuthClientError | null }>
+  linkSocial: (body: {
+    provider: string
+    callbackURL?: string
+    scopes?: string[]
+  }) => Promise<{
+    data?: { url?: string; redirect?: boolean } | null
+    error?: AuthClientError | null
+  }>
   listSessions: () => Promise<{ data?: unknown }>
   revokeSession: (body: {
     token: string
@@ -122,3 +130,11 @@ export const authClient = createAuthClient({
     apiKeyClient(),
   ],
 }) as unknown as ElevaAuthClient
+
+export const CALENDAR_OAUTH_SCOPES = {
+  google: [
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/calendar.events",
+  ],
+  microsoft: ["Calendars.ReadWrite", "offline_access"],
+} as const

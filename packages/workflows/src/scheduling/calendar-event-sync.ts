@@ -1,16 +1,18 @@
-import { and, eq } from "drizzle-orm"
-import { WorkOS } from "@workos-inc/node"
-import { main } from "@eleva/db"
+import { and, eq, sql } from "drizzle-orm"
+import { getProviderAccessToken } from "@eleva/auth"
+import { auth, db, main } from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
 import {
-  getCalendarToken,
+  createCredentialManager,
+  requireAuthAccountId,
   getAdapter,
   CalendarNotFoundError,
   CalendarAdapterError,
   type CalendarProvider,
   type CalendarEventInput,
 } from "@eleva/calendar"
+
 import {
   sendBookingIcsEmail,
   sendRescheduleIcsEmail,
@@ -18,15 +20,7 @@ import {
   type IcsEmailPayload,
 } from "./ics-email"
 
-let _workos: WorkOS | null = null
-function getWorkOS(): WorkOS {
-  if (!_workos) {
-    const key = process.env.WORKOS_API_KEY
-    if (!key) throw new Error("WORKOS_API_KEY is required")
-    _workos = new WorkOS(key)
-  }
-  return _workos
-}
+const credentials = createCredentialManager({ getProviderAccessToken })
 
 const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
   "google-calendar": "google",
@@ -39,6 +33,53 @@ function resolveProvider(slug: string): CalendarProvider {
   return provider
 }
 
+async function loadAuthUser(userId: string) {
+  const [row] = await db()
+    .select({ email: auth.user.email, name: auth.user.name })
+    .from(auth.user)
+    .where(eq(auth.user.id, userId))
+    .limit(1)
+  return row
+}
+
+async function loadConnectedCalendar(orgId: string, integrationId: string) {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({
+        authAccountId: main.expertIntegrations.authAccountId,
+        slug: main.expertIntegrations.slug,
+        userId: main.expertProfiles.userId,
+      })
+      .from(main.expertIntegrations)
+      .innerJoin(
+        main.expertProfiles,
+        eq(main.expertProfiles.id, main.expertIntegrations.expertProfileId)
+      )
+      .where(
+        and(
+          eq(main.expertIntegrations.id, integrationId),
+          eq(main.expertIntegrations.status, "connected")
+        )
+      )
+      .limit(1)
+    return row
+  })
+}
+
+async function calendarAccessToken(
+  userId: string,
+  slug: string,
+  authAccountId: string | null
+) {
+  const provider = resolveProvider(slug)
+  const accessToken = await credentials.getCalendarToken(
+    userId,
+    provider,
+    requireAuthAccountId(authAccountId)
+  )
+  return { provider, accessToken }
+}
+
 async function loadBookingContext(
   orgId: string,
   sessionId: string,
@@ -47,7 +88,7 @@ async function loadBookingContext(
   const data = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({
-        expertWorkosUserId: main.users.workosUserId,
+        expertUserId: main.expertProfiles.userId,
         expertName: main.expertProfiles.displayName,
         eventTypeTitle: main.eventTypes.title,
         startsAt: main.sessions.startsAt,
@@ -62,7 +103,6 @@ async function loadBookingContext(
         main.expertProfiles,
         eq(main.sessions.expertProfileId, main.expertProfiles.id)
       )
-      .innerJoin(main.users, eq(main.expertProfiles.userId, main.users.id))
       .innerJoin(
         main.eventTypes,
         eq(main.sessions.eventTypeId, main.eventTypes.id)
@@ -77,30 +117,27 @@ async function loadBookingContext(
   const memberData = await withOrgContext(orgId, async (tx: Tx) => {
     const [row] = await tx
       .select({
-        workosUserId: main.users.workosUserId,
+        memberUserId: main.bookings.memberUserId,
       })
       .from(main.bookings)
-      .innerJoin(main.users, eq(main.bookings.memberUserId, main.users.id))
       .where(eq(main.bookings.id, bookingId))
       .limit(1)
     return row
   })
 
-  if (!memberData?.workosUserId) return null
+  if (!memberData?.memberUserId) return null
 
-  const workos = getWorkOS()
   const [expertUser, memberUser] = await Promise.all([
-    workos.userManagement.getUser(data.expertWorkosUserId),
-    workos.userManagement.getUser(memberData.workosUserId),
+    loadAuthUser(data.expertUserId),
+    loadAuthUser(memberData.memberUserId),
   ])
+  if (!expertUser || !memberUser) return null
 
   const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
   const eventTypeName =
     data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
 
-  const memberName =
-    [memberUser.firstName, memberUser.lastName].filter(Boolean).join(" ") ||
-    "Member"
+  const memberName = memberUser.name || "Member"
 
   return {
     expertEmail: expertUser.email,
@@ -115,6 +152,61 @@ async function loadBookingContext(
     sessionMode: data.sessionMode,
     locale,
   }
+}
+
+async function sendCreateIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string
+): Promise<{ calendarEventId: null }> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) await sendBookingIcsEmail(emailPayload)
+  return { calendarEventId: null }
+}
+
+async function sendRescheduleIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string,
+  newStartTime: Date,
+  newEndTime: Date,
+  previousStartTime: Date
+): Promise<void> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) {
+    await sendRescheduleIcsEmail(
+      {
+        ...emailPayload,
+        startsAt: newStartTime,
+        endsAt: newEndTime,
+        sequence: await nextIcsSequence(orgId, bookingId),
+      },
+      previousStartTime
+    )
+  }
+}
+
+async function nextIcsSequence(
+  orgId: string,
+  bookingId: string
+): Promise<number> {
+  const [row] = await withOrgContext(orgId, async (tx: Tx) => {
+    return tx
+      .update(main.bookings)
+      .set({ updatedAt: sql`clock_timestamp()` })
+      .where(eq(main.bookings.id, bookingId))
+      .returning({ updatedAt: main.bookings.updatedAt })
+  })
+  return row?.updatedAt.getTime() ?? Date.now()
+}
+
+async function sendCancellationIcsFallback(
+  orgId: string,
+  sessionId: string,
+  bookingId: string
+): Promise<void> {
+  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
+  if (emailPayload) await sendCancellationIcsEmail(emailPayload)
 }
 
 /**
@@ -175,36 +267,21 @@ export async function calendarEventCreate(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendBookingIcsEmail(emailPayload)
-      }
-      return { calendarEventId: null }
+      return sendCreateIcsFallback(orgId, sessionId, bookingId)
     }
 
-    const integration = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          workosUserId: main.expertIntegrations.workosUserId,
-          slug: main.expertIntegrations.slug,
-        })
-        .from(main.expertIntegrations)
-        .where(
-          and(
-            eq(main.expertIntegrations.id, destination.expertIntegrationId),
-            eq(main.expertIntegrations.status, "connected")
-          )
-        )
-        .limit(1)
-      return row
-    })
+    const integration = await loadConnectedCalendar(
+      orgId,
+      destination.expertIntegrationId
+    )
+    if (!integration?.authAccountId) {
+      return sendCreateIcsFallback(orgId, sessionId, bookingId)
+    }
 
-    if (!integration?.workosUserId) return { calendarEventId: null }
-
-    const provider = resolveProvider(integration.slug)
-    const accessToken = await getCalendarToken(
-      integration.workosUserId,
-      provider
+    const { provider, accessToken } = await calendarAccessToken(
+      integration.userId,
+      integration.slug,
+      integration.authAccountId
     )
     const adapter = getAdapter(provider)
 
@@ -298,44 +375,39 @@ export async function calendarEventUpdate(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        const updated: IcsEmailPayload = {
-          ...emailPayload,
-          startsAt: newStartTime,
-          endsAt: newEndTime,
-          sequence: 1,
-        }
-        await sendRescheduleIcsEmail(updated, previousStartTime)
-      }
+      await sendRescheduleIcsFallback(
+        orgId,
+        sessionId,
+        bookingId,
+        newStartTime,
+        newEndTime,
+        previousStartTime
+      )
       return
     }
 
     if (!session.calendarEventId) return
 
-    const integration = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          workosUserId: main.expertIntegrations.workosUserId,
-          slug: main.expertIntegrations.slug,
-        })
-        .from(main.expertIntegrations)
-        .where(
-          and(
-            eq(main.expertIntegrations.id, destination.expertIntegrationId),
-            eq(main.expertIntegrations.status, "connected")
-          )
-        )
-        .limit(1)
-      return row
-    })
+    const integration = await loadConnectedCalendar(
+      orgId,
+      destination.expertIntegrationId
+    )
+    if (!integration?.authAccountId) {
+      await sendRescheduleIcsFallback(
+        orgId,
+        sessionId,
+        bookingId,
+        newStartTime,
+        newEndTime,
+        previousStartTime
+      )
+      return
+    }
 
-    if (!integration?.workosUserId) return
-
-    const provider = resolveProvider(integration.slug)
-    const accessToken = await getCalendarToken(
-      integration.workosUserId,
-      provider
+    const { provider, accessToken } = await calendarAccessToken(
+      integration.userId,
+      integration.slug,
+      integration.authAccountId
     )
     const adapter = getAdapter(provider)
 
@@ -401,38 +473,25 @@ export async function calendarEventDelete(params: {
     })
 
     if (!destination) {
-      const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-      if (emailPayload) {
-        await sendCancellationIcsEmail(emailPayload)
-      }
+      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
       return
     }
 
     if (!session.calendarEventId) return
 
-    const integration = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          workosUserId: main.expertIntegrations.workosUserId,
-          slug: main.expertIntegrations.slug,
-        })
-        .from(main.expertIntegrations)
-        .where(
-          and(
-            eq(main.expertIntegrations.id, destination.expertIntegrationId),
-            eq(main.expertIntegrations.status, "connected")
-          )
-        )
-        .limit(1)
-      return row
-    })
+    const integration = await loadConnectedCalendar(
+      orgId,
+      destination.expertIntegrationId
+    )
+    if (!integration?.authAccountId) {
+      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
+      return
+    }
 
-    if (!integration?.workosUserId) return
-
-    const provider = resolveProvider(integration.slug)
-    const accessToken = await getCalendarToken(
-      integration.workosUserId,
-      provider
+    const { provider, accessToken } = await calendarAccessToken(
+      integration.userId,
+      integration.slug,
+      integration.authAccountId
     )
     const adapter = getAdapter(provider)
 

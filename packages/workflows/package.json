@@ -16,11 +16,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/auth": "workspace:*",
     "@eleva/calendar": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
-    "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "resend": "catalog:"
   },

@@ -21,6 +21,13 @@ export {
 } from "./subscriptions"
 export type { ProductTier } from "./subscriptions"
 export { provisionOrgBilling } from "./provisioning"
+export {
+  enqueueSeatSync,
+  markSeatSyncPending,
+  syncSeatQuantity,
+  syncSeatQuantityAudited,
+} from "./seats"
+export type { SyncSeatQuantityResult } from "./seats"
 export type {
   ProvisionBillingInput,
   ProvisionBillingResult,

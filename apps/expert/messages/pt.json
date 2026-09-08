@@ -85,7 +85,29 @@
   "calendars": {
     "backToIntegrations": "Integrações",
     "title": "Calendários ligados",
-    "description": "Ligue o calendário Google ou Microsoft para evitar reservas em duplicado."
+    "description": "Ligue o calendário Google ou Microsoft para evitar reservas em duplicado.",
+    "connectTitle": "Ligar um calendário",
+    "connectDescription": "Dê à Eleva acesso para verificar disponibilidade e escrever sessões confirmadas.",
+    "connectGoogle": "Ligar Google Calendar",
+    "connectMicrosoft": "Ligar Microsoft Calendar",
+    "reconnectGoogle": "Voltar a ligar Google Calendar",
+    "reconnectMicrosoft": "Voltar a ligar Microsoft Calendar",
+    "connectedTitle": "Contas ligadas",
+    "disconnect": "Desligar",
+    "noCalendarFallback": "Ainda não há calendário ligado. Os membros podem reservar; receberá convites por email até ligar um.",
+    "status": {
+      "connecting": "A ligar",
+      "connected": "Ligado",
+      "disconnected": "Desligado",
+      "error": "Erro",
+      "expired": "Expirado"
+    },
+    "error": {
+      "connect-failed": "Não foi possível iniciar a ligação do calendário.",
+      "disconnect-failed": "Não foi possível desligar este calendário.",
+      "validation": "O pedido é inválido.",
+      "unauthorized-calendar": "Não pode alterar este calendário."
+    }
   },
   "integrations": {
     "title": "Integrações",

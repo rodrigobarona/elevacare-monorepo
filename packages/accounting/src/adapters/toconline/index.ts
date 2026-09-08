@@ -3,7 +3,6 @@ import {
   decryptOAuthToken,
   encryptOAuthToken,
   revokeOAuthToken,
-  type VaultRef,
 } from "@eleva/encryption"
 import { requireToconlineEnv } from "@eleva/config/env"
 import { AdapterError } from "../../types"
@@ -54,6 +53,8 @@ interface ToconlineMetadata {
   businessName?: string
   /** Last `/v1/me`-style probe timestamp. */
   lastProbeAt?: string
+  orgId?: string
+  userId?: string
 }
 
 async function buildAuthUrl(input: {
@@ -134,16 +135,29 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
 
   return {
     vaultRef,
-    metadata: { seriesPrefix: env.TOCONLINE_SERIES_PREFIX },
+    metadata: {
+      seriesPrefix: env.TOCONLINE_SERIES_PREFIX,
+      seriesId: env.TOCONLINE_SERIES_PREFIX,
+      orgId: input.orgId,
+      userId: input.userId,
+    },
     expiresAt: expiresAt.toISOString(),
   }
 }
 
 async function issueInvoice(
-  creds: { vaultRef: string; metadata?: Record<string, unknown> },
+  creds: {
+    vaultRef: string
+    metadata?: Record<string, unknown>
+    orgId?: string
+  },
   input: IssueInvoiceInput
 ): Promise<IssueInvoiceResult> {
-  const token = await loadAccessToken(creds.vaultRef as VaultRef)
+  const token = await loadAccessToken(
+    creds.vaultRef,
+    credsOrgId(creds.metadata, creds.orgId),
+    credsUserId(creds.metadata)
+  )
   const env = requireToconlineEnv()
   const meta = (creds.metadata ?? {}) as ToconlineMetadata
 
@@ -227,9 +241,14 @@ async function issueInvoice(
 async function status(creds: {
   vaultRef: string
   metadata?: Record<string, unknown>
+  orgId?: string
 }): Promise<AdapterStatus> {
   try {
-    const token = await loadAccessToken(creds.vaultRef as VaultRef)
+    const token = await loadAccessToken(
+      creds.vaultRef,
+      credsOrgId(creds.metadata, creds.orgId),
+      credsUserId(creds.metadata)
+    )
     const env = requireToconlineEnv()
     const res = await fetch(
       `${env.TOCONLINE_API_URL.replace(/\/$/, "")}/api/v1/companies`,
@@ -269,15 +288,40 @@ async function status(creds: {
 
 async function disconnect(input: DisconnectInput): Promise<void> {
   if (!input.vaultRef) return
-  await revokeOAuthToken(input.vaultRef as VaultRef)
+  await revokeOAuthToken(input.vaultRef)
   // TOConline does not expose a public revoke endpoint; the access
   // token will simply expire. Removing the vault ref is sufficient
   // to lock the adapter out.
 }
 
-async function loadAccessToken(ref: VaultRef): Promise<string> {
+function credsOrgId(
+  metadata?: Record<string, unknown>,
+  fallbackOrgId?: string
+): string {
+  const orgId = metadata?.orgId
+  if (typeof orgId === "string" && orgId.length > 0) return orgId
+  if (typeof fallbackOrgId === "string" && fallbackOrgId.length > 0) {
+    return fallbackOrgId
+  }
+  throw new AdapterError("credentials", "TOConline credentials missing orgId")
+}
+
+function credsUserId(metadata?: Record<string, unknown>): string {
+  const userId = metadata?.userId
+  if (typeof userId === "string" && userId.length > 0) return userId
+  throw new AdapterError("credentials", "TOConline credentials missing userId")
+}
+
+async function loadAccessToken(
+  ciphertext: string,
+  orgId: string,
+  userId: string
+): Promise<string> {
   try {
-    const decrypted = await decryptOAuthToken(ref)
+    const decrypted = await decryptOAuthToken(orgId, ciphertext, {
+      provider: "toconline",
+      userId,
+    })
     if (!decrypted.accessToken) {
       throw new AdapterError(
         "credentials",
