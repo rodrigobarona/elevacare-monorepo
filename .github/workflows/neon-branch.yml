@@ -99,12 +99,25 @@ jobs:
           AUDIT_DATABASE_URL: ${{ steps.audit-url.outputs.db_url }}
           AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
         run: |
-          # db:* scripts load ../../.env.local; CI injects DATABASE_URL instead.
-          touch .env.local
-          pnpm --filter=@eleva/db db:migrate
-          pnpm --filter=@eleva/db db:rls:main
-          pnpm --filter=@eleva/db db:migrate:audit
-          pnpm --filter=@eleva/db db:rls:audit
+          # db:* scripts load ../../.env.local via tsx --env-file (overrides empty files).
+          umask 077
+          {
+            printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
+            printf 'DATABASE_URL_UNPOOLED=%s\n' "$DATABASE_URL_UNPOOLED"
+            printf 'AUDIT_DATABASE_URL=%s\n' "$AUDIT_DATABASE_URL"
+            printf 'AUDIT_DATABASE_URL_UNPOOLED=%s\n' "$AUDIT_DATABASE_URL_UNPOOLED"
+          } > .env.local
+          apply() {
+            pnpm --filter=@eleva/db db:migrate
+            pnpm --filter=@eleva/db db:rls:main
+            pnpm --filter=@eleva/db db:migrate:audit
+            pnpm --filter=@eleva/db db:rls:audit
+          }
+          if ! apply; then
+            echo "Migrate failed (compute may still be waking); retrying..."
+            sleep 8
+            apply
+          fi
 
       - name: RLS isolation and class suite
         if: steps.neon-creds.outputs.ready == 'true'
