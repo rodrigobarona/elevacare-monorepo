@@ -36,19 +36,23 @@ other way around.
 2. **Organization roles.** `owner` / `admin` / `member` are seniority inside one org, not
    product labels. `organization.type` is
    `personal | expert | team | academy | staff`.
-3. **Product labels.** Derived only from `(organization.type, member.role)`:
+3. **Product labels.** Customer labels derive from `(organization.type, member.role)`.
+   Staff is a **separate resolver branch** that reads the Better Auth `admin` plugin
+   role, not `member.role`:
 
-   | Product label   | `type`   | role                |
-   | --------------- | -------- | ------------------- |
-   | Member          | personal | owner               |
-   | Expert (solo)   | expert   | owner               |
-   | Expert (clinic) | team     | member              |
-   | Clinic admin    | team     | owner or admin      |
-   | Academy admin   | academy  | owner or admin      |
-   | Eleva staff     | staff    | (staff plugin role) |
+   | Product label   | Input                                                                                                                         |
+   | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+   | Eleva staff     | `admin` plugin role in `staff_support \| staff_finance \| platform_admin` on `admin.eleva.care`, or active org `type = staff` |
+   | Member          | active org `type = personal`, role `owner`                                                                                    |
+   | Expert (solo)   | active org `type = expert`, role `owner`                                                                                      |
+   | Expert (clinic) | active org `type = team`, role `member`                                                                                       |
+   | Clinic admin    | active org `type = team`, role `owner` or `admin`                                                                             |
+   | Academy admin   | active org `type = academy`, role `owner` or `admin`                                                                          |
 
-   A human may hold several memberships; `organization.setActive` selects the context.
-   Staff never become `owner` of a customer org.
+   Precedence: if the request host is `admin.eleva.care` (or the active org is
+   `type = staff`), the staff branch wins even when the same human also has
+   customer memberships. `organization.setActive` selects the customer context
+   on product hosts. Staff never become `owner` of a customer org.
 
 4. **Capability bundles.** `capabilities.ts` is a derived view of `permissions.ts` for
    callers that want named bundles (`member_capabilities`, `expert_capabilities`, …).

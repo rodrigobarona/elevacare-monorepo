@@ -238,8 +238,10 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 
 ## Staging URL Matrix
 
-Canonical staging host is **`dev.eleva.care`** (not `staging.eleva.care`). Historical
-`staging.eleva.care` mentions elsewhere are aliases to retire.
+Canonical **web/API** staging host is **`dev.eleva.care`** (not `staging.eleva.care`).
+Historical `staging.eleva.care` web/API host aliases are retired. The Resend
+staging sender / DKIM domain may remain `staging.eleva.care` until mail DNS is
+renamed in a later ops change.
 
 - `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
 - `api.dev.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)

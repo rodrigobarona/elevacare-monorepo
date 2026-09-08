@@ -17,7 +17,7 @@ It should guide:
 
 Eleva should own its calendar integration layer.
 
-That means Eleva should not assume calendar sync belongs to the identity layer. Each calendar connection persists the Better Auth `account.id` (`accountId`). Background workers and webhooks call `auth.api.getAccessToken({ body: { accountId } })` (Better Auth 1.7+; `providerId` alone is not a selector). Do not use the browser account-cookie selector off the request path. WorkOS Pipes is removed (removed, see ADR-017).
+That means Eleva should not assume calendar sync belongs to the identity layer. Each calendar connection persists the Better Auth `account.id` (`accountId`) and the owning `userId`. Background workers and webhooks call `auth.api.getAccessToken({ body: { accountId, userId } })` (Better Auth 1.7+; `providerId` alone is not a selector; `accountId` without the trusted `userId` is insufficient off the request path). Do not use the browser account-cookie selector in workers. WorkOS Pipes is removed (removed, see ADR-017).
 
 The scheduling platform should treat calendar connections as part of `packages/scheduling` and related service boundaries.
 

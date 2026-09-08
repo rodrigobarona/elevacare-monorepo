@@ -277,7 +277,7 @@ Each entry should include:
   `staging.eleva.care` is a historical alias to retire (callbacks, CORS,
   webhooks). The former `rbacDriftCheck` QStash job is not in the catalog
   (RBAC is code, ADR-021). Calendar workers persist Better Auth `account.id` and
-  call `auth.api.getAccessToken({ body: { accountId } })`
+  call `auth.api.getAccessToken({ body: { accountId, userId } })`
   (`calendar-integration-spec.md`). CI foundations (Playwright, Neon branch,
   gitleaks, i18n parity, audit migrations) are Phase 1.2.
 - Reference: [`adrs/ADR-017-better-auth-identity.md`](./adrs/ADR-017-better-auth-identity.md)

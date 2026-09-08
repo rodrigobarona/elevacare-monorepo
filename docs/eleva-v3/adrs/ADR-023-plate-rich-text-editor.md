@@ -45,7 +45,9 @@ rows-per-language).
 
    Plain strings use `LocalizedText` (`Partial<Record<Locale, string>>`) from
    `packages/db/src/schema/main/shared.ts`. A sibling `_source_locale` column names the
-   required key. HTML is written server-side from the JSON.
+   required key. Zod + DB CHECK: `value[_source_locale]` **must exist** (non-empty
+   `json`/`text` for rich text, non-empty string for `LocalizedText`). Writes that omit
+   or mismatch the source locale are rejected. HTML is written server-side from the JSON.
 
 3. **UI.** Plate blocks come from the Plate shadcn registry into
    `packages/editor/src/components/ui` and are restyled with `@eleva/ui` tokens. `cn` and

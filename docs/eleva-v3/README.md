@@ -17,7 +17,7 @@ This handbook is based on the master planning work captured in the Eleva v3 proj
 ## How To Use This Handbook
 
 > **Building or shipping v3? Start with the [Execution Plan](./execution-plan/README.md).**
-> It is the sequencing SSOT: locked decisions (ADR-017..021, Better Auth replaces WorkOS (removed, see ADR-017),
+> It is the sequencing SSOT: locked decisions (ADR-017..021, Better Auth is the target identity layer; WorkOS runtime is deleted in Phase 3 — removed, see ADR-017),
 > Daily.co for video), the branch → PR → CodeRabbit CLI → merge loop, and one file per phase
 > (`execution-plan/phases/NN-*.md`) ending in a copy-paste prompt. A single-page offline HTML
 > version is generated at `execution-plan/index.html` (`pnpm docs:execution-plan:html`).
@@ -90,7 +90,7 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - The public marketing/discovery surface (`apps/web`) and the authenticated product surfaces are **separate apps**.
 - The monorepo uses **pnpm + Turborepo** (bun allowed as a task runner only; `bun install` banned).
 - **Neon Postgres with RLS** + `withOrgContext()` is the non-bypassable tenancy layer, across two Neon projects (`eleva_v3_main` + `eleva_v3_audit`).
-- **Better Auth** (self-hosted in `apps/api` at `/auth/*`) owns identity, sessions, organizations and API keys (ADR-017). WorkOS is removed (removed, see ADR-017).
+- **Better Auth** (self-hosted in `apps/api` at `/auth/*`) is the target identity, session, organization and API-key layer (ADR-017). Residual WorkOS code is deleted in Phase 3 (removed, see ADR-017).
 - **Envelope encryption** in `@eleva/encryption` (ADR-020) — no vault product. OAuth tokens encrypted by Better Auth.
 - **RBAC SSOT in code** (`packages/auth/src/permissions.ts`, ADR-021). Product label = `(organization.type, member.role)`.
 - **Stripe** Connect Express + Dynamic Payment Methods + Entitlements + **Embedded Components** + single `/webhooks/stripe` per env (canonical handler in `@eleva/billing/server`). Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016. Multibanco reference vouchers excluded.

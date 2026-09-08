@@ -20,7 +20,9 @@ Daily as the only video path so Phase 9 does not keep a Meet fallback.
 Constraints: EU processing and a BAA/DPA (gate **D-07**); HIPAA-mode rooms cannot use custom
 names or live streaming; session recordings, if ever offered, need a customer-owned S3 landing
 zone that Daily can assume an IAM role into (gate **D-08**, backlog 16.8 — not Phase 9 or 10);
-the join page lives on `app.eleva.care`, the branded Daily domain is `sessions.eleva.care`
+the join page lives on `eleva.care/[orgSlug]/sessions/...` (member) and
+`eleva.care/[orgSlug]/expert/sessions/...` (expert) via gateway rewrites — not
+`app.eleva.care`; the branded Daily domain is `sessions.eleva.care`
 (Daily owns the CNAME). Phone and in-person delivery modes must keep working if Daily is down
 or D-07 is unsigned.
 

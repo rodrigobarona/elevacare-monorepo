@@ -34,7 +34,7 @@ We also need Google and Microsoft calendar OAuth. A 2026-05 amendment briefly ch
 
 - Experts connect Google Calendar and Microsoft Outlook Calendar through Better Auth `linkSocial` with calendar scopes. Tokens are stored on `auth.account` with `encryptOAuthTokens: true`.
 - **`packages/calendar`** owns the `CalendarAdapter` interface for direct Google Calendar and Microsoft Graph API calls (listCalendars, getFreeBusy, createEvent, updateEvent, deleteEvent). Adapters receive an access token from `@eleva/auth` (`auth.api.getAccessToken` / `getProviderAccessToken`) and make API calls directly.
-- `getCalendarToken(userId, provider)` is the single entry point for obtaining calendar tokens. A `needs_reauthorization` error is surfaced to the expert when refresh fails.
+- `getCalendarToken({ userId, accountId })` is the single entry point. `accountId` is the Better Auth `account.id` persisted on the calendar connection (required when an expert has more than one Google or Microsoft account). A `needs_reauthorization` error is surfaced to the expert when refresh fails.
 - Online session destination is Daily only (ADR-018). Google Meet is not a destination.
 
 **Identity vs calendar OAuth**:

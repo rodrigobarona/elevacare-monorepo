@@ -69,7 +69,7 @@ without password export (ADR-019); Phase 2 proves the vendor behaviour in a spik
 5. **Accounts.** Required: `account: { encryptOAuthTokens: true }` (Better Auth encrypts
    Google/Microsoft tokens with `BETTER_AUTH_SECRET`; Phase 2 has an integration check that
    fails if the flag is missing or false). `@eleva/calendar` reads tokens through
-   `auth.api.getAccessToken({ body: { accountId } })` (ADR-004 amended). Account linking:
+   `auth.api.getAccessToken({ body: { accountId, userId } })` (ADR-004 amended). Account linking:
    `accountLinking.disableImplicitLinking: true`, `trustedProviders: ["google"]` only for
    explicit `linkSocial()` after a verified magic-link session; a Google sign-in whose
    e-mail matches an existing user returns `account_not_linked` (ADR-019). No linking by

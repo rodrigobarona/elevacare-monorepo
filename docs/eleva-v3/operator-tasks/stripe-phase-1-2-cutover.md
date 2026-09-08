@@ -1,7 +1,10 @@
 # Stripe Phase 1 + 2 — Post-Merge Cutover Runbook
 
-Status: Pending — execute the moment `stripe-audit` lands on `main`
-and the production deploy of `elevacare-api` is `READY`.
+Status: **Historical (WorkOS-era, 2026-05).** Stripe webhook/config steps remain
+useful. Identity evidence in the 2026-05-19 reports (WorkOS org, WorkOS JWT)
+does not validate Better Auth (removed, see ADR-017). Frontend criterion 8 and
+a Better Auth E2E session are still **blocked** until Phase 2. Do not treat
+this document as launch-READY.
 
 This runbook is the single source of truth for everything that must
 happen after the Stripe billing branch (commits `37813ec` →
@@ -559,7 +562,11 @@ cutover date.
 
 ## Cutover Verification Report — 2026-05-19
 
-Status: **READY**. All three blocking gaps (G1, G2, G3) and four of five
+Status: **HISTORICAL (WorkOS-era)**. Stripe ingest findings below are retained
+as evidence of the webhook path. They do **not** certify Better Auth. Criterion
+8 remains NOT EXECUTED.
+
+Original 2026-05 text: READY. All three blocking gaps (G1, G2, G3) and four of five
 medium-/low-severity notes from the original audit are resolved. Webhook
 ingest healthy, audit pipeline shipping rows to `eleva_v3_audit.audit_events`,
 both QStash schedules firing on cadence, Sentry receiving alerts from the
@@ -752,7 +759,10 @@ Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
 
 ## Production Readiness Audit — 2026-05-19 (evening)
 
-Status: **PASS — production-ready** with two non-blocking findings (N7, N8).
+Status: **HISTORICAL**. WorkOS org + JWT pipeline evidence below is not a
+Better Auth pass (removed, see ADR-017). Keep blocked until Phase 2 E2E.
+
+Original 2026-05 text: PASS — production-ready with two non-blocking findings (N7, N8).
 Recommend ADR-016 flip from `Accepted` to `Active`.
 
 Walked an 8-phase audit grounded in current Stripe + WorkOS docs (pulled via (removed, see ADR-017)

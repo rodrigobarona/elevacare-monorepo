@@ -158,8 +158,12 @@ do not treat them as one:
 
 - **Sessions:** TTL = Better Auth `session.expiresIn` (the value Better Auth passes
   to `set` for the session key).
-- **Verification records** (magic-link, OTP, reset): TTL = Better Auth
-  `verification.expiresIn`.
+- **Verification / one-shot tokens:** the `secondaryStorage.set` adapter **must
+  apply the `ttl` argument Better Auth passes for that write**. Do not collapse
+  these to one `verification.expiresIn`. Documented sources include
+  `emailVerification.expiresIn`, `emailAndPassword.resetPasswordTokenExpiresIn`,
+  magic-link / OTP expiry, and OAuth-state TTL. Phase 2 tests magic-link, OTP,
+  password-reset and OAuth-state writes separately.
 
 Do not share the application-cache keyspace or flush policy with either key
 prefix. Phase 2 tests both write paths separately.

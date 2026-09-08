@@ -25,8 +25,8 @@ alwaysApply: false
   `{firstName}'s Space`.
 - `requireApiAuth` accepts exactly one credential: session cookie (origin-checked),
   `Authorization: Bearer <jwt>`, or `x-api-key`. Cross-mode is 400.
-- Calendar tokens: `auth.api.getAccessToken({ body: { accountId } })` — persist
-  `accountId` on the connection; do not store tokens in `packages/calendar`.
+- Calendar tokens: `auth.api.getAccessToken({ body: { accountId, userId } })` —
+  persist both on the connection; do not store tokens in `packages/calendar`.
 - WorkOS helpers, Widgets and `infra/workos` are Phase 3 deletions (removed, see ADR-017).
   Do not add new WorkOS calls.
 
