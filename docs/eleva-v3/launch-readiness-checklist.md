@@ -51,7 +51,7 @@ Each item should have:
 ## Environment And Infrastructure Readiness
 
 - [ ] Staging and production environments are configured correctly.
-- [ ] Required environment variables are documented and present.
+- [ ] Required environment variables are documented and present (`BETTER_AUTH_*`, `ELEVA_KEK_V*`, `DAILY_*`). At launch (after Phase 3) no `WORKOS_*` variables remain and obsolete WorkOS credentials are revoked (removed, see ADR-017).
 - [ ] Webhook endpoints are configured per environment.
 - [ ] Calendar, payment, video, and email integrations are validated in the correct environment.
 - [ ] Health checks and uptime monitors are configured.

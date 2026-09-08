@@ -27,12 +27,12 @@ Items identified during the 2026-05 code review that were intentionally deferred
 
 ## DX / Refactoring
 
-| #   | Location                                               | Issue                                                                       | Severity | Suggested Sprint                                               |
-| --- | ------------------------------------------------------ | --------------------------------------------------------------------------- | -------- | -------------------------------------------------------------- |
-| 9   | `packages/calendar/src/adapters/google.ts`             | All errors throw generic `Error` instead of typed `CalendarAdapterError`    | Medium   | Sprint 5 (requires new error type hierarchy + caller updates)  |
-| 10  | `apps/app/src/app/expert/calendars/page.tsx`           | `SLUG_LABEL` is a hardcoded 2-entry map instead of manifest-driven          | Low      | Deferred until manifest exports `displayName` at runtime       |
-| 11  | `apps/app/src/app/expert/schedule/schedule-editor.tsx` | `rulesToDayMap` silently drops multiple windows per day (reduces to single) | Medium   | Sprint 5 (product feature: multi-window availability)          |
-| 12  | `apps/app/src/app/expert/calendars/actions.ts`         | `disconnectCalendarAction` updates local DB but does not revoke at WorkOS   | Low      | Not needed (WorkOS Pipes manages its own revocation lifecycle) |
+| #   | Location                                               | Issue                                                                               | Severity | Suggested Sprint                                                     |
+| --- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------- |
+| 9   | `packages/calendar/src/adapters/google.ts`             | All errors throw generic `Error` instead of typed `CalendarAdapterError`            | Medium   | Sprint 5 (requires new error type hierarchy + caller updates)        |
+| 10  | `apps/app/src/app/expert/calendars/page.tsx`           | `SLUG_LABEL` is a hardcoded 2-entry map instead of manifest-driven                  | Low      | Deferred until manifest exports `displayName` at runtime             |
+| 11  | `apps/app/src/app/expert/schedule/schedule-editor.tsx` | `rulesToDayMap` silently drops multiple windows per day (reduces to single)         | Medium   | Sprint 5 (product feature: multi-window availability)                |
+| 12  | `packages/calendar` + `@eleva/auth`                    | Disconnect must revoke the Better Auth `account` grant and delete `calendar_*` rows | Medium   | Phase 4 — `unlinkAccount` + adapter revoke in the same audited write |
 
 ## Cosmetic / i18n
 

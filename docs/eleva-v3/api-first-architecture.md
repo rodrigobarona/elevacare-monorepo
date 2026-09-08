@@ -27,12 +27,14 @@ We adopt an **API-first, agentic-first, and secure-by-default** architecture.
 
 Dual auth via `resolveApiAuth()`:
 
-| Auth type      | Use case                | Mechanism                                              |
-| -------------- | ----------------------- | ------------------------------------------------------ |
-| Session cookie | Browser apps            | WorkOS AuthKit `wos-session` cookie                    |
-| Bearer API key | AI agents, CLI          | `Authorization: Bearer elk_...` validated via WorkOS   |
-| Bearer M2M JWT | Service-to-service      | `Authorization: Bearer <jwt>` verified via WorkOS JWKS |
-| Secret header  | Internal (cron, QStash) | `Authorization: Bearer ${CRON_SECRET}`                 |
+| Auth type      | Use case                | Mechanism                                                               |
+| -------------- | ----------------------- | ----------------------------------------------------------------------- |
+| Session cookie | Browser apps            | Better Auth session cookie on `.eleva.care` (`requireApiAuth` + origin) |
+| API key        | AI agents, CLI          | `x-api-key` issued by Better Auth (never `Authorization: Bearer`)       |
+| Bearer M2M JWT | Service-to-service      | `Authorization: Bearer <jwt>` issued and verified by Better Auth        |
+| Secret header  | Internal (cron, QStash) | `Authorization: Bearer ${CRON_SECRET}`                                  |
+
+WorkOS AuthKit cookies, WorkOS API keys and WorkOS JWKS (removed, see ADR-017). `requireApiAuth()` accepts exactly one credential per request.
 
 ### Security Layers
 
@@ -56,7 +58,7 @@ Dual auth via `resolveApiAuth()`:
 
 ### Error Format
 
-All errors return JSON: `{ error: string, issues?: ZodIssue[], message?: string }` with HTTP status codes 401, 403, 404, 422, 429, 500.
+All errors return JSON: `{ error: string, issues?: ZodIssue[], message?: string }` with HTTP status codes 400 (exactly-one-credential violation), 401, 403, 404, 422, 429, 500.
 
 ### OpenAPI & Documentation
 

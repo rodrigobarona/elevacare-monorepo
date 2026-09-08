@@ -172,9 +172,9 @@ maintain for staging).
 
 ### 3.1 Webhook endpoint
 
-The user already created `https://api.eleva.care/webhooks/stripe` in
-the WorkOS Stripe-add-on dashboard. Re-run the setup script to make
-sure it has the canonical 20-event list and an explicit
+The webhook endpoint is `https://api.eleva.care/webhooks/stripe` in
+the Stripe Dashboard (not a WorkOS add-on — removed, see ADR-017). Re-run the setup script to ensure
+it has the canonical 20-event list and an explicit
 `api_version` pin (not "account default"):
 
 ```bash
@@ -211,8 +211,8 @@ With `WORKOS_SEAT_METER_ID` set, clinic tiers get
 pnpm --filter @eleva/infra-stripe seed:entitlements
 ```
 
-Mirrors the `@eleva/flags` plan-feature matrix into Stripe Entitlements
-so the WorkOS Stripe add-on can flow them to JWTs.
+Mirrors the `@eleva/flags` plan-feature matrix into Stripe Entitlements.
+Runtime gates read flags from Edge Config / Stripe Entitlements, not a WorkOS JWT (removed, see ADR-017).
 
 ### 3.4 Verification
 
@@ -225,30 +225,14 @@ In Stripe Dashboard → Developers → Webhooks:
 
 ---
 
-## 4 · WorkOS ↔ Stripe customer linkage backfill
+## 4 · Org ↔ Stripe customer linkage
 
-Every WorkOS Organization needs a `stripeCustomerId` mirror locally
-and on the WorkOS org metadata. New orgs created via
-`POST /organizations` get this automatically (we changed
-`apps/api/src/app/organizations/route.ts` to call `provisionOrgBilling`).
-Existing orgs need a one-shot backfill.
+WorkOS Organization metadata + `backfill:org-customers` walking WorkOS orgs (removed, see ADR-017).
+Current contract: `provisionOrgBilling` on Better Auth
+organization create (Phase 6) writes `billing_customers.stripe_customer_id`.
+Do not run the WorkOS backfill script (removed, see ADR-017).
 
-```bash
-pnpm --filter @eleva/infra-stripe backfill:org-customers
-```
-
-Output is a summary of:
-
-- `Already OK` — already linked, no work
-- `Provisioned` — created Stripe customer + linked + mirrored
-- `Mirrored only` — Stripe customer existed, only the local mirror missing
-- `Orphan` — WorkOS org gone but local row remains (reconcile via `/workos/sync`, not here)
-- `Failed` — investigate logs; usually a Stripe API issue
-
-The script filters out soft-deleted orgs and gracefully handles
-orphans, so it's safe to re-run.
-
-### 4.1 Verify
+### 4.1 Verify (mirror table)
 
 ```sql
 SELECT
@@ -257,8 +241,9 @@ SELECT
 FROM billing_customers;
 ```
 
-`unlinked` should be 0 (or only equal to the orphan count from the
-backfill output).
+`unlinked` must be 0 for every non-deleted organization that has started
+billing. Investigate any unlinked row (failed `provisionOrgBilling` on
+create) — there is no WorkOS backfill output to reconcile against (removed, see ADR-017).
 
 ---
 
@@ -664,7 +649,7 @@ then receive a fresh issue from the detector.
 | 5   | Both QStash schedules visible + firing on cadence                | PASS         | `audit-outbox-drainer` schedule present (cron `0 6,18 * * *`) and route now `200 OK`. `stripe-stuck-events` schedule created at 14:43 UTC (`scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8`, cron `*/10 * * * *`).                                                                                                  |
 | 6   | Each smoke event ends in `processed` / `ignored` with audit row  | PASS         | After env-var fix at 14:13 UTC: 13 events landed, all `ignored` with correct `ignore_reason: "no org resolution for customer cus_…"` — fixture-correct (no Eleva metadata in CLI fixtures). 0 failed/failed_terminal. Latency 888–952 ms. Mirror tables empty (correct: ignored events do not write). |
 | 7   | Replay test shows no duplicates                                  | PASS         | `replay:event evt_3TYo6F…` x3 → status `ignored`, `attempts` advanced 1→2→3, no audit duplicates (none expected for ignored). State machine and dispatcher confirmed working.                                                                                                                         |
-| 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough deferred — needs WorkOS test session.                                                                                                                                                                                                    |
+| 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough still required — blocker is a Better Auth test session (Phase 2), not a WorkOS session (removed, see ADR-017).                                                                                                                           |
 | 9   | Sentry shows no new issues from cutover                          | PASS         | 0 issues from new code paths post-deploy. Sentry receiving traffic now (init/handler failures will be visible going forward).                                                                                                                                                                         |
 | 10  | Stuck-event drill fires Sentry issue within 10 min               | PASS         | Re-ran 14:50 UTC after G3 deploy. Sentry issue [`ELEVA-CARE-19`](https://prood.sentry.io/issues/ELEVA-CARE-19) created within 1s with the synthetic event ID, `app: api` tag, release `72c4b99...`, and full extra metadata (ageSeconds=1208, attempts, stripeEventId, etc.). Drill row cleaned up.   |
 | 11  | Old `/stripe/webhook` returns 404, old Dashboard webhook removed | PASS         | Legacy path returns 404. Stripe Dashboard has only the canonical `https://api.eleva.care/webhooks/stripe`.                                                                                                                                                                                            |
@@ -770,11 +755,11 @@ Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
 Status: **PASS — production-ready** with two non-blocking findings (N7, N8).
 Recommend ADR-016 flip from `Accepted` to `Active`.
 
-Walked an 8-phase audit grounded in current Stripe + WorkOS docs (pulled via
+Walked an 8-phase audit grounded in current Stripe + WorkOS docs (pulled via (removed, see ADR-017)
 Context7). Highlights:
 
 - **5/5 adversarial webhook security tests pass**: missing/wrong/stale/tampered signatures all rejected with `400`; positive control accepted.
-- **End-to-end real-customer happy path verified**: created a real WorkOS org + Stripe customer + paid subscription, dispatcher classified as `processed` (not `ignored`), mirror + audit + JWT pipeline all populated correctly. **First non-fixture event in the project's history.**
+- **End-to-end real-customer happy path verified**: created a real WorkOS org + Stripe customer + paid subscription, dispatcher classified as `processed` (not `ignored`), mirror + audit + JWT pipeline all populated correctly. **First non-fixture event in the project's history.** (removed, see ADR-017)
 - **Subscription lifecycle 5/5**: create → upgrade tier → cancel-at-period-end → immediate cancel all dispatch + mirror + audit correctly.
 - **F3 event ordering protection works**: stale replay refused with `stale event (created X < last Y)` reason, mirror not reverted.
 - **Idempotency under stress**: 5-replay storm produced no duplicate audit rows; `attempts` advances monotonically (2 → 7).
@@ -792,16 +777,13 @@ a customer with an `active` paid subscription on a product that has the
 itself was verified via `/v1/products/.../features` (returns the right link).
 
 Follow-up implementation confirmed **no application runtime code reads
-`customers.activeEntitlements.list`**. Feature gates read
-`session.entitlements` from the WorkOS access-token JWT via `@eleva/flags`.
+`customers.activeEntitlements.list`**. Feature gates read `@eleva/flags`
+(Edge Config + Stripe Entitlements), not a WorkOS JWT (removed, see ADR-017).
 Therefore this is not a production blocker and has no known user-facing impact.
 
-The Stripe Entitlements API remains useful as a diagnostic comparison path.
-Use `pnpm stripe:verify:entitlements -- --org-id <uuid> --access-token <jwt>`
-to compare the canonical WorkOS JWT claim with the Stripe API response. Re-test
-on a live Stripe account when moving out of Sandbox; if WorkOS support confirms
-the Add-on depends on the Stripe API path, revisit subscription to
-`entitlements.active_entitlement_summary.updated`.
+Do not pass access tokens on the command line. Diagnostic comparison, when
+needed, is Stripe Dashboard + `s.entitlements.activeEntitlements.list` against
+the `billing_customers` mirror — Phase 6 owns the Better Auth session path.
 
 #### N8 — Webhook handler error column lacks PG diagnostic detail
 
@@ -814,6 +796,6 @@ visible during incidents while preserving the existing string column.
 ### Done-criteria revisit
 
 All 11 original done-criteria still PASS or PARTIAL with documented owners.
-N8 is resolved in code. N7 is reframed as live-mode JWT verification deferred
-until the first real subscriber because runtime feature gates read the WorkOS
-JWT claim, not Stripe's diagnostic active-entitlements API.
+N8 is resolved in code. N7 is reframed as live-mode flag verification deferred
+until the first real subscriber because runtime gates read `@eleva/flags`, not
+Stripe's diagnostic active-entitlements API. WorkOS JWT claims (removed, see ADR-017).

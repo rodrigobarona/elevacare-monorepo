@@ -22,7 +22,7 @@ It is intended for:
 
 The first runbooks should cover:
 
-- WorkOS
+- Better Auth
 - Stripe
 - Daily
 - Resend
@@ -46,14 +46,14 @@ Each integration runbook should document:
 
 ## Required Runbooks
 
-### WorkOS runbook
+### Better Auth runbook
 
 Should cover:
 
 - sign-in failures
-- session issues
+- session / cookie issues on `.eleva.care`
 - organization/membership mismatch
-- permission claim issues
+- permission / capability issues
 
 ### Stripe runbook
 

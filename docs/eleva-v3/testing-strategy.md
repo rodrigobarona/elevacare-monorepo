@@ -52,13 +52,17 @@ Use for:
 
 ### End-to-end tests
 
+Root Playwright suite (`e2e/`, Phase 1.2): smoke that `apps/web` home and
+`apps/api` `/health` + `/openapi.json` respond. Later phases add journey specs.
+Neon branch-per-PR runs `packages/db` RLS isolation + policy-class tests.
+
 Use for:
 
 - launch-critical user journeys
 - onboarding
 - booking
 - payment success paths
-- patient/expert dashboard basics
+- member/expert dashboard basics
 
 ### Manual QA
 

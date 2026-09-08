@@ -37,7 +37,7 @@ Ownership is needed for:
 ### Identity and RBAC
 
 - Primary owner: auth/platform lead
-- Scope: WorkOS, organizations, memberships, RBAC, session model
+- Scope: Better Auth (ADR-017), organizations, memberships, RBAC, session model. WorkOS (removed, see ADR-017).
 
 ### Marketplace and discovery
 

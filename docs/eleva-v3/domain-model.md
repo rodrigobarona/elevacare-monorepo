@@ -505,7 +505,6 @@ The model should support:
 
 ## Domain Questions Still Open
 
-- exact modeling of guest users vs pre-created WorkOS identities
 - final shape of organization hierarchy for clinics/teams
 - pack/session-credit accounting model
 - final visibility defaults for diary data

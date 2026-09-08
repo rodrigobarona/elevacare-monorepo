@@ -1,0 +1,33 @@
+---
+description: Better Auth boundary and identity rules. Apply when touching auth server, session helpers, permissions, or proxy.ts.
+globs:
+  - packages/auth/**
+  - apps/*/src/proxy.ts
+  - apps/api/src/app/auth/**
+alwaysApply: false
+---
+
+# Better Auth (ADR-017, ADR-021)
+
+- Only `packages/auth` imports `better-auth` / `@better-auth/*`. Frontends use
+  `@eleva/auth/client`, `@eleva/auth/server` (`getSession()`) and `@eleva/auth/proxy`
+  (`getSessionCookie()`). Never instantiate `betterAuth()` in an app.
+- Mount path is `/auth` on `apps/api` (`basePath: "/auth"`). Product-app cookie domain is
+  `.eleva.care`. From Phase 12, `admin.eleva.care` uses a host-only `__Host-` cookie and
+  rejects the shared cookie (ADR-015 / ADR-017). `trustedOrigins` is an explicit list —
+  never `*`.
+- Every new permission goes in `packages/auth/src/permissions.ts` (`createAccessControl`)
+  and a role grant. `capabilities.ts` derives from that file. Product label =
+  `(organization.type, member.role)`.
+- Regenerate schema with the Better Auth CLI into `packages/db/src/schema/auth`. Hand edits
+  are indexes, RLS class headers and `additionalFields` only.
+- Wrap `databaseHooks` side effects in `withAudit()`. Personal Space name is
+  `{firstName}'s Space`.
+- `requireApiAuth` accepts exactly one credential: session cookie (origin-checked),
+  `Authorization: Bearer <jwt>`, or `x-api-key`. Cross-mode is 400.
+- Calendar tokens: `auth.api.getAccessToken({ body: { accountId } })` — persist
+  `accountId` on the connection; do not store tokens in `packages/calendar`.
+- WorkOS helpers, Widgets and `infra/workos` are Phase 3 deletions (removed, see ADR-017).
+  Do not add new WorkOS calls.
+
+Load the **better-auth** skill to add a plugin, permission or trusted origin.

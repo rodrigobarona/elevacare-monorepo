@@ -49,9 +49,35 @@ reviews:
   path_instructions:
     - path: apps/**/src/proxy.ts
       instructions: >-
-        Per docs/eleva-v3/implementation-sprints.md this file must stay
-        under ~50 LOC. Flag any cross-cutting concern that belongs in an
-        @eleva/* package (auth, observability, flags) instead of inline.
+        Keep this file thin (optimistic getSessionCookie + redirects).
+        Flag any cross-cutting concern that belongs in an @eleva/* package
+        (auth, observability, flags) instead of inline.
+    - path: packages/auth/**
+      instructions: >-
+        Only place that may import better-auth / @better-auth/*
+        (ADR-017). Permissions SSOT is permissions.ts; hooks are
+        withAudit-wrapped. Flag new WorkOS imports. Flag trustedOrigins
+        wildcards. Flag mixing session cookie, JWT and API key on one
+        request.
+    - path: packages/video/**
+      instructions: >-
+        Only @daily-co importer (ADR-018). Random room names; meeting
+        tokens minted at join, never stored or logged. Verify webhook
+        signatures. No PHI in logs. Recording/transcription is 16.8 only.
+    - path: packages/encryption/**
+      instructions: >-
+        Envelope AES-256-GCM only (ADR-020). Never log KEK/DEK/plaintext.
+        shredOrgKeys deletes rows. Flag createCipheriv outside this
+        package (except Better Auth internals).
+    - path: packages/accounting/**
+      instructions: >-
+        Only TOConline/Moloni importer. Tier 1 vs Tier 2 boundaries.
+        Host api33.toconline.pt. IVA matrix from the payments spec.
+        Flag vendor calls inside a DB transaction.
+    - path: e2e/**
+      instructions: >-
+        No secrets in specs. Stable selectors via data-testid. Smoke
+        specs must not call live Stripe/Daily/TOConline.
     - path: packages/db/**
       instructions: >-
         Every tenant-scoped table must have an org_id column + RLS

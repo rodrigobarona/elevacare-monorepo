@@ -17,7 +17,7 @@ It should guide:
 ## Runtime Decision
 
 - **Durable orchestration**: **Vercel Workflows DevKit**
-- **Periodic cron (drift checks, nightly digests, monthly reconciliation)**: **Upstash QStash**
+- **Periodic cron (nightly digests, monthly reconciliation, retention scrubbers)**: **Upstash QStash**
 - **Ephemeral coordination (slot reservation, rate-limit locks, short-lived caches)**: **Upstash Redis**
 
 There is no ad hoc cron route for core product correctness. Anything that must survive crashes, retries, or multi-hour waits runs in Vercel Workflows DevKit.
@@ -89,9 +89,11 @@ There is no ad hoc cron route for core product correctness. Anything that must s
 
 - `dsarExport` — export all user data → upload to Vercel Blob → time-limited signed URL → notify admin
 - `softDeleteScrubber` — 30-day retention enforcement
-- `vaultCryptoShredder` — org deletion → crypto-shred all Vault references → verify via integration test
+- `orgKeyShredder` — org deletion → `shredOrgKeys` (ADR-020) → verify encrypted rows are unreadable
 - `ersAuditExport` — periodic ERS-required export (if applicable)
-- `rbacDriftCheck` — **QStash periodic**: verify WorkOS roles match `infra/workos/rbac-config.json`
+
+Permissions are TypeScript (ADR-021). The former `rbacDriftCheck` QStash job against
+`infra/workos/rbac-config.json` is not in the catalog (removed, see ADR-017).
 
 ### Mobile workflows (when mobile ships)
 
@@ -149,12 +151,22 @@ Use **Upstash Redis**:
 - short-lived slot reservation (TTL-based)
 - rate-limit windows (sliding/fixed)
 - distributed locks (`withLock`)
-- short-lived caches (Stripe Customer cache, WorkOS user cache)
+- short-lived application caches (Stripe Customer cache)
+
+Use **Upstash Redis (`secondaryStorage`)** for Better Auth with two TTL sources —
+do not treat them as one:
+
+- **Sessions:** TTL = Better Auth `session.expiresIn` (the value Better Auth passes
+  to `set` for the session key).
+- **Verification records** (magic-link, OTP, reset): TTL = Better Auth
+  `verification.expiresIn`.
+
+Do not share the application-cache keyspace or flush policy with either key
+prefix. Phase 2 tests both write paths separately.
 
 Use **Upstash QStash**:
 
 - `stripeToConlineReconciliation` (monthly)
-- `rbacDriftCheck` (daily)
 - `softDeleteScrubber` (daily)
 - `scheduledDigest` (daily/weekly per audience)
 

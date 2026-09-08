@@ -1,6 +1,9 @@
 # Eleva.care v3 Implementation Sprints (8 Weeks)
 
-Status: Authoritative
+> **Superseded for sequencing by [`execution-plan/README.md`](./execution-plan/README.md).**
+> This file is kept for history. Do not plan or implement from it.
+
+Status: Historical
 
 ## Purpose
 
@@ -24,9 +27,9 @@ Deferred post-beta: Eleva Diary mobile (M7), Fumadocs full content site beyond P
 - **Vercel Marketplace integrations** supply env vars automatically on link: Neon, Upstash (Redis + QStash), Resend, Sentry, and others. Use `vercel env pull .env.local` per app instead of hand-writing secrets.
 - **Vercel MCP** available for fetching project info, deployments, env vars, and Edge Config reads during implementation.
 - **Stripe MCP** used for product/price/webhook/customer seeding across staging + production accounts.
-- **WorkOS CLI** used for org/role/permission provisioning from `infra/workos/rbac-config.json`.
+- **WorkOS (removed, see ADR-017) CLI** used for org/role/permission provisioning from `infra/workos/rbac-config.json`.
 - **Neon MCP** for project creation, branch-per-PR, migrations.
-- **Context7** used throughout for up-to-date docs (Next 16, Stripe, WorkOS, Drizzle, Daily, Twilio, Vercel Workflows DevKit, next-intl, Vercel Flags SDK).
+- **Context7** used throughout for up-to-date docs (Next 16, Stripe, WorkOS (removed, see ADR-017), Drizzle, Daily, Twilio, Vercel Workflows DevKit, next-intl, Vercel Flags SDK).
 
 ## Next.js 16 Naming Conventions (Platform-Wide)
 
@@ -154,7 +157,7 @@ Governed by: [identity-rbac-spec.md](./identity-rbac-spec.md), [compliance-data-
 
 Backend (Track A):
 
-- `@eleva/auth`: WorkOS AuthKit integration, session helpers, `requirePermission`, `withPermission`, `usePermission`, `PermissionGate`, `withAuth(handler)` proxy wrapper. Session cookie scoped to `.eleva.care` so every zone shares it.
+- `@eleva/auth`: WorkOS (removed, see ADR-017) AuthKit integration, session helpers, `requirePermission`, `withPermission`, `usePermission`, `PermissionGate`, `withAuth(handler)` proxy wrapper. Session cookie scoped to `.eleva.care` so every zone shares it.
 - Org-per-user provisioning on first sign-in (non-blocking sync). Personal org for every patient; solo-expert org on Become-Partner approval; clinic admin `admin` vs clinic member `member` per [identity-rbac-spec.md](./identity-rbac-spec.md).
 - `@eleva/db`: Neon pooled `@neondatabase/serverless` client, Drizzle schema skeleton, `withOrgContext()`. Initial tables: `users`, `organizations`, `memberships`, `roles`, `permissions`, `audit_outbox` (in main), `audit_events` (in audit project).
 - RLS policies on every tenant table using `current_setting('eleva.org_id')`. Separate RLS policies on `eleva_v3_audit.audit_events` (INSERT via drainer credentials; SELECT filtered by org_id OR `audit:view_all`; UPDATE/DELETE revoked).
@@ -178,8 +181,8 @@ Frontend (Track B):
 
 Exit:
 
-- new user lands in a freshly provisioned personal org as `admin` (WorkOS default); product label = patient
-- role change in WorkOS reflects in JWT after refresh
+- new user lands in a freshly provisioned personal org as `admin` (WorkOS (removed, see ADR-017) default); product label = patient
+- role change in WorkOS (removed, see ADR-017) reflects in JWT after refresh
 - switching locale persists; EN shows no prefix, PT/ES prefixed
 - RLS isolation test green (org A insert, org B select → zero rows)
 - audit outbox drainer ships test events from `eleva_v3_main.audit_outbox` to `eleva_v3_audit.audit_events` at-least-once
@@ -187,7 +190,7 @@ Exit:
 - `src/proxy.ts` remains under ~60 LOC in `apps/web`; sub-app proxies are thin auth/header wrappers; gateway integration tests in `apps/web/src/proxy.test.ts` pass
 - signup form rejects reserved usernames; DB rejects reserved slugs at the constraint level
 
-MCPs: WorkOS CLI (create app, import `rbac-config.json`), Neon MCP (migration branches), Vercel MCP (verify env vars on both apps).
+MCPs: WorkOS (removed, see ADR-017) CLI (create app, import `rbac-config.json`), Neon MCP (migration branches), Vercel MCP (verify env vars on both apps).
 
 Context7 pulls: `/websites/workos`, `/vercel/next.js` (Next 16 proxy.ts conventions + cacheComponents), next-intl v4, Drizzle.
 
@@ -204,7 +207,7 @@ Backend (Track A):
 - Drizzle schema: `expert_profiles`, `expert_categories`, `expert_listings`, `become_partner_applications`, `expert_integration_credentials`.
 - `@eleva/billing/stripe-embedded`: React wrappers for `@stripe/connect-js` + `<ConnectComponentsProvider>`; typed hooks per screen.
 - `/api/stripe/account-session` minting short-lived AccountSession tokens with precise component permissions, RBAC-gated.
-- `@eleva/accounting`: `ExpertInvoicingAdapter` interface; seed adapters `toconline/`, `moloni/`, `manual/`. OAuth install flows. Credential store in Neon + WorkOS Vault.
+- `@eleva/accounting`: `ExpertInvoicingAdapter` interface; seed adapters `toconline/`, `moloni/`, `manual/`. OAuth install flows. Credential store in Neon + WorkOS (removed, see ADR-017) Vault.
 - Vercel Blob for expert application document uploads.
 
 Frontend (Track B):
@@ -234,7 +237,7 @@ Exit:
 - expert connects TOConline OR acknowledges manual invoicing
 - admin cannot activate expert without verified invoicing setup
 
-MCPs: Stripe MCP (staging + production Connect platforms, products + prices for Top Expert €29/mo). WorkOS CLI (add permissions for expert roles). Vercel MCP (Blob token for uploads).
+MCPs: Stripe MCP (staging + production Connect platforms, products + prices for Top Expert €29/mo). WorkOS (removed, see ADR-017) CLI (add permissions for expert roles). Vercel MCP (Blob token for uploads).
 
 Context7 pulls: `/websites/stripe` (Connect Embedded Components, Identity, AccountSession), TOConline API.
 
@@ -250,7 +253,7 @@ Backend (Track A):
 
 - Drizzle schema: `event_types` (with `slug` field, case-insensitive unique per expert), `schedules`, `availability_rules`, `date_overrides`, `connected_calendars`, `calendar_busy_sources`, `calendar_destination`, `slot_reservations`, `bookings`, `sessions`, `event_locations` (in-person), `expert_practice_location`.
 - `@eleva/scheduling`: `getValidTimesFromSchedule`, atomic `reserveSlot` (Upstash Redis SET NX + DB tx), booking rules (buffers, notice, booking window), per-event language + country-license validation, `worldwide_mode_flag` bypass for non-clinical sessions.
-- `@eleva/calendar`: Google + Microsoft OAuth flows, token refresh, idempotent `events.insert` with client-supplied ID + 409 fallback. Tokens in WorkOS Vault via `@eleva/encryption`. Pub/Sub watch for external changes.
+- `@eleva/calendar`: Google + Microsoft OAuth flows, token refresh, idempotent `events.insert` with client-supplied ID + 409 fallback. Tokens in WorkOS (removed, see ADR-017) Vault via `@eleva/encryption`. Pub/Sub watch for external changes.
 - `@eleva/workflows`: `slotReservationExpiry`, `calendarEventCreate`/`Update`/`Delete`, `calendarTokenRefresh`, `calendarSyncReconciliation`.
 
 Frontend (Track B):
@@ -286,7 +289,7 @@ Backend (Track A):
 - Drizzle schema: `stripe_webhook_events`, `billing_customers`, `billing_subscriptions`, `booking_payments`, `payout_states`, `commission_rule`, `application_fee_breakdown`.
 - `@eleva/billing/server` `processStripeEvent`: single `/webhooks/stripe` route in `apps/api`. Verifies signature → writes `stripe_webhook_events` for idempotency → dispatches by `event.type` under `withAudit`. Subscribed events locked per handbook.
 - **ADR-016 exception**: subscription Checkout Sessions are the only place `payment_method_types` may be hardcoded — pinned to `["card", "sepa_debit"]` (MB WAY/Multibanco are one-time-only and cannot recur). Booking PaymentIntents continue to rely on Dynamic Payment Methods. See `processStripeEvent` and `stripe_webhook_events` for the implementing code paths.
-- **Stripe AccountSession endpoint** lives on the API subdomain at `api.eleva.care/stripe/account-session` (session-aware; reads WorkOS session cookie scoped on `.eleva.care`; CORS allows `https://eleva.care` with credentials). App zone calls it with `credentials: 'include'`.
+- **Stripe AccountSession endpoint** lives on the API subdomain at `api.eleva.care/stripe/account-session` (session-aware; reads WorkOS (removed, see ADR-017) session cookie scoped on `.eleva.care`; CORS allows `https://eleva.care` with credentials). App zone calls it with `credentials: 'include'`.
 - `@eleva/workflows`:
   - `paymentSucceeded` → `bookingConfirmation` → entitlement write → Lane 1 fan-out
   - `paymentFailed` → release slot → notify
@@ -425,7 +428,7 @@ Security:
 - Upstash Redis rate limits on auth (5/min/IP), booking reservation (30/min/user), AI report draft (10/day/expert), invoice retry (3/hour).
 - Secure headers composed in every app's `src/proxy.ts` via `withHeaders`: strict CSP with explicit `connect-src 'self' https://api.eleva.care https://js.stripe.com https://api.stripe.com https://m.stripe.com` (allows the app zone's cross-origin calls to the API subdomain); `frame-src https://js.stripe.com https://connect-js.stripe.com https://*.stripe.com https://*.daily.co`; HSTS; Permissions-Policy; X-Frame-Options; Referrer-Policy.
 - Stripe webhook signature verification strict + replay window.
-- WorkOS JWT verification centralized in `@eleva/auth`.
+- WorkOS (removed, see ADR-017) JWT verification centralized in `@eleva/auth`.
 
 Observability:
 
@@ -481,7 +484,7 @@ Deliverables:
 - `dsarExport` workflow: export all user data → Vercel Blob → signed URL → admin notification. 10-minute target. Playwright integration test.
 - `vaultCryptoShredder` workflow: org deletion → shred Vault refs → verified by integration test.
 - Consent banner live + GDPR/ERS alignment.
-- Daily / Neon / Resend / WorkOS / Sentry / BetterStack / Upstash EU regions confirmed contractually; documented in [environment-matrix.md](./environment-matrix.md).
+- Daily / Neon / Resend / WorkOS (removed, see ADR-017) / Sentry / BetterStack / Upstash EU regions confirmed contractually; documented in [environment-matrix.md](./environment-matrix.md).
 - IVA/VAT matrix sign-off from accountant recorded in-repo.
 - Pilot expert + pilot clinic run a week of real bookings on staging with production Stripe/TOConline; monthly reconciliation green.
 - Tier 2 invoicing green end-to-end for TOConline expert-side + Moloni + Manual SAF-T export.
@@ -535,8 +538,8 @@ A sprint exits only when:
 ## MCP and CLI Usage By Sprint
 
 - S0: Vercel MCP (projects + marketplace linking), Neon MCP (two projects)
-- S1: WorkOS CLI (app + roles), Neon MCP (branches), Vercel MCP (env verification)
-- S2: Stripe MCP (Connect platforms, products, prices), WorkOS CLI (permissions), Vercel MCP (Blob)
+- S1: WorkOS (removed, see ADR-017) CLI (app + roles), Neon MCP (branches), Vercel MCP (env verification)
+- S2: Stripe MCP (Connect platforms, products, prices), WorkOS (removed, see ADR-017) CLI (permissions), Vercel MCP (Blob)
 - S3: Neon MCP, Upstash dashboard
 - S4: Stripe MCP (webhook endpoints, test customers), Stripe CLI (local forwarding), Neon MCP, Vercel MCP (webhook secrets)
 - S5: Vercel MCP (AI Gateway), Neon MCP, Daily dashboard
@@ -550,7 +553,7 @@ A sprint exits only when:
 - Stripe: `/websites/stripe` (Embedded Components, Dynamic Payment Methods, Webhooks, Tax, Entitlements, Subscriptions)
 - Stripe Node: `/stripe/stripe-node`
 - Stripe.js: `/stripe/stripe-js`
-- WorkOS: `/websites/workos`
+- WorkOS (removed, see ADR-017): `/websites/workos`
 - Neon: via Neon MCP skill
 - Drizzle: resolve at Sprint 1 start
 - Daily: resolve at Sprint 3 start
@@ -574,7 +577,7 @@ A sprint exits only when:
 - Lane 1 transactional notifications (email + SMS + in-app); Lane 2 welcome automations only
 - Security hardened (BotID, rate limits, CSP, HSTS); observability wired (Sentry + BetterStack)
 - DSAR export + Vault crypto-shredding workflows operational
-- Production on Vercel with Neon EU, Daily EU, Resend EU, Twilio EU, WorkOS EU, Sentry EU, BetterStack EU
+- Production on Vercel with Neon EU, Daily EU, Resend EU, Twilio EU, WorkOS (removed, see ADR-017) EU, Sentry EU, BetterStack EU
 
 ## What Does Not Ship In Beta
 

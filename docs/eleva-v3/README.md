@@ -17,7 +17,7 @@ This handbook is based on the master planning work captured in the Eleva v3 proj
 ## How To Use This Handbook
 
 > **Building or shipping v3? Start with the [Execution Plan](./execution-plan/README.md).**
-> It is the sequencing SSOT: locked decisions (ADR-017..021, Better Auth replaces WorkOS,
+> It is the sequencing SSOT: locked decisions (ADR-017..021, Better Auth replaces WorkOS (removed, see ADR-017),
 > Daily.co for video), the branch → PR → CodeRabbit CLI → merge loop, and one file per phase
 > (`execution-plan/phases/NN-*.md`) ending in a copy-paste prompt. A single-page offline HTML
 > version is generated at `execution-plan/index.html` (`pnpm docs:execution-plan:html`).
@@ -67,6 +67,7 @@ Read these documents in order when onboarding a developer, designer, PM, or agen
 36. [`service-level-objectives.md`](./service-level-objectives.md)
 37. [`support-escalation-matrix.md`](./support-escalation-matrix.md)
 38. [`adrs/README.md`](./adrs/README.md)
+39. [`security-traceability.md`](./security-traceability.md) — control → phase → enforcing test (Phase 1 skeleton)
 
 **Brand, marketing, and design** should also use [`brand-book/README.md`](./brand-book/README.md) (and its appendices) so voice, visual identity, and partner boundaries stay consistent with the Eleva.care product reference.
 
@@ -85,20 +86,23 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 ### Authoritative starting decisions
 
 - Eleva v3 is an **EU-first**, Portugal-first-at-launch digital health platform with strong compliance and privacy boundaries.
-- The first authenticated web product is **one app** (`apps/app`) with strong RBAC and route-group separation.
-- The public marketing/discovery surface (`apps/web`) and the authenticated product surface (`apps/app`) are **separate apps**.
+- The authenticated surfaces are **role-focused micro-apps** (`apps/app`, `apps/expert`, `apps/team`, `apps/account`, `apps/admin`) per ADR-015.
+- The public marketing/discovery surface (`apps/web`) and the authenticated product surfaces are **separate apps**.
 - The monorepo uses **pnpm + Turborepo** (bun allowed as a task runner only; `bun install` banned).
 - **Neon Postgres with RLS** + `withOrgContext()` is the non-bypassable tenancy layer, across two Neon projects (`eleva_v3_main` + `eleva_v3_audit`).
-- **WorkOS** (EU) owns auth, organizations, and Vault.
+- **Better Auth** (self-hosted in `apps/api` at `/auth/*`) owns identity, sessions, organizations and API keys (ADR-017). WorkOS is removed (removed, see ADR-017).
+- **Envelope encryption** in `@eleva/encryption` (ADR-020) — no vault product. OAuth tokens encrypted by Better Auth.
+- **RBAC SSOT in code** (`packages/auth/src/permissions.ts`, ADR-021). Product label = `(organization.type, member.role)`.
 - **Stripe** Connect Express + Dynamic Payment Methods + Entitlements + **Embedded Components** + single `/webhooks/stripe` per env (canonical handler in `@eleva/billing/server`). Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016. Multibanco reference vouchers excluded.
 - **Hybrid monetization**: solo experts = commission (15% → 8% on Top Expert tier); clinics/orgs = per-seat SaaS (Starter/Growth/Enterprise), no commission on clinic-member bookings. Three-party revenue demoted to phase-2 opt-in.
-- **Two-tier invoicing** in `packages/accounting`: Tier 1 (Eleva→Expert/Clinic) via TOConline; Tier 2 (Expert→Patient) via cal.com-style adapter registry.
+- **Two-tier invoicing** in `packages/accounting`: Tier 1 (Eleva→Expert/Clinic) via TOConline; Tier 2 (Expert→Member) via cal.com-style adapter registry.
 - **Notifications two-lane**: Lane 1 transactional (Vercel Workflows + Resend + Twilio EU + Neon inbox + Expo push) and Lane 2 marketing (Resend Automations, PHI-free). Novu retired.
 - **Vercel Workflows DevKit** for durable orchestration; QStash for periodic cron only; Upstash Redis for ephemeral coordination.
 - **Vercel Flags SDK + Edge Config** for feature flags (via `packages/flags`).
 - **Vercel AI Gateway** exclusive for AI pipelines (via `packages/ai`).
-- **Daily.co** (EU) for video + transcripts (Eleva-owned records).
-- **Eleva-owned Google/Microsoft calendar OAuth** in `packages/calendar`, not WorkOS Pipes.
+- **Daily.co only** for video (ADR-018). Eleva owns the domain records (session row, transcript text). Recording **storage** is undecided until D-08 / Phase 16.8.
+- **Eleva-owned Google/Microsoft calendar OAuth** in `packages/calendar`; tokens from Better Auth `account` rows. WorkOS Pipes (removed, see ADR-017).
+- **Rich text = Plate** in `@eleva/editor` (ADR-023).
 - **GA4 on `apps/web`, PostHog on `apps/app`** (split, no overlap).
 - `Eleva Diary` joins the monorepo in M7, after v1 contracts of `auth` + `db` + `api` + `notifications`.
 
