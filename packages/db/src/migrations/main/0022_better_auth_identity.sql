@@ -218,7 +218,7 @@ INSERT INTO "auth"."user" (
 SELECT
   u."id",
   'Legacy Member',
-  u."workos_user_id" || '@legacy.eleva.care',
+  COALESCE(NULLIF(u."workos_user_id", ''), u."id"::text) || '@legacy.eleva.care',
   true,
   u."avatar_url",
   u."created_at",

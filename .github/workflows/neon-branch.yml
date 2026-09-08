@@ -108,9 +108,9 @@ jobs:
             printf 'AUDIT_DATABASE_URL_UNPOOLED=%s\n' "$AUDIT_DATABASE_URL_UNPOOLED"
           } > .env.local
           apply() {
-            pnpm --filter=@eleva/db db:migrate
-            pnpm --filter=@eleva/db db:rls:main
-            pnpm --filter=@eleva/db db:migrate:audit
+            pnpm --filter=@eleva/db db:migrate &&
+            pnpm --filter=@eleva/db db:rls:main &&
+            pnpm --filter=@eleva/db db:migrate:audit &&
             pnpm --filter=@eleva/db db:rls:audit
           }
           if ! apply; then
