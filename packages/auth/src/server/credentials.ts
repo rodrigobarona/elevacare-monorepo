@@ -5,6 +5,30 @@ export const SESSION_COOKIE_NAMES = [
   "__Secure-better-auth.session_token",
 ] as const
 
+export function hasDuplicateSessionCookie(
+  cookieHeader: string | null
+): boolean {
+  if (!cookieHeader) return false
+  return SESSION_COOKIE_NAMES.some(
+    (name) => countCookieValues(cookieHeader, name) > 1
+  )
+}
+
+export function expiredSessionCookies(): string[] {
+  const attrs = "Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax"
+  const hostOnly = SESSION_COOKIE_NAMES.map((name) => `${name}=; ${attrs}`)
+  if (process.env.VERCEL_ENV !== "production") {
+    return hostOnly
+  }
+  const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
+  return [
+    ...SESSION_COOKIE_NAMES.map(
+      (name) => `${name}=; ${attrs}; Domain=${domain}`
+    ),
+    ...hostOnly,
+  ]
+}
+
 export function cookieHeaderHasSession(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false
   return SESSION_COOKIE_NAMES.some(

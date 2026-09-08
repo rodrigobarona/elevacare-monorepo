@@ -9,28 +9,26 @@ import {
 import { getAuthApi } from "./auth"
 import {
   bearerToken,
+  hasDuplicateSessionCookie,
   isJwtBearer,
   listCredentialSources,
-  SESSION_COOKIE_NAMES,
-  countCookieValues,
 } from "./credentials"
+import { assertCookieCsrf } from "./csrf"
 import { verifyBetterAuthJwt } from "./jwt-verify"
 
 export type { ApiAuthMode }
+export { expiredSessionCookies } from "./credentials"
 
 export interface ApiIdentity extends ElevaSession {
   authMode: ApiAuthMode
 }
 
 export async function resolveApiAuth(request: Request): Promise<ApiIdentity> {
-  const cookieHeader = request.headers.get("cookie") ?? ""
-  for (const name of SESSION_COOKIE_NAMES) {
-    if (countCookieValues(cookieHeader, name) > 1) {
-      throw new UnauthorizedError(
-        "ambiguous-credentials",
-        "AMBIGUOUS_CREDENTIALS"
-      )
-    }
+  if (hasDuplicateSessionCookie(request.headers.get("cookie"))) {
+    throw new UnauthorizedError(
+      "session-cookie-ambiguous",
+      "SESSION_COOKIE_AMBIGUOUS"
+    )
   }
 
   const sources = listCredentialSources(request)
@@ -48,6 +46,7 @@ export async function resolveApiAuth(request: Request): Promise<ApiIdentity> {
   if (!source) throw new UnauthorizedError("no-session")
   switch (source) {
     case "cookie":
+      assertCookieCsrf(request)
       return sessionFromCookieOrBearer(request, "cookie")
     case "api-key":
       return sessionFromApiKey(request)

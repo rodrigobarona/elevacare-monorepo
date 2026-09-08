@@ -357,6 +357,12 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 - Vercel Marketplace integrations (Neon, Upstash, Resend, Sentry, BetterStack) populate env vars automatically when linked.
 - Better Auth encrypts Google/Microsoft OAuth tokens on `account` rows. TOConline / Moloni tokens are envelope-encrypted in `@eleva/encryption` (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
 
+## Development / preview only — never production
+
+| Variable                | Used by                       | Notes                                                                                                                                                                                                                                                                                                                                |
+| ----------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `E2E_AUTH_BYPASS_TOKEN` | `POST /auth/e2e/verify-email` | Playwright / local verify helper. Compared with `timingSafeEqual`. Route is unmounted (404) unless `VERCEL_ENV !== production` **and** the token is set. `apps/api` instrumentation throws if the token is present when `VERCEL_ENV=production`. Confirm absence with `vercel env ls --environment production` at the Phase 15 gate. |
+
 ## Preview Environments — Integration Posture
 
 | Integration | Posture in preview                                            |

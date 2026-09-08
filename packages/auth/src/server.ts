@@ -1,6 +1,7 @@
 import { cache } from "react"
 import { cookies, headers } from "next/headers"
 import { eq } from "drizzle-orm"
+import { createApiClient, ApiClientError } from "@eleva/api-client"
 import { normalizeWorkOSLocale, type Locale } from "@eleva/config/i18n"
 import {
   refreshSession as authkitRefreshSession,
@@ -8,12 +9,13 @@ import {
 } from "@workos-inc/authkit-nextjs"
 import { unsealData } from "iron-session"
 import { db, main } from "@eleva/db"
-import { resolveSessionFromWorkosUser } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
+import { loadElevaSession } from "./load-eleva-session"
 import {
-  listUserOrganizations,
+  listAuthOrganizations,
   type UserOrganizationItem,
 } from "./organizations"
+import { hasDuplicateSessionCookie } from "./server/credentials"
 import { getWorkOS } from "./workos-client"
 
 export { getWorkOS } from "./workos-client"
@@ -64,13 +66,6 @@ async function getWorkosSessionFromCookie(): Promise<WorkosCookieSession | null>
   } catch {
     return null
   }
-}
-
-async function getWorkosUserFromCookie(): Promise<
-  WorkosCookieSession["user"] | null
-> {
-  const session = await getWorkosSessionFromCookie()
-  return session?.user ?? null
 }
 
 /**
@@ -255,30 +250,59 @@ export async function refreshSessionEntitlements(): Promise<void> {
   return refreshWorkOSSession()
 }
 
+const SESSION_FETCH_TIMEOUT_MS = 8_000
+
+function apiBaseUrl(): string {
+  return (
+    process.env.NEXT_PUBLIC_API_URL ??
+    process.env.API_URL ??
+    "http://localhost:3002"
+  )
+}
+
+function isAbortOrTimeout(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.name === "AbortError" || err.name === "TimeoutError")
+  )
+}
+
+const loadBetterAuthPayload = cache(async () => {
+  const hdrs = await headers()
+  const cookie = hdrs.get("cookie") ?? ""
+  if (hasDuplicateSessionCookie(cookie)) return null
+  const client = createApiClient({
+    baseUrl: apiBaseUrl(),
+    headers: cookie ? { cookie } : undefined,
+    signal: AbortSignal.timeout(SESSION_FETCH_TIMEOUT_MS),
+  })
+  try {
+    return await client.auth.getSession()
+  } catch (err) {
+    if (err instanceof ApiClientError) {
+      if (err.status === 401 || err.status === 403) {
+        return null
+      }
+    }
+    if (isAbortOrTimeout(err)) return null
+    throw err
+  }
+})
+
 /**
  * Default session loader (no org preference). Picks the first active
  * membership. Use `getSessionForOrg` in org-scoped layouts instead.
  */
 export const getSession = cache(async (): Promise<ElevaSession | null> => {
-  const {
-    workosUserId,
-    tokenEmail,
-    tokenFirstName,
-    tokenLastName,
-    permissions,
-    entitlements,
-    jwtOrgId,
-  } = await resolveWorkosIdentity()
-  if (!workosUserId) return null
-  return resolveSessionFromWorkosUser(
-    workosUserId,
-    {
-      email: tokenEmail ?? "unknown",
-      firstName: tokenFirstName,
-      lastName: tokenLastName,
-    },
-    { jwtPermissions: permissions, jwtEntitlements: entitlements, jwtOrgId }
-  )
+  const payload = await loadBetterAuthPayload()
+  if (!payload?.user) return null
+  return loadElevaSession({
+    userId: payload.user.id,
+    email: payload.user.email,
+    name: payload.user.name ?? null,
+    image: payload.user.image ?? null,
+    orgId: payload.session?.activeOrganizationId ?? null,
+  })
 })
 
 /**
@@ -286,81 +310,46 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
  * from URL params so multi-org users land in the correct org context.
  *
  * Call this from `[orgSlug]/layout.tsx` instead of `getSession()`.
- * NOT cache()'d because the orgSlug varies per-layout invocation.
+ * The Better Auth payload is request-cached; org selection is per slug.
  */
 export async function getSessionForOrg(
   orgSlug: string
 ): Promise<ElevaSession | null> {
-  const {
-    workosUserId,
-    tokenEmail,
-    tokenFirstName,
-    tokenLastName,
-    permissions,
-    entitlements,
-    jwtOrgId,
-  } = await resolveWorkosIdentity()
-  if (!workosUserId) return null
-  return resolveSessionFromWorkosUser(
-    workosUserId,
-    {
-      email: tokenEmail ?? "unknown",
-      firstName: tokenFirstName,
-      lastName: tokenLastName,
-    },
-    {
-      preferredOrgSlug: orgSlug,
-      jwtPermissions: permissions,
-      jwtEntitlements: entitlements,
-      jwtOrgId,
-    }
-  )
+  const payload = await loadBetterAuthPayload()
+  if (!payload?.user) return null
+  return loadElevaSession({
+    userId: payload.user.id,
+    email: payload.user.email,
+    name: payload.user.name ?? null,
+    image: payload.user.image ?? null,
+    orgId: payload.session?.activeOrganizationId ?? null,
+    preferredOrgSlug: orgSlug,
+  })
 }
 
 /**
  * Auth check for lightweight UI surfaces like the marketing header.
- * WorkOS remains the source for identity fields; the Eleva user row
- * provides app-owned profile state such as the uploaded avatar URL.
- *
- * Memoised per-request via React.cache.
+ * Better Auth is the identity source; the Eleva user row provides
+ * the uploaded avatar URL.
  */
 export const getAuthUser = cache(async (): Promise<AuthUser | null> => {
-  const user = await resolveWorkosUserOrNull()
-  if (!user) return null
-  return {
-    id: user.id,
-    email: user.email ?? "unknown",
-    firstName: user.firstName ?? null,
-    lastName: user.lastName ?? null,
-    avatarUrl: await getAvatarUrlForWorkosUser(user.id),
-  }
-})
-
-async function getAvatarUrlForWorkosUser(
-  workosUserId: string
-): Promise<string | null> {
+  const payload = await loadBetterAuthPayload()
+  if (!payload?.user) return null
+  const parts = (payload.user.name ?? "").trim().split(/\s+/)
   const [row] = await db()
     .select({ avatarUrl: main.users.avatarUrl })
     .from(main.users)
-    .where(eq(main.users.workosUserId, workosUserId))
+    .where(eq(main.users.id, payload.user.id))
     .limit(1)
 
-  return row?.avatarUrl ?? null
-}
-
-async function resolveWorkosUserOrNull(): Promise<
-  WorkosCookieSession["user"] | null
-> {
-  try {
-    const workosSession = await authkitGetSession()
-    return workosSession.user ?? null
-  } catch (err) {
-    if (err instanceof Error && err.message.includes("AuthKit middleware")) {
-      return await getWorkosUserFromCookie()
-    }
-    throw err
+  return {
+    id: payload.user.id,
+    email: payload.user.email,
+    firstName: parts[0] || null,
+    lastName: parts.slice(1).join(" ") || null,
+    avatarUrl: row?.avatarUrl ?? payload.user.image ?? null,
   }
-}
+})
 
 /**
  * Convenience wrapper that throws UnauthorizedError if there is no
@@ -376,6 +365,20 @@ export async function requireSession(
     throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
   }
   return session
+}
+
+export async function requireOrg(): Promise<ElevaSession> {
+  const session = await requireSession()
+  if (!session.orgId) {
+    throw new UnauthorizedError("no-session", "active organization required")
+  }
+  return session
+}
+
+export function getCapabilities(
+  session: ElevaSession
+): ElevaSession["capabilities"] {
+  return session.capabilities
 }
 
 /**
@@ -422,8 +425,5 @@ export interface UserOrganization extends UserOrganizationItem {}
  */
 export async function getUserOrganizations(): Promise<UserOrganization[]> {
   const session = await requireSession()
-  return listUserOrganizations({
-    workosUserId: session.user.workosUserId,
-    currentWorkosOrgId: session.workosOrgId,
-  })
+  return listAuthOrganizations(session.user.id, session.orgId)
 }

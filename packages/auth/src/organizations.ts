@@ -155,6 +155,72 @@ export async function listAuthOrganizations(
   })
 }
 
+export class OrganizationForbiddenError extends Error {
+  constructor(message = "not a member of this organization") {
+    super(message)
+    this.name = "OrganizationForbiddenError"
+  }
+}
+
+function isForbiddenMembershipError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false
+  const record = err as {
+    status?: unknown
+    statusCode?: unknown
+    body?: { message?: unknown; code?: unknown }
+    message?: unknown
+  }
+  if (
+    record.statusCode === 403 ||
+    record.status === 403 ||
+    record.status === "FORBIDDEN"
+  ) {
+    return true
+  }
+  const text = [record.message, record.body?.message, record.body?.code]
+    .filter((value): value is string => typeof value === "string")
+    .join(" ")
+    .toLowerCase()
+  return text.includes("not a member")
+}
+
+export async function setActiveElevaOrganization(input: {
+  headers: Headers
+  orgId: string
+  actorUserId: string
+}): Promise<void> {
+  const api = getAuthApi()
+  const current = await api.getSession({ headers: input.headers })
+  const previousOrganizationId = current?.session.activeOrganizationId ?? null
+
+  try {
+    await api.setActiveOrganization({
+      headers: input.headers,
+      body: { organizationId: input.orgId },
+    })
+  } catch (err) {
+    if (isForbiddenMembershipError(err)) {
+      throw new OrganizationForbiddenError()
+    }
+    throw err
+  }
+
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (_tx, ctx) => {
+      await ctx.emit({
+        entity: "session",
+        action: "active_organization_changed",
+        entityId: current?.session.id ?? input.actorUserId,
+        payload: {
+          previousOrganizationId,
+          organizationId: input.orgId,
+        },
+      })
+    }
+  )
+}
+
 export async function addOrganizationMember(input: {
   userId: string
   orgId: string

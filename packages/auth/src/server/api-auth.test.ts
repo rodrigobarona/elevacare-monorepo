@@ -174,4 +174,122 @@ describe("requireApiAuth", () => {
       )
     ).rejects.toBeInstanceOf(UnauthorizedError)
   })
+
+  it("rejects duplicate session cookies as SESSION_COOKIE_AMBIGUOUS", async () => {
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          headers: {
+            cookie:
+              "better-auth.session_token=abc; better-auth.session_token=xyz",
+          },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "session-cookie-ambiguous",
+      message: "SESSION_COOKIE_AMBIGUOUS",
+    })
+    expect(getSession).not.toHaveBeenCalled()
+  })
+
+  it("rejects cross-site cookie POST as CSRF_ORIGIN_MISMATCH", async () => {
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: {
+            cookie: "better-auth.session_token=abc",
+            "sec-fetch-site": "cross-site",
+          },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "csrf-origin-mismatch",
+      message: "CSRF_ORIGIN_MISMATCH",
+    })
+    expect(getSession).not.toHaveBeenCalled()
+  })
+
+  it("rejects cookie POST with no Origin and no Sec-Fetch-Site", async () => {
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: { cookie: "better-auth.session_token=abc" },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "csrf-origin-mismatch",
+      message: "CSRF_ORIGIN_MISMATCH",
+    })
+    expect(getSession).not.toHaveBeenCalled()
+  })
+
+  it("rejects untrusted Origin on cookie POST", async () => {
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: {
+            cookie: "better-auth.session_token=abc",
+            origin: "https://evil.example",
+          },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "csrf-origin-mismatch",
+    })
+  })
+
+  it("allows Bearer POST from a cross-site caller", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: "org-1" },
+    })
+    const identity = await requireApiAuth(
+      new Request("http://localhost/x", {
+        method: "POST",
+        headers: {
+          authorization: "Bearer opaque-session",
+          "sec-fetch-site": "cross-site",
+        },
+      })
+    )
+    expect(identity.authMode).toBe("bearer")
+  })
+
+  it("allows API-key POST from a cross-site caller", async () => {
+    verifyApiKey.mockResolvedValue({
+      valid: true,
+      key: { userId: "user-1", referenceId: "org-1", name: "ci" },
+    })
+    const identity = await requireApiAuth(
+      new Request("http://localhost/x", {
+        method: "POST",
+        headers: {
+          "x-api-key": "key_abc",
+          "sec-fetch-site": "cross-site",
+        },
+      })
+    )
+    expect(identity.authMode).toBe("api-key")
+  })
+
+  it("allows same-site cookie POST from a trusted origin", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: "org-1" },
+    })
+    const identity = await requireApiAuth(
+      new Request("http://localhost/x", {
+        method: "POST",
+        headers: {
+          cookie: "better-auth.session_token=abc",
+          origin: "http://localhost:3000",
+          "sec-fetch-site": "same-site",
+        },
+      })
+    )
+    expect(identity.authMode).toBe("cookie")
+  })
 })

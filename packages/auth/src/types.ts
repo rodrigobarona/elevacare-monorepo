@@ -46,6 +46,8 @@ export type UnauthorizedErrorCode =
   | "no-session"
   | "missing-capability"
   | "ambiguous-credentials"
+  | "session-cookie-ambiguous"
+  | "csrf-origin-mismatch"
   | "invalid-token"
   | "jwt-not-revocable"
 

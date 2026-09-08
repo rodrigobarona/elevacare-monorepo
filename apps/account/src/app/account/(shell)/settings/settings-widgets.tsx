@@ -1,9 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { UserProfile, UserSecurity, UserSessions } from "@workos-inc/widgets"
+import { toast } from "sonner"
+import { authClient } from "@eleva/auth/client"
 import { Button } from "@eleva/ui/components/button"
+import { Input } from "@eleva/ui/components/input"
+import { Label } from "@eleva/ui/components/label"
 import {
   SettingsFieldset,
   SettingsFieldsetActions,
@@ -14,18 +18,15 @@ import {
   SettingsFieldsetStatus,
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
-import { ElevaWidgetsProvider } from "@/components/workos-widgets-provider"
 import { AvatarUpload } from "./avatar-upload"
 import {
   LanguagePreference,
   LANGUAGE_PREFERENCE_FORM_ID,
 } from "./language-preference"
+import { SettingsSecurity } from "./settings-security"
 import type { Locale } from "@eleva/config/i18n"
 
 interface SettingsWidgetsProps {
-  locale: string
-  authToken: string
-  workosSessionId: string
   avatarUrl: string | null
   displayName: string
   email: string
@@ -34,9 +35,6 @@ interface SettingsWidgetsProps {
 }
 
 export function SettingsWidgets({
-  locale,
-  authToken,
-  workosSessionId,
   avatarUrl,
   displayName,
   email,
@@ -44,7 +42,23 @@ export function SettingsWidgets({
   preferredLocale,
 }: SettingsWidgetsProps) {
   const t = useTranslations("settings")
+  const router = useRouter()
+  const [name, setName] = useState(displayName)
+  const [profilePending, setProfilePending] = useState(false)
   const [languagePending, setLanguagePending] = useState(false)
+
+  async function onSaveProfile(e: React.FormEvent) {
+    e.preventDefault()
+    setProfilePending(true)
+    const { error } = await authClient.updateUser({ name: name.trim() })
+    setProfilePending(false)
+    if (error) {
+      toast.error(error.message ?? t("profile.profileError"))
+      return
+    }
+    toast.success(t("profile.profileSaved"))
+    router.refresh()
+  }
 
   return (
     <div className="space-y-6">
@@ -61,11 +75,27 @@ export function SettingsWidgets({
           <SettingsFieldsetDescription>
             {t("profile.description")}
           </SettingsFieldsetDescription>
-          <div className="mt-4">
-            <ElevaWidgetsProvider locale={locale}>
-              <UserProfile authToken={authToken} />
-            </ElevaWidgetsProvider>
-          </div>
+          <form className="mt-4 space-y-3" onSubmit={onSaveProfile}>
+            <div className="space-y-1.5">
+              <p className="text-sm text-muted-foreground">
+                {t("profile.email")}
+              </p>
+              <p className="text-sm">{email}</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="profile-name">{t("profile.name")}</Label>
+              <Input
+                id="profile-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                required
+              />
+            </div>
+            <Button type="submit" size="sm" isDisabled={profilePending}>
+              {profilePending ? t("profile.saving") : t("profile.save")}
+            </Button>
+          </form>
         </SettingsFieldsetContent>
         <SettingsFieldsetFooter>
           <SettingsFieldsetStatus>
@@ -104,41 +134,7 @@ export function SettingsWidgets({
         </SettingsFieldsetFooter>
       </SettingsFieldset>
 
-      <SettingsFieldset>
-        <SettingsFieldsetContent>
-          <SettingsFieldsetTitle>{t("security.title")}</SettingsFieldsetTitle>
-          <SettingsFieldsetDescription>
-            {t("security.description")}
-          </SettingsFieldsetDescription>
-          <div className="mt-4">
-            <ElevaWidgetsProvider locale={locale}>
-              <UserSecurity authToken={authToken} />
-            </ElevaWidgetsProvider>
-          </div>
-        </SettingsFieldsetContent>
-      </SettingsFieldset>
-
-      <SettingsFieldset>
-        <SettingsFieldsetContent>
-          <SettingsFieldsetTitle>{t("sessions.title")}</SettingsFieldsetTitle>
-          <SettingsFieldsetDescription>
-            {t("sessions.description")}
-          </SettingsFieldsetDescription>
-          <div className="mt-4">
-            <ElevaWidgetsProvider locale={locale}>
-              <UserSessions
-                authToken={authToken}
-                currentSessionId={workosSessionId}
-              />
-            </ElevaWidgetsProvider>
-          </div>
-        </SettingsFieldsetContent>
-        <SettingsFieldsetFooter>
-          <SettingsFieldsetStatus>
-            {t("sessions.footerHint")}
-          </SettingsFieldsetStatus>
-        </SettingsFieldsetFooter>
-      </SettingsFieldset>
+      <SettingsSecurity />
     </div>
   )
 }

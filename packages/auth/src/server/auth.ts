@@ -296,6 +296,11 @@ export interface AuthApi {
       role: string
     }
   }) => Promise<unknown>
+  setActiveOrganization: (opts: {
+    headers: Headers
+    body: { organizationId: string }
+  }) => Promise<unknown>
+  signOut: (opts: { headers: Headers }) => Promise<unknown>
   verifyApiKey: (opts: { body: { key: string } }) => Promise<{
     valid: boolean
     key?: { userId: string; referenceId?: string | null; name?: string | null }

@@ -16,6 +16,8 @@ import {
   CreateWorkspaceRequestSchema,
   ExpertOnboardingStepSchema,
   ListOrganizationsMineResponseSchema,
+  SetActiveOrganizationRequestSchema,
+  SetActiveOrganizationResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -250,6 +252,32 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/organizations/active": {
+        post: {
+          operationId: "setActiveOrganization",
+          summary: "Set the active organization on the current session",
+          tags: ["Organizations"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: SetActiveOrganizationRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Active organization updated",
+              content: {
+                "application/json": {
+                  schema: SetActiveOrganizationResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
           },
         },
       },
@@ -1143,8 +1171,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         cookieAuth: {
           type: "apiKey",
           in: "cookie",
-          name: "wos-session",
-          description: "WorkOS AuthKit session cookie for browser auth",
+          name: "better-auth.session_token",
+          description:
+            "Better Auth session cookie (`better-auth.session_token` or `__Secure-better-auth.session_token`)",
         },
       },
     },

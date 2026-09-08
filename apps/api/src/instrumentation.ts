@@ -16,6 +16,8 @@
  */
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    const { assertE2eBypassNotInProduction } = await import("@/lib/e2e-env")
+    assertE2eBypassNotInProduction()
     const { initSentry } = await import("@eleva/observability/sentry")
     await initSentry({ app: "api" })
   }

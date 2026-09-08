@@ -4,6 +4,7 @@ export {
   type ApiAuthMode,
   UnauthorizedError,
 } from "./types"
+export { isAlreadySignedOut } from "./server/already-signed-out"
 export {
   deriveProductLabel,
   capabilitiesFor,
@@ -63,6 +64,8 @@ export {
   getSession,
   getSessionForOrg,
   requireSession,
+  requireOrg,
+  getCapabilities,
   getWidgetToken,
   getWidgetTokenFromSession,
 } from "./server"
@@ -76,6 +79,8 @@ export {
   listAuthOrganizations,
   createOrganization,
   createElevaOrganization,
+  setActiveElevaOrganization,
+  OrganizationForbiddenError,
   addOrganizationMember,
   type UserOrganizationItem,
   type ListUserOrganizationsInput,

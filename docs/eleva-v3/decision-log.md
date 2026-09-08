@@ -284,6 +284,21 @@ Each entry should include:
 - Reference: [`spikes/02-better-auth.md`](./spikes/02-better-auth.md),
   [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
 
+### 2026-09-08: Better Auth clients and account UI (Phase 02.2)
+
+- Owner: engineering
+- Status: active
+- Summary: Frontends use `@eleva/auth/client` (`createAuthClient` against
+  `${NEXT_PUBLIC_API_URL}/auth`) and `getSession()` via
+  `@eleva/api-client` `GET /auth/get-session`. Proxy optimistic auth uses
+  `getSessionCookie` (no DB). Account hosts `/login`, `/signup`,
+  `/verify-email`, `/reset-password`, `/two-factor`, `/logout`. Org switch
+  calls `POST /organizations/active`. WorkOS Widgets CSS/config is removed
+  from `@eleva/dashboard`. Residual WorkOS provisioning helpers stay until
+  Phase 3.
+- Reference:
+  [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
 ### 2026-09-08: Phase 1.2 CI merge gates
 
 - Owner: engineering
@@ -547,15 +562,22 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 ### D-13 (2026-09-07): Cookie, CSRF and subdomain threat model
 
 - Owner: security owner (engineering lead)
-- Status: proposed (written in Phase 2; sign before PR 04.2)
+- Status: proposed (written in Phase 2; not a sign-off; sign before PR 04.2)
 - Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: `Domain=.eleva.care`, `Secure`, `HttpOnly`, `SameSite=Lax`, `__Secure-` prefix; admin
-  console host-only cookie; cookie-authenticated mutations pass the Better Auth origin check
-  (`trustedOrigins` explicit list, `Sec-Fetch-Site`) or fail 403 `CSRF_ORIGIN_MISMATCH`; Bearer and
-  API-key paths exempt; previews never mint `.eleva.care` cookies; `*.eleva.care` DNS inventory in
-  `environment-matrix.md`. Document: `docs/eleva-v3/security/cookie-csrf-threat-model.md`.
-  Blocks: Phase 4 PR 04.2.
-- Reference: [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+- Summary: Product-app session cookies are `better-auth.session_token` or
+  `__Secure-better-auth.session_token` with `Domain=.eleva.care`, `Secure`,
+  `HttpOnly`, `SameSite=Lax`. Admin (Phase 12) uses a host-only `__Host-` cookie
+  and rejects the shared cookie. Cookie-authenticated mutations require a trusted
+  `Origin` or `Sec-Fetch-Site` of `same-origin`/`same-site`, and reject
+  `cross-site` and missing provenance (`403 CSRF_ORIGIN_MISMATCH`). Duplicate
+  session cookies are `401 SESSION_COOKIE_AMBIGUOUS` and both values are cleared
+  on the parent domain and host. `__Secure-` does not stop cookie tossing.
+  Bearer and API-key paths are exempt. Previews never mint `.eleva.care` cookies.
+  `*.eleva.care` DNS inventory lives in `environment-matrix.md`. Security owner
+  signs this as the Phase 4 PR 04.2 entry gate.
+- Reference:
+  [`security/cookie-csrf-threat-model.md`](./security/cookie-csrf-threat-model.md),
+  [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
 
 ### D-14 (2026-09-07): Launch payment-method set
 
