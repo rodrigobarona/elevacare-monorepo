@@ -25,6 +25,7 @@ import {
 import { sendAuthEmail } from "@eleva/email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
+import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 
 function requireSecret(): string {
@@ -98,8 +99,23 @@ function socialProviders() {
   }
 }
 
+function requireSecondaryStorageWhenDeployed(
+  storage: ReturnType<typeof secondaryStorage>
+): void {
+  const deployed =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.NODE_ENV === "production"
+  if (deployed && !storage) {
+    throw new Error(
+      "KV_REST_API_URL and KV_REST_API_TOKEN are required in production and preview so Better Auth rate limits stay on"
+    )
+  }
+}
+
 function createAuth() {
   const storage = secondaryStorage()
+  requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
 
   // Plugin packages resolve a second @better-auth/core copy; the runtime
@@ -207,7 +223,7 @@ function createAuth() {
           await sendAuthEmail({
             kind: "organization-invitation",
             to: data.email,
-            url: data.invitation.id,
+            url: invitationAcceptUrl(data.invitation.id),
           })
         },
         organizationHooks: {

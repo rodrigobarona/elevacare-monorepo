@@ -8,13 +8,19 @@ afterEach(() => {
 })
 
 describe("crossSubDomainCookieConfig", () => {
-  it("uses ELEVA_COOKIE_DOMAIN when set", () => {
+  it("uses ELEVA_COOKIE_DOMAIN on Vercel production", () => {
     process.env.ELEVA_COOKIE_DOMAIN = ".eleva.care"
-    delete process.env.VERCEL_ENV
+    process.env.VERCEL_ENV = "production"
     expect(crossSubDomainCookieConfig()).toEqual({
       enabled: true,
       domain: ".eleva.care",
     })
+  })
+
+  it("ignores ELEVA_COOKIE_DOMAIN on preview", () => {
+    process.env.ELEVA_COOKIE_DOMAIN = ".eleva.care"
+    process.env.VERCEL_ENV = "preview"
+    expect(crossSubDomainCookieConfig()).toEqual({ enabled: false })
   })
 
   it("defaults to .eleva.care on Vercel production", () => {

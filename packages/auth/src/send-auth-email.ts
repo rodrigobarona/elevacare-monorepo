@@ -16,7 +16,7 @@ async function persistE2eAuthUrl(
   if (!shouldPersistE2eAuthUrl()) return
   const restUrl = process.env.KV_REST_API_URL
   const restToken = process.env.KV_REST_API_TOKEN
-  if (!restUrl || !restToken || !url) return
+  if (!restUrl || !restToken || !url || !restUrl.startsWith("https://")) return
   try {
     const redis = new Redis({ url: restUrl, token: restToken })
     await redis.set(e2eAuthUrlKey(kind, email), url, { ex: 300 })

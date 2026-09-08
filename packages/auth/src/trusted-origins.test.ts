@@ -37,4 +37,15 @@ describe("trustedOrigins", () => {
     expect(isTrustedOrigin("https://evil.example")).toBe(false)
     expect(isTrustedOrigin(null)).toBe(false)
   })
+
+  it("drops loopback extras from ELEVA_TRUSTED_ORIGINS when deployed", () => {
+    const origins = trustedOrigins({
+      VERCEL_ENV: "preview",
+      ELEVA_TRUSTED_ORIGINS:
+        "http://localhost:3006,https://evil.example,https://app.eleva.care",
+    })
+    expect(origins).not.toContain("http://localhost:3006")
+    expect(origins).not.toContain("https://evil.example")
+    expect(origins).toContain("https://app.eleva.care")
+  })
 })

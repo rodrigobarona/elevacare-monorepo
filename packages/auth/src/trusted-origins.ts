@@ -32,13 +32,31 @@ function localAppOrigins(env: OriginEnv = process.env): string[] {
   ])
 }
 
+function isApprovedDeployedOrigin(origin: string): boolean {
+  try {
+    const url = new URL(origin)
+    if (url.protocol !== "https:") return false
+    const host = url.hostname
+    return host === "eleva.care" || host.endsWith(".eleva.care")
+  } catch {
+    return false
+  }
+}
+
 export function trustedOrigins(env: OriginEnv = process.env): string[] {
   const extra = (env.ELEVA_TRUSTED_ORIGINS ?? "")
     .split(",")
     .map((origin) => origin.trim())
     .filter(Boolean)
+  const extras = isDeployedTrustList(env)
+    ? extra.filter(isApprovedDeployedOrigin)
+    : extra
   return [
-    ...new Set([...DEFAULT_TRUSTED_ORIGINS, ...localAppOrigins(env), ...extra]),
+    ...new Set([
+      ...DEFAULT_TRUSTED_ORIGINS,
+      ...localAppOrigins(env),
+      ...extras,
+    ]),
   ]
 }
 

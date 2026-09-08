@@ -126,6 +126,7 @@ async function tokenFromDatabase(email: string): Promise<string | null> {
     SELECT value
     FROM auth.verification
     WHERE identifier IN (${plain}, ${prefixed}, ${hashedPlain}, ${hashedPrefixed})
+      AND expires_at > now()
     ORDER BY created_at DESC NULLS LAST, expires_at DESC
     LIMIT 1
   `

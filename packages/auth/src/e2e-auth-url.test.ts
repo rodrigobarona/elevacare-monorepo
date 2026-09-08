@@ -38,6 +38,12 @@ describe("shouldPersistE2eAuthUrl", () => {
         NODE_ENV: "production",
       })
     ).toBe(false)
+    expect(
+      shouldPersistE2eAuthUrl({
+        E2E_AUTH_CAPTURE: "1",
+        VERCEL_ENV: "preview",
+      })
+    ).toBe(false)
   })
 })
 

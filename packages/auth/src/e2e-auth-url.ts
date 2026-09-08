@@ -26,7 +26,11 @@ type RuntimeEnv = {
 export function shouldPersistE2eAuthUrl(
   env: RuntimeEnv = process.env
 ): boolean {
-  if (env.VERCEL_ENV === "production" || env.NODE_ENV === "production") {
+  if (
+    env.VERCEL_ENV === "production" ||
+    env.VERCEL_ENV === "preview" ||
+    env.NODE_ENV === "production"
+  ) {
     return false
   }
   return env.E2E_AUTH_CAPTURE === "1"
