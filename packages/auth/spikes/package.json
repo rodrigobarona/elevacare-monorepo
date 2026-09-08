@@ -1,0 +1,31 @@
+{
+  "name": "@eleva/auth-spike",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "migrate": "tsx --env-file=.env.local src/migrate.ts",
+    "prove": "tsx --env-file=.env.local src/prove.ts"
+  },
+  "dependencies": {
+    "@better-auth/api-key": "1.7.3",
+    "@better-auth/drizzle-adapter": "1.7.3",
+    "@better-auth/passkey": "1.7.3",
+    "better-auth": "1.7.3",
+    "drizzle-orm": "0.45.2",
+    "jose": "^6.1.0",
+    "otpauth": "^9.4.1",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "@types/node": "^25.8.0",
+    "@types/pg": "^8.15.5",
+    "tsx": "^4.22.0",
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,12 +1,12 @@
 # Phase 2 — Better Auth foundation (server, schema, client, account UI)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-02/better-auth-foundation` (split: `phase-02.0/spike-better-auth`, `phase-02.1/auth-server-schema`, `phase-02.2/auth-clients-account-ui`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Depends on | Phase 1. **Spike PR 02.0** (`phase-02.0/spike-better-auth`, evidence only, max 2 days) must be merged before PR 02.1 opens: a throwaway Better Auth instance on a Neon branch proves sign-up + email verification, personal Space provisioning, expert org creation and switching, cross-subdomain session on `*.dev.eleva.care`, passkey + TOTP, API key, opaque bearer session, JWT/JWKS, admin role, Google linking and session revocation; report in `docs/eleva-v3/spikes/02-better-auth.md` with the exact package/plugin versions to pin and any option renames the plan must absorb |
-| Effort     | 2 weeks (highest risk phase)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| Touches    | `packages/auth/**`, `packages/db/**`, `apps/api/src/app/auth/**`, `apps/api/src/lib/auth.ts`, `apps/api/src/app/{organizations,memberships,onboarding}/**`, `apps/account/**`, `packages/dashboard/**`, `packages/email/**`, `pnpm-workspace.yaml`                                                                                                                                                                                                                                                                                                                                          |
-| Exit gate  | Sign up -> personal Space -> create Expert org -> switch org -> RLS isolation test green; 2FA + passkeys + magic link + Google work; API accepts session cookie, Bearer session token, API key, JWT; Playwright auth spec green                                                                                                                                                                                                                                                                                                                                                             |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Branch     | `phase-02/better-auth-foundation` (split: `phase-02.0/spike-better-auth`, `phase-02.1/auth-server-schema`, `phase-02.2/auth-clients-account-ui`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Depends on | Phase 1. **Spike PR 02.0** (`phase-02.0/spike-better-auth`, evidence only, max 2 days) must be merged before PR 02.1 opens: a throwaway Better Auth instance on a Neon branch proves sign-up + email verification, personal Space provisioning, expert org creation and switching, cross-subdomain session on `*.dev.eleva.care`, TOTP + passkey options (attestation is 02.2 Playwright), API key, opaque bearer session, JWT/JWKS, admin role, Google linking and session revocation; report in `docs/eleva-v3/spikes/02-better-auth.md` with the exact package/plugin versions to pin and any option renames the plan must absorb |
+| Effort     | 2 weeks (highest risk phase)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Touches    | `packages/auth/**`, `packages/db/**`, `apps/api/src/app/auth/**`, `apps/api/src/lib/auth.ts`, `apps/api/src/app/{organizations,memberships,onboarding}/**`, `apps/account/**`, `packages/dashboard/**`, `packages/email/**`, `pnpm-workspace.yaml`                                                                                                                                                                                                                                                                                                                                                                                   |
+| Exit gate  | Sign up -> personal Space -> create Expert org -> switch org -> RLS isolation test green; 2FA + passkeys + magic link + Google work; API accepts session cookie, Bearer session token, API key, JWT; Playwright auth spec green                                                                                                                                                                                                                                                                                                                                                                                                      |
 
 ## Why this phase exists
 
@@ -20,8 +20,14 @@ Phase 3.
 
 In:
 
-- `pnpm-workspace.yaml` catalog: add `better-auth` (and any split plugin packages verified via
-  Context7 at start, e.g. `@better-auth/passkey`, `@better-auth/stripe` is **not** used).
+- `pnpm-workspace.yaml` catalog: pin `better-auth`, `@better-auth/passkey`,
+  `@better-auth/api-key`, `@better-auth/drizzle-adapter` at **1.7.3** (spike 02.0).
+  `@better-auth/stripe` is **not** used. `@better-auth/cli` is lagged at 1.4.22
+  and **must not** generate the 1.7 Drizzle schema. Author
+  `packages/db/src/schema/auth` from the 1.7.3 table list in
+  `docs/eleva-v3/spikes/02-better-auth.md`, then `drizzle-kit generate`. Do
+  **not** call `getMigrations` against the Drizzle adapter (that API is
+  Kysely-only). Do not wait for a later CLI generate.
 - `packages/auth/src/server/auth.ts`: the only `better-auth` server import. Options per ADR-017.
   Export `auth`, `type Session`, `type AuthUser`, `type AuthOrganization`.
 - `packages/auth/src/permissions.ts` (`createAccessControl`, statements, roles) and
@@ -34,8 +40,9 @@ In:
   `requireSession()`, `requireOrg()`), `packages/auth/src/proxy.ts`
   (`getSessionCookie` optimistic guard, `return-to` handling preserved), `guards.ts`,
   `org-routing.ts`, `react.tsx` (`PermissionGate` reading capabilities from session).
-- `packages/db/src/schema/auth/*` generated by `npx @better-auth/cli generate` (Drizzle output),
-  moved into the `auth` Postgres schema; `packages/db/src/schema/main`: repoint FKs to
+- `packages/db/src/schema/auth/*` authored from the 1.7.3 table list in
+  `docs/eleva-v3/spikes/02-better-auth.md` (or a 1.7-compatible Better Auth
+  generate), moved into the `auth` Postgres schema; `packages/db/src/schema/main`: repoint FKs to
   `auth.user.id` / `auth.organization.id` and keep the `users`, `organizations`, `memberships`,
   `roles`, `permissions` mirrors and every `workos_*` column in place, read-only (expand step —
   see the expand-and-contract bullet below; Phase 3 drops them); add `org_data_keys` (used in Phase 3);
@@ -150,7 +157,8 @@ identity tables/columns** (Phase 3).
 - [ ] Create Expert workspace from `/account/workspaces/new` -> `organization.type = expert`,
       switch active org, `apps/expert` reads `session.activeOrganizationId`.
 - [ ] 2FA TOTP enrol + verify + backup codes; passkey register + sign-in; magic link sign-in;
-      Google sign-in links to the same user when email matches (`trustedProviders`).
+      Google sign-in of an existing email returns `account_not_linked`; linking is
+      `linkSocial()` after a verified session (`disableImplicitLinking`, ADR-017).
 - [ ] Cookie/CSRF threat model written and recorded as D-13 **proposed** in `decision-log.md`
       (sign-off is the Phase 4 PR 04.2 entry gate, not a Phase 2 deliverable); cross-site
       cookie-only POST -> 403 `CSRF_ORIGIN_MISMATCH`; tossed/duplicate session cookie -> 401
@@ -161,7 +169,10 @@ identity tables/columns** (Phase 3).
 - [ ] `requireApiAuth()` accepts: cookie session; `Authorization: Bearer <session token>`;
       `x-api-key` created via `apiKey` plugin scoped to an org; JWT from `/auth/token` verified
       via JWKS (Bearer value routed by shape: compact JWS -> JWT verifier, anything else ->
-      session-token verifier). Unit tests for all four plus cross-mode rejection (JWT where a
+      session-token verifier). JWTs are short-lived (`15m`) and **non-revocable** (JWKS only;
+      no session-table check). After `revoke-other-sessions`, cookie/opaque bearer of that
+      session return 401 and a JWT minted before revoke still verifies until `exp`. Unit tests
+      for all four plus that revoke contract, plus cross-mode rejection (JWT where a
       session token is expected and vice versa, API key as Bearer -> 401) and mixed-source
       rejection (any two or three credential sources on one request -> 400 `AMBIGUOUS_CREDENTIALS`).
 - [ ] RLS isolation test green on Neon branch in CI; `db:seed:demo` works from empty DB.
@@ -195,7 +206,8 @@ identity tables/columns** (Phase 3).
 ## External docs
 
 - Better Auth `/better-auth/better-auth`: installation, Next.js integration (`toNextJsHandler`,
-  `nextCookies`), database (Drizzle adapter, `schema` option, CLI `generate`), plugins
+  `nextCookies`), database (Drizzle adapter, `schema` option; author tables from
+  the 02.0 list — do not run `@better-auth/cli` generate), plugins
   organization (access control, hooks, `setActive`, invitations), admin, two-factor, passkey,
   magic-link, bearer, jwt (JWKS), api-key, open-api, cookies (`crossSubDomainCookies`,
   `getSessionCookie`), rate limiting + `secondaryStorage`, `databaseHooks`, `trustedOrigins`,
@@ -273,6 +285,9 @@ PR 02.1 — server + schema + API:
 1. Catalog: add better-auth (+ any required split plugin packages) to pnpm-workspace.yaml catalog;
    add to packages/auth and packages/db as "catalog:". Do not add @better-auth/stripe.
 2. packages/auth/src/server/auth.ts (ONLY file importing better-auth server APIs):
+   Imports (spike-pinned 1.7.3): drizzleAdapter from `@better-auth/drizzle-adapter`,
+   apiKey from `@better-auth/api-key`, passkey from `@better-auth/passkey`, nextCookies
+   from `better-auth/next-js` (last plugin), the rest from `better-auth/plugins`.
    betterAuth({
      baseURL: process.env.BETTER_AUTH_URL, basePath: "/auth", secret: BETTER_AUTH_SECRET,
      database: drizzleAdapter(db(), { provider: "pg", schema: authSchema }),
@@ -280,7 +295,8 @@ PR 02.1 — server + schema + API:
      emailVerification: { sendVerificationEmail, autoSignInAfterVerification: true },
      socialProviders: { google: { clientId, clientSecret, accessType: "offline", prompt: "consent" },
                         microsoft: { clientId, clientSecret, tenantId: "common" } },
-     account: { encryptOAuthTokens: true, accountLinking: { enabled: true, trustedProviders: ["google"] } },
+     account: { encryptOAuthTokens: true, accountLinking: { enabled: true,
+       disableImplicitLinking: true, trustedProviders: ["google"] } },
      session: { cookieCache: { enabled: true, maxAge: 300 }, expiresIn: 60*60*24*30, updateAge: 60*60*24 },
      advanced: { crossSubDomainCookies: { enabled: true, domain: process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care" },
                  useSecureCookies: process.env.NODE_ENV === "production", database: { generateId: "uuid" } },
@@ -293,8 +309,11 @@ PR 02.1 — server + schema + API:
                                organizationHooks: audit + seat-sync stubs, allowUserToCreateOrganization: true,
                                creatorRole: "owner", membershipLimit: 200 }),
                 admin({ ac: adminAc, roles: adminRoles, defaultRole: "user", adminRoles: ["platform_admin"] }),
+                  // 1.7.3 throws if adminRoles names a role missing from `roles`
                 twoFactor({ issuer: "Eleva.care" }), passkey({ rpID, rpName: "Eleva.care", origin }),
-                magicLink({ sendMagicLink }), bearer(), jwt(), apiKey({ enableMetadata: true }),
+                magicLink({ sendMagicLink }), bearer(),
+                jwt({ jwt: { expirationTime: "15m" } }), // short-lived, non-revocable — see requireApiAuth
+                apiKey({ enableMetadata: true }),
                 openAPI({ path: "/reference", disableDefaultReference: true }), nextCookies() ]
    }).
    Provision personal Space in the user.create.after hook: idempotent (check by ownerUserId +
@@ -311,8 +330,11 @@ PR 02.1 — server + schema + API:
    the admin plugin. Port every capability currently in infra/workos/rbac-config.json.
    capabilities.ts derives product labels from (organization.type, member.role) exactly like the
    current implementation; keep capabilities.test.ts green and extend it.
-4. packages/db: run the Better Auth CLI generate for Drizzle, place output in
-   packages/db/src/schema/auth/index.ts using pgSchema("auth"); make apiKey.referenceId and
+4. packages/db: author Drizzle tables in packages/db/src/schema/auth/index.ts from the
+   1.7.3 list in docs/eleva-v3/spikes/02-better-auth.md (user, session, account,
+   verification, organization, member, invitation, twoFactor, passkey, jwks, apikey)
+   using pgSchema("auth") — do **not** run `@better-auth/cli` generate. Then
+   drizzle-kit generate. Make apiKey.referenceId and
    organization.type first-class. Migrate main schema with EXPAND-AND-CONTRACT — this PR only
    expands: backfill auth.user / auth.organization / auth.member from main.users,
    main.organizations, main.memberships (packages/db/scripts/backfill-auth-identity.ts,
@@ -336,7 +358,19 @@ PR 02.1 — server + schema + API:
    Regenerate migrations (drizzle-kit generate) and make db:seed:demo and db:seed:categories
    work from an empty database. Add/extend rls-isolation.test.ts.
 5. apps/api: create src/app/auth/[...all]/route.ts exporting { GET, POST } = toNextJsHandler(auth)
-   with CORS allow-list from trustedOrigins (credentials true). Rewrite src/lib/auth.ts
+   with CORS allow-list from trustedOrigins (credentials true). Better Auth does not ship
+   GET /auth/ok — add a 200 JSON health next to the handler. JWT default alg is EdDSA;
+   verify GET /auth/token with jose + /auth/jwks (never hardcode RS256). Organization
+   list is GET /auth/organization/list. session.cookieCache is not a revoke source of
+   truth — requireApiAuth must call auth.api.getSession. JWTs from `/auth/token` are
+   **short-lived and non-revocable**: `jwt({ jwt: { expirationTime: "15m" } })` (Better
+   Auth 1.7.3 default). The JWT verifier checks signature + `iss`/`aud`/`exp`/`alg`
+   (EdDSA) only — it must **not** look up `session` after JWKS verify. `revoke-other-sessions`
+   and sign-out kill cookie, opaque bearer, and API-key sessions immediately; a JWT minted
+   before revoke stays valid until `exp`. Privileged mutations (sign-out, billing, membership,
+   org switch) MUST use cookie or opaque bearer, never JWT. 02.1 integration test: mint JWT,
+   revoke that session, JWKS verify still succeeds, cookie/bearer of that session return 401.
+   Rewrite src/lib/auth.ts
    requireApiAuth() to resolve identity from (a) session cookie via auth.api.getSession({ headers }),
    (b) Authorization: Bearer <token>: if the value is a compact JWS (three base64url segments,
    kid header) verify it as a JWT with JWKS from /auth/jwks (jwt plugin), otherwise verify it as

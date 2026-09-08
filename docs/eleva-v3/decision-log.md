@@ -264,6 +264,26 @@ Each entry should include:
 - Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
 
+### 2026-09-08: Better Auth spike 02.0 pins 1.7.3 and disables implicit Google linking
+
+- Owner: engineering
+- Status: active
+- Summary: PR 02.0 proved Better Auth **1.7.3** on Neon branch
+  `spike-02-better-auth` / database `auth_spike`. Catalog pins for 02.1:
+  `better-auth`, `@better-auth/passkey`, `@better-auth/api-key`,
+  `@better-auth/drizzle-adapter` at 1.7.3. `accountLinking.disableImplicitLinking`
+  is required (ADR-017) — the Phase 2 prompt now includes it. Default JWT alg is
+  EdDSA; JWTs from `/auth/token` are short-lived (`15m`) and
+  **non-revocable** (JWKS only — no session-table check after verify);
+  `GET /auth/ok` is not a vendor route; `adminRoles: ["platform_admin"]`
+  requires `roles.platform_admin`; `@better-auth/cli` 1.4.22 must not generate
+  1.7 schema. The throwaway `packages/auth/spikes/` instance is exempt from
+  `withAudit` (isolated `auth_spike` has no `audit_outbox`); 02.1 deletes the
+  folder and wraps the real hook. Passkey attestation is 02.2, not a 02.0
+  gate.
+- Reference: [`spikes/02-better-auth.md`](./spikes/02-better-auth.md),
+  [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
 ### 2026-09-08: Phase 1.2 CI merge gates
 
 - Owner: engineering
