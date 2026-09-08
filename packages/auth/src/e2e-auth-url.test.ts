@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   authRateLimitEnabled,
   e2eAuthUrlKey,
+  hashedVerificationIdentifier,
   shouldPersistE2eAuthUrl,
 } from "./e2e-auth-url"
 
@@ -11,6 +12,13 @@ describe("e2eAuthUrlKey", () => {
     expect(key.startsWith("e2e:auth-url:verify-email:")).toBe(true)
     expect(key).not.toContain("member@example.com")
     expect(key).toBe(e2eAuthUrlKey("verify-email", "member@example.com"))
+  })
+
+  it("hashes verification identifiers as unpadded base64url", () => {
+    const hashed = hashedVerificationIdentifier("member@example.com")
+    expect(hashed).not.toContain("member@example.com")
+    expect(hashed).not.toContain("=")
+    expect(hashed).toBe(hashedVerificationIdentifier("member@example.com"))
   })
 })
 

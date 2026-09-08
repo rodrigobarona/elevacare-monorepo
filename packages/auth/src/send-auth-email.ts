@@ -20,8 +20,9 @@ async function persistE2eAuthUrl(
   try {
     const redis = new Redis({ url: restUrl, token: restToken })
     await redis.set(e2eAuthUrlKey(kind, email), url, { ex: 300 })
-  } catch {
-    // Capture is best-effort. Email still sends.
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "unknown"
+    console.warn(`[e2e] auth URL capture failed: ${message}`)
   }
 }
 

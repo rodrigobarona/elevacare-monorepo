@@ -140,9 +140,10 @@ function createAuth() {
       autoSignInAfterVerification: true,
     },
     verification: {
-      // Secondary storage alone hides tokens from Neon. Keep a DB copy so
-      // support and Playwright can complete verify / reset / magic-link.
+      // Secondary storage alone hides tokens from Neon. Keep a hashed DB
+      // copy so support can still complete verify / reset / magic-link.
       storeInDatabase: true,
+      storeIdentifier: "hashed",
     },
     socialProviders: socialProviders(),
     account: {

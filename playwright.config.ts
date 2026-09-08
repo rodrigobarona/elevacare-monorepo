@@ -1,28 +1,43 @@
 import { readFileSync } from "node:fs"
 import { defineConfig, devices } from "@playwright/test"
 
+function parseEnvValue(raw: string): string {
+  const value = raw.trim()
+  if (value.startsWith('"') || value.startsWith("'")) {
+    const quote = value[0]
+    const end = value.indexOf(quote, 1)
+    if (end !== -1) {
+      const rest = value.slice(end + 1).trim()
+      if (rest === "" || rest.startsWith("#")) {
+        return value.slice(1, end)
+      }
+    }
+  }
+  const comment = value.indexOf(" #")
+  return comment === -1 ? value : value.slice(0, comment).trim()
+}
+
 function loadEnvLocal(): void {
   let raw: string
   try {
     raw = readFileSync(".env.local", "utf8")
-  } catch {
-    return
+  } catch (error) {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return
+    }
+    throw error
   }
   for (const line of raw.split("\n")) {
     const trimmed = line.trim()
     if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue
     const eq = trimmed.indexOf("=")
     const key = trimmed.slice(0, eq).trim()
-    let value = trimmed.slice(eq + 1).trim()
-    const quoted =
-      (value.startsWith('"') && value.endsWith('"')) ||
-      (value.startsWith("'") && value.endsWith("'"))
-    if (quoted) {
-      value = value.slice(1, -1)
-    } else {
-      const comment = value.indexOf(" #")
-      if (comment !== -1) value = value.slice(0, comment).trim()
-    }
+    const value = parseEnvValue(trimmed.slice(eq + 1))
     if (process.env[key] === undefined) process.env[key] = value
   }
 }

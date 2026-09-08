@@ -9,6 +9,14 @@ export function e2eAuthUrlKey(kind: E2eAuthLinkKind, email: string): string {
   return `e2e:auth-url:${kind}:${digest}`
 }
 
+/** Better Auth `verification.storeIdentifier: "hashed"` uses SHA-256 base64url. */
+export function hashedVerificationIdentifier(identifier: string): string {
+  return createHash("sha256")
+    .update(identifier)
+    .digest("base64url")
+    .replace(/=+$/, "")
+}
+
 type RuntimeEnv = {
   VERCEL_ENV?: string
   NODE_ENV?: string

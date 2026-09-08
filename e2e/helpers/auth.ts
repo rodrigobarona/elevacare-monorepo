@@ -4,7 +4,11 @@ import {
   type APIRequestContext,
   type APIResponse,
 } from "@playwright/test"
-import { e2eAuthUrlKey, type E2eAuthLinkKind } from "@eleva/auth/e2e-auth-url"
+import {
+  e2eAuthUrlKey,
+  hashedVerificationIdentifier,
+  type E2eAuthLinkKind,
+} from "@eleva/auth/e2e-auth-url"
 
 export const apiUrl = process.env.E2E_API_URL ?? "http://localhost:3002"
 export const accountUrl = process.env.E2E_ACCOUNT_URL ?? "http://localhost:3006"
@@ -103,15 +107,24 @@ export async function waitForE2eAuthUrl(
   return null
 }
 
+function e2eDatabaseUrl(): string | null {
+  if (process.env.VERCEL_ENV === "production") return null
+  if (process.env.NODE_ENV === "production") return null
+  return process.env.DATABASE_URL ?? null
+}
+
 async function tokenFromDatabase(email: string): Promise<string | null> {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = e2eDatabaseUrl()
   if (!databaseUrl) return null
+  const plain = email
+  const prefixed = `email-verification:${email}`
+  const hashedPlain = hashedVerificationIdentifier(plain)
+  const hashedPrefixed = hashedVerificationIdentifier(prefixed)
   const sql = neon(databaseUrl)
   const rows = await sql`
     SELECT value
     FROM auth.verification
-    WHERE identifier = ${email}
-       OR identifier = ${`email-verification:${email}`}
+    WHERE identifier IN (${plain}, ${prefixed}, ${hashedPlain}, ${hashedPrefixed})
     ORDER BY created_at DESC NULLS LAST, expires_at DESC
     LIMIT 1
   `
@@ -121,7 +134,7 @@ async function tokenFromDatabase(email: string): Promise<string | null> {
 
 async function markEmailVerifiedInDatabase(email: string): Promise<boolean> {
   if (process.env.E2E_ALLOW_DB_WRITES !== "1") return false
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = e2eDatabaseUrl()
   if (!databaseUrl) return false
   const sql = neon(databaseUrl)
   const rows = await sql`
