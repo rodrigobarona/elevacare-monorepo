@@ -250,6 +250,8 @@ export async function refreshSessionEntitlements(): Promise<void> {
   return refreshWorkOSSession()
 }
 
+const SESSION_FETCH_TIMEOUT_MS = 8_000
+
 function apiBaseUrl(): string {
   return (
     process.env.NEXT_PUBLIC_API_URL ??
@@ -258,21 +260,34 @@ function apiBaseUrl(): string {
   )
 }
 
-async function loadBetterAuthPayload() {
+function isAbortOrTimeout(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.name === "AbortError" || err.name === "TimeoutError")
+  )
+}
+
+const loadBetterAuthPayload = cache(async () => {
   const hdrs = await headers()
   const cookie = hdrs.get("cookie") ?? ""
   if (hasDuplicateSessionCookie(cookie)) return null
   const client = createApiClient({
     baseUrl: apiBaseUrl(),
     headers: cookie ? { cookie } : undefined,
+    signal: AbortSignal.timeout(SESSION_FETCH_TIMEOUT_MS),
   })
   try {
     return await client.auth.getSession()
   } catch (err) {
-    if (err instanceof ApiClientError && err.status === 401) return null
+    if (err instanceof ApiClientError) {
+      if (err.status === 401 || err.status === 403 || err.status >= 500) {
+        return null
+      }
+    }
+    if (isAbortOrTimeout(err)) return null
     throw err
   }
-}
+})
 
 /**
  * Default session loader (no org preference). Picks the first active
@@ -295,7 +310,7 @@ export const getSession = cache(async (): Promise<ElevaSession | null> => {
  * from URL params so multi-org users land in the correct org context.
  *
  * Call this from `[orgSlug]/layout.tsx` instead of `getSession()`.
- * NOT cache()'d because the orgSlug varies per-layout invocation.
+ * The Better Auth payload is request-cached; org selection is per slug.
  */
 export async function getSessionForOrg(
   orgSlug: string

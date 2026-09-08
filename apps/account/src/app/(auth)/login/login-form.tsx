@@ -65,7 +65,13 @@ export function LoginForm() {
   }
 
   async function onPasskey() {
-    const { error: result } = await authClient.signIn.passkey()
+    const { error: result } = await authClient.signIn.passkey({
+      fetchOptions: {
+        onSuccess() {
+          window.location.assign(next)
+        },
+      },
+    })
     if (result) setError(result.message ?? t("errorGeneric"))
   }
 
@@ -112,7 +118,12 @@ export function LoginForm() {
             </p>
           ) : null}
           {magicSent ? (
-            <p className="text-sm text-muted-foreground">{t("magicSent")}</p>
+            <p
+              className="text-sm text-muted-foreground"
+              data-testid="login-magic-sent"
+            >
+              {t("magicSent")}
+            </p>
           ) : null}
           <Button
             type="submit"

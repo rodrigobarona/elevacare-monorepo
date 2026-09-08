@@ -7,7 +7,10 @@ import {
   resolveLocaleForRequest,
 } from "@eleva/observability/proxy-locale"
 import { LOGIN_PATH } from "./guards"
-import { hasDuplicateSessionCookie } from "./server/credentials"
+import {
+  expiredSessionCookies,
+  hasDuplicateSessionCookie,
+} from "./server/credentials"
 
 export type { ProxyHandler } from "@eleva/observability/proxy"
 export {
@@ -30,27 +33,28 @@ export const DEFAULT_UNAUTHENTICATED_PATHS = [
   "/two-factor",
 ] as const
 
-interface SessionLike {
-  user?: { id: string } | null
-}
-
-export type RedirectStrategy = "authkit" | { kind: "gateway"; baseUrl: string }
+export type RedirectStrategy = { kind: "gateway"; baseUrl: string }
+export type OptimisticSessionState = "signed-in" | "signed-out" | "ambiguous"
 
 export interface AuthProxyOptions {
   unauthenticatedPaths?: readonly string[]
   authFlowPaths?: readonly string[]
   enforce?: boolean
   redirect?: RedirectStrategy
-  onAuthenticated?: (
-    req: NextRequest,
-    response: NextResponse,
-    session: SessionLike
-  ) => void
+  onAuthenticated?: (req: NextRequest, response: NextResponse) => void
 }
 
-function hasOptimisticSession(req: NextRequest): boolean {
-  if (hasDuplicateSessionCookie(req.headers.get("cookie"))) return false
-  return Boolean(getSessionCookie(req))
+export function optimisticSessionState(
+  req: NextRequest
+): OptimisticSessionState {
+  if (hasDuplicateSessionCookie(req.headers.get("cookie"))) return "ambiguous"
+  return getSessionCookie(req) ? "signed-in" : "signed-out"
+}
+
+export function applyExpiredSessionCookies(response: NextResponse): void {
+  for (const cookie of expiredSessionCookies()) {
+    response.headers.append("Set-Cookie", cookie)
+  }
 }
 
 function buildAuthFlowResponse(req: NextRequest): NextResponse {
@@ -84,18 +88,15 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
       return buildAuthFlowResponse(req)
     }
 
-    const signedIn = hasOptimisticSession(req)
+    const sessionState = optimisticSessionState(req)
+    const signedIn = sessionState === "signed-in"
     const needsRedirect =
       enforce && !signedIn && !matchesPath(pathname, unauthenticatedPaths)
 
     if (needsRedirect) {
-      if (typeof redirect === "object" && redirect.kind === "gateway") {
-        return buildGatewayRedirect(req, redirect.baseUrl)
-      }
-      const returnTo = encodeURIComponent(req.nextUrl.toString())
-      return NextResponse.redirect(
-        new URL(`${LOGIN_PATH}?returnTo=${returnTo}`, req.url)
-      )
+      const response = buildGatewayRedirect(req, redirect.baseUrl)
+      if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
+      return response
     }
 
     const locale = resolveLocaleForRequest(req)
@@ -104,8 +105,10 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
     const response = NextResponse.next({ request: { headers: requestHeaders } })
     persistLocaleCookie(req, response, locale)
 
+    if (sessionState === "ambiguous") applyExpiredSessionCookies(response)
+
     if (signedIn && onAuthenticated) {
-      onAuthenticated(req, response, { user: { id: "session" } })
+      onAuthenticated(req, response)
     }
 
     return response

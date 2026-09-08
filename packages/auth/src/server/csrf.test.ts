@@ -46,6 +46,23 @@ describe("assertCookieCsrf", () => {
     }
   })
 
+  it("rejects a cookie POST with no Origin and no Sec-Fetch-Site", () => {
+    expect(() =>
+      assertCookieCsrf(new Request("http://localhost/x", { method: "POST" }))
+    ).toThrow(UnauthorizedError)
+  })
+
+  it("allows a cookie POST with same-origin metadata and no Origin", () => {
+    expect(() =>
+      assertCookieCsrf(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: { "sec-fetch-site": "same-origin" },
+        })
+      )
+    ).not.toThrow()
+  })
+
   it("rejects an untrusted Origin on POST", () => {
     expect(() =>
       assertCookieCsrf(

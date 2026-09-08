@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
   compactJwsKid,
+  expiredSessionCookies,
+  hasDuplicateSessionCookie,
   isCompactJws,
   isJwtBearer,
   listCredentialSources,
@@ -61,5 +63,22 @@ describe("JWT discriminator", () => {
   it("treats opaque bearer tokens as non-JWT", () => {
     expect(isJwtBearer("session-token-plain")).toBe(false)
     expect(isCompactJws("a.b")).toBe(false)
+  })
+})
+
+describe("session cookie tossing", () => {
+  it("detects two values for the same session cookie name", () => {
+    expect(
+      hasDuplicateSessionCookie(
+        "better-auth.session_token=abc; better-auth.session_token=xyz"
+      )
+    ).toBe(true)
+  })
+
+  it("emits Max-Age=0 cookies for domain and host", () => {
+    const cookies = expiredSessionCookies()
+    expect(cookies.every((value) => value.includes("Max-Age=0"))).toBe(true)
+    expect(cookies.some((value) => value.includes("Domain="))).toBe(true)
+    expect(cookies.some((value) => !value.includes("Domain="))).toBe(true)
   })
 })

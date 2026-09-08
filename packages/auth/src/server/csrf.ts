@@ -20,4 +20,11 @@ export function assertCookieCsrf(request: Request): void {
   if (origin && !isTrustedOrigin(origin)) {
     throw new UnauthorizedError("csrf-origin-mismatch", "CSRF_ORIGIN_MISMATCH")
   }
+  if (
+    !origin &&
+    secFetchSite !== "same-origin" &&
+    secFetchSite !== "same-site"
+  ) {
+    throw new UnauthorizedError("csrf-origin-mismatch", "CSRF_ORIGIN_MISMATCH")
+  }
 }

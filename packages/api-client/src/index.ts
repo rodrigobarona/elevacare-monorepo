@@ -465,6 +465,8 @@ export interface ApiClientOptions {
   headers?: Record<string, string>
   /** Custom fetch implementation (for testing or Node.js). */
   fetch?: typeof globalThis.fetch
+  /** Optional abort signal applied to every request. */
+  signal?: AbortSignal
 }
 
 export function createApiClient(options: ApiClientOptions) {
@@ -490,6 +492,7 @@ export function createApiClient(options: ApiClientOptions) {
       headers,
       body: body ? JSON.stringify(body) : undefined,
       credentials: bearerToken ? "omit" : "include",
+      signal: options.signal,
     })
 
     const text = await response.text()
@@ -531,7 +534,14 @@ export function createApiClient(options: ApiClientOptions) {
         try {
           const raw = await request<unknown>("GET", "/auth/get-session")
           const parsed = SessionResponseSchema.safeParse(raw)
-          return parsed.success ? parsed.data : null
+          if (!parsed.success) {
+            console.error(
+              "api-client: unexpected /auth/get-session payload",
+              parsed.error.issues
+            )
+            return null
+          }
+          return parsed.data
         } catch (err) {
           if (
             err instanceof ApiClientError &&
@@ -564,12 +574,13 @@ export function createApiClient(options: ApiClientOptions) {
           `/organizations?slug=${encodeURIComponent(slug)}`
         )
       },
-      setActive(data: SetActiveOrganizationRequest) {
-        return request<SetActiveOrganizationResponse>(
+      async setActive(data: SetActiveOrganizationRequest) {
+        const raw = await request<unknown>(
           "POST",
           "/organizations/active",
           data
         )
+        return SetActiveOrganizationResponseSchema.parse(raw)
       },
     },
 

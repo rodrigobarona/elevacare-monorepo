@@ -35,7 +35,9 @@ export interface ElevaAuthClient {
       provider: string
       callbackURL?: string
     }) => Promise<unknown>
-    passkey: () => Promise<{ error?: AuthClientError | null }>
+    passkey: (body?: {
+      fetchOptions?: { onSuccess?: () => void }
+    }) => Promise<{ error?: AuthClientError | null }>
   }
   signUp: {
     email: (body: {

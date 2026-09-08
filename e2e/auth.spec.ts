@@ -37,9 +37,10 @@ test.describe("auth journey", () => {
     await page.getByTestId("login-email").fill(email)
     await page.getByTestId("login-password").fill(password)
     await page.getByTestId("login-submit").click()
+    await page.waitForURL(/\/(account|dashboard)(\/|$)/, { timeout: 15_000 })
 
     await page.goto(`${accountUrl}/account/workspaces/new`)
-    await expect(page.getByText(/workspace/i).first()).toBeVisible({
+    await expect(page.getByTestId("workspaces-new")).toBeVisible({
       timeout: 15_000,
     })
 
@@ -49,5 +50,8 @@ test.describe("auth journey", () => {
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
     await page.getByTestId("login-magic").click()
+    await expect(page.getByTestId("login-magic-sent")).toBeVisible({
+      timeout: 15_000,
+    })
   })
 })

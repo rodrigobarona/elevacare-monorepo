@@ -32,7 +32,9 @@ Cookie-authenticated mutations (`requireApiAuth` cookie path only) require:
 - `Sec-Fetch-Site` is not `cross-site`, and
 - if `Origin` is present, it is on the explicit `trustedOrigins()` list
   (`ELEVA_TRUSTED_ORIGINS` plus the hardcoded production/staging/localhost
-  origins — never `*`).
+  origins — never `*`), and
+- if `Origin` is absent, `Sec-Fetch-Site` must be `same-origin` or `same-site`.
+  A mutation with neither header is rejected.
 
 Failure: **403 `CSRF_ORIGIN_MISMATCH`**.
 
@@ -48,9 +50,9 @@ If the request `Cookie` header contains more than one value for
 - a security log line is written
 
 Tests: `packages/auth/src/server/api-auth.test.ts` and
-`packages/auth/src/server/csrf.test.ts` (six cases: same-site cookie POST,
-cross-site cookie POST, untrusted Origin, Bearer cross-site, API-key
-cross-site, duplicate session cookie).
+`packages/auth/src/server/csrf.test.ts` (same-site cookie POST, cross-site
+cookie POST, untrusted Origin, missing Origin and Sec-Fetch-Site, Bearer
+cross-site, API-key cross-site, duplicate session cookie).
 
 ## DNS inventory
 

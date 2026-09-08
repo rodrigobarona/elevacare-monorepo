@@ -16,6 +16,22 @@ function resolveReturnPath(value: string | undefined): string {
   return sanitizeReturnTo(value) ?? "/dashboard"
 }
 
+function cookieCsrfHeaders(incoming: Headers): Record<string, string> {
+  const forwarded: Record<string, string> = {}
+  const cookie = incoming.get("cookie")
+  if (cookie) forwarded.cookie = cookie
+  const host = incoming.get("x-forwarded-host") ?? incoming.get("host")
+  const origin =
+    incoming.get("origin") ??
+    (host
+      ? `${incoming.get("x-forwarded-proto") ?? "https"}://${host.split(",")[0]!.trim()}`
+      : null)
+  if (origin) forwarded.origin = origin
+  const secFetchSite = incoming.get("sec-fetch-site")
+  if (secFetchSite) forwarded["sec-fetch-site"] = secFetchSite
+  return forwarded
+}
+
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
   if (!url) {
@@ -37,10 +53,9 @@ export async function switchOrganization(
   const parsed = SetActiveOrganizationRequestSchema.parse({ organizationId })
   await requireSession()
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   const api = createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: cookieCsrfHeaders(incomingHeaders),
   })
   await api.organizations.setActive({ organizationId: parsed.organizationId })
   revalidatePath("/", "layout")

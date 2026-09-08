@@ -210,6 +210,21 @@ describe("requireApiAuth", () => {
     expect(getSession).not.toHaveBeenCalled()
   })
 
+  it("rejects cookie POST with no Origin and no Sec-Fetch-Site", async () => {
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          method: "POST",
+          headers: { cookie: "better-auth.session_token=abc" },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "csrf-origin-mismatch",
+      message: "CSRF_ORIGIN_MISMATCH",
+    })
+    expect(getSession).not.toHaveBeenCalled()
+  })
+
   it("rejects untrusted Origin on cookie POST", async () => {
     await expect(
       requireApiAuth(
