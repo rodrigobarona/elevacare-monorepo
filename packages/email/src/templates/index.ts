@@ -1,4 +1,9 @@
 export {
+  AuthTransactionalEmail,
+  type AuthEmailKind,
+  type AuthTransactionalProps,
+} from "../components/auth-transactional"
+export {
   BookingConfirmedEmail,
   type BookingConfirmedProps,
 } from "./booking-confirmed"

@@ -22,7 +22,8 @@
     "./credentials": "./src/server/credentials.ts",
     "./server/auth": "./src/server/auth.ts",
     "./api-auth": "./src/server/api-auth.ts",
-    "./trusted-origins": "./src/trusted-origins.ts"
+    "./trusted-origins": "./src/trusted-origins.ts",
+    "./e2e-auth-url": "./src/e2e-auth-url.ts"
   },
   "scripts": {
     "lint": "eslint .",

@@ -1,13 +1,29 @@
 import { Resend } from "resend"
 import { render } from "react-email"
-import { AuthTransactionalEmail } from "./templates/auth-transactional"
+import {
+  AuthTransactionalEmail,
+  type AuthEmailKind,
+} from "./components/auth-transactional"
 
-export type AuthEmailKind =
-  | "verify-email"
-  | "reset-password"
-  | "magic-link"
-  | "organization-invitation"
-  | "two-factor-otp"
+export type { AuthEmailKind }
+
+function authFromAddress(): string {
+  const candidates = [
+    process.env.RESEND_FROM_EMAIL,
+    process.env.RESEND_EMAIL_BOOKINGS_FROM,
+  ]
+  return (
+    candidates.map((value) => value?.trim()).find((value) => value) ??
+    "Eleva.care <noreply@eleva.care>"
+  )
+}
+
+function isProductionRuntime(): boolean {
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.NODE_ENV === "production"
+  )
+}
 
 const SUBJECT: Record<AuthEmailKind, { en: string; pt: string; es: string }> = {
   "verify-email": {
@@ -41,6 +57,7 @@ export async function sendAuthEmail(input: {
   kind: AuthEmailKind
   to: string
   url?: string
+  code?: string
   name?: string
   locale?: "en" | "pt" | "es"
 }): Promise<void> {
@@ -57,18 +74,31 @@ export async function sendAuthEmail(input: {
     AuthTransactionalEmail({
       kind: input.kind,
       url: input.url,
+      code: input.code,
       name: input.name,
       locale,
     })
   )
 
   const resend = new Resend(apiKey)
-  const from =
-    process.env.RESEND_FROM_EMAIL ?? "Eleva.care <noreply@eleva.care>"
-  await resend.emails.send({
-    from,
-    to: input.to,
-    subject: SUBJECT[input.kind][locale],
-    html,
-  })
+  const from = authFromAddress()
+  try {
+    const { error } = await resend.emails.send({
+      from,
+      to: input.to,
+      subject: SUBJECT[input.kind][locale],
+      html,
+    })
+    if (error) {
+      throw new Error(error.message)
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    console.error(`[email] ${input.kind} send failed: ${message}`)
+    // Local/e2e uses @example.com; Resend rejects those. Token is already
+    // persisted for Playwright. Fail the request only in production.
+    if (isProductionRuntime()) {
+      throw error instanceof Error ? error : new Error(message)
+    }
+  }
 }

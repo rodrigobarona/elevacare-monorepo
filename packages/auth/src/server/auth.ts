@@ -24,6 +24,8 @@ import {
 } from "../send-auth-email"
 import { sendAuthEmail } from "@eleva/email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
+import { authRateLimitEnabled } from "../e2e-auth-url"
+import { crossSubDomainCookieConfig } from "./cookie-domain"
 
 function requireSecret(): string {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -137,6 +139,11 @@ function createAuth() {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
     },
+    verification: {
+      // Secondary storage alone hides tokens from Neon. Keep a DB copy so
+      // support and Playwright can complete verify / reset / magic-link.
+      storeInDatabase: true,
+    },
     socialProviders: socialProviders(),
     account: {
       encryptOAuthTokens: true,
@@ -152,16 +159,13 @@ function createAuth() {
       updateAge: 60 * 60 * 24,
     },
     advanced: {
-      crossSubDomainCookies: {
-        enabled: true,
-        domain: process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care",
-      },
+      crossSubDomainCookies: crossSubDomainCookieConfig(),
       useSecureCookies: process.env.NODE_ENV === "production",
       database: { generateId: "uuid" },
     },
     trustedOrigins: trustedOrigins(),
     rateLimit: {
-      enabled: Boolean(storage),
+      enabled: authRateLimitEnabled(Boolean(storage)),
       storage: "secondary-storage",
     },
     databaseHooks: {
@@ -248,7 +252,7 @@ function createAuth() {
             kind: "two-factor-otp",
             to: user.email,
             name: user.name ?? undefined,
-            url: otp,
+            code: otp,
           })
         },
       }),

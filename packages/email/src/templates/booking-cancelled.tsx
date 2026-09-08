@@ -1,6 +1,6 @@
 import { Section, Text } from "react-email"
-import { EmailLayout } from "./layout"
-import { DetailRow } from "./detail-row"
+import { EmailLayout } from "../components/layout"
+import { DetailRow } from "../components/detail-row"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 export interface BookingCancelledProps {

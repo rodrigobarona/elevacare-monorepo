@@ -1,14 +1,9 @@
 {
-  "extends": "@eleva/typescript-config/nextjs.json",
+  "extends": "@eleva/typescript-config/base.json",
   "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] },
-    "plugins": [{ "name": "next" }]
+    "noEmit": true,
+    "jsx": "react-jsx"
   },
-  "include": [
-    "next-env.d.ts",
-    "next.config.mjs",
-    "src/**/*",
-    ".next/types/**/*.ts"
-  ],
+  "include": ["../../packages/email/src/**/*"],
   "exclude": ["node_modules"]
 }

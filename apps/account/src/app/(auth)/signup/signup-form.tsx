@@ -49,7 +49,7 @@ export function SignupForm() {
 
   if (sent) {
     return (
-      <Card>
+      <Card data-testid="verify-email">
         <CardHeader>
           <CardTitle>{t("verifyTitle")}</CardTitle>
           <CardDescription>{t("verifySent")}</CardDescription>
@@ -126,7 +126,11 @@ export function SignupForm() {
             }
           />
           {error ? (
-            <p className="text-sm text-destructive" role="alert">
+            <p
+              className="text-sm text-destructive"
+              role="alert"
+              data-testid="signup-error"
+            >
               {error}
             </p>
           ) : null}

@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-08: Local Better Auth e2e capture stays out of production Redis
+
+- Owner: engineering
+- Status: active
+- Summary: Playwright auth (`pnpm e2e:auth`) reads verify/reset/magic URLs
+  from Upstash only when `E2E_AUTH_CAPTURE=1` **and** the runtime is not
+  production (`VERCEL_ENV` / `NODE_ENV`). Keys are `e2e:auth-url:{kind}:{sha256(email)}`
+  with a 5-minute TTL so KV never stores a raw address or a production
+  one-time link. Direct Neon `email_verified` writes stay behind
+  `E2E_ALLOW_DB_WRITES=1` and are unused when capture works. Auth rate
+  limiting stays on for Vercel production and preview even if the capture
+  flag is set. Operators set `E2E_AUTH_CAPTURE=1` in local `.env.local`
+  only; never on the production Vercel project.
+- Reference: [`environment-matrix.md`](./environment-matrix.md),
+  [`../../e2e/AUTH-USER-TESTING.md`](../../e2e/AUTH-USER-TESTING.md)
+
 ### 2026-05-21: v3 icon SSOT / import boundary policy
 
 - Owner: design/platform
