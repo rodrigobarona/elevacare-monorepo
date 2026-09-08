@@ -1,12 +1,12 @@
 # Phase 2 — Better Auth foundation (server, schema, client, account UI)
 
-| Field      | Value                                                                                                                                                                                                                                              |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-02/better-auth-foundation` (split: `phase-02.1/auth-server-schema`, `phase-02.2/auth-clients-account-ui`)                                                                                                                                   |
-| Depends on | Phase 1                                                                                                                                                                                                                                            |
-| Effort     | 2 weeks (highest risk phase)                                                                                                                                                                                                                       |
-| Touches    | `packages/auth/**`, `packages/db/**`, `apps/api/src/app/auth/**`, `apps/api/src/lib/auth.ts`, `apps/api/src/app/{organizations,memberships,onboarding}/**`, `apps/account/**`, `packages/dashboard/**`, `packages/email/**`, `pnpm-workspace.yaml` |
-| Exit gate  | Sign up -> personal Space -> create Expert org -> switch org -> RLS isolation test green; 2FA + passkeys + magic link + Google work; API accepts session cookie, Bearer session token, API key, JWT; Playwright auth spec green                    |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-02/better-auth-foundation` (split: `phase-02.0/spike-better-auth`, `phase-02.1/auth-server-schema`, `phase-02.2/auth-clients-account-ui`)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Depends on | Phase 1. **Spike PR 02.0** (`phase-02.0/spike-better-auth`, evidence only, max 2 days) must be merged before PR 02.1 opens: a throwaway Better Auth instance on a Neon branch proves sign-up + email verification, personal Space provisioning, expert org creation and switching, cross-subdomain session on `*.dev.eleva.care`, passkey + TOTP, API key, opaque bearer session, JWT/JWKS, admin role, Google linking and session revocation; report in `docs/eleva-v3/spikes/02-better-auth.md` with the exact package/plugin versions to pin and any option renames the plan must absorb |
+| Effort     | 2 weeks (highest risk phase)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Touches    | `packages/auth/**`, `packages/db/**`, `apps/api/src/app/auth/**`, `apps/api/src/lib/auth.ts`, `apps/api/src/app/{organizations,memberships,onboarding}/**`, `apps/account/**`, `packages/dashboard/**`, `packages/email/**`, `pnpm-workspace.yaml`                                                                                                                                                                                                                                                                                                                                          |
+| Exit gate  | Sign up -> personal Space -> create Expert org -> switch org -> RLS isolation test green; 2FA + passkeys + magic link + Google work; API accepts session cookie, Bearer session token, API key, JWT; Playwright auth spec green                                                                                                                                                                                                                                                                                                                                                             |
 
 ## Why this phase exists
 
@@ -35,9 +35,10 @@ In:
   (`getSessionCookie` optimistic guard, `return-to` handling preserved), `guards.ts`,
   `org-routing.ts`, `react.tsx` (`PermissionGate` reading capabilities from session).
 - `packages/db/src/schema/auth/*` generated by `npx @better-auth/cli generate` (Drizzle output),
-  moved into the `auth` Postgres schema; `packages/db/src/schema/main`: drop `users`,
-  `organizations`, `memberships`, `roles`, `permissions` mirrors; replace FKs with `auth.user.id`
-  / `auth.organization.id`; drop `workos_*` columns; add `org_data_keys` (used in Phase 3);
+  moved into the `auth` Postgres schema; `packages/db/src/schema/main`: repoint FKs to
+  `auth.user.id` / `auth.organization.id` and keep the `users`, `organizations`, `memberships`,
+  `roles`, `permissions` mirrors and every `workos_*` column in place, read-only (expand step —
+  see the expand-and-contract bullet below; Phase 3 drops them); add `org_data_keys` (used in Phase 3);
   update RLS helper `withOrgContext` to accept the active org from the session; regenerate
   migrations; update seeds (`db:seed:demo`).
 - `apps/api/src/app/auth/[...all]/route.ts` mounting `toNextJsHandler(auth)`; CORS allow-list
@@ -71,10 +72,57 @@ In:
 - Playwright `e2e/auth.spec.ts`: sign up, verify email (test inbox or dev bypass), land on personal
   Space, create Expert workspace, switch org, sign out, sign in with magic link.
 
-Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 3).
+- **Cookie, CSRF and subdomain threat model (D-13, review P1)** — written in this phase, before
+  the session code, as `docs/eleva-v3/security/cookie-csrf-threat-model.md` (linked from
+  `identity-rbac-spec.md`); the security owner's sign-off is NOT part of this phase (see the end
+  of this bullet): the session cookie is `Domain=.eleva.care`,
+  `Secure`, `HttpOnly`, `SameSite=Lax`, `__Secure-` prefixed; the staff console is the exception
+  (`admin.eleva.care` host-only cookie — Phase 12); every state-changing route requires
+  **either** a non-cookie credential (`Authorization` / `x-api-key`) **or** the Better Auth
+  origin check (`Origin`/`Sec-Fetch-Site` against `trustedOrigins`) — the `requireApiAuth`
+  single-credential rule already rejects mixed credentials, this adds the cross-site rule for
+  the cookie path; `trustedOrigins` is the explicit env list (never a wildcard), preview
+  deployments target the staging API and never mint `.eleva.care` cookies. **Cookie tossing is
+  a real exposure of a `Domain=.eleva.care` cookie and the `__Secure-` prefix does NOT close it**
+  (it only forces `Secure`; any `*.eleva.care` host can still set a same-name parent-domain
+  cookie, and `__Host-` is not an option for a cookie that must be shared across the app
+  subdomains). The controls, each with a test: (1) the session cookie value is **signed** by
+  Better Auth with `BETTER_AUTH_SECRET` — an unsigned or foreign-signed value is a 401, never a
+  session; (2) **duplicate-cookie rejection**: if the request carries more than one cookie with
+  the session name (the tossing signature — browsers send both), `requireApiAuth` and the
+  Better Auth session reader treat the request as unauthenticated, answer 401
+  `SESSION_COOKIE_AMBIGUOUS`, clear both (`Max-Age=0` on the parent domain and on the host) and
+  log a security event — they never pick "the first one"; (3) **trusted-subdomain control**: no
+  user-controlled or third-party host may exist under `eleva.care` — org slugs live in paths,
+  never in hostnames; the only non-first-party name is the Daily CNAME `sessions.eleva.care`,
+  which is why it is listed as a named risk in the threat model (a compromised or misbehaving
+  page there could set a `.eleva.care` cookie — controls 1 and 2 are what defend against it) and
+  why every `*.eleva.care` DNS record is inventoried in `environment-matrix.md` with an owner
+  and reviewed each phase; the staff console uses a host-only `__Host-` cookie (Phase 12) because
+  it does not need sharing. Tests: tossed cookie (second same-name cookie from a subdomain,
+  unsigned) -> 401 `SESSION_COOKIE_AMBIGUOUS` + both cleared; forged-signature cookie -> 401;
+  cross-site POST with cookie only -> 403 `CSRF_ORIGIN_MISMATCH`; same-site with cookie -> 200;
+  Bearer from any origin
+  -> 200; API key from any origin -> 200. Recorded in `decision-log.md` as D-13 (**proposed** —
+  this phase writes the threat model and the tests; the security sign-off is a Phase 4 entry
+  gate: PR 04.2 cannot open until D-13 carries owner, date and evidence).
+- **Expand-and-contract for identity tables (review P1)**: this phase **expands** — creates the
+  `auth.*` schema, backfills `auth.user/organization/member` from the current `main.users`,
+  `main.organizations`, `main.memberships` (idempotent script under `packages/db/scripts/`),
+  repoints every FK with `NOT VALID` constraints then `VALIDATE CONSTRAINT` in a separate
+  statement, keeps the legacy tables read-only (trigger raising on write) and keeps `workos_*`
+  columns nullable. Nothing is dropped here. Phase 3 **contracts**: drops the legacy tables and
+  `workos_*` columns after the Phase 3 exit-gate grep and a row-count parity check pass. This
+  is what makes Phase 2 revertible without data loss.
+
+Out: calendar credentials, encryption, billing seat sync, infra deletion, **dropping legacy
+identity tables/columns** (Phase 3).
 
 ## Deliverables
 
+0. PR 02.0 spike report `docs/eleva-v3/spikes/02-better-auth.md` (the twelve contract checks
+   above, each with the request made, the response observed and the Better Auth version); the
+   pinned catalog versions PR 02.1 uses come from this report. Spike code is deleted before 02.1.
 1. Catalog + `packages/auth/package.json` exports: `.`, `./client`, `./server`, `./proxy`,
    `./permissions`, `./react`.
 2. `packages/auth/src/server/auth.ts`, `permissions.ts`, `capabilities.ts`, `client.ts`,
@@ -92,6 +140,8 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
 
 ## Acceptance criteria
 
+- [ ] PR 02.0 spike report committed under `docs/eleva-v3/spikes/02-better-auth.md`; every one of
+      the twelve contract checks is marked proven or has a plan change recorded next to it.
 - [ ] `rg -n 'better-auth' -g '!packages/auth/**' -g '!pnpm-lock.yaml' -g '!docs/**' -g '!pnpm-workspace.yaml'`
       returns nothing (boundary lint; matches `import`, `from` and `require` forms).
 - [ ] `GET https://api.<env>/auth/ok` returns 200; `GET /openapi.json` includes `/auth/*` paths.
@@ -101,6 +151,13 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
       switch active org, `apps/expert` reads `session.activeOrganizationId`.
 - [ ] 2FA TOTP enrol + verify + backup codes; passkey register + sign-in; magic link sign-in;
       Google sign-in links to the same user when email matches (`trustedProviders`).
+- [ ] Cookie/CSRF threat model written and recorded as D-13 **proposed** in `decision-log.md`
+      (sign-off is the Phase 4 PR 04.2 entry gate, not a Phase 2 deliverable); cross-site
+      cookie-only POST -> 403 `CSRF_ORIGIN_MISMATCH`; tossed/duplicate session cookie -> 401
+      `SESSION_COOKIE_AMBIGUOUS`; Bearer/API key from any origin -> 200 (tests).
+- [ ] Legacy `main.users/organizations/memberships` still present and read-only after this PR;
+      row-count parity script prints `auth.* == main.*` for users, orgs, memberships; every FK
+      validated (`pg_constraint.convalidated = true`).
 - [ ] `requireApiAuth()` accepts: cookie session; `Authorization: Bearer <session token>`;
       `x-api-key` created via `apiKey` plugin scoped to an org; JWT from `/auth/token` verified
       via JWKS (Bearer value routed by shape: compact JWS -> JWT verifier, anything else ->
@@ -153,8 +210,9 @@ Out: calendar credentials, encryption, billing seat sync, infra deletion (Phase 
 - Better Auth package split or option renames: verify with Context7 on day one and pin versions.
 - Cross-subdomain cookies in preview deployments: previews must target the staging API
   (`NEXT_PUBLIC_API_URL`), documented in `environment-matrix.md`.
-- Dropping mirror tables breaks existing seeds and queries: run typecheck + tests continuously;
-  grep for `main.users`, `main.organizations`, `main.memberships` before deleting.
+- Repointing FKs breaks existing seeds and queries: run typecheck + tests continuously; grep for
+  `main.users`, `main.organizations`, `main.memberships` — they become read-only here and are
+  dropped only in Phase 3 (expand-and-contract), so a Phase 2 revert loses no data.
 
 ## Copy-paste prompt
 
@@ -175,8 +233,8 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the "PHASE 2 TASK" section further down is
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main && git pull --ff-only && git checkout -b phase-02.1/auth-server-schema
-- Second PR (opened after the first merges): phase-02.2/auth-clients-account-ui. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
+- git checkout main && git pull --ff-only && git checkout -b phase-02.0/spike-better-auth
+- Then, after each merge: phase-02.1/auth-server-schema, then phase-02.2/auth-clients-account-ui. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
   or the review cap is reached (README section 4 rule 4: max 3 rounds, zero Critical/Major left,
@@ -198,6 +256,18 @@ pt/en only — decision-log staff-only exception), cataloged dependency versions
 (pnpm-workspace.yaml catalog), Phosphor icons via @eleva/icons only.
 
 PHASE 2 TASK — Stand up self-hosted Better Auth as the identity system (ADR-017, ADR-021).
+
+PR 02.0 — spike (throwaway code under packages/auth/spikes/, a Neon branch, evidence is the
+deliverable): stand up a minimal Better Auth server with the ADR-017 plugin set and prove, in
+docs/eleva-v3/spikes/02-better-auth.md (request, response, version for each): sign-up + email
+verification; personal Space provisioning hook; expert organization creation; organization
+switching (active org on the session); cross-subdomain cookie on *.dev.eleva.care; passkey and
+TOTP enrolment + verify; API key create + authenticate; opaque bearer session token; JWT + JWKS
+verification from a second process; admin role check; Google account linking by email (record
+the threat model notes); session revocation propagating to every client. Record the exact
+package layout (core vs split plugin packages) and pin those versions in the report. Where the
+observed behaviour differs from this phase file, write the plan change into the report and apply
+it to this file in the same PR. Delete the spike code before PR 02.1 opens.
 
 PR 02.1 — server + schema + API:
 1. Catalog: add better-auth (+ any required split plugin packages) to pnpm-workspace.yaml catalog;
@@ -243,11 +313,24 @@ PR 02.1 — server + schema + API:
    current implementation; keep capabilities.test.ts green and extend it.
 4. packages/db: run the Better Auth CLI generate for Drizzle, place output in
    packages/db/src/schema/auth/index.ts using pgSchema("auth"); make apiKey.referenceId and
-   organization.type first-class. Migrate main schema: drop users, organizations, memberships,
-   roles, permissions tables; every FK that pointed at them now points at auth.user.id or
-   auth.organization.id (expert_profiles, clinic_profiles, billing_customers,
+   organization.type first-class. Migrate main schema with EXPAND-AND-CONTRACT — this PR only
+   expands: backfill auth.user / auth.organization / auth.member from main.users,
+   main.organizations, main.memberships (packages/db/scripts/backfill-auth-identity.ts,
+   idempotent, prints parity counts; a --verify flag runs read-only and exits non-zero on ANY
+   of: count mismatch per table; a legacy row (main.users/organizations/memberships) whose
+   mapped auth.* row is missing or has a different email/slug/(user, org, role) tuple — checked
+   key by key, not by count; a repointed FK column anywhere in main.* whose value has no
+   matching auth.user.id / auth.organization.id (orphan scan over every FK listed below, using
+   the information_schema); it prints the offending ids (capped at 50 per check) — Phase 3 gates
+   its contract migration on this exit code);
+   every FK that pointed at the legacy tables now points at
+   auth.user.id or auth.organization.id (expert_profiles, clinic_profiles, billing_customers,
    billing_subscriptions, expert_integrations, bookings, schedules, event_types, audit_outbox
-   actor fields, etc.); drop all workos_* columns; add org_data_keys(org_id FK auth.organization,
+   actor fields, etc.) added as NOT VALID then VALIDATE CONSTRAINT in a separate migration
+   statement; legacy tables get a BEFORE INSERT/UPDATE/DELETE trigger that raises (read-only);
+   workos_* columns stay, nullable. DO NOT drop users, organizations, memberships, roles,
+   permissions or any workos_* column in this phase — Phase 3 contracts after its exit-gate
+   grep and the parity check. Add org_data_keys(org_id FK auth.organization,
    key_version int, kek_version text, wrapped_dek bytea, created_at, retired_at) with RLS.
    Update withOrgContext to keep the eleva.org_id contract; RLS policies unchanged in semantics.
    Regenerate migrations (drizzle-kit generate) and make db:seed:demo and db:seed:categories
@@ -318,8 +401,20 @@ PR 02.2 — clients, proxy, account UI, dashboard:
     Phase 15 gate checklist verifies with `vercel env ls --environment production` that it is
     absent; unit test: with VERCEL_ENV=production the route table has no /auth/e2e/* path, and
     a request to it returns 404.
-12. Docs: identity-rbac-spec.md final field names, api-contract-spec.md auth section,
-    AGENTS.md facts, decision-log.md entry.
+12. Cookie/CSRF/subdomain threat model: write docs/eleva-v3/security/cookie-csrf-threat-model.md
+    (cookie attributes Domain=.eleva.care Secure HttpOnly SameSite=Lax __Secure- prefix; admin
+    host-only exception; origin check for cookie-authenticated mutations via Better Auth
+    trustedOrigins + Sec-Fetch-Site, error CSRF_ORIGIN_MISMATCH 403; explicit trustedOrigins
+    env list, never wildcard; previews never mint .eleva.care cookies; *.eleva.care DNS
+    inventory in environment-matrix.md) and implement the origin check in requireApiAuth's
+    cookie path only (Bearer and API-key paths are exempt); implement duplicate-session-cookie
+    rejection (more than one cookie with the session name -> 401 SESSION_COOKIE_AMBIGUOUS, clear
+    both, security log) and rely on the signed cookie value — __Secure- alone does not stop
+    cookie tossing on a Domain=.eleva.care cookie; tests for the six cases; record D-13 in
+    decision-log.md with Status: proposed, owner: security, review date — do NOT write a
+    sign-off here: the security owner signs it as the Phase 4 PR 04.2 entry gate.
+13. Docs: identity-rbac-spec.md final field names, api-contract-spec.md auth section,
+    AGENTS.md facts, decision-log.md entries (D-13 + Better Auth adoption), security-traceability.md rows.
 
 Acceptance (verify and paste evidence in the PR): boundary grep clean; GET /auth/ok 200;
 /openapi.json includes /auth paths; sign-up creates personal Space + audit row; Expert workspace

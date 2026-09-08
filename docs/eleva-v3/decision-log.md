@@ -115,6 +115,7 @@ Each entry should include:
 - Owner: payments
 - Status: active
 - Summary: Stripe API pinned ≥ 2023-08-16. `payment_method_types` never hardcoded for booking checkout — Dynamic Payment Methods auto-show the right set per country (PT = card + MB WAY + wallets; EU = SEPA/iDEAL/Bancontact per country). Subscription Checkout limited to `card + sepa_debit` per ADR-016 (MB WAY/Multibanco are one-time-only). Enabled methods managed in Stripe Dashboard per environment. Two accounts (staging + production). Single `/webhooks/stripe` endpoint per env handles all event types (Payment + Subscriptions + Connect + Identity) with idempotency via `stripe_webhook_events`. UX uses Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016, plus Connect/Identity Embedded Components, Payment Element for booking checkout. `appearance` API themed to Eleva tokens. CSP allows Stripe domains.
+- Superseded in part (2026-09-07): the booking-checkout method set is now fixed by D-14 (Payment Method Configuration `STRIPE_PMC_BOOKING`: `card` incl. wallets, `link`, `mb_way` only; Multibanco, SEPA Direct Debit, Klarna and every delayed-notification method off) and the launch currency by D-02 (EUR only). The "never hardcode `payment_method_types`" rule stands — the configuration decides, not a list in code.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md), ADR-005, ADR-016
 
 ### 2026-04-22: Multibanco reference vouchers — excluded
@@ -309,8 +310,211 @@ Each entry should include:
 
 - Owner: engineering
 - Status: accepted
-- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversed` is the SSOT (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles via `room_request_id` in room `meta` before any retry and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
+- Summary: the Phase 0 CodeRabbit loop locked several cross-phase contracts that previous documents left ambiguous. (1) Payout states: `payout_states.status` = `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` is the SSOT (`reversal_pending` added by the 2026-09-07 amendment: refund succeeded, transfer reversal not yet confirmed) (Phase 6 and `payments-payouts-spec.md` identical); a hold records `held_from_status` and a dispute won or a hold release restores it — there is no `released` state. (2) Notifications: one `sendNotification({ kind, recipient, orgId?, ctx, idempotencyKey, channelsOverride? })` contract; urgency belongs to `NOTIFICATION_KINDS[kind]`; e-mail is an idempotent provider submission (Resend `Idempotency-Key` = delivery row id, 24 h dedupe), SMS is at-least-once with Twilio status callback + per-delivery `Ref` body-fingerprint reconciliation; disputes and manual holds go to `held` (never `approval_required`) as a `hold_reasons` set, and the row returns to `held_from_status` only when every reason is cleared. (3) Tier 1 invoice retry policy is two-stage (5 fast attempts -> `failed` + alert; 10 sweep attempts -> `dead_lettered` + admin flag). (4) Daily: delegate removal ejects + bans at the provider; webhook transitions are ordered by event time (`sessions.last_event_at`, monotonic status); room creation reconciles lost responses from Eleva-owned intent (`room_create_attempt_at`, `room_attempt_seq`, `room_fingerprint_exp`) matched against the listed rooms' `nbf`/`exp` — Daily HIPAA mode rejects custom room names and room properties have no `meta`, so there is no provider-side handle (supersedes the earlier `room_request_id`-in-`meta` design, 2026-09-07 amendment) — and otherwise lands in `room_unresolved`. (5) Private booking links claim a use inside the durable reservation transaction, after the slot lock. (6) Migration deltas key on the MVP source snapshot (`migration_runs.source_watermark`), never the target completion time; Phase 15 production configuration is gated one mutation at a time (ADR-019). (7) CodeRabbit: the App's 100-file cap is the only file cap; the loop caps are 3 `pnpm review` rounds, 2 `pnpm review:branch` rounds and 2 GitHub App rounds, exiting only with zero open Critical/Major and every remaining Minor/Trivial recorded in the PR body "Deferred findings" table; the PR-size targets of `execution-plan/README.md` section 4 rule 1 (<= 30 files / 400 lines) apply to every prompt; hourly allowance recorded (Advanced trial 10/dev/h until 21 Sep 2026, then Team 8 or Essentials 5).
 - Reference: execution-plan phases 4, 6, 7, 8, 9, 12, 14, 15; [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Payout States"; [`notifications-spec.md`](./notifications-spec.md) entrypoint.
+
+### 2026-09-07: Execution-plan amendment from the external engineering review (D-01..D-14)
+
+- Owner: engineering (plan), named owners per decision below
+- Status: active — accepted 2026-09-07 by Rodrigo Barona (founder); this entry records the
+  amendment itself, the D-NN entries below carry their own sign-off
+- Summary: an external engineering evaluation of the execution plan (kept verbatim at
+  [`execution-plan/reviews/2026-09-07-external-engineering-review.md`](./execution-plan/reviews/2026-09-07-external-engineering-review.md),
+  disposition per finding in
+  [`execution-plan/reviews/2026-09-07-review-response.md`](./execution-plan/reviews/2026-09-07-review-response.md))
+  was folded into the plan as one amendment PR. Structural changes: PR-level dependencies and
+  approval gates (README section 4 rules 11-13, including environment mutation rules and the
+  no-vendor-call-inside-a-transaction rule), spike PRs 02.0 / 06.0 / 07.0 / 09.0, the security
+  baseline moved to the phases that create the risk (Phase 13 verifies, does not introduce),
+  recording/transcription stripped from Phase 10 into Phase 16.8, refund + transfer-reversal
+  contract corrected for separate charges and transfers, `computeSettlement` as the financial
+  calculation contract, DB exclusion constraint as the booking consistency boundary,
+  `consents` / `public_handles` / per-subscriber outbox deliveries created in Phase 4 PR 04.1,
+  rollback narrowed to an acceptance point. The decisions below are the **approval gates**; each
+  is `proposed` until its owner signs, and the phase file names the PR that cannot open before
+  that. Sign-off is recorded by editing the status and adding the date and name in place.
+- Reference: [`execution-plan/README.md`](./execution-plan/README.md) section 4 rule 12 (gate table)
+
+### 2026-09-07: Phase 1 security baseline contracts (RLS policy classes, secret scanning, traceability, localized columns)
+
+- Owner: engineering (security), DPO informed
+- Status: accepted (documentation + CI contracts; the controls themselves are implemented by the phases named in `security-traceability.md`)
+- Summary: Phase 1 fixes four contracts that later phases build on. (1) **RLS policy classes**: every tenant table declares one of the seven classes in `packages/db/src/rls/policy-classes.ts` (`tenant-owned`, `dual-organization`, `public-read`, `member-owned`, `platform-only`, `append-only-audit`, `clinical-shared`) and `rls-classes.test.ts` proves each class with a fixture and positive/negative assertions. (2) **Secret scanning**: `gitleaks` runs in CI with the repo `.gitleaks.toml`; a hit fails the job. (3) **Security traceability**: `docs/eleva-v3/security-traceability.md` maps every control to the phase that introduces it, the test that enforces it and the evidence link; CI fails when a control row has no enforcing check. (4) **Localized columns**: `LocalizedText` / `LocalizedRichText` (JSONB keyed by `Locale`, one row per entity, Zod-validated, `pt` required) are the only storage shape for translatable content — the duplicate `LocalizedString` type is deleted in PR 04.1.
+- Reference: [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md), [`security-hardening-checklist.md`](./security-hardening-checklist.md)
+
+### 2026-09-07: Admin dual-control kinds, distinct `analytics` consent, imported-consent semantics, rollback acceptance point
+
+- Owner: engineering (Phase 12/13/14 contracts); finance for the refund threshold (D-06); DPO for consent semantics (informed)
+- Status: accepted (plan contracts — implementation is verified by the phase tests named below)
+- Review date: 2026-09-21 for the dual-control threshold default (`ADMIN_DUAL_CONTROL_REFUND_CENTS = 20000`) and the analytics-consent default (denied); the rest is structural
+- Summary: (1) **Dual control (Phase 12)** is required for exactly six admin action kinds, mapped route-by-route in `packages/auth/src/admin-actions.ts`: `payment.refund_large` (above the threshold), `payout.release` (from `held`), `expert.commission_override`, `partner.approve_clinical` (clinical specialties), `expert.ban_with_future_bookings` (suspend/ban with confirmed future bookings), `record.break_glass_decrypt`; every other admin mutation is single-actor with a mandatory reason. Adding a kind = map row + table-driven test + audit-union entry. (2) **`analytics` is a distinct consent kind** (Phase 13), separate from `marketing`: PostHog/GA4 stay off until it is granted; it is never inferred from marketing or from a legacy field. (3) **Imported consents (Phase 14)** keep their MVP acceptance timestamp, `source = import`, document version tagged `legacy`; `analytics`, `ai_processing` and `session_recording` are never imported; the mapper (`infra/migration/src/map/consents.ts`) is deny-by-default and fails the run on an unmapped legacy field. (4) **Rollback boundary (Phase 14/15)**: `CUTOVER_ACCEPTANCE_TS = min(CUTOVER_TS + 48 h, first executed payout)`; before it, rollback to the MVP is a rehearsed runbook; after it, issues are fixed forward — no rollback path exists once money has moved.
+- Reference: [`execution-plan/phases/12-admin-console.md`](./execution-plan/phases/12-admin-console.md), [`execution-plan/phases/13-hardening-observability.md`](./execution-plan/phases/13-hardening-observability.md), [`execution-plan/phases/14-mvp-migration.md`](./execution-plan/phases/14-mvp-migration.md), [`execution-plan/phases/15-launch-cutover.md`](./execution-plan/phases/15-launch-cutover.md)
+
+### D-01 (2026-09-07): `pt-BR` retired as a locale; alias to `pt`; no `fr` now
+
+- Owner: product (founder)
+- Status: active — decided 2026-09-07 by Rodrigo Barona (founder, product owner) during the
+  review of the external evaluation; recorded by engineering
+- Summary: the `Locale` union in `@eleva/config` is `pt | en | es`; `apps/web/src/proxy.ts`
+  answers `/pt-BR/*` with a 301 to `/pt/*` (query preserved) so indexed MVP URLs keep working;
+  hreflang `pt/en/es` + `x-default`; no `pt-BR` message files anywhere (the i18n parity checker
+  fails on a stray one). `fr` is not added: no content, experts, legal pages or native reviewer;
+  adding a locale later is message files plus a reviewer, not architecture. Brazil returns as a
+  content + payments discovery item (Phase 16.2). Blocks: Phase 4 PR 04.2.
+- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md) (SEO), [`execution-plan/phases/01-rebaseline-adrs-ci.md`](./execution-plan/phases/01-rebaseline-adrs-ci.md) (parity checker)
+
+### D-02 (2026-09-07): EUR-only launch
+
+- Owner: founder + finance
+- Status: proposed (working decision — sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: `CHECK (currency = 'EUR')` on `event_types` and `event_type_modes`; the Stripe call
+  still reads `currency` from the reservation snapshot, so lifting the CHECK later is the whole
+  multi-currency change on the payment path. Blocks: Phase 4 PR 04.2.
+- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md), [`payments-payouts-spec.md`](./payments-payouts-spec.md) settlement matrix
+
+### D-03 (2026-09-07): Commission is VAT-inclusive — the expert nets the headline
+
+- Owner: finance (accountant)
+- Status: proposed (sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: the advertised commission (15% / 8% / 0%) is the gross platform fee; IVA is carved out
+  of it per the Phase 7 IVA matrix (PT B2B 15.00 = 12.20 + 2.80; intra-EU reverse charge 15.00 net).
+  100 EUR booking -> 15.00 fee -> 85.00 expert transfer. Implemented once in `computeSettlement`.
+  Blocks: Phase 6 PR 06.1 (and Phase 7 Tier 1 coding).
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix", [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
+
+### D-04 (2026-09-07): Processing-fee bearer
+
+- Owner: finance
+- Status: proposed (sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: marketplace bookings — Eleva absorbs Stripe's processing fee out of its commission
+  (`expertTransfer = gross − platformFeeGross`); clinic-attributed 0% bookings — the clinic bears
+  the processing fee (`expertTransfer = gross − processingFeeCents`). `processing_fee_cents` is
+  stored on `booking_payments` from `balance_transaction.fee`. Blocks: Phase 6 PR 06.1.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix"
+
+### D-05 (2026-09-07): Connect capability model — `transfers` only, Identity behind a flag
+
+- Owner: finance + legal
+- Status: proposed (confirm with Stripe/legal in PR 06.0, sign before PR 06.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: with separate charges and transfers the connected account only receives transfers, so
+  request the `transfers` capability only — no `card_payments`; `charges_enabled` never gates
+  anything. Connect's own KYC is the identity check. Publish gate = `details_submitted &&
+payouts_enabled && capabilities.transfers = active`. Stripe Identity stays implemented behind
+  `ff.expert_identity_verification` (default off) in case legal requires a second verification
+  for clinical experts. Blocks: Phase 6 PR 06.1; Phase 12 partner checklist reads the same fields.
+- Reference: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md), [`execution-plan/phases/12-admin-console.md`](./execution-plan/phases/12-admin-console.md)
+
+### D-06 (2026-09-07): Refund, dispute and no-show policy
+
+- Owner: finance + product
+- Status: proposed (sign before PR 06.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: cancellation-window refund rules, dispute handling (hold payout, reverse on loss) and
+  the no-show policy (Phase 9 records attendance only; this decision says refund / keep / partial
+  per attendance outcome). Refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` (default 200 EUR) need
+  dual control in the admin console. Blocks: Phase 6 PR 06.2.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds", [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md) (attendance)
+
+### D-07 (2026-09-07): Daily HIPAA domain, BAA/DPA and EU processing position
+
+- Owner: founder + DPO
+- Status: proposed (evidence from PR 09.0; sign before Phase 9 opens)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: the Daily plan tier with HIPAA enabled, the executed BAA/DPA, the documented EU
+  media-processing position (stated only as Daily documents it — no stronger claim on `/trust`),
+  `sessions.eleva.care` verified, recording confirmed off for the domain. Blocks: Phase 9.
+- Reference: [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md) (PR 09.0), `docs/eleva-v3/spikes/09-daily-account.md`
+
+### D-08 (2026-09-07): Session-recording storage — S3 EU landing zone, private Blob system of record
+
+- Owner: DPO + founder
+- Status: proposed (decide before Phase 16.8 is promoted)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: Daily HIPAA recording writes only to a customer-owned AWS S3 bucket via IAM role trust;
+  Vercel Blob, Neon object storage and Cloudflare R2 are not accepted destinations. Design: a
+  disposable EU S3 bucket (SSE-KMS, 72 h lifecycle) as a mailbox, a workflow that pulls, encrypts
+  per org and stores through `@eleva/storage` in the private Blob store (EU region confirmed),
+  then deletes the S3 object. Recording lives only in 16.8. Blocks: 16.8.
+- Reference: [`execution-plan/phases/16-post-launch-backlog.md`](./execution-plan/phases/16-post-launch-backlog.md) "16.8 design note"
+
+### D-09 (2026-09-07): Historical MVP invoices — `legacy` / `legacy_missing`, never reissued
+
+- Owner: accountant
+- Status: proposed (sign before PR 07.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: migrated MVP paid bookings are imported as `platform_fee_invoices.status = legacy`
+  (+ `legacy_document_ref`) or `legacy_missing`; v3 never issues a Tier 1 document for a booking
+  paid before cutover; the accountant decides any lawful backfill outside the system. Phase 14
+  reports the `legacy_missing` count. Blocks: Phase 7 PR 07.1.
+- Reference: [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md), [`execution-plan/phases/14-mvp-migration.md`](./execution-plan/phases/14-mvp-migration.md)
+
+### D-10 (2026-09-07): Public-site parity dispositions
+
+- Owner: product (founder)
+- Status: proposed (sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: every surface of the live MVP site has a disposition tested by `e2e/legacy-urls.spec.ts`:
+  expert URLs preserved via `public_handles`; `/pt-BR/*` 301; health quiz retired (301 to the
+  experts directory); community links kept as external footer links; Help Center replaced by
+  `apps/docs` guides with 301s; contact migrated to `/{locale}/contact`; legal pages migrated as
+  versioned `/{locale}/legal/*` (their versions are the `CONSENT_DOCUMENTS` versions); trust
+  claims rewritten only with Phase 13 evidence. Blocks: Phase 4 PR 04.2.
+- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md) "Public-site parity"
+
+### D-11 (2026-09-07): Clinical access model
+
+- Owner: DPO + product
+- Status: proposed (sign before PR 10.1)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: expert-authored records are readable by the authoring expert; by other experts of the
+  same clinic organization only when the clinic admin enabled `clinic_shared_records` (default
+  off, reason required, audited) and the member has not opted out (`record_access_optouts`);
+  by Eleva staff never in plaintext (metadata only; break-glass decrypt is a Phase 12 dual-control
+  action). Phase 10 enforces it in RLS; Phase 11 only adds the toggle. Blocks: Phase 10 PR 10.1.
+- Reference: [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`execution-plan/phases/11-team-clinics.md`](./execution-plan/phases/11-team-clinics.md)
+
+### D-12 (2026-09-07): Account deletion vs legal retention of clinical records
+
+- Owner: DPO + legal
+- Status: proposed (sign before the Phase 5 account-deletion work)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: member-authored data is erased on schedule (grace period, then crypto-shred);
+  expert-authored clinical records stay under the expert organization's legal retention duty —
+  pseudonymised (identity replaced by a retention token) and kept for the period recorded in
+  `data-retention-export-matrix.md` (working default: the Portuguese clinical-record minimum),
+  then crypto-shredded by the Phase 10 job. The member deletion UI says so in plain language.
+  Blocks: Phase 5 deletion flow.
+- Reference: [`execution-plan/phases/05-member-app.md`](./execution-plan/phases/05-member-app.md), [`data-retention-export-matrix.md`](./data-retention-export-matrix.md)
+
+### D-13 (2026-09-07): Cookie, CSRF and subdomain threat model
+
+- Owner: security owner (engineering lead)
+- Status: proposed (written in Phase 2; sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: `Domain=.eleva.care`, `Secure`, `HttpOnly`, `SameSite=Lax`, `__Secure-` prefix; admin
+  console host-only cookie; cookie-authenticated mutations pass the Better Auth origin check
+  (`trustedOrigins` explicit list, `Sec-Fetch-Site`) or fail 403 `CSRF_ORIGIN_MISMATCH`; Bearer and
+  API-key paths exempt; previews never mint `.eleva.care` cookies; `*.eleva.care` DNS inventory in
+  `environment-matrix.md`. Document: `docs/eleva-v3/security/cookie-csrf-threat-model.md`.
+  Blocks: Phase 4 PR 04.2.
+- Reference: [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
+
+### D-14 (2026-09-07): Launch payment-method set
+
+- Owner: finance + product
+- Status: proposed (sign before PR 04.2)
+- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Summary: booking PaymentIntents use a Stripe Payment Method Configuration (`STRIPE_PMC_BOOKING`,
+  owned by `infra/stripe/setup-payment-methods.ts`) with `card` (incl. Apple Pay / Google Pay),
+  `link`, `mb_way`; Multibanco, SEPA Direct Debit, Klarna and every delayed-notification method are
+  off for one-time bookings (a 5-minute hold cannot outlive a days-long settlement). MB WAY is
+  `async_short`: hold extended to 10 min while `processing`. SEPA DD remains allowed for SaaS
+  subscriptions (ADR-016 carve-out). Blocks: Phase 4 PR 04.2.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Dynamic Payment Methods", `packages/billing/src/server/payment-method-policy.ts`
 
 ## Related Docs
 

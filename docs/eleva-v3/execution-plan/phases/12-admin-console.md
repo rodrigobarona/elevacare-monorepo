@@ -23,12 +23,26 @@ In:
   server `requireStaff(role[])`; every admin API route under `apps/api/src/app/admin/*` with
   `requireApiAuth({ staffRoles })` and rate limits; all writes `withAudit({ actorUserId,
 reason })` with a mandatory `reason` field on destructive actions.
+- **Step-up authentication (P1)**: every staff session must have 2FA (TOTP or passkey) enrolled
+  — `requireStaff` refuses otherwise — and every `[R]` route additionally requires a **fresh
+  step-up** (passkey or TOTP re-verification within the last 10 minutes, tracked as
+  `session.stepUpAt` via the Better Auth `twoFactor`/`passkey` plugins); the admin UI prompts
+  inline. Staff sessions expire after 12 h idle, are bound to the `admin.eleva.care` host only,
+  and IP/user-agent changes force re-authentication.
+- **Dual control (P1)** for the irreversible money and identity actions: refunds above
+  `ADMIN_DUAL_CONTROL_REFUND_CENTS` (default 200 EUR), payout release from `held`, commission
+  override, partner approval of a clinical specialty, ban of an expert with future bookings, and
+  **break-glass decrypt** of a record. Each is a two-step `admin_action_requests` row
+  (`requested_by`, `approved_by` must differ, `expires_at` 24 h, `status
+pending|executing|approved|rejected|expired|executed`); the second staff member approves from a queue,
+  execution happens on approval inside `withAudit` with both actors; a single `platform_admin`
+  cannot self-approve. Everything else stays single-actor with reason.
 - **Users**: search (email/name/id), detail (orgs, roles, sessions, 2FA/passkeys, bookings,
   payments), actions: ban/unban (`admin.banUser`), revoke sessions, disable 2FA, resend
   verification, **impersonate** (`admin.impersonateUser`, 1h, banner shown in the impersonated
   apps, audited start/stop, blocked for other staff), delete account (schedules Phase 5 flow).
 - **Become-Partner queue**: `become_partner_applications` (from expert onboarding completion):
-  review checklist (identity verified, Connect enabled, invoicing choice, profile quality, ERS
+  review checklist (Connect KYC complete — `details_submitted` + `payouts_enabled` + `transfers` active (D-05); Stripe Identity only if `ff.expert_identity_verification` is on —, invoicing choice, profile quality, ERS
   compliance of bio), approve/reject with reason -> `expert_profiles.status`; clinic verification
   queue (Phase 11).
 - **Experts & orgs**: list/filter, detail, edit categories/visibility, feature Top Expert override,
@@ -52,8 +66,9 @@ Out: analytics dashboards (PostHog handles), CMS.
 
 ## Deliverables
 
-1. Migrations: `become_partner_applications` (if not existing from expert onboarding), `admin_notes`,
-   `impersonation_sessions` bookkeeping; audit unions (`admin: user_banned|user_unbanned|
+1. Migrations: `admin_notes`, `impersonation_sessions`, `admin_action_requests` (dual control)
+   bookkeeping — `become_partner_applications` **already exists from Phase 4B** with its reviewer
+   columns (`reviewer_id`, `reviewed_at`, `reason`); this phase adds no columns to it; audit unions (`admin: user_banned|user_unbanned|
 sessions_revoked|impersonation_started|impersonation_ended|partner_approved|partner_rejected|
 commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_viewed...`).
 2. API `apps/api/src/app/admin/**` routes + OpenAPI (tagged `admin`, hidden from public docs
@@ -77,6 +92,10 @@ commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_vie
 - [ ] Payout approve/hold/retry, refund, dispute views work against Phase 6 endpoints; every action
       requires a reason and appears in audit search.
 - [ ] Webhook event replay re-processes idempotently; DLQ replay succeeds/fails visibly.
+- [ ] Staff user without 2FA cannot open the console; `[R]` route without a fresh step-up -> 401
+      `STEP_UP_REQUIRED`; after passkey re-verification the same call succeeds (test).
+- [ ] Dual-control action requested by A cannot be approved by A (403); approved by B executes
+      once with both actors in audit; expired request cannot be approved.
 - [ ] Audit search by correlation id returns the chain (API call -> domain writes -> notifications).
 - [ ] Flags view shows current values per environment; no write path.
 - [ ] `e2e/admin.spec.ts` green.
@@ -115,6 +134,8 @@ commission_override_set|listing_suspended|webhook_replayed|dlq_replayed|flag_vie
 
 - Impersonation misuse: require reason, 1h cap, banner, staff-on-staff blocked, weekly audit
   report (Phase 13 heartbeat).
+- Single compromised staff account: step-up + dual control bound the blast radius to non-money,
+  non-identity actions; Phase 13 verifies, it does not introduce, these controls.
 
 ## Copy-paste prompt
 
@@ -175,8 +196,52 @@ PR 12.1 — access, users, partners, experts, bookings:
    resend-verification, stop-impersonating) which still audit actor, target and route as
    metadata. The route list below marks each with [R] or [O] and the UI dialogs follow the same
    split (reason field mandatory vs optional).
-   Admin routes tagged "admin" in OpenAPI and hidden from the public docs listing unless the
-   requester is staff.
+   Step-up: requireStaff refuses sessions without an enrolled second factor (twoFactor or
+   passkey); adminRoute({ stepUp: true }) — set on every [R] route — requires session.stepUpAt
+   within 10 min else 401 STEP_UP_REQUIRED; the admin shell catches it and opens the passkey/TOTP
+   re-verify dialog then retries. Staff sessions: 12 h idle expiry, cookie scoped to
+   admin.eleva.care (not .eleva.care), re-auth on IP or UA change. Dual control:
+   admin_action_requests (id, kind, target, payload jsonb, requested_by, approved_by nullable,
+   status pending|executing|approved|rejected|expired|executed, reason, created_at, expires_at 24h,
+   claimed_at nullable, claim_token uuid nullable, claim_seq int default 0,
+   executed_at) with adminRoute({ dualControl: true }) creating the request instead of
+   executing; POST /admin/action-requests/[id]/approve [R, stepUp] first CLAIMS the request atomically —
+   UPDATE admin_action_requests SET status = 'executing', approved_by = $actor, claimed_at = now(),
+   claim_token = gen_random_uuid(), claim_seq = claim_seq + 1
+   WHERE id = $id AND status = 'pending' AND expires_at > now() AND requested_by <> $actor
+   RETURNING * — and only the caller that gets a row executes the side effect inside withAudit
+   with both actors, passing claim_token as the vendor idempotency key suffix ("admin-action:" +
+   id + ":" + claim_seq), then completes with UPDATE ... SET status = 'executed', executed_at =
+   now() WHERE id = $id AND claim_token = $token (a stale worker whose token no longer matches gets
+   zero rows, logs admin.action_request.stale_completion and must NOT retry the side effect);
+   zero rows on claim -> 409 ALREADY_CLAIMED (or 403 when requested_by = actor, 410 when expired).
+   Recovery: an 'executing' row older than 10 min with no executed_at is NOT blindly reopened —
+   the sweep first reconciles with the provider for money kinds (stripe.refunds.list / transfers
+   by the idempotency key of the current claim_seq: if the side effect exists, mark 'executed'
+   and alert; only if it provably does not exist flip to 'pending' with a new claim_seq so the
+   next approval uses a fresh idempotency key that cannot collide with the in-flight one) and for
+   non-money kinds (ban, decrypt, override) the side effect is idempotent by request id and may
+   be reopened directly. Tests: two concurrent approvals -> one executes, one 409; stale worker
+   completion after sweep -> zero rows, no second side effect; timed-out claim with the refund
+   already at Stripe -> reconciled to 'executed' with exactly one refund; kinds: refund above
+   ADMIN_DUAL_CONTROL_REFUND_CENTS (default 20000), payout release from held, commission
+   override, partner approval for a clinical specialty, ban expert with future bookings,
+   break-glass record decrypt (the only path that lets staff read body_encrypted; audited
+   record: decrypted with purpose "break_glass" and both actors).
+   Route -> dual-control kind map (SSOT in packages/auth/src/admin-actions.ts, imported by
+   adminRoute and by the tests; one test per row asserting single-actor attempt -> 202 request
+   row and NO side effect, dual approval -> exactly one side effect):
+   | route | condition | kind |
+   | POST /admin/payments/[id]/refund | amount_cents > ADMIN_DUAL_CONTROL_REFUND_CENTS | payment.refund_large |
+   | POST /admin/payouts/[id]/release | payout_states.status = held | payout.release |
+   | PATCH /admin/experts/[orgId] | body contains commissionOverrideBps or commissionOverrideExpiresAt (field-level condition evaluated by adminRoute on the parsed body; other fields stay single-actor [R]) | expert.commission_override |
+   | POST /admin/partners/[id]/approve | SPECIALTIES[slug].clinical = true | partner.approve_clinical |
+   | POST /admin/experts/[orgId]/suspend | exists booking for that expert org with start_at > now() AND status IN (confirmed, rescheduled) (otherwise single-actor [R]) | expert.ban_with_future_bookings |
+   | POST /admin/users/[id]/ban | user is the owner of an expert org with such future bookings (same predicate through the membership) — a plain member ban stays single-actor [R] | expert.ban_with_future_bookings |
+   | POST /admin/records/[id]/decrypt | always | record.break_glass_decrypt |
+   Any other admin mutation is single-actor with a mandatory reason; adding a kind requires a
+   row here, a test and an audit-union entry. Admin routes tagged "admin" in OpenAPI and hidden
+   from the public docs listing unless the requester is staff.
 2. Users: GET /admin/users?q&cursor (auth.api.listUsers), GET /admin/users/[id] (profile, orgs +
    roles, sessions, 2FA/passkeys flags, bookings summary, payments summary), POST
    /admin/users/[id]/ban [R] { reason, expiresAt? } (auth.api.banUser + revokeUserSessions),
@@ -186,12 +251,22 @@ PR 12.1 — access, users, partners, experts, bookings:
    [R] { reason }. @eleva/dashboard:
    <ImpersonationBanner /> rendered in every app shell when session.impersonatedBy is set, with a
    Stop button calling the API.
-3. Partners: become_partner_applications (id, expert_org_id, submitted_at, status pending|
-   approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at, reason) created on
-   expert onboarding completion (update Phase 6/7 completion route). GET /admin/partners?status,
-   GET /admin/partners/[id] (checklist computed: identity verified, Connect charges+payouts,
-   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R] { reason } ->
-   expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved,
+3. Partners: become_partner_applications exists since Phase 4B (id, expert_org_id, submitted_at,
+   status pending|approved|rejected|needs_changes, checklist jsonb, reviewer_id, reviewed_at,
+   reason) — this phase adds no columns; rows are created by the Phase 4B onboarding
+   completion route, never by this phase. GET /admin/partners?status,
+   GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
+   capabilities.transfers active (D-05; Stripe Identity status only when
+   ff.expert_identity_verification is on),
+   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
+   { reason } — TWO paths by the application's specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -> executes directly:
+   expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved;
+   clinical (any ERS-regulated specialty) -> adminRoute({ dualControl: true }) creates an
+   admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —
+   the same side effect runs only from the dual-control approve endpoint (item 1) with both
+   actors in the audit event; tests cover both paths and assert a clinical application can never
+   reach status = active with a single actor,
    POST /reject [R] { reason } -> Lane 1 partner.rejected, POST /needs-changes [R] { reason,
    items }.
    Clinic verification queue: GET /admin/clinics/verifications, POST
@@ -244,7 +319,9 @@ PR 12.2 — money, accounting, ops, flags:
 9. Flags: GET /admin/flags read-only view from @eleva/flags (values per environment); link to
    Vercel dashboard for edits. Content: categories, reserved usernames view.
 10. Tests: role matrix for every admin route (table-driven), impersonation guard (staff target ->
-    403), reason enforcement (400 without reason), replay idempotency; e2e/admin.spec.ts: seeded
+    403), reason enforcement (400 without reason), step-up (401 then 200 after re-verify),
+    dual control (self-approve 403, expired 409, executes once), replay idempotency;
+    e2e/admin.spec.ts: seeded
     platform_admin logs in, approves a pending partner, approves an approval_required payout,
     impersonates a member and sees the banner.
 11. Docs: admin-operator-playbooks.md (one section per action with route + audit action names),

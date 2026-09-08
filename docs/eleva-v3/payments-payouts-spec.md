@@ -143,12 +143,24 @@ Starter / Growth / Enterprise per the tier table above.
 - **never hardcode `payment_method_types`** on PaymentIntents or booking Checkout Sessions — Dynamic Payment Methods auto-show the right set per country
 - **ADR-016 carve-out**: SaaS subscription Checkout Sessions (`mode: "subscription"`) MUST pin `payment_method_types: ["card", "sepa_debit"]` because MB WAY and Multibanco are one-time-only and cannot recur. This is the only place `payment_method_types` may be hardcoded — see [ADR-016](./adrs/ADR-016-subscription-ux-direction.md) and [ADR-005](./adrs/ADR-005-payments-and-monetization.md).
 - Stripe picks based on customer country/currency/device/amount (booking checkout)
-- enabled methods managed in Stripe Dashboard per environment
-- expected per-country method set:
+- enabled methods are **not** left to the Dashboard default: booking PaymentIntents pass
+  `payment_method_configuration = STRIPE_PMC_BOOKING`, a Payment Method Configuration owned by
+  `infra/stripe/setup-payment-methods.ts` (D-14). Launch set: `card` (incl. Apple Pay / Google
+  Pay), `link`, `mb_way`. Reservation-hold policy per method class lives in
+  `packages/billing/src/server/payment-method-policy.ts`: `synchronous` (card, wallets, Link),
+  `async_short` (MB WAY — hold extended to 10 min while the intent is `processing`; the expiry
+  sweep never cancels a reservation with a `processing` intent **inside** that window; the
+  window is bounded: at hold + 10 min the sweep calls `paymentIntents.retrieve` — `succeeded`
+  -> confirm normally (late webhook), `requires_payment_method`/`canceled` -> release, still
+  `processing` -> release the slot anyway and mark the reservation `released_while_processing`;
+  if that intent later succeeds (`payment_intent.succeeded` after release) the handler tries to
+  re-reserve the same window and confirms when it is still free, otherwise refunds in full
+  automatically (`refund reason = slot_lost`) and notifies the member — tested with a recorded
+  late-success event; a `processing` intent older than 24 h is cancelled by the reconciler), `excluded`
+- expected per-country method set at launch (EUR-only, D-02):
   - **PT** → card + **MB WAY** + Apple Pay + Google Pay + Link
-  - **ES** → card + SEPA Direct Debit + wallets
-  - **DE / NL / BE** → card + iDEAL / Bancontact + SEPA + wallets
-  - **UK / US / other** → card + local wallets
+  - **everyone else** → card + wallets + Link (SEPA Direct Debit, iDEAL, Bancontact arrive with
+    the ES/EU expansion decision in Phase 16.1, each with its own hold policy)
 
 ### MB WAY wallet
 
@@ -159,38 +171,40 @@ Starter / Growth / Enterprise per the tier table above.
 ### Excluded payment methods
 
 - **Multibanco reference vouchers** — 7-day settlement delay + voucher + D3/D6/expiry reminder workflow is complexity without upside given MB WAY covers PT instant payments. Revisiting requires a new ADR.
+- **SEPA Direct Debit, Klarna and every other delayed-notification method** for one-time bookings — a 5-minute slot reservation cannot outlive a payment that settles in days (D-14). SEPA DD stays allowed for SaaS subscriptions per the ADR-016 carve-out.
 
-### Single webhook endpoint
+### Webhook endpoints (platform + Connect)
 
-- **one `/webhooks/stripe`** per environment is implemented in `@eleva/billing/server` and dispatched through `processStripeEvent`
-- the route handler in `apps/api/src/app/webhooks/stripe/route.ts` is intentionally thin — it reads the raw request body and the `stripe-signature` header, verifies the Stripe signature against `STRIPE_WEBHOOK_SECRET` via `stripe().webhooks.constructEventAsync()`, then forwards the resulting verified `Stripe.Event` to `processStripeEvent`; all business logic lives in `@eleva/billing/server`
+- **two endpoints per environment** since the 2026-09 plan amendment: `/webhooks/stripe` (platform account events, `STRIPE_WEBHOOK_SECRET`) and `/webhooks/stripe/connect` (`connect: true` endpoint for connected-account events, `STRIPE_CONNECT_WEBHOOK_SECRET`); both are thin routes in `apps/api` and both dispatch through the same `processStripeEvent` in `@eleva/billing/server`; `infra/stripe/setup-webhooks.ts` manages both (two-file contract, see `.cursor/rules/stripe-webhooks.mdc`)
+- both route handlers (`apps/api/src/app/webhooks/stripe/route.ts` and `apps/api/src/app/webhooks/stripe/connect/route.ts`) are intentionally thin and **each verifies its own signature**: read the raw request body and the `stripe-signature` header, call `stripe().webhooks.constructEventAsync(rawBody, signature, secret)` with the route-specific secret (`STRIPE_WEBHOOK_SECRET` for `/webhooks/stripe`, `STRIPE_CONNECT_WEBHOOK_SECRET` for `/webhooks/stripe/connect`), return 400 on failure without touching the database, and only then forward the verified `Stripe.Event` (plus `source: "platform" | "connect"`) to `processStripeEvent`; a Connect event delivered to the platform route (or vice versa) fails verification because the secrets differ — that cross-delivery is a test fixture on both routes. All business logic lives in `@eleva/billing/server`
 - `processStripeEvent` is the canonical idempotency + dispatch flow (signature verification is the route's responsibility — see `.cursor/rules/stripe-webhooks.mdc`):
   - persists every `event.id` in `stripe_webhook_events` (Neon, platform-level table) for idempotency — `INSERT ... ON CONFLICT DO NOTHING` short-circuits duplicate deliveries; status transitions are `received → processing → processed | failed | failed_terminal | ignored`
   - dispatches by `event.type` to the right Vercel Workflow under `withAudit({ orgId, actorUserId: null })` so every mirror write is auditable
 - locked subscribed event types:
   - **Payment**: `payment_intent.succeeded`, `payment_intent.payment_failed`, `payment_intent.processing`, `charge.refunded`, `charge.dispute.*`
   - **Subscriptions**: `customer.subscription.*`, `invoice.*`
-  - **Connect**: `account.updated`, `capability.updated`, `person.updated`, `identity.verification_session.*`, `transfer.*`, `payout.*`, `application_fee.created`, `application_fee.refunded`
+  - **Platform endpoint (transfers)**: `transfer.created`, `transfer.updated`, `transfer.reversed` — the platform owns the transfer and performs the reversal, so its events arrive on `/webhooks/stripe`, not on the Connect endpoint; `identity.verification_session.*` also platform-side
+  - **Connect endpoint**: `account.updated`, `capability.updated`, `person.updated`, `payout.*` (connected-account payouts) — connected-account resources only. `application_fee.*` are **not** subscribed — the separate-charges-and-transfers funds flow has no application fee object (the platform fee is a ledger value, `booking_payments.application_fee_cents`)
 - Stripe retries handled natively (24h exponential); dead-letter path = Vercel Workflows DLQ + `/admin/webhooks`
 
 ### Embedded Components UX — fully embedded, no redirects
 
-All Stripe surfaces render inline in Eleva's app. No popups, no Stripe-hosted pages in user flows.
+All Stripe surfaces render inline in Eleva's app. No Stripe-hosted pages in user flows and no popups **opened by Eleva code** — with two documented exceptions. (1) **Connect embedded components' own authentication popups**: onboarding, account management, payouts and documents components open a Stripe-hosted popup for identity verification/authentication steps that Stripe does not allow inline; this is part of Connect.js (pinned version in `@eleva/billing`) and is permitted: the app must not set `Cross-Origin-Opener-Policy` (Stripe states cross-origin isolation is unsupported and it would sever the popup's opener channel), the components render inside an Eleva error boundary with `onLoadError`/`onExit` handlers that show a retry CTA and re-mint the `AccountSession` on `expired` errors, and a blocked-popup state shows an explicit "allow popups for eleva.care" message; browser tests (Playwright) cover Connect onboarding, payouts, Link and 3DS against the pinned Connect.js/Stripe.js versions. (2) **The Stripe Customer Portal for SaaS subscription management** (rows marked "Portal" below). Portal is hosted by Stripe by design (there is no embedded equivalent for plan change, cancellation, invoice history and payment-method update for subscriptions); the controls that make it acceptable are: the portal session is minted server-side (`POST /billing/portal-session`, RBAC-gated to the org owner/billing role, audited `billing.portal_session_created`) with a `return_url` fixed to `/expert/billing` or `/org/billing` on our own origin; the redirect is a full-page navigation, never an iframe (Stripe forbids framing the Portal), so `billing.stripe.com` appears in no CSP directive at all (a server-issued 302 to a top-level navigation is not governed by CSP; nothing is framed and no form posts to it); on return the page re-fetches subscription state from our DB (already updated by `customer.subscription.*` webhooks) and shows a pending state until the webhook has landed rather than trusting query parameters. Any future embedded Stripe component that covers the same surface replaces Portal and removes the exception.
 
-| Surface                                    | Component                                                                              | Location                       |
-| ------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------ |
-| Patient checkout                           | Payment Element                                                                        | booking page                   |
-| Expert Connect onboarding                  | `<ConnectAccountOnboarding>`                                                           | expert onboarding wizard       |
-| Expert KYC / Identity                      | Stripe Identity embedded modal                                                         | inline from Connect onboarding |
-| Expert payouts + balances                  | `<ConnectPayouts>`, `<ConnectBalances>`                                                | `/expert/finance`              |
-| Expert account management                  | `<ConnectAccountManagement>`, `<ConnectDocuments>`                                     | `/expert/finance/account`      |
-| Expert tax                                 | `<ConnectTaxSettings>`, `<ConnectTaxRegistrations>`, `<ConnectTaxThresholdMonitoring>` | `/expert/finance/tax`          |
-| Platform action-needed                     | `<ConnectNotificationBanner>`                                                          | top of expert/clinic workspace |
-| Expert SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                       | `/expert/billing`              |
-| Expert SaaS subscription management        | Stripe Customer Portal (per ADR-016, audited on session-mint)                          | `/expert/billing` → Portal     |
-| Clinic SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                       | `/org/billing`                 |
-| Clinic SaaS subscription + seat management | Stripe Customer Portal (per ADR-016; seat sync via WorkOS Seat Sync)                   | `/org/billing` → Portal        |
-| Patient payment-method update              | Payment Element in save-card mode                                                      | patient account                |
+| Surface                                    | Component                                                                                                       | Location                       |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------------------------ |
+| Patient checkout                           | Payment Element                                                                                                 | booking page                   |
+| Expert Connect onboarding                  | `<ConnectAccountOnboarding>`                                                                                    | expert onboarding wizard       |
+| Expert KYC / Identity                      | Connect's own KYC (D-05); Stripe Identity embedded modal only behind `ff.expert_identity_verification`          | inline from Connect onboarding |
+| Expert payouts + balances                  | `<ConnectPayouts>`, `<ConnectBalances>`                                                                         | `/expert/finance`              |
+| Expert account management                  | `<ConnectAccountManagement>`, `<ConnectDocuments>`                                                              | `/expert/finance/account`      |
+| Expert tax                                 | `<ConnectTaxSettings>`, `<ConnectTaxRegistrations>`, `<ConnectTaxThresholdMonitoring>`                          | `/expert/finance/tax`          |
+| Platform action-needed                     | `<ConnectNotificationBanner>`                                                                                   | top of expert/clinic workspace |
+| Expert SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                                                | `/expert/billing`              |
+| Expert SaaS subscription management        | Stripe Customer Portal (per ADR-016, audited on session-mint)                                                   | `/expert/billing` → Portal     |
+| Clinic SaaS subscription purchase          | Stripe Embedded Checkout (per ADR-016, `card + sepa_debit` only)                                                | `/org/billing`                 |
+| Clinic SaaS subscription + seat management | Stripe Customer Portal (per ADR-016; seat quantity synced by `@eleva/billing` from active members, see Phase 3) | `/org/billing` → Portal        |
+| Patient payment-method update              | Payment Element in save-card mode                                                                               | patient account                |
 
 Architecture:
 
@@ -198,7 +212,8 @@ Architecture:
 - `/api/stripe/account-session` mints short-lived `AccountSession` tokens with precise component permissions; RBAC-gated
 - `appearance` API maps Eleva design tokens (brand colors, radius, fonts) → Stripe widget theme; dark-mode supported
 - `locale` prop wired to next-intl (`pt` / `en` / `es`)
-- CSP allows `js.stripe.com`, `connect-js.stripe.com`, `*.stripe.com`, `billing.stripe.com` (per ADR-016, for Customer Portal redirect return flow) in `script-src` and `frame-src`
+- the current `packages/config` `VENDORS.stripe.frameSrc` still carries `https://*.stripe.com` — Phase 4 PR 04.2 replaces it with the explicit list below (a CSP unit test pins the directive set) and Phase 6 re-verifies it against the pinned Connect.js version
+- CSP is **exactly Stripe's published list for the products we enable** (Stripe.js/Elements + Link, 3DS, Connect embedded components), re-checked against the Stripe CSP docs in the Phase 6 spike and pinned in `@eleva/config` `stripeCsp`: `script-src https://js.stripe.com https://*.js.stripe.com https://connect-js.stripe.com https://maps.googleapis.com` (Address Element); `frame-src https://js.stripe.com https://*.js.stripe.com https://connect-js.stripe.com https://hooks.stripe.com` (3DS); `connect-src https://api.stripe.com https://maps.googleapis.com`; `img-src https://*.stripe.com`; `style-src` with the Connect.js inline-style hash Stripe documents plus its font origins; `billing.stripe.com` only in `form-action` (Customer Portal is a full-page navigation, never framed). The bare `*.stripe.com` never appears in `script-src`/`frame-src`/`connect-src`, and no `Cross-Origin-Opener-Policy`/`Cross-Origin-Embedder-Policy` header is set on any page hosting Stripe (unsupported by Stripe). The CSP test asserts this exact directive set; the browser tests above run in report-only mode first and any violation fails CI
 - error UX: components wrapped in Eleva error boundary; `onExit` / `onLoadError` handled with consistent retry CTA
 
 Account type locked: **Stripe Connect Express + Embedded Components** (not Custom). Express supports all embedded components we need without Custom's extra compliance and fee load.
@@ -262,18 +277,92 @@ this list must stay identical):
   `held_from_status` records the status before the first reason; dispute won removes `dispute`,
   staff `release` removes `manual`, and the row returns to `held_from_status` only when the set
   is empty; dispute lost -> `reversed`
-- `reversed` — refund before/after transfer or dispute lost (transfer reversed when one exists)
+- `reversal_pending` — a refund succeeded but the matching `transfers.createReversal` failed
+  (`balance_insufficient`, network); retried with alerting and reconciled by `transfer.reversed`
+- `reversed` — refund before/after transfer or dispute lost (transfer reversed when one exists;
+  `reversed_cents` accumulates partial reversals)
+
+The union is therefore `pending|scheduled|approval_required|transferred|paid_out|failed|held|reversal_pending|reversed` — identical in Phase 6 (schema, API types, state machine, audit union `payout.*`) and here.
 
 Holds compose: a payout leaves `held` only when every hold reason has been cleared; there is
 no separate "released" state.
 
 ## Refunds
 
-- policy-based refunds (cancellation window rules)
+- policy-based refunds (cancellation window rules; the no-show and dispute policy is decision D-06)
 - linked to cancellation state
-- operational/admin review for edge cases
+- operational/admin review for edge cases; refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` need
+  dual control (Phase 12)
 - auditable reason tracking
-- on refund: reconcile Tier 1 invoice via credit note in TOConline (future improvement — may be manual at launch)
+- **funds-flow contract (separate charges and transfers — P0-1 of the 2026-09 review)**: a refund
+  and a transfer reversal are two Stripe operations with two ledger states, never a single
+  `reverse_transfer` flag (that option belongs to destination charges). (1) `refunds.create({
+payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` -> `refunds`
+  row; (2) when a transfer exists, `transfers.createReversal(transferId, { amount })` with its own
+  idempotency key -> `transfer_reversals` row. Partial refunds reverse proportionally but the
+  allocation is **cumulative, not per refund**: `reversalCents_n = round(refundedToDate / gross *
+  transferred) - reversedToDate`, so independent rounding can neither leave residual cents nor
+  exceed the transfer; the final refund that brings `refundedToDate = gross` reverses exactly
+  `transferred - reversedToDate`. Sequence (README rule 9 — no vendor call inside a transaction):
+  tx1 inserts the `refunds` row `pending` with its idempotency key and, when a transfer exists,
+  the `transfer_reversals` row `pending` with the computed `reversed_cents`; **outside any
+  transaction** `refunds.create` is called with its key; `transfers.createReversal` is called
+  **only after the refund is confirmed `succeeded`** (from the response, or — when the response
+  was lost — by **replaying the identical `refunds.create` with the same idempotency key**, which
+  Stripe answers with the original result for 24 h, or by the `charge.refunded` /
+  `refund.updated` webhook that carries the refund id; Stripe has no lookup-by-idempotency-key
+  endpoint, so the refund id is persisted on the row the moment any of those paths returns it) — a failed or unknown refund never triggers a
+  reversal, so the expert's transfer is never reduced without funds going back to the member;
+  tx2 records each result by compare-and-set on the row status (`pending -> succeeded|failed`),
+  updates `booking_payments.refunded_cents` and `payout_states.reversed_cents` and moves the
+  payout to `reversal_pending` when the reversal call failed (a lost response is repaired by the
+  reconciler the same way: replay the identical POST with the stored idempotency key inside the
+  24 h window, or take the object id from the `charge.refunded` / `transfer.reversed` webhook;
+  after 24 h with neither, the reconciler lists `refunds` by `payment_intent` and `transfers`
+  reversals by the stored `transfer_id` and matches on `metadata.refund_row_id` /
+  `metadata.reversal_row_id`, which every create call sets for exactly this purpose); the DB
+  enforces `CHECK (reversed_cents <= amount_cents)`; Stripe rejects
+  reversals above the unreversed remainder, so the ledger and Stripe agree by construction
+  (tests: partial refunds 33.33 + 33.33 + 33.34 on 100.00 gross / 85.00 transferred ->
+  reversals 28.33 + 28.33 + 28.34, cumulative 85.00; 3 x 33.33 alone -> 84.99, the residual
+  cent is reversed only when the residual cent is refunded; refund after full reversal -> no
+  reversal call). A successful
+  refund with a failed reversal parks the payout in `reversal_pending` — the member never waits
+  on the expert's balance
+- on refund **succeeded** (never on request): Tier 1 credit note in TOConline from
+  `computeSettlement.creditNoteAllocation`
+
+### Settlement matrix (`computeSettlement`, D-03 / D-04 — provisional until both are signed; accountant approval blocks Phase 6 PR 06.1)
+
+`packages/billing/src/server/commission.ts` is the only place money is split. The rows below are
+the **working defaults** engineering proposes; they are not the financial SSOT until D-03 and
+D-04 carry a signature in `decision-log.md`, and PR 06.1 cannot open before that. To keep the
+contract testable under either outcome, the fee bearer is an **input**, not a constant: inputs
+are `grossCents`, `commissionBps` (1500 default, 800 Top Expert, 0 clinic-attributed),
+`vatRateBps` and `vatTreatment` (from the IVA matrix below), `processingFeeCents` (Stripe's
+actual `balance_transaction.fee`) and `feeBearer: "platform" | "expert" | "clinic"` (resolved
+from `@eleva/config` `SETTLEMENT_FEE_BEARER` per booking kind once D-04 is signed). The unit
+tests cover every bearer variant so the D-04 outcome is a config change with a green suite, not a
+code change.
+
+| Output                                | Rule                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `platformFeeGross`                    | advertised commission, **VAT-inclusive** — the expert nets the headline (100 EUR -> 15.00 fee, 85.00 transfer)                                                                                                                                                                                |
+| `platformFeeNet` / `vatOnPlatformFee` | PT B2B: 15.00 = 12.20 net + 2.80 IVA; intra-EU reverse charge: 15.00 net, 0 IVA                                                                                                                                                                                                               |
+| `expertTransfer`                      | `feeBearer = platform` (marketplace working default): gross − fee gross, Eleva absorbs Stripe processing out of its fee; `feeBearer = clinic` (clinic 0% working default): gross − processing fee; `feeBearer = expert`: gross − fee gross − processing fee — D-04 picks one per booking kind |
+| `creditNoteAllocation`                | proportional on partial refunds                                                                                                                                                                                                                                                               |
+| rounding                              | half-up on cents, applied once, on the fee                                                                                                                                                                                                                                                    |
+| `currency`                            | `EUR` (D-02; `CHECK (currency = 'EUR')` on offer tables at launch)                                                                                                                                                                                                                            |
+
+Every ledger row, transfer, Tier 1 invoice and finance-UI number comes from this function;
+`booking_payments` stores `applied_commission_bps`, `platform_fee_net_cents`,
+`platform_fee_vat_cents`, `processing_fee_cents`.
+
+### Historical MVP invoices (D-09)
+
+Migrated MVP paid bookings are imported with `platform_fee_invoices.status = legacy` (+
+`legacy_document_ref`) or `legacy_missing`; v3 never issues a Tier 1 document for a booking paid
+before cutover; the accountant decides any backfill outside the system.
 
 ## Two-Tier Invoicing Model (Crystal Clear)
 
@@ -329,14 +418,14 @@ VIES validation:
 
 #### Reconciliation
 
-- **monthly QStash cron** `stripeToConlineReconciliation`: aggregates Stripe application fees per expert/clinic vs TOConline invoice totals
+- **monthly QStash cron** `stripeToConlineReconciliation`: aggregates the settlement ledger — `booking_payments.application_fee_cents` (the `computeSettlement` output persisted per paid booking; there is no Stripe application-fee object in the separate-charges-and-transfers flow) — per expert/clinic vs `platform_fee_invoices` totals and the TOConline document totals for the same period; fixture: N paid bookings with known settlements reconcile to the cent against their invoices, one missing invoice and one amount drift are both flagged
 - flags mismatches to `/admin/accounting`
 - alerts BetterStack if mismatch > 0.1% of monthly volume
 
 #### Rollout
 
 - behind `ff.toconline_invoicing_enabled` staged (staging → 1 pilot expert/clinic → all PT → default on for PT)
-- OAuth tokens stored in WorkOS Vault via `packages/encryption`
+- OAuth tokens stored encrypted at rest via `packages/encryption` (envelope, ADR-009) in Neon — WorkOS Vault is gone with Phase 3
 
 ### Tier 2 — Expert → Patient (expert's legal obligation, optionally automated)
 
@@ -348,7 +437,7 @@ VIES validation:
 
 - shared interface `ExpertInvoicingAdapter` with `connect / issueInvoice / status / disconnect`
 - per-expert credentials in Neon `expert_integration_credentials(id, expert_id, slug, vault_ref, status, installed_at)`
-- secrets in WorkOS Vault
+- secrets encrypted at rest via `packages/encryption` (envelope, ADR-009); `vault_ref` points at the encrypted row, never at a third-party vault
 
 #### Seed adapter priority
 

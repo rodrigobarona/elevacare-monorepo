@@ -1,12 +1,13 @@
 # Phase 4 — Public marketplace + booking funnel (`apps/web` + API)
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-04/public-marketplace-booking` (split: `phase-04.1/public-api-and-explorer`, `phase-04.2/booking-funnel-payment`)                                                                                                                                                                                                                                                                                                                                                                 |
-| Depends on | Phase 3                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Touches    | `apps/web/**`, `apps/api/src/app/{public,bookings,payments}/**`, `packages/scheduling/**`, `packages/billing/src/server/{payments,commission}.ts`, `packages/workflows/src/domain-events.ts`, `apps/api/src/app/workflows/domain-events-publisher/**`, `packages/db/src/schema/main/domain-events-outbox.ts`, `packages/db/src/schema/main/{bookings,booking-payments}.ts`, `packages/api-client/**`, `packages/ui/**` (booking components), `packages/config/src/reserved-usernames.ts` |
-| Exit gate  | An unauthenticated visitor finds an expert, picks a slot, pays with a Stripe test card and MB WAY (test), receives a confirmation page and email stub; 100 concurrent reservations of the same slot -> exactly one winner                                                                                                                                                                                                                                                                |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-04/public-marketplace-booking` (split: `phase-04.1/public-api-and-explorer`, `phase-04.2/booking-funnel-payment`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Depends on | Phase 3. PR 04.2 also needs the **entry gate** below. Phase 4B may start once PR 04.1 is merged (it consumes the tables and public reads, not the funnel).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Entry gate | Approved before PR 04.2 opens (recorded in `decision-log.md`): terms / privacy / health-data consent texts with version ids (owner: legal + DPO); cookie + CSRF threat model from Phase 2 signed off (D-13); EUR-only launch (D-02); launch payment-method set (D-14); public-site parity dispositions (D-10); `pt-BR` retirement (D-01).                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Touches    | `apps/web/**`, `apps/api/src/app/{public,bookings,payments}/**`, `packages/scheduling/**`, `packages/billing/src/server/{payments,commission}.ts`, `packages/workflows/src/domain-events.ts`, `apps/api/src/app/workflows/domain-events-publisher/**`, `packages/db/src/schema/main/{domain-events-outbox,domain-event-deliveries,public-handles,consents}.ts`, `packages/db/src/schema/main/{bookings,booking-payments,slot-reservations}.ts`, `packages/compliance/src/consents.ts`, `packages/billing/src/server/payment-method-policy.ts`, `infra/stripe/setup-payment-methods.ts`, `scripts/check-route-guards.mjs`, `packages/api-client/**`, `packages/ui/**` (booking components), `packages/config/src/{reserved-usernames,i18n}.ts` |
+| Exit gate  | An unauthenticated visitor finds an expert, picks a slot, pays with a Stripe test card and MB WAY (test), receives a confirmation page and email stub; 100 concurrent reservations of the same slot -> exactly one winner                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ## Why this phase exists
 
@@ -37,7 +38,31 @@ In:
     (BCP-47), `memberCountry` (ISO 3166-1 alpha-2, pre-filled from the geo header, editable) and
     optional `linkToken`; `assertModeBookable(mode, memberCountry, language)` runs before the
     slot lock and returns 422 `MODE_NOT_AVAILABLE_IN_COUNTRY` / `MODE_LANGUAGE_MISMATCH`;
-    `reserveSlot` 5-minute TTL; returns
+    `reserveSlot` 5-minute TTL. The Redis lock is a **performance optimisation, not the
+    consistency boundary**: the final guarantee of one occupant per slot is a PostgreSQL
+    exclusion constraint on `slot_reservations` (`btree_gist`; `EXCLUDE USING gist
+(expert_user_id WITH =, tstzrange(start_at, end_at, '[)') WITH &&) WHERE (status IN
+('reserved', 'converted'))`). Every booking is born from a reservation (`bookings.reservation_id`
+    unique) and a confirmed booking keeps its reservation in `converted`, so the constraint covers
+    active holds **and** confirmed bookings in one table; expiry and cancellation flip the
+    reservation to `expired|released` and it leaves the constraint. **Reschedule keeps the same
+    reservation row** (so `bookings.reservation_id`, the `pi:` key and the intent binding never
+    move): `POST /bookings/[id]/reschedule` runs one transaction that `SELECT ... FOR UPDATE`s
+    the reservation, updates `start_at`/`end_at`/`mode_id` in place and lets the exclusion
+    constraint re-check the new window — `23P01` -> 409 `SLOT_TAKEN` and the booking stays on
+    its old time; a concurrency test races a reschedule against a fresh `/bookings/reserve` on
+    the target window and expects exactly one winner. In `reserveSlot` AND in the reschedule
+    path, a PostgreSQL exclusion violation (`23P01`) is caught explicitly and mapped to the same
+    canonical result as the Redis-detected conflict — `{ error: "conflict" }` -> 409 `SLOT_TAKEN`
+    — never to the generic `db_error` branch (unit test: mocked insert throwing `23P01` ->
+    `SLOT_TAKEN`; integration test on the Neon branch: two inserts on an overlapping window ->
+    one 201, one 409); the 100-way concurrency test runs twice — with Redis and with the
+    lock disabled (`SCHEDULING_DISABLE_REDIS_LOCK=1`, test-only) — and expects one 201 both times.
+    The body also carries `consents: [{ kind, version }]` for `terms`, `privacy` and
+    `health_data_processing` (all three required by Zod, versions must equal the current
+    `CONSENT_DOCUMENTS` versions in `@eleva/compliance`); they are persisted in the reservation
+    transaction as `consents` rows (see the `packages/db` bullet) so a paid booking always has a
+    durable, versioned consent record before any money moves. Returns
     `reservationId` **and** a `reservationToken` — 32 random bytes returned once to the caller;
     only `sha256(token)` is persisted in a new `slot_reservations.capability_hash` column, next
     to a new nullable `slot_reservations.user_id` set when the caller is signed in. It is the
@@ -59,16 +84,35 @@ In:
     reservation snapshot — plus a `booking_payments` row with `status = intent_pending` and
     `stripe_idempotency_key = pi:<reservationId>`, and commits, so `bookingId` exists **before**
     Stripe is called; **step 2** creates the PaymentIntent outside any transaction: amount =
-    reservation `price_cents`, currency = reservation `currency` (the snapshot, never a constant
-    — offers may be priced in any currency the expert's Connect account supports and
-    `POST /bookings/confirm` compares the intent against that same snapshot), charged on the
+    reservation `price_cents`, currency = reservation `currency` (read from the snapshot, never a
+    literal in the Stripe call; **launch is EUR-only** — D-02 — enforced by `CHECK (currency =
+'EUR')` on `event_type_modes` and `event_types`, so the snapshot is where a later
+    multi-currency decision plugs in without touching the payment path; `POST /bookings/confirm`
+    compares the intent against that same snapshot), charged on the
     **platform** account — Stripe
     "separate charges and transfers" funds flow, so **no** `transfer_data` and **no**
     `application_fee_amount`; the platform fee from the `@eleva/billing` commission SSOT is
     stored in the ledger as `booking_payments.application_fee_cents` and the payout engine
     (Phase 6) later transfers `amount - fee` to the expert; `transfer_group = bookingId` (the
-    same id the payout engine uses later), `automatic_payment_methods`, metadata
-    `reservationId`, `bookingId`, `expertOrgId`; **step 3 (tx B)** writes the intent id to
+    same id the payout engine uses later), `payment_method_configuration = STRIPE_PMC_BOOKING`
+    (a Payment Method Configuration owned by `infra/stripe/setup-payment-methods.ts` — the script
+    dry-runs by default, creates or updates the configuration with `--apply`, and its first run in
+    test mode before PR 04.2 is the check that the platform account has the `mb_way` capability
+    active (MB WAY needs a PT-registered account and EUR) and that one configuration can hold
+    `card` + `link` + `mb_way` together; if Stripe refuses, D-14 is re-opened before any funnel
+    code assumes MB WAY; launch set
+    per D-14: `card` incl. Apple Pay / Google Pay, `link`, `mb_way`; **Multibanco, SEPA Direct
+    Debit, Klarna and every other delayed-notification method are off** — a reservation hold
+    cannot outlive a payment that settles in days; `automatic_payment_methods` stays enabled so
+    the configuration, not a hardcoded `payment_method_types` list, decides), metadata
+    `reservationId`, `bookingId`, `expertOrgId`. Reservation-hold policy per method class
+    (`packages/billing/src/server/payment-method-policy.ts`, tested): `synchronous` (card,
+    wallets, Link) — the 5-minute hold is enough; `async_short` (MB WAY — the intent sits in
+    `processing` until the member approves in the MB WAY app) — the reservation's `expires_at`
+    is extended to `now() + 10 min` when the intent enters `processing`, the expiry sweep **never
+    cancels a reservation whose intent is `processing`**, and `payment_intent.payment_failed` /
+    `payment_intent.canceled` release the slot; `excluded` — rejected by the configuration.
+    **Step 3 (tx B)** writes the intent id to
     `booking_payments` (status `requires_payment`) and
     `slot_reservations.stripe_payment_intent_id`. If step 2 times out or step 3 fails, the row
     stays `intent_pending`; the next call for the same reservation (and the
@@ -98,11 +142,19 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
     activation is **not** in that transaction: the commit also inserts a
     `domain_events_outbox` row `booking.guest_activation_required` (idempotency key
     `booking:<id>:guest-activation`), and the subscriber creates the Better Auth user with
-    `emailVerified=false`, sends the magic-link activation and links the booking to the new
-    member's personal Space (buyer org) with retries — a Better Auth or e-mail outage can never
+    `emailVerified=false`, sends the magic-link activation, links the booking to the new
+    member's personal Space (buyer org) and, in that same transaction, re-keys the funnel's
+    `consents` rows from `guest_email_hash` to `user_id` (idempotent `UPDATE ... WHERE
+    guest_email_hash = $h AND user_id IS NULL`) so `GET /me/consents` (Phase 5) returns them —
+    with retries — a Better Auth or e-mail outage can never
     leave a paid, confirmed booking without an activation path. Until Phase 8 ships the
-    publisher, Phase 4 ships the outbox table + a minimal QStash-triggered publisher for this one
-    event, which Phases 7 and 8 extend with their own event types and subscribers.)
+    publisher, Phase 4 ships the outbox tables + a minimal QStash-triggered publisher for this one
+    event, which Phases 7, 8 and 9 extend with their own event types and subscribers. The outbox
+    is **per subscriber from day one**: `domain_events_outbox` holds the event, and
+    `domain_event_deliveries` (`event_id`, `subscriber_id`, `status pending|succeeded|failed|dead`,
+    `attempts`, `claimed_at`, `completed_at`, `last_error`, unique `(event_id, subscriber_id)`)
+    holds one row per registered subscriber; an event is `published_at` only when every required
+    subscriber is `succeeded`, and a failing subscriber never blocks or re-runs a healthy one.)
   - `POST /bookings/[id]/cancel`, `POST /bookings/[id]/reschedule` with rules from
     `scheduling-booking-spec.md` (notice windows, 100% refund on expert conflict).
 - `packages/db` **offer model** (SSOT: `scheduling-booking-spec.md` sections Event Type, Delivery
@@ -120,8 +172,21 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
   `label` jsonb, `sort_order`, `active`; CHECK: `in_person <=> location_id not null`); new
   `booking_links` (`token_hash` unique, `event_type_id`, optional `event_type_mode_id`,
   `schedule_id`, `recipient_email`, `price_cents`, `expires_at`, `max_uses`, `use_count`,
-  `revoked_at`); `calendar_feed_tokens` (per expert, hashed, revocable). All tenant tables carry
-  `org_id` + RLS + audit unions. The Phase 4B expert UI edits these tables; Phase 4 ships them with
+  `revoked_at`); `calendar_feed_tokens` (per expert, hashed, revocable); **`public_handles`**
+  (`handle citext` PK, `owner_kind expert|clinic`, `owner_id`, `created_at`; backfilled from
+  `expert_profiles.username`, reserved names from `@eleva/config` rejected by a trigger) — the
+  one namespace every public `/[handle]` URL resolves through, created **here** because Phase 4B
+  onboarding writes to it and Phase 11 only adds clinic owners. Localized text columns use the
+  `LocalizedText` / `LocalizedRichText` JSONB contracts from `packages/db/src/schema/main/shared.ts`
+  (one row, one column, keyed by the `Locale` union — never per-locale rows or suffix columns;
+  `event_types.title`, `label`, `instructions` here; rich text arrives with `@eleva/editor` in 4B;
+  PR 04.1 deletes the duplicate `LocalizedString` in `expert-categories.ts` that Phase 1 marked and
+  repoints its users to `LocalizedText`).
+  All tenant tables carry
+  `org_id` + RLS + audit unions and declare their **RLS policy class** (Phase 1: `tenant-owned`,
+  `dual-organization`, `owner-user-visible`, `participant-visible`, `staff-only`, `public-read`,
+  `service-only`) — `bookings` is `dual-organization`, `public_handles` and `expert_profiles`
+  public columns are `public-read`. The Phase 4B expert UI edits these tables; Phase 4 ships them with
   a seed (`packages/db/src/seed/offer-fixtures.ts`) that encodes the two reference offers from the
   spec — _Quick chat_ (worldwide, 4 languages, online on schedule A, phone on schedule B limited to
   EU countries) and _Physiotherapy_ (first visit online; follow-up in person at three locations
@@ -135,8 +200,25 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
   so concurrent `/payments/intent` calls converge on one row via `ON CONFLICT DO NOTHING` +
   re-read — `cancellation_reason`), `booking_payments` (unique `booking_id`, payment intent id,
   status, amount, fee, transfer group), `slot_reservations` additions (`capability_hash`,
-  nullable `user_id`, nullable unique `stripe_payment_intent_id`), indexes, RLS for both orgs
-  (expert org and buyer org can read).
+  nullable `user_id`, nullable unique `stripe_payment_intent_id`, `expert_user_id`, `status`
+  gains `converted|released|released_while_processing` (the last one is the bounded-async path
+  of the payments spec: MB WAY still `processing` at hold + 10 min releases the slot; a later
+  success re-reserves or auto-refunds with reason `slot_lost`), the `btree_gist` exclusion constraint described under
+  `/bookings/reserve`), **`consents`** (`id`, `subject_kind user|guest`, `user_id` nullable,
+  `guest_email_hash` nullable (keyed HMAC), `kind` from `CONSENT_KINDS`, `document_version`,
+  `locale`, `source funnel|account|import`, `reservation_id` nullable, `booking_id` nullable,
+  `granted_at`, `withdrawn_at` nullable, `subject_pseudonym` nullable (bytea; HMAC of the former
+  `user_id` under the retention key — written only by the Phase 5 deletion job, which sets
+  `user_id = NULL` and clears `guest_email_hash` on booking-linked rows; `CHECK (user_id IS NOT
+NULL OR guest_email_hash IS NOT NULL OR subject_pseudonym IS NOT NULL)`); **no** IP or user
+  agent unless the DPO approves a keyed hash in `decision-log.md` — default off; RLS class
+  `owner-user-visible`: read = `user_id = current user` OR org context in (`expert_org_id`,
+  buyer org) OR staff (DSAR/compliance); rows with `user_id IS NULL AND subject_pseudonym IS NOT
+NULL` are readable **only** by staff with the `compliance` capability and by the expert org
+  that owns the linked booking (never by any member — a deleted member has no session; another
+  member gets zero rows); writes only via the API service role. RLS tests: own rows visible,
+  other member -> 0 rows, deleted-member (pseudonymised) rows -> member 0 rows / expert org 1 row
+  / compliance staff 1 row), indexes.
 - `@eleva/scheduling`: `resolveOffer({ eventTypeModeId, linkToken? })` -> `ResolvedOffer`
   (`{ mode, scheduleId, priceCents, durationMinutes, bookingLinkId? }`; validates the link and
   picks the link's schedule override or the mode's schedule) consumed by both
@@ -145,7 +227,10 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
   date overrides), the expert's existing
   bookings across **all** modes and event types, buffers (10 min before default), minimum notice
   (24h default), slot interval (30 min default), booking window (60 days default), timezone
-  conversion; external busy-time provider interface fed by `@eleva/calendar` (every connected
+  conversion under **one canonical time model**: instants are `timestamptz` (UTC), schedule
+  rules are local wall-clock times plus an IANA zone on the schedule, conversion happens only at
+  the engine boundary, DST gaps and folds have fixed-date tests, and a numeric UTC offset is never
+  used to infer a zone; external busy-time provider interface fed by `@eleva/calendar` (every connected
   calendar with `use_for_busy`); `assertModeBookable()` and the offer invariants from the spec
   (every explicit scope list is a non-empty subset of `service_countries` for both kinds,
   worldwide only for `non_clinical` + `worldwide_remote`, in-person scope = location country) as
@@ -174,7 +259,29 @@ paymentIntentId })` in `@eleva/scheduling`, reached by **two separate entry poin
     ported from the MVP MDX (`_context/clone-repo/eleva-care-app/content/**`) — no claims of
     diagnosis, "members" not "patients".
   - SEO: metadata per route, `sitemap.ts`, `robots.ts`, OG images (`opengraph-image.tsx`),
-    JSON-LD `Person`/`MedicalBusiness` where accurate, hreflang for `pt/en/es/pt-BR`.
+    JSON-LD `Person`/`MedicalBusiness` where accurate, hreflang for `pt/en/es` + `x-default`.
+    **`pt-BR` is retired (D-01)**: `apps/web/src/proxy.ts` answers `/pt-BR/*` with a 301 to
+    `/pt/*` (query preserved) so indexed MVP URLs keep working; no `pt-BR` message files; the
+    `Locale` union in `@eleva/config` is `pt | en | es`. Public URLs have **one shape**,
+    locale-prefixed (`/[locale]/[handle]`, `/[locale]/[handle]/[eventSlug]`); the same proxy
+    301s an unprefixed `/[handle]...` to the negotiated default locale (`ELEVA_LOCALE` cookie,
+    then `Accept-Language`, then `pt`). `fr` is **not** added now (no content,
+    experts, legal pages or reviewer) — adding it later is message files plus a native reviewer,
+    not architecture.
+  - **Public-site parity (D-10)** — every surface of the live MVP site has a disposition, tested
+    by `e2e/legacy-urls.spec.ts` (status code + target for each row):
+
+    | MVP surface                                                   | v3 disposition                                                                                                                                  |
+    | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `/{locale}/{username}` and `/{locale}/{username}/{eventSlug}` | **Preserve** — same path shape via `public_handles`; Phase 14 migration test asserts every MVP expert URL resolves                              |
+    | `/pt-BR/*`                                                    | **Redirect** 301 → `/pt/*`                                                                                                                      |
+    | Health quiz                                                   | **Retire** — 301 to `/{locale}/experts`; not rebuilt in v3 launch scope (Phase 16 candidate if product asks)                                    |
+    | Community links                                               | **Preserve as external links** in the footer (no v3 route)                                                                                      |
+    | Help Center                                                   | **Replace** → `apps/docs` guides at `/docs/guides/*`; MVP help URLs 301 to the closest guide, else `/docs`                                      |
+    | Contact                                                       | **Migrate** → `/{locale}/contact` (Resend-backed form, BotID, rate limited; API route in `apps/api`)                                            |
+    | Cookie policy, payment policies, expert agreement             | **Migrate** as versioned legal pages under `/{locale}/legal/*`; their versions are the `CONSENT_DOCUMENTS` versions the funnel records          |
+    | Trust and compliance claims                                   | **Rewrite with evidence** — `/trust/*` copy only states what Phase 13 evidence supports (owner, approver, evidence link, review date per claim) |
+
 - `@eleva/api-client`: typed calls for all new endpoints; `@eleva/ui`: `SlotPicker`,
   `TimezoneSelect`, `PriceTag`, `ConsentCheckbox`, `BookingSummary`.
 - Playwright `e2e/booking.spec.ts` (Stripe test mode with `4242` card).
@@ -185,14 +292,23 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 1. API routes above with OpenAPI registration and `@eleva/api-client` methods.
 2. DB migrations for the offer model (practice scope, locations, schedules, delivery modes,
-   booking links, feed tokens) and for bookings/booking_payments; RLS policies and isolation test
-   extension; `offer-fixtures.ts` seed.
+   booking links, feed tokens), `public_handles`, `consents`, the `slot_reservations` exclusion
+   constraint, `domain_events_outbox` + `domain_event_deliveries`, and bookings/booking_payments;
+   RLS policies with declared policy classes and isolation test extension; `offer-fixtures.ts` seed.
 3. `@eleva/scheduling` availability engine per mode + offer invariants + tests (DST, timezone
    edges, buffers, overrides, cross-mode busy time, country/language gating, link overrides).
-4. `apps/web` pages, components, messages for `pt/en/es` (+ `pt-BR` alias decision recorded).
-5. Stripe Payment Element integration (client `@stripe/stripe-js` only via `@eleva/billing/client`).
-6. Concurrency test: 100 parallel `POST /bookings/reserve` against the same slot -> one 201, rest 409.
+4. `apps/web` pages, components, messages for `pt/en/es`; `pt-BR` 301 redirects; parity table
+   redirects; `e2e/legacy-urls.spec.ts`.
+5. Stripe Payment Element integration (client `@stripe/stripe-js` only via `@eleva/billing/client`);
+   `infra/stripe/setup-payment-methods.ts` creating/updating the launch Payment Method
+   Configuration (dry-run by default, `-- --apply`); `payment-method-policy.ts` hold rules.
+6. Concurrency test: 100 parallel `POST /bookings/reserve` against the same slot -> one 201, rest
+   409 — with Redis **and** with the lock disabled (constraint is the boundary).
 7. `e2e/booking.spec.ts`.
+8. Security moved forward from Phase 13 (review finding 6.2): `pnpm check:route-guards` (every
+   `apps/api` route declares auth model, rate-limit class and BotID class; fails CI on a missing
+   declaration) and two staging synthetic checks (`/public/experts/.../slots` and a test-mode
+   `POST /payments/intent`) alerting to the on-call channel.
 
 ## Acceptance criteria
 
@@ -213,8 +329,14 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
       `booking_payments.status = succeeded`, `audit_outbox` rows for reserve/confirm.
 - [ ] Guest booking creates a Better Auth user with a pending magic link; second booking with the
       same email reuses the user.
-- [ ] Concurrency test passes; expired reservations are released by the existing
-      `slot-reservation-expiry` workflow.
+- [ ] Concurrency test passes with and without the Redis lock; expired reservations are released
+      by the existing `slot-reservation-expiry` workflow; a reservation whose MB WAY intent is
+      `processing` is **not** expired by the sweep.
+- [ ] Every confirmed booking has three `consents` rows (`terms`, `privacy`,
+      `health_data_processing`) with the versions current at reserve time; a reserve body with a
+      stale version is rejected 422 `CONSENT_VERSION_OUTDATED`.
+- [ ] `/pt-BR/experts` -> 301 `/pt/experts`; every parity-table row passes `e2e/legacy-urls.spec.ts`.
+- [ ] `pnpm check:route-guards` is green and wired into CI.
 - [ ] Every browser-originated public POST route (`/bookings/reserve`, `/payments/intent`,
       `/bookings/confirm`, cancel/reschedule) has BotID + rate limit; `/webhooks/stripe` has
       **no** BotID and is guarded by signature verification only (BotID would reject Stripe
@@ -231,9 +353,11 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 ## Docs to update
 
-- `scheduling-booking-spec.md` (final API), `payments-payouts-spec.md` (intent creation, fee at
-  charge time), `api-contract-spec.md`, `content-seo-spec.md`, `search-and-discovery-spec.md`,
-  `decision-log.md` (`pt-BR` decision).
+- `scheduling-booking-spec.md` (final API, exclusion constraint, time model),
+  `payments-payouts-spec.md` (intent creation, fee at charge time, payment-method policy, EUR-only),
+  `api-contract-spec.md`, `content-seo-spec.md` (parity table, hreflang),
+  `search-and-discovery-spec.md`, `decision-log.md` (D-01 `pt-BR`, D-02 EUR-only, D-10 parity,
+  D-14 payment methods — the entry-gate approvals are recorded there before PR 04.2 opens).
 
 ## Local references
 
@@ -254,9 +378,13 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 ## External docs
 
-- Stripe `/websites/stripe`: Payment Element, Dynamic Payment Methods, MB WAY, Connect "separate
-  charges and transfers" funds flow (platform charge, `transfer_group`, later `transfers.create`
-  with `source_transaction`), idempotency keys.
+- Stripe `/websites/stripe`: Payment Element, Dynamic Payment Methods, Payment Method
+  Configurations (`payment_method_configuration` on the PaymentIntent), MB WAY (asynchronous
+  confirmation, `processing` status), Connect "separate charges and transfers" funds flow
+  (platform charge, `transfer_group`, later `transfers.create` with `source_transaction`),
+  idempotency keys.
+- PostgreSQL exclusion constraints with `btree_gist` (`/websites/postgresql`) and Drizzle
+  `/drizzle-team/drizzle-orm` for expression indexes / custom SQL in migrations.
 - Next.js 16 `/vercel/next.js`: `use cache`, `cacheTag`/`revalidateTag`, `generateMetadata`,
   `sitemap.ts`, `opengraph-image`.
 - next-intl v4 `/amannn/next-intl`.
@@ -342,9 +470,21 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    max_uses int NOT NULL default 1 CHECK (max_uses >= 1) (no unlimited links; the expert creates
    another link instead), use_count int NOT NULL default 0 CHECK (use_count >= 0), created_by,
    revoked_at); calendar_feed_tokens
-   (id, org_id, expert_profile_id, token_hash unique, created_at, revoked_at). RLS on every table
-   by org_id; audit unions (expert_location, schedule, event_type_mode, booking_link:
-   created|updated|deleted; event_type: published|unpublished). Seed
+   (id, org_id, expert_profile_id, token_hash unique, created_at, revoked_at); public_handles
+   (handle citext PK, owner_kind enum expert|clinic, owner_id uuid, created_at; backfill one row
+   per expert_profiles.username; trigger rejects RESERVED_USERNAMES from @eleva/config; every
+   public /[handle] route resolves through it — Phase 4B onboarding claims handles here and
+   Phase 11 adds clinic owners, neither creates the table). Currency: CHECK (currency = 'EUR') on
+   event_types and event_type_modes (D-02 EUR-only launch; lift the CHECK, never the snapshot
+   design, when multi-currency is approved). Localized columns (title, label, instructions) are
+   single jsonb columns typed LocalizedText from packages/db/src/schema/main/shared.ts, keyed by
+   the Locale union — never per-locale rows or *_pt/*_en suffix columns; delete the duplicate
+   LocalizedString type in expert-categories.ts and repoint its users to LocalizedText. RLS on every table
+   by org_id with the policy class declared in the migration header comment and covered by the
+   class test suite from Phase 1 (public_handles: public-read; expert_profiles: tenant-owned +
+   public-read view); audit unions (expert_location, schedule, event_type_mode, booking_link:
+   created|updated|deleted; event_type: published|unpublished; public_handle: claimed|released).
+   Seed
    packages/db/src/seed/offer-fixtures.ts with the two reference offers: "Quick chat" (kind
    non_clinical, worldwide_remote expert, 4 languages pt/en/es/fr; mode online worldwide on
    schedule "Online" + mode phone with country_scope_codes = EU list on schedule "Phone") and
@@ -374,11 +514,33 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    booking_payments (id, booking_id, stripe_payment_intent_id unique, stripe_charge_id, status,
    amount_cents, application_fee_cents, transfer_group, payment_method_type, paid_at,
    refunded_cents, created_at); extend slot_reservations with capability_hash (char(64), not
-   null), user_id (nullable FK auth.user) and stripe_payment_intent_id (nullable, unique). RLS:
-   expert org and buyer org may read; only API (service role via
+   null), user_id (nullable FK auth.user), stripe_payment_intent_id (nullable, unique),
+   expert_user_id NOT NULL, status values converted|released|expired|released_while_processing
+   added (payments spec "payment-method policy": processing intent past the async window ->
+   release + later payment_intent.succeeded re-reserves or auto-refunds reason slot_lost, test
+   with a recorded late-success event), and the FINAL slot
+   consistency boundary: CREATE EXTENSION IF NOT EXISTS btree_gist; ALTER TABLE slot_reservations
+   ADD CONSTRAINT slot_reservations_no_overlap EXCLUDE USING gist (expert_user_id WITH =,
+   tstzrange(start_at, end_at, '[)') WITH &&) WHERE (status IN ('reserved', 'converted')).
+   reserveSlot maps SQLSTATE 23P01 to BookingError SLOT_TAKEN (409); confirm keeps the
+   reservation in converted for the life of the booking; cancel/expiry set released|expired so
+   the row leaves the constraint; reschedule UPDATEs start_at/end_at on the SAME reservation row
+   under FOR UPDATE so the constraint re-checks the new window (23P01 -> 409 SLOT_TAKEN, booking
+   unchanged) and bookings.reservation_id never changes. Redis stays as the fast path only. Also
+   create consents (id, subject_kind enum user|guest, user_id nullable FK auth.user,
+   guest_email_hash char(64) nullable — HMAC-SHA256 with CONSENT_HASH_KEY, kind from
+   CONSENT_KINDS in @eleva/compliance, document_version text, locale, source enum
+   funnel|account|import, reservation_id nullable FK, booking_id nullable FK, granted_at,
+   withdrawn_at nullable; no ip/user_agent columns unless decision-log records DPO approval).
+   @eleva/compliance exports CONSENT_DOCUMENTS = { [kind]: { version, urls: Record<Locale,
+   string> } } — the version strings are the legal-approved ids from the entry gate. RLS:
+   bookings — expert org and buyer org may read (dual-organization class); consents —
+   owner-user-visible + staff read, with the pseudonymised-row rule (user_id IS NULL AND
+   subject_pseudonym IS NOT NULL -> compliance staff + owning expert org only) and its three
+   tests (member 0 rows / expert org 1 row / compliance staff 1 row); only API (service role via
    withOrgContext of the expert org) writes. Migration + rls-isolation test extension. Extend
    @eleva/audit entity/action unions (booking: reserved|confirmed|cancelled|rescheduled;
-   booking_payment: created|succeeded|failed|refunded).
+   booking_payment: created|succeeded|failed|refunded; consent: granted|withdrawn).
 2. @eleva/scheduling: resolveOffer({ expertOrgId, eventTypeModeId, linkToken? }) -> ResolvedOffer
    { mode, scheduleId (the booking link's schedule_id override when present, else the mode's),
    priceCents, durationMinutes, bookingLinkId? } after validating the link (hash, revoked_at,
@@ -390,7 +552,10 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    minimum notice (default 24h), slot interval (default 30 min), booking window (default 60 days),
    mode duration override and external busy intervals (interface BusyTimeProvider implemented in
    @eleva/calendar over every enabled calendar_busy_sources row, 5-minute cache in Upstash
-   Redis). assertModeBookable(mode, memberCountry, language) -> typed BookingError
+   Redis). One time model: instants are UTC timestamptz, schedule rules are local wall-clock +
+   the schedule's IANA zone, conversion only at the engine boundary (packages/scheduling/src/
+   timezone.ts), DST gap/fold tests on fixed dates, never derive a zone from a numeric offset.
+   assertModeBookable(mode, memberCountry, language) -> typed BookingError
    MODE_NOT_AVAILABLE_IN_COUNTRY | MODE_LANGUAGE_MISMATCH | MODE_INACTIVE. Tests: DST transitions
    (Europe/Lisbon 2026-03-29 and 2026-10-25), override closes a day, buffer prevents adjacent
    slot, viewer in America/Sao_Paulo sees converted times; fixtures: Quick-chat phone slots come
@@ -417,10 +582,21 @@ PR 04.1 — data, scheduling engine, public API, explorer + profile:
    slot, pagination), /[locale]/[username] profile (bio, categories, languages, countries served,
    event types with price range, duration and mode icons, next 3 slots, trust badges), SEO
    metadata, sitemap.ts,
-   robots.ts, opengraph-image.tsx, JSON-LD, hreflang. Messages in pt/en/es (add pt-BR only if the
-   team confirms; otherwise alias pt-BR -> pt in @eleva/config routing and record it in
-   decision-log.md). Copy: "members", never "patients"; ERS-compliant wording per
+   robots.ts, opengraph-image.tsx, JSON-LD, hreflang pt/en/es + x-default. Messages in pt/en/es
+   only: pt-BR is RETIRED (D-01) — apps/web/src/proxy.ts 301s /pt-BR/* to /pt/* preserving the
+   query string, no pt-BR message files, Locale union in @eleva/config = pt | en | es; do not add
+   fr. Ship the public-site parity table from this phase file: 301 the MVP health quiz to
+   /[locale]/experts, community as external footer links, Help Center URLs to apps/docs guides,
+   /[locale]/contact form (API route in apps/api with BotID + rate limit, sends through
+   @eleva/notifications when Phase 8 exists, else a Resend stub in packages/notifications),
+   legal pages /legal/cookies, /legal/payments, /legal/expert-agreement as versioned documents;
+   e2e/legacy-urls.spec.ts asserts status + Location for every row. Copy: "members", never
+   "patients"; ERS-compliant wording per
    _context/clone-repo/eleva-care-app/.cursor/rules/ers-content-compliance.mdc.
+   Security forward-pull (review 6.2): scripts/check-route-guards.mjs walks apps/api/src/app/**/
+   route.ts and fails when a handler lacks the exported ROUTE_POLICY = { auth, rateLimit, botId }
+   declaration (add the declaration to every existing route in this PR); wire it as
+   pnpm check:route-guards in CI next to check:api-first-actions.
 
 PR 04.2 — funnel + payment + marketing/legal:
 5. apps/api: POST /bookings/reserve (guest {email,name,phone?} or session; body also carries
@@ -445,7 +621,14 @@ PR 04.2 — funnel + payment + marketing/legal:
    the reservation/booking; tests: two concurrent reserves on a max_uses=1 link -> exactly one
    201 and one 404; expired unconfirmed reservation releases the use and a later reserve succeeds;
    calls reserveSlot with 5-min
-   TTL; generates a 32-byte random reservationToken and persists only sha256(token) in a new
+   TTL — the Redis lock is the fast path, the slot_reservations exclusion constraint (PR 04.1)
+   is the boundary: a 23P01 inside the reservation transaction -> 409 SLOT_TAKEN, lock released;
+   the body REQUIRES consents: [{ kind, version }] for terms, privacy and health_data_processing
+   with version === CONSENT_DOCUMENTS[kind].version (else 422 CONSENT_VERSION_OUTDATED) and the
+   reservation transaction inserts the three consents rows (subject user or guest_email_hash,
+   locale, source funnel, reservation_id); confirm later sets booking_id on them (test: a
+   confirmed booking always has its three consent rows; stale version -> 422 and no
+   reservation); generates a 32-byte random reservationToken and persists only sha256(token) in a new
    slot_reservations.capability_hash column (migration in @eleva/db; also add nullable user_id set
    from the session when signed in, nullable unique stripe_payment_intent_id, and price_cents +
    currency snapshotted from the event type at reserve time — the single immutable amount for the
@@ -464,8 +647,18 @@ PR 04.2 — funnel + payment + marketing/legal:
    "pi:" + reservationId, then COMMITS so bookingId exists before Stripe is called; step 2 (no
    transaction) creates the Stripe PaymentIntent via @eleva/billing with that idempotency key:
    amount = reservation price_cents,
-   currency = reservation currency (the snapshot — never a constant), automatic_payment_methods
-   enabled (never hardcode payment_method_types),
+   currency = reservation currency (read from the snapshot, never a literal; EUR-only at launch is
+   enforced by the DB CHECK from PR 04.1, not by this call), automatic_payment_methods enabled
+   plus payment_method_configuration = env STRIPE_PMC_BOOKING (never hardcode
+   payment_method_types): add infra/stripe/setup-payment-methods.ts (dry-run by default,
+   -- --apply) that creates/updates the "eleva-booking" Payment Method Configuration with card
+   (Apple Pay, Google Pay), link and mb_way ON and every other method OFF, prints the pmc_ id
+   for the env; add packages/billing/src/server/payment-method-policy.ts classifying
+   payment_method_type into synchronous (card, link, wallets) | async_short (mb_way) | excluded
+   with tests; on payment_intent.processing for an async_short method extend
+   slot_reservations.expires_at to now() + 10 min and make the slot-reservation-expiry sweep skip
+   reservations whose intent is processing (payment_intent.payment_failed / canceled release
+   the slot); test: sweep does not cancel a processing MB WAY reservation, does cancel an idle one;
    charged on the platform account (separate charges and transfers: NO transfer_data and NO
    application_fee_amount — the payout engine in Phase 6 transfers amount - fee after eligibility),
    platform fee computed by the commission SSOT (packages/billing/src/server/commission.ts — make
@@ -498,25 +691,39 @@ PR 04.2 — funnel + payment + marketing/legal:
    increment it again) in a single
    transaction; on a unique-violation race (two concurrent confirms for the same
    reservation) catch the constraint error, re-read the booking and return it — never surface the
-   constraint error. Test: sequential double confirm -> 200/200 same bookingId; concurrent double
-   confirm -> both 200, one booking row; confirm with an intent bound to another reservation ->
+   constraint error. Status codes (review 6.5): the call that performs the flip returns 201; any
+   call that finds the booking already confirmed returns 200 with alreadyConfirmed: true; the
+   webhook path returns its own 200 acknowledgement regardless. Test: sequential double confirm
+   -> 201 then 200, same bookingId; concurrent double confirm -> exactly one 201 and one 200, one
+   booking row; confirm with an intent bound to another reservation ->
    409; POST /bookings/confirm without reservationToken -> 400 from Zod. Guest activation is
    durable, not inline: in the same transaction as the flip insert a domain_events_outbox row
    booking.guest_activation_required (idempotency key booking:<id>:guest-activation). This phase
-   OWNS the transactional outbox that Phases 7 and 8 later extend: migration domain_events_outbox
-   (id, type, payload jsonb, idempotency_key unique, created_at, published_at nullable, attempts),
-   emitDomainEvent(tx, event) in packages/workflows/src/domain-events.ts (typed union of event
-   names + payloads, starting with booking.guest_activation_required; INSERT inside the caller's
-   Drizzle transaction, never from after() alone), and POST /workflows/domain-events-publisher
-   (QStash Receiver.verify, scheduled every minute and kicked best-effort from after() after
-   commit; selects unpublished rows FOR UPDATE SKIP LOCKED, dispatches to a subscriber registry,
-   sets published_at, increments attempts, dead-letters after 10); the subscriber creates the guest's Better Auth user if missing
+   OWNS the transactional outbox that Phases 7, 8 and 9 later extend: migrations
+   domain_events_outbox (id, type, payload jsonb, idempotency_key unique, created_at,
+   published_at nullable) and domain_event_deliveries (event_id FK, subscriber_id text, status
+   enum pending|succeeded|failed|dead, attempts int, claimed_at, completed_at, last_error,
+   UNIQUE (event_id, subscriber_id)) — one delivery row per subscriber registered for the event
+   type, inserted with the event; emitDomainEvent(tx, event) in
+   packages/workflows/src/domain-events.ts (typed union of event names + payloads, starting with
+   booking.guest_activation_required; INSERT inside the caller's Drizzle transaction, never from
+   after() alone), and POST /workflows/domain-events-publisher (QStash Receiver.verify, scheduled
+   every minute and kicked best-effort from after() after commit; claims pending deliveries FOR
+   UPDATE SKIP LOCKED, runs each subscriber independently, marks the delivery succeeded|failed
+   with attempts + last_error, dead-letters a delivery after 10 attempts, and sets the event's
+   published_at only when every delivery is succeeded — a failing subscriber never re-runs a
+   healthy one; test: two subscribers, one throws -> the other's delivery is succeeded once, the
+   failing one retries alone); the subscriber creates the guest's Better Auth user if missing
    (auth.api.signUpEmail is not appropriate for passwordless: use magicLink sendMagicLink with a
-   callback to /account/activate) and links the booking to the member's personal Space —
-   idempotent on user email + booking id. Test: subscriber failure -> booking stays confirmed,
+   callback to /account/activate), links the booking to the member's personal Space and re-keys
+   the guest consents rows (UPDATE consents SET user_id = $userId, subject_kind = 'user' WHERE
+   guest_email_hash = $hash AND user_id IS NULL) in the same transaction — idempotent on user
+   email + booking id (test: after activation GET /me/consents returns the three funnel rows). Test: subscriber failure -> booking stays confirmed,
    outbox row retried, single user created after 3 attempts. POST /bookings/[id]/cancel and /reschedule enforcing
    scheduling-booking-spec.md rules (member cancel >= 24h full refund; < 24h per policy; expert
-   cancel always 100% refund). Refund execution itself is Phase 6 — here only record the intent
+   cancel always 100% refund; reschedule = same reservation row re-timed under the exclusion
+   constraint, test: reschedule vs concurrent reserve on the target window -> one winner).
+   Refund execution itself is Phase 6 — here only record the intent
    (booking_payments.status = refund_pending) and emit audit. Also handle
    payment_intent.succeeded / payment_intent.payment_failed in packages/billing/src/server/
    webhook.ts to confirm/fail the booking (two-file contract: also add the events to
@@ -532,8 +739,10 @@ PR 04.2 — funnel + payment + marketing/legal:
    then SlotPicker with month/week view and TimezoneSelect for the chosen mode; details form with
    Zod (phone required for phone mode, E.164 with country prefix from memberCountry) + consent
    checkboxes for terms, privacy and
-   health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const; Phase 5 owns the
-   consents table); Payment step using Stripe Payment Element from @eleva/billing/client with
+   health_data_processing (kinds from the @eleva/compliance CONSENT_KINDS const, each checkbox
+   linking the versioned legal page from CONSENT_DOCUMENTS; the versions travel in the reserve
+   body and land in the consents table created in PR 04.1 — Phase 5 adds the member-facing
+   view/withdraw UI on top); Payment step using Stripe Payment Element from @eleva/billing/client with
    Dynamic Payment Methods; confirmation with ICS download from @eleva/calendar ics-generator and
    CTA to activate the account; the confirmation and the ICS carry the location address for
    in_person, "the expert will call <masked phone>" for phone, "video link arrives before the
@@ -547,17 +756,25 @@ PR 04.2 — funnel + payment + marketing/legal:
    /legal/privacy, /legal/health-data, /trust/security, /trust/ers, ported from the MVP MDX with
    ERS-compliant copy in pt/en/es. Footer + header navigation in apps/web.
 8. Tests: HTTP-level concurrency test (100 parallel reserve calls -> one 201, 99 409) in
-   apps/api; state machine tests; e2e/booking.spec.ts with Stripe test card 4242 and a seeded
-   expert (extend db:seed:demo if needed).
-9. Docs: scheduling-booking-spec.md, payments-payouts-spec.md (fee at charge time), api-contract-
-   spec.md, content-seo-spec.md, search-and-discovery-spec.md, decision-log.md.
+   apps/api, run twice — with Redis and with SCHEDULING_DISABLE_REDIS_LOCK=1 (test-only env,
+   refused when NODE_ENV=production) so the exclusion constraint is proven to be the boundary;
+   state machine tests; e2e/booking.spec.ts with Stripe test card 4242 and a seeded expert
+   (extend db:seed:demo if needed); e2e/legacy-urls.spec.ts for the parity table. Synthetic
+   checks: two Vercel cron or Checkly-style probes on staging (slots GET, test-mode
+   /payments/intent) posting failures to the on-call channel (@eleva/observability helper).
+9. Docs: scheduling-booking-spec.md (exclusion constraint, time model), payments-payouts-spec.md
+   (fee at charge time, payment-method policy, EUR-only), api-contract-spec.md,
+   content-seo-spec.md (parity table), search-and-discovery-spec.md, decision-log.md (confirm the
+   entry-gate entries D-01, D-02, D-10, D-14 exist before opening this PR; add what changed).
 
 Acceptance (paste evidence): explorer + profile in pt/en/es; slot correctness tests incl. DST and
 the offer fixtures (mode-specific schedules, cross-mode busy time, country/language gating, link
 schedule override); offer invariants rejected in tests; private link books with a closed agenda and
-exhausts after max_uses; reserve -> pay -> confirm flow with DB rows and audit rows; guest user + magic link created;
-concurrency test passes; BotID + rate limit on every POST; OpenAPI + api-client updated; i18n
-parity green; Lighthouse mobile performance >= 90 on the profile page (staging).
+exhausts after max_uses; reserve -> pay -> confirm flow with DB rows, three consents rows and audit
+rows; guest user + magic link created; concurrency test passes with and without Redis; pt-BR 301
+and parity redirects pass; check:route-guards green; BotID + rate limit on every POST; OpenAPI +
+api-client updated; i18n parity green; Lighthouse mobile performance >= 90 on the profile page
+(staging).
 
 Report: endpoints added, migrations, tests, CodeRabbit CLI counts, PR URLs, Stripe webhook events
 added, anything deferred.

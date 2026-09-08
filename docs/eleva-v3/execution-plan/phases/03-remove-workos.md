@@ -52,6 +52,11 @@ toVersion)`, `shredOrgKeys(orgId)`; KEKs from `ELEVA_KEK_V<n>`; `org_data_keys` 
 - `infra/workos/` deleted; root scripts `workos:*` removed; `infra/stripe/backfill-org-customers.ts`
   and `verify-entitlements.ts` updated to read orgs from `auth.organization`;
   `packages/db/scripts/backfill-org-slugs.ts` updated or deleted.
+- **Contract step of expand-and-contract (Phase 2 expanded)**: after the exit-gate grep and the
+  parity script (`auth.* == main.*` counts) pass on the Neon branch, one migration drops
+  `main.users`, `main.organizations`, `main.memberships`, `main.roles`, `main.permissions`, the
+  read-only triggers and every `workos_*` column; `db:seed:*` and every query helper are already
+  on `auth.*` since Phase 2, so this is a deletion with a typecheck, not a rewrite.
 - `apps/account/src/components/workos-widgets-provider.tsx` and `settings-widgets.tsx` deleted
   (replaced in Phase 2); `apps/*/package.json` drop `@workos-inc/*` **and** `@radix-ui/themes`
   (the WorkOS Widgets peer kept transitionally by ADR-022 — also remove it from the
@@ -92,6 +97,8 @@ Out: records/PHI features (Phase 10); MVP record re-encryption (Phase 14).
 - [ ] Adding/removing a member in a Team org updates Stripe subscription quantity (test with
       Stripe test clock or mocked client).
 - [ ] QStash `workos-sync` schedule gone (`pnpm qstash:list`).
+- [ ] Contract migration applied on the Neon branch: legacy identity tables and `workos_*`
+      columns gone; parity script ran green immediately before; `rls-classes` suite green.
 - [ ] CI `legacy-idp-guard` step green; boundary lint fails on a deliberate `@workos-inc` import (verify
       locally, then remove).
 
@@ -234,7 +241,11 @@ PHASE 3 TASK — Remove every remaining WorkOS dependency (ADR-017, ADR-020).
    @eleva/workflows) AND into the event-type publish/unpublish mutation in @eleva/scheduling.
    Tests with a mocked Stripe client: owner without event types = 0 seats; publish -> +1;
    unpublish -> -1; remove member -> -1.
-4. Deletions: apps/api/src/app/workos/, infra/workos/ (whole package), infra/qstash/
+4. Contract migration (Phase 2 expanded, this phase contracts): run
+   packages/db/scripts/backfill-auth-identity.ts --verify (parity counts must match), then one
+   drizzle migration dropping main.users, main.organizations, main.memberships, main.roles,
+   main.permissions, their read-only triggers and every workos_* column; typecheck + tests +
+   rls-classes suite green on the Neon branch. Then deletions: apps/api/src/app/workos/, infra/workos/ (whole package), infra/qstash/
    setup-workos-sync.ts (+ update setup-all.ts, README, root scripts qstash:setup:workos-sync,
    workos:rbac:generate, workos:widgets:generate), apps/account/src/components/
    workos-widgets-provider.tsx, apps/account/src/app/account/(shell)/settings/settings-widgets.tsx

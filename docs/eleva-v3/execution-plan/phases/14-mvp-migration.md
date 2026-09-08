@@ -68,7 +68,10 @@ In:
     all three modes; + `sessions` for future **online** meetings only; Meet links dropped; Daily
     rooms created by the Phase 9 sweep after cutover) + `booking_payments` (payment intent id, amounts,
     fee), `PaymentTransfersTable` + `TransactionCommissionsTable` -> `payout_states` (status
-    mapping, transfer ids, `applied_commission_bps` from the ledger), `SlotReservationsTable`
+    mapping, transfer ids, `applied_commission_bps` from the ledger) and **`platform_fee_invoices`
+    rows with `status = legacy|legacy_missing` + `legacy_document_ref` per D-09** (Phase 7) — v3
+    never issues a Tier 1 document for a booking paid before cutover; the report lists the
+    `legacy_missing` count for the accountant, `SlotReservationsTable`
     dropped (expired), `SubscriptionPlansTable` + `SubscriptionEventsTable` +
     `AnnualPlanEligibilityTable` -> `billing_subscriptions` + grandfather flags
     (`commission_override_bps` with expiry per finance mapping table).
@@ -85,7 +88,11 @@ In:
   - Google Calendar tokens: dropped (forced re-connect; notification kind `calendar.reconnect_required`).
 - **Identity strategy**: welcome campaign (`packages/email` template `migration.welcome`) with a
   set-password/magic link per user, sent in waves; Google users can just sign in.
-- **URL compatibility**: preserve `/[locale]/[username]` and `/[locale]/[username]/[eventSlug]`;
+- **URL compatibility**: preserve `/[locale]/[username]` and `/[locale]/[username]/[eventSlug]`
+  by writing every MVP `username` into **`public_handles`** (Phase 4 table; collision with a
+  reserved name is a fatal mapping error, collision between two MVP users is impossible by the
+  MVP unique index — assert it); `/pt-BR/*` -> `/pt/*` 301 (D-01) is a gateway rule from Phase 4,
+  the rehearsal only asserts it;
   301 map for changed paths (`/[locale]/appointments/*` -> `/app/*`, old expert routes ->
   `/expert/*`) in `apps/web` gateway redirects; `_context` MVP route list as source.
 - **Stripe**: same platform account; verify each Connect account id exists (`accounts.retrieve`),
@@ -95,9 +102,31 @@ In:
   (`pnpm migration:verify` -> row counts per table, checksum matches, orphan FK check, sample
   logins via magic link in staging), produce report under `infra/migration/reports/rehearsal-YYYY-MM-DD.md`
   (committed). Three rehearsals required; the last within 3 days of cutover.
+- **Data-subject notice and legal basis**: the migration is a change of processor tooling under
+  the same controller, so the basis is the existing relationship; still, the welcome campaign
+  links the updated privacy notice (versioned in `CONSENT_DOCUMENTS`), the consent rows for
+  migrated users are imported with `source = import` and the MVP acceptance timestamp (never
+  re-asserted as fresh) under an explicit **legacy -> v3 consent mapping** (`infra/migration/src/map/consents.ts` — one of the `map/*.ts` modules in deliverable 1, deny-by-default, one fixture per legacy combination): MVP terms/privacy
+  acceptance -> `terms` + `privacy` at the MVP document version tagged `legacy`; MVP
+  `marketing_opt_in = true` -> `marketing` granted, otherwise absent; MVP booking-time health
+  consent -> `health_data_processing` for that booking only; **`analytics` is never imported**
+  (the MVP had no separate analytics consent — the cookie banner asks fresh, GA4/PostHog stay
+  off until then); `ai_processing` and `session_recording` never imported. A legacy field with
+  no mapping row fails the run (no silent grants). Both migration sites (bulk import and delta
+  run) call the same mapper; the DPO signs the mapping with the migration DPIA addendum before
+  rehearsal 3 (recorded in `decision-log.md`).
 - **Freeze plan** (executed in Phase 15): MVP read-only banner + disabled booking, drain pending
   Multibanco (> 8 days rule means none should exist within 24h — verify), final delta run,
   verification, DNS switch.
+- **Rollback scope (narrowed, P0-8)**: rollback is a **decision available only until the
+  acceptance point** — T+48 h after DNS switch or the first post-cutover payout **executed** (first
+  `payout_states.status = transferred` row with a Stripe transfer id — a scheduled or delayed run
+  that moved no money does not count), whichever comes first (`CUTOVER_ACCEPTANCE_TS` written to the runbook at cutover). Before that point the
+  five-action table below applies. **After the acceptance point there is no rollback**: v3 is the
+  system of record and problems are fixed forward. The reason is arithmetic, not caution — money
+  moved by v3 (transfers, reversals, Tier 1 invoices, credit notes) cannot be un-happened in the
+  MVP, so a later "rollback" would create a second ledger. The rehearsal times the rollback and
+  proves it inside the window; it does **not** claim reversibility beyond it.
 
 Out: cutover itself (Phase 15).
 
@@ -128,10 +157,18 @@ Out: cutover itself (Phase 15).
       `MIGRATION_CONFIRM_PRODUCTION` or with a wrong typed project id exits 2;
       `migration:rehearse` rejects `--target production`.
 - [ ] Sample migrated expert signs in via magic link on staging, sees profile, event types,
-      availability, past bookings, payout history; public URL `/[username]/[eventSlug]` resolves.
+      availability, past bookings, payout history; public URL `/[locale]/[username]/[eventSlug]` resolves.
 - [ ] Records decrypt for the owning expert in `apps/expert`; member sees published ones.
 - [ ] Stripe verification step passes for 100% of Connect accounts and customers.
-- [ ] Rollback rehearsal on staging equivalents, timed: v3 write freeze,
+- [ ] Every MVP paid booking has a `platform_fee_invoices` row in `legacy` or `legacy_missing`;
+      zero Tier 1 documents issued for pre-cutover bookings (test on the branch).
+- [ ] Every MVP username exists in `public_handles`; 20 random `/[locale]/[username]/[eventSlug]`
+      MVP URLs (locale-prefixed — the only public shape) resolve 200, 20 random `/pt-BR/*` URLs
+      301 to `/pt/*`, and an unprefixed `/[username]/[eventSlug]` 301s to the default-locale path
+      (gateway rule from Phase 4).
+- [ ] Migrated consents carry `source = import` and the MVP timestamp; DPIA addendum signed.
+- [ ] Rollback rehearsal on staging equivalents, timed and completed **inside the acceptance
+      window** (T+48 h / first executed payout): v3 write freeze,
       `pnpm migration:reverse-export --since "$CUTOVER_TS"` produces a signed JSON of the complete
       post-cutover mutation set (inserts, updates and deletes; schema-derived table inventory), each entity class restored per the
       five-action table in the runbook,
@@ -302,7 +339,11 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
    schedules + availabilities -> schedules + availability_rules, blocked dates -> date_overrides,
    scheduling settings -> expert defaults, meetings -> bookings (+ sessions for future ones,
    status map; drop Meet links) + booking_payments, payment transfers + transaction commissions ->
-   payout_states (status map, transfer ids, applied_commission_bps), subscription plans/events/
+   payout_states (status map, transfer ids, applied_commission_bps) + platform_fee_invoices rows
+   status legacy|legacy_missing with legacy_document_ref (D-09; count legacy_missing in the
+   report; issuePlatformFeeInvoice refuses these bookings), usernames -> public_handles (fatal on
+   reserved-name collision), consents -> consents with source import + MVP acceptance timestamp,
+   subscription plans/events/
    annual eligibility -> billing_subscriptions + commission_override_bps/expiry per
    infra/migration/GRANDFATHER.md (write this table and get finance approval recorded in
    decision-log.md), records -> records (decrypt via WorkOS Vault, HMAC-SHA-256 of the plaintext
@@ -314,7 +355,8 @@ PHASE 14 TASK — MVP -> v3 data migration tooling and three rehearsals (ADR-019
 4. verify.ts: per-table source vs target counts with tolerances (0 for users, experts, bookings,
    payments, records), FK orphan scan, checksum match ratio (must be 100%), sample login test
    (issue magic links for 5 experts on staging and assert session creation via the API), public
-   URL resolution test for 20 random /[username]/[eventSlug]. report.ts renders JSON + Markdown.
+   URL resolution test for 20 random /[locale]/[username]/[eventSlug] (locale-prefixed) plus the
+   unprefixed -> default-locale 301. report.ts renders JSON + Markdown.
 5. Welcome campaign: @eleva/email template migration.welcome (pt/en/es): explains the new
    platform, set-password/magic link, Google sign-in note (works immediately when the subject was
    migrated, otherwise sign in with the magic link once and Google links on the next sign-in),

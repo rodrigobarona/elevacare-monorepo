@@ -3,7 +3,7 @@
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Branch     | `phase-04b/expert-offer-builder` (split: `phase-04b.1/practice-locations-schedules-calendars`, `phase-04b.2/event-type-builder-links-editor`)                                                                                                                                                                                                                                                        |
-| Depends on | Phase 3 (Google/Microsoft `linkSocial` calendar credentials), Phase 4 (offer tables, invariants, public API — PR 04.1 at minimum)                                                                                                                                                                                                                                                                    |
+| Depends on | Phase 3 (Google/Microsoft `linkSocial` calendar credentials) and **PR 04.1 merged** (offer tables, `public_handles`, invariants, public reads). PR 04.2 (funnel + payment) may run concurrently with this phase; `e2e/expert-offer.spec.ts` asserts the public funnel only once 04.2 is merged                                                                                                       |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                              |
 | Touches    | `apps/expert/**`, `apps/api/src/app/{expert,calendar,ai/editor}/**`, `packages/editor/**` (new), `packages/ai/src/{approved-models,translate-messages}.ts`, `packages/scheduling/src/{offer-invariants,publish-event-type}.ts`, `packages/calendar/src/{feed,connections}.ts`, `packages/dashboard/src/onboarding-shell.tsx`, `packages/api-client/**`, `e2e/**`                                     |
 | Exit gate  | Through the UI alone an expert completes onboarding (practice country, countries served, languages), adds three locations and three schedules, builds the two reference offers from `scheduling-booking-spec.md` (Quick chat; Physiotherapy), publishes them, creates a private link for a closed agenda, connects two external calendars — and the public funnel from Phase 4 reflects every choice |
@@ -33,8 +33,10 @@ In:
   (`practice_country`, `service_countries` with plain-language legal helper text, `languages`,
   `license_scope`, `worldwide_remote` for non-clinical work), Locations (optional), Availability
   (default schedule), First service (compact event type builder). Phase 6 appends Payments and
-  Identity, Phase 7 appends Invoicing, completion creates `become_partner_applications`
-  (Phase 12). Steps are declared in one registry (`onboarding-steps.ts`) so later phases append,
+  Identity, Phase 7 appends Invoicing, completion inserts a `become_partner_applications`
+  row (table **created here**: `id`, `expert_org_id`, `submitted_at`, `status pending|approved|rejected|needs_changes`,
+  `checklist jsonb`, `reviewer_id`, `reviewed_at`, `reason`; RLS `tenant-owned` + staff read — Phase 12
+  builds the review queue on top and adds no columns, it does not create the table). Steps are declared in one registry (`onboarding-steps.ts`) so later phases append,
   never fork the shell.
 - **Availability** `/[orgSlug]/availability`: schedules list (name, timezone, default badge, "used
   by" mode chips); editor with weekly grid (drag to create ranges, copy day to others, split
@@ -71,8 +73,15 @@ In:
 /expert/calendar/calendars/[id]`, `PATCH /expert/event-types/[id]/destination`, `PATCH
 /expert/event-types/[id]/modes/[modeId]/destination`, `POST /ai/editor` (streaming).
 - **`@eleva/editor`** (new package, ADR-023): `RichTextEditor`, `RichTextViewer` (server-safe,
-  sanitized), `LocalizedRichTextField` (locale tabs + "Translate from English"), value stored as
-  Plate JSON in `jsonb` plus derived sanitized HTML and plain text columns; Plate registry
+  sanitized), `LocalizedRichTextField` (locale tabs + "Translate from English"), value stored
+  under the **`LocalizedRichText` contract** in `packages/db/src/schema/main/shared.ts`: one
+  `jsonb` column per field shaped `{ [locale in Locale]?: { value: PlateJSON, html: string, text:
+  string } }` plus a sibling `<field>_source_locale` column (the language the expert wrote in —
+  no locale is mandatory, `en` is not privileged), Zod-validated (`localizedRichTextSchema`),
+  `html`/`text` derived server-side from `value`; full-text search uses expression indexes per
+  locale (`to_tsvector('eleva_fts_pt', description->'pt'->>'text')`, same for `en`/`es`), never a
+  GIN index on the whole JSONB; `LocalizedText` (plain strings) follows the same one-column shape;
+  the duplicate `LocalizedString` in `expert-categories.ts` is removed in Phase 4 PR 04.1 (Phase 1 only marks it). Plate registry
   components generated into `packages/editor/src/components/ui/*`; `@platejs/ai` wired to `POST
 /ai/editor`. Boundary lint: `platejs`, `@platejs/*`, `slate*` importable only inside
   `packages/editor`; `@radix-ui/*` permitted only inside `packages/editor` (documented ADR-022
@@ -313,10 +322,17 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    RichTextViewer (server component; renders the stored sanitized HTML; sanitizer allow-list
    tested against XSS vectors), LocalizedRichTextField (tabs for pt/en/es; "Translate from
    English" per tab calls the AI route and marks the tab "AI draft — review" until edited),
-   toPlainText(value), toSanitizedHtml(value). Storage contract: jsonb value + html + text
-   columns on every consumer table (this PR: event_types.description_*, expert_profiles.bio_*,
-   expert_locations.instructions_*), written server-side from the JSON — clients never send
-   HTML. ESLint boundary: platejs, @platejs/*, slate* only in packages/editor; @radix-ui/* only
+   toPlainText(value), toSanitizedHtml(value). Storage contract (LocalizedRichText,
+   packages/db/src/schema/main/shared.ts + localizedRichTextSchema in packages/db/src/zod/):
+   ONE jsonb column per field shaped { [locale]?: { value: PlateJSON, html, text } } and a
+   sibling <field>_source_locale column; no locale is mandatory (an expert may write only pt);
+   this PR: event_types.description + description_source_locale, expert_profiles.bio +
+   bio_source_locale, expert_practice_locations.instructions (LocalizedText, short); html and
+   text are derived server-side from value — clients never send HTML; add per-locale expression
+   indexes to_tsvector('eleva_fts_<locale>', col->'<locale>'->>'text') for the searchable
+   fields (packages/db/src/migrations/run-fts.ts already defines the eleva_fts_pt/en configs;
+   add es) and never a GIN index on the whole jsonb; API responses return the full localized
+   object, the UI picks the viewer locale with fallback to source_locale. ESLint boundary: platejs, @platejs/*, slate* only in packages/editor; @radix-ui/* only
    in packages/editor (documented ADR-022 exception) — add both to the boundary lint with tests;
    catalog every new dependency in pnpm-workspace.yaml.
 7. @eleva/ai: packages/ai/src/approved-models.ts allow-list { modelId, provider, zeroRetention,
@@ -334,7 +350,14 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    member-owned apps/app content is never accepted; rate limit 30/h/org, streams; context
    "clinical" is REJECTED in this phase — Phase 10 enables it with zeroRetention models and adds
    the "record" resource; logs tokens/latency, never content).
-8. apps/api: /expert/event-types CRUD (kind, visibility, defaults, policies, localized fields via
+8. apps/api (naming SSOT: singular /expert/* for the signed-in expert's own resources, plural
+   /public/experts/* for public reads — Phase 6 and later phases use the same shape). This PR
+   also RENAMES the pre-existing authenticated plural routes apps/api/src/app/experts/
+   {event-types,integrations,profile,schedule} to apps/api/src/app/expert/* in one commit
+   (git mv, OpenAPI paths, @eleva/api-client regenerated, every in-repo caller updated; no
+   compatibility redirects — the API has no external consumers before launch and
+   check:route-guards fails on any remaining experts/ folder that is not under public/):
+   /expert/event-types CRUD (kind, visibility, defaults, policies, localized fields via
    the editor contract), /expert/event-types/[id]/modes CRUD (validated with offer-invariants on
    every write; 422 with field-level messages), POST /expert/event-types/[id]/publish ->
    @eleva/scheduling publishEventType (>= 1 active mode, all invariants, handle exists) and
