@@ -118,9 +118,22 @@ const s2Schema = z.object({
   BLOB_PRIVATE_READ_WRITE_TOKEN: stringOptional,
 })
 
+const calendarOAuthSchema = z.object({
+  GOOGLE_OAUTH_CLIENT_ID: stringOptional,
+  GOOGLE_OAUTH_CLIENT_SECRET: stringOptional,
+  MICROSOFT_OAUTH_CLIENT_ID: stringOptional,
+  MICROSOFT_OAUTH_CLIENT_SECRET: stringOptional,
+  MS_OAUTH_CLIENT_ID: stringOptional,
+  MS_OAUTH_CLIENT_SECRET: stringOptional,
+  BETTER_AUTH_SECRET: stringOptional,
+  BETTER_AUTH_URL: urlOptional,
+  ELEVA_KEK_V1: stringOptional,
+})
+
 export const envSchema = baseSchema
   .extend(s1aSchema.shape)
   .extend(s2Schema.shape)
+  .extend(calendarOAuthSchema.shape)
 
 export type Env = z.infer<typeof envSchema>
 export type BaseEnv = Env
@@ -345,4 +358,25 @@ export function resolveGatewayUrl(hostHeader?: string | null): string {
   }
 
   return "https://eleva.care"
+}
+
+/**
+ * Microsoft OAuth app credentials. Prefers `MICROSOFT_OAUTH_*` (Phase 2 /
+ * Better Auth) and falls back to the legacy `MS_OAUTH_*` aliases so a
+ * deploy that set only one pair still boots.
+ */
+export function resolveMicrosoftOAuth(): {
+  clientId: string | undefined
+  clientSecret: string | undefined
+} {
+  const e = env()
+  const canonicalClientId = e.MICROSOFT_OAUTH_CLIENT_ID || undefined
+  const canonicalClientSecret = e.MICROSOFT_OAUTH_CLIENT_SECRET || undefined
+  if (canonicalClientId && canonicalClientSecret) {
+    return { clientId: canonicalClientId, clientSecret: canonicalClientSecret }
+  }
+  return {
+    clientId: e.MS_OAUTH_CLIENT_ID || undefined,
+    clientSecret: e.MS_OAUTH_CLIENT_SECRET || undefined,
+  }
 }

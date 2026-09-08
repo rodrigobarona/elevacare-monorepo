@@ -5,3 +5,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
 
 pnpm lint-staged
+
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --redact --config .gitleaks.toml
+else
+  echo "gitleaks not on PATH; CI still runs the gitleaks job. Install: brew install gitleaks"
+fi

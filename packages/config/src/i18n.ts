@@ -12,9 +12,9 @@
 
 import { z } from "zod"
 import { countryToLocale } from "./country-to-locale"
+import { locales, type Locale } from "./i18n-locales"
 
-export const locales = ["en", "pt", "es"] as const
-export type Locale = (typeof locales)[number]
+export { locales, type Locale } from "./i18n-locales"
 
 export const defaultLocale: Locale = "en"
 

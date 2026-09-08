@@ -1,0 +1,21 @@
+title = "Eleva.care"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documented placeholder fragments in .env.example (ellipsis, not live secrets)"
+regexes = [
+  '''sk_test_\.\.\.''',
+  '''client_\.\.\.''',
+  '''whsec_\.\.\.''',
+  '''re_\.\.\.''',
+  '''AC\.\.\.''',
+]
+
+[[allowlists]]
+description = "Vendored clone snapshots and screenshot-indexed onboarding refs (not product code)"
+paths = [
+  '''(^|/)(_context/clone-repo/)''',
+  '''(^|/)(_context/Onboarding-exxamples/)''',
+]

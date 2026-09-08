@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm"
 import {
   index,
   jsonb,
+  pgPolicy,
   pgTable,
   text,
   timestamp,
@@ -48,8 +49,16 @@ export const auditEvents = pgTable(
     orgIdx: index("audit_events_org_idx").on(t.orgId),
     entityIdx: index("audit_events_entity_idx").on(t.entity, t.entityId),
     receivedIdx: index("audit_events_received_idx").on(t.receivedAt),
+    tenantRead: pgPolicy("audit_events_tenant_read", {
+      for: "select",
+      using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+    }),
+    drainerInsert: pgPolicy("audit_events_drainer_insert", {
+      for: "insert",
+      withCheck: sql`current_setting('eleva.service', true) = 'audit_drainer'`,
+    }),
   })
-)
+).enableRLS()
 
 export type AuditEvent = typeof auditEvents.$inferSelect
 export type NewAuditEvent = typeof auditEvents.$inferInsert

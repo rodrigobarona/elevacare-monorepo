@@ -264,6 +264,20 @@ Each entry should include:
 - Summary: `docs/eleva-v3/execution-plan/` is the authoritative build plan: phases 0-16, one branch (`phase-NN/<slug>`) = one PR = one CodeRabbit loop (CLI before the PR via `pnpm review` / `pnpm review:branch`, GitHub App on the PR) per phase, and a self-contained copy-paste prompt per phase. `index.html` is generated from the Markdown (`pnpm docs:execution-plan:html`). commitlint gains scopes `plan`, `p0`-`p16`, `p16.1`-`p16.16`.
 - Reference: [`execution-plan/README.md`](./execution-plan/README.md), [`contribution-workflow.md`](./contribution-workflow.md)
 
+### 2026-09-08: Phase 1.2 CI merge gates
+
+- Owner: engineering
+- Status: active
+- Summary: required checks on `main` now include `lockfile-guard`, `lint`,
+  `typecheck`, `build`, `test`, `i18n-parity`, `gitleaks`, `e2e-smoke`, and
+  `neon-branch-migrate-and-rls` (plus `coderabbit`). Same-repo PRs fail the
+  Neon job when `NEON_API_KEY` / `NEON_PROJECT_ID` are missing so tenant
+  isolation cannot skip. Fork PRs skip the live branch (secrets unavailable).
+- Reference: [`contribution-workflow.md`](./contribution-workflow.md),
+  [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml),
+  [`.github/workflows/e2e.yml`](../../.github/workflows/e2e.yml),
+  [`.github/workflows/neon-branch.yml`](../../.github/workflows/neon-branch.yml)
+
 ### 2026-09-08: Phase 1.1 authored ADR-017..021 and ADR-023
 
 - Owner: engineering

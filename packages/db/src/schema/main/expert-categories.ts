@@ -38,7 +38,10 @@ export const expertCategories = pgTable(
   })
 )
 
-/** Locale-keyed display strings. Only en/pt/es required at launch. */
+/**
+ * @deprecated Duplicate of `LocalizedText` in `./shared.ts`. Delete this
+ * type and import `LocalizedText` in Phase 4 PR 04.1.
+ */
 export interface LocalizedString {
   en: string
   pt: string

@@ -48,6 +48,7 @@ catalog:
   # Testing
   vitest: ^4.1.6
   "@vitest/coverage-v8": ^4.1.6
+  "@playwright/test": ^1.56.1
 
   # Auth (WorkOS)
   "@workos-inc/authkit-nextjs": ^4.1.0

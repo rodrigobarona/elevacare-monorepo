@@ -5,6 +5,7 @@ import {
   requireAuthEnv,
   requireCronSecret,
   requireDbEnv,
+  resolveMicrosoftOAuth,
 } from "./env"
 
 const ORIGINAL = process.env
@@ -104,5 +105,50 @@ describe("requireCronSecret", () => {
   it("returns the secret when present", () => {
     process.env.CRON_SECRET = "shhhh"
     expect(requireCronSecret().CRON_SECRET).toBe("shhhh")
+  })
+})
+
+describe("resolveMicrosoftOAuth", () => {
+  beforeEach(() => {
+    process.env = { ...ORIGINAL }
+    resetEnvCache()
+  })
+
+  afterEach(() => {
+    process.env = ORIGINAL
+    resetEnvCache()
+  })
+
+  it("prefers MICROSOFT_OAUTH_* over MS_OAUTH_*", () => {
+    process.env.MICROSOFT_OAUTH_CLIENT_ID = "canonical-id"
+    process.env.MICROSOFT_OAUTH_CLIENT_SECRET = "canonical-secret"
+    process.env.MS_OAUTH_CLIENT_ID = "legacy-id"
+    process.env.MS_OAUTH_CLIENT_SECRET = "legacy-secret"
+    expect(resolveMicrosoftOAuth()).toEqual({
+      clientId: "canonical-id",
+      clientSecret: "canonical-secret",
+    })
+  })
+
+  it("falls back to MS_OAUTH_* when the canonical pair is unset", () => {
+    delete process.env.MICROSOFT_OAUTH_CLIENT_ID
+    delete process.env.MICROSOFT_OAUTH_CLIENT_SECRET
+    process.env.MS_OAUTH_CLIENT_ID = "legacy-id"
+    process.env.MS_OAUTH_CLIENT_SECRET = "legacy-secret"
+    expect(resolveMicrosoftOAuth()).toEqual({
+      clientId: "legacy-id",
+      clientSecret: "legacy-secret",
+    })
+  })
+
+  it("uses the complete legacy pair when the canonical pair is partial", () => {
+    process.env.MICROSOFT_OAUTH_CLIENT_ID = "canonical-id"
+    delete process.env.MICROSOFT_OAUTH_CLIENT_SECRET
+    process.env.MS_OAUTH_CLIENT_ID = "legacy-id"
+    process.env.MS_OAUTH_CLIENT_SECRET = "legacy-secret"
+    expect(resolveMicrosoftOAuth()).toEqual({
+      clientId: "legacy-id",
+      clientSecret: "legacy-secret",
+    })
   })
 })

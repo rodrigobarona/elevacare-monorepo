@@ -72,6 +72,7 @@ export async function withOrgContext<T>(
 ): Promise<T> {
   const client = getTxDb()
   return client.transaction(async (tx) => {
+    await applyIntegrationTestRole(tx)
     await tx.execute(sql`SELECT set_config('eleva.org_id', ${orgId}, true)`)
     return fn(tx)
   })
@@ -89,11 +90,19 @@ export async function withPlatformAdminContext<T>(
 ): Promise<T> {
   const client = getTxDb()
   return client.transaction(async (tx) => {
+    await applyIntegrationTestRole(tx)
     await tx.execute(
       sql`SELECT set_config('eleva.platform_admin', 'true', true)`
     )
     return fn(tx)
   })
+}
+
+async function applyIntegrationTestRole(tx: Tx) {
+  if (process.env.ELEVA_RLS_INTEGRATION !== "1") {
+    return
+  }
+  await tx.execute(sql`SET LOCAL ROLE eleva_rls_test`)
 }
 
 export function __resetContextClientForTests() {

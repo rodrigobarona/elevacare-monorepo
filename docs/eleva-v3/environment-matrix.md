@@ -387,7 +387,7 @@ Added in Phase 1 (this PR documents them; values land with Phase 2+). `WORKOS_*`
 | `MICROSOFT_OAUTH_CLIENT_ID` / `MICROSOFT_OAUTH_CLIENT_SECRET` | calendar               | calendar only                                                                                                                                                                                   |
 | `DAILY_API_KEY` / `DAILY_DOMAIN` / `DAILY_WEBHOOK_SECRET`     | `@eleva/video`         | HIPAA domain; branded `sessions.eleva.care`                                                                                                                                                     |
 
-Neon branch-per-PR (Phase 1.2 CI) needs GitHub secrets `NEON_API_KEY` and `NEON_PROJECT_ID`.
+Neon branch-per-PR (Phase 1.2 CI) needs GitHub secret `NEON_API_KEY` and secret or variable `NEON_PROJECT_ID`. The job branches that project and derives `AUDIT_DATABASE_URL` by pointing the same host at the `audit` database.
 
 ## Related Docs
 
