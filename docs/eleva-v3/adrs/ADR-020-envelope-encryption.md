@@ -29,9 +29,8 @@ and DEK and plaintext never logged (Sentry redaction in Phase 10).
    `encryptForOrg` / `decryptForOrg` / `rotateKek` / `shredOrgKeys`.
 2. **`org_data_keys`.** Columns: `org_id`, `key_version`, `wrapped_dek`, `kek_version`,
    `created_at`, `retired_at`. Active key = `retired_at IS NULL`. `key_version` is the
-   DEK version: the ciphertext field `dek_version` **is this column** (same integer, one
-   name in code: `key_version`). `getOrCreateOrgDek` is concurrency-safe (row lock +
-   `ON CONFLICT DO NOTHING`).
+   only DEK version name (ciphertext and table). `getOrCreateOrgDek` is concurrency-safe
+   (row lock + `ON CONFLICT DO NOTHING`).
 3. **KEK.** Every active wrap version is `ELEVA_KEK_V<n>` (base64 32 bytes). The inventory
    is the set of env vars matching `ELEVA_KEK_V[0-9]+`, not `ELEVA_KEK_V1` alone. Rotation
    re-wraps the active DEK in place (`kek_version` updated, `retired_at` stays NULL).
@@ -40,9 +39,12 @@ and DEK and plaintext never logged (Sentry redaction in Phase 10).
    `SELECT count(*) FROM org_data_keys WHERE kek_version = <old>` is 0 (no active or
    leftover history row), then the env var is deleted. Custody and rotation runbook
    lands in Phase 10; evidence in the Phase 13 compliance pack.
-4. **Ciphertext format.** `v1:<kek_version>:<key_version>:<iv>:<tag>:<data>` (base64
-   segments; `key_version` was previously labelled `dek_version` in drafts). Parsers fail
-   closed on an unknown version prefix.
+4. **Ciphertext format.** `v1:<key_version>:<iv>:<tag>:<data>` (base64 segments).
+   `decryptForOrg` loads `org_data_keys` by `(org_id, key_version)` and unwraps the DEK
+   with `ELEVA_KEK_V{row.kek_version}`. The ciphertext does **not** select the KEK —
+   after `rotateKek` the row's `kek_version` is the new wrap, so existing ciphertext
+   stays readable and the old `ELEVA_KEK_V<n>` can be deleted once no row references it.
+   Parsers fail closed on an unknown version prefix.
 5. **Crypto-shred.** `shredOrgKeys` **deletes** `org_data_keys` rows for that org (not
    UPDATE-to-null). Ciphertext remains but is unreadable. Legal-hold / retention (D-12)
    can block shred until the retention window ends.

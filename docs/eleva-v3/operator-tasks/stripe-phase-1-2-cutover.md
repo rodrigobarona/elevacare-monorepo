@@ -1,12 +1,17 @@
 # Stripe Phase 1 + 2 — Post-Merge Cutover Runbook
 
-Status: **Historical (WorkOS-era, 2026-05).** Stripe webhook/config steps remain
-useful. Identity evidence in the 2026-05-19 reports (WorkOS org, WorkOS JWT)
-does not validate Better Auth (removed, see ADR-017). Frontend criterion 8 and
+Status: **Historical (WorkOS-era, 2026-05; removed, see ADR-017).** Stripe webhook/config steps remain
+useful. Identity evidence in the 2026-05-19 reports (WorkOS org, WorkOS JWT — removed, see ADR-017)
+does not validate Better Auth. Frontend criterion 8 and
 a Better Auth E2E session are still **blocked** until Phase 2. Do not treat
 this document as launch-READY.
 
-This runbook is the single source of truth for everything that must
+**Do not execute** any step that names `WORKOS_*`, `/workos/sync`, WorkOS JWT (removed, see ADR-017),
+or WorkOS Dashboard (removed, see ADR-017). Those commands and env vars are retired.
+Skip them; use Phase 6 Better Auth org billing instead.
+
+This runbook is a 2026-05 historical record for Stripe webhook/config. It is not
+the current identity SSOT. Everything that must
 happen after the Stripe billing branch (commits `37813ec` →
 `13a676f`, plus today's migration fix `0017`) merges to `main`.
 Until each block here is checked off, the integration is not safe
@@ -562,7 +567,7 @@ cutover date.
 
 ## Cutover Verification Report — 2026-05-19
 
-Status: **HISTORICAL (WorkOS-era)**. Stripe ingest findings below are retained
+Status: **HISTORICAL (WorkOS-era; removed, see ADR-017)**. Stripe ingest findings below are retained
 as evidence of the webhook path. They do **not** certify Better Auth. Criterion
 8 remains NOT EXECUTED.
 
@@ -759,7 +764,7 @@ Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
 
 ## Production Readiness Audit — 2026-05-19 (evening)
 
-Status: **HISTORICAL**. WorkOS org + JWT pipeline evidence below is not a
+Status: **HISTORICAL**. WorkOS org + JWT pipeline evidence below is not a (removed, see ADR-017)
 Better Auth pass (removed, see ADR-017). Keep blocked until Phase 2 E2E.
 
 Original 2026-05 text: PASS — production-ready with two non-blocking findings (N7, N8).

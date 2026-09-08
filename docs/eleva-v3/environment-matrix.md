@@ -157,7 +157,7 @@ Some surfaces are not Vercel-hosted and cannot be path-rewritten:
 
 `api.eleva.care` serves the `elevacare-api` Vercel project. It's a dev/server-facing surface (webhooks, OAuth callbacks, session-aware server endpoints); humans don't browse it. CORS configuration:
 
-- `Access-Control-Allow-Origin: https://eleva.care` (exact; `https://dev.eleva.care` in staging; specific `*.preview.eleva.care` host in preview)
+- `Access-Control-Allow-Origin` exact match: production `https://eleva.care` and `https://admin.eleva.care`; staging `https://dev.eleva.care` and `https://admin.dev.eleva.care`; preview a specific `*.preview.eleva.care` host. Never `*`.
 - `Access-Control-Allow-Credentials: true`
 - `robots.txt` disallow (don't index; no HTML anyway)
 
@@ -246,7 +246,7 @@ renamed in a later ops change.
 - `dev.eleva.care` — gateway staging (rewrites to staging `elevacare-app` for member/expert/team/account routes; rewrites `/docs/*` to staging `elevacare-docs`)
 - `api.dev.eleva.care` — staging `elevacare-api` Vercel project (separate subdomain, not rewritten)
 
-Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling apps; API preview URL points at the preview `elevacare-api` deployment.
+Per-PR previews: `*.preview.eleva.care` wildcard. Preview env vars in the gateway project point `APP_URL`, `DOCS_URL` at the matching preview deployment URLs of sibling **frontend** apps. **API is always the staging API** (`api.dev.eleva.care`) — previews do not get their own `elevacare-api` deployment or `.eleva.care` cookies (ADR-017).
 
 ## Required DNS Records (Vercel-Managed)
 

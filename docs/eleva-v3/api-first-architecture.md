@@ -17,7 +17,7 @@ We adopt an **API-first, agentic-first, and secure-by-default** architecture.
 ### Core Principles
 
 1. **API-first**: All mutating business logic is callable via HTTP in `apps/api`. Server Actions in frontend apps are thin proxies.
-2. **Agentic-first**: Every endpoint supports dual auth (session + Bearer), returns JSON, uses deterministic error codes, and is discoverable via OpenAPI spec.
+2. **Agentic-first**: Every endpoint is callable with **exactly one** of the credentials in the matrix below (session cookie, `x-api-key`, Bearer JWT, or internal secret — not “dual auth”), returns JSON, uses deterministic error codes, and is discoverable via OpenAPI spec.
 3. **Secure by default**: Every route handler explicitly declares its auth model. No unauthenticated mutations. Rate limiting and Zod validation required.
 4. **BotID on public routes**: Public-facing POSTs that create resources use Vercel BotID.
 5. **Domain packages own logic**: `@eleva/auth` owns provisioning. `@eleva/db` owns queries. Apps are thin layers.

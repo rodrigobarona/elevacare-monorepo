@@ -181,7 +181,7 @@ Frontend (Track B):
 
 Exit:
 
-- new user lands in a freshly provisioned personal org as `admin` (WorkOS (removed, see ADR-017) default); product label = patient
+- new user lands in a freshly provisioned personal Space as `owner` (Better Auth; WorkOS `admin` default removed, see ADR-017); product label = member
 - role change in WorkOS (removed, see ADR-017) reflects in JWT after refresh
 - switching locale persists; EN shows no prefix, PT/ES prefixed
 - RLS isolation test green (org A insert, org B select → zero rows)
