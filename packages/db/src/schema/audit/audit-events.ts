@@ -55,7 +55,7 @@ export const auditEvents = pgTable(
     }),
     drainerInsert: pgPolicy("audit_events_drainer_insert", {
       for: "insert",
-      withCheck: sql`current_setting('eleva.service', true) = 'audit_drainer' OR current_setting('eleva.platform_admin', true) = 'true'`,
+      withCheck: sql`current_setting('eleva.service', true) = 'audit_drainer'`,
     }),
   })
 ).enableRLS()

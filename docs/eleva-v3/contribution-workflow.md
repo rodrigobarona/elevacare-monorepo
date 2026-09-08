@@ -53,7 +53,8 @@ This document defines how the team should contribute changes to Eleva v3 in a wa
   check on the `main` branch-protection rule.
 - CI gates (`lockfile-guard`, `lint`, `typecheck`, `build`, `test`,
   `i18n-parity`, `gitleaks`, `e2e-smoke`, `neon-branch-migrate-and-rls`)
-  are also required checks.
+  are also required checks. Boundary lint (`boundariesConfig`) runs
+  inside the Lint job (`pnpm lint`); it is not a separate status check.
 - For the monorepo rules applied to every PR — boundary lint, RLS
   isolation, audit-row coverage, no vendor-SDK leakage, no
   `bun install`, no hardcoded `payment_method_types`,

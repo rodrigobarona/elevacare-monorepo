@@ -8,6 +8,9 @@ concurrency:
   group: neon-${{ github.event.pull_request.number }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 env:
   NODE_VERSION: 24
 
@@ -17,7 +20,9 @@ jobs:
     if: github.event.action != 'closed'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
 
       - name: Resolve Neon credentials
         id: neon-creds
@@ -36,12 +41,12 @@ jobs:
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v4.4.0
         if: steps.neon-creds.outputs.ready == 'true'
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         if: steps.neon-creds.outputs.ready == 'true'
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -100,8 +105,12 @@ jobs:
           NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID || vars.NEON_PROJECT_ID }}
         run: |
           if [ -z "$NEON_API_KEY" ] || [ -z "$NEON_PROJECT_ID" ]; then
+            if [ "${{ github.event.pull_request.head.repo.full_name }}" = "${{ github.repository }}" ]; then
+              echo "::error::Add GitHub secret NEON_API_KEY and secret or variable NEON_PROJECT_ID so closed same-repo PRs delete their Neon branch."
+              exit 1
+            fi
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::warning::NEON_API_KEY / NEON_PROJECT_ID are not set. Nothing to delete."
+            echo "::warning::Skipping Neon branch delete on fork PR (credentials unavailable)."
           else
             echo "ready=true" >> "$GITHUB_OUTPUT"
           fi

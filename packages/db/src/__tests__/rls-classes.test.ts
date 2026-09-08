@@ -4,10 +4,12 @@ import { afterAll, describe, expect, it } from "vitest"
 import {
   RLS_CLASS_FIXTURES,
   RLS_POLICY_CLASSES,
+  RLS_TABLE_ASSIGNMENTS,
   classPredicateSql,
   type RlsClassFixture,
   type RlsPolicyClass,
 } from "../rls/classes"
+import { TENANT_TABLES } from "../rls/policies"
 
 const enabled = process.env.ELEVA_RLS_INTEGRATION === "1"
 const databaseUrl =
@@ -306,6 +308,19 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
         })
       ).rejects.toThrow()
 
+      await expect(
+        withLocalSettings(
+          client,
+          { "eleva.platform_admin": "true" },
+          async () => {
+            await client.query(
+              `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
+              [randomUUID(), orgA]
+            )
+          }
+        )
+      ).rejects.toThrow()
+
       await withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
         const rows = await client.query(
           `SELECT id FROM ${table} WHERE id = $1`,
@@ -320,6 +335,67 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
         )
         expect(rows.rows).toHaveLength(0)
       })
+    } finally {
+      client.release()
+    }
+  })
+
+  it("installed policies exist on assigned main-db tables", async () => {
+    const client = await pool.connect()
+    try {
+      const managed = new Set<string>(TENANT_TABLES)
+      for (const row of RLS_TABLE_ASSIGNMENTS) {
+        if (row.table === "audit_events") {
+          continue
+        }
+
+        const exists = await client.query(
+          `SELECT 1 FROM information_schema.tables
+           WHERE table_schema = 'public' AND table_name = $1`,
+          [row.table]
+        )
+        expect(exists.rowCount, row.table).toBeGreaterThan(0)
+
+        if (!managed.has(row.table)) {
+          continue
+        }
+
+        const rel = await client.query<{
+          relrowsecurity: boolean
+          relforcerowsecurity: boolean
+        }>(
+          `SELECT relrowsecurity, relforcerowsecurity
+           FROM pg_class
+           WHERE relname = $1 AND relkind = 'r'`,
+          [row.table]
+        )
+        expect(rel.rows[0]?.relrowsecurity, row.table).toBe(true)
+        expect(rel.rows[0]?.relforcerowsecurity, row.table).toBe(true)
+
+        const policies = await client.query<{
+          using: string | null
+          with_check: string | null
+        }>(
+          `SELECT pg_get_expr(p.polqual, p.polrelid) AS using,
+                  pg_get_expr(p.polwithcheck, p.polrelid) AS with_check
+           FROM pg_policy p
+           JOIN pg_class c ON c.oid = p.polrelid
+           WHERE c.relname = $1`,
+          [row.table]
+        )
+        expect(policies.rowCount, `${row.table} policies`).toBeGreaterThan(0)
+
+        const combined = policies.rows
+          .flatMap((policy) => [policy.using, policy.with_check])
+          .filter(Boolean)
+          .join(" ")
+        expect(combined, row.table).toContain("eleva.org_id")
+        if (row.table === "organizations") {
+          expect(combined).toContain("id")
+        } else {
+          expect(combined).toContain("org_id")
+        }
+      }
     } finally {
       client.release()
     }

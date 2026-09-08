@@ -90,8 +90,11 @@ describe("RLS class taxonomy", () => {
     expect(classPredicateSql("tenant-owned", "audit_events")).toBe(
       "org_id::text = current_setting('eleva.org_id', true)"
     )
-    expect(classPredicateSql("service-only", "audit_events")).toContain(
-      "audit_drainer"
+    expect(classPredicateSql("service-only", "audit_events")).toBe(
+      "current_setting('eleva.service', true) = 'audit_drainer'"
+    )
+    expect(classPredicateSql("service-only", "audit_events")).not.toContain(
+      "platform_admin"
     )
     expect(classPredicateSql("service-only", "audit_events")).not.toContain(
       "stripe_webhook"

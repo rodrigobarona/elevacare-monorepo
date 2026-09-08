@@ -5,7 +5,7 @@ const apiUrl = process.env.E2E_API_URL ?? "http://127.0.0.1:3002"
 test.describe("smoke", () => {
   test("web home returns 200 and renders the hero", async ({ page }) => {
     const response = await page.goto("/")
-    expect(response?.ok()).toBeTruthy()
+    expect(response?.status()).toBe(200)
     await expect(page.getByTestId("marketing-hero")).toBeVisible()
   })
 
@@ -18,7 +18,7 @@ test.describe("smoke", () => {
 
   test("api /openapi.json is valid OpenAPI", async ({ request }) => {
     const response = await request.get(`${apiUrl}/openapi.json`)
-    expect(response.ok()).toBeTruthy()
+    expect(response.status()).toBe(200)
     const body = (await response.json()) as {
       openapi?: string
       info?: { title?: string }

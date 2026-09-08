@@ -115,10 +115,7 @@ export function classPredicateSql(
         table === "audit_events" ||
         table === "_rls_fixture_audit_events_split"
       ) {
-        return (
-          `current_setting('eleva.platform_admin', true) = 'true'` +
-          ` OR current_setting('eleva.service', true) = 'audit_drainer'`
-        )
+        return `current_setting('eleva.service', true) = 'audit_drainer'`
       }
       return (
         `current_setting('eleva.platform_admin', true) = 'true'` +

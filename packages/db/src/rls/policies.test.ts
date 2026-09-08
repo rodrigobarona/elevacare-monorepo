@@ -115,10 +115,11 @@ describe("buildAuditRlsStatements", () => {
     )
   })
 
-  it("drainer insert requires eleva.service or platform_admin", () => {
+  it("drainer insert is audit_drainer only", () => {
     const insertPolicy = stmts.find((s) => s.includes("FOR INSERT"))
     expect(insertPolicy).toContain("eleva.service")
     expect(insertPolicy).toContain("audit_drainer")
+    expect(insertPolicy).not.toContain("platform_admin")
     expect(insertPolicy).not.toMatch(/WITH CHECK \(true\)/)
   })
 })

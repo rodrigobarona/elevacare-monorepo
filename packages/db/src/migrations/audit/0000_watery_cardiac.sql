@@ -20,4 +20,4 @@ CREATE INDEX "audit_events_org_idx" ON "audit_events" USING btree ("org_id");-->
 CREATE INDEX "audit_events_entity_idx" ON "audit_events" USING btree ("entity","entity_id");--> statement-breakpoint
 CREATE INDEX "audit_events_received_idx" ON "audit_events" USING btree ("received_at");--> statement-breakpoint
 CREATE POLICY "audit_events_tenant_read" ON "audit_events" AS PERMISSIVE FOR SELECT TO public USING (org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true');--> statement-breakpoint
-CREATE POLICY "audit_events_drainer_insert" ON "audit_events" AS PERMISSIVE FOR INSERT TO public WITH CHECK (current_setting('eleva.service', true) = 'audit_drainer' OR current_setting('eleva.platform_admin', true) = 'true');
+CREATE POLICY "audit_events_drainer_insert" ON "audit_events" AS PERMISSIVE FOR INSERT TO public WITH CHECK (current_setting('eleva.service', true) = 'audit_drainer');

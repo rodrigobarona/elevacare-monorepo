@@ -125,7 +125,7 @@ CREATE POLICY <table>_tenant_isolation ON <table>
 `organizations` is tenant-owned with `id` in place of `org_id`. Audit DB `audit_events` is
 the one split-predicate table (still the same seven classes, not an eighth): `SELECT` is
 `tenant-owned` (matching `eleva.org_id`, plus the `eleva.platform_admin` bypass on the
-policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` or platform admin).
+policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` only — no platform-admin write).
 `public-read` is one class: published rows are world-readable; writes stay tenant-owned.
 
 ### Current table assignments

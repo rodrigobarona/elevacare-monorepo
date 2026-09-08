@@ -96,9 +96,8 @@ export function buildMainRlsStatements(): string[] {
 }
 
 export function buildAuditRlsStatements(): string[] {
-  // Audit DB: append-only. SELECT filtered by org_id match. INSERT
-  // allowed at policy level (role-level grants further restrict to
-  // drainer credentials in production).
+  // Audit DB: append-only. SELECT filtered by org_id (plus platform
+  // admin). INSERT is audit_drainer only.
   const out: string[] = []
   out.push(`ALTER TABLE audit_events ENABLE ROW LEVEL SECURITY;`)
   out.push(`ALTER TABLE audit_events FORCE ROW LEVEL SECURITY;`)
@@ -114,8 +113,7 @@ export function buildAuditRlsStatements(): string[] {
   out.push(
     `CREATE POLICY audit_events_drainer_insert ON audit_events FOR INSERT ` +
       `WITH CHECK (` +
-      `  current_setting('eleva.service', true) = 'audit_drainer' ` +
-      `  OR current_setting('eleva.platform_admin', true) = 'true'` +
+      `  current_setting('eleva.service', true) = 'audit_drainer'` +
       `);`
   )
   return out
