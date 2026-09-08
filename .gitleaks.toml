@@ -14,7 +14,8 @@ regexes = [
 ]
 
 [[allowlists]]
-description = "Tracked reference snapshots, not product code (also excluded from CodeRabbit path_filters)"
+description = "Vendored clone snapshots and screenshot-indexed onboarding refs (not product code)"
 paths = [
-  '''(^|/)(_context/)''',
+  '''(^|/)(_context/clone-repo/)''',
+  '''(^|/)(_context/Onboarding-exxamples/)''',
 ]
