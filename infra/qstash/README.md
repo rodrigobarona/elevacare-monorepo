@@ -25,10 +25,9 @@ When you add a new schedule:
 3. Add a step to `setup-all.ts` so a single `pnpm qstash:setup:all` provisions everything.
 4. Add an entry in the `EXPECTED_PATHS` array in `list-schedules.ts` so the cross-check picks it up.
 
-A leftover identity-sync schedule may still exist in the shared QStash
-account. `pnpm qstash:list` prints unexpected destinations. Delete that
-orphan in the Upstash console after this phase merges; do not
-re-register it.
+The leftover identity-sync schedule was deleted from the shared QStash
+account on 2026-09-08. `pnpm qstash:list` should show only the expected
+destinations above. Do not re-register the retired path.
 
 ## Promoting staging → production
 
