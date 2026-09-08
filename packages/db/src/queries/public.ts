@@ -445,6 +445,10 @@ export async function checkPublicSlugAvailability(
  * Given a list of candidate slugs, return the subset that already
  * exist as organization slugs. Used by the slug generation utility
  * for collision avoidance.
+ *
+ * Slugs are unique across the platform, so this cannot run inside
+ * `withOrgContext` (that would only see one tenant). Platform-admin
+ * context is the reviewed service-only boundary for this scan.
  */
 export async function findExistingOrgSlugs(
   candidates: string[]

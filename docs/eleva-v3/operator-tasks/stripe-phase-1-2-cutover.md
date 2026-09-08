@@ -235,10 +235,8 @@ In Stripe Dashboard → Developers → Webhooks:
 
 ## 4 · Org ↔ Stripe customer linkage
 
-organization metadata + `backfill:org-customers` walking organizations (removed, see ADR-017).
-Current contract: `provisionOrgBilling` on Better Auth
-organization create (Phase 6) writes `billing_customers.stripe_customer_id`.
-Do not run the previous identity backfill script (removed, see ADR-017).
+`provisionOrgBilling` writes `billing_customers.stripe_customer_id` when a
+Better Auth organization is created. Do not run a one-off identity backfill.
 
 ### 4.1 Verify (mirror table)
 
@@ -534,20 +532,20 @@ cutover date.
 
 ## Appendix · Quick reference
 
-| Command                                                                   | What it does                              |
-| ------------------------------------------------------------------------- | ----------------------------------------- |
-| `pnpm --filter @eleva/db db:push`                                         | Apply Drizzle migrations                  |
-| `pnpm --filter @eleva/db db:rls`                                          | Apply RLS policies                        |
-| `pnpm --filter @eleva/db tsx scripts/fix-stripe-event-state-machine.ts`   | Idempotent recovery for partial migration |
-| `pnpm --filter @eleva/infra-stripe setup:webhooks -- --url <url> --apply` | Configure Stripe webhook endpoint         |
-| `pnpm --filter @eleva/infra-stripe seed:products`                         | Seed Stripe products + prices             |
-| `pnpm --filter @eleva/infra-stripe seed:entitlements`                     | Seed Stripe Entitlements                  |
-| `pnpm --filter @eleva/infra-stripe backfill:org-customers`                | Link existing orgs to Stripe customers    |
-| `pnpm --filter @eleva/infra-stripe replay:event evt_…`                    | Re-run one event through the processor    |
-| `pnpm --filter @eleva/api setup:qstash:audit`                             | Schedule audit drainer                    |
-| `pnpm --filter @eleva/api setup:qstash:stripe-stuck`                      | Schedule stuck-event detector             |
-| `stripe listen --forward-to localhost:3002/webhooks/stripe`               | Local dev tunnel                          |
-| `stripe trigger <event>`                                                  | Fire a sample event                       |
+| Command                                                                   | What it does                                                 |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `pnpm --filter @eleva/db db:push`                                         | Apply Drizzle migrations                                     |
+| `pnpm --filter @eleva/db db:rls`                                          | Apply RLS policies                                           |
+| `pnpm --filter @eleva/db tsx scripts/fix-stripe-event-state-machine.ts`   | Idempotent recovery for partial migration                    |
+| `pnpm --filter @eleva/infra-stripe setup:webhooks -- --url <url> --apply` | Configure Stripe webhook endpoint                            |
+| `pnpm --filter @eleva/infra-stripe seed:products`                         | Seed Stripe products + prices                                |
+| `pnpm --filter @eleva/infra-stripe seed:entitlements`                     | Seed Stripe Entitlements                                     |
+| `pnpm --filter @eleva/infra-stripe tsx backfill-org-customers.ts`         | Historical: one-off org customer mirror (do not run in prod) |
+| `pnpm --filter @eleva/infra-stripe replay:event evt_…`                    | Re-run one event through the processor                       |
+| `pnpm --filter @eleva/api setup:qstash:audit`                             | Schedule audit drainer                                       |
+| `pnpm --filter @eleva/api setup:qstash:stripe-stuck`                      | Schedule stuck-event detector                                |
+| `stripe listen --forward-to localhost:3002/webhooks/stripe`               | Local dev tunnel                                             |
+| `stripe trigger <event>`                                                  | Fire a sample event                                          |
 
 | Env var                                                  | Where it must be set                | Owner                   |
 | -------------------------------------------------------- | ----------------------------------- | ----------------------- |

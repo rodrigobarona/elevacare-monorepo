@@ -19,7 +19,9 @@ const EXPECTED_PATHS = [
 function isExpectedDestination(destination: string, path: string): boolean {
   try {
     const url = new URL(destination)
-    return url.hostname.endsWith("eleva.care") && url.pathname === path
+    const isElevaHost =
+      url.hostname === "eleva.care" || url.hostname.endsWith(".eleva.care")
+    return url.protocol === "https:" && isElevaHost && url.pathname === path
   } catch {
     return false
   }

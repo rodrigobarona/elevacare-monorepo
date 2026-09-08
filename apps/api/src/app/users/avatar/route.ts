@@ -61,7 +61,7 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const avatarUrl = await getUserAvatarUrl(session.user.id)
+  const avatarUrl = await getUserAvatarUrl(session.user.id, session.user.id)
   return secureJson({ avatarUrl }, { status: 200, headers, noStore: false })
 }
 
@@ -93,11 +93,16 @@ export async function PUT(request: Request) {
     )
   }
 
-  const previousUrl = await getUserAvatarUrl(session.user.id)
+  const previousUrl = await getUserAvatarUrl(session.user.id, session.user.id)
   await withAudit(
     { orgId: session.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
-      await updateUserAvatarUrl(session.user.id, body.data.url, tx)
+      await updateUserAvatarUrl(
+        session.user.id,
+        body.data.url,
+        session.user.id,
+        tx
+      )
       await ctx.emit({
         entity: "user",
         action: "updated",
@@ -130,11 +135,11 @@ export async function DELETE(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const previousUrl = await getUserAvatarUrl(session.user.id)
+  const previousUrl = await getUserAvatarUrl(session.user.id, session.user.id)
   await withAudit(
     { orgId: session.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
-      await updateUserAvatarUrl(session.user.id, null, tx)
+      await updateUserAvatarUrl(session.user.id, null, session.user.id, tx)
       await ctx.emit({
         entity: "user",
         action: "updated",

@@ -92,7 +92,7 @@ export const boundariesConfig = [
                 "Import Better Auth only through @eleva/auth (boundary lint).",
             },
             {
-              group: ["@workos-inc", "@workos-inc/*"],
+              group: ["@workos-inc", "@workos-inc/**"],
               message:
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
             },

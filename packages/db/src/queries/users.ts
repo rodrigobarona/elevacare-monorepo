@@ -2,7 +2,21 @@ import { eq } from "drizzle-orm"
 import { withPlatformAdminContext, type Tx } from "../context"
 import { user } from "../schema/auth"
 
-export async function getUserAvatarUrl(userId: string): Promise<string | null> {
+function assertSelfAvatarAccess(userId: string, actorUserId: string): void {
+  if (actorUserId !== userId) {
+    throw new Error("avatar access is self-only")
+  }
+}
+
+/**
+ * Identity-scoped avatar read. `auth.user` is not tenant-owned, so this
+ * uses platform-admin context after proving the caller is the subject.
+ */
+export async function getUserAvatarUrl(
+  userId: string,
+  actorUserId: string
+): Promise<string | null> {
+  assertSelfAvatarAccess(userId, actorUserId)
   return withPlatformAdminContext(async (tx) => {
     const [row] = await tx
       .select({ image: user.image })
@@ -13,11 +27,18 @@ export async function getUserAvatarUrl(userId: string): Promise<string | null> {
   })
 }
 
+/**
+ * Identity-scoped avatar write. Callers must pass the authenticated user
+ * as `actorUserId`; org membership is not a substitute (avatars are
+ * user-owned, not tenant-owned).
+ */
 export async function updateUserAvatarUrl(
   userId: string,
   avatarUrl: string | null,
+  actorUserId: string,
   txOpt?: Tx
 ): Promise<void> {
+  assertSelfAvatarAccess(userId, actorUserId)
   const run = async (tx: Tx) => {
     await tx
       .update(user)

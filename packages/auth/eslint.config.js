@@ -9,7 +9,7 @@ export default [
         {
           patterns: [
             {
-              group: ["@workos-inc", "@workos-inc/*"],
+              group: ["@workos-inc", "@workos-inc/**"],
               message:
                 "Leftover identity-provider SDKs are removed. Use Better Auth.",
             },

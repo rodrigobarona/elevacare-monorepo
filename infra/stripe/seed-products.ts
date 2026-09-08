@@ -136,6 +136,15 @@ async function ensureSeatPrices(
   const hasLicensedPrice = existingPrices.some(
     (pr) => pr.metadata.eleva_price_type === "per_seat"
   )
+  const legacyMetered = existingPrices.find(
+    (pr) => pr.metadata.eleva_price_type === "per_seat_metered"
+  )
+  if (legacyMetered) {
+    throw new Error(
+      `[stripe] Product ${productId} still has legacy metered seat price ${legacyMetered.id}. ` +
+        `Deactivate it before seeding the licensed per_seat price.`
+    )
+  }
 
   if (hasLicensedPrice) return
 

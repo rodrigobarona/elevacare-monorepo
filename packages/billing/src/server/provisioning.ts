@@ -97,6 +97,11 @@ export async function provisionOrgBilling(
     return rows[0] ?? null
   })
   const stripeCustomerId = canonical?.stripeCustomerId ?? customer.id
+  if (stripeCustomerId !== customer.id) {
+    console.warn(
+      `[provisioning] mirror race for org ${input.orgId}: created ${customer.id} but canonical is ${stripeCustomerId}; orphaned customer requires cleanup`
+    )
+  }
 
   const tier = ORG_TYPE_TO_TIER[input.orgType] ?? "member_free"
   let subscriptionId: string | null = null

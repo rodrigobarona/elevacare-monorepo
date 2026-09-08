@@ -174,7 +174,7 @@ The Stripe Entitlements does NOT support Stripe Sandbox accounts (per ADR-016). 
 7. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
 8. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
 9. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
-10. Trigger a `customer.subscription.created` test event and verify a row appears in the `stripe_webhook_events` table with status='processed'
+10. Trigger a `customer.subscription.created` Stripe CLI fixture and verify a row appears in `stripe_webhook_events` with `status='ignored'` (CLI fixtures have no Eleva organization metadata). To assert `processed`, trigger the event for a provisioned Eleva customer.
 
 ## Idempotency
 

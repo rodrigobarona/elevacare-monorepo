@@ -11,7 +11,7 @@
 
 import { eq } from "drizzle-orm"
 import { provisionOrgBilling } from "@eleva/billing/server"
-import { auth, db, main as schema, withPlatformAdminContext } from "@eleva/db"
+import { auth, main as schema, withPlatformAdminContext } from "@eleva/db"
 
 interface OrgRow {
   id: string
@@ -107,8 +107,6 @@ async function checkMirrorExists(orgId: string): Promise<boolean> {
   })
   return result !== null
 }
-
-void db
 
 run().catch((err) => {
   console.error("[backfill] Fatal:", err)

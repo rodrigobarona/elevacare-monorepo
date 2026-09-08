@@ -74,6 +74,12 @@ describe("requireAuthEnv / requireDbEnv", () => {
     )
   })
 
+  it("requireAuthEnv rejects a short BETTER_AUTH_SECRET", () => {
+    process.env.BETTER_AUTH_SECRET = "too-short"
+    process.env.BETTER_AUTH_URL = "https://api.eleva.care"
+    expect(() => requireAuthEnv()).toThrow(/32 characters/)
+  })
+
   it("requireDbEnv throws without DATABASE_URL", () => {
     delete process.env.DATABASE_URL
     expect(() => requireDbEnv()).toThrow(/DATABASE_URL/)

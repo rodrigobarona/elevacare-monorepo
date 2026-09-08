@@ -174,7 +174,10 @@ stripe trigger identity.verification_session.verified
 Check the API server logs for `[stripe-webhook]` output confirming
 delivery and `stripe_webhook_events` rows for the persisted entries.
 
-## Stripe Sandbox note
+## Stripe environments
 
-For staging/dev, use Stripe **test mode** on a standard account, not a
-Sandbox account.
+- Local and standard integration development: Stripe **test mode** on the
+  Eleva standard account (`sk_test_...`).
+- Isolated Connect or staging experiments that must not share test-mode
+  objects: a Stripe **Sandbox**.
+- Production: live mode only. Never point staging at a live key.

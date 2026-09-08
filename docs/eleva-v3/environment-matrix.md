@@ -381,8 +381,9 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 
 ## Required environment variables (v3 target)
 
-Added in Phase 1 (this PR documents them; values land with Phase 2+). `legacy identity env vars` stay in
-`.env.example` annotated "removed in Phase 3 (ADR-017)" until Phase 3 deletes them.
+Added in Phase 1; leftover identity-provider env vars are deleted in Phase 03.2.
+Revoke any leftover identity-provider credentials in Vercel after merge.
+Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `ELEVA_KEK_V1`.
 
 | Variable                                                      | Owner                  | Notes                                                                                                                                                                                           |
 | ------------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

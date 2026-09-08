@@ -172,6 +172,11 @@ export function requireAuthEnv(): Required<
   if (missing.length > 0) {
     throw new Error(`@eleva/auth boot: missing env vars: ${missing.join(", ")}`)
   }
+  if (e.BETTER_AUTH_SECRET!.length < 32) {
+    throw new Error(
+      "@eleva/auth boot: BETTER_AUTH_SECRET must be at least 32 characters"
+    )
+  }
   return {
     BETTER_AUTH_SECRET: e.BETTER_AUTH_SECRET!,
     BETTER_AUTH_URL: e.BETTER_AUTH_URL!,
