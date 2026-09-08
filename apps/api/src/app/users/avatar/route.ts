@@ -3,7 +3,11 @@ import { getUserAvatarUrl, updateUserAvatarUrl } from "@eleva/db"
 import { deletePublicBlob } from "@eleva/storage"
 import { withAudit } from "@eleva/audit"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import {
+  apiAuthFailure,
+  requireApiAuth,
+  requirePrivilegedApiAuth,
+} from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
@@ -66,11 +70,10 @@ export async function PUT(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 
@@ -114,11 +117,10 @@ export async function DELETE(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 

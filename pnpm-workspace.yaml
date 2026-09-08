@@ -50,6 +50,12 @@ catalog:
   "@vitest/coverage-v8": ^4.1.6
   "@playwright/test": ^1.56.1
 
+  # Auth (Better Auth 1.7.3 — spike 02.0)
+  better-auth: 1.7.3
+  "@better-auth/passkey": 1.7.3
+  "@better-auth/api-key": 1.7.3
+  "@better-auth/drizzle-adapter": 1.7.3
+
   # Auth (WorkOS)
   "@workos-inc/authkit-nextjs": ^4.1.0
   "@workos-inc/node": ^9.3.0

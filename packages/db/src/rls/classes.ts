@@ -51,6 +51,7 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "sessions", class: "participant-visible" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },
+  { table: "org_data_keys", class: "tenant-owned" },
   { table: "audit_outbox", class: "service-only" },
   { table: "stripe_webhook_events", class: "service-only" },
   { table: "users", class: "owner-user-visible" },

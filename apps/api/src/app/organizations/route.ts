@@ -2,11 +2,15 @@ import {
   CreateOrganizationRequestSchema,
   CreateWorkspaceRequestSchema,
 } from "@eleva/api-client"
-import { createOrganization } from "@eleva/auth"
+import { createElevaOrganization } from "@eleva/auth"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { getOrganizationBySlug } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import {
+  apiAuthFailure,
+  requireApiAuth,
+  requirePrivilegedApiAuth,
+} from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
@@ -20,11 +24,10 @@ export async function POST(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 
@@ -52,8 +55,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const result = await createOrganization({
-    workosUserId: session.user.workosUserId,
+  const result = await createElevaOrganization({
     userId: session.user.id,
     name: body.data.name,
     type: body.data.type,

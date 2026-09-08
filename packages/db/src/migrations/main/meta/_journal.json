@@ -155,6 +155,13 @@
       "when": 1779416518992,
       "tag": "0021_expert_profiles_user_org_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1779418000000,
+      "tag": "0022_better_auth_identity",
+      "breakpoints": true
     }
   ]
 }

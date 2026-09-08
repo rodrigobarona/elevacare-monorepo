@@ -30,17 +30,28 @@ export interface ElevaSession {
   productLabel: ProductLabel
   /** Eleva org type for the active organization. */
   orgType: OrgType
-  /** WorkOS seniority role inside the current org. */
+  /** WorkOS seniority role inside the current org. Better Auth `owner` maps to `admin`. */
   workosRole: "admin" | "member"
+  /** How requireApiAuth resolved this identity. */
+  authMode?: ApiAuthMode
   /** Union of capability slugs granted by this membership's role bundle. */
   capabilities: readonly string[]
   /** Stripe Entitlements from WorkOS access token (populated when Stripe add-on is enabled). */
   entitlements?: readonly string[]
 }
 
+export type ApiAuthMode = "cookie" | "bearer" | "jwt" | "api-key"
+
+export type UnauthorizedErrorCode =
+  | "no-session"
+  | "missing-capability"
+  | "ambiguous-credentials"
+  | "invalid-token"
+  | "jwt-not-revocable"
+
 export class UnauthorizedError extends Error {
-  readonly code: "no-session" | "missing-capability"
-  constructor(code: "no-session" | "missing-capability", message?: string) {
+  readonly code: UnauthorizedErrorCode
+  constructor(code: UnauthorizedErrorCode, message?: string) {
     super(message ?? `Unauthorized: ${code}`)
     this.code = code
     this.name = "UnauthorizedError"

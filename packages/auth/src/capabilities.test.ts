@@ -27,6 +27,11 @@ describe("deriveProductLabel", () => {
     expect(() => deriveProductLabel("personal", "member")).toThrow()
     expect(() => deriveProductLabel("expert", "member")).toThrow()
   })
+  it("maps Better Auth owner like WorkOS admin", () => {
+    expect(deriveProductLabel("personal", "owner")).toBe("member")
+    expect(deriveProductLabel("expert", "owner")).toBe("expert")
+    expect(deriveProductLabel("team", "owner")).toBe("team_admin")
+  })
 })
 
 describe("capability bundles", () => {

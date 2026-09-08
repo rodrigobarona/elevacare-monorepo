@@ -1,4 +1,4 @@
-import { listUserOrganizations } from "@eleva/auth"
+import { listAuthOrganizations } from "@eleva/auth"
 import { UnauthorizedError } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
@@ -27,10 +27,10 @@ export async function GET(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const organizations = await listUserOrganizations({
-    workosUserId: session.user.workosUserId,
-    currentWorkosOrgId: session.workosOrgId,
-  })
+  const organizations = await listAuthOrganizations(
+    session.user.id,
+    session.orgId
+  )
 
   return secureJson({ organizations }, { status: 200, headers })
 }

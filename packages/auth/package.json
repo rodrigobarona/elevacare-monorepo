@@ -16,7 +16,11 @@
     "./return-to": "./src/return-to.ts",
     "./upload-token": "./src/upload-token.ts",
     "./organizations": "./src/organizations.ts",
-    "./org-routing": "./src/org-routing.ts"
+    "./org-routing": "./src/org-routing.ts",
+    "./permissions": "./src/permissions.ts",
+    "./server/auth": "./src/server/auth.ts",
+    "./api-auth": "./src/server/api-auth.ts",
+    "./trusted-origins": "./src/trusted-origins.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -24,10 +28,17 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@better-auth/api-key": "catalog:",
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
+    "@upstash/redis": "catalog:",
+    "better-auth": "catalog:",
+    "jose": "^6.1.0",
     "@workos-inc/authkit-nextjs": "catalog:",
     "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",

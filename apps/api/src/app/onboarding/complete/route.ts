@@ -1,15 +1,13 @@
 import { z } from "zod"
-import { completeOnboarding } from "@eleva/auth"
-import { getWorkOS } from "@eleva/auth/server"
+import { completeOnboarding, createElevaOrganization } from "@eleva/auth"
 import { provisionOrgBilling } from "@eleva/billing/server"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 import { LocaleSchema } from "@eleva/config/i18n"
 import { corsHeaders } from "@/lib/cors"
-import { requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requirePrivilegedApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
-import { UnauthorizedError } from "@eleva/auth"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -24,11 +22,10 @@ export async function POST(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requirePrivilegedApiAuth(request)
   } catch (err) {
-    if (err instanceof UnauthorizedError) {
-      return secureJson({ error: "unauthorized" }, { status: 401, headers })
-    }
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
     throw err
   }
 
@@ -51,63 +48,25 @@ export async function POST(request: Request) {
     )
   }
 
-  const workos = getWorkOS()
-
-  const org = await workos.organizations.createOrganization({
+  const created = await createElevaOrganization({
+    userId: session.user.id,
     name: body.data.spaceName,
-  })
-
-  await workos.userManagement.createOrganizationMembership({
-    userId: session.user.workosUserId,
-    organizationId: org.id,
-    roleSlug: "admin",
+    type: "personal",
   })
 
   const result = await completeOnboarding({
     workosUserId: session.user.workosUserId,
-    workosOrgId: org.id,
+    workosOrgId: created.orgId,
     orgName: body.data.spaceName,
     role: "admin",
     orgType: "personal",
     actorUserId: session.user.id,
   })
 
-  const settled = await Promise.allSettled([
-    workos.userManagement.updateUser({
-      userId: session.user.workosUserId,
-      externalId: result.userId,
-      ...(body.data.locale && { locale: body.data.locale }),
-    }),
-    workos.organizations.updateOrganization({
-      organization: org.id,
-      externalId: result.orgId,
-      metadata: { slug: result.slug, org_type: "personal" },
-    }),
-  ])
-
-  const failures = settled.filter(
-    (s): s is PromiseRejectedResult => s.status === "rejected"
-  )
-  if (failures.length > 0) {
-    for (const f of failures) {
-      console.error("[onboarding/complete] WorkOS update failed:", f.reason)
-    }
-    return secureJson(
-      {
-        error: "partial_failure",
-        message: "Onboarding completed but WorkOS sync failed",
-        userId: result.userId,
-        orgId: result.orgId,
-        slug: result.slug,
-      },
-      { status: 207, headers }
-    )
-  }
-
   try {
     await provisionOrgBilling({
       orgId: result.orgId,
-      workosOrgId: org.id,
+      workosOrgId: created.orgId,
       orgName: body.data.spaceName,
       orgType: "personal",
       email: session.user.email,

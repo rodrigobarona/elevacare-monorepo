@@ -8,6 +8,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./schema": "./src/schema/main/index.ts",
+    "./schema/auth": "./src/schema/auth/index.ts",
     "./schema/audit": "./src/schema/audit/index.ts",
     "./context": "./src/context.ts",
     "./client": "./src/client.ts",
@@ -32,7 +33,8 @@
     "db:seed:demo": "tsx --env-file=../../.env.local src/seed/run-demo.ts",
     "db:seed:categories": "tsx --env-file=../../.env.local src/seed/run-categories.ts",
     "db:fix:stripe-state-machine": "tsx --env-file=../../.env.local scripts/fix-stripe-event-state-machine.ts",
-    "db:backfill:org-slugs": "tsx --env-file=../../.env.local scripts/backfill-org-slugs.ts"
+    "db:backfill:org-slugs": "tsx --env-file=../../.env.local scripts/backfill-org-slugs.ts",
+    "db:backfill:auth-identity": "tsx --env-file=../../.env.local scripts/backfill-auth-identity.ts"
   },
   "dependencies": {
     "@eleva/config": "workspace:*",

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm"
+import { eq, sql } from "drizzle-orm"
 import { db } from "../client"
 import { type Tx } from "../context"
 import { users } from "../schema/main/users"
@@ -22,4 +22,9 @@ export async function updateUserAvatarUrl(
     .update(users)
     .set({ avatarUrl, updatedAt: new Date() })
     .where(eq(users.id, userId))
+  await client.execute(sql`
+    update auth.user
+    set image = ${avatarUrl}, updated_at = now()
+    where id = ${userId}::uuid
+  `)
 }

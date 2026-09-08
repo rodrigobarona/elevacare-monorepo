@@ -1,7 +1,10 @@
-import { inArray } from "drizzle-orm"
-import { db, main } from "@eleva/db"
+import { eq, inArray } from "drizzle-orm"
+import { withAudit } from "@eleva/audit"
+import { auth, db, main, findExistingOrgSlugs } from "@eleva/db"
 import type { OrgType, WorkosRole } from "@eleva/db/schema"
+import { generateUniqueOrgSlug } from "@eleva/config/slug"
 import { deriveProductLabel } from "./capabilities"
+import { getAuthApi } from "./server/auth"
 import {
   provisionOrganizationWithAdminMembership,
   type ProvisionOrganizationResult,
@@ -112,6 +115,109 @@ export async function listUserOrganizations(
   )
 
   return orgs.filter((org): org is UserOrganizationItem => org !== null)
+}
+
+export async function listAuthOrganizations(
+  userId: string,
+  currentOrgId: string | null
+): Promise<UserOrganizationItem[]> {
+  const rows = await db()
+    .select({
+      orgId: auth.organization.id,
+      orgSlug: auth.organization.slug,
+      orgType: auth.organization.type,
+      name: auth.organization.name,
+      role: auth.member.role,
+    })
+    .from(auth.member)
+    .innerJoin(
+      auth.organization,
+      eq(auth.member.organizationId, auth.organization.id)
+    )
+    .where(eq(auth.member.userId, userId))
+
+  return rows.map((row) => {
+    const orgType = row.orgType as OrgType
+    const workosRole: WorkosRole = row.role === "member" ? "member" : "admin"
+    return {
+      workosOrgId: row.orgId,
+      orgId: row.orgId,
+      orgSlug: row.orgSlug,
+      orgType,
+      name: row.name,
+      workosRole,
+      productLabel: deriveProductLabel(
+        orgType,
+        row.role === "owner" ? "owner" : workosRole
+      ),
+      isCurrent: row.orgId === currentOrgId,
+    }
+  })
+}
+
+export async function addOrganizationMember(input: {
+  userId: string
+  orgId: string
+  role: "admin" | "member" | "owner"
+  actorUserId: string
+}): Promise<void> {
+  await getAuthApi().addMember({
+    body: {
+      userId: input.userId,
+      organizationId: input.orgId,
+      role: input.role === "admin" ? "admin" : input.role,
+    },
+  })
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (_tx, ctx) => {
+      await ctx.emit({
+        entity: "membership",
+        action: "created",
+        entityId: input.userId,
+        payload: { orgId: input.orgId, role: input.role },
+      })
+    }
+  )
+}
+
+export async function createElevaOrganization(input: {
+  userId: string
+  name: string
+  type: CreateOrganizationType
+}): Promise<CreateOrganizationResult> {
+  const slug = await generateUniqueOrgSlug(input.name, findExistingOrgSlugs)
+  const created = await getAuthApi().createOrganization({
+    body: {
+      name: input.name,
+      slug,
+      userId: input.userId,
+      type: input.type,
+    },
+  })
+  const organization = (
+    created as { id?: string; organization?: { id?: string } } | null
+  )?.organization
+  const orgId = (created as { id?: string } | null)?.id ?? organization?.id
+  if (!orgId) {
+    throw new Error("createOrganization did not return an id")
+  }
+
+  await withAudit({ orgId, actorUserId: input.userId }, async (_tx, ctx) => {
+    await ctx.emit({
+      entity: "organization",
+      action: "created",
+      entityId: orgId,
+      payload: { type: input.type, name: input.name, slug },
+    })
+  })
+
+  return {
+    orgId,
+    slug,
+    created: true,
+    workosOrgId: orgId,
+  }
 }
 
 /**
