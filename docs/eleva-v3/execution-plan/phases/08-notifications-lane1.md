@@ -144,8 +144,10 @@ Out: push (Expo) — post-launch; Novu (retired).
 ## Acceptance criteria
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
-      before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number, in person -> location name, address, "Open in Maps" link and the location's
-      instructions; the ICS `LOCATION` follows the same rule.
+      before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number (e-mail body only), in person -> location name, address, "Open in Maps" link and the location's
+      instructions; the ICS `LOCATION` is `Video call` / `Phone call` / the location name +
+      address — it never contains a phone number, masked or not (the privacy rule is absolute for
+      ICS because calendar files sync to third-party providers).
 - [ ] Booking confirmation email arrives in the member's locale with ICS attached; expert receives
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
@@ -157,7 +159,9 @@ Out: push (Expo) — post-launch; Novu (retired).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.
 - [ ] Hard bounce suppresses further emails to that address; visible in delivery table.
 - [ ] Every template renders in `pt/en/es` in `apps/email` preview; the template lint fails on any
-      specialty/diagnosis/notes token in a subject or SMS body; ICS contents match the privacy rule.
+      specialty, diagnosis, report-content, notes or session-topic token in a subject, SMS body,
+      push-style preview text or ICS field (the full rule of Scope "Content and privacy rules",
+      one fixture per prohibited token per surface); ICS contents match the privacy rule.
 - [ ] Guest e-mail copy is byte-identical for "account exists" and "no account" cases (test).
 - [ ] Boundary lint: no import edge between `@eleva/auth` and `@eleva/notifications`.
 - [ ] A failing notification delivery leaves the same event's other subscribers `succeeded` and

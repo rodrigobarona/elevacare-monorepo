@@ -395,8 +395,10 @@ PR 10.2 — CRM + AI reports beta:
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
-   Report({ bookingId, noteRecordIds }) (the one signature — validate that every note belongs to
-   bookingId and the caller's org BEFORE decrypting; mismatch -> 403, no decryption) — input is
+   Report({ bookingId, noteRecordIds }) (the one signature — BEFORE any decryption: validate
+   that every note belongs to bookingId and the caller's org (mismatch -> 403) AND that an
+   active ai_processing consent exists for the booking's member (absent or withdrawn -> 403
+   AI_CONSENT_REQUIRED, no decryption, no Gateway call; test both denials) — input is
    the expert's decrypted typed notes for that
    booking (plus the member's typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from

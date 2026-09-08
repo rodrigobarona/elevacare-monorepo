@@ -99,21 +99,24 @@ Daily calls; identical grant after a Daily timeout triggers exactly one sync tha
 row); step 2 calls Daily `updateRoom` with a 10 s timeout and no DB lock held, **fenced** so an
 older call can never land after a newer one. Daily room `properties` are a closed set — there
 is no `meta` field and no provider-side version, so **all fencing state is Eleva-owned** on the
-`sessions` row (`recording_desired`, `recording_enabled`, `recording_state_version`,
-`recording_verified_at`): (a) provider calls for one booking are single-flight behind a Redis
+`sessions` row (`recording_desired`, `recording_enabled`, `recording_state_version` — bumped on
+every change of desired state —, `recording_verified_version` — the version whose provider
+state was last confirmed by read-back —, `recording_verified_at`): (a) provider calls for one booking are single-flight behind a Redis
 mutex `recording-sync:{bookingId}` (15 s TTL, held only around the Daily call — consent writes
 and joins never wait on it) and a worker that acquires the mutex re-reads the current version
 `v` and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after `updateRoom` the worker reads the room back (`GET /rooms/{name}`) and accepts only when
 the returned `config.enable_recording` equals the desired value it just sent; step 3 persists
-`recording_enabled = <read-back value>`, `recording_verified_at = now()` with a
-compare-and-swap `WHERE recording_state_version = v` — zero rows means a newer desired state
-superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
-therefore never blocks consent writes or joins on a row lock. The `join` route refuses to mint
-a token while `recording_desired <> recording_enabled` or while `recording_verified_at` is
-older than the row's last `recording_state_version` change (it re-runs the sync first, and
-returns 503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
+`recording_enabled = <read-back value>`, `recording_verified_version = v`,
+`recording_verified_at = now()` with a compare-and-swap `WHERE recording_state_version = v` —
+zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
+instead of writing. A Daily outage therefore never blocks consent writes or joins on a row
+lock. The `join` route's guard is purely local and exact: it refuses to mint a token unless
+`recording_verified_version = recording_state_version AND recording_enabled =
+recording_desired` (a timed-out or superseded update leaves `recording_verified_version`
+behind, so it is detected without any provider read); on refusal it re-runs the sync first and
+returns 503 RECORDING_STATE_PENDING if Daily is still unreachable, so nobody joins a room whose
 provider-side recording state is unknown or stale. Tests: grant/withdraw race (withdrawal
 committed last) -> final Daily state and row both `false`; out-of-order completion (older
 enable call finishes after the newer withdraw call) -> the mutex + re-read means the older
@@ -139,9 +142,10 @@ Recording/transcription behind flags: Phase 9 rooms are created at confirmation 
    then GET /rooms/{name} read-back accepted only when config.enable_recording equals the value
    just sent (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
-   recording_state_version, recording_verified_at); CAS on the version; join refuses to mint
-   while recording_desired <> recording_enabled or recording_verified_at predates the last
-   version change) (idempotent — no call when unchanged; race test: grant/withdraw concurrently
+   recording_state_version, recording_verified_version, recording_verified_at); CAS on the
+   version also sets recording_verified_version = v; join refuses to mint unless
+   recording_verified_version = recording_state_version AND recording_enabled =
+   recording_desired) (idempotent — no call when unchanged; race test: grant/withdraw concurrently
    -> final state false; stale read-back test -> row not persisted, sync re-runs, join returns
    503 until the read-back matches; Daily timeout test -> consent write < 100 ms, join 503
    RECORDING_STATE_PENDING); invoke it from

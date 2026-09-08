@@ -246,8 +246,15 @@ PR 12.1 — access, users, partners, experts, bookings:
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
-   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R] { reason } ->
-   expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved,
+   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
+   { reason } — TWO paths by the application's specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -> executes directly:
+   expert_profiles.status = active + revalidateTag("public-experts") + Lane 1 partner.approved;
+   clinical (any ERS-regulated specialty) -> adminRoute({ dualControl: true }) creates an
+   admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —
+   the same side effect runs only from the dual-control approve endpoint (item 1) with both
+   actors in the audit event; tests cover both paths and assert a clinical application can never
+   reach status = active with a single actor,
    POST /reject [R] { reason } -> Lane 1 partner.rejected, POST /needs-changes [R] { reason,
    items }.
    Clinic verification queue: GET /admin/clinics/verifications, POST

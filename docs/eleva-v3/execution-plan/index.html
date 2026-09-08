@@ -4149,7 +4149,7 @@ counts, PR URLs, deferred items.</code></pre></div>
 </tr>
 <tr>
 <td>Exit gate</td>
-<td>Every paid booking yields (1) an Eleva -&gt; expert TOConline invoice in series <code>ELEVA-FEE-{YYYY}</code> for the platform fee, and (2) an expert -&gt; member invoice through the expert&#39;s connected adapter (TOConline, Moloni) or a manual-mode record with monthly SAF-T/CSV export; monthly reconciliation job flags mismatches</td>
+<td>Every booking paid <strong>after cutover</strong> (pre-cutover MVP bookings are <code>legacy</code>/<code>legacy_missing</code> rows per D-09 and never get a Tier 1 document) yields (1) an Eleva -&gt; expert TOConline invoice in series <code>ELEVA-FEE-{YYYY}</code> for the platform fee, and (2) an expert -&gt; member invoice through the expert&#39;s connected adapter (TOConline, Moloni) or a manual-mode record with monthly SAF-T/CSV export; monthly reconciliation job flags mismatches</td>
 </tr>
 </tbody></table>
 <h2 id="07-invoicing-toconline--why-this-phase-exists"><a class="anchor" href="#07-invoicing-toconline--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -4644,8 +4644,10 @@ status; suppress future sends on hard bounce.</li>
 <h2 id="08-notifications-lane1--acceptance-criteria"><a class="anchor" href="#08-notifications-lane1--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
-before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on&quot; + the masked number, in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
-instructions; the ICS <code>LOCATION</code> follows the same rule.</li>
+before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on&quot; + the masked number (e-mail body only), in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s
+instructions; the ICS <code>LOCATION</code> is <code>Video call</code> / <code>Phone call</code> / the location name +
+address — it never contains a phone number, masked or not (the privacy rule is absolute for
+ICS because calendar files sync to third-party providers).</li>
 <li><input disabled="" type="checkbox"> Booking confirmation email arrives in the member&#39;s locale with ICS attached; expert receives
 &quot;new booking&quot;; in-app rows created for both.</li>
 <li><input disabled="" type="checkbox"> Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash <code>notBefore</code>
@@ -4657,7 +4659,9 @@ or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
 <li><input disabled="" type="checkbox"> SMS sent only with verified phone + opt-in; Twilio EU region used.</li>
 <li><input disabled="" type="checkbox"> Hard bounce suppresses further emails to that address; visible in delivery table.</li>
 <li><input disabled="" type="checkbox"> Every template renders in <code>pt/en/es</code> in <code>apps/email</code> preview; the template lint fails on any
-specialty/diagnosis/notes token in a subject or SMS body; ICS contents match the privacy rule.</li>
+specialty, diagnosis, report-content, notes or session-topic token in a subject, SMS body,
+push-style preview text or ICS field (the full rule of Scope &quot;Content and privacy rules&quot;,
+one fixture per prohibited token per surface); ICS contents match the privacy rule.</li>
 <li><input disabled="" type="checkbox"> Guest e-mail copy is byte-identical for &quot;account exists&quot; and &quot;no account&quot; cases (test).</li>
 <li><input disabled="" type="checkbox"> Boundary lint: no import edge between <code>@eleva/auth</code> and <code>@eleva/notifications</code>.</li>
 <li><input disabled="" type="checkbox"> A failing notification delivery leaves the same event&#39;s other subscribers <code>succeeded</code> and
@@ -4921,9 +4925,17 @@ so each attempt sets <code>exp = endAt + 30 min + &lt;attempt-specific offset of
 <code>room_fingerprint_exp</code> and reconciles a lost response by listing rooms created inside the
 attempt window whose <code>config.nbf</code>/<code>config.exp</code> equal the stored pair — details in the prompt;
 verified in PR 09.0), <code>last_event_at</code>,
-<code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: on
-<code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) with <code>attendance &lt;&gt; &#39;both&#39;</code> the status becomes <code>no_show</code>, else <code>ended</code>; both transitions are in the state-machine
-table and tested
+<code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
+<strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
+<code>ended + 2 min</code> (QStash, idempotent); it recomputes attendance from the full ordered
+<code>participants</code> history (every <code>participant.joined</code>/<code>left</code> persisted by the webhook, including
+those whose event time precedes <code>meeting.ended</code> but arrived after it) and only then sets the
+status: <code>attendance &lt;&gt; &#39;both&#39;</code> -&gt; <code>no_show</code>, else <code>ended</code>; a participant event that arrives
+after finalization with an event time inside the session window re-runs the recompute and may
+flip <code>no_show</code> -&gt; <code>ended</code> (never the reverse; emits <code>session.attendance_corrected</code> and undoes
+any no-show side effect that has not executed yet); both transitions are in the state-machine
+table and tested, including the out-of-order sequence <code>participant.joined</code> (t=10:02) delivered
+after <code>meeting.ended</code> (t=10:31) -&gt; final status <code>ended</code>, not <code>no_show</code>
 (join/leave history only — never used for authorization), RLS for expert org + buyer org.</p>
 </li>
 <li><p><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
@@ -5131,11 +5143,18 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    send one) and room properties accept no custom metadata (schema is additionalProperties:
    false — never send properties.meta), so ensureSessionRoom must reconcile from Eleva-owned
    state plus the only booking-specific room values Daily keeps, nbf and exp: (a) inside a
-   short transaction it increments sessions.room_attempt_seq, writes room_create_attempt_at =
-   now() and room_fingerprint_exp = endAt + 30 min + offset, where offset = 0..599 s derived from
-   (booking_id, room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of
-   intent — the extra seconds are invisible to users because the join window ends at endAt+30m
-   in our authorization, not at room exp); (b) POST /rooms { privacy: &quot;private&quot;, properties: {
+   short transaction it takes an in-progress LEASE — UPDATE sessions SET room_attempt_seq =
+   room_attempt_seq + 1, room_create_attempt_at = now(), room_create_lease_until = now() + 60 s,
+   room_fingerprint_exp = endAt + 30 min + offset WHERE booking_id = $id AND daily_room_name IS
+   NULL AND (room_create_lease_until IS NULL OR room_create_lease_until &lt; now()) RETURNING * —
+   zero rows means another worker holds the lease (or the room already exists): return
+   in_progress without calling Daily (the caller&#39;s workflow retries after the lease expires), so
+   only ONE POST can be in flight per booking; offset = 0..599 s derived from (booking_id,
+   room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of intent — the
+   extra seconds are invisible to users because the join window ends at endAt+30m in our
+   authorization, not at room exp); the lease is cleared when the room is persisted or the
+   attempt lands in room_unresolved, and an expired lease with no room is the signal for the
+   reconciliation path in (c), never for a blind new POST; (b) POST /rooms { privacy: &quot;private&quot;, properties: {
    nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
    automatic retry; on 200 persist daily_room_name/url from the response; (c) on
    timeout/5xx/network error it reconciles: GET /rooms?limit=100 followed through every page
@@ -5154,7 +5173,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    (404 = already gone = success). Tests with a mocked Daily client: lost response then one
    fingerprint match on the second page -&gt; adopted, zero extra POSTs; lost response, no match
    twice -&gt; exactly one more POST with seq 2; two matches -&gt; room_unresolved, no POST; two
-   concurrent ensureSessionRoom calls -&gt; one POST (the row transaction serializes the attempt);
+   concurrent ensureSessionRoom calls -&gt; one POST (the second sees the lease and returns
+   in_progress); a worker that dies mid-call -&gt; the lease expires, the next call reconciles by
+   fingerprint before any POST;
    cancel with DELETE 404 -&gt; success; orphan sweep deletes an unreferenced room and never a
    referenced one.
    Tests: lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one
@@ -5164,8 +5185,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
    attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status -&gt;
    no_show when attendance &lt;&gt; both, else ended; sweep at end_at + 15 min if no webhook),
-   room_created_at, room_create_attempt_at, room_attempt_seq int NOT NULL DEFAULT 0,
-   room_fingerprint_exp timestamptz nullable,
+   room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
+   room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable,
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -5659,8 +5680,10 @@ PR 10.2 — CRM + AI reports beta:
 8. @eleva/ai (only AI Gateway; no direct provider SDKs): packages/ai/src/prompts/session-report.
    v1.ts (system + user template; language from booking locale; output schema Zod { summary,
    observations[], recommendations[], followUpQuestions[], redFlags[] , disclaimer }), draftSession
-   Report({ bookingId, noteRecordIds }) (the one signature — validate that every note belongs to
-   bookingId and the caller&#39;s org BEFORE decrypting; mismatch -&gt; 403, no decryption) — input is
+   Report({ bookingId, noteRecordIds }) (the one signature — BEFORE any decryption: validate
+   that every note belongs to bookingId and the caller&#39;s org (mismatch -&gt; 403) AND that an
+   active ai_processing consent exists for the booking&#39;s member (absent or withdrawn -&gt; 403
+   AI_CONSENT_REQUIRED, no decryption, no Gateway call; test both denials) — input is
    the expert&#39;s decrypted typed notes for that
    booking (plus the member&#39;s typed intake answers when present), never a transcript — using
    generateObject via the gateway with model id from
@@ -6278,8 +6301,15 @@ PR 12.1 — access, users, partners, experts, bookings:
    GET /admin/partners/[id] (checklist computed: Connect details_submitted + payouts_enabled +
    capabilities.transfers active (D-05; Stripe Identity status only when
    ff.expert_identity_verification is on),
-   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R] { reason } -&gt;
-   expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved,
+   invoicing choice, profile completeness, ERS bio check flags), POST /approve [R, stepUp]
+   { reason } — TWO paths by the application&#39;s specialty class (packages/config
+   SPECIALTIES[slug].clinical boolean, SSOT): non-clinical -&gt; executes directly:
+   expert_profiles.status = active + revalidateTag(&quot;public-experts&quot;) + Lane 1 partner.approved;
+   clinical (any ERS-regulated specialty) -&gt; adminRoute({ dualControl: true }) creates an
+   admin_action_requests row of kind partner.approve_clinical and returns 202 { requestId } —
+   the same side effect runs only from the dual-control approve endpoint (item 1) with both
+   actors in the audit event; tests cover both paths and assert a clinical application can never
+   reach status = active with a single actor,
    POST /reject [R] { reason } -&gt; Lane 1 partner.rejected, POST /needs-changes [R] { reason,
    items }.
    Clinic verification queue: GET /admin/clinics/verifications, POST
@@ -7675,21 +7705,23 @@ Daily calls; identical grant after a Daily timeout triggers exactly one sync tha
 row); step 2 calls Daily <code>updateRoom</code> with a 10 s timeout and no DB lock held, <strong>fenced</strong> so an
 older call can never land after a newer one. Daily room <code>properties</code> are a closed set — there
 is no <code>meta</code> field and no provider-side version, so <strong>all fencing state is Eleva-owned</strong> on the
-<code>sessions</code> row (<code>recording_desired</code>, <code>recording_enabled</code>, <code>recording_state_version</code>,
-<code>recording_verified_at</code>): (a) provider calls for one booking are single-flight behind a Redis
+<code>sessions</code> row (<code>recording_desired</code>, <code>recording_enabled</code>, <code>recording_state_version</code> — bumped on
+every change of desired state —, <code>recording_verified_version</code> — the version whose provider
+state was last confirmed by read-back —, <code>recording_verified_at</code>): (a) provider calls for one booking are single-flight behind a Redis
 mutex <code>recording-sync:{bookingId}</code> (15 s TTL, held only around the Daily call — consent writes
 and joins never wait on it) and a worker that acquires the mutex re-reads the current version
 <code>v</code> and desired state and applies the CURRENT desired state, not the one it started with, so
 two calls for one room never overlap and the last call always carries the newest intent; (b)
 after <code>updateRoom</code> the worker reads the room back (<code>GET /rooms/{name}</code>) and accepts only when
 the returned <code>config.enable_recording</code> equals the desired value it just sent; step 3 persists
-<code>recording_enabled = &lt;read-back value&gt;</code>, <code>recording_verified_at = now()</code> with a
-compare-and-swap <code>WHERE recording_state_version = v</code> — zero rows means a newer desired state
-superseded this call, so the worker re-runs from step 1 instead of writing. A Daily outage
-therefore never blocks consent writes or joins on a row lock. The <code>join</code> route refuses to mint
-a token while <code>recording_desired &lt;&gt; recording_enabled</code> or while <code>recording_verified_at</code> is
-older than the row&#39;s last <code>recording_state_version</code> change (it re-runs the sync first, and
-returns 503 RECORDING_STATE_PENDING if Daily is still unreachable), so nobody joins a room whose
+<code>recording_enabled = &lt;read-back value&gt;</code>, <code>recording_verified_version = v</code>,
+<code>recording_verified_at = now()</code> with a compare-and-swap <code>WHERE recording_state_version = v</code> —
+zero rows means a newer desired state superseded this call, so the worker re-runs from step 1
+instead of writing. A Daily outage therefore never blocks consent writes or joins on a row
+lock. The <code>join</code> route&#39;s guard is purely local and exact: it refuses to mint a token unless
+<code>recording_verified_version = recording_state_version AND recording_enabled = recording_desired</code> (a timed-out or superseded update leaves <code>recording_verified_version</code>
+behind, so it is detected without any provider read); on refusal it re-runs the sync first and
+returns 503 RECORDING_STATE_PENDING if Daily is still unreachable, so nobody joins a room whose
 provider-side recording state is unknown or stale. Tests: grant/withdraw race (withdrawal
 committed last) -&gt; final Daily state and row both <code>false</code>; out-of-order completion (older
 enable call finishes after the newer withdraw call) -&gt; the mutex + re-read means the older
@@ -7712,9 +7744,10 @@ rather than minting.</p>
    then GET /rooms/{name} read-back accepted only when config.enable_recording equals the value
    just sent (Daily room properties are a closed set: NO meta field, NO provider-side version —
    all fencing state lives on the sessions row: recording_desired, recording_enabled,
-   recording_state_version, recording_verified_at); CAS on the version; join refuses to mint
-   while recording_desired &lt;&gt; recording_enabled or recording_verified_at predates the last
-   version change) (idempotent — no call when unchanged; race test: grant/withdraw concurrently
+   recording_state_version, recording_verified_version, recording_verified_at); CAS on the
+   version also sets recording_verified_version = v; join refuses to mint unless
+   recording_verified_version = recording_state_version AND recording_enabled =
+   recording_desired) (idempotent — no call when unchanged; race test: grant/withdraw concurrently
    -&gt; final state false; stale read-back test -&gt; row not persisted, sync re-runs, join returns
    503 until the read-back matches; Daily timeout test -&gt; consent write &lt; 100 ms, join 503
    RECORDING_STATE_PENDING); invoke it from

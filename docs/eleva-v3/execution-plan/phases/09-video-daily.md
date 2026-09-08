@@ -45,10 +45,18 @@ In:
   `room_fingerprint_exp` and reconciles a lost response by listing rooms created inside the
   attempt window whose `config.nbf`/`config.exp` equal the stored pair — details in the prompt;
   verified in PR 09.0), `last_event_at`,
-  `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: on
-  `meeting.ended` (or the sweep at `end_at + 15 min` when Daily sent nothing) with `attendance <>
-'both'` the status becomes `no_show`, else `ended`; both transitions are in the state-machine
-  table and tested
+  `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
+  **derived, never written from a single event**: on `meeting.ended` (or the sweep at `end_at +
+15 min` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
+  `ended + 2 min` (QStash, idempotent); it recomputes attendance from the full ordered
+  `participants` history (every `participant.joined`/`left` persisted by the webhook, including
+  those whose event time precedes `meeting.ended` but arrived after it) and only then sets the
+  status: `attendance <> 'both'` -> `no_show`, else `ended`; a participant event that arrives
+  after finalization with an event time inside the session window re-runs the recompute and may
+  flip `no_show` -> `ended` (never the reverse; emits `session.attendance_corrected` and undoes
+  any no-show side effect that has not executed yet); both transitions are in the state-machine
+  table and tested, including the out-of-order sequence `participant.joined` (t=10:02) delivered
+  after `meeting.ended` (t=10:31) -> final status `ended`, not `no_show`
   (join/leave history only — never used for authorization), RLS for expert org + buyer org.
 - `session_participants` table (the **authorization** contract for delegated participants):
   `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,
@@ -254,11 +262,18 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    send one) and room properties accept no custom metadata (schema is additionalProperties:
    false — never send properties.meta), so ensureSessionRoom must reconcile from Eleva-owned
    state plus the only booking-specific room values Daily keeps, nbf and exp: (a) inside a
-   short transaction it increments sessions.room_attempt_seq, writes room_create_attempt_at =
-   now() and room_fingerprint_exp = endAt + 30 min + offset, where offset = 0..599 s derived from
-   (booking_id, room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of
-   intent — the extra seconds are invisible to users because the join window ends at endAt+30m
-   in our authorization, not at room exp); (b) POST /rooms { privacy: "private", properties: {
+   short transaction it takes an in-progress LEASE — UPDATE sessions SET room_attempt_seq =
+   room_attempt_seq + 1, room_create_attempt_at = now(), room_create_lease_until = now() + 60 s,
+   room_fingerprint_exp = endAt + 30 min + offset WHERE booking_id = $id AND daily_room_name IS
+   NULL AND (room_create_lease_until IS NULL OR room_create_lease_until < now()) RETURNING * —
+   zero rows means another worker holds the lease (or the room already exists): return
+   in_progress without calling Daily (the caller's workflow retries after the lease expires), so
+   only ONE POST can be in flight per booking; offset = 0..599 s derived from (booking_id,
+   room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of intent — the
+   extra seconds are invisible to users because the join window ends at endAt+30m in our
+   authorization, not at room exp); the lease is cleared when the room is persisted or the
+   attempt lands in room_unresolved, and an expired lease with no room is the signal for the
+   reconciliation path in (c), never for a blind new POST; (b) POST /rooms { privacy: "private", properties: {
    nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
    automatic retry; on 200 persist daily_room_name/url from the response; (c) on
    timeout/5xx/network error it reconciles: GET /rooms?limit=100 followed through every page
@@ -277,7 +292,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    (404 = already gone = success). Tests with a mocked Daily client: lost response then one
    fingerprint match on the second page -> adopted, zero extra POSTs; lost response, no match
    twice -> exactly one more POST with seq 2; two matches -> room_unresolved, no POST; two
-   concurrent ensureSessionRoom calls -> one POST (the row transaction serializes the attempt);
+   concurrent ensureSessionRoom calls -> one POST (the second sees the lease and returns
+   in_progress); a worker that dies mid-call -> the lease expires, the next call reconciles by
+   fingerprint before any POST;
    cancel with DELETE 404 -> success; orphan sweep deletes an unreferenced room and never a
    referenced one.
    Tests: lost response after Daily created the room -> reconciliation adopts it -> exactly one
@@ -287,8 +304,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
    attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status ->
    no_show when attendance <> both, else ended; sweep at end_at + 15 min if no webhook),
-   room_created_at, room_create_attempt_at, room_attempt_seq int NOT NULL DEFAULT 0,
-   room_fingerprint_exp timestamptz nullable,
+   room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
+   room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable,
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
