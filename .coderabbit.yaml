@@ -56,7 +56,7 @@ reviews:
       instructions: >-
         Only place that may import better-auth / @better-auth/*
         (ADR-017). Permissions SSOT is permissions.ts; hooks are
-        withAudit-wrapped. Flag new WorkOS imports. Flag trustedOrigins
+        withAudit-wrapped. Flag leftover IDP SDK imports. Flag trustedOrigins
         wildcards. Flag mixing session cookie, JWT and API key on one
         request. The only better-auth server import is
         packages/auth/src/server/auth.ts.

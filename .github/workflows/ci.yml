@@ -157,6 +157,37 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check:i18n-parity
 
+  legacy-idp-guard:
+    name: Legacy IDP guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Reject leftover identity-provider references
+        run: |
+          set +e
+          matches="$(
+            rg --hidden -n -i 'workos' \
+              --glob '!.git/**' \
+              --glob '!_context/**' \
+              --glob '!docs/eleva-v3/adrs/**' \
+              --glob '!docs/eleva-v3/decision-log.md' \
+              --glob '!docs/eleva-v3/execution-plan/**' \
+              --glob '!pnpm-lock.yaml' \
+              --glob '!.github/workflows/**' \
+              --glob '!packages/db/src/migrations/**' \
+              --glob '!packages/eslint-config/**' \
+              --glob '!packages/auth/eslint.config.js' \
+              --glob '!.cursor/hooks/state/**' \
+              || true
+          )"
+          if [ -n "$matches" ]; then
+            echo "$matches"
+            echo "::error::Leftover identity-provider references found. See Phase 03.2 exit gate."
+            exit 1
+          fi
+
   gitleaks:
     name: gitleaks
     runs-on: ubuntu-latest

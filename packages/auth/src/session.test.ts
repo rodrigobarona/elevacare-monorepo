@@ -4,13 +4,12 @@ import { requirePermission, resolveSessionCapabilities } from "./session"
 import { UnauthorizedError, type ElevaSession } from "./types"
 
 const mockSession: ElevaSession = {
-  user: { id: "u1", workosUserId: "wu1", email: "a@b.c" },
+  user: { id: "u1", email: "a@b.c" },
   orgId: "org-1",
-  workosOrgId: "workos-org-1",
   orgSlug: "test-org",
   orgType: "expert",
   productLabel: "expert",
-  workosRole: "admin",
+  membershipRole: "admin",
   capabilities: ["events:manage", "bookings:manage_own"],
 }
 

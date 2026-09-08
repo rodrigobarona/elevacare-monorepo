@@ -32,8 +32,6 @@ export type RlsTableAssignment = {
 
 /** Current table → class map. Keep in sync with schema-and-migration-rules.md. */
 export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
-  { table: "organizations", class: "tenant-owned" },
-  { table: "memberships", class: "tenant-owned" },
   { table: "expert_profiles", class: "tenant-owned" },
   { table: "expert_listings", class: "public-read" },
   { table: "clinic_profiles", class: "public-read" },
@@ -54,7 +52,6 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "org_data_keys", class: "tenant-owned" },
   { table: "audit_outbox", class: "service-only" },
   { table: "stripe_webhook_events", class: "service-only" },
-  { table: "users", class: "owner-user-visible" },
   { table: "expert_categories", class: "public-read" },
   {
     table: "audit_events",
@@ -79,7 +76,11 @@ export type RlsClassFixture = {
 export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
   { class: "tenant-owned", table: "org_data_keys", synthetic: false },
   { class: "dual-organization", table: "bookings", synthetic: false },
-  { class: "owner-user-visible", table: "users", synthetic: false },
+  {
+    class: "owner-user-visible",
+    table: "_rls_fixture_owner_user_visible",
+    synthetic: true,
+  },
   { class: "participant-visible", table: "sessions", synthetic: false },
   { class: "staff-only", table: "_rls_fixture_staff_only", synthetic: true },
   { class: "public-read", table: "expert_listings", synthetic: false },
@@ -93,16 +94,14 @@ export function classPredicateSql(
 ): string {
   switch (rlsClass) {
     case "tenant-owned":
-      return table === "organizations"
-        ? `id::text = current_setting('eleva.org_id', true)`
-        : `org_id::text = current_setting('eleva.org_id', true)`
+      return `org_id::text = current_setting('eleva.org_id', true)`
     case "dual-organization":
       return (
         `org_id::text = current_setting('eleva.org_id', true)` +
         ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
       )
     case "owner-user-visible":
-      return table === "users"
+      return table === "_rls_fixture_owner_user_visible"
         ? `id::text = current_setting('eleva.user_id', true)`
         : `user_id::text = current_setting('eleva.user_id', true)`
     case "participant-visible":

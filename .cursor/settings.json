@@ -3,9 +3,6 @@
     "posthog": {
       "enabled": true
     },
-    "workos": {
-      "enabled": true
-    },
     "pr-review-canvas": {
       "enabled": true
     },

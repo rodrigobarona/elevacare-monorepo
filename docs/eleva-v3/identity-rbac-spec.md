@@ -48,14 +48,14 @@ Eleva remains responsible for:
 - data ownership and visibility rules (Neon RLS, ADR-003)
 
 Neon _managed_ Better Auth is rejected (Beta, partial `organization` plugin, no MFA, no
-hooks). WorkOS AuthKit, Organizations, RBAC, Vault, Pipes and Widgets are removed (removed, see ADR-017).
+hooks). The previous identity provider (hosted Organizations, role store, vault, pipes, and widgets) is retired (ADR-017).
 
 ## Core Identity Model
 
 ### User
 
-One human. Tables: `auth.user` plus `main.users` (profile, locale, avatar URL on the DB
-row — never the OAuth profile picture).
+One human. Tables: `auth.user` (profile, locale cookie `ELEVA_LOCALE`, avatar URL on
+`auth.user.image` — never the OAuth profile picture).
 
 Examples: member, expert, organization admin, Eleva operator.
 
@@ -120,7 +120,7 @@ Consumers:
   forwarded). Mapped fields: `user.id` (= `auth.user.id`), `email`, `displayName`,
   `avatarUrl`; `orgId` / `orgSlug` / `orgType` from `auth.member` +
   `auth.organization`; `session.activeOrganizationId` selects the active org
-  when present. `workosUserId` / `workosOrgId` remain aliases of those ids until
+  when present. `userId` / `orgId` remain aliases of those ids until
   Phase 3.
 - `@eleva/auth/proxy` — `getSessionCookie()` optimistic check in each `proxy.ts`;
   authorization is always re-checked server-side
@@ -287,7 +287,7 @@ Identity + RBAC is one layer. The non-bypassable layer is Neon RLS (ADR-003).
 
 `@eleva/encryption` is envelope AES-256-GCM (per-org DEK wrapped by `ELEVA_KEK_V*`).
 OAuth tokens are **not** in this package — Better Auth `account.encryptOAuthTokens`
-covers Google/Microsoft. WorkOS Vault is removed (removed, see ADR-017).
+covers Google/Microsoft. Integration credentials (TOConline, Moloni) use `@eleva/encryption`.
 
 CI rule: no `process.env.ENCRYPTION_KEY`, no `crypto.createCipheriv` outside
 `packages/encryption` (and Better Auth's own internals).
@@ -308,7 +308,7 @@ cookie slot or a session token as Bearer is rejected.
 
 ## Closed Decisions
 
-- Better Auth is the identity provider (ADR-017). WorkOS (removed, see ADR-017).
+- Better Auth is the identity provider (ADR-017).
 - Role backbone = `owner` / `admin` / `member`; product labels from `(org_type, role)`
   (ADR-021)
 - Organization-per-user default for solo experts and members

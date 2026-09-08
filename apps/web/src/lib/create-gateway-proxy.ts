@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { SESSION_COOKIE_NAMES } from "@eleva/auth/credentials"
 import {
   getOrgTypeBySlug,
   orgSlugNeedingTypeLookup,
@@ -19,7 +20,6 @@ export type IntlMiddleware = (
 
 export interface GatewayProxyOptions {
   origins?: GatewayOrigins
-  sessionCookieName?: string
   intlMiddleware: IntlMiddleware
 }
 
@@ -44,13 +44,13 @@ function rewriteToOrigin(request: NextRequest, origin: string): NextResponse {
 
 export function createGatewayProxy(options: GatewayProxyOptions) {
   const origins = options.origins ?? resolveOriginsFromEnv()
-  const sessionCookie =
-    options.sessionCookieName ?? process.env.WORKOS_COOKIE_NAME ?? "wos-session"
   const intlMiddleware = options.intlMiddleware
 
   return async function gatewayProxy(request: NextRequest) {
     const { pathname } = request.nextUrl
-    const hasSession = request.cookies.has(sessionCookie)
+    const hasSession = SESSION_COOKIE_NAMES.some((name) =>
+      request.cookies.has(name)
+    )
 
     let decision = resolveDispatch(pathname, hasSession, origins)
 

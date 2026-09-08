@@ -2,11 +2,7 @@
 
 import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
-import {
-  requireSession,
-  getWorkOS,
-  refreshWorkOSSession,
-} from "@eleva/auth/server"
+import { requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
 import { createApiClient } from "@eleva/api-client"
 import {
@@ -51,13 +47,7 @@ export async function updateLanguagePreference(
   const locale: Locale = raw
 
   try {
-    const session = await requireSession()
-
-    const workos = getWorkOS()
-    await workos.userManagement.updateUser({
-      userId: session.user.workosUserId,
-      locale,
-    })
+    await requireSession()
 
     const [jar, hdrs] = await Promise.all([cookies(), headers()])
     const host = hdrs.get("x-forwarded-host") ?? hdrs.get("host")
@@ -66,10 +56,6 @@ export async function updateLanguagePreference(
       locale,
       getLocaleCookieOptions(host, { httpOnly: false })
     )
-
-    // WorkOS user.locale is the authenticated source of truth, but the
-    // session JWT caches the old value until we refresh it.
-    await refreshWorkOSSession()
 
     revalidatePath("/", "layout")
     revalidatePath("/account/settings")

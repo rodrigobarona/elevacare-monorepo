@@ -30,7 +30,7 @@ Account profile avatars use Vercel Blob client uploads:
 6. The account Server Action calls `PUT /users/avatar` through
    `@eleva/api-client`, forwarding the current session cookie.
 7. `apps/api/src/app/users/avatar/route.ts` persists the final public Blob URL
-   in `main.users.avatarUrl` and deletes the replaced blob after the DB write.
+   in `auth.user.image` and deletes the replaced blob after the DB write.
 
 The upload token is only for `/blob/upload`. It must not authenticate regular
 profile API calls such as `GET`, `PUT`, or `DELETE /users/avatar`; those routes
@@ -38,18 +38,18 @@ use the standard API auth model (`requireApiAuth()`).
 
 ## Avatar Source Of Truth
 
-WorkOS may expose an OAuth profile picture for identities created through an
-external provider. Treat that value as provider-owned identity data, not the
-Eleva app avatar.
+An identity provider may expose an OAuth profile picture for identities created
+through an external provider. Treat that value as provider-owned identity data,
+not the Eleva app avatar.
 
-The canonical app avatar is `main.users.avatarUrl` in `@eleva/db` because it is:
+The canonical app avatar is `auth.user.image` in `@eleva/db` because it is:
 
 - controlled by the account profile flow;
 - exposed through the API-first contract at `/users/avatar`;
 - resolved into `ElevaSession.user.avatarUrl` by `@eleva/auth`;
 - auditable with the rest of Eleva's mutating user operations.
 
-Do not store the app avatar in WorkOS user metadata. Metadata would bypass the
+Do not store the app avatar in user metadata. Metadata would bypass the
 domain package and audit patterns, make OpenAPI documentation less useful, and
 couple app-specific profile state to the identity provider.
 

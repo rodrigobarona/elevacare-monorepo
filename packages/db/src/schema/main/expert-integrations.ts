@@ -21,8 +21,7 @@ import {
   pkColumn,
   updatedAt,
 } from "./shared"
-import { account } from "../auth/index"
-import { organizations } from "./organizations"
+import { account, organization } from "../auth/index"
 import { expertProfiles } from "./expert-profiles"
 
 export const integrationCategoryEnum = pgEnum("integration_category", [
@@ -55,9 +54,9 @@ export const integrationStatusEnum = pgEnum("integration_status", [
  * Replaces `connected_calendars` and `expert_integration_credentials`.
  *
  * Credential strategy is declared by `connectType`:
- *   pipes  -> WorkOS Pipes manages OAuth (workosUserId required)
- *   oauth  -> Eleva-managed OAuth via WorkOS Vault (vaultRef required)
- *   api_key -> expert-supplied key in Vault (vaultRef required)
+ *   pipes  -> calendar OAuth via Better Auth (`authAccountId` required)
+ *   oauth  -> Eleva-managed OAuth (`vaultRef` required)
+ *   api_key -> expert-supplied key (`vaultRef` required)
  *   manual -> no credentials
  *
  * CHECK constraints enforce the above invariants at the DB level.
@@ -68,7 +67,7 @@ export const expertIntegrations = pgTable(
   "expert_integrations",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertProfileId: uuid("expert_profile_id")
@@ -80,15 +79,12 @@ export const expertIntegrations = pgTable(
     slug: text("slug").notNull(),
     connectType: integrationConnectTypeEnum("connect_type").notNull(),
 
-    /** WorkOS user ID for Pipes getAccessToken calls (calendar integrations). */
-    workosUserId: text("workos_user_id"),
-
     /** Better Auth `auth.account.id` for calendar OAuth tokens. */
     authAccountId: uuid("auth_account_id").references(() => account.id, {
       onDelete: "cascade",
     }),
 
-    /** WorkOS Vault reference for Eleva-managed OAuth tokens (invoicing). */
+    /** Envelope-encrypted credential reference for Eleva-managed OAuth. */
     vaultRef: varchar("vault_ref", { length: 255 }),
 
     /** Human-readable account label: email, account name, etc. */
@@ -128,7 +124,7 @@ export const expertIntegrations = pgTable(
     statusIdx: index("expert_integrations_status_idx").on(t.status),
     pipesCheck: check(
       "expert_integrations_pipes_check",
-      sql`connect_type != 'pipes' OR auth_account_id IS NOT NULL OR workos_user_id IS NOT NULL`
+      sql`connect_type != 'pipes' OR auth_account_id IS NOT NULL`
     ),
     oauthCheck: check(
       "expert_integrations_oauth_check",
@@ -154,7 +150,7 @@ export const calendarBusySources = pgTable(
   "calendar_busy_sources",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertIntegrationId: uuid("expert_integration_id").notNull(),
@@ -196,7 +192,7 @@ export const calendarDestinations = pgTable(
   "calendar_destinations",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertProfileId: uuid("expert_profile_id")

@@ -55,18 +55,13 @@ export async function POST(request: Request) {
   })
 
   const result = await completeOnboarding({
-    workosUserId: session.user.workosUserId,
-    workosOrgId: created.orgId,
-    orgName: body.data.spaceName,
-    role: "admin",
-    orgType: "personal",
-    actorUserId: session.user.id,
+    userId: session.user.id,
+    orgId: created.orgId,
   })
 
   try {
     await provisionOrgBilling({
       orgId: result.orgId,
-      workosOrgId: created.orgId,
       orgName: body.data.spaceName,
       orgType: "personal",
       email: session.user.email,

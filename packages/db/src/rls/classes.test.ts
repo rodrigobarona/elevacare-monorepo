@@ -54,13 +54,13 @@ describe("RLS class taxonomy", () => {
     }
   })
 
-  it("uses id for organizations tenant-owned and user id for users", () => {
-    expect(classPredicateSql("tenant-owned", "organizations")).toContain(
-      "id::text"
+  it("uses org_id for tenant-owned and user id for owner-visible fixtures", () => {
+    expect(classPredicateSql("tenant-owned", "org_data_keys")).toContain(
+      "org_id::text"
     )
-    expect(classPredicateSql("owner-user-visible", "users")).toContain(
-      "eleva.user_id"
-    )
+    expect(
+      classPredicateSql("owner-user-visible", "_rls_fixture_owner_user_visible")
+    ).toContain("eleva.user_id")
   })
 
   it("never assigns a table two classes", () => {

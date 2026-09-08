@@ -14,7 +14,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
-import { organizations } from "./organizations"
+import { organization } from "../auth"
 
 /**
  * Stripe billing persistence layer (Phase 1 of stripe-foundation-review).
@@ -29,7 +29,7 @@ import { organizations } from "./organizations"
  *   billing_customers      - Org -> Stripe Customer mirror. Tenant-scoped.
  *                            Stripe metadata is the source of truth; this
  *                            mirror exists for fast lookups + admin/support
- *                            queries. WorkOS `stripeCustomerId` on the org
+ *                            queries. Stripe Customer id on the org
  *                            remains the canonical link for entitlements.
  *
  *   billing_subscriptions  - Stripe Subscription mirror. Tenant-scoped.
@@ -37,9 +37,9 @@ import { organizations } from "./organizations"
  *                            "is this subscription active / past_due /
  *                            canceled" without hitting Stripe per request.
  *
- * Feature gating still reads from the WorkOS access-token `entitlements`
- * claim (see ADR-016). These mirrors are for support, audit, and admin
- * tooling, not entitlement decisions.
+ * Feature gating reads from session entitlements (see ADR-016). These
+ * mirrors are for support, audit, and admin tooling, not entitlement
+ * decisions.
  */
 
 export const stripeWebhookEventStatusEnum = pgEnum(
@@ -146,7 +146,7 @@ export const stripeWebhookEvents = pgTable(
      * valuable than the back-link, and `organizations.deletedAt` is the
      * normal soft-delete path which doesn't trigger the FK).
      */
-    resolvedOrgId: uuid("resolved_org_id").references(() => organizations.id, {
+    resolvedOrgId: uuid("resolved_org_id").references(() => organization.id, {
       onDelete: "set null",
     }),
   },
@@ -160,19 +160,17 @@ export const stripeWebhookEvents = pgTable(
 /**
  * Org -> Stripe Customer mirror. Created when an org is provisioned (see
  * `provisionOrgBilling` in @eleva/billing/server). The
- * organizations.stripeCustomerId on the WorkOS side remains the canonical
- * link for AuthKit entitlement claims; this mirror exists so the API and
- * support tooling can answer "what is the Stripe customer for this org?"
- * without round-tripping WorkOS or searching Stripe metadata.
+ * `auth.organization.id` is the canonical tenant key. This mirror exists so
+ * the API and support tooling can answer "what is the Stripe customer for
+ * this org?" without searching Stripe metadata.
  */
 export const billingCustomers = pgTable(
   "billing_customers",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
-    workosOrgId: varchar("workos_org_id", { length: 255 }).notNull(),
     stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).notNull(),
     /** Snapshot of Stripe customer metadata at last sync. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
@@ -184,7 +182,6 @@ export const billingCustomers = pgTable(
     stripeIdx: uniqueIndex("billing_customers_stripe_idx").on(
       t.stripeCustomerId
     ),
-    workosIdx: index("billing_customers_workos_idx").on(t.workosOrgId),
     tenantPolicy: pgPolicy("billing_customers_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
@@ -206,7 +203,7 @@ export const billingSubscriptions = pgTable(
   "billing_subscriptions",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     stripeSubscriptionId: varchar("stripe_subscription_id", {
@@ -231,7 +228,7 @@ export const billingSubscriptions = pgTable(
       .array()
       .notNull()
       .$defaultFn(() => []),
-    /** Subscription item ID for the metered seat (WorkOS Seat Sync), if any. */
+    /** Subscription item ID for the metered seat, if any. */
     seatItemId: varchar("seat_item_id", { length: 255 }),
     currentPeriodStart: timestamp("current_period_start", {
       withTimezone: true,

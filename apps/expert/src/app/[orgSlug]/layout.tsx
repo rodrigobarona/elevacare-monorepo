@@ -1,5 +1,3 @@
-import "@radix-ui/themes/styles.css"
-
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"

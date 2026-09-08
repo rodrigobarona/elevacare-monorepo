@@ -12,7 +12,6 @@
 import { Client, type Schedule } from "@upstash/qstash"
 
 const EXPECTED_PATHS = [
-  "/workos/sync",
   "/workflows/audit-outbox-drainer",
   "/workflows/stripe-stuck-events",
 ] as const
@@ -53,6 +52,17 @@ async function main() {
       )
     } else {
       console.log(`  MISSING  ${path}`)
+    }
+  }
+
+  const unexpected = schedules.filter(
+    (s: Schedule) =>
+      !EXPECTED_PATHS.some((path) => s.destination.endsWith(path))
+  )
+  if (unexpected.length > 0) {
+    console.log(`\n=== Unexpected schedules (delete in Upstash) ===`)
+    for (const s of unexpected as Schedule[]) {
+      console.log(`  ${s.scheduleId}  →  ${s.destination}`)
     }
   }
 }

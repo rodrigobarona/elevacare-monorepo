@@ -9,7 +9,7 @@ interface SessionWithEntitlements {
 /**
  * Stripe Entitlement keys mapped to subscription tiers.
  * These keys are set in Stripe Dashboard > Entitlements and
- * flow into the WorkOS access token via the Stripe add-on.
+ * flow into the Better Auth session via billing mirrors.
  */
 export const ENTITLEMENT_KEYS = {
   MEMBER_FREE: "member_free",
@@ -25,7 +25,7 @@ export type EntitlementKey =
 /**
  * Check if a session holds a specific entitlement.
  * Returns false gracefully when entitlements are not yet populated
- * (e.g. before the Stripe add-on is enabled in WorkOS).
+ * (e.g. before a Stripe subscription has attached entitlements).
  */
 export function hasEntitlement(
   session: SessionWithEntitlements,

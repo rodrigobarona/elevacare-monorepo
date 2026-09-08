@@ -1,13 +1,12 @@
 import { Suspense } from "react"
 import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
+import { SESSION_COOKIE_NAMES } from "@eleva/auth/credentials"
 import { Link } from "@/i18n/navigation"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
 import { SignedOutButtons } from "./signed-out-buttons"
 import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
-
-const SESSION_COOKIE = process.env.WORKOS_COOKIE_NAME ?? "wos-session"
 
 type NavItem = {
   href: string
@@ -26,7 +25,8 @@ interface SiteHeaderProps {
  */
 export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   const t = await getTranslations("nav")
-  const hasSessionCookie = (await cookies()).has(SESSION_COOKIE)
+  const jar = await cookies()
+  const hasSessionCookie = SESSION_COOKIE_NAMES.some((name) => jar.has(name))
 
   return (
     <header className="border-b px-6 py-4">

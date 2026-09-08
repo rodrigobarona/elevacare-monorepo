@@ -425,7 +425,7 @@ VIES validation:
 #### Rollout
 
 - behind `ff.toconline_invoicing_enabled` staged (staging → 1 pilot expert/clinic → all PT → default on for PT)
-- OAuth tokens stored encrypted at rest via `packages/encryption` (envelope, ADR-020) in Neon. WorkOS Vault is removed (removed, see ADR-017).
+- Integration OAuth tokens stored encrypted at rest via `packages/encryption` (envelope, ADR-020) in Neon. Calendar tokens use Better Auth `account.encryptOAuthTokens`.
 
 ### Tier 2 — Expert → Patient (expert's legal obligation, optionally automated)
 

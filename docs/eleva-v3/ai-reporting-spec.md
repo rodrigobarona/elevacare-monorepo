@@ -227,7 +227,7 @@ Feature flag: `ff.ai_reports_beta` for staged rollout.
 
 - Vercel AI Gateway is the sole model router (ADR-009)
 - No direct LLM provider SDKs outside `packages/ai`
-- Transcripts are Eleva-owned records encrypted via `@eleva/encryption` (ADR-020). WorkOS Vault (removed, see ADR-017 / ADR-020).
+- Transcripts are Eleva-owned records encrypted via `@eleva/encryption` (ADR-020).
 - Human-in-the-loop is mandatory for any patient-visible report
 
 ## Open Questions

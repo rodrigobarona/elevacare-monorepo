@@ -13,17 +13,17 @@ import {
  * Phase 1 of W1 wires `@eleva/flags` into a stable boundary inside
  * `@eleva/billing/server`. Booking, marketplace, and admin code calls
  * these helpers instead of reading `session.entitlements` directly,
- * so the Stripe Entitlements -> WorkOS JWT -> app-behavior chain has
+ * so the Stripe Entitlements -> session -> app-behavior chain has
  * one canonical entry point.
  *
  * The helpers are pure functions on the session shape and don't touch
- * Stripe at runtime (entitlements arrive via the WorkOS access-token
- * JWT). They are SSR-safe and edge-runtime safe.
+ * Stripe at runtime (entitlements arrive via the Better Auth session).
+ * They are SSR-safe and edge-runtime safe.
  *
  * Source-of-truth wiring:
  *   - Stripe Entitlement features seeded by infra/stripe/seed-entitlements
- *   - Customer subscription -> WorkOS Add-on -> JWT entitlements claim
- *   - JWT parsed in @eleva/auth resolveWorkosIdentity into ElevaSession
+ *   - Customer subscription -> session entitlements claim
+ *   - Session assembled in @eleva/auth loadElevaSession
  *   - Booking domain calls computeCommissionRate(session) here
  *
  * See ADR-016 for the full chain.

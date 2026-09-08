@@ -35,7 +35,7 @@ The design system should support:
 
 ### `packages/ui`
 
-Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) via the shadcn React Aria base ([ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md)). Radix UI is not a primitive source. `@radix-ui/themes` remains only as the transitional WorkOS Widgets peer until [Phase 3](./execution-plan/phases/03-remove-workos.md) deletes those wrappers (ADR-022 decision 6). WorkOS Widgets are being retired in Phase 3 (removed, see ADR-017).
+Built on [React Aria Components](https://react-spectrum.adobe.com/react-aria/components.html) via the shadcn React Aria base ([ADR-022](./adrs/ADR-022-react-aria-ui-primitives.md)). Radix UI is not a primitive source. The previous identity widgets and their `@radix-ui/themes` peer are gone (ADR-017, Phase 3). Plate may still import `@radix-ui/*` inside `packages/editor` (ADR-023).
 
 Should own:
 

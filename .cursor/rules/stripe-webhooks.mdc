@@ -174,9 +174,7 @@ stripe trigger identity.verification_session.verified
 Check the API server logs for `[stripe-webhook]` output confirming
 delivery and `stripe_webhook_events` rows for the persisted entries.
 
-## WorkOS Stripe Add-on note
+## Stripe Sandbox note
 
-The WorkOS Stripe Add-on does NOT support Stripe Sandbox accounts (per
-ADR-016). For staging/dev, use Stripe **test mode** on a standard
-account, not a Sandbox account. Entitlements and `workos_seat_count`
-meter integration require this.
+For staging/dev, use Stripe **test mode** on a standard account, not a
+Sandbox account.

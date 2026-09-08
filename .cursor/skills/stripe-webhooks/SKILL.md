@@ -107,9 +107,8 @@ pnpm stripe:setup:webhooks -- --url https://<api-domain>/webhooks/stripe --apply
 Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in the environment.
 The secret is only shown once at creation time.
 
-**WorkOS Stripe Add-on note:** The Add-on does NOT support Stripe Sandbox
-accounts (per ADR-016). For staging/dev, use Stripe **test mode** on a
-standard account, not a Sandbox account.
+For staging/dev, use Stripe **test mode** on a standard account, not a
+Sandbox account.
 
 ## Local Development
 

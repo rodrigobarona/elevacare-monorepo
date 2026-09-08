@@ -43,7 +43,7 @@ export interface CalendarEvent {
 /**
  * Calendar API adapter. Each provider (Google, Microsoft) implements
  * this interface for direct API calls. OAuth credential management is
- * handled by WorkOS Pipes -- see ADR-004 (amended 2026-05).
+ * handled by Eleva-owned OAuth via Better Auth -- see ADR-004.
  */
 export interface CalendarAdapter {
   readonly provider: CalendarProvider

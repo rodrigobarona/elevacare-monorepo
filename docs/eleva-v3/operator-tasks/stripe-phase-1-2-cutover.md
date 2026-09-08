@@ -1,13 +1,13 @@
 # Stripe Phase 1 + 2 — Post-Merge Cutover Runbook
 
-Status: **Historical (WorkOS-era, 2026-05; removed, see ADR-017).** Stripe webhook/config steps remain
-useful. Identity evidence in the 2026-05-19 reports (WorkOS org, WorkOS JWT — removed, see ADR-017)
+Status: **Historical (previous-identity-era, 2026-05; removed, see ADR-017).** Stripe webhook/config steps remain
+useful. Identity evidence in the 2026-05-19 reports (organization, session entitlements — removed, see ADR-017)
 does not validate Better Auth. Frontend criterion 8 and
 a Better Auth E2E session are still **blocked** until Phase 2. Do not treat
 this document as launch-READY.
 
-**Do not execute** any step that names `WORKOS_*`, `/workos/sync`, WorkOS JWT (removed, see ADR-017),
-or WorkOS Dashboard (removed, see ADR-017). Those commands and env vars are retired.
+**Do not execute** any step that names `legacy identity env vars`, `/legacy-identity/sync`, session entitlements (removed, see ADR-017),
+or the previous identity dashboard (removed, see ADR-017). Those commands and env vars are retired.
 Skip them; use Phase 6 Better Auth org billing instead.
 
 This runbook is a 2026-05 historical record for Stripe webhook/config. It is not
@@ -151,9 +151,9 @@ with noise.
 
 | Var                                     | When needed                                                                                              |
 | --------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `WORKOS_SEAT_METER_ID`                  | Required for clinic-tier metered seat pricing (W5). Until set, clinic prices fall back to licensed seats |
+| `SEAT_METER_ID`                         | Required for clinic-tier metered seat pricing (W5). Until set, clinic prices fall back to licensed seats |
 | `BETTERSTACK_HEARTBEAT_URL`             | If you want the stripe-stuck-events heartbeat in BetterStack                                             |
-| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | Already required by `/workos/sync` and rate limiting; verify still set                                   |
+| `KV_REST_API_URL` + `KV_REST_API_TOKEN` | Already required by `/legacy-identity/sync` and rate limiting; verify still set                          |
 
 ### 2.5 Verification
 
@@ -181,7 +181,7 @@ maintain for staging).
 ### 3.1 Webhook endpoint
 
 The webhook endpoint is `https://api.eleva.care/webhooks/stripe` in
-the Stripe Dashboard (not a WorkOS add-on — removed, see ADR-017). Re-run the setup script to ensure
+the Stripe Dashboard (not a previous-identity add-on — removed, see ADR-017). Re-run the setup script to ensure
 it has the canonical 20-event list and an explicit
 `api_version` pin (not "account default"):
 
@@ -210,7 +210,7 @@ pnpm --filter @eleva/infra-stripe seed:products
 ```
 
 Idempotent. Creates the SaaS subscription products + tiered prices.
-With `WORKOS_SEAT_METER_ID` set, clinic tiers get
+With `SEAT_METER_ID` set, clinic tiers get
 `per_seat_metered` prices; without it they fall back to licensed.
 
 ### 3.3 Entitlements
@@ -220,7 +220,7 @@ pnpm --filter @eleva/infra-stripe seed:entitlements
 ```
 
 Mirrors the `@eleva/flags` plan-feature matrix into Stripe Entitlements.
-Runtime gates read flags from Edge Config / Stripe Entitlements, not a WorkOS JWT (removed, see ADR-017).
+Runtime gates read flags from Edge Config / Stripe Entitlements, not a session entitlements (removed, see ADR-017).
 
 ### 3.4 Verification
 
@@ -235,10 +235,10 @@ In Stripe Dashboard → Developers → Webhooks:
 
 ## 4 · Org ↔ Stripe customer linkage
 
-WorkOS Organization metadata + `backfill:org-customers` walking WorkOS orgs (removed, see ADR-017).
+organization metadata + `backfill:org-customers` walking organizations (removed, see ADR-017).
 Current contract: `provisionOrgBilling` on Better Auth
 organization create (Phase 6) writes `billing_customers.stripe_customer_id`.
-Do not run the WorkOS backfill script (removed, see ADR-017).
+Do not run the previous identity backfill script (removed, see ADR-017).
 
 ### 4.1 Verify (mirror table)
 
@@ -251,7 +251,7 @@ FROM billing_customers;
 
 `unlinked` must be 0 for every non-deleted organization that has started
 billing. Investigate any unlinked row (failed `provisionOrgBilling` on
-create) — there is no WorkOS backfill output to reconcile against (removed, see ADR-017).
+create) — there is no the previous identity provider backfill output to reconcile against (removed, see ADR-017).
 
 ---
 
@@ -560,14 +560,14 @@ cutover date.
 | `QSTASH_TOKEN` / `QSTASH_URL`                            | elevacare-api Production            | dev                     |
 | `QSTASH_CURRENT_SIGNING_KEY` / `QSTASH_NEXT_SIGNING_KEY` | elevacare-api Production            | dev                     |
 | `AUDIT_DATABASE_URL` / `AUDIT_DATABASE_URL_UNPOOLED`     | elevacare-api Production            | dev (currently MISSING) |
-| `WORKOS_SEAT_METER_ID`                                   | elevacare-api Production (optional) | dev                     |
+| `SEAT_METER_ID`                                          | elevacare-api Production (optional) | dev                     |
 | `BETTERSTACK_HEARTBEAT_URL`                              | elevacare-api Production (optional) | ops                     |
 
 ---
 
 ## Cutover Verification Report — 2026-05-19
 
-Status: **HISTORICAL (WorkOS-era; removed, see ADR-017)**. Stripe ingest findings below are retained
+Status: **HISTORICAL (previous-identity-era; removed, see ADR-017)**. Stripe ingest findings below are retained
 as evidence of the webhook path. They do **not** certify Better Auth. Criterion
 8 remains NOT EXECUTED.
 
@@ -655,13 +655,13 @@ then receive a fresh issue from the detector.
 | #   | Criterion                                                        | State        | Notes                                                                                                                                                                                                                                                                                                 |
 | --- | ---------------------------------------------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1   | All 4 migrations applied + RLS on                                | PASS         | 0014–0018 in place; RLS on `billing_*`, off on `stripe_webhook_events` (intentional). New 0018 is a benign FK from `stripe_webhook_events.resolved_org_id` → `organizations.id`.                                                                                                                      |
-| 2   | All env vars in section 2 set in Vercel Production + redeployed  | PASS         | Stripe core (4 vars) added 14:13 UTC. `AUDIT_DATABASE_URL` + `_UNPOOLED` added by 14:42 UTC. `WORKOS_SEAT_METER_ID` and `BETTERSTACK_HEARTBEAT_URL` deferred (optional).                                                                                                                              |
+| 2   | All env vars in section 2 set in Vercel Production + redeployed  | PASS         | Stripe core (4 vars) added 14:13 UTC. `AUDIT_DATABASE_URL` + `_UNPOOLED` added by 14:42 UTC. `SEAT_METER_ID` and `BETTERSTACK_HEARTBEAT_URL` deferred (optional).                                                                                                                                     |
 | 3   | Webhook endpoint pinned + 20 events + secret rotated into env    | PASS         | URL correct, all 20 events present, status `enabled`, secret matches. Account default upgraded to `2026-04-22.dahlia` 16:55 UTC; payloads now match SDK types. Endpoint itself still reads `api_version: null` (follow-default); recreate explicitly via setup script for live-mode cutover.          |
 | 4   | Org backfill summary shows 0 unexpected `Failed`                 | PASS         | Backfill ran cleanly; 0 orgs in DB so 0 to backfill. Mechanism verified.                                                                                                                                                                                                                              |
 | 5   | Both QStash schedules visible + firing on cadence                | PASS         | `audit-outbox-drainer` schedule present (cron `0 6,18 * * *`) and route now `200 OK`. `stripe-stuck-events` schedule created at 14:43 UTC (`scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8`, cron `*/10 * * * *`).                                                                                                  |
 | 6   | Each smoke event ends in `processed` / `ignored` with audit row  | PASS         | After env-var fix at 14:13 UTC: 13 events landed, all `ignored` with correct `ignore_reason: "no org resolution for customer cus_…"` — fixture-correct (no Eleva metadata in CLI fixtures). 0 failed/failed_terminal. Latency 888–952 ms. Mirror tables empty (correct: ignored events do not write). |
 | 7   | Replay test shows no duplicates                                  | PASS         | `replay:event evt_3TYo6F…` x3 → status `ignored`, `attempts` advanced 1→2→3, no audit duplicates (none expected for ignored). State machine and dispatcher confirmed working.                                                                                                                         |
-| 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough still required — blocker is a Better Auth test session (Phase 2), not a WorkOS session (removed, see ADR-017).                                                                                                                           |
+| 8   | Frontend flows complete without errors                           | NOT EXECUTED | All zones reachable (HTTP 200). Full E2E browser walkthrough still required — blocker is a Better Auth test session (Phase 2), not a previous-identity session (removed, see ADR-017).                                                                                                                |
 | 9   | Sentry shows no new issues from cutover                          | PASS         | 0 issues from new code paths post-deploy. Sentry receiving traffic now (init/handler failures will be visible going forward).                                                                                                                                                                         |
 | 10  | Stuck-event drill fires Sentry issue within 10 min               | PASS         | Re-ran 14:50 UTC after G3 deploy. Sentry issue [`ELEVA-CARE-19`](https://prood.sentry.io/issues/ELEVA-CARE-19) created within 1s with the synthetic event ID, `app: api` tag, release `72c4b99...`, and full extra metadata (ageSeconds=1208, attempts, stripeEventId, etc.). Drill row cleaned up.   |
 | 11  | Old `/stripe/webhook` returns 404, old Dashboard webhook removed | PASS         | Legacy path returns 404. Stripe Dashboard has only the canonical `https://api.eleva.care/webhooks/stripe`.                                                                                                                                                                                            |
@@ -709,7 +709,7 @@ dashboard since it was a synthetic test.
 | ------ | ------------------------------------------------------------------------------ | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ~~N1~~ | Webhook endpoint `api_version: null` (account default was `2025-02-24.acacia`) | RESOLVED (Sandbox) 16:55 UTC | Operator upgraded the Stripe account default version to `2026-04-22.dahlia` via the Dashboard. Verified: fresh events now serialize as `api_version=2026-04-22.dahlia`, matching the SDK types pinned in `@eleva/billing`. Endpoint itself still reads `api_version: null` (follow-default) which is fine for Sandbox. For the live-mode cutover, recreate the live endpoint via `pnpm stripe:setup:webhooks --apply` so it reports `api_version: "2026-04-22.dahlia"` explicitly locked. |
 | N2     | ~~`stripe-stuck-events` QStash schedule missing~~                              | RESOLVED                     | Schedule `scd_4ruV6aUpBAA4UPnXcpffZuLyVmM8` created at 14:43 UTC, cron `*/10 * * * *`, retries 3.                                                                                                                                                                                                                                                                                                                                                                                         |
-| N3     | `WORKOS_SEAT_METER_ID` not configured                                          | Low                          | Optional W5 metered-seat path. Clinic prices currently `usage_type: licensed`. Defer to phase-2 unless metered billing is needed at launch.                                                                                                                                                                                                                                                                                                                                               |
+| N3     | `SEAT_METER_ID` not configured                                                 | Low                          | Optional W5 metered-seat path. Clinic prices currently `usage_type: licensed`. Defer to phase-2 unless metered billing is needed at launch.                                                                                                                                                                                                                                                                                                                                               |
 | N4     | `BETTERSTACK_HEARTBEAT_URL` not configured                                     | Low                          | Detector heartbeat fires `void` and silently resolves. Liveness signal of the alerting job is non-existent.                                                                                                                                                                                                                                                                                                                                                                               |
 | N5     | ~~2 stale rows in `audit_outbox` since 2026-05-18 17:16 UTC~~                  | RESOLVED                     | Drained 14:42 UTC after G2 fix. `audit_outbox` shows `shipped: 2`, `pending: 0`.                                                                                                                                                                                                                                                                                                                                                                                                          |
 | N6     | ~~Misleading error log at `apps/api/src/app/webhooks/stripe/route.ts:63`~~     | RESOLVED                     | Refactored 14:42 UTC: SDK init in its own `try` returning `500 stripe_init_failed` + `captureException`. Signature catch only fires for `StripeSignatureVerificationError`. Awaiting deploy.                                                                                                                                                                                                                                                                                              |
@@ -764,17 +764,17 @@ Stored in `/tmp/stripe-review/phase-{1..11}.txt` (ephemeral). Key artifacts:
 
 ## Production Readiness Audit — 2026-05-19 (evening)
 
-Status: **HISTORICAL**. WorkOS org + JWT pipeline evidence below is not a (removed, see ADR-017)
+Status: **HISTORICAL**. organization + JWT pipeline evidence below is not a (removed, see ADR-017)
 Better Auth pass (removed, see ADR-017). Keep blocked until Phase 2 E2E.
 
 Original 2026-05 text: PASS — production-ready with two non-blocking findings (N7, N8).
 Recommend ADR-016 flip from `Accepted` to `Active`.
 
-Walked an 8-phase audit grounded in current Stripe + WorkOS docs (pulled via (removed, see ADR-017)
+Walked an 8-phase audit grounded in current Stripe + the previous identity provider docs (pulled via (removed, see ADR-017)
 Context7). Highlights:
 
 - **5/5 adversarial webhook security tests pass**: missing/wrong/stale/tampered signatures all rejected with `400`; positive control accepted.
-- **End-to-end real-customer happy path verified**: created a real WorkOS org + Stripe customer + paid subscription, dispatcher classified as `processed` (not `ignored`), mirror + audit + JWT pipeline all populated correctly. **First non-fixture event in the project's history.** (removed, see ADR-017)
+- **End-to-end real-customer happy path verified**: created a real organization + Stripe customer + paid subscription, dispatcher classified as `processed` (not `ignored`), mirror + audit + JWT pipeline all populated correctly. **First non-fixture event in the project's history.** (removed, see ADR-017)
 - **Subscription lifecycle 5/5**: create → upgrade tier → cancel-at-period-end → immediate cancel all dispatch + mirror + audit correctly.
 - **F3 event ordering protection works**: stale replay refused with `stale event (created X < last Y)` reason, mirror not reverted.
 - **Idempotency under stress**: 5-replay storm produced no duplicate audit rows; `attempts` advances monotonically (2 → 7).
@@ -793,7 +793,7 @@ itself was verified via `/v1/products/.../features` (returns the right link).
 
 Follow-up implementation confirmed **no application runtime code reads
 `customers.activeEntitlements.list`**. Feature gates read `@eleva/flags`
-(Edge Config + Stripe Entitlements), not a WorkOS JWT (removed, see ADR-017).
+(Edge Config + Stripe Entitlements), not a session entitlements (removed, see ADR-017).
 Therefore this is not a production blocker and has no known user-facing impact.
 
 Do not pass access tokens on the command line. Diagnostic comparison, when
@@ -813,4 +813,4 @@ visible during incidents while preserving the existing string column.
 All 11 original done-criteria still PASS or PARTIAL with documented owners.
 N8 is resolved in code. N7 is reframed as live-mode flag verification deferred
 until the first real subscriber because runtime gates read `@eleva/flags`, not
-Stripe's diagnostic active-entitlements API. WorkOS JWT claims (removed, see ADR-017).
+Stripe's diagnostic active-entitlements API. session entitlements claims (removed, see ADR-017).

@@ -4,7 +4,6 @@ import {
   desc,
   eq,
   inArray,
-  isNotNull,
   isNull,
   or,
   sql,
@@ -14,6 +13,7 @@ import type { PgColumn } from "drizzle-orm/pg-core"
 import { isReserved } from "@eleva/config/reserved-usernames"
 
 import { withPlatformAdminContext } from "../context"
+import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 
 type ArrayCastSuffix = "text[]" | "session_mode[]"
@@ -451,14 +451,9 @@ export async function findExistingOrgSlugs(
 ): Promise<Set<string>> {
   return withPlatformAdminContext(async (tx) => {
     const rows = await tx
-      .select({ slug: main.organizations.slug })
-      .from(main.organizations)
-      .where(
-        and(
-          inArray(main.organizations.slug, candidates),
-          isNotNull(main.organizations.slug)
-        )
-      )
-    return new Set(rows.map((r) => r.slug).filter(Boolean) as string[])
+      .select({ slug: auth.organization.slug })
+      .from(auth.organization)
+      .where(inArray(auth.organization.slug, candidates))
+    return new Set(rows.map((r) => r.slug).filter(Boolean))
   })
 }

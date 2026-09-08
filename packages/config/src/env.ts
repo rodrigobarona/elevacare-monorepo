@@ -3,7 +3,7 @@ import { z } from "zod"
 /**
  * Eleva v3 environment variable validator.
  *
- * Layered Zod schema: S0 seeded the multi-zone vars; S1-A adds WorkOS,
+ * Layered Zod schema: S0 seeded the multi-zone vars; S1-A adds Better Auth,
  * Neon (main + audit), Sentry, BetterStack, and Edge Config vars.
  *
  * Usage:
@@ -50,12 +50,6 @@ const baseSchema = z.object({
 // secrets; runtime consumers should use requireAuthEnv()/requireDbEnv()
 // helpers below to assert presence at their own boot time.
 const s1aSchema = z.object({
-  WORKOS_API_KEY: stringOptional,
-  WORKOS_CLIENT_ID: stringOptional,
-  WORKOS_COOKIE_PASSWORD: stringOptional,
-  NEXT_PUBLIC_WORKOS_REDIRECT_URI: urlOptional,
-  WORKOS_VAULT_NAMESPACE: z.string().default("eleva-v3-main"),
-
   DATABASE_URL: postgresUrl.optional(),
   DATABASE_URL_UNPOOLED: postgresUrl.optional(),
   AUDIT_DATABASE_URL: postgresUrl.optional(),
@@ -163,26 +157,24 @@ export function resetEnvCache(): void {
 
 /**
  * Narrow helpers that throw when specific groups of vars are missing.
- * Consumers that need WorkOS at runtime call requireAuthEnv(); db
+ * Consumers that need Better Auth at runtime call requireAuthEnv(); db
  * consumers call requireDbEnv(); etc. Keeps shared boot graceful in
  * contexts that do not need the whole surface (eg. edge runtime reading
  * only flags).
  */
 export function requireAuthEnv(): Required<
-  Pick<Env, "WORKOS_API_KEY" | "WORKOS_CLIENT_ID" | "WORKOS_COOKIE_PASSWORD">
+  Pick<Env, "BETTER_AUTH_SECRET" | "BETTER_AUTH_URL">
 > {
   const e = env()
   const missing: string[] = []
-  if (!e.WORKOS_API_KEY) missing.push("WORKOS_API_KEY")
-  if (!e.WORKOS_CLIENT_ID) missing.push("WORKOS_CLIENT_ID")
-  if (!e.WORKOS_COOKIE_PASSWORD) missing.push("WORKOS_COOKIE_PASSWORD")
+  if (!e.BETTER_AUTH_SECRET) missing.push("BETTER_AUTH_SECRET")
+  if (!e.BETTER_AUTH_URL) missing.push("BETTER_AUTH_URL")
   if (missing.length > 0) {
     throw new Error(`@eleva/auth boot: missing env vars: ${missing.join(", ")}`)
   }
   return {
-    WORKOS_API_KEY: e.WORKOS_API_KEY!,
-    WORKOS_CLIENT_ID: e.WORKOS_CLIENT_ID!,
-    WORKOS_COOKIE_PASSWORD: e.WORKOS_COOKIE_PASSWORD!,
+    BETTER_AUTH_SECRET: e.BETTER_AUTH_SECRET!,
+    BETTER_AUTH_URL: e.BETTER_AUTH_URL!,
   }
 }
 

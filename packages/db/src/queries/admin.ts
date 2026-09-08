@@ -1,13 +1,13 @@
 import { and, eq, isNull } from "drizzle-orm"
 
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
+import * as auth from "../schema/auth"
 import * as main from "../schema/main"
 
 export interface OrganizationBySlugResult {
   id: string
-  workosOrgId: string
-  slug: string | null
-  type: string | null
+  slug: string
+  type: string
 }
 
 /**
@@ -19,18 +19,12 @@ export async function getOrganizationBySlug(
   return withPlatformAdminContext(async (tx) => {
     const rows = await tx
       .select({
-        id: main.organizations.id,
-        workosOrgId: main.organizations.workosOrgId,
-        slug: main.organizations.slug,
-        type: main.organizations.type,
+        id: auth.organization.id,
+        slug: auth.organization.slug,
+        type: auth.organization.type,
       })
-      .from(main.organizations)
-      .where(
-        and(
-          eq(main.organizations.slug, slug),
-          isNull(main.organizations.deletedAt)
-        )
-      )
+      .from(auth.organization)
+      .where(eq(auth.organization.slug, slug))
       .limit(1)
     return rows[0] ?? null
   })

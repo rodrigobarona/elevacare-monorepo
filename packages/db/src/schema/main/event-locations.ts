@@ -19,7 +19,7 @@ import {
   updatedAt,
   type LocalizedText,
 } from "./shared"
-import { organizations } from "./organizations"
+import { organization } from "../auth"
 import { expertProfiles } from "./expert-profiles"
 import { eventTypes } from "./event-types"
 
@@ -32,7 +32,7 @@ export const expertPracticeLocations = pgTable(
   "expert_practice_locations",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertProfileId: uuid("expert_profile_id").notNull(),
@@ -79,7 +79,7 @@ export const eventLocations = pgTable(
   "event_locations",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     eventTypeId: uuid("event_type_id")

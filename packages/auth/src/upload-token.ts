@@ -9,16 +9,15 @@ interface UploadTokenPayload {
 }
 
 function getTokenPassword(): string {
-  const pw = process.env.WORKOS_COOKIE_PASSWORD
-  if (!pw)
-    throw new Error("WORKOS_COOKIE_PASSWORD is required for upload tokens")
+  const pw = process.env.BETTER_AUTH_SECRET
+  if (!pw) throw new Error("BETTER_AUTH_SECRET is required for upload tokens")
   return pw
 }
 
 /**
  * Mint a short-lived sealed token that authorises a client-side Vercel
  * Blob upload. The token is encrypted + authenticated via iron-session
- * using the same secret as session cookies (`WORKOS_COOKIE_PASSWORD`).
+ * using `BETTER_AUTH_SECRET`.
  *
  * Intended flow:
  *   1. Server action reads the session and calls `mintUploadToken(userId)`.

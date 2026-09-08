@@ -27,7 +27,7 @@ alwaysApply: false
   `Authorization: Bearer <jwt>`, or `x-api-key`. Cross-mode is 400.
 - Calendar tokens: `auth.api.getAccessToken({ body: { accountId, userId } })` —
   persist both on the connection; do not store tokens in `packages/calendar`.
-- WorkOS helpers, Widgets and `infra/workos` are Phase 3 deletions (removed, see ADR-017).
-  Do not add new WorkOS calls.
+- Do not reintroduce the previous identity SDK, widgets, or vendor infra
+  (see ADR-017). Identity is Better Auth only.
 
 Load the **better-auth** skill to add a plugin, permission or trusted origin.

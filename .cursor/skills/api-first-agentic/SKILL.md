@@ -117,7 +117,7 @@ const [row] = await d.insert(main.users).values({...}).returning(...)
 
 // After (GOOD -- domain function):
 import { provisionUser } from "@eleva/auth"
-const { userId } = await provisionUser({ workosUserId: user.id, completedOnboarding: true })
+const { userId } = await provisionUser({ userId: user.id, completedOnboarding: true })
 ```
 
 ## Dual Auth Pattern
@@ -125,7 +125,7 @@ const { userId } = await provisionUser({ workosUserId: user.id, completedOnboard
 `resolveApiAuth()` in `apps/api/src/lib/auth.ts` handles:
 
 1. **Bearer token** in `Authorization: Bearer <token>` -- for AI agents, CLI, M2M
-2. **Session cookie** -- for browser apps using WorkOS AuthKit
+2. **Session cookie** -- for browser apps using Better Auth
 3. **Anonymous** -- returned when no credentials present
 
 Use `requireApiAuth()` to reject anonymous callers with 401.

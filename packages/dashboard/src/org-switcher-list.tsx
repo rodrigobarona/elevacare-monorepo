@@ -63,10 +63,10 @@ export function OrgSwitcherList({
             const badgeLabel = getOrgTypeBadgeLabel(org.orgType, t)
             return (
               <CommandItem
-                key={org.workosOrgId}
-                id={org.workosOrgId}
+                key={org.orgId}
+                id={org.orgId}
                 textValue={orgSearchValue(org, badgeLabel)}
-                isDisabled={switchingId === org.workosOrgId}
+                isDisabled={switchingId === org.orgId}
                 onAction={() => onSwitch(org)}
                 className="gap-2 rounded-md px-2.5 py-2 data-focused:bg-accent/40 [&>svg.ml-auto]:hidden"
               >

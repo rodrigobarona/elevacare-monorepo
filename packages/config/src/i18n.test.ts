@@ -10,7 +10,6 @@ import {
   getLocaleCookieDomain,
   getLocaleCookieOptions,
   normalizeLocale,
-  normalizeWorkOSLocale,
   resolveLocaleFromHeaders,
 } from "./i18n"
 
@@ -55,7 +54,7 @@ describe("i18n config", () => {
     expect(normalizeLocale("pt-PT")).toBe("pt")
     expect(normalizeLocale("es-MX")).toBe("es")
     expect(normalizeLocale("EN-us")).toBe("en")
-    expect(normalizeWorkOSLocale("pt-BR")).toBe("pt")
+    expect(normalizeLocale("pt-BR")).toBe("pt")
     expect(normalizeLocale("fr-FR")).toBeNull()
     expect(normalizeLocale(null)).toBeNull()
   })

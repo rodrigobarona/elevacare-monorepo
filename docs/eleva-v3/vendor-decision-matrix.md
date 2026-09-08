@@ -69,7 +69,7 @@ Why it fits:
 - organization types, personal Spaces, hooks, MFA and API keys are first-class
 - permissions version with the code that enforces them
 
-Region: **EU** (Neon project). WorkOS is removed (removed, see ADR-017).
+Region: **EU** (Neon project). the previous identity provider is retired (see ADR-017).
 
 Open validations:
 
@@ -208,7 +208,7 @@ Region: **EU**.
 
 Rules:
 
-- transcripts are **Eleva-owned records**, encrypted at rest via `@eleva/encryption` (ADR-020). Recording storage is 16.8 / D-08. WorkOS Vault is removed (removed, see ADR-017).
+- transcripts are **Eleva-owned records**, encrypted at rest via `@eleva/encryption` (ADR-020). Recording storage is 16.8 / D-08.
 - transcript retention defined per ADR-009
 - no transcript content leaks into notifications, analytics, or AI-gateway logs
 
@@ -393,7 +393,7 @@ Expected role:
 - Tier 1 — Eleva → Expert/Clinic platform-fee invoicing
 - series `ELEVA-FEE-{YYYY}` for per-booking solo commission invoices
 - series `ELEVA-SAAS-{YYYY}` for monthly clinic SaaS invoices
-- OAuth tokens envelope-encrypted via `@eleva/encryption` (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
+- Integration OAuth tokens envelope-encrypted via `@eleva/encryption` (ADR-020). Calendar tokens use Better Auth `account.encryptOAuthTokens`.
 - sandbox environment → Eleva staging, production environment → Eleva production
 
 Rules:
@@ -417,7 +417,7 @@ Expected role:
   - **P3**: Primavera Cloud
   - **Phase-2 ES**: Holded, FacturaDirecta
 - `ExpertInvoicingAdapter` interface: `connect / issueInvoice / status / disconnect`
-- per-expert credentials in Neon `expert_integration_credentials`, envelope-encrypted (ADR-020). WorkOS Vault is removed (removed, see ADR-017).
+- per-expert credentials in Neon `expert_integration_credentials`, envelope-encrypted (ADR-020).
 
 Rules:
 
@@ -435,11 +435,11 @@ Decision status: **locked**
 Expected role:
 
 - `packages/calendar` owns OAuth flows, token refresh, event read/write, webhook subscription
-- tokens stored in Better Auth `account` rows (`encryptOAuthTokens`). WorkOS Vault / Pipes are removed (removed, see ADR-017).
+- tokens stored in Better Auth `account` rows (`encryptOAuthTokens`).
 
 Rules:
 
-- **not** an identity-vendor pipe (removed, see ADR-017)
+- **not** an identity-vendor pipe (ADR-017)
 - busy-calendar and destination-calendar concepts (per cal.com pattern)
 
 ### Internationalization
@@ -467,7 +467,7 @@ Expected role:
 ## Summary — locked stack
 
 - Package manager: **pnpm** + Turborepo
-- Auth: **Better Auth** (self-hosted, EU Neon). WorkOS is removed (removed, see ADR-017).
+- Auth: **Better Auth** (self-hosted, EU Neon). the previous identity provider is retired (see ADR-017).
 - DB: **Neon** (EU) + **Drizzle**, RLS + two projects
 - Payments: **Stripe** (Connect Express + Subscriptions + Entitlements + Dynamic Payment Methods + Embedded Components, no Multibanco vouchers)
 - Monetization: hybrid (solo=commission, clinic=SaaS)
@@ -485,7 +485,7 @@ Expected role:
 - Feature flags: **Vercel Flags SDK + Edge Config**
 - Accounting Tier 1: **TOConline**
 - Accounting Tier 2: **Adapter registry** (TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T)
-- Calendar OAuth: **Eleva-owned** (`packages/calendar`), tokens from Better Auth. WorkOS Pipes is removed (removed, see ADR-017).
+- Calendar OAuth: **Eleva-owned** (`packages/calendar`), tokens from Better Auth `account` rows (ADR-017).
 - i18n: **next-intl** (pt/en/es)
 - Docs/CMS: **Fumadocs**
 

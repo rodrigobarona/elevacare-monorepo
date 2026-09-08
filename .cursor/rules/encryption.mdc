@@ -13,5 +13,7 @@ alwaysApply: false
   `shredOrgKeys` **deletes** `org_data_keys` rows (`retired_at IS NULL` is the active key).
 - Never log KEK, DEK, IV, tag or plaintext. Tests use known vectors, never production KEKs.
 - Only this package may call `createCipheriv` / `createDecipheriv` for application
-  payloads. OAuth tokens are Better Auth's (`account.encryptOAuthTokens`), not this package.
-- WorkOS Vault wrappers are Phase 3 deletions (removed, see ADR-017).
+  payloads. Calendar OAuth tokens (Google/Microsoft) are Better Auth's
+  (`account.encryptOAuthTokens`), not this package. TOConline/Moloni and other
+  non-calendar integration credentials use this package.
+- Use envelope encryption in `@eleva/encryption` (ADR-020). Do not add an external vault SDK.

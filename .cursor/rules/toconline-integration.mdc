@@ -53,7 +53,7 @@ const TOCONLINE_TOKEN_URL = `${process.env.TOCONLINE_OAUTH_URL}/token`;
 - Scope: `commercial`
 - PKCE challenge: S256
 - Client auth: body params (not Basic header)
-- Store tokens via WorkOS Vault (`packages/encryption`)
+- Store tokens via envelope encryption (`packages/encryption`)
 
 ## Environment Variables
 
@@ -195,7 +195,7 @@ Track invoice status in Neon (`packages/db`) to prevent duplicates:
 
 - `platform_fee_invoices` — PK on `booking_id`; Tier 1 solo-expert commissions
 - `clinic_saas_invoices` — PK on `subscription_period`; Tier 1 clinic SaaS
-- `expert_integration_credentials` — per-expert adapter OAuth tokens (vault-encrypted)
+- `expert_integration_credentials` — per-expert adapter OAuth tokens (envelope-encrypted via `@eleva/encryption`; not Better Auth calendar tokens)
 
 Always check the table before calling TOConline. If a record exists with status `finalized`, skip.
 
@@ -244,7 +244,7 @@ Retry with exponential backoff (max 3 attempts). After exhaustion, set invoice s
 - [TOConline API Reference](docs/eleva-v3/toconline-api-reference.md)
 - `@eleva/billing` (`packages/billing/`) — Stripe Connect, webhooks, payouts
 - `@eleva/db` (`packages/db/`) — Neon idempotency tables
-- `@eleva/encryption` (`packages/encryption/`) — WorkOS Vault for OAuth tokens
+- `@eleva/encryption` (`packages/encryption/`) — envelope encryption for OAuth tokens
 - `@eleva/flags` (`packages/flags/`) — feature flag toggles
 - `@eleva/workflows` (`packages/workflows/`) — Vercel Workflow triggers
 - `@eleva/observability` (`packages/observability/`) — Sentry spans

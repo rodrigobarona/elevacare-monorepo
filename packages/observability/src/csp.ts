@@ -40,10 +40,6 @@ const VENDORS: Record<string, VendorEntry> = {
     scriptSrc: ["https://cdn.sentry-cdn.com"],
     connectSrc: ["https://*.sentry.io", "https://*.ingest.sentry.io"],
   },
-  workos: {
-    connectSrc: ["https://api.workos.com"],
-    frameSrc: ["https://api.workos.com"],
-  },
   eleva: {
     connectSrc: ["https://api.eleva.care"],
   },

@@ -26,7 +26,6 @@
     "@stripe/react-connect-js": "^3.4.2",
     "@upstash/redis": "catalog:",
     "@stripe/stripe-js": "catalog:",
-    "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "stripe": "catalog:",
     "zod": "catalog:"

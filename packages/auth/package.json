@@ -19,6 +19,7 @@
     "./org-routing": "./src/org-routing.ts",
     "./permissions": "./src/permissions.ts",
     "./client": "./src/client.ts",
+    "./credentials": "./src/server/credentials.ts",
     "./server/auth": "./src/server/auth.ts",
     "./api-auth": "./src/server/api-auth.ts",
     "./trusted-origins": "./src/trusted-origins.ts"
@@ -42,8 +43,6 @@
     "@upstash/redis": "catalog:",
     "better-auth": "catalog:",
     "jose": "^6.1.0",
-    "@workos-inc/authkit-nextjs": "catalog:",
-    "@workos-inc/node": "catalog:",
     "drizzle-orm": "catalog:",
     "iron-session": "^8.0.4"
   },

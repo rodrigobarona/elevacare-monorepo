@@ -1,54 +1,33 @@
-import { and, eq, isNull } from "drizzle-orm"
-import { db, main, findExistingOrgSlugs } from "@eleva/db"
+import { and, eq } from "drizzle-orm"
+import { auth, db } from "@eleva/db"
 import {
   _ensureExpertProfileForOrgDetailed,
   type EnsureExpertProfileResult,
 } from "@eleva/db/queries/admin"
 import { withAudit } from "@eleva/audit"
-import { generateUniqueOrgSlug } from "@eleva/config/slug"
+import { UnauthorizedError } from "./types"
 
 export type { EnsureExpertProfileResult } from "@eleva/db/queries/admin"
 
 /**
- * Provisioning functions for users, organizations, and memberships.
- *
- * These are the canonical write path for identity provisioning in the
- * Eleva DB. Called by:
- *   - Onboarding fast-path (apps/account, apps/api)
- *   - WorkOS event sync (packages/auth/sync.ts)
- *   - API endpoints (apps/api)
- *
- * WorkOS createOrganization is the caller's responsibility (kept out
- * of this package so the auth SDK surface can fully mock); these
- * functions only mirror the WorkOS ids into Eleva's DB.
- *
- * All writes funnel through withAudit so the outbox drainer records
- * user.created + org.created + membership.created events.
- */
-
-/**
- * Look up whether a WorkOS user already has a personal org in Eleva's DB.
- * Returns the existing org ids or null if the user has never been provisioned.
+ * Look up whether a user already has a personal org in Eleva's DB.
  */
 export async function findExistingPersonalOrg(
-  workosUserId: string
-): Promise<{ workosOrgId: string; orgId: string } | null> {
+  userId: string
+): Promise<{ orgId: string } | null> {
   const [row] = await db()
     .select({
-      workosOrgId: main.organizations.workosOrgId,
-      orgId: main.organizations.id,
+      orgId: auth.organization.id,
     })
-    .from(main.users)
-    .innerJoin(main.memberships, eq(main.memberships.userId, main.users.id))
+    .from(auth.member)
     .innerJoin(
-      main.organizations,
-      eq(main.organizations.id, main.memberships.orgId)
+      auth.organization,
+      eq(auth.organization.id, auth.member.organizationId)
     )
     .where(
       and(
-        eq(main.users.workosUserId, workosUserId),
-        eq(main.organizations.type, "personal"),
-        isNull(main.organizations.deletedAt)
+        eq(auth.member.userId, userId),
+        eq(auth.organization.type, "personal")
       )
     )
     .limit(1)
@@ -56,409 +35,12 @@ export async function findExistingPersonalOrg(
   return row ?? null
 }
 
-export interface EnsurePersonalOrgInput {
-  workosUserId: string
-  workosOrgId: string
-  email: string
-  displayName?: string | null
-}
-
-export async function ensurePersonalOrg(
-  input: EnsurePersonalOrgInput
-): Promise<{ userId: string; orgId: string }> {
-  // Idempotent upsert of users first (outside withOrgContext because
-  // the user table is not tenant-scoped).
-  const [existingUser] = await db()
-    .select({ id: main.users.id })
-    .from(main.users)
-    .where(eq(main.users.workosUserId, input.workosUserId))
-    .limit(1)
-
-  let userId = existingUser?.id
-  if (!userId) {
-    const [inserted] = await db()
-      .insert(main.users)
-      .values({
-        workosUserId: input.workosUserId,
-      })
-      .returning({ id: main.users.id })
-    userId = inserted!.id
-  }
-
-  // Idempotent upsert of the personal org.
-  const [existingOrg] = await db()
-    .select({ id: main.organizations.id })
-    .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, input.workosOrgId))
-    .limit(1)
-
-  if (existingOrg) {
-    // Ensure membership exists (handles case: org already provisioned
-    // by an earlier run that crashed before membership insert).
-    const [existingMembership] = await db()
-      .select({ id: main.memberships.id })
-      .from(main.memberships)
-      .where(
-        and(
-          eq(main.memberships.userId, userId),
-          eq(main.memberships.orgId, existingOrg.id)
-        )
-      )
-      .limit(1)
-    if (!existingMembership) {
-      await withAudit(
-        { orgId: existingOrg.id, actorUserId: userId },
-        async (tx, ctx) => {
-          const [row] = await tx
-            .insert(main.memberships)
-            .values({
-              userId,
-              orgId: existingOrg.id,
-              workosRole: "admin",
-              status: "active",
-            })
-            .returning({ id: main.memberships.id })
-          await ctx.emit({
-            entity: "membership",
-            action: "created",
-            entityId: row!.id,
-            payload: { orgId: existingOrg.id, userId, role: "admin" },
-          })
-        }
-      )
-    }
-    return { userId, orgId: existingOrg.id }
-  }
-
-  const orgId = crypto.randomUUID()
-  await withAudit({ orgId, actorUserId: userId }, async (tx, ctx) => {
-    await tx.insert(main.organizations).values({
-      id: orgId,
-      workosOrgId: input.workosOrgId,
-      type: "personal",
-    })
-    await tx.insert(main.memberships).values({
-      userId,
-      orgId,
-      workosRole: "admin",
-      status: "active",
-    })
-    await ctx.emit({
-      entity: "organization",
-      action: "created",
-      entityId: orgId,
-      payload: { type: "personal", workosOrgId: input.workosOrgId },
-    })
-  })
-
-  return { userId, orgId }
-}
-
-// ---------------------------------------------------------------------------
-// Granular provisioning functions for API-first / agentic use
-// ---------------------------------------------------------------------------
-
-export interface ProvisionUserInput {
-  workosUserId: string
-  completedOnboarding?: boolean
-}
-
-export interface ProvisionUserResult {
+export async function ensurePersonalOrg(input: {
   userId: string
-  created: boolean
-}
-
-/**
- * Upsert a user row keyed by WorkOS user ID.
- * Sets `completedOnboarding` when provided.
- */
-export async function provisionUser(
-  input: ProvisionUserInput
-): Promise<ProvisionUserResult> {
-  const [existing] = await db()
-    .select({ id: main.users.id })
-    .from(main.users)
-    .where(eq(main.users.workosUserId, input.workosUserId))
-    .limit(1)
-
-  if (existing) {
-    if (input.completedOnboarding) {
-      await db()
-        .update(main.users)
-        .set({ completedOnboarding: true, updatedAt: new Date() })
-        .where(eq(main.users.workosUserId, input.workosUserId))
-    }
-    return { userId: existing.id, created: false }
-  }
-
-  const [inserted] = await db()
-    .insert(main.users)
-    .values({
-      workosUserId: input.workosUserId,
-      ...(input.completedOnboarding && { completedOnboarding: true }),
-    })
-    .returning({ id: main.users.id })
-
-  return { userId: inserted!.id, created: true }
-}
-
-export interface ProvisionOrganizationInput {
-  workosOrgId: string
-  name: string
-  type?: "personal" | "expert" | "team" | "academy" | "staff"
-  slug?: string
-  actorUserId?: string | null
-}
-
-export interface ProvisionOrganizationResult {
-  orgId: string
-  slug: string
-  created: boolean
-}
-
-/**
- * Upsert an organization row keyed by WorkOS org ID.
- * Generates a unique slug if one is not provided.
- */
-export async function provisionOrganization(
-  input: ProvisionOrganizationInput
-): Promise<ProvisionOrganizationResult> {
-  const slug =
-    input.slug ??
-    (await generateUniqueOrgSlug(input.name, findExistingOrgSlugs))
-  const type = input.type ?? "personal"
-
-  const [existing] = await db()
-    .select({
-      id: main.organizations.id,
-      slug: main.organizations.slug,
-      type: main.organizations.type,
-    })
-    .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, input.workosOrgId))
-    .limit(1)
-
-  if (existing) {
-    const existingSlug = existing.slug ?? slug
-    const shouldUpdateType = existing.type !== type
-    if (!existing.slug || shouldUpdateType) {
-      await withAudit(
-        { orgId: existing.id, actorUserId: input.actorUserId ?? null },
-        async (tx, ctx) => {
-          await tx
-            .update(main.organizations)
-            .set({
-              slug: existingSlug,
-              type,
-              updatedAt: new Date(),
-            })
-            .where(eq(main.organizations.workosOrgId, input.workosOrgId))
-
-          await ctx.emit({
-            entity: "organization",
-            action: "updated",
-            entityId: existing.id,
-            payload: {
-              workosOrgId: input.workosOrgId,
-              before: { type: existing.type, slug: existing.slug },
-              after: { type, slug: existingSlug },
-            },
-          })
-        }
-      )
-    }
-    return { orgId: existing.id, slug: existingSlug, created: false }
-  }
-
-  const orgId = crypto.randomUUID()
-  await withAudit(
-    { orgId, actorUserId: input.actorUserId ?? null },
-    async (tx, ctx) => {
-      await tx
-        .insert(main.organizations)
-        .values({ id: orgId, workosOrgId: input.workosOrgId, type, slug })
-      await ctx.emit({
-        entity: "organization",
-        action: "created",
-        entityId: orgId,
-        payload: { type, workosOrgId: input.workosOrgId, slug },
-      })
-    }
-  )
-
-  return { orgId, slug, created: true }
-}
-
-export interface ProvisionOrganizationWithAdminMembershipInput {
-  workosOrgId: string
-  name: string
-  userId: string
-  type?: "personal" | "expert" | "team" | "academy" | "staff"
-  actorUserId: string
-}
-
-/**
- * Atomically provisions a new organization and admin membership in one audit
- * transaction. Used by createOrganization to avoid half-provisioned orgs.
- */
-export async function provisionOrganizationWithAdminMembership(
-  input: ProvisionOrganizationWithAdminMembershipInput
-): Promise<ProvisionOrganizationResult> {
-  const slug = await generateUniqueOrgSlug(input.name, findExistingOrgSlugs)
-  const type = input.type ?? "personal"
-
-  const [existing] = await db()
-    .select({
-      id: main.organizations.id,
-      slug: main.organizations.slug,
-    })
-    .from(main.organizations)
-    .where(eq(main.organizations.workosOrgId, input.workosOrgId))
-    .limit(1)
-
-  if (existing) {
-    let resolvedSlug = existing.slug ?? slug
-    await withAudit(
-      { orgId: existing.id, actorUserId: input.actorUserId },
-      async (tx, ctx) => {
-        if (existing.slug === null) {
-          await tx
-            .update(main.organizations)
-            .set({ slug, updatedAt: new Date() })
-            .where(eq(main.organizations.id, existing.id))
-          resolvedSlug = slug
-        }
-
-        const [existingMembership] = await tx
-          .select({ id: main.memberships.id })
-          .from(main.memberships)
-          .where(
-            and(
-              eq(main.memberships.userId, input.userId),
-              eq(main.memberships.orgId, existing.id)
-            )
-          )
-          .limit(1)
-
-        const [membershipRow] = await tx
-          .insert(main.memberships)
-          .values({
-            userId: input.userId,
-            orgId: existing.id,
-            workosRole: "admin",
-            status: "active",
-          })
-          .onConflictDoUpdate({
-            target: [main.memberships.userId, main.memberships.orgId],
-            set: {
-              workosRole: "admin",
-              status: "active",
-              updatedAt: new Date(),
-            },
-          })
-          .returning({ id: main.memberships.id })
-
-        await ctx.emit({
-          entity: "membership",
-          action: existingMembership ? "updated" : "created",
-          entityId: membershipRow!.id,
-          payload: {
-            userId: input.userId,
-            orgId: existing.id,
-            role: "admin",
-          },
-        })
-      }
-    )
-    return { orgId: existing.id, slug: resolvedSlug, created: false }
-  }
-
-  const orgId = crypto.randomUUID()
-  await withAudit(
-    { orgId, actorUserId: input.actorUserId },
-    async (tx, ctx) => {
-      await tx.insert(main.organizations).values({
-        id: orgId,
-        workosOrgId: input.workosOrgId,
-        type,
-        slug,
-      })
-      await tx.insert(main.memberships).values({
-        userId: input.userId,
-        orgId,
-        workosRole: "admin",
-        status: "active",
-      })
-      await ctx.emit({
-        entity: "organization",
-        action: "created",
-        entityId: orgId,
-        payload: {
-          type,
-          workosOrgId: input.workosOrgId,
-          slug,
-          membership: { userId: input.userId, role: "admin" },
-        },
-      })
-    }
-  )
-
-  return { orgId, slug, created: true }
-}
-
-export interface ProvisionMembershipInput {
-  userId: string
-  orgId: string
-  role: "admin" | "member"
-  actorUserId?: string | null
-}
-
-/**
- * Upsert a membership row. Idempotent on (userId, orgId).
- */
-export async function provisionMembership(
-  input: ProvisionMembershipInput
-): Promise<void> {
-  await withAudit(
-    { orgId: input.orgId, actorUserId: input.actorUserId ?? null },
-    async (tx, ctx) => {
-      const [existing] = await tx
-        .select({ id: main.memberships.id })
-        .from(main.memberships)
-        .where(
-          and(
-            eq(main.memberships.userId, input.userId),
-            eq(main.memberships.orgId, input.orgId)
-          )
-        )
-        .limit(1)
-
-      const [row] = await tx
-        .insert(main.memberships)
-        .values({
-          userId: input.userId,
-          orgId: input.orgId,
-          workosRole: input.role,
-          status: "active",
-        })
-        .onConflictDoUpdate({
-          target: [main.memberships.userId, main.memberships.orgId],
-          set: {
-            workosRole: input.role,
-            status: "active",
-            updatedAt: new Date(),
-          },
-        })
-        .returning({ id: main.memberships.id })
-
-      await ctx.emit({
-        entity: "membership",
-        action: existing ? "updated" : "created",
-        entityId: row!.id,
-        payload: { userId: input.userId, orgId: input.orgId, role: input.role },
-      })
-    }
-  )
+}): Promise<{ userId: string; orgId: string } | null> {
+  const existing = await findExistingPersonalOrg(input.userId)
+  if (!existing) return null
+  return { userId: input.userId, orgId: existing.orgId }
 }
 
 export async function ensureExpertProfileForOrg(input: {
@@ -486,12 +68,8 @@ export async function ensureExpertProfileForOrg(input: {
 }
 
 export interface CompleteOnboardingInput {
-  workosUserId: string
-  workosOrgId: string
-  orgName: string
-  role: "admin" | "member"
-  orgType?: "personal" | "expert" | "team" | "academy" | "staff"
-  actorUserId?: string | null
+  userId: string
+  orgId: string
 }
 
 export interface CompleteOnboardingResult {
@@ -501,36 +79,36 @@ export interface CompleteOnboardingResult {
 }
 
 /**
- * High-level onboarding orchestrator: provisions user + org + membership
- * in the Eleva DB. Does NOT call WorkOS (create org, create membership,
- * set externalId) -- that is the caller's responsibility.
- *
- * This is the function both Server Actions and API routes should call
- * for onboarding, eliminating the duplicated inline upsert logic.
+ * Confirms the user is a member of the org created during onboarding
+ * and returns the slug. Identity rows already live in auth.*.
  */
 export async function completeOnboarding(
   input: CompleteOnboardingInput
 ): Promise<CompleteOnboardingResult> {
-  const { userId } = await provisionUser({
-    workosUserId: input.workosUserId,
-    completedOnboarding: true,
-  })
+  const [row] = await db()
+    .select({
+      orgId: auth.organization.id,
+      slug: auth.organization.slug,
+    })
+    .from(auth.member)
+    .innerJoin(
+      auth.organization,
+      eq(auth.organization.id, auth.member.organizationId)
+    )
+    .where(
+      and(
+        eq(auth.member.userId, input.userId),
+        eq(auth.member.organizationId, input.orgId)
+      )
+    )
+    .limit(1)
 
-  const actorUserId = input.actorUserId ?? userId
+  if (!row) {
+    throw new UnauthorizedError(
+      "not-a-member",
+      "onboarding membership not found"
+    )
+  }
 
-  const { orgId, slug } = await provisionOrganization({
-    workosOrgId: input.workosOrgId,
-    name: input.orgName,
-    type: input.orgType ?? "personal",
-    actorUserId,
-  })
-
-  await provisionMembership({
-    userId,
-    orgId,
-    role: input.role,
-    actorUserId,
-  })
-
-  return { userId, orgId, slug }
+  return { userId: input.userId, orgId: row.orgId, slug: row.slug }
 }

@@ -1,5 +1,5 @@
-import type { OrgType, WorkosRole } from "@eleva/db/schema"
-import type { ProductLabel } from "./types"
+import type { OrgType } from "@eleva/db/schema"
+import type { MembershipRole, ProductLabel } from "./types"
 
 /**
  * Eleva product label derivation per identity-rbac-spec.md role catalog:
@@ -12,23 +12,28 @@ import type { ProductLabel } from "./types"
  *   (staff, *)              -> staff
  *
  * Anything else throws. This function is pure; no DB/network access.
- *
- * NOTE: WorkOS `admin`/`member` roles hold capability supersets synced from
- * infra/workos/rbac-config.json. JWT `permissions` are intersected with the
- * derived product bundle in session resolution.
  */
-export type MembershipSeniority = WorkosRole | "owner"
+export type MembershipSeniority = MembershipRole | "owner"
 
-/** Better Auth organization `owner` is the WorkOS `admin` equivalent. */
-export function normalizeMembershipRole(role: MembershipSeniority): WorkosRole {
+/** Better Auth organization `owner` is the product `admin` equivalent. */
+export function normalizeMembershipRole(
+  role: MembershipSeniority
+): MembershipRole {
   return role === "owner" ? "admin" : role
+}
+
+/** Narrow an arbitrary Better Auth `member.role` string to a seniority. */
+export function toMembershipSeniority(role: string): MembershipSeniority {
+  if (role === "member") return "member"
+  if (role === "owner") return "owner"
+  return "admin"
 }
 
 export function deriveProductLabel(
   orgType: OrgType,
-  workosRole: MembershipSeniority
+  membershipRole: MembershipSeniority
 ): ProductLabel {
-  const role = normalizeMembershipRole(workosRole)
+  const role = normalizeMembershipRole(membershipRole)
   if (orgType === "staff") return "staff"
   if (orgType === "personal" && role === "admin") return "member"
   if (orgType === "expert" && role === "admin") return "expert"
@@ -36,14 +41,13 @@ export function deriveProductLabel(
   if (orgType === "team" && role === "member") return "expert"
   if ((orgType as string) === "academy" && role === "admin") return "lecturer"
   throw new Error(
-    `Unsupported (orgType=${orgType}, workosRole=${workosRole}) combination`
+    `Unsupported (orgType=${orgType}, membershipRole=${membershipRole}) combination`
   )
 }
 
 /**
  * RBAC bundle -> capability-slug list. Product labels derived from
- * (org_type, workos_role). WorkOS role supersets in rbac-config.json are
- * intersected at runtime in packages/auth/src/session.ts.
+ * (org_type, membership role).
  */
 export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
   member: [

@@ -19,7 +19,7 @@ import {
   pkColumn,
   updatedAt,
 } from "./shared"
-import { organizations } from "./organizations"
+import { organization } from "../auth"
 import { expertProfiles } from "./expert-profiles"
 
 /**
@@ -35,7 +35,7 @@ export const schedules = pgTable(
   "schedules",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     expertProfileId: uuid("expert_profile_id")
@@ -75,7 +75,7 @@ export const availabilityRules = pgTable(
   "availability_rules",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     scheduleId: uuid("schedule_id")
@@ -112,7 +112,7 @@ export const dateOverrides = pgTable(
   "date_overrides",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     scheduleId: uuid("schedule_id")

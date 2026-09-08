@@ -25,19 +25,6 @@ async function main() {
 
   await registerSchedule(
     {
-      name: "WorkOS Events poller",
-      path: "/workos/sync",
-      cron: "*/5 * * * *",
-      retries: 3,
-      requireBearer: false,
-      description:
-        "Poll WorkOS Events API for user/org/role mutations and mirror locally",
-    },
-    { dryRun }
-  )
-
-  await registerSchedule(
-    {
       name: "Audit outbox drainer",
       path: "/workflows/audit-outbox-drainer",
       cron: "0 6,18 * * *",

@@ -10,11 +10,7 @@ export const CompleteOnboardingRequestSchema = z.object({
   locale: LocaleSchema.optional(),
 })
 
-export const SyncExistingOnboardingRequestSchema = z
-  .object({
-    locale: LocaleSchema.optional(),
-  })
-  .optional()
+export const SyncExistingOnboardingRequestSchema = z.object({}).optional()
 
 export const CompleteOnboardingResponseSchema = z.object({
   ok: z.literal(true),
@@ -56,12 +52,11 @@ export const CreateWorkspaceRequestSchema = z.object({
 })
 
 export const OrganizationSwitcherItemSchema = z.object({
-  workosOrgId: z.string(),
   orgId: z.string().uuid(),
   orgSlug: z.string(),
   orgType: OrgTypeSchema,
   name: z.string(),
-  workosRole: z.enum(["admin", "member"]),
+  membershipRole: z.enum(["admin", "member"]),
   productLabel: z.string(),
   isCurrent: z.boolean(),
 })
@@ -73,13 +68,11 @@ export const ListOrganizationsMineResponseSchema = z.object({
 export const CreateOrganizationResponseSchema = z.object({
   orgId: z.string().uuid(),
   slug: z.string(),
-  workosOrgId: z.string(),
   created: z.boolean(),
 })
 
 export const GetOrganizationResponseSchema = z.object({
   id: z.string().uuid(),
-  workosOrgId: z.string(),
   slug: z.string().nullable(),
   type: z.string(),
 })

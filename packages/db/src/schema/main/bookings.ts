@@ -13,10 +13,9 @@ import {
   varchar,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
-import { organizations } from "./organizations"
+import { organization, user } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
 import { eventTypes } from "./event-types"
-import { users } from "./users"
 
 export const bookingStatusEnum = pgEnum("booking_status", [
   "slot_reserved",
@@ -55,7 +54,7 @@ export const slotReservations = pgTable(
   "slot_reservations",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     eventTypeId: uuid("event_type_id")
@@ -114,7 +113,7 @@ export const bookings = pgTable(
   "bookings",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     eventTypeId: uuid("event_type_id")
@@ -125,7 +124,7 @@ export const bookings = pgTable(
       .references(() => expertProfiles.id),
     memberUserId: uuid("member_user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => user.id),
 
     startsAt: timestamp("starts_at", {
       withTimezone: true,
@@ -197,7 +196,7 @@ export const sessions = pgTable(
   "sessions",
   {
     id: pkColumn(),
-    orgId: orgIdColumn().references(() => organizations.id, {
+    orgId: orgIdColumn().references(() => organization.id, {
       onDelete: "cascade",
     }),
     bookingId: uuid("booking_id")
@@ -211,7 +210,7 @@ export const sessions = pgTable(
       .references(() => expertProfiles.id),
     memberUserId: uuid("member_user_id")
       .notNull()
-      .references(() => users.id),
+      .references(() => user.id),
 
     startsAt: timestamp("starts_at", {
       withTimezone: true,

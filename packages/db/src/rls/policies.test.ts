@@ -33,43 +33,12 @@ describe("buildMainRlsStatements", () => {
     }
   })
 
-  it("uses id for organizations self-reference", () => {
-    const orgPolicy = stmts.find((s) =>
-      s.startsWith("CREATE POLICY organizations_tenant_isolation")
-    )
-    expect(orgPolicy).toContain(
-      "id::text = current_setting('eleva.org_id', true)"
-    )
-    expect(orgPolicy).not.toMatch(/\borg_id::text\b/)
-  })
-
   it("includes platform_admin bypass for expert_profiles", () => {
     const policy = stmts.find((s) =>
       s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")
     )
     expect(policy).toContain(
       "org_id::text = current_setting('eleva.org_id', true)"
-    )
-    expect(policy).toContain(
-      "current_setting('eleva.platform_admin', true) = 'true'"
-    )
-  })
-
-  it("includes platform_admin bypass for memberships", () => {
-    const policy = stmts.find((s) =>
-      s.startsWith("CREATE POLICY memberships_tenant_isolation")
-    )
-    expect(policy).toContain(
-      "org_id::text = current_setting('eleva.org_id', true)"
-    )
-    expect(policy).toContain(
-      "current_setting('eleva.platform_admin', true) = 'true'"
-    )
-  })
-
-  it("includes platform_admin bypass for organizations", () => {
-    const policy = stmts.find((s) =>
-      s.startsWith("CREATE POLICY organizations_tenant_isolation")
     )
     expect(policy).toContain(
       "current_setting('eleva.platform_admin', true) = 'true'"

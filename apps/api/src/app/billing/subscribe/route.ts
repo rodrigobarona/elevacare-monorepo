@@ -104,7 +104,7 @@ export async function POST(request: Request) {
   try {
     const s = stripe()
     const customers = await s.customers.search({
-      query: `metadata["workos_org_id"]:"${session.workosOrgId}"`,
+      query: `metadata["eleva_org_id"]:"${session.orgId}"`,
     })
 
     const customer = customers.data[0]
@@ -159,8 +159,8 @@ export async function POST(request: Request) {
 
       const clientSecret = await extractClientSecret(s, updated.latest_invoice)
 
-      // Refresh the WorkOS session so the JWT immediately picks up new
-      // entitlements (otherwise the cached cookie keeps the old set).
+      // Kept for call-site compatibility. Better Auth sessions do not
+      // cache entitlement claims the way the previous JWT did.
       // Non-blocking: if refresh fails the user sees stale entitlements
       // until natural rotation, which is recoverable.
       void refreshSessionEntitlements().catch((err) => {

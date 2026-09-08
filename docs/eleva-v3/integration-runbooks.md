@@ -91,6 +91,26 @@ Should cover:
 - no busy-time sync
 - destination-calendar write failure
 
+### Envelope KEK rotation (ADR-020)
+
+`@eleva/encryption` wraps each org DEK with `ELEVA_KEK_V<n>` (base64, 32 bytes).
+The highest `n` present at process start is current. Never log KEK or DEK bytes.
+Generate a new version with `openssl rand -base64 32`.
+
+1. Add `ELEVA_KEK_V<n+1>` next to the existing `ELEVA_KEK_V<n>` in Vercel (all
+   apps that import `@eleva/encryption`, at least `apps/api`). Do not delete the
+   old var yet.
+2. Deploy so every instance loads the new current version.
+3. For each org, call `rotateKek(orgId)` from `@eleva/encryption`. This re-wraps
+   DEK rows only; stored ciphertext stays readable because decrypt loads the DEK
+   by `dek_v`, not by the `kek_v` prefix.
+4. Confirm every `org_data_keys` row (including retired) has `kek_version` equal
+   to the new `n` — zero rows may still reference the old key. Keep
+   `ELEVA_KEK_V<n>` in env until that count is zero. Then the old var can leave
+   Vercel; store it offline until Phase 14 record export is done.
+5. `shredOrgKeys(orgId)` is erasure, not rotation — it deletes DEK rows and
+   makes ciphertext permanently unreadable (`KEY_SHREDDED`).
+
 ## Investigation Order
 
 In general, the investigation order should be:

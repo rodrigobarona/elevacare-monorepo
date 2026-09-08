@@ -34,7 +34,7 @@ Dual auth via `resolveApiAuth()`:
 | Bearer M2M JWT | Service-to-service      | `Authorization: Bearer <jwt>` issued and verified by Better Auth        |
 | Secret header  | Internal (cron, QStash) | `Authorization: Bearer ${CRON_SECRET}`                                  |
 
-WorkOS AuthKit cookies, WorkOS API keys and WorkOS JWKS (removed, see ADR-017). `requireApiAuth()` accepts exactly one credential per request.
+Better Auth cookies, Bearer tokens, and API keys. `requireApiAuth()` accepts exactly one credential per request.
 
 ### Security Layers
 

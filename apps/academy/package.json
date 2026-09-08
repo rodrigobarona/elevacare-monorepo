@@ -18,7 +18,6 @@
     "@eleva/db": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
-    "@workos-inc/authkit-nextjs": "catalog:",
     "@eleva/icons": "workspace:*",
     "next": "catalog:",
     "next-intl": "catalog:",

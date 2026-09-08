@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 /**
  * Unit tests for the demo seed. The @eleva/db client is mocked so we
- * do not need a live Neon connection \u2014 we verify the contract:
+ * do not need a live Neon connection — we verify the contract:
  *
  *   - Three personas seeded: expert, team, personal.
  *   - Idempotent: when select returns an existing row, we do NOT
@@ -28,8 +28,10 @@ describe("seedDemo", () => {
     const valuesInsertVoid = vi.fn().mockResolvedValue(undefined)
     const insert = vi.fn().mockImplementation(() => ({
       values: vi.fn().mockImplementation((row: unknown) => {
-        // Insert into users/organizations return an id; memberships do not.
-        if ((row as { workosRole?: string }).workosRole) {
+        if (
+          (row as { role?: string }).role &&
+          !(row as { email?: string }).email
+        ) {
           return valuesInsertVoid(row)
         }
         return valuesInsert(row)
@@ -44,8 +46,6 @@ describe("seedDemo", () => {
     let selectCall = 0
     const select = vi.fn().mockImplementation(() => {
       const chain = selectChain()
-      // The helper issues 3 selects per persona: users, organizations,
-      // memberships. Return existing rows per flags.
       selectCall += 1
       const pos = ((selectCall - 1) % 3) + 1
       ;(chain.limit as ReturnType<typeof vi.fn>).mockResolvedValue(
@@ -61,10 +61,12 @@ describe("seedDemo", () => {
     vi.doMock("../client", () => ({
       db: () => ({ insert, select, update: vi.fn() }),
     }))
+    vi.doMock("../schema/auth", () => ({
+      user: { id: {}, email: {}, name: {}, emailVerified: {} },
+      organization: { id: {}, slug: {}, name: {}, type: {} },
+      member: { id: {}, userId: {}, organizationId: {}, role: {} },
+    }))
     vi.doMock("../schema/main", () => ({
-      users: { id: {}, workosUserId: {} },
-      organizations: { id: {}, workosOrgId: {} },
-      memberships: { id: {}, userId: {}, orgId: {} },
       expertProfiles: {
         id: {},
         username: {},
@@ -94,9 +96,9 @@ describe("seedDemo", () => {
       "member.demo@example.test",
       "pat.mota@example.test",
     ])
-    // Three personas * (user + org + membership + auth user/org/member)
-    // = 18 inserts plus expert_profiles + clinic_profiles.
-    expect(insert).toHaveBeenCalledTimes(20)
+    // Three personas * (user + org + membership) = 9 inserts
+    // plus expert_profiles + clinic_profiles.
+    expect(insert).toHaveBeenCalledTimes(11)
   })
 
   it("is idempotent when all rows already exist", async () => {

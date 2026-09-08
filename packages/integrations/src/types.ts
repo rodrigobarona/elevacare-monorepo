@@ -29,7 +29,7 @@ export interface IntegrationManifest {
   connectType: ConnectType
   description: { en: string; pt: string; es: string }
   docsUrl?: string
-  /** WorkOS Pipes provider slug. Required when connectType = "pipes". */
+  /** Legacy calendar-pipe provider slug. Required when connectType = "pipes". */
   pipesProvider?: string
   /** Feature flag slug gating visibility. */
   featureFlag?: string

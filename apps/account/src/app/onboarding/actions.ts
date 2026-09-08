@@ -11,9 +11,9 @@ function getApiBaseUrl(): string {
 }
 
 /**
- * Checks if the current user already has a WorkOS org membership
- * (e.g. they were invited). If so, provisions rows in the Eleva DB
- * and skips the space creation step.
+ * Checks if the current user already has an organization membership
+ * (e.g. they were invited). If so, confirms the local rows and skips
+ * the space creation step.
  */
 export async function checkExistingMembership(locale?: string): Promise<{
   hasMembership: boolean

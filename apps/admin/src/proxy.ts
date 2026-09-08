@@ -4,7 +4,7 @@ import { withHeaders } from "@eleva/observability/proxy"
 
 /**
  * Admin app: protected back-office. Unauthenticated users bounce to
- * the gateway's /login so the WorkOS handshake happens at eleva.care.
+ * the gateway's /login so the Better Auth handshake happens at eleva.care.
  */
 export default withHeaders(
   createAuthProxy({

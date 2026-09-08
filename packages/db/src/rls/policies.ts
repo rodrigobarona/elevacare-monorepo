@@ -17,8 +17,6 @@
 
 /** Main DB tables that carry org_id and need RLS enabled. */
 export const TENANT_TABLES = [
-  "organizations",
-  "memberships",
   "audit_outbox",
   "expert_profiles",
   "expert_listings",
@@ -42,8 +40,6 @@ export const TENANT_TABLES = [
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
 
-const ORG_SELF_TABLES = new Set<string>(["organizations"])
-
 /**
  * Tables that grant unrestricted access to platform admins. Bootstrap
  * operations (org provisioning, membership setup) run before
@@ -51,8 +47,6 @@ const ORG_SELF_TABLES = new Set<string>(["organizations"])
  */
 export const ADMIN_BYPASS_TABLES = new Set<string>([
   "expert_profiles",
-  "memberships",
-  "organizations",
   // Billing mirrors are written from the Stripe webhook handler under a
   // service context with no end-user session. The Drizzle pgPolicy
   // declarations on these tables already include the eleva.platform_admin
@@ -68,9 +62,6 @@ function tenantPredicate(table: string): string {
     ? ` OR current_setting('eleva.platform_admin', true) = 'true'`
     : ""
 
-  if (ORG_SELF_TABLES.has(table)) {
-    return `id::text = current_setting('eleva.org_id', true)${adminBypass}`
-  }
   return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
 }
 
