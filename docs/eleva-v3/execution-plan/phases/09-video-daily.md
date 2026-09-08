@@ -43,10 +43,13 @@ In:
   `room_fingerprint_exp` (Daily gives us **no** idempotency handle: HIPAA mode replaces any custom
   room name with a random string and rejects a `name` in the request, and room properties are a
   closed set with no `meta`. The only booking-specific values a room carries are `nbf` and `exp`,
-  so each attempt sets `exp = endAt + 30 min + <attempt-specific offset of 0–599 s>` stored in
-  `room_fingerprint_exp` and reconciles a lost response by listing rooms created inside the
-  attempt window whose `config.nbf`/`config.exp` equal the stored pair — details in the prompt;
-  verified in PR 09.0), `last_event_at`,
+  so each attempt sets `exp = endAt + 30 min + <offset of 0–599 s>` stored in
+  `room_fingerprint_exp`, which carries a **global UNIQUE index** — the offset is allocated in
+  Eleva-owned state so no two sessions ever share an `exp` second, and the pair
+  (`nbf`, `exp`) therefore identifies exactly one booking; a lost response is reconciled by
+  listing rooms created inside the attempt window whose `config.nbf`/`config.exp` equal the
+  stored pair, and anything other than exactly one match is `room_unresolved`, never an
+  adoption — details in the prompt; verified in PR 09.0), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
   **derived, never written from a single event**: on `meeting.ended` (or the sweep at `end_at +
 15 min` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
@@ -284,10 +287,18 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    NULL AND (room_create_lease_until IS NULL OR room_create_lease_until < now()) RETURNING * —
    zero rows means another worker holds the lease (or the room already exists): return
    in_progress without calling Daily (the caller's workflow retries after the lease expires), so
-   only ONE POST can be in flight per booking; offset = 0..599 s derived from (booking_id,
-   room_attempt_seq) (persisted BEFORE the vendor call; the row is the record of intent — the
-   extra seconds are invisible to users because the join window ends at endAt+30m in our
-   authorization, not at room exp); the lease is cleared when the room is persisted or the
+   only ONE POST can be in flight per booking; offset = 0..599 s is ALLOCATED, not derived:
+   sessions.room_fingerprint_exp has a global UNIQUE index, the UPDATE tries offset 0 and on
+   23505 retries with the next offset (same transaction boundary, one statement each) until it
+   commits or all 600 are taken (then status = room_unresolved before any vendor call — a
+   collision test creates two bookings with identical startAt/endAt and asserts distinct exp
+   values; a saturation test fills the 600 offsets and asserts room_unresolved with zero POSTs),
+   so the pair (nbf, exp) is unique across ALL sessions — the fingerprint proves booking identity
+   because Eleva allocated it uniquely, not because Daily made it unique (persisted BEFORE the
+   vendor call; the row is the record of intent — the extra seconds are invisible to users
+   because the join window ends at endAt+30m in our authorization, not at room exp; a new
+   attempt (seq + 1) allocates a fresh unique exp and the old one is released only when the
+   session leaves room_unresolved or is cancelled); the lease is cleared when the room is persisted or the
    attempt lands in room_unresolved, and an expired lease with no room is the signal for the
    reconciliation path in (c), never for a blind new POST; (b) POST /rooms { privacy: "private", properties: {
    nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
@@ -318,10 +329,13 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    adopted or deleted, exactly one room remains.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
-   attendance both|expert_only|member_only|nobody nullable (set once at meeting.ended; status ->
-   no_show when attendance <> both, else ended; sweep at end_at + 15 min if no webhook),
+   attendance both|expert_only|member_only|nobody nullable (derived by finalizeAttendance from
+   the full participant history after meeting.ended, re-derived by correction runs when late
+   participant events arrive; status -> no_show when attendance <> both, else ended; sweep at
+   end_at + 15 min if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
-   room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable,
+   room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
+   (global — the allocation described in item 1 depends on it),
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
