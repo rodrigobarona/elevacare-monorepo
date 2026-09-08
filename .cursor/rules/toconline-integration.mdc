@@ -244,7 +244,7 @@ Retry with exponential backoff (max 3 attempts). After exhaustion, set invoice s
 - [TOConline API Reference](docs/eleva-v3/toconline-api-reference.md)
 - `@eleva/billing` (`packages/billing/`) — Stripe Connect, webhooks, payouts
 - `@eleva/db` (`packages/db/`) — Neon idempotency tables
-- `@eleva/encryption` (`packages/encryption/`) — envelope encryption for OAuth tokens
+- `@eleva/encryption` (`packages/encryption/`) — envelope encryption for non-calendar integration credentials (TOConline/Moloni). Calendar OAuth tokens use Better Auth `account.encryptOAuthTokens`.
 - `@eleva/flags` (`packages/flags/`) — feature flag toggles
 - `@eleva/workflows` (`packages/workflows/`) — Vercel Workflow triggers
 - `@eleva/observability` (`packages/observability/`) — Sentry spans

@@ -39,6 +39,8 @@ describe("deriveProductLabel", () => {
     expect(toMembershipSeniority("owner")).toBe("owner")
     expect(toMembershipSeniority("admin")).toBe("admin")
     expect(toMembershipSeniority("member")).toBe("member")
+    expect(toMembershipSeniority("admin,member")).toBe("admin")
+    expect(toMembershipSeniority("viewer")).toBe("member")
     expect(normalizeMembershipRole("owner")).toBe("admin")
     expect(normalizeMembershipRole("admin")).toBe("admin")
     expect(normalizeMembershipRole("member")).toBe("member")

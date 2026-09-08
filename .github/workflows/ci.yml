@@ -179,12 +179,17 @@ jobs:
               --glob '!packages/db/src/migrations/**' \
               --glob '!packages/eslint-config/**' \
               --glob '!packages/auth/eslint.config.js' \
-              --glob '!.cursor/hooks/state/**' \
-              || true
+              --glob '!.cursor/hooks/state/**'
           )"
-          if [ -n "$matches" ]; then
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
             echo "$matches"
             echo "::error::Leftover identity-provider references found. See Phase 03.2 exit gate."
+            exit 1
+          fi
+          if [ "$status" -gt 1 ]; then
+            echo "::error::legacy-idp-guard scan failed (rg exit $status)."
             exit 1
           fi
 

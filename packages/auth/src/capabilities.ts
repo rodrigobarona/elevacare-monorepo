@@ -24,9 +24,15 @@ export function normalizeMembershipRole(
 
 /** Narrow an arbitrary Better Auth `member.role` string to a seniority. */
 export function toMembershipSeniority(role: string): MembershipSeniority {
-  if (role === "member") return "member"
-  if (role === "owner") return "owner"
-  return "admin"
+  const slugs = new Set(
+    role
+      .split(",")
+      .map((slug) => slug.trim().toLowerCase())
+      .filter(Boolean)
+  )
+  if (slugs.has("owner")) return "owner"
+  if (slugs.has("admin")) return "admin"
+  return "member"
 }
 
 export function deriveProductLabel(

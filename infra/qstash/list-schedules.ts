@@ -16,6 +16,15 @@ const EXPECTED_PATHS = [
   "/workflows/stripe-stuck-events",
 ] as const
 
+function isExpectedDestination(destination: string, path: string): boolean {
+  try {
+    const url = new URL(destination)
+    return url.hostname.endsWith("eleva.care") && url.pathname === path
+  } catch {
+    return false
+  }
+}
+
 async function main() {
   const token = process.env.QSTASH_TOKEN
   const baseUrl = process.env.QSTASH_URL
@@ -41,11 +50,13 @@ async function main() {
     if (s.isPaused) console.log(`    PAUSED`)
   }
 
-  // Cross-check expected paths. Match by suffix so any host (staging,
-  // production, custom domain) hits the same expectation.
+  // Cross-check expected paths. Require an eleva.care host and an exact
+  // pathname so a lookalike destination cannot pass as expected.
   console.log(`\n=== Expected schedules check ===`)
   for (const path of EXPECTED_PATHS) {
-    const match = schedules.find((s: Schedule) => s.destination.endsWith(path))
+    const match = schedules.find((s: Schedule) =>
+      isExpectedDestination(s.destination, path)
+    )
     if (match) {
       console.log(
         `  PRESENT  ${path}  →  ${match.destination}  (cron ${match.cron})`
@@ -57,7 +68,7 @@ async function main() {
 
   const unexpected = schedules.filter(
     (s: Schedule) =>
-      !EXPECTED_PATHS.some((path) => s.destination.endsWith(path))
+      !EXPECTED_PATHS.some((path) => isExpectedDestination(s.destination, path))
   )
   if (unexpected.length > 0) {
     console.log(`\n=== Unexpected schedules (delete in Upstash) ===`)

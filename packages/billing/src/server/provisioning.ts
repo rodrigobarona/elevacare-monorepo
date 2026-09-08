@@ -54,11 +54,19 @@ export async function provisionOrgBilling(
   })
 
   if (existing) {
-    const subscriptionId = await ensureSubscriptionExists({
-      customerId: existing.stripeCustomerId,
-      orgType: input.orgType,
-      orgId: input.orgId,
-    })
+    let subscriptionId: string | null = null
+    try {
+      subscriptionId = await ensureSubscriptionExists({
+        customerId: existing.stripeCustomerId,
+        orgType: input.orgType,
+        orgId: input.orgId,
+      })
+    } catch (err) {
+      console.error(
+        `[provisioning] ensureSubscriptionExists failed for customer ${existing.stripeCustomerId}:`,
+        err instanceof Error ? err.message : err
+      )
+    }
     return {
       stripeCustomerId: existing.stripeCustomerId,
       subscriptionId,
