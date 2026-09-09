@@ -79,7 +79,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request),
-    RATE_LIMITS.authenticated,
+    RATE_LIMITS.public,
     cors
   )
   if (rateLimited) return rateLimited

@@ -1,7 +1,7 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { Explorer, type ExplorerSearch } from "./explorer"
-import { hreflangLanguages } from "@/lib/hreflang"
+import { hreflangLanguages, localePath } from "@/lib/hreflang"
 
 type Props = {
   params: Promise<{ locale: string }>
@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("title"),
     description: t("description"),
     alternates: {
-      canonical: locale === "en" ? "/experts" : `/${locale}/experts`,
+      canonical: localePath(locale, "/experts"),
       languages: hreflangLanguages("/experts"),
     },
   }

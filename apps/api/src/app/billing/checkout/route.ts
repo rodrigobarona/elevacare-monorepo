@@ -57,9 +57,12 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
-  if (botVerdict?.isBot) {
-    return secureJson({ error: "blocked" }, { status: 403, headers })
+  const isBearer = request.headers.get("authorization")?.startsWith("Bearer ")
+  if (!isBearer) {
+    const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+    if (botVerdict?.isBot) {
+      return secureJson({ error: "blocked" }, { status: 403, headers })
+    }
   }
 
   const rateLimited = await applyRateLimit(

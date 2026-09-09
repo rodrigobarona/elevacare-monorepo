@@ -5,7 +5,7 @@ import { ApiClientError } from "@eleva/api-client"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { SiteHeader } from "@/components/site-header"
 import { formatEur } from "@/lib/format-eur"
-import { hreflangLanguages } from "@/lib/hreflang"
+import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { pickLocalizedText } from "@/lib/localized-text"
 import { createPublicApiClient } from "@/lib/public-api"
 
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description:
         expert.headline ?? t("description", { name: expert.displayName }),
       alternates: {
-        canonical: locale === "en" ? path : `/${locale}${path}`,
+        canonical: localePath(locale, path),
         languages: hreflangLanguages(path),
       },
     }
@@ -57,14 +57,12 @@ export default async function ExpertProfilePage({ params }: Props) {
     throw error
   }
 
-  const firstMode = expert.eventTypes
-    .flatMap((eventType) => eventType.modes)
-    .at(0)
-  const firstEvent = expert.eventTypes.find((eventType) =>
-    eventType.modes.some((mode) => mode.id === firstMode?.id)
+  const firstEvent = expert.eventTypes.find(
+    (eventType) => eventType.modes.length > 0
   )
+  const firstMode = firstEvent?.modes[0]
 
-  let upcoming: { startLocal: string; label: string }[] = []
+  let upcoming: { start: string; label: string }[] = []
   if (firstMode && firstEvent) {
     const from = new Date()
     const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
@@ -80,7 +78,7 @@ export default async function ExpertProfilePage({ params }: Props) {
         }
       )
       upcoming = slots.slots.slice(0, 3).map((slot) => ({
-        startLocal: slot.startLocal,
+        start: slot.start,
         label: pickLocalizedText(firstEvent.title, locale),
       }))
     } catch {
@@ -141,11 +139,16 @@ export default async function ExpertProfilePage({ params }: Props) {
             <ul className="mt-3 space-y-2">
               {upcoming.map((slot) => (
                 <li
-                  key={`${slot.label}-${slot.startLocal}`}
+                  key={`${slot.label}-${slot.start}`}
                   className="rounded-md border px-3 py-2 text-sm"
                 >
                   {slot.label} ·{" "}
-                  {slot.startLocal.replace("T", " ").slice(0, 16)}
+                  {new Intl.DateTimeFormat(locale, {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                    timeZone: "Europe/Lisbon",
+                    timeZoneName: "short",
+                  }).format(new Date(slot.start))}
                 </li>
               ))}
             </ul>

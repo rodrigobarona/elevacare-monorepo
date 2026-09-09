@@ -2,7 +2,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 import { Explorer, type ExplorerSearch } from "../explorer"
-import { hreflangLanguages } from "@/lib/hreflang"
+import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isMarketplaceCategory } from "@/lib/marketplace-categories"
 
 type Props = {
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: t("categoryTitle", { category: label }),
     description: t("description"),
     alternates: {
-      canonical: locale === "en" ? path : `/${locale}${path}`,
+      canonical: localePath(locale, path),
       languages: hreflangLanguages(path),
     },
   }
