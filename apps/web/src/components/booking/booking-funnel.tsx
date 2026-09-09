@@ -746,50 +746,58 @@ export function BookingFunnel({
                     })
                   : t("done.video")}
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                onPress={() =>
-                  downloadBookingIcs({
-                    uid:
-                      payment?.bookingId ??
-                      reservation?.reservationId ??
-                      eventSlug,
-                    summary: `${offerTitle} · ${expertName}`,
-                    description:
-                      selectedMode.mode === "online"
-                        ? t("done.video")
-                        : selectedMode.mode === "phone"
-                          ? t("done.phone", {
-                              phone: maskPhone(toE164(phone, country) ?? phone),
-                            })
-                          : t("done.inPerson", {
-                              location: locationCopy ?? "",
-                            }),
-                    start: slot.start,
-                    end: slot.end,
-                    timeZone,
-                    location:
-                      selectedMode.mode === "in_person"
-                        ? locationCopy
-                        : selectedMode.mode === "phone"
-                          ? t("done.phoneLocation", {
-                              phone: maskPhone(toE164(phone, country) ?? phone),
-                            })
-                          : t("done.videoLocation"),
-                    expertName,
-                    memberName: name,
-                    memberEmail: email,
-                  })
-                }
-              >
-                {t("done.ics")}
-              </Button>
-              <LinkButton href="/signup">{t("done.activate")}</LinkButton>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {t("done.activateHint")}
-            </p>
+            {confirmState === "confirmed" ? (
+              <>
+                <div className="flex flex-wrap gap-3">
+                  <Button
+                    variant="outline"
+                    onPress={() =>
+                      downloadBookingIcs({
+                        uid:
+                          payment?.bookingId ??
+                          reservation?.reservationId ??
+                          eventSlug,
+                        summary: `${offerTitle} · ${expertName}`,
+                        description:
+                          selectedMode.mode === "online"
+                            ? t("done.video")
+                            : selectedMode.mode === "phone"
+                              ? t("done.phone", {
+                                  phone: maskPhone(
+                                    toE164(phone, country) ?? phone
+                                  ),
+                                })
+                              : t("done.inPerson", {
+                                  location: locationCopy ?? "",
+                                }),
+                        start: slot.start,
+                        end: slot.end,
+                        timeZone,
+                        location:
+                          selectedMode.mode === "in_person"
+                            ? locationCopy
+                            : selectedMode.mode === "phone"
+                              ? t("done.phoneLocation", {
+                                  phone: maskPhone(
+                                    toE164(phone, country) ?? phone
+                                  ),
+                                })
+                              : t("done.videoLocation"),
+                        expertName,
+                        memberName: name,
+                        memberEmail: email,
+                      })
+                    }
+                  >
+                    {t("done.ics")}
+                  </Button>
+                  <LinkButton href="/signup">{t("done.activate")}</LinkButton>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {t("done.activateHint")}
+                </p>
+              </>
+            ) : null}
           </div>
         ) : null}
       </section>

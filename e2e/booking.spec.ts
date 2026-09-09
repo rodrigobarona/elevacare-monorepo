@@ -9,15 +9,25 @@ type PublicExpert = {
 }
 
 async function firstBookableExpert(): Promise<PublicExpert | null> {
-  const list = await fetch(`${apiUrl}/public/experts`)
+  let list: Response
+  try {
+    list = await fetch(`${apiUrl}/public/experts`)
+  } catch {
+    return null
+  }
   if (!list.ok) return null
   const body = (await list.json()) as {
     experts?: Array<{ username: string; displayName: string }>
   }
   for (const card of body.experts ?? []) {
-    const profile = await fetch(
-      `${apiUrl}/public/experts/${encodeURIComponent(card.username)}`
-    )
+    let profile: Response
+    try {
+      profile = await fetch(
+        `${apiUrl}/public/experts/${encodeURIComponent(card.username)}`
+      )
+    } catch {
+      continue
+    }
     if (!profile.ok) continue
     const expert = (await profile.json()) as PublicExpert
     if (expert.eventTypes.some((eventType) => eventType.modes.length > 0)) {
