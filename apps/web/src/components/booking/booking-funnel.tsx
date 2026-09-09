@@ -708,7 +708,10 @@ export function BookingFunnel({
         {step === "done" && slot && selectedMode ? (
           <div className="mt-8 space-y-6">
             <header className="space-y-2">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              <h1
+                className="font-heading text-3xl font-semibold tracking-tight"
+                data-testid="booking-done-heading"
+              >
                 {confirmState === "confirmed"
                   ? t("done.heading")
                   : t("done.pending")}
