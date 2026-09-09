@@ -66,7 +66,12 @@ async function main() {
     process.exit(1)
   }
 
-  const apiVersionRaw = process.env.STRIPE_API_VERSION ?? "2026-04-22.dahlia"
+  const apiVersionRaw = process.env.STRIPE_API_VERSION
+  if (!apiVersionRaw) {
+    console.error("[stripe:pmc] STRIPE_API_VERSION not found in environment.")
+    process.exit(1)
+  }
+
   const sdkApiVersion = apiVersionRaw as ConstructorParameters<
     typeof Stripe
   >[1] extends infer C | undefined

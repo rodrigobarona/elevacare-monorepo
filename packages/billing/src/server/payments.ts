@@ -1,5 +1,5 @@
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto"
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
 import { withAudit } from "@eleva/audit"
@@ -9,10 +9,9 @@ import {
   withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
-import { organization } from "@eleva/db/schema/auth"
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
 import { stripe } from "./client"
-import { computeCommissionRate, ENTITLEMENT_KEYS } from "./commission"
+import { computeCommissionRate } from "./commission"
 
 export function hashReservationToken(token: string): string {
   return createHash("sha256").update(token).digest("hex")
@@ -136,7 +135,7 @@ export async function createPaymentIntentForReservation(
   }
   if (!loaded) return { ok: false, error: "not_found" }
 
-  const { reservation, orgType, linkRevoked } = loaded
+  const { reservation, linkRevoked } = loaded
   const access = authorizeReservationAccess({
     capabilityHash: reservation.capabilityHash,
     reservationToken: input.reservationToken,
@@ -176,20 +175,23 @@ export async function createPaymentIntentForReservation(
     return { ok: false, error: "unavailable" }
   }
 
-  const existing = await loadBookingForReservation(
-    reservation.orgId,
-    reservation.id
-  )
+  let existing: Awaited<ReturnType<typeof loadBookingForReservation>>
+  let entitlements: readonly string[]
+  try {
+    ;[existing, entitlements] = await Promise.all([
+      loadBookingForReservation(reservation.orgId, reservation.id),
+      loadOrgEntitlements(reservation.orgId),
+    ])
+  } catch (err) {
+    console.error("[payments/intent] booking/entitlements load failed", err)
+    return { ok: false, error: "db_error" }
+  }
   if (!reservation.userId && !funnel.guest?.email && !existing) {
     return { ok: false, error: "unavailable" }
   }
   let bookingId = existing?.bookingId ?? randomUUID()
   let paymentId = existing?.paymentId ?? randomUUID()
   const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
-  const entitlements =
-    orgType === "clinic" || orgType === "team"
-      ? [ENTITLEMENT_KEYS.CLINIC_STARTER]
-      : []
   const rate = computeCommissionRate({ entitlements })
   const applicationFeeCents = Math.round(priceCents * rate)
 
@@ -313,19 +315,15 @@ async function reuseExistingIntent(
 
 async function loadReservationForIntent(reservationId: string) {
   return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
-      .select({
-        reservation: main.slotReservations,
-        orgType: organization.type,
-      })
+    const [reservation] = await tx
+      .select()
       .from(main.slotReservations)
-      .innerJoin(organization, eq(organization.id, main.slotReservations.orgId))
       .where(eq(main.slotReservations.id, reservationId))
       .limit(1)
 
-    if (!row) return null
+    if (!reservation) return null
 
-    const rawLinkId = row.reservation.funnel?.bookingLinkId
+    const rawLinkId = reservation.funnel?.bookingLinkId
     const bookingLinkId = bookingLinkIdSchema.safeParse(rawLinkId).success
       ? rawLinkId
       : null
@@ -337,7 +335,7 @@ async function loadReservationForIntent(reservationId: string) {
         .where(
           and(
             eq(main.bookingLinks.id, bookingLinkId),
-            eq(main.bookingLinks.orgId, row.reservation.orgId)
+            eq(main.bookingLinks.orgId, reservation.orgId)
           )
         )
         .limit(1)
@@ -345,10 +343,35 @@ async function loadReservationForIntent(reservationId: string) {
     }
 
     return {
-      reservation: row.reservation,
-      orgType: row.orgType,
+      reservation,
       linkRevoked,
     }
+  })
+}
+
+const ENTITLED_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const
+
+async function loadOrgEntitlements(orgId: string): Promise<readonly string[]> {
+  return withOrgContext(orgId, async (tx) => {
+    const rows = await tx
+      .select({ tier: main.billingSubscriptions.tier })
+      .from(main.billingSubscriptions)
+      .where(
+        and(
+          eq(main.billingSubscriptions.orgId, orgId),
+          inArray(
+            main.billingSubscriptions.status,
+            ENTITLED_SUBSCRIPTION_STATUSES
+          )
+        )
+      )
+    const entitlements = new Set<string>()
+    for (const row of rows) {
+      if (row.tier && row.tier !== "unknown") {
+        entitlements.add(row.tier)
+      }
+    }
+    return [...entitlements]
   })
 }
 
