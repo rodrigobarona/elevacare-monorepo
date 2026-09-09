@@ -182,8 +182,9 @@ test.describe("booking funnel", () => {
     await page.goto(
       `/${expert!.username}/${eventType.slug}?redirect_status=succeeded`
     )
-    await expect(page.getByTestId("booking-done-heading")).toHaveText(
-      "You're booked",
+    await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
+      "data-state",
+      "confirmed",
       { timeout: 10_000 }
     )
     expect(confirmBodies).toEqual([

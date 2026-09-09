@@ -211,9 +211,7 @@ export function BookingFunnel({
           reservationToken: hold.reservationToken,
           paymentIntentId: paid.paymentIntentId,
         })
-        setPayment((current) =>
-          current ? { ...current, bookingId: result.bookingId } : current
-        )
+        setPayment({ ...paid, bookingId: result.bookingId })
         setConfirmState("confirmed")
       } catch (error) {
         if (error instanceof ApiClientError) {
@@ -692,10 +690,12 @@ export function BookingFunnel({
                 onPaid={(result) => {
                   setStep("done")
                   if (result.status === "succeeded") {
-                    void confirmPaidHold(reservation, {
+                    const paid = {
                       ...payment,
                       paymentIntentId: result.paymentIntentId,
-                    })
+                    }
+                    setPayment(paid)
+                    void confirmPaidHold(reservation, paid)
                     return
                   }
                   setConfirmState("pending")
@@ -711,6 +711,7 @@ export function BookingFunnel({
               <h1
                 className="font-heading text-3xl font-semibold tracking-tight"
                 data-testid="booking-done-heading"
+                data-state={confirmState}
               >
                 {confirmState === "confirmed"
                   ? t("done.heading")
