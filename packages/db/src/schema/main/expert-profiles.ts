@@ -227,7 +227,7 @@ export const expertProfiles = pgTable(
       "expert_profiles_username_format",
       sql`username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND username NOT LIKE '%--%'`
     ),
-    // 0025_offer_model backfills empty arrays to {en} before this CHECK.
+    // 0027_offer_model backfills empty arrays to {en} before this CHECK.
     languagesMinChk: check(
       "expert_profiles_languages_min",
       sql`cardinality(languages) >= 1`

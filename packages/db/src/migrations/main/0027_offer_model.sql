@@ -109,7 +109,7 @@ BEGIN
   SELECT count(*) INTO offending FROM "event_types" WHERE "currency" <> 'EUR';
   IF offending > 0 THEN
     RAISE EXCEPTION
-      '0025_offer_model: % event_types row(s) are not EUR; migrate prices first',
+      '0027_offer_model: % event_types row(s) are not EUR; migrate prices first',
       offending;
   END IF;
 END $$;
@@ -159,6 +159,8 @@ CREATE TABLE "event_type_modes" (
     CHECK ((price_cents IS NULL) = (currency IS NULL)),
   CONSTRAINT "event_type_modes_languages_min"
     CHECK (cardinality(languages) >= 1),
+  CONSTRAINT "event_type_modes_duration_minutes"
+    CHECK (duration_minutes IS NULL OR duration_minutes > 0),
   CONSTRAINT "event_type_modes_event_type_fk"
     FOREIGN KEY ("org_id", "event_type_id")
     REFERENCES "event_types"("org_id", "id") ON DELETE CASCADE,
@@ -266,7 +268,7 @@ CREATE TABLE "public_handles" (
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "public_handles_format"
     CHECK (
-      handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      handle::text ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'
       AND handle::text NOT LIKE '%--%'
     )
 );
@@ -310,7 +312,7 @@ SELECT DISTINCT ON (lower("username")) "username", 'expert', "id", "created_at"
 FROM "expert_profiles"
 WHERE "deleted_at" IS NULL
   AND NOT (lower("username") = ANY(public.reserved_public_handles()))
-  AND "username" ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+  AND "username" ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'
   AND "username" NOT LIKE '%--%'
 ORDER BY lower("username"), "created_at", "id";
 --> statement-breakpoint
@@ -324,18 +326,18 @@ BEGIN
   WHERE "deleted_at" IS NULL
     AND lower("username") = ANY(public.reserved_public_handles());
   IF skipped > 0 THEN
-    RAISE NOTICE '0025_offer_model skipped % reserved expert username(s)', skipped;
+    RAISE NOTICE '0027_offer_model skipped % reserved expert username(s)', skipped;
   END IF;
   SELECT count(*) INTO malformed
   FROM "expert_profiles"
   WHERE "deleted_at" IS NULL
     AND NOT (lower("username") = ANY(public.reserved_public_handles()))
     AND (
-      "username" !~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      "username" !~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'
       OR "username" LIKE '%--%'
     );
   IF malformed > 0 THEN
-    RAISE NOTICE '0025_offer_model skipped % malformed expert username(s)', malformed;
+    RAISE NOTICE '0027_offer_model skipped % malformed expert username(s)', malformed;
   END IF;
 END $$;
 --> statement-breakpoint
@@ -349,14 +351,14 @@ BEGIN
     FROM "expert_profiles"
     WHERE "deleted_at" IS NULL
       AND NOT (lower("username") = ANY(public.reserved_public_handles()))
-      AND "username" ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      AND "username" ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'
       AND "username" NOT LIKE '%--%'
     GROUP BY lower("username")
     HAVING count(*) > 1
   ) dup;
   IF collided > 0 THEN
     RAISE WARNING
-      '0025_offer_model: % duplicate username(s) got only one public_handles row',
+      '0027_offer_model: % duplicate username(s) got only one public_handles row',
       collided;
   END IF;
 END $$;

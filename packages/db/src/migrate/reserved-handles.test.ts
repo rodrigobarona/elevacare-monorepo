@@ -3,8 +3,8 @@ import { resolve } from "node:path"
 import { describe, expect, it } from "vitest"
 import { RESERVED_USERNAMES } from "@eleva/config"
 
-/** Frozen at 0025. New reserved names ship in a later migration. */
-const RESERVED_HANDLES_AT_0025 = [
+/** Frozen at 0027. New reserved names ship in a later migration. */
+const RESERVED_HANDLES_AT_0027 = [
   "member",
   "expert",
   "org",
@@ -75,14 +75,28 @@ const RESERVED_HANDLES_AT_0025 = [
   "app",
 ] as const
 
-describe("0025 public_handles reserved trigger", () => {
-  it("embeds the frozen reserved list in lowercase", () => {
-    const sql = readFileSync(
-      resolve(import.meta.dirname, "../migrations/main/0025_offer_model.sql"),
-      "utf8"
-    )
-    for (const name of RESERVED_HANDLES_AT_0025) {
-      expect(sql, name).toContain(`'${name.toLowerCase()}'`)
+function offerModelSql(): string {
+  return readFileSync(
+    resolve(import.meta.dirname, "../migrations/main/0027_offer_model.sql"),
+    "utf8"
+  )
+}
+
+function reservedHandlesFunctionBody(sql: string): string {
+  const start = sql.indexOf(
+    "CREATE OR REPLACE FUNCTION public.reserved_public_handles()"
+  )
+  expect(start).toBeGreaterThanOrEqual(0)
+  const end = sql.indexOf("$$;", start)
+  expect(end).toBeGreaterThan(start)
+  return sql.slice(start, end)
+}
+
+describe("0027 public_handles reserved trigger", () => {
+  it("embeds the frozen reserved list in reserved_public_handles()", () => {
+    const body = reservedHandlesFunctionBody(offerModelSql())
+    for (const name of RESERVED_HANDLES_AT_0027) {
+      expect(body, name).toContain(`'${name.toLowerCase()}'`)
     }
   })
 
@@ -92,21 +106,16 @@ describe("0025 public_handles reserved trigger", () => {
     }
   })
 
-  it("constrains handle shape to the expert username format", () => {
-    const sql = readFileSync(
-      resolve(import.meta.dirname, "../migrations/main/0025_offer_model.sql"),
-      "utf8"
-    )
+  it("constrains handle shape to the 3–30 username contract", () => {
+    const sql = offerModelSql()
     expect(sql).toContain('CONSTRAINT "public_handles_format"')
-    expect(sql).toContain(
-      "handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'"
-    )
+    expect(sql).toContain("handle::text ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$'")
     expect(sql).toContain("AND handle::text NOT LIKE '%--%'")
   })
 
-  it("keeps the frozen 0025 list a subset of the current reserved names", () => {
+  it("keeps the frozen 0027 list a subset of the current reserved names", () => {
     const current = new Set<string>(RESERVED_USERNAMES)
-    for (const name of RESERVED_HANDLES_AT_0025) {
+    for (const name of RESERVED_HANDLES_AT_0027) {
       expect(current.has(name), `${name} removed from RESERVED_USERNAMES`).toBe(
         true
       )

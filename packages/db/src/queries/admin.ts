@@ -154,10 +154,36 @@ export async function updateExpertProfile(
   orgId: string,
   data: Partial<main.NewExpertProfile>
 ): Promise<void> {
+  const next: Partial<main.NewExpertProfile> = { ...data }
+  if (
+    data.practiceCountries &&
+    data.practiceCountries.length > 0 &&
+    data.practiceCountry === undefined
+  ) {
+    next.practiceCountry = data.practiceCountries[0]!.toUpperCase()
+  }
+  if (
+    data.practiceCountries &&
+    data.practiceCountries.length > 0 &&
+    data.serviceCountries === undefined
+  ) {
+    const codes = new Set(
+      data.practiceCountries.map((code) => code.toUpperCase())
+    )
+    if (next.practiceCountry) codes.add(next.practiceCountry)
+    next.serviceCountries = [...codes]
+  }
+  if (data.worldwideMode !== undefined && data.worldwideRemote === undefined) {
+    next.worldwideRemote = data.worldwideMode
+  }
+  if (data.worldwideRemote !== undefined && data.worldwideMode === undefined) {
+    next.worldwideMode = data.worldwideRemote
+  }
+
   await withOrgContext(orgId, async (tx: Tx) => {
     await tx
       .update(main.expertProfiles)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...next, updatedAt: new Date() })
       .where(eq(main.expertProfiles.id, profileId))
   })
 }

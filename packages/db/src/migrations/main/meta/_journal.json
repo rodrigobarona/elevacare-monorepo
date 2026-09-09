@@ -178,7 +178,7 @@
       "breakpoints": true
     },
     {
-      "idx": 25,
+      "idx": 27,
       "version": "7",
       "when": 1779440000000,
       "tag": "0025_auth_uuid_defaults",
@@ -195,7 +195,7 @@
       "idx": 27,
       "version": "7",
       "when": 1779500000000,
-      "tag": "0025_offer_model",
+      "tag": "0027_offer_model",
       "breakpoints": true
     }
   ]

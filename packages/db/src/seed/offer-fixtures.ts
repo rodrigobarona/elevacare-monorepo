@@ -129,6 +129,7 @@ async function upsertExpert(
       practiceCountries: [input.practiceCountry],
       serviceCountries: input.serviceCountries,
       worldwideRemote: input.worldwideRemote,
+      worldwideMode: input.worldwideRemote,
       sessionModes: ["online", "phone", "in_person"],
       status: "active",
     })
@@ -138,10 +139,30 @@ async function upsertExpert(
 
 async function ensureHandle(handle: string, ownerId: string) {
   await withPlatformAdminContext(async (tx) => {
-    await tx
+    const [inserted] = await tx
       .insert(main.publicHandles)
       .values({ handle, ownerKind: "expert", ownerId })
       .onConflictDoNothing()
+      .returning({
+        ownerKind: main.publicHandles.ownerKind,
+        ownerId: main.publicHandles.ownerId,
+      })
+    if (inserted) return
+    const [existing] = await tx
+      .select({
+        ownerKind: main.publicHandles.ownerKind,
+        ownerId: main.publicHandles.ownerId,
+      })
+      .from(main.publicHandles)
+      .where(eq(main.publicHandles.handle, handle))
+      .limit(1)
+    if (
+      !existing ||
+      existing.ownerKind !== "expert" ||
+      existing.ownerId !== ownerId
+    ) {
+      throw new Error(`public handle ${handle} belongs to another owner`)
+    }
   })
 }
 

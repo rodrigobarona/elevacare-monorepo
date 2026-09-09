@@ -134,6 +134,10 @@ export const eventTypeModes = pgTable(
       "event_type_modes_price_currency",
       sql`(price_cents IS NULL) = (currency IS NULL)`
     ),
+    durationChk: check(
+      "event_type_modes_duration_minutes",
+      sql`duration_minutes IS NULL OR duration_minutes > 0`
+    ),
     tenantPolicy: pgPolicy("event_type_modes_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
@@ -184,7 +188,7 @@ export const bookingLinks = pgTable(
       columns: [t.orgId, t.eventTypeId],
       foreignColumns: [eventTypes.orgId, eventTypes.id],
     }).onDelete("cascade"),
-    // SQL 0025 uses ON DELETE SET NULL (event_type_mode_id) / (schedule_id)
+    // SQL 0027 uses ON DELETE SET NULL (event_type_mode_id) / (schedule_id)
     // only. Drizzle cannot express a column-specific SET NULL on a composite
     // FK, so the TS schema stays restrict and the migration is authoritative.
     modeFk: foreignKey({
@@ -248,7 +252,7 @@ export const publicHandles = pgTable(
     ),
     handleFormatChk: check(
       "public_handles_format",
-      sql`handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND handle::text NOT LIKE '%--%'`
+      sql`handle::text ~ '^[a-z0-9][a-z0-9-]{1,28}[a-z0-9]$' AND handle::text NOT LIKE '%--%'`
     ),
     publicRead: pgPolicy("public_handles_public_read", {
       for: "select",

@@ -38,7 +38,7 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0025_offer_model")
+    expect(last?.tag).toBe("0027_offer_model")
     expect(last?.statements.length).toBeGreaterThan(10)
     expect(last?.hash).toHaveLength(64)
     const sql = last?.statements.join("\n") ?? ""

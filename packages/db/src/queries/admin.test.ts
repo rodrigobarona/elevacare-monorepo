@@ -89,5 +89,26 @@ describe("admin queries", () => {
       )
       expect(chainObj.where).toHaveBeenCalled()
     })
+
+    it("mirrors legacy practiceCountries and worldwideMode onto authoritative columns", async () => {
+      const chainObj = chain([])
+      mockTx.update.mockReturnValueOnce(chainObj)
+
+      const { updateExpertProfile } = await import("./admin")
+      await updateExpertProfile("profile-1", "org-1", {
+        practiceCountries: ["pt", "es"],
+        worldwideMode: true,
+      })
+
+      expect(chainObj.set).toHaveBeenCalledWith(
+        expect.objectContaining({
+          practiceCountries: ["pt", "es"],
+          practiceCountry: "PT",
+          serviceCountries: ["PT", "ES"],
+          worldwideMode: true,
+          worldwideRemote: true,
+        })
+      )
+    })
   })
 })
