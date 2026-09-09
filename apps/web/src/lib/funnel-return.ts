@@ -50,7 +50,9 @@ export function saveFunnelReturn(snapshot: FunnelReturnSnapshot): void {
   }
 }
 
-export function loadFunnelReturn(): FunnelReturnSnapshot | null {
+export function loadFunnelReturn(options?: {
+  allowExpired?: boolean
+}): FunnelReturnSnapshot | null {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY)
     if (!raw) return null
@@ -64,6 +66,13 @@ export function loadFunnelReturn(): FunnelReturnSnapshot | null {
       !parsed.modeId
     ) {
       return null
+    }
+    if (!options?.allowExpired) {
+      const expiresAt = Date.parse(parsed.reservation.expiresAt)
+      if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) {
+        clearFunnelReturn()
+        return null
+      }
     }
     return parsed
   } catch {

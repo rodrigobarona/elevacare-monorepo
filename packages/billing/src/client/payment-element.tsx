@@ -36,6 +36,7 @@ export function BookingPaymentElement({
   failedLabel,
   pendingLabel,
   appearanceTheme = "light",
+  onProcessingChange,
   onPaid,
   children,
 }: {
@@ -50,6 +51,7 @@ export function BookingPaymentElement({
   failedLabel: string
   pendingLabel: string
   appearanceTheme?: "light" | "dark"
+  onProcessingChange?: (isProcessing: boolean) => void
   onPaid: (result: Extract<BookingPaymentResult, { ok: true }>) => void
   children?: ReactNode
 }) {
@@ -80,6 +82,7 @@ export function BookingPaymentElement({
         processingLabel={processingLabel}
         failedLabel={failedLabel}
         pendingLabel={pendingLabel}
+        onProcessingChange={onProcessingChange}
         onPaid={onPaid}
       >
         {children}
@@ -96,6 +99,7 @@ function PaymentForm({
   processingLabel,
   failedLabel,
   pendingLabel,
+  onProcessingChange,
   onPaid,
   children,
 }: {
@@ -106,6 +110,7 @@ function PaymentForm({
   processingLabel: string
   failedLabel: string
   pendingLabel: string
+  onProcessingChange?: (isProcessing: boolean) => void
   onPaid: (result: Extract<BookingPaymentResult, { ok: true }>) => void
   children?: ReactNode
 }) {
@@ -114,11 +119,16 @@ function PaymentForm({
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
 
+  function markProcessing(next: boolean) {
+    setIsProcessing(next)
+    onProcessingChange?.(next)
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!stripe || !elements) return
+    if (!stripe || !elements || isProcessing) return
 
-    setIsProcessing(true)
+    markProcessing(true)
     setError(null)
 
     try {
@@ -132,7 +142,7 @@ function PaymentForm({
 
       if (result.error) {
         setError(result.error.message ?? failedLabel)
-        setIsProcessing(false)
+        markProcessing(false)
         return
       }
 
@@ -149,11 +159,15 @@ function PaymentForm({
         return
       }
 
-      setError(pendingLabel)
-      setIsProcessing(false)
+      setError(
+        intent?.status === "requires_payment_method"
+          ? failedLabel
+          : pendingLabel
+      )
+      markProcessing(false)
     } catch {
       setError(failedLabel)
-      setIsProcessing(false)
+      markProcessing(false)
     }
   }
 

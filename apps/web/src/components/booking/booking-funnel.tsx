@@ -136,6 +136,7 @@ export function BookingFunnel({
   const [nowMs, setNowMs] = useState(() => Date.now())
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [paymentInFlight, setPaymentInFlight] = useState(false)
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,
@@ -202,7 +203,9 @@ export function BookingFunnel({
     const id = window.setTimeout(() => {
       const status = parseRedirectStatus(window.location.search)
       if (!status) return
-      const snapshot = loadFunnelReturn()
+      const snapshot = loadFunnelReturn({
+        allowExpired: status === "succeeded" || status === "processing",
+      })
       if (!snapshot) return
       setReservation(snapshot.reservation)
       setPayment(snapshot.payment)
@@ -232,9 +235,10 @@ export function BookingFunnel({
     return () => window.clearTimeout(id)
   }, [])
 
-  const holdExpired = reservation
-    ? isExpired(reservation.expiresAt, nowMs)
-    : false
+  const holdExpired =
+    reservation != null &&
+    !paymentInFlight &&
+    isExpired(reservation.expiresAt, nowMs)
   const priceCents =
     specialPriceCents ?? selectedMode?.priceCents ?? modes[0]?.priceCents ?? 0
   const extraCountries = useMemo(
@@ -350,6 +354,8 @@ export function BookingFunnel({
     setReservation(null)
     setPayment(null)
     setSlot(null)
+    setFormError(null)
+    setPaymentInFlight(false)
     setStep(initialFunnelStep({ pinnedModeId, skipToWhen }))
   }
 
@@ -636,6 +642,7 @@ export function BookingFunnel({
                 processingLabel={t("pay.processing")}
                 failedLabel={t("pay.failed")}
                 pendingLabel={t("pay.pendingError")}
+                onProcessingChange={setPaymentInFlight}
                 onPaid={() => {
                   setStep("done")
                 }}
