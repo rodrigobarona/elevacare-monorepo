@@ -21,7 +21,7 @@ describe("bookingReturnUrl", () => {
   it("strips Stripe redirect query keys", () => {
     expect(
       bookingReturnUrl(
-        "https://eleva.care/en/ana/intake?redirect_status=succeeded&payment_intent=pi_1&keep=1"
+        "https://eleva.care/en/ana/intake?redirect_status=succeeded&payment_intent=pi_1&payment_intent_client_secret=pi_1_secret_xxx&keep=1"
       )
     ).toBe("https://eleva.care/en/ana/intake?keep=1")
   })

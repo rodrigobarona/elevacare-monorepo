@@ -1,7 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { ApiClientError } from "@eleva/api-client"
 import { BookingFunnel } from "@/components/booking/booking-funnel"
 import { BookingLayout } from "@/components/booking/booking-layout"
 import { funnelConsentDocs } from "@/lib/booking-consents"
@@ -41,17 +40,14 @@ export default async function PrivateBookingPage({ params }: Props) {
   }
   setRequestLocale(locale)
 
-  const api = createPublicApiClient()
   const geoPromise = readBookingGeo()
 
   let link
   try {
+    const api = createPublicApiClient()
     link = await api.public.getBookingLink(token)
-  } catch (error) {
-    if (error instanceof ApiClientError && error.status === 404) {
-      notFound()
-    }
-    throw error
+  } catch {
+    notFound()
   }
 
   const geo = await geoPromise

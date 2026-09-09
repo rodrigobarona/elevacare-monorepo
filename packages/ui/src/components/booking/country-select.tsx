@@ -38,7 +38,10 @@ export function CountrySelect({
     () => countryOptions(locale, extraCodes),
     [locale, extraCodes]
   )
-  const selected = normalizeCountry(value)
+  const upper = value.trim().toUpperCase()
+  const selected = options.some((option) => option.code === upper)
+    ? upper
+    : normalizeCountry(value)
 
   return (
     <div className={cn("flex w-full flex-col gap-2", className)}>

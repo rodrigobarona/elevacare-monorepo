@@ -33,7 +33,11 @@ export async function GET(
       (await listPublicEventTypeModes([link.eventTypeId])).get(
         link.eventTypeId
       ) ?? []
-    if (!modes.some((mode) => mode.id === link.eventTypeModeId)) {
+    if (
+      modes.length === 0 ||
+      (link.eventTypeModeId !== null &&
+        !modes.some((mode) => mode.id === link.eventTypeModeId))
+    ) {
       return secureJson(PUBLIC_NOT_FOUND, { status: 404, headers })
     }
 

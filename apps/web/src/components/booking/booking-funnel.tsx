@@ -283,11 +283,9 @@ export function BookingFunnel({
 
   async function holdAndPay() {
     if (!selectedMode || !slot) return
-    const e164 =
-      selectedMode.mode === "phone" || phone.trim().length > 0
-        ? toE164(phone, country)
-        : undefined
-    if (selectedMode.mode === "phone" && !e164) {
+    const typedPhone = phone.trim().length > 0
+    const e164 = typedPhone ? toE164(phone, country) : undefined
+    if ((selectedMode.mode === "phone" || typedPhone) && !e164) {
       setFormError("phoneRequired")
       return
     }
@@ -300,27 +298,33 @@ export function BookingFunnel({
     setFormError(null)
     const api = createPublicApiClient()
     try {
-      const reserved = await api.bookings.reserve({
-        username,
-        eventTypeModeId: selectedMode.id,
-        startsAt: slot.start,
-        endsAt: slot.end,
-        timezone: timeZone,
-        language,
-        memberCountry: country,
-        ...(linkToken ? { linkToken } : {}),
-        guest: {
-          email,
-          name,
+      const activeHold =
+        reservation && new Date(reservation.expiresAt).getTime() > Date.now()
+          ? reservation
+          : null
+      const reserved =
+        activeHold ??
+        (await api.bookings.reserve({
+          username,
+          eventTypeModeId: selectedMode.id,
+          startsAt: slot.start,
+          endsAt: slot.end,
+          timezone: timeZone,
+          language,
+          memberCountry: country,
+          ...(linkToken ? { linkToken } : {}),
+          guest: {
+            email,
+            name,
+            ...(e164 ? { phone: e164 } : {}),
+          },
           ...(e164 ? { phone: e164 } : {}),
-        },
-        ...(e164 ? { phone: e164 } : {}),
-        consents: consents.map((doc) => ({
-          kind: doc.kind,
-          version: doc.version,
-        })),
-      })
-      setReservation(reserved)
+          consents: consents.map((doc) => ({
+            kind: doc.kind,
+            version: doc.version,
+          })),
+        }))
+      if (!activeHold) setReservation(reserved)
       const intent = await api.payments.intent({
         reservationId: reserved.reservationId,
         reservationToken: reserved.reservationToken,
