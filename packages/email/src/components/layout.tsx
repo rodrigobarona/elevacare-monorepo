@@ -8,13 +8,14 @@ import {
   Tailwind,
   Text,
 } from "react-email"
+import type { ReactNode } from "react"
 import { elevaTailwindConfig } from "../theme"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 
 interface LayoutProps {
   preview: string
   locale?: EmailLocale
-  children: React.ReactNode
+  children: ReactNode
   jsonLd?: Record<string, unknown>
 }
 
@@ -29,7 +30,7 @@ export function EmailLayout({
   return (
     <Html lang={locale}>
       <Head>
-        {jsonLd && (
+        {jsonLd ? (
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
@@ -39,11 +40,11 @@ export function EmailLayout({
                 .replace(/\u2029/g, "\\u2029"),
             }}
           />
-        )}
+        ) : null}
       </Head>
-      <Preview>{preview}</Preview>
       <Tailwind config={elevaTailwindConfig}>
         <Body className="bg-canvas font-sans">
+          <Preview>{preview}</Preview>
           <Container className="mx-auto max-w-[560px] px-4 py-10">
             <Section className="mb-6">
               <Text className="text-brand text-[20px] font-semibold tracking-tight">

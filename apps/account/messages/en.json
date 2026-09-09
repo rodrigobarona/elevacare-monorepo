@@ -144,6 +144,7 @@
     "magicSent": "Check your email for a sign-in link.",
     "google": "Continue with Google",
     "passkey": "Sign in with a passkey",
+    "forgotPassword": "Forgot password?",
     "noAccount": "No account yet?",
     "hasAccount": "Already have an account?",
     "consentPrefix": "I agree to the",

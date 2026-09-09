@@ -24,6 +24,9 @@ import {
 } from "../send-auth-email"
 import { sendAuthEmail } from "@eleva/email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
+import { authRateLimitEnabled } from "../e2e-auth-url"
+import { invitationAcceptUrl } from "../invitation-accept-url"
+import { crossSubDomainCookieConfig } from "./cookie-domain"
 
 function requireSecret(): string {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -96,8 +99,23 @@ function socialProviders() {
   }
 }
 
+function requireSecondaryStorageWhenDeployed(
+  storage: ReturnType<typeof secondaryStorage>
+): void {
+  const deployed =
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.NODE_ENV === "production"
+  if (deployed && !storage) {
+    throw new Error(
+      "KV_REST_API_URL and KV_REST_API_TOKEN are required in production and preview so Better Auth rate limits stay on"
+    )
+  }
+}
+
 function createAuth() {
   const storage = secondaryStorage()
+  requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
 
   // Plugin packages resolve a second @better-auth/core copy; the runtime
@@ -137,6 +155,12 @@ function createAuth() {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
     },
+    verification: {
+      // Secondary storage alone hides tokens from Neon. Keep a hashed DB
+      // copy so support can still complete verify / reset / magic-link.
+      storeInDatabase: true,
+      storeIdentifier: "hashed",
+    },
     socialProviders: socialProviders(),
     account: {
       encryptOAuthTokens: true,
@@ -152,16 +176,13 @@ function createAuth() {
       updateAge: 60 * 60 * 24,
     },
     advanced: {
-      crossSubDomainCookies: {
-        enabled: true,
-        domain: process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care",
-      },
+      crossSubDomainCookies: crossSubDomainCookieConfig(),
       useSecureCookies: process.env.NODE_ENV === "production",
       database: { generateId: "uuid" },
     },
     trustedOrigins: trustedOrigins(),
     rateLimit: {
-      enabled: Boolean(storage),
+      enabled: authRateLimitEnabled(Boolean(storage)),
       storage: "secondary-storage",
     },
     databaseHooks: {
@@ -202,7 +223,7 @@ function createAuth() {
           await sendAuthEmail({
             kind: "organization-invitation",
             to: data.email,
-            url: data.invitation.id,
+            url: invitationAcceptUrl(data.invitation.id),
           })
         },
         organizationHooks: {
@@ -248,7 +269,7 @@ function createAuth() {
             kind: "two-factor-otp",
             to: user.email,
             name: user.name ?? undefined,
-            url: otp,
+            code: otp,
           })
         },
       }),

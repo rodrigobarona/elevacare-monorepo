@@ -144,6 +144,7 @@
     "magicSent": "Revisa el email para el enlace de acceso.",
     "google": "Continuar con Google",
     "passkey": "Iniciar sesión con clave de acceso",
+    "forgotPassword": "¿Olvidaste la contraseña?",
     "noAccount": "¿Aún no tienes cuenta?",
     "hasAccount": "¿Ya tienes cuenta?",
     "consentPrefix": "Acepto los",

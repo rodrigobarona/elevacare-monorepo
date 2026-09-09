@@ -51,7 +51,11 @@ export function LoginForm() {
       window.location.assign(`/two-factor?returnTo=${encodeURIComponent(next)}`)
       return
     }
-    if (result) setError(result.message ?? t("errorGeneric"))
+    if (result) {
+      setError(result.message ?? t("errorGeneric"))
+      return
+    }
+    window.location.assign(next)
   }
 
   async function onMagic() {
@@ -122,7 +126,11 @@ export function LoginForm() {
             />
           </div>
           {error ? (
-            <p className="text-sm text-destructive" role="alert">
+            <p
+              className="text-sm text-destructive"
+              role="alert"
+              data-testid="login-error"
+            >
               {error}
             </p>
           ) : null}
@@ -142,6 +150,16 @@ export function LoginForm() {
           >
             {t("signIn")}
           </Button>
+          <p className="text-center text-sm">
+            <LinkButton
+              href="/reset-password"
+              variant="link"
+              className="h-auto p-0"
+              data-testid="login-forgot-password"
+            >
+              {t("forgotPassword")}
+            </LinkButton>
+          </p>
         </form>
         <Button
           type="button"

@@ -18,7 +18,7 @@ const timestamptz = (name: string) =>
 export const user = authSchema.table(
   "user",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     email: text("email").notNull(),
     emailVerified: boolean("email_verified").notNull().default(false),
@@ -37,7 +37,7 @@ export const user = authSchema.table(
 export const session = authSchema.table(
   "session",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     expiresAt: timestamptz("expires_at").notNull(),
     token: text("token").notNull(),
     createdAt: timestamptz("created_at").notNull().defaultNow(),
@@ -59,7 +59,7 @@ export const session = authSchema.table(
 export const account = authSchema.table(
   "account",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: uuid("user_id")
@@ -81,7 +81,7 @@ export const account = authSchema.table(
 export const verification = authSchema.table(
   "verification",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     identifier: text("identifier").notNull(),
     value: text("value").notNull(),
     expiresAt: timestamptz("expires_at").notNull(),
@@ -94,7 +94,7 @@ export const verification = authSchema.table(
 export const organization = authSchema.table(
   "organization",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
     logo: text("logo"),
@@ -108,7 +108,7 @@ export const organization = authSchema.table(
 export const member = authSchema.table(
   "member",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -130,7 +130,7 @@ export const member = authSchema.table(
 export const invitation = authSchema.table(
   "invitation",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     organizationId: uuid("organization_id")
       .notNull()
       .references(() => organization.id, { onDelete: "cascade" }),
@@ -147,7 +147,7 @@ export const invitation = authSchema.table(
 )
 
 export const twoFactor = authSchema.table("twoFactor", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   secret: text("secret").notNull(),
   backupCodes: text("backup_codes").notNull(),
   userId: uuid("user_id")
@@ -158,7 +158,7 @@ export const twoFactor = authSchema.table("twoFactor", {
 export const passkey = authSchema.table(
   "passkey",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: text("name"),
     publicKey: text("public_key").notNull(),
     userId: uuid("user_id")
@@ -176,17 +176,19 @@ export const passkey = authSchema.table(
 )
 
 export const jwks = authSchema.table("jwks", {
-  id: uuid("id").primaryKey(),
+  id: uuid("id").primaryKey().defaultRandom(),
   publicKey: text("public_key").notNull(),
   privateKey: text("private_key").notNull(),
   createdAt: timestamptz("created_at").notNull().defaultNow(),
   expiresAt: timestamptz("expires_at"),
+  alg: text("alg"),
+  crv: text("crv"),
 })
 
 export const apikey = authSchema.table(
   "apikey",
   {
-    id: uuid("id").primaryKey(),
+    id: uuid("id").primaryKey().defaultRandom(),
     name: text("name"),
     start: text("start"),
     prefix: text("prefix"),

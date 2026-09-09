@@ -2,7 +2,11 @@
   "extends": ["//"],
   "tasks": {
     "dev": {
-      "passThroughEnv": ["E2E_AUTH_BYPASS_TOKEN"]
+      "passThroughEnv": [
+        "E2E_AUTH_BYPASS_TOKEN",
+        "E2E_AUTH_CAPTURE",
+        "E2E_ALLOW_DB_WRITES"
+      ]
     }
   }
 }

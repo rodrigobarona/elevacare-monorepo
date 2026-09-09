@@ -79,7 +79,7 @@ export interface ElevaAuthClient {
   updateUser: (body: {
     name: string
   }) => Promise<{ error?: AuthClientError | null }>
-  forgetPassword: (body: {
+  requestPasswordReset: (body: {
     email: string
     redirectTo?: string
   }) => Promise<{ error?: AuthClientError | null }>

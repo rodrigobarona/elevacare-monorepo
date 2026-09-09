@@ -28,7 +28,7 @@ export function ResetPasswordForm() {
     e.preventDefault()
     setPending(true)
     setError(null)
-    const { error: result } = await authClient.forgetPassword({
+    const { error: result } = await authClient.requestPasswordReset({
       email,
       redirectTo: "/reset-password",
     })
@@ -67,7 +67,9 @@ export function ResetPasswordForm() {
       </CardHeader>
       <CardContent>
         {done ? (
-          <p className="text-sm text-muted-foreground">{t("resetDone")}</p>
+          <p className="text-sm text-muted-foreground" data-testid="reset-done">
+            {t("resetDone")}
+          </p>
         ) : (
           <form
             className="space-y-3"
@@ -83,6 +85,7 @@ export function ResetPasswordForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   autoComplete="new-password"
+                  data-testid="reset-password"
                   required
                 />
               </div>
@@ -95,16 +98,26 @@ export function ResetPasswordForm() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
+                  data-testid="reset-email"
                   required
                 />
               </div>
             )}
             {error ? (
-              <p className="text-sm text-destructive" role="alert">
+              <p
+                className="text-sm text-destructive"
+                role="alert"
+                data-testid="reset-error"
+              >
                 {error}
               </p>
             ) : null}
-            <Button type="submit" className="w-full" isDisabled={pending}>
+            <Button
+              type="submit"
+              className="w-full"
+              isDisabled={pending}
+              data-testid="reset-submit"
+            >
               {token ? t("resetSubmit") : t("resetRequest")}
             </Button>
           </form>
