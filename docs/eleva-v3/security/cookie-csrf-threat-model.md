@@ -1,10 +1,10 @@
 # Cookie, CSRF, and subdomain threat model (D-13)
 
-Status: **proposed** (engineering). Security owner sign-off is a Phase 4 PR 04.2
-entry gate — do not treat this file as approved.
+Status: **active — working pre-launch** (recorded 2026-09-09 by Rodrigo Barona,
+founder / security owner). Not a production sign-off. Re-sign before go-live.
 
 Owner: security  
-Review date: 2026-10-01
+Next review date: 2026-09-21
 
 ## Cookie attributes
 

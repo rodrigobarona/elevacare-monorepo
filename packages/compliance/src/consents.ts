@@ -6,10 +6,88 @@ export const CONSENT_KINDS = [
 
 export type ConsentKind = (typeof CONSENT_KINDS)[number]
 
+export const CONSENT_DOCUMENT_VERSION = "dev-2026-09-09"
+
+const DRAFT_CONSENT_VERSION_PREFIX = "dev-"
+
+export function isDraftConsentVersion(version: string): boolean {
+  return version.startsWith(DRAFT_CONSENT_VERSION_PREFIX)
+}
+
 /**
- * Legal-approved document version ids are a Phase 4 PR 04.2 D-gate
- * (D-10 / DPO). Do not invent placeholders here.
+ * Working pre-launch versions (prefix `dev-`) must not accept consent on
+ * the production Vercel environment. Legal and the DPO replace this
+ * value before go-live (D-10).
  */
-export const CONSENT_DOCUMENTS: Partial<
-  Record<ConsentKind, { version: string; urls: Record<string, string> }>
-> = {}
+type DeploymentEnv = {
+  VERCEL_ENV?: string
+}
+
+function currentDeploymentEnv(): DeploymentEnv {
+  return { VERCEL_ENV: process.env.VERCEL_ENV }
+}
+
+export function assertConsentVersionsApprovedForDeployment(
+  env: DeploymentEnv = currentDeploymentEnv()
+): void {
+  if (env.VERCEL_ENV !== "production") {
+    return
+  }
+  if (!isDraftConsentVersion(CONSENT_DOCUMENT_VERSION)) {
+    return
+  }
+  throw new Error(
+    "CONSENT_DOCUMENT_VERSION is a working pre-launch draft and cannot accept production consent. Replace it after legal and DPO sign-off."
+  )
+}
+
+/** Public path slug for each funnel consent kind. */
+export const CONSENT_DOCUMENT_SLUGS = {
+  terms: "terms",
+  privacy: "privacy",
+  health_data_processing: "health-data",
+} as const satisfies Record<ConsentKind, string>
+
+export type ConsentDocument = {
+  version: string
+  urls: Record<"en" | "pt" | "es", string>
+}
+
+function localeLegalUrl(locale: "en" | "pt" | "es", slug: string): string {
+  const path = `/legal/${slug}`
+  return locale === "en" ? path : `/${locale}${path}`
+}
+
+function documentFor(kind: ConsentKind): ConsentDocument {
+  const slug = CONSENT_DOCUMENT_SLUGS[kind]
+  return {
+    version: CONSENT_DOCUMENT_VERSION,
+    urls: {
+      en: localeLegalUrl("en", slug),
+      pt: localeLegalUrl("pt", slug),
+      es: localeLegalUrl("es", slug),
+    },
+  }
+}
+
+/**
+ * Working pre-launch document versions (D-10). Recorded 2026-09-09 by
+ * Rodrigo Barona as founder/product owner. Not DPO-approved. Re-sign
+ * before go-live.
+ */
+export const CONSENT_DOCUMENTS: Record<ConsentKind, ConsentDocument> = {
+  terms: documentFor("terms"),
+  privacy: documentFor("privacy"),
+  health_data_processing: documentFor("health_data_processing"),
+}
+
+export function requiredConsentVersions(
+  env: DeploymentEnv = currentDeploymentEnv()
+): Record<ConsentKind, string> {
+  assertConsentVersionsApprovedForDeployment(env)
+  const versions = {} as Record<ConsentKind, string>
+  for (const kind of CONSENT_KINDS) {
+    versions[kind] = CONSENT_DOCUMENTS[kind].version
+  }
+  return versions
+}

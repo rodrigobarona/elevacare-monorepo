@@ -885,6 +885,9 @@ importers:
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth
+      '@eleva/compliance':
+        specifier: workspace:*
+        version: link:../../packages/compliance
       '@eleva/config':
         specifier: workspace:^
         version: link:../../packages/config

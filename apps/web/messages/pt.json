@@ -113,6 +113,92 @@
     }
   },
   "footer": {
-    "rights": "© {year} Eleva.care. Todos os direitos reservados."
+    "rights": "© {year} Eleva.care. Todos os direitos reservados.",
+    "legal": "Legal",
+    "terms": "Termos",
+    "privacy": "Privacidade",
+    "healthData": "Dados de saúde",
+    "cookies": "Cookies",
+    "payments": "Pagamentos",
+    "expertAgreement": "Acordo de especialistas",
+    "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live."
+  },
+  "legal": {
+    "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
+    "versionLabel": "Versão {version}",
+    "documents": {
+      "terms": {
+        "title": "Termos de utilização — Eleva.care",
+        "description": "Rascunho dos termos de utilização da plataforma digital de saúde Eleva.care.",
+        "heading": "Termos de utilização",
+        "paragraphs": {
+          "p1": "A Eleva.care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos (teleconsultas / telemedicina) por profissionais independentes e licenciados. A Eleva não presta cuidados clínicos.",
+          "p2": "Ao criar uma conta ou reservar uma sessão, os membros aceitam usar a plataforma de forma lícita, dar informação correta e tratar especialistas e outros membros com respeito.",
+          "p3": "Os especialistas mantêm a responsabilidade pela sua prática, licenças e juízo clínico. Uma reserva na Eleva é um contrato pelo serviço desse especialista, facilitado pela plataforma.",
+          "p4": "Estes termos podem mudar antes do lançamento. A versão mostrada na reserva é a versão registada com o seu consentimento. Uma reserva posterior pode usar uma versão mais recente.",
+          "p5": "Se não concordar com este rascunho, não reserve. Os termos de produção substituem este texto após revisão jurídica e do DPO."
+        }
+      },
+      "privacy": {
+        "title": "Aviso de privacidade — Eleva.care",
+        "description": "Rascunho do aviso de privacidade para membros da plataforma digital de saúde Eleva.care.",
+        "heading": "Aviso de privacidade",
+        "paragraphs": {
+          "p1": "A Eleva.care trata dados pessoais para operar a plataforma digital de saúde: dados de conta, dados de reserva e — quando reserva uma sessão de saúde — informação de saúde necessária para essa sessão.",
+          "p2": "Tratamos dados ao abrigo do RGPD. Os dados de saúde são categoria especial. A base legal e os prazos de conservação serão confirmados pelo DPO antes do go-live. Este rascunho não substitui essa revisão.",
+          "p3": "Partilhamos dados com o especialista que escolheu, com processadores de pagamento (Stripe) no checkout, e com fornecedores de infraestrutura necessários à plataforma. Não vendemos dados de membros.",
+          "p4": "Pode pedir acesso, correção, apagamento ou uma cópia portável dos seus dados, sem prejuízo da conservação legal que se aplica a registos clínicos da autoria do especialista.",
+          "p5": "Contacte privacy@eleva.care sobre este rascunho. O aviso de produção indicará o responsável, o DPO e os subcontratantes após revisão jurídica."
+        }
+      },
+      "health-data": {
+        "title": "Tratamento de dados de saúde — Eleva.care",
+        "description": "Rascunho do aviso de tratamento de dados de saúde quando reserva uma sessão.",
+        "heading": "Tratamento de dados de saúde",
+        "paragraphs": {
+          "p1": "Quando reserva uma sessão, a Eleva e o especialista podem tratar informação de saúde que forneça (motivo da visita, história que escolha partilhar e notas de sessão da autoria do especialista).",
+          "p2": "Este tratamento é necessário para prestar a sessão reservada e para o especialista manter os registos a que está legalmente obrigado. A equipa da Eleva não lê registos clínicos em texto claro.",
+          "p3": "Pode recusar este tratamento, mas nesse caso não concluímos uma reserva de sessão de saúde. O uso só de conta da plataforma não exige este consentimento.",
+          "p4": "A versão deste aviso no momento da reserva fica associada à sua reserva. Uma versão desatualizada é rejeitada para nunca registarmos consentimento sobre um texto que não viu.",
+          "p5": "Este é um rascunho de desenvolvimento. A área jurídica e o DPO emitirão o aviso de produção antes do go-live."
+        }
+      },
+      "cookies": {
+        "title": "Política de cookies — Eleva.care",
+        "description": "Rascunho da política de cookies da plataforma digital de saúde Eleva.care.",
+        "heading": "Política de cookies",
+        "paragraphs": {
+          "p1": "A Eleva usa cookies estritamente necessários para o manter autenticado e para lembrar o idioma e o tema. Os cookies de sessão seguem o modelo CSRF e de subdomínio da plataforma.",
+          "p2": "Um banner de cookies de marketing ou analítica (previsto: c15t com Inth) é uma decisão de produto à parte. Este rascunho não ativa esses cookies.",
+          "p3": "Os cookies essenciais não exigem banner ao abrigo da ePrivacy quando se limitam a prestar o serviço que pediu (autenticação, idioma, segurança).",
+          "p4": "Pode apagar cookies no browser. Terminar sessão limpa o cookie de sessão em .eleva.care e no anfitrião.",
+          "p5": "Esta política será atualizada quando existir uma ferramenta de gestão de consentimento. Não é um aviso de cookies de produção."
+        }
+      },
+      "payments": {
+        "title": "Política de pagamentos — Eleva.care",
+        "description": "Rascunho da política de pagamentos para reservas na Eleva.care.",
+        "heading": "Política de pagamentos",
+        "paragraphs": {
+          "p1": "As reservas de lançamento são cobradas apenas em EUR. O preço que vê numa oferta é o montante autorizado no checkout.",
+          "p2": "Métodos de checkout no lançamento: cartão (incluindo Apple Pay e Google Pay), Link e MB WAY. Multibanco, débito direto SEPA e Klarna estão desligados para reservas únicas.",
+          "p3": "O pagamento é processado pela Stripe na conta de plataforma da Eleva. O especialista é pago mais tarde pelo motor de payouts; este rascunho não descreve prazos de produção.",
+          "p4": "As regras de reembolso e falta são uma decisão financeira posterior. Até lá, trate reembolsos como manuais e não garantidos por esta página.",
+          "p5": "A área financeira volta a assinar esta política antes do go-live. Cartões de teste nunca devem ser usados em produção."
+        }
+      },
+      "expert-agreement": {
+        "title": "Acordo de especialistas — Eleva.care",
+        "description": "Rascunho do acordo para profissionais independentes na Eleva.care.",
+        "heading": "Acordo de especialistas",
+        "paragraphs": {
+          "p1": "Os especialistas na Eleva.care são profissionais independentes e licenciados. Não são trabalhadores da Eleva. Mantêm a responsabilidade pelas licenças, seguros e registos clínicos.",
+          "p2": "Os especialistas comprometem-se a oferecer apenas serviços para os quais estão qualificados, a manter disponibilidade correta e a tratar os membros com cuidado profissional.",
+          "p3": "Comissão, IVA e termos de payout são decisões financeiras de trabalho e serão confirmados antes da produção.",
+          "p4": "A Eleva pode suspender um perfil que viole estes termos ou a lei aplicável. Isso não substitui a decisão de um regulador ou de um tribunal.",
+          "p5": "Este é um rascunho de desenvolvimento. A área jurídica emitirá o acordo de produção antes do go-live."
+        }
+      }
+    }
   }
 }

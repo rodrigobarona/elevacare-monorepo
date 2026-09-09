@@ -113,6 +113,92 @@
     }
   },
   "footer": {
-    "rights": "© {year} Eleva.care. All rights reserved."
+    "rights": "© {year} Eleva.care. All rights reserved.",
+    "legal": "Legal",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "healthData": "Health data",
+    "cookies": "Cookies",
+    "payments": "Payments",
+    "expertAgreement": "Expert agreement",
+    "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live."
+  },
+  "legal": {
+    "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",
+    "versionLabel": "Version {version}",
+    "documents": {
+      "terms": {
+        "title": "Terms of use — Eleva.care",
+        "description": "Working draft terms for using the Eleva.care digital health platform.",
+        "heading": "Terms of use",
+        "paragraphs": {
+          "p1": "Eleva.care is a digital health platform that enables the delivery of remote healthcare services (teleconsultations / telemedicine) by independent, licensed professionals. Eleva does not itself provide clinical care.",
+          "p2": "By creating an account or booking a session, members agree to use the platform lawfully, give accurate information, and treat experts and other members with respect.",
+          "p3": "Experts remain responsible for their own professional practice, licences, and clinical judgement. A booking on Eleva is a contract for that expert's service, facilitated by the platform.",
+          "p4": "These terms may change before launch. The version shown at booking is the version recorded with your consent. A later booking may use a newer version.",
+          "p5": "If you do not agree with this draft, do not book. Production terms will replace this text after legal and DPO review."
+        }
+      },
+      "privacy": {
+        "title": "Privacy notice — Eleva.care",
+        "description": "Working draft privacy notice for members of the Eleva.care digital health platform.",
+        "heading": "Privacy notice",
+        "paragraphs": {
+          "p1": "Eleva.care processes personal data to operate the digital health platform: account details, booking data, and — when you book a health session — health-related information needed to deliver that session.",
+          "p2": "We process data under GDPR. Health data is special-category data. The legal basis and retention periods will be confirmed by the DPO before go-live. This draft does not replace that review.",
+          "p3": "We share data with the expert you book, with payment processors (Stripe) for checkout, and with infrastructure providers needed to run the platform. We do not sell member data.",
+          "p4": "You may ask for access, correction, deletion, or a portable copy of your data, subject to legal retention that applies to expert-authored clinical records.",
+          "p5": "Contact privacy@eleva.care for this draft. The production notice will name the controller, DPO, and processors after legal review."
+        }
+      },
+      "health-data": {
+        "title": "Health data processing — Eleva.care",
+        "description": "Working draft notice for processing health data when you book a session.",
+        "heading": "Health data processing",
+        "paragraphs": {
+          "p1": "When you book a session, Eleva and the expert may process health-related information you provide (reason for the visit, history you choose to share, and session notes the expert authors).",
+          "p2": "This processing is necessary to deliver the booked session and to let the expert keep records they are legally required to keep. Eleva staff cannot read clinical records in plaintext.",
+          "p3": "You can refuse this processing, but then we cannot complete a health-session booking. Account-only use of the platform does not require this consent.",
+          "p4": "The version of this notice at reserve time is stored with your booking. A stale version is rejected so we never record consent against text you did not see.",
+          "p5": "This is a working draft for development. Legal and the DPO will issue the production health-data notice before go-live."
+        }
+      },
+      "cookies": {
+        "title": "Cookie policy — Eleva.care",
+        "description": "Working draft cookie policy for the Eleva.care digital health platform.",
+        "heading": "Cookie policy",
+        "paragraphs": {
+          "p1": "Eleva uses strictly necessary cookies to keep you signed in and to remember locale and theme. Session cookies follow the platform CSRF and subdomain model.",
+          "p2": "A marketing or analytics cookie banner (planned: c15t with Inth) is a separate product decision. This draft does not enable those cookies.",
+          "p3": "Essential cookies do not require a banner under ePrivacy when they are limited to delivering the service you requested (sign-in, locale, security).",
+          "p4": "You can delete cookies in your browser. Signing out clears the session cookie on .eleva.care and the host.",
+          "p5": "This policy will be updated when a consent-management tool ships. It is not a production cookie notice."
+        }
+      },
+      "payments": {
+        "title": "Payment policy — Eleva.care",
+        "description": "Working draft payment policy for bookings on Eleva.care.",
+        "heading": "Payment policy",
+        "paragraphs": {
+          "p1": "Launch bookings are charged in EUR only. Prices you see on an offer are the amount authorised at checkout.",
+          "p2": "Checkout methods at launch: card (including Apple Pay and Google Pay), Link, and MB WAY. Multibanco, SEPA Direct Debit, and Klarna are off for one-time bookings.",
+          "p3": "Payment is processed by Stripe on Eleva's platform account. The expert is paid later through the payout engine; this draft does not describe production payout timing.",
+          "p4": "Refund and no-show rules are a later finance decision. Until then, treat refunds as manual and not guaranteed by this page.",
+          "p5": "Finance will re-sign this policy before go-live. Test-mode cards must never be used on production."
+        }
+      },
+      "expert-agreement": {
+        "title": "Expert agreement — Eleva.care",
+        "description": "Working draft agreement for independent professionals on Eleva.care.",
+        "heading": "Expert agreement",
+        "paragraphs": {
+          "p1": "Experts on Eleva.care are independent, licensed professionals. They are not employees of Eleva. They remain responsible for their licences, insurance, and clinical records.",
+          "p2": "Experts agree to offer only services they are qualified to provide, to keep availability accurate, and to treat members with professional care.",
+          "p3": "Commission, VAT, and payout terms are working finance decisions and will be confirmed before production.",
+          "p4": "Eleva may suspend an expert listing that breaks these terms or applicable law. That does not replace a regulator's or court's decision.",
+          "p5": "This is a working draft for development. Legal will issue the production expert agreement before go-live."
+        }
+      }
+    }
   }
 }

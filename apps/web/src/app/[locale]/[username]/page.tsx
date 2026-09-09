@@ -3,6 +3,7 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ApiClientError } from "@eleva/api-client"
 import { isReserved } from "@eleva/config/reserved-usernames"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { formatEur } from "@/lib/format-eur"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
@@ -186,6 +187,7 @@ export default async function ExpertProfilePage({ params }: Props) {
           </ul>
         </section>
       </main>
+      <SiteFooter />
     </div>
   )
 }
