@@ -12,6 +12,7 @@ import {
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
   CreateEventTypeRequestSchema,
+  UpdateEventTypeRequestSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -49,12 +50,6 @@ const RateLimitErrorSchema = z.object({
 })
 
 const OkSchema = z.object({ ok: z.literal(true) })
-
-const LocalizedTextSchema = z.object({
-  en: z.string(),
-  pt: z.string().optional(),
-  es: z.string().optional(),
-})
 
 const stdErrors = {
   "401": {
@@ -687,14 +682,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  slug: z.string().optional(),
-                  title: LocalizedTextSchema.optional(),
-                  description: LocalizedTextSchema.nullish(),
-                  published: z.boolean().optional(),
-                  durationMinutes: z.number().int().positive().optional(),
-                  priceAmount: z.number().nonnegative().optional(),
-                }),
+                schema: UpdateEventTypeRequestSchema,
               },
             },
           },

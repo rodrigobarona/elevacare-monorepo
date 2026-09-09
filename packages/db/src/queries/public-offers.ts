@@ -59,6 +59,8 @@ export type PublicBookingLink = {
   expiresAt: Date
 }
 
+const MAX_MARKETPLACE_OFFSET = 10_000
+
 export function decodeMarketplaceCursor(cursor?: string): number {
   if (!cursor) return 0
   try {
@@ -66,7 +68,7 @@ export function decodeMarketplaceCursor(cursor?: string): number {
       Buffer.from(cursor, "base64url").toString("utf8")
     ) as { o?: unknown }
     if (typeof parsed.o !== "number" || !Number.isFinite(parsed.o)) return 0
-    return Math.max(0, Math.floor(parsed.o))
+    return Math.min(MAX_MARKETPLACE_OFFSET, Math.max(0, Math.floor(parsed.o)))
   } catch {
     return 0
   }

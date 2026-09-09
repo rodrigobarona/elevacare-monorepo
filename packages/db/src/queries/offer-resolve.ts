@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import { withOrgContext } from "../context"
 import { bookingLinks, eventTypeModes, eventTypes } from "../schema/main"
 
@@ -82,7 +82,8 @@ export async function loadOfferForResolve(input: {
       .where(
         and(
           eq(eventTypes.id, mode.eventTypeId),
-          eq(eventTypes.orgId, input.expertOrgId)
+          eq(eventTypes.orgId, input.expertOrgId),
+          isNull(eventTypes.deletedAt)
         )
       )
       .limit(1)

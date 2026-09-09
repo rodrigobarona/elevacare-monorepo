@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto"
-import { isBookingLinkUsable, loadOfferForResolve } from "@eleva/db"
+import { loadOfferForResolve } from "@eleva/db"
 import type { CountryScopeType, OfferMode } from "./offer-invariants"
 
 export type ResolvedOffer = {
@@ -68,7 +68,9 @@ export function hashBookingLinkToken(token: string): string {
 }
 
 export function isUsableBookingLink(link: OfferLinkRow, now: Date): boolean {
-  return isBookingLinkUsable(link, now)
+  if (link.revokedAt !== null) return false
+  if (link.expiresAt.getTime() <= now.getTime()) return false
+  return link.useCount < link.maxUses
 }
 
 export function composeResolvedOffer(input: {

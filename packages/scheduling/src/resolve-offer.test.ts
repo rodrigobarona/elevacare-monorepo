@@ -181,4 +181,12 @@ describe("booking link helpers", () => {
   it("treats a future unused link as usable", () => {
     expect(isUsableBookingLink(link(), now)).toBe(true)
   })
+
+  it("rejects revoked, expired, and exhausted links", () => {
+    expect(isUsableBookingLink(link({ revokedAt: now }), now)).toBe(false)
+    expect(isUsableBookingLink(link({ expiresAt: now }), now)).toBe(false)
+    expect(isUsableBookingLink(link({ useCount: 1, maxUses: 1 }), now)).toBe(
+      false
+    )
+  })
 })

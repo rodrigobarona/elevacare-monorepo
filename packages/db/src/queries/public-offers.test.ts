@@ -16,6 +16,10 @@ describe("marketplace cursor", () => {
     expect(decodeMarketplaceCursor("not-base64")).toBe(0)
     expect(decodeMarketplaceCursor(encodeMarketplaceCursor(-3))).toBe(0)
   })
+
+  it("clamps a crafted deep offset so the list cannot scan unbounded rows", () => {
+    expect(decodeMarketplaceCursor(encodeMarketplaceCursor(1e12))).toBe(10_000)
+  })
 })
 
 describe("isBookingLinkUsable", () => {
