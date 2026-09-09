@@ -1,12 +1,18 @@
-import { Button } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
+import { Link } from "@/i18n/navigation"
 import { SiteHeader } from "@/components/site-header"
 
 export function MarketingHome() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader nav={[{ href: "/about", labelKey: "about" }]} />
+      <SiteHeader
+        nav={[
+          { href: "/experts", labelKey: "experts" },
+          { href: "/about", labelKey: "about" },
+        ]}
+      />
       <MarketingContent />
     </div>
   )
@@ -32,13 +38,16 @@ function MarketingContent() {
           {t("home.description")}
         </p>
         <div className="mt-10 flex gap-4">
-          <Button size="lg">
+          <Link href="/experts" className={buttonVariants({ size: "lg" })}>
             {t("home.cta")}
             <ArrowRightIcon data-icon="inline-end" />
-          </Button>
-          <Button variant="outline" size="lg">
+          </Link>
+          <Link
+            href="/about"
+            className={buttonVariants({ variant: "outline", size: "lg" })}
+          >
             {t("home.ctaSecondary")}
-          </Button>
+          </Link>
         </div>
       </main>
 

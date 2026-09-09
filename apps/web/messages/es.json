@@ -5,6 +5,7 @@
   },
   "nav": {
     "about": "Acerca de",
+    "experts": "Especialistas",
     "home": "Inicio",
     "login": "Iniciar sesión",
     "getStarted": "Empezar ahora",
@@ -53,6 +54,50 @@
     "ctaHeading": "¿Lista para empezar?",
     "ctaDescription": "Encuentra la especialista adecuada para tu camino de salud — solo toma un minuto.",
     "cta": "Encontrar especialista"
+  },
+  "experts": {
+    "title": "Encontrar especialista — Eleva.care",
+    "categoryTitle": "Especialistas en {category} — Eleva.care",
+    "description": "Explora especialistas verificadas en salud de la mujer y reserva una sesión en tu idioma y país.",
+    "eyebrow": "Marketplace",
+    "heading": "Encontrar especialista",
+    "categoryHeading": "{category}",
+    "intro": "Filtra por idioma y ordena por precio o valoración. Las miembros eligen cómo quieren reunirse en la página de la especialista.",
+    "empty": "Aún no hay especialistas con estos filtros.",
+    "loadError": "El directorio de especialistas no está disponible. Inténtalo de nuevo en breve.",
+    "fromPrice": "Desde {price}",
+    "priceOnRequest": "Precio bajo consulta",
+    "topExpert": "Top Expert",
+    "nextPage": "Página siguiente",
+    "filters": {
+      "language": "Idioma",
+      "anyLanguage": "Cualquier idioma",
+      "sort": "Ordenar",
+      "apply": "Aplicar filtros"
+    },
+    "languages": {
+      "pt": "Portugués",
+      "en": "Inglés",
+      "es": "Español"
+    },
+    "sort": {
+      "relevance": "Relevancia",
+      "price": "Precio",
+      "rating": "Valoración"
+    }
+  },
+  "profile": {
+    "title": "{name} — Eleva.care",
+    "description": "Reserva una sesión con {name} en Eleva.care.",
+    "upcoming": "Disponibilidad próxima",
+    "noSlots": "No hay horarios en las próximas dos semanas.",
+    "offers": "Ofertas",
+    "offerMeta": "{duration} min · desde {price} · {modes}",
+    "modes": {
+      "online": "vídeo",
+      "in_person": "presencial",
+      "phone": "teléfono"
+    }
   },
   "footer": {
     "rights": "© {year} Eleva.care. Todos los derechos reservados."

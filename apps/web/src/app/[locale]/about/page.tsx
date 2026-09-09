@@ -38,7 +38,12 @@ export default async function AboutPage({ params }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader nav={[{ href: "/", labelKey: "home" }]} />
+      <SiteHeader
+        nav={[
+          { href: "/", labelKey: "home" },
+          { href: "/experts", labelKey: "experts" },
+        ]}
+      />
       <AboutContent />
     </div>
   )
@@ -107,7 +112,7 @@ function AboutContent() {
               {t("about.ctaDescription")}
             </p>
             <div className="mt-8 flex justify-center gap-4">
-              <Link href="/" className={buttonVariants({ size: "lg" })}>
+              <Link href="/experts" className={buttonVariants({ size: "lg" })}>
                 {t("about.cta")}
                 <ArrowRightIcon data-icon="inline-end" />
               </Link>

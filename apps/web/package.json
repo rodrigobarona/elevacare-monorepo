@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/api-client": "workspace:*",
     "@eleva/auth": "workspace:^",
     "@eleva/config": "workspace:^",
     "@eleva/observability": "workspace:^",
