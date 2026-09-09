@@ -9,16 +9,18 @@ Idempotent scripts to provision Stripe products, prices, entitlement features, a
 
 ## Scripts
 
-| Script                                       | Description                                               |
-| -------------------------------------------- | --------------------------------------------------------- |
-| `pnpm seed:products`                         | Dry-run: shows products/prices that would be created      |
-| `pnpm seed:products --apply`                 | Creates products and prices in Stripe                     |
-| `pnpm seed:entitlements`                     | Dry-run: shows entitlement features that would be created |
-| `pnpm seed:entitlements --apply`             | Creates features and attaches them to products            |
-| `pnpm setup:portal`                          | Dry-run: shows Customer Portal configuration              |
-| `pnpm setup:portal --apply`                  | Creates a Customer Portal configuration                   |
-| `pnpm setup:webhooks -- --url <URL>`         | Dry-run: shows webhook endpoint that would be configured  |
-| `pnpm setup:webhooks -- --url <URL> --apply` | Creates or updates the webhook endpoint                   |
+| Script                                       | Description                                                                                                      |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `pnpm seed:products`                         | Dry-run: shows products/prices that would be created                                                             |
+| `pnpm seed:products --apply`                 | Creates products and prices in Stripe                                                                            |
+| `pnpm seed:entitlements`                     | Dry-run: shows entitlement features that would be created                                                        |
+| `pnpm seed:entitlements --apply`             | Creates features and attaches them to products                                                                   |
+| `pnpm setup:portal`                          | Dry-run: shows Customer Portal configuration                                                                     |
+| `pnpm setup:portal --apply`                  | Creates a Customer Portal configuration                                                                          |
+| `pnpm setup:webhooks -- --url <URL>`         | Dry-run: shows webhook endpoint that would be configured                                                         |
+| `pnpm setup:webhooks -- --url <URL> --apply` | Creates or updates the webhook endpoint                                                                          |
+| `pnpm setup:payment-methods`                 | Dry-run: shows the eleva-booking Payment Method Config                                                           |
+| `pnpm setup:payment-methods -- --apply`      | Creates or updates PMC per [D-14](../../docs/eleva-v3/decision-log.md#d-14-2026-09-07-launch-payment-method-set) |
 
 ## Root-level shortcuts
 
@@ -30,12 +32,14 @@ pnpm stripe:seed:products
 pnpm stripe:seed:entitlements
 pnpm stripe:setup:portal
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
+pnpm stripe:setup:payment-methods
 
 # Apply (creates in Stripe)
 pnpm stripe:seed:products -- --apply
 pnpm stripe:seed:entitlements -- --apply
 pnpm stripe:setup:portal -- --apply
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply
+pnpm stripe:setup:payment-methods -- --apply
 
 # Run both seed scripts in sequence (apply mode)
 pnpm stripe:seed
@@ -54,6 +58,10 @@ pnpm stripe:seed
 ## Entitlement features
 
 Each product has an attached Stripe Entitlement Feature with a `lookup_key` matching the entitlement key above. When a customer has an active subscription to a product, the feature is "active" for that customer.
+
+## Booking Payment Method Configuration
+
+`setup-payment-methods.ts` owns `STRIPE_PMC_BOOKING` ([D-14](../../docs/eleva-v3/decision-log.md#d-14-2026-09-07-launch-payment-method-set)): card (Apple Pay / Google Pay), Link, and MB WAY on; every other method on the live configuration is turned off. Runtime classification is `packages/billing/src/server/payment-method-policy.ts` (`synchronous` | `async_short` | `excluded`).
 
 ## How Eleva uses these
 

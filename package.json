@@ -33,6 +33,7 @@
     "stripe:seed:entitlements": "pnpm --filter=@eleva/infra-stripe seed:entitlements",
     "stripe:setup:webhooks": "pnpm --filter=@eleva/infra-stripe setup:webhooks",
     "stripe:setup:portal": "pnpm --filter=@eleva/infra-stripe setup:portal",
+    "stripe:setup:payment-methods": "pnpm --filter=@eleva/infra-stripe setup:payment-methods",
     "stripe:backfill:org-customers": "pnpm --filter=@eleva/infra-stripe backfill:org-customers",
     "stripe:replay:event": "pnpm --filter=@eleva/infra-stripe replay:event",
     "stripe:verify:entitlements": "pnpm --filter=@eleva/infra-stripe verify:entitlements",

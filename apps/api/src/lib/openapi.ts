@@ -26,6 +26,8 @@ import {
   PublicSlotsResponseSchema,
   ReserveBookingRequestSchema,
   ReserveBookingResponseSchema,
+  CreatePaymentIntentRequestSchema,
+  CreatePaymentIntentResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
 } from "@eleva/api-client"
@@ -1259,6 +1261,49 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "422": {
               description:
                 "Consent, mode, guest, phone, or unpublished/unavailable slot",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/payments/intent": {
+        post: {
+          operationId: "createBookingPaymentIntent",
+          summary: "Create a PaymentIntent for a reserved slot",
+          description:
+            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a platform PaymentIntent (no Stripe calls inside a DB transaction). Token or user mismatches return 404.",
+          tags: ["Payments"],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: CreatePaymentIntentRequestSchema },
+            },
+          },
+          responses: {
+            "201": {
+              description: "PaymentIntent created",
+              content: {
+                "application/json": {
+                  schema: CreatePaymentIntentResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Bot detected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "503": {
+              description: "Stripe or snapshot unavailable",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description: "Intent write failed",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdPublicWithNotFound,
+            "422": {
+              description: "Invalid reservationId or reservationToken",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

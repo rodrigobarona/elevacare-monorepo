@@ -98,6 +98,8 @@ const s2Schema = z.object({
    * versions are accepted; older ones throw at boot.
    */
   STRIPE_API_VERSION: stringOptional,
+  /** Payment Method Configuration id for marketplace booking (pmc_...). */
+  STRIPE_PMC_BOOKING: stringOptional,
 
   TOCONLINE_CLIENT_ID: stringOptional,
   TOCONLINE_CLIENT_SECRET: stringOptional,

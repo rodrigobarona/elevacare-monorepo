@@ -8,6 +8,7 @@
     "seed:entitlements": "tsx --env-file=../../.env.local seed-entitlements.ts",
     "setup:portal": "tsx --env-file=../../.env.local setup-portal.ts",
     "setup:webhooks": "tsx --env-file=../../.env.local setup-webhooks.ts",
+    "setup:payment-methods": "tsx --env-file=../../.env.local setup-payment-methods.ts",
     "backfill:org-customers": "tsx --env-file=../../.env.local backfill-org-customers.ts",
     "replay:event": "tsx --env-file=../../.env.local replay-event.ts",
     "verify:entitlements": "tsx --env-file=../../.env.local verify-entitlements.ts",

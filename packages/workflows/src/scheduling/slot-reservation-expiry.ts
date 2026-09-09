@@ -24,7 +24,7 @@ export async function expireStaleReservations(): Promise<SlotExpiryResult> {
   try {
     const updated = await mainDb
       .update(main.slotReservations)
-      .set({ status: "expired" })
+      .set({ status: "expired", funnel: sql`"funnel" - 'guest'` })
       .where(
         and(
           eq(main.slotReservations.status, "active"),
@@ -39,7 +39,6 @@ export async function expireStaleReservations(): Promise<SlotExpiryResult> {
     await captureException(err, { workflow: "slotReservationExpiry" })
   }
 
-  void sql
   await heartbeat("slot-reservation-expiry")
   return result
 }

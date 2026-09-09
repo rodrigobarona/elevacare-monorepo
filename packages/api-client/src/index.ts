@@ -602,9 +602,27 @@ export type PublicSlotsResponse = z.infer<typeof PublicSlotsResponseSchema>
 export type PublicBookingLinkResponse = z.infer<
   typeof PublicBookingLinkResponseSchema
 >
+export const CreatePaymentIntentRequestSchema = z.object({
+  reservationId: z.string().uuid(),
+  reservationToken: z.string().min(16).max(128),
+})
+
+export const CreatePaymentIntentResponseSchema = z.object({
+  clientSecret: z.string().min(1),
+  paymentIntentId: z.string().min(1),
+  bookingId: z.string().uuid(),
+  publishableKey: z.string().min(1),
+})
+
 export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
 export type ReserveBookingResponse = z.infer<
   typeof ReserveBookingResponseSchema
+>
+export type CreatePaymentIntentRequest = z.infer<
+  typeof CreatePaymentIntentRequestSchema
+>
+export type CreatePaymentIntentResponse = z.infer<
+  typeof CreatePaymentIntentResponseSchema
 >
 
 export interface SubCalendar {
@@ -980,6 +998,13 @@ export function createApiClient(options: ApiClientOptions) {
       async reserve(data: ReserveBookingRequest) {
         const raw = await request<unknown>("POST", "/bookings/reserve", data)
         return ReserveBookingResponseSchema.parse(raw)
+      },
+    },
+
+    payments: {
+      async intent(data: CreatePaymentIntentRequest) {
+        const raw = await request<unknown>("POST", "/payments/intent", data)
+        return CreatePaymentIntentResponseSchema.parse(raw)
       },
     },
   }

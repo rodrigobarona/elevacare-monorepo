@@ -245,6 +245,14 @@ export async function reserveBooking(
   }
 
   const holdToken = randomBytes(32).toString("hex")
+  const funnelGuest =
+    !input.session && input.guest
+      ? {
+          email: input.guest.email,
+          name: input.guest.name,
+          ...(memberPhone ? { phone: memberPhone } : {}),
+        }
+      : undefined
   const reserved = await reserveSlot(redis, {
     eventTypeId: offer.eventTypeId,
     expertProfileId: expert.id,
@@ -257,6 +265,14 @@ export async function reserveBooking(
     userId: input.session?.userId,
     eventTypeModeId: offer.eventTypeModeId,
     price: { cents: offer.priceCents, currency: offer.currency },
+    funnel: {
+      timezone: input.timezone,
+      language: input.language,
+      memberCountry: input.memberCountry,
+      bookingLinkId: offer.bookingLinkId ?? null,
+      sessionMode: offer.mode,
+      ...(funnelGuest ? { guest: funnelGuest } : {}),
+    },
     audit: {
       actorUserId: input.session?.userId ?? null,
       payload: {
