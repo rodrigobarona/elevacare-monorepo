@@ -5,7 +5,7 @@ import {
   orgSlugNeedingTypeLookup,
 } from "@eleva/auth/org-routing"
 import { resolveDispatch, type GatewayOrigins } from "@eleva/config/dispatch"
-import { rewriteRetiredLocalePath } from "@eleva/config/i18n"
+import { isLocale, rewriteRetiredLocalePath } from "@eleva/config/i18n"
 import {
   buildAdminRedirect,
   buildLoginRedirect,
@@ -14,6 +14,22 @@ import {
   isDocumentNavigation,
   resolveOriginsFromEnv,
 } from "./gateway-dispatch"
+
+function rewriteForOrganizationsPath(pathname: string): string | null {
+  const segments = pathname.split("/").filter(Boolean)
+  if (segments.length === 0) return null
+  let prefix = ""
+  let rest = segments
+  const first = segments[0]
+  if (first && isLocale(first) && segments.length > 1) {
+    prefix = `/${first}`
+    rest = segments.slice(1)
+  }
+  if (rest.length !== 1 || rest[0]?.toLowerCase() !== "for-organizations") {
+    return null
+  }
+  return `${prefix}/for-clinics`
+}
 
 export type IntlMiddleware = (
   request: NextRequest
@@ -53,6 +69,13 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     if (retiredPath) {
       const destination = request.nextUrl.clone()
       destination.pathname = retiredPath
+      return NextResponse.redirect(destination, 301)
+    }
+
+    const organizationsPath = rewriteForOrganizationsPath(pathname)
+    if (organizationsPath) {
+      const destination = request.nextUrl.clone()
+      destination.pathname = organizationsPath
       return NextResponse.redirect(destination, 301)
     }
 

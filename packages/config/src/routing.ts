@@ -55,6 +55,9 @@ export const WEB_MARKETING_PATHS = [
   "pricing",
   "experts",
   "book",
+  "become-expert",
+  "for-clinics",
+  "for-organizations",
 ] as const
 
 /**

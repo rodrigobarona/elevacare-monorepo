@@ -33,6 +33,24 @@ export async function SiteFooter() {
             </Link>
           ))}
         </nav>
+        <nav
+          data-testid="footer-solutions"
+          aria-label={t("solutions")}
+          className="flex flex-wrap justify-center gap-x-4 gap-y-2"
+        >
+          <Link
+            href="/become-expert"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t("becomeExpert")}
+          </Link>
+          <Link
+            href="/for-clinics"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t("forClinics")}
+          </Link>
+        </nav>
         <p className="text-center text-sm text-muted-foreground">
           {t("rights", { year })}
         </p>
