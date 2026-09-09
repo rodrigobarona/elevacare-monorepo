@@ -1,5 +1,5 @@
-import { createHash, randomUUID } from "node:crypto"
-import { and, eq } from "drizzle-orm"
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto"
+import { and, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
 import { withAudit } from "@eleva/audit"
@@ -10,6 +10,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { organization } from "@eleva/db/schema/auth"
+import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
 import { stripe } from "./client"
 import { computeCommissionRate, ENTITLEMENT_KEYS } from "./commission"
 
@@ -42,13 +43,6 @@ export function parseReservationFunnel(value: unknown) {
 
 const bookingLinkIdSchema = z.string().uuid()
 
-function funnelWithoutGuest(
-  funnel: z.infer<typeof funnelSnapshotSchema>
-): z.infer<typeof funnelSnapshotSchema> {
-  const { guest: _guest, ...rest } = funnel
-  return rest
-}
-
 export function paymentIntentIdempotencyKey(reservationId: string): string {
   return `pi:${reservationId}`
 }
@@ -62,7 +56,9 @@ export function authorizeReservationAccess(input: {
   expiresAt: Date
   linkRevoked: boolean
 }): "ok" | "not_found" {
-  if (hashReservationToken(input.reservationToken) !== input.capabilityHash) {
+  const computed = Buffer.from(hashReservationToken(input.reservationToken))
+  const stored = Buffer.from(input.capabilityHash)
+  if (computed.length !== stored.length || !timingSafeEqual(computed, stored)) {
     return "not_found"
   }
   if (
@@ -155,13 +151,12 @@ export async function createPaymentIntentForReservation(
   }
 
   const parsedFunnel = parseReservationFunnel(reservation.funnel)
-  const funnel = parsedFunnel.success ? parsedFunnel.data : null
+  const funnel: ReservationFunnelSnapshot | null = parsedFunnel.success
+    ? parsedFunnel.data
+    : null
   const priceCents = reservation.priceCents
   const currency = reservation.currency
   if (!funnel || priceCents == null || !currency) {
-    return { ok: false, error: "unavailable" }
-  }
-  if (!reservation.userId && !funnel.guest?.email) {
     return { ok: false, error: "unavailable" }
   }
 
@@ -185,6 +180,9 @@ export async function createPaymentIntentForReservation(
     reservation.orgId,
     reservation.id
   )
+  if (!reservation.userId && !funnel.guest?.email && !existing) {
+    return { ok: false, error: "unavailable" }
+  }
   let bookingId = existing?.bookingId ?? randomUUID()
   let paymentId = existing?.paymentId ?? randomUUID()
   const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
@@ -426,10 +424,6 @@ async function insertPendingBooking(
     transferGroup: input.bookingId,
     stripeIdempotencyKey: input.idempotencyKey,
   })
-  await tx
-    .update(main.slotReservations)
-    .set({ funnel: funnelWithoutGuest(funnel) })
-    .where(eq(main.slotReservations.id, reservation.id))
 }
 
 async function bindPaymentIntent(
@@ -442,7 +436,10 @@ async function bindPaymentIntent(
 ) {
   await tx
     .update(main.slotReservations)
-    .set({ stripePaymentIntentId: input.paymentIntentId })
+    .set({
+      stripePaymentIntentId: input.paymentIntentId,
+      funnel: sql`"funnel" - 'guest'`,
+    })
     .where(eq(main.slotReservations.id, input.reservationId))
   await tx
     .update(main.bookings)

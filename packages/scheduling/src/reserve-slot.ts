@@ -263,7 +263,7 @@ async function expireOverlappingHolds(
   const now = new Date()
   await tx
     .update(slotReservations)
-    .set({ status: "expired" })
+    .set({ status: "expired", funnel: sql`"funnel" - 'guest'` })
     .where(
       and(
         eq(slotReservations.expertUserId, expertUserId),

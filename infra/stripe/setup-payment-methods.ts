@@ -83,7 +83,16 @@ async function main() {
   const listed = await client.paymentMethodConfigurations
     .list({ limit: 100 })
     .autoPagingToArray({ limit: 1000 })
-  const existing = listed.find((row) => row.name === PMC_NAME)
+  const matches = listed.filter((row) => row.name === PMC_NAME)
+  if (matches.length > 1) {
+    console.error(
+      "[stripe:pmc] multiple configurations named %s: %s. Resolve manually.",
+      PMC_NAME,
+      matches.map((row) => row.id).join(", ")
+    )
+    process.exit(1)
+  }
+  const existing = matches[0]
 
   if (!apply) {
     console.log(
@@ -115,6 +124,8 @@ async function main() {
     existing?.id ??
     (await client.paymentMethodConfigurations.create({ name: PMC_NAME })).id
   const current = await client.paymentMethodConfigurations.retrieve(id)
+  const turningOff = methodKeys(current).filter((key) => !ON_METHODS.has(key))
+  console.log("[stripe:pmc] turning off:", turningOff.join(", ") || "(none)")
   const config = await client.paymentMethodConfigurations.update(
     id,
     prefsFromConfig(current)
