@@ -128,8 +128,8 @@ export function SlotPicker({
         ))}
         {visibleDays.map((day) => {
           const key = utcDateKey(day)
-          const count = byDay.get(key)?.length ?? 0
           const inMonth = sameUtcMonth(day, startOfMonth(month))
+          const count = inMonth ? (byDay.get(key)?.length ?? 0) : 0
           return (
             <button
               key={key}

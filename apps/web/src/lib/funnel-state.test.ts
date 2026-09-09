@@ -53,4 +53,9 @@ describe("initialFunnelLanguage", () => {
   it("falls back to the first offered language", () => {
     expect(initialFunnelLanguage("es", ["pt"])).toBe("pt")
   })
+
+  it("normalizes stored language tags", () => {
+    expect(initialFunnelLanguage("pt", ["PT-BR"])).toBe("pt")
+    expect(initialFunnelLanguage("es", ["PT"])).toBe("pt")
+  })
 })

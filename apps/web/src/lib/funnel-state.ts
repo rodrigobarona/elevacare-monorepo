@@ -41,7 +41,10 @@ export function initialFunnelLanguage(
   offeredLanguageIds: readonly string[]
 ): FunnelLocale {
   const offered = new Set(
-    offeredLanguageIds.map((value) => value.split("-")[0] ?? value)
+    offeredLanguageIds.map((value) => {
+      const normalized = value.toLowerCase()
+      return normalized.split("-")[0] ?? normalized
+    })
   )
   if (offered.has(locale) || offered.size === 0) return locale
   const first = [...offered][0]
