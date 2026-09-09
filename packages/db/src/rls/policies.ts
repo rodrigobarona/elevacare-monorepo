@@ -33,6 +33,8 @@ export const TENANT_TABLES = [
   "calendar_destinations",
   "slot_reservations",
   "bookings",
+  "booking_payments",
+  "consents",
   "sessions",
   "expert_practice_locations",
   "event_locations",
@@ -61,6 +63,13 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
 ])
 
 function tenantPredicate(table: string): string {
+  if (table === "bookings") {
+    return (
+      `org_id::text = current_setting('eleva.org_id', true)` +
+      ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
+    )
+  }
+
   const adminBypass = ADMIN_BYPASS_TABLES.has(table)
     ? ` OR current_setting('eleva.platform_admin', true) = 'true'`
     : ""

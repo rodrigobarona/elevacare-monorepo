@@ -38,14 +38,19 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0027_offer_model")
+    expect(last?.tag).toBe("0028_booking_finalize")
     expect(last?.statements.length).toBeGreaterThan(10)
     expect(last?.hash).toHaveLength(64)
-    const sql = last?.statements.join("\n") ?? ""
-    expect(sql).toContain("public.iso3166_alpha2_codes")
-    expect(sql).not.toContain("SELECT 1 FROM unnest(service_countries)")
-    expect(sql).not.toContain(
+    const offer = migrations.find((m) => m.tag === "0027_offer_model")
+    const offerSql = offer?.statements.join("\n") ?? ""
+    expect(offerSql).toContain("public.iso3166_alpha2_codes")
+    expect(offerSql).not.toContain("SELECT 1 FROM unnest(service_countries)")
+    expect(offerSql).not.toContain(
       `"country_scope_type" "country_scope_type" DEFAULT 'list'`
     )
+    const sql = last?.statements.join("\n") ?? ""
+    expect(sql).toContain("btree_gist")
+    expect(sql).toContain("slot_reservations_no_overlap")
+    expect(sql).toContain("counterparty_org_id")
   })
 })

@@ -120,6 +120,7 @@ describe("reserveSlot — concurrent reservation race", () => {
       reserveSlot(redis, {
         eventTypeId: "evt-type-1",
         expertProfileId: "expert-1",
+        expertUserId: "user-1",
         orgId: "org-1",
         startsAt: slotStart,
         endsAt: slotEnd,
@@ -153,6 +154,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const slot1 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: new Date("2026-06-15T10:00:00Z"),
       endsAt: new Date("2026-06-15T11:00:00Z"),
@@ -163,6 +165,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const slot2 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: new Date("2026-06-15T14:00:00Z"),
       endsAt: new Date("2026-06-15T15:00:00Z"),
@@ -186,6 +189,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const expert1 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: slotStart,
       endsAt: slotEnd,
@@ -196,6 +200,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const expert2 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-2",
+      expertUserId: "user-2",
       orgId: "org-1",
       startsAt: slotStart,
       endsAt: slotEnd,

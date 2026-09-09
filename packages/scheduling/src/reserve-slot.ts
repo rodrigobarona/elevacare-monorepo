@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto"
 import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withOrgContext, type Tx } from "@eleva/db/context"
@@ -39,12 +40,20 @@ export async function reserveSlot(
   const {
     eventTypeId,
     expertProfileId,
+    expertUserId,
     orgId,
     startsAt,
     endsAt,
     holdToken,
     ttlSeconds = DEFAULT_TTL_SECONDS,
+    userId,
+    eventTypeModeId,
+    priceCents,
+    currency,
   } = input
+  const capabilityHash = createHash("sha256")
+    .update(randomBytes(32))
+    .digest("hex")
 
   const key = slotKey(expertProfileId, startsAt.toISOString())
 
@@ -75,6 +84,12 @@ export async function reserveSlot(
           orgId,
           eventTypeId,
           expertProfileId,
+          expertUserId,
+          capabilityHash,
+          userId,
+          eventTypeModeId,
+          priceCents,
+          currency,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),
@@ -90,7 +105,7 @@ export async function reserveSlot(
   } catch (err) {
     await compareAndDelete(redis, key, holdToken)
 
-    if (err instanceof ConflictError) {
+    if (err instanceof ConflictError || isExclusionViolation(err)) {
       return { success: false, error: "conflict" }
     }
     return { success: false, error: "db_error" }
@@ -226,4 +241,13 @@ class ConflictError extends Error {
     super("slot_conflict")
     this.name = "ConflictError"
   }
+}
+
+function isExclusionViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    err.code === "23P01"
+  )
 }

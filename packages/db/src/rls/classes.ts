@@ -55,6 +55,8 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "calendar_destinations", class: "tenant-owned" },
   { table: "slot_reservations", class: "tenant-owned" },
   { table: "bookings", class: "dual-organization" },
+  { table: "booking_payments", class: "tenant-owned" },
+  { table: "consents", class: "tenant-owned" },
   { table: "sessions", class: "participant-visible" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },

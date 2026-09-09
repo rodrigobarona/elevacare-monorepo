@@ -39,11 +39,16 @@ export interface GetAvailableSlotsInput {
 export interface ReserveSlotInput {
   eventTypeId: string
   expertProfileId: string
+  expertUserId: string
   orgId: string
   startsAt: Date
   endsAt: Date
   holdToken: string
   ttlSeconds?: number
+  userId?: string
+  eventTypeModeId?: string
+  priceCents?: number
+  currency?: "EUR"
 }
 
 export type ReserveSlotResult =

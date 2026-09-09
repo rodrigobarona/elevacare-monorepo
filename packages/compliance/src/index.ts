@@ -1,2 +1,1 @@
-// @eleva/compliance — scaffolded in Sprint 0. Implementation lands in later sprints.
-export {};
+export { CONSENT_DOCUMENTS, CONSENT_KINDS, type ConsentKind } from "./consents"
