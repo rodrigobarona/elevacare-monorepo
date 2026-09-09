@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from "node:crypto"
 import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
+import { withAudit } from "@eleva/audit"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { slotReservations, bookings, sessions } from "@eleva/db/schema"
 import type { ReserveSlotInput, ReserveSlotResult } from "./types"
@@ -49,6 +50,8 @@ export async function reserveSlot(
     userId,
     eventTypeModeId,
     price,
+    afterInsert,
+    audit,
   } = input
   const reservationToken = randomBytes(32).toString("base64url")
   const capabilityHash = createHash("sha256")
@@ -67,7 +70,7 @@ export async function reserveSlot(
   }
 
   try {
-    const reservationId = await withOrgContext(orgId, async (tx: Tx) => {
+    const writeReservation = async (tx: Tx): Promise<string> => {
       await expireOverlappingHolds(tx, expertUserId, startsAt, endsAt)
       const conflict = await checkConflicts(
         tx,
@@ -99,13 +102,42 @@ export async function reserveSlot(
         })
         .returning({ id: slotReservations.id })
 
-      return row!.id
-    })
+      const reservationId = row!.id
+      if (afterInsert) {
+        await afterInsert(tx, reservationId)
+      }
+      return reservationId
+    }
+
+    const reservationId = audit
+      ? await withAudit(
+          { orgId, actorUserId: audit.actorUserId ?? null },
+          async (tx, ctx) => {
+            const id = await writeReservation(tx)
+            await ctx.emit({
+              entity: "booking",
+              action: "reserved",
+              entityId: id,
+              payload: {
+                eventTypeId,
+                eventTypeModeId,
+                startsAt: startsAt.toISOString(),
+                endsAt: endsAt.toISOString(),
+                ...audit.payload,
+              },
+            })
+            return id
+          }
+        )
+      : await withOrgContext(orgId, writeReservation)
 
     return { success: true, reservationId, reservationToken }
   } catch (err) {
     await compareAndDelete(redis, key, holdToken)
 
+    if (err instanceof LinkClaimError) {
+      return { success: false, error: "link_unusable" }
+    }
     if (err instanceof ConflictError || isExclusionViolation(err)) {
       return { success: false, error: "conflict" }
     }
@@ -267,6 +299,13 @@ class ConflictError extends Error {
   constructor() {
     super("slot_conflict")
     this.name = "ConflictError"
+  }
+}
+
+export class LinkClaimError extends Error {
+  constructor() {
+    super("link_unusable")
+    this.name = "LinkClaimError"
   }
 }
 

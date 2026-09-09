@@ -4,8 +4,12 @@ export {
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
   assertConsentVersionsApprovedForDeployment,
+  hashGuestEmail,
   isDraftConsentVersion,
   requiredConsentVersions,
+  validateFunnelConsents,
   type ConsentDocument,
   type ConsentKind,
+  type FunnelConsentCheck,
+  type FunnelConsentGrant,
 } from "./consents"

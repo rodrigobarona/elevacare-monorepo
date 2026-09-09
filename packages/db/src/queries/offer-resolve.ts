@@ -34,6 +34,7 @@ export type OfferResolveLinkRow = {
   expiresAt: Date
   useCount: number
   maxUses: number
+  recipientEmail: string | null
 }
 
 export async function loadOfferForResolve(input: {
@@ -106,6 +107,7 @@ export async function loadOfferForResolve(input: {
         expiresAt: bookingLinks.expiresAt,
         useCount: bookingLinks.useCount,
         maxUses: bookingLinks.maxUses,
+        recipientEmail: bookingLinks.recipientEmail,
       })
       .from(bookingLinks)
       .where(

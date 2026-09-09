@@ -1,3 +1,5 @@
+import { createHmac } from "node:crypto"
+
 export const CONSENT_KINDS = [
   "terms",
   "privacy",
@@ -90,4 +92,42 @@ export function requiredConsentVersions(
     versions[kind] = CONSENT_DOCUMENTS[kind].version
   }
   return versions
+}
+
+export type FunnelConsentGrant = {
+  kind: ConsentKind
+  version: string
+}
+
+export type FunnelConsentCheck =
+  | { ok: true }
+  | { ok: false; error: "CONSENT_VERSION_OUTDATED" }
+
+export function validateFunnelConsents(
+  grants: readonly { kind: string; version: string }[],
+  env: DeploymentEnv = currentDeploymentEnv()
+): FunnelConsentCheck {
+  const required = requiredConsentVersions(env)
+  const byKind = new Map<string, string>()
+  for (const grant of grants) {
+    byKind.set(grant.kind, grant.version)
+  }
+  for (const kind of CONSENT_KINDS) {
+    if (byKind.get(kind) !== required[kind]) {
+      return { ok: false, error: "CONSENT_VERSION_OUTDATED" }
+    }
+  }
+  return { ok: true }
+}
+
+export function hashGuestEmail(
+  email: string,
+  secret: string | undefined = process.env.CONSENT_HASH_KEY
+): string {
+  if (!secret) {
+    throw new Error("CONSENT_HASH_KEY is not configured")
+  }
+  return createHmac("sha256", secret)
+    .update(email.trim().toLowerCase())
+    .digest("hex")
 }

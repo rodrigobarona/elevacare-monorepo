@@ -14,6 +14,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/audit": "workspace:*",
+    "@eleva/compliance": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
     "@upstash/redis": "catalog:",

@@ -550,6 +550,45 @@ export const PublicBookingLinkResponseSchema = z.object({
   expiresAt: z.string().datetime(),
 })
 
+export const ReserveBookingConsentSchema = z.object({
+  kind: z.enum(["terms", "privacy", "health_data_processing"]),
+  version: z.string().min(1).max(64),
+})
+
+export const ReserveBookingGuestSchema = z.object({
+  email: z.string().email().max(320),
+  name: z.string().min(1).max(200).trim(),
+  phone: z.string().min(8).max(32).optional(),
+})
+
+export const ReserveBookingRequestSchema = z.object({
+  username: z.string().min(1).max(64).trim(),
+  eventTypeModeId: z.string().uuid(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  timezone: z.string().min(1).max(64),
+  language: LocaleSchema,
+  memberCountry: z
+    .string()
+    .length(2)
+    .regex(/^[A-Za-z]{2}$/),
+  linkToken: z.string().min(8).max(256).optional(),
+  guest: ReserveBookingGuestSchema.optional(),
+  phone: z.string().min(8).max(32).optional(),
+  consents: z
+    .array(ReserveBookingConsentSchema)
+    .length(3)
+    .refine((grants) => new Set(grants.map((grant) => grant.kind)).size === 3, {
+      message: "consents must cover each kind exactly once",
+    }),
+})
+
+export const ReserveBookingResponseSchema = z.object({
+  reservationId: z.string().uuid(),
+  reservationToken: z.string().min(16).max(128),
+  expiresAt: z.string().datetime(),
+})
+
 export type ListPublicExpertsQuery = z.infer<
   typeof ListPublicExpertsQuerySchema
 >
@@ -562,6 +601,10 @@ export type PublicSlotsQuery = z.infer<typeof PublicSlotsQuerySchema>
 export type PublicSlotsResponse = z.infer<typeof PublicSlotsResponseSchema>
 export type PublicBookingLinkResponse = z.infer<
   typeof PublicBookingLinkResponseSchema
+>
+export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
+export type ReserveBookingResponse = z.infer<
+  typeof ReserveBookingResponseSchema
 >
 
 export interface SubCalendar {
@@ -930,6 +973,13 @@ export function createApiClient(options: ApiClientOptions) {
           "GET",
           `/public/booking-links/${encodeURIComponent(token)}`
         )
+      },
+    },
+
+    bookings: {
+      async reserve(data: ReserveBookingRequest) {
+        const raw = await request<unknown>("POST", "/bookings/reserve", data)
+        return ReserveBookingResponseSchema.parse(raw)
       },
     },
   }
