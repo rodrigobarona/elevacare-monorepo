@@ -71,6 +71,18 @@ export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value)
 }
 
+/**
+ * D-01: indexed MVP `/pt-BR/*` URLs 301 to `/pt/*`.
+ * First-segment match only — `/pt-brazil` is not a retired locale prefix.
+ */
+const RETIRED_PT_BR_PREFIX = /^\/pt-br(?=\/|$)/i
+
+export function rewriteRetiredLocalePath(pathname: string): string | null {
+  const match = RETIRED_PT_BR_PREFIX.exec(pathname)
+  if (!match) return null
+  return `/pt${pathname.slice(match[0].length)}`
+}
+
 export const LocaleSchema = z.enum(locales)
 
 /**

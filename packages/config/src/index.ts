@@ -23,6 +23,7 @@ export {
   localeNames,
   cookieName as localeCookieName,
   isLocale,
+  rewriteRetiredLocalePath,
   resolveLocaleFromHeaders,
   type Locale,
   type I18nConfig,
