@@ -160,7 +160,11 @@ async function claimPendingDeliveries(
         SELECT c.id
         FROM domain_event_deliveries AS c
         WHERE (
-          c.status IN ('pending', 'failed')
+          c.status = 'pending'
+          OR (
+            c.status = 'failed'
+            AND c.claimed_at < now() - make_interval(secs => least(c.attempts * 60, 3600))
+          )
           OR (
             c.status = 'processing'
             AND c.claimed_at < now() - make_interval(secs => ${STALE_PROCESSING_MS / 1000})

@@ -38,8 +38,9 @@ export async function activateGuestBooking(
   if (!email) return
   if (booking.guestActivationSentAt) return
   if (booking.memberUserId) {
-    await sendActivationLink(email, deps)
-    await markActivationSent(booking.orgId, booking.id)
+    if (await claimActivationSend(booking.orgId, booking.id)) {
+      await sendActivationLink(email, deps)
+    }
     return
   }
 
@@ -49,6 +50,9 @@ export async function activateGuestBooking(
   })
   await provisionPersonalSpace({ id: user.id, name: user.name })
   const space = await findPersonalSpace(user.id)
+  if (!space) {
+    throw new Error("guest activation: personal space missing after provision")
+  }
 
   await withAudit(
     { orgId: booking.orgId, actorUserId: user.id },
@@ -57,7 +61,7 @@ export async function activateGuestBooking(
         .update(main.bookings)
         .set({
           memberUserId: user.id,
-          counterpartyOrgId: space?.orgId ?? null,
+          counterpartyOrgId: space.orgId,
         })
         .where(eq(main.bookings.id, booking.id))
       await tx
@@ -82,16 +86,24 @@ export async function activateGuestBooking(
     }
   )
 
-  await sendActivationLink(email, deps)
-  await markActivationSent(booking.orgId, booking.id)
+  if (await claimActivationSend(booking.orgId, booking.id)) {
+    await sendActivationLink(email, deps)
+  }
 }
 
-async function markActivationSent(orgId: string, bookingId: string) {
-  await withOrgContext(orgId, async (tx) => {
-    await tx
+async function claimActivationSend(orgId: string, bookingId: string) {
+  return withOrgContext(orgId, async (tx) => {
+    const claimed = await tx
       .update(main.bookings)
       .set({ guestActivationSentAt: new Date() })
-      .where(eq(main.bookings.id, bookingId))
+      .where(
+        and(
+          eq(main.bookings.id, bookingId),
+          isNull(main.bookings.guestActivationSentAt)
+        )
+      )
+      .returning({ id: main.bookings.id })
+    return claimed.length > 0
   })
 }
 

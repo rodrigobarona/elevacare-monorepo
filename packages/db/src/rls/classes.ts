@@ -130,9 +130,18 @@ export function classPredicateSql(
       ) {
         return `current_setting('eleva.service', true) = 'audit_drainer'`
       }
+      if (
+        table === "domain_events_outbox" ||
+        table === "domain_event_deliveries"
+      ) {
+        return (
+          `current_setting('eleva.platform_admin', true) = 'true'` +
+          ` OR current_setting('eleva.service', true) = 'domain_events_publisher'`
+        )
+      }
       return (
         `current_setting('eleva.platform_admin', true) = 'true'` +
-        ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer', 'domain_events_publisher')`
+        ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`
       )
     default: {
       const _exhaustive: never = rlsClass
