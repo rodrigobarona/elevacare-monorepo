@@ -41,6 +41,7 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "cookies",
   "blog",
   "experts",
+  "book",
   "categories",
   "become-partner",
   "clinics",

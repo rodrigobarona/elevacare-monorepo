@@ -3,8 +3,10 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { ApiClientError } from "@eleva/api-client"
 import { isReserved } from "@eleva/config/reserved-usernames"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
+import { Link } from "@/i18n/navigation"
 import { formatEur } from "@/lib/format-eur"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { pickLocalizedText } from "@/lib/localized-text"
@@ -181,6 +183,17 @@ export default async function ExpertProfilePage({ params }: Props) {
                         .join(", "),
                     })}
                   </p>
+                  {eventType.modes.length > 0 ? (
+                    <Link
+                      href={`/${expert.username}/${eventType.slug}`}
+                      className={buttonVariants({
+                        size: "sm",
+                        className: "mt-3",
+                      })}
+                    >
+                      {t("book")}
+                    </Link>
+                  ) : null}
                 </li>
               )
             })}

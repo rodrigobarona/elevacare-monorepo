@@ -158,6 +158,7 @@ export const bookingLinks = pgTable(
     tokenHash: char("token_hash", { length: 64 }).notNull(),
     recipientEmail: varchar("recipient_email", { length: 320 }),
     priceCents: integer("price_cents"),
+    /** Invitee-facing message shown on the public `/book/[token]` funnel. */
     note: text("note"),
     expiresAt: timestamp("expires_at", {
       withTimezone: true,

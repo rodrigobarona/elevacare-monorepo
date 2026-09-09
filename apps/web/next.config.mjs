@@ -40,7 +40,14 @@ const nextConfig = {
       beforeFiles: resolveGatewayStaticAssetRewrites(),
     }
   },
-  transpilePackages: ["@eleva/auth", "@eleva/config", "@eleva/db", "@eleva/ui"],
+  transpilePackages: [
+    "@eleva/auth",
+    "@eleva/billing",
+    "@eleva/calendar",
+    "@eleva/config",
+    "@eleva/db",
+    "@eleva/ui",
+  ],
 }
 
 export default withNextIntl(nextConfig)

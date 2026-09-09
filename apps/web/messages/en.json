@@ -6,6 +6,7 @@
   "nav": {
     "about": "About",
     "experts": "Experts",
+    "expert": "Expert",
     "home": "Home",
     "login": "Log in",
     "getStarted": "Get started",
@@ -106,10 +107,152 @@
     "noSlots": "No upcoming slots in the next two weeks.",
     "offers": "Offers",
     "offerMeta": "{duration} min · from {price} · {modes}",
+    "book": "Choose a time",
     "modes": {
       "online": "video",
       "in_person": "in person",
       "phone": "phone"
+    }
+  },
+  "booking": {
+    "meta": {
+      "title": "Book {offer} with {name} — Eleva.care",
+      "description": "Choose how and when to meet {name} for {offer} on Eleva.care, a digital health platform.",
+      "linkTitle": "Your session with {name} — Eleva.care"
+    },
+    "back": "Back",
+    "languages": {
+      "en": "English",
+      "pt": "Portuguese",
+      "es": "Spanish"
+    },
+    "steps": {
+      "meet": "How you'll meet",
+      "when": "When",
+      "details": "Your details",
+      "pay": "Payment",
+      "done": "Confirmed"
+    },
+    "summary": {
+      "mode": "How you'll meet",
+      "when": "When",
+      "price": "Price",
+      "chooseTime": "Pick a time to continue"
+    },
+    "modes": {
+      "online": {
+        "title": "Video",
+        "description": "A private video link arrives before the session."
+      },
+      "phone": {
+        "title": "Phone",
+        "description": "The expert calls the number you share."
+      },
+      "in_person": {
+        "title": "In person",
+        "description": "Meet at the practice address."
+      }
+    },
+    "meet": {
+      "heading": "How do you want to meet?",
+      "sub": "Choose the way that feels right. You can change this before you pay.",
+      "countryLabel": "Where are you?",
+      "countryHint": "We use this to show sessions available in your country. You can change it anytime.",
+      "languageLabel": "Session language",
+      "duration": "{minutes} minutes",
+      "continue": "See available times",
+      "alternativeHint": "Try another way to meet, or change your country or language.",
+      "reasons": {
+        "country": "This way of meeting is not offered in your country.",
+        "language": "This session is not offered in the language you chose.",
+        "inactive": "This option is not available right now."
+      }
+    },
+    "when": {
+      "heading": "Pick a time",
+      "sub": "Times are shown in your timezone.",
+      "timezone": "Your timezone",
+      "month": "Month",
+      "week": "Week",
+      "previous": "Previous month",
+      "next": "Next month",
+      "empty": "No times this day. Try another date.",
+      "loading": "Finding times…",
+      "loadError": "We could not load times. Please try again.",
+      "continue": "Continue",
+      "weekdays": {
+        "mon": "Mon",
+        "tue": "Tue",
+        "wed": "Wed",
+        "thu": "Thu",
+        "fri": "Fri",
+        "sat": "Sat",
+        "sun": "Sun"
+      }
+    },
+    "details": {
+      "heading": "A few details",
+      "sub": "We'll use these to hold the session and send your confirmation.",
+      "name": "Full name",
+      "email": "Email",
+      "phone": "Phone number",
+      "phoneHint": "Needed for a phone session. You can include the country code.",
+      "consentsIntro": "To book a health session on this digital health platform, please confirm:",
+      "hold": "Continue to payment",
+      "holding": "Holding your time…",
+      "consents": {
+        "terms": {
+          "label": "I agree to the",
+          "link": "terms of use"
+        },
+        "privacy": {
+          "label": "I have read the",
+          "link": "privacy notice"
+        },
+        "health_data_processing": {
+          "label": "I consent to",
+          "link": "health data processing"
+        }
+      }
+    },
+    "pay": {
+      "heading": "Confirm and pay",
+      "sub": "Your time is held for a few minutes. Card, Apple Pay, Google Pay, Link, and MB WAY may appear.",
+      "hold": "Hold expires in {time}",
+      "expired": "This hold has ended. Pick a new time to continue.",
+      "restart": "Pick a new time",
+      "pay": "Pay {price}",
+      "processing": "Confirming payment…",
+      "failed": "Payment could not be completed. Please try again.",
+      "pendingError": "Payment is still pending. Please wait a moment and try again."
+    },
+    "done": {
+      "heading": "You're booked",
+      "sub": "We've saved your session. A confirmation email is on its way.",
+      "pending": "Payment received",
+      "pendingSub": "We're confirming your session. You'll get an email as soon as it's ready. Eleva.care is a digital health platform — the expert remains responsible for your care.",
+      "video": "Your video link arrives before the session.",
+      "videoLocation": "Video session — link arrives before the session",
+      "phone": "The expert will call {phone}.",
+      "phoneLocation": "The expert will call {phone}",
+      "inPerson": "Meet at {location}.",
+      "ics": "Add to calendar",
+      "activate": "Create your Eleva account",
+      "activateHint": "Save this session to your Space and manage it later."
+    },
+    "link": {
+      "specialPrice": "Special price",
+      "noteHeading": "A note for you"
+    },
+    "errors": {
+      "slotTaken": "That time was just taken. Please pick another.",
+      "modeCountry": "This way of meeting is not available in your country.",
+      "modeLanguage": "This session is not offered in that language.",
+      "phoneRequired": "Add a phone number so the expert can call you.",
+      "guestRequired": "Please add your name and email to continue.",
+      "consentOutdated": "Please review the latest notices and try again.",
+      "consentsRequired": "Please confirm the three notices to continue.",
+      "generic": "We could not hold that time. Please try again."
     }
   },
   "footer": {
