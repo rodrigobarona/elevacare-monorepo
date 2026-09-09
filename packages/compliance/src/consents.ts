@@ -19,8 +19,16 @@ export function isDraftConsentVersion(version: string): boolean {
  * the production Vercel environment. Legal and the DPO replace this
  * value before go-live (D-10).
  */
+type DeploymentEnv = {
+  VERCEL_ENV?: string
+}
+
+function currentDeploymentEnv(): DeploymentEnv {
+  return { VERCEL_ENV: process.env.VERCEL_ENV }
+}
+
 export function assertConsentVersionsApprovedForDeployment(
-  env: { VERCEL_ENV?: string } = process.env
+  env: DeploymentEnv = currentDeploymentEnv()
 ): void {
   if (env.VERCEL_ENV !== "production") {
     return
@@ -74,7 +82,7 @@ export const CONSENT_DOCUMENTS: Record<ConsentKind, ConsentDocument> = {
 }
 
 export function requiredConsentVersions(
-  env: { VERCEL_ENV?: string } = process.env
+  env: DeploymentEnv = currentDeploymentEnv()
 ): Record<ConsentKind, string> {
   assertConsentVersionsApprovedForDeployment(env)
   const versions = {} as Record<ConsentKind, string>
