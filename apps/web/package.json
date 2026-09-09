@@ -15,6 +15,7 @@
   "dependencies": {
     "@eleva/api-client": "workspace:*",
     "@eleva/auth": "workspace:^",
+    "@eleva/compliance": "workspace:*",
     "@eleva/config": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",

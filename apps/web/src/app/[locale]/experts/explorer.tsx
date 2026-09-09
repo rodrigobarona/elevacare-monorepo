@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { ApiClientError } from "@eleva/api-client"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Link } from "@/i18n/navigation"
 import { formatEur } from "@/lib/format-eur"
@@ -210,6 +211,7 @@ export async function Explorer({
           </div>
         ) : null}
       </main>
+      <SiteFooter />
     </div>
   )
 }

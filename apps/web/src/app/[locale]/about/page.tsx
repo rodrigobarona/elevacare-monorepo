@@ -3,6 +3,7 @@ import { ArrowRightIcon } from "@eleva/icons"
 import { useTranslations } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { Link } from "@/i18n/navigation"
+import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import type { Metadata } from "next"
 
@@ -45,6 +46,7 @@ export default async function AboutPage({ params }: Props) {
         ]}
       />
       <AboutContent />
+      <SiteFooter />
     </div>
   )
 }
@@ -120,14 +122,6 @@ function AboutContent() {
           </div>
         </section>
       </main>
-
-      <footer className="border-t px-6 py-8">
-        <div className="mx-auto max-w-6xl text-center">
-          <p className="text-sm text-muted-foreground">
-            {t("footer.rights", { year: new Date().getFullYear().toString() })}
-          </p>
-        </div>
-      </footer>
     </>
   )
 }

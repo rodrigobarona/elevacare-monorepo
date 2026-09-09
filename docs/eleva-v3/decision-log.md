@@ -32,6 +32,18 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-09: Remove internal `apps/poc` playground
+
+- Owner: engineering
+- Status: active
+- Summary: Deleted `@eleva/poc` (`apps/poc`) and companion specs in
+  `_context/PoCs`. Wizard/map UI lived only inside that app (not shared
+  packages). Dropped cataloged Leaflet deps (`leaflet`, `react-leaflet`,
+  `@types/leaflet`) and CI exclusions (`turbo --filter=!@eleva/poc`,
+  lint-staged / CodeRabbit / i18n-parity / proxy-test skips).
+  `_context/mobbin/` stays as design screenshot references.
+- Reference: [`contribution-workflow.md`](./contribution-workflow.md)
+
 ### 2026-09-08: Local Better Auth e2e capture stays out of production Redis
 
 - Owner: engineering
@@ -367,7 +379,7 @@ Each entry should include:
 
 - Owner: engineering
 - Status: active
-- Summary: `@eleva/ui` regenerated from the shadcn `aria-luma` style on `react-aria-components`; `radix-ui`, `cmdk`, `react-hook-form` dropped; `navigation-menu`/`form` deleted, `field` + `checkbox-field` added. `@eleva/dashboard` mounts `AppRouterProvider` (relative hrefs → `router.push`, absolute → hard navigation for cross-zone). Consumers in `apps/web`, `apps/account`, `apps/expert`, `apps/poc` migrated to React Aria props (`isDisabled`, `onPress`, `isOpen`, `selectedKey`). Done before Phase 2 so all new v3 UI is written once against the final primitive layer.
+- Summary: `@eleva/ui` regenerated from the shadcn `aria-luma` style on `react-aria-components`; `radix-ui`, `cmdk`, `react-hook-form` dropped; `navigation-menu`/`form` deleted, `field` + `checkbox-field` added. `@eleva/dashboard` mounts `AppRouterProvider` (relative hrefs → `router.push`, absolute → hard navigation for cross-zone). Consumers in `apps/web`, `apps/account`, `apps/expert` migrated to React Aria props (`isDisabled`, `onPress`, `isOpen`, `selectedKey`). Done before Phase 2 so all new v3 UI is written once against the final primitive layer.
 - Reference: [`adrs/ADR-022-react-aria-ui-primitives.md`](./adrs/ADR-022-react-aria-ui-primitives.md), [`design-system-spec.md`](./design-system-spec.md)
 
 ### 2026-09-07: Rich text = Plate in a single `@eleva/editor` package (ADR-023, authored in Phase 1)
@@ -451,8 +463,10 @@ Each entry should include:
 ### D-02 (2026-09-07): EUR-only launch
 
 - Owner: founder + finance
-- Status: proposed (working decision — sign before PR 04.2)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Status: active — working pre-launch decision recorded 2026-09-09 by Rodrigo
+  Barona (founder, product owner). Not a production finance sign-off. Re-sign
+  before go-live.
+- Review date: 2026-09-21 (re-sign with finance before production)
 - Summary: `CHECK (currency = 'EUR')` on `event_types` and `event_type_modes`; the Stripe call
   still reads `currency` from the reservation snapshot, so lifting the CHECK later is the whole
   multi-currency change on the payment path. Blocks: Phase 4 PR 04.2.
@@ -540,8 +554,10 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 ### D-10 (2026-09-07): Public-site parity dispositions
 
 - Owner: product (founder)
-- Status: proposed (sign before PR 04.2)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Status: active — working pre-launch decision recorded 2026-09-09 by Rodrigo
+  Barona (founder, product owner). Draft legal pages and `CONSENT_DOCUMENTS`
+  version `dev-2026-09-09` are not DPO-approved. Re-sign before go-live.
+- Review date: 2026-09-21 (legal + DPO re-sign before production)
 - Summary: every surface of the live MVP site has a disposition tested by `e2e/legacy-urls.spec.ts`:
   expert URLs preserved via `public_handles`; `/pt-BR/*` 301; health quiz retired (301 to the
   experts directory); community links kept as external footer links; Help Center replaced by
@@ -577,9 +593,12 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 ### D-13 (2026-09-07): Cookie, CSRF and subdomain threat model
 
-- Owner: security owner (engineering lead)
-- Status: proposed (written in Phase 2; not a sign-off; sign before PR 04.2)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Owner: founder acting as security owner (working pre-launch); engineering lead
+  re-signs before production
+- Status: active — working pre-launch decision recorded 2026-09-09 by Rodrigo
+  Barona (founder). CSRF/session model as written in Phase 2. Unblocks PR 04.2
+  for development. Not a production security sign-off.
+- Review date: 2026-09-21 (engineering-lead security owner re-sign before production)
 - Summary: Product-app session cookies are `better-auth.session_token` or
   `__Secure-better-auth.session_token` with `Domain=.eleva.care`, `Secure`,
   `HttpOnly`, `SameSite=Lax`. Admin (Phase 12) uses a host-only `__Host-` cookie
@@ -589,8 +608,9 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
   session cookies are `401 SESSION_COOKIE_AMBIGUOUS` and both values are cleared
   on the parent domain and host. `__Secure-` does not stop cookie tossing.
   Bearer and API-key paths are exempt. Previews never mint `.eleva.care` cookies.
-  `*.eleva.care` DNS inventory lives in `environment-matrix.md`. Security owner
-  signs this as the Phase 4 PR 04.2 entry gate.
+  `*.eleva.care` DNS inventory lives in `environment-matrix.md`. This working
+  pre-launch record unblocks PR 04.2; the engineering-lead security owner
+  re-signs before go-live.
 - Reference:
   [`security/cookie-csrf-threat-model.md`](./security/cookie-csrf-threat-model.md),
   [`execution-plan/phases/02-better-auth-foundation.md`](./execution-plan/phases/02-better-auth-foundation.md)
@@ -598,8 +618,10 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 ### D-14 (2026-09-07): Launch payment-method set
 
 - Owner: finance + product
-- Status: proposed (sign before PR 04.2)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Status: active — working pre-launch decision recorded 2026-09-09 by Rodrigo
+  Barona (founder, product owner). Launch set: card (incl. wallets), Link, MB WAY.
+  Not a production finance sign-off. Re-sign before go-live.
+- Review date: 2026-09-21 (finance re-sign before production)
 - Summary: booking PaymentIntents use a Stripe Payment Method Configuration (`STRIPE_PMC_BOOKING`,
   owned by `infra/stripe/setup-payment-methods.ts`) with `card` (incl. Apple Pay / Google Pay),
   `link`, `mb_way`; Multibanco, SEPA Direct Debit, Klarna and every delayed-notification method are
