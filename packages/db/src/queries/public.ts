@@ -69,10 +69,12 @@ export interface PublicExpertCard {
 
 export interface PublicExpertProfile extends PublicExpertCard {
   id: string
+  userId: string
   /** Tenant ID — needed for booking funnel reservation context. */
   orgId: string
   /** ISO-639-1 + ISO-3166-1 — we keep them denormalised for cards. */
   worldwideMode: boolean
+  serviceCountries: string[]
 }
 
 export interface PublicClinicProfile {
@@ -139,6 +141,7 @@ export async function findExpertByUsername(
     const rows = await tx
       .select({
         id: main.expertProfiles.id,
+        userId: main.expertProfiles.userId,
         orgId: main.expertProfiles.orgId,
         username: main.expertProfiles.username,
         displayName: main.expertProfiles.displayName,
@@ -150,6 +153,7 @@ export async function findExpertByUsername(
         sessionModes: main.expertProfiles.sessionModes,
         topExpertActive: main.expertProfiles.topExpertActive,
         worldwideMode: main.expertProfiles.worldwideMode,
+        serviceCountries: main.expertProfiles.serviceCountries,
       })
       .from(main.expertProfiles)
       .where(

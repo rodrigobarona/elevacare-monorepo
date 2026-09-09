@@ -407,6 +407,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
+      '@eleva/scheduling':
+        specifier: workspace:*
+        version: link:../../packages/scheduling
       '@eleva/storage':
         specifier: workspace:*
         version: link:../../packages/storage

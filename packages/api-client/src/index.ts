@@ -371,8 +371,8 @@ export const CreateEventTypeRequestSchema = z.object({
   title: LocalizedTextSchema,
   description: LocalizedTextSchema.nullish(),
   durationMinutes: z.number().int().positive(),
-  priceAmount: z.number().nonnegative(),
-  currency: z.string().min(3).max(3),
+  priceAmount: z.number().int().nonnegative(),
+  currency: z.literal("EUR"),
   languages: z.array(z.string()),
   sessionMode: z.enum(["online", "in_person", "phone"]),
   bookingWindowDays: z.number().int().positive().nullish(),
@@ -425,6 +425,143 @@ export const DestinationCalendarRequestSchema = z.object({
 
 export type DestinationCalendarRequest = z.infer<
   typeof DestinationCalendarRequestSchema
+>
+
+export const PublicLocalizedTextSchema = z.object({
+  en: z.string(),
+  pt: z.string().optional(),
+  es: z.string().optional(),
+})
+
+export const ListPublicExpertsQuerySchema = z
+  .object({
+    category: z.string().min(1).max(80).optional(),
+    language: z
+      .string()
+      .regex(/^[a-z]{2}$/)
+      .optional(),
+    minPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
+    maxPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
+    sort: z.enum(["relevance", "price", "rating"]).optional(),
+    cursor: z.string().min(1).max(200).optional(),
+  })
+  .refine(
+    (query) =>
+      query.minPrice == null ||
+      query.maxPrice == null ||
+      query.minPrice <= query.maxPrice,
+    {
+      message: "minPrice must be less than or equal to maxPrice",
+      path: ["minPrice"],
+    }
+  )
+
+export const PublicExpertCardSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  headline: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  languages: z.array(z.string()),
+  serviceCountries: z.array(z.string()),
+  categorySlugs: z.array(z.string()),
+  minPriceCents: z.number().int().nullable(),
+  topExpertActive: z.boolean(),
+})
+
+export const ListPublicExpertsResponseSchema = z.object({
+  experts: z.array(PublicExpertCardSchema),
+  nextCursor: z.string().nullable(),
+})
+
+export const PublicEventTypeModeSchema = z.object({
+  id: z.string().uuid(),
+  mode: z.enum(["online", "in_person", "phone"]),
+  priceCents: z.number().int().nonnegative(),
+  currency: z.literal("EUR"),
+  durationMinutes: z.number().int().positive(),
+  countryScopeType: z.enum(["worldwide", "list"]),
+  countryScopeCodes: z.array(z.string()),
+  languages: z.array(z.string()),
+  label: PublicLocalizedTextSchema.nullable(),
+  location: z
+    .object({
+      id: z.string().uuid(),
+      name: z.string(),
+      city: z.string(),
+      country: z.string(),
+    })
+    .nullable(),
+})
+
+export const PublicEventTypeSchema = z.object({
+  slug: z.string(),
+  title: PublicLocalizedTextSchema,
+  description: PublicLocalizedTextSchema.nullable(),
+  durationMinutes: z.number().int().positive(),
+  priceAmount: z.number().int().nonnegative(),
+  currency: z.literal("EUR"),
+  languages: z.array(z.string()),
+  sessionMode: z.enum(["online", "in_person", "phone"]),
+  modes: z.array(PublicEventTypeModeSchema),
+})
+
+export const PublicExpertProfileSchema = z.object({
+  username: z.string(),
+  displayName: z.string(),
+  headline: z.string().nullable(),
+  bio: z.string().nullable(),
+  avatarUrl: z.string().nullable(),
+  languages: z.array(z.string()),
+  serviceCountries: z.array(z.string()),
+  categorySlugs: z.array(z.string()),
+  eventTypes: z.array(PublicEventTypeSchema),
+})
+
+export const PublicEventTypeDetailSchema = PublicEventTypeSchema.extend({
+  username: z.string(),
+})
+
+export const PublicSlotsQuerySchema = z.object({
+  modeId: z.string().uuid(),
+  from: z.string().datetime(),
+  to: z.string().datetime(),
+  tz: z.string().min(1).max(64),
+  linkToken: z.string().min(8).max(256).optional(),
+})
+
+export const PublicSlotSchema = z.object({
+  start: z.string().datetime(),
+  end: z.string().datetime(),
+  startLocal: z.string(),
+  endLocal: z.string(),
+})
+
+export const PublicSlotsResponseSchema = z.object({
+  slots: z.array(PublicSlotSchema),
+  priceCents: z.number().int().nonnegative(),
+  durationMinutes: z.number().int().positive(),
+  scheduleId: z.string().uuid(),
+})
+
+export const PublicBookingLinkResponseSchema = z.object({
+  eventTypeId: z.string().uuid(),
+  eventTypeModeId: z.string().uuid().nullable(),
+  priceCents: z.number().int().nonnegative().nullable(),
+  expiresAt: z.string().datetime(),
+})
+
+export type ListPublicExpertsQuery = z.infer<
+  typeof ListPublicExpertsQuerySchema
+>
+export type ListPublicExpertsResponse = z.infer<
+  typeof ListPublicExpertsResponseSchema
+>
+export type PublicExpertProfile = z.infer<typeof PublicExpertProfileSchema>
+export type PublicEventTypeDetail = z.infer<typeof PublicEventTypeDetailSchema>
+export type PublicSlotsQuery = z.infer<typeof PublicSlotsQuerySchema>
+export type PublicSlotsResponse = z.infer<typeof PublicSlotsResponseSchema>
+export type PublicBookingLinkResponse = z.infer<
+  typeof PublicBookingLinkResponseSchema
 >
 
 export interface SubCalendar {
@@ -743,6 +880,56 @@ export function createApiClient(options: ApiClientOptions) {
             data
           )
         },
+      },
+    },
+
+    public: {
+      listExperts(query: ListPublicExpertsQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.category) params.set("category", query.category)
+        if (query.language) params.set("language", query.language)
+        if (query.minPrice != null)
+          params.set("minPrice", String(query.minPrice))
+        if (query.maxPrice != null)
+          params.set("maxPrice", String(query.maxPrice))
+        if (query.sort) params.set("sort", query.sort)
+        if (query.cursor) params.set("cursor", query.cursor)
+        const qs = params.toString()
+        return request<ListPublicExpertsResponse>(
+          "GET",
+          qs ? `/public/experts?${qs}` : "/public/experts"
+        )
+      },
+      getExpert(username: string) {
+        return request<PublicExpertProfile>(
+          "GET",
+          `/public/experts/${encodeURIComponent(username)}`
+        )
+      },
+      getEventType(username: string, slug: string) {
+        return request<PublicEventTypeDetail>(
+          "GET",
+          `/public/experts/${encodeURIComponent(username)}/event-types/${encodeURIComponent(slug)}`
+        )
+      },
+      getSlots(username: string, slug: string, query: PublicSlotsQuery) {
+        const params = new URLSearchParams({
+          modeId: query.modeId,
+          from: query.from,
+          to: query.to,
+          tz: query.tz,
+        })
+        if (query.linkToken) params.set("linkToken", query.linkToken)
+        return request<PublicSlotsResponse>(
+          "GET",
+          `/public/experts/${encodeURIComponent(username)}/event-types/${encodeURIComponent(slug)}/slots?${params}`
+        )
+      },
+      getBookingLink(token: string) {
+        return request<PublicBookingLinkResponse>(
+          "GET",
+          `/public/booking-links/${encodeURIComponent(token)}`
+        )
       },
     },
   }

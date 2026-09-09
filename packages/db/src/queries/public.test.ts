@@ -97,6 +97,7 @@ describe("public queries", () => {
     vi.doMock("../schema/main", () => ({
       expertProfiles: {
         id: { name: "id" },
+        userId: { name: "userId" },
         username: { name: "username" },
         displayName: { name: "displayName" },
         headline: { name: "headline" },
@@ -104,6 +105,7 @@ describe("public queries", () => {
         avatarUrl: { name: "avatarUrl" },
         languages: { name: "languages" },
         practiceCountries: { name: "practiceCountries" },
+        serviceCountries: { name: "serviceCountries" },
         sessionModes: { name: "sessionModes" },
         topExpertActive: { name: "topExpertActive" },
         worldwideMode: { name: "worldwideMode" },
@@ -162,6 +164,7 @@ describe("public queries", () => {
   it("findExpertByUsername joins category slugs onto the profile", async () => {
     const expertRow = {
       id: "expert-1",
+      userId: "user-1",
       username: "ana-silva",
       displayName: "Ana Silva",
       headline: null,
@@ -169,6 +172,7 @@ describe("public queries", () => {
       avatarUrl: null,
       languages: ["pt"],
       practiceCountries: ["PT"],
+      serviceCountries: ["PT"],
       sessionModes: ["online"],
       topExpertActive: true,
       worldwideMode: false,

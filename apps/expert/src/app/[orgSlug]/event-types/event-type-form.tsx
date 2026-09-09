@@ -77,9 +77,7 @@ export function EventTypeForm({
   const [price, setPrice] = React.useState(
     String((defaultValues?.priceAmount ?? 0) / 100)
   )
-  const [currency, setCurrency] = React.useState<string>(
-    defaultValues?.currency ?? "eur"
-  )
+  const currency = "EUR" as const
   const [sessionMode, setSessionMode] = React.useState<SessionMode>(
     defaultValues?.sessionMode ?? "online"
   )
@@ -297,22 +295,8 @@ export function EventTypeForm({
               />
             </div>
             <div className="space-y-1.5">
-              <Select
-                selectedKey={currency}
-                onSelectionChange={(key) => {
-                  if (typeof key === "string") setCurrency(key)
-                }}
-              >
-                <Label>Currency</Label>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem id="eur">EUR</SelectItem>
-                  <SelectItem id="usd">USD</SelectItem>
-                  <SelectItem id="gbp">GBP</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Currency</Label>
+              <p className="text-sm text-muted-foreground">{currency}</p>
             </div>
           </div>
 

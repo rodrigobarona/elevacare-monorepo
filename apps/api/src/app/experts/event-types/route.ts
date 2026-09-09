@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { CreateEventTypeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -9,30 +9,7 @@ import { getExpertProfileByUserId, createEventType } from "@eleva/db"
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const LocalizedTextSchema = z.object({
-  en: z.string(),
-  pt: z.string().optional(),
-  es: z.string().optional(),
-})
-
-const CreateEventTypeSchema = z.object({
-  slug: z.string().optional(),
-  title: LocalizedTextSchema,
-  description: LocalizedTextSchema.nullish(),
-  durationMinutes: z.number().int().positive(),
-  priceAmount: z.number().nonnegative(),
-  currency: z.string().min(3).max(3),
-  languages: z.array(z.string()),
-  sessionMode: z.enum(["online", "in_person", "phone"]),
-  bookingWindowDays: z.number().int().positive().nullish(),
-  minimumNoticeMinutes: z.number().int().nonnegative(),
-  bufferBeforeMinutes: z.number().int().nonnegative(),
-  bufferAfterMinutes: z.number().int().nonnegative(),
-  cancellationWindowHours: z.number().int().positive().nullish(),
-  rescheduleWindowHours: z.number().int().positive().nullish(),
-  requiresApproval: z.boolean(),
-  worldwideMode: z.boolean(),
-})
+const CreateEventTypeSchema = CreateEventTypeRequestSchema
 
 function normalizeSlug(raw: string): string {
   return raw

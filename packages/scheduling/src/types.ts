@@ -34,6 +34,12 @@ export interface GetAvailableSlotsInput {
   externalBusyTimes: BusyInterval[]
   rangeStart: Date
   rangeEnd: Date
+  /**
+   * Step between candidate starts. `getAvailableSlots` defaults this to the
+   * event duration. `getAvailableSlotsForOffer` defaults to 30 minutes
+   * (Phase 4 marketplace grid) unless overridden.
+   */
+  slotIntervalMinutes?: number
 }
 
 export interface ReserveSlotInput {

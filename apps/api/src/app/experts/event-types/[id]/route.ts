@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { UpdateEventTypeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -13,31 +13,7 @@ import {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const LocalizedTextSchema = z.object({
-  en: z.string(),
-  pt: z.string().optional(),
-  es: z.string().optional(),
-})
-
-const UpdateEventTypeSchema = z.object({
-  slug: z.string().optional(),
-  title: LocalizedTextSchema.optional(),
-  description: LocalizedTextSchema.nullish(),
-  durationMinutes: z.number().int().positive().optional(),
-  priceAmount: z.number().nonnegative().optional(),
-  currency: z.string().min(3).max(3).optional(),
-  languages: z.array(z.string()).optional(),
-  sessionMode: z.enum(["online", "in_person", "phone"]).optional(),
-  bookingWindowDays: z.number().int().positive().nullish(),
-  minimumNoticeMinutes: z.number().int().nonnegative().optional(),
-  bufferBeforeMinutes: z.number().int().nonnegative().optional(),
-  bufferAfterMinutes: z.number().int().nonnegative().optional(),
-  cancellationWindowHours: z.number().int().positive().nullish(),
-  rescheduleWindowHours: z.number().int().positive().nullish(),
-  requiresApproval: z.boolean().optional(),
-  worldwideMode: z.boolean().optional(),
-  published: z.boolean().optional(),
-})
+const UpdateEventTypeSchema = UpdateEventTypeRequestSchema
 
 function normalizeSlug(raw: string): string {
   return raw
