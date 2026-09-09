@@ -43,6 +43,18 @@ export type {
   ReserveBookingResult,
   ReserveBookingError,
 } from "./reserve-booking"
+export {
+  confirmBookingPayment,
+  markBookingPaymentFailed,
+  authorizeConfirmAccess,
+  isUniqueViolation,
+} from "./confirm-booking"
+export type {
+  ConfirmBookingPaymentInput,
+  ConfirmBookingPaymentResult,
+  BookingPaymentIntentSnapshot,
+} from "./confirm-booking"
+export { hashReservationToken } from "./reservation-token"
 export { validateBookingRules, canCancel, canReschedule } from "./booking-rules"
 export type {
   TimeSlot,

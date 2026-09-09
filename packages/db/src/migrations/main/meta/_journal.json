@@ -211,6 +211,13 @@
       "when": 1779530000000,
       "tag": "0029_reservation_funnel_snapshot",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1779540000000,
+      "tag": "0030_domain_events_outbox",
+      "breakpoints": true
     }
   ]
 }

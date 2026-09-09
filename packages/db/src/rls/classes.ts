@@ -62,6 +62,8 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "billing_subscriptions", class: "tenant-owned" },
   { table: "org_data_keys", class: "tenant-owned" },
   { table: "audit_outbox", class: "service-only" },
+  { table: "domain_events_outbox", class: "service-only" },
+  { table: "domain_event_deliveries", class: "service-only" },
   { table: "stripe_webhook_events", class: "service-only" },
   { table: "expert_categories", class: "public-read" },
   {
@@ -130,7 +132,7 @@ export function classPredicateSql(
       }
       return (
         `current_setting('eleva.platform_admin', true) = 'true'` +
-        ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`
+        ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer', 'domain_events_publisher')`
       )
     default: {
       const _exhaustive: never = rlsClass

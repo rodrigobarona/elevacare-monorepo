@@ -1,4 +1,4 @@
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto"
+import { randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
@@ -10,12 +10,11 @@ import {
   type Tx,
 } from "@eleva/db"
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
+import { hashReservationToken } from "@eleva/scheduling"
 import { stripe } from "./client"
 import { computeCommissionRate } from "./commission"
 
-export function hashReservationToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex")
-}
+export { hashReservationToken }
 
 const funnelSnapshotSchema = z.object({
   timezone: z.string().min(1),
@@ -100,6 +99,7 @@ export async function createBookingPaymentIntent(
         reservationId: input.reservationId,
         bookingId: input.bookingId,
         expertOrgId: input.expertOrgId,
+        eleva_org_id: input.expertOrgId,
         eleva_booking_id: input.bookingId,
       },
     },
@@ -122,6 +122,41 @@ export type CreatePaymentIntentForReservationResult =
       publishableKey: string
     }
   | { ok: false; error: "not_found" | "unavailable" | "db_error" }
+
+export async function retrieveBookingPaymentIntent(
+  paymentIntentId: string
+): Promise<{
+  id: string
+  status: string
+  amount: number
+  currency: string
+  metadata: {
+    reservationId?: string
+    bookingId?: string
+    expertOrgId?: string
+  }
+  paymentMethodType?: string | null
+}> {
+  const intent = await stripe().paymentIntents.retrieve(paymentIntentId, {
+    expand: ["payment_method"],
+  })
+  const method = intent.payment_method
+  return {
+    id: intent.id,
+    status: String(intent.status),
+    amount: intent.amount,
+    currency: intent.currency,
+    metadata: {
+      reservationId: intent.metadata.reservationId,
+      bookingId: intent.metadata.bookingId,
+      expertOrgId: intent.metadata.expertOrgId,
+    },
+    paymentMethodType:
+      typeof method === "object" && method && "type" in method
+        ? String(method.type)
+        : null,
+  }
+}
 
 export async function createPaymentIntentForReservation(
   input: CreatePaymentIntentForReservationInput

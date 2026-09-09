@@ -4,7 +4,12 @@ import { z } from "zod"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { captureException } from "@eleva/observability"
+import {
+  confirmBookingPayment,
+  markBookingPaymentFailed,
+} from "@eleva/scheduling"
 import { stripe } from "./client"
+import { retrieveBookingPaymentIntent } from "./payments"
 
 /**
  * Stripe webhook processor (Phase 1 of stripe-foundation-review).
@@ -1268,8 +1273,45 @@ async function handlePaymentIntentEvent(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
   const intent = event.data.object as Stripe.PaymentIntent
+  const reservationId = intent.metadata?.reservationId
+  if (reservationId && event.type === "payment_intent.succeeded") {
+    const confirmed = await confirmBookingPayment({
+      reservationId,
+      paymentIntentId: intent.id,
+      source: "webhook",
+      retrieveIntent: retrieveBookingPaymentIntent,
+    })
+    if (!confirmed.ok) {
+      if (
+        confirmed.error === "payment_mismatch" ||
+        confirmed.error === "not_found"
+      ) {
+        throw new TerminalError(
+          `booking confirm ${confirmed.error} for intent ${intent.id}`
+        )
+      }
+      throw new Error(
+        `booking confirm failed (${confirmed.error}) for intent ${intent.id}`
+      )
+    }
+  }
+  if (reservationId && event.type === "payment_intent.payment_failed") {
+    const marked = await markBookingPaymentFailed({
+      paymentIntentId: intent.id,
+      reservationId,
+    })
+    if (!marked.ok) {
+      throw new Error(
+        `booking payment_failed mark failed for intent ${intent.id}`
+      )
+    }
+  }
+
   const orgId =
     orgIdFromMetadata(intent.metadata) ??
+    orgIdFromMetadata({
+      eleva_org_id: intent.metadata?.expertOrgId ?? "",
+    }) ??
     (intent.customer
       ? await resolveOrgIdFromCustomer(
           typeof intent.customer === "string"

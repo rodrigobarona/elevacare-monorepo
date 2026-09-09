@@ -264,6 +264,10 @@ export const bookings = pgTable(
       withTimezone: true,
       mode: "date",
     }),
+    guestActivationSentAt: timestamp("guest_activation_sent_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     completedAt: timestamp("completed_at", {
       withTimezone: true,
       mode: "date",

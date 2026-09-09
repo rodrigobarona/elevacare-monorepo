@@ -38,7 +38,7 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0029_reservation_funnel_snapshot")
+    expect(last?.tag).toBe("0030_domain_events_outbox")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
     const offer = migrations.find((m) => m.tag === "0027_offer_model")
@@ -62,8 +62,18 @@ describe("migration journal helpers", () => {
     expect(finalizeSql).toContain("ON DELETE RESTRICT")
     expect(finalizeSql).toContain("gen_random_uuid()")
     expect(finalizeSql).not.toContain("sha256(id::text")
+    const funnel = migrations.find(
+      (m) => m.tag === "0029_reservation_funnel_snapshot"
+    )
+    const funnelSql = funnel?.statements.join("\n") ?? ""
+    expect(funnelSql).toContain("funnel")
+    expect(funnelSql).toContain("slot_reservations_funnel_object")
     const sql = last?.statements.join("\n") ?? ""
-    expect(sql).toContain("funnel")
-    expect(sql).toContain("slot_reservations_funnel_object")
+    expect(sql).toContain("domain_events_outbox")
+    expect(sql).toContain("domain_event_deliveries")
+    expect(sql).toContain("domain_event_delivery_status")
+    expect(sql).toContain("'processing'")
+    expect(sql).toContain("domain_events_publisher")
+    expect(sql).toContain("guest_activation_sent_at")
   })
 })

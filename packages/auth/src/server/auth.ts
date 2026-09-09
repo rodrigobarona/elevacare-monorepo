@@ -353,6 +353,9 @@ export interface AuthApi {
     body: { accountId: string; userId?: string }
   }) => Promise<{ accessToken?: string } | null>
   generateOpenAPISchema?: () => Promise<unknown>
+  signInMagicLink: (opts: {
+    body: { email: string; callbackURL: string }
+  }) => Promise<unknown>
 }
 
 function enqueueTeamSeatSync(orgId: string): void {
@@ -365,6 +368,23 @@ function enqueueTeamSeatSync(orgId: string): void {
 
 export function getAuthApi(): AuthApi {
   return getAuth().api as unknown as AuthApi
+}
+
+export async function requestMagicLinkSignIn(input: {
+  email: string
+  callbackURL: string
+}): Promise<void> {
+  const result = await getAuthApi().signInMagicLink({
+    body: { email: input.email, callbackURL: input.callbackURL },
+  })
+  if (
+    result &&
+    typeof result === "object" &&
+    "status" in result &&
+    result.status === false
+  ) {
+    throw new Error("magic link request rejected")
+  }
 }
 
 let authSingleton: ReturnType<typeof createAuth> | undefined

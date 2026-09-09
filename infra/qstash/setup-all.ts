@@ -13,6 +13,7 @@
  *   API_BASE_URL=https://api.eleva.care pnpm qstash:setup:all -- --dry-run
  */
 import { isDryRun, registerSchedule } from "./register-schedule"
+import { DOMAIN_EVENTS_PUBLISHER_SCHEDULE } from "./domain-events-schedule"
 
 const dryRun = isDryRun()
 
@@ -48,6 +49,8 @@ async function main() {
     },
     { dryRun }
   )
+
+  await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
   console.log("\n[qstash:setup:all] Done.")
   console.log(

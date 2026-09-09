@@ -23,6 +23,7 @@ export {
   type CompleteOnboardingInput,
   type CompleteOnboardingResult,
 } from "./provisioning"
+export { provisionPersonalSpace } from "./provision-personal-space"
 export {
   createAuthProxy,
   createPassthroughProxy,

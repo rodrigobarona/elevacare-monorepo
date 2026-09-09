@@ -8,7 +8,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./drainers": "./src/drainers/index.ts",
-    "./scheduling": "./src/scheduling/index.ts"
+    "./scheduling": "./src/scheduling/index.ts",
+    "./domain-events": "./src/domain-events.ts",
+    "./subscribers": "./src/subscribers/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -16,8 +18,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/audit": "workspace:*",
     "@eleva/auth": "workspace:*",
     "@eleva/calendar": "workspace:*",
+    "@eleva/compliance": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
