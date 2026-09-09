@@ -1282,12 +1282,18 @@ async function handlePaymentIntentEvent(
       retrieveIntent: retrieveBookingPaymentIntent,
     })
     if (!confirmed.ok) {
-      if (
-        confirmed.error === "payment_mismatch" ||
-        confirmed.error === "not_found"
-      ) {
+      if (confirmed.error === "not_found") {
+        await recordOrphanedPaidIntent({
+          intent,
+          reservationId,
+        })
         throw new TerminalError(
-          `booking confirm ${confirmed.error} for intent ${intent.id}`
+          `booking confirm not_found for intent ${intent.id}`
+        )
+      }
+      if (confirmed.error === "payment_mismatch") {
+        throw new TerminalError(
+          `booking confirm payment_mismatch for intent ${intent.id}`
         )
       }
       throw new Error(
@@ -1307,18 +1313,7 @@ async function handlePaymentIntentEvent(
     }
   }
 
-  const orgId =
-    orgIdFromMetadata(intent.metadata) ??
-    orgIdFromMetadata({
-      eleva_org_id: intent.metadata?.expertOrgId ?? "",
-    }) ??
-    (intent.customer
-      ? await resolveOrgIdFromCustomer(
-          typeof intent.customer === "string"
-            ? intent.customer
-            : intent.customer.id
-        )
-      : null)
+  const orgId = await resolvePaymentIntentOrgId(intent)
   if (!orgId) {
     return {
       kind: "ignored",
@@ -1448,6 +1443,48 @@ async function handleChargeDisputeCreated(
     })
   })
   return { kind: "handled", resolvedOrgId: orgId }
+}
+
+async function resolvePaymentIntentOrgId(
+  intent: Stripe.PaymentIntent
+): Promise<string | null> {
+  return (
+    orgIdFromMetadata(intent.metadata) ??
+    orgIdFromMetadata({
+      eleva_org_id: intent.metadata?.expertOrgId ?? "",
+    }) ??
+    (intent.customer
+      ? await resolveOrgIdFromCustomer(
+          typeof intent.customer === "string"
+            ? intent.customer
+            : intent.customer.id
+        )
+      : null)
+  )
+}
+
+async function recordOrphanedPaidIntent(input: {
+  intent: Stripe.PaymentIntent
+  reservationId: string
+}): Promise<void> {
+  const orgId = await resolvePaymentIntentOrgId(input.intent)
+  if (!orgId) {
+    throw new Error(
+      `orphaned paid intent ${input.intent.id} has no resolvable org`
+    )
+  }
+  await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
+    await ctx.emit({
+      entity: "booking_payment",
+      action: "rejected",
+      entityId: input.intent.id,
+      payload: {
+        code: "ORPHANED_PAID_INTENT",
+        paymentIntentId: input.intent.id,
+        reservationId: input.reservationId,
+      },
+    })
+  })
 }
 
 /**

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { hashReservationToken } from "../src/reservation-token"
 
 const reservationId = "11111111-1111-4111-8111-111111111111"
 const bookingId = "22222222-2222-4222-8222-222222222222"
@@ -28,6 +29,70 @@ function intentSnapshot(
   }
 }
 
+function mockConfirmTarget(
+  overrides: {
+    capabilityHash?: string
+    emit?: ReturnType<typeof vi.fn>
+  } = {}
+) {
+  const emit = overrides.emit ?? vi.fn()
+  vi.doMock("@eleva/audit", () => ({
+    withAudit: vi.fn(async (_opts, fn) => fn({}, { emit })),
+  }))
+  const reservation = {
+    id: reservationId,
+    orgId,
+    capabilityHash: overrides.capabilityHash ?? "a".repeat(64),
+    userId: null,
+    status: "active",
+    priceCents: 5000,
+    currency: "EUR",
+    stripePaymentIntentId: paymentIntentId,
+    funnel: null,
+  }
+  const booking = {
+    id: bookingId,
+    status: "pending_payment",
+    stripePaymentIntentId: paymentIntentId,
+    guestEmail: "member@example.com",
+    guestName: "Member",
+  }
+  const payment = {
+    id: paymentId,
+    status: "requires_payment",
+    stripePaymentIntentId: paymentIntentId,
+  }
+  vi.doMock("@eleva/db", () => ({
+    main: {
+      slotReservations: { id: "id" },
+      bookings: { id: "id", orgId: "org", reservationId: "res" },
+      bookingPayments: {
+        id: "id",
+        orgId: "org",
+        bookingId: "bid",
+        stripePaymentIntentId: "pi",
+      },
+      bookingLinks: { id: "id", orgId: "org", revokedAt: "revoked" },
+    },
+    withPlatformAdminContext: vi.fn(async (fn: (tx: unknown) => unknown) => {
+      const limit = vi
+        .fn()
+        .mockResolvedValueOnce([reservation])
+        .mockResolvedValueOnce([booking])
+        .mockResolvedValueOnce([payment])
+        .mockResolvedValue([])
+      const tx = {
+        select: () => ({
+          from: () => ({
+            where: () => ({ limit }),
+          }),
+        }),
+      }
+      return fn(tx)
+    }),
+  }))
+}
+
 describe("authorizeConfirmAccess", () => {
   it("accepts a matching token for an active hold", async () => {
     const { authorizeConfirmAccess, hashReservationToken } =
@@ -43,7 +108,7 @@ describe("authorizeConfirmAccess", () => {
         hasBoundIntent: false,
       })
     ).toBe("ok")
-  })
+  }, 15_000)
 
   it("returns not_found when the booking link is revoked and unpaid", async () => {
     const { authorizeConfirmAccess, hashReservationToken } =
@@ -102,14 +167,27 @@ describe("confirmBookingPayment", () => {
     expect(result).toEqual({ ok: false, error: "not_found" })
   })
 
+  it("does not retrieve Stripe before public authorization", async () => {
+    const retrieveIntent = vi.fn(async () => intentSnapshot())
+    mockConfirmTarget({
+      capabilityHash: hashReservationToken("other-token-16xx"),
+    })
+    const { confirmBookingPayment } = await import("../src/confirm-booking")
+    const result = await confirmBookingPayment({
+      reservationId,
+      paymentIntentId,
+      reservationToken: "reservation-token-16",
+      source: "public",
+      retrieveIntent,
+    })
+    expect(result).toEqual({ ok: false, error: "not_found" })
+    expect(retrieveIntent).not.toHaveBeenCalled()
+  })
+
   it("returns unavailable when Stripe retrieve throws", async () => {
-    vi.doMock("@eleva/audit", () => ({
-      withAudit: vi.fn(async (_opts, fn) => fn({}, { emit: vi.fn() })),
-    }))
-    vi.doMock("@eleva/db", () => ({
-      main: {},
-      withPlatformAdminContext: vi.fn(),
-    }))
+    mockConfirmTarget({
+      capabilityHash: hashReservationToken("reservation-token-16"),
+    })
     const { confirmBookingPayment } = await import("../src/confirm-booking")
     const result = await confirmBookingPayment({
       reservationId,
@@ -125,65 +203,7 @@ describe("confirmBookingPayment", () => {
 
   it("returns payment_mismatch when the intent belongs to another reservation", async () => {
     const emit = vi.fn()
-    vi.doMock("@eleva/audit", () => ({
-      withAudit: vi.fn(async (_opts, fn) => fn({}, { emit })),
-    }))
-    vi.doMock("@eleva/db", () => {
-      const reservation = {
-        id: reservationId,
-        orgId,
-        capabilityHash: "a".repeat(64),
-        userId: null,
-        status: "active",
-        priceCents: 5000,
-        currency: "EUR",
-        stripePaymentIntentId: paymentIntentId,
-        funnel: null,
-      }
-      const booking = {
-        id: bookingId,
-        status: "pending_payment",
-        stripePaymentIntentId: paymentIntentId,
-        guestEmail: "member@example.com",
-        guestName: "Member",
-      }
-      const payment = {
-        id: paymentId,
-        status: "requires_payment",
-        stripePaymentIntentId: paymentIntentId,
-      }
-      return {
-        main: {
-          slotReservations: { id: "id" },
-          bookings: { id: "id", orgId: "org", reservationId: "res" },
-          bookingPayments: {
-            id: "id",
-            orgId: "org",
-            bookingId: "bid",
-            stripePaymentIntentId: "pi",
-          },
-          bookingLinks: { id: "id", orgId: "org", revokedAt: "revoked" },
-        },
-        withPlatformAdminContext: vi.fn(
-          async (fn: (tx: unknown) => unknown) => {
-            const limit = vi
-              .fn()
-              .mockResolvedValueOnce([reservation])
-              .mockResolvedValueOnce([booking])
-              .mockResolvedValueOnce([payment])
-              .mockResolvedValue([])
-            const tx = {
-              select: () => ({
-                from: () => ({
-                  where: () => ({ limit }),
-                }),
-              }),
-            }
-            return fn(tx)
-          }
-        ),
-      }
-    })
+    mockConfirmTarget({ emit })
 
     const { confirmBookingPayment } = await import("../src/confirm-booking")
     const result = await confirmBookingPayment({

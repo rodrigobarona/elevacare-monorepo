@@ -110,14 +110,6 @@ export async function confirmBookingPayment(
     return { ok: false, error: "not_found" }
   }
 
-  let intent: BookingPaymentIntentSnapshot
-  try {
-    intent = await input.retrieveIntent(input.paymentIntentId)
-  } catch (err) {
-    console.error("[bookings/confirm] Stripe retrieve failed", err)
-    return { ok: false, error: "unavailable" }
-  }
-
   let loaded
   try {
     loaded = await loadConfirmTarget(input.reservationId, input.paymentIntentId)
@@ -140,6 +132,14 @@ export async function confirmBookingPayment(
       hasBoundIntent: Boolean(reservation.stripePaymentIntentId),
     })
     if (access === "not_found") return { ok: false, error: "not_found" }
+  }
+
+  let intent: BookingPaymentIntentSnapshot
+  try {
+    intent = await input.retrieveIntent(input.paymentIntentId)
+  } catch (err) {
+    console.error("[bookings/confirm] Stripe retrieve failed", err)
+    return { ok: false, error: "unavailable" }
   }
 
   if (booking.status === "confirmed" && payment.status === "succeeded") {

@@ -56,6 +56,7 @@ async function authorizePublisher(request: Request): Promise<boolean> {
       return await receiver.verify({
         signature,
         body,
+        url: request.url,
       })
     } catch {
       return false

@@ -38,9 +38,8 @@ export async function activateGuestBooking(
   if (!email) return
   if (booking.guestActivationSentAt) return
   if (booking.memberUserId) {
-    if (await claimActivationSend(booking.orgId, booking.id)) {
-      await sendActivationLink(email, deps)
-    }
+    await sendActivationLink(email, deps)
+    await claimActivationSend(booking.orgId, booking.id)
     return
   }
 
@@ -86,25 +85,42 @@ export async function activateGuestBooking(
     }
   )
 
-  if (await claimActivationSend(booking.orgId, booking.id)) {
-    await sendActivationLink(email, deps)
-  }
+  await sendActivationLink(email, deps)
+  await claimActivationSend(booking.orgId, booking.id)
+}
+
+class ActivationClaimSkip extends Error {
+  override readonly name = "ActivationClaimSkip"
 }
 
 async function claimActivationSend(orgId: string, bookingId: string) {
-  return withOrgContext(orgId, async (tx) => {
-    const claimed = await tx
-      .update(main.bookings)
-      .set({ guestActivationSentAt: new Date() })
-      .where(
-        and(
-          eq(main.bookings.id, bookingId),
-          isNull(main.bookings.guestActivationSentAt)
+  try {
+    return await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
+      const claimed = await tx
+        .update(main.bookings)
+        .set({ guestActivationSentAt: new Date() })
+        .where(
+          and(
+            eq(main.bookings.id, bookingId),
+            isNull(main.bookings.guestActivationSentAt)
+          )
         )
-      )
-      .returning({ id: main.bookings.id })
-    return claimed.length > 0
-  })
+        .returning({ id: main.bookings.id })
+      if (claimed.length === 0) {
+        throw new ActivationClaimSkip()
+      }
+      await ctx.emit({
+        entity: "booking",
+        action: "claimed",
+        entityId: bookingId,
+        payload: { guestActivationSend: true },
+      })
+      return true
+    })
+  } catch (err) {
+    if (err instanceof ActivationClaimSkip) return false
+    throw err
+  }
 }
 
 async function findOrCreateUser(input: { email: string; name: string }) {

@@ -76,13 +76,17 @@ function readPublicApiBaseUrl(): ApiBaseUrlResult {
   ) {
     return { url: "<API_BASE_URL not set>", invalid: true }
   }
-  return { url: apiBaseUrl.replace(/\/+$/, ""), invalid: false }
+  const url = apiBaseUrl.replace(/\/+$/, "")
+  if (!url.startsWith("https://")) {
+    return { url, invalid: true }
+  }
+  return { url, invalid: false }
 }
 
 function explainMissingApiBaseUrl(): void {
   console.error(
-    "\n[qstash] API_BASE_URL must be set to a publicly reachable URL.\n" +
-      "  QStash is a cloud service and cannot call localhost.\n\n" +
+    "\n[qstash] API_BASE_URL must be set to a publicly reachable HTTPS URL.\n" +
+      "  QStash is a cloud service and cannot call localhost or plain HTTP.\n\n" +
       "  Examples:\n" +
       "    API_BASE_URL=https://api.eleva.care pnpm qstash:setup           # production\n" +
       "    API_BASE_URL=https://staging-api.eleva.care pnpm qstash:setup   # staging\n" +
