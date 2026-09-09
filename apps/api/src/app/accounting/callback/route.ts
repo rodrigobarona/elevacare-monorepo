@@ -10,6 +10,14 @@ import {
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { withAudit } from "@eleva/audit"
 import { env, resolveGatewayUrl } from "@eleva/config/env"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 function onboardingUrl(
   query: string,
@@ -47,6 +55,12 @@ export async function GET(request: Request) {
   if (!session) {
     return NextResponse.redirect(new URL(LOGIN_PATH, appUrl))
   }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
 
   const url = new URL(request.url)
   const code = url.searchParams.get("code")

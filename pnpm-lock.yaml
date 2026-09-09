@@ -879,6 +879,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@eleva/api-client':
+        specifier: workspace:*
+        version: link:../../packages/api-client
       '@eleva/auth':
         specifier: workspace:^
         version: link:../../packages/auth

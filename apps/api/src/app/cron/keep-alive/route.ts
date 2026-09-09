@@ -3,6 +3,13 @@ import { NextResponse } from "next/server"
 import { pingAuditDb, pingMainDb } from "@eleva/db"
 import { requireCronSecret } from "@eleva/config/env"
 import { heartbeat } from "@eleva/observability"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "internal",
+  rateLimit: false,
+  botId: false,
+} as const satisfies RoutePolicy
 
 /**
  * Daily liveness check for the Neon main + audit databases.

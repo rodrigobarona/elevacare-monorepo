@@ -84,6 +84,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm check:api-first-actions
+      - run: pnpm check:route-guards
 
   typecheck:
     name: Typecheck

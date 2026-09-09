@@ -7,6 +7,13 @@ import {
   publicOptions,
 } from "@/lib/public-marketplace"
 import { secureJson } from "@/lib/security-headers"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "public",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

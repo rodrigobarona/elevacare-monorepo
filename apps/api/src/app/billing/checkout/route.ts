@@ -12,6 +12,13 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: true,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -50,9 +57,12 @@ export async function POST(request: Request): Promise<Response> {
     )
   }
 
-  const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
-  if (botVerdict?.isBot) {
-    return secureJson({ error: "blocked" }, { status: 403, headers })
+  const isBearer = request.headers.get("authorization")?.startsWith("Bearer ")
+  if (!isBearer) {
+    const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+    if (botVerdict?.isBot) {
+      return secureJson({ error: "blocked" }, { status: 403, headers })
+    }
   }
 
   const rateLimited = await applyRateLimit(

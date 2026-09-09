@@ -1,6 +1,13 @@
 import { detectStuckStripeEvents } from "@eleva/workflows/drainers"
 import { corsHeaders } from "@/lib/cors"
 import { secureJson } from "@/lib/security-headers"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "internal",
+  rateLimit: false,
+  botId: false,
+} as const satisfies RoutePolicy
 
 /**
  * POST /workflows/stripe-stuck-events

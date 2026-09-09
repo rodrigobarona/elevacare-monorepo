@@ -5,6 +5,7 @@
   },
   "nav": {
     "about": "Sobre",
+    "experts": "Especialistas",
     "home": "Início",
     "login": "Entrar",
     "getStarted": "Começar agora",
@@ -53,6 +54,63 @@
     "ctaHeading": "Pronta para começar?",
     "ctaDescription": "Encontre a especialista certa para o seu percurso de saúde — demora apenas um minuto.",
     "cta": "Encontrar especialista"
+  },
+  "experts": {
+    "title": "Encontrar especialista — Eleva.care",
+    "categoryTitle": "Especialistas em {category} — Eleva.care",
+    "description": "Explore especialistas verificadas em saúde da mulher, ofertas e disponibilidade na sua língua e país.",
+    "eyebrow": "Marketplace",
+    "heading": "Encontrar especialista",
+    "categoryHeading": "{category}",
+    "intro": "Filtre por idioma e ordene por preço ou avaliação. As membros escolhem como querem reunir-se na página da especialista.",
+    "empty": "Ainda não há especialistas com estes filtros.",
+    "filterError": "Esses filtros não são válidos. Repor e tentar novamente.",
+    "resetFilters": "Repor filtros",
+    "loadError": "O diretório de especialistas está indisponível. Tente novamente em breve.",
+    "fromPrice": "A partir de {price}",
+    "priceOnRequest": "Preço sob consulta",
+    "topExpert": "Especialista em destaque",
+    "categories": {
+      "psychology": "Psicologia",
+      "nutrition": "Nutrição",
+      "physiotherapy": "Fisioterapia",
+      "midwifery": "Parteira",
+      "pelvic-health": "Saúde pélvica",
+      "lactation": "Lactação",
+      "fertility": "Fertilidade",
+      "mental-health-coaching": "Coaching de saúde mental",
+      "wellness": "Bem-estar"
+    },
+    "nextPage": "Página seguinte",
+    "filters": {
+      "language": "Idioma",
+      "anyLanguage": "Qualquer idioma",
+      "sort": "Ordenar",
+      "apply": "Aplicar filtros"
+    },
+    "languages": {
+      "pt": "Português",
+      "en": "Inglês",
+      "es": "Espanhol"
+    },
+    "sort": {
+      "relevance": "Relevância",
+      "price": "Preço",
+      "rating": "Avaliação"
+    }
+  },
+  "profile": {
+    "title": "{name} — Eleva.care",
+    "description": "Veja ofertas e disponibilidade de {name} na Eleva.care.",
+    "upcoming": "Disponibilidade próxima",
+    "noSlots": "Sem horários nas próximas duas semanas.",
+    "offers": "Ofertas",
+    "offerMeta": "{duration} min · a partir de {price} · {modes}",
+    "modes": {
+      "online": "vídeo",
+      "in_person": "presencial",
+      "phone": "telefone"
+    }
   },
   "footer": {
     "rights": "© {year} Eleva.care. Todos os direitos reservados."

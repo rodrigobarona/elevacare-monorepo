@@ -1,6 +1,13 @@
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "public",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
