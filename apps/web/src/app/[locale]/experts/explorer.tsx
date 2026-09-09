@@ -33,6 +33,7 @@ export async function Explorer({
     []
   let nextCursor: string | null = null
   let loadError = false
+  let filterError = false
 
   try {
     const result = await api.public.listExperts({
@@ -44,7 +45,9 @@ export async function Explorer({
     experts = result.experts
     nextCursor = result.nextCursor
   } catch (error) {
-    if (!(error instanceof ApiClientError && error.status === 422)) {
+    if (error instanceof ApiClientError && error.status === 422) {
+      filterError = true
+    } else {
       loadError = true
     }
   }
@@ -128,7 +131,16 @@ export async function Explorer({
           <p className="mt-10 text-sm text-destructive">{t("loadError")}</p>
         ) : null}
 
-        {!loadError && experts.length === 0 ? (
+        {filterError ? (
+          <p className="mt-10 text-sm text-muted-foreground">
+            {t("filterError")}{" "}
+            <Link href={basePath} className="font-medium text-primary">
+              {t("resetFilters")}
+            </Link>
+          </p>
+        ) : null}
+
+        {!loadError && !filterError && experts.length === 0 ? (
           <p className="mt-10 text-sm text-muted-foreground">{t("empty")}</p>
         ) : null}
 

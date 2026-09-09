@@ -6,7 +6,7 @@ import { localePath } from "@/lib/hreflang"
 const PATHS = ["/", "/about", "/experts"] as const
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const origin = resolveGatewayUrl()
+  const origin = resolveGatewayUrl().replace(/\/+$/, "")
   return PATHS.flatMap((pathname) =>
     locales.map((locale) => ({
       url: `${origin}${localePath(locale, pathname)}`,
