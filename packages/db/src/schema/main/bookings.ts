@@ -398,6 +398,8 @@ export const bookingPayments = pgTable(
   },
   (t) => ({
     orgIdx: index("booking_payments_org_idx").on(t.orgId),
+    // One payment row per booking. 04.2 /payments/intent retries UPDATE this
+    // row via stripe_idempotency_key; they do not insert a second attempt.
     bookingKey: unique("booking_payments_booking_id_key").on(t.bookingId),
     stripePiIdx: uniqueIndex("booking_payments_stripe_pi_idx")
       .on(t.stripePaymentIntentId)

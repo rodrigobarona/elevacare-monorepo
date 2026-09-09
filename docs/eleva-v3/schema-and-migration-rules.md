@@ -156,6 +156,8 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `calendar_destinations`     | tenant-owned                              |
 | `slot_reservations`         | tenant-owned                              |
 | `bookings`                  | dual-organization                         |
+| `booking_payments`          | tenant-owned                              |
+| `consents`                  | tenant-owned                              |
 | `sessions`                  | participant-visible                       |
 | `billing_customers`         | tenant-owned                              |
 | `billing_subscriptions`     | tenant-owned                              |

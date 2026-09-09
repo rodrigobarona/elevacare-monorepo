@@ -51,6 +51,7 @@ describe("migration journal helpers", () => {
     const sql = last?.statements.join("\n") ?? ""
     expect(sql).toContain("btree_gist")
     expect(sql).toContain("slot_reservations_no_overlap")
+    expect(sql).toContain(`SET "status" = 'expired'`)
     expect(sql).toContain("counterparty_org_id")
     expect(sql).toContain("bookings_counterparty_org_idx")
     expect(sql).toContain("bookings_price_amount_match")

@@ -87,11 +87,37 @@ ALTER TABLE "slot_reservations" ADD CONSTRAINT "slot_reservations_mode_fk"
   REFERENCES "event_type_modes"("org_id", "id")
   ON DELETE RESTRICT;
 --> statement-breakpoint
-ALTER TABLE "slot_reservations" ADD CONSTRAINT "slot_reservations_no_overlap"
-  EXCLUDE USING gist (
-    expert_user_id WITH =,
-    tstzrange(starts_at, ends_at, '[)') WITH &&
-  ) WHERE (status IN ('active', 'converted'));
+UPDATE "slot_reservations"
+SET "status" = 'expired'
+WHERE "status" = 'active'
+  AND "expires_at" <= now();
+--> statement-breakpoint
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM "slot_reservations" a
+    JOIN "slot_reservations" b
+      ON a.expert_user_id = b.expert_user_id
+     AND a.id < b.id
+     AND a.status IN ('active', 'converted')
+     AND b.status IN ('active', 'converted')
+     AND tstzrange(a.starts_at, a.ends_at, '[)') && tstzrange(b.starts_at, b.ends_at, '[)')
+  ) THEN
+    RAISE EXCEPTION 'overlapping active/converted slot_reservations remain; resolve before 0028 exclusion';
+  END IF;
+END $$;
+--> statement-breakpoint
+DO $$
+BEGIN
+  ALTER TABLE "slot_reservations" ADD CONSTRAINT "slot_reservations_no_overlap"
+    EXCLUDE USING gist (
+      expert_user_id WITH =,
+      tstzrange(starts_at, ends_at, '[)') WITH &&
+    ) WHERE (status IN ('active', 'converted'));
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD COLUMN "reservation_id" uuid;
 --> statement-breakpoint
