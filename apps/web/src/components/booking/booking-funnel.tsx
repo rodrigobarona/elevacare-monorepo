@@ -171,7 +171,9 @@ export function BookingFunnel({
   useEffect(() => {
     if (!selectedMode) return
     const from = startOfMonth(month)
-    const to = new Date(addMonths(month, 1).getTime() + 24 * 60 * 60 * 1000)
+    const nextMonthPlusDay = addMonths(month, 1).getTime() + 24 * 60 * 60 * 1000
+    const maxRange = from.getTime() + 31 * 24 * 60 * 60 * 1000
+    const to = new Date(Math.min(nextMonthPlusDay, maxRange))
     const api = createPublicApiClient()
     const key = `${selectedMode.id}:${month.toISOString()}:${timeZone}`
     let cancelled = false

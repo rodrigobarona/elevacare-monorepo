@@ -35,6 +35,10 @@ test.describe("phase 04 shipped surfaces", () => {
   test("explorer lists a seeded expert and opens the profile", async ({
     page,
   }) => {
+    test.skip(
+      process.env.CI === "true" && !process.env.DATABASE_URL,
+      "e2e-smoke has no DATABASE_URL"
+    )
     const list = await page.goto("/experts")
     expect(list?.status()).toBe(200)
     const card = page.locator(
@@ -60,6 +64,14 @@ test.describe("phase 04 live Stripe booking", () => {
   )
   test("pays a seeded paid offer with test card 4242", async ({ page }) => {
     test.setTimeout(120_000)
+    test.skip(
+      !process.env.STRIPE_PMC_BOOKING,
+      "set STRIPE_PMC_BOOKING before creating a live hold"
+    )
+    test.skip(
+      !process.env.CONSENT_HASH_KEY || process.env.CONSENT_HASH_KEY.length < 32,
+      "set CONSENT_HASH_KEY (32+ chars) before creating a live hold"
+    )
     const book = await page.goto("/fisiomota/first-visit")
     test.skip(book?.status() !== 200, "needs seeded fisiomota / first-visit")
 
