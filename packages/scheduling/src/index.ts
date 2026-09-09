@@ -30,6 +30,7 @@ export {
   reserveSlot,
   releaseReservation,
   convertReservation,
+  isRedisSlotLockDisabled,
 } from "./reserve-slot"
 export {
   reserveBooking,

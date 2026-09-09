@@ -13,6 +13,17 @@ import type { ReserveSlotInput, ReserveSlotResult } from "./types"
 
 const DEFAULT_TTL_SECONDS = 300
 
+/**
+ * Test-only escape hatch so the exclusion constraint can be proven
+ * without Redis SET NX. Honored only when NODE_ENV is "test".
+ */
+export function isRedisSlotLockDisabled(): boolean {
+  return (
+    process.env.NODE_ENV === "test" &&
+    process.env.SCHEDULING_DISABLE_REDIS_LOCK === "1"
+  )
+}
+
 function slotKey(expertProfileId: string, startsAtIso: string): string {
   return `slot:${expertProfileId}:${startsAtIso}`
 }
@@ -73,14 +84,17 @@ export async function reserveSlot(
     .digest("hex")
 
   const key = slotKey(expertProfileId, startsAt.toISOString())
+  const skipRedisLock = isRedisSlotLockDisabled()
 
-  const acquired = await redis.set(key, holdToken, {
-    nx: true,
-    ex: ttlSeconds,
-  })
+  if (!skipRedisLock) {
+    const acquired = await redis.set(key, holdToken, {
+      nx: true,
+      ex: ttlSeconds,
+    })
 
-  if (!acquired) {
-    return { success: false, error: "slot_taken" }
+    if (!acquired) {
+      return { success: false, error: "slot_taken" }
+    }
   }
 
   try {
