@@ -6,9 +6,10 @@ export const RLS_TEST_ROLE = "eleva_rls_test"
 export async function provisionRlsTestRole(client: PoolClient): Promise<void> {
   await client.query(`
     DO $$ BEGIN
-      IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${RLS_TEST_ROLE}') THEN
-        CREATE ROLE ${RLS_TEST_ROLE} NOINHERIT NOBYPASSRLS NOSUPERUSER NOLOGIN;
-      END IF;
+      CREATE ROLE ${RLS_TEST_ROLE} NOINHERIT NOBYPASSRLS NOSUPERUSER NOLOGIN;
+    EXCEPTION
+      WHEN duplicate_object THEN NULL;
+      WHEN unique_violation THEN NULL;
     END $$;
   `)
   await client.query(`GRANT ${RLS_TEST_ROLE} TO CURRENT_USER`)
