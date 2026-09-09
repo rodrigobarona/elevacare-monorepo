@@ -80,6 +80,34 @@ describe("createGatewayProxy integration", () => {
     }
   })
 
+  it("301s retired /pt-BR paths to /pt and preserves the query (D-01)", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(
+      makeRequest("/pt-BR/experts", { search: "?sort=price" })
+    )
+    expect(intl).not.toHaveBeenCalled()
+    expect(res.status).toBe(301)
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/pt/experts?sort=price"
+    )
+  })
+
+  it("301s bare /pt-BR to /pt before zone dispatch", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(makeRequest("/pt-BR"))
+    expect(intl).not.toHaveBeenCalled()
+    expect(res.status).toBe(301)
+    expect(res.headers.get("location")).toBe("http://localhost:3000/pt")
+  })
+
   it("falls through to intl middleware for marketing paths", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,

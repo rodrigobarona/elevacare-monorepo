@@ -10,6 +10,7 @@ import {
   getLocaleCookieDomain,
   getLocaleCookieOptions,
   normalizeLocale,
+  rewriteRetiredLocalePath,
   resolveLocaleFromHeaders,
 } from "./i18n"
 
@@ -48,6 +49,21 @@ describe("i18n config", () => {
     expect(isLocale("es")).toBe(true)
     expect(isLocale("it")).toBe(false)
     expect(isLocale("")).toBe(false)
+  })
+
+  it("rewrites retired pt-BR prefixes to pt (D-01)", () => {
+    expect(rewriteRetiredLocalePath("/pt-BR")).toBe("/pt")
+    expect(rewriteRetiredLocalePath("/pt-BR/")).toBe("/pt/")
+    expect(rewriteRetiredLocalePath("/pt-BR/experts")).toBe("/pt/experts")
+    expect(rewriteRetiredLocalePath("/pt-br/experts/fisioterapia")).toBe(
+      "/pt/experts/fisioterapia"
+    )
+    expect(rewriteRetiredLocalePath("/PT-BR/about")).toBe("/pt/about")
+    expect(rewriteRetiredLocalePath("/pt")).toBeNull()
+    expect(rewriteRetiredLocalePath("/pt/experts")).toBeNull()
+    expect(rewriteRetiredLocalePath("/en/pt-BR")).toBeNull()
+    expect(rewriteRetiredLocalePath("/pt-brazil")).toBeNull()
+    expect(rewriteRetiredLocalePath("/experts")).toBeNull()
   })
 
   it("normalizes region-specific locale values", () => {

@@ -5,6 +5,7 @@ import {
   orgSlugNeedingTypeLookup,
 } from "@eleva/auth/org-routing"
 import { resolveDispatch, type GatewayOrigins } from "@eleva/config/dispatch"
+import { rewriteRetiredLocalePath } from "@eleva/config/i18n"
 import {
   buildAdminRedirect,
   buildLoginRedirect,
@@ -48,6 +49,13 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
 
   return async function gatewayProxy(request: NextRequest) {
     const { pathname } = request.nextUrl
+    const retiredPath = rewriteRetiredLocalePath(pathname)
+    if (retiredPath) {
+      const destination = request.nextUrl.clone()
+      destination.pathname = retiredPath
+      return NextResponse.redirect(destination, 301)
+    }
+
     const hasSession = SESSION_COOKIE_NAMES.some((name) =>
       request.cookies.has(name)
     )
