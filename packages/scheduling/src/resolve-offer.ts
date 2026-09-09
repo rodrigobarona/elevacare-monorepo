@@ -82,6 +82,9 @@ export function composeResolvedOffer(input: {
   if (mode.orgId !== orgId || mode.eventTypeId !== eventType.id) {
     return { ok: false, error: "not_found" }
   }
+  if (!mode.active) {
+    return { ok: false, error: "not_found" }
+  }
 
   if (link) {
     if (link.orgId !== orgId || link.eventTypeId !== eventType.id) {

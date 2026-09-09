@@ -440,8 +440,8 @@ export const ListPublicExpertsQuerySchema = z
       .string()
       .regex(/^[a-z]{2}$/)
       .optional(),
-    minPrice: z.coerce.number().int().min(0).optional(),
-    maxPrice: z.coerce.number().int().min(0).optional(),
+    minPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
+    maxPrice: z.coerce.number().int().min(0).max(100_000_000).optional(),
     sort: z.enum(["relevance", "price", "rating"]).optional(),
     cursor: z.string().min(1).max(200).optional(),
   })

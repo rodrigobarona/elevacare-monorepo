@@ -11,6 +11,7 @@ import {
   CreateAccountSessionResponseSchema,
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
+  CreateEventTypeRequestSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -648,28 +649,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  slug: z.string().optional(),
-                  title: LocalizedTextSchema,
-                  description: LocalizedTextSchema.nullish(),
-                  durationMinutes: z.number().int().positive(),
-                  priceAmount: z.number().nonnegative(),
-                  currency: z.string().min(3).max(3),
-                  languages: z.array(z.string()),
-                  sessionMode: z.enum(["online", "in_person", "phone"]),
-                  bookingWindowDays: z.number().int().positive().nullish(),
-                  minimumNoticeMinutes: z.number().int().nonnegative(),
-                  bufferBeforeMinutes: z.number().int().nonnegative(),
-                  bufferAfterMinutes: z.number().int().nonnegative(),
-                  cancellationWindowHours: z
-                    .number()
-                    .int()
-                    .positive()
-                    .nullish(),
-                  rescheduleWindowHours: z.number().int().positive().nullish(),
-                  requiresApproval: z.boolean(),
-                  worldwideMode: z.boolean(),
-                }),
+                schema: CreateEventTypeRequestSchema,
               },
             },
           },

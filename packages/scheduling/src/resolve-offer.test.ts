@@ -48,6 +48,17 @@ function link(overrides: Partial<OfferLinkRow> = {}): OfferLinkRow {
 }
 
 describe("composeResolvedOffer", () => {
+  it("returns not_found for an inactive mode", () => {
+    expect(
+      composeResolvedOffer({
+        orgId: "org-1",
+        mode: { ...mode, active: false },
+        eventType,
+        now,
+      })
+    ).toEqual({ ok: false, error: "not_found" })
+  })
+
   it("uses mode schedule, price, and duration when no link is present", () => {
     const result = composeResolvedOffer({
       orgId: "org-1",
