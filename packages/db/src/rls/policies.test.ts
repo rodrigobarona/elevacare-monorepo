@@ -33,6 +33,32 @@ describe("buildMainRlsStatements", () => {
     }
   })
 
+  it("keeps dual-organization writes on org_id and SELECT on counterparty", () => {
+    const write = stmts.find((s) =>
+      s.startsWith("CREATE POLICY bookings_tenant_isolation")
+    )
+    const read = stmts.find((s) =>
+      s.startsWith("CREATE POLICY bookings_counterparty_read")
+    )
+    expect(write).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+    expect(write).not.toContain("counterparty_org_id")
+    expect(read).toContain("FOR SELECT")
+    expect(read).toContain(
+      "counterparty_org_id::text = current_setting('eleva.org_id', true)"
+    )
+  })
+
+  it("omits the counterparty predicate for non-dual tables", () => {
+    for (const table of TENANT_TABLES.filter((t) => t !== "bookings")) {
+      const policy = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
+      )
+      expect(policy).not.toContain("counterparty_org_id")
+    }
+  })
+
   it("includes platform_admin bypass for expert_profiles", () => {
     const policy = stmts.find((s) =>
       s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")

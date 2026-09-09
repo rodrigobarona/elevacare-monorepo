@@ -173,6 +173,7 @@ export const bookingLinks = pgTable(
   },
   (t) => ({
     orgIdx: index("booking_links_org_idx").on(t.orgId),
+    orgIdKey: unique("booking_links_org_id_id_key").on(t.orgId, t.id),
     tokenIdx: uniqueIndex("booking_links_token_hash_idx").on(t.tokenHash),
     maxUsesChk: check("booking_links_max_uses", sql`max_uses >= 1`),
     useCountChk: check(

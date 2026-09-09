@@ -1,3 +1,4 @@
+import { createHash, randomBytes } from "node:crypto"
 import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withOrgContext, type Tx } from "@eleva/db/context"
@@ -28,7 +29,7 @@ async function compareAndDelete(
  * lock to prevent concurrent double-booking, then writes the
  * slot_reservations row inside an RLS-scoped DB transaction.
  *
- * Returns { success: true, reservationId } on success.
+ * Returns { success: true, reservationId, reservationToken } on success.
  * Returns { success: false, error } when the slot is already taken
  * or a conflict exists.
  */
@@ -39,12 +40,20 @@ export async function reserveSlot(
   const {
     eventTypeId,
     expertProfileId,
+    expertUserId,
     orgId,
     startsAt,
     endsAt,
     holdToken,
     ttlSeconds = DEFAULT_TTL_SECONDS,
+    userId,
+    eventTypeModeId,
+    price,
   } = input
+  const reservationToken = randomBytes(32).toString("base64url")
+  const capabilityHash = createHash("sha256")
+    .update(reservationToken)
+    .digest("hex")
 
   const key = slotKey(expertProfileId, startsAt.toISOString())
 
@@ -59,6 +68,7 @@ export async function reserveSlot(
 
   try {
     const reservationId = await withOrgContext(orgId, async (tx: Tx) => {
+      await expireOverlappingHolds(tx, expertUserId, startsAt, endsAt)
       const conflict = await checkConflicts(
         tx,
         expertProfileId,
@@ -75,6 +85,12 @@ export async function reserveSlot(
           orgId,
           eventTypeId,
           expertProfileId,
+          expertUserId,
+          capabilityHash,
+          userId,
+          eventTypeModeId,
+          priceCents: price?.cents,
+          currency: price?.currency,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),
@@ -86,11 +102,11 @@ export async function reserveSlot(
       return row!.id
     })
 
-    return { success: true, reservationId }
+    return { success: true, reservationId, reservationToken }
   } catch (err) {
     await compareAndDelete(redis, key, holdToken)
 
-    if (err instanceof ConflictError) {
+    if (err instanceof ConflictError || isExclusionViolation(err)) {
       return { success: false, error: "conflict" }
     }
     return { success: false, error: "db_error" }
@@ -167,6 +183,32 @@ export async function convertReservation(
   })
 }
 
+/**
+ * Exclusion cannot use `expires_at > now()` (index predicates must be
+ * immutable). Move stale holds out of the constrained statuses in the
+ * same transaction so a new insert is not blocked by 23P01.
+ */
+async function expireOverlappingHolds(
+  tx: Tx,
+  expertUserId: string,
+  startsAt: Date,
+  endsAt: Date
+): Promise<void> {
+  const now = new Date()
+  await tx
+    .update(slotReservations)
+    .set({ status: "expired" })
+    .where(
+      and(
+        eq(slotReservations.expertUserId, expertUserId),
+        eq(slotReservations.status, "active"),
+        sql`${slotReservations.expiresAt} <= ${now}`,
+        sql`${slotReservations.startsAt} < ${endsAt}`,
+        sql`${slotReservations.endsAt} > ${startsAt}`
+      )
+    )
+}
+
 async function checkConflicts(
   tx: Tx,
   expertProfileId: string,
@@ -226,4 +268,13 @@ class ConflictError extends Error {
     super("slot_conflict")
     this.name = "ConflictError"
   }
+}
+
+function isExclusionViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    err.code === "23P01"
+  )
 }

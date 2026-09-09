@@ -197,6 +197,13 @@
       "when": 1779500000000,
       "tag": "0027_offer_model",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1779510000000,
+      "tag": "0028_booking_finalize",
+      "breakpoints": true
     }
   ]
 }

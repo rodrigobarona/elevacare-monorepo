@@ -107,7 +107,7 @@ read: `eleva.org_id`, `eleva.user_id`, `eleva.platform_admin`, and later `eleva.
 | Class                 | Predicate (canonical)                                                                                       | Who reads                                |
 | --------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
 | `tenant-owned`        | `org_id::text = current_setting('eleva.org_id', true)`                                                      | members of the active org                |
-| `dual-organization`   | `org_id` **or** `counterparty_org_id` matches `eleva.org_id`                                                | both sides of a booking                  |
+| `dual-organization`   | `SELECT`: `org_id` **or** `counterparty_org_id`. Writes: `org_id` only                                      | both sides of a booking may read         |
 | `owner-user-visible`  | `user_id::text = current_setting('eleva.user_id', true)` (plus org match when present)                      | the owning human                         |
 | `participant-visible` | exists a `session_participants` / booking participant row for `eleva.user_id`                               | session members                          |
 | `staff-only`          | `current_setting('eleva.platform_admin', true) = 'true'`                                                    | Eleva staff                              |
@@ -156,6 +156,8 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `calendar_destinations`     | tenant-owned                              |
 | `slot_reservations`         | tenant-owned                              |
 | `bookings`                  | dual-organization                         |
+| `booking_payments`          | tenant-owned                              |
+| `consents`                  | tenant-owned                              |
 | `sessions`                  | participant-visible                       |
 | `billing_customers`         | tenant-owned                              |
 | `billing_subscriptions`     | tenant-owned                              |

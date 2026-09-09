@@ -163,7 +163,8 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
         await client.query(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`)
         const predicate = classPredicateSql(fixture.class, table)
         const writePredicate =
-          fixture.class === "public-read"
+          fixture.class === "public-read" ||
+          fixture.class === "dual-organization"
             ? `org_id::text = current_setting('eleva.org_id', true)`
             : predicate
         await client.query(`DROP POLICY IF EXISTS ${policy} ON ${table}`)
@@ -231,6 +232,14 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
             await expectCount({ "eleva.org_id": orgA }, 1)
             await expectCount({ "eleva.org_id": orgB }, 1)
             await expectCount({ "eleva.org_id": randomUUID() }, 0)
+            await expect(
+              withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
+                await client.query(
+                  `INSERT INTO ${table} (id, org_id, counterparty_org_id) VALUES ($1, $2, $3)`,
+                  [randomUUID(), orgA, orgB]
+                )
+              })
+            ).rejects.toThrow()
             break
           case "owner-user-visible":
           case "participant-visible":

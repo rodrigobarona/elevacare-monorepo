@@ -26,6 +26,11 @@ vi.mock("@eleva/db/context", () => {
         },
       }),
     }),
+    update: () => ({
+      set: () => ({
+        where: () => Promise.resolve([]),
+      }),
+    }),
   }
 
   return {
@@ -43,6 +48,7 @@ vi.mock("@eleva/db/schema", () => ({
     orgId: "org_id",
     eventTypeId: "event_type_id",
     expertProfileId: "expert_profile_id",
+    expertUserId: "expert_user_id",
     startsAt: "starts_at",
     endsAt: "ends_at",
     expiresAt: "expires_at",
@@ -120,6 +126,7 @@ describe("reserveSlot — concurrent reservation race", () => {
       reserveSlot(redis, {
         eventTypeId: "evt-type-1",
         expertProfileId: "expert-1",
+        expertUserId: "user-1",
         orgId: "org-1",
         startsAt: slotStart,
         endsAt: slotEnd,
@@ -138,6 +145,7 @@ describe("reserveSlot — concurrent reservation race", () => {
 
     expect(winners[0]!.reservationId).toBeDefined()
     expect(winners[0]!.reservationId).toMatch(/^reservation-/)
+    expect(winners[0]!.reservationToken).toMatch(/^[A-Za-z0-9_-]{43}$/)
 
     for (const loser of losers) {
       expect(loser.error).toBe("slot_taken")
@@ -153,6 +161,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const slot1 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: new Date("2026-06-15T10:00:00Z"),
       endsAt: new Date("2026-06-15T11:00:00Z"),
@@ -163,6 +172,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const slot2 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: new Date("2026-06-15T14:00:00Z"),
       endsAt: new Date("2026-06-15T15:00:00Z"),
@@ -186,6 +196,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const expert1 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-1",
+      expertUserId: "user-1",
       orgId: "org-1",
       startsAt: slotStart,
       endsAt: slotEnd,
@@ -196,6 +207,7 @@ describe("reserveSlot — concurrent reservation race", () => {
     const expert2 = reserveSlot(redis, {
       eventTypeId: "evt-type-1",
       expertProfileId: "expert-2",
+      expertUserId: "user-2",
       orgId: "org-1",
       startsAt: slotStart,
       endsAt: slotEnd,

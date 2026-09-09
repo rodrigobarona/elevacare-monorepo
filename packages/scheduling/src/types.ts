@@ -39,15 +39,19 @@ export interface GetAvailableSlotsInput {
 export interface ReserveSlotInput {
   eventTypeId: string
   expertProfileId: string
+  expertUserId: string
   orgId: string
   startsAt: Date
   endsAt: Date
   holdToken: string
   ttlSeconds?: number
+  userId?: string
+  eventTypeModeId?: string
+  price?: { cents: number; currency: "EUR" }
 }
 
 export type ReserveSlotResult =
-  | { success: true; reservationId: string }
+  | { success: true; reservationId: string; reservationToken: string }
   | { success: false; error: "slot_taken" | "conflict" | "db_error" }
 
 export interface BookingRuleCheck {
