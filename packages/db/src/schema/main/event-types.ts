@@ -5,6 +5,7 @@ import {
   index,
   integer,
   jsonb,
+  pgEnum,
   pgPolicy,
   pgTable,
   text,
@@ -23,6 +24,17 @@ import {
 import { organization } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
 import { schedules } from "./schedules"
+
+export const eventTypeKindEnum = pgEnum("event_type_kind", [
+  "clinical",
+  "non_clinical",
+])
+
+export const eventTypeVisibilityEnum = pgEnum("event_type_visibility", [
+  "public",
+  "unlisted",
+  "private",
+])
 
 /**
  * Bookable service definition. Each expert publishes one or more event
@@ -62,6 +74,10 @@ export const eventTypes = pgTable(
       .notNull()
       .$defaultFn(() => []),
     sessionMode: sessionModeEnum("session_mode").notNull().default("online"),
+    kind: eventTypeKindEnum("kind").notNull().default("non_clinical"),
+    visibility: eventTypeVisibilityEnum("visibility")
+      .notNull()
+      .default("public"),
 
     bookingWindowDays: integer("booking_window_days"),
     minimumNoticeMinutes: integer("minimum_notice_minutes")
@@ -87,6 +103,7 @@ export const eventTypes = pgTable(
       .on(t.expertProfileId, t.slug)
       .where(sql`deleted_at IS NULL`),
     orgIdx: index("event_types_org_idx").on(t.orgId),
+    orgIdKey: uniqueIndex("event_types_org_id_id_key").on(t.orgId, t.id),
     expertIdx: index("event_types_expert_idx").on(t.expertProfileId),
     publishedIdx: index("event_types_published_idx").on(t.published, t.active),
     slugFormatChk: check(
@@ -98,10 +115,7 @@ export const eventTypes = pgTable(
       sql`duration_minutes > 0`
     ),
     priceChk: check("event_types_price_non_negative", sql`price_amount >= 0`),
-    currencyChk: check(
-      "event_types_currency_iso",
-      sql`currency = upper(currency) AND length(currency) = 3`
-    ),
+    currencyChk: check("event_types_currency_eur", sql`currency = 'EUR'`),
     windowsChk: check(
       "event_types_windows_non_negative",
       sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (cancellation_window_hours IS NULL OR cancellation_window_hours >= 0) AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`

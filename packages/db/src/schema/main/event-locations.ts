@@ -39,9 +39,14 @@ export const expertPracticeLocations = pgTable(
 
     name: varchar("name", { length: 200 }).notNull(),
     address: text("address").notNull(),
+    line2: varchar("line2", { length: 200 }),
     city: varchar("city", { length: 100 }).notNull(),
+    region: varchar("region", { length: 100 }),
     country: varchar("country", { length: 2 }).notNull(),
     postalCode: varchar("postal_code", { length: 20 }),
+    timezone: varchar("timezone", { length: 64 }),
+    instructions: jsonb("instructions").$type<LocalizedText>(),
+    active: boolean("active").notNull().default(true),
 
     latitude: doublePrecision("latitude"),
     longitude: doublePrecision("longitude"),
@@ -52,6 +57,10 @@ export const expertPracticeLocations = pgTable(
   },
   (t) => ({
     orgIdx: index("expert_practice_locations_org_idx").on(t.orgId),
+    orgIdKey: uniqueIndex("expert_practice_locations_org_id_id_key").on(
+      t.orgId,
+      t.id
+    ),
     expertIdx: index("expert_practice_locations_expert_idx").on(
       t.expertProfileId
     ),

@@ -24,8 +24,9 @@ export type RlsTableAssignment = {
   /** INSERT / WITH CHECK class. Also the SELECT class unless `selectClass` is set. */
   class: RlsPolicyClass
   /**
-   * SELECT / USING class when it differs from writes. `audit_events` is the
-   * only split: tenant-owned reads, service-only inserts. Not an eighth class.
+   * SELECT / USING class when it differs from writes. Two splits today:
+   * `audit_events` (tenant-owned reads, service-only inserts) and
+   * `public_handles` (public-read SELECT, staff-only writes). Not an eighth class.
    */
   selectClass?: RlsPolicyClass
 }
@@ -40,6 +41,14 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "availability_rules", class: "tenant-owned" },
   { table: "date_overrides", class: "tenant-owned" },
   { table: "event_types", class: "tenant-owned" },
+  { table: "event_type_modes", class: "tenant-owned" },
+  { table: "booking_links", class: "tenant-owned" },
+  { table: "calendar_feed_tokens", class: "tenant-owned" },
+  {
+    table: "public_handles",
+    class: "staff-only",
+    selectClass: "public-read",
+  },
   { table: "expert_practice_locations", class: "tenant-owned" },
   { table: "event_locations", class: "tenant-owned" },
   { table: "calendar_busy_sources", class: "tenant-owned" },
@@ -67,8 +76,9 @@ export type RlsClassFixture = {
 }
 
 /**
- * One fixture per class. Classes with a current table use that table.
- * `staff-only` has no table yet — the suite creates `_rls_fixture_staff_only`.
+ * One fixture per class. Classes with a current un-split table use that
+ * table. Split-predicate tables (`public_handles`, `audit_events`) cannot
+ * prove a single class, so `staff-only` stays on `_rls_fixture_staff_only`.
  * FK-heavy tables (`bookings`, `sessions`, `expert_listings`) still get a
  * real-table existence check; their predicate is proven on a same-shape
  * synthetic table so the suite does not have to seed the full booking graph.

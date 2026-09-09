@@ -111,16 +111,36 @@ export const expertProfiles = pgTable(
     avatarUrl: text("avatar_url"),
 
     /** ISO-639-1 codes (e.g., 'pt', 'en', 'es'). */
-    languages: text("languages")
-      .array()
-      .notNull()
-      .$defaultFn(() => []),
+    languages: text("languages").array().notNull().default(["en"]),
 
-    /** ISO-3166-1 alpha-2 codes (e.g., 'PT', 'ES', 'BR'). */
+    /**
+     * Authoritative ISO-3166-1 alpha-2 practice country (D-02).
+     * `practiceCountries` is the pre-04.1 array and stays until 04.1b.
+     */
+    practiceCountry: varchar("practice_country", { length: 2 })
+      .notNull()
+      .default("PT"),
+
+    /** Legacy multi-country list. Prefer `practiceCountry` + `serviceCountries`. */
     practiceCountries: text("practice_countries")
       .array()
       .notNull()
       .$defaultFn(() => []),
+
+    /** Countries this expert may serve; must include practice_country. */
+    serviceCountries: text("service_countries")
+      .array()
+      .notNull()
+      .default(["PT"]),
+
+    /**
+     * Authoritative worldwide-remote flag for offer invariants.
+     * `worldwideMode` below is the pre-04.1 column and stays writable
+     * until 04.1b drops it after data has moved here.
+     */
+    worldwideRemote: boolean("worldwide_remote").notNull().default(false),
+
+    acceptingBookings: boolean("accepting_bookings").notNull().default(true),
 
     /** Free-form license scope (e.g., "OPP 12345"). Validated by admin. */
     licenseScope: text("license_scope"),
@@ -195,6 +215,7 @@ export const expertProfiles = pgTable(
       .on(t.userId, t.orgId)
       .where(sql`${t.deletedAt} IS NULL`),
     orgIdx: index("expert_profiles_org_idx").on(t.orgId),
+    orgIdKey: uniqueIndex("expert_profiles_org_id_id_key").on(t.orgId, t.id),
     userIdx: index("expert_profiles_user_idx").on(t.userId),
     statusIdx: index("expert_profiles_status_idx").on(t.status),
     searchIdx: index("expert_profiles_search_idx").using("gin", t.searchVector),
@@ -205,6 +226,23 @@ export const expertProfiles = pgTable(
     usernameFormatChk: check(
       "expert_profiles_username_format",
       sql`username ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND username NOT LIKE '%--%'`
+    ),
+    // 0027_offer_model backfills empty arrays to {en} before this CHECK.
+    languagesMinChk: check(
+      "expert_profiles_languages_min",
+      sql`cardinality(languages) >= 1`
+    ),
+    practiceCountryChk: check(
+      "expert_profiles_practice_country",
+      sql`practice_country ~ '^[A-Z]{2}$'`
+    ),
+    serviceContainsPracticeChk: check(
+      "expert_profiles_service_contains_practice",
+      sql`practice_country = ANY(service_countries)`
+    ),
+    serviceCountriesFormatChk: check(
+      "expert_profiles_service_countries_format",
+      sql`public.iso3166_alpha2_codes(service_countries)`
     ),
     tenantPolicy: pgPolicy("expert_profiles_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,

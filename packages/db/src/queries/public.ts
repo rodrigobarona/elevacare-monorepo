@@ -88,8 +88,8 @@ export interface PublicClinicProfile {
 export interface PublicCategory {
   id: string
   slug: string
-  displayName: main.LocalizedString
-  description: main.LocalizedString | null
+  displayName: main.LocalizedText
+  description: main.LocalizedText | null
   icon: string | null
   sortOrder: number
 }

@@ -32,7 +32,9 @@ describe("RLS class taxonomy", () => {
 
   it("uses a synthetic fixture only for classes with no current table", () => {
     const classesWithTables = new Set(
-      RLS_TABLE_ASSIGNMENTS.map((row) => row.class)
+      RLS_TABLE_ASSIGNMENTS.filter(
+        (row) => !row.selectClass || row.selectClass === row.class
+      ).map((row) => row.class)
     )
     for (const fixture of RLS_CLASS_FIXTURES) {
       if (classesWithTables.has(fixture.class)) {
@@ -79,6 +81,22 @@ describe("RLS class taxonomy", () => {
         expect(allowed.has(row.selectClass)).toBe(true)
       }
     }
+  })
+
+  it("keeps staff-only on a synthetic fixture because public_handles is split", () => {
+    const handles = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "public_handles"
+    )
+    expect(handles?.class).toBe("staff-only")
+    expect(handles?.selectClass).toBe("public-read")
+    const fixture = RLS_CLASS_FIXTURES.find(
+      (item) => item.class === "staff-only"
+    )
+    expect(fixture).toEqual({
+      class: "staff-only",
+      table: "_rls_fixture_staff_only",
+      synthetic: true,
+    })
   })
 
   it("models audit_events as tenant-owned SELECT and service-only INSERT", () => {

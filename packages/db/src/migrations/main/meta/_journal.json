@@ -190,6 +190,13 @@
       "when": 1779441000000,
       "tag": "0026_jwks_alg_crv",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1779500000000,
+      "tag": "0027_offer_model",
+      "breakpoints": true
     }
   ]
 }

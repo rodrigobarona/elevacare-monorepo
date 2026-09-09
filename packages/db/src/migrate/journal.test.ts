@@ -38,8 +38,14 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0026_jwks_alg_crv")
-    expect(last?.statements.length).toBeGreaterThan(0)
+    expect(last?.tag).toBe("0027_offer_model")
+    expect(last?.statements.length).toBeGreaterThan(10)
     expect(last?.hash).toHaveLength(64)
+    const sql = last?.statements.join("\n") ?? ""
+    expect(sql).toContain("public.iso3166_alpha2_codes")
+    expect(sql).not.toContain("SELECT 1 FROM unnest(service_countries)")
+    expect(sql).not.toContain(
+      `"country_scope_type" "country_scope_type" DEFAULT 'list'`
+    )
   })
 })
