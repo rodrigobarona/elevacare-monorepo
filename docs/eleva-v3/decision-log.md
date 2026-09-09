@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-09: Domain-events outbox for booking guest activation
+
+- Owner: engineering
+- Status: accepted
+- Summary: Phase 04.2d adds `domain_events_outbox` + `domain_event_deliveries`
+  (service-only, org-scoped writes plus `eleva.platform_admin` /
+  `eleva.service = 'domain_events_publisher'`). Confirm and the Stripe
+  `payment_intent.succeeded` webhook flip `pending_payment` → `confirmed`
+  and enqueue `booking.guest_activation_required`. The publisher claims
+  deliveries (`processing` + stale reclaim), runs subscribers outside the
+  claim transaction, and never stores guest email/name in the durable
+  payload. Guest activation reads contact fields from `bookings` under
+  `withOrgContext` and sends a Better Auth magic link once
+  (`guest_activation_sent_at`). Cancel/reschedule and refund execution
+  stay out of this slice.
+- Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md),
+  [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
+
 ### 2026-09-09: Remove internal `apps/poc` playground
 
 - Owner: engineering

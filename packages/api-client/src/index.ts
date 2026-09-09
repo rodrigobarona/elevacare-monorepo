@@ -622,6 +622,17 @@ export const CreatePaymentIntentResponseSchema = z.object({
   publishableKey: z.string().min(1),
 })
 
+export const ConfirmBookingRequestSchema = z.object({
+  reservationId: z.string().uuid(),
+  reservationToken: z.string().min(16).max(128),
+  paymentIntentId: z.string().min(1),
+})
+
+export const ConfirmBookingResponseSchema = z.object({
+  bookingId: z.string().uuid(),
+  alreadyConfirmed: z.boolean(),
+})
+
 export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
 export type ReserveBookingResponse = z.infer<
   typeof ReserveBookingResponseSchema
@@ -631,6 +642,10 @@ export type CreatePaymentIntentRequest = z.infer<
 >
 export type CreatePaymentIntentResponse = z.infer<
   typeof CreatePaymentIntentResponseSchema
+>
+export type ConfirmBookingRequest = z.infer<typeof ConfirmBookingRequestSchema>
+export type ConfirmBookingResponse = z.infer<
+  typeof ConfirmBookingResponseSchema
 >
 
 export interface SubCalendar {
@@ -1006,6 +1021,10 @@ export function createApiClient(options: ApiClientOptions) {
       async reserve(data: ReserveBookingRequest) {
         const raw = await request<unknown>("POST", "/bookings/reserve", data)
         return ReserveBookingResponseSchema.parse(raw)
+      },
+      async confirm(data: ConfirmBookingRequest) {
+        const raw = await request<unknown>("POST", "/bookings/confirm", data)
+        return ConfirmBookingResponseSchema.parse(raw)
       },
     },
 

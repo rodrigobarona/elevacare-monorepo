@@ -26,6 +26,8 @@ import {
   PublicSlotsResponseSchema,
   ReserveBookingRequestSchema,
   ReserveBookingResponseSchema,
+  ConfirmBookingRequestSchema,
+  ConfirmBookingResponseSchema,
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
   SetActiveOrganizationRequestSchema,
@@ -1304,6 +1306,57 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             ...stdPublicWithNotFound,
             "422": {
               description: "Invalid reservationId or reservationToken",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
+      "/bookings/confirm": {
+        post: {
+          operationId: "confirmBookingPayment",
+          summary: "Confirm a paid booking reservation",
+          description:
+            "Authorizes reservationToken like /payments/intent, retrieves the PaymentIntent from Stripe, and flips pending_payment → confirmed. First flip returns 201; retries return 200 with alreadyConfirmed. Mismatched intents return 409 PAYMENT_MISMATCH.",
+          tags: ["Bookings"],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: ConfirmBookingRequestSchema },
+            },
+          },
+          responses: {
+            ...stdPublicWithNotFound,
+            "201": {
+              description: "Booking confirmed",
+              content: {
+                "application/json": { schema: ConfirmBookingResponseSchema },
+              },
+            },
+            "200": {
+              description: "Already confirmed",
+              content: {
+                "application/json": { schema: ConfirmBookingResponseSchema },
+              },
+            },
+            "400": {
+              description: "Missing reservationToken or invalid body",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "PAYMENT_MISMATCH",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description: "Bot detected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "503": {
+              description: "Stripe retrieve unavailable",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description: "Confirmation write failed",
               content: { "application/json": { schema: ErrorSchema } },
             },
           },

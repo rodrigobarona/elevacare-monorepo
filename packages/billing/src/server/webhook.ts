@@ -4,7 +4,12 @@ import { z } from "zod"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { captureException } from "@eleva/observability"
+import {
+  confirmBookingPayment,
+  markBookingPaymentFailed,
+} from "@eleva/scheduling"
 import { stripe } from "./client"
+import { retrieveBookingPaymentIntent } from "./payments"
 
 /**
  * Stripe webhook processor (Phase 1 of stripe-foundation-review).
@@ -1268,15 +1273,47 @@ async function handlePaymentIntentEvent(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
   const intent = event.data.object as Stripe.PaymentIntent
-  const orgId =
-    orgIdFromMetadata(intent.metadata) ??
-    (intent.customer
-      ? await resolveOrgIdFromCustomer(
-          typeof intent.customer === "string"
-            ? intent.customer
-            : intent.customer.id
+  const reservationId = intent.metadata?.reservationId
+  if (reservationId && event.type === "payment_intent.succeeded") {
+    const confirmed = await confirmBookingPayment({
+      reservationId,
+      paymentIntentId: intent.id,
+      source: "webhook",
+      retrieveIntent: retrieveBookingPaymentIntent,
+    })
+    if (!confirmed.ok) {
+      if (confirmed.error === "not_found") {
+        await recordOrphanedPaidIntent({
+          intent,
+          reservationId,
+        })
+        throw new TerminalError(
+          `booking confirm not_found for intent ${intent.id}`
         )
-      : null)
+      }
+      if (confirmed.error === "payment_mismatch") {
+        throw new TerminalError(
+          `booking confirm payment_mismatch for intent ${intent.id}`
+        )
+      }
+      throw new Error(
+        `booking confirm failed (${confirmed.error}) for intent ${intent.id}`
+      )
+    }
+  }
+  if (reservationId && event.type === "payment_intent.payment_failed") {
+    const marked = await markBookingPaymentFailed({
+      paymentIntentId: intent.id,
+      reservationId,
+    })
+    if (!marked.ok) {
+      throw new Error(
+        `booking payment_failed mark failed for intent ${intent.id}`
+      )
+    }
+  }
+
+  const orgId = await resolvePaymentIntentOrgId(intent)
   if (!orgId) {
     return {
       kind: "ignored",
@@ -1406,6 +1443,48 @@ async function handleChargeDisputeCreated(
     })
   })
   return { kind: "handled", resolvedOrgId: orgId }
+}
+
+async function resolvePaymentIntentOrgId(
+  intent: Stripe.PaymentIntent
+): Promise<string | null> {
+  return (
+    orgIdFromMetadata(intent.metadata) ??
+    orgIdFromMetadata({
+      eleva_org_id: intent.metadata?.expertOrgId ?? "",
+    }) ??
+    (intent.customer
+      ? await resolveOrgIdFromCustomer(
+          typeof intent.customer === "string"
+            ? intent.customer
+            : intent.customer.id
+        )
+      : null)
+  )
+}
+
+async function recordOrphanedPaidIntent(input: {
+  intent: Stripe.PaymentIntent
+  reservationId: string
+}): Promise<void> {
+  const orgId = await resolvePaymentIntentOrgId(input.intent)
+  if (!orgId) {
+    throw new Error(
+      `orphaned paid intent ${input.intent.id} has no resolvable org`
+    )
+  }
+  await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
+    await ctx.emit({
+      entity: "booking_payment",
+      action: "rejected",
+      entityId: input.intent.id,
+      payload: {
+        code: "ORPHANED_PAID_INTENT",
+        paymentIntentId: input.intent.id,
+        reservationId: input.reservationId,
+      },
+    })
+  })
 }
 
 /**

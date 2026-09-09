@@ -33,7 +33,10 @@ export type {
   ProvisionBillingResult,
 } from "./provisioning"
 export { processStripeEvent, TerminalError } from "./webhook"
-export { createPaymentIntentForReservation } from "./payments"
+export {
+  createPaymentIntentForReservation,
+  retrieveBookingPaymentIntent,
+} from "./payments"
 export type { CreatePaymentIntentForReservationResult } from "./payments"
 export {
   classifyPaymentMethod,

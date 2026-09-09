@@ -43,6 +43,8 @@ export const TENANT_TABLES = [
   "billing_customers",
   "billing_subscriptions",
   "org_data_keys",
+  "domain_events_outbox",
+  "domain_event_deliveries",
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
@@ -54,6 +56,8 @@ export type TenantTable = (typeof TENANT_TABLES)[number]
  */
 export const ADMIN_BYPASS_TABLES = new Set<string>([
   "expert_profiles",
+  "domain_events_outbox",
+  "domain_event_deliveries",
   // Billing mirrors are written from the Stripe webhook handler under a
   // service context with no end-user session. The Drizzle pgPolicy
   // declarations on these tables already include the eleva.platform_admin
@@ -71,12 +75,21 @@ function isDualOrganization(table: string): boolean {
   )
 }
 
+const SERVICE_ROLE_TABLES: Record<string, string> = {
+  domain_events_outbox: "domain_events_publisher",
+  domain_event_deliveries: "domain_events_publisher",
+}
+
 function tenantPredicate(table: string): string {
   const adminBypass = ADMIN_BYPASS_TABLES.has(table)
     ? ` OR current_setting('eleva.platform_admin', true) = 'true'`
     : ""
+  const service = SERVICE_ROLE_TABLES[table]
+  const serviceBypass = service
+    ? ` OR current_setting('eleva.service', true) = '${service}'`
+    : ""
 
-  return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
+  return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}${serviceBypass}`
 }
 
 /**

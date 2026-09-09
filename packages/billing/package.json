@@ -23,6 +23,7 @@
     "@eleva/encryption": "workspace:*",
     "@eleva/flags": "workspace:*",
     "@eleva/observability": "workspace:*",
+    "@eleva/scheduling": "workspace:*",
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
     "@upstash/redis": "catalog:",

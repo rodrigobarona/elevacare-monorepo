@@ -104,15 +104,15 @@ file header comment and listed here. Phase 1.2 adds `packages/db/src/__tests__/r
 (parametrised suite; one fixture + positive/negative assertion per class). Session settings
 read: `eleva.org_id`, `eleva.user_id`, `eleva.platform_admin`, and later `eleva.staff_role`.
 
-| Class                 | Predicate (canonical)                                                                                       | Who reads                                |
-| --------------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `tenant-owned`        | `org_id::text = current_setting('eleva.org_id', true)`                                                      | members of the active org                |
-| `dual-organization`   | `SELECT`: `org_id` **or** `counterparty_org_id`. Writes: `org_id` only                                      | both sides of a booking may read         |
-| `owner-user-visible`  | `user_id::text = current_setting('eleva.user_id', true)` (plus org match when present)                      | the owning human                         |
-| `participant-visible` | exists a `session_participants` / booking participant row for `eleva.user_id`                               | session members                          |
-| `staff-only`          | `current_setting('eleva.platform_admin', true) = 'true'`                                                    | Eleva staff                              |
-| `public-read`         | `SELECT` unrestricted (or `published_at IS NOT NULL`); `WITH CHECK` remains tenant-owned                    | marketplace                              |
-| `service-only`        | `eleva.platform_admin` **or** a named service role (`eleva.service = 'stripe_webhook'` / `'audit_drainer'`) | webhooks, drainers, staff+service tables |
+| Class                 | Predicate (canonical)                                                                                                                     | Who reads                                |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `tenant-owned`        | `org_id::text = current_setting('eleva.org_id', true)`                                                                                    | members of the active org                |
+| `dual-organization`   | `SELECT`: `org_id` **or** `counterparty_org_id`. Writes: `org_id` only                                                                    | both sides of a booking may read         |
+| `owner-user-visible`  | `user_id::text = current_setting('eleva.user_id', true)` (plus org match when present)                                                    | the owning human                         |
+| `participant-visible` | exists a `session_participants` / booking participant row for `eleva.user_id`                                                             | session members                          |
+| `staff-only`          | `current_setting('eleva.platform_admin', true) = 'true'`                                                                                  | Eleva staff                              |
+| `public-read`         | `SELECT` unrestricted (or `published_at IS NOT NULL`); `WITH CHECK` remains tenant-owned                                                  | marketplace                              |
+| `service-only`        | `eleva.platform_admin` **or** a named service role (`eleva.service = 'stripe_webhook'` / `'audit_drainer'` / `'domain_events_publisher'`) | webhooks, drainers, staff+service tables |
 
 `CREATE POLICY` template (tenant-owned):
 
@@ -162,6 +162,8 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `billing_customers`         | tenant-owned                              |
 | `billing_subscriptions`     | tenant-owned                              |
 | `audit_outbox`              | service-only                              |
+| `domain_events_outbox`      | service-only                              |
+| `domain_event_deliveries`   | service-only                              |
 | `stripe_webhook_events`     | service-only                              |
 | `users`                     | owner-user-visible                        |
 | `expert_categories`         | public-read                               |

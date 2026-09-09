@@ -1223,6 +1223,9 @@ importers:
       '@eleva/observability':
         specifier: workspace:*
         version: link:../observability
+      '@eleva/scheduling':
+        specifier: workspace:*
+        version: link:../scheduling
       '@stripe/connect-js':
         specifier: ^3.4.3
         version: 3.4.3
@@ -1783,12 +1786,18 @@ importers:
 
   packages/workflows:
     dependencies:
+      '@eleva/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@eleva/auth':
         specifier: workspace:*
         version: link:../auth
       '@eleva/calendar':
         specifier: workspace:*
         version: link:../calendar
+      '@eleva/compliance':
+        specifier: workspace:*
+        version: link:../compliance
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
