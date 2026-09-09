@@ -145,6 +145,7 @@ export async function findPublicEventType(
   | Pick<
       EventType,
       | "id"
+      | "orgId"
       | "slug"
       | "title"
       | "description"
@@ -165,6 +166,7 @@ export async function findPublicEventType(
     const [row] = await tx
       .select({
         id: eventTypes.id,
+        orgId: eventTypes.orgId,
         slug: eventTypes.slug,
         title: eventTypes.title,
         description: eventTypes.description,

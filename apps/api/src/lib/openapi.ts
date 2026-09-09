@@ -15,6 +15,13 @@ import {
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
   ListOrganizationsMineResponseSchema,
+  ListPublicExpertsQuerySchema,
+  ListPublicExpertsResponseSchema,
+  PublicBookingLinkResponseSchema,
+  PublicEventTypeDetailSchema,
+  PublicExpertProfileSchema,
+  PublicSlotsQuerySchema,
+  PublicSlotsResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
 } from "@eleva/api-client"
@@ -60,6 +67,25 @@ const stdErrors = {
   "429": {
     description: "Rate limit exceeded",
     content: { "application/json": { schema: RateLimitErrorSchema } },
+  },
+} as const
+
+const stdPublicErrors = {
+  "422": {
+    description: "Validation error",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "429": {
+    description: "Rate limit exceeded",
+    content: { "application/json": { schema: RateLimitErrorSchema } },
+  },
+} as const
+
+const stdPublicWithNotFound = {
+  ...stdPublicErrors,
+  "404": {
+    description: "Not found",
+    content: { "application/json": { schema: ErrorSchema } },
   },
 } as const
 
@@ -1136,6 +1162,111 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: StripeWebhookErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/public/experts": {
+        get: {
+          operationId: "listPublicExperts",
+          summary: "List public experts",
+          tags: ["Public"],
+          security: [],
+          requestParams: {
+            query: ListPublicExpertsQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Paginated public expert cards",
+              content: {
+                "application/json": {
+                  schema: ListPublicExpertsResponseSchema,
+                },
+              },
+            },
+            ...stdPublicErrors,
+          },
+        },
+      },
+      "/public/experts/{username}": {
+        get: {
+          operationId: "getPublicExpert",
+          summary: "Get a public expert profile",
+          tags: ["Public"],
+          security: [],
+          requestParams: {
+            path: z.object({ username: z.string() }),
+          },
+          responses: {
+            "200": {
+              description: "Public expert profile with bookable event types",
+              content: {
+                "application/json": { schema: PublicExpertProfileSchema },
+              },
+            },
+            ...stdPublicWithNotFound,
+          },
+        },
+      },
+      "/public/experts/{username}/event-types/{slug}": {
+        get: {
+          operationId: "getPublicEventType",
+          summary: "Get a public event type and its modes",
+          tags: ["Public"],
+          security: [],
+          requestParams: {
+            path: z.object({ username: z.string(), slug: z.string() }),
+          },
+          responses: {
+            "200": {
+              description: "Public event type with bookable modes",
+              content: {
+                "application/json": { schema: PublicEventTypeDetailSchema },
+              },
+            },
+            ...stdPublicWithNotFound,
+          },
+        },
+      },
+      "/public/experts/{username}/event-types/{slug}/slots": {
+        get: {
+          operationId: "getPublicEventTypeSlots",
+          summary: "List available slots for an event-type mode",
+          tags: ["Public"],
+          security: [],
+          requestParams: {
+            path: z.object({ username: z.string(), slug: z.string() }),
+            query: PublicSlotsQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Available slots in UTC and the viewer timezone",
+              content: {
+                "application/json": { schema: PublicSlotsResponseSchema },
+              },
+            },
+            ...stdPublicWithNotFound,
+          },
+        },
+      },
+      "/public/booking-links/{token}": {
+        get: {
+          operationId: "getPublicBookingLink",
+          summary: "Resolve a private booking link",
+          tags: ["Public"],
+          security: [],
+          requestParams: {
+            path: z.object({ token: z.string() }),
+          },
+          responses: {
+            "200": {
+              description: "Usable booking link",
+              content: {
+                "application/json": {
+                  schema: PublicBookingLinkResponseSchema,
+                },
+              },
+            },
+            ...stdPublicWithNotFound,
           },
         },
       },

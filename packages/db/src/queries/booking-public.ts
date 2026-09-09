@@ -1,10 +1,11 @@
-import { and, eq, gt, lt, isNull, asc, notInArray } from "drizzle-orm"
-import { withPlatformAdminContext, type Tx } from "../context"
+import { and, eq, gt, inArray, lt, isNull, asc, notInArray } from "drizzle-orm"
+import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import {
   schedules,
   availabilityRules,
   dateOverrides,
   bookings,
+  slotReservations,
   type Schedule,
   type AvailabilityRule,
   type DateOverride,
@@ -44,32 +45,60 @@ export async function getExpertScheduleForBooking(
       return { schedule: null, rules: [], overrides: [] }
     }
 
-    const rules = await tx
-      .select({
-        dayOfWeek: availabilityRules.dayOfWeek,
-        startTime: availabilityRules.startTime,
-        endTime: availabilityRules.endTime,
-      })
-      .from(availabilityRules)
-      .where(eq(availabilityRules.scheduleId, schedule.id))
-      .orderBy(
-        asc(availabilityRules.dayOfWeek),
-        asc(availabilityRules.startTime)
-      )
-
-    const ovs = await tx
-      .select({
-        overrideDate: dateOverrides.overrideDate,
-        startTime: dateOverrides.startTime,
-        endTime: dateOverrides.endTime,
-        isBlocked: dateOverrides.isBlocked,
-      })
-      .from(dateOverrides)
-      .where(eq(dateOverrides.scheduleId, schedule.id))
-      .orderBy(asc(dateOverrides.overrideDate))
-
-    return { schedule, rules, overrides: ovs }
+    const windows = await loadScheduleWindows(tx, schedule.id)
+    return { schedule, ...windows }
   })
+}
+
+export async function getScheduleForBooking(
+  orgId: string,
+  scheduleId: string
+): Promise<BookingScheduleData> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [schedule] = await tx
+      .select({ id: schedules.id, timezone: schedules.timezone })
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.orgId, orgId),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .limit(1)
+
+    if (!schedule) {
+      return { schedule: null, rules: [], overrides: [] }
+    }
+
+    const windows = await loadScheduleWindows(tx, schedule.id)
+    return { schedule, ...windows }
+  })
+}
+
+async function loadScheduleWindows(tx: Tx, scheduleId: string) {
+  const rules = await tx
+    .select({
+      dayOfWeek: availabilityRules.dayOfWeek,
+      startTime: availabilityRules.startTime,
+      endTime: availabilityRules.endTime,
+    })
+    .from(availabilityRules)
+    .where(eq(availabilityRules.scheduleId, scheduleId))
+    .orderBy(asc(availabilityRules.dayOfWeek), asc(availabilityRules.startTime))
+
+  const overrides = await tx
+    .select({
+      overrideDate: dateOverrides.overrideDate,
+      startTime: dateOverrides.startTime,
+      endTime: dateOverrides.endTime,
+      isBlocked: dateOverrides.isBlocked,
+    })
+    .from(dateOverrides)
+    .where(eq(dateOverrides.scheduleId, scheduleId))
+    .orderBy(asc(dateOverrides.overrideDate))
+
+  return { rules, overrides }
 }
 
 /**
@@ -98,6 +127,24 @@ export async function listExpertBusyBookings(
         )
       )
 
-    return rows.map((r) => ({ start: r.startsAt, end: r.endsAt }))
+    const holds = await tx
+      .select({
+        startsAt: slotReservations.startsAt,
+        endsAt: slotReservations.endsAt,
+      })
+      .from(slotReservations)
+      .where(
+        and(
+          eq(slotReservations.expertProfileId, expertProfileId),
+          inArray(slotReservations.status, ["active", "converted"]),
+          lt(slotReservations.startsAt, rangeEnd),
+          gt(slotReservations.endsAt, rangeStart)
+        )
+      )
+
+    return [...rows, ...holds].map((r) => ({
+      start: r.startsAt,
+      end: r.endsAt,
+    }))
   })
 }

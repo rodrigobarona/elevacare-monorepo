@@ -60,9 +60,25 @@ export {
 } from "./queries/schedules"
 export {
   getExpertScheduleForBooking,
+  getScheduleForBooking,
   listExpertBusyBookings,
   type BookingScheduleData,
 } from "./queries/booking-public"
+export { loadOfferForResolve } from "./queries/offer-resolve"
+export {
+  listPublicMarketplaceExperts,
+  listPublicEventTypeModes,
+  findUsableBookingLink,
+  isBookingLinkUsable,
+  decodeMarketplaceCursor,
+  encodeMarketplaceCursor,
+  type MarketplaceSort,
+  type ListMarketplaceExpertsInput,
+  type MarketplaceExpertCard,
+  type ListMarketplaceExpertsResult,
+  type PublicEventTypeMode,
+  type PublicBookingLink,
+} from "./queries/public-offers"
 export {
   listCalendarIntegrations,
   listExpertIntegrations,

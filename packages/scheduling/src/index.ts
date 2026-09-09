@@ -7,6 +7,24 @@ export type {
   OfferMode,
 } from "./offer-invariants"
 export { getAvailableSlots } from "./availability"
+export { getAvailableSlotsForOffer, emptyBusyTimeProvider } from "./offer-slots"
+export type {
+  BusyTimeProvider,
+  GetOfferSlotsInput,
+  ViewerTimeSlot,
+} from "./offer-slots"
+export { assertModeBookable } from "./mode-bookable"
+export type {
+  ModeBookableError,
+  ModeBookableInput,
+  ModeBookableResult,
+} from "./mode-bookable"
+export { resolveOffer, hashBookingLinkToken } from "./resolve-offer"
+export type {
+  ResolvedOffer,
+  ResolveOfferInput,
+  ResolveOfferResult,
+} from "./resolve-offer"
 export {
   reserveSlot,
   releaseReservation,

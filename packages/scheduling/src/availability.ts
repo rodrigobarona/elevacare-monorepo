@@ -41,6 +41,7 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): TimeSlot[] {
 
   const tz = schedule.timezone
   const duration = eventType.durationMinutes
+  const interval = Math.max(1, input.slotIntervalMinutes ?? duration)
   const bufferBefore = eventType.bufferBeforeMinutes
   const bufferAfter = eventType.bufferAfterMinutes
   const minimumNotice = eventType.minimumNoticeMinutes
@@ -98,8 +99,15 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): TimeSlot[] {
     for (const w of windows) {
       let cursor = w.startMinutes
       while (cursor + duration <= w.endMinutes) {
-        const slotStart = createUtcFromLocalTime(dateStr, cursor, tz)
-        const slotEnd = createUtcFromLocalTime(dateStr, cursor + duration, tz)
+        let slotStart: Date
+        let slotEnd: Date
+        try {
+          slotStart = createUtcFromLocalTime(dateStr, cursor, tz)
+          slotEnd = createUtcFromLocalTime(dateStr, cursor + duration, tz)
+        } catch {
+          cursor += interval
+          continue
+        }
 
         const startMs = slotStart.getTime()
         const endMs = slotEnd.getTime()
@@ -108,12 +116,12 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): TimeSlot[] {
           startMs < effectiveStart.getTime() ||
           endMs > effectiveEnd.getTime()
         ) {
-          cursor += duration
+          cursor += interval
           continue
         }
 
         if (startMs < now.getTime() + minimumNotice * 60_000) {
-          cursor += duration
+          cursor += interval
           continue
         }
 
@@ -121,12 +129,12 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): TimeSlot[] {
         const bufferedEnd = new Date(endMs + bufferAfter * 60_000)
 
         if (overlaps(bufferedStart, bufferedEnd, allBusy)) {
-          cursor += duration
+          cursor += interval
           continue
         }
 
         slots.push({ start: slotStart, end: slotEnd })
-        cursor += duration
+        cursor += interval
       }
     }
   }
