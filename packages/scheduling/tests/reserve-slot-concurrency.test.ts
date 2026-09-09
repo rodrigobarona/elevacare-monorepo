@@ -26,6 +26,11 @@ vi.mock("@eleva/db/context", () => {
         },
       }),
     }),
+    update: () => ({
+      set: () => ({
+        where: () => Promise.resolve([]),
+      }),
+    }),
   }
 
   return {
@@ -43,6 +48,7 @@ vi.mock("@eleva/db/schema", () => ({
     orgId: "org_id",
     eventTypeId: "event_type_id",
     expertProfileId: "expert_profile_id",
+    expertUserId: "expert_user_id",
     startsAt: "starts_at",
     endsAt: "ends_at",
     expiresAt: "expires_at",

@@ -68,6 +68,7 @@ export async function reserveSlot(
 
   try {
     const reservationId = await withOrgContext(orgId, async (tx: Tx) => {
+      await expireOverlappingHolds(tx, expertUserId, startsAt, endsAt)
       const conflict = await checkConflicts(
         tx,
         expertProfileId,
@@ -180,6 +181,32 @@ export async function convertReservation(
 
     return { converted: true }
   })
+}
+
+/**
+ * Exclusion cannot use `expires_at > now()` (index predicates must be
+ * immutable). Move stale holds out of the constrained statuses in the
+ * same transaction so a new insert is not blocked by 23P01.
+ */
+async function expireOverlappingHolds(
+  tx: Tx,
+  expertUserId: string,
+  startsAt: Date,
+  endsAt: Date
+): Promise<void> {
+  const now = new Date()
+  await tx
+    .update(slotReservations)
+    .set({ status: "expired" })
+    .where(
+      and(
+        eq(slotReservations.expertUserId, expertUserId),
+        eq(slotReservations.status, "active"),
+        sql`${slotReservations.expiresAt} <= ${now}`,
+        sql`${slotReservations.startsAt} < ${endsAt}`,
+        sql`${slotReservations.endsAt} > ${startsAt}`
+      )
+    )
 }
 
 async function checkConflicts(

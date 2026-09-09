@@ -293,9 +293,13 @@ export const bookings = pgTable(
       columns: [t.orgId, t.bookingLinkId],
       foreignColumns: [bookingLinks.orgId, bookingLinks.id],
     }).onDelete("set null"),
-    dualOrgPolicy: pgPolicy("bookings_tenant_isolation", {
-      using: sql`org_id::text = current_setting('eleva.org_id', true) OR counterparty_org_id::text = current_setting('eleva.org_id', true)`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true) OR counterparty_org_id::text = current_setting('eleva.org_id', true)`,
+    ownerPolicy: pgPolicy("bookings_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
+    counterpartyRead: pgPolicy("bookings_counterparty_read", {
+      for: "select",
+      using: sql`counterparty_org_id::text = current_setting('eleva.org_id', true)`,
     }),
   })
 )
@@ -419,7 +423,7 @@ export const consents = pgTable(
       onDelete: "cascade",
     }),
     subjectKind: consentSubjectKindEnum("subject_kind").notNull(),
-    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }),
+    userId: uuid("user_id").references(() => user.id, { onDelete: "restrict" }),
     guestEmailHash: char("guest_email_hash", { length: 64 }),
     kind: consentKindEnum("kind").notNull(),
     documentVersion: text("document_version").notNull(),
@@ -449,6 +453,12 @@ export const consents = pgTable(
     orgIdx: index("consents_org_idx").on(t.orgId),
     userIdx: index("consents_user_idx").on(t.userId),
     reservationIdx: index("consents_reservation_idx").on(t.reservationId),
+    activeUserGrantIdx: uniqueIndex("consents_active_user_idx")
+      .on(t.orgId, t.userId, t.kind, t.documentVersion)
+      .where(sql`user_id IS NOT NULL AND withdrawn_at IS NULL`),
+    activeGuestGrantIdx: uniqueIndex("consents_active_guest_idx")
+      .on(t.orgId, t.guestEmailHash, t.kind, t.documentVersion)
+      .where(sql`guest_email_hash IS NOT NULL AND withdrawn_at IS NULL`),
     subjectChk: check(
       "consents_subject",
       sql`(subject_kind = 'user' AND user_id IS NOT NULL) OR (subject_kind = 'guest' AND guest_email_hash IS NOT NULL)`

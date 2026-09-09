@@ -18,6 +18,11 @@ vi.mock("@eleva/db/context", () => {
         returning: () => Promise.reject(exclusion),
       }),
     }),
+    update: () => ({
+      set: () => ({
+        where: () => Promise.resolve([]),
+      }),
+    }),
   }
 
   return {

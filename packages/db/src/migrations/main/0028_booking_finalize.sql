@@ -1,8 +1,11 @@
 -- Phase 04.1b booking finalize (additive). RLS: slot_reservations =
--- tenant-owned; bookings = dual-organization (org_id OR counterparty_org_id);
--- booking_payments and consents = tenant-owned (expert org).
+-- tenant-owned; bookings = dual-organization (owner writes on org_id;
+-- counterparty SELECT on counterparty_org_id); booking_payments and
+-- consents = tenant-owned (expert org).
 -- slot_reservations.status 'active' is the reserved hold; remap to
 -- 'reserved' in a later migration after this ADD VALUE commits.
+-- bookings.price_cents is the 04.1 snapshot of price_amount; CHECK keeps
+-- them equal until a later cutover drops price_amount.
 -- Do not invent CONSENT_DOCUMENTS version ids here (04.2 D-gate).
 
 CREATE EXTENSION IF NOT EXISTS btree_gist;
@@ -128,6 +131,13 @@ WHERE "price_cents" IS NULL;
 --> statement-breakpoint
 UPDATE "bookings" SET "currency" = upper("currency") WHERE "currency" <> upper("currency");
 --> statement-breakpoint
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM "bookings" WHERE upper("currency") <> 'EUR') THEN
+    RAISE EXCEPTION 'bookings contain non-EUR currency rows; resolve before 0028';
+  END IF;
+END $$;
+--> statement-breakpoint
 ALTER TABLE "bookings" ALTER COLUMN "price_cents" SET NOT NULL;
 --> statement-breakpoint
 ALTER TABLE "bookings" ALTER COLUMN "currency" SET DEFAULT 'EUR';
@@ -171,14 +181,13 @@ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_guest_or_member"
 DROP POLICY IF EXISTS "bookings_tenant_isolation" ON "bookings";
 --> statement-breakpoint
 CREATE POLICY "bookings_tenant_isolation" ON "bookings" AS PERMISSIVE FOR ALL TO public
-  USING (
-    org_id::text = current_setting('eleva.org_id', true)
-    OR counterparty_org_id::text = current_setting('eleva.org_id', true)
-  )
-  WITH CHECK (
-    org_id::text = current_setting('eleva.org_id', true)
-    OR counterparty_org_id::text = current_setting('eleva.org_id', true)
-  );
+  USING (org_id::text = current_setting('eleva.org_id', true))
+  WITH CHECK (org_id::text = current_setting('eleva.org_id', true));
+--> statement-breakpoint
+DROP POLICY IF EXISTS "bookings_counterparty_read" ON "bookings";
+--> statement-breakpoint
+CREATE POLICY "bookings_counterparty_read" ON "bookings" AS PERMISSIVE FOR SELECT TO public
+  USING (counterparty_org_id::text = current_setting('eleva.org_id', true));
 --> statement-breakpoint
 CREATE TABLE "booking_payments" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -222,7 +231,7 @@ CREATE TABLE "consents" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
   "org_id" uuid NOT NULL REFERENCES "auth"."organization"("id") ON DELETE CASCADE,
   "subject_kind" "consent_subject_kind" NOT NULL,
-  "user_id" uuid REFERENCES "auth"."user"("id") ON DELETE SET NULL,
+  "user_id" uuid REFERENCES "auth"."user"("id") ON DELETE RESTRICT,
   "guest_email_hash" char(64),
   "kind" "consent_kind" NOT NULL,
   "document_version" text NOT NULL,
@@ -244,6 +253,14 @@ CREATE INDEX "consents_org_idx" ON "consents" ("org_id");
 CREATE INDEX "consents_user_idx" ON "consents" ("user_id");
 --> statement-breakpoint
 CREATE INDEX "consents_reservation_idx" ON "consents" ("reservation_id");
+--> statement-breakpoint
+CREATE UNIQUE INDEX "consents_active_user_idx"
+  ON "consents" ("org_id", "user_id", "kind", "document_version")
+  WHERE "user_id" IS NOT NULL AND "withdrawn_at" IS NULL;
+--> statement-breakpoint
+CREATE UNIQUE INDEX "consents_active_guest_idx"
+  ON "consents" ("org_id", "guest_email_hash", "kind", "document_version")
+  WHERE "guest_email_hash" IS NOT NULL AND "withdrawn_at" IS NULL;
 --> statement-breakpoint
 ALTER TABLE "consents" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint

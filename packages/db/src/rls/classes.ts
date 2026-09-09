@@ -99,7 +99,8 @@ export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
   { class: "service-only", table: "audit_outbox", synthetic: false },
 ]
 
-/** Canonical USING/WITH CHECK predicates for the class suite. */
+/** Canonical SELECT predicates for the class suite. Writes for
+ * `dual-organization` stay `org_id` only (see `buildMainRlsStatements`). */
 export function classPredicateSql(
   rlsClass: RlsPolicyClass,
   table: string

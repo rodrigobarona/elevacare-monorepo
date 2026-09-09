@@ -64,19 +64,19 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   "billing_subscriptions",
 ])
 
-function tenantPredicate(table: string): string {
-  const isDualOrg = RLS_TABLE_ASSIGNMENTS.some(
+function isDualOrganization(table: string): boolean {
+  return RLS_TABLE_ASSIGNMENTS.some(
     (assignment) =>
       assignment.table === table && assignment.class === "dual-organization"
   )
-  const counterparty = isDualOrg
-    ? ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
-    : ""
+}
+
+function tenantPredicate(table: string): string {
   const adminBypass = ADMIN_BYPASS_TABLES.has(table)
     ? ` OR current_setting('eleva.platform_admin', true) = 'true'`
     : ""
 
-  return `org_id::text = current_setting('eleva.org_id', true)${counterparty}${adminBypass}`
+  return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
 }
 
 /**
@@ -97,6 +97,13 @@ export function buildMainRlsStatements(): string[] {
       `CREATE POLICY ${table}_tenant_isolation ON ${table} ` +
         `USING (${pred}) WITH CHECK (${pred});`
     )
+    if (isDualOrganization(table)) {
+      out.push(`DROP POLICY IF EXISTS ${table}_counterparty_read ON ${table};`)
+      out.push(
+        `CREATE POLICY ${table}_counterparty_read ON ${table} FOR SELECT ` +
+          `USING (counterparty_org_id::text = current_setting('eleva.org_id', true));`
+      )
+    }
   }
   return out
 }
