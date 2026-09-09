@@ -120,12 +120,16 @@ export function validateFunnelConsents(
   return { ok: true }
 }
 
+const CONSENT_HASH_KEY_MIN_LENGTH = 32
+
 export function hashGuestEmail(
   email: string,
   secret: string | undefined = process.env.CONSENT_HASH_KEY
 ): string {
-  if (!secret) {
-    throw new Error("CONSENT_HASH_KEY is not configured")
+  if (!secret || secret.length < CONSENT_HASH_KEY_MIN_LENGTH) {
+    throw new Error(
+      "CONSENT_HASH_KEY is not configured with at least 32 characters"
+    )
   }
   return createHmac("sha256", secret)
     .update(email.trim().toLowerCase())

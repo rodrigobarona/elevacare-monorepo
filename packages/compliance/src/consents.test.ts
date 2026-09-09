@@ -66,9 +66,13 @@ describe("CONSENT_DOCUMENTS", () => {
   })
 
   it("hashes guest emails with HMAC-SHA256", () => {
-    const hash = hashGuestEmail("Ada@Eleva.care", "test-consent-key")
+    const secret = "a".repeat(32)
+    const hash = hashGuestEmail("Ada@Eleva.care", secret)
     expect(hash).toHaveLength(64)
-    expect(hash).toBe(hashGuestEmail("ada@eleva.care", "test-consent-key"))
+    expect(hash).toBe(hashGuestEmail("ada@eleva.care", secret))
+    expect(() => hashGuestEmail("ada@eleva.care", "short-key")).toThrow(
+      /CONSENT_HASH_KEY/
+    )
     vi.stubEnv("CONSENT_HASH_KEY", "")
     expect(() => hashGuestEmail("ada@eleva.care")).toThrow(/CONSENT_HASH_KEY/)
   })

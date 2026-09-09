@@ -116,13 +116,13 @@ export async function insertFunnelConsents(
     guestEmail?: string
   }
 ): Promise<void> {
+  const consentCheck = validateFunnelConsents(input.grants)
+  if (!consentCheck.ok) {
+    throw new Error(`invalid consent grants: ${consentCheck.error}`)
+  }
   const byKind = new Map(
     input.grants.map((grant) => [grant.kind, grant.version])
   )
-  const missing = CONSENT_KINDS.filter((kind) => !byKind.has(kind))
-  if (missing.length > 0) {
-    throw new Error(`missing consent grants: ${missing.join(", ")}`)
-  }
 
   let subject:
     | { subjectKind: "user"; userId: string }
