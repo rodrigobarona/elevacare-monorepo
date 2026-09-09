@@ -143,4 +143,15 @@ describe("getAvailableSlots", () => {
     expect(slots[0]!.start.toISOString()).toBe("2026-06-15T08:00:00.000Z")
     expect(slots[7]!.start.toISOString()).toBe("2026-06-15T15:00:00.000Z")
   })
+
+  it("rejects a non-integer slot interval", () => {
+    expect(() =>
+      getAvailableSlots({
+        ...baseInput,
+        slotIntervalMinutes: 7.5,
+        rangeStart: new Date("2026-06-15T00:00:00Z"),
+        rangeEnd: new Date("2026-06-15T23:59:59Z"),
+      })
+    ).toThrow(RangeError)
+  })
 })

@@ -3,6 +3,8 @@ import {
   decodeMarketplaceCursor,
   encodeMarketplaceCursor,
   isBookingLinkUsable,
+  MAX_MARKETPLACE_OFFSET,
+  nextMarketplaceCursor,
 } from "./public-offers"
 
 describe("marketplace cursor", () => {
@@ -18,7 +20,20 @@ describe("marketplace cursor", () => {
   })
 
   it("clamps a crafted deep offset so the list cannot scan unbounded rows", () => {
-    expect(decodeMarketplaceCursor(encodeMarketplaceCursor(1e12))).toBe(10_000)
+    expect(decodeMarketplaceCursor(encodeMarketplaceCursor(1e12))).toBe(
+      MAX_MARKETPLACE_OFFSET
+    )
+  })
+
+  it("stops nextCursor once the next offset would pass the clamp", () => {
+    expect(nextMarketplaceCursor(48, 24, true)).toBe(
+      encodeMarketplaceCursor(72)
+    )
+    expect(nextMarketplaceCursor(48, 24, false)).toBeNull()
+    expect(nextMarketplaceCursor(MAX_MARKETPLACE_OFFSET, 24, true)).toBeNull()
+    expect(nextMarketplaceCursor(MAX_MARKETPLACE_OFFSET - 24, 24, true)).toBe(
+      encodeMarketplaceCursor(MAX_MARKETPLACE_OFFSET)
+    )
   })
 })
 

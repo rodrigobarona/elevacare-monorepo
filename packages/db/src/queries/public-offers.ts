@@ -59,7 +59,16 @@ export type PublicBookingLink = {
   expiresAt: Date
 }
 
-const MAX_MARKETPLACE_OFFSET = 10_000
+export const MAX_MARKETPLACE_OFFSET = 10_000
+
+export function nextMarketplaceCursor(
+  offset: number,
+  limit: number,
+  hasMore: boolean
+): string | null {
+  if (!hasMore || offset + limit > MAX_MARKETPLACE_OFFSET) return null
+  return encodeMarketplaceCursor(offset + limit)
+}
 
 export function decodeMarketplaceCursor(cursor?: string): number {
   if (!cursor) return 0
@@ -246,8 +255,7 @@ export async function listPublicMarketplaceExperts(
           row.minPriceCents == null ? null : Number(row.minPriceCents),
         topExpertActive: row.topExpertActive,
       })),
-      nextCursor:
-        rows.length > limit ? encodeMarketplaceCursor(offset + limit) : null,
+      nextCursor: nextMarketplaceCursor(offset, limit, rows.length > limit),
     }
   })
 }

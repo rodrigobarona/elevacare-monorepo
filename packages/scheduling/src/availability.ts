@@ -41,7 +41,10 @@ export function getAvailableSlots(input: GetAvailableSlotsInput): TimeSlot[] {
 
   const tz = schedule.timezone
   const duration = eventType.durationMinutes
-  const interval = Math.max(1, input.slotIntervalMinutes ?? duration)
+  const interval = input.slotIntervalMinutes ?? duration
+  if (!Number.isInteger(interval) || interval < 1) {
+    throw new RangeError("slotIntervalMinutes must be a positive integer")
+  }
   const bufferBefore = eventType.bufferBeforeMinutes
   const bufferAfter = eventType.bufferAfterMinutes
   const minimumNotice = eventType.minimumNoticeMinutes

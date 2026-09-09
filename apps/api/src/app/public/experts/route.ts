@@ -22,11 +22,19 @@ export async function GET(request: Request) {
       )
     }
 
-    const result = await unstable_cache(
-      () => listPublicMarketplaceExperts(parsed.data),
-      ["public-experts", JSON.stringify(parsed.data)],
-      { tags: ["public-experts"], revalidate: 60 }
-    )()
+    const { cursor, ...filters } = parsed.data
+    const cacheKey = JSON.stringify(
+      Object.entries(filters)
+        .filter(([, value]) => value !== undefined)
+        .sort(([a], [b]) => a.localeCompare(b))
+    )
+    const result = cursor
+      ? await listPublicMarketplaceExperts(parsed.data)
+      : await unstable_cache(
+          () => listPublicMarketplaceExperts(parsed.data),
+          ["public-experts", cacheKey],
+          { tags: ["public-experts"], revalidate: 60 }
+        )()
 
     return secureJson(ListPublicExpertsResponseSchema.parse(result), {
       status: 200,

@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, lt, isNull, asc, notInArray } from "drizzle-orm"
+import { and, eq, gt, lt, isNull, asc, notInArray } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import {
   schedules,
@@ -136,7 +136,8 @@ export async function listExpertBusyBookings(
       .where(
         and(
           eq(slotReservations.expertProfileId, expertProfileId),
-          inArray(slotReservations.status, ["active", "converted"]),
+          eq(slotReservations.status, "active"),
+          gt(slotReservations.expiresAt, new Date()),
           lt(slotReservations.startsAt, rangeEnd),
           gt(slotReservations.endsAt, rangeStart)
         )

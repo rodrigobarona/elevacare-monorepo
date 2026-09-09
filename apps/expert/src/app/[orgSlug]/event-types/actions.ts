@@ -21,7 +21,7 @@ export interface EventTypeFormData {
   description?: CreateEventTypeRequest["description"]
   durationMinutes: number
   priceAmount: number
-  currency: string
+  currency: "EUR"
   languages: string[]
   sessionMode: "online" | "in_person" | "phone"
   bookingWindowDays?: number | null

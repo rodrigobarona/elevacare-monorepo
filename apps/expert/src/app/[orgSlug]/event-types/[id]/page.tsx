@@ -32,7 +32,7 @@ export default async function EditEventTypePage(props: {
     description: (eventType.description as LocalizedText) ?? { en: "" },
     durationMinutes: eventType.durationMinutes,
     priceAmount: eventType.priceAmount,
-    currency: eventType.currency,
+    currency: "EUR",
     languages: eventType.languages as string[],
     sessionMode: eventType.sessionMode,
     bookingWindowDays: eventType.bookingWindowDays,
