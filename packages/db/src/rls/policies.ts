@@ -15,6 +15,8 @@
  * ADR-003 is the source of truth.
  */
 
+import { RLS_TABLE_ASSIGNMENTS } from "./classes"
+
 /** Main DB tables that carry org_id and need RLS enabled. */
 export const TENANT_TABLES = [
   "audit_outbox",
@@ -63,18 +65,18 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
 ])
 
 function tenantPredicate(table: string): string {
-  if (table === "bookings") {
-    return (
-      `org_id::text = current_setting('eleva.org_id', true)` +
-      ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
-    )
-  }
-
+  const isDualOrg = RLS_TABLE_ASSIGNMENTS.some(
+    (assignment) =>
+      assignment.table === table && assignment.class === "dual-organization"
+  )
+  const counterparty = isDualOrg
+    ? ` OR counterparty_org_id::text = current_setting('eleva.org_id', true)`
+    : ""
   const adminBypass = ADMIN_BYPASS_TABLES.has(table)
     ? ` OR current_setting('eleva.platform_admin', true) = 'true'`
     : ""
 
-  return `org_id::text = current_setting('eleva.org_id', true)${adminBypass}`
+  return `org_id::text = current_setting('eleva.org_id', true)${counterparty}${adminBypass}`
 }
 
 /**

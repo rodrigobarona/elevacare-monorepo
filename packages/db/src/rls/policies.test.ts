@@ -33,6 +33,18 @@ describe("buildMainRlsStatements", () => {
     }
   })
 
+  it("derives dual-organization predicate from RLS assignments", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY bookings_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+    expect(policy).toContain(
+      "counterparty_org_id::text = current_setting('eleva.org_id', true)"
+    )
+  })
+
   it("includes platform_admin bypass for expert_profiles", () => {
     const policy = stmts.find((s) =>
       s.startsWith("CREATE POLICY expert_profiles_tenant_isolation")

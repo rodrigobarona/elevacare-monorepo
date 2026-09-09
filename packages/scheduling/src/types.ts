@@ -47,12 +47,11 @@ export interface ReserveSlotInput {
   ttlSeconds?: number
   userId?: string
   eventTypeModeId?: string
-  priceCents?: number
-  currency?: "EUR"
+  price?: { cents: number; currency: "EUR" }
 }
 
 export type ReserveSlotResult =
-  | { success: true; reservationId: string }
+  | { success: true; reservationId: string; reservationToken: string }
   | { success: false; error: "slot_taken" | "conflict" | "db_error" }
 
 export interface BookingRuleCheck {

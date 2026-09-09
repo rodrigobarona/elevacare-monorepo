@@ -62,7 +62,6 @@ export type AuditAction =
   | "released"
   | "reserved"
   | "confirmed"
-  | "cancelled"
   | "rescheduled"
   | "granted"
   | "withdrawn"

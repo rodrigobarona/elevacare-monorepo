@@ -56,7 +56,10 @@ WHERE ep.id = sr.expert_profile_id
   AND sr.expert_user_id IS NULL;
 --> statement-breakpoint
 UPDATE "slot_reservations"
-SET "capability_hash" = encode(sha256(id::text::bytea), 'hex')
+SET "capability_hash" = encode(
+  sha256((gen_random_uuid()::text || gen_random_uuid()::text)::bytea),
+  'hex'
+)
 WHERE "capability_hash" IS NULL;
 --> statement-breakpoint
 ALTER TABLE "slot_reservations" ALTER COLUMN "capability_hash" SET NOT NULL;
@@ -91,6 +94,10 @@ ALTER TABLE "bookings" ADD COLUMN "reservation_id" uuid;
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD COLUMN "counterparty_org_id" uuid REFERENCES "auth"."organization"("id") ON DELETE SET NULL;
 --> statement-breakpoint
+CREATE INDEX "bookings_counterparty_org_idx"
+  ON "bookings" ("counterparty_org_id")
+  WHERE "counterparty_org_id" IS NOT NULL;
+--> statement-breakpoint
 ALTER TABLE "bookings" ADD COLUMN "expert_user_id" uuid REFERENCES "auth"."user"("id") ON DELETE RESTRICT;
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD COLUMN "guest_email" varchar(320);
@@ -119,6 +126,12 @@ UPDATE "bookings"
 SET "price_cents" = "price_amount"
 WHERE "price_cents" IS NULL;
 --> statement-breakpoint
+UPDATE "bookings" SET "currency" = upper("currency") WHERE "currency" <> upper("currency");
+--> statement-breakpoint
+ALTER TABLE "bookings" ALTER COLUMN "price_cents" SET NOT NULL;
+--> statement-breakpoint
+ALTER TABLE "bookings" ALTER COLUMN "currency" SET DEFAULT 'EUR';
+--> statement-breakpoint
 ALTER TABLE "bookings" ALTER COLUMN "expert_user_id" SET NOT NULL;
 --> statement-breakpoint
 ALTER TABLE "bookings" ALTER COLUMN "member_user_id" DROP NOT NULL;
@@ -141,10 +154,13 @@ ALTER TABLE "bookings" ADD CONSTRAINT "bookings_link_fk"
   ON DELETE SET NULL;
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_price_cents"
-  CHECK (price_cents IS NULL OR price_cents >= 0);
+  CHECK (price_cents >= 0);
+--> statement-breakpoint
+ALTER TABLE "bookings" ADD CONSTRAINT "bookings_price_amount_match"
+  CHECK (price_cents = price_amount);
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_currency_eur"
-  CHECK (currency = 'EUR' OR currency = 'eur');
+  CHECK (currency = 'EUR');
 --> statement-breakpoint
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_member_country"
   CHECK (member_country IS NULL OR member_country ~ '^[A-Z]{2}$');

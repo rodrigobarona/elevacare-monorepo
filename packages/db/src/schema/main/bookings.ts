@@ -11,6 +11,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uniqueIndex,
   uuid,
   varchar,
@@ -209,7 +210,7 @@ export const bookings = pgTable(
     language: varchar("language", { length: 16 }),
     memberCountry: varchar("member_country", { length: 2 }),
     bookingLinkId: uuid("booking_link_id"),
-    priceCents: integer("price_cents"),
+    priceCents: integer("price_cents").notNull(),
 
     startsAt: timestamp("starts_at", {
       withTimezone: true,
@@ -225,7 +226,7 @@ export const bookings = pgTable(
     sessionMode: sessionModeEnum("session_mode").notNull(),
 
     priceAmount: integer("price_amount").notNull(),
-    currency: varchar("currency", { length: 3 }).notNull().default("eur"),
+    currency: varchar("currency", { length: 3 }).notNull().default("EUR"),
     bookedLocale: varchar("booked_locale", { length: 5 }),
 
     /** Stripe references (populated in Sprint 4). */
@@ -264,17 +265,16 @@ export const bookings = pgTable(
     stripePaymentIdx: uniqueIndex("bookings_stripe_payment_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
-    reservationKey: uniqueIndex("bookings_reservation_id_key").on(
-      t.reservationId
+    counterpartyIdx: index("bookings_counterparty_org_idx")
+      .on(t.counterpartyOrgId)
+      .where(sql`counterparty_org_id IS NOT NULL`),
+    reservationKey: unique("bookings_reservation_id_key").on(t.reservationId),
+    priceChk: check("bookings_price_cents", sql`price_cents >= 0`),
+    priceMatchChk: check(
+      "bookings_price_amount_match",
+      sql`price_cents = price_amount`
     ),
-    priceChk: check(
-      "bookings_price_cents",
-      sql`price_cents IS NULL OR price_cents >= 0`
-    ),
-    currencyChk: check(
-      "bookings_currency_eur",
-      sql`currency = 'EUR' OR currency = 'eur'`
-    ),
+    currencyChk: check("bookings_currency_eur", sql`currency = 'EUR'`),
     countryChk: check(
       "bookings_member_country",
       sql`member_country IS NULL OR member_country ~ '^[A-Z]{2}$'`
@@ -394,7 +394,7 @@ export const bookingPayments = pgTable(
   },
   (t) => ({
     orgIdx: index("booking_payments_org_idx").on(t.orgId),
-    bookingKey: uniqueIndex("booking_payments_booking_id_key").on(t.bookingId),
+    bookingKey: unique("booking_payments_booking_id_key").on(t.bookingId),
     stripePiIdx: uniqueIndex("booking_payments_stripe_pi_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),

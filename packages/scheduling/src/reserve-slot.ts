@@ -29,7 +29,7 @@ async function compareAndDelete(
  * lock to prevent concurrent double-booking, then writes the
  * slot_reservations row inside an RLS-scoped DB transaction.
  *
- * Returns { success: true, reservationId } on success.
+ * Returns { success: true, reservationId, reservationToken } on success.
  * Returns { success: false, error } when the slot is already taken
  * or a conflict exists.
  */
@@ -48,11 +48,11 @@ export async function reserveSlot(
     ttlSeconds = DEFAULT_TTL_SECONDS,
     userId,
     eventTypeModeId,
-    priceCents,
-    currency,
+    price,
   } = input
+  const reservationToken = randomBytes(32).toString("base64url")
   const capabilityHash = createHash("sha256")
-    .update(randomBytes(32))
+    .update(reservationToken)
     .digest("hex")
 
   const key = slotKey(expertProfileId, startsAt.toISOString())
@@ -88,8 +88,8 @@ export async function reserveSlot(
           capabilityHash,
           userId,
           eventTypeModeId,
-          priceCents,
-          currency,
+          priceCents: price?.cents,
+          currency: price?.currency,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),
@@ -101,7 +101,7 @@ export async function reserveSlot(
       return row!.id
     })
 
-    return { success: true, reservationId }
+    return { success: true, reservationId, reservationToken }
   } catch (err) {
     await compareAndDelete(redis, key, holdToken)
 

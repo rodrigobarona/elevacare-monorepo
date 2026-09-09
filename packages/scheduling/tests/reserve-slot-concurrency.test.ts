@@ -139,6 +139,7 @@ describe("reserveSlot — concurrent reservation race", () => {
 
     expect(winners[0]!.reservationId).toBeDefined()
     expect(winners[0]!.reservationId).toMatch(/^reservation-/)
+    expect(winners[0]!.reservationToken).toMatch(/^[A-Za-z0-9_-]{43}$/)
 
     for (const loser of losers) {
       expect(loser.error).toBe("slot_taken")
