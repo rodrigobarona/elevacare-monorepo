@@ -150,6 +150,8 @@ export async function Explorer({
             <li key={expert.username}>
               <Link
                 href={`/${expert.username}`}
+                data-testid="expert-card"
+                data-username={expert.username}
                 className="flex h-full gap-4 rounded-xl border p-5 transition-colors hover:bg-muted/40"
               >
                 <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-lg font-semibold">

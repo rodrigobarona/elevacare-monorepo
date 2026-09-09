@@ -93,6 +93,7 @@ export function SlotPicker({
           <Button
             variant="ghost"
             size="icon-sm"
+            data-testid="booking-slot-next"
             aria-label={labels.next}
             onPress={() => onMonthChange(addMonths(month, 1))}
           >
@@ -135,6 +136,7 @@ export function SlotPicker({
               key={key}
               type="button"
               disabled={count === 0}
+              data-testid={count > 0 ? "booking-slot-day" : undefined}
               onClick={() => {
                 const first = byDay.get(key)?.[0]
                 if (first) onSelect(first)
@@ -172,6 +174,7 @@ export function SlotPicker({
             return (
               <Button
                 key={slot.start}
+                data-testid="booking-slot-time"
                 variant={selectedStart === slot.start ? "default" : "outline"}
                 onPress={() => onSelect(slot)}
               >

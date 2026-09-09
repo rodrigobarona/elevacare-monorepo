@@ -55,7 +55,10 @@ export default async function LegalDocumentPage({ params }: Props) {
       />
       <main className="flex-1 px-6 py-16">
         <article className="mx-auto max-w-3xl">
-          <p className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50">
+          <p
+            data-testid="legal-draft-banner"
+            className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50"
+          >
             {t("draftBanner")}
           </p>
           <p className="text-sm text-muted-foreground">

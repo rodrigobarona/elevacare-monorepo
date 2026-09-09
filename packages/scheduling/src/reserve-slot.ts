@@ -156,6 +156,17 @@ export async function reserveSlot(
     if (err instanceof ConflictError || isExclusionViolation(err)) {
       return { success: false, error: "conflict" }
     }
+    const code =
+      typeof err === "object" && err !== null && "code" in err
+        ? String(err.code)
+        : undefined
+    const name = err instanceof Error ? err.name : "unknown"
+    console.error("[reserve-slot] write failed", {
+      name,
+      code,
+      expertProfileId,
+      startsAt: startsAt.toISOString(),
+    })
     return { success: false, error: "db_error" }
   }
 }
