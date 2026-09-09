@@ -72,3 +72,15 @@ export function mapReserveError(code: string | undefined): string {
       return "generic"
   }
 }
+
+export function mapConfirmError(code: string | undefined): string {
+  if (!code) return "confirmFailed"
+  switch (code) {
+    case "PAYMENT_MISMATCH":
+      return "confirmMismatch"
+    case "unavailable":
+      return "confirmFailed"
+    default:
+      return "confirmFailed"
+  }
+}

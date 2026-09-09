@@ -57,10 +57,13 @@ const localeSet = new Set<string>(locales)
  *  7. App standalone at depth 1 -> app zone
  *  8. Org-scoped second segment (/:slug/team|admin|academy|settings)
  *     -> respective satellite app (team org experts → /team, managers → /admin)
- *  9. Bare or deeper /:slug with valid shape:
+ *  9. Public marketplace (Phase 04):
+ *       /:username            without session -> marketing (public profile)
+ *       /:username/:eventSlug                 -> marketing (booking funnel)
+ * 10. Deeper /:slug with valid shape:
  *       hasSession -> app zone (member app handles org check)
  *       !hasSession -> unauth-slug (caller redirects to /login)
- * 10. Anything else -> marketing
+ * 11. Anything else -> marketing
  */
 export function resolveDispatch(
   pathname: string,
@@ -110,6 +113,11 @@ export function resolveDispatch(
     return { kind: "rewrite", origin: origins.app }
 
   if (isSlug) {
+    // Public profile and booking funnel stay on web. Authenticated bare
+    // /:slug still goes to the member/expert app (org home / last-org hop).
+    if (depth === 2 || (depth === 1 && !hasSession)) {
+      return { kind: "marketing" }
+    }
     if (hasSession) {
       return { kind: "rewrite", origin: origins.app }
     }

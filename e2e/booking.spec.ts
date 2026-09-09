@@ -9,14 +9,32 @@ type PublicExpert = {
 }
 
 async function firstBookableExpert(): Promise<PublicExpert | null> {
-  const response = await fetch(`${apiUrl}/public/experts`)
-  if (!response.ok) return null
-  const body = (await response.json()) as { experts?: PublicExpert[] }
-  return (
-    body.experts?.find((expert) =>
-      expert.eventTypes.some((eventType) => eventType.modes.length > 0)
-    ) ?? null
-  )
+  let list: Response
+  try {
+    list = await fetch(`${apiUrl}/public/experts`)
+  } catch {
+    return null
+  }
+  if (!list.ok) return null
+  const body = (await list.json()) as {
+    experts?: Array<{ username: string; displayName: string }>
+  }
+  for (const card of body.experts ?? []) {
+    let profile: Response
+    try {
+      profile = await fetch(
+        `${apiUrl}/public/experts/${encodeURIComponent(card.username)}`
+      )
+    } catch {
+      continue
+    }
+    if (!profile.ok) continue
+    const expert = (await profile.json()) as PublicExpert
+    if (expert.eventTypes.some((eventType) => eventType.modes.length > 0)) {
+      return expert
+    }
+  }
+  return null
 }
 
 async function mockFunnelApis(page: Page, username: string, slug: string) {
@@ -108,5 +126,83 @@ test.describe("booking funnel", () => {
     }
 
     await expect(whenHeading).toBeVisible()
+  })
+
+  test("confirms a paid hold after Stripe redirect", async ({ page }) => {
+    const expert = await firstBookableExpert()
+    test.skip(!expert, "needs a published marketplace expert from the API")
+
+    const eventType = expert!.eventTypes.find((item) => item.modes.length > 0)
+    const modeId = eventType?.modes[0]?.id
+    if (!eventType || !modeId) {
+      test.skip(true, "expert has no bookable modes")
+      return
+    }
+
+    const start = new Date()
+    start.setUTCDate(start.getUTCDate() + 2)
+    start.setUTCHours(10, 0, 0, 0)
+    const end = new Date(start.getTime() + 60 * 60 * 1000)
+    const confirmBodies: unknown[] = []
+    await mockFunnelApis(page, expert!.username, eventType.slug)
+
+    await page.route("**/bookings/confirm", async (route) => {
+      confirmBodies.push(await route.request().postDataJSON())
+      await route.fulfill({
+        status: 201,
+        json: {
+          bookingId: "00000000-0000-4000-8000-000000000003",
+          alreadyConfirmed: false,
+        },
+      })
+    })
+
+    await page.addInitScript(
+      (snapshot) => {
+        sessionStorage.setItem("bookingFunnel:v1", JSON.stringify(snapshot))
+      },
+      {
+        reservation: {
+          reservationId: "00000000-0000-4000-8000-000000000002",
+          reservationToken: "reservation-token-e2e-test",
+          expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        },
+        payment: {
+          clientSecret: "pi_e2e_secret_test",
+          paymentIntentId: "pi_e2e_intent",
+          bookingId: "00000000-0000-4000-8000-000000000003",
+          publishableKey: "pk_test_e2e",
+        },
+        slot: {
+          start: start.toISOString(),
+          end: end.toISOString(),
+          startLocal: "10:00",
+          endLocal: "11:00",
+        },
+        modeId,
+        name: "E2E Member",
+        email: "member@example.com",
+        phone: "",
+        timeZone: "Europe/Lisbon",
+        country: "PT",
+        language: "en",
+      }
+    )
+
+    await page.goto(
+      `/${expert!.username}/${eventType.slug}?redirect_status=succeeded`
+    )
+    await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
+      "data-state",
+      "confirmed",
+      { timeout: 10_000 }
+    )
+    expect(confirmBodies).toEqual([
+      {
+        reservationId: "00000000-0000-4000-8000-000000000002",
+        reservationToken: "reservation-token-e2e-test",
+        paymentIntentId: "pi_e2e_intent",
+      },
+    ])
   })
 })

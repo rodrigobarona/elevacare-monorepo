@@ -151,10 +151,18 @@ describe("resolveDispatch - bare org slug", () => {
     })
   })
 
-  it("returns unauth-slug for /[orgSlug] without a session", () => {
+  it("keeps /[username] on marketing without a session (public profile)", () => {
     expect(resolveDispatch("/clinica-mota", false, origins)).toEqual({
-      kind: "unauth-slug",
-      slug: "clinica-mota",
+      kind: "marketing",
+    })
+  })
+
+  it("keeps /[username]/[eventSlug] on marketing for guests and signed-in members", () => {
+    expect(resolveDispatch("/anaquick/quick-chat", false, origins)).toEqual({
+      kind: "marketing",
+    })
+    expect(resolveDispatch("/anaquick/quick-chat", true, origins)).toEqual({
+      kind: "marketing",
     })
   })
 

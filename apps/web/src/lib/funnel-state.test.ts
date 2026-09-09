@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   initialFunnelLanguage,
   initialFunnelStep,
+  mapConfirmError,
   mapReserveError,
   previousFunnelStep,
 } from "./funnel-state"
@@ -42,6 +43,15 @@ describe("mapReserveError", () => {
     expect(mapReserveError("CONSENT_VERSION_OUTDATED")).toBe("consentOutdated")
     expect(mapReserveError("mystery")).toBe("generic")
     expect(mapReserveError(undefined)).toBe("generic")
+  })
+})
+
+describe("mapConfirmError", () => {
+  it("maps confirm API codes", () => {
+    expect(mapConfirmError("PAYMENT_MISMATCH")).toBe("confirmMismatch")
+    expect(mapConfirmError("unavailable")).toBe("confirmFailed")
+    expect(mapConfirmError("mystery")).toBe("confirmFailed")
+    expect(mapConfirmError(undefined)).toBe("confirmFailed")
   })
 })
 

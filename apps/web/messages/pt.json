@@ -237,6 +237,7 @@
       "phoneLocation": "Chamada para {phone}",
       "inPerson": "Encontro em {location}.",
       "ics": "Adicionar ao calendário",
+      "retry": "Tentar confirmar de novo",
       "activate": "Criar a sua conta Eleva",
       "activateHint": "Guarde esta sessão no seu Space e faça a gestão mais tarde."
     },
@@ -252,6 +253,8 @@
       "guestRequired": "Indique o nome e o email para continuar.",
       "consentOutdated": "Reveja os avisos mais recentes e tente novamente.",
       "consentsRequired": "Confirme os três avisos para continuar.",
+      "confirmFailed": "O pagamento passou, mas ainda não confirmámos a sessão. Tente novamente.",
+      "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
       "generic": "Não foi possível reservar esse horário. Tente novamente."
     }
   },

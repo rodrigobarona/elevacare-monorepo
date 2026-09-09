@@ -168,16 +168,26 @@ describe("createGatewayProxy integration", () => {
     expect(res.headers.get("location")).toBe("http://localhost:3007/payments")
   })
 
-  it("redirects unauthenticated org slug to /login with returnTo", async () => {
+  it("serves the public profile for an unauthenticated /:username", async () => {
+    const intl = vi.fn(marketingIntl)
     const proxy = createGatewayProxy({
       origins: testOrigins,
-      intlMiddleware: marketingIntl,
+      intlMiddleware: intl,
     })
     const res = await proxy(makeRequest("/clinica-mota"))
-    expect(res.status).toBe(307)
-    expect(res.headers.get("location")).toBe(
-      "http://localhost:3000/login?returnTo=%2Fclinica-mota"
-    )
+    expect(res.status).toBe(200)
+    expect(intl).toHaveBeenCalledOnce()
+  })
+
+  it("serves the booking funnel for /:username/:eventSlug without a session", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(makeRequest("/anaquick/quick-chat"))
+    expect(res.status).toBe(200)
+    expect(intl).toHaveBeenCalledOnce()
   })
 
   it("redirects authenticated team org slug to member app in development", async () => {

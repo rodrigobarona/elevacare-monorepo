@@ -237,6 +237,7 @@
       "phoneLocation": "The expert will call {phone}",
       "inPerson": "Meet at {location}.",
       "ics": "Add to calendar",
+      "retry": "Try confirming again",
       "activate": "Create your Eleva account",
       "activateHint": "Save this session to your Space and manage it later."
     },
@@ -252,6 +253,8 @@
       "guestRequired": "Please add your name and email to continue.",
       "consentOutdated": "Please review the latest notices and try again.",
       "consentsRequired": "Please confirm the three notices to continue.",
+      "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
+      "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
       "generic": "We could not hold that time. Please try again."
     }
   },
