@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslations } from "next-intl"
 import {
   ApiClientError,
@@ -46,6 +46,7 @@ import {
 import {
   initialFunnelLanguage,
   initialFunnelStep,
+  mapConfirmError,
   mapReserveError,
   previousFunnelStep,
   type FunnelStep,
@@ -137,6 +138,10 @@ export function BookingFunnel({
   const [formError, setFormError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [paymentInFlight, setPaymentInFlight] = useState(false)
+  const [confirmState, setConfirmState] = useState<
+    "idle" | "pending" | "confirmed" | "failed"
+  >("idle")
+  const confirmInFlight = useRef(false)
 
   const evaluations = evaluateModes(modes, {
     memberCountry: country,
@@ -193,6 +198,37 @@ export function BookingFunnel({
     }
   }, [eventSlug, linkToken, month, selectedMode, timeZone, username])
 
+  const confirmPaidHold = useCallback(
+    async (hold: Reservation, paid: Payment) => {
+      if (confirmInFlight.current) return
+      confirmInFlight.current = true
+      setConfirmState("pending")
+      setFormError(null)
+      try {
+        const api = createPublicApiClient()
+        const result = await api.bookings.confirm({
+          reservationId: hold.reservationId,
+          reservationToken: hold.reservationToken,
+          paymentIntentId: paid.paymentIntentId,
+        })
+        setPayment((current) =>
+          current ? { ...current, bookingId: result.bookingId } : current
+        )
+        setConfirmState("confirmed")
+      } catch (error) {
+        if (error instanceof ApiClientError) {
+          setFormError(mapConfirmError(error.body?.error))
+        } else {
+          setFormError("confirmFailed")
+        }
+        setConfirmState("failed")
+      } finally {
+        confirmInFlight.current = false
+      }
+    },
+    []
+  )
+
   useEffect(() => {
     if (!reservation) return
     const id = window.setInterval(() => setNowMs(Date.now()), 1000)
@@ -223,7 +259,11 @@ export function BookingFunnel({
       ) {
         setLanguage(snapshot.language)
       }
-      if (status === "succeeded" || status === "processing") {
+      if (status === "succeeded") {
+        setStep("done")
+        void confirmPaidHold(snapshot.reservation, snapshot.payment)
+      } else if (status === "processing") {
+        setConfirmState("pending")
         setStep("done")
       } else {
         setFormError("generic")
@@ -233,7 +273,7 @@ export function BookingFunnel({
       window.history.replaceState({}, "", bookingReturnUrl())
     }, 0)
     return () => window.clearTimeout(id)
-  }, [])
+  }, [confirmPaidHold])
 
   const holdExpired =
     reservation != null &&
@@ -360,6 +400,8 @@ export function BookingFunnel({
     setSlot(null)
     setFormError(null)
     setPaymentInFlight(false)
+    setConfirmState("idle")
+    confirmInFlight.current = false
     setStep(initialFunnelStep({ pinnedModeId, skipToWhen }))
   }
 
@@ -647,8 +689,16 @@ export function BookingFunnel({
                 failedLabel={t("pay.failed")}
                 pendingLabel={t("pay.pendingError")}
                 onProcessingChange={setPaymentInFlight}
-                onPaid={() => {
+                onPaid={(result) => {
                   setStep("done")
+                  if (result.status === "succeeded") {
+                    void confirmPaidHold(reservation, {
+                      ...payment,
+                      paymentIntentId: result.paymentIntentId,
+                    })
+                    return
+                  }
+                  setConfirmState("pending")
                 }}
               />
             )}
@@ -659,10 +709,28 @@ export function BookingFunnel({
           <div className="mt-8 space-y-6">
             <header className="space-y-2">
               <h1 className="font-heading text-3xl font-semibold tracking-tight">
-                {t("done.pending")}
+                {confirmState === "confirmed"
+                  ? t("done.heading")
+                  : t("done.pending")}
               </h1>
-              <p className="text-muted-foreground">{t("done.pendingSub")}</p>
+              <p className="text-muted-foreground">
+                {confirmState === "confirmed"
+                  ? t("done.sub")
+                  : t("done.pendingSub")}
+              </p>
             </header>
+            {confirmState === "failed" && formError ? (
+              <div className="space-y-3">
+                <FieldError>{t(`errors.${formError}`)}</FieldError>
+                {reservation && payment ? (
+                  <Button
+                    onPress={() => void confirmPaidHold(reservation, payment)}
+                  >
+                    {t("done.retry")}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
             <p>
               {selectedMode.mode === "phone"
                 ? t("done.phone", {
