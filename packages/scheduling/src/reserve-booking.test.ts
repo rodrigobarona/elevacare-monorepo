@@ -1,15 +1,20 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
 import { CONSENT_DOCUMENT_VERSION, CONSENT_KINDS } from "@eleva/compliance"
 import type { Redis } from "@upstash/redis"
 import type { ResolvedOffer } from "./resolve-offer"
 import type { ReserveSlotResult } from "./types"
 
 const findExpertByUsername = vi.fn()
+const getScheduleForBooking = vi.fn()
+const listExpertBusyBookings = vi.fn()
 const resolveOffer = vi.fn()
 const reserveSlot = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   findExpertByUsername: (...args: unknown[]) => findExpertByUsername(...args),
+  getScheduleForBooking: (...args: unknown[]) => getScheduleForBooking(...args),
+  listExpertBusyBookings: (...args: unknown[]) =>
+    listExpertBusyBookings(...args),
 }))
 
 vi.mock("./resolve-offer", async () => {
@@ -46,6 +51,11 @@ const offer: ResolvedOffer = {
   countryScopeCodes: [],
   languages: ["pt", "en"],
   active: true,
+  published: true,
+  bookingWindowDays: null,
+  minimumNoticeMinutes: 0,
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
 }
 
 const grants = CONSENT_KINDS.map((kind) => ({
@@ -67,6 +77,10 @@ const baseInput = {
 
 describe("reserveBooking", () => {
   beforeEach(() => {
+    vi.useFakeTimers({
+      now: new Date("2026-09-01T00:00:00Z"),
+      toFake: ["Date"],
+    })
     vi.clearAllMocks()
     findExpertByUsername.mockResolvedValue({
       id: "expert-1",
@@ -75,6 +89,16 @@ describe("reserveBooking", () => {
       username: "ada",
     })
     resolveOffer.mockResolvedValue({ ok: true, offer })
+    getScheduleForBooking.mockResolvedValue({
+      schedule: { id: "sched-1", timezone: "UTC" },
+      rules: [0, 1, 2, 3, 4, 5, 6].map((dayOfWeek) => ({
+        dayOfWeek,
+        startTime: "00:00:00",
+        endTime: "23:59:00",
+      })),
+      overrides: [],
+    })
+    listExpertBusyBookings.mockResolvedValue([])
     reserveSlot.mockResolvedValue({
       success: true,
       reservationId: "res-1",
@@ -184,6 +208,39 @@ describe("reserveBooking", () => {
     expect(result).toEqual({ ok: false, error: "SLOT_TAKEN" })
   })
 
+  it("rejects a duration that does not match the offer", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      endsAt: new Date("2026-09-10T11:00:00Z"),
+    })
+    expect(result).toEqual({ ok: false, error: "SLOT_UNAVAILABLE" })
+    expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
+  it("rejects an unpublished public offer before the slot lock", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    resolveOffer.mockResolvedValue({
+      ok: true,
+      offer: { ...offer, published: false },
+    })
+    const result = await reserveBooking(redis, baseInput)
+    expect(result).toEqual({ ok: false, error: "not_found" })
+    expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
+  it("rejects a slot outside published availability", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    getScheduleForBooking.mockResolvedValue({
+      schedule: { id: "sched-1", timezone: "UTC" },
+      rules: [{ dayOfWeek: 1, startTime: "09:00:00", endTime: "10:00:00" }],
+      overrides: [],
+    })
+    const result = await reserveBooking(redis, baseInput)
+    expect(result).toEqual({ ok: false, error: "SLOT_UNAVAILABLE" })
+    expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
   it("returns reservationId, reservationToken, and expiresAt", async () => {
     const { reserveBooking, RESERVE_TTL_SECONDS } =
       await import("./reserve-booking")
@@ -221,4 +278,8 @@ describe("isE164Phone", () => {
     expect(isE164Phone("912345678")).toBe(false)
     expect(isE164Phone("+351 912 345 678")).toBe(false)
   })
+})
+
+afterAll(() => {
+  vi.useRealTimers()
 })

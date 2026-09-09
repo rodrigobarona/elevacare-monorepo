@@ -18,6 +18,11 @@ export type ResolvedOffer = {
   countryScopeCodes: string[]
   languages: string[]
   active: boolean
+  published: boolean
+  bookingWindowDays: number | null
+  minimumNoticeMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
 }
 
 export type ResolveOfferInput = {
@@ -52,6 +57,11 @@ export type OfferEventTypeRow = {
   expertProfileId: string
   durationMinutes: number
   priceAmount: number
+  published: boolean
+  bookingWindowDays: number | null
+  minimumNoticeMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
 }
 
 export type OfferLinkRow = {
@@ -154,6 +164,11 @@ export function composeResolvedOffer(input: {
       countryScopeCodes: mode.countryScopeCodes,
       languages: mode.languages,
       active: mode.active,
+      published: eventType.published,
+      bookingWindowDays: eventType.bookingWindowDays,
+      minimumNoticeMinutes: eventType.minimumNoticeMinutes,
+      bufferBeforeMinutes: eventType.bufferBeforeMinutes,
+      bufferAfterMinutes: eventType.bufferAfterMinutes,
     },
   }
 }

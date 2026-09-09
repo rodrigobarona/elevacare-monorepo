@@ -119,11 +119,11 @@ export async function reserveSlot(
               action: "reserved",
               entityId: id,
               payload: {
+                ...audit.payload,
                 eventTypeId,
                 eventTypeModeId,
                 startsAt: startsAt.toISOString(),
                 endsAt: endsAt.toISOString(),
-                ...audit.payload,
               },
             })
             return id

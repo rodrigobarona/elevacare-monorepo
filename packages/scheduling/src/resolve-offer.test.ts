@@ -27,6 +27,11 @@ const eventType: OfferEventTypeRow = {
   expertProfileId: "expert-1",
   durationMinutes: 30,
   priceAmount: 6000,
+  published: true,
+  bookingWindowDays: 60,
+  minimumNoticeMinutes: 0,
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
 }
 
 const now = new Date("2026-09-09T12:00:00Z")

@@ -25,6 +25,11 @@ const eventType: OfferEventTypeRow = {
   expertProfileId: "expert-1",
   durationMinutes: 60,
   priceAmount: 6000,
+  published: true,
+  bookingWindowDays: null,
+  minimumNoticeMinutes: 0,
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
 }
 
 const resolved = composeResolvedOffer({ orgId: "org-1", mode, eventType })

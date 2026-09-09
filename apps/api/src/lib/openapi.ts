@@ -1223,7 +1223,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "reserveBooking",
           summary: "Reserve a booking slot",
           description:
-            "Holds a public or private-link slot for 5 minutes after consent and mode checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged.",
+            "Holds a public or private-link slot for 5 minutes after consent, mode, and availability checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged.",
           tags: ["Bookings"],
           security: [],
           requestBody: {
@@ -1256,6 +1256,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdPublicWithNotFound,
+            "422": {
+              description:
+                "Consent, mode, guest, phone, or unpublished/unavailable slot",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

@@ -7,9 +7,14 @@ import {
   validateFunnelConsents,
   type ConsentKind,
 } from "@eleva/compliance"
-import { findExpertByUsername } from "@eleva/db"
+import {
+  findExpertByUsername,
+  getScheduleForBooking,
+  listExpertBusyBookings,
+} from "@eleva/db"
 import type { Tx } from "@eleva/db/context"
 import { bookingLinks, consents } from "@eleva/db/schema"
+import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
 import {
   linkRecipientMatches,
@@ -55,6 +60,7 @@ export type ReserveBookingError =
   | "MODE_LANGUAGE_MISMATCH"
   | "PHONE_REQUIRED"
   | "GUEST_REQUIRED"
+  | "SLOT_UNAVAILABLE"
   | "SLOT_TAKEN"
   | "db_error"
 
@@ -206,6 +212,36 @@ export async function reserveBooking(
   const memberPhone = input.guest?.phone ?? input.phone
   if (offer.mode === "phone" && !isE164Phone(memberPhone ?? "")) {
     return { ok: false, error: "PHONE_REQUIRED" }
+  }
+
+  if (!offer.published && !offer.bookingLinkId) {
+    return { ok: false, error: "not_found" }
+  }
+
+  const schedulePromise = getScheduleForBooking(expert.orgId, offer.scheduleId)
+  const busyPromise = listExpertBusyBookings(
+    expert.id,
+    input.startsAt,
+    input.endsAt
+  )
+  const [{ schedule, rules, overrides }, existingBookings] = await Promise.all([
+    schedulePromise,
+    busyPromise,
+  ])
+  if (!schedule) {
+    return { ok: false, error: "not_found" }
+  }
+  const slotOk = assertRequestedSlotAvailable({
+    offer,
+    startsAt: input.startsAt,
+    endsAt: input.endsAt,
+    schedule,
+    rules,
+    overrides,
+    existingBookings,
+  })
+  if (!slotOk.ok) {
+    return slotOk
   }
 
   const holdToken = randomBytes(32).toString("hex")

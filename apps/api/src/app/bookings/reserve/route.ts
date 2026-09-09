@@ -28,6 +28,7 @@ const RESERVE_ERROR_STATUS: Record<ReserveBookingError, number> = {
   MODE_LANGUAGE_MISMATCH: 422,
   PHONE_REQUIRED: 422,
   GUEST_REQUIRED: 422,
+  SLOT_UNAVAILABLE: 422,
   SLOT_TAKEN: 409,
   db_error: 500,
 }

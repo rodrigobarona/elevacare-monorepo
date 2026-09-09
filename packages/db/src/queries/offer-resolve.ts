@@ -21,6 +21,11 @@ export type OfferResolveEventTypeRow = {
   expertProfileId: string
   durationMinutes: number
   priceAmount: number
+  published: boolean
+  bookingWindowDays: number | null
+  minimumNoticeMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
 }
 
 export type OfferResolveLinkRow = {
@@ -78,6 +83,11 @@ export async function loadOfferForResolve(input: {
         expertProfileId: eventTypes.expertProfileId,
         durationMinutes: eventTypes.durationMinutes,
         priceAmount: eventTypes.priceAmount,
+        published: eventTypes.published,
+        bookingWindowDays: eventTypes.bookingWindowDays,
+        minimumNoticeMinutes: eventTypes.minimumNoticeMinutes,
+        bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
+        bufferAfterMinutes: eventTypes.bufferAfterMinutes,
       })
       .from(eventTypes)
       .where(

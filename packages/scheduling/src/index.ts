@@ -13,6 +13,7 @@ export type {
   GetOfferSlotsInput,
   ViewerTimeSlot,
 } from "./offer-slots"
+export { assertRequestedSlotAvailable } from "./assert-slot-available"
 export { assertModeBookable } from "./mode-bookable"
 export type {
   ModeBookableError,
