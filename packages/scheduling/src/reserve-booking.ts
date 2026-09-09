@@ -257,6 +257,24 @@ export async function reserveBooking(
     userId: input.session?.userId,
     eventTypeModeId: offer.eventTypeModeId,
     price: { cents: offer.priceCents, currency: offer.currency },
+    funnel: {
+      timezone: input.timezone,
+      language: input.language,
+      memberCountry: input.memberCountry,
+      bookingLinkId: offer.bookingLinkId ?? null,
+      sessionMode: offer.mode,
+      ...(input.session
+        ? {}
+        : input.guest
+          ? {
+              guest: {
+                email: input.guest.email,
+                name: input.guest.name,
+                ...(memberPhone ? { phone: memberPhone } : {}),
+              },
+            }
+          : {}),
+    },
     audit: {
       actorUserId: input.session?.userId ?? null,
       payload: {

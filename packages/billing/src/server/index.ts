@@ -33,6 +33,22 @@ export type {
   ProvisionBillingResult,
 } from "./provisioning"
 export { processStripeEvent, TerminalError } from "./webhook"
+export {
+  authorizeReservationAccess,
+  createBookingPaymentIntent,
+  createPaymentIntentForReservation,
+  hashReservationToken,
+  parseReservationFunnel,
+  paymentIntentIdempotencyKey,
+} from "./payments"
+export type {
+  CreateBookingPaymentIntentInput,
+  CreatePaymentIntentForReservationResult,
+} from "./payments"
+export {
+  classifyPaymentMethod,
+  type BookingPaymentMethodClass,
+} from "./payment-method-policy"
 export type { StripeEventResult } from "./webhook"
 export {
   computeCommissionRate,

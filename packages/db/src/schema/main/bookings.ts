@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  jsonb,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization, user } from "../auth"
@@ -78,6 +79,15 @@ export const sessionStatusEnum = pgEnum("session_status", [
   "no_show",
 ])
 
+export type ReservationFunnelSnapshot = {
+  timezone: string
+  language: string
+  memberCountry: string
+  bookingLinkId: string | null
+  sessionMode: "online" | "in_person" | "phone"
+  guest?: { email: string; name: string; phone?: string }
+}
+
 /**
  * Short-lived slot lock created during the booking/payment flow.
  * TTL is 5 minutes (enforced by the slotReservationExpiry workflow).
@@ -132,6 +142,7 @@ export const slotReservations = pgTable(
     eventTypeModeId: uuid("event_type_mode_id"),
     priceCents: integer("price_cents"),
     currency: varchar("currency", { length: 3 }),
+    funnel: jsonb("funnel").$type<ReservationFunnelSnapshot>(),
 
     createdAt: createdAt(),
   },
@@ -159,6 +170,10 @@ export const slotReservations = pgTable(
     priceCurrencyChk: check(
       "slot_reservations_price_currency",
       sql`(price_cents IS NULL) = (currency IS NULL)`
+    ),
+    funnelChk: check(
+      "slot_reservations_funnel_object",
+      sql`funnel IS NULL OR jsonb_typeof(funnel) = 'object'`
     ),
     modeFk: foreignKey({
       name: "slot_reservations_mode_fk",

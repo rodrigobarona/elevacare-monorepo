@@ -52,6 +52,7 @@ export async function reserveSlot(
     price,
     afterInsert,
     audit,
+    funnel,
   } = input
   const reservationToken = randomBytes(32).toString("base64url")
   const capabilityHash = createHash("sha256")
@@ -94,6 +95,7 @@ export async function reserveSlot(
           eventTypeModeId,
           priceCents: price?.cents,
           currency: price?.currency,
+          funnel,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),

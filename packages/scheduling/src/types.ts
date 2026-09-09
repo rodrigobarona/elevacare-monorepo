@@ -3,6 +3,7 @@ import type {
   AvailabilityRule,
   DateOverride,
   EventType,
+  ReservationFunnelSnapshot,
   Schedule,
 } from "@eleva/db/schema"
 
@@ -55,6 +56,7 @@ export interface ReserveSlotInput {
   userId?: string
   eventTypeModeId?: string
   price?: { cents: number; currency: "EUR" }
+  funnel?: ReservationFunnelSnapshot
   afterInsert?: (tx: Tx, reservationId: string) => Promise<void>
   audit?: {
     actorUserId?: string | null

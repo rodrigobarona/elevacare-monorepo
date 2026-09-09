@@ -259,11 +259,64 @@ describe("reserveBooking", () => {
         eventTypeId: "et-1",
         expertProfileId: "expert-1",
         price: { cents: 4500, currency: "EUR" },
+        funnel: expect.objectContaining({
+          timezone: "Europe/Lisbon",
+          language: "pt",
+          memberCountry: "PT",
+          sessionMode: "online",
+          guest: expect.objectContaining({
+            email: "member@eleva.care",
+            name: "Ada",
+          }),
+        }),
         audit: expect.objectContaining({
           payload: expect.objectContaining({
             language: "pt",
             memberCountry: "PT",
             consents: grants,
+          }),
+        }),
+      })
+    )
+  })
+
+  it("omits guest from the funnel snapshot when a session is present", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      guest: undefined,
+      session: { userId: "user-1", email: "member@eleva.care" },
+    })
+    expect(result.ok).toBe(true)
+    expect(reserveSlot).toHaveBeenCalledWith(
+      redis,
+      expect.objectContaining({
+        userId: "user-1",
+        funnel: {
+          timezone: "Europe/Lisbon",
+          language: "pt",
+          memberCountry: "PT",
+          bookingLinkId: null,
+          sessionMode: "online",
+        },
+      })
+    )
+  })
+
+  it("snapshots the top-level phone onto the guest funnel", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      phone: "+351912345678",
+    })
+    expect(result.ok).toBe(true)
+    expect(reserveSlot).toHaveBeenCalledWith(
+      redis,
+      expect.objectContaining({
+        funnel: expect.objectContaining({
+          guest: expect.objectContaining({
+            email: "member@eleva.care",
+            phone: "+351912345678",
           }),
         }),
       })
