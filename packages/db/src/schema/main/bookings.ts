@@ -79,6 +79,7 @@ export const sessionStatusEnum = pgEnum("session_status", [
   "no_show",
 ])
 
+/** Guest PII is copied onto bookings then scrubbed from this snapshot. */
 export type ReservationFunnelSnapshot = {
   timezone: string
   language: string

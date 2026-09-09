@@ -3,7 +3,12 @@ import { and, eq } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  main,
+  withOrgContext,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import { organization } from "@eleva/db/schema/auth"
 import { stripe } from "./client"
 import { computeCommissionRate, ENTITLEMENT_KEYS } from "./commission"
@@ -33,6 +38,15 @@ const funnelSnapshotSchema = z.object({
 
 export function parseReservationFunnel(value: unknown) {
   return funnelSnapshotSchema.safeParse(value)
+}
+
+const bookingLinkIdSchema = z.string().uuid()
+
+function funnelWithoutGuest(
+  funnel: z.infer<typeof funnelSnapshotSchema>
+): z.infer<typeof funnelSnapshotSchema> {
+  const { guest: _guest, ...rest } = funnel
+  return rest
 }
 
 export function paymentIntentIdempotencyKey(reservationId: string): string {
@@ -117,7 +131,13 @@ export type CreatePaymentIntentForReservationResult =
 export async function createPaymentIntentForReservation(
   input: CreatePaymentIntentForReservationInput
 ): Promise<CreatePaymentIntentForReservationResult> {
-  const loaded = await loadReservationForIntent(input.reservationId)
+  let loaded
+  try {
+    loaded = await loadReservationForIntent(input.reservationId)
+  } catch (err) {
+    console.error("[payments/intent] reservation load failed", err)
+    return { ok: false, error: "db_error" }
+  }
   if (!loaded) return { ok: false, error: "not_found" }
 
   const { reservation, orgType, linkRevoked } = loaded
@@ -307,7 +327,10 @@ async function loadReservationForIntent(reservationId: string) {
 
     if (!row) return null
 
-    const bookingLinkId = row.reservation.funnel?.bookingLinkId
+    const rawLinkId = row.reservation.funnel?.bookingLinkId
+    const bookingLinkId = bookingLinkIdSchema.safeParse(rawLinkId).success
+      ? rawLinkId
+      : null
     let linkRevoked = false
     if (bookingLinkId) {
       const [link] = await tx
@@ -332,7 +355,7 @@ async function loadReservationForIntent(reservationId: string) {
 }
 
 async function loadBookingForReservation(orgId: string, reservationId: string) {
-  return withPlatformAdminContext(async (tx) => {
+  return withOrgContext(orgId, async (tx) => {
     const [row] = await tx
       .select({
         bookingId: main.bookings.id,
@@ -360,7 +383,7 @@ async function insertPendingBooking(
     bookingId: string
     paymentId: string
     reservation: typeof main.slotReservations.$inferSelect
-    funnel: NonNullable<typeof main.slotReservations.$inferSelect.funnel>
+    funnel: z.infer<typeof funnelSnapshotSchema>
     priceCents: number
     currency: string
     applicationFeeCents: number
@@ -403,6 +426,10 @@ async function insertPendingBooking(
     transferGroup: input.bookingId,
     stripeIdempotencyKey: input.idempotencyKey,
   })
+  await tx
+    .update(main.slotReservations)
+    .set({ funnel: funnelWithoutGuest(funnel) })
+    .where(eq(main.slotReservations.id, reservation.id))
 }
 
 async function bindPaymentIntent(

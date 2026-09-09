@@ -121,6 +121,20 @@ async function main() {
   )
 
   console.log("[stripe:pmc] %s", config.id)
+  const blocked = [...ON_METHODS].filter((method) => {
+    const block = (config as unknown as Record<string, unknown>)[method]
+    return (
+      typeof block === "object" &&
+      block !== null &&
+      (block as { available?: boolean }).available === false
+    )
+  })
+  if (blocked.length > 0) {
+    console.warn(
+      "[stripe:pmc] enabled but not available (capability inactive):",
+      blocked.join(", ")
+    )
+  }
   console.log("Set STRIPE_PMC_BOOKING=%s", config.id)
 }
 

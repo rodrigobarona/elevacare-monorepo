@@ -3,13 +3,26 @@ import { eq, and, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import { withAudit } from "@eleva/audit"
 import { withOrgContext, type Tx } from "@eleva/db/context"
-import { slotReservations, bookings, sessions } from "@eleva/db/schema"
+import {
+  slotReservations,
+  bookings,
+  sessions,
+  type ReservationFunnelSnapshot,
+} from "@eleva/db/schema"
 import type { ReserveSlotInput, ReserveSlotResult } from "./types"
 
 const DEFAULT_TTL_SECONDS = 300
 
 function slotKey(expertProfileId: string, startsAtIso: string): string {
   return `slot:${expertProfileId}:${startsAtIso}`
+}
+
+function stripFunnelGuest(
+  funnel: ReservationFunnelSnapshot | null | undefined
+): ReservationFunnelSnapshot | null | undefined {
+  if (!funnel) return funnel
+  const { guest: _guest, ...rest } = funnel
+  return rest
 }
 
 async function compareAndDelete(
@@ -163,6 +176,7 @@ export async function releaseReservation(
         startsAt: slotReservations.startsAt,
         status: slotReservations.status,
         holdToken: slotReservations.holdToken,
+        funnel: slotReservations.funnel,
       })
       .from(slotReservations)
       .where(eq(slotReservations.id, reservationId))
@@ -172,7 +186,10 @@ export async function releaseReservation(
 
     await tx
       .update(slotReservations)
-      .set({ status: "released" })
+      .set({
+        status: "released",
+        funnel: stripFunnelGuest(row.funnel) ?? null,
+      })
       .where(eq(slotReservations.id, reservationId))
 
     const key = slotKey(row.expertProfileId, row.startsAt.toISOString())
@@ -190,9 +207,24 @@ export async function convertReservation(
   bookingId: string
 ): Promise<{ converted: boolean }> {
   return withOrgContext(orgId, async (tx: Tx) => {
+    const [current] = await tx
+      .select({ funnel: slotReservations.funnel })
+      .from(slotReservations)
+      .where(
+        and(
+          eq(slotReservations.id, reservationId),
+          eq(slotReservations.status, "active")
+        )
+      )
+      .limit(1)
+
     const updated = await tx
       .update(slotReservations)
-      .set({ status: "converted", bookingId })
+      .set({
+        status: "converted",
+        bookingId,
+        funnel: stripFunnelGuest(current?.funnel) ?? null,
+      })
       .where(
         and(
           eq(slotReservations.id, reservationId),
