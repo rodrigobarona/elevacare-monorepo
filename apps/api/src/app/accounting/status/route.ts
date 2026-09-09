@@ -9,6 +9,14 @@ import {
   type Tx,
 } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 /**
  * GET /accounting/status
@@ -38,6 +46,13 @@ export async function GET(request: Request) {
       { status: 401, headers: cors }
     )
   }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated,
+    cors
+  )
+  if (rateLimited) return rateLimited
 
   const expert = await withPlatformAdminContext(async (tx: Tx) => {
     const [row] = await tx

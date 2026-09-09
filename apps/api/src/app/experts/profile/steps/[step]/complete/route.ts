@@ -6,6 +6,13 @@ import { ExpertOnboardingStepSchema } from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: true,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

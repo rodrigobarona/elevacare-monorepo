@@ -18,6 +18,13 @@ import {
   RATE_LIMITS,
   rateLimitKey,
 } from "../../../lib/rate-limit"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 /**
  * POST /billing/subscribe

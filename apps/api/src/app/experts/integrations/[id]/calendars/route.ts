@@ -10,6 +10,13 @@ import {
   requireAuthAccountId,
   type CalendarProvider,
 } from "@eleva/calendar"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 const credentials = createCredentialManager({ getProviderAccessToken })
 

@@ -17,6 +17,13 @@
 import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
 import { corsHeaders } from "@/lib/cors"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "signature",
+  rateLimit: false,
+  botId: false,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

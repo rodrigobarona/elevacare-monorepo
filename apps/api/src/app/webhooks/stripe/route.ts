@@ -2,6 +2,13 @@ import { captureException } from "@eleva/observability"
 import { processStripeEvent, stripe } from "@eleva/billing/server"
 import { secureJson } from "../../../lib/security-headers"
 import { corsHeaders } from "../../../lib/cors"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "signature",
+  rateLimit: false,
+  botId: false,
+} as const satisfies RoutePolicy
 
 /**
  * POST /webhooks/stripe

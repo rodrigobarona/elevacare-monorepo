@@ -14,6 +14,7 @@ alwaysApply: false
 
 Every route handler MUST follow this pattern:
 
+0. **ROUTE_POLICY**: export `{ auth, rateLimit, botId }` (`public` | `session` | `signature` | `internal`). `pnpm check:route-guards` fails without it.
 1. **Auth**: call `requireApiAuth(request)` from `@/lib/auth`. Return 401 for anonymous, 403 for missing capability.
 2. **BotID**: on public-facing POST routes, call `checkBot()` from `@/lib/bot-protection` before business logic.
 3. **Rate limit**: call `applyRateLimit()` from `@/lib/rate-limit` with the appropriate config.
@@ -29,6 +30,13 @@ import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { UnauthorizedError } from "@eleva/auth"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

@@ -8,6 +8,13 @@ import {
   listCalendarIntegrations,
   disconnectIntegration,
 } from "@eleva/db"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

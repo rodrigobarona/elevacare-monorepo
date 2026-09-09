@@ -11,6 +11,13 @@ import {
   updateScheduleTimezone,
   upsertDateOverride,
 } from "@eleva/db"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: true,
+} as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"

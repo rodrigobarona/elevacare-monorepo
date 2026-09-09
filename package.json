@@ -12,6 +12,7 @@
     "format": "turbo format",
     "typecheck": "turbo typecheck",
     "check:api-first-actions": "node scripts/check-api-first-actions.mjs",
+    "check:route-guards": "node scripts/check-route-guards.mjs",
     "check:i18n-parity": "node --import tsx/esm scripts/check-i18n-parity.mjs",
     "e2e": "E2E_AUTH_BYPASS_TOKEN=\"${E2E_AUTH_BYPASS_TOKEN:-}\" playwright test",
     "e2e:auth": "E2E_AUTH=1 E2E_SKIP_WEBSERVER=1 playwright test e2e/auth-api.spec.ts e2e/auth.spec.ts e2e/admin.spec.ts --workers=1",
