@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security MFA · S3</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+</head>
+<body class="min-h-screen bg-[#f4f7f4]">
+  <div id="gate"></div>
+  <div id="app" class="hidden">
+    <main class="mx-auto max-w-xl px-6 py-12">
+      <a href="/expert-onboarding" class="text-sm text-stone-500">← Hub</a>
+      <p class="mt-6 text-xs uppercase tracking-widest text-emerald-700">S3 · Security MFA</p>
+      <h1 class="mt-4 text-3xl font-semibold text-emerald-950">Protect member data</h1>
+      <p class="mt-3 text-stone-600">Enable authenticator app — no email OTP in this lab.</p>
+      <div class="mt-8 rounded-xl border bg-white p-6">
+        <p class="font-medium">Authenticator app</p>
+        <p class="mt-1 text-sm text-stone-500">Status: <span id="status">Not enabled</span></p>
+        <button id="enable" type="button" class="mt-4 rounded-lg bg-emerald-800 px-4 py-2 text-sm text-white">Enable (mock)</button>
+      </div>
+      <button id="finish" type="button" class="mt-8 w-full rounded-lg bg-emerald-800 py-3 text-white">Save & return to hub</button>
+    </main>
+  </div>
+  <script>
+    const SLUG='security-mfa';
+    const SEED={spaceCreated:true,workspaceName:"Ana's Expert Space",practiceCountry:'PT'};
+    function labLoad(){try{var r=localStorage.getItem('eleva-lab:'+SLUG);return r?{...SEED,...JSON.parse(r)}:SEED}catch(e){return SEED}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    let draft=labLoad();
+    document.getElementById('enable').onclick=()=>{draft.mfaEnabled=true;labSave(draft);document.getElementById('status').textContent='Enabled';document.getElementById('status').className='text-emerald-700 font-medium'};
+    document.getElementById('finish').onclick=()=>location.href='/expert-onboarding#setting-up';
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{
+      draft={...SEED,...labLoad(),spaceCreated:true}; labSave(draft);
+      document.getElementById('app').classList.remove('hidden');
+      if(draft.mfaEnabled) document.getElementById('enable').click();
+    });
+  </script>
+</body>
+</html>

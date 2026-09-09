@@ -1,0 +1,21 @@
+{
+  "attribution": "Photos via Pexels (free license)",
+  "images": {
+    "avatar": {
+      "url": "https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg",
+      "credit": "Pexels"
+    },
+    "wellness": {
+      "url": "https://images.pexels.com/photos/7579831/pexels-photo-7579831.jpeg",
+      "credit": "Pexels"
+    },
+    "telehealth": {
+      "url": "https://images.pexels.com/photos/7579842/pexels-photo-7579842.jpeg",
+      "credit": "Pexels"
+    },
+    "consultation": {
+      "url": "https://images.pexels.com/photos/4021775/pexels-photo-4021775.jpeg",
+      "credit": "Pexels"
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@eleva/poc",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack --port 3099",
+    "build": "next build",
+    "start": "next start --port 3099"
+  },
+  "dependencies": {
+    "@eleva/config": "workspace:^",
+    "@eleva/dashboard": "workspace:*",
+    "@eleva/icons": "workspace:*",
+    "@eleva/ui": "workspace:*",
+    "next": "catalog:",
+    "next-themes": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "sonner": "catalog:",
+    "leaflet": "catalog:",
+    "react-leaflet": "catalog:"
+  },
+  "devDependencies": {
+    "@eleva/typescript-config": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/leaflet": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "typescript": "catalog:"
+  }
+}

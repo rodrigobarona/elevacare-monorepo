@@ -1,0 +1,23 @@
+@import "tailwindcss" source("../..");
+@import "@eleva/ui/globals.css";
+@import "@eleva/dashboard/sources.css";
+
+@layer utilities {
+  .poc-grain {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+
+  .poc-glass {
+    @apply border border-white/20 bg-white/70 shadow-xl shadow-stone-900/5 backdrop-blur-xl dark:border-white/10 dark:bg-stone-900/70;
+  }
+
+  .poc-warm-glow {
+    box-shadow:
+      0 0 0 1px rgb(var(--eleva-primary-light) / 0.15),
+      0 24px 48px -12px rgb(var(--eleva-primary) / 0.12);
+  }
+
+  .poc-text-balance {
+    text-wrap: balance;
+  }
+}

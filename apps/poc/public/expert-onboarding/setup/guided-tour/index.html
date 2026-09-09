@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Guided Tour · S8</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+  <style>.spotlight{box-shadow:0 0 0 9999px rgba(0,0,0,.65)}</style>
+</head>
+<body class="min-h-screen bg-stone-200">
+  <div id="gate"></div>
+  <div id="app" class="hidden relative">
+    <header class="bg-white px-6 py-3 border-b"><span class="font-semibold">Expert dashboard</span></header>
+    <div class="grid md:grid-cols-4 gap-4 p-6">
+      <div id="t1" class="rounded-xl bg-white p-4 shadow">Overview</div>
+      <div id="t2" class="rounded-xl bg-white p-4 shadow">Sessions</div>
+      <div id="t3" class="rounded-xl bg-white p-4 shadow">Payouts</div>
+      <div id="t4" class="rounded-xl bg-white p-4 shadow">Settings</div>
+    </div>
+    <div id="tooltip" class="fixed z-50 hidden max-w-xs rounded-xl bg-stone-900 p-4 text-sm text-white"></div>
+  </div>
+  <script>
+    const SLUG='guided-tour';
+    const SEED={spaceCreated:true,workspaceName:"Ana's Expert Space"};
+    const TOUR=[
+      {id:'t1',text:'Start here — see setup progress at a glance.'},
+      {id:'t2',text:'Configure bookable sessions for members.'},
+      {id:'t3',text:'Connect Stripe when you are ready to get paid.'},
+      {id:'t4',text:'Compliance and security live in Settings.'},
+    ];
+    let i=0;
+    function show(){
+      document.querySelectorAll('[id^=t]').forEach(el=>el.classList.remove('spotlight','relative','z-50'));
+      if(i>=TOUR.length){document.getElementById('tooltip').classList.add('hidden');return}
+      const t=TOUR[i], el=document.getElementById(t.id);
+      el.classList.add('spotlight','relative','z-50');
+      const tip=document.getElementById('tooltip');
+      tip.classList.remove('hidden');
+      tip.innerHTML=t.text+`<button id="next" class="mt-3 block rounded bg-white px-3 py-1 text-stone-900">${i===TOUR.length-1?'Finish':'Next'}</button>`;
+      const r=el.getBoundingClientRect();
+      tip.style.top=(r.bottom+12)+'px'; tip.style.left=r.left+'px';
+      document.getElementById('next').onclick=()=>{i++;show()};
+    }
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{
+      labSave({...SEED,spaceCreated:true});
+      document.getElementById('app').classList.remove('hidden'); show();
+    });
+  </script>
+</body>
+</html>

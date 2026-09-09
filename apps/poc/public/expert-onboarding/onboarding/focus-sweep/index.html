@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Sweep · O2</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/expert-onboarding/shared/create-space-snippet.js"></script>
+</head>
+<body class="min-h-screen bg-[#faf8f6] text-stone-900">
+  <div id="gate"></div>
+  <div id="app" class="hidden">
+    <header class="flex items-center justify-between px-6 py-4">
+      <a href="/expert-onboarding" class="text-sm text-stone-500">← Hub</a>
+      <span class="text-xs uppercase tracking-widest text-rose-400">O2 · Focus sweep</span>
+    </header>
+    <div id="segments" class="mx-auto flex max-w-lg gap-1 px-6 pt-2"></div>
+    <main id="stage" class="mx-auto flex min-h-[calc(100vh-8rem)] max-w-lg flex-col justify-center px-6 py-12"></main>
+    <footer class="fixed bottom-0 inset-x-0 border-t bg-white/90 px-6 py-4">
+      <div class="mx-auto flex max-w-lg justify-between">
+        <button id="backBtn" type="button" class="text-sm text-stone-500 disabled:invisible">Back</button>
+        <button id="nextBtn" type="button" class="rounded-full bg-stone-900 px-8 py-3 text-sm text-white">Continue</button>
+      </div>
+    </footer>
+  </div>
+  <script>
+    const SLUG = 'focus-sweep';
+    const STEPS = [
+      { title: 'What do you offer members?', render: d => `<div class="grid gap-3">${['Nutrition','Mental wellbeing','Movement','Sleep'].map(s=>`<button type="button" data-val="${s}" class="choice rounded-2xl border-2 px-5 py-4 text-left ${d.specialty===s?'border-rose-400 bg-rose-50':'border-stone-200'}">${s}</button>`).join('')}</div>` },
+      { title: 'Where do you practice?', render: d => `<div class="flex gap-3">${['PT','ES','BR'].map(c=>`<button type="button" data-val="${c}" class="choice flex-1 rounded-2xl border-2 py-5 text-xl ${d.practiceCountry===c?'border-rose-400 bg-rose-50':'border-stone-200'}">${c}</button>`).join('')}</div>` },
+      { title: 'Name your first session', render: d => `<input id="sessionInput" value="${d.sessionTitle||''}" class="w-full border-b-2 border-stone-300 py-3 text-3xl outline-none" placeholder="Intro consultation" />` },
+      { title: 'Set a price', render: d => `<input id="priceInput" type="number" value="${d.eventPrice||''}" class="w-full border-b-2 py-3 text-5xl outline-none" placeholder="65" />` },
+      { title: 'Draft saved', render: d => `<div class="rounded-2xl bg-white p-6 shadow-sm"><p class="text-lg"><strong>${d.sessionTitle||'Session'}</strong> · ${d.practiceCountry||'—'} · €${d.eventPrice||'—'}</p><a href="/expert-onboarding#setting-up" class="mt-4 inline-block text-sm text-rose-500 underline">Explore setting up gallery</a></div>` },
+    ];
+    function labLoad(){try{return JSON.parse(localStorage.getItem('eleva-lab:'+SLUG)||'{}')}catch(e){return{}}}
+    function labSave(d){try{localStorage.setItem('eleva-lab:'+SLUG,JSON.stringify(d))}catch(e){}}
+    let step=0, draft=labLoad();
+    function render(){
+      const s=STEPS[step];
+      document.getElementById('segments').innerHTML=STEPS.map((_,i)=>`<div class="h-1.5 flex-1 rounded-full ${i<=step?'bg-rose-400':'bg-stone-200'}"></div>`).join('');
+      document.getElementById('stage').innerHTML=`<h1 class="text-4xl font-semibold">${s.title}</h1><div class="mt-10">${s.render(draft)}</div>`;
+      document.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{draft[step===0?'specialty':'practiceCountry']=b.dataset.val;labSave(draft);render()});
+      const si=document.getElementById('sessionInput'); if(si) si.oninput=e=>{draft.sessionTitle=e.target.value;labSave(draft)};
+      const pi=document.getElementById('priceInput'); if(pi) pi.oninput=e=>{draft.eventPrice=e.target.value;labSave(draft)};
+      document.getElementById('backBtn').disabled=step===0;
+      document.getElementById('nextBtn').textContent=step===STEPS.length-1?'Done':'Continue';
+    }
+    document.getElementById('backBtn').onclick=()=>{if(step>0){step--;render()}};
+    document.getElementById('nextBtn').onclick=()=>{if(step<STEPS.length-1){step++;render()}else location.href='/expert-onboarding'};
+    ElevaCreateSpaceGate.mount('gate', SLUG, ()=>{document.getElementById('app').classList.remove('hidden');render()});
+  </script>
+</body>
+</html>
