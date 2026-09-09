@@ -74,6 +74,10 @@ function extractPolicy(source) {
           if (!ts.isObjectLiteralExpression(init)) continue
           const fields = {}
           for (const prop of init.properties) {
+            if (ts.isSpreadAssignment(prop)) {
+              policy = null
+              return
+            }
             if (!ts.isPropertyAssignment(prop) || !ts.isIdentifier(prop.name)) {
               continue
             }

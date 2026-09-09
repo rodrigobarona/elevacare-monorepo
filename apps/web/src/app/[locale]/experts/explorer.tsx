@@ -75,7 +75,9 @@ export async function Explorer({
           {t("eyebrow")}
         </p>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {category ? t("categoryHeading", { category }) : t("heading")}
+          {category
+            ? t("categoryHeading", { category: t(`categories.${category}`) })
+            : t("heading")}
         </h1>
         <p className="mt-3 max-w-2xl text-muted-foreground">{t("intro")}</p>
 

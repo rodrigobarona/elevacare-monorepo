@@ -68,6 +68,17 @@
     "fromPrice": "From {price}",
     "priceOnRequest": "Price on request",
     "topExpert": "Top Expert",
+    "categories": {
+      "psychology": "Psychology",
+      "nutrition": "Nutrition",
+      "physiotherapy": "Physiotherapy",
+      "midwifery": "Midwifery",
+      "pelvic-health": "Pelvic health",
+      "lactation": "Lactation",
+      "fertility": "Fertility",
+      "mental-health-coaching": "Mental health coaching",
+      "wellness": "Wellness"
+    },
     "nextPage": "Next page",
     "filters": {
       "language": "Language",

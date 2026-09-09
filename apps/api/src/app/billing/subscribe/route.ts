@@ -18,12 +18,13 @@ import {
   RATE_LIMITS,
   rateLimitKey,
 } from "../../../lib/rate-limit"
+import { checkBot } from "../../../lib/bot-protection"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
   auth: "session",
   rateLimit: true,
-  botId: false,
+  botId: true,
 } as const satisfies RoutePolicy
 
 /**
@@ -81,6 +82,11 @@ export async function POST(request: Request) {
       { error: "forbidden", code: "missing-capability" },
       { status: 403, headers }
     )
+  }
+
+  const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
   }
 
   const rateLimited = await applyRateLimit(

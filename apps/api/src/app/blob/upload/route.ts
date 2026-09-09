@@ -17,11 +17,12 @@
 import { handleBlobUpload } from "@eleva/storage/blob-upload-handler"
 import { verifyUploadToken } from "@eleva/auth/upload-token"
 import { corsHeaders } from "@/lib/cors"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
   auth: "signature",
-  rateLimit: false,
+  rateLimit: true,
   botId: false,
 } as const satisfies RoutePolicy
 
@@ -75,6 +76,13 @@ export async function OPTIONS(request: Request) {
 
 export async function POST(request: Request): Promise<Response> {
   const cors = corsHeaders(request, "POST, OPTIONS")
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request),
+    RATE_LIMITS.authenticated,
+    cors
+  )
+  if (rateLimited) return rateLimited
 
   try {
     const authHeader = request.headers.get("authorization")

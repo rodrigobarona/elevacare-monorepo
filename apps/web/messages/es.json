@@ -67,7 +67,18 @@
     "loadError": "El directorio de especialistas no está disponible. Inténtalo de nuevo en breve.",
     "fromPrice": "Desde {price}",
     "priceOnRequest": "Precio bajo consulta",
-    "topExpert": "Top Expert",
+    "topExpert": "Especialista destacada",
+    "categories": {
+      "psychology": "Psicología",
+      "nutrition": "Nutrición",
+      "physiotherapy": "Fisioterapia",
+      "midwifery": "Matrona",
+      "pelvic-health": "Salud pélvica",
+      "lactation": "Lactancia",
+      "fertility": "Fertilidad",
+      "mental-health-coaching": "Coaching de salud mental",
+      "wellness": "Bienestar"
+    },
     "nextPage": "Página siguiente",
     "filters": {
       "language": "Idioma",
