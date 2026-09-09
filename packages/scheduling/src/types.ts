@@ -1,3 +1,4 @@
+import type { Tx } from "@eleva/db/context"
 import type {
   AvailabilityRule,
   DateOverride,
@@ -54,11 +55,19 @@ export interface ReserveSlotInput {
   userId?: string
   eventTypeModeId?: string
   price?: { cents: number; currency: "EUR" }
+  afterInsert?: (tx: Tx, reservationId: string) => Promise<void>
+  audit?: {
+    actorUserId?: string | null
+    payload?: Record<string, unknown>
+  }
 }
 
 export type ReserveSlotResult =
   | { success: true; reservationId: string; reservationToken: string }
-  | { success: false; error: "slot_taken" | "conflict" | "db_error" }
+  | {
+      success: false
+      error: "slot_taken" | "conflict" | "db_error" | "link_unusable"
+    }
 
 export interface BookingRuleCheck {
   eventType: Pick<

@@ -69,6 +69,7 @@ const s1aSchema = z.object({
 
   KV_REST_API_URL: urlOptional,
   KV_REST_API_TOKEN: stringOptional,
+  CONSENT_HASH_KEY: z.string().min(32).optional().or(z.literal("")),
   QSTASH_TOKEN: stringOptional,
   QSTASH_CURRENT_SIGNING_KEY: stringOptional,
   QSTASH_NEXT_SIGNING_KEY: stringOptional,

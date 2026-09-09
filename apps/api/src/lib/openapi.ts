@@ -24,6 +24,8 @@ import {
   PublicExpertProfileSchema,
   PublicSlotsQuerySchema,
   PublicSlotsResponseSchema,
+  ReserveBookingRequestSchema,
+  ReserveBookingResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
 } from "@eleva/api-client"
@@ -1213,6 +1215,52 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdPublicWithNotFound,
+          },
+        },
+      },
+      "/bookings/reserve": {
+        post: {
+          operationId: "reserveBooking",
+          summary: "Reserve a booking slot",
+          description:
+            "Holds a public or private-link slot for 5 minutes after consent, mode, and availability checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged.",
+          tags: ["Bookings"],
+          security: [],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: ReserveBookingRequestSchema },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Slot reserved",
+              content: {
+                "application/json": { schema: ReserveBookingResponseSchema },
+              },
+            },
+            "403": {
+              description: "Bot detected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Slot already taken",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description: "Reservation write failed",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "503": {
+              description: "Reservation lock unavailable",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdPublicWithNotFound,
+            "422": {
+              description:
+                "Consent, mode, guest, phone, or unpublished/unavailable slot",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

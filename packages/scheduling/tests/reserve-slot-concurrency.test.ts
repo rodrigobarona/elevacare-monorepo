@@ -4,6 +4,10 @@ import type { ReserveSlotResult } from "../src/types"
 
 let insertCounter = 0
 
+vi.mock("@eleva/audit", () => ({
+  withAudit: vi.fn(),
+}))
+
 /**
  * Mock @eleva/db/context — withOrgContext simply executes the callback
  * with a mock transaction that reports no conflicts and returns a

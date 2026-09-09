@@ -1,12 +1,18 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   CONSENT_DOCUMENTS,
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
   assertConsentVersionsApprovedForDeployment,
+  hashGuestEmail,
   isDraftConsentVersion,
   requiredConsentVersions,
+  validateFunnelConsents,
 } from "./consents"
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+})
 
 describe("CONSENT_DOCUMENTS", () => {
   it("records a version and locale URLs for every funnel kind", () => {
@@ -39,5 +45,35 @@ describe("CONSENT_DOCUMENTS", () => {
     expect(() => requiredConsentVersions({ VERCEL_ENV: "production" })).toThrow(
       /cannot accept production consent/
     )
+  })
+
+  it("accepts the current funnel versions and rejects a stale one", () => {
+    const grants = CONSENT_KINDS.map((kind) => ({
+      kind,
+      version: CONSENT_DOCUMENT_VERSION,
+    }))
+    expect(validateFunnelConsents(grants, { VERCEL_ENV: "preview" })).toEqual({
+      ok: true,
+    })
+    expect(
+      validateFunnelConsents(
+        grants.map((grant) =>
+          grant.kind === "terms" ? { ...grant, version: "stale" } : grant
+        ),
+        { VERCEL_ENV: "preview" }
+      )
+    ).toEqual({ ok: false, error: "CONSENT_VERSION_OUTDATED" })
+  })
+
+  it("hashes guest emails with HMAC-SHA256", () => {
+    const secret = "a".repeat(32)
+    const hash = hashGuestEmail("Ada@Eleva.care", secret)
+    expect(hash).toHaveLength(64)
+    expect(hash).toBe(hashGuestEmail("ada@eleva.care", secret))
+    expect(() => hashGuestEmail("ada@eleva.care", "short-key")).toThrow(
+      /CONSENT_HASH_KEY/
+    )
+    vi.stubEnv("CONSENT_HASH_KEY", "")
+    expect(() => hashGuestEmail("ada@eleva.care")).toThrow(/CONSENT_HASH_KEY/)
   })
 })

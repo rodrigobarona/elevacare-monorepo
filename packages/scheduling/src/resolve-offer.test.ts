@@ -27,6 +27,11 @@ const eventType: OfferEventTypeRow = {
   expertProfileId: "expert-1",
   durationMinutes: 30,
   priceAmount: 6000,
+  published: true,
+  bookingWindowDays: 60,
+  minimumNoticeMinutes: 0,
+  bufferBeforeMinutes: 0,
+  bufferAfterMinutes: 0,
 }
 
 const now = new Date("2026-09-09T12:00:00Z")
@@ -43,6 +48,7 @@ function link(overrides: Partial<OfferLinkRow> = {}): OfferLinkRow {
     expiresAt: new Date("2026-09-10T12:00:00Z"),
     useCount: 0,
     maxUses: 1,
+    recipientEmail: null,
     ...overrides,
   }
 }
@@ -169,6 +175,57 @@ describe("composeResolvedOffer", () => {
         })
       ).toEqual({ ok: false, error: "not_found" })
     }
+  })
+
+  it("returns not_found when a recipient-restricted link email does not match", () => {
+    const restricted = link({ recipientEmail: "invitee@eleva.care" })
+    expect(
+      composeResolvedOffer({
+        orgId: "org-1",
+        mode,
+        eventType,
+        link: restricted,
+        now,
+        viewerEmail: "other@eleva.care",
+        enforceRecipient: true,
+      })
+    ).toEqual({ ok: false, error: "not_found" })
+    expect(
+      composeResolvedOffer({
+        orgId: "org-1",
+        mode,
+        eventType,
+        link: restricted,
+        now,
+        enforceRecipient: true,
+      })
+    ).toEqual({ ok: false, error: "not_found" })
+  })
+
+  it("matches a recipient-restricted link case-insensitively", () => {
+    expect(
+      composeResolvedOffer({
+        orgId: "org-1",
+        mode,
+        eventType,
+        link: link({ recipientEmail: "invitee@eleva.care" }),
+        now,
+        viewerEmail: "Invitee@Eleva.care",
+        enforceRecipient: true,
+      })
+    ).toMatchObject({ ok: true, offer: { bookingLinkId: "link-1" } })
+  })
+
+  it("does not enforce the recipient when enforceRecipient is omitted", () => {
+    expect(
+      composeResolvedOffer({
+        orgId: "org-1",
+        mode,
+        eventType,
+        link: link({ recipientEmail: "invitee@eleva.care" }),
+        now,
+      })
+    ).toMatchObject({ ok: true })
   })
 })
 

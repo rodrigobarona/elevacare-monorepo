@@ -13,16 +13,25 @@ export type ResolvedOffer = {
   currency: "EUR"
   durationMinutes: number
   bookingLinkId?: string
+  recipientEmail?: string | null
   countryScopeType: CountryScopeType
   countryScopeCodes: string[]
   languages: string[]
   active: boolean
+  published: boolean
+  bookingWindowDays: number | null
+  minimumNoticeMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
 }
 
 export type ResolveOfferInput = {
   expertOrgId: string
   eventTypeModeId: string
   linkToken?: string
+  viewerEmail?: string
+  /** When true, a recipient-restricted link 404s unless viewerEmail matches. */
+  enforceRecipient?: boolean
 }
 
 export type ResolveOfferResult =
@@ -48,6 +57,11 @@ export type OfferEventTypeRow = {
   expertProfileId: string
   durationMinutes: number
   priceAmount: number
+  published: boolean
+  bookingWindowDays: number | null
+  minimumNoticeMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
 }
 
 export type OfferLinkRow = {
@@ -61,6 +75,7 @@ export type OfferLinkRow = {
   expiresAt: Date
   useCount: number
   maxUses: number
+  recipientEmail: string | null
 }
 
 export function hashBookingLinkToken(token: string): string {
@@ -73,14 +88,36 @@ export function isUsableBookingLink(link: OfferLinkRow, now: Date): boolean {
   return link.useCount < link.maxUses
 }
 
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase()
+}
+
+export function linkRecipientMatches(
+  recipientEmail: string | null,
+  viewerEmail: string
+): boolean {
+  if (recipientEmail === null) return true
+  return normalizeEmail(recipientEmail) === normalizeEmail(viewerEmail)
+}
+
 export function composeResolvedOffer(input: {
   orgId: string
   mode: OfferModeRow
   eventType: OfferEventTypeRow
   link?: OfferLinkRow | null
   now?: Date
+  viewerEmail?: string
+  enforceRecipient?: boolean
 }): ResolveOfferResult {
-  const { orgId, mode, eventType, link, now = new Date() } = input
+  const {
+    orgId,
+    mode,
+    eventType,
+    link,
+    now = new Date(),
+    viewerEmail,
+    enforceRecipient,
+  } = input
   if (mode.orgId !== orgId || mode.eventTypeId !== eventType.id) {
     return { ok: false, error: "not_found" }
   }
@@ -98,6 +135,14 @@ export function composeResolvedOffer(input: {
     if (!isUsableBookingLink(link, now)) {
       return { ok: false, error: "not_found" }
     }
+    if (
+      enforceRecipient &&
+      link.recipientEmail !== null &&
+      (viewerEmail === undefined ||
+        !linkRecipientMatches(link.recipientEmail, viewerEmail))
+    ) {
+      return { ok: false, error: "not_found" }
+    }
   }
 
   return {
@@ -112,11 +157,18 @@ export function composeResolvedOffer(input: {
       priceCents: link?.priceCents ?? mode.priceCents ?? eventType.priceAmount,
       currency: "EUR",
       durationMinutes: mode.durationMinutes ?? eventType.durationMinutes,
-      ...(link ? { bookingLinkId: link.id } : {}),
+      ...(link
+        ? { bookingLinkId: link.id, recipientEmail: link.recipientEmail }
+        : {}),
       countryScopeType: mode.countryScopeType,
       countryScopeCodes: mode.countryScopeCodes,
       languages: mode.languages,
       active: mode.active,
+      published: eventType.published,
+      bookingWindowDays: eventType.bookingWindowDays,
+      minimumNoticeMinutes: eventType.minimumNoticeMinutes,
+      bufferBeforeMinutes: eventType.bufferBeforeMinutes,
+      bufferAfterMinutes: eventType.bufferAfterMinutes,
     },
   }
 }
@@ -138,5 +190,7 @@ export async function resolveOffer(
     mode: loaded.mode,
     eventType: loaded.eventType,
     link: loaded.link,
+    viewerEmail: input.viewerEmail,
+    enforceRecipient: input.enforceRecipient,
   })
 }

@@ -1,6 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest"
 import type { Redis } from "@upstash/redis"
 
+vi.mock("@eleva/audit", () => ({
+  withAudit: vi.fn(),
+}))
+
 vi.mock("@eleva/db/context", () => {
   const exclusion = Object.assign(new Error("conflicting key value"), {
     code: "23P01",

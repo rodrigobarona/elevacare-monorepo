@@ -13,6 +13,7 @@ export type {
   GetOfferSlotsInput,
   ViewerTimeSlot,
 } from "./offer-slots"
+export { assertRequestedSlotAvailable } from "./assert-slot-available"
 export { assertModeBookable } from "./mode-bookable"
 export type {
   ModeBookableError,
@@ -30,6 +31,18 @@ export {
   releaseReservation,
   convertReservation,
 } from "./reserve-slot"
+export {
+  reserveBooking,
+  claimBookingLink,
+  insertFunnelConsents,
+  isE164Phone,
+  RESERVE_TTL_SECONDS,
+} from "./reserve-booking"
+export type {
+  ReserveBookingInput,
+  ReserveBookingResult,
+  ReserveBookingError,
+} from "./reserve-booking"
 export { validateBookingRules, canCancel, canReschedule } from "./booking-rules"
 export type {
   TimeSlot,
