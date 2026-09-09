@@ -61,9 +61,7 @@ export const eventTypeModes = pgTable(
     priceCents: integer("price_cents"),
     currency: varchar("currency", { length: 3 }),
     durationMinutes: integer("duration_minutes"),
-    countryScopeType: countryScopeTypeEnum("country_scope_type")
-      .notNull()
-      .default("list"),
+    countryScopeType: countryScopeTypeEnum("country_scope_type").notNull(),
     countryScopeCodes: text("country_scope_codes")
       .array()
       .notNull()
@@ -78,6 +76,14 @@ export const eventTypeModes = pgTable(
   (t) => ({
     orgIdx: index("event_type_modes_org_idx").on(t.orgId),
     eventTypeIdx: index("event_type_modes_event_type_idx").on(t.eventTypeId),
+    scheduleIdx: index("event_type_modes_schedule_idx").on(
+      t.orgId,
+      t.scheduleId
+    ),
+    locationIdx: index("event_type_modes_location_idx").on(
+      t.orgId,
+      t.locationId
+    ),
     orgIdKey: uniqueIndex("event_type_modes_org_id_id_key").on(t.orgId, t.id),
     modeUnique: unique("event_type_modes_unique_idx")
       .on(t.eventTypeId, t.mode, t.locationId)
@@ -239,6 +245,10 @@ export const publicHandles = pgTable(
     ownerIdx: uniqueIndex("public_handles_owner_idx").on(
       t.ownerKind,
       t.ownerId
+    ),
+    handleFormatChk: check(
+      "public_handles_format",
+      sql`handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$' AND handle::text NOT LIKE '%--%'`
     ),
     publicRead: pgPolicy("public_handles_public_read", {
       for: "select",

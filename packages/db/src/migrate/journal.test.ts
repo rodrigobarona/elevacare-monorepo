@@ -44,5 +44,8 @@ describe("migration journal helpers", () => {
     const sql = last?.statements.join("\n") ?? ""
     expect(sql).toContain("public.iso3166_alpha2_codes")
     expect(sql).not.toContain("SELECT 1 FROM unnest(service_countries)")
+    expect(sql).not.toContain(
+      `"country_scope_type" "country_scope_type" DEFAULT 'list'`
+    )
   })
 })

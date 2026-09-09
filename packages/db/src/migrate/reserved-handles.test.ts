@@ -92,6 +92,18 @@ describe("0025 public_handles reserved trigger", () => {
     }
   })
 
+  it("constrains handle shape to the expert username format", () => {
+    const sql = readFileSync(
+      resolve(import.meta.dirname, "../migrations/main/0025_offer_model.sql"),
+      "utf8"
+    )
+    expect(sql).toContain('CONSTRAINT "public_handles_format"')
+    expect(sql).toContain(
+      "handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'"
+    )
+    expect(sql).toContain("AND handle::text NOT LIKE '%--%'")
+  })
+
   it("keeps the frozen 0025 list a subset of the current reserved names", () => {
     const current = new Set<string>(RESERVED_USERNAMES)
     for (const name of RESERVED_HANDLES_AT_0025) {

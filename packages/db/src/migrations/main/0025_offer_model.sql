@@ -134,7 +134,7 @@ CREATE TABLE "event_type_modes" (
   "price_cents" integer,
   "currency" varchar(3),
   "duration_minutes" integer,
-  "country_scope_type" "country_scope_type" DEFAULT 'list' NOT NULL,
+  "country_scope_type" "country_scope_type" NOT NULL,
   "country_scope_codes" text[] DEFAULT ARRAY[]::text[] NOT NULL,
   "languages" text[] NOT NULL,
   "label" jsonb,
@@ -173,6 +173,10 @@ CREATE TABLE "event_type_modes" (
 CREATE INDEX "event_type_modes_org_idx" ON "event_type_modes" ("org_id");
 --> statement-breakpoint
 CREATE INDEX "event_type_modes_event_type_idx" ON "event_type_modes" ("event_type_id");
+--> statement-breakpoint
+CREATE INDEX "event_type_modes_schedule_idx" ON "event_type_modes" ("org_id", "schedule_id");
+--> statement-breakpoint
+CREATE INDEX "event_type_modes_location_idx" ON "event_type_modes" ("org_id", "location_id");
 --> statement-breakpoint
 CREATE UNIQUE INDEX "event_type_modes_unique_idx" ON "event_type_modes" ("event_type_id", "mode", "location_id") NULLS NOT DISTINCT;
 --> statement-breakpoint
@@ -259,7 +263,12 @@ CREATE TABLE "public_handles" (
   "handle" citext PRIMARY KEY,
   "owner_kind" "public_handle_owner_kind" NOT NULL,
   "owner_id" uuid NOT NULL,
-  "created_at" timestamp with time zone DEFAULT now() NOT NULL
+  "created_at" timestamp with time zone DEFAULT now() NOT NULL,
+  CONSTRAINT "public_handles_format"
+    CHECK (
+      handle::text ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      AND handle::text NOT LIKE '%--%'
+    )
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX "public_handles_owner_idx" ON "public_handles" ("owner_kind", "owner_id");
@@ -301,11 +310,14 @@ SELECT DISTINCT ON (lower("username")) "username", 'expert', "id", "created_at"
 FROM "expert_profiles"
 WHERE "deleted_at" IS NULL
   AND NOT (lower("username") = ANY(public.reserved_public_handles()))
+  AND "username" ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+  AND "username" NOT LIKE '%--%'
 ORDER BY lower("username"), "created_at", "id";
 --> statement-breakpoint
 DO $$
 DECLARE
   skipped integer;
+  malformed integer;
 BEGIN
   SELECT count(*) INTO skipped
   FROM "expert_profiles"
@@ -313,6 +325,17 @@ BEGIN
     AND lower("username") = ANY(public.reserved_public_handles());
   IF skipped > 0 THEN
     RAISE NOTICE '0025_offer_model skipped % reserved expert username(s)', skipped;
+  END IF;
+  SELECT count(*) INTO malformed
+  FROM "expert_profiles"
+  WHERE "deleted_at" IS NULL
+    AND NOT (lower("username") = ANY(public.reserved_public_handles()))
+    AND (
+      "username" !~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      OR "username" LIKE '%--%'
+    );
+  IF malformed > 0 THEN
+    RAISE NOTICE '0025_offer_model skipped % malformed expert username(s)', malformed;
   END IF;
 END $$;
 --> statement-breakpoint
@@ -326,6 +349,8 @@ BEGIN
     FROM "expert_profiles"
     WHERE "deleted_at" IS NULL
       AND NOT (lower("username") = ANY(public.reserved_public_handles()))
+      AND "username" ~ '^[a-z0-9](?:[a-z0-9-]{1,28}[a-z0-9])?$'
+      AND "username" NOT LIKE '%--%'
     GROUP BY lower("username")
     HAVING count(*) > 1
   ) dup;
