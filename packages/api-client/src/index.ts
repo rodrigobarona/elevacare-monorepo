@@ -548,6 +548,12 @@ export const PublicBookingLinkResponseSchema = z.object({
   eventTypeModeId: z.string().uuid().nullable(),
   priceCents: z.number().int().nonnegative().nullable(),
   expiresAt: z.string().datetime(),
+  note: z.string().max(2000).nullable(),
+  username: z.string().min(3).max(30),
+  eventSlug: z.string().min(1).max(80),
+  expertDisplayName: z.string().min(1).max(200),
+  eventTitle: PublicLocalizedTextSchema,
+  modes: z.array(PublicEventTypeModeSchema).min(1),
 })
 
 export const ReserveBookingConsentSchema = z.object({
@@ -596,8 +602,10 @@ export type ListPublicExpertsResponse = z.infer<
   typeof ListPublicExpertsResponseSchema
 >
 export type PublicExpertProfile = z.infer<typeof PublicExpertProfileSchema>
+export type PublicEventTypeMode = z.infer<typeof PublicEventTypeModeSchema>
 export type PublicEventTypeDetail = z.infer<typeof PublicEventTypeDetailSchema>
 export type PublicSlotsQuery = z.infer<typeof PublicSlotsQuerySchema>
+export type PublicSlot = z.infer<typeof PublicSlotSchema>
 export type PublicSlotsResponse = z.infer<typeof PublicSlotsResponseSchema>
 export type PublicBookingLinkResponse = z.infer<
   typeof PublicBookingLinkResponseSchema

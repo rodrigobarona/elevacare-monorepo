@@ -58,6 +58,7 @@ catalog:
   # Payments (Stripe)
   stripe: ^22.1.1
   "@stripe/stripe-js": ^9.5.0
+  "@stripe/react-stripe-js": 6.6.0
 
   # Email
   resend: ^6.12.3
@@ -72,6 +73,7 @@ catalog:
   # UI
   sonner: ^2.0.7
   zod: ^4.4.3
+  libphonenumber-js: ^1.12.38
 
   # Maps (PoC)
   leaflet: ^1.9.4

@@ -57,6 +57,11 @@ export type PublicBookingLink = {
   scheduleId: string | null
   priceCents: number | null
   expiresAt: Date
+  note: string | null
+  username: string
+  expertDisplayName: string
+  eventSlug: string
+  eventTitle: LocalizedText
 }
 
 export const MAX_MARKETPLACE_OFFSET = 10_000
@@ -379,8 +384,28 @@ export async function findUsableBookingLink(
         revokedAt: main.bookingLinks.revokedAt,
         useCount: main.bookingLinks.useCount,
         maxUses: main.bookingLinks.maxUses,
+        note: main.bookingLinks.note,
+        username: main.expertProfiles.username,
+        expertDisplayName: main.expertProfiles.displayName,
+        eventSlug: main.eventTypes.slug,
+        eventTitle: main.eventTypes.title,
       })
       .from(main.bookingLinks)
+      .innerJoin(
+        main.eventTypes,
+        and(
+          eq(main.eventTypes.id, main.bookingLinks.eventTypeId),
+          eq(main.eventTypes.orgId, main.bookingLinks.orgId),
+          isNull(main.eventTypes.deletedAt)
+        )
+      )
+      .innerJoin(
+        main.expertProfiles,
+        and(
+          eq(main.expertProfiles.id, main.eventTypes.expertProfileId),
+          eq(main.expertProfiles.orgId, main.bookingLinks.orgId)
+        )
+      )
       .where(
         and(
           eq(main.bookingLinks.tokenHash, tokenHash),
@@ -398,6 +423,11 @@ export async function findUsableBookingLink(
       scheduleId: row.scheduleId,
       priceCents: row.priceCents,
       expiresAt: row.expiresAt,
+      note: row.note,
+      username: row.username,
+      expertDisplayName: row.expertDisplayName,
+      eventSlug: row.eventSlug,
+      eventTitle: row.eventTitle,
     }
   })
 }

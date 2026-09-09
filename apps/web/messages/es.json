@@ -6,6 +6,7 @@
   "nav": {
     "about": "Acerca de",
     "experts": "Especialistas",
+    "expert": "Especialista",
     "home": "Inicio",
     "login": "Iniciar sesión",
     "getStarted": "Empezar ahora",
@@ -106,10 +107,152 @@
     "noSlots": "No hay horarios en las próximas dos semanas.",
     "offers": "Ofertas",
     "offerMeta": "{duration} min · desde {price} · {modes}",
+    "book": "Elegir hora",
     "modes": {
       "online": "vídeo",
       "in_person": "presencial",
       "phone": "teléfono"
+    }
+  },
+  "booking": {
+    "meta": {
+      "title": "Reservar {offer} con {name} — Eleva.care",
+      "description": "Elige cómo y cuándo quedar con {name} para {offer} en Eleva.care, una plataforma digital de salud.",
+      "linkTitle": "Tu sesión con {name} — Eleva.care"
+    },
+    "back": "Atrás",
+    "languages": {
+      "en": "Inglés",
+      "pt": "Portugués",
+      "es": "Español"
+    },
+    "steps": {
+      "meet": "Cómo os encontráis",
+      "when": "Cuándo",
+      "details": "Tus datos",
+      "pay": "Pago",
+      "done": "Confirmado"
+    },
+    "summary": {
+      "mode": "Cómo os encontráis",
+      "when": "Cuándo",
+      "price": "Precio",
+      "chooseTime": "Elige una hora para continuar"
+    },
+    "modes": {
+      "online": {
+        "title": "Vídeo",
+        "description": "Recibes un enlace de vídeo privado antes de la sesión."
+      },
+      "phone": {
+        "title": "Teléfono",
+        "description": "Recibes una llamada al número que indiques."
+      },
+      "in_person": {
+        "title": "Presencial",
+        "description": "Quedáis en la consulta."
+      }
+    },
+    "meet": {
+      "heading": "¿Cómo quieres quedar?",
+      "sub": "Elige la forma que te encaje. Puedes cambiarla antes de pagar.",
+      "countryLabel": "¿Dónde estás?",
+      "countryHint": "Lo usamos para mostrar sesiones disponibles en tu país. Puedes cambiarlo cuando quieras.",
+      "languageLabel": "Idioma de la sesión",
+      "duration": "{minutes} minutos",
+      "continue": "Ver horarios",
+      "alternativeHint": "Prueba otra forma de quedar, o cambia el país o el idioma.",
+      "reasons": {
+        "country": "Esta forma de quedar no se ofrece en tu país.",
+        "language": "Esta sesión no se ofrece en el idioma que elegiste.",
+        "inactive": "Esta opción no está disponible ahora."
+      }
+    },
+    "when": {
+      "heading": "Elige una hora",
+      "sub": "Los horarios se muestran en tu zona horaria.",
+      "timezone": "Tu zona horaria",
+      "month": "Mes",
+      "week": "Semana",
+      "previous": "Mes anterior",
+      "next": "Mes siguiente",
+      "empty": "No hay horas este día. Prueba otra fecha.",
+      "loading": "Buscando horarios…",
+      "loadError": "No pudimos cargar los horarios. Inténtalo de nuevo.",
+      "continue": "Continuar",
+      "weekdays": {
+        "mon": "Lun",
+        "tue": "Mar",
+        "wed": "Mié",
+        "thu": "Jue",
+        "fri": "Vie",
+        "sat": "Sáb",
+        "sun": "Dom"
+      }
+    },
+    "details": {
+      "heading": "Algunos datos",
+      "sub": "Los usamos para reservar la sesión y enviarte la confirmación.",
+      "name": "Nombre completo",
+      "email": "Correo",
+      "phone": "Teléfono",
+      "phoneHint": "Necesario para una sesión por teléfono. Puedes incluir el prefijo del país.",
+      "consentsIntro": "Para reservar una sesión de salud en esta plataforma digital de salud, confirma:",
+      "hold": "Continuar al pago",
+      "holding": "Reservando tu hora…",
+      "consents": {
+        "terms": {
+          "label": "Acepto los",
+          "link": "términos de uso"
+        },
+        "privacy": {
+          "label": "He leído el",
+          "link": "aviso de privacidad"
+        },
+        "health_data_processing": {
+          "label": "Doy mi consentimiento para el",
+          "link": "tratamiento de datos de salud"
+        }
+      }
+    },
+    "pay": {
+      "heading": "Confirmar y pagar",
+      "sub": "Tu hora queda reservada unos minutos. Pueden aparecer tarjeta, Apple Pay, Google Pay, Link y MB WAY.",
+      "hold": "La reserva caduca en {time}",
+      "expired": "Esta reserva ha terminado. Elige otra hora para continuar.",
+      "restart": "Elegir otra hora",
+      "pay": "Pagar {price}",
+      "processing": "Confirmando el pago…",
+      "failed": "No se pudo completar el pago. Inténtalo de nuevo.",
+      "pendingError": "El pago sigue pendiente. Espera un momento e inténtalo de nuevo."
+    },
+    "done": {
+      "heading": "Sesión reservada",
+      "sub": "Hemos guardado tu sesión. El correo de confirmación está en camino.",
+      "pending": "Pago recibido",
+      "pendingSub": "Estamos confirmando tu sesión. Recibirás un correo en cuanto esté lista. Eleva.care es una plataforma digital de salud: quien te atiende sigue siendo responsable de tu cuidado.",
+      "video": "El enlace de vídeo llega antes de la sesión.",
+      "videoLocation": "Sesión por vídeo — el enlace llega antes de la sesión",
+      "phone": "La llamada será al {phone}.",
+      "phoneLocation": "Llamada al {phone}",
+      "inPerson": "Quedáis en {location}.",
+      "ics": "Añadir al calendario",
+      "activate": "Crear tu cuenta Eleva",
+      "activateHint": "Guarda esta sesión en tu Space y gestiónala más tarde."
+    },
+    "link": {
+      "specialPrice": "Precio especial",
+      "noteHeading": "Una nota para ti"
+    },
+    "errors": {
+      "slotTaken": "Esa hora acaba de ocuparse. Elige otra.",
+      "modeCountry": "Esta forma de quedar no está disponible en tu país.",
+      "modeLanguage": "Esta sesión no se ofrece en ese idioma.",
+      "phoneRequired": "Añade un teléfono para que puedan llamarte.",
+      "guestRequired": "Añade tu nombre y correo para continuar.",
+      "consentOutdated": "Revisa los avisos más recientes e inténtalo de nuevo.",
+      "consentsRequired": "Confirma los tres avisos para continuar.",
+      "generic": "No pudimos reservar esa hora. Inténtalo de nuevo."
     }
   },
   "footer": {

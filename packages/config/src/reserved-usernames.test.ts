@@ -20,6 +20,8 @@ describe("reserved usernames", () => {
       "home",
       "signin",
       "signup",
+      "book",
+      "experts",
     ]) {
       expect(isReserved(slug), `${slug} should be reserved`).toBe(true)
     }

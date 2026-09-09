@@ -6,6 +6,7 @@
   "nav": {
     "about": "Sobre",
     "experts": "Especialistas",
+    "expert": "Especialista",
     "home": "Início",
     "login": "Entrar",
     "getStarted": "Começar agora",
@@ -106,10 +107,152 @@
     "noSlots": "Sem horários nas próximas duas semanas.",
     "offers": "Ofertas",
     "offerMeta": "{duration} min · a partir de {price} · {modes}",
+    "book": "Escolher horário",
     "modes": {
       "online": "vídeo",
       "in_person": "presencial",
       "phone": "telefone"
+    }
+  },
+  "booking": {
+    "meta": {
+      "title": "Marcar {offer} com {name} — Eleva.care",
+      "description": "Escolha como e quando encontrar {name} para {offer} na Eleva.care, uma plataforma digital de saúde.",
+      "linkTitle": "A sua sessão com {name} — Eleva.care"
+    },
+    "back": "Voltar",
+    "languages": {
+      "en": "Inglês",
+      "pt": "Português",
+      "es": "Espanhol"
+    },
+    "steps": {
+      "meet": "Como se encontram",
+      "when": "Quando",
+      "details": "Os seus dados",
+      "pay": "Pagamento",
+      "done": "Confirmado"
+    },
+    "summary": {
+      "mode": "Como se encontram",
+      "when": "Quando",
+      "price": "Preço",
+      "chooseTime": "Escolha um horário para continuar"
+    },
+    "modes": {
+      "online": {
+        "title": "Vídeo",
+        "description": "Recebe um link de vídeo privado antes da sessão."
+      },
+      "phone": {
+        "title": "Telefone",
+        "description": "Recebe uma chamada no número que indicar."
+      },
+      "in_person": {
+        "title": "Presencial",
+        "description": "Encontro no consultório."
+      }
+    },
+    "meet": {
+      "heading": "Como quer encontrar-se?",
+      "sub": "Escolha a forma que lhe parecer melhor. Pode alterar antes de pagar.",
+      "countryLabel": "Onde está?",
+      "countryHint": "Usamos isto para mostrar sessões disponíveis no seu país. Pode alterar a qualquer momento.",
+      "languageLabel": "Idioma da sessão",
+      "duration": "{minutes} minutos",
+      "continue": "Ver horários",
+      "alternativeHint": "Experimente outra forma de encontro, ou altere o país ou o idioma.",
+      "reasons": {
+        "country": "Esta forma de encontro não é oferecida no seu país.",
+        "language": "Esta sessão não é oferecida no idioma que escolheu.",
+        "inactive": "Esta opção não está disponível neste momento."
+      }
+    },
+    "when": {
+      "heading": "Escolha um horário",
+      "sub": "Os horários aparecem no seu fuso horário.",
+      "timezone": "O seu fuso horário",
+      "month": "Mês",
+      "week": "Semana",
+      "previous": "Mês anterior",
+      "next": "Mês seguinte",
+      "empty": "Sem horários neste dia. Experimente outra data.",
+      "loading": "A procurar horários…",
+      "loadError": "Não foi possível carregar os horários. Tente novamente.",
+      "continue": "Continuar",
+      "weekdays": {
+        "mon": "Seg",
+        "tue": "Ter",
+        "wed": "Qua",
+        "thu": "Qui",
+        "fri": "Sex",
+        "sat": "Sáb",
+        "sun": "Dom"
+      }
+    },
+    "details": {
+      "heading": "Alguns dados",
+      "sub": "Usamos estes dados para reservar a sessão e enviar a confirmação.",
+      "name": "Nome completo",
+      "email": "Email",
+      "phone": "Telemóvel",
+      "phoneHint": "Necessário para uma sessão por telefone. Pode incluir o indicativo do país.",
+      "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
+      "hold": "Continuar para pagamento",
+      "holding": "A reservar o horário…",
+      "consents": {
+        "terms": {
+          "label": "Aceito os",
+          "link": "termos de utilização"
+        },
+        "privacy": {
+          "label": "Li o",
+          "link": "aviso de privacidade"
+        },
+        "health_data_processing": {
+          "label": "Autorizo o",
+          "link": "tratamento de dados de saúde"
+        }
+      }
+    },
+    "pay": {
+      "heading": "Confirmar e pagar",
+      "sub": "O horário fica reservado por alguns minutos. Podem aparecer cartão, Apple Pay, Google Pay, Link e MB WAY.",
+      "hold": "A reserva expira em {time}",
+      "expired": "Esta reserva terminou. Escolha um novo horário para continuar.",
+      "restart": "Escolher outro horário",
+      "pay": "Pagar {price}",
+      "processing": "A confirmar o pagamento…",
+      "failed": "Não foi possível concluir o pagamento. Tente novamente.",
+      "pendingError": "O pagamento ainda está pendente. Aguarde um momento e tente novamente."
+    },
+    "done": {
+      "heading": "Sessão marcada",
+      "sub": "Guardámos a sua sessão. O email de confirmação está a caminho.",
+      "pending": "Pagamento recebido",
+      "pendingSub": "Estamos a confirmar a sessão. Recebe um email assim que estiver pronta. A Eleva.care é uma plataforma digital de saúde — quem acompanha continua responsável pelo seu cuidado.",
+      "video": "O link de vídeo chega antes da sessão.",
+      "videoLocation": "Sessão por vídeo — o link chega antes da sessão",
+      "phone": "A chamada será para {phone}.",
+      "phoneLocation": "Chamada para {phone}",
+      "inPerson": "Encontro em {location}.",
+      "ics": "Adicionar ao calendário",
+      "activate": "Criar a sua conta Eleva",
+      "activateHint": "Guarde esta sessão no seu Space e faça a gestão mais tarde."
+    },
+    "link": {
+      "specialPrice": "Preço especial",
+      "noteHeading": "Uma nota para si"
+    },
+    "errors": {
+      "slotTaken": "Esse horário acabou de ser ocupado. Escolha outro.",
+      "modeCountry": "Esta forma de encontro não está disponível no seu país.",
+      "modeLanguage": "Esta sessão não é oferecida nesse idioma.",
+      "phoneRequired": "Indique um telemóvel para poderem ligar-lhe.",
+      "guestRequired": "Indique o nome e o email para continuar.",
+      "consentOutdated": "Reveja os avisos mais recentes e tente novamente.",
+      "consentsRequired": "Confirme os três avisos para continuar.",
+      "generic": "Não foi possível reservar esse horário. Tente novamente."
     }
   },
   "footer": {

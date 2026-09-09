@@ -14,6 +14,7 @@
     "@vercel/og": "^0.11.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "libphonenumber-js": "catalog:",
     "next": "catalog:",
     "next-themes": "catalog:",
     "react": "catalog:",
@@ -42,8 +43,10 @@
     "./globals.css": "./src/styles/globals.css",
     "./postcss.config": "./postcss.config.mjs",
     "./lib/*": "./src/lib/*.ts",
+    "./lib/booking/*": "./src/lib/booking/*.ts",
     "./lib/brand-icon": "./src/lib/brand-icon.tsx",
     "./components/*": "./src/components/*.tsx",
+    "./components/booking/*": "./src/components/booking/*.tsx",
     "./components/button-variants": "./src/components/button-variants.ts",
     "./hooks/*": "./src/hooks/*.ts"
   }

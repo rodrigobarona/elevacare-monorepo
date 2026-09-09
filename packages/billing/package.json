@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./server": "./src/server/index.ts",
-    "./embedded": "./src/embedded/index.ts"
+    "./embedded": "./src/embedded/index.ts",
+    "./client": "./src/client/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -25,6 +26,7 @@
     "@stripe/connect-js": "^3.4.3",
     "@stripe/react-connect-js": "^3.4.2",
     "@upstash/redis": "catalog:",
+    "@stripe/react-stripe-js": "catalog:",
     "@stripe/stripe-js": "catalog:",
     "drizzle-orm": "catalog:",
     "stripe": "catalog:",
