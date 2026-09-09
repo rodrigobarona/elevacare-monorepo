@@ -25,6 +25,10 @@ describe("reserved usernames", () => {
       "become-expert",
       "for-clinics",
       "for-organizations",
+      "quiz",
+      "trust",
+      "community",
+      "contact",
     ]) {
       expect(isReserved(slug), `${slug} should be reserved`).toBe(true)
     }

@@ -1,34 +1,29 @@
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { CONSENT_DOCUMENT_VERSION } from "@eleva/compliance"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
-import {
-  isLegalSlug,
-  LEGAL_PARAGRAPH_KEYS,
-  LEGAL_SLUGS,
-} from "@/lib/legal-slugs"
+import { isTrustSlug, TRUST_SLUGS } from "@/lib/trust-slugs"
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>
 }
 
 export function generateStaticParams() {
-  return LEGAL_SLUGS.map((slug) => ({ slug }))
+  return TRUST_SLUGS.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params
-  if (!isLegalSlug(slug)) {
+  if (!isTrustSlug(slug)) {
     return {}
   }
-  const t = await getTranslations({ locale, namespace: "legal" })
-  const path = `/legal/${slug}`
+  const t = await getTranslations({ locale, namespace: "trust" })
+  const path = `/trust/${slug}`
   return {
-    title: t(`documents.${slug}.title`),
-    description: t(`documents.${slug}.description`),
+    title: t(`pages.${slug}.title`),
+    description: t(`pages.${slug}.description`),
     robots: { index: false, follow: false },
     alternates: {
       canonical: localePath(locale, path),
@@ -37,13 +32,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function LegalDocumentPage({ params }: Props) {
+export default async function TrustPage({ params }: Props) {
   const { locale, slug } = await params
-  if (!isLegalSlug(slug)) {
+  if (!isTrustSlug(slug)) {
     notFound()
   }
   setRequestLocale(locale)
-  const t = await getTranslations({ locale, namespace: "legal" })
+  const t = await getTranslations({ locale, namespace: "trust" })
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -61,17 +56,12 @@ export default async function LegalDocumentPage({ params }: Props) {
           >
             {t("draftBanner")}
           </p>
-          <p className="text-sm text-muted-foreground">
-            {t("versionLabel", { version: CONSENT_DOCUMENT_VERSION })}
-          </p>
-          <h1 className="mt-4 text-3xl font-bold tracking-tight">
-            {t(`documents.${slug}.heading`)}
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t(`pages.${slug}.heading`)}
           </h1>
-          <div className="mt-8 space-y-4 text-base leading-relaxed text-muted-foreground">
-            {LEGAL_PARAGRAPH_KEYS.map((key) => (
-              <p key={key}>{t(`documents.${slug}.paragraphs.${key}`)}</p>
-            ))}
-          </div>
+          <p className="mt-6 text-base leading-relaxed text-muted-foreground">
+            {t(`pages.${slug}.body`)}
+          </p>
         </article>
       </main>
       <SiteFooter />

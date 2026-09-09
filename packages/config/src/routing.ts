@@ -51,6 +51,8 @@ export const WEB_MARKETING_PATHS = [
   "about",
   "legal",
   "help",
+  "support",
+  "faq",
   "blog",
   "pricing",
   "experts",
@@ -58,6 +60,13 @@ export const WEB_MARKETING_PATHS = [
   "become-expert",
   "for-clinics",
   "for-organizations",
+  "quiz",
+  "health-quiz",
+  "questionario",
+  "cuestionario",
+  "trust",
+  "contact",
+  "community",
 ] as const
 
 /**

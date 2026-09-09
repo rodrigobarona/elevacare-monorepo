@@ -112,7 +112,10 @@ export default async function ExpertProfilePage({ params }: Props) {
             )}
           </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+            <h1
+              data-testid="expert-profile-heading"
+              className="text-3xl font-bold tracking-tight"
+            >
               {expert.displayName}
             </h1>
             {expert.headline ? (
@@ -150,7 +153,6 @@ export default async function ExpertProfilePage({ params }: Props) {
                     dateStyle: "medium",
                     timeStyle: "short",
                     timeZone: "Europe/Lisbon",
-                    timeZoneName: "short",
                   }).format(new Date(slot.start))}
                 </li>
               ))}

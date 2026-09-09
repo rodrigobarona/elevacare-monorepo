@@ -16,7 +16,8 @@
     "./next-dev": "./src/next-dev.mjs",
     "./routing": "./src/routing.ts",
     "./dispatch": "./src/dispatch.ts",
-    "./slug": "./src/slug.ts"
+    "./slug": "./src/slug.ts",
+    "./public-site-parity": "./src/public-site-parity.ts"
   },
   "scripts": {
     "lint": "eslint .",

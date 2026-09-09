@@ -6,6 +6,7 @@ import {
 } from "@eleva/auth/org-routing"
 import { resolveDispatch, type GatewayOrigins } from "@eleva/config/dispatch"
 import { isLocale, rewriteRetiredLocalePath } from "@eleva/config/i18n"
+import { rewriteParityPath } from "@eleva/config/public-site-parity"
 import {
   buildAdminRedirect,
   buildLoginRedirect,
@@ -76,6 +77,13 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
     if (organizationsPath) {
       const destination = request.nextUrl.clone()
       destination.pathname = organizationsPath
+      return NextResponse.redirect(destination, 301)
+    }
+
+    const parityPath = rewriteParityPath(pathname)
+    if (parityPath) {
+      const destination = request.nextUrl.clone()
+      destination.pathname = parityPath
       return NextResponse.redirect(destination, 301)
     }
 
