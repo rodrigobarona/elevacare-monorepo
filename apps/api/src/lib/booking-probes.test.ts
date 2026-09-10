@@ -121,6 +121,26 @@ describe("runBookingFunnelProbes", () => {
     expect(recoverIntentCheck(intent!, "db_error").ok).toBe(false)
   })
 
+  it("keeps a non-BotID 403 degraded without recovery", async () => {
+    const fetchImpl = vi.fn(async (url: string) => {
+      if (url.includes("/slots")) return jsonResponse(200, slotsBody)
+      if (url.includes("/event-types/first-visit")) {
+        return jsonResponse(200, offerBody)
+      }
+      return jsonResponse(403, { error: "forbidden" })
+    })
+
+    const report = await runBookingFunnelProbes({
+      baseUrl: "https://api.dev.eleva.care",
+      fetchImpl,
+    })
+
+    const intent = report.checks.find((check) => check.name === "intent")
+    expect(report.ok).toBe(false)
+    expect(intent?.blockedByBotId).toBeUndefined()
+    expect(recoverIntentCheck(intent!, "not_found").ok).toBe(false)
+  })
+
   it("treats intent 422 as healthy (route + Zod, no PaymentIntent)", async () => {
     const fetchImpl = vi.fn(async (url: string) => {
       if (url.includes("/slots")) return jsonResponse(200, slotsBody)

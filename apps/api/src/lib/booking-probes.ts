@@ -123,6 +123,10 @@ function isIntentValidationBody(body: unknown): boolean {
   return isRecord(body) && body.error === "validation"
 }
 
+function isIntentBlockedBody(body: unknown): boolean {
+  return isRecord(body) && body.error === "blocked"
+}
+
 async function probeIntent(
   baseUrl: string,
   fetchImpl: FetchLike
@@ -138,7 +142,7 @@ async function probeIntent(
   })
   const body = await intentRes.json().catch(() => null)
 
-  if (intentRes.status === 403) {
+  if (intentRes.status === 403 && isIntentBlockedBody(body)) {
     return {
       ok: false,
       status: 403,
@@ -170,8 +174,9 @@ async function probeIntent(
  *
  * Intent: POST a fake reservation. Healthy only when the handler
  * returns 404 `{ error: "not_found" }` or 422 `{ error: "validation" }`
- * — a bare route-level 404 is a miss. 403 is BotID rejecting the
- * server-side POST; callers may recover via the domain function.
+ * — a bare route-level 404 is a miss. 403 `{ error: "blocked" }` is
+ * BotID rejecting the server-side POST; callers may recover via the
+ * domain function. Any other 403 stays degraded.
  */
 export async function runBookingFunnelProbes(options: {
   baseUrl: string

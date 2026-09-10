@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server"
-
 import { createPaymentIntentForReservation } from "@eleva/billing/server"
 import { env, requireCronSecret } from "@eleva/config/env"
 import { heartbeat, reportProbeFailure } from "@eleva/observability"
-import type { RoutePolicy } from "@/lib/route-policy"
 import {
   BOOKING_PROBE_FAKE_RESERVATION_ID,
   BOOKING_PROBE_FAKE_TOKEN,
   recoverIntentCheck,
   runBookingFunnelProbes,
 } from "@/lib/booking-probes"
+import { corsHeaders } from "@/lib/cors"
+import type { RoutePolicy } from "@/lib/route-policy"
+import { secureJson } from "@/lib/security-headers"
 
 export const ROUTE_POLICY = {
   auth: "internal",
@@ -47,30 +47,28 @@ function resolveProbeBaseUrl(request: Request): string | undefined {
 }
 
 export async function GET(request: Request): Promise<Response> {
+  const headers = corsHeaders(request, "GET, OPTIONS")
   let secret: string
   try {
     secret = requireCronSecret().CRON_SECRET
   } catch (err) {
     console.error("[cron/booking-probes] CRON_SECRET not configured", err)
-    return NextResponse.json(
+    return secureJson(
       { error: "cron-not-configured" },
-      { status: 500, headers: { "Cache-Control": "no-store" } }
+      { status: 500, headers }
     )
   }
 
   const authHeader = request.headers.get("authorization") ?? ""
   if (authHeader !== `Bearer ${secret}`) {
-    return NextResponse.json(
-      { error: "unauthorized" },
-      { status: 401, headers: { "Cache-Control": "no-store" } }
-    )
+    return secureJson({ error: "unauthorized" }, { status: 401, headers })
   }
 
   const baseUrl = resolveProbeBaseUrl(request)
   if (!baseUrl) {
-    return NextResponse.json(
+    return secureJson(
       { error: "api-url-not-configured" },
-      { status: 500, headers: { "Cache-Control": "no-store" } }
+      { status: 500, headers }
     )
   }
 
@@ -81,11 +79,17 @@ export async function GET(request: Request): Promise<Response> {
       if (check.name !== "intent" || !check.blockedByBotId) {
         return check
       }
-      const domain = await createPaymentIntentForReservation({
-        reservationId: BOOKING_PROBE_FAKE_RESERVATION_ID,
-        reservationToken: BOOKING_PROBE_FAKE_TOKEN,
-      })
-      return recoverIntentCheck(check, domain.ok ? "created" : domain.error)
+      let domainError: string
+      try {
+        const domain = await createPaymentIntentForReservation({
+          reservationId: BOOKING_PROBE_FAKE_RESERVATION_ID,
+          reservationToken: BOOKING_PROBE_FAKE_TOKEN,
+        })
+        domainError = domain.ok ? "created" : domain.error
+      } catch {
+        domainError = "db_error"
+      }
+      return recoverIntentCheck(check, domainError)
     })
   )
   const allOk = checks.every((check) => check.ok)
@@ -100,7 +104,7 @@ export async function GET(request: Request): Promise<Response> {
     )
   }
 
-  return NextResponse.json(
+  return secureJson(
     {
       status: allOk ? "healthy" : "degraded",
       ranAt: new Date().toISOString(),
@@ -109,7 +113,14 @@ export async function GET(request: Request): Promise<Response> {
     },
     {
       status: allOk ? 200 : 500,
-      headers: { "Cache-Control": "no-store" },
+      headers,
     }
   )
+}
+
+export function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "GET, OPTIONS"),
+  })
 }
