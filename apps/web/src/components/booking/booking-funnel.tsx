@@ -32,7 +32,7 @@ import {
 } from "@eleva/ui/lib/booking/mode-bookable"
 import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
 import { maskPhone, toE164 } from "@eleva/ui/lib/booking/e164"
-import { startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
+import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
 import { downloadBookingIcs } from "@/lib/booking-ics"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
@@ -171,7 +171,9 @@ export function BookingFunnel({
   useEffect(() => {
     if (!selectedMode) return
     const from = startOfMonth(month)
-    const to = new Date(from.getTime() + 42 * 24 * 60 * 60 * 1000)
+    const nextMonthPlusDay = addMonths(month, 1).getTime() + 24 * 60 * 60 * 1000
+    const maxRange = from.getTime() + 31 * 24 * 60 * 60 * 1000
+    const to = new Date(Math.min(nextMonthPlusDay, maxRange))
     const api = createPublicApiClient()
     const key = `${selectedMode.id}:${month.toISOString()}:${timeZone}`
     let cancelled = false
@@ -518,12 +520,19 @@ export function BookingFunnel({
               label={t("when.timezone")}
             />
             {slotsLoading ? (
-              <p className="text-sm text-muted-foreground">
+              <p
+                data-testid="booking-slots-loading"
+                className="text-sm text-muted-foreground"
+              >
                 {t("when.loading")}
               </p>
             ) : null}
             {slotsError ? (
-              <p role="alert" className="text-sm text-destructive">
+              <p
+                role="alert"
+                data-testid="booking-slots-error"
+                className="text-sm text-destructive"
+              >
                 {t("when.loadError")}
               </p>
             ) : null}
@@ -573,7 +582,11 @@ export function BookingFunnel({
                   {t("back")}
                 </Button>
               ) : null}
-              <Button isDisabled={!slot} onPress={() => setStep("details")}>
+              <Button
+                data-testid="booking-continue-when"
+                isDisabled={!slot}
+                onPress={() => setStep("details")}
+              >
                 {t("when.continue")}
               </Button>
             </div>
@@ -591,6 +604,7 @@ export function BookingFunnel({
             <Field>
               <FieldLabel>{t("details.name")}</FieldLabel>
               <Input
+                data-testid="booking-guest-name"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 autoComplete="name"
@@ -599,6 +613,7 @@ export function BookingFunnel({
             <Field>
               <FieldLabel>{t("details.email")}</FieldLabel>
               <Input
+                data-testid="booking-guest-email"
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -646,6 +661,7 @@ export function BookingFunnel({
                 {t("back")}
               </Button>
               <Button
+                data-testid="booking-continue-details"
                 isDisabled={
                   !name.trim() || !email.includes("@") || isSubmitting
                 }

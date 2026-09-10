@@ -21,24 +21,26 @@ export function ConsentCheckbox({
   className?: string
 }) {
   return (
-    <CheckboxField
-      id={id}
-      isSelected={isSelected}
-      onChange={onChange}
-      className={cn("items-start", className)}
-      label={
-        <span className="text-sm leading-relaxed">
-          {label}{" "}
-          <a
-            href={href}
-            target="_blank"
-            rel="noreferrer"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            {linkLabel}
-          </a>
-        </span>
-      }
-    />
+    <div data-testid={`booking-consent-${id}`}>
+      <CheckboxField
+        id={id}
+        isSelected={isSelected}
+        onChange={onChange}
+        className={cn("items-start", className)}
+        label={
+          <span className="text-sm leading-relaxed">
+            {label}{" "}
+            <a
+              href={href}
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {linkLabel}
+            </a>
+          </span>
+        }
+      />
+    </div>
   )
 }
