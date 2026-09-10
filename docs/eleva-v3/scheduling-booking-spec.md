@@ -25,7 +25,7 @@ Eleva scheduling must support:
 - different schedules for different event types
 - online, in-person, and phone sessions
 - localized event content
-- expert and patient timezones
+- expert and member timezones
 - reminders, rescheduling, and cancellations
 - future support for organization/team scheduling
 
@@ -484,6 +484,16 @@ Sensitive session-adjacent content should not leak through reminder payloads or 
 - should some event types require manual expert confirmation by default (likely opt-in per event type)
 - when should organization-owned schedules override expert-owned schedules (phase-2 collective scheduling)
 - how should packs interact with scheduling priority and booking eligibility
+
+## Phase 04 implementation (2026-09-10)
+
+Shipped on `main` through PR 04.2f (`#42`) and earlier 04.1 / 04.2 slices:
+
+- **Time model:** slot bounds are `timestamptz`. The reservation snapshots `timezone` (IANA) at reserve time. Display formatting uses that snapshot; do not mix `dateStyle`/`timeStyle` with `timeZoneName` in `Intl.DateTimeFormat`.
+- **Consistency boundary:** `slot_reservations` has a `btree_gist` exclusion constraint on the expert + tstzrange. A `23P01` inside the reservation transaction is `409 SLOT_TAKEN`. Redis `reserveSlot` (5 min TTL) is the fast path, not the source of truth. HTTP 100-way proof is PR `#43` (open).
+- **Reserve → pay → confirm:** `POST /bookings/reserve` requires current `CONSENT_DOCUMENTS` versions and returns `{ reservationId, reservationToken, expiresAt }` (token never logged). `POST /payments/intent` authorizes with the token; Stripe is never called inside a DB transaction. `POST /bookings/confirm` requires `reservationToken` in Zod (`400` without it). Webhook `payment_intent.succeeded` calls the same domain function. Guest activation is an outbox event, not inline.
+- **Private links:** `GET /public/booking-links/{token}` and reserve `linkToken` support unpublished offers and schedule/price overrides. Seeded closed-agenda + exhausted `max_uses` evidence is PR `#47` (open).
+- **Not this phase:** member/expert cancel and reschedule _execution_ (refunds are Phase 6). Policy text above still stands.
 
 ## Closed Decisions
 

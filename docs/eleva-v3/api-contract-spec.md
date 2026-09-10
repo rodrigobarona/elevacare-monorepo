@@ -151,6 +151,24 @@ The team should explicitly define contracts for:
 - transcript/report flows
 - admin/operator actions
 
+## Phase 04 public booking contracts (2026-09-10)
+
+SSOT remains OpenAPI at `GET /openapi.json` and Zod in `@eleva/api-client`. Shipped public HTTP:
+
+| Method | Path                                                  | Auth                        | Notes                                                                                                                                                                                                 |
+| ------ | ----------------------------------------------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/public/experts`                                     | public                      | Marketplace list                                                                                                                                                                                      |
+| GET    | `/public/experts/{username}`                          | public                      | Profile + published event types                                                                                                                                                                       |
+| GET    | `/public/experts/{username}/event-types/{slug}`       | public                      | Offer                                                                                                                                                                                                 |
+| GET    | `/public/experts/{username}/event-types/{slug}/slots` | public                      | Availability; range capped                                                                                                                                                                            |
+| GET    | `/public/booking-links/{token}`                       | public                      | Private invite; 404 on any validation failure                                                                                                                                                         |
+| POST   | `/bookings/reserve`                                   | public + BotID + rate limit | Guest or session; consents required. Private-link bookings must send `linkToken`; the server validates hash, expiry, revocation, `max_uses`, and recipient, and returns the same `404` on any failure |
+| POST   | `/payments/intent`                                    | public + BotID + rate limit | `{ reservationId, reservationToken }`                                                                                                                                                                 |
+| POST   | `/bookings/confirm`                                   | public + BotID + rate limit | `reservationToken` required (Zod `400`)                                                                                                                                                               |
+| POST   | `/webhooks/stripe`                                    | Stripe signature            | `payment_intent.succeeded` / `payment_failed`                                                                                                                                                         |
+
+`ROUTE_POLICY` is declared on every `apps/api` handler (`pnpm check:route-guards`). Cancel/reschedule HTTP is Phase 6.
+
 ## Error Model
 
 The platform should standardize:

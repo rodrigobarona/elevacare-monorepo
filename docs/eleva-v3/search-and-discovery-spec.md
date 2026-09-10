@@ -169,6 +169,16 @@ Discovery must connect cleanly into:
 
 The search layer should not invent parallel versions of expert/event truth.
 
+## Phase 04 implementation (2026-09-10)
+
+`apps/web` explorer and profile are live on `main` (04.1d + 04.2 funnel):
+
+- `GET /public/experts` supports category, language, price, and sort (`relevance` / `price` / `rating` placeholder).
+- Profile is `/{username}`; booking entry is `/{username}/{eventSlug}` then the public funnel.
+- Only `published` + `active` event types appear on the marketplace. Unpublished offers stay reachable through a private booking link.
+- Seeded reference experts: `anaquick` (€0 — do not use for paid e2e) and `fisiomota` / `first-visit` (€60 online).
+- Clinic public discovery and ratings remain later phases.
+
 ## Open Questions
 
 - exact initial ranking strategy
