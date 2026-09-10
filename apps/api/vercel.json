@@ -4,6 +4,10 @@
     {
       "path": "/cron/keep-alive",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/cron/booking-probes",
+      "schedule": "15 6 * * *"
     }
   ]
 }

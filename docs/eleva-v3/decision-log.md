@@ -54,16 +54,28 @@ Each entry should include:
 - Owner: engineering
 - Status: active
 - Review date: 2026-09-17
-- Summary: 04.1 and 04.2 funnel/payment are on `main` through `#46`
-  (`feat(web): add draft become-expert and for-clinics pages`). Entry-gate
+- Summary: 04.1 and 04.2 leftover PRs `#43`–`#50` are on `main`. Entry-gate
   records D-01, D-02, D-10, D-13, D-14 exist below and stay working
-  pre-launch (not DPO/finance production sign-off). Still open for human
-  approve: `#43` (100-way reserve), `#44` (4242 e2e), `#45` (D-10 301s +
-  contact/trust drafts; rebased onto `#46`), `#47` (closed-agenda link
-  seed + e2e), `#48` (docs), `#49` (staging probes). Gated: contact POST
+  pre-launch (not DPO/finance production sign-off). Gated: contact POST
   API (DPO), Lighthouse ≥90 on profile (staging), cancel/reschedule
-  execution (Phase 6). Do not start Phase 5 until 04.2 merges and D-12
-  is signed for account deletion.
+  execution (Phase 6). Do not start Phase 5 until D-12 is signed for
+  account deletion.
+- Reference:
+  [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
+
+### 2026-09-10: Staging booking funnel synthetic probes
+
+- Owner: engineering
+- Status: active
+- Review date: 2026-09-17 (reassess probe coverage, on-call, Lighthouse, and the contact DPO gate)
+- Summary: Phase 04.2 leftover item 8 adds `GET /cron/booking-probes`
+  (Vercel Cron daily 06:15 UTC, `CRON_SECRET`; Hobby runs once per
+  day sometime in 06:00–06:59 UTC). It HTTP-probes seeded
+  `fisiomota/first-visit` slots and test-mode `POST /payments/intent`
+  with a fake reservation (404/422 healthy; no PaymentIntent). Failures
+  call `@eleva/observability` `reportProbeFailure` (Sentry → on-call).
+  Success heartbeats `booking-probes`. Lighthouse ≥90 on the profile page
+  and the contact POST API stay gated (staging evidence / DPO).
 - Reference:
   [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
 
