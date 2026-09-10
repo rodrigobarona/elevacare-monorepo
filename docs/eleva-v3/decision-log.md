@@ -53,14 +53,15 @@ Each entry should include:
 
 - Owner: engineering
 - Status: active
+- Review date: 2026-09-17
 - Summary: 04.1 and 04.2 funnel/payment are on `main` through `#46`
   (`feat(web): add draft become-expert and for-clinics pages`). Entry-gate
   records D-01, D-02, D-10, D-13, D-14 exist below and stay working
   pre-launch (not DPO/finance production sign-off). Still open for human
   approve: `#43` (100-way reserve), `#44` (4242 e2e), `#45` (D-10 301s +
   contact/trust drafts; rebased onto `#46`), `#47` (closed-agenda link
-  seed + e2e). Not started / gated: contact POST API (DPO), staging
-  synthetic probes, Lighthouse ≥90 on profile, cancel/reschedule
+  seed + e2e), `#48` (docs), `#49` (staging probes). Gated: contact POST
+  API (DPO), Lighthouse ≥90 on profile (staging), cancel/reschedule
   execution (Phase 6). Do not start Phase 5 until 04.2 merges and D-12
   is signed for account deletion.
 - Reference:
