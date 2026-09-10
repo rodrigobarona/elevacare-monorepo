@@ -51,7 +51,10 @@ export function PriceTag({
     >
       <span>{formatBookingPrice(cents, locale)}</span>
       {special && specialLabel ? (
-        <span className="text-xs font-medium tracking-wide text-primary uppercase">
+        <span
+          data-testid="booking-special-price"
+          className="text-xs font-medium tracking-wide text-primary uppercase"
+        >
           {specialLabel}
         </span>
       ) : null}

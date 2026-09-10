@@ -3,6 +3,14 @@ import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
 import * as main from "../schema/main"
+import {
+  DEMO_BOOKING_LINK_EXPIRES_AT,
+  DEMO_BOOKING_LINK_TOKENS,
+  DEMO_PRIVATE_INVITE_NOTE,
+  DEMO_PRIVATE_INVITE_PRICE_CENTS,
+  DEMO_PRIVATE_INVITE_SLUG,
+  hashDemoBookingLinkToken,
+} from "./demo-booking-links"
 
 /** EU launch list for the reference phone mode (D-02). */
 export const EU_PHONE_COUNTRIES = [
@@ -220,6 +228,7 @@ async function upsertEventType(
     durationMinutes: number
     priceAmount: number
     languages: string[]
+    published?: boolean
   }
 ): Promise<string> {
   const [existing] = await tx
@@ -232,7 +241,15 @@ async function upsertEventType(
       )
     )
     .limit(1)
-  if (existing) return existing.id
+  if (existing) {
+    if (input.published !== undefined) {
+      await tx
+        .update(main.eventTypes)
+        .set({ published: input.published })
+        .where(eq(main.eventTypes.id, existing.id))
+    }
+    return existing.id
+  }
   const [inserted] = await tx
     .insert(main.eventTypes)
     .values({
@@ -246,7 +263,7 @@ async function upsertEventType(
       priceAmount: input.priceAmount,
       currency: "EUR",
       languages: input.languages,
-      published: true,
+      published: input.published ?? true,
       active: true,
     })
     .returning({ id: main.eventTypes.id })
@@ -299,6 +316,55 @@ async function ensureMode(
       active: true,
     })
     .returning({ id: main.eventTypeModes.id })
+  return inserted!.id
+}
+
+async function upsertBookingLink(
+  tx: Tx,
+  input: {
+    orgId: string
+    eventTypeId: string
+    eventTypeModeId: string
+    scheduleId: string
+    token: string
+    priceCents: number
+    note: string
+    maxUses: number
+    useCount: number
+    createdBy: string
+  }
+) {
+  const tokenHash = hashDemoBookingLinkToken(input.token)
+  const values = {
+    orgId: input.orgId,
+    eventTypeId: input.eventTypeId,
+    eventTypeModeId: input.eventTypeModeId,
+    scheduleId: input.scheduleId,
+    tokenHash,
+    priceCents: input.priceCents,
+    note: input.note,
+    expiresAt: DEMO_BOOKING_LINK_EXPIRES_AT,
+    maxUses: input.maxUses,
+    useCount: input.useCount,
+    createdBy: input.createdBy,
+    revokedAt: null,
+  }
+  const [existing] = await tx
+    .select({ id: main.bookingLinks.id })
+    .from(main.bookingLinks)
+    .where(eq(main.bookingLinks.tokenHash, tokenHash))
+    .limit(1)
+  if (existing) {
+    await tx
+      .update(main.bookingLinks)
+      .set(values)
+      .where(eq(main.bookingLinks.id, existing.id))
+    return existing.id
+  }
+  const [inserted] = await tx
+    .insert(main.bookingLinks)
+    .values(values)
+    .returning({ id: main.bookingLinks.id })
   return inserted!.id
 }
 
@@ -549,6 +615,53 @@ async function seedPhysiotherapy() {
       languages: ["pt", "en", "es"],
       priceCents: 5500,
       sortOrder: 2,
+    })
+    const privateInviteId = await upsertEventType(tx, {
+      orgId,
+      expertProfileId: profileId,
+      slug: DEMO_PRIVATE_INVITE_SLUG,
+      title: {
+        en: "Private invite",
+        pt: "Convite privado",
+        es: "Invitación privada",
+      },
+      kind: "clinical",
+      durationMinutes: 60,
+      priceAmount: 6000,
+      languages: ["pt", "en", "es"],
+      published: false,
+    })
+    const privateModeId = await ensureMode(tx, {
+      orgId,
+      eventTypeId: privateInviteId,
+      mode: "online",
+      scheduleId: onlineSchedule,
+      countryScopeType: "list",
+      countryScopeCodes: ["PT", "ES"],
+      languages: ["pt", "en", "es"],
+      priceCents: 6000,
+      sortOrder: 0,
+    })
+    const linkInput = {
+      orgId,
+      eventTypeId: privateInviteId,
+      eventTypeModeId: privateModeId,
+      scheduleId: onlineSchedule,
+      priceCents: DEMO_PRIVATE_INVITE_PRICE_CENTS,
+      note: DEMO_PRIVATE_INVITE_NOTE,
+      createdBy: userId,
+    }
+    await upsertBookingLink(tx, {
+      ...linkInput,
+      token: DEMO_BOOKING_LINK_TOKENS.open,
+      maxUses: 1,
+      useCount: 0,
+    })
+    await upsertBookingLink(tx, {
+      ...linkInput,
+      token: DEMO_BOOKING_LINK_TOKENS.exhausted,
+      maxUses: 1,
+      useCount: 1,
     })
     return profileId
   })

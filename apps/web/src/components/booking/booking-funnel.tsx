@@ -428,7 +428,10 @@ export function BookingFunnel({
         </div>
 
         {linkNote ? (
-          <aside className="mt-6 rounded-3xl bg-primary/8 px-4 py-3 text-sm">
+          <aside
+            data-testid="booking-link-note"
+            className="mt-6 rounded-3xl bg-primary/8 px-4 py-3 text-sm"
+          >
             <p className="font-medium">{t("link.noteHeading")}</p>
             <p className="mt-1 text-muted-foreground">{linkNote}</p>
           </aside>
