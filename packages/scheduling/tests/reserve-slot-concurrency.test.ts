@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest"
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
 import type { Redis } from "@upstash/redis"
 import type { ReserveSlotResult } from "../src/types"
 
@@ -26,6 +26,16 @@ vi.mock("@eleva/db/context", () => {
       values: () => ({
         returning: () => {
           insertCounter += 1
+          if (
+            process.env.SCHEDULING_DISABLE_REDIS_LOCK === "1" &&
+            insertCounter > 1
+          ) {
+            return Promise.reject(
+              Object.assign(new Error("conflicting key value"), {
+                code: "23P01",
+              })
+            )
+          }
           return Promise.resolve([{ id: `reservation-${insertCounter}` }])
         },
       }),
@@ -116,7 +126,12 @@ describe("reserveSlot — concurrent reservation race", () => {
   beforeEach(() => {
     redis = createMockRedis()
     insertCounter = 0
+    vi.unstubAllEnvs()
     vi.clearAllMocks()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
   })
 
   it("100 concurrent reservation attempts produce exactly one winner", async () => {
@@ -157,6 +172,80 @@ describe("reserveSlot — concurrent reservation race", () => {
 
     expect(redis.set).toHaveBeenCalledTimes(CONCURRENCY)
     expect(insertCounter).toBe(1)
+  })
+
+  it("100 concurrent attempts with the Redis lock disabled still produce one winner", async () => {
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("SCHEDULING_DISABLE_REDIS_LOCK", "1")
+    const { reserveSlot } = await import("../src/reserve-slot")
+
+    const CONCURRENCY = 100
+    const slotStart = new Date("2026-06-15T10:00:00Z")
+    const slotEnd = new Date("2026-06-15T11:00:00Z")
+
+    const results = await Promise.all(
+      Array.from({ length: CONCURRENCY }, (_, i) =>
+        reserveSlot(redis, {
+          eventTypeId: "evt-type-1",
+          expertProfileId: "expert-1",
+          expertUserId: "user-1",
+          orgId: "org-1",
+          startsAt: slotStart,
+          endsAt: slotEnd,
+          holdToken: `token-${i}`,
+          ttlSeconds: 300,
+        })
+      )
+    )
+
+    const winners = results.filter((r) => r.success)
+    const losers = results.filter((r) => !r.success)
+
+    expect(winners).toHaveLength(1)
+    expect(losers).toHaveLength(CONCURRENCY - 1)
+    expect(redis.set).not.toHaveBeenCalled()
+    expect(insertCounter).toBe(CONCURRENCY)
+    for (const loser of losers) {
+      expect(loser.error).toBe("conflict")
+    }
+  })
+
+  it("ignores SCHEDULING_DISABLE_REDIS_LOCK outside NODE_ENV=test", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("SCHEDULING_DISABLE_REDIS_LOCK", "1")
+    const { isRedisSlotLockDisabled, reserveSlot } =
+      await import("../src/reserve-slot")
+
+    expect(isRedisSlotLockDisabled()).toBe(false)
+
+    vi.stubEnv("NODE_ENV", "development")
+    expect(isRedisSlotLockDisabled()).toBe(false)
+    vi.stubEnv("NODE_ENV", "production")
+
+    const first = await reserveSlot(redis, {
+      eventTypeId: "evt-type-1",
+      expertProfileId: "expert-1",
+      expertUserId: "user-1",
+      orgId: "org-1",
+      startsAt: new Date("2026-06-15T10:00:00Z"),
+      endsAt: new Date("2026-06-15T11:00:00Z"),
+      holdToken: "token-a",
+      ttlSeconds: 300,
+    })
+    const second = await reserveSlot(redis, {
+      eventTypeId: "evt-type-1",
+      expertProfileId: "expert-1",
+      expertUserId: "user-1",
+      orgId: "org-1",
+      startsAt: new Date("2026-06-15T10:00:00Z"),
+      endsAt: new Date("2026-06-15T11:00:00Z"),
+      holdToken: "token-b",
+      ttlSeconds: 300,
+    })
+
+    expect(first.success).toBe(true)
+    expect(second).toEqual({ success: false, error: "slot_taken" })
+    expect(redis.set).toHaveBeenCalledTimes(2)
   })
 
   it("different slots can be reserved concurrently by the same expert", async () => {
