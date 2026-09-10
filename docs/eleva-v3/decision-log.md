@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-10: Private-link credential after reserve is reservationToken
+
+- Owner: engineering
+- Status: accepted
+- Summary: Records the shipped Phase 04.2 contract (does not change an
+  ADR). `GET /public/booking-links/{token}` and `POST /bookings/reserve`
+  take plaintext `linkToken` and validate hash, expiry, revocation,
+  `max_uses`, and recipient (same `404` on any failure). After reserve,
+  `reservationToken` is the sole client credential: `POST /payments/intent`
+  and `POST /bookings/confirm` do not accept `linkToken` again. They
+  re-read `revoked_at` on the reservation's stored `booking_link_id` and
+  return `404` if revoked. Compatibility: clients must stop sending
+  `linkToken` after reserve; OpenAPI and `@eleva/api-client` already
+  match. No ADR is reopened.
+- Reference: [`scheduling-booking-spec.md`](./scheduling-booking-spec.md),
+  [`api-contract-spec.md`](./api-contract-spec.md)
+
+### 2026-09-10: Phase 04.2 leftover status after marketing pages
+
+- Owner: engineering
+- Status: active
+- Review date: 2026-09-17
+- Summary: 04.1 and 04.2 funnel/payment are on `main` through `#46`
+  (`feat(web): add draft become-expert and for-clinics pages`). Entry-gate
+  records D-01, D-02, D-10, D-13, D-14 exist below and stay working
+  pre-launch (not DPO/finance production sign-off). Still open for human
+  approve: `#43` (100-way reserve), `#44` (4242 e2e), `#45` (D-10 301s +
+  contact/trust drafts; rebased onto `#46`), `#47` (closed-agenda link
+  seed + e2e), `#48` (docs), `#49` (staging probes). Gated: contact POST
+  API (DPO), Lighthouse ≥90 on profile (staging), cancel/reschedule
+  execution (Phase 6). Do not start Phase 5 until 04.2 merges and D-12
+  is signed for account deletion.
+- Reference:
+  [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
+
 ### 2026-09-09: Domain-events outbox for booking guest activation
 
 - Owner: engineering
@@ -576,12 +611,13 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
   Barona (founder, product owner). Draft legal pages and `CONSENT_DOCUMENTS`
   version `dev-2026-09-09` are not DPO-approved. Re-sign before go-live.
 - Review date: 2026-09-21 (legal + DPO re-sign before production)
-- Summary: every surface of the live MVP site has a disposition tested by `e2e/legacy-urls.spec.ts`:
-  expert URLs preserved via `public_handles`; `/pt-BR/*` 301; health quiz retired (301 to the
-  experts directory); community links kept as external footer links; Help Center replaced by
-  `apps/docs` guides with 301s; contact migrated to `/{locale}/contact`; legal pages migrated as
-  versioned `/{locale}/legal/*` (their versions are the `CONSENT_DOCUMENTS` versions); trust
-  claims rewritten only with Phase 13 evidence. Blocks: Phase 4 PR 04.2.
+- Summary: every surface of the live MVP site has a disposition. On `main`
+  as of 2026-09-10: expert URLs via `public_handles`; `/pt-BR/*` 301 (D-01);
+  versioned `/{locale}/legal/*` (`CONSENT_DOCUMENTS`); `/become-expert` and
+  `/for-clinics` drafts. Quiz / help / trust / contact / community footer
+  301s and `e2e/legacy-urls.spec.ts` land in PR `#45` (open, rebased onto
+  `#46`). Contact POST is still at the DPO gate. Trust copy stays
+  evidence-free until Phase 13. Blocks: Phase 4 PR 04.2 leftovers.
 - Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md) "Public-site parity"
 
 ### D-11 (2026-09-07): Clinical access model

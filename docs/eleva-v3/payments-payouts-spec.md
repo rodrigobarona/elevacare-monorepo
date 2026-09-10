@@ -24,6 +24,15 @@ Eleva is a two-sided marketplace platform. The commercial model is **segment-dif
 - [MarketplaceBeat — Marketplace Monetization Models](https://marketplacebeat.com/articles/marketplace-monetization-models) — subscription as workflow-monetization layer for workflow-heavy categories.
 - [Monetizely — Clinic SaaS pricing research](https://www.getmonetizely.com/articles/which-pricing-metric-fits-clinics-saas-best-per-seat-per-transaction-or-per-outcome) — 3+ tiers → 26% higher ARPA.
 
+## Phase 04 implementation (2026-09-10)
+
+Booking checkout on `main` (PRs 04.2c–04.2f):
+
+- **EUR-only (D-02):** offer and reservation amounts are `EUR`. Stripe reads the reservation snapshot, never a currency literal.
+- **Fee at charge time:** `computeCommissionRate` in `@eleva/billing` is the SSOT. The platform fee is stored on `booking_payments.application_fee_cents` + `applied_commission_bps`. The PaymentIntent is separate charges and transfers: no `transfer_data`, no `application_fee_amount`. Phase 6 transfers `amount - fee`.
+- **Payment-method policy (D-14):** booking intents use `payment_method_configuration = STRIPE_PMC_BOOKING` (`infra/stripe/setup-payment-methods.ts`). Classes live in `packages/billing/src/server/payment-method-policy.ts`. Do not hardcode `payment_method_types` on booking intents.
+- **Hold:** 5 minutes; MB WAY `async_short` extends to 10 minutes while `processing`. Sweep must not cancel a processing MB WAY reservation inside that window.
+
 ## Payments Principles
 
 - Separate commercial state from scheduling state.
