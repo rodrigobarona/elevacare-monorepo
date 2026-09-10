@@ -13,6 +13,7 @@ export {
 } from "./redaction"
 export { initSentry, captureException, type SentryInitOptions } from "./sentry"
 export { heartbeat } from "./heartbeat"
+export { reportProbeFailure } from "./probes"
 export { buildCspHeader, CSP_ALLOWLIST } from "./csp"
 
 // withHeaders / proxy helpers are exposed only via the `@eleva/observability/proxy`
