@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-10: Private-link credential after reserve is reservationToken
+
+- Owner: engineering
+- Status: accepted
+- Summary: Records the shipped Phase 04.2 contract (does not change an
+  ADR). `GET /public/booking-links/{token}` and `POST /bookings/reserve`
+  take plaintext `linkToken` and validate hash, expiry, revocation,
+  `max_uses`, and recipient (same `404` on any failure). After reserve,
+  `reservationToken` is the sole client credential: `POST /payments/intent`
+  and `POST /bookings/confirm` do not accept `linkToken` again. They
+  re-read `revoked_at` on the reservation's stored `booking_link_id` and
+  return `404` if revoked. Compatibility: clients must stop sending
+  `linkToken` after reserve; OpenAPI and `@eleva/api-client` already
+  match. No ADR is reopened.
+- Reference: [`scheduling-booking-spec.md`](./scheduling-booking-spec.md),
+  [`api-contract-spec.md`](./api-contract-spec.md)
+
 ### 2026-09-10: Phase 04.2 leftover status after marketing pages
 
 - Owner: engineering

@@ -129,11 +129,14 @@ Experts must be able to invite one person to book even when their agenda is clos
   `note`, `created_by`, `revoked_at`.
 - A link bypasses visibility and `accepting_bookings` but **never** the legal invariants above, the
   busy-time check or the reservation/payment flow.
-- Authorization is **link-scoped, not anonymous**: the token is the credential. Every mutation in
-  the private flow (reserve, payment intent, confirm) must present it; the API re-validates
-  `token_hash`, `revoked_at`, `expires_at`, `max_uses` and the `recipient_email` lock on each call
-  and the reservation stores `booking_link_id` so confirm cannot be replayed against a different
-  link. A use is claimed atomically at reservation time
+- Authorization is **link-scoped, not anonymous**. Distinguish reserve-time validation from
+  post-reservation checks: `GET /public/booking-links/{token}` and `POST /bookings/reserve` take
+  the plaintext `linkToken` and re-validate `token_hash`, `revoked_at`, `expires_at`, `max_uses`
+  and the `recipient_email` lock (same `404` on any failure). After reserve, the client presents
+  only `reservationToken` — `POST /payments/intent` and `POST /bookings/confirm` do not accept
+  `linkToken` again. They re-read `revoked_at` on the reservation's stored `booking_link_id` and
+  return `404` if revoked, so confirm cannot be replayed against a different link. A use is
+  claimed atomically at reservation time
   (`UPDATE booking_links SET use_count = use_count + 1 WHERE ... AND use_count < max_uses
 RETURNING id`; no row => 404) and released when the reservation expires or is cancelled before
   confirmation. Rate limiting (`publicMutation` class) and BotID stay on as defense in depth, like
