@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
@@ -8,6 +9,7 @@ import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Link } from "@/i18n/navigation"
 import { formatEur } from "@/lib/format-eur"
+import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { pickLocalizedText } from "@/lib/localized-text"
 import { createPublicApiClient } from "@/lib/public-api"
@@ -48,11 +50,10 @@ export default async function ExpertProfilePage({ params }: Props) {
   }
 
   const t = await getTranslations("profile")
-  const api = createPublicApiClient()
 
   let expert
   try {
-    expert = await api.public.getExpert(username)
+    expert = await createPublicApiClient().public.getExpert(username)
   } catch (error) {
     if (error instanceof ApiClientError && error.status === 404) {
       notFound()
@@ -64,30 +65,6 @@ export default async function ExpertProfilePage({ params }: Props) {
     (eventType) => eventType.modes.length > 0
   )
   const firstMode = firstEvent?.modes[0]
-
-  let upcoming: { start: string; label: string }[] = []
-  if (firstMode && firstEvent) {
-    const from = new Date()
-    const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
-    try {
-      const slots = await api.public.getSlots(
-        expert.username,
-        firstEvent.slug,
-        {
-          modeId: firstMode.id,
-          from: from.toISOString(),
-          to: to.toISOString(),
-          tz: "Europe/Lisbon",
-        }
-      )
-      upcoming = slots.slots.slice(0, 3).map((slot) => ({
-        start: slot.start,
-        label: pickLocalizedText(firstEvent.title, locale),
-      }))
-    } catch {
-      upcoming = []
-    }
-  }
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -139,24 +116,22 @@ export default async function ExpertProfilePage({ params }: Props) {
 
         <section className="mt-10">
           <h2 className="text-xl font-semibold">{t("upcoming")}</h2>
-          {upcoming.length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
+          {firstEvent && firstMode ? (
+            <Suspense
+              fallback={
+                <div className="mt-3 h-10 animate-pulse rounded-md bg-muted" />
+              }
+            >
+              <UpcomingSlots
+                locale={locale}
+                username={expert.username}
+                eventSlug={firstEvent.slug}
+                eventTitle={pickLocalizedText(firstEvent.title, locale)}
+                modeId={firstMode.id}
+              />
+            </Suspense>
           ) : (
-            <ul className="mt-3 space-y-2">
-              {upcoming.map((slot) => (
-                <li
-                  key={`${slot.label}-${slot.start}`}
-                  className="rounded-md border px-3 py-2 text-sm"
-                >
-                  {slot.label} ·{" "}
-                  {new Intl.DateTimeFormat(locale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                    timeZone: "Europe/Lisbon",
-                  }).format(new Date(slot.start))}
-                </li>
-              ))}
-            </ul>
+            <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
           )}
         </section>
 
@@ -204,5 +179,57 @@ export default async function ExpertProfilePage({ params }: Props) {
       </main>
       <SiteFooter />
     </div>
+  )
+}
+
+async function UpcomingSlots({
+  locale,
+  username,
+  eventSlug,
+  eventTitle,
+  modeId,
+}: {
+  locale: string
+  username: string
+  eventSlug: string
+  eventTitle: string
+  modeId: string
+}) {
+  const t = await getTranslations("profile")
+  const from = new Date()
+  const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
+  let upcoming: { start: string }[] = []
+  try {
+    const slots = await createPublicApiClient().public.getSlots(
+      username,
+      eventSlug,
+      {
+        modeId,
+        from: from.toISOString(),
+        to: to.toISOString(),
+        tz: "Europe/Lisbon",
+      }
+    )
+    upcoming = slots.slots.slice(0, 3).map((slot) => ({ start: slot.start }))
+  } catch {
+    // Slots are optional on the profile; keep the page up if the API fails.
+  }
+
+  if (upcoming.length === 0) {
+    return <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
+  }
+
+  return (
+    <ul className="mt-3 space-y-2">
+      {upcoming.map((slot) => (
+        <li
+          key={`${eventTitle}-${slot.start}`}
+          className="rounded-md border px-3 py-2 text-sm"
+        >
+          {eventTitle} ·{" "}
+          {formatSlotDateTime(slot.start, locale, "Europe/Lisbon")}
+        </li>
+      ))}
+    </ul>
   )
 }
