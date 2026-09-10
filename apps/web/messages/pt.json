@@ -11,7 +11,9 @@
     "login": "Entrar",
     "getStarted": "Começar agora",
     "dashboard": "Painel",
-    "signout": "Sair"
+    "signout": "Sair",
+    "becomeExpert": "Tornar-se especialista",
+    "forClinics": "Para clínicas"
   },
   "home": {
     "eyebrow": "Saúde da mulher, elevada",
@@ -267,7 +269,10 @@
     "cookies": "Cookies",
     "payments": "Pagamentos",
     "expertAgreement": "Acordo de especialistas",
-    "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live."
+    "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live.",
+    "solutions": "Juntar-se à Eleva",
+    "becomeExpert": "Tornar-se especialista",
+    "forClinics": "Para clínicas"
   },
   "legal": {
     "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
@@ -346,5 +351,21 @@
         }
       }
     }
+  },
+  "becomeExpert": {
+    "title": "Tornar-se especialista — Eleva.care",
+    "description": "Junte-se à Eleva.care como profissional independente e licenciado numa plataforma digital de saúde.",
+    "draftBanner": "Rascunho de pré-lançamento. Comissão, prazos de payout e termos jurídicos não são finais. A área financeira e o DPO voltam a assinar antes do go-live.",
+    "heading": "Exercer na Eleva.care",
+    "body": "A Eleva.care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos (teleconsultas / telemedicina) por profissionais independentes e licenciados. Os especialistas mantêm autonomia clínica. A Eleva opera a tecnologia de agenda, reserva e pagamento. Os membros marcam sessões consigo — esta página não inventa percentagens de payout nem liquidação semanal.",
+    "cta": "Criar a sua conta"
+  },
+  "forClinics": {
+    "title": "Para clínicas — Eleva.care",
+    "description": "Gira uma Team de clínica na Eleva.care, uma plataforma digital de saúde para profissionais independentes.",
+    "draftBanner": "Rascunho de pré-lançamento. Preços por lugar e termos de parceria não são finais. A área financeira e o DPO voltam a assinar antes do go-live.",
+    "heading": "Clínicas e Teams",
+    "body": "As clínicas usam a Eleva.care como Team: vários especialistas licenciados numa organização, com a mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva assume responsabilidade organizacional, técnica e administrativa pela operação da plataforma. Mensalidades por lugar e contratos de parceria são decisões financeiras de trabalho e não constam desta página.",
+    "cta": "Criar a sua conta"
   }
 }

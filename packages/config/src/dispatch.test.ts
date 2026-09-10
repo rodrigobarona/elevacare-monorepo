@@ -32,6 +32,8 @@ describe("resolveDispatch - locale + marketing", () => {
       "/home",
       "/experts",
       "/book/private-token",
+      "/become-expert",
+      "/for-clinics",
     ]) {
       expect(resolveDispatch(path, false, origins)).toEqual({
         kind: "marketing",

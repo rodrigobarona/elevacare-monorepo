@@ -12,6 +12,8 @@ export function MarketingHome() {
         nav={[
           { href: "/experts", labelKey: "experts" },
           { href: "/about", labelKey: "about" },
+          { href: "/become-expert", labelKey: "becomeExpert" },
+          { href: "/for-clinics", labelKey: "forClinics" },
         ]}
       />
       <MarketingContent />
@@ -45,7 +47,7 @@ function MarketingContent() {
             <ArrowRightIcon data-icon="inline-end" />
           </Link>
           <Link
-            href="/about"
+            href="/for-clinics"
             className={buttonVariants({ variant: "outline", size: "lg" })}
           >
             {t("home.ctaSecondary")}

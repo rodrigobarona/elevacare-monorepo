@@ -108,6 +108,32 @@ describe("createGatewayProxy integration", () => {
     expect(res.headers.get("location")).toBe("http://localhost:3000/pt")
   })
 
+  it("301s /for-organizations to /for-clinics and preserves the query", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(
+      makeRequest("/pt/for-organizations", { search: "?ref=mvp" })
+    )
+    expect(intl).not.toHaveBeenCalled()
+    expect(res.status).toBe(301)
+    expect(res.headers.get("location")).toBe(
+      "http://localhost:3000/pt/for-clinics?ref=mvp"
+    )
+  })
+
+  it("does not 301 nested /for-organizations paths", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(makeRequest("/pt/for-organizations/team-a"))
+    expect(res.status).not.toBe(301)
+  })
+
   it("falls through to intl middleware for marketing paths", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,

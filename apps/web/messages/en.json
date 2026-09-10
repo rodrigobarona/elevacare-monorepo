@@ -11,7 +11,9 @@
     "login": "Log in",
     "getStarted": "Get started",
     "dashboard": "Dashboard",
-    "signout": "Sign out"
+    "signout": "Sign out",
+    "becomeExpert": "Become an expert",
+    "forClinics": "For clinics"
   },
   "home": {
     "eyebrow": "Women's health, elevated",
@@ -267,7 +269,10 @@
     "cookies": "Cookies",
     "payments": "Payments",
     "expertAgreement": "Expert agreement",
-    "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live."
+    "draftNote": "These pages are working pre-launch drafts (version {version}). Legal and the DPO will re-sign before go-live.",
+    "solutions": "Join Eleva",
+    "becomeExpert": "Become an expert",
+    "forClinics": "For clinics"
   },
   "legal": {
     "draftBanner": "Working pre-launch draft. This is not production legal text. Legal and the DPO will replace it before Eleva.care goes live.",
@@ -346,5 +351,21 @@
         }
       }
     }
+  },
+  "becomeExpert": {
+    "title": "Become an expert — Eleva.care",
+    "description": "Join Eleva.care as an independent, licensed professional on a digital health platform.",
+    "draftBanner": "Working pre-launch draft. Commission, payout timing, and legal terms are not final. Finance and the DPO will re-sign before go-live.",
+    "heading": "Practise on Eleva.care",
+    "body": "Eleva.care is a digital health platform that enables the delivery of remote healthcare services (teleconsultations / telemedicine) by independent, licensed professionals. Experts keep clinical autonomy. Eleva operates the scheduling, booking, and payment technology. Members book sessions with you — Eleva does not invent payout percentages or weekly settlement here.",
+    "cta": "Create your account"
+  },
+  "forClinics": {
+    "title": "For clinics — Eleva.care",
+    "description": "Run a clinic Team on Eleva.care, a digital health platform for independent professionals.",
+    "draftBanner": "Working pre-launch draft. Seat pricing and partnership terms are not final. Finance and the DPO will re-sign before go-live.",
+    "heading": "Clinics and Teams",
+    "body": "Clinics use Eleva.care as a Team: several licensed experts under one organization, with the same digital health platform members already use to book. Eleva assumes organizational, technical, and administrative responsibility for operating the platform. Seat fees and partnership contracts are working finance decisions and are not stated on this page.",
+    "cta": "Create your account"
   }
 }
