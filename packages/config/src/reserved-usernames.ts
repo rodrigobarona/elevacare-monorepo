@@ -57,6 +57,12 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "support",
   "faq",
   "contact",
+  "quiz",
+  "health-quiz",
+  "questionario",
+  "cuestionario",
+  "trust",
+  "community",
 
   // Auth + system
   "auth",

@@ -272,7 +272,10 @@
     "draftNote": "Estas páginas são rascunhos de pré-lançamento (versão {version}). A área jurídica e o DPO voltam a assinar antes do go-live.",
     "solutions": "Juntar-se à Eleva",
     "becomeExpert": "Tornar-se especialista",
-    "forClinics": "Para clínicas"
+    "forClinics": "Para clínicas",
+    "community": "Comunidade",
+    "instagram": "Instagram",
+    "linkedin": "LinkedIn"
   },
   "legal": {
     "draftBanner": "Rascunho de pré-lançamento. Este não é texto jurídico de produção. A área jurídica e o DPO substituem-no antes da Eleva.care ir ao ar.",
@@ -367,5 +370,29 @@
     "heading": "Clínicas e Teams",
     "body": "As clínicas usam a Eleva.care como Team: vários especialistas licenciados numa organização, com a mesma plataforma digital de saúde que os membros já usam para marcar. A Eleva assume responsabilidade organizacional, técnica e administrativa pela operação da plataforma. Mensalidades por lugar e contratos de parceria são decisões financeiras de trabalho e não constam desta página.",
     "cta": "Criar a sua conta"
+  },
+  "contact": {
+    "title": "Contacto — Eleva.care",
+    "description": "Página de contacto em rascunho. O formulário público espera aprovação jurídica e do DPO.",
+    "draftBanner": "Rascunho de pré-lançamento. Esta página ainda não recolhe mensagens. A área jurídica e o DPO aprovam o formulário antes da Eleva.care ir ao ar.",
+    "heading": "Contacto",
+    "body": "O formulário público de contacto fica aqui depois de a área jurídica e o DPO aprovarem o texto e as regras de retenção. Até lá esta página não envia nem guarda mensagens."
+  },
+  "trust": {
+    "draftBanner": "Rascunho de pré-lançamento. Esta página não afirma uma certificação nem uma auditoria concluída. A Fase 13 publica texto com evidência, dono, aprovador, ligação à evidência e data de revisão.",
+    "pages": {
+      "security": {
+        "title": "Segurança — Eleva.care",
+        "description": "Marcador para as afirmações de segurança da Fase 13 com evidência.",
+        "heading": "Segurança",
+        "body": "A Eleva não publica afirmações de segurança ou conformidade nesta página até a Fase 13 registar evidência para cada frase. Não se implica aqui um selo GDPR, HIPAA, ISO ou ERS."
+      },
+      "ers": {
+        "title": "ERS e regulação de saúde — Eleva.care",
+        "description": "Marcador para as afirmações ERS da Fase 13 com evidência.",
+        "heading": "Regulação de saúde",
+        "body": "Esta página descreverá a posição da Eleva junto da ERS Portugal só depois de a Fase 13 anexar evidência. Não afirma licença, registo ou revisão concluída."
+      }
+    }
   }
 }

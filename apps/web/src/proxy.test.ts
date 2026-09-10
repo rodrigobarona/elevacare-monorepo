@@ -134,6 +134,25 @@ describe("createGatewayProxy integration", () => {
     expect(res.status).not.toBe(301)
   })
 
+  it("301s retired quiz and help URLs to their D-10 targets", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+
+    const quiz = await proxy(makeRequest("/pt/quiz", { search: "?src=legacy" }))
+    expect(intl).not.toHaveBeenCalled()
+    expect(quiz.status).toBe(301)
+    expect(quiz.headers.get("location")).toBe(
+      "http://localhost:3000/pt/experts?src=legacy"
+    )
+
+    const help = await proxy(makeRequest("/help/patient/booking"))
+    expect(help.status).toBe(301)
+    expect(help.headers.get("location")).toBe("http://localhost:3000/docs")
+  })
+
   it("falls through to intl middleware for marketing paths", async () => {
     const proxy = createGatewayProxy({
       origins: testOrigins,

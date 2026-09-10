@@ -70,3 +70,9 @@ export {
   type GatewayOrigins,
 } from "./dispatch"
 export { slugify, generateUniqueOrgSlug } from "./slug"
+export {
+  rewriteParityPath,
+  COMMUNITY_EXTERNAL_LINKS,
+  PUBLIC_SITE_PARITY_REDIRECTS,
+  RETIRED_LOCALE_REDIRECTS,
+} from "./public-site-parity"
