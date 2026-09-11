@@ -134,6 +134,11 @@ export const dsarRequests = pgTable(
       withTimezone: true,
       mode: "date",
     }),
+    /** Lease timestamp for `processing`. Stale rows may be reclaimed. */
+    processingStartedAt: timestamp("processing_started_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
   },
   (t) => ({
     userIdx: index("dsar_requests_user_idx").on(t.userId),

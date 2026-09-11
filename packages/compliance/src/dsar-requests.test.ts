@@ -1,15 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { withAudit, withPlatformAdminContext, deletePrivateDocument } =
-  vi.hoisted(() => ({
-    withAudit: vi.fn(),
-    withPlatformAdminContext: vi.fn(),
-    deletePrivateDocument: vi.fn(),
-  }))
+const {
+  withAudit,
+  withPlatformAudit,
+  withPlatformAdminContext,
+  deletePrivateDocument,
+  dsarExport,
+} = vi.hoisted(() => ({
+  withAudit: vi.fn(),
+  withPlatformAudit: vi.fn(),
+  withPlatformAdminContext: vi.fn(),
+  deletePrivateDocument: vi.fn(),
+  dsarExport: vi.fn(),
+}))
 
 vi.mock("@eleva/audit", () => ({
   withAudit: (...args: unknown[]) => withAudit(...args),
-  withPlatformAudit: vi.fn(),
+  withPlatformAudit: (...args: unknown[]) => withPlatformAudit(...args),
 }))
 
 vi.mock("@eleva/db", () => ({
@@ -22,6 +29,7 @@ vi.mock("@eleva/db", () => ({
       expiresAt: "dsar.expires_at",
       blobPathname: "dsar.blob_pathname",
       completedAt: "dsar.completed_at",
+      processingStartedAt: "dsar.processing_started_at",
     },
     dsarRequestStatusEnum: {
       enumValues: ["pending", "processing", "ready", "expired", "failed"],
@@ -35,7 +43,16 @@ vi.mock("@eleva/storage", () => ({
   deletePrivateDocument: (...args: unknown[]) => deletePrivateDocument(...args),
 }))
 
-import { markDsarExpired } from "./dsar-requests"
+vi.mock("./dsar-export", async () => {
+  const actual =
+    await vi.importActual<typeof import("./dsar-export")>("./dsar-export")
+  return {
+    ...actual,
+    dsarExport: (...args: unknown[]) => dsarExport(...args),
+  }
+})
+
+import { markDsarExpired, processDsarExport } from "./dsar-requests"
 
 const BLOB_URL =
   "https://private.blob.vercel-storage.com/dsar/user-1/export.zip"
@@ -135,5 +152,84 @@ describe("markDsarExpired", () => {
 
     expect(deletePrivateDocument).not.toHaveBeenCalled()
     expect(withAudit).not.toHaveBeenCalled()
+  })
+})
+
+describe("processDsarExport", () => {
+  beforeEach(() => {
+    withPlatformAudit.mockReset()
+    withPlatformAdminContext.mockReset()
+    dsarExport.mockReset()
+  })
+
+  it("asks the caller to retry a fresh processing claim", async () => {
+    withPlatformAdminContext.mockResolvedValue([
+      readyRow({ status: "processing", blobPathname: null, expiresAt: null }),
+    ])
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        const tx = {
+          update: () => ({
+            set: () => ({
+              where: () => ({
+                returning: async () => [],
+              }),
+            }),
+          }),
+        }
+        return fn(tx, { emit: vi.fn() })
+      }
+    )
+
+    await expect(
+      processDsarExport({
+        dsarId: "dsar-1",
+        userId: "user-1",
+        orgId: "org-1",
+      })
+    ).resolves.toEqual({ status: "skipped", retry: true })
+    expect(dsarExport).not.toHaveBeenCalled()
+  })
+
+  it("reclaims a stale processing request", async () => {
+    withPlatformAdminContext.mockResolvedValue([
+      readyRow({ status: "processing", blobPathname: null, expiresAt: null }),
+    ])
+    const claimSets: unknown[] = []
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        const tx = {
+          update: () => ({
+            set: (values: unknown) => {
+              claimSets.push(values)
+              return {
+                where: () => ({
+                  returning: async () =>
+                    claimSets.length === 1 ? [{ id: "dsar-1" }] : [],
+                }),
+              }
+            },
+          }),
+        }
+        return fn(tx, { emit: vi.fn() })
+      }
+    )
+    dsarExport.mockResolvedValue({
+      blobUrl: BLOB_URL,
+      expiresAt: new Date("2026-09-12T00:00:00.000Z"),
+    })
+
+    await expect(
+      processDsarExport({
+        dsarId: "dsar-1",
+        userId: "user-1",
+        orgId: "org-1",
+      })
+    ).resolves.toEqual({ status: "ready" })
+    expect(claimSets[0]).toMatchObject({
+      status: "processing",
+      processingStartedAt: expect.any(Date),
+    })
+    expect(dsarExport).toHaveBeenCalledWith("user-1")
   })
 })

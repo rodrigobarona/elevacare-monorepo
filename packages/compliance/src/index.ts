@@ -52,14 +52,18 @@ export {
   markDsarExpired,
   dsarDownloadUrlIfReady,
   processDsarExport,
+  DSAR_PROCESSING_LEASE_MS,
   type DsarRequestView,
 } from "./dsar-requests"
 export {
   scheduleAccountDeletion,
   cancelAccountDeletion,
   sweepAccountDeletions,
+  completeSweptAccountDeletions,
+  anonymisedAccountEmail,
   AccountDeletionConflictError,
   AccountDeletionNotPendingError,
   type ScheduleAccountDeletionResult,
   type AccountDeletionSweepResult,
+  type AccountDeletionAwaitingCompletion,
 } from "./account-deletion"

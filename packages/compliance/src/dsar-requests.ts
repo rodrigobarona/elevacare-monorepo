@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { and, eq, inArray, isNull, lt, or } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import { deletePrivateDocument } from "@eleva/storage"
@@ -9,6 +9,7 @@ import {
 } from "./dsar-export"
 
 const ACTIVE_DSAR_STATUSES = ["pending", "processing"] as const
+export const DSAR_PROCESSING_LEASE_MS = 10 * 60 * 1000
 
 export type DsarRequestView = {
   id: string
@@ -162,7 +163,7 @@ export async function processDsarExport(input: {
   dsarId: string
   userId: string
   orgId: string
-}): Promise<{ status: "ready" | "failed" | "skipped" }> {
+}): Promise<{ status: "ready" | "failed" | "skipped"; retry?: boolean }> {
   const existing = await getDsarRequestForUser(input.userId, input.dsarId)
   if (!existing) return { status: "skipped" }
   if (
@@ -176,17 +177,28 @@ export async function processDsarExport(input: {
     return { status: "skipped" }
   }
 
+  const now = new Date()
+  const staleBefore = new Date(now.getTime() - DSAR_PROCESSING_LEASE_MS)
   const claimed = await withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
       const [row] = await tx
         .update(main.dsarRequests)
-        .set({ status: "processing" })
+        .set({ status: "processing", processingStartedAt: now })
         .where(
           and(
             eq(main.dsarRequests.id, input.dsarId),
             eq(main.dsarRequests.userId, input.userId),
-            inArray(main.dsarRequests.status, ["pending", "failed"])
+            or(
+              inArray(main.dsarRequests.status, ["pending", "failed"]),
+              and(
+                eq(main.dsarRequests.status, "processing"),
+                or(
+                  isNull(main.dsarRequests.processingStartedAt),
+                  lt(main.dsarRequests.processingStartedAt, staleBefore)
+                )
+              )
+            )
           )
         )
         .returning({ id: main.dsarRequests.id })
@@ -200,7 +212,12 @@ export async function processDsarExport(input: {
       return true
     }
   )
-  if (!claimed) return { status: "skipped" }
+  if (!claimed) {
+    return {
+      status: "skipped",
+      retry: existing.status === "processing",
+    }
+  }
 
   try {
     const exported = await dsarExport(input.userId)

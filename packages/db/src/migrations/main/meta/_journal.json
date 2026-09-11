@@ -225,6 +225,13 @@
       "when": 1779560000000,
       "tag": "0031_member_privacy",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1779570000000,
+      "tag": "0032_dsar_processing_lease",
+      "breakpoints": true
     }
   ]
 }

@@ -1564,7 +1564,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             "409": {
-              description: "Too late, invalid status, or slot taken",
+              description: "Too late or invalid status",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

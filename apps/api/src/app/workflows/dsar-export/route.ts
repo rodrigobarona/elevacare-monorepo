@@ -46,6 +46,12 @@ export async function POST(request: Request) {
 
   try {
     const result = await processDsarExport(parsed.data)
+    if (result.retry) {
+      return secureJson(
+        { ok: false, error: "dsar_export_in_progress", ...result },
+        { status: 500, headers }
+      )
+    }
     return secureJson({ ok: true, ...result }, { status: 200, headers })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)

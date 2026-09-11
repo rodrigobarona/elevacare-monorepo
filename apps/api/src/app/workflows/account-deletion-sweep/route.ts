@@ -1,5 +1,8 @@
 import { cancelCancelablePaymentIntents } from "@eleva/billing/server"
-import { sweepAccountDeletions } from "@eleva/compliance"
+import {
+  completeSweptAccountDeletions,
+  sweepAccountDeletions,
+} from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
 import { authorizeWorkflowSecret } from "@/lib/qstash-publish"
 import { secureJson } from "@/lib/security-headers"
@@ -35,14 +38,30 @@ export async function POST(request: Request) {
     const outcomes = await cancelCancelablePaymentIntents(
       result.paymentIntentIds
     )
+    const paymentIntentFailures = outcomes
+      .filter((outcome) => outcome.status === "failed")
+      .map((outcome) => outcome.id)
+    if (paymentIntentFailures.length > 0) {
+      return secureJson(
+        {
+          ok: false,
+          error: "payment_intent_cancel_failed",
+          raced: result.raced,
+          completed: result.completed,
+          paymentIntentFailures,
+        },
+        { status: 500, headers }
+      )
+    }
+    const completedAfterCancel = await completeSweptAccountDeletions(
+      result.awaitingCompletion
+    )
     return secureJson(
       {
         ok: true,
         raced: result.raced,
-        completed: result.completed,
-        paymentIntentFailures: outcomes
-          .filter((outcome) => outcome.status === "failed")
-          .map((outcome) => outcome.id),
+        completed: result.completed + completedAfterCancel,
+        paymentIntentFailures: [],
       },
       { status: 200, headers }
     )

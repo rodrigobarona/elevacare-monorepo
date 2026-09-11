@@ -14,6 +14,22 @@ vi.mock("@eleva/db", () => ({
       id: "user.id",
       deletionScheduledAt: "deletion_scheduled_at",
       updatedAt: "updated_at",
+      name: "user.name",
+      email: "user.email",
+      emailVerified: "user.email_verified",
+      image: "user.image",
+      timezone: "user.timezone",
+      locale: "user.locale",
+      banned: "user.banned",
+      banReason: "user.ban_reason",
+    },
+    session: {
+      id: "session.id",
+      userId: "session.user_id",
+    },
+    account: {
+      id: "account.id",
+      userId: "account.user_id",
     },
     member: {
       userId: "member.user_id",
@@ -71,6 +87,7 @@ vi.mock("./retention", async () => {
 })
 
 import {
+  anonymisedAccountEmail,
   cancelAccountDeletion,
   scheduleAccountDeletion,
   sweepAccountDeletions,
@@ -190,6 +207,42 @@ describe("scheduleAccountDeletion", () => {
     expect(userSets[0]).toMatchObject({ deletionScheduledAt: expect.any(Date) })
     expect(bookingSets.length).toBeGreaterThan(0)
     expect(paymentSets).toContainEqual({ status: "refund_pending" })
+  })
+
+  it("maps a concurrent pending-user unique violation to AccountDeletionConflictError", async () => {
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        const tx = {
+          execute: async () => undefined,
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: async () => [],
+              }),
+            }),
+          }),
+          update: () => ({
+            set: () => ({
+              where: async () => undefined,
+            }),
+          }),
+          insert: () => ({
+            values: () => ({
+              returning: async () => {
+                throw Object.assign(new Error("duplicate key"), {
+                  code: "23505",
+                })
+              },
+            }),
+          }),
+        }
+        return fn(tx, emitCtx())
+      }
+    )
+
+    await expect(
+      scheduleAccountDeletion({ userId: "user-1", orgId: "org-1" })
+    ).rejects.toMatchObject({ code: "ACCOUNT_DELETION_ALREADY_SCHEDULED" })
   })
 })
 
@@ -324,6 +377,8 @@ describe("sweepAccountDeletions", () => {
       { id: "b2", userId: "user-1", bookingId: "booking-2" },
     ]
     const bookingScopeBefore = consents.filter((row) => row.bookingId).length
+    const ops: string[] = []
+    const userSets: unknown[] = []
 
     withPlatformAdminContext.mockImplementation(
       async (fn: (tx: unknown) => unknown) =>
@@ -361,12 +416,21 @@ describe("sweepAccountDeletions", () => {
               }),
             }),
           }),
-          update: () => ({
-            set: () => ({
-              where: () => ({
-                returning: async () => [{ id: "req-1" }],
-              }),
-            }),
+          update: (table: { id: string }) => ({
+            set: (values: Record<string, unknown>) => {
+              if (table.id === "user.id") {
+                ops.push("anonymise")
+                userSets.push(values)
+              }
+              if (table.id === "adr.id" && values.status === "completed") {
+                ops.push("complete")
+              }
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "req-1" }],
+                }),
+              }
+            },
           }),
           delete: () => ({
             where: async () => {
@@ -401,5 +465,101 @@ describe("sweepAccountDeletions", () => {
       bookingScopeBefore
     )
     expect(consents.every((row) => row.userId === null)).toBe(true)
+    expect(ops.indexOf("anonymise")).toBeGreaterThanOrEqual(0)
+    expect(ops.indexOf("anonymise")).toBeLessThan(ops.indexOf("complete"))
+    expect(userSets[0]).toMatchObject({
+      email: anonymisedAccountEmail("user-1"),
+      banned: true,
+      name: "Deleted member",
+    })
+  })
+
+  it("does not complete a due request while cancelable PaymentIntents remain", async () => {
+    withPlatformAdminContext.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: () => ({
+              innerJoin: () => ({
+                innerJoin: () => ({
+                  where: async () => [
+                    {
+                      id: "req-1",
+                      userId: "user-1",
+                      orgId: "org-1",
+                      scheduledFor: new Date("2026-01-01T00:00:00.000Z"),
+                    },
+                  ],
+                }),
+              }),
+            }),
+          }),
+        })
+    )
+
+    const statusSets: unknown[] = []
+    withPlatformAudit.mockImplementation(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        let selectCalls = 0
+        const tx = {
+          execute: async () => undefined,
+          select: () => {
+            selectCalls += 1
+            if (selectCalls === 1) {
+              return {
+                from: () => ({
+                  where: () => ({
+                    limit: async () => [{ id: "req-1" }],
+                  }),
+                }),
+              }
+            }
+            if (selectCalls === 2 || selectCalls === 3) {
+              return {
+                from: () => ({
+                  leftJoin: () => ({
+                    where: async () => [],
+                  }),
+                }),
+              }
+            }
+            return {
+              from: () => ({
+                leftJoin: () => ({
+                  where: async () => [
+                    {
+                      stripePaymentIntentId: "pi_stuck",
+                      paymentStatus: "requires_payment",
+                    },
+                  ],
+                }),
+              }),
+            }
+          },
+          update: (table: { id: string }) => ({
+            set: (values: unknown) => {
+              if (table.id === "adr.id") statusSets.push(values)
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "req-1" }],
+                }),
+              }
+            },
+          }),
+          delete: () => ({ where: async () => undefined }),
+        }
+        return fn(tx, emitCtx())
+      }
+    )
+
+    const result = await sweepAccountDeletions(
+      new Date("2026-09-11T00:00:00.000Z")
+    )
+    expect(result.completed).toBe(0)
+    expect(result.paymentIntentIds).toEqual(["pi_stuck"])
+    expect(result.awaitingCompletion).toEqual([
+      { id: "req-1", userId: "user-1", orgId: "org-1" },
+    ])
+    expect(statusSets).not.toContainEqual({ status: "completed" })
   })
 })

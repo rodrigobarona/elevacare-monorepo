@@ -122,13 +122,11 @@ describe("DSAR signed download token", () => {
     const exp = Math.floor(Date.now() / 1000) + DSAR_SIGNED_URL_TTL_SECONDS
     const sig = signDsarDownloadToken("dsar-1", exp)
     expect(verifyDsarDownloadToken("dsar-1", exp, sig)).toBe(true)
-    expect(
-      verifyDsarDownloadToken(
-        "dsar-1",
-        exp - DSAR_SIGNED_URL_TTL_SECONDS - 10,
-        sig
-      )
-    ).toBe(false)
+    const expiredExp = Math.floor(Date.now() / 1000) - 1
+    const expiredSig = signDsarDownloadToken("dsar-1", expiredExp)
+    expect(verifyDsarDownloadToken("dsar-1", expiredExp, expiredSig)).toBe(
+      false
+    )
     const url = buildDsarDownloadUrl({
       apiBaseUrl: "https://api.eleva.care",
       dsarId: "11111111-1111-4111-8111-111111111111",

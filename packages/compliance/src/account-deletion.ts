@@ -8,6 +8,9 @@ import {
 
 export { ACCOUNT_DELETION_GRACE_DAYS }
 
+const ANONYMISED_ACCOUNT_NAME = "Deleted member"
+const ANONYMISED_BAN_REASON = "account_deleted"
+
 const CANCELABLE_BOOKING_STATUSES = ["pending_payment"] as const
 const REFUNDABLE_BOOKING_STATUSES = ["confirmed", "rescheduled"] as const
 const CANCELABLE_PAYMENT_STATUSES = [
@@ -44,6 +47,61 @@ async function lockAccountDeletionUser(tx: Tx, userId: string): Promise<void> {
   await tx.execute(
     sql`SELECT pg_advisory_xact_lock(hashtext(${`account-deletion:${userId}`}))`
   )
+}
+
+export function anonymisedAccountEmail(userId: string): string {
+  return `deleted+${userId}@deleted.invalid`
+}
+
+function isUniqueViolation(err: unknown): boolean {
+  let current: unknown = err
+  for (let depth = 0; depth < 4 && current; depth += 1) {
+    if (
+      typeof current === "object" &&
+      current !== null &&
+      "code" in current &&
+      (current as { code: unknown }).code === "23505"
+    ) {
+      return true
+    }
+    current =
+      typeof current === "object" && current !== null && "cause" in current
+        ? (current as { cause: unknown }).cause
+        : undefined
+  }
+  return false
+}
+
+async function eraseAccountRecord(
+  tx: Tx,
+  userId: string,
+  now: Date
+): Promise<void> {
+  await tx.delete(auth.session).where(eq(auth.session.userId, userId))
+  await tx
+    .update(auth.account)
+    .set({
+      accessToken: null,
+      refreshToken: null,
+      idToken: null,
+      password: null,
+      updatedAt: now,
+    })
+    .where(eq(auth.account.userId, userId))
+  await tx
+    .update(auth.user)
+    .set({
+      name: ANONYMISED_ACCOUNT_NAME,
+      email: anonymisedAccountEmail(userId),
+      emailVerified: false,
+      image: null,
+      timezone: null,
+      locale: null,
+      banned: true,
+      banReason: ANONYMISED_BAN_REASON,
+      updatedAt: now,
+    })
+    .where(eq(auth.user.id, userId))
 }
 
 function uniquePaymentIntentIds(ids: readonly (string | null)[]): string[] {
@@ -230,15 +288,24 @@ export async function scheduleAccountDeletion(input: {
         .set({ deletionScheduledAt: now, updatedAt: now })
         .where(eq(auth.user.id, input.userId))
 
-      const [request] = await tx
-        .insert(main.accountDeletionRequests)
-        .values({
-          userId: input.userId,
-          requestedAt: now,
-          scheduledFor,
-          status: "pending",
-        })
-        .returning({ id: main.accountDeletionRequests.id })
+      let request: { id: string } | undefined
+      try {
+        const inserted = await tx
+          .insert(main.accountDeletionRequests)
+          .values({
+            userId: input.userId,
+            requestedAt: now,
+            scheduledFor,
+            status: "pending",
+          })
+          .returning({ id: main.accountDeletionRequests.id })
+        request = inserted[0]
+      } catch (err) {
+        if (isUniqueViolation(err)) {
+          throw new AccountDeletionConflictError()
+        }
+        throw err
+      }
 
       const requestId = request!.id
       const paymentIntentIds = await cancelFutureBookingsInTx(
@@ -267,13 +334,15 @@ export async function cancelAccountDeletion(input: {
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
       await lockAccountDeletionUser(tx, input.userId)
+      const now = new Date()
       const [request] = await tx
         .update(main.accountDeletionRequests)
         .set({ status: "cancelled" })
         .where(
           and(
             eq(main.accountDeletionRequests.userId, input.userId),
-            eq(main.accountDeletionRequests.status, "pending")
+            eq(main.accountDeletionRequests.status, "pending"),
+            gt(main.accountDeletionRequests.scheduledFor, now)
           )
         )
         .returning({ id: main.accountDeletionRequests.id })
@@ -298,10 +367,17 @@ export async function cancelAccountDeletion(input: {
   )
 }
 
+export type AccountDeletionAwaitingCompletion = {
+  id: string
+  userId: string
+  orgId: string
+}
+
 export type AccountDeletionSweepResult = {
   raced: number
   completed: number
   paymentIntentIds: string[]
+  awaitingCompletion: AccountDeletionAwaitingCompletion[]
 }
 
 export async function sweepAccountDeletions(
@@ -336,6 +412,7 @@ export async function sweepAccountDeletions(
     raced: 0,
     completed: 0,
     paymentIntentIds: [],
+    awaitingCompletion: [],
   }
   const seen = new Set<string>()
 
@@ -361,7 +438,11 @@ export async function sweepAccountDeletions(
           )
           .limit(1)
         if (!claimed) {
-          return { ids: [] as string[], completed: false }
+          return {
+            ids: [] as string[],
+            completed: false,
+            awaitingCompletion: false,
+          }
         }
 
         const ids = await cancelFutureBookingsInTx(tx, userId, now)
@@ -378,38 +459,95 @@ export async function sweepAccountDeletions(
           await tx
             .delete(main.notificationPreferences)
             .where(eq(main.notificationPreferences.userId, userId))
-          const [completed] = await tx
-            .update(main.accountDeletionRequests)
-            .set({ status: "completed" })
-            .where(
-              and(
-                eq(main.accountDeletionRequests.id, row.id),
-                eq(main.accountDeletionRequests.status, "pending")
+          await eraseAccountRecord(tx, userId, now)
+          if (ids.length === 0) {
+            const [completed] = await tx
+              .update(main.accountDeletionRequests)
+              .set({ status: "completed" })
+              .where(
+                and(
+                  eq(main.accountDeletionRequests.id, row.id),
+                  eq(main.accountDeletionRequests.status, "pending")
+                )
               )
-            )
-            .returning({ id: main.accountDeletionRequests.id })
-          if (!completed) {
-            return { ids: [] as string[], completed: false }
+              .returning({ id: main.accountDeletionRequests.id })
+            if (!completed) {
+              return {
+                ids: [] as string[],
+                completed: false,
+                awaitingCompletion: false,
+              }
+            }
           }
         }
         await ctx.emit({
           entity: "account_deletion_request",
-          action: due ? "status_changed" : "updated",
+          action: due && ids.length === 0 ? "status_changed" : "updated",
           entityId: row.id,
           payload: due
-            ? { status: "completed", raceCatch: true }
+            ? {
+                status: ids.length === 0 ? "completed" : "pending",
+                accountAnonymised: true,
+                awaitingPaymentCancel: ids.length > 0,
+                raceCatch: true,
+              }
             : {
                 raceCatch: true,
                 cancelledIntents: ids.length,
               },
         })
-        return { ids, completed: due }
+        return {
+          ids,
+          completed: due && ids.length === 0,
+          awaitingCompletion: due && ids.length > 0,
+        }
       }
     )
     result.raced += swept.ids.length
     result.paymentIntentIds.push(...swept.ids)
     if (swept.completed) result.completed += 1
+    if (swept.awaitingCompletion) {
+      result.awaitingCompletion.push({
+        id: row.id,
+        userId,
+        orgId: row.orgId,
+      })
+    }
   }
 
   return result
+}
+
+export async function completeSweptAccountDeletions(
+  requests: readonly AccountDeletionAwaitingCompletion[]
+): Promise<number> {
+  let completed = 0
+  for (const row of requests) {
+    const done = await withPlatformAudit(
+      { orgId: row.orgId, actorUserId: row.userId },
+      async (tx, ctx) => {
+        await lockAccountDeletionUser(tx, row.userId)
+        const [updated] = await tx
+          .update(main.accountDeletionRequests)
+          .set({ status: "completed" })
+          .where(
+            and(
+              eq(main.accountDeletionRequests.id, row.id),
+              eq(main.accountDeletionRequests.status, "pending")
+            )
+          )
+          .returning({ id: main.accountDeletionRequests.id })
+        if (!updated) return false
+        await ctx.emit({
+          entity: "account_deletion_request",
+          action: "status_changed",
+          entityId: row.id,
+          payload: { status: "completed", accountAnonymised: true },
+        })
+        return true
+      }
+    )
+    if (done) completed += 1
+  }
+  return completed
 }
