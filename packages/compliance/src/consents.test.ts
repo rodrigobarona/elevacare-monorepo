@@ -3,6 +3,7 @@ import {
   CONSENT_DOCUMENTS,
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
+  FUNNEL_CONSENT_KINDS,
   assertConsentVersionsApprovedForDeployment,
   hashGuestEmail,
   isDraftConsentVersion,
@@ -16,7 +17,7 @@ afterEach(() => {
 
 describe("CONSENT_DOCUMENTS", () => {
   it("records a version and locale URLs for every funnel kind", () => {
-    for (const kind of CONSENT_KINDS) {
+    for (const kind of FUNNEL_CONSENT_KINDS) {
       const doc = CONSENT_DOCUMENTS[kind]
       expect(doc.version).toBe(CONSENT_DOCUMENT_VERSION)
       expect(doc.urls.en).toMatch(/^\/legal\//)
@@ -48,7 +49,7 @@ describe("CONSENT_DOCUMENTS", () => {
   })
 
   it("accepts the current funnel versions and rejects a stale one", () => {
-    const grants = CONSENT_KINDS.map((kind) => ({
+    const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({
       kind,
       version: CONSENT_DOCUMENT_VERSION,
     }))
@@ -63,6 +64,18 @@ describe("CONSENT_DOCUMENTS", () => {
         { VERCEL_ENV: "preview" }
       )
     ).toEqual({ ok: false, error: "CONSENT_VERSION_OUTDATED" })
+  })
+
+  it("does not require marketing on the booking funnel", () => {
+    expect(CONSENT_KINDS).toContain("marketing")
+    expect(FUNNEL_CONSENT_KINDS).not.toContain("marketing")
+    const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({
+      kind,
+      version: CONSENT_DOCUMENT_VERSION,
+    }))
+    expect(validateFunnelConsents(grants, { VERCEL_ENV: "preview" })).toEqual({
+      ok: true,
+    })
   })
 
   it("hashes guest emails with HMAC-SHA256", () => {

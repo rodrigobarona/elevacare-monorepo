@@ -3,6 +3,7 @@ import {
   type AnyPgColumn,
   char,
   check,
+  customType,
   foreignKey,
   index,
   integer,
@@ -52,7 +53,14 @@ export const bookingPaymentStatusEnum = pgEnum("booking_payment_status", [
   "succeeded",
   "failed",
   "refunded",
+  "refund_pending",
 ])
+
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType() {
+    return "bytea"
+  },
+})
 
 export const consentSubjectKindEnum = pgEnum("consent_subject_kind", [
   "user",
@@ -69,6 +77,7 @@ export const consentKindEnum = pgEnum("consent_kind", [
   "terms",
   "privacy",
   "health_data_processing",
+  "marketing",
 ])
 
 export const sessionStatusEnum = pgEnum("session_status", [
@@ -414,6 +423,7 @@ export const bookingPayments = pgTable(
     paymentMethodType: varchar("payment_method_type", { length: 64 }),
     paidAt: timestamp("paid_at", { withTimezone: true, mode: "date" }),
     refundedCents: integer("refunded_cents").notNull().default(0),
+    receiptUrl: text("receipt_url"),
     createdAt: createdAt(),
   },
   (t) => ({
@@ -447,6 +457,7 @@ export const consents = pgTable(
     subjectKind: consentSubjectKindEnum("subject_kind").notNull(),
     userId: uuid("user_id").references(() => user.id, { onDelete: "restrict" }),
     guestEmailHash: char("guest_email_hash", { length: 64 }),
+    subjectPseudonym: bytea("subject_pseudonym"),
     kind: consentKindEnum("kind").notNull(),
     documentVersion: text("document_version").notNull(),
     locale: varchar("locale", { length: 8 }).notNull(),
@@ -483,7 +494,7 @@ export const consents = pgTable(
       .where(sql`guest_email_hash IS NOT NULL AND withdrawn_at IS NULL`),
     subjectChk: check(
       "consents_subject",
-      sql`(subject_kind = 'user' AND user_id IS NOT NULL) OR (subject_kind = 'guest' AND guest_email_hash IS NOT NULL)`
+      sql`(subject_kind = 'user' AND user_id IS NOT NULL AND guest_email_hash IS NULL AND subject_pseudonym IS NULL) OR (subject_kind = 'guest' AND user_id IS NULL AND guest_email_hash IS NOT NULL AND subject_pseudonym IS NULL) OR (subject_kind = 'user' AND user_id IS NULL AND guest_email_hash IS NULL AND subject_pseudonym IS NOT NULL AND booking_id IS NOT NULL)`
     ),
     tenantPolicy: pgPolicy("consents_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

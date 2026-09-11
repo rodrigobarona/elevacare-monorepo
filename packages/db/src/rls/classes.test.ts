@@ -61,7 +61,7 @@ describe("RLS class taxonomy", () => {
       "org_id::text"
     )
     expect(
-      classPredicateSql("owner-user-visible", "_rls_fixture_owner_user_visible")
+      classPredicateSql("owner-user-visible", "notification_preferences")
     ).toContain("eleva.user_id")
   })
 
@@ -79,6 +79,9 @@ describe("RLS class taxonomy", () => {
       expect(allowed.has(row.class)).toBe(true)
       if (row.selectClass) {
         expect(allowed.has(row.selectClass)).toBe(true)
+      }
+      if (row.insertClass) {
+        expect(allowed.has(row.insertClass)).toBe(true)
       }
     }
   })
@@ -123,5 +126,14 @@ describe("RLS class taxonomy", () => {
     expect(classPredicateSql("service-only", "audit_outbox")).toContain(
       "stripe_webhook"
     )
+  })
+
+  it("models DSAR and deletion as owner SELECT/INSERT and staff writes", () => {
+    for (const table of ["dsar_requests", "account_deletion_requests"]) {
+      const row = RLS_TABLE_ASSIGNMENTS.find((item) => item.table === table)
+      expect(row?.selectClass).toBe("owner-user-visible")
+      expect(row?.insertClass).toBe("owner-user-visible")
+      expect(row?.class).toBe("staff-only")
+    }
   })
 })

@@ -3,6 +3,7 @@ export {
   CONSENT_DOCUMENT_SLUGS,
   CONSENT_DOCUMENT_VERSION,
   CONSENT_KINDS,
+  FUNNEL_CONSENT_KINDS,
   assertConsentVersionsApprovedForDeployment,
   hashGuestEmail,
   isDraftConsentVersion,
@@ -12,4 +13,16 @@ export {
   type ConsentKind,
   type FunnelConsentCheck,
   type FunnelConsentGrant,
+  type FunnelConsentKind,
 } from "./consents"
+export {
+  ACCOUNT_DELETION_GRACE_DAYS,
+  pseudonymiseBookingConsents,
+  subjectPseudonymForUser,
+} from "./retention"
+export {
+  listDsarCollectors,
+  registerDsarCollector,
+  type DsarCollector,
+  type DsarCollectorResult,
+} from "./dsar-collectors"

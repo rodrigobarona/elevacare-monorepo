@@ -30,6 +30,10 @@ export const user = authSchema.table(
     banReason: text("ban_reason"),
     banExpires: timestamptz("ban_expires"),
     twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
+    timezone: text("timezone"),
+    locale: text("locale"),
+    /** App-owned. Only `scheduleAccountDeletion` writes this — not Better Auth input. */
+    deletionScheduledAt: timestamptz("deletion_scheduled_at"),
   },
   (table) => [uniqueIndex("auth_user_email_uidx").on(table.email)]
 )

@@ -38,7 +38,7 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0030_domain_events_outbox")
+    expect(last?.tag).toBe("0031_member_privacy")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
     const offer = migrations.find((m) => m.tag === "0027_offer_model")
@@ -68,12 +68,38 @@ describe("migration journal helpers", () => {
     const funnelSql = funnel?.statements.join("\n") ?? ""
     expect(funnelSql).toContain("funnel")
     expect(funnelSql).toContain("slot_reservations_funnel_object")
+    const domainEvents = migrations.find(
+      (m) => m.tag === "0030_domain_events_outbox"
+    )
+    const domainSql = domainEvents?.statements.join("\n") ?? ""
+    expect(domainSql).toContain("domain_events_outbox")
+    expect(domainSql).toContain("domain_event_deliveries")
+    expect(domainSql).toContain("domain_event_delivery_status")
+    expect(domainSql).toContain("'processing'")
+    expect(domainSql).toContain("domain_events_publisher")
+    expect(domainSql).toContain("guest_activation_sent_at")
     const sql = last?.statements.join("\n") ?? ""
-    expect(sql).toContain("domain_events_outbox")
-    expect(sql).toContain("domain_event_deliveries")
-    expect(sql).toContain("domain_event_delivery_status")
-    expect(sql).toContain("'processing'")
-    expect(sql).toContain("domain_events_publisher")
-    expect(sql).toContain("guest_activation_sent_at")
+    expect(sql).toContain("notification_preferences")
+    expect(sql).toContain("dsar_requests")
+    expect(sql).toContain("account_deletion_requests")
+    expect(sql).toContain("subject_pseudonym")
+    expect(sql).toContain("refund_pending")
+    expect(sql).toContain("'marketing'")
+    expect(sql).toContain("deletion_scheduled_at")
+    expect(sql).toContain("owner_user_visible")
+    expect(sql).toContain("dsar_requests_owner_read")
+    expect(sql).toContain("dsar_requests_admin_update")
+    expect(sql).toContain("account_deletion_requests_completed_orphan")
+    expect(sql).toContain("subject_kind = 'user'")
+    expect(sql).toMatch(
+      /subject_pseudonym IS NOT NULL\s+AND booking_id IS NOT NULL/
+    )
+    expect(sql).not.toMatch(
+      /subject_kind = 'user'\s+AND user_id IS NULL\s+AND guest_email_hash IS NULL\s+AND subject_pseudonym IS NOT NULL\s+\)/
+    )
+    expect(sql).toContain("receipt_url")
+    expect(sql).toContain("ADD COLUMN IF NOT EXISTS")
+    expect(sql).toContain("DROP CONSTRAINT IF EXISTS")
+    expect(sql).toContain('SET "guest_email_hash" = NULL')
   })
 })

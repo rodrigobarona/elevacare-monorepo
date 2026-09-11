@@ -1,5 +1,8 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest"
-import { CONSENT_DOCUMENT_VERSION, CONSENT_KINDS } from "@eleva/compliance"
+import {
+  CONSENT_DOCUMENT_VERSION,
+  FUNNEL_CONSENT_KINDS,
+} from "@eleva/compliance"
 import type { Redis } from "@upstash/redis"
 import type { ResolvedOffer } from "./resolve-offer"
 import type { ReserveSlotResult } from "./types"
@@ -58,7 +61,7 @@ const offer: ResolvedOffer = {
   bufferAfterMinutes: 0,
 }
 
-const grants = CONSENT_KINDS.map((kind) => ({
+const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({
   kind,
   version: CONSENT_DOCUMENT_VERSION,
 }))

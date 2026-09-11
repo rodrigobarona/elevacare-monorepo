@@ -4,6 +4,8 @@ import {
   buildAuditRlsStatements,
   buildMainRlsStatements,
   TENANT_TABLES,
+  OWNER_USER_TABLES,
+  COMPLIANCE_WORKFLOW_TABLES,
   ADMIN_BYPASS_TABLES,
 } from "./policies"
 
@@ -80,6 +82,61 @@ describe("buildMainRlsStatements", () => {
         s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
       )
       expect(policy).not.toContain("eleva.platform_admin")
+    }
+  })
+})
+
+describe("owner-user-visible RLS", () => {
+  const stmts = buildMainRlsStatements()
+
+  it("emits ENABLE + FORCE and an owner-user policy for every owner-user table", () => {
+    for (const table of OWNER_USER_TABLES) {
+      expect(stmts).toContain(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+      expect(stmts).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+      expect(stmts).toContain(
+        `DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`
+      )
+      const policy = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_owner_user_visible`)
+      )
+      expect(policy).toContain(
+        "user_id::text = current_setting('eleva.user_id', true)"
+      )
+      expect(policy).toContain("USING")
+      expect(policy).toContain("WITH CHECK")
+      expect(policy).not.toContain("eleva.org_id")
+    }
+  })
+})
+
+describe("compliance workflow RLS", () => {
+  const stmts = buildMainRlsStatements()
+
+  it("splits owner read/insert from admin update/delete", () => {
+    for (const table of COMPLIANCE_WORKFLOW_TABLES) {
+      const read = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_owner_read`)
+      )
+      const insert = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_owner_insert`)
+      )
+      const update = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_admin_update`)
+      )
+      const del = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_admin_delete`)
+      )
+      expect(read).toContain("FOR SELECT")
+      expect(read).toContain("eleva.user_id")
+      expect(read).toContain("eleva.platform_admin")
+      expect(insert).toContain("FOR INSERT")
+      expect(insert).toContain("status = 'pending' AND (")
+      expect(insert).not.toContain("AND status = 'pending') OR")
+      expect(update).toContain("FOR UPDATE")
+      expect(update).toContain("eleva.platform_admin")
+      expect(update).not.toContain("eleva.user_id")
+      expect(del).toContain("FOR DELETE")
+      expect(del).toContain("eleva.platform_admin")
     }
   })
 })

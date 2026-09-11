@@ -58,8 +58,10 @@ Each entry should include:
   records D-01, D-02, D-10, D-13, D-14 exist below and stay working
   pre-launch (not DPO/finance production sign-off). Gated: contact POST
   API (DPO), Lighthouse ≥90 on profile (staging), cancel/reschedule
-  execution (Phase 6). Do not start Phase 5 until D-12 is signed for
-  account deletion.
+  execution (Phase 6). Phase 5 may start against the D-12 working
+  pre-launch default recorded below; DPO/legal still re-sign D-12
+  before go-live. Switching booking-scope consents to erasure is a new
+  decision, not that sign-off.
 - Reference:
   [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
 
@@ -646,15 +648,27 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 
 ### D-12 (2026-09-07): Account deletion vs legal retention of clinical records
 
-- Owner: DPO + legal
-- Status: proposed (sign before the Phase 5 account-deletion work)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: member-authored data is erased on schedule (grace period, then crypto-shred);
-  expert-authored clinical records stay under the expert organization's legal retention duty —
-  pseudonymised (identity replaced by a retention token) and kept for the period recorded in
-  `data-retention-export-matrix.md` (working default: the Portuguese clinical-record minimum),
-  then crypto-shredded by the Phase 10 job. The member deletion UI says so in plain language.
-  Blocks: Phase 5 deletion flow.
+- Owner: DPO + legal for production re-sign; founder acting as product owner
+  (working pre-launch)
+- Status: active — working pre-launch decision recorded 2026-09-11 by Rodrigo
+  Barona (founder). Unblocks Phase 5 schema and deletion-flow development.
+  Not a DPO/legal production sign-off.
+- Review date: 2026-09-25 (DPO + legal re-sign before production)
+- Summary: Two consent scopes, stated the same way in this entry, the
+  retention matrix, and the deletion sweep. **Account-scope consents**
+  (`booking_id IS NULL`: marketing, later analytics, account terms/privacy)
+  are **erased** on the sweep. **Booking-scope consents** are
+  **pseudonymised** (`user_id` → NULL, `subject_pseudonym` = HMAC-SHA256 of
+  the former user id under `RETENTION_PSEUDONYM_KEY`, `guest_email_hash` →
+  NULL) and retained for the Portuguese clinical-record minimum (DPO fills
+  the year in `data-retention-export-matrix.md` before go-live; this
+  record does not invent a year). Expert-authored clinical records follow the
+  same retain-then-Phase-10-crypto-shred rule. Product grace for
+  `scheduled_for` is `ACCOUNT_DELETION_GRACE_DAYS = 14` (not the clinical
+  period). Switching booking-scope consents to erasure is a **new
+  decision**, not a sign-off. The member deletion UI says so in plain
+  language. This working pre-launch record unblocks Phase 5; DPO and legal
+  re-sign before go-live.
 - Reference: [`execution-plan/phases/05-member-app.md`](./execution-plan/phases/05-member-app.md), [`data-retention-export-matrix.md`](./data-retention-export-matrix.md)
 
 ### D-13 (2026-09-07): Cookie, CSRF and subdomain threat model

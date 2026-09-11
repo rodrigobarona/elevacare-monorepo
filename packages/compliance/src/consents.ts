@@ -4,9 +4,18 @@ export const CONSENT_KINDS = [
   "terms",
   "privacy",
   "health_data_processing",
+  "marketing",
 ] as const
 
 export type ConsentKind = (typeof CONSENT_KINDS)[number]
+
+export const FUNNEL_CONSENT_KINDS = [
+  "terms",
+  "privacy",
+  "health_data_processing",
+] as const satisfies readonly ConsentKind[]
+
+export type FunnelConsentKind = (typeof FUNNEL_CONSENT_KINDS)[number]
 
 export const CONSENT_DOCUMENT_VERSION = "dev-2026-09-09"
 
@@ -48,7 +57,7 @@ export const CONSENT_DOCUMENT_SLUGS = {
   terms: "terms",
   privacy: "privacy",
   health_data_processing: "health-data",
-} as const satisfies Record<ConsentKind, string>
+} as const satisfies Record<FunnelConsentKind, string>
 
 export type ConsentDocument = {
   version: string
@@ -60,7 +69,7 @@ function localeLegalUrl(locale: "en" | "pt" | "es", slug: string): string {
   return locale === "en" ? path : `/${locale}${path}`
 }
 
-function documentFor(kind: ConsentKind): ConsentDocument {
+function documentFor(kind: FunnelConsentKind): ConsentDocument {
   const slug = CONSENT_DOCUMENT_SLUGS[kind]
   return {
     version: CONSENT_DOCUMENT_VERSION,
@@ -77,7 +86,7 @@ function documentFor(kind: ConsentKind): ConsentDocument {
  * Rodrigo Barona as founder/product owner. Not DPO-approved. Re-sign
  * before go-live.
  */
-export const CONSENT_DOCUMENTS: Record<ConsentKind, ConsentDocument> = {
+export const CONSENT_DOCUMENTS: Record<FunnelConsentKind, ConsentDocument> = {
   terms: documentFor("terms"),
   privacy: documentFor("privacy"),
   health_data_processing: documentFor("health_data_processing"),
@@ -85,10 +94,10 @@ export const CONSENT_DOCUMENTS: Record<ConsentKind, ConsentDocument> = {
 
 export function requiredConsentVersions(
   env: DeploymentEnv = currentDeploymentEnv()
-): Record<ConsentKind, string> {
+): Record<FunnelConsentKind, string> {
   assertConsentVersionsApprovedForDeployment(env)
-  const versions = {} as Record<ConsentKind, string>
-  for (const kind of CONSENT_KINDS) {
+  const versions = {} as Record<FunnelConsentKind, string>
+  for (const kind of FUNNEL_CONSENT_KINDS) {
     versions[kind] = CONSENT_DOCUMENTS[kind].version
   }
   return versions
@@ -112,7 +121,7 @@ export function validateFunnelConsents(
   for (const grant of grants) {
     byKind.set(grant.kind, grant.version)
   }
-  for (const kind of CONSENT_KINDS) {
+  for (const kind of FUNNEL_CONSENT_KINDS) {
     if (byKind.get(kind) !== required[kind]) {
       return { ok: false, error: "CONSENT_VERSION_OUTDATED" }
     }

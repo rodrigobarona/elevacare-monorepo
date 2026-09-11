@@ -102,12 +102,42 @@ Use this document to answer:
 - Deletion: should be patient-aware and policy-driven
 - Audit access: yes when shared/accessed by experts
 
+### Consents — account scope (`booking_id IS NULL`)
+
+- Data type: marketing (and later analytics, account terms/privacy) grants not tied to a booking
+- Sensitivity: personal / compliance-critical
+- Export: yes (DSAR)
+- Deletion: erased on the account-deletion sweep (D-12 working pre-launch)
+- Audit access: yes (`consent` granted / withdrawn)
+
+### Consents — booking scope (`booking_id IS NOT NULL`)
+
+- Data type: funnel consents that authorised a booking
+- Sensitivity: compliance-critical
+- Export: yes (DSAR); after deletion the row keeps `subject_pseudonym` only
+- Deletion: pseudonymise (`user_id` → NULL, `subject_pseudonym` = HMAC of the former user id under `RETENTION_PSEUDONYM_KEY`, `guest_email_hash` → NULL) and retain for the Portuguese clinical-record minimum. DPO fills the year before go-live; **do not invent a year number** in engineering.
+- Audit access: yes; audit events keep the pseudonym
+
+### Account deletion grace
+
+- Named working pre-launch constant: `ACCOUNT_DELETION_GRACE_DAYS = 14`
+- Role: product grace for `account_deletion_requests.scheduled_for`, not the clinical retention period
+- Owner: product (founder working default); DPO/legal re-sign D-12 before go-live
+
+### DSAR export
+
+- Data type: member-requested zip of their own exportable records
+- Sensitivity: personal; private Blob only (`BLOB_PRIVATE_READ_WRITE_TOKEN`)
+- Export: JSON + CSV zip; 10-minute target; signed URL expires 24h
+- Deletion: the private Blob object is deleted when `dsar_requests.status` → `expired` (Phase 5.3 expiry job). Signed URL expiry is not enough — the zip must be removed from the private store.
+- Audit access: yes (`dsar_request` requested / ready / expired / failed)
+
 ### Consent and visibility records
 
 - Data type: consent grants, sharing permissions, visibility windows
 - Sensitivity: compliance-critical
 - Export: yes where relevant
-- Deletion: generally constrained because policy history matters
+- Deletion: split by D-12 — see the two consent-scope rows above; do not treat all consents as one erasure rule
 - Audit access: yes
 
 ### Notification delivery records

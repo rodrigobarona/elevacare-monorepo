@@ -40,6 +40,8 @@ export type AuditEntity =
   | "booking"
   | "booking_payment"
   | "consent"
+  | "dsar_request"
+  | "account_deletion_request"
   | "session"
   | "org_data_key"
 
@@ -88,6 +90,9 @@ export type AuditAction =
   // Connect payouts.
   | "succeeded"
   | "failed"
+  | "requested"
+  | "ready"
+  | "expired"
   // Identity verification.
   | "verified"
   | "email_verified"

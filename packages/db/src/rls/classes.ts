@@ -21,14 +21,18 @@ export type RlsPolicyClass = (typeof RLS_POLICY_CLASSES)[number]
 
 export type RlsTableAssignment = {
   table: string
-  /** INSERT / WITH CHECK class. Also the SELECT class unless `selectClass` is set. */
+  /** UPDATE / DELETE (and INSERT unless `insertClass` is set). */
   class: RlsPolicyClass
   /**
-   * SELECT / USING class when it differs from writes. Two splits today:
-   * `audit_events` (tenant-owned reads, service-only inserts) and
-   * `public_handles` (public-read SELECT, staff-only writes). Not an eighth class.
+   * SELECT / USING class when it differs from writes. Splits today:
+   * `audit_events` (tenant-owned reads, service-only inserts),
+   * `public_handles` (public-read SELECT, staff-only writes), and
+   * `dsar_requests` / `account_deletion_requests` (owner SELECT +
+   * owner pending INSERT, staff-only UPDATE/DELETE).
    */
   selectClass?: RlsPolicyClass
+  /** INSERT / WITH CHECK class when it differs from `class`. */
+  insertClass?: RlsPolicyClass
 }
 
 /** Current table → class map. Keep in sync with schema-and-migration-rules.md. */
@@ -57,6 +61,19 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "bookings", class: "dual-organization" },
   { table: "booking_payments", class: "tenant-owned" },
   { table: "consents", class: "tenant-owned" },
+  { table: "notification_preferences", class: "owner-user-visible" },
+  {
+    table: "dsar_requests",
+    class: "staff-only",
+    selectClass: "owner-user-visible",
+    insertClass: "owner-user-visible",
+  },
+  {
+    table: "account_deletion_requests",
+    class: "staff-only",
+    selectClass: "owner-user-visible",
+    insertClass: "owner-user-visible",
+  },
   { table: "sessions", class: "participant-visible" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },
@@ -92,8 +109,8 @@ export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
   { class: "dual-organization", table: "bookings", synthetic: false },
   {
     class: "owner-user-visible",
-    table: "_rls_fixture_owner_user_visible",
-    synthetic: true,
+    table: "notification_preferences",
+    synthetic: false,
   },
   { class: "participant-visible", table: "sessions", synthetic: false },
   { class: "staff-only", table: "_rls_fixture_staff_only", synthetic: true },

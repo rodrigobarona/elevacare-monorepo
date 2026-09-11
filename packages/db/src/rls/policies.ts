@@ -50,6 +50,28 @@ export const TENANT_TABLES = [
 export type TenantTable = (typeof TENANT_TABLES)[number]
 
 /**
+ * Main-DB tables keyed by `user_id = eleva.user_id` (owner-user-visible).
+ * They do not carry `org_id`; `pnpm db:rls` must not apply the tenant
+ * predicate.
+ */
+export const OWNER_USER_TABLES = ["notification_preferences"] as const
+
+export type OwnerUserTable = (typeof OWNER_USER_TABLES)[number]
+
+/**
+ * Member privacy workflow tables. Owner and platform-admin may SELECT
+ * and INSERT a pending row; status / blob / schedule transitions are
+ * platform-admin only. Inserts always require status = 'pending'.
+ */
+export const COMPLIANCE_WORKFLOW_TABLES = [
+  "dsar_requests",
+  "account_deletion_requests",
+] as const
+
+export type ComplianceWorkflowTable =
+  (typeof COMPLIANCE_WORKFLOW_TABLES)[number]
+
+/**
  * Tables that grant unrestricted access to platform admins. Bootstrap
  * operations (org provisioning, membership setup) run before
  * `eleva.org_id` is set, so these tables need an escape hatch.
@@ -117,6 +139,43 @@ export function buildMainRlsStatements(): string[] {
           `USING (counterparty_org_id::text = current_setting('eleva.org_id', true));`
       )
     }
+  }
+  for (const table of OWNER_USER_TABLES) {
+    const pred = `user_id::text = current_setting('eleva.user_id', true)`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_owner_user_visible ON ${table} ` +
+        `USING (${pred}) WITH CHECK (${pred});`
+    )
+  }
+  for (const table of COMPLIANCE_WORKFLOW_TABLES) {
+    const owner = `user_id::text = current_setting('eleva.user_id', true)`
+    const admin = `current_setting('eleva.platform_admin', true) = 'true'`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_insert ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_admin_update ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_admin_delete ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_owner_read ON ${table} FOR SELECT ` +
+        `USING (${owner} OR ${admin});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_owner_insert ON ${table} FOR INSERT ` +
+        `WITH CHECK (status = 'pending' AND (${owner} OR ${admin}));`
+    )
+    out.push(
+      `CREATE POLICY ${table}_admin_update ON ${table} FOR UPDATE ` +
+        `USING (${admin}) WITH CHECK (${admin});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_admin_delete ON ${table} FOR DELETE ` +
+        `USING (${admin});`
+    )
   }
   return out
 }
