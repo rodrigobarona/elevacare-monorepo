@@ -70,12 +70,34 @@ export async function withOrgContext<T>(
   orgId: string,
   fn: (tx: Tx) => Promise<T>
 ): Promise<T> {
-  const client = getTxDb()
-  return client.transaction(async (tx) => {
-    await applyIntegrationTestRole(tx)
-    await tx.execute(sql`SELECT set_config('eleva.org_id', ${orgId}, true)`)
-    return fn(tx)
-  })
+  return withLocalSettings({ "eleva.org_id": orgId }, fn)
+}
+
+/**
+ * Tenant + owner-user settings in one transaction. Use when a mutation
+ * writes both tenant-owned rows and owner-user-visible tables
+ * (notification_preferences, later DSAR / deletion).
+ */
+export async function withOrgAndUserContext<T>(
+  orgId: string,
+  userId: string,
+  fn: (tx: Tx) => Promise<T>
+): Promise<T> {
+  return withLocalSettings(
+    { "eleva.org_id": orgId, "eleva.user_id": userId },
+    fn
+  )
+}
+
+/**
+ * Owner-user-visible queries (`user_id = eleva.user_id`). Required for
+ * `notification_preferences` and the other member-privacy tables.
+ */
+export async function withUserContext<T>(
+  userId: string,
+  fn: (tx: Tx) => Promise<T>
+): Promise<T> {
+  return withLocalSettings({ "eleva.user_id": userId }, fn)
 }
 
 /**
@@ -88,14 +110,60 @@ export async function withOrgContext<T>(
 export async function withPlatformAdminContext<T>(
   fn: (tx: Tx) => Promise<T>
 ): Promise<T> {
+  return withLocalSettings({ "eleva.platform_admin": "true" }, fn)
+}
+
+/**
+ * Platform-admin plus the acting member's user id. Member `/me` writes
+ * that span expert-org consents still need `eleva.user_id` for
+ * owner-user-visible tables in the same transaction.
+ */
+export async function withPlatformAdminUserContext<T>(
+  userId: string,
+  fn: (tx: Tx) => Promise<T>
+): Promise<T> {
+  return withLocalSettings(
+    { "eleva.platform_admin": "true", "eleva.user_id": userId },
+    fn
+  )
+}
+
+type ElevaGuc = "eleva.org_id" | "eleva.user_id" | "eleva.platform_admin"
+
+async function withLocalSettings<T>(
+  settings: Partial<Record<ElevaGuc, string>>,
+  fn: (tx: Tx) => Promise<T>
+): Promise<T> {
   const client = getTxDb()
   return client.transaction(async (tx) => {
     await applyIntegrationTestRole(tx)
-    await tx.execute(
-      sql`SELECT set_config('eleva.platform_admin', 'true', true)`
-    )
+    for (const key of Object.keys(settings) as ElevaGuc[]) {
+      const value = settings[key]
+      if (value === undefined) continue
+      await setConfig(tx, key, value)
+    }
     return fn(tx)
   })
+}
+
+async function setConfig(tx: Tx, key: ElevaGuc, value: string): Promise<void> {
+  switch (key) {
+    case "eleva.org_id":
+      await tx.execute(sql`SELECT set_config('eleva.org_id', ${value}, true)`)
+      return
+    case "eleva.user_id":
+      await tx.execute(sql`SELECT set_config('eleva.user_id', ${value}, true)`)
+      return
+    case "eleva.platform_admin":
+      await tx.execute(
+        sql`SELECT set_config('eleva.platform_admin', ${value}, true)`
+      )
+      return
+    default: {
+      const _exhaustive: never = key
+      throw new Error(`unknown eleva GUC: ${_exhaustive}`)
+    }
+  }
 }
 
 async function applyIntegrationTestRole(tx: Tx) {

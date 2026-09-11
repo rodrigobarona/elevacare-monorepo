@@ -16,6 +16,12 @@ export {
   type FunnelConsentKind,
 } from "./consents"
 export {
+  listMemberConsents,
+  updateMemberConsent,
+  MemberConsentConflictError,
+  type MemberConsentStatus,
+} from "./member-consents"
+export {
   ACCOUNT_DELETION_GRACE_DAYS,
   pseudonymiseBookingConsents,
   subjectPseudonymForUser,

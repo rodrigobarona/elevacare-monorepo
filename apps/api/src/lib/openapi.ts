@@ -32,6 +32,16 @@ import {
   CreatePaymentIntentResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
+  MeProfileSchema,
+  PatchMeRequestSchema,
+  ListMeBookingsQuerySchema,
+  ListMeBookingsResponseSchema,
+  ListMePaymentsQuerySchema,
+  ListMePaymentsResponseSchema,
+  PutNotificationPreferencesRequestSchema,
+  MeNotificationPreferencesResponseSchema,
+  ListMeConsentsResponseSchema,
+  PutMeConsentRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -1381,6 +1391,144 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdPublicWithNotFound,
+          },
+        },
+      },
+      "/me": {
+        get: {
+          operationId: "getMe",
+          summary: "Get the authenticated member profile and preferences",
+          tags: ["Me"],
+          responses: {
+            "200": {
+              description: "Member profile",
+              content: { "application/json": { schema: MeProfileSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        patch: {
+          operationId: "patchMe",
+          summary: "Update the authenticated member profile",
+          description:
+            "Updates name, timezone, locale, and avatarUrl. Avatar bytes stay on PUT /users/avatar.",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: PatchMeRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated profile",
+              content: { "application/json": { schema: MeProfileSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/me/bookings": {
+        get: {
+          operationId: "listMeBookings",
+          summary: "List the authenticated member's bookings",
+          tags: ["Me"],
+          requestParams: { query: ListMeBookingsQuerySchema },
+          responses: {
+            "200": {
+              description: "Upcoming or past bookings",
+              content: {
+                "application/json": { schema: ListMeBookingsResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/payments": {
+        get: {
+          operationId: "listMePayments",
+          summary: "List the authenticated member's booking payments",
+          description:
+            "Joins booking_payments. receipt_url is served from cache or retrieved via @eleva/billing and then cached.",
+          tags: ["Me"],
+          requestParams: { query: ListMePaymentsQuerySchema },
+          responses: {
+            "200": {
+              description: "Member payments",
+              content: {
+                "application/json": { schema: ListMePaymentsResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/notification-preferences": {
+        put: {
+          operationId: "putMeNotificationPreferences",
+          summary: "Upsert the authenticated member's notification preferences",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: PutNotificationPreferencesRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated preferences",
+              content: {
+                "application/json": {
+                  schema: MeNotificationPreferencesResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/consents": {
+        get: {
+          operationId: "listMeConsents",
+          summary: "List consent status for every kind",
+          tags: ["Me"],
+          responses: {
+            "200": {
+              description: "Consent kinds with version and timestamps",
+              content: {
+                "application/json": { schema: ListMeConsentsResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+        put: {
+          operationId: "putMeConsent",
+          summary: "Grant or withdraw one consent kind",
+          description:
+            "Marketing withdraws immediately. health_data_processing returns 409 while a confirmed future booking exists.",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: PutMeConsentRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated consents",
+              content: {
+                "application/json": { schema: ListMeConsentsResponseSchema },
+              },
+            },
+            "409": {
+              description: "health_data_processing still required",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
           },
         },
       },

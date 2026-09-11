@@ -1,7 +1,10 @@
 export { db, auditDb, __resetClientsForTests } from "./client"
 export {
   withOrgContext,
+  withOrgAndUserContext,
+  withUserContext,
   withPlatformAdminContext,
+  withPlatformAdminUserContext,
   __resetContextClientForTests,
   type Tx,
 } from "./context"
@@ -87,5 +90,20 @@ export {
   replaceDestinationCalendar,
 } from "./queries/calendars"
 export { getUserAvatarUrl, updateUserAvatarUrl } from "./queries/users"
+export {
+  getMemberProfile,
+  updateMemberProfileRow,
+  listMemberNotificationPreferences,
+  upsertMemberNotificationPreferencesInTx,
+  listMemberBookings,
+  listMemberPayments,
+  cacheBookingPaymentReceipt,
+  memberHasConfirmedFutureBooking,
+  type MemberProfile,
+  type MemberNotificationPreference,
+  type MemberBookingListItem,
+  type MemberPaymentListItem,
+  type MemberListResult,
+} from "./queries/member"
 export { countBillableSeats } from "./queries/seats"
 export type { LocalizedText } from "./schema/main/shared"
