@@ -1,6 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
+import { deletePrivateDocument } from "@eleva/storage"
 import {
   buildDsarDownloadUrl,
   dsarExport,
@@ -111,12 +112,21 @@ export async function markDsarExpired(input: {
   orgId: string
   dsarId: string
 }): Promise<void> {
+  const existing = await getDsarRequestForUser(input.userId, input.dsarId)
+  if (!existing) return
+  if (existing.status === "expired" && !existing.blobPathname) return
+
+  // Blob I/O stays outside withAudit — never vendor SDK calls in a DB tx.
+  if (existing.blobPathname) {
+    await deletePrivateDocument(existing.blobPathname)
+  }
+
   await withAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
       await tx
         .update(main.dsarRequests)
-        .set({ status: "expired" })
+        .set({ status: "expired", blobPathname: null })
         .where(
           and(
             eq(main.dsarRequests.id, input.dsarId),

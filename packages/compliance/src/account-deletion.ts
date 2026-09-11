@@ -301,22 +301,24 @@ export async function sweepAccountDeletions(
   for (const row of pending) {
     if (seen.has(row.id)) continue
     seen.add(row.id)
+    if (!row.userId) continue
+    const userId = row.userId
 
     const due = row.scheduledFor.getTime() <= now.getTime()
     const paymentIntentIds = await withPlatformAudit(
       { orgId: row.orgId, actorUserId: null },
       async (tx, ctx) => {
-        const ids = await cancelFutureBookingsInTx(tx, row.userId, now)
+        const ids = await cancelFutureBookingsInTx(tx, userId, now)
         if (due) {
           await tx
             .delete(main.consents)
             .where(
               and(
-                eq(main.consents.userId, row.userId),
+                eq(main.consents.userId, userId),
                 isNull(main.consents.bookingId)
               )
             )
-          await pseudonymiseBookingConsents(row.userId, tx)
+          await pseudonymiseBookingConsents(userId, tx)
           await tx
             .update(main.accountDeletionRequests)
             .set({ status: "completed" })
