@@ -49,6 +49,27 @@ const ownerUserVisible = {
   withCheck: sql`user_id::text = current_setting('eleva.user_id', true)`,
 }
 
+const ownerOrAdminRead = {
+  for: "select" as const,
+  using: sql`user_id::text = current_setting('eleva.user_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,
+}
+
+const ownerPendingOrAdminInsert = {
+  for: "insert" as const,
+  withCheck: sql`(user_id::text = current_setting('eleva.user_id', true) AND status = 'pending') OR current_setting('eleva.platform_admin', true) = 'true'`,
+}
+
+const adminUpdate = {
+  for: "update" as const,
+  using: sql`current_setting('eleva.platform_admin', true) = 'true'`,
+  withCheck: sql`current_setting('eleva.platform_admin', true) = 'true'`,
+}
+
+const adminDelete = {
+  for: "delete" as const,
+  using: sql`current_setting('eleva.platform_admin', true) = 'true'`,
+}
+
 /**
  * Per-member notification matrix. RLS: owner-user-visible
  * (`user_id = eleva.user_id`). Consumed by Phase 8; written in Phase 5.
@@ -86,7 +107,8 @@ export const notificationPreferences = pgTable(
 )
 
 /**
- * Member DSAR export requests. RLS: owner-user-visible.
+ * Member DSAR export requests. RLS split: owner/admin SELECT,
+ * owner pending INSERT, platform-admin UPDATE/DELETE.
  * Zip lives on the private Blob store; signed URL is 24h.
  */
 export const dsarRequests = pgTable(
@@ -116,12 +138,19 @@ export const dsarRequests = pgTable(
   (t) => ({
     userIdx: index("dsar_requests_user_idx").on(t.userId),
     statusIdx: index("dsar_requests_status_idx").on(t.status),
-    ownerPolicy: pgPolicy("dsar_requests_owner_user_visible", ownerUserVisible),
+    ownerRead: pgPolicy("dsar_requests_owner_read", ownerOrAdminRead),
+    ownerInsert: pgPolicy(
+      "dsar_requests_owner_insert",
+      ownerPendingOrAdminInsert
+    ),
+    adminUpdate: pgPolicy("dsar_requests_admin_update", adminUpdate),
+    adminDelete: pgPolicy("dsar_requests_admin_delete", adminDelete),
   })
 )
 
 /**
- * Member account-deletion requests. RLS: owner-user-visible.
+ * Member account-deletion requests. RLS split: owner/admin SELECT,
+ * owner pending INSERT, platform-admin UPDATE/DELETE.
  * `scheduled_for` uses ACCOUNT_DELETION_GRACE_DAYS (14) as product grace.
  */
 export const accountDeletionRequests = pgTable(
@@ -153,9 +182,21 @@ export const accountDeletionRequests = pgTable(
     scheduledIdx: index("account_deletion_requests_scheduled_idx")
       .on(t.scheduledFor)
       .where(sql`status = 'pending'`),
-    ownerPolicy: pgPolicy(
-      "account_deletion_requests_owner_user_visible",
-      ownerUserVisible
+    ownerRead: pgPolicy(
+      "account_deletion_requests_owner_read",
+      ownerOrAdminRead
+    ),
+    ownerInsert: pgPolicy(
+      "account_deletion_requests_owner_insert",
+      ownerPendingOrAdminInsert
+    ),
+    adminUpdatePolicy: pgPolicy(
+      "account_deletion_requests_admin_update",
+      adminUpdate
+    ),
+    adminDeletePolicy: pgPolicy(
+      "account_deletion_requests_admin_delete",
+      adminDelete
     ),
   })
 )

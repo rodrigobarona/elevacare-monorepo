@@ -23,7 +23,6 @@ export {
 export {
   listDsarCollectors,
   registerDsarCollector,
-  resetDsarCollectorsForTests,
   type DsarCollector,
   type DsarCollectorResult,
 } from "./dsar-collectors"

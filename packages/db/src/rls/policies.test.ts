@@ -5,6 +5,7 @@ import {
   buildMainRlsStatements,
   TENANT_TABLES,
   OWNER_USER_TABLES,
+  COMPLIANCE_WORKFLOW_TABLES,
   ADMIN_BYPASS_TABLES,
 } from "./policies"
 
@@ -104,6 +105,37 @@ describe("owner-user-visible RLS", () => {
       expect(policy).toContain("USING")
       expect(policy).toContain("WITH CHECK")
       expect(policy).not.toContain("eleva.org_id")
+    }
+  })
+})
+
+describe("compliance workflow RLS", () => {
+  const stmts = buildMainRlsStatements()
+
+  it("splits owner read/insert from admin update/delete", () => {
+    for (const table of COMPLIANCE_WORKFLOW_TABLES) {
+      const read = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_owner_read`)
+      )
+      const insert = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_owner_insert`)
+      )
+      const update = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_admin_update`)
+      )
+      const del = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_admin_delete`)
+      )
+      expect(read).toContain("FOR SELECT")
+      expect(read).toContain("eleva.user_id")
+      expect(read).toContain("eleva.platform_admin")
+      expect(insert).toContain("FOR INSERT")
+      expect(insert).toContain("status = 'pending'")
+      expect(update).toContain("FOR UPDATE")
+      expect(update).toContain("eleva.platform_admin")
+      expect(update).not.toContain("eleva.user_id")
+      expect(del).toContain("FOR DELETE")
+      expect(del).toContain("eleva.platform_admin")
     }
   })
 })

@@ -1,6 +1,7 @@
 -- Phase 05.1: member privacy schema (D-12 working pre-launch).
--- RLS: notification_preferences, dsar_requests, and
--- account_deletion_requests are owner-user-visible (user_id = eleva.user_id).
+-- RLS: notification_preferences is owner-user-visible.
+-- dsar_requests and account_deletion_requests split: owner SELECT +
+-- pending INSERT; platform-admin UPDATE/DELETE (workflow state).
 -- Do not change bookings / consents RLS classes.
 
 ALTER TABLE "auth"."user" ADD COLUMN "timezone" text;
@@ -24,7 +25,7 @@ ALTER TABLE "consents" ADD CONSTRAINT "consents_subject"
     (subject_kind = 'user' AND user_id IS NOT NULL)
     OR (subject_kind = 'guest' AND guest_email_hash IS NOT NULL)
     OR (
-      booking_id IS NOT NULL
+      subject_kind = 'user'
       AND user_id IS NULL
       AND guest_email_hash IS NULL
       AND subject_pseudonym IS NOT NULL
@@ -102,10 +103,31 @@ ALTER TABLE "dsar_requests" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 ALTER TABLE "dsar_requests" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
-CREATE POLICY "dsar_requests_owner_user_visible"
-  ON "dsar_requests" AS PERMISSIVE FOR ALL TO public
-  USING (user_id::text = current_setting('eleva.user_id', true))
-  WITH CHECK (user_id::text = current_setting('eleva.user_id', true));
+CREATE POLICY "dsar_requests_owner_read"
+  ON "dsar_requests" AS PERMISSIVE FOR SELECT TO public
+  USING (
+    user_id::text = current_setting('eleva.user_id', true)
+    OR current_setting('eleva.platform_admin', true) = 'true'
+  );
+--> statement-breakpoint
+CREATE POLICY "dsar_requests_owner_insert"
+  ON "dsar_requests" AS PERMISSIVE FOR INSERT TO public
+  WITH CHECK (
+    (
+      user_id::text = current_setting('eleva.user_id', true)
+      AND status = 'pending'
+    )
+    OR current_setting('eleva.platform_admin', true) = 'true'
+  );
+--> statement-breakpoint
+CREATE POLICY "dsar_requests_admin_update"
+  ON "dsar_requests" AS PERMISSIVE FOR UPDATE TO public
+  USING (current_setting('eleva.platform_admin', true) = 'true')
+  WITH CHECK (current_setting('eleva.platform_admin', true) = 'true');
+--> statement-breakpoint
+CREATE POLICY "dsar_requests_admin_delete"
+  ON "dsar_requests" AS PERMISSIVE FOR DELETE TO public
+  USING (current_setting('eleva.platform_admin', true) = 'true');
 --> statement-breakpoint
 CREATE TABLE "account_deletion_requests" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -130,7 +152,28 @@ ALTER TABLE "account_deletion_requests" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 ALTER TABLE "account_deletion_requests" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
-CREATE POLICY "account_deletion_requests_owner_user_visible"
-  ON "account_deletion_requests" AS PERMISSIVE FOR ALL TO public
-  USING (user_id::text = current_setting('eleva.user_id', true))
-  WITH CHECK (user_id::text = current_setting('eleva.user_id', true));
+CREATE POLICY "account_deletion_requests_owner_read"
+  ON "account_deletion_requests" AS PERMISSIVE FOR SELECT TO public
+  USING (
+    user_id::text = current_setting('eleva.user_id', true)
+    OR current_setting('eleva.platform_admin', true) = 'true'
+  );
+--> statement-breakpoint
+CREATE POLICY "account_deletion_requests_owner_insert"
+  ON "account_deletion_requests" AS PERMISSIVE FOR INSERT TO public
+  WITH CHECK (
+    (
+      user_id::text = current_setting('eleva.user_id', true)
+      AND status = 'pending'
+    )
+    OR current_setting('eleva.platform_admin', true) = 'true'
+  );
+--> statement-breakpoint
+CREATE POLICY "account_deletion_requests_admin_update"
+  ON "account_deletion_requests" AS PERMISSIVE FOR UPDATE TO public
+  USING (current_setting('eleva.platform_admin', true) = 'true')
+  WITH CHECK (current_setting('eleva.platform_admin', true) = 'true');
+--> statement-breakpoint
+CREATE POLICY "account_deletion_requests_admin_delete"
+  ON "account_deletion_requests" AS PERMISSIVE FOR DELETE TO public
+  USING (current_setting('eleva.platform_admin', true) = 'true');

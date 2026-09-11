@@ -24,9 +24,11 @@ export type RlsTableAssignment = {
   /** INSERT / WITH CHECK class. Also the SELECT class unless `selectClass` is set. */
   class: RlsPolicyClass
   /**
-   * SELECT / USING class when it differs from writes. Two splits today:
-   * `audit_events` (tenant-owned reads, service-only inserts) and
-   * `public_handles` (public-read SELECT, staff-only writes). Not an eighth class.
+   * SELECT / USING class when it differs from writes. Splits today:
+   * `audit_events` (tenant-owned reads, service-only inserts),
+   * `public_handles` (public-read SELECT, staff-only writes), and
+   * `dsar_requests` / `account_deletion_requests` (owner-user-visible
+   * SELECT, staff-only writes). Not an eighth class.
    */
   selectClass?: RlsPolicyClass
 }
@@ -58,8 +60,16 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "booking_payments", class: "tenant-owned" },
   { table: "consents", class: "tenant-owned" },
   { table: "notification_preferences", class: "owner-user-visible" },
-  { table: "dsar_requests", class: "owner-user-visible" },
-  { table: "account_deletion_requests", class: "owner-user-visible" },
+  {
+    table: "dsar_requests",
+    class: "staff-only",
+    selectClass: "owner-user-visible",
+  },
+  {
+    table: "account_deletion_requests",
+    class: "staff-only",
+    selectClass: "owner-user-visible",
+  },
   { table: "sessions", class: "participant-visible" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },
