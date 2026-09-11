@@ -451,6 +451,45 @@ export const PutMeConsentRequestSchema = z.object({
   locale: LocaleSchema.optional(),
 })
 
+export const CancelMeBookingResponseSchema = z.object({
+  ok: z.literal(true),
+  bookingId: z.string().uuid(),
+})
+
+export const RescheduleMeBookingRequestSchema = z.object({
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+})
+
+export const RescheduleMeBookingResponseSchema = z.object({
+  ok: z.literal(true),
+  bookingId: z.string().uuid(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+})
+
+export const CreateDsarRequestResponseSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["pending", "processing", "ready", "expired", "failed"]),
+})
+
+export const DsarRequestStatusResponseSchema = z.object({
+  id: z.string().uuid(),
+  status: z.enum(["pending", "processing", "ready", "expired", "failed"]),
+  requestedAt: z.string().datetime(),
+  expiresAt: z.string().datetime().nullable(),
+  downloadUrl: z.string().url().optional(),
+})
+
+export const DeleteAccountResponseSchema = z.object({
+  requestId: z.string().uuid(),
+  scheduledFor: z.string().datetime(),
+})
+
+export const CancelDeletionResponseSchema = z.object({
+  requestId: z.string().uuid(),
+})
+
 export type MeProfile = z.infer<typeof MeProfileSchema>
 export type PatchMeRequest = z.infer<typeof PatchMeRequestSchema>
 export type PutNotificationPreferencesRequest = z.infer<
@@ -471,6 +510,25 @@ export type MeNotificationPreferencesResponse = z.infer<
   typeof MeNotificationPreferencesResponseSchema
 >
 export type PutMeConsentRequest = z.infer<typeof PutMeConsentRequestSchema>
+export type CancelMeBookingResponse = z.infer<
+  typeof CancelMeBookingResponseSchema
+>
+export type RescheduleMeBookingRequest = z.infer<
+  typeof RescheduleMeBookingRequestSchema
+>
+export type RescheduleMeBookingResponse = z.infer<
+  typeof RescheduleMeBookingResponseSchema
+>
+export type CreateDsarRequestResponse = z.infer<
+  typeof CreateDsarRequestResponseSchema
+>
+export type DsarRequestStatusResponse = z.infer<
+  typeof DsarRequestStatusResponseSchema
+>
+export type DeleteAccountResponse = z.infer<typeof DeleteAccountResponseSchema>
+export type CancelDeletionResponse = z.infer<
+  typeof CancelDeletionResponseSchema
+>
 
 // ── Expert Profile ──────────────────────────────────────────────────
 
@@ -1115,6 +1173,46 @@ export function createApiClient(options: ApiClientOptions) {
       async putConsent(data: PutMeConsentRequest) {
         const raw = await request<unknown>("PUT", "/me/consents", data)
         return ListMeConsentsResponseSchema.parse(raw)
+      },
+      async cancelBooking(bookingId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/me/bookings/${encodeURIComponent(bookingId)}/cancel`
+        )
+        return CancelMeBookingResponseSchema.parse(raw)
+      },
+      async rescheduleBooking(
+        bookingId: string,
+        data: RescheduleMeBookingRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/me/bookings/${encodeURIComponent(bookingId)}/reschedule`,
+          data
+        )
+        return RescheduleMeBookingResponseSchema.parse(raw)
+      },
+    },
+
+    privacy: {
+      async requestDsar() {
+        const raw = await request<unknown>("POST", "/privacy/dsar")
+        return CreateDsarRequestResponseSchema.parse(raw)
+      },
+      async getDsar(id: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/privacy/dsar/${encodeURIComponent(id)}`
+        )
+        return DsarRequestStatusResponseSchema.parse(raw)
+      },
+      async deleteAccount() {
+        const raw = await request<unknown>("POST", "/privacy/delete-account")
+        return DeleteAccountResponseSchema.parse(raw)
+      },
+      async cancelDeletion() {
+        const raw = await request<unknown>("POST", "/privacy/cancel-deletion")
+        return CancelDeletionResponseSchema.parse(raw)
       },
     },
 

@@ -97,6 +97,7 @@ export {
   upsertMemberNotificationPreferencesInTx,
   listMemberBookings,
   listMemberPayments,
+  getMemberBookingForPolicy,
   cacheBookingPaymentReceipt,
   lockMemberHealthConsentInvariant,
   memberHasConfirmedFutureBooking,
@@ -104,6 +105,7 @@ export {
   type MemberNotificationPreference,
   type MemberBookingListItem,
   type MemberPaymentListItem,
+  type MemberBookingPolicyRow,
   type MemberListResult,
 } from "./queries/member"
 export { countBillableSeats } from "./queries/seats"

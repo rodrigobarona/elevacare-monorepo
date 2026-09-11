@@ -58,7 +58,21 @@ export type {
   BookingPaymentIntentSnapshot,
 } from "./confirm-booking"
 export { hashReservationToken } from "./reservation-token"
-export { validateBookingRules, canCancel, canReschedule } from "./booking-rules"
+export {
+  cancelMemberBooking,
+  rescheduleMemberBooking,
+  MemberBookingPolicyError,
+} from "./member-booking"
+export type {
+  MemberIcsPayload,
+  MemberBookingPolicyErrorCode,
+} from "./member-booking"
+export {
+  validateBookingRules,
+  canCancel,
+  canReschedule,
+  MEMBER_CANCEL_MIN_HOURS,
+} from "./booking-rules"
 export type {
   TimeSlot,
   BusyInterval,

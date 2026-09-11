@@ -10,6 +10,7 @@ import {
   type ReservationFunnelSnapshot,
 } from "@eleva/db/schema"
 import type { ReserveSlotInput, ReserveSlotResult } from "./types"
+import { assertMemberCanBook } from "./assert-member-can-book"
 
 const DEFAULT_TTL_SECONDS = 300
 
@@ -78,6 +79,11 @@ export async function reserveSlot(
     audit,
     funnel,
   } = input
+
+  if (userId) {
+    await assertMemberCanBook(userId)
+  }
+
   const reservationToken = randomBytes(32).toString("base64url")
   const capabilityHash = createHash("sha256")
     .update(reservationToken)

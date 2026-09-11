@@ -158,3 +158,10 @@ describe("canReschedule", () => {
     expect(canReschedule(24, startsAt, now)).toBe(true)
   })
 })
+
+describe("MEMBER_CANCEL_MIN_HOURS", () => {
+  it("is the 24-hour member policy floor", async () => {
+    const { MEMBER_CANCEL_MIN_HOURS } = await import("../src/booking-rules")
+    expect(MEMBER_CANCEL_MIN_HOURS).toBe(24)
+  })
+})

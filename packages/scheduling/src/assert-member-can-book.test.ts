@@ -3,16 +3,17 @@ import { BookingError, assertMemberCanBook } from "./assert-member-can-book"
 
 const withPlatformAdminContext = vi.fn()
 
-vi.mock("@eleva/db", () => ({
-  auth: {
-    user: {
-      id: "id",
-      banned: "banned",
-      deletionScheduledAt: "deletion_scheduled_at",
-    },
-  },
+vi.mock("@eleva/db/context", () => ({
   withPlatformAdminContext: (fn: (tx: unknown) => unknown) =>
     withPlatformAdminContext(fn),
+}))
+
+vi.mock("@eleva/db/schema/auth", () => ({
+  user: {
+    id: "id",
+    banned: "banned",
+    deletionScheduledAt: "deletion_scheduled_at",
+  },
 }))
 
 function mockMember(

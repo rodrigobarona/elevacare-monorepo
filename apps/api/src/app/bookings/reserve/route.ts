@@ -2,13 +2,18 @@ import {
   ReserveBookingRequestSchema,
   ReserveBookingResponseSchema,
 } from "@eleva/api-client"
-import { reserveBooking, type ReserveBookingError } from "@eleva/scheduling"
+import {
+  reserveBooking,
+  BookingError,
+  type ReserveBookingError,
+} from "@eleva/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { getBookingRedis } from "@/lib/booking-redis"
 import { checkBot } from "@/lib/bot-protection"
 import { isIanaTimeZone, PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
+import { rejectIfMemberCannotBook } from "@/lib/member-bookability"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -30,6 +35,8 @@ const RESERVE_ERROR_STATUS: Record<ReserveBookingError, number> = {
   GUEST_REQUIRED: 422,
   SLOT_UNAVAILABLE: 422,
   SLOT_TAKEN: 409,
+  ACCOUNT_DELETION_SCHEDULED: 409,
+  ACCOUNT_BANNED: 409,
   db_error: 500,
 }
 
@@ -103,6 +110,9 @@ export async function POST(request: Request) {
       ? undefined
       : { userId: auth.session.user.id, email: auth.session.user.email }
 
+  const blocked = await rejectIfMemberCannotBook(session?.userId, headers)
+  if (blocked) return blocked
+
   if (!session && !body.guest) {
     return secureJson({ error: "GUEST_REQUIRED" }, { status: 422, headers })
   }
@@ -124,6 +134,9 @@ export async function POST(request: Request) {
       consents: body.consents,
     })
   } catch (err) {
+    if (err instanceof BookingError) {
+      return secureJson({ error: err.code }, { status: 409, headers })
+    }
     console.error("[bookings/reserve] reservation failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }

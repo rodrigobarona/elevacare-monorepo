@@ -3,11 +3,16 @@ import {
   CreatePaymentIntentResponseSchema,
 } from "@eleva/api-client"
 import { createPaymentIntentForReservation } from "@eleva/billing/server"
+import { BookingError } from "@eleva/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { checkBot } from "@/lib/bot-protection"
 import { PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
+import {
+  paymentIntentBookabilityStatus,
+  rejectIfMemberCannotBook,
+} from "@/lib/member-bookability"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -62,6 +67,9 @@ export async function POST(request: Request) {
   const sessionUserId =
     auth.type === "anonymous" ? undefined : auth.session.user.id
 
+  const blocked = await rejectIfMemberCannotBook(sessionUserId, headers)
+  if (blocked) return blocked
+
   let result
   try {
     result = await createPaymentIntentForReservation({
@@ -70,6 +78,9 @@ export async function POST(request: Request) {
       sessionUserId,
     })
   } catch (err) {
+    if (err instanceof BookingError) {
+      return secureJson({ error: err.code }, { status: 409, headers })
+    }
     console.error("[payments/intent] failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
@@ -80,6 +91,13 @@ export async function POST(request: Request) {
     }
     if (result.error === "unavailable") {
       return secureJson({ error: "unavailable" }, { status: 503, headers })
+    }
+    const bookability = paymentIntentBookabilityStatus(result.error)
+    if (bookability) {
+      return secureJson(
+        { error: result.error },
+        { status: bookability, headers }
+      )
     }
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
