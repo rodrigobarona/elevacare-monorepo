@@ -50,7 +50,8 @@ export async function POST(request: Request) {
     if (err instanceof AccountDeletionNotPendingError) {
       return secureJson({ error: err.code }, { status: 409, headers })
     }
-    throw err
+    console.error("[privacy/cancel-deletion] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 

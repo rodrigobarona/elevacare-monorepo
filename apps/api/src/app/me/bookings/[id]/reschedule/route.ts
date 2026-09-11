@@ -79,6 +79,7 @@ export async function POST(
   try {
     const result = await rescheduleMemberBooking({
       userId: session.user.id,
+      orgId: session.orgId,
       bookingId: id,
       startsAt,
       endsAt,
@@ -106,7 +107,8 @@ export async function POST(
         { status: POLICY_STATUS[err.code], headers }
       )
     }
-    throw err
+    console.error("[me/bookings/reschedule] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 

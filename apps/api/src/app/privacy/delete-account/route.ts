@@ -7,6 +7,7 @@ import {
 } from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { checkBot } from "@/lib/bot-protection"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -14,7 +15,7 @@ import type { RoutePolicy } from "@/lib/route-policy"
 export const ROUTE_POLICY = {
   auth: "session",
   rateLimit: true,
-  botId: false,
+  botId: true,
 } as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
@@ -30,6 +31,11 @@ export async function POST(request: Request) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
     throw err
+  }
+
+  const botVerdict = await checkBot()
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
   }
 
   const rateLimited = await applyRateLimit(
@@ -50,7 +56,8 @@ export async function POST(request: Request) {
     if (err instanceof AccountDeletionConflictError) {
       return secureJson({ error: err.code }, { status: 409, headers })
     }
-    throw err
+    console.error("[privacy/delete-account] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 
   await cancelCancelablePaymentIntents(scheduled.paymentIntentIds)

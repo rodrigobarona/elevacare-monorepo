@@ -1,12 +1,16 @@
 import { getPrivateDocument } from "@eleva/storage"
-import { getDsarRequestById, verifyDsarDownloadToken } from "@eleva/compliance"
+import {
+  getDsarRequestForUser,
+  verifyDsarDownloadToken,
+} from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
+import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson, withSecurityHeaders } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
-  auth: "public",
+  auth: "session",
   rateLimit: true,
   botId: false,
 } as const satisfies RoutePolicy
@@ -21,9 +25,18 @@ export async function GET(
   const headers = corsHeaders(request, "GET, OPTIONS")
   const { id } = await params
 
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
   const rateLimited = await applyRateLimit(
-    rateLimitKey(request),
-    RATE_LIMITS.public,
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated,
     headers
   )
   if (rateLimited) return rateLimited
@@ -35,7 +48,7 @@ export async function GET(
     return secureJson({ error: "not found" }, { status: 404, headers })
   }
 
-  const row = await getDsarRequestById(id)
+  const row = await getDsarRequestForUser(session.user.id, id)
   if (
     !row ||
     row.status !== "ready" ||
@@ -64,7 +77,8 @@ export async function GET(
         "Content-Type": "application/zip",
         "Content-Disposition": 'attachment; filename="eleva-member-export.zip"',
       },
-    })
+    }),
+    { noStore: true }
   )
 }
 

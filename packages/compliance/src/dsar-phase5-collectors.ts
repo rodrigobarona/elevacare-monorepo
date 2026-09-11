@@ -26,6 +26,21 @@ function iso(value: Date | string | null | undefined): string | null {
   return value
 }
 
+async function collectAllPages<T>(
+  fetchPage: (
+    cursor?: string
+  ) => Promise<{ items: T[]; nextCursor: string | null }>
+): Promise<T[]> {
+  const items: T[] = []
+  let cursor: string | undefined
+  for (;;) {
+    const page = await fetchPage(cursor)
+    items.push(...page.items)
+    if (!page.nextCursor) return items
+    cursor = page.nextCursor
+  }
+}
+
 const phase5Collectors: DsarCollector[] = [
   {
     id: "profile",
@@ -52,10 +67,14 @@ const phase5Collectors: DsarCollector[] = [
     id: "bookings",
     collect: async (userId) => {
       const [upcoming, past] = await Promise.all([
-        listMemberBookings({ userId, range: "upcoming", limit: 50 }),
-        listMemberBookings({ userId, range: "past", limit: 50 }),
+        collectAllPages((cursor) =>
+          listMemberBookings({ userId, range: "upcoming", limit: 50, cursor })
+        ),
+        collectAllPages((cursor) =>
+          listMemberBookings({ userId, range: "past", limit: 50, cursor })
+        ),
       ])
-      const json = [...upcoming.items, ...past.items].map((booking) => ({
+      const json = [...upcoming, ...past].map((booking) => ({
         id: booking.id,
         orgId: booking.orgId,
         status: booking.status,
@@ -74,7 +93,9 @@ const phase5Collectors: DsarCollector[] = [
   {
     id: "payments",
     collect: async (userId) => {
-      const { items } = await listMemberPayments({ userId, limit: 50 })
+      const items = await collectAllPages((cursor) =>
+        listMemberPayments({ userId, limit: 50, cursor })
+      )
       const json = items.map((payment) => ({
         id: payment.id,
         bookingId: payment.bookingId,

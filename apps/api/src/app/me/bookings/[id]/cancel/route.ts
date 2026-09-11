@@ -53,6 +53,7 @@ export async function POST(
   try {
     const result = await cancelMemberBooking({
       userId: session.user.id,
+      orgId: session.orgId,
       bookingId: id,
     })
     after(() =>
@@ -71,7 +72,8 @@ export async function POST(
         { status: POLICY_STATUS[err.code], headers }
       )
     }
-    throw err
+    console.error("[me/bookings/cancel] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
 

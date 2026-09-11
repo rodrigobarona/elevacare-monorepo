@@ -61,12 +61,17 @@ export async function GET(
     row.expiresAt &&
     row.expiresAt.getTime() <= Date.now()
   ) {
-    await markDsarExpired({
-      userId: session.user.id,
-      orgId: session.orgId,
-      dsarId: row.id,
-    })
-    status = "expired"
+    try {
+      await markDsarExpired({
+        userId: session.user.id,
+        orgId: session.orgId,
+        dsarId: row.id,
+      })
+      status = "expired"
+    } catch (err) {
+      console.error("[privacy/dsar] expiration cleanup failed", err)
+      return secureJson({ error: "internal" }, { status: 500, headers })
+    }
   }
 
   const downloadUrl =

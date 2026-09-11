@@ -172,22 +172,35 @@ export async function processDsarExport(input: {
   ) {
     return { status: "skipped" }
   }
+  if (existing.status === "expired") {
+    return { status: "skipped" }
+  }
 
-  await withPlatformAudit(
+  const claimed = await withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
-      await tx
+      const [row] = await tx
         .update(main.dsarRequests)
         .set({ status: "processing" })
-        .where(eq(main.dsarRequests.id, input.dsarId))
+        .where(
+          and(
+            eq(main.dsarRequests.id, input.dsarId),
+            eq(main.dsarRequests.userId, input.userId),
+            inArray(main.dsarRequests.status, ["pending", "failed"])
+          )
+        )
+        .returning({ id: main.dsarRequests.id })
+      if (!row) return false
       await ctx.emit({
         entity: "dsar_request",
         action: "updated",
         entityId: input.dsarId,
         payload: { status: "processing" },
       })
+      return true
     }
   )
+  if (!claimed) return { status: "skipped" }
 
   try {
     const exported = await dsarExport(input.userId)

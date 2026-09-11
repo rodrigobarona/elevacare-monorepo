@@ -8,12 +8,20 @@ import {
 
 const getMemberBookingForPolicy = vi.fn()
 const withAudit = vi.fn()
+const resolveOffer = vi.fn()
+const getExpertScheduleForBooking = vi.fn()
+const listExpertBusyBookings = vi.fn()
+const assertRequestedSlotAvailable = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   getMemberBookingForPolicy: (...args: unknown[]) =>
     getMemberBookingForPolicy(...args),
+  getExpertScheduleForBooking: (...args: unknown[]) =>
+    getExpertScheduleForBooking(...args),
+  listExpertBusyBookings: (...args: unknown[]) =>
+    listExpertBusyBookings(...args),
   main: {
-    bookings: { id: "bookings.id" },
+    bookings: { id: "bookings.id", status: "bookings.status" },
     bookingPayments: { id: "payments.id" },
     slotReservations: { id: "slots.id", status: "slots.status" },
   },
@@ -22,6 +30,15 @@ vi.mock("@eleva/db", () => ({
 
 vi.mock("@eleva/audit", () => ({
   withAudit: (...args: unknown[]) => withAudit(...args),
+}))
+
+vi.mock("./resolve-offer", () => ({
+  resolveOffer: (...args: unknown[]) => resolveOffer(...args),
+}))
+
+vi.mock("./assert-slot-available", () => ({
+  assertRequestedSlotAvailable: (...args: unknown[]) =>
+    assertRequestedSlotAvailable(...args),
 }))
 
 const now = new Date("2026-09-11T10:00:00.000Z")
@@ -48,6 +65,7 @@ function booking(overrides: Record<string, unknown> = {}) {
     paymentStatus: "succeeded",
     expertProfileId: "expert-profile-1",
     reservationId: "res-1",
+    eventTypeModeId: "mode-1",
     ...overrides,
   }
 }
@@ -69,7 +87,13 @@ describe("cancelMemberBooking", () => {
       ) =>
         fn(
           {
-            update: () => ({ set: () => ({ where: async () => undefined }) }),
+            update: () => ({
+              set: () => ({
+                where: () => ({
+                  returning: async () => [{ id: "booking-1" }],
+                }),
+              }),
+            }),
           },
           { emit: vi.fn(async () => undefined) }
         )
@@ -81,7 +105,12 @@ describe("cancelMemberBooking", () => {
       booking({ startsAt: new Date("2026-09-11T20:00:00.000Z") })
     )
     await expect(
-      cancelMemberBooking({ userId: "user-1", bookingId: "booking-1", now })
+      cancelMemberBooking({
+        userId: "user-1",
+        orgId: "space-1",
+        bookingId: "booking-1",
+        now,
+      })
     ).rejects.toMatchObject({ code: "POLICY_TOO_LATE" })
     expect(withAudit).not.toHaveBeenCalled()
   })
@@ -101,7 +130,11 @@ describe("cancelMemberBooking", () => {
             update: (table: { id: string }) => ({
               set: (values: unknown) => {
                 if (table.id === "payments.id") paymentSets.push(values)
-                return { where: async () => undefined }
+                return {
+                  where: () => ({
+                    returning: async () => [{ id: "booking-1" }],
+                  }),
+                }
               },
             }),
           },
@@ -111,6 +144,7 @@ describe("cancelMemberBooking", () => {
 
     await cancelMemberBooking({
       userId: "user-1",
+      orgId: "space-1",
       bookingId: "booking-1",
       now,
     })
@@ -131,6 +165,7 @@ describe("rescheduleMemberBooking", () => {
     await expect(
       rescheduleMemberBooking({
         userId: "user-1",
+        orgId: "space-1",
         bookingId: "booking-1",
         startsAt: new Date("2026-09-20T10:00:00.000Z"),
         endsAt: new Date("2026-09-13T10:50:00.000Z"),

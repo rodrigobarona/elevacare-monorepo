@@ -48,6 +48,9 @@ vi.mock("@eleva/db", () => ({
       userId: "consents.user_id",
       bookingId: "consents.booking_id",
     },
+    notificationPreferences: {
+      userId: "prefs.user_id",
+    },
     slotReservations: {
       id: "slots.id",
       status: "slot_reservations.status",
@@ -99,6 +102,7 @@ describe("scheduleAccountDeletion", () => {
     withPlatformAudit.mockImplementation(
       async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
         const tx = {
+          execute: async () => undefined,
           select: () => {
             selectCalls += 1
             if (selectCalls === 1) {
@@ -126,14 +130,28 @@ describe("scheduleAccountDeletion", () => {
                 }),
               }
             }
+            if (selectCalls === 3) {
+              return {
+                from: () => ({
+                  leftJoin: () => ({
+                    where: async () => [
+                      {
+                        id: "confirmed-1",
+                        paymentId: "pay-1",
+                        paymentStatus: "succeeded",
+                      },
+                    ],
+                  }),
+                }),
+              }
+            }
             return {
               from: () => ({
                 leftJoin: () => ({
                   where: async () => [
                     {
-                      id: "confirmed-1",
-                      paymentId: "pay-1",
-                      paymentStatus: "succeeded",
+                      stripePaymentIntentId: "pi_pending",
+                      paymentStatus: "requires_payment",
                     },
                   ],
                 }),
@@ -145,7 +163,11 @@ describe("scheduleAccountDeletion", () => {
               if (table.id === "user.id") userSets.push(values)
               if (table.id === "bookings.id") bookingSets.push(values)
               if (table.id === "payments.id") paymentSets.push(values)
-              return { where: async () => undefined }
+              return {
+                where: () => ({
+                  returning: async () => [],
+                }),
+              }
             },
           }),
           insert: () => ({
@@ -177,17 +199,16 @@ describe("cancelAccountDeletion", () => {
     withPlatformAudit.mockImplementation(
       async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
         const tx = {
-          select: () => ({
-            from: () => ({
-              where: () => ({
-                limit: async () => [{ id: "req-1" }],
-              }),
-            }),
-          }),
+          execute: async () => undefined,
           update: (table: { id: string }) => ({
             set: (values: unknown) => {
               if (table.id === "user.id") userSets.push(values)
-              return { where: async () => undefined }
+              return {
+                where: () => ({
+                  returning: async () =>
+                    table.id === "adr.id" ? [{ id: "req-1" }] : [],
+                }),
+              }
             },
           }),
         }
@@ -229,9 +250,19 @@ describe("sweepAccountDeletions", () => {
       async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
         let selectCalls = 0
         const tx = {
+          execute: async () => undefined,
           select: () => {
             selectCalls += 1
             if (selectCalls === 1) {
+              return {
+                from: () => ({
+                  where: () => ({
+                    limit: async () => [{ id: "req-1" }],
+                  }),
+                }),
+              }
+            }
+            if (selectCalls === 2) {
               return {
                 from: () => ({
                   leftJoin: () => ({
@@ -240,16 +271,25 @@ describe("sweepAccountDeletions", () => {
                 }),
               }
             }
+            if (selectCalls === 3) {
+              return {
+                from: () => ({
+                  leftJoin: () => ({
+                    where: async () => [
+                      {
+                        id: "confirmed-race",
+                        paymentId: "pay-race",
+                        paymentStatus: "succeeded",
+                      },
+                    ],
+                  }),
+                }),
+              }
+            }
             return {
               from: () => ({
                 leftJoin: () => ({
-                  where: async () => [
-                    {
-                      id: "confirmed-race",
-                      paymentId: "pay-race",
-                      paymentStatus: "succeeded",
-                    },
-                  ],
+                  where: async () => [],
                 }),
               }),
             }
@@ -257,7 +297,11 @@ describe("sweepAccountDeletions", () => {
           update: (table: { id: string }) => ({
             set: (values: unknown) => {
               if (table.id === "payments.id") paymentSets.push(values)
-              return { where: async () => undefined }
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "req-1" }],
+                }),
+              }
             },
           }),
           delete: () => ({ where: async () => undefined }),
@@ -306,14 +350,24 @@ describe("sweepAccountDeletions", () => {
     withPlatformAudit.mockImplementation(
       async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
         const tx = {
+          execute: async () => undefined,
           select: () => ({
             from: () => ({
+              where: () => ({
+                limit: async () => [{ id: "req-1" }],
+              }),
               leftJoin: () => ({
                 where: async () => [],
               }),
             }),
           }),
-          update: () => ({ set: () => ({ where: async () => undefined }) }),
+          update: () => ({
+            set: () => ({
+              where: () => ({
+                returning: async () => [{ id: "req-1" }],
+              }),
+            }),
+          }),
           delete: () => ({
             where: async () => {
               for (let i = consents.length - 1; i >= 0; i--) {

@@ -16,9 +16,20 @@ export async function publishWorkflowJob(
     return "inline"
   }
 
+  const destination = `${apiBase}${path.startsWith("/") ? path : `/${path}`}`
+  let parsed: URL
+  try {
+    parsed = new URL(destination)
+  } catch {
+    throw new Error("workflow destination is not a valid URL")
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("workflow destination must use https")
+  }
+
   const client = new Client({ token })
   await client.publishJSON({
-    url: `${apiBase}${path.startsWith("/") ? path : `/${path}`}`,
+    url: destination,
     body,
     headers: { Authorization: `Bearer ${secret}` },
   })

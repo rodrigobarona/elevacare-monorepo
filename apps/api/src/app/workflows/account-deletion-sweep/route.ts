@@ -32,12 +32,17 @@ export async function POST(request: Request) {
 
   try {
     const result = await sweepAccountDeletions()
-    await cancelCancelablePaymentIntents(result.paymentIntentIds)
+    const outcomes = await cancelCancelablePaymentIntents(
+      result.paymentIntentIds
+    )
     return secureJson(
       {
         ok: true,
         raced: result.raced,
         completed: result.completed,
+        paymentIntentFailures: outcomes
+          .filter((outcome) => outcome.status === "failed")
+          .map((outcome) => outcome.id),
       },
       { status: 200, headers }
     )

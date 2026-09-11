@@ -39,6 +39,7 @@ export {
 } from "./payments"
 export type { CreatePaymentIntentForReservationResult } from "./payments"
 export { cancelCancelablePaymentIntents } from "./cancel-intents"
+export type { CancelPaymentIntentOutcome } from "./cancel-intents"
 export { retrieveChargeReceipt } from "./receipts"
 export type { ChargeReceipt } from "./receipts"
 export { listMemberPaymentsWithReceipts } from "./member-payments"

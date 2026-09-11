@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNull } from "drizzle-orm"
+import { and, eq, gt, inArray, isNull, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
@@ -38,6 +38,59 @@ export type ScheduleAccountDeletionResult = {
   requestId: string
   scheduledFor: Date
   paymentIntentIds: string[]
+}
+
+async function lockAccountDeletionUser(tx: Tx, userId: string): Promise<void> {
+  await tx.execute(
+    sql`SELECT pg_advisory_xact_lock(hashtext(${`account-deletion:${userId}`}))`
+  )
+}
+
+function uniquePaymentIntentIds(ids: readonly (string | null)[]): string[] {
+  const seen = new Set<string>()
+  const unique: string[] = []
+  for (const id of ids) {
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    unique.push(id)
+  }
+  return unique
+}
+
+async function collectCancelablePaymentIntentIds(
+  tx: Tx,
+  userId: string
+): Promise<string[]> {
+  const rows = await tx
+    .select({
+      stripePaymentIntentId: main.bookings.stripePaymentIntentId,
+      paymentStatus: main.bookingPayments.status,
+    })
+    .from(main.bookings)
+    .leftJoin(
+      main.bookingPayments,
+      eq(main.bookingPayments.bookingId, main.bookings.id)
+    )
+    .where(
+      and(
+        eq(main.bookings.memberUserId, userId),
+        eq(main.bookings.cancellationReason, "account_deletion"),
+        eq(main.bookings.status, "cancelled")
+      )
+    )
+
+  return uniquePaymentIntentIds(
+    rows
+      .filter(
+        (row) =>
+          row.stripePaymentIntentId &&
+          row.paymentStatus &&
+          (CANCELABLE_PAYMENT_STATUSES as readonly string[]).includes(
+            row.paymentStatus
+          )
+      )
+      .map((row) => row.stripePaymentIntentId)
+  )
 }
 
 async function cancelFutureBookingsInTx(
@@ -142,16 +195,7 @@ async function cancelFutureBookingsInTx(
     }
   }
 
-  return pending
-    .filter(
-      (row) =>
-        row.stripePaymentIntentId &&
-        row.paymentStatus &&
-        (CANCELABLE_PAYMENT_STATUSES as readonly string[]).includes(
-          row.paymentStatus
-        )
-    )
-    .map((row) => row.stripePaymentIntentId as string)
+  return collectCancelablePaymentIntentIds(tx, userId)
 }
 
 export async function scheduleAccountDeletion(input: {
@@ -166,6 +210,7 @@ export async function scheduleAccountDeletion(input: {
   return withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
+      await lockAccountDeletionUser(tx, input.userId)
       const [existing] = await tx
         .select({ id: main.accountDeletionRequests.id })
         .from(main.accountDeletionRequests)
@@ -221,16 +266,17 @@ export async function cancelAccountDeletion(input: {
   return withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
+      await lockAccountDeletionUser(tx, input.userId)
       const [request] = await tx
-        .select({ id: main.accountDeletionRequests.id })
-        .from(main.accountDeletionRequests)
+        .update(main.accountDeletionRequests)
+        .set({ status: "cancelled" })
         .where(
           and(
             eq(main.accountDeletionRequests.userId, input.userId),
             eq(main.accountDeletionRequests.status, "pending")
           )
         )
-        .limit(1)
+        .returning({ id: main.accountDeletionRequests.id })
       if (!request) {
         throw new AccountDeletionNotPendingError()
       }
@@ -239,11 +285,6 @@ export async function cancelAccountDeletion(input: {
         .update(auth.user)
         .set({ deletionScheduledAt: null, updatedAt: new Date() })
         .where(eq(auth.user.id, input.userId))
-
-      await tx
-        .update(main.accountDeletionRequests)
-        .set({ status: "cancelled" })
-        .where(eq(main.accountDeletionRequests.id, request.id))
 
       await ctx.emit({
         entity: "account_deletion_request",
@@ -305,9 +346,24 @@ export async function sweepAccountDeletions(
     const userId = row.userId
 
     const due = row.scheduledFor.getTime() <= now.getTime()
-    const paymentIntentIds = await withPlatformAudit(
-      { orgId: row.orgId, actorUserId: null },
+    const swept = await withPlatformAudit(
+      { orgId: row.orgId, actorUserId: userId },
       async (tx, ctx) => {
+        await lockAccountDeletionUser(tx, userId)
+        const [claimed] = await tx
+          .select({ id: main.accountDeletionRequests.id })
+          .from(main.accountDeletionRequests)
+          .where(
+            and(
+              eq(main.accountDeletionRequests.id, row.id),
+              eq(main.accountDeletionRequests.status, "pending")
+            )
+          )
+          .limit(1)
+        if (!claimed) {
+          return { ids: [] as string[], completed: false }
+        }
+
         const ids = await cancelFutureBookingsInTx(tx, userId, now)
         if (due) {
           await tx
@@ -320,9 +376,21 @@ export async function sweepAccountDeletions(
             )
           await pseudonymiseBookingConsents(userId, tx)
           await tx
+            .delete(main.notificationPreferences)
+            .where(eq(main.notificationPreferences.userId, userId))
+          const [completed] = await tx
             .update(main.accountDeletionRequests)
             .set({ status: "completed" })
-            .where(eq(main.accountDeletionRequests.id, row.id))
+            .where(
+              and(
+                eq(main.accountDeletionRequests.id, row.id),
+                eq(main.accountDeletionRequests.status, "pending")
+              )
+            )
+            .returning({ id: main.accountDeletionRequests.id })
+          if (!completed) {
+            return { ids: [] as string[], completed: false }
+          }
         }
         await ctx.emit({
           entity: "account_deletion_request",
@@ -335,12 +403,12 @@ export async function sweepAccountDeletions(
                 cancelledIntents: ids.length,
               },
         })
-        return ids
+        return { ids, completed: due }
       }
     )
-    result.raced += paymentIntentIds.length
-    result.paymentIntentIds.push(...paymentIntentIds)
-    if (due) result.completed += 1
+    result.raced += swept.ids.length
+    result.paymentIntentIds.push(...swept.ids)
+    if (swept.completed) result.completed += 1
   }
 
   return result

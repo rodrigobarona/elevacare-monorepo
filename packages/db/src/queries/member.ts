@@ -14,7 +14,12 @@ import { alias } from "drizzle-orm/pg-core"
 import { user } from "../schema/auth"
 import * as main from "../schema/main"
 import type { LocalizedText } from "../schema/main/shared"
-import { withPlatformAdminContext, withUserContext, type Tx } from "../context"
+import {
+  withPlatformAdminContext,
+  withOrgContext,
+  withUserContext,
+  type Tx,
+} from "../context"
 import { updateUserAvatarUrl } from "./users"
 
 const MEMBER_BOOKING_PAGE_SIZE = 20
@@ -507,14 +512,35 @@ export type MemberBookingPolicyRow = {
     | null
   expertProfileId: string
   reservationId: string | null
+  eventTypeModeId: string | null
 }
 
 export async function getMemberBookingForPolicy(input: {
   userId: string
   bookingId: string
+  orgId: string
 }): Promise<MemberBookingPolicyRow | null> {
+  const expertOrgId = await withOrgContext(input.orgId, async (tx) => {
+    const [row] = await tx
+      .select({ orgId: main.bookings.orgId })
+      .from(main.bookings)
+      .where(
+        and(
+          eq(main.bookings.id, input.bookingId),
+          eq(main.bookings.memberUserId, input.userId),
+          or(
+            eq(main.bookings.orgId, input.orgId),
+            eq(main.bookings.counterpartyOrgId, input.orgId)
+          )
+        )
+      )
+      .limit(1)
+    return row?.orgId ?? null
+  })
+  if (!expertOrgId) return null
+
   const expertUser = alias(user, "expert_user")
-  return withPlatformAdminContext(async (tx) => {
+  return withOrgContext(expertOrgId, async (tx) => {
     const [row] = await tx
       .select({
         id: main.bookings.id,
@@ -537,6 +563,7 @@ export async function getMemberBookingForPolicy(input: {
         paymentStatus: main.bookingPayments.status,
         expertProfileId: main.bookings.expertProfileId,
         reservationId: main.bookings.reservationId,
+        eventTypeModeId: main.bookings.eventTypeModeId,
       })
       .from(main.bookings)
       .innerJoin(
@@ -556,7 +583,8 @@ export async function getMemberBookingForPolicy(input: {
       .where(
         and(
           eq(main.bookings.id, input.bookingId),
-          eq(main.bookings.memberUserId, input.userId)
+          eq(main.bookings.memberUserId, input.userId),
+          eq(main.bookings.orgId, expertOrgId)
         )
       )
       .limit(1)

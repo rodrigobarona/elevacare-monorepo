@@ -1,13 +1,17 @@
 import { and, eq, ne, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
+  getExpertScheduleForBooking,
   getMemberBookingForPolicy,
+  listExpertBusyBookings,
   main,
   withOrgContext,
   type MemberBookingPolicyRow,
   type Tx,
 } from "@eleva/db"
+import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { MEMBER_CANCEL_MIN_HOURS, canCancel } from "./booking-rules"
+import { resolveOffer } from "./resolve-offer"
 
 export { MEMBER_CANCEL_MIN_HOURS }
 
@@ -87,6 +91,7 @@ function assertPolicyWindow(startsAt: Date, now: Date): void {
 
 export async function cancelMemberBooking(input: {
   userId: string
+  orgId: string
   bookingId: string
   now?: Date
 }): Promise<{ ics: MemberIcsPayload }> {
@@ -94,6 +99,7 @@ export async function cancelMemberBooking(input: {
   const row = await getMemberBookingForPolicy({
     userId: input.userId,
     bookingId: input.bookingId,
+    orgId: input.orgId,
   })
   if (!row) throw new MemberBookingPolicyError("not_found")
   if (!MUTABLE_STATUSES.has(row.status)) {
@@ -104,7 +110,7 @@ export async function cancelMemberBooking(input: {
   await withAudit(
     { orgId: row.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
-      await tx
+      const [updated] = await tx
         .update(main.bookings)
         .set({
           status: "cancelled",
@@ -112,7 +118,16 @@ export async function cancelMemberBooking(input: {
           cancelledAt: now,
           updatedAt: now,
         })
-        .where(eq(main.bookings.id, row.id))
+        .where(
+          and(
+            eq(main.bookings.id, row.id),
+            eq(main.bookings.status, row.status)
+          )
+        )
+        .returning({ id: main.bookings.id })
+      if (!updated) {
+        throw new MemberBookingPolicyError("INVALID_STATUS")
+      }
 
       if (row.paymentId && row.paymentStatus === "succeeded") {
         await tx
@@ -147,6 +162,7 @@ export async function cancelMemberBooking(input: {
 
 export async function rescheduleMemberBooking(input: {
   userId: string
+  orgId: string
   bookingId: string
   startsAt: Date
   endsAt: Date
@@ -156,6 +172,7 @@ export async function rescheduleMemberBooking(input: {
   const row = await getMemberBookingForPolicy({
     userId: input.userId,
     bookingId: input.bookingId,
+    orgId: input.orgId,
   })
   if (!row) throw new MemberBookingPolicyError("not_found")
   if (!MUTABLE_STATUSES.has(row.status)) {
@@ -171,6 +188,8 @@ export async function rescheduleMemberBooking(input: {
     throw new MemberBookingPolicyError("POLICY_TOO_LATE")
   }
 
+  await assertDestinationAvailable(row, input.startsAt, input.endsAt, now)
+
   await withAudit(
     { orgId: row.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
@@ -184,7 +203,7 @@ export async function rescheduleMemberBooking(input: {
         throw new MemberBookingPolicyError("SLOT_TAKEN")
       }
 
-      await tx
+      const [updated] = await tx
         .update(main.bookings)
         .set({
           startsAt: input.startsAt,
@@ -192,7 +211,16 @@ export async function rescheduleMemberBooking(input: {
           status: "rescheduled",
           updatedAt: now,
         })
-        .where(eq(main.bookings.id, row.id))
+        .where(
+          and(
+            eq(main.bookings.id, row.id),
+            eq(main.bookings.status, row.status)
+          )
+        )
+        .returning({ id: main.bookings.id })
+      if (!updated) {
+        throw new MemberBookingPolicyError("INVALID_STATUS")
+      }
 
       await ctx.emit({
         entity: "booking",
@@ -213,6 +241,55 @@ export async function rescheduleMemberBooking(input: {
       1
     ),
     previousStartsAt: row.startsAt,
+  }
+}
+
+async function assertDestinationAvailable(
+  row: MemberBookingPolicyRow,
+  startsAt: Date,
+  endsAt: Date,
+  now: Date
+): Promise<void> {
+  if (!row.eventTypeModeId) {
+    throw new MemberBookingPolicyError("SLOT_TAKEN")
+  }
+
+  const offerResult = await resolveOffer({
+    expertOrgId: row.orgId,
+    eventTypeModeId: row.eventTypeModeId,
+  })
+  if (!offerResult.ok) {
+    throw new MemberBookingPolicyError("SLOT_TAKEN")
+  }
+
+  const scheduleData = await getExpertScheduleForBooking(row.expertProfileId)
+  if (!scheduleData.schedule) {
+    throw new MemberBookingPolicyError("SLOT_TAKEN")
+  }
+
+  const existingBookings = await listExpertBusyBookings(
+    row.expertProfileId,
+    new Date(startsAt.getTime() - 36 * 60 * 60 * 1000),
+    new Date(endsAt.getTime() + 36 * 60 * 60 * 1000)
+  )
+  const busy = existingBookings.filter(
+    (interval) =>
+      interval.start.getTime() !== row.startsAt.getTime() ||
+      interval.end.getTime() !== row.endsAt.getTime()
+  )
+
+  const available = assertRequestedSlotAvailable({
+    offer: offerResult.offer,
+    startsAt,
+    endsAt,
+    schedule: { timezone: scheduleData.schedule.timezone },
+    rules: scheduleData.rules,
+    overrides: scheduleData.overrides,
+    existingBookings: busy,
+    now,
+  })
+  if (!available.ok) {
+    throw new MemberBookingPolicyError("SLOT_TAKEN")
   }
 }
 
