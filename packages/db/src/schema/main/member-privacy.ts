@@ -56,7 +56,7 @@ const ownerOrAdminRead = {
 
 const ownerPendingOrAdminInsert = {
   for: "insert" as const,
-  withCheck: sql`(user_id::text = current_setting('eleva.user_id', true) AND status = 'pending') OR current_setting('eleva.platform_admin', true) = 'true'`,
+  withCheck: sql`status = 'pending' AND (user_id::text = current_setting('eleva.user_id', true) OR current_setting('eleva.platform_admin', true) = 'true')`,
 }
 
 const adminUpdate = {
@@ -108,7 +108,7 @@ export const notificationPreferences = pgTable(
 
 /**
  * Member DSAR export requests. RLS split: owner/admin SELECT,
- * owner pending INSERT, platform-admin UPDATE/DELETE.
+ * owner/admin pending INSERT, platform-admin UPDATE/DELETE.
  * Zip lives on the private Blob store; signed URL is 24h.
  */
 export const dsarRequests = pgTable(
@@ -150,7 +150,7 @@ export const dsarRequests = pgTable(
 
 /**
  * Member account-deletion requests. RLS split: owner/admin SELECT,
- * owner pending INSERT, platform-admin UPDATE/DELETE.
+ * owner/admin pending INSERT, platform-admin UPDATE/DELETE.
  * `scheduled_for` uses ACCOUNT_DELETION_GRACE_DAYS (14) as product grace.
  */
 export const accountDeletionRequests = pgTable(

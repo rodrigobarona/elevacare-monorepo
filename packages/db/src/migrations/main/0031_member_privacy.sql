@@ -1,7 +1,8 @@
 -- Phase 05.1: member privacy schema (D-12 working pre-launch).
 -- RLS: notification_preferences is owner-user-visible.
--- dsar_requests and account_deletion_requests split: owner SELECT +
--- pending INSERT; platform-admin UPDATE/DELETE (workflow state).
+-- dsar_requests and account_deletion_requests split: owner/admin SELECT
+-- + pending INSERT (status = pending for owner and admin); platform-admin
+-- UPDATE/DELETE (workflow state).
 -- Do not change bookings / consents RLS classes.
 -- Statements are idempotent so a mid-file retry on a Neon preview branch
 -- (statement-by-statement apply, no enclosing transaction) can finish.
@@ -55,6 +56,7 @@ ALTER TABLE "consents" ADD CONSTRAINT "consents_subject"
       AND user_id IS NULL
       AND guest_email_hash IS NULL
       AND subject_pseudonym IS NOT NULL
+      AND booking_id IS NOT NULL
     )
   );
 --> statement-breakpoint
@@ -162,11 +164,11 @@ DROP POLICY IF EXISTS "dsar_requests_owner_insert" ON "dsar_requests";
 CREATE POLICY "dsar_requests_owner_insert"
   ON "dsar_requests" AS PERMISSIVE FOR INSERT TO public
   WITH CHECK (
-    (
+    status = 'pending'
+    AND (
       user_id::text = current_setting('eleva.user_id', true)
-      AND status = 'pending'
+      OR current_setting('eleva.platform_admin', true) = 'true'
     )
-    OR current_setting('eleva.platform_admin', true) = 'true'
   );
 --> statement-breakpoint
 DROP POLICY IF EXISTS "dsar_requests_admin_update" ON "dsar_requests";
@@ -223,11 +225,11 @@ DROP POLICY IF EXISTS "account_deletion_requests_owner_insert"
 CREATE POLICY "account_deletion_requests_owner_insert"
   ON "account_deletion_requests" AS PERMISSIVE FOR INSERT TO public
   WITH CHECK (
-    (
+    status = 'pending'
+    AND (
       user_id::text = current_setting('eleva.user_id', true)
-      AND status = 'pending'
+      OR current_setting('eleva.platform_admin', true) = 'true'
     )
-    OR current_setting('eleva.platform_admin', true) = 'true'
   );
 --> statement-breakpoint
 DROP POLICY IF EXISTS "account_deletion_requests_admin_update"

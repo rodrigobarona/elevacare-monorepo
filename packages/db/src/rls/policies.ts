@@ -59,8 +59,9 @@ export const OWNER_USER_TABLES = ["notification_preferences"] as const
 export type OwnerUserTable = (typeof OWNER_USER_TABLES)[number]
 
 /**
- * Member privacy workflow tables. Owner may SELECT and INSERT a pending
- * row; status / blob / schedule transitions are platform-admin only.
+ * Member privacy workflow tables. Owner and platform-admin may SELECT
+ * and INSERT a pending row; status / blob / schedule transitions are
+ * platform-admin only. Inserts always require status = 'pending'.
  */
 export const COMPLIANCE_WORKFLOW_TABLES = [
   "dsar_requests",
@@ -165,7 +166,7 @@ export function buildMainRlsStatements(): string[] {
     )
     out.push(
       `CREATE POLICY ${table}_owner_insert ON ${table} FOR INSERT ` +
-        `WITH CHECK ((${owner} AND status = 'pending') OR ${admin});`
+        `WITH CHECK (status = 'pending' AND (${owner} OR ${admin}));`
     )
     out.push(
       `CREATE POLICY ${table}_admin_update ON ${table} FOR UPDATE ` +

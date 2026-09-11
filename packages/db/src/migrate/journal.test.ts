@@ -91,6 +91,12 @@ describe("migration journal helpers", () => {
     expect(sql).toContain("dsar_requests_admin_update")
     expect(sql).toContain("account_deletion_requests_completed_orphan")
     expect(sql).toContain("subject_kind = 'user'")
+    expect(sql).toMatch(
+      /subject_pseudonym IS NOT NULL\s+AND booking_id IS NOT NULL/
+    )
+    expect(sql).not.toMatch(
+      /subject_kind = 'user'\s+AND user_id IS NULL\s+AND guest_email_hash IS NULL\s+AND subject_pseudonym IS NOT NULL\s+\)/
+    )
     expect(sql).toContain("receipt_url")
     expect(sql).toContain("ADD COLUMN IF NOT EXISTS")
     expect(sql).toContain("DROP CONSTRAINT IF EXISTS")

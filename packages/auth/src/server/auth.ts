@@ -202,12 +202,14 @@ function createAuth() {
         timezone: {
           type: "string",
           required: false,
-          input: true,
+          // Profile writes go through audited domain APIs, not Better Auth
+          // sign-up / update-user (those paths cannot wrap withAudit).
+          input: false,
         },
         locale: {
           type: "string",
           required: false,
-          input: true,
+          input: false,
         },
       },
     },
