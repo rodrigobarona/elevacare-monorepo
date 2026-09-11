@@ -1,19 +1,230 @@
 {
   "nav": {
-    "dashboard": "Panel",
-    "settings": "Ajustes"
+    "home": "Inicio",
+    "sessions": "Sesiones",
+    "payments": "Pagos",
+    "settings": "Ajustes",
+    "privacy": "Privacidad"
   },
-  "dashboard": {
-    "member": {
-      "welcome": "Bienvenido/a, {name}",
-      "subtitle": "Tus próximas citas e informes viven aquí."
+  "common": {
+    "save": "Guardar",
+    "saving": "Guardando…",
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "loading": "Cargando…",
+    "view": "Ver detalles",
+    "empty": "Todavía no hay nada aquí."
+  },
+  "home": {
+    "welcome": "Bienvenido/a, {name}",
+    "subtitle": "Tus sesiones, pagos y ajustes de privacidad viven en este Espacio.",
+    "upcomingTitle": "Próximas sesiones",
+    "upcomingEmpty": "No tienes sesiones próximas.",
+    "pastTitle": "Sesiones anteriores",
+    "pastEmpty": "Todavía no tienes sesiones anteriores.",
+    "findExpert": "Encontrar un especialista",
+    "viewAll": "Ver todas las sesiones"
+  },
+  "sessions": {
+    "title": "Sesiones",
+    "subtitle": "Consulta las sesiones próximas y anteriores con especialistas de Eleva.",
+    "upcomingTitle": "Próximas",
+    "pastTitle": "Anteriores",
+    "emptyUpcoming": "No tienes sesiones próximas. Encuentra un especialista para reservar tu próxima visita.",
+    "emptyPast": "Todavía no tienes sesiones anteriores.",
+    "detailTitle": "Detalles de la sesión",
+    "expert": "Especialista",
+    "when": "Cuándo",
+    "mode": "Modo",
+    "status": "Estado",
+    "price": "Precio",
+    "addToCalendar": "Añadir al calendario",
+    "join": "Unirse a la sesión",
+    "joinSoon": "La videollamada llegará en una fase posterior.",
+    "icsFailed": "No se pudo descargar el archivo de calendario.",
+    "cancel": "Cancelar sesión",
+    "reschedule": "Reprogramar",
+    "cancelTitle": "¿Cancelar esta sesión?",
+    "cancelDescription": "Puedes cancelar hasta 24 horas antes del inicio. Después, la política ya no permite la cancelación del miembro. Si ya pagaste, el reembolso quedará pendiente y se procesará más tarde.",
+    "cancelConfirm": "Cancelar sesión",
+    "cancelling": "Cancelando…",
+    "cancelled": "Sesión cancelada.",
+    "rescheduleTitle": "Reprogramar esta sesión",
+    "rescheduleDescription": "Elige un nuevo inicio al menos 24 horas antes de la sesión actual. La duración no cambia. El horario anterior se libera.",
+    "rescheduleWhen": "Nuevo inicio",
+    "rescheduleConfirm": "Reprogramar",
+    "rescheduling": "Reprogramando…",
+    "rescheduled": "Sesión reprogramada.",
+    "policyTooLate": "Esta sesión está dentro de la ventana de 24 horas, así que no se puede cancelar ni reprogramar aquí.",
+    "receipt": "Recibo",
+    "modes": {
+      "online": "En línea",
+      "in_person": "Presencial",
+      "phone": "Teléfono"
+    },
+    "statusLabel": {
+      "confirmed": "Confirmada",
+      "rescheduled": "Reprogramada",
+      "cancelled": "Cancelada",
+      "pending_payment": "Pago pendiente",
+      "completed": "Completada",
+      "no_show": "No se presentó"
+    }
+  },
+  "payments": {
+    "title": "Pagos",
+    "subtitle": "Recibos y estado de reembolso de tus sesiones.",
+    "empty": "Todavía no hay pagos.",
+    "amount": "Importe",
+    "status": "Estado",
+    "paidAt": "Pagado",
+    "receipt": "Ver recibo",
+    "refunded": "Reembolsado {amount}",
+    "session": "Sesión",
+    "statusLabel": {
+      "intent_pending": "Intención pendiente",
+      "requires_payment": "Requiere pago",
+      "succeeded": "Pagado",
+      "failed": "Fallido",
+      "refunded": "Reembolsado",
+      "refund_pending": "Reembolso pendiente"
     }
   },
   "settings": {
     "title": "Ajustes",
-    "subtitle": "Gestionar las preferencias de la organización."
+    "subtitle": "Gestiona tu perfil de miembro, idioma, tema y notificaciones.",
+    "profile": {
+      "title": "Perfil",
+      "description": "Actualiza el nombre que ven los especialistas en este Espacio.",
+      "email": "Correo",
+      "name": "Nombre",
+      "timezone": "Zona horaria",
+      "save": "Guardar",
+      "saving": "Guardando…",
+      "saved": "Perfil actualizado.",
+      "error": "No se pudo actualizar el perfil. Inténtalo de nuevo.",
+      "footerHint": "El correo se usa para iniciar sesión y no se puede cambiar aquí."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "description": "Este es tu avatar. Haz clic en la foto para subir una imagen de tus archivos.",
+      "changePhoto": "Cambiar foto de perfil",
+      "remove": "Eliminar",
+      "hint": "JPG, PNG o WebP. Máximo 2 MB.",
+      "tooLarge": "El archivo es demasiado grande. El máximo es 2 MB.",
+      "invalidType": "Tipo de archivo no compatible. Usa JPG, PNG o WebP.",
+      "uploadFailed": "La subida falló. Inténtalo de nuevo.",
+      "saveFailed": "No se pudo guardar el avatar. Inténtalo de nuevo.",
+      "removeFailed": "No se pudo eliminar el avatar. Inténtalo de nuevo.",
+      "uploaded": "Foto de perfil actualizada.",
+      "removed": "Foto de perfil eliminada."
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Elige el idioma usado en Eleva para tu cuenta.",
+      "footerHint": "Se guarda como ELEVA_LOCALE y se aplica en la próxima visita.",
+      "saved": "Preferencia de idioma actualizada.",
+      "error": "No se pudo actualizar el idioma. Inténtalo de nuevo."
+    },
+    "theme": {
+      "title": "Tema",
+      "description": "Elige claro, oscuro o el del dispositivo.",
+      "footerHint": "Se guarda como ELEVA_THEME y se comparte entre las apps de Eleva.",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema",
+      "saved": "Tema actualizado."
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "description": "Elige cómo Eleva puede contactarte. Las horas de silencio pausan los mensajes no urgentes.",
+      "footerHint": "Estas preferencias se usarán cuando empecemos a enviar notificaciones.",
+      "saved": "Preferencias de notificación guardadas.",
+      "error": "No se pudieron guardar las preferencias de notificación.",
+      "quietHours": "Horas de silencio",
+      "quietHoursHint": "Opcional. La hora de inicio y de fin son obligatorias cuando está activo.",
+      "quietStart": "Inicio",
+      "quietEnd": "Fin",
+      "enableQuietHours": "Activar horas de silencio",
+      "channel": {
+        "email": "Correo",
+        "sms": "SMS",
+        "in_app": "En la app"
+      },
+      "category": {
+        "booking": "Sesiones",
+        "reminder": "Recordatorios",
+        "payment": "Pagos",
+        "marketing": "Marketing",
+        "system": "Sistema"
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacidad",
+    "subtitle": "Consentimientos, exportación de datos y eliminación de la cuenta en este Espacio.",
+    "consents": {
+      "title": "Consentimientos",
+      "description": "Consulta lo que aceptaste y retira el marketing o el tratamiento de datos de salud cuando esté permitido.",
+      "granted": "Concedido {date}",
+      "withdrawn": "Retirado {date}",
+      "notGranted": "No concedido",
+      "version": "Versión {version}",
+      "grant": "Conceder",
+      "withdraw": "Retirar",
+      "grantedToast": "Consentimiento actualizado.",
+      "withdrawnToast": "Consentimiento retirado.",
+      "healthDataBlocked": "No puedes retirar el consentimiento de datos de salud mientras exista una sesión futura confirmada.",
+      "kinds": {
+        "terms": "Términos de uso",
+        "privacy": "Aviso de privacidad",
+        "health_data_processing": "Tratamiento de datos de salud",
+        "marketing": "Mensajes de marketing"
+      }
+    },
+    "dsar": {
+      "title": "Descargar tus datos",
+      "description": "Solicita una copia de los datos que Eleva tiene sobre ti. El archivo se prepara en zip y el enlace caduca a las 24 horas.",
+      "request": "Solicitar exportación",
+      "requesting": "Solicitando…",
+      "requested": "Exportación solicitada. Suele tardar unos minutos.",
+      "status": "Estado: {status}",
+      "download": "Descargar zip",
+      "refresh": "Comprobar estado",
+      "error": "No se pudo solicitar o cargar tu exportación.",
+      "statusLabel": {
+        "pending": "Pendiente",
+        "processing": "Preparando",
+        "ready": "Lista",
+        "expired": "Caducada",
+        "failed": "Fallida"
+      }
+    },
+    "deletion": {
+      "title": "Eliminar cuenta",
+      "description": "Programa la eliminación de esta cuenta de miembro. Las nuevas reservas se bloquean en cuanto confirmas.",
+      "ruleTitle": "Qué se borra y qué se conserva",
+      "ruleBody": "Los datos de ámbito de la cuenta se borran: tu perfil, las preferencias de notificación y los consentimientos que no están ligados a una sesión (por ejemplo, marketing). Los consentimientos de ámbito de la sesión —los que autorizaron una consulta— se desidentifican (se quitan tu nombre y tu cuenta) y se conservan durante el mínimo del historial clínico portugués, y se destruyen después. Las notas clínicas del especialista siguen la misma regla de conservar y luego destruir. Esto no se puede acortar en esta pantalla.",
+      "grace": "Hay un periodo de espera de 14 días antes de la eliminación. Puedes cancelar durante esa ventana.",
+      "confirmTitle": "¿Eliminar tu cuenta?",
+      "confirmBody": "Esto programa la eliminación. Los datos de ámbito de la cuenta se borrarán. Los consentimientos ligados a sesiones se desidentifican y se conservan durante el periodo clínico legal. Las sesiones futuras y sin pagar se cancelan. Las sesiones pagadas quedan marcadas para un reembolso posterior.",
+      "confirm": "Programar eliminación",
+      "scheduling": "Programando…",
+      "scheduled": "Eliminación de la cuenta programada para {date}.",
+      "alreadyScheduled": "La eliminación ya está programada.",
+      "cancelRequest": "Cancelar eliminación",
+      "cancelling": "Cancelando…",
+      "cancelled": "Eliminación de la cuenta cancelada. Ya puedes volver a reservar."
+    }
   },
   "errors": {
-    "unauthorized": "No tienes acceso a esta página."
+    "unauthorized": "No tienes acceso a esta página.",
+    "generic": "Algo salió mal. Inténtalo de nuevo.",
+    "validation": "Revisa el formulario e inténtalo de nuevo.",
+    "notFound": "No encontramos esa sesión.",
+    "tooLate": "Los cambios solo se permiten al menos 24 horas antes del inicio de la sesión.",
+    "invalidStatus": "Esta sesión ya no se puede cambiar.",
+    "slotTaken": "Ese horario ya no está disponible. Elige otro inicio.",
+    "notFoundSession": "Sesión no encontrada."
   }
 }

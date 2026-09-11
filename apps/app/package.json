@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@eleva/accounting": "workspace:^",
+    "@eleva/api-client": "workspace:^",
     "@eleva/audit": "workspace:^",
     "@eleva/auth": "workspace:^",
     "@eleva/billing": "workspace:^",
@@ -33,6 +34,7 @@
     "next-themes": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "sonner": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
