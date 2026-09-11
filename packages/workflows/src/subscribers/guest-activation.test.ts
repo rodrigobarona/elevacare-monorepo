@@ -157,7 +157,9 @@ describe("activateGuestBooking consent re-key", () => {
     })
 
     expect(hashGuestEmail).toHaveBeenCalledWith("ada@eleva.care")
-    expect(consentSets).toEqual([{ userId: "user-1", subjectKind: "user" }])
+    expect(consentSets).toEqual([
+      { userId: "user-1", subjectKind: "user", guestEmailHash: null },
+    ])
     expect(provisionPersonalSpace).toHaveBeenCalledWith({
       id: "user-1",
       name: "Ada",
