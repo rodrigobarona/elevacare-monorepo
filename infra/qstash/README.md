@@ -13,10 +13,11 @@ tying our deploy automation to the layout of any single app.
 
 ## Schedules registered today
 
-| Path                              | Cron           | Auth                            | Owner            |
-| --------------------------------- | -------------- | ------------------------------- | ---------------- |
-| `/workflows/audit-outbox-drainer` | `0 6,18 * * *` | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/audit`   |
-| `/workflows/stripe-stuck-events`  | `*/10 * * * *` | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing` |
+| Path                                | Cron           | Auth                            | Owner               |
+| ----------------------------------- | -------------- | ------------------------------- | ------------------- |
+| `/workflows/audit-outbox-drainer`   | `0 6,18 * * *` | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/audit`      |
+| `/workflows/stripe-stuck-events`    | `*/10 * * * *` | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
+| `/workflows/account-deletion-sweep` | `0 * * * *`    | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/compliance` |
 
 When you add a new schedule:
 

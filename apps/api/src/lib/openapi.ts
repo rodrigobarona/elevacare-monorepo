@@ -42,6 +42,13 @@ import {
   MeNotificationPreferencesResponseSchema,
   ListMeConsentsResponseSchema,
   PutMeConsentRequestSchema,
+  CancelMeBookingResponseSchema,
+  RescheduleMeBookingRequestSchema,
+  RescheduleMeBookingResponseSchema,
+  CreateDsarRequestResponseSchema,
+  DsarRequestStatusResponseSchema,
+  DeleteAccountResponseSchema,
+  CancelDeletionResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -1258,7 +1265,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "409": {
-              description: "Slot already taken",
+              description:
+                "Slot already taken, or member cannot book (deletion scheduled / banned)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "500": {
@@ -1303,6 +1311,10 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "403": {
               description: "Bot detected",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Member cannot book (deletion scheduled or banned)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "503": {
@@ -1528,6 +1540,161 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "health_data_processing still required",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/bookings/{id}/cancel": {
+        post: {
+          operationId: "cancelMeBooking",
+          summary: "Cancel a confirmed member booking",
+          description:
+            "Requires at least 24 hours before starts_at. Releases the slot and marks a succeeded payment refund_pending. Phase 6 executes the refund.",
+          tags: ["Me"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Booking cancelled",
+              content: {
+                "application/json": { schema: CancelMeBookingResponseSchema },
+              },
+            },
+            "409": {
+              description: "Too late or invalid status",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/me/bookings/{id}/reschedule": {
+        post: {
+          operationId: "rescheduleMeBooking",
+          summary: "Reschedule a confirmed member booking",
+          description:
+            "Requires at least 24 hours before the original starts_at. Moves times, releases the old slot, and sends ICS via existing helpers.",
+          tags: ["Me"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: RescheduleMeBookingRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Booking rescheduled",
+              content: {
+                "application/json": {
+                  schema: RescheduleMeBookingResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description: "Too late, invalid status, or slot taken",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/privacy/dsar": {
+        post: {
+          operationId: "createDsarRequest",
+          summary: "Request a member data export",
+          description:
+            "Creates a pending DSAR and kicks off a private-Blob zip export via QStash. The signed download URL is only returned on GET when status is ready.",
+          tags: ["Privacy"],
+          responses: {
+            "201": {
+              description: "Export requested",
+              content: {
+                "application/json": {
+                  schema: CreateDsarRequestResponseSchema,
+                },
+              },
+            },
+            "200": {
+              description: "Existing pending export reused",
+              content: {
+                "application/json": {
+                  schema: CreateDsarRequestResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/privacy/dsar/{id}": {
+        get: {
+          operationId: "getDsarRequest",
+          summary: "Get DSAR export status",
+          description:
+            "downloadUrl is included only when status is ready and the 24h signed URL has not expired.",
+          tags: ["Privacy"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "DSAR status",
+              content: {
+                "application/json": {
+                  schema: DsarRequestStatusResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/privacy/delete-account": {
+        post: {
+          operationId: "deleteAccount",
+          summary: "Schedule member account deletion",
+          description:
+            "Marks deletion_scheduled_at, cancels future bookings, and flags succeeded payments refund_pending. Stripe refunds are not executed here. 14-day grace.",
+          tags: ["Privacy"],
+          responses: {
+            "201": {
+              description: "Deletion scheduled",
+              content: {
+                "application/json": { schema: DeleteAccountResponseSchema },
+              },
+            },
+            "409": {
+              description: "Deletion already scheduled",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/privacy/cancel-deletion": {
+        post: {
+          operationId: "cancelAccountDeletion",
+          summary: "Cancel a pending account deletion",
+          description:
+            "Clears deletion_scheduled_at so the member can book again.",
+          tags: ["Privacy"],
+          responses: {
+            "200": {
+              description: "Deletion cancelled",
+              content: {
+                "application/json": { schema: CancelDeletionResponseSchema },
+              },
+            },
+            "409": {
+              description: "No pending deletion",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdErrors,

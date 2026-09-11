@@ -35,6 +35,9 @@ vi.mock("@eleva/db/context", () => {
         return fn(mockTx)
       }
     ),
+    withPlatformAdminContext: vi.fn(
+      async (fn: (tx: typeof mockTx) => Promise<unknown>) => fn(mockTx)
+    ),
   }
 })
 

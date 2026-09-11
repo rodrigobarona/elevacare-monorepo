@@ -38,9 +38,11 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0031_member_privacy")
+    expect(last?.tag).toBe("0032_dsar_processing_lease")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
+    const privacy = migrations.find((m) => m.tag === "0031_member_privacy")
+    expect(privacy?.statements.length).toBeGreaterThan(0)
     const offer = migrations.find((m) => m.tag === "0027_offer_model")
     const offerSql = offer?.statements.join("\n") ?? ""
     expect(offerSql).toContain("public.iso3166_alpha2_codes")
@@ -78,7 +80,9 @@ describe("migration journal helpers", () => {
     expect(domainSql).toContain("'processing'")
     expect(domainSql).toContain("domain_events_publisher")
     expect(domainSql).toContain("guest_activation_sent_at")
-    const sql = last?.statements.join("\n") ?? ""
+    const leaseSql = last?.statements.join("\n") ?? ""
+    expect(leaseSql).toContain("processing_started_at")
+    const sql = privacy?.statements.join("\n") ?? ""
     expect(sql).toContain("notification_preferences")
     expect(sql).toContain("dsar_requests")
     expect(sql).toContain("account_deletion_requests")

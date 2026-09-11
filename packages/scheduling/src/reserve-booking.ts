@@ -16,6 +16,7 @@ import type { Tx } from "@eleva/db/context"
 import { bookingLinks, consents } from "@eleva/db/schema"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
+import { BookingError } from "./assert-member-can-book"
 import {
   linkRecipientMatches,
   normalizeEmail,
@@ -62,6 +63,8 @@ export type ReserveBookingError =
   | "GUEST_REQUIRED"
   | "SLOT_UNAVAILABLE"
   | "SLOT_TAKEN"
+  | "ACCOUNT_DELETION_SCHEDULED"
+  | "ACCOUNT_BANNED"
   | "db_error"
 
 export type ReserveBookingResult =
@@ -253,56 +256,65 @@ export async function reserveBooking(
           ...(memberPhone ? { phone: memberPhone } : {}),
         }
       : undefined
-  const reserved = await reserveSlot(redis, {
-    eventTypeId: offer.eventTypeId,
-    expertProfileId: expert.id,
-    expertUserId: expert.userId,
-    orgId: expert.orgId,
-    startsAt: input.startsAt,
-    endsAt: input.endsAt,
-    holdToken,
-    ttlSeconds: RESERVE_TTL_SECONDS,
-    userId: input.session?.userId,
-    eventTypeModeId: offer.eventTypeModeId,
-    price: { cents: offer.priceCents, currency: offer.currency },
-    funnel: {
-      timezone: input.timezone,
-      language: input.language,
-      memberCountry: input.memberCountry,
-      bookingLinkId: offer.bookingLinkId ?? null,
-      sessionMode: offer.mode,
-      ...(funnelGuest ? { guest: funnelGuest } : {}),
-    },
-    audit: {
-      actorUserId: input.session?.userId ?? null,
-      payload: {
+
+  let reserved
+  try {
+    reserved = await reserveSlot(redis, {
+      eventTypeId: offer.eventTypeId,
+      expertProfileId: expert.id,
+      expertUserId: expert.userId,
+      orgId: expert.orgId,
+      startsAt: input.startsAt,
+      endsAt: input.endsAt,
+      holdToken,
+      ttlSeconds: RESERVE_TTL_SECONDS,
+      userId: input.session?.userId,
+      eventTypeModeId: offer.eventTypeModeId,
+      price: { cents: offer.priceCents, currency: offer.currency },
+      funnel: {
+        timezone: input.timezone,
         language: input.language,
         memberCountry: input.memberCountry,
-        timezone: input.timezone,
         bookingLinkId: offer.bookingLinkId ?? null,
-        consents: input.consents.map((grant) => ({
-          kind: grant.kind,
-          version: grant.version,
-        })),
+        sessionMode: offer.mode,
+        ...(funnelGuest ? { guest: funnelGuest } : {}),
       },
-    },
-    afterInsert: async (tx, reservationId) => {
-      if (offer.bookingLinkId) {
-        await claimBookingLink(tx, {
-          linkId: offer.bookingLinkId,
-          recipientEmail: memberEmail,
+      audit: {
+        actorUserId: input.session?.userId ?? null,
+        payload: {
+          language: input.language,
+          memberCountry: input.memberCountry,
+          timezone: input.timezone,
+          bookingLinkId: offer.bookingLinkId ?? null,
+          consents: input.consents.map((grant) => ({
+            kind: grant.kind,
+            version: grant.version,
+          })),
+        },
+      },
+      afterInsert: async (tx, reservationId) => {
+        if (offer.bookingLinkId) {
+          await claimBookingLink(tx, {
+            linkId: offer.bookingLinkId,
+            recipientEmail: memberEmail,
+          })
+        }
+        await insertFunnelConsents(tx, {
+          orgId: expert.orgId,
+          reservationId,
+          locale: input.language,
+          grants: input.consents,
+          userId: input.session?.userId,
+          guestEmail: input.session ? undefined : memberEmail,
         })
-      }
-      await insertFunnelConsents(tx, {
-        orgId: expert.orgId,
-        reservationId,
-        locale: input.language,
-        grants: input.consents,
-        userId: input.session?.userId,
-        guestEmail: input.session ? undefined : memberEmail,
-      })
-    },
-  })
+      },
+    })
+  } catch (err) {
+    if (err instanceof BookingError) {
+      return { ok: false, error: err.code }
+    }
+    throw err
+  }
 
   if (!reserved.success) {
     if (reserved.error === "link_unusable") {

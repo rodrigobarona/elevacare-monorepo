@@ -10,10 +10,16 @@ import {
   or,
   sql,
 } from "drizzle-orm"
+import { alias } from "drizzle-orm/pg-core"
 import { user } from "../schema/auth"
 import * as main from "../schema/main"
 import type { LocalizedText } from "../schema/main/shared"
-import { withPlatformAdminContext, withUserContext, type Tx } from "../context"
+import {
+  withPlatformAdminContext,
+  withOrgContext,
+  withUserContext,
+  type Tx,
+} from "../context"
 import { updateUserAvatarUrl } from "./users"
 
 const MEMBER_BOOKING_PAGE_SIZE = 20
@@ -481,6 +487,109 @@ export async function lockMemberHealthConsentInvariant(
   userId: string
 ): Promise<void> {
   await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`)
+}
+
+export type MemberBookingPolicyRow = {
+  id: string
+  orgId: string
+  status: (typeof main.bookingStatusEnum.enumValues)[number]
+  startsAt: Date
+  endsAt: Date
+  timezone: string
+  sessionMode: main.SessionMode
+  bookedLocale: string | null
+  memberEmail: string | null
+  memberName: string | null
+  guestEmail: string | null
+  guestName: string | null
+  expertUserId: string
+  expertEmail: string
+  expertName: string
+  eventTypeName: { en: string; pt?: string; es?: string }
+  paymentId: string | null
+  paymentStatus:
+    | (typeof main.bookingPaymentStatusEnum.enumValues)[number]
+    | null
+  expertProfileId: string
+  reservationId: string | null
+  eventTypeModeId: string | null
+}
+
+export async function getMemberBookingForPolicy(input: {
+  userId: string
+  bookingId: string
+  orgId: string
+}): Promise<MemberBookingPolicyRow | null> {
+  const expertOrgId = await withOrgContext(input.orgId, async (tx) => {
+    const [row] = await tx
+      .select({ orgId: main.bookings.orgId })
+      .from(main.bookings)
+      .where(
+        and(
+          eq(main.bookings.id, input.bookingId),
+          eq(main.bookings.memberUserId, input.userId),
+          or(
+            eq(main.bookings.orgId, input.orgId),
+            eq(main.bookings.counterpartyOrgId, input.orgId)
+          )
+        )
+      )
+      .limit(1)
+    return row?.orgId ?? null
+  })
+  if (!expertOrgId) return null
+
+  const expertUser = alias(user, "expert_user")
+  return withOrgContext(expertOrgId, async (tx) => {
+    const [row] = await tx
+      .select({
+        id: main.bookings.id,
+        orgId: main.bookings.orgId,
+        status: main.bookings.status,
+        startsAt: main.bookings.startsAt,
+        endsAt: main.bookings.endsAt,
+        timezone: main.bookings.timezone,
+        sessionMode: main.bookings.sessionMode,
+        bookedLocale: main.bookings.bookedLocale,
+        memberEmail: user.email,
+        memberName: user.name,
+        guestEmail: main.bookings.guestEmail,
+        guestName: main.bookings.guestName,
+        expertUserId: main.bookings.expertUserId,
+        expertEmail: expertUser.email,
+        expertName: expertUser.name,
+        eventTypeName: main.eventTypes.title,
+        paymentId: main.bookingPayments.id,
+        paymentStatus: main.bookingPayments.status,
+        expertProfileId: main.bookings.expertProfileId,
+        reservationId: main.bookings.reservationId,
+        eventTypeModeId: main.bookings.eventTypeModeId,
+      })
+      .from(main.bookings)
+      .innerJoin(
+        main.expertProfiles,
+        eq(main.expertProfiles.id, main.bookings.expertProfileId)
+      )
+      .innerJoin(
+        main.eventTypes,
+        eq(main.eventTypes.id, main.bookings.eventTypeId)
+      )
+      .innerJoin(expertUser, eq(expertUser.id, main.bookings.expertUserId))
+      .leftJoin(user, eq(user.id, main.bookings.memberUserId))
+      .leftJoin(
+        main.bookingPayments,
+        eq(main.bookingPayments.bookingId, main.bookings.id)
+      )
+      .where(
+        and(
+          eq(main.bookings.id, input.bookingId),
+          eq(main.bookings.memberUserId, input.userId),
+          eq(main.bookings.orgId, expertOrgId)
+        )
+      )
+      .limit(1)
+    return row ?? null
+  })
 }
 
 export async function memberHasConfirmedFutureBooking(

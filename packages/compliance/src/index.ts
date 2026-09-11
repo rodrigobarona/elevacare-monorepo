@@ -29,6 +29,41 @@ export {
 export {
   listDsarCollectors,
   registerDsarCollector,
+  hasDsarCollector,
   type DsarCollector,
   type DsarCollectorResult,
 } from "./dsar-collectors"
+export {
+  ensurePhase5DsarCollectors,
+  PHASE5_DSAR_COLLECTOR_IDS,
+} from "./dsar-phase5-collectors"
+export {
+  dsarExport,
+  signDsarDownloadToken,
+  verifyDsarDownloadToken,
+  buildDsarDownloadUrl,
+  DSAR_SIGNED_URL_TTL_SECONDS,
+  type DsarExportResult,
+} from "./dsar-export"
+export {
+  createDsarRequest,
+  getDsarRequestForUser,
+  getDsarRequestById,
+  markDsarExpired,
+  dsarDownloadUrlIfReady,
+  processDsarExport,
+  DSAR_PROCESSING_LEASE_MS,
+  type DsarRequestView,
+} from "./dsar-requests"
+export {
+  scheduleAccountDeletion,
+  cancelAccountDeletion,
+  sweepAccountDeletions,
+  completeSweptAccountDeletions,
+  anonymisedAccountEmail,
+  AccountDeletionConflictError,
+  AccountDeletionNotPendingError,
+  type ScheduleAccountDeletionResult,
+  type AccountDeletionSweepResult,
+  type AccountDeletionAwaitingCompletion,
+} from "./account-deletion"

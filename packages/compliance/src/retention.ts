@@ -38,7 +38,7 @@ async function pseudonymiseBookingConsentsInTx(
 /**
  * Booking-scope D-12 step: replace the member identity with an HMAC
  * retention token. Account-scope rows (`booking_id IS NULL`) are erased
- * by the sweep, not this helper. Unwired to any route in 05.1.
+ * by the sweep, not this helper.
  */
 export async function pseudonymiseBookingConsents(
   userId: string,

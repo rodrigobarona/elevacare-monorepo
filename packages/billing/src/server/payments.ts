@@ -10,7 +10,11 @@ import {
   type Tx,
 } from "@eleva/db"
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
-import { hashReservationToken } from "@eleva/scheduling"
+import {
+  hashReservationToken,
+  assertMemberCanBook,
+  BookingError,
+} from "@eleva/scheduling"
 import { stripe } from "./client"
 import { computeCommissionRate } from "./commission"
 
@@ -121,7 +125,15 @@ export type CreatePaymentIntentForReservationResult =
       bookingId: string
       publishableKey: string
     }
-  | { ok: false; error: "not_found" | "unavailable" | "db_error" }
+  | {
+      ok: false
+      error:
+        | "not_found"
+        | "unavailable"
+        | "db_error"
+        | "ACCOUNT_DELETION_SCHEDULED"
+        | "ACCOUNT_BANNED"
+    }
 
 export async function retrieveBookingPaymentIntent(
   paymentIntentId: string
@@ -192,6 +204,18 @@ export async function createPaymentIntentForReservation(
   const currency = reservation.currency
   if (!funnel || priceCents == null || !currency) {
     return { ok: false, error: "unavailable" }
+  }
+
+  const memberId = reservation.userId ?? input.sessionUserId
+  if (memberId) {
+    try {
+      await assertMemberCanBook(memberId)
+    } catch (err) {
+      if (err instanceof BookingError) {
+        return { ok: false, error: err.code }
+      }
+      throw err
+    }
   }
 
   const publishableKey = env().STRIPE_PUBLISHABLE_KEY

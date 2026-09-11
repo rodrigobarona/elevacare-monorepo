@@ -14,6 +14,7 @@ import { Client, type Schedule } from "@upstash/qstash"
 const EXPECTED_PATHS = [
   "/workflows/audit-outbox-drainer",
   "/workflows/stripe-stuck-events",
+  "/workflows/account-deletion-sweep",
 ] as const
 
 function isExpectedDestination(destination: string, path: string): boolean {

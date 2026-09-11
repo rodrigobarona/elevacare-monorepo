@@ -50,6 +50,19 @@ async function main() {
     { dryRun }
   )
 
+  await registerSchedule(
+    {
+      name: "Account deletion sweep",
+      path: "/workflows/account-deletion-sweep",
+      cron: "0 * * * *",
+      retries: 3,
+      requireBearer: true,
+      description:
+        "Hourly D-12 sweep: erase account-scope consents, pseudonymise booking-scope, catch confirm-after-mark",
+    },
+    { dryRun }
+  )
+
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
   console.log("\n[qstash:setup:all] Done.")

@@ -160,6 +160,30 @@ export async function getPrivateDocument(url: string) {
   })
 }
 
+export interface UploadPrivateBlobInput {
+  pathname: string
+  body: ArrayBuffer | Buffer | Blob
+  contentType: string
+}
+
+/**
+ * Private-store put for server-generated artifacts (DSAR zips).
+ * Unlike `uploadPrivateDocument`, this does not restrict MIME types.
+ */
+export async function uploadPrivateBlob(
+  input: UploadPrivateBlobInput
+): Promise<{ url: string; pathname: string }> {
+  const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+  const buf = await asArrayBuffer(input.body)
+  const result: PutBlobResult = await put(input.pathname, buf, {
+    access: "private",
+    contentType: input.contentType,
+    addRandomSuffix: true,
+    token: BLOB_PRIVATE_READ_WRITE_TOKEN,
+  })
+  return { url: result.url, pathname: result.pathname }
+}
+
 function validatePrivate(input: UploadPrivateDocumentInput): void {
   if (!input.name || input.name.trim().length === 0) {
     throw new UploadValidationError("missing-name", "filename required")
