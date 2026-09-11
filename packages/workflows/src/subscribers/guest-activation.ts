@@ -68,6 +68,7 @@ export async function activateGuestBooking(
         .set({
           userId: user.id,
           subjectKind: "user",
+          guestEmailHash: null,
         })
         .where(
           and(

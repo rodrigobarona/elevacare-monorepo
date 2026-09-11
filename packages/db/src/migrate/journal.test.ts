@@ -92,5 +92,8 @@ describe("migration journal helpers", () => {
     expect(sql).toContain("account_deletion_requests_completed_orphan")
     expect(sql).toContain("subject_kind = 'user'")
     expect(sql).toContain("receipt_url")
+    expect(sql).toContain("ADD COLUMN IF NOT EXISTS")
+    expect(sql).toContain("DROP CONSTRAINT IF EXISTS")
+    expect(sql).toContain('SET "guest_email_hash" = NULL')
   })
 })
