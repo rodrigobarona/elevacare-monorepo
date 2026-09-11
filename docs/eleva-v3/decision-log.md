@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-11: Phase 06.0 Stripe funds-flow spike evidence
+
+- Owner: engineering
+- Status: active
+- Review date: 2026-09-21 (finance sign-off of D-03 / D-04 / D-05 still
+  required before PR 06.1)
+- Summary: Test-mode spike committed. PT Custom receives transfers with
+  `transfers` only (`card_payments` absent). US Custom rejects that pair.
+  Platform PaymentIntent + delayed `source_transaction` transfer + two-step
+  refund/reversal + cumulative partials + dispute-on-transfer are proven.
+  The 2026-04-22 "single `/webhooks/stripe` endpoint" clause is superseded:
+  06.1/06.2 must register `/webhooks/stripe` (platform,
+  `STRIPE_WEBHOOK_SECRET`) and `/webhooks/stripe/connect` (`connect: true`,
+  `STRIPE_CONNECT_WEBHOOK_SECRET`). Same dispatcher and
+  `stripe_webhook_events` table. ADR-005 is amended to match. No Connect
+  endpoint exists yet. D-03, D-04, D-05 stay `proposed`.
+- Reference: [`spikes/06-stripe-funds-flow.md`](./spikes/06-stripe-funds-flow.md)
+
 ### 2026-09-10: Private-link credential after reserve is reservationToken
 
 - Owner: engineering
@@ -211,6 +229,7 @@ Each entry should include:
 - Status: active
 - Summary: Stripe API pinned ≥ 2023-08-16. `payment_method_types` never hardcoded for booking checkout — Dynamic Payment Methods auto-show the right set per country (PT = card + MB WAY + wallets; EU = SEPA/iDEAL/Bancontact per country). Subscription Checkout limited to `card + sepa_debit` per ADR-016 (MB WAY/Multibanco are one-time-only). Enabled methods managed in Stripe Dashboard per environment. Two accounts (staging + production). Single `/webhooks/stripe` endpoint per env handles all event types (Payment + Subscriptions + Connect + Identity) with idempotency via `stripe_webhook_events`. UX uses Embedded Checkout for SaaS purchase + Customer Portal for management per ADR-016, plus Connect/Identity Embedded Components, Payment Element for booking checkout. `appearance` API themed to Eleva tokens. CSP allows Stripe domains.
 - Superseded in part (2026-09-07): the booking-checkout method set is now fixed by D-14 (Payment Method Configuration `STRIPE_PMC_BOOKING`: `card` incl. wallets, `link`, `mb_way` only; Multibanco, SEPA Direct Debit, Klarna and every delayed-notification method off) and the launch currency by D-02 (EUR only). The "never hardcode `payment_method_types`" rule stands — the configuration decides, not a list in code.
+- Superseded in part (2026-09-11): the "single `/webhooks/stripe` endpoint" clause is replaced by the two-endpoint contract in the Phase 06.0 entry (platform + `connect: true`). One dispatcher and one idempotency table remain.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md), ADR-005, ADR-016
 
 ### 2026-04-22: Multibanco reference vouchers — excluded
@@ -564,7 +583,7 @@ Each entry should include:
 ### D-05 (2026-09-07): Connect capability model — `transfers` only, Identity behind a flag
 
 - Owner: finance + legal
-- Status: proposed (confirm with Stripe/legal in PR 06.0, sign before PR 06.1)
+- Status: proposed (06.0 spike confirms PT transfers-only; sign before PR 06.1)
 - Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: with separate charges and transfers the connected account only receives transfers, so
   request the `transfers` capability only — no `card_payments`; `charges_enabled` never gates

@@ -1,0 +1,121 @@
+{
+  "generatedAt": "2026-09-11T23:20:06.394Z",
+  "environment": "staging-test-mode",
+  "livemode": false,
+  "pmcConfigured": true,
+  "checks": [
+    {
+      "id": "01-express-transfers-only",
+      "title": "Express account with transfers capability only (D-05)",
+      "status": "proven",
+      "absorb": "Stripe accepted Express (controller) without requesting card_payments. capabilities.transfers=inactive, card_payments=absent, details_submitted=false, payouts_enabled=false.",
+      "ids": {
+        "accountId": "acct_1UEdjmK5qSgquuFJ",
+        "transfers": "inactive",
+        "card_payments": "absent"
+      }
+    },
+    {
+      "id": "01b-pt-custom-transfers-only",
+      "title": "PT Custom transfers-only account becomes receivable without card_payments",
+      "status": "proven",
+      "absorb": "PT Custom with transfers only reached transfers=active and payouts_enabled=true. card_payments=absent (D-05 holds for PT). US Custom rejected transfers-only in a prior probe (requires card_payments).",
+      "ids": {
+        "accountId": "acct_1UEdjoGcNaSZChKB",
+        "transfers": "active",
+        "card_payments": "absent",
+        "payoutsEnabled": "true"
+      }
+    },
+    {
+      "id": "02-platform-payment-intent",
+      "title": "Platform PaymentIntent with payment_method_configuration (no transfer_data)",
+      "status": "proven",
+      "absorb": "Charged 100.00 EUR on the platform. status=succeeded, pmc=pmc_1UDsgeGd5f3064kZkzV7YhTQ, processing_fee_cents=340 (retrieved from txn_3UEdjtGd5f3064kZ11x6AAgq after the charge settled).",
+      "ids": {
+        "paymentIntentId": "pi_3UEdjtGd5f3064kZ1rv4oO70",
+        "chargeId": "ch_3UEdjtGd5f3064kZ13fCLZ3e",
+        "transferGroup": "spike-06-0-1789168813225",
+        "processingFeeCents": "340",
+        "balanceTransactionId": "txn_3UEdjtGd5f3064kZ11x6AAgq"
+      }
+    },
+    {
+      "id": "03-delayed-transfer",
+      "title": "Delayed transfer with source_transaction",
+      "status": "proven",
+      "absorb": "Transferred 85.00 EUR to acct_1UEdjoGcNaSZChKB using source_transaction=ch_3UEdjtGd5f3064kZ13fCLZ3e.",
+      "ids": {
+        "transferId": "tr_3UEdjtGd5f3064kZ1BzJUIhN",
+        "destination": "acct_1UEdjoGcNaSZChKB"
+      }
+    },
+    {
+      "id": "04-full-refund-reversal",
+      "title": "Full refund then transfers.createReversal (two operations)",
+      "status": "proven",
+      "absorb": "Two Stripe operations: refunds.create succeeded re_3UEdjvGd5f3064kZ1lHGYnpZ, then transfers.createReversal trr_1UEdjyGd5f3064kZoh6WSckP amount=8500. reverse_transfer was not used.",
+      "ids": {
+        "paymentIntentId": "pi_3UEdjvGd5f3064kZ1e7Nc4qU",
+        "refundId": "re_3UEdjvGd5f3064kZ1lHGYnpZ",
+        "transferId": "tr_3UEdjvGd5f3064kZ1tptfdOF",
+        "reversalId": "trr_1UEdjyGd5f3064kZoh6WSckP"
+      }
+    },
+    {
+      "id": "05-partial-refund-reversal",
+      "title": "Partial refunds reverse a cumulative share of the transfer",
+      "status": "proven",
+      "absorb": "33.33+33.33+33.34 refunds reversed 2833+2833+2834=8500 of 85.00 transfer.",
+      "ids": {
+        "paymentIntentId": "pi_3UEdjzGd5f3064kZ1fLAHInn",
+        "transferId": "tr_3UEdjzGd5f3064kZ1i3YkCa7",
+        "reversedCents": "8500"
+      }
+    },
+    {
+      "id": "06-reversal-insufficient-balance",
+      "title": "Reversal when connected balance is insufficient",
+      "status": "unproven",
+      "absorb": "A follow-up 85.00 transfer after earlier spike charges returned Stripe balance_insufficient on the platform available balance (same error class 06.2 retries). Connected-account drain-then-reverse was not reached on this run because the platform test balance was exhausted.",
+      "error": "You have insufficient funds in your Stripe account for this transfer. Your card balance is too low.  You can use the /v1/balance endpoint to view your Stripe balance (for more details, see stripe.com/docs/api#balance).",
+      "ids": {
+        "stripeCode": "balance_insufficient"
+      }
+    },
+    {
+      "id": "07-dispute",
+      "title": "Dispute created on a transferred charge",
+      "status": "proven",
+      "absorb": "pm_card_createDispute charged and transferred. charge.disputed=true, dispute=du_1UEdkBGd5f3064kZqchy6bH3.",
+      "ids": {
+        "paymentIntentId": "pi_3UEdkBGd5f3064kZ1YPyubdo",
+        "chargeId": "ch_3UEdkBGd5f3064kZ1ujlOg9a",
+        "disputeId": "du_1UEdkBGd5f3064kZqchy6bH3"
+      }
+    },
+    {
+      "id": "08-webhook-endpoints",
+      "title": "Platform vs Connect webhook endpoints",
+      "status": "proven",
+      "absorb": "Listed 1 endpoints: 1 platform, 0 connect:true. 06.1/06.2 must manage two endpoints (STRIPE_WEBHOOK_SECRET / STRIPE_CONNECT_WEBHOOK_SECRET).",
+      "ids": {
+        "platformCount": "1",
+        "connectCount": "0",
+        "platformUrls": "https://api.eleva.care/webhooks/stripe",
+        "connectUrls": ""
+      }
+    },
+    {
+      "id": "09-clinic-zero-percent",
+      "title": "Clinic 0% booking: processing fee deducted from transfer",
+      "status": "proven",
+      "absorb": "Working D-04 clinic row: commission 0 bps, feeBearer=clinic, expertTransfer = gross − processingFee = 10000 − 340 = 9660 cents. Marketplace row stays expertTransfer=8500 with Eleva absorbing the 3.40 EUR fee.",
+      "ids": {
+        "processingFeeCents": "340",
+        "clinicExpertTransferCents": "9660",
+        "marketplaceExpertTransferCents": "8500"
+      }
+    }
+  ]
+}
