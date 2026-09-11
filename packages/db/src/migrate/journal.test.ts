@@ -89,6 +89,7 @@ describe("migration journal helpers", () => {
     expect(sql).toContain("owner_user_visible")
     expect(sql).toContain("dsar_requests_owner_read")
     expect(sql).toContain("dsar_requests_admin_update")
+    expect(sql).toContain("account_deletion_requests_completed_orphan")
     expect(sql).toContain("subject_kind = 'user'")
     expect(sql).toContain("receipt_url")
   })

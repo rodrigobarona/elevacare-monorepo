@@ -134,43 +134,43 @@ be expressed. This is still the same seven classes — a split predicate, not an
 
 ### Current table assignments
 
-| Table                       | Class                                         |
-| --------------------------- | --------------------------------------------- |
-| `organizations`             | tenant-owned (`id`)                           |
-| `memberships`               | tenant-owned                                  |
-| `expert_profiles`           | tenant-owned                                  |
-| `expert_listings`           | public-read                                   |
-| `clinic_profiles`           | public-read                                   |
-| `expert_integrations`       | tenant-owned                                  |
-| `schedules`                 | tenant-owned                                  |
-| `availability_rules`        | tenant-owned                                  |
-| `date_overrides`            | tenant-owned                                  |
-| `event_types`               | tenant-owned                                  |
-| `event_type_modes`          | tenant-owned                                  |
-| `booking_links`             | tenant-owned                                  |
-| `calendar_feed_tokens`      | tenant-owned                                  |
-| `public_handles`            | staff-only writes + public-read SELECT        |
-| `expert_practice_locations` | tenant-owned                                  |
-| `event_locations`           | tenant-owned                                  |
-| `calendar_busy_sources`     | tenant-owned                                  |
-| `calendar_destinations`     | tenant-owned                                  |
-| `slot_reservations`         | tenant-owned                                  |
-| `bookings`                  | dual-organization                             |
-| `booking_payments`          | tenant-owned                                  |
-| `consents`                  | tenant-owned                                  |
-| `sessions`                  | participant-visible                           |
-| `billing_customers`         | tenant-owned                                  |
-| `billing_subscriptions`     | tenant-owned                                  |
-| `audit_outbox`              | service-only                                  |
-| `domain_events_outbox`      | service-only                                  |
-| `domain_event_deliveries`   | service-only                                  |
-| `stripe_webhook_events`     | service-only                                  |
-| `users`                     | owner-user-visible                            |
-| `notification_preferences`  | owner-user-visible                            |
-| `dsar_requests`             | owner-user-visible SELECT + staff-only writes |
-| `account_deletion_requests` | owner-user-visible SELECT + staff-only writes |
-| `expert_categories`         | public-read                                   |
-| `audit_events` (audit DB)   | tenant-owned SELECT + service-only INSERT     |
+| Table                       | Class                                                       |
+| --------------------------- | ----------------------------------------------------------- |
+| `organizations`             | tenant-owned (`id`)                                         |
+| `memberships`               | tenant-owned                                                |
+| `expert_profiles`           | tenant-owned                                                |
+| `expert_listings`           | public-read                                                 |
+| `clinic_profiles`           | public-read                                                 |
+| `expert_integrations`       | tenant-owned                                                |
+| `schedules`                 | tenant-owned                                                |
+| `availability_rules`        | tenant-owned                                                |
+| `date_overrides`            | tenant-owned                                                |
+| `event_types`               | tenant-owned                                                |
+| `event_type_modes`          | tenant-owned                                                |
+| `booking_links`             | tenant-owned                                                |
+| `calendar_feed_tokens`      | tenant-owned                                                |
+| `public_handles`            | staff-only writes + public-read SELECT                      |
+| `expert_practice_locations` | tenant-owned                                                |
+| `event_locations`           | tenant-owned                                                |
+| `calendar_busy_sources`     | tenant-owned                                                |
+| `calendar_destinations`     | tenant-owned                                                |
+| `slot_reservations`         | tenant-owned                                                |
+| `bookings`                  | dual-organization                                           |
+| `booking_payments`          | tenant-owned                                                |
+| `consents`                  | tenant-owned                                                |
+| `sessions`                  | participant-visible                                         |
+| `billing_customers`         | tenant-owned                                                |
+| `billing_subscriptions`     | tenant-owned                                                |
+| `audit_outbox`              | service-only                                                |
+| `domain_events_outbox`      | service-only                                                |
+| `domain_event_deliveries`   | service-only                                                |
+| `stripe_webhook_events`     | service-only                                                |
+| `users`                     | owner-user-visible                                          |
+| `notification_preferences`  | owner-user-visible                                          |
+| `dsar_requests`             | owner-user-visible SELECT/INSERT + staff-only UPDATE/DELETE |
+| `account_deletion_requests` | owner-user-visible SELECT/INSERT + staff-only UPDATE/DELETE |
+| `expert_categories`         | public-read                                                 |
+| `audit_events` (audit DB)   | tenant-owned SELECT + service-only INSERT                   |
 
 Classes with no current un-split table use a synthetic `_rls_fixture_<class>` in the
 Phase 1.2 suite. `owner-user-visible` is proven on `notification_preferences`. Future

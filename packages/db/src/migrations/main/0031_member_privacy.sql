@@ -22,8 +22,18 @@ ALTER TABLE "consents" DROP CONSTRAINT "consents_subject";
 --> statement-breakpoint
 ALTER TABLE "consents" ADD CONSTRAINT "consents_subject"
   CHECK (
-    (subject_kind = 'user' AND user_id IS NOT NULL)
-    OR (subject_kind = 'guest' AND guest_email_hash IS NOT NULL)
+    (
+      subject_kind = 'user'
+      AND user_id IS NOT NULL
+      AND guest_email_hash IS NULL
+      AND subject_pseudonym IS NULL
+    )
+    OR (
+      subject_kind = 'guest'
+      AND user_id IS NULL
+      AND guest_email_hash IS NOT NULL
+      AND subject_pseudonym IS NULL
+    )
     OR (
       subject_kind = 'user'
       AND user_id IS NULL
@@ -131,10 +141,12 @@ CREATE POLICY "dsar_requests_admin_delete"
 --> statement-breakpoint
 CREATE TABLE "account_deletion_requests" (
   "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
-  "user_id" uuid NOT NULL REFERENCES "auth"."user"("id") ON DELETE CASCADE,
+  "user_id" uuid REFERENCES "auth"."user"("id") ON DELETE SET NULL,
   "requested_at" timestamp with time zone DEFAULT now() NOT NULL,
   "scheduled_for" timestamp with time zone NOT NULL,
-  "status" "account_deletion_request_status" DEFAULT 'pending' NOT NULL
+  "status" "account_deletion_request_status" DEFAULT 'pending' NOT NULL,
+  CONSTRAINT "account_deletion_requests_completed_orphan"
+    CHECK (user_id IS NOT NULL OR status = 'completed')
 );
 --> statement-breakpoint
 CREATE INDEX "account_deletion_requests_user_idx"

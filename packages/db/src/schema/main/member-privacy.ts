@@ -157,9 +157,7 @@ export const accountDeletionRequests = pgTable(
   "account_deletion_requests",
   {
     id: pkColumn(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").references(() => user.id, { onDelete: "set null" }),
     requestedAt: timestamp("requested_at", {
       withTimezone: true,
       mode: "date",
@@ -176,6 +174,10 @@ export const accountDeletionRequests = pgTable(
   },
   (t) => ({
     userIdx: index("account_deletion_requests_user_idx").on(t.userId),
+    completedOrphanChk: check(
+      "account_deletion_requests_completed_orphan",
+      sql`user_id IS NOT NULL OR status = 'completed'`
+    ),
     pendingUserIdx: uniqueIndex("account_deletion_requests_pending_user_idx")
       .on(t.userId)
       .where(sql`status = 'pending'`),

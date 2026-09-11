@@ -494,7 +494,7 @@ export const consents = pgTable(
       .where(sql`guest_email_hash IS NOT NULL AND withdrawn_at IS NULL`),
     subjectChk: check(
       "consents_subject",
-      sql`(subject_kind = 'user' AND user_id IS NOT NULL) OR (subject_kind = 'guest' AND guest_email_hash IS NOT NULL) OR (subject_kind = 'user' AND user_id IS NULL AND guest_email_hash IS NULL AND subject_pseudonym IS NOT NULL)`
+      sql`(subject_kind = 'user' AND user_id IS NOT NULL AND guest_email_hash IS NULL AND subject_pseudonym IS NULL) OR (subject_kind = 'guest' AND user_id IS NULL AND guest_email_hash IS NOT NULL AND subject_pseudonym IS NULL) OR (subject_kind = 'user' AND user_id IS NULL AND guest_email_hash IS NULL AND subject_pseudonym IS NOT NULL)`
     ),
     tenantPolicy: pgPolicy("consents_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

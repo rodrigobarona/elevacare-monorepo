@@ -21,16 +21,18 @@ export type RlsPolicyClass = (typeof RLS_POLICY_CLASSES)[number]
 
 export type RlsTableAssignment = {
   table: string
-  /** INSERT / WITH CHECK class. Also the SELECT class unless `selectClass` is set. */
+  /** UPDATE / DELETE (and INSERT unless `insertClass` is set). */
   class: RlsPolicyClass
   /**
    * SELECT / USING class when it differs from writes. Splits today:
    * `audit_events` (tenant-owned reads, service-only inserts),
    * `public_handles` (public-read SELECT, staff-only writes), and
-   * `dsar_requests` / `account_deletion_requests` (owner-user-visible
-   * SELECT, staff-only writes). Not an eighth class.
+   * `dsar_requests` / `account_deletion_requests` (owner SELECT +
+   * owner pending INSERT, staff-only UPDATE/DELETE).
    */
   selectClass?: RlsPolicyClass
+  /** INSERT / WITH CHECK class when it differs from `class`. */
+  insertClass?: RlsPolicyClass
 }
 
 /** Current table → class map. Keep in sync with schema-and-migration-rules.md. */
@@ -64,11 +66,13 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
     table: "dsar_requests",
     class: "staff-only",
     selectClass: "owner-user-visible",
+    insertClass: "owner-user-visible",
   },
   {
     table: "account_deletion_requests",
     class: "staff-only",
     selectClass: "owner-user-visible",
+    insertClass: "owner-user-visible",
   },
   { table: "sessions", class: "participant-visible" },
   { table: "billing_customers", class: "tenant-owned" },

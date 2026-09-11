@@ -129,7 +129,7 @@ Use this document to answer:
 - Data type: member-requested zip of their own exportable records
 - Sensitivity: personal; private Blob only (`BLOB_PRIVATE_READ_WRITE_TOKEN`)
 - Export: JSON + CSV zip; 10-minute target; signed URL expires 24h
-- Deletion: zip expires with the signed URL (`dsar_requests.status` → `expired`)
+- Deletion: the private Blob object is deleted when `dsar_requests.status` → `expired` (Phase 5.3 expiry job). Signed URL expiry is not enough — the zip must be removed from the private store.
 - Audit access: yes (`dsar_request` requested / ready / expired / failed)
 
 ### Consent and visibility records

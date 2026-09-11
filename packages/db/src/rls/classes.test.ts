@@ -80,6 +80,9 @@ describe("RLS class taxonomy", () => {
       if (row.selectClass) {
         expect(allowed.has(row.selectClass)).toBe(true)
       }
+      if (row.insertClass) {
+        expect(allowed.has(row.insertClass)).toBe(true)
+      }
     }
   })
 
@@ -123,5 +126,14 @@ describe("RLS class taxonomy", () => {
     expect(classPredicateSql("service-only", "audit_outbox")).toContain(
       "stripe_webhook"
     )
+  })
+
+  it("models DSAR and deletion as owner SELECT/INSERT and staff writes", () => {
+    for (const table of ["dsar_requests", "account_deletion_requests"]) {
+      const row = RLS_TABLE_ASSIGNMENTS.find((item) => item.table === table)
+      expect(row?.selectClass).toBe("owner-user-visible")
+      expect(row?.insertClass).toBe("owner-user-visible")
+      expect(row?.class).toBe("staff-only")
+    }
   })
 })
