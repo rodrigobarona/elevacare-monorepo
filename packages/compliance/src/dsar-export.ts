@@ -20,13 +20,16 @@ function csvBytes(csv: string): Uint8Array {
   return new TextEncoder().encode(csv.endsWith("\n") ? csv : `${csv}\n`)
 }
 
-export async function dsarExport(userId: string): Promise<DsarExportResult> {
+export async function dsarExport(
+  userId: string,
+  orgId?: string
+): Promise<DsarExportResult> {
   ensurePhase5DsarCollectors()
   const collectors = listDsarCollectors()
   const entries: { name: string; data: Uint8Array }[] = []
 
   for (const collector of collectors) {
-    const result = await collector.collect(userId)
+    const result = await collector.collect(userId, orgId)
     const stem = result.filename.replace(/\.(json|csv)$/i, "")
     entries.push({ name: `${stem}.json`, data: jsonBytes(result.json) })
     if (result.csv != null) {

@@ -201,7 +201,8 @@ export const slotReservations = pgTable(
 /**
  * Customer-facing commercial commitment tied to a specific slot and
  * event type. org_id = expert's org. Member access via application-
- * layer queries using withPlatformAdminContext + member_user_id filter.
+ * layer queries using withOrgContext(member Space) + member_user_id
+ * and counterparty_org_id (expert joins run in the expert org).
  */
 export const bookings = pgTable(
   "bookings",

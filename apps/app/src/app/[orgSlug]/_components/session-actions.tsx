@@ -138,6 +138,7 @@ export function SessionActions({
           variant="destructive"
           isDisabled={!mutable}
           onPress={() => setCancelOpen(true)}
+          data-testid="member-cancel-session"
         >
           {t("cancel")}
         </Button>
@@ -158,6 +159,7 @@ export function SessionActions({
             variant="destructive"
             isDisabled={pending}
             onPress={handleCancel}
+            data-testid="member-cancel-confirm"
           >
             {pending ? t("cancelling") : t("cancelConfirm")}
           </Button>

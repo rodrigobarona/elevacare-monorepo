@@ -69,10 +69,10 @@ before any re-send) — see execution-plan Phase 8.
 
 Responsibilities (`{ userId }` mode):
 
-- resolve user preferences (`notification_preferences(user_id, kind, email, sms, in_app, push, quiet_hours_tz, quiet_hours)`)
+- resolve user preferences (`notification_preferences` unique on `(user_id, channel, category)`; see Preference Model)
 - resolve locale + timezone
 - render React Email template per channel
-- fan out to enabled channels in order: in-app (always), email, SMS, push
+- fan out to channels whose `(user_id, channel, category).enabled` flag is true, in order: in-app, email, SMS, push. Required `payment` / `system` categories ignore a disabled flag at send time.
 
 `{ email, locale? }` mode (recipient without an account — invitations to unknown addresses, guest
 booking confirmations before activation) is the explicit exception: no preferences lookup, no
@@ -178,11 +178,11 @@ Lane 1 only, opt-in, quiet-hours respected:
 - cancellation
 - payment failed (urgent)
 
-Preference model requires explicit SMS consent per kind.
+Preference model requires explicit SMS consent per category (`(user_id, channel, category)`).
 
 ### In-app (Neon-backed inbox)
 
-Lane 1 always fans out here (regardless of email/SMS preferences):
+Lane 1 fans out here when `in_app.enabled` is true for that category (required `payment` / `system` categories still send):
 
 - all dashboard alerts
 - expert follow-up tasks
@@ -232,15 +232,30 @@ Initial build supports at minimum:
 
 ## Preference Model
 
-Table: `notification_preferences(user_id, kind, email, sms, in_app, push, quiet_hours_tz, quiet_hours_start, quiet_hours_end)`.
+Shipped in Phase 5 (`notification_preferences`). Phase 8 sending consumes this table; this phase only stores it.
+
+Table: unique `(user_id, channel, category)`.
+
+| Column                                  | Values                                                                              |
+| --------------------------------------- | ----------------------------------------------------------------------------------- |
+| `channel`                               | `email` \| `sms` \| `in_app` (Expo `push` is a later channel, not in this enum yet) |
+| `category`                              | `booking` \| `reminder` \| `payment` \| `marketing` \| `system`                     |
+| `enabled`                               | boolean                                                                             |
+| `quiet_hours_start` / `quiet_hours_end` | `HH:MM` (Postgres `time`) or null                                                   |
+| `timezone`                              | IANA tz, copied from the member profile when saving                                 |
+
+API: `GET /me` returns the rows; `PUT /me/notification-preferences` upserts the matrix. Both require session/bearer and `RATE_LIMITS.authenticated`.
 
 Rules:
 
-- transactional notifications that are operationally required (payment_failed, stripe_account_capability_changed) cannot be turned off
-- marketing preferences (`marketing_consent`) are a separate column on the user — not part of per-kind preferences
-- SMS consent is explicit (opt-in) per-kind; default off
-- quiet hours apply to SMS and push; email and in-app always deliver immediately
-- preferences stored with timezone; quiet-hours evaluated in user's TZ
+- Member-facing product copy uses **members** and personal **Spaces**, not patients or workspaces.
+- SMS is explicit opt-in; UI default is off.
+- Marketing is explicit opt-in; UI default is off. Lane 2 still also requires `marketing` consent (`PUT /me/consents`); withdrawing marketing consent is immediate.
+- Transactional categories that are operationally required (`payment` / `system` equivalents of payment_failed, `stripe_account_capability_changed`) cannot be turned off at send time in Phase 8 — the matrix still stores the member's choice. This applies to every channel, including `in_app.enabled`. Booking, reminder, and marketing use the stored `enabled` flag at send time, including in-app.
+- Quiet hours are stored in the member's timezone. Phase 8 evaluates them in that TZ. Quiet hours apply to SMS (and later push); email and in-app still deliver immediately when the category is enabled (or required).
+- Guest booking confirmation before activation is the explicit exception: no preferences lookup (see Lane 1 `{ email }` mode).
+
+`apps/app` `/[orgSlug]/settings` is the member editor for this matrix. Playwright `e2e/member.spec.ts` persists one cell (email × marketing) and asserts `GET /me`.
 
 ## Package Boundaries
 

@@ -739,6 +739,31 @@ payouts_enabled && capabilities.transfers = active`. Stripe Identity stays imple
 - Reference: [`schema-and-migration-rules.md`](./schema-and-migration-rules.md),
   ADR-003, [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md)
 
+### D-17 (2026-09-11): Phase 5 member contracts (working pre-launch)
+
+- Owner: platform
+- Status: active — working pre-launch record for Phase 5. Not a DPO/legal
+  production sign-off.
+- Review date: 2026-09-25 (revisit with D-12 before go-live)
+- Summary: Member HTTP for cancel, reschedule, DSAR, and account deletion
+  shipped in Phase 5 (`POST /me/bookings/{id}/cancel`,
+  `POST /me/bookings/{id}/reschedule`, `/privacy/dsar*`,
+  `/privacy/delete-account`). Phase 6 executes Stripe refunds for
+  `refund_pending` payments; do not attribute cancel/reschedule HTTP to
+  Phase 6. DSAR kickoff is `after()` + QStash with a localhost inline
+  fallback, as locked in `execution-plan/phases/05-member-app.md`. ADR-007
+  still assigns durable `dsarExport` to Vercel Workflows; that migration is
+  deferred, not done in Phase 5. Member DSAR writes a private-Blob zip
+  (`uploadPrivateBlob`), HMAC-signs a 24h download URL, marks `failed` on
+  upload errors, and expires ready rows after the TTL. Notification
+  preferences are the `(user_id, channel, category)` matrix (not the former
+  per-kind schema); Phase 8 sending consumes it. `GET /me/bookings` reads
+  under `withOrgContext(session.orgId)` plus `member_user_id`.
+- Reference: [`api-contract-spec.md`](./api-contract-spec.md),
+  [`compliance-data-governance.md`](./compliance-data-governance.md),
+  [`notifications-spec.md`](./notifications-spec.md), ADR-007,
+  [`execution-plan/phases/05-member-app.md`](./execution-plan/phases/05-member-app.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

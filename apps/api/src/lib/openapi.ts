@@ -1444,6 +1444,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         get: {
           operationId: "listMeBookings",
           summary: "List the authenticated member's bookings",
+          description:
+            "Reads via withOrgContext(session.orgId) plus member_user_id. Expert and event-type joins run in the expert org.",
           tags: ["Me"],
           requestParams: { query: ListMeBookingsQuerySchema },
           responses: {

@@ -175,6 +175,7 @@ export function SlotPicker({
               <Button
                 key={slot.start}
                 data-testid="booking-slot-time"
+                data-start={slot.start}
                 variant={selectedStart === slot.start ? "default" : "outline"}
                 onPress={() => onSelect(slot)}
               >

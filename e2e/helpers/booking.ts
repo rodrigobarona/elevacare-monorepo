@@ -1,4 +1,4 @@
-import { expect, type Frame, type Page } from "@playwright/test"
+import { expect, type Frame, type Locator, type Page } from "@playwright/test"
 
 export const apiUrl = process.env.E2E_API_URL ?? "http://127.0.0.1:3002"
 
@@ -6,7 +6,10 @@ export function uniqueGuestEmail(prefix = "booking"): string {
   return `${prefix}.${Date.now()}.${Math.random().toString(36).slice(2, 8)}@example.com`
 }
 
-export async function walkFunnelToDetails(page: Page): Promise<void> {
+export async function walkFunnelToDetails(
+  page: Page,
+  options?: { minStart?: Date }
+): Promise<void> {
   const continueMeet = page.getByTestId("booking-continue-meet")
   const whenHeading = page.getByTestId("booking-when-heading")
   await expect(continueMeet.or(whenHeading)).toBeVisible({ timeout: 15_000 })
@@ -29,15 +32,51 @@ export async function walkFunnelToDetails(page: Page): Promise<void> {
 
   const picker = page.locator("[data-slot='slot-picker']")
   await expect(picker).toBeVisible()
-  const dayWithSlots = picker.getByTestId("booking-slot-day")
-  await expect(dayWithSlots.first()).toBeVisible({ timeout: 15_000 })
-  await dayWithSlots.last().click()
+  if (options?.minStart) {
+    await selectSlotOnOrAfter(page, picker, options.minStart)
+  } else {
+    const dayWithSlots = picker.getByTestId("booking-slot-day")
+    await expect(dayWithSlots.first()).toBeVisible({ timeout: 15_000 })
+    await dayWithSlots.last().click()
 
-  const time = picker.getByTestId("booking-slot-time")
-  await expect(time.first()).toBeVisible({ timeout: 10_000 })
-  await time.first().click()
+    const time = picker.getByTestId("booking-slot-time")
+    await expect(time.first()).toBeVisible({ timeout: 10_000 })
+    await time.first().click()
+  }
   await page.getByTestId("booking-continue-when").click()
   await expect(page.getByTestId("booking-guest-name")).toBeVisible()
+}
+
+async function selectSlotOnOrAfter(
+  page: Page,
+  picker: Locator,
+  minStart: Date
+): Promise<void> {
+  const minMs = minStart.getTime()
+  for (let month = 0; month < 4; month++) {
+    const days = picker.getByTestId("booking-slot-day")
+    await expect(days.first()).toBeVisible({ timeout: 15_000 })
+    const dayCount = await days.count()
+    for (let i = dayCount - 1; i >= 0; i--) {
+      await days.nth(i).click()
+      const times = picker.getByTestId("booking-slot-time")
+      await expect(times.first()).toBeVisible({ timeout: 10_000 })
+      const timeCount = await times.count()
+      for (let t = 0; t < timeCount; t++) {
+        const start = await times.nth(t).getAttribute("data-start")
+        if (start && Date.parse(start) >= minMs) {
+          await times.nth(t).click()
+          return
+        }
+      }
+    }
+    if (month < 3) {
+      await page.getByTestId("booking-slot-next").click()
+    }
+  }
+  throw new Error(
+    `no slot at or after ${minStart.toISOString()} — seeded fisiomota schedule may be inside the 24h cancel window`
+  )
 }
 
 export async function fillGuestAndConsents(

@@ -5,6 +5,7 @@
       "passThroughEnv": [
         "E2E_AUTH_BYPASS_TOKEN",
         "E2E_AUTH_CAPTURE",
+        "E2E_MOCK_PRIVATE_BLOB",
         "E2E_ALLOW_DB_WRITES"
       ]
     }

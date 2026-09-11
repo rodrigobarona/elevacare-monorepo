@@ -380,7 +380,11 @@ export function SettingsForm({
                       {t(`notifications.category.${category}`)}
                     </th>
                     {CHANNELS.map((channel) => (
-                      <td key={channel} className="px-2 py-2">
+                      <td
+                        key={channel}
+                        className="px-2 py-2"
+                        data-testid={`notify-${channel}-${category}`}
+                      >
                         <CheckboxField
                           label={t(`notifications.channel.${channel}`)}
                           labelClassName="sr-only"
@@ -448,6 +452,7 @@ export function SettingsForm({
               size="sm"
               isDisabled={notifyPending}
               onPress={saveNotifications}
+              data-testid="member-notifications-save"
             >
               {notifyPending ? t("profile.saving") : t("profile.save")}
             </Button>

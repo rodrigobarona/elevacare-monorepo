@@ -33,6 +33,55 @@ const ALLOWED_DOC_MIME = new Set([
 
 const MAX_DOC_BYTES = 10 * 1024 * 1024 // 10MB
 
+const e2ePrivateBlobs = new Map<string, { body: Buffer; contentType: string }>()
+
+function e2ePrivateBlobMockEnabled(): boolean {
+  if (process.env.NODE_ENV === "production") return false
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  ) {
+    return false
+  }
+  return (
+    process.env.E2E_MOCK_PRIVATE_BLOB === "1" ||
+    process.env.E2E_AUTH_CAPTURE === "1"
+  )
+}
+
+function e2ePrivateBlobPathname(urlOrPath: string): string {
+  return urlOrPath.replace(/^e2e-private:\/\//, "").replace(/^\/+/, "")
+}
+
+function e2ePrivateBlobUrl(pathname: string): string {
+  return `e2e-private://${e2ePrivateBlobPathname(pathname)}`
+}
+
+function lookupE2ePrivateBlob(urlOrPath: string) {
+  const pathname = e2ePrivateBlobPathname(urlOrPath)
+  return (
+    e2ePrivateBlobs.get(urlOrPath) ??
+    e2ePrivateBlobs.get(pathname) ??
+    e2ePrivateBlobs.get(e2ePrivateBlobUrl(pathname))
+  )
+}
+
+function deleteE2ePrivateBlob(urlOrPath: string): void {
+  const pathname = e2ePrivateBlobPathname(urlOrPath)
+  e2ePrivateBlobs.delete(urlOrPath)
+  e2ePrivateBlobs.delete(pathname)
+  e2ePrivateBlobs.delete(e2ePrivateBlobUrl(pathname))
+}
+
+function bufferToStream(buf: Buffer): ReadableStream<Uint8Array> {
+  return new ReadableStream({
+    start(controller) {
+      controller.enqueue(new Uint8Array(buf))
+      controller.close()
+    },
+  })
+}
+
 export class UploadValidationError extends Error {
   readonly code:
     | "mime-not-allowed"
@@ -143,21 +192,38 @@ export async function uploadPrivateDocument(
 }
 
 export async function deletePrivateDocument(url: string): Promise<void> {
+  if (e2ePrivateBlobMockEnabled()) {
+    deleteE2ePrivateBlob(url)
+    return
+  }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
   await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
 }
+
+export type PrivateDocumentResult = {
+  stream: ReadableStream<Uint8Array>
+} | null
 
 /**
  * Stream a private blob for an authorized user. Returns null if
  * the blob no longer exists. The caller (an API route) is responsible
  * for auth checks before calling this.
  */
-export async function getPrivateDocument(url: string) {
+export async function getPrivateDocument(
+  url: string
+): Promise<PrivateDocumentResult> {
+  if (e2ePrivateBlobMockEnabled()) {
+    const stored = lookupE2ePrivateBlob(url)
+    if (!stored) return null
+    return { stream: bufferToStream(stored.body) }
+  }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
-  return get(url, {
+  const result = await get(url, {
     access: "private",
     token: BLOB_PRIVATE_READ_WRITE_TOKEN,
   })
+  if (!result?.stream) return null
+  return { stream: result.stream as ReadableStream<Uint8Array> }
 }
 
 export interface UploadPrivateBlobInput {
@@ -173,8 +239,15 @@ export interface UploadPrivateBlobInput {
 export async function uploadPrivateBlob(
   input: UploadPrivateBlobInput
 ): Promise<{ url: string; pathname: string }> {
+  const buf = await asNodeBuffer(input.body)
+  if (e2ePrivateBlobMockEnabled()) {
+    const url = e2ePrivateBlobUrl(input.pathname)
+    const stored = { body: buf, contentType: input.contentType }
+    e2ePrivateBlobs.set(url, stored)
+    e2ePrivateBlobs.set(input.pathname, stored)
+    return { url, pathname: input.pathname }
+  }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
-  const buf = await asArrayBuffer(input.body)
   const result: PutBlobResult = await put(input.pathname, buf, {
     access: "private",
     contentType: input.contentType,
@@ -194,6 +267,14 @@ function validatePrivate(input: UploadPrivateDocumentInput): void {
       `${input.contentType} not allowed; expected pdf or image`
     )
   }
+}
+
+async function asNodeBuffer(
+  body: ArrayBuffer | Buffer | Blob
+): Promise<Buffer> {
+  if (Buffer.isBuffer(body)) return body
+  if (body instanceof ArrayBuffer) return Buffer.from(body)
+  return Buffer.from(await body.arrayBuffer())
 }
 
 async function asArrayBuffer(

@@ -8,11 +8,16 @@ import {
   uniqueEmail,
   verifyEmail,
 } from "./helpers/auth"
+import { isNonLoopbackE2eTarget } from "./helpers/local"
 
 const runAuthJourney = process.env.E2E_AUTH === "1"
 
 test.describe("auth screens", () => {
   test.skip(!runAuthJourney, "Set E2E_AUTH=1 with account + API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
 
   test("login, signup, reset-password, and verify-email pages render", async ({
     page,
@@ -62,6 +67,10 @@ test.describe("auth screens", () => {
 
 test.describe("auth journey", () => {
   test.skip(!runAuthJourney, "Set E2E_AUTH=1 with account + API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
 
   test("sign up, verify, password sign-in, reset request, magic link", async ({
     page,

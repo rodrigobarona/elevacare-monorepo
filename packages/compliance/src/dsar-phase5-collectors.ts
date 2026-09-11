@@ -65,13 +65,28 @@ const phase5Collectors: DsarCollector[] = [
   },
   {
     id: "bookings",
-    collect: async (userId) => {
+    collect: async (userId, orgId) => {
+      if (!orgId) {
+        return { filename: "bookings", json: [], csv: toCsv([]) }
+      }
       const [upcoming, past] = await Promise.all([
         collectAllPages((cursor) =>
-          listMemberBookings({ userId, range: "upcoming", limit: 50, cursor })
+          listMemberBookings({
+            userId,
+            orgId,
+            range: "upcoming",
+            limit: 50,
+            cursor,
+          })
         ),
         collectAllPages((cursor) =>
-          listMemberBookings({ userId, range: "past", limit: 50, cursor })
+          listMemberBookings({
+            userId,
+            orgId,
+            range: "past",
+            limit: 50,
+            cursor,
+          })
         ),
       ])
       const json = [...upcoming, ...past].map((booking) => ({

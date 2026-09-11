@@ -47,6 +47,7 @@ export async function GET(request: Request) {
 
   const result = await listMemberBookings({
     userId: session.user.id,
+    orgId: session.orgId,
     range: query.data.range,
     cursor: query.data.cursor,
   })

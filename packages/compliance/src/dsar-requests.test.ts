@@ -230,6 +230,6 @@ describe("processDsarExport", () => {
       status: "processing",
       processingStartedAt: expect.any(Date),
     })
-    expect(dsarExport).toHaveBeenCalledWith("user-1")
+    expect(dsarExport).toHaveBeenCalledWith("user-1", "org-1")
   })
 })
