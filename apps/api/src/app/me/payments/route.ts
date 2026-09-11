@@ -1,0 +1,77 @@
+import { corsHeaders } from "@/lib/cors"
+import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import { secureJson } from "@/lib/security-headers"
+import type { RoutePolicy } from "@/lib/route-policy"
+import { ListMePaymentsQuerySchema } from "@eleva/api-client"
+import { listMemberPaymentsWithReceipts } from "@eleva/billing/server"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+export async function GET(request: Request) {
+  const headers = corsHeaders(request, "GET, OPTIONS")
+
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
+  const url = new URL(request.url)
+  const query = ListMePaymentsQuerySchema.safeParse({
+    cursor: url.searchParams.get("cursor") ?? undefined,
+  })
+  if (!query.success) {
+    return secureJson(
+      { error: "validation", issues: query.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  const result = await listMemberPaymentsWithReceipts({
+    userId: session.user.id,
+    cursor: query.data.cursor,
+  })
+
+  return secureJson(
+    {
+      payments: result.items.map((payment) => ({
+        id: payment.id,
+        orgId: payment.orgId,
+        bookingId: payment.bookingId,
+        status: payment.status,
+        amountCents: payment.amountCents,
+        currency: "EUR" as const,
+        paidAt: payment.paidAt ? payment.paidAt.toISOString() : null,
+        refundedCents: payment.refundedCents,
+        receiptUrl: payment.receiptUrl,
+        stripeChargeId: payment.stripeChargeId,
+      })),
+      nextCursor: result.nextCursor,
+    },
+    { status: 200, headers }
+  )
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "GET, OPTIONS"),
+  })
+}

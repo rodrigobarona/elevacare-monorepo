@@ -74,6 +74,7 @@ function mockConfirmTarget(
       },
       bookingLinks: { id: "id", orgId: "org", revokedAt: "revoked" },
     },
+    lockMemberHealthConsentInvariant: vi.fn(),
     withPlatformAdminContext: vi.fn(async (fn: (tx: unknown) => unknown) => {
       const limit = vi
         .fn()

@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
  * Unit tests for withAudit. The @eleva/db module is mocked so we do
  * not need a live Neon connection; we verify the contract:
  *
- *   1. withOrgContext is invoked with the caller orgId.
+ *   1. withOrgAndUserContext is invoked when actorUserId is set.
  *   2. fn receives a tx + ctx.
  *   3. A call to ctx.emit() inserts an audit_outbox row with the
  *      auditId + orgId + correlation_id.
@@ -34,13 +34,32 @@ describe("withAudit", () => {
     const txHandle = { insert, execute: executeSpy }
 
     const withOrgContext = vi.fn(
-      async (orgId: string, fn: (tx: unknown) => Promise<unknown>) => {
+      async (_orgId: string, fn: (tx: unknown) => Promise<unknown>) => {
         return fn(txHandle)
       }
+    )
+    const withOrgAndUserContext = vi.fn(
+      async (
+        _orgId: string,
+        _userId: string,
+        fn: (tx: unknown) => Promise<unknown>
+      ) => {
+        return fn(txHandle)
+      }
+    )
+    const withPlatformAdminContext = vi.fn(
+      async (fn: (tx: unknown) => Promise<unknown>) => fn(txHandle)
+    )
+    const withPlatformAdminUserContext = vi.fn(
+      async (_userId: string, fn: (tx: unknown) => Promise<unknown>) =>
+        fn(txHandle)
     )
 
     vi.doMock("@eleva/db", () => ({
       withOrgContext,
+      withOrgAndUserContext,
+      withPlatformAdminContext,
+      withPlatformAdminUserContext,
       main: {
         auditOutbox: { __isTable: true, name: "audit_outbox" },
       },
@@ -54,12 +73,20 @@ describe("withAudit", () => {
       return { ...actual }
     })
 
-    const { withAudit } = await import("./with-audit.js")
-    return { withAudit, withOrgContext, insert }
+    const { withAudit, withPlatformAudit } = await import("./with-audit.js")
+    return {
+      withAudit,
+      withPlatformAudit,
+      withOrgContext,
+      withOrgAndUserContext,
+      withPlatformAdminContext,
+      withPlatformAdminUserContext,
+      insert,
+    }
   }
 
-  it("invokes withOrgContext with the caller orgId and commits one outbox row on emit", async () => {
-    const { withAudit, withOrgContext, insert } = await setup({
+  it("invokes withOrgAndUserContext with org and actor and commits one outbox row on emit", async () => {
+    const { withAudit, withOrgAndUserContext, insert } = await setup({
       correlationId: "corr-1",
     })
 
@@ -77,8 +104,9 @@ describe("withAudit", () => {
     )
 
     expect(result).toBe("ok")
-    expect(withOrgContext).toHaveBeenCalledOnce()
-    expect(withOrgContext.mock.calls[0]?.[0]).toBe("org-1")
+    expect(withOrgAndUserContext).toHaveBeenCalledOnce()
+    expect(withOrgAndUserContext.mock.calls[0]?.[0]).toBe("org-1")
+    expect(withOrgAndUserContext.mock.calls[0]?.[1]).toBe("user-1")
 
     expect(insert).toHaveBeenCalledOnce()
     const valuesCall = insert.mock.results[0]!.value
@@ -125,10 +153,12 @@ describe("withAudit", () => {
   })
 
   it("actorUserId defaults to null and payload to empty object", async () => {
-    const { withAudit, insert } = await setup()
+    const { withAudit, withOrgContext, insert } = await setup()
     await withAudit({ orgId: "org-1" }, async (_tx, ctx) => {
       await ctx.emit({ entity: "user", action: "deleted", entityId: "user-2" })
     })
+    expect(withOrgContext).toHaveBeenCalledOnce()
+    expect(withOrgContext.mock.calls[0]?.[0]).toBe("org-1")
     const row = (
       insert.mock.results[0]!.value.values as unknown as ReturnType<
         typeof vi.fn
@@ -139,5 +169,35 @@ describe("withAudit", () => {
     }
     expect(row.actorUserId).toBeNull()
     expect(row.payload).toEqual({})
+  })
+
+  it("withPlatformAudit uses platform-admin context without an actor", async () => {
+    const {
+      withPlatformAudit,
+      withPlatformAdminContext,
+      withPlatformAdminUserContext,
+    } = await setup()
+    await withPlatformAudit({ orgId: "org-1" }, async (_tx, ctx) => {
+      await ctx.emit({ entity: "consent", action: "withdrawn" })
+    })
+    expect(withPlatformAdminContext).toHaveBeenCalledOnce()
+    expect(withPlatformAdminUserContext).not.toHaveBeenCalled()
+  })
+
+  it("withPlatformAudit uses platform-admin user context when actor is set", async () => {
+    const {
+      withPlatformAudit,
+      withPlatformAdminContext,
+      withPlatformAdminUserContext,
+    } = await setup()
+    await withPlatformAudit(
+      { orgId: "org-1", actorUserId: "user-1" },
+      async (_tx, ctx) => {
+        await ctx.emit({ entity: "consent", action: "withdrawn" })
+      }
+    )
+    expect(withPlatformAdminUserContext).toHaveBeenCalledOnce()
+    expect(withPlatformAdminUserContext.mock.calls[0]?.[0]).toBe("user-1")
+    expect(withPlatformAdminContext).not.toHaveBeenCalled()
   })
 })
