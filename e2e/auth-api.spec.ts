@@ -15,11 +15,16 @@ import {
   verifyEmail,
   waitForE2eAuthUrl,
 } from "./helpers/auth"
+import { isNonLoopbackE2eTarget } from "./helpers/local"
 
 const runAuthJourney = process.env.E2E_AUTH === "1"
 
 test.describe("Better Auth CSRF", () => {
   test.skip(!runAuthJourney, "Set E2E_AUTH=1 with API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
 
   test("rejects sign-up POST from an untrusted Origin", async ({ request }) => {
     const response = await request.post(`${apiUrl}/auth/sign-up/email`, {
@@ -40,6 +45,10 @@ test.describe("Better Auth CSRF", () => {
 test.describe("Better Auth API", () => {
   test.describe.configure({ mode: "serial" })
   test.skip(!runAuthJourney, "Set E2E_AUTH=1 with API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
 
   test("sign-up, verify, session, Space, expert org, switch, reset, sign-out, magic link", async ({
     request,
@@ -215,6 +224,10 @@ test.describe("Better Auth API", () => {
 
 test.describe("Better Auth API extras", () => {
   test.skip(!runAuthJourney, "Set E2E_AUTH=1 with API running")
+  test.skip(
+    isNonLoopbackE2eTarget(),
+    "auth e2e must not run against non-loopback hosts"
+  )
 
   test("wrong password is rejected", async ({ request }) => {
     const email = uniqueEmail("wrong")

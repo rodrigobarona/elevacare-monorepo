@@ -366,27 +366,27 @@ export async function listMemberBookings(input: {
   const detailsById = await loadMemberBookingDetails(page)
 
   return {
-    items: page.flatMap((row) => {
+    items: page.map((row) => {
       const details = detailsById.get(row.id)
-      if (!details) return []
-      return [
-        {
-          id: row.id,
-          orgId: row.orgId,
-          status: row.status,
-          startsAt: row.startsAt,
-          endsAt: row.endsAt,
-          timezone: row.timezone,
-          sessionMode: row.sessionMode,
-          priceCents: row.priceCents,
-          currency: row.currency,
-          expert: {
-            displayName: details.displayName,
-            username: details.username,
-          },
-          eventType: { slug: details.slug, title: details.title },
+      if (!details) {
+        throw new Error(`member booking ${row.id} missing expert/event details`)
+      }
+      return {
+        id: row.id,
+        orgId: row.orgId,
+        status: row.status,
+        startsAt: row.startsAt,
+        endsAt: row.endsAt,
+        timezone: row.timezone,
+        sessionMode: row.sessionMode,
+        priceCents: row.priceCents,
+        currency: row.currency,
+        expert: {
+          displayName: details.displayName,
+          username: details.username,
         },
-      ]
+        eventType: { slug: details.slug, title: details.title },
+      }
     }),
     nextCursor:
       rows.length > limit && last

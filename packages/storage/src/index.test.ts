@@ -63,5 +63,19 @@ describe("e2e private blob mock", () => {
     expect(byPath?.stream).toBeInstanceOf(ReadableStream)
     await deletePrivateDocument(uploaded.url)
     expect(await getPrivateDocument(uploaded.url)).toBeNull()
+    expect(await getPrivateDocument(uploaded.pathname)).toBeNull()
+  })
+
+  it("never mocks when VERCEL_ENV is production", async () => {
+    vi.stubEnv("VERCEL_ENV", "production")
+    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
+    vi.stubEnv("E2E_AUTH_CAPTURE", "1")
+    await expect(
+      uploadPrivateBlob({
+        pathname: "dsar/user-1/export.zip",
+        body: Buffer.from("PK"),
+        contentType: "application/zip",
+      })
+    ).rejects.toThrow(/BLOB_PRIVATE_READ_WRITE_TOKEN/)
   })
 })

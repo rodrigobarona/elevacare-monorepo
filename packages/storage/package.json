@@ -34,7 +34,6 @@
     "eslint": "catalog:",
     "react": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:",
     "vitest": "catalog:"
   }
 }

@@ -258,7 +258,6 @@ export function PrivacyPanel({
               <LinkButton
                 size="sm"
                 href={downloadUrl}
-                target="_blank"
                 data-testid="member-dsar-download"
               >
                 {t("dsar.download")}

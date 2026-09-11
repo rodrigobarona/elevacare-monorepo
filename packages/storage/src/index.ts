@@ -37,15 +37,40 @@ const e2ePrivateBlobs = new Map<string, { body: Buffer; contentType: string }>()
 
 function e2ePrivateBlobMockEnabled(): boolean {
   if (process.env.NODE_ENV === "production") return false
-  if (process.env.VERCEL_ENV === "production") return false
+  if (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  ) {
+    return false
+  }
   return (
     process.env.E2E_MOCK_PRIVATE_BLOB === "1" ||
     process.env.E2E_AUTH_CAPTURE === "1"
   )
 }
 
+function e2ePrivateBlobPathname(urlOrPath: string): string {
+  return urlOrPath.replace(/^e2e-private:\/\//, "").replace(/^\/+/, "")
+}
+
 function e2ePrivateBlobUrl(pathname: string): string {
-  return `e2e-private://${pathname.replace(/^\/+/, "")}`
+  return `e2e-private://${e2ePrivateBlobPathname(pathname)}`
+}
+
+function lookupE2ePrivateBlob(urlOrPath: string) {
+  const pathname = e2ePrivateBlobPathname(urlOrPath)
+  return (
+    e2ePrivateBlobs.get(urlOrPath) ??
+    e2ePrivateBlobs.get(pathname) ??
+    e2ePrivateBlobs.get(e2ePrivateBlobUrl(pathname))
+  )
+}
+
+function deleteE2ePrivateBlob(urlOrPath: string): void {
+  const pathname = e2ePrivateBlobPathname(urlOrPath)
+  e2ePrivateBlobs.delete(urlOrPath)
+  e2ePrivateBlobs.delete(pathname)
+  e2ePrivateBlobs.delete(e2ePrivateBlobUrl(pathname))
 }
 
 function bufferToStream(buf: Buffer): ReadableStream<Uint8Array> {
@@ -168,8 +193,7 @@ export async function uploadPrivateDocument(
 
 export async function deletePrivateDocument(url: string): Promise<void> {
   if (e2ePrivateBlobMockEnabled()) {
-    e2ePrivateBlobs.delete(url)
-    e2ePrivateBlobs.delete(url.replace(/^e2e-private:\/\//, ""))
+    deleteE2ePrivateBlob(url)
     return
   }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
@@ -189,7 +213,7 @@ export async function getPrivateDocument(
   url: string
 ): Promise<PrivateDocumentResult> {
   if (e2ePrivateBlobMockEnabled()) {
-    const stored = e2ePrivateBlobs.get(url)
+    const stored = lookupE2ePrivateBlob(url)
     if (!stored) return null
     return { stream: bufferToStream(stored.body) }
   }
@@ -215,7 +239,7 @@ export interface UploadPrivateBlobInput {
 export async function uploadPrivateBlob(
   input: UploadPrivateBlobInput
 ): Promise<{ url: string; pathname: string }> {
-  const buf = Buffer.from(await asArrayBuffer(input.body))
+  const buf = await asNodeBuffer(input.body)
   if (e2ePrivateBlobMockEnabled()) {
     const url = e2ePrivateBlobUrl(input.pathname)
     const stored = { body: buf, contentType: input.contentType }
@@ -243,6 +267,14 @@ function validatePrivate(input: UploadPrivateDocumentInput): void {
       `${input.contentType} not allowed; expected pdf or image`
     )
   }
+}
+
+async function asNodeBuffer(
+  body: ArrayBuffer | Buffer | Blob
+): Promise<Buffer> {
+  if (Buffer.isBuffer(body)) return body
+  if (body instanceof ArrayBuffer) return Buffer.from(body)
+  return Buffer.from(await body.arrayBuffer())
 }
 
 async function asArrayBuffer(

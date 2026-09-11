@@ -16,15 +16,12 @@ function isLoopbackHost(host: string): boolean {
 export function isNonLoopbackE2eTarget(): boolean {
   if (process.env.VERCEL_ENV === "production") return true
   const urls = [
-    process.env.E2E_BASE_URL,
-    process.env.E2E_API_URL,
-    process.env.E2E_ACCOUNT_URL,
-    process.env.E2E_APP_URL,
-    appUrl,
-    webUrl,
+    process.env.E2E_BASE_URL ?? webUrl,
+    process.env.E2E_API_URL ?? "http://localhost:3002",
+    process.env.E2E_ACCOUNT_URL ?? "http://localhost:3006",
+    process.env.E2E_APP_URL ?? appUrl,
   ]
   for (const raw of urls) {
-    if (!raw) continue
     try {
       if (!isLoopbackHost(new URL(raw).hostname)) return true
     } catch {
