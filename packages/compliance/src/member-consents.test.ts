@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const {
   memberHasConfirmedFutureBooking,
+  lockMemberHealthConsentInvariant,
   withAudit,
   withPlatformAudit,
   withPlatformAdminContext,
 } = vi.hoisted(() => ({
   memberHasConfirmedFutureBooking: vi.fn(),
+  lockMemberHealthConsentInvariant: vi.fn(),
   withAudit: vi.fn(),
   withPlatformAudit: vi.fn(),
   withPlatformAdminContext: vi.fn(),
@@ -28,6 +30,7 @@ vi.mock("@eleva/db", () => ({
     consentSourceEnum: { enumValues: ["funnel", "account", "import"] },
   },
   memberHasConfirmedFutureBooking,
+  lockMemberHealthConsentInvariant,
   withPlatformAdminContext,
 }))
 
@@ -75,14 +78,25 @@ describe("pickLatestConsentPerKind", () => {
 describe("updateMemberConsent", () => {
   beforeEach(() => {
     memberHasConfirmedFutureBooking.mockReset()
+    lockMemberHealthConsentInvariant.mockReset()
     withAudit.mockReset()
     withPlatformAudit.mockReset()
     withPlatformAdminContext.mockReset()
     withPlatformAdminContext.mockResolvedValue([])
+    lockMemberHealthConsentInvariant.mockResolvedValue(undefined)
   })
 
   it("returns 409-family error when withdrawing health_data_processing with a confirmed future booking", async () => {
     memberHasConfirmedFutureBooking.mockResolvedValue(true)
+    withPlatformAudit.mockImplementation(
+      async (
+        _opts: unknown,
+        fn: (
+          tx: { execute: () => Promise<void> },
+          ctx: { emit: ReturnType<typeof vi.fn> }
+        ) => Promise<void>
+      ) => fn({ execute: async () => undefined }, { emit: vi.fn() })
+    )
 
     await expect(
       updateMemberConsent({
@@ -93,25 +107,30 @@ describe("updateMemberConsent", () => {
       })
     ).rejects.toBeInstanceOf(MemberConsentConflictError)
 
-    expect(withPlatformAudit).not.toHaveBeenCalled()
+    expect(lockMemberHealthConsentInvariant).toHaveBeenCalled()
+    expect(memberHasConfirmedFutureBooking).toHaveBeenCalled()
   })
 
   it("withdraws marketing even when a confirmed future booking exists", async () => {
     memberHasConfirmedFutureBooking.mockResolvedValue(true)
     const emit = vi.fn()
-    const updateWhere = vi.fn().mockResolvedValue(undefined)
+    const returning = vi.fn().mockResolvedValue([{ id: "consent-1" }])
     withPlatformAudit.mockImplementation(
       async (
         _opts: unknown,
         fn: (
-          tx: { update: () => { set: () => { where: typeof updateWhere } } },
+          tx: {
+            update: () => {
+              set: () => { where: () => { returning: typeof returning } }
+            }
+          },
           ctx: { emit: typeof emit }
         ) => Promise<void>
       ) =>
         fn(
           {
             update: () => ({
-              set: () => ({ where: updateWhere }),
+              set: () => ({ where: () => ({ returning }) }),
             }),
           },
           { emit }
@@ -126,12 +145,13 @@ describe("updateMemberConsent", () => {
     })
 
     expect(memberHasConfirmedFutureBooking).not.toHaveBeenCalled()
-    expect(updateWhere).toHaveBeenCalled()
+    expect(returning).toHaveBeenCalled()
     expect(emit).toHaveBeenCalledWith(
       expect.objectContaining({
         entity: "consent",
         action: "withdrawn",
-        payload: { kind: "marketing" },
+        entityId: "consent-1",
+        payload: { kind: "marketing", ids: ["consent-1"] },
       })
     )
   })

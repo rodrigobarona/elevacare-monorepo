@@ -1411,7 +1411,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "patchMe",
           summary: "Update the authenticated member profile",
           description:
-            "Updates name, timezone, locale, and avatarUrl. Avatar bytes stay on PUT /users/avatar.",
+            "Updates name, timezone, locale, and/or avatarUrl. At least one field is required. Avatar bytes stay on PUT /users/avatar.",
           tags: ["Me"],
           requestBody: {
             required: true,
@@ -1468,6 +1468,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         put: {
           operationId: "putMeNotificationPreferences",
           summary: "Upsert the authenticated member's notification preferences",
+          description:
+            "Upserts channel/category enabled flags. quietHoursStart and quietHoursEnd must both be set or both be null. Each channel/category pair must be unique. Timezone and quiet hours apply to every preference row for the member.",
           tags: ["Me"],
           requestBody: {
             required: true,

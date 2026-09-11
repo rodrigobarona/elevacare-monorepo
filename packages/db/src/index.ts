@@ -98,6 +98,7 @@ export {
   listMemberBookings,
   listMemberPayments,
   cacheBookingPaymentReceipt,
+  lockMemberHealthConsentInvariant,
   memberHasConfirmedFutureBooking,
   type MemberProfile,
   type MemberNotificationPreference,

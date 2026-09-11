@@ -1,6 +1,7 @@
 import { and, desc, eq, isNull } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import {
+  lockMemberHealthConsentInvariant,
   main,
   memberHasConfirmedFutureBooking,
   withPlatformAdminContext,
@@ -99,12 +100,6 @@ export async function updateMemberConsent(input: {
   version?: string
   locale?: "en" | "pt" | "es"
 }): Promise<MemberConsentStatus[]> {
-  if (!input.granted && input.kind === "health_data_processing") {
-    if (await memberHasConfirmedFutureBooking(input.userId)) {
-      throw new MemberConsentConflictError()
-    }
-  }
-
   const version = input.version ?? CONSENT_DOCUMENT_VERSION
   const locale = input.locale ?? "en"
 
@@ -127,22 +122,31 @@ export async function updateMemberConsent(input: {
           )
           .limit(1)
 
+        let consentId = active?.id
         if (!active) {
-          await tx.insert(main.consents).values({
-            orgId: input.orgId,
-            subjectKind: "user",
-            userId: input.userId,
-            kind: input.kind,
-            documentVersion: version,
-            locale,
-            source: "account",
-          })
+          const [created] = await tx
+            .insert(main.consents)
+            .values({
+              orgId: input.orgId,
+              subjectKind: "user",
+              userId: input.userId,
+              kind: input.kind,
+              documentVersion: version,
+              locale,
+              source: "account",
+            })
+            .returning({ id: main.consents.id })
+          consentId = created!.id
+        }
+
+        if (!consentId) {
+          throw new Error("consent grant produced no id")
         }
 
         await ctx.emit({
           entity: "consent",
           action: "granted",
-          entityId: input.userId,
+          entityId: consentId,
           payload: { kind: input.kind, version },
         })
       }
@@ -153,6 +157,14 @@ export async function updateMemberConsent(input: {
   await withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
+      if (input.kind === "health_data_processing") {
+        await lockMemberHealthConsentInvariant(tx, input.userId)
+        if (
+          await memberHasConfirmedFutureBooking(input.userId, new Date(), tx)
+        ) {
+          throw new MemberConsentConflictError()
+        }
+      }
       const conditions = [
         eq(main.consents.userId, input.userId),
         eq(main.consents.kind, input.kind),
@@ -161,15 +173,17 @@ export async function updateMemberConsent(input: {
       if (input.kind === "marketing") {
         conditions.push(isNull(main.consents.bookingId))
       }
-      await tx
+      const withdrawn = await tx
         .update(main.consents)
         .set({ withdrawnAt: new Date() })
         .where(and(...conditions))
+        .returning({ id: main.consents.id })
+      const ids = withdrawn.map((row) => row.id)
       await ctx.emit({
         entity: "consent",
         action: "withdrawn",
-        entityId: input.userId,
-        payload: { kind: input.kind },
+        entityId: ids.length === 1 ? ids[0]! : null,
+        payload: { kind: input.kind, ids },
       })
     }
   )
