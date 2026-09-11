@@ -260,6 +260,218 @@ export const UpdateAvatarRequestSchema = z.object({
 
 export type UpdateAvatarRequest = z.infer<typeof UpdateAvatarRequestSchema>
 
+export function isIanaTimeZone(value: string): boolean {
+  if (/^[+-]\d/.test(value)) return false
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format()
+    return true
+  } catch {
+    return false
+  }
+}
+
+const IanaTimeZoneSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .refine(isIanaTimeZone, { message: "timezone must be a valid IANA name" })
+
+const QuietHoursTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, "quiet hours must be HH:MM")
+
+export const NotificationChannelSchema = z.enum(["email", "sms", "in_app"])
+export const NotificationCategorySchema = z.enum([
+  "booking",
+  "reminder",
+  "payment",
+  "marketing",
+  "system",
+])
+
+export const MemberConsentKindSchema = z.enum([
+  "terms",
+  "privacy",
+  "health_data_processing",
+  "marketing",
+])
+
+export const MemberNotificationPreferenceSchema = z.object({
+  channel: NotificationChannelSchema,
+  category: NotificationCategorySchema,
+  enabled: z.boolean(),
+  quietHoursStart: z.string().nullable(),
+  quietHoursEnd: z.string().nullable(),
+  timezone: z.string().nullable(),
+})
+
+export const MeProfileSchema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  name: z.string(),
+  timezone: z.string().nullable(),
+  locale: LocaleSchema.nullable(),
+  avatarUrl: z.string().nullable(),
+  preferences: z.array(MemberNotificationPreferenceSchema),
+})
+
+export const PatchMeRequestSchema = z
+  .object({
+    name: z.string().min(1).max(200).trim().optional(),
+    timezone: IanaTimeZoneSchema.nullable().optional(),
+    locale: LocaleSchema.nullable().optional(),
+    avatarUrl: z.string().url().nullable().optional(),
+  })
+  .refine(
+    (body) =>
+      body.name !== undefined ||
+      body.timezone !== undefined ||
+      body.locale !== undefined ||
+      body.avatarUrl !== undefined,
+    { message: "at least one field is required" }
+  )
+
+export const PutNotificationPreferencesRequestSchema = z
+  .object({
+    timezone: IanaTimeZoneSchema.nullable().optional(),
+    quietHoursStart: QuietHoursTimeSchema.nullable().optional(),
+    quietHoursEnd: QuietHoursTimeSchema.nullable().optional(),
+    preferences: z
+      .array(
+        z.object({
+          channel: NotificationChannelSchema,
+          category: NotificationCategorySchema,
+          enabled: z.boolean(),
+        })
+      )
+      .min(1)
+      .max(15),
+  })
+  .superRefine((body, ctx) => {
+    const start = body.quietHoursStart
+    const end = body.quietHoursEnd
+    if ((start == null) !== (end == null)) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "quietHoursStart and quietHoursEnd must both be set or both be null",
+        path: ["quietHoursEnd"],
+      })
+    }
+    const keys = new Set<string>()
+    for (const [index, preference] of body.preferences.entries()) {
+      const key = `${preference.channel}:${preference.category}`
+      if (keys.has(key)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "duplicate channel and category",
+          path: ["preferences", index],
+        })
+      }
+      keys.add(key)
+    }
+  })
+
+export const ListMeBookingsQuerySchema = z.object({
+  range: z.enum(["upcoming", "past"]).default("upcoming"),
+  cursor: z.string().min(1).max(200).optional(),
+})
+
+export const MemberBookingSchema = z.object({
+  id: z.string().uuid(),
+  orgId: z.string().uuid(),
+  status: z.string(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  timezone: z.string(),
+  sessionMode: z.enum(["online", "in_person", "phone"]),
+  priceCents: z.number().int().nonnegative(),
+  currency: z.literal("EUR"),
+  expert: z.object({
+    displayName: z.string(),
+    username: z.string(),
+  }),
+  eventType: z.object({
+    slug: z.string(),
+    title: z.object({
+      en: z.string(),
+      pt: z.string().optional(),
+      es: z.string().optional(),
+    }),
+  }),
+})
+
+export const ListMeBookingsResponseSchema = z.object({
+  bookings: z.array(MemberBookingSchema),
+  nextCursor: z.string().nullable(),
+})
+
+export const MemberPaymentSchema = z.object({
+  id: z.string().uuid(),
+  orgId: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  status: z.string(),
+  amountCents: z.number().int(),
+  currency: z.literal("EUR"),
+  paidAt: z.string().datetime().nullable(),
+  refundedCents: z.number().int().nonnegative(),
+  receiptUrl: z.string().url().nullable(),
+  stripeChargeId: z.string().nullable(),
+})
+
+export const ListMePaymentsQuerySchema = z.object({
+  cursor: z.string().min(1).max(200).optional(),
+})
+
+export const ListMePaymentsResponseSchema = z.object({
+  payments: z.array(MemberPaymentSchema),
+  nextCursor: z.string().nullable(),
+})
+
+export const MemberConsentSchema = z.object({
+  kind: MemberConsentKindSchema,
+  version: z.string(),
+  grantedAt: z.string().datetime().nullable(),
+  withdrawnAt: z.string().datetime().nullable(),
+  source: z.enum(["funnel", "account", "import"]).nullable(),
+})
+
+export const MeNotificationPreferencesResponseSchema = z.object({
+  preferences: z.array(MemberNotificationPreferenceSchema),
+})
+
+export const ListMeConsentsResponseSchema = z.object({
+  consents: z.array(MemberConsentSchema),
+})
+
+export const PutMeConsentRequestSchema = z.object({
+  kind: MemberConsentKindSchema,
+  granted: z.boolean(),
+  version: z.string().min(1).max(64).optional(),
+  locale: LocaleSchema.optional(),
+})
+
+export type MeProfile = z.infer<typeof MeProfileSchema>
+export type PatchMeRequest = z.infer<typeof PatchMeRequestSchema>
+export type PutNotificationPreferencesRequest = z.infer<
+  typeof PutNotificationPreferencesRequestSchema
+>
+export type ListMeBookingsQuery = z.infer<typeof ListMeBookingsQuerySchema>
+export type ListMeBookingsResponse = z.infer<
+  typeof ListMeBookingsResponseSchema
+>
+export type ListMePaymentsQuery = z.infer<typeof ListMePaymentsQuerySchema>
+export type ListMePaymentsResponse = z.infer<
+  typeof ListMePaymentsResponseSchema
+>
+export type ListMeConsentsResponse = z.infer<
+  typeof ListMeConsentsResponseSchema
+>
+export type MeNotificationPreferencesResponse = z.infer<
+  typeof MeNotificationPreferencesResponseSchema
+>
+export type PutMeConsentRequest = z.infer<typeof PutMeConsentRequestSchema>
+
 // ── Expert Profile ──────────────────────────────────────────────────
 
 const LocalizedTextSchema = z.object({
@@ -855,6 +1067,54 @@ export function createApiClient(options: ApiClientOptions) {
         remove() {
           return request<{ ok: true }>("DELETE", "/users/avatar")
         },
+      },
+    },
+
+    me: {
+      async get() {
+        const raw = await request<unknown>("GET", "/me")
+        return MeProfileSchema.parse(raw)
+      },
+      async patch(data: PatchMeRequest) {
+        const raw = await request<unknown>("PATCH", "/me", data)
+        return MeProfileSchema.parse(raw)
+      },
+      async listBookings(query: ListMeBookingsQuery = { range: "upcoming" }) {
+        const params = new URLSearchParams({ range: query.range })
+        if (query.cursor) params.set("cursor", query.cursor)
+        const raw = await request<unknown>(
+          "GET",
+          `/me/bookings?${params.toString()}`
+        )
+        return ListMeBookingsResponseSchema.parse(raw)
+      },
+      async listPayments(query: ListMePaymentsQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.cursor) params.set("cursor", query.cursor)
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          qs ? `/me/payments?${qs}` : "/me/payments"
+        )
+        return ListMePaymentsResponseSchema.parse(raw)
+      },
+      async putNotificationPreferences(
+        data: PutNotificationPreferencesRequest
+      ) {
+        const raw = await request<unknown>(
+          "PUT",
+          "/me/notification-preferences",
+          data
+        )
+        return MeNotificationPreferencesResponseSchema.parse(raw)
+      },
+      async listConsents() {
+        const raw = await request<unknown>("GET", "/me/consents")
+        return ListMeConsentsResponseSchema.parse(raw)
+      },
+      async putConsent(data: PutMeConsentRequest) {
+        const raw = await request<unknown>("PUT", "/me/consents", data)
+        return ListMeConsentsResponseSchema.parse(raw)
       },
     },
 

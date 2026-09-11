@@ -38,6 +38,9 @@ export {
   retrieveBookingPaymentIntent,
 } from "./payments"
 export type { CreatePaymentIntentForReservationResult } from "./payments"
+export { retrieveChargeReceipt } from "./receipts"
+export type { ChargeReceipt } from "./receipts"
+export { listMemberPaymentsWithReceipts } from "./member-payments"
 export {
   classifyPaymentMethod,
   type BookingPaymentMethodClass,

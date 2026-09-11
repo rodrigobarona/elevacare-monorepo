@@ -20,6 +20,7 @@
     "@eleva/billing": "workspace:*",
     "@eleva/calendar": "workspace:*",
     "@eleva/config": "workspace:*",
+    "@eleva/compliance": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:^",
     "@eleva/observability": "workspace:*",

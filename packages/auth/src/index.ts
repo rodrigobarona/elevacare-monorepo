@@ -25,6 +25,14 @@ export {
 } from "./provisioning"
 export { provisionPersonalSpace } from "./provision-personal-space"
 export {
+  getMemberProfile,
+  updateMemberProfile,
+  updateMemberNotificationPreferences,
+  listMemberNotificationPreferences,
+  type MemberProfile,
+  type MemberNotificationPreference,
+} from "./member"
+export {
   createAuthProxy,
   createPassthroughProxy,
   STANDARD_APP_MATCHER,
