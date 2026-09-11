@@ -47,17 +47,7 @@ export async function listMemberConsents(
       .orderBy(desc(main.consents.grantedAt))
   )
 
-  const latest = new Map<ConsentKind, MemberConsentStatus>()
-  for (const row of rows) {
-    if (latest.has(row.kind)) continue
-    latest.set(row.kind, {
-      kind: row.kind,
-      version: row.documentVersion,
-      grantedAt: row.grantedAt,
-      withdrawnAt: row.withdrawnAt,
-      source: row.source,
-    })
-  }
+  const latest = pickLatestConsentPerKind(rows)
 
   return CONSENT_KINDS.map((kind) => {
     const row = latest.get(kind)
@@ -70,6 +60,35 @@ export async function listMemberConsents(
       source: null,
     }
   })
+}
+
+export function pickLatestConsentPerKind(
+  rows: Array<{
+    kind: ConsentKind
+    documentVersion: string
+    grantedAt: Date | null
+    withdrawnAt: Date | null
+    source: MemberConsentStatus["source"]
+  }>
+): Map<ConsentKind, MemberConsentStatus> {
+  const ranked = [...rows].sort((a, b) => {
+    const aActive = a.withdrawnAt == null ? 0 : 1
+    const bActive = b.withdrawnAt == null ? 0 : 1
+    if (aActive !== bActive) return aActive - bActive
+    return (b.grantedAt?.getTime() ?? 0) - (a.grantedAt?.getTime() ?? 0)
+  })
+  const latest = new Map<ConsentKind, MemberConsentStatus>()
+  for (const row of ranked) {
+    if (latest.has(row.kind)) continue
+    latest.set(row.kind, {
+      kind: row.kind,
+      version: row.documentVersion,
+      grantedAt: row.grantedAt,
+      withdrawnAt: row.withdrawnAt,
+      source: row.source,
+    })
+  }
+  return latest
 }
 
 export async function updateMemberConsent(input: {

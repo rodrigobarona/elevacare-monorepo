@@ -38,8 +38,39 @@ vi.mock("@eleva/audit", () => ({
 
 import {
   MemberConsentConflictError,
+  pickLatestConsentPerKind,
   updateMemberConsent,
 } from "./member-consents"
+
+describe("pickLatestConsentPerKind", () => {
+  it("prefers an older active grant over a newer withdrawn row", () => {
+    const activeGrantedAt = new Date("2026-01-01T00:00:00.000Z")
+    const withdrawnGrantedAt = new Date("2026-06-01T00:00:00.000Z")
+    const latest = pickLatestConsentPerKind([
+      {
+        kind: "health_data_processing",
+        documentVersion: "dev-2026-09-09",
+        grantedAt: withdrawnGrantedAt,
+        withdrawnAt: new Date("2026-06-02T00:00:00.000Z"),
+        source: "funnel",
+      },
+      {
+        kind: "health_data_processing",
+        documentVersion: "dev-2026-09-09",
+        grantedAt: activeGrantedAt,
+        withdrawnAt: null,
+        source: "account",
+      },
+    ])
+    expect(latest.get("health_data_processing")).toEqual({
+      kind: "health_data_processing",
+      version: "dev-2026-09-09",
+      grantedAt: activeGrantedAt,
+      withdrawnAt: null,
+      source: "account",
+    })
+  })
+})
 
 describe("updateMemberConsent", () => {
   beforeEach(() => {
