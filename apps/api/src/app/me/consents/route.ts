@@ -1,5 +1,5 @@
 import { corsHeaders } from "@/lib/cors"
-import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireMemberApiAuth(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
@@ -62,7 +62,7 @@ export async function PUT(request: Request) {
 
   let session
   try {
-    session = await requireApiAuth(request)
+    session = await requireMemberApiAuth(request)
   } catch (err) {
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure

@@ -1,19 +1,230 @@
 {
   "nav": {
-    "dashboard": "Painel",
-    "settings": "Definições"
+    "home": "Início",
+    "sessions": "Sessões",
+    "payments": "Pagamentos",
+    "settings": "Definições",
+    "privacy": "Privacidade"
   },
-  "dashboard": {
-    "member": {
-      "welcome": "Bem-vindo(a), {name}",
-      "subtitle": "As suas próximas consultas e relatórios ficam aqui."
+  "common": {
+    "save": "Guardar",
+    "saving": "A guardar…",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "loading": "A carregar…",
+    "view": "Ver detalhes",
+    "empty": "Ainda não há nada aqui."
+  },
+  "home": {
+    "welcome": "Bem-vindo(a), {name}",
+    "subtitle": "As suas sessões, pagamentos e definições de privacidade ficam neste Espaço.",
+    "upcomingTitle": "Próximas sessões",
+    "upcomingEmpty": "Não tem sessões agendadas.",
+    "pastTitle": "Sessões anteriores",
+    "pastEmpty": "Ainda não tem sessões anteriores.",
+    "findExpert": "Encontrar um especialista",
+    "viewAll": "Ver todas as sessões"
+  },
+  "sessions": {
+    "title": "Sessões",
+    "subtitle": "Consulte as sessões futuras e anteriores com especialistas Eleva.",
+    "upcomingTitle": "Próximas",
+    "pastTitle": "Anteriores",
+    "emptyUpcoming": "Não tem sessões futuras. Encontre um especialista para marcar a próxima visita.",
+    "emptyPast": "Ainda não tem sessões anteriores.",
+    "detailTitle": "Detalhes da sessão",
+    "expert": "Especialista",
+    "when": "Quando",
+    "mode": "Modo",
+    "status": "Estado",
+    "price": "Preço",
+    "addToCalendar": "Adicionar ao calendário",
+    "join": "Entrar na sessão",
+    "joinSoon": "A entrada por vídeo chega numa fase posterior.",
+    "icsFailed": "Não foi possível descarregar o ficheiro de calendário.",
+    "cancel": "Cancelar sessão",
+    "reschedule": "Reagendar",
+    "cancelTitle": "Cancelar esta sessão?",
+    "cancelDescription": "Pode cancelar até 24 horas antes do início. Depois disso, a política já não permite o cancelamento pelo membro. Se já pagou, o reembolso fica pendente e será processado mais tarde.",
+    "cancelConfirm": "Cancelar sessão",
+    "cancelling": "A cancelar…",
+    "cancelled": "Sessão cancelada.",
+    "rescheduleTitle": "Reagendar esta sessão",
+    "rescheduleDescription": "Escolha um novo início pelo menos 24 horas antes da sessão atual. A duração mantém-se. O horário anterior é libertado.",
+    "rescheduleWhen": "Novo início",
+    "rescheduleConfirm": "Reagendar",
+    "rescheduling": "A reagendar…",
+    "rescheduled": "Sessão reagendada.",
+    "policyTooLate": "Esta sessão está dentro da janela de 24 horas, por isso não pode ser cancelada nem reagendada aqui.",
+    "receipt": "Recibo",
+    "modes": {
+      "online": "Online",
+      "in_person": "Presencial",
+      "phone": "Telefone"
+    },
+    "statusLabel": {
+      "confirmed": "Confirmada",
+      "rescheduled": "Reagendada",
+      "cancelled": "Cancelada",
+      "pending_payment": "Pagamento pendente",
+      "completed": "Concluída",
+      "no_show": "Não compareceu"
+    }
+  },
+  "payments": {
+    "title": "Pagamentos",
+    "subtitle": "Recibos e estado de reembolso das suas sessões.",
+    "empty": "Ainda não há pagamentos.",
+    "amount": "Montante",
+    "status": "Estado",
+    "paidAt": "Pago",
+    "receipt": "Ver recibo",
+    "refunded": "Reembolsado {amount}",
+    "session": "Sessão",
+    "statusLabel": {
+      "intent_pending": "Intenção pendente",
+      "requires_payment": "Requer pagamento",
+      "succeeded": "Pago",
+      "failed": "Falhou",
+      "refunded": "Reembolsado",
+      "refund_pending": "Reembolso pendente"
     }
   },
   "settings": {
     "title": "Definições",
-    "subtitle": "Gerir as preferências da organização."
+    "subtitle": "Gerir o perfil de membro, idioma, tema e notificações.",
+    "profile": {
+      "title": "Perfil",
+      "description": "Atualize o nome mostrado aos especialistas neste Espaço.",
+      "email": "Email",
+      "name": "Nome",
+      "timezone": "Fuso horário",
+      "save": "Guardar",
+      "saving": "A guardar…",
+      "saved": "Perfil atualizado.",
+      "error": "Não foi possível atualizar o perfil. Tente novamente.",
+      "footerHint": "O email é usado para iniciar sessão e não pode ser alterado aqui."
+    },
+    "avatar": {
+      "title": "Foto de perfil",
+      "description": "Este é o seu avatar. Clique na foto para carregar uma imagem dos seus ficheiros.",
+      "changePhoto": "Alterar foto de perfil",
+      "remove": "Remover",
+      "hint": "JPG, PNG ou WebP. Máximo 2 MB.",
+      "tooLarge": "O ficheiro é demasiado grande. O máximo é 2 MB.",
+      "invalidType": "Tipo de ficheiro não suportado. Use JPG, PNG ou WebP.",
+      "uploadFailed": "O carregamento falhou. Tente novamente.",
+      "saveFailed": "Não foi possível guardar o avatar. Tente novamente.",
+      "removeFailed": "Não foi possível remover o avatar. Tente novamente.",
+      "uploaded": "Foto de perfil atualizada.",
+      "removed": "Foto de perfil removida."
+    },
+    "language": {
+      "title": "Idioma",
+      "description": "Escolha o idioma usado na Eleva para a sua conta.",
+      "footerHint": "Guardado em ELEVA_LOCALE e aplicado na próxima visita.",
+      "saved": "Preferência de idioma atualizada.",
+      "error": "Não foi possível atualizar o idioma. Tente novamente."
+    },
+    "theme": {
+      "title": "Tema",
+      "description": "Escolha claro, escuro, ou seguir o dispositivo.",
+      "footerHint": "Guardado em ELEVA_THEME e partilhado pelas apps Eleva.",
+      "light": "Claro",
+      "dark": "Escuro",
+      "system": "Sistema",
+      "saved": "Tema atualizado."
+    },
+    "notifications": {
+      "title": "Notificações",
+      "description": "Escolha como a Eleva pode contactá-lo. As horas de silêncio pausam mensagens não urgentes.",
+      "footerHint": "Estas preferências serão usadas quando começarmos a enviar notificações.",
+      "saved": "Preferências de notificação guardadas.",
+      "error": "Não foi possível guardar as preferências de notificação.",
+      "quietHours": "Horas de silêncio",
+      "quietHoursHint": "Opcional. A hora de início e de fim são ambas obrigatórias quando está ativo.",
+      "quietStart": "Início",
+      "quietEnd": "Fim",
+      "enableQuietHours": "Ativar horas de silêncio",
+      "channel": {
+        "email": "Email",
+        "sms": "SMS",
+        "in_app": "Na app"
+      },
+      "category": {
+        "booking": "Sessões",
+        "reminder": "Lembretes",
+        "payment": "Pagamentos",
+        "marketing": "Marketing",
+        "system": "Sistema"
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacidade",
+    "subtitle": "Consentimentos, exportação de dados e eliminação da conta neste Espaço.",
+    "consents": {
+      "title": "Consentimentos",
+      "description": "Veja o que aceitou e retire o marketing ou o tratamento de dados de saúde quando for permitido.",
+      "granted": "Concedido {date}",
+      "withdrawn": "Retirado {date}",
+      "notGranted": "Não concedido",
+      "version": "Versão {version}",
+      "grant": "Conceder",
+      "withdraw": "Retirar",
+      "grantedToast": "Consentimento atualizado.",
+      "withdrawnToast": "Consentimento retirado.",
+      "healthDataBlocked": "Não pode retirar o consentimento de dados de saúde enquanto existir uma sessão futura confirmada.",
+      "kinds": {
+        "terms": "Termos de utilização",
+        "privacy": "Aviso de privacidade",
+        "health_data_processing": "Tratamento de dados de saúde",
+        "marketing": "Mensagens de marketing"
+      }
+    },
+    "dsar": {
+      "title": "Descarregar os seus dados",
+      "description": "Peça uma cópia dos dados que a Eleva tem sobre si. O ficheiro é preparado em zip e o link expira ao fim de 24 horas.",
+      "request": "Pedir exportação",
+      "requesting": "A pedir…",
+      "requested": "Exportação pedida. Costuma demorar alguns minutos.",
+      "status": "Estado: {status}",
+      "download": "Descarregar zip",
+      "refresh": "Verificar estado",
+      "error": "Não foi possível pedir ou carregar a exportação.",
+      "statusLabel": {
+        "pending": "Pendente",
+        "processing": "A preparar",
+        "ready": "Pronta",
+        "expired": "Expirada",
+        "failed": "Falhou"
+      }
+    },
+    "deletion": {
+      "title": "Eliminar conta",
+      "description": "Agende a eliminação desta conta de membro. Novas marcações ficam bloqueadas assim que confirmar.",
+      "ruleTitle": "O que é apagado e o que é conservado",
+      "ruleBody": "Os dados de âmbito da conta são apagados: o perfil, as preferências de notificação e os consentimentos que não estão ligados a uma sessão (por exemplo, marketing). Os consentimentos de âmbito da sessão — os que autorizaram uma consulta — são desidentificados (o nome e a conta são retirados) e conservados pelo mínimo do registo clínico português, e destruídos mais tarde. As notas clínicas do especialista seguem a mesma regra de conservar e depois destruir. Isto não pode ser encurtado neste ecrã.",
+      "grace": "Há um período de espera de 14 dias antes da eliminação. Pode cancelar durante essa janela.",
+      "confirmTitle": "Eliminar a sua conta?",
+      "confirmBody": "Isto agenda a eliminação. Os dados de âmbito da conta serão apagados. Os consentimentos ligados a sessões são desidentificados e conservados pelo período clínico legal. Sessões futuras e por pagar são canceladas. As sessões pagas ficam marcadas para reembolso posterior.",
+      "confirm": "Agendar eliminação",
+      "scheduling": "A agendar…",
+      "scheduled": "Eliminação da conta agendada para {date}.",
+      "alreadyScheduled": "A eliminação já está agendada.",
+      "cancelRequest": "Cancelar eliminação",
+      "cancelling": "A cancelar…",
+      "cancelled": "Eliminação da conta cancelada. Já pode voltar a marcar."
+    }
   },
   "errors": {
-    "unauthorized": "Não tem acesso a esta página."
+    "unauthorized": "Não tem acesso a esta página.",
+    "generic": "Algo correu mal. Tente novamente.",
+    "validation": "Verifique o formulário e tente novamente.",
+    "notFound": "Não encontrámos essa sessão.",
+    "tooLate": "As alterações só são permitidas pelo menos 24 horas antes do início da sessão.",
+    "invalidStatus": "Esta sessão já não pode ser alterada.",
+    "slotTaken": "Esse horário já não está disponível. Escolha outro início.",
+    "notFoundSession": "Sessão não encontrada."
   }
 }

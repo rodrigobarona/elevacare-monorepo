@@ -89,6 +89,7 @@ vi.mock("./retention", async () => {
 import {
   anonymisedAccountEmail,
   cancelAccountDeletion,
+  getPendingAccountDeletion,
   scheduleAccountDeletion,
   sweepAccountDeletions,
 } from "./account-deletion"
@@ -561,5 +562,49 @@ describe("sweepAccountDeletions", () => {
       { id: "req-1", userId: "user-1", orgId: "org-1" },
     ])
     expect(statusSets).not.toContainEqual({ status: "completed" })
+  })
+})
+
+describe("getPendingAccountDeletion", () => {
+  beforeEach(() => {
+    withPlatformAdminContext.mockReset()
+  })
+
+  it("returns the pending request that has not reached scheduledFor", async () => {
+    const scheduledFor = new Date("2099-01-01T00:00:00.000Z")
+    withPlatformAdminContext.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: async () => [{ id: "req-1", scheduledFor }],
+              }),
+            }),
+          }),
+        })
+    )
+
+    await expect(getPendingAccountDeletion("user-1")).resolves.toEqual({
+      requestId: "req-1",
+      scheduledFor,
+    })
+  })
+
+  it("returns null when no pending request exists", async () => {
+    withPlatformAdminContext.mockImplementation(
+      async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: async () => [],
+              }),
+            }),
+          }),
+        })
+    )
+
+    await expect(getPendingAccountDeletion("user-1")).resolves.toBeNull()
   })
 })

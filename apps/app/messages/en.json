@@ -1,19 +1,230 @@
 {
   "nav": {
-    "dashboard": "Dashboard",
-    "settings": "Settings"
+    "home": "Home",
+    "sessions": "Sessions",
+    "payments": "Payments",
+    "settings": "Settings",
+    "privacy": "Privacy"
   },
-  "dashboard": {
-    "member": {
-      "welcome": "Welcome, {name}",
-      "subtitle": "Your upcoming appointments and reports live here."
+  "common": {
+    "save": "Save",
+    "saving": "Saving…",
+    "cancel": "Cancel",
+    "close": "Close",
+    "loading": "Loading…",
+    "view": "View details",
+    "empty": "Nothing here yet."
+  },
+  "home": {
+    "welcome": "Welcome, {name}",
+    "subtitle": "Your sessions, payments, and privacy settings live in this Space.",
+    "upcomingTitle": "Upcoming sessions",
+    "upcomingEmpty": "You have no upcoming sessions.",
+    "pastTitle": "Past sessions",
+    "pastEmpty": "You have no past sessions yet.",
+    "findExpert": "Find an expert",
+    "viewAll": "View all sessions"
+  },
+  "sessions": {
+    "title": "Sessions",
+    "subtitle": "Review upcoming and past sessions with Eleva experts.",
+    "upcomingTitle": "Upcoming",
+    "pastTitle": "Past",
+    "emptyUpcoming": "No upcoming sessions. Find an expert to book your next visit.",
+    "emptyPast": "No past sessions yet.",
+    "detailTitle": "Session details",
+    "expert": "Expert",
+    "when": "When",
+    "mode": "Mode",
+    "status": "Status",
+    "price": "Price",
+    "addToCalendar": "Add to calendar",
+    "join": "Join session",
+    "joinSoon": "Video join arrives in a later release.",
+    "icsFailed": "Could not download the calendar file.",
+    "cancel": "Cancel session",
+    "reschedule": "Reschedule",
+    "cancelTitle": "Cancel this session?",
+    "cancelDescription": "You can cancel up to 24 hours before the session starts. After that the policy no longer allows a member cancellation. If you already paid, a refund will be marked pending and processed later.",
+    "cancelConfirm": "Cancel session",
+    "cancelling": "Cancelling…",
+    "cancelled": "Session cancelled.",
+    "rescheduleTitle": "Reschedule this session",
+    "rescheduleDescription": "Choose a new start time at least 24 hours before the current session. The duration stays the same. The previous slot is released.",
+    "rescheduleWhen": "New start",
+    "rescheduleConfirm": "Reschedule",
+    "rescheduling": "Rescheduling…",
+    "rescheduled": "Session rescheduled.",
+    "policyTooLate": "This session is inside the 24-hour window, so it cannot be cancelled or rescheduled here.",
+    "receipt": "Receipt",
+    "modes": {
+      "online": "Online",
+      "in_person": "In person",
+      "phone": "Phone"
+    },
+    "statusLabel": {
+      "confirmed": "Confirmed",
+      "rescheduled": "Rescheduled",
+      "cancelled": "Cancelled",
+      "pending_payment": "Pending payment",
+      "completed": "Completed",
+      "no_show": "No show"
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "subtitle": "Receipts and refund status for your sessions.",
+    "empty": "No payments yet.",
+    "amount": "Amount",
+    "status": "Status",
+    "paidAt": "Paid",
+    "receipt": "View receipt",
+    "refunded": "Refunded {amount}",
+    "session": "Session",
+    "statusLabel": {
+      "intent_pending": "Intent pending",
+      "requires_payment": "Requires payment",
+      "succeeded": "Paid",
+      "failed": "Failed",
+      "refunded": "Refunded",
+      "refund_pending": "Refund pending"
     }
   },
   "settings": {
     "title": "Settings",
-    "subtitle": "Manage your organization preferences."
+    "subtitle": "Manage your member profile, language, theme, and notifications.",
+    "profile": {
+      "title": "Profile",
+      "description": "Update the name shown to experts in this Space.",
+      "email": "Email",
+      "name": "Name",
+      "timezone": "Timezone",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Profile updated.",
+      "error": "Could not update your profile. Try again.",
+      "footerHint": "Your email is used to sign in and cannot be changed here."
+    },
+    "avatar": {
+      "title": "Profile photo",
+      "description": "This is your avatar. Click the photo to upload a custom image from your files.",
+      "changePhoto": "Change profile photo",
+      "remove": "Remove",
+      "hint": "JPG, PNG or WebP. Max 2 MB.",
+      "tooLarge": "File is too large. Maximum size is 2 MB.",
+      "invalidType": "Unsupported file type. Use JPG, PNG, or WebP.",
+      "uploadFailed": "Upload failed. Please try again.",
+      "saveFailed": "Could not save avatar. Please try again.",
+      "removeFailed": "Could not remove avatar. Please try again.",
+      "uploaded": "Profile photo updated.",
+      "removed": "Profile photo removed."
+    },
+    "language": {
+      "title": "Language",
+      "description": "Choose the language used across Eleva for your account.",
+      "footerHint": "Saved as ELEVA_LOCALE and applied on your next visit.",
+      "saved": "Language preference updated.",
+      "error": "Could not update language. Please try again."
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "Choose light, dark, or match your device.",
+      "footerHint": "Saved as ELEVA_THEME and shared across Eleva apps.",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "saved": "Theme updated."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Choose how Eleva can reach you. Quiet hours pause non-urgent messages.",
+      "footerHint": "These preferences are used when we start sending notifications.",
+      "saved": "Notification preferences saved.",
+      "error": "Could not save notification preferences.",
+      "quietHours": "Quiet hours",
+      "quietHoursHint": "Optional. Both start and end are required when enabled.",
+      "quietStart": "Starts",
+      "quietEnd": "Ends",
+      "enableQuietHours": "Enable quiet hours",
+      "channel": {
+        "email": "Email",
+        "sms": "SMS",
+        "in_app": "In-app"
+      },
+      "category": {
+        "booking": "Sessions",
+        "reminder": "Reminders",
+        "payment": "Payments",
+        "marketing": "Marketing",
+        "system": "System"
+      }
+    }
+  },
+  "privacy": {
+    "title": "Privacy",
+    "subtitle": "Consents, data export, and account deletion for this Space.",
+    "consents": {
+      "title": "Consents",
+      "description": "See what you agreed to and withdraw marketing or health-data processing where allowed.",
+      "granted": "Granted {date}",
+      "withdrawn": "Withdrawn {date}",
+      "notGranted": "Not granted",
+      "version": "Version {version}",
+      "grant": "Grant",
+      "withdraw": "Withdraw",
+      "grantedToast": "Consent updated.",
+      "withdrawnToast": "Consent withdrawn.",
+      "healthDataBlocked": "You cannot withdraw health-data consent while a confirmed future session exists.",
+      "kinds": {
+        "terms": "Terms of use",
+        "privacy": "Privacy notice",
+        "health_data_processing": "Health data processing",
+        "marketing": "Marketing messages"
+      }
+    },
+    "dsar": {
+      "title": "Download your data",
+      "description": "Request a copy of the data Eleva holds about you. The file is prepared as a zip and the download link expires after 24 hours.",
+      "request": "Request export",
+      "requesting": "Requesting…",
+      "requested": "Export requested. This usually takes a few minutes.",
+      "status": "Status: {status}",
+      "download": "Download zip",
+      "refresh": "Check status",
+      "error": "Could not request or load your export.",
+      "statusLabel": {
+        "pending": "Pending",
+        "processing": "Preparing",
+        "ready": "Ready",
+        "expired": "Expired",
+        "failed": "Failed"
+      }
+    },
+    "deletion": {
+      "title": "Delete account",
+      "description": "Schedule deletion of this member account. New bookings are blocked as soon as you confirm.",
+      "ruleTitle": "What is erased and what is kept",
+      "ruleBody": "Account-scope data is erased: your profile, notification preferences, and consents that are not tied to a session (for example marketing). Booking-scope consents — the ones that authorised a session — are de-identified (your name and account are removed) and kept for the Portuguese clinical-record minimum, then destroyed later. Expert clinical notes follow the same retain-then-destroy rule. This cannot be shortened from this screen.",
+      "grace": "There is a 14-day waiting period before deletion runs. You can cancel during that window.",
+      "confirmTitle": "Delete your account?",
+      "confirmBody": "This schedules deletion. Account-scope data will be erased. Session-linked consents are de-identified and retained for the legal clinical period. Future and unpaid sessions are cancelled. Paid sessions are marked for a later refund.",
+      "confirm": "Schedule deletion",
+      "scheduling": "Scheduling…",
+      "scheduled": "Account deletion scheduled for {date}.",
+      "alreadyScheduled": "Deletion is already scheduled.",
+      "cancelRequest": "Cancel deletion",
+      "cancelling": "Cancelling…",
+      "cancelled": "Account deletion cancelled. You can book again."
+    }
   },
   "errors": {
-    "unauthorized": "You do not have access to this page."
+    "unauthorized": "You do not have access to this page.",
+    "generic": "Something went wrong. Please try again.",
+    "validation": "Please check the form and try again.",
+    "notFound": "We could not find that session.",
+    "tooLate": "Changes are only allowed at least 24 hours before the session starts.",
+    "invalidStatus": "This session can no longer be changed.",
+    "slotTaken": "That time is no longer available. Choose another start time.",
+    "notFoundSession": "Session not found."
   }
 }

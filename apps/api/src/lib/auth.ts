@@ -33,6 +33,17 @@ export async function requireApiAuth(request: Request): Promise<ElevaSession> {
   return requireBetterAuth(request)
 }
 
+/** Member-app `/me` routes: session plus personal-Space product label. */
+export async function requireMemberApiAuth(
+  request: Request
+): Promise<ElevaSession> {
+  const session = await requireApiAuth(request)
+  if (session.productLabel !== "member") {
+    throw new UnauthorizedError("missing-capability", "member product required")
+  }
+  return session
+}
+
 export async function requirePrivilegedApiAuth(
   request: Request
 ): Promise<ElevaSession> {
