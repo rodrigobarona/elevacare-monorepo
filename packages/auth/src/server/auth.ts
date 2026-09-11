@@ -197,6 +197,20 @@ function createAuth() {
         },
       },
     },
+    user: {
+      additionalFields: {
+        timezone: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+        locale: {
+          type: "string",
+          required: false,
+          input: true,
+        },
+      },
+    },
     plugins: [
       organization({
         ac,

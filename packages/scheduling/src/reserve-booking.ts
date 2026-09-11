@@ -2,10 +2,10 @@ import { randomBytes } from "node:crypto"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import {
-  CONSENT_KINDS,
+  FUNNEL_CONSENT_KINDS,
   hashGuestEmail,
   validateFunnelConsents,
-  type ConsentKind,
+  type FunnelConsentKind,
 } from "@eleva/compliance"
 import {
   findExpertByUsername,
@@ -140,7 +140,7 @@ export async function insertFunnelConsents(
   }
 
   await tx.insert(consents).values(
-    CONSENT_KINDS.map((kind: ConsentKind) => ({
+    FUNNEL_CONSENT_KINDS.map((kind: FunnelConsentKind) => ({
       orgId: input.orgId,
       ...subject,
       kind,

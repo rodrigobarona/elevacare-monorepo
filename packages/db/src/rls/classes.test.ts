@@ -61,7 +61,7 @@ describe("RLS class taxonomy", () => {
       "org_id::text"
     )
     expect(
-      classPredicateSql("owner-user-visible", "_rls_fixture_owner_user_visible")
+      classPredicateSql("owner-user-visible", "notification_preferences")
     ).toContain("eleva.user_id")
   })
 

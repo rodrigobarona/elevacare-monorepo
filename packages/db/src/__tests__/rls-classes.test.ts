@@ -10,7 +10,7 @@ import {
   type RlsClassFixture,
   type RlsPolicyClass,
 } from "../rls/classes"
-import { TENANT_TABLES } from "../rls/policies"
+import { TENANT_TABLES, OWNER_USER_TABLES } from "../rls/policies"
 
 const enabled = process.env.ELEVA_RLS_INTEGRATION === "1"
 const databaseUrl =
@@ -369,7 +369,10 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
     async () => {
       const client = await pool.connect()
       try {
-        const managed = new Set<string>(TENANT_TABLES)
+        const managed = new Set<string>([
+          ...TENANT_TABLES,
+          ...OWNER_USER_TABLES,
+        ])
         for (const row of RLS_TABLE_ASSIGNMENTS) {
           if (row.table === "audit_events") {
             continue
@@ -415,8 +418,15 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
             .flatMap((policy) => [policy.using, policy.with_check])
             .filter(Boolean)
             .join(" ")
-          expect(combined, row.table).toContain("eleva.org_id")
-          expect(combined).toContain("org_id")
+          const ownerUserTables = new Set<string>(OWNER_USER_TABLES)
+          if (ownerUserTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.user_id")
+            expect(combined, row.table).toContain("user_id")
+            expect(combined, row.table).not.toContain("eleva.org_id")
+          } else {
+            expect(combined, row.table).toContain("eleva.org_id")
+            expect(combined).toContain("org_id")
+          }
         }
       } finally {
         client.release()

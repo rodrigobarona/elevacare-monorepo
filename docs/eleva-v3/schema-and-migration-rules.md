@@ -166,11 +166,14 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `domain_event_deliveries`   | service-only                              |
 | `stripe_webhook_events`     | service-only                              |
 | `users`                     | owner-user-visible                        |
+| `notification_preferences`  | owner-user-visible                        |
+| `dsar_requests`             | owner-user-visible                        |
+| `account_deletion_requests` | owner-user-visible                        |
 | `expert_categories`         | public-read                               |
 | `audit_events` (audit DB)   | tenant-owned SELECT + service-only INSERT |
 
-Classes with no current table (`owner-user-visible` is covered by `users`; if a class has
-zero tables the Phase 1.2 suite creates a synthetic `_rls_fixture_<class>`). Future
+Classes with no current un-split table use a synthetic `_rls_fixture_<class>` in the
+Phase 1.2 suite. `owner-user-visible` is proven on `notification_preferences`. Future
 migrations declare the class in the header comment.
 
 ## Localized column contract

@@ -50,6 +50,19 @@ export const TENANT_TABLES = [
 export type TenantTable = (typeof TENANT_TABLES)[number]
 
 /**
+ * Main-DB tables keyed by `user_id = eleva.user_id` (owner-user-visible).
+ * They do not carry `org_id`; `pnpm db:rls` must not apply the tenant
+ * predicate.
+ */
+export const OWNER_USER_TABLES = [
+  "notification_preferences",
+  "dsar_requests",
+  "account_deletion_requests",
+] as const
+
+export type OwnerUserTable = (typeof OWNER_USER_TABLES)[number]
+
+/**
  * Tables that grant unrestricted access to platform admins. Bootstrap
  * operations (org provisioning, membership setup) run before
  * `eleva.org_id` is set, so these tables need an escape hatch.
@@ -117,6 +130,16 @@ export function buildMainRlsStatements(): string[] {
           `USING (counterparty_org_id::text = current_setting('eleva.org_id', true));`
       )
     }
+  }
+  for (const table of OWNER_USER_TABLES) {
+    const pred = `user_id::text = current_setting('eleva.user_id', true)`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_owner_user_visible ON ${table} ` +
+        `USING (${pred}) WITH CHECK (${pred});`
+    )
   }
   return out
 }
