@@ -239,7 +239,7 @@ export function PrivacyPanel({
             {t("dsar.description")}
           </SettingsFieldsetDescription>
           {dsarStatus ? (
-            <p className="mt-4 text-sm">
+            <p className="mt-4 text-sm" data-testid="member-dsar-status">
               {t("dsar.status", {
                 status: isDsarStatus(dsarStatus)
                   ? t(`dsar.statusLabel.${dsarStatus}`)
@@ -251,11 +251,21 @@ export function PrivacyPanel({
         <SettingsFieldsetFooter>
           <SettingsFieldsetActions>
             {downloadUrl ? (
-              <LinkButton size="sm" href={downloadUrl} target="_blank">
+              <LinkButton
+                size="sm"
+                href={downloadUrl}
+                target="_blank"
+                data-testid="member-dsar-download"
+              >
                 {t("dsar.download")}
               </LinkButton>
             ) : null}
-            <Button size="sm" isDisabled={dsarPending} onPress={handleDsar}>
+            <Button
+              size="sm"
+              isDisabled={dsarPending}
+              onPress={handleDsar}
+              data-testid="member-dsar-request"
+            >
               {dsarPending ? t("dsar.requesting") : t("dsar.request")}
             </Button>
           </SettingsFieldsetActions>

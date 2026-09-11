@@ -86,7 +86,13 @@ export function BookingCard({
   }
 
   return (
-    <Card size="sm">
+    <Card
+      size="sm"
+      data-testid="member-booking-card"
+      data-booking-id={booking.id}
+      data-status={booking.status}
+      data-expert={booking.expert.username}
+    >
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>
@@ -122,6 +128,7 @@ export function BookingCard({
         <LinkButton
           variant="outline"
           href={`/${orgSlug}/sessions/${booking.id}`}
+          data-testid="member-booking-detail"
         >
           {t("detailTitle")}
         </LinkButton>

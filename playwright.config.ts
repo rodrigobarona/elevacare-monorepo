@@ -49,6 +49,8 @@ const apiUrl = process.env.E2E_API_URL ?? "http://localhost:3002"
 const accountUrl = process.env.E2E_ACCOUNT_URL ?? "http://localhost:3006"
 const skipWebServer = process.env.E2E_SKIP_WEBSERVER === "1"
 const runAuth = process.env.E2E_AUTH === "1"
+const runMember = process.env.E2E_MEMBER === "1"
+const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3001"
 
 export default defineConfig({
   testDir: "./e2e",
@@ -86,7 +88,7 @@ export default defineConfig({
           reuseExistingServer: !process.env.CI,
           timeout: 120_000,
         },
-        ...(runAuth
+        ...(runAuth || runMember
           ? [
               {
                 command: "pnpm --filter=@eleva/account start",
@@ -94,9 +96,23 @@ export default defineConfig({
                 reuseExistingServer: !process.env.CI,
                 timeout: 120_000,
               },
+            ]
+          : []),
+        ...(runAuth
+          ? [
               {
                 command: "pnpm --filter=@eleva/admin start",
                 url: process.env.E2E_ADMIN_URL ?? "http://localhost:3007",
+                reuseExistingServer: !process.env.CI,
+                timeout: 120_000,
+              },
+            ]
+          : []),
+        ...(runMember
+          ? [
+              {
+                command: "pnpm --filter=@eleva/app start",
+                url: appUrl,
                 reuseExistingServer: !process.env.CI,
                 timeout: 120_000,
               },
