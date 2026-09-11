@@ -1,6 +1,11 @@
 import { and, eq, ne } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  lockMemberHealthConsentInvariant,
+  main,
+  withPlatformAdminContext,
+  type Tx,
+} from "@eleva/db"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -198,6 +203,10 @@ export async function confirmBookingPayment(
     await withAudit(
       { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
       async (tx, ctx) => {
+        const memberId = booking.memberUserId ?? reservation.userId
+        if (memberId) {
+          await lockMemberHealthConsentInvariant(tx, memberId)
+        }
         await flipConfirmed(tx, {
           reservationId: reservation.id,
           bookingId: booking.id,

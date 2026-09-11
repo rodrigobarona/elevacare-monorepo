@@ -13,12 +13,7 @@ import {
 import { user } from "../schema/auth"
 import * as main from "../schema/main"
 import type { LocalizedText } from "../schema/main/shared"
-import {
-  withOrgContext,
-  withPlatformAdminContext,
-  withUserContext,
-  type Tx,
-} from "../context"
+import { withPlatformAdminContext, withUserContext, type Tx } from "../context"
 import { updateUserAvatarUrl } from "./users"
 
 const MEMBER_BOOKING_PAGE_SIZE = 20
@@ -169,6 +164,19 @@ export async function upsertMemberNotificationPreferencesInTx(
   }
 ): Promise<MemberNotificationPreference[]> {
   const now = new Date()
+  const existing = await listPreferencesInTx(tx, input.userId)
+  const seed = existing[0]
+  const timezone =
+    input.timezone !== undefined ? input.timezone : (seed?.timezone ?? null)
+  const quietHoursStart =
+    input.quietHoursStart !== undefined
+      ? input.quietHoursStart
+      : (seed?.quietHoursStart ?? null)
+  const quietHoursEnd =
+    input.quietHoursEnd !== undefined
+      ? input.quietHoursEnd
+      : (seed?.quietHoursEnd ?? null)
+
   for (const preference of input.preferences) {
     const set: {
       enabled: boolean
@@ -196,9 +204,9 @@ export async function upsertMemberNotificationPreferencesInTx(
         channel: preference.channel,
         category: preference.category,
         enabled: preference.enabled,
-        quietHoursStart: input.quietHoursStart ?? null,
-        quietHoursEnd: input.quietHoursEnd ?? null,
-        timezone: input.timezone ?? null,
+        quietHoursStart,
+        quietHoursEnd,
+        timezone,
         updatedAt: now,
       })
       .onConflictDoUpdate({
@@ -210,6 +218,33 @@ export async function upsertMemberNotificationPreferencesInTx(
         set,
       })
   }
+
+  const memberLevel: {
+    updatedAt: Date
+    quietHoursStart?: string | null
+    quietHoursEnd?: string | null
+    timezone?: string | null
+  } = { updatedAt: now }
+  if (input.quietHoursStart !== undefined) {
+    memberLevel.quietHoursStart = input.quietHoursStart
+  }
+  if (input.quietHoursEnd !== undefined) {
+    memberLevel.quietHoursEnd = input.quietHoursEnd
+  }
+  if (input.timezone !== undefined) {
+    memberLevel.timezone = input.timezone
+  }
+  if (
+    input.timezone !== undefined ||
+    input.quietHoursStart !== undefined ||
+    input.quietHoursEnd !== undefined
+  ) {
+    await tx
+      .update(main.notificationPreferences)
+      .set(memberLevel)
+      .where(eq(main.notificationPreferences.userId, input.userId))
+  }
+
   return listPreferencesInTx(tx, input.userId)
 }
 
@@ -424,31 +459,37 @@ export async function listMemberPayments(input: {
   })
 }
 
-export async function cacheBookingPaymentReceipt(input: {
-  paymentId: string
-  orgId: string
-  receiptUrl: string
-  stripeChargeId?: string | null
-}): Promise<void> {
-  await withOrgContext(input.orgId, async (tx) => {
-    await tx
-      .update(main.bookingPayments)
-      .set({
-        receiptUrl: input.receiptUrl,
-        ...(input.stripeChargeId
-          ? { stripeChargeId: input.stripeChargeId }
-          : {}),
-      })
-      .where(eq(main.bookingPayments.id, input.paymentId))
-  })
+export async function cacheBookingPaymentReceipt(
+  tx: Tx,
+  input: {
+    paymentId: string
+    receiptUrl: string
+    stripeChargeId?: string | null
+  }
+): Promise<void> {
+  await tx
+    .update(main.bookingPayments)
+    .set({
+      receiptUrl: input.receiptUrl,
+      ...(input.stripeChargeId ? { stripeChargeId: input.stripeChargeId } : {}),
+    })
+    .where(eq(main.bookingPayments.id, input.paymentId))
+}
+
+export async function lockMemberHealthConsentInvariant(
+  tx: Tx,
+  userId: string
+): Promise<void> {
+  await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${userId}))`)
 }
 
 export async function memberHasConfirmedFutureBooking(
   userId: string,
-  now: Date = new Date()
+  now: Date = new Date(),
+  tx?: Tx
 ): Promise<boolean> {
-  return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
+  const run = async (handle: Tx) => {
+    const [row] = await handle
       .select({ id: main.bookings.id })
       .from(main.bookings)
       .where(
@@ -460,7 +501,9 @@ export async function memberHasConfirmedFutureBooking(
       )
       .limit(1)
     return Boolean(row)
-  })
+  }
+  if (tx) return run(tx)
+  return withPlatformAdminContext(run)
 }
 
 function clampPageSize(limit: number | undefined, fallback: number): number {

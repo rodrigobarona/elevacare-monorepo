@@ -1,3 +1,4 @@
+import { withAudit } from "@eleva/audit"
 import {
   cacheBookingPaymentReceipt,
   listMemberPayments,
@@ -14,10 +15,8 @@ export async function listMemberPaymentsWithReceipts(input: {
   limit?: number
 }): Promise<MemberListResult<MemberPaymentListItem>> {
   const listed = await listMemberPayments(input)
-  const items = await mapPool(
-    listed.items,
-    RECEIPT_CONCURRENCY,
-    resolvePaymentReceipt
+  const items = await mapPool(listed.items, RECEIPT_CONCURRENCY, (payment) =>
+    resolvePaymentReceipt(payment, input.userId)
   )
   return { items, nextCursor: listed.nextCursor }
 }
@@ -30,7 +29,8 @@ function needsReceipt(payment: MemberPaymentListItem): boolean {
 }
 
 async function resolvePaymentReceipt(
-  payment: MemberPaymentListItem
+  payment: MemberPaymentListItem,
+  actorUserId: string
 ): Promise<MemberPaymentListItem> {
   if (!needsReceipt(payment)) return payment
   try {
@@ -39,11 +39,18 @@ async function resolvePaymentReceipt(
       stripePaymentIntentId: payment.stripePaymentIntentId,
     })
     if (!receipt) return payment
-    await cacheBookingPaymentReceipt({
-      paymentId: payment.id,
-      orgId: payment.orgId,
-      receiptUrl: receipt.receiptUrl,
-      stripeChargeId: receipt.stripeChargeId,
+    await withAudit({ orgId: payment.orgId, actorUserId }, async (tx, ctx) => {
+      await cacheBookingPaymentReceipt(tx, {
+        paymentId: payment.id,
+        receiptUrl: receipt.receiptUrl,
+        stripeChargeId: receipt.stripeChargeId,
+      })
+      await ctx.emit({
+        entity: "booking_payment",
+        action: "updated",
+        entityId: payment.id,
+        payload: { receiptCached: true },
+      })
     })
     return {
       ...payment,
