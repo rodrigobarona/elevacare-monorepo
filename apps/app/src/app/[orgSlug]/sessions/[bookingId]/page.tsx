@@ -38,7 +38,12 @@ async function findBooking(
 ) {
   for (const range of ["upcoming", "past"] as const) {
     let cursor: string | undefined
-    for (let page = 0; page < 8; page += 1) {
+    const seenCursors = new Set<string>()
+    while (true) {
+      if (cursor) {
+        if (seenCursors.has(cursor)) break
+        seenCursors.add(cursor)
+      }
       const result = await api.me.listBookings({ range, cursor })
       const found = result.bookings.find((booking) => booking.id === bookingId)
       if (found) return found

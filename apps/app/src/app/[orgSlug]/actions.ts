@@ -13,13 +13,14 @@ import {
 } from "@eleva/api-client"
 import { requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
+import { deletePublicBlob } from "@eleva/storage"
 import {
   cookieName,
   getLocaleCookieOptions,
   isLocale,
   type Locale,
 } from "@eleva/config/i18n"
-import { getAuthedApiClient } from "@/lib/member-api"
+import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 
 export type ActionResult<T = void> = T extends void
   ? { ok: true } | { ok: false; error: string }
@@ -68,6 +69,24 @@ function revalidateMember(orgSlug: string) {
   revalidatePath(`/${orgSlug}/privacy`)
 }
 
+const PUBLIC_BLOB_HOST = /\.public\.blob\.vercel-storage\.com$/
+
+async function discardOrphanPublicAvatar(url: string): Promise<void> {
+  try {
+    const parsed = new URL(url)
+    if (
+      parsed.protocol !== "https:" ||
+      !PUBLIC_BLOB_HOST.test(parsed.hostname) ||
+      !parsed.pathname.includes("/avatar/profile/")
+    ) {
+      return
+    }
+    await deletePublicBlob(url)
+  } catch (err) {
+    console.warn("discardOrphanPublicAvatar failed", err)
+  }
+}
+
 export async function updateProfileAction(
   orgSlug: string,
   input: unknown
@@ -76,6 +95,7 @@ export async function updateProfileAction(
   const body = PatchMeRequestSchema.safeParse(input)
   if (!slug.success || !body.success) return { ok: false, error: "validation" }
   try {
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.patch(body.data)
     revalidateMember(slug.data)
@@ -96,7 +116,7 @@ export async function updateLanguageAction(
   }
   const locale: Locale = localeRaw
   try {
-    await requireSession()
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.patch({ locale })
     const [jar, hdrs] = await Promise.all([cookies(), headers()])
@@ -123,6 +143,7 @@ export async function updateNotificationPreferencesAction(
   const body = PutNotificationPreferencesRequestSchema.safeParse(input)
   if (!slug.success || !body.success) return { ok: false, error: "validation" }
   try {
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.putNotificationPreferences(body.data)
     revalidateMember(slug.data)
@@ -141,6 +162,7 @@ export async function updateConsentAction(
   const body = PutMeConsentRequestSchema.safeParse(input)
   if (!slug.success || !body.success) return { ok: false, error: "validation" }
   try {
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.putConsent(body.data)
     revalidateMember(slug.data)
@@ -159,6 +181,7 @@ export async function cancelBookingAction(
   const id = UuidSchema.safeParse(bookingId)
   if (!slug.success || !id.success) return { ok: false, error: "validation" }
   try {
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.cancelBooking(id.data)
     revalidateMember(slug.data)
@@ -181,6 +204,7 @@ export async function rescheduleBookingAction(
     return { ok: false, error: "validation" }
   }
   try {
+    await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
     await api.me.rescheduleBooking(id.data, body.data)
     revalidateMember(slug.data)
@@ -263,13 +287,18 @@ export async function updateAvatarAction(
 ): Promise<ActionResult> {
   const slug = OrgSlugSchema.safeParse(orgSlug)
   const body = UpdateAvatarRequestSchema.safeParse({ url })
-  if (!slug.success || !body.success) return { ok: false, error: "validation" }
+  if (!body.success) return { ok: false, error: "validation" }
+  if (!slug.success) {
+    await discardOrphanPublicAvatar(body.data.url)
+    return { ok: false, error: "validation" }
+  }
   try {
     const api = await getAuthedApiClient()
     await api.users.avatar.update(body.data)
     revalidateMember(slug.data)
     return { ok: true }
   } catch (err) {
+    await discardOrphanPublicAvatar(body.data.url)
     console.error("updateAvatarAction failed", err)
     return { ok: false, error: mapGenericError(err) }
   }

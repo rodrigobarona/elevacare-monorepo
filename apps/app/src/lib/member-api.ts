@@ -5,6 +5,12 @@ import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
 import { requireSession } from "@eleva/auth/server"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
+const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
+
+function isLocalHttpApiUrl(parsed: URL): boolean {
+  return parsed.protocol === "http:" && LOCAL_API_HOSTS.has(parsed.hostname)
+}
+
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
   if (!url) {
@@ -12,7 +18,17 @@ function getApiBaseUrl(): string {
       "NEXT_PUBLIC_API_URL environment variable is required but not set"
     )
   }
-  return url
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    throw new Error("NEXT_PUBLIC_API_URL must be a valid absolute URL")
+  }
+  if (parsed.protocol === "https:") return url
+  if (isLocalHttpApiUrl(parsed)) return url
+  throw new Error(
+    "NEXT_PUBLIC_API_URL must use HTTPS outside local development"
+  )
 }
 
 export async function getAuthedApiClient() {

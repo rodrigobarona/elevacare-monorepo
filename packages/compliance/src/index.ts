@@ -57,6 +57,7 @@ export {
 } from "./dsar-requests"
 export {
   scheduleAccountDeletion,
+  getPendingAccountDeletion,
   cancelAccountDeletion,
   sweepAccountDeletions,
   completeSweptAccountDeletions,

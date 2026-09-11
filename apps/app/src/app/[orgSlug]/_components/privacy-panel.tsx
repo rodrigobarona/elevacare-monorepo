@@ -56,9 +56,14 @@ function isDsarStatus(value: string): value is DsarStatus {
 interface PrivacyPanelProps {
   orgSlug: string
   consents: MemberConsent[]
+  scheduledFor: string | null
 }
 
-export function PrivacyPanel({ orgSlug, consents }: PrivacyPanelProps) {
+export function PrivacyPanel({
+  orgSlug,
+  consents,
+  scheduledFor: initialScheduledFor,
+}: PrivacyPanelProps) {
   const t = useTranslations("privacy")
   const tc = useTranslations("common")
   const te = useTranslations("errors")
@@ -70,7 +75,9 @@ export function PrivacyPanel({ orgSlug, consents }: PrivacyPanelProps) {
   const [dsarPending, setDsarPending] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [deletePending, setDeletePending] = useState(false)
-  const [scheduledFor, setScheduledFor] = useState<string | null>(null)
+  const [scheduledFor, setScheduledFor] = useState<string | null>(
+    initialScheduledFor
+  )
 
   useEffect(() => {
     if (!dsarId) return

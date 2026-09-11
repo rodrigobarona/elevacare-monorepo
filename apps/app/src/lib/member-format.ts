@@ -64,6 +64,62 @@ export function toDatetimeLocalValue(iso: string, timeZone: string): string {
   return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`
 }
 
+type WallClock = {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+}
+
+function wallClockInZone(ms: number, timeZone: string): WallClock {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(new Date(ms))
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ""
+  return {
+    year: Number(get("year")),
+    month: Number(get("month")),
+    day: Number(get("day")),
+    hour: Number(get("hour")),
+    minute: Number(get("minute")),
+  }
+}
+
+function sameWallClock(left: WallClock, right: WallClock): boolean {
+  return (
+    left.year === right.year &&
+    left.month === right.month &&
+    left.day === right.day &&
+    left.hour === right.hour &&
+    left.minute === right.minute
+  )
+}
+
+function zoneOffsetMs(instant: number, timeZone: string): number {
+  const zoned = wallClockInZone(instant, timeZone)
+  const asUtc = Date.UTC(
+    zoned.year,
+    zoned.month - 1,
+    zoned.day,
+    zoned.hour,
+    zoned.minute
+  )
+  return asUtc - instant
+}
+
+/**
+ * Convert a datetime-local wall clock in `timeZone` to UTC ISO.
+ * Nonexistent DST-gap times throw. Ambiguous DST-overlap times use the
+ * earlier occurrence.
+ */
 export function fromDatetimeLocalValue(
   localValue: string,
   timeZone: string
@@ -72,15 +128,31 @@ export function fromDatetimeLocalValue(
   if (!match) {
     throw new Error("invalid datetime")
   }
-  const year = Number(match[1])
-  const month = Number(match[2])
-  const day = Number(match[3])
-  const hour = Number(match[4])
-  const minute = Number(match[5])
-  const asUtc = Date.UTC(year, month - 1, day, hour, minute)
-  const utcDate = new Date(asUtc)
-  const inZone = new Date(utcDate.toLocaleString("en-US", { timeZone: "UTC" }))
-  const zoned = new Date(utcDate.toLocaleString("en-US", { timeZone }))
-  const offset = inZone.getTime() - zoned.getTime()
-  return new Date(asUtc + offset).toISOString()
+  const wanted: WallClock = {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+    hour: Number(match[4]),
+    minute: Number(match[5]),
+  }
+  const utcGuess = Date.UTC(
+    wanted.year,
+    wanted.month - 1,
+    wanted.day,
+    wanted.hour,
+    wanted.minute
+  )
+  const first = utcGuess - zoneOffsetMs(utcGuess, timeZone)
+  const instant = utcGuess - zoneOffsetMs(first, timeZone)
+  if (!sameWallClock(wallClockInZone(instant, timeZone), wanted)) {
+    throw new Error("invalid datetime")
+  }
+  const hourMs = 60 * 60 * 1000
+  const candidates = [instant]
+  for (const probe of [instant - hourMs, instant + hourMs]) {
+    if (sameWallClock(wallClockInZone(probe, timeZone), wanted)) {
+      candidates.push(probe)
+    }
+  }
+  return new Date(Math.min(...candidates)).toISOString()
 }

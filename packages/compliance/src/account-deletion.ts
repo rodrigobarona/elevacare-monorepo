@@ -326,6 +326,30 @@ export async function scheduleAccountDeletion(input: {
   )
 }
 
+export async function getPendingAccountDeletion(
+  userId: string
+): Promise<{ requestId: string; scheduledFor: Date } | null> {
+  const now = new Date()
+  const [row] = await withPlatformAdminContext((tx) =>
+    tx
+      .select({
+        id: main.accountDeletionRequests.id,
+        scheduledFor: main.accountDeletionRequests.scheduledFor,
+      })
+      .from(main.accountDeletionRequests)
+      .where(
+        and(
+          eq(main.accountDeletionRequests.userId, userId),
+          eq(main.accountDeletionRequests.status, "pending"),
+          gt(main.accountDeletionRequests.scheduledFor, now)
+        )
+      )
+      .limit(1)
+  )
+  if (!row) return null
+  return { requestId: row.id, scheduledFor: row.scheduledFor }
+}
+
 export async function cancelAccountDeletion(input: {
   userId: string
   orgId: string
