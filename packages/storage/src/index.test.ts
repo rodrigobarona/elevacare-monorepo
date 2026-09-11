@@ -1,8 +1,11 @@
-import { describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   UploadValidationError,
   ALLOWED_DOCUMENT_MIME_TYPES,
   MAX_DOCUMENT_BYTES,
+  uploadPrivateBlob,
+  getPrivateDocument,
+  deletePrivateDocument,
 } from "./index"
 
 describe("upload validation constants", () => {
@@ -36,5 +39,29 @@ describe("UploadValidationError", () => {
     expect(err.code).toBe("too-large")
     expect(err.name).toBe("UploadValidationError")
     expect(err).toBeInstanceOf(Error)
+  })
+})
+
+describe("e2e private blob mock", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs()
+  })
+
+  it("stores and streams without calling Vercel when E2E_MOCK_PRIVATE_BLOB=1", async () => {
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
+    const uploaded = await uploadPrivateBlob({
+      pathname: "dsar/user-1/export.zip",
+      body: Buffer.from("PK"),
+      contentType: "application/zip",
+    })
+    expect(uploaded.url).toMatch(/^e2e-private:\/\//)
+    expect(uploaded.pathname).toBe("dsar/user-1/export.zip")
+    const got = await getPrivateDocument(uploaded.url)
+    expect(got?.stream).toBeInstanceOf(ReadableStream)
+    const byPath = await getPrivateDocument(uploaded.pathname)
+    expect(byPath?.stream).toBeInstanceOf(ReadableStream)
+    await deletePrivateDocument(uploaded.url)
+    expect(await getPrivateDocument(uploaded.url)).toBeNull()
   })
 })

@@ -20,8 +20,7 @@ import {
   walkFunnelToDetails,
 } from "./helpers/booking"
 import {
-  isVercelProductionTarget,
-  mockPrivateBlob,
+  isNonLoopbackE2eTarget,
   PAID_EXPERT,
   PAID_OFFER,
   webUrl,
@@ -29,6 +28,7 @@ import {
 
 const runMemberJourney = process.env.E2E_MEMBER === "1"
 const runLiveStripe = process.env.E2E_LIVE_STRIPE === "1"
+const CANCEL_MIN_START = () => new Date(Date.now() + 25 * 60 * 60 * 1000)
 
 function cookieHeaderFromPage(
   cookies: Array<{ name: string; value: string }>
@@ -37,10 +37,10 @@ function cookieHeaderFromPage(
 }
 
 test.describe("member e2e target", () => {
-  test("does not run auth or member journeys against Vercel Production", () => {
+  test("does not run auth or member journeys against non-loopback hosts", () => {
     expect(
-      isVercelProductionTarget(),
-      "Auth and member e2e must stay on local (localhost / pnpm dev). Do not set E2E_*_URL to eleva.care Production."
+      isNonLoopbackE2eTarget(),
+      "Auth and member e2e must stay on loopback (localhost / 127.0.0.1 / ::1). Do not set E2E_*_URL to staging or Production."
     ).toBe(false)
   })
 })
@@ -52,8 +52,8 @@ test.describe("member Space journey", () => {
     "Set E2E_MEMBER=1 E2E_SKIP_WEBSERVER=1 with pnpm dev (web, api, app, account)"
   )
   test.skip(
-    isVercelProductionTarget(),
-    "member e2e must not run against Vercel Production"
+    isNonLoopbackE2eTarget(),
+    "member e2e must not run against non-loopback hosts"
   )
 
   test("guest magic-link activation shows the booking, persists a preference, requests DSAR, and cancels within policy", async ({
@@ -84,7 +84,7 @@ test.describe("member Space journey", () => {
     )
 
     const email = uniqueGuestEmail("member")
-    await walkFunnelToDetails(page)
+    await walkFunnelToDetails(page, { minStart: CANCEL_MIN_START() })
     await fillGuestAndConsents(page, { name: "E2E Member", email })
 
     const reserve = page.waitForResponse(
@@ -135,54 +135,61 @@ test.describe("member Space journey", () => {
     }
     const confirmResponse = await confirm
     expect([200, 201]).toContain(confirmResponse.status())
+    const confirmBody = (await confirmResponse.json()) as { bookingId?: string }
+    const bookingId = confirmBody.bookingId
+    expect(bookingId).toBeTruthy()
     await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
       "data-state",
       "confirmed",
       { timeout: 45_000 }
     )
 
-    const magicUrl = await waitForE2eAuthUrl("magic-link", email, 20_000)
-    test.skip(
-      !magicUrl,
-      "magic-link URL missing — set E2E_AUTH_CAPTURE=1 and restart pnpm dev"
-    )
+    try {
+      const magicUrl = await waitForE2eAuthUrl("magic-link", email, 20_000)
+      if (!magicUrl) {
+        throw new Error(
+          "magic-link URL missing — set E2E_AUTH_CAPTURE=1 and restart pnpm dev"
+        )
+      }
 
-    await page.goto(magicUrl!)
-    await page.goto(`${webUrl}/dashboard`)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+(?:\/)?(?:\?.*)?$/, {
-      timeout: 20_000,
-    })
+      await page.goto(magicUrl)
+      await page.goto(`${webUrl}/dashboard`)
+      await expect(page).toHaveURL(/\/space-[a-z0-9]+(?:\/)?(?:\?.*)?$/, {
+        timeout: 20_000,
+      })
 
-    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
-    expect(spaceSlug).toMatch(/^space-/)
+      const spaceSlug = new URL(page.url()).pathname
+        .split("/")
+        .filter(Boolean)[0]
+      expect(spaceSlug).toMatch(/^space-/)
 
-    const bookingCard = page.getByTestId("member-booking-card")
-    await expect(bookingCard.first()).toBeVisible({ timeout: 15_000 })
-    await expect(bookingCard.first()).toHaveAttribute(
-      "data-expert",
-      PAID_EXPERT
-    )
-    await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
+      const bookingCard = page.getByTestId("member-booking-card")
+      await expect(bookingCard.first()).toBeVisible({ timeout: 15_000 })
+      await expect(bookingCard.first()).toHaveAttribute(
+        "data-expert",
+        PAID_EXPERT
+      )
+      await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
 
-    await persistMarketingPreference(page, request, spaceSlug)
-    await requestDsarWithMockedBlob(page, spaceSlug)
+      await persistMarketingPreference(page, request, spaceSlug)
+      await requestDsarWithMockedBlob(page, spaceSlug)
 
-    await page.goto(`/${spaceSlug}`)
-    await page.getByTestId("member-booking-detail").first().click()
-    const cancel = page.getByTestId("member-cancel-session")
-    await expect(cancel).toBeVisible()
-    if (await cancel.isDisabled()) {
-      test.skip(true, "booking is inside the 24-hour cancel window")
-      return
+      await page.goto(`/${spaceSlug}`)
+      await page.getByTestId("member-booking-detail").first().click()
+      const cancel = page.getByTestId("member-cancel-session")
+      await expect(cancel).toBeVisible()
+      await expect(cancel).toBeEnabled()
+      await cancel.click()
+      await page.getByTestId("member-cancel-confirm").click()
+      await expect(page).toHaveURL(new RegExp(`/${spaceSlug}/sessions`), {
+        timeout: 15_000,
+      })
+      await expect(
+        page.getByTestId("member-booking-card").first()
+      ).toHaveAttribute("data-status", "cancelled")
+    } finally {
+      await cancelCreatedBooking(page, request, bookingId)
     }
-    await cancel.click()
-    await page.getByTestId("member-cancel-confirm").click()
-    await expect(page).toHaveURL(new RegExp(`/${spaceSlug}/sessions`), {
-      timeout: 15_000,
-    })
-    await expect(
-      page.getByTestId("member-booking-card").first()
-    ).toHaveAttribute("data-status", "cancelled")
   })
 })
 
@@ -192,8 +199,8 @@ test.describe("member Space without live Stripe", () => {
     "Set E2E_MEMBER=1 E2E_SKIP_WEBSERVER=1 with pnpm dev"
   )
   test.skip(
-    isVercelProductionTarget(),
-    "member e2e must not run against Vercel Production"
+    isNonLoopbackE2eTarget(),
+    "member e2e must not run against non-loopback hosts"
   )
   test.skip(runLiveStripe, "live Stripe journey already covers prefs + DSAR")
 
@@ -285,10 +292,36 @@ async function requestDsarWithMockedBlob(
   page: Page,
   spaceSlug: string
 ): Promise<void> {
-  await mockPrivateBlob(page)
+  // Private Blob is mocked in `@eleva/storage` when E2E_AUTH_CAPTURE=1
+  // or E2E_MOCK_PRIVATE_BLOB=1 (server process). Playwright cannot intercept
+  // Node `@vercel/blob.put`.
   await page.goto(`/${spaceSlug}/privacy`)
   await page.getByTestId("member-dsar-request").click()
-  await expect(page.getByTestId("member-dsar-status")).toBeVisible({
-    timeout: 15_000,
+  const status = page.getByTestId("member-dsar-status")
+  await expect(status).toHaveAttribute("data-status", "ready", {
+    timeout: 30_000,
   })
+  const download = page.getByTestId("member-dsar-download")
+  await expect(download).toBeVisible()
+  const [downloadEvent] = await Promise.all([
+    page.waitForEvent("download"),
+    download.click(),
+  ])
+  expect(downloadEvent.suggestedFilename()).toMatch(/eleva-member-export\.zip/)
+  expect(await downloadEvent.failure()).toBeNull()
+}
+
+async function cancelCreatedBooking(
+  page: Page,
+  request: APIRequestContext,
+  bookingId: string | undefined
+): Promise<void> {
+  if (!bookingId) return
+  const cookies = cookieHeaderFromPage(await page.context().cookies())
+  if (!cookies) return
+  const response = await request.post(
+    `${apiUrl}/me/bookings/${bookingId}/cancel`,
+    { headers: authHeaders(cookies) }
+  )
+  expect([200, 409]).toContain(response.status())
 }

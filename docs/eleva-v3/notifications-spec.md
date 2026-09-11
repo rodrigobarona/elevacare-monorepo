@@ -72,7 +72,7 @@ Responsibilities (`{ userId }` mode):
 - resolve user preferences (`notification_preferences` unique on `(user_id, channel, category)`; see Preference Model)
 - resolve locale + timezone
 - render React Email template per channel
-- fan out to enabled channels in order: in-app (always), email, SMS, push
+- fan out to channels whose `(user_id, channel, category).enabled` flag is true, in order: in-app, email, SMS, push. Required `payment` / `system` categories ignore a disabled flag at send time.
 
 `{ email, locale? }` mode (recipient without an account — invitations to unknown addresses, guest
 booking confirmations before activation) is the explicit exception: no preferences lookup, no
@@ -178,11 +178,11 @@ Lane 1 only, opt-in, quiet-hours respected:
 - cancellation
 - payment failed (urgent)
 
-Preference model requires explicit SMS consent per kind.
+Preference model requires explicit SMS consent per category (`(user_id, channel, category)`).
 
 ### In-app (Neon-backed inbox)
 
-Lane 1 always fans out here (regardless of email/SMS preferences):
+Lane 1 fans out here when `in_app.enabled` is true for that category (required `payment` / `system` categories still send):
 
 - all dashboard alerts
 - expert follow-up tasks
@@ -251,8 +251,8 @@ Rules:
 - Member-facing product copy uses **members** and personal **Spaces**, not patients or workspaces.
 - SMS is explicit opt-in; UI default is off.
 - Marketing is explicit opt-in; UI default is off. Lane 2 still also requires `marketing` consent (`PUT /me/consents`); withdrawing marketing consent is immediate.
-- Transactional categories that are operationally required (`payment` / `system` equivalents of payment_failed, `stripe_account_capability_changed`) cannot be turned off at send time in Phase 8 — the matrix still stores the member's choice.
-- Quiet hours are stored in the member's timezone. Phase 8 evaluates them in that TZ. Quiet hours apply to SMS (and later push); email and in-app still deliver immediately.
+- Transactional categories that are operationally required (`payment` / `system` equivalents of payment_failed, `stripe_account_capability_changed`) cannot be turned off at send time in Phase 8 — the matrix still stores the member's choice. This applies to every channel, including `in_app.enabled`. Booking, reminder, and marketing use the stored `enabled` flag at send time, including in-app.
+- Quiet hours are stored in the member's timezone. Phase 8 evaluates them in that TZ. Quiet hours apply to SMS (and later push); email and in-app still deliver immediately when the category is enabled (or required).
 - Guest booking confirmation before activation is the explicit exception: no preferences lookup (see Lane 1 `{ email }` mode).
 
 `apps/app` `/[orgSlug]/settings` is the member editor for this matrix. Playwright `e2e/member.spec.ts` persists one cell (email × marketing) and asserts `GET /me`.

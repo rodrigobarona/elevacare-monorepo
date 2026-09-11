@@ -270,7 +270,9 @@ Member data-subject access requests are a Phase 5 privacy API, not a staff-only 
 
 ### Collectors and store
 
-`@eleva/compliance` `dsarExport(userId)` walks the collector registry. Phase 5 registers profile, bookings, payments, consents, and notification preferences. Later phases register their own collectors in their own PR (Phase 8 deliveries, Phase 10 records).
+`@eleva/compliance` `dsarExport(userId, orgId?)` walks the collector registry. Phase 5 registers profile, bookings, payments, consents, and notification preferences. Bookings collection uses `withOrgContext(orgId)` (same RLS as `GET /me/bookings`). Later phases register their own collectors in their own PR (Phase 8 deliveries, Phase 10 records).
+
+Kickoff stays QStash + localhost inline for Phase 5 (D-17). ADR-007 Vercel Workflows migration is deferred.
 
 Output is a JSON + CSV zip uploaded with `uploadPrivateBlob` from `@eleva/storage` (`BLOB_PRIVATE_READ_WRITE_TOKEN`). Public Blob is never used for DSAR. Path pattern: `dsar/{userId}/export.zip`.
 

@@ -285,6 +285,7 @@ async function listPreferencesInTx(
 
 export async function listMemberBookings(input: {
   userId: string
+  orgId: string
   range: "upcoming" | "past"
   cursor?: string
   limit?: number
@@ -293,8 +294,14 @@ export async function listMemberBookings(input: {
   const cursor = decodeMemberCursor(input.cursor)
   const now = new Date()
 
-  return withPlatformAdminContext(async (tx) => {
-    const conditions = [eq(main.bookings.memberUserId, input.userId)]
+  const rows = await withOrgContext(input.orgId, async (tx) => {
+    const conditions = [
+      eq(main.bookings.memberUserId, input.userId),
+      or(
+        eq(main.bookings.orgId, input.orgId),
+        eq(main.bookings.counterpartyOrgId, input.orgId)
+      )!,
+    ]
     if (input.range === "upcoming") {
       conditions.push(sql`${main.bookings.startsAt} >= ${now}`)
       conditions.push(
@@ -336,7 +343,7 @@ export async function listMemberBookings(input: {
         ? [asc(main.bookings.startsAt), asc(main.bookings.id)]
         : [desc(main.bookings.startsAt), desc(main.bookings.id)]
 
-    const rows = await tx
+    return tx
       .select({
         id: main.bookings.id,
         orgId: main.bookings.orgId,
@@ -347,49 +354,112 @@ export async function listMemberBookings(input: {
         sessionMode: main.bookings.sessionMode,
         priceCents: main.bookings.priceCents,
         currency: main.bookings.currency,
-        expertDisplayName: main.expertProfiles.displayName,
-        expertUsername: main.expertProfiles.username,
-        eventSlug: main.eventTypes.slug,
-        eventTitle: main.eventTypes.title,
       })
       .from(main.bookings)
-      .innerJoin(
-        main.expertProfiles,
-        eq(main.expertProfiles.id, main.bookings.expertProfileId)
-      )
-      .innerJoin(
-        main.eventTypes,
-        eq(main.eventTypes.id, main.bookings.eventTypeId)
-      )
       .where(and(...conditions))
       .orderBy(...order)
       .limit(limit + 1)
-
-    const page = rows.slice(0, limit)
-    const last = page[page.length - 1]
-    return {
-      items: page.map((row) => ({
-        id: row.id,
-        orgId: row.orgId,
-        status: row.status,
-        startsAt: row.startsAt,
-        endsAt: row.endsAt,
-        timezone: row.timezone,
-        sessionMode: row.sessionMode,
-        priceCents: row.priceCents,
-        currency: row.currency,
-        expert: {
-          displayName: row.expertDisplayName,
-          username: row.expertUsername,
-        },
-        eventType: { slug: row.eventSlug, title: row.eventTitle },
-      })),
-      nextCursor:
-        rows.length > limit && last
-          ? encodeMemberCursor(last.startsAt, last.id)
-          : null,
-    }
   })
+
+  const page = rows.slice(0, limit)
+  const last = page[page.length - 1]
+  const detailsById = await loadMemberBookingDetails(page)
+
+  return {
+    items: page.flatMap((row) => {
+      const details = detailsById.get(row.id)
+      if (!details) return []
+      return [
+        {
+          id: row.id,
+          orgId: row.orgId,
+          status: row.status,
+          startsAt: row.startsAt,
+          endsAt: row.endsAt,
+          timezone: row.timezone,
+          sessionMode: row.sessionMode,
+          priceCents: row.priceCents,
+          currency: row.currency,
+          expert: {
+            displayName: details.displayName,
+            username: details.username,
+          },
+          eventType: { slug: details.slug, title: details.title },
+        },
+      ]
+    }),
+    nextCursor:
+      rows.length > limit && last
+        ? encodeMemberCursor(last.startsAt, last.id)
+        : null,
+  }
+}
+
+async function loadMemberBookingDetails(
+  page: Array<{ id: string; orgId: string }>
+): Promise<
+  Map<
+    string,
+    {
+      displayName: string
+      username: string
+      slug: string
+      title: LocalizedText
+    }
+  >
+> {
+  const detailsById = new Map<
+    string,
+    {
+      displayName: string
+      username: string
+      slug: string
+      title: LocalizedText
+    }
+  >()
+  if (page.length === 0) return detailsById
+
+  const idsByOrg = new Map<string, string[]>()
+  for (const row of page) {
+    const ids = idsByOrg.get(row.orgId) ?? []
+    ids.push(row.id)
+    idsByOrg.set(row.orgId, ids)
+  }
+
+  await Promise.all(
+    [...idsByOrg.entries()].map(async ([expertOrgId, ids]) => {
+      const details = await withOrgContext(expertOrgId, async (tx) =>
+        tx
+          .select({
+            id: main.bookings.id,
+            displayName: main.expertProfiles.displayName,
+            username: main.expertProfiles.username,
+            slug: main.eventTypes.slug,
+            title: main.eventTypes.title,
+          })
+          .from(main.bookings)
+          .innerJoin(
+            main.expertProfiles,
+            eq(main.expertProfiles.id, main.bookings.expertProfileId)
+          )
+          .innerJoin(
+            main.eventTypes,
+            eq(main.eventTypes.id, main.bookings.eventTypeId)
+          )
+          .where(inArray(main.bookings.id, ids))
+      )
+      for (const row of details) {
+        detailsById.set(row.id, {
+          displayName: row.displayName,
+          username: row.username,
+          slug: row.slug,
+          title: row.title,
+        })
+      }
+    })
+  )
+
+  return detailsById
 }
 
 export async function listMemberPayments(input: {

@@ -12,7 +12,7 @@ export type DsarCollectorResult = {
 
 export type DsarCollector = {
   id: string
-  collect: (userId: string) => Promise<DsarCollectorResult>
+  collect: (userId: string, orgId?: string) => Promise<DsarCollectorResult>
 }
 
 const collectors = new Map<string, DsarCollector>()

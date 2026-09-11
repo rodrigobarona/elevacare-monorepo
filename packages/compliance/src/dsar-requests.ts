@@ -220,7 +220,7 @@ export async function processDsarExport(input: {
   }
 
   try {
-    const exported = await dsarExport(input.userId)
+    const exported = await dsarExport(input.userId, input.orgId)
     await withPlatformAudit(
       { orgId: input.orgId, actorUserId: input.userId },
       async (tx, ctx) => {

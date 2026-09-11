@@ -239,7 +239,11 @@ export function PrivacyPanel({
             {t("dsar.description")}
           </SettingsFieldsetDescription>
           {dsarStatus ? (
-            <p className="mt-4 text-sm" data-testid="member-dsar-status">
+            <p
+              className="mt-4 text-sm"
+              data-testid="member-dsar-status"
+              data-status={dsarStatus}
+            >
               {t("dsar.status", {
                 status: isDsarStatus(dsarStatus)
                   ? t(`dsar.statusLabel.${dsarStatus}`)
