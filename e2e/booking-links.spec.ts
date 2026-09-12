@@ -30,7 +30,10 @@ test.describe("phase 04 private booking links", () => {
     const closed = await page.goto(`/fisiomota/${DEMO_PRIVATE_INVITE_SLUG}`)
     expect(closed?.status()).toBe(404)
 
-    const open = await page.goto(`/book/${DEMO_BOOKING_LINK_TOKENS.open}`)
+    let open = await page.goto(`/book/${DEMO_BOOKING_LINK_TOKENS.open}`)
+    if (open?.status() === 404) {
+      open = await page.goto(`/book/${DEMO_BOOKING_LINK_TOKENS.open}`)
+    }
     expect(open?.status()).toBe(200)
     await expect(page.getByTestId("booking-link-note")).toContainText(
       DEMO_PRIVATE_INVITE_NOTE

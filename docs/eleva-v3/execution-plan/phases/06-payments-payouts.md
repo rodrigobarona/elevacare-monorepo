@@ -2,7 +2,7 @@
 
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-06/payments-payouts` (split: `phase-06.0/spike-stripe-funds-flow`, `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`)                                                                                                                                                                                                                                                  |
+| Branch     | `phase-06/payments-payouts` (split: `phase-06.0/spike-stripe-funds-flow`, `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`, `phase-06.3/e2e-payouts`)                                                                                                                                                                                                                        |
 | Depends on | Phase 4, Phase 4B (onboarding wizard registry)                                                                                                                                                                                                                                                                                                                                                            |
 | Entry gate | Before PR 06.1 opens, finance has approved in `decision-log.md`: the settlement matrix (D-03 VAT basis of the commission, D-04 processing-fee bearer for marketplace and clinic bookings) and the Connect capability/verification requirement (D-05). Before PR 06.2 opens: the refund, dispute and no-show policy (D-06). PR 06.0 (spike, test mode) produces the evidence those approvals are based on. |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -177,6 +177,10 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 - vitest: commission, eligibility (DST + Lisbon snap), transfer idempotency (mock Stripe),
   refund paths, webhook parity test, state machine transitions.
+- Playwright `e2e/phase-06.spec.ts` (`pnpm e2e:phase06` / included in `pnpm e2e` / `pnpm e2e:smoke`):
+  OpenAPI documents refund, payout, finance, and both Stripe webhook paths; anonymous callers
+  get 401; unsigned webhooks never process; payout workflow routes reject missing drain secrets.
+  Live pay → eligible → transfer → payout remains Stripe test-mode / staging (exit gate).
 - Integration on staging: Stripe test mode, one pilot expert, one full cycle with test clock
   where possible.
 
@@ -243,7 +247,9 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 6 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-06.1/connect-onboarding-hardening
-- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
+- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Third PR:
+  phase-06.3/e2e-payouts (Playwright closeout for OpenAPI + anonymous auth + unsigned webhooks).
+  Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
