@@ -77,12 +77,18 @@ test.describe("phase 06 payout and refund surfaces", () => {
       "/webhooks/stripe",
       "/webhooks/stripe/connect",
     ] as const) {
+      const eventId = `evt_e2e_unsigned_${path.replaceAll("/", "_")}_${Date.now()}`
       const response = await request.post(`${apiUrl}${path}`, {
         headers: { "Content-Type": "application/json" },
-        data: { id: "evt_e2e_unsigned", type: "payment_intent.succeeded" },
+        data: { id: eventId, type: "payment_intent.succeeded" },
       })
       expect([400, 500], path).toContain(response.status())
-      const body = (await response.json()) as { error?: string }
+      const body = (await response.json()) as {
+        error?: string
+        received?: boolean
+        status?: string
+        eventType?: string
+      }
       expect(
         [
           "missing_signature",
@@ -92,6 +98,12 @@ test.describe("phase 06 payout and refund surfaces", () => {
         ],
         path
       ).toContain(body.error)
+      // Fail-closed responses never reach processStripeEvent (persists
+      // stripe_webhook_events + dispatches). Proven in handle-webhook.test.ts.
+      expect(body.received, path).not.toBe(true)
+      expect(body.status, path).not.toBe("processed")
+      expect(body.status, path).not.toBe("duplicate")
+      expect(body.eventType, path).toBeUndefined()
     }
   })
 
