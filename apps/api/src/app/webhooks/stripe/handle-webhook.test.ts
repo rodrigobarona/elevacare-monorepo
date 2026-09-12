@@ -34,7 +34,7 @@ describe("handleStripeWebhook fail-closed", () => {
     stripeMock.mockReset()
     stripeMock.mockReturnValue({
       webhooks: { constructEventAsync },
-    } as ReturnType<typeof stripe>)
+    } as unknown as ReturnType<typeof stripe>)
   })
 
   it("does not dispatch when the signing secret is missing", async () => {
