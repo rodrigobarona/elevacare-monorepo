@@ -131,6 +131,7 @@
     "payoutState": "Estado do pagamento",
     "eligibleAt": "Elegível",
     "exportCsv": "Exportar CSV",
+    "exportFailed": "Não foi possível exportar o CSV. Tenta novamente.",
     "empty": "Ainda não há pagamentos de marcações.",
     "noPayout": "Não agendado",
     "status": {

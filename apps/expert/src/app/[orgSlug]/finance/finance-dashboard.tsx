@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from "@eleva/ui/components/card"
 import { Separator } from "@eleva/ui/components/separator"
+import { toast } from "sonner"
 import { exportFinanceCsv } from "./actions"
 
 const INTL_LOCALE: Record<"en" | "pt" | "es", string> = {
@@ -94,15 +95,23 @@ export function FinanceDashboard({
             variant="outline"
             onPress={() => {
               void (async () => {
-                const result = await exportFinanceCsv(orgSlug)
-                if (!result.ok || typeof window === "undefined") return
-                const blob = new Blob([result.csv], { type: "text/csv" })
-                const url = URL.createObjectURL(blob)
-                const link = document.createElement("a")
-                link.href = url
-                link.download = "finance.csv"
-                link.click()
-                URL.revokeObjectURL(url)
+                try {
+                  const result = await exportFinanceCsv(orgSlug)
+                  if (!result.ok) {
+                    toast.error(t("exportFailed"))
+                    return
+                  }
+                  if (typeof window === "undefined") return
+                  const blob = new Blob([result.csv], { type: "text/csv" })
+                  const url = URL.createObjectURL(blob)
+                  const link = document.createElement("a")
+                  link.href = url
+                  link.download = "finance.csv"
+                  link.click()
+                  URL.revokeObjectURL(url)
+                } catch {
+                  toast.error(t("exportFailed"))
+                }
               })()
             }}
           >

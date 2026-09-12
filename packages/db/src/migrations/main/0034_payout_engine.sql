@@ -102,17 +102,23 @@ ALTER TABLE "payout_states" DROP CONSTRAINT IF EXISTS "payout_states_expert_org"
 ALTER TABLE "payout_states" ADD CONSTRAINT "payout_states_expert_org"
   CHECK (org_id = expert_org_id);
 --> statement-breakpoint
-ALTER TABLE "booking_payments" DROP CONSTRAINT IF EXISTS "booking_payments_id_org_key";
+DO $$ BEGIN
+  ALTER TABLE "booking_payments" ADD CONSTRAINT "booking_payments_id_org_key" UNIQUE ("id", "org_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "booking_payments" ADD CONSTRAINT "booking_payments_id_org_key" UNIQUE ("id", "org_id");
+DO $$ BEGIN
+  ALTER TABLE "payout_states" ADD CONSTRAINT "payout_states_id_org_key" UNIQUE ("id", "org_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "payout_states" DROP CONSTRAINT IF EXISTS "payout_states_id_org_key";
---> statement-breakpoint
-ALTER TABLE "payout_states" ADD CONSTRAINT "payout_states_id_org_key" UNIQUE ("id", "org_id");
---> statement-breakpoint
-ALTER TABLE "payout_states" DROP CONSTRAINT IF EXISTS "payout_states_id_payment_key";
---> statement-breakpoint
-ALTER TABLE "payout_states" ADD CONSTRAINT "payout_states_id_payment_key" UNIQUE ("id", "booking_payment_id");
+DO $$ BEGIN
+  ALTER TABLE "payout_states" ADD CONSTRAINT "payout_states_id_payment_key" UNIQUE ("id", "booking_payment_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
 ALTER TABLE "payout_states" DROP CONSTRAINT IF EXISTS "payout_states_payment_org_fk";
 --> statement-breakpoint
@@ -168,13 +174,17 @@ ALTER TABLE "booking_refunds" DROP CONSTRAINT IF EXISTS "booking_refunds_amount"
 --> statement-breakpoint
 ALTER TABLE "booking_refunds" ADD CONSTRAINT "booking_refunds_amount" CHECK (amount_cents > 0);
 --> statement-breakpoint
-ALTER TABLE "booking_refunds" DROP CONSTRAINT IF EXISTS "booking_refunds_id_org_key";
+DO $$ BEGIN
+  ALTER TABLE "booking_refunds" ADD CONSTRAINT "booking_refunds_id_org_key" UNIQUE ("id", "org_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
-ALTER TABLE "booking_refunds" ADD CONSTRAINT "booking_refunds_id_org_key" UNIQUE ("id", "org_id");
---> statement-breakpoint
-ALTER TABLE "booking_refunds" DROP CONSTRAINT IF EXISTS "booking_refunds_id_payment_key";
---> statement-breakpoint
-ALTER TABLE "booking_refunds" ADD CONSTRAINT "booking_refunds_id_payment_key" UNIQUE ("id", "booking_payment_id");
+DO $$ BEGIN
+  ALTER TABLE "booking_refunds" ADD CONSTRAINT "booking_refunds_id_payment_key" UNIQUE ("id", "booking_payment_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
 ALTER TABLE "booking_refunds" DROP CONSTRAINT IF EXISTS "booking_refunds_payment_org_fk";
 --> statement-breakpoint

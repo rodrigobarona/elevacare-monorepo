@@ -1508,13 +1508,12 @@ async function handleChargeRefunded(
     typeof charge.payment_intent === "string"
       ? charge.payment_intent
       : (charge.payment_intent?.id ?? null)
-  const latestRefund = charge.refunds?.data?.[0]
   if (paymentIntentId) {
     await confirmRefundFromCharge({
       paymentIntentId,
       amountRefunded: charge.amount_refunded,
-      stripeRefundId: latestRefund?.id ?? null,
-      refundRowId: latestRefund?.metadata?.refund_row_id ?? null,
+      stripeRefundId: null,
+      refundRowId: null,
     })
   }
   await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
@@ -1736,17 +1735,44 @@ async function handleTransferEvent(
         )
         .limit(1)
       if (!current) return
-      const nextStatus =
-        current.status === "scheduled" ||
-        current.status === "pending" ||
-        current.status === "approval_required"
-          ? "transferred"
-          : current.status
+      if (current.status !== "scheduled") {
+        void captureException(
+          new Error("transfer.created for non-scheduled payout"),
+          {
+            payoutStateId,
+            status: current.status,
+            probe: "transfer-created",
+          }
+        )
+        await tx
+          .update(main.payoutStates)
+          .set({
+            stripeTransferId: transfer.id,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(main.payoutStates.id, payoutStateId),
+              eq(main.payoutStates.orgId, orgId)
+            )
+          )
+        await ctx.emit({
+          entity: "payout",
+          action: "transferred",
+          entityId: payoutStateId,
+          payload: {
+            stripeTransferId: transfer.id,
+            type: event.type,
+            statusUnchanged: current.status,
+          },
+        })
+        return
+      }
       await tx
         .update(main.payoutStates)
         .set({
           stripeTransferId: transfer.id,
-          status: nextStatus,
+          status: "transferred",
           updatedAt: new Date(),
         })
         .where(

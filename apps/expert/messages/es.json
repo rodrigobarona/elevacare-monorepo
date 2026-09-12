@@ -131,6 +131,7 @@
     "payoutState": "Estado del pago",
     "eligibleAt": "Elegible",
     "exportCsv": "Exportar CSV",
+    "exportFailed": "No se pudo exportar el CSV. Inténtalo de nuevo.",
     "empty": "Aún no hay pagos de reservas.",
     "noPayout": "Sin programar",
     "status": {

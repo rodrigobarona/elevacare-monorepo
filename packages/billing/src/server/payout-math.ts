@@ -183,6 +183,18 @@ export function applyHoldSet(input: {
   }
 }
 
+export function nextPayoutStatusAfterRefund(input: {
+  previousStatus: PayoutStatus
+  amountCents: number
+  reversedCentsAfter: number
+  transferExists: boolean
+  reversalOk: boolean
+}): PayoutStatus {
+  if (input.transferExists && !input.reversalOk) return "reversal_pending"
+  if (input.reversedCentsAfter >= input.amountCents) return "reversed"
+  return input.previousStatus
+}
+
 export function clearHoldSet(input: {
   holdReasons: readonly string[]
   heldFromStatus: PayoutStatus | null

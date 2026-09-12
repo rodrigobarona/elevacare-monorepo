@@ -1,12 +1,18 @@
 import { and, eq, inArray, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
+  CLINIC_COMMISSION_BPS,
+  PT_VAT_RATE_BPS,
+  SETTLEMENT_FEE_BEARER,
+} from "@eleva/config"
+import {
   main,
   withOrgContext,
   withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
 import { captureException } from "@eleva/observability"
+import { computeSettlement } from "./commission"
 import { stripe } from "./client"
 import {
   applyHoldSet,
@@ -120,7 +126,17 @@ export async function createPayoutStateForPaidPayment(input: {
   )
   const amountCents = Math.max(
     0,
-    snapshot.payment.amountCents - snapshot.payment.applicationFeeCents
+    computeSettlement({
+      grossCents: snapshot.payment.amountCents,
+      commissionBps: snapshot.payment.appliedCommissionBps,
+      vatRateBps: PT_VAT_RATE_BPS,
+      vatTreatment: "pt_b2b",
+      processingFeeCents: snapshot.payment.processingFeeCents,
+      feeBearer:
+        snapshot.payment.appliedCommissionBps === CLINIC_COMMISSION_BPS
+          ? SETTLEMENT_FEE_BEARER.clinic
+          : SETTLEMENT_FEE_BEARER.marketplace,
+    }).expertTransfer
   )
   const thresholdCents = payoutApprovalThresholdCents(
     process.env.PAYOUT_APPROVAL_THRESHOLD_CENTS
@@ -133,25 +149,48 @@ export async function createPayoutStateForPaidPayment(input: {
   const status: PayoutStatus = approval ? "approval_required" : "pending"
   const id = crypto.randomUUID()
 
-  await withAudit(
+  const result = await withAudit(
     { orgId: input.orgId, actorUserId: null },
     async (tx, ctx) => {
-      await tx.insert(main.payoutStates).values({
-        id,
-        orgId: input.orgId,
-        bookingPaymentId: input.bookingPaymentId,
-        expertOrgId: input.orgId,
-        destinationOrgId: input.orgId,
-        destinationConnectAccountId: snapshot.connectAccountId!,
-        status,
-        amountCents,
-        eligibleAt,
-        scheduledFor: approval ? null : eligibleAt,
-      })
+      const [inserted] = await tx
+        .insert(main.payoutStates)
+        .values({
+          id,
+          orgId: input.orgId,
+          bookingPaymentId: input.bookingPaymentId,
+          expertOrgId: input.orgId,
+          destinationOrgId: input.orgId,
+          destinationConnectAccountId: snapshot.connectAccountId!,
+          status,
+          amountCents,
+          eligibleAt,
+          scheduledFor: approval ? null : eligibleAt,
+        })
+        .onConflictDoNothing({
+          target: main.payoutStates.bookingPaymentId,
+        })
+        .returning({ id: main.payoutStates.id })
+      if (!inserted) {
+        const [existing] = await tx
+          .select({ id: main.payoutStates.id })
+          .from(main.payoutStates)
+          .where(eq(main.payoutStates.bookingPaymentId, input.bookingPaymentId))
+          .limit(1)
+        await ctx.emit({
+          entity: "payout",
+          action: approval ? "requested" : "scheduled",
+          entityId: existing?.id ?? id,
+          payload: {
+            bookingPaymentId: input.bookingPaymentId,
+            idempotentReplay: true,
+          },
+        })
+        return { created: false, payoutStateId: existing?.id ?? id }
+      }
       await ctx.emit({
         entity: "payout",
         action: approval ? "requested" : "scheduled",
-        entityId: id,
+        entityId: inserted.id,
         payload: {
           bookingPaymentId: input.bookingPaymentId,
           status,
@@ -161,10 +200,11 @@ export async function createPayoutStateForPaidPayment(input: {
           firstPayout: snapshot.isFirstPayout,
         },
       })
+      return { created: true, payoutStateId: inserted.id }
     }
   )
 
-  return { created: true, payoutStateId: id }
+  return result
 }
 
 export async function applyHold(input: {
@@ -234,6 +274,9 @@ export async function clearHold(input: {
     { orgId: probe.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
       const current = await loadPayout(tx, input.payoutStateId)
+      if (current.status !== "held") {
+        throw new PayoutError("PAYOUT_NOT_HELD", "Payout is not on hold", 409)
+      }
       const next = clearHoldSet({
         holdReasons: current.holdReasons ?? [],
         heldFromStatus: current.heldFromStatus,
@@ -395,35 +438,42 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     transferId = transfer.id
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    const attempts = current.attempts + 1
-    await withAudit(
+    const updated = await withAudit(
       { orgId: current.orgId, actorUserId: null },
       async (tx, ctx) => {
-        await tx
+        const [row] = await tx
           .update(main.payoutStates)
           .set({
-            status: attempts >= TRANSFER_MAX_ATTEMPTS ? "failed" : "scheduled",
-            attempts,
+            status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
+            attempts: sql`${main.payoutStates.attempts} + 1`,
             lastError: message.slice(0, 2000),
             updatedAt: new Date(),
           })
           .where(eq(main.payoutStates.id, payoutStateId))
+          .returning({
+            attempts: main.payoutStates.attempts,
+            status: main.payoutStates.status,
+          })
         await ctx.emit({
           entity: "payout",
           action: "failed",
           entityId: payoutStateId,
-          payload: { attempts, lastError: message.slice(0, 200) },
+          payload: {
+            attempts: row?.attempts ?? current.attempts + 1,
+            lastError: message.slice(0, 200),
+          },
         })
+        return row
       }
     )
-    if (attempts >= TRANSFER_MAX_ATTEMPTS) {
+    if (updated?.status === "failed") {
       await withPlatformAdminContext(async (tx) => {
         await tx.insert(main.workflowDeadLetters).values({
           orgId: current.orgId,
           workflowName: "process-expert-transfers",
           entityId: current.id,
           payload: { payoutStateId, lastError: message.slice(0, 500) },
-          attempts,
+          attempts: updated.attempts,
           lastError: message.slice(0, 2000),
         })
       })

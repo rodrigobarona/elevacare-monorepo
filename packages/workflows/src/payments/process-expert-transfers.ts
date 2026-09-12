@@ -1,10 +1,16 @@
-import { executeTransfer, listScheduledDuePayouts } from "@eleva/billing/server"
+import {
+  executeTransfer,
+  listScheduledDuePayouts,
+  retryFailedTransferReversals,
+} from "@eleva/billing/server"
 
 export async function processExpertTransfers(): Promise<{
   transferred: number
   failed: number
   skipped: number
+  reversalsRetried: number
 }> {
+  const { retried: reversalsRetried } = await retryFailedTransferReversals()
   const due = await listScheduledDuePayouts()
   let transferred = 0
   let failed = 0
@@ -15,5 +21,5 @@ export async function processExpertTransfers(): Promise<{
     else if (result.status === "failed") failed += 1
     else skipped += 1
   }
-  return { transferred, failed, skipped }
+  return { transferred, failed, skipped, reversalsRetried }
 }

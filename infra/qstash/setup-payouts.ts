@@ -1,8 +1,8 @@
 /**
  * QStash schedules for the payout engine (Phase 06.2).
  *
- * Crons are UTC. Lisbon is UTC+0 in winter and UTC+1 in summer, so
- * 05:00 UTC is 06:00 Europe/Lisbon during WEST and 06:00 UTC/WET in winter.
+ * Crons are UTC. 05:00 UTC is 05:00 Europe/Lisbon in winter (WET) and
+ * 06:00 Europe/Lisbon in summer (WEST). Schedules stay on fixed UTC.
  *
  * Usage:
  *   pnpm qstash:setup:payouts

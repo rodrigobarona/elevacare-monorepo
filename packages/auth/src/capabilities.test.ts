@@ -109,3 +109,12 @@ describe("canMutateStaffPayouts", () => {
     }
   )
 })
+
+describe("refund capabilities", () => {
+  it("members cannot refund; experts and staff finance can", () => {
+    expect(CAPABILITY_BUNDLES.member).not.toContain("billing:refund")
+    expect(CAPABILITY_BUNDLES.expert).toContain("billing:refund")
+    expect(CAPABILITY_BUNDLES.staff).toContain("admin_payouts:refund")
+    expect(CAPABILITY_BUNDLES.staff).toContain("billing:refund")
+  })
+})

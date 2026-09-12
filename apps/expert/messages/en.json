@@ -131,6 +131,7 @@
     "payoutState": "Payout state",
     "eligibleAt": "Eligible",
     "exportCsv": "Export CSV",
+    "exportFailed": "Could not export the CSV. Please try again.",
     "empty": "No booking payments yet.",
     "noPayout": "Not scheduled",
     "status": {

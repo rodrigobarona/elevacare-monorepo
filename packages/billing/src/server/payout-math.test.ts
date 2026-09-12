@@ -6,6 +6,7 @@ import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
   needsPayoutApproval,
+  nextPayoutStatusAfterRefund,
   snapToNext0400Lisbon,
 } from "./payout-math"
 
@@ -200,6 +201,56 @@ describe("cumulativeReversalCents", () => {
       reversedToDate: first + second + third,
     })
     expect(leftover).toBe(1)
+  })
+})
+
+describe("nextPayoutStatusAfterRefund", () => {
+  it("marks reversed for a full refund before transfer", () => {
+    expect(
+      nextPayoutStatusAfterRefund({
+        previousStatus: "pending",
+        amountCents: 8500,
+        reversedCentsAfter: 8500,
+        transferExists: false,
+        reversalOk: true,
+      })
+    ).toBe("reversed")
+  })
+
+  it("keeps the prior status for a partial refund after a successful reversal", () => {
+    expect(
+      nextPayoutStatusAfterRefund({
+        previousStatus: "transferred",
+        amountCents: 8500,
+        reversedCentsAfter: 2833,
+        transferExists: true,
+        reversalOk: true,
+      })
+    ).toBe("transferred")
+  })
+
+  it("parks reversal_pending when the refund succeeded but the reversal failed", () => {
+    expect(
+      nextPayoutStatusAfterRefund({
+        previousStatus: "transferred",
+        amountCents: 8500,
+        reversedCentsAfter: 0,
+        transferExists: true,
+        reversalOk: false,
+      })
+    ).toBe("reversal_pending")
+  })
+
+  it("marks reversed on a lost dispute after the transfer is fully reversed", () => {
+    expect(
+      nextPayoutStatusAfterRefund({
+        previousStatus: "held",
+        amountCents: 8500,
+        reversedCentsAfter: 8500,
+        transferExists: true,
+        reversalOk: true,
+      })
+    ).toBe("reversed")
   })
 })
 

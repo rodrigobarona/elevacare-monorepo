@@ -1,11 +1,13 @@
-import { and, desc, eq, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
 import { stripe } from "./client"
+import { experimentalCreditNoteAllocation } from "./commission"
 import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
+  nextPayoutStatusAfterRefund,
   type RefundPolicyInput,
 } from "./payout-math"
 import { applyHold, clearHold } from "./payouts"
@@ -125,14 +127,31 @@ export async function refundBookingPayment(input: {
   const reversalId = snapshot.payout?.stripeTransferId
     ? crypto.randomUUID()
     : null
-  const reversalCents = snapshot.payout?.stripeTransferId
+  const reversalCents = snapshot.payout
     ? cumulativeReversalCents({
         refundedToDate: snapshot.payment.refundedCents + snapshot.amountCents,
         grossCents: snapshot.payment.amountCents,
-        transferredCents: snapshot.payout!.amountCents,
-        reversedToDate: snapshot.payout!.reversedCents,
+        transferredCents: snapshot.payout.amountCents,
+        reversedToDate: snapshot.payout.reversedCents,
       })
     : 0
+  const creditNote = experimentalCreditNoteAllocation(
+    {
+      bookingGross: snapshot.payment.amountCents,
+      platformFeeGross: snapshot.payment.applicationFeeCents,
+      platformFeeNet: snapshot.payment.platformFeeNetCents,
+      vatOnPlatformFee: snapshot.payment.platformFeeVatCents,
+      paymentProcessingFee: snapshot.payment.processingFeeCents,
+      expertTransfer:
+        snapshot.payout?.amountCents ??
+        Math.max(
+          0,
+          snapshot.payment.amountCents - snapshot.payment.applicationFeeCents
+        ),
+    },
+    snapshot.amountCents,
+    snapshot.payment.refundedCents
+  )
 
   await withAudit(
     { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
@@ -228,6 +247,9 @@ export async function refundBookingPayment(input: {
           .update(main.bookingPayments)
           .set({
             refundedCents: sql`LEAST(${main.bookingPayments.amountCents}, ${main.bookingPayments.refundedCents} + ${snapshot.amountCents})`,
+            applicationFeeCents: sql`GREATEST(0, ${main.bookingPayments.applicationFeeCents} - ${creditNote.platformFeeGross})`,
+            platformFeeNetCents: sql`GREATEST(0, ${main.bookingPayments.platformFeeNetCents} - ${creditNote.platformFeeNet})`,
+            platformFeeVatCents: sql`GREATEST(0, ${main.bookingPayments.platformFeeVatCents} - ${creditNote.vatOnPlatformFee})`,
             status: sql`CASE WHEN ${main.bookingPayments.refundedCents} + ${snapshot.amountCents} >= ${main.bookingPayments.amountCents} THEN 'refunded' ELSE ${main.bookingPayments.status} END`,
           })
           .where(eq(main.bookingPayments.id, input.bookingPaymentId))
@@ -252,6 +274,20 @@ export async function refundBookingPayment(input: {
   if (refundStatus === "pending") {
     return { refundId, status: "pending" }
   }
+  if (
+    snapshot.payout &&
+    reversalCents > 0 &&
+    !snapshot.payout.stripeTransferId
+  ) {
+    await recordPayoutRefundShare({
+      payout: snapshot.payout,
+      reversalCents,
+      actorUserId: input.actorUserId,
+      transferExists: false,
+      reversalOk: true,
+    })
+    return { refundId, status: "succeeded" }
+  }
   if (!snapshot.payout?.stripeTransferId || reversalCents <= 0) {
     return { refundId, status: "succeeded" }
   }
@@ -263,6 +299,49 @@ export async function refundBookingPayment(input: {
     actorUserId: input.actorUserId,
   })
   return { refundId, status: "succeeded" }
+}
+
+async function recordPayoutRefundShare(input: {
+  payout: typeof main.payoutStates.$inferSelect
+  reversalCents: number
+  actorUserId: string | null
+  transferExists: boolean
+  reversalOk: boolean
+}): Promise<void> {
+  const reversedCentsAfter = Math.min(
+    input.payout.amountCents,
+    input.payout.reversedCents + input.reversalCents
+  )
+  const nextStatus = nextPayoutStatusAfterRefund({
+    previousStatus: input.payout.status,
+    amountCents: input.payout.amountCents,
+    reversedCentsAfter,
+    transferExists: input.transferExists,
+    reversalOk: input.reversalOk,
+  })
+  await withAudit(
+    { orgId: input.payout.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      await tx
+        .update(main.payoutStates)
+        .set({
+          reversedCents: reversedCentsAfter,
+          status: nextStatus,
+          updatedAt: new Date(),
+        })
+        .where(eq(main.payoutStates.id, input.payout.id))
+      await ctx.emit({
+        entity: "payout",
+        action: nextStatus === "reversed" ? "reversed" : "updated",
+        entityId: input.payout.id,
+        payload: {
+          reversedCents: reversedCentsAfter,
+          nextStatus,
+          transferExists: input.transferExists,
+        },
+      })
+    }
+  )
 }
 
 async function reverseTransferShare(input: {
@@ -372,14 +451,27 @@ async function reverseTransferShare(input: {
             lastError: message.slice(0, 2000),
           })
         }
+        await tx
+          .update(main.payoutStates)
+          .set({
+            status: nextPayoutStatusAfterRefund({
+              previousStatus: input.payout.status,
+              amountCents: input.payout.amountCents,
+              reversedCentsAfter: input.payout.reversedCents,
+              transferExists: true,
+              reversalOk: false,
+            }),
+            lastError: message.slice(0, 2000),
+            updatedAt: new Date(),
+          })
+          .where(eq(main.payoutStates.id, input.payout.id))
         await ctx.emit({
           entity: "payout",
           action: "failed",
           entityId: input.payout.id,
           payload: {
-            code: "REVERSAL_FAILED",
+            code: "REVERSAL_PENDING",
             lastError: message.slice(0, 200),
-            payoutStatusUnchanged: true,
           },
         })
       }
@@ -389,6 +481,40 @@ async function reverseTransferShare(input: {
       probe: "transfer-reversal",
     })
   }
+}
+
+export async function retryFailedTransferReversals(): Promise<{
+  retried: number
+}> {
+  const rows = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({
+        refundId: main.transferReversals.refundId,
+        reversalCents: main.transferReversals.amountCents,
+        payout: main.payoutStates,
+      })
+      .from(main.transferReversals)
+      .innerJoin(
+        main.payoutStates,
+        eq(main.transferReversals.payoutStateId, main.payoutStates.id)
+      )
+      .where(
+        and(
+          eq(main.transferReversals.status, "failed"),
+          eq(main.payoutStates.status, "reversal_pending"),
+          isNotNull(main.payoutStates.stripeTransferId)
+        )
+      )
+  )
+  for (const row of rows) {
+    await reverseTransferShare({
+      payout: row.payout,
+      refundId: row.refundId,
+      reversalCents: row.reversalCents,
+      actorUserId: null,
+    })
+  }
+  return { retried: rows.length }
 }
 
 export async function applyDisputeOpened(input: {
@@ -491,30 +617,38 @@ export async function applyDisputeClosed(input: {
   const remaining = payout.amountCents - payout.reversedCents
   if (payout.stripeTransferId && remaining > 0) {
     const refundId = crypto.randomUUID()
-    await withAudit(
+    const created = await withAudit(
       { orgId: payout.orgId, actorUserId: null },
       async (tx, ctx) => {
-        await tx.insert(main.bookingRefunds).values({
-          id: refundId,
-          orgId: payout.orgId,
-          bookingPaymentId: input.bookingPaymentId,
-          amountCents: remaining,
-          status: "succeeded",
-          reason: "dispute_lost",
-          refundSeq: 0,
-          idempotencyKey: `dispute-loss:${input.bookingPaymentId}`,
-        })
+        const [inserted] = await tx
+          .insert(main.bookingRefunds)
+          .values({
+            id: refundId,
+            orgId: payout.orgId,
+            bookingPaymentId: input.bookingPaymentId,
+            amountCents: remaining,
+            status: "succeeded",
+            reason: "dispute_lost",
+            refundSeq: 0,
+            idempotencyKey: `dispute-loss:${input.bookingPaymentId}`,
+          })
+          .onConflictDoNothing({
+            target: main.bookingRefunds.idempotencyKey,
+          })
+          .returning({ id: main.bookingRefunds.id })
         await ctx.emit({
           entity: "dispute",
           action: "updated",
           entityId: input.bookingPaymentId,
-          payload: { outcome: "lost" },
+          payload: { outcome: "lost", idempotentReplay: !inserted },
         })
+        return inserted?.id ?? null
       }
     )
+    if (!created) return
     await reverseTransferShare({
       payout,
-      refundId,
+      refundId: created,
       reversalCents: remaining,
       actorUserId: null,
     })
@@ -527,7 +661,8 @@ export async function applyDisputeClosed(input: {
       await tx
         .update(main.payoutStates)
         .set({
-          status: "failed",
+          status: "reversed",
+          reversedCents: payout.amountCents,
           holdReasons: [],
           heldFromStatus: null,
           lastError: "dispute_lost",
@@ -545,7 +680,7 @@ export async function applyDisputeClosed(input: {
         entityId: input.bookingPaymentId,
         payload: {
           outcome: "lost",
-          payoutStatus: "failed",
+          payoutStatus: "reversed",
           transferred: Boolean(payout.stripeTransferId),
         },
       })
@@ -648,7 +783,11 @@ export async function confirmTransferReversed(input: {
         .update(main.payoutStates)
         .set({
           reversedCents: next,
-          status: full ? "reversed" : payout.status,
+          status: full
+            ? "reversed"
+            : payout.status === "reversal_pending"
+              ? "transferred"
+              : payout.status,
           lastError: null,
           updatedAt: new Date(),
         })
@@ -659,7 +798,7 @@ export async function confirmTransferReversed(input: {
         .where(
           and(
             eq(main.transferReversals.payoutStateId, payout.id),
-            eq(main.transferReversals.status, "pending")
+            inArray(main.transferReversals.status, ["pending", "failed"])
           )
         )
       await ctx.emit({
@@ -705,7 +844,11 @@ export async function markRefundFailedFromStripe(input: {
           .update(main.bookingPayments)
           .set({
             refundedCents: sql`GREATEST(0, ${main.bookingPayments.refundedCents} - ${row.amountCents})`,
-            status: sql`CASE WHEN GREATEST(0, ${main.bookingPayments.refundedCents} - ${row.amountCents}) >= ${main.bookingPayments.amountCents} THEN 'refunded' ELSE 'succeeded' END`,
+            status: sql`CASE
+            WHEN GREATEST(0, ${main.bookingPayments.refundedCents} - ${row.amountCents}) >= ${main.bookingPayments.amountCents} THEN 'refunded'
+            WHEN ${main.bookingPayments.status} = 'refunded' THEN 'succeeded'
+            ELSE ${main.bookingPayments.status}
+          END`,
           })
           .where(eq(main.bookingPayments.id, payment.id))
       }
