@@ -590,12 +590,18 @@ Each entry should include:
 - Status: proposed (06.0 spike confirms PT Custom transfers-only; PT Express
   capability state unproven until hosted onboarding; sign before PR 06.1)
 - Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: with separate charges and transfers the connected account only receives transfers, so
-  request the `transfers` capability only — no `card_payments`; `charges_enabled` never gates
-  anything. Connect's own KYC is the identity check. Publish gate = `details_submitted &&
-payouts_enabled && capabilities.transfers = active`. Stripe Identity stays implemented behind
-  `ff.expert_identity_verification` (default off) in case legal requires a second verification
-  for clinical experts. Blocks: Phase 6 PR 06.1; Phase 12 partner checklist reads the same fields.
+- Summary: proposed working default is `transfers` only (no `card_payments`)
+  because the connected account only receives transfers; `charges_enabled`
+  never gates anything. 06.0 evidence: PT Custom matches that default; US Custom
+  requires `card_payments`; PT Express create without `card_payments` is
+  accepted but capability state after hosted onboarding is unproven. Until
+  D-05 is signed, keep `card_payments` on Express and on unsupported
+  country/account-type combinations. Connect's own KYC is the identity check.
+  Publish gate = `details_submitted && payouts_enabled &&
+capabilities.transfers = active`. Stripe Identity stays implemented behind
+  `ff.expert_identity_verification` (default off) in case legal requires a
+  second verification for clinical experts. Blocks: Phase 6 PR 06.1; Phase 12
+  partner checklist reads the same fields.
 - Reference: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md), [`execution-plan/phases/12-admin-console.md`](./execution-plan/phases/12-admin-console.md)
 
 ### D-06 (2026-09-07): Refund, dispute and no-show policy

@@ -137,12 +137,12 @@ IVA split uses 23% on the VAT-inclusive fee
 
 ## Plan changes to absorb in 06.1 / 06.2
 
-1. **D-05 stays `transfers` only for PT Custom (proven).** PT Express
-   transfers-only remains unproven until hosted onboarding confirms
-   `transfers=active` and `payouts_enabled=true` without `card_payments`.
-   `connect.ts` still requests `card_payments` — 06.1 should request `transfers`
-   only as the working default, then confirm Express capability state after
-   onboarding. Do not sign D-05 from this spike.
+1. **D-05 stays `proposed`.** Proven scope is PT Custom (`transfers` only,
+   `card_payments` absent). US Custom requires `card_payments`. PT Express
+   capability state is unproven. Keep `card_payments` on Express and on any
+   unsupported or unproven country/account-type combination until hosted
+   onboarding proves otherwise or finance/legal signs D-05. Do not strip
+   `card_payments` from `connect.ts` in 06.1 on the strength of this spike.
 2. **Two webhook endpoints** — Connect list is empty today.
 3. **`balance_insufficient`** is a real Stripe code on this platform; retries
    - DLQ as specified.
