@@ -154,6 +154,26 @@ const stdWithNotFound = {
   },
 } as const
 
+const stdRefundErrors = {
+  ...stdErrors,
+  "403": {
+    description: "Missing refund capability or organization mismatch",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "404": {
+    description: "Booking payment not found",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "409": {
+    description: "Policy or payout-state conflict",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "502": {
+    description: "Stripe refund failed",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+} as const
+
 const stdWithPayoutMutation = {
   ...stdErrors,
   "400": {
@@ -1517,7 +1537,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 },
               },
             },
-            ...stdErrors,
+            ...stdRefundErrors,
           },
         },
       },
@@ -1538,7 +1558,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ListPayoutsResponseSchema },
               },
             },
-            ...stdErrors,
+            ...stdWithNotFound,
+            "403": {
+              description: "Missing payouts:view_own or admin_payouts:read",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },
@@ -1632,6 +1656,10 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdErrors,
+            "403": {
+              description: "Missing payouts:view_own",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

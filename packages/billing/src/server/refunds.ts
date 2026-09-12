@@ -273,6 +273,15 @@ export async function refundBookingPayment(input: {
     throw new RefundError("STRIPE_REFUND_FAILED", "Stripe refund failed", 502)
   }
   if (refundStatus === "pending") {
+    if (snapshot.payout && reversalCents > 0) {
+      await recordPayoutRefundShare({
+        payout: snapshot.payout,
+        reversalCents: 0,
+        actorUserId: input.actorUserId,
+        transferExists: Boolean(snapshot.payout.stripeTransferId),
+        reversalOk: false,
+      })
+    }
     return { refundId, status: "pending" }
   }
   if (
@@ -752,12 +761,70 @@ export async function confirmRefundFromCharge(input: {
       await ctx.emit({
         entity: "refund",
         action: "succeeded",
-        entityId: payment.id,
+        entityId: input.refundRowId ?? payment.id,
         payload: { amountRefunded: input.amountRefunded },
       })
     }
   )
+  await completeTransferReversalForPayment(payment.id)
   return payment.id
+}
+
+async function completeTransferReversalForPayment(
+  bookingPaymentId: string
+): Promise<void> {
+  const snapshot = await withPlatformAdminContext(async (tx) => {
+    const [payment] = await tx
+      .select()
+      .from(main.bookingPayments)
+      .where(eq(main.bookingPayments.id, bookingPaymentId))
+      .limit(1)
+    const [payout] = await tx
+      .select()
+      .from(main.payoutStates)
+      .where(eq(main.payoutStates.bookingPaymentId, bookingPaymentId))
+      .limit(1)
+    const [refund] = await tx
+      .select({ id: main.bookingRefunds.id })
+      .from(main.bookingRefunds)
+      .where(
+        and(
+          eq(main.bookingRefunds.bookingPaymentId, bookingPaymentId),
+          eq(main.bookingRefunds.status, "succeeded")
+        )
+      )
+      .orderBy(desc(main.bookingRefunds.refundSeq))
+      .limit(1)
+    return {
+      payment: payment ?? null,
+      payout: payout ?? null,
+      refundId: refund?.id ?? null,
+    }
+  })
+  if (!snapshot.payment || !snapshot.payout) return
+  const reversalCents = cumulativeReversalCents({
+    refundedToDate: snapshot.payment.refundedCents,
+    grossCents: snapshot.payment.amountCents,
+    transferredCents: snapshot.payout.amountCents,
+    reversedToDate: snapshot.payout.reversedCents,
+  })
+  if (reversalCents <= 0) return
+  if (!snapshot.payout.stripeTransferId) {
+    await recordPayoutRefundShare({
+      payout: snapshot.payout,
+      reversalCents,
+      actorUserId: null,
+      transferExists: false,
+      reversalOk: true,
+    })
+    return
+  }
+  await reverseTransferShare({
+    payout: snapshot.payout,
+    refundId: snapshot.refundId ?? crypto.randomUUID(),
+    reversalCents,
+    actorUserId: null,
+  })
 }
 
 export async function confirmTransferReversed(input: {
@@ -794,15 +861,23 @@ export async function confirmTransferReversed(input: {
           updatedAt: new Date(),
         })
         .where(eq(main.payoutStates.id, payout.id))
-      await tx
-        .update(main.transferReversals)
-        .set({ status: "succeeded", updatedAt: new Date() })
+      const [openReversal] = await tx
+        .select({ id: main.transferReversals.id })
+        .from(main.transferReversals)
         .where(
           and(
             eq(main.transferReversals.payoutStateId, payout.id),
             inArray(main.transferReversals.status, ["pending", "failed"])
           )
         )
+        .orderBy(desc(main.transferReversals.createdAt))
+        .limit(1)
+      if (openReversal) {
+        await tx
+          .update(main.transferReversals)
+          .set({ status: "succeeded", updatedAt: new Date() })
+          .where(eq(main.transferReversals.id, openReversal.id))
+      }
       await ctx.emit({
         entity: "payout",
         action: "reversed",
@@ -829,18 +904,22 @@ export async function markRefundFailedFromStripe(input: {
       .limit(1)
   )
   if (!payment) return
+  const existing = await withPlatformAdminContext(async (tx) => {
+    const match = input.refundRowId
+      ? eq(main.bookingRefunds.id, input.refundRowId)
+      : eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId)
+    const [row] = await tx
+      .select()
+      .from(main.bookingRefunds)
+      .where(and(eq(main.bookingRefunds.bookingPaymentId, payment.id), match))
+      .limit(1)
+    return row ?? null
+  })
+  if (!existing || existing.status === "failed") return
   await withAudit(
     { orgId: payment.orgId, actorUserId: null },
     async (tx, ctx) => {
-      const match = input.refundRowId
-        ? eq(main.bookingRefunds.id, input.refundRowId)
-        : eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId)
-      const [row] = await tx
-        .select()
-        .from(main.bookingRefunds)
-        .where(and(eq(main.bookingRefunds.bookingPaymentId, payment.id), match))
-        .limit(1)
-      if (!row || row.status === "failed") return
+      const row = existing
       if (row.status === "succeeded") {
         await tx
           .update(main.bookingPayments)

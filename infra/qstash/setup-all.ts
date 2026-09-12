@@ -14,6 +14,7 @@
  */
 import { isDryRun, registerSchedule } from "./register-schedule"
 import { DOMAIN_EVENTS_PUBLISHER_SCHEDULE } from "./domain-events-schedule"
+import { PAYOUT_SCHEDULES } from "./payout-schedules"
 
 const dryRun = isDryRun()
 
@@ -65,44 +66,9 @@ async function main() {
 
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
-  await registerSchedule(
-    {
-      name: "Process expert transfers",
-      path: "/workflows/process-expert-transfers",
-      cron: "0 */2 * * *",
-      retries: 3,
-      requireBearer: true,
-      description:
-        "Create Stripe Transfers for scheduled eligible payouts (every 2h)",
-    },
-    { dryRun }
-  )
-
-  await registerSchedule(
-    {
-      name: "Process pending payouts",
-      path: "/workflows/process-pending-payouts",
-      cron: "0 5 * * *",
-      retries: 3,
-      requireBearer: true,
-      description:
-        "Promote pending payouts to scheduled at 05:00 UTC (~06:00 Europe/Lisbon in WEST)",
-    },
-    { dryRun }
-  )
-
-  await registerSchedule(
-    {
-      name: "Check upcoming payouts",
-      path: "/workflows/check-upcoming-payouts",
-      cron: "0 7 * * *",
-      retries: 3,
-      requireBearer: true,
-      description:
-        "Alert on payouts becoming eligible within 48h at 07:00 UTC (~08:00 Europe/Lisbon in WEST)",
-    },
-    { dryRun }
-  )
+  for (const spec of PAYOUT_SCHEDULES) {
+    await registerSchedule(spec, { dryRun })
+  }
 
   console.log("\n[qstash:setup:all] Done.")
   console.log(

@@ -1665,7 +1665,27 @@ async function handleRefundUpdated(
       resolvedOrgId: null,
     }
   }
-  const orgId = await orgIdFromPaymentIntent(paymentIntentId)
+  let orgId = await orgIdFromPaymentIntent(paymentIntentId)
+  if (!orgId) {
+    const chargeId =
+      typeof refund.charge === "string"
+        ? refund.charge
+        : (refund.charge?.id ?? null)
+    const bookingPaymentId = await findBookingPaymentIdByCharge({
+      paymentIntentId,
+      chargeId,
+    })
+    if (bookingPaymentId) {
+      const [payment] = await withPlatformAdminContext(async (tx) =>
+        tx
+          .select({ orgId: main.bookingPayments.orgId })
+          .from(main.bookingPayments)
+          .where(eq(main.bookingPayments.id, bookingPaymentId))
+          .limit(1)
+      )
+      orgId = payment?.orgId ?? null
+    }
+  }
   if (!orgId) {
     return {
       kind: "ignored",
@@ -1734,7 +1754,15 @@ async function handleTransferEvent(
           )
         )
         .limit(1)
-      if (!current) return
+      if (!current) {
+        await ctx.emit({
+          entity: "payout",
+          action: "updated",
+          entityId: payoutStateId,
+          payload: { missing: true, stripeTransferId: transfer.id },
+        })
+        return
+      }
       if (current.status !== "scheduled") {
         void captureException(
           new Error("transfer.created for non-scheduled payout"),

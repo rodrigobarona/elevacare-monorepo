@@ -449,7 +449,12 @@ export async function executeTransfer(payoutStateId: string): Promise<{
             lastError: message.slice(0, 2000),
             updatedAt: new Date(),
           })
-          .where(eq(main.payoutStates.id, payoutStateId))
+          .where(
+            and(
+              eq(main.payoutStates.id, payoutStateId),
+              eq(main.payoutStates.status, "scheduled")
+            )
+          )
           .returning({
             attempts: main.payoutStates.attempts,
             status: main.payoutStates.status,
@@ -821,7 +826,12 @@ export async function promoteEligiblePendingPayouts(): Promise<number> {
         await tx
           .update(main.payoutStates)
           .set({ status: "scheduled", updatedAt: new Date() })
-          .where(eq(main.payoutStates.id, row.id))
+          .where(
+            and(
+              eq(main.payoutStates.id, row.id),
+              eq(main.payoutStates.status, "pending")
+            )
+          )
         await ctx.emit({
           entity: "payout",
           action: "scheduled",

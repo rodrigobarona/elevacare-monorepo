@@ -1,3 +1,4 @@
+import { z } from "zod"
 import {
   PayoutActionRequestSchema,
   PayoutActionResponseSchema,
@@ -8,6 +9,8 @@ import { apiAuthFailure, requireStaffPayoutMutator } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+const PayoutIdSchema = z.string().uuid()
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -35,7 +38,8 @@ export async function POST(
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated
+    RATE_LIMITS.authenticated,
+    headers
   )
   if (rateLimited) return rateLimited
 
@@ -49,10 +53,17 @@ export async function POST(
     )
   }
 
-  const { id } = await params
+  const { id: rawId } = await params
+  const id = PayoutIdSchema.safeParse(rawId)
+  if (!id.success) {
+    return secureJson(
+      { error: "validation", issues: id.error.issues },
+      { status: 422, headers }
+    )
+  }
   try {
     const row = await approvePayout({
-      payoutStateId: id,
+      payoutStateId: id.data,
       actorUserId: session.user.id,
       reason: parsed.data.reason,
     })

@@ -1,3 +1,4 @@
+import { z } from "zod"
 import {
   RefundBookingPaymentRequestSchema,
   RefundBookingPaymentResponseSchema,
@@ -12,6 +13,8 @@ import {
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+const BookingPaymentIdSchema = z.string().uuid()
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -39,11 +42,14 @@ export async function POST(
 
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated
+    RATE_LIMITS.authenticated,
+    headers
   )
   if (rateLimited) return rateLimited
 
-  const expertRefund = session.capabilities.includes("billing:refund")
+  const expertRefund =
+    session.productLabel !== "staff" &&
+    session.capabilities.includes("billing:refund")
   const staffRefund = session.capabilities.includes("admin_payouts:refund")
   if (!expertRefund && !staffRefund) {
     return secureJson(
@@ -53,20 +59,25 @@ export async function POST(
   }
 
   let actingOrgId: string | undefined = session.orgId
-  if (staffRefund) {
+  if (session.productLabel === "staff" || (staffRefund && !expertRefund)) {
     try {
       await requireStaffPayoutMutator(request, "admin_payouts:refund")
       actingOrgId = undefined
     } catch (err) {
-      if (!expertRefund) {
-        const failure = apiAuthFailure(err, headers)
-        if (failure) return failure
-        throw err
-      }
+      const failure = apiAuthFailure(err, headers)
+      if (failure) return failure
+      throw err
     }
   }
 
-  const { bookingPaymentId } = await params
+  const { bookingPaymentId: rawPaymentId } = await params
+  const paymentId = BookingPaymentIdSchema.safeParse(rawPaymentId)
+  if (!paymentId.success) {
+    return secureJson(
+      { error: "validation", issues: paymentId.error.issues },
+      { status: 422, headers }
+    )
+  }
   const parsed = RefundBookingPaymentRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
@@ -79,7 +90,7 @@ export async function POST(
 
   try {
     const result = await refundBookingPayment({
-      bookingPaymentId,
+      bookingPaymentId: paymentId.data,
       amountCents: parsed.data.amountCents,
       reason: parsed.data.reason,
       actorUserId: session.user.id,
