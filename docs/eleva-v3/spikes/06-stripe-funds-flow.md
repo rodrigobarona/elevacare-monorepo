@@ -1,7 +1,8 @@
 # Spike 06.0 — Stripe separate charges and transfers
 
 **Status:** 8 proven, 1 unproven (connected-account `balance_insufficient` after
-payout), 1 D-05 plan confirmation (PT transfers-only works; US Custom does not).
+payout), 1 D-05 plan confirmation (PT Custom transfers-only works; PT Express
+capability state unproven until hosted onboarding; US Custom does not).
 **Date:** 2026-09-11
 **Stripe:** test mode (`sk_test_`), platform account used by local `.env.local`
 (named `--env staging` in the runner). Live keys refused.
@@ -19,15 +20,17 @@ payout), 1 D-05 plan confirmation (PT transfers-only works; US Custom does not).
 
 ## Contract checks
 
-### 01 — Express transfers-only (D-05) — proven
+### 01 — Express create without `card_payments` — proven (capability state unproven)
 
 - **Request:** `accounts.create` with Express `controller` (fees/losses =
   application), `country: PT`, `capabilities: { transfers: { requested: true } }`
   only — no `card_payments`.
 - **Response:** `acct_1UEdjmK5qSgquuFJ`. `capabilities.transfers=inactive`,
   `card_payments=absent`, `details_submitted=false`, `payouts_enabled=false`.
-- **Absorb:** Stripe **accepts** Express without `card_payments`. Transfers stay
-  inactive until hosted Express onboarding. Publish gating in 06.1 must wait for
+- **Absorb:** Stripe **accepts** Express account creation without `card_payments`.
+  That is not proof that Express is transfers-only: `transfers` stayed inactive and
+  `payouts_enabled=false`. Whether Express becomes receivable after hosted onboarding
+  without `card_payments` is unproven. Publish gating in 06.1 must still wait for
   `details_submitted && payouts_enabled && capabilities.transfers === "active"`.
 
 ### 01b — PT Custom transfers-only becomes receivable — proven
@@ -39,10 +42,13 @@ payout), 1 D-05 plan confirmation (PT transfers-only works; US Custom does not).
 - **Prior US probe (same test account):** Custom US
   `transfers` only rejected: _You cannot request the `transfers` capability
   without the `card_payments` capability for accounts in US._
-- **Absorb / D-05:** for **PT** (launch country) Stripe does **not** require
-  `card_payments` to receive transfers. Keep D-05 as `transfers` only. Do not
-  request `card_payments` on PT Express/Custom. US/other countries if added later
-  need their own capability matrix.
+- **Absorb / D-05:** **PT Custom** does **not** require `card_payments` to
+  receive transfers (`transfers=active`, `payouts_enabled=true`). Keep D-05 as
+  `transfers` only for PT Custom. Do **not** extend that conclusion to PT Express:
+  Express create without `card_payments` is accepted (check 01), but the
+  receivable capability state is unproven until hosted onboarding. US Custom
+  requires `card_payments`. Other countries if added later need their own
+  capability matrix. D-05 stays `proposed`.
 
 ### 02 — Platform PaymentIntent + PMC — proven
 
@@ -71,7 +77,9 @@ payout), 1 D-05 plan confirmation (PT transfers-only works; US Custom does not).
 - **Response:** refund `re_3UEdjvGd5f3064kZ1lHGYnpZ` succeeded, reversal
   `trr_1UEdjyGd5f3064kZoh6WSckP`.
 - **Absorb:** two Stripe operations, two ledger states. Destination-charge
-  `reverse_transfer` is the wrong API.
+  `reverse_transfer` is the wrong API. This is the **pre-payout** path
+  (funds still on the connected account). Reversal after a connected-account
+  payout is check 06 and remains unproven.
 
 ### 05 — Partial refunds, cumulative share — proven
 
@@ -86,7 +94,8 @@ payout), 1 D-05 plan confirmation (PT transfers-only works; US Custom does not).
 - **Request:** another 85 EUR transfer so we could payout-then-reverse.
 - **Response:** Stripe `balance_insufficient` on the **platform** available
   balance (test account spent down by earlier spike charges). Connected-account
-  drain path not reached.
+  drain path not reached. PaymentIntent `pi_3UEdk7Gd5f3064kZ01AQVslJ` was
+  created before the transfer failed.
 - **Absorb:** 06.2 must treat `balance_insufficient` as retryable (platform or
   connected). Re-run this case when the test available balance is topped up.
   Do not block 06.2 design: the error code is confirmed.
@@ -128,8 +137,12 @@ IVA split uses 23% on the VAT-inclusive fee
 
 ## Plan changes to absorb in 06.1 / 06.2
 
-1. **D-05 stays `transfers` only for PT.** Express create already in
-   `connect.ts` still requests `card_payments` — remove it in 06.1.
+1. **D-05 stays `transfers` only for PT Custom (proven).** PT Express
+   transfers-only remains unproven until hosted onboarding confirms
+   `transfers=active` and `payouts_enabled=true` without `card_payments`.
+   `connect.ts` still requests `card_payments` — 06.1 should request `transfers`
+   only as the working default, then confirm Express capability state after
+   onboarding. Do not sign D-05 from this spike.
 2. **Two webhook endpoints** — Connect list is empty today.
 3. **`balance_insufficient`** is a real Stripe code on this platform; retries
    - DLQ as specified.

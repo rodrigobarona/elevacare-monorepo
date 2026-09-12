@@ -31,7 +31,7 @@
       "id": "02-platform-payment-intent",
       "title": "Platform PaymentIntent with payment_method_configuration (no transfer_data)",
       "status": "proven",
-      "absorb": "Charged 100.00 EUR on the platform. status=succeeded, pmc=pmc_1UDsgeGd5f3064kZkzV7YhTQ, processing_fee_cents=340 (retrieved from txn_3UEdjtGd5f3064kZ11x6AAgq after the charge settled).",
+      "absorb": "Charged 100.00 EUR on the platform. status=succeeded, pmc=pmc_1UDsgeGd5f3064kZkzV7YhTQ, processing_fee_cents=340.",
       "ids": {
         "paymentIntentId": "pi_3UEdjtGd5f3064kZ1rv4oO70",
         "chargeId": "ch_3UEdjtGd5f3064kZ13fCLZ3e",
@@ -77,9 +77,10 @@
       "id": "06-reversal-insufficient-balance",
       "title": "Reversal when connected balance is insufficient",
       "status": "unproven",
-      "absorb": "A follow-up 85.00 transfer after earlier spike charges returned Stripe balance_insufficient on the platform available balance (same error class 06.2 retries). Connected-account drain-then-reverse was not reached on this run because the platform test balance was exhausted.",
+      "absorb": "Could not mint a second 85.00 transfer to drain: Stripe returned balance_insufficient. This is the same class of insufficient-funds error 06.2 retries. Connected-account drain after payout was not reached on this run because the platform test available balance was exhausted.",
       "error": "You have insufficient funds in your Stripe account for this transfer. Your card balance is too low.  You can use the /v1/balance endpoint to view your Stripe balance (for more details, see stripe.com/docs/api#balance).",
       "ids": {
+        "paymentIntentId": "pi_3UEdk7Gd5f3064kZ01AQVslJ",
         "stripeCode": "balance_insufficient"
       }
     },
@@ -110,7 +111,7 @@
       "id": "09-clinic-zero-percent",
       "title": "Clinic 0% booking: processing fee deducted from transfer",
       "status": "proven",
-      "absorb": "Working D-04 clinic row: commission 0 bps, feeBearer=clinic, expertTransfer = gross − processingFee = 10000 − 340 = 9660 cents. Marketplace row stays expertTransfer=8500 with Eleva absorbing the 3.40 EUR fee.",
+      "absorb": "Working D-04 clinic row: commission 0 bps, feeBearer=clinic, expertTransfer = gross − processingFee = 10000 − 340 = 9660 cents. Marketplace row stays expertTransfer=8500 with Eleva absorbing the 340 cent fee.",
       "ids": {
         "processingFeeCents": "340",
         "clinicExpertTransferCents": "9660",

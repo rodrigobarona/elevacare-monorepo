@@ -91,7 +91,7 @@ Demoted behind `ff.three_party_revenue` (default off). Shipped only when a speci
 
 ## Consequences
 
-- `packages/billing` is large: Embedded Components wrappers, AccountSession minting, two webhook routes + one dispatcher, commission logic, subscription lifecycle for both expert and clinic tiers
+- `packages/billing` is large: Embedded Components wrappers, AccountSession minting, `processStripeEvent` in `packages/billing/src/server/webhook.ts`, commission logic, subscription lifecycle for both expert and clinic tiers. `apps/api` owns both webhook Route Handlers (`/webhooks/stripe` and `/webhooks/stripe/connect`)
 - Clinic bookings route cleanly to clinic Connect account (single-leg Transfer); three-party complexity only exists when the flag is on
 - Entitlement bridge: Stripe Entitlements are the source of truth, `packages/flags` reads them to gate features
 - Webhook code stays one dispatcher and one idempotency table; two endpoints are required so connected-account events verify against `STRIPE_CONNECT_WEBHOOK_SECRET`

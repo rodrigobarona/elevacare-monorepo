@@ -40,8 +40,12 @@ Each entry should include:
   required before PR 06.1)
 - Summary: Test-mode spike committed. PT Custom receives transfers with
   `transfers` only (`card_payments` absent). US Custom rejects that pair.
-  Platform PaymentIntent + delayed `source_transaction` transfer + two-step
-  refund/reversal + cumulative partials + dispute-on-transfer are proven.
+  PT Express create without `card_payments` is accepted, but capability
+  state after hosted onboarding is unproven. Platform PaymentIntent + delayed
+  `source_transaction` transfer + the tested pre-payout refund/reversal
+  flow + cumulative partials + dispute-on-transfer are proven.
+  Connected-account reversal after payout remains unproven because the
+  platform test balance was insufficient; defer validation to Phase 06.1/06.2.
   The 2026-04-22 "single `/webhooks/stripe` endpoint" clause is superseded:
   06.1/06.2 must register `/webhooks/stripe` (platform,
   `STRIPE_WEBHOOK_SECRET`) and `/webhooks/stripe/connect` (`connect: true`,
@@ -583,7 +587,8 @@ Each entry should include:
 ### D-05 (2026-09-07): Connect capability model — `transfers` only, Identity behind a flag
 
 - Owner: finance + legal
-- Status: proposed (06.0 spike confirms PT transfers-only; sign before PR 06.1)
+- Status: proposed (06.0 spike confirms PT Custom transfers-only; PT Express
+  capability state unproven until hosted onboarding; sign before PR 06.1)
 - Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
 - Summary: with separate charges and transfers the connected account only receives transfers, so
   request the `transfers` capability only — no `card_payments`; `charges_enabled` never gates
