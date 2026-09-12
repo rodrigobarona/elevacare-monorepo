@@ -166,6 +166,20 @@ async function main() {
     process.exit(1)
   }
 
+  const platformUrl = url.replace(/\/$/, "")
+  const PRODUCTION_PLATFORM_WEBHOOK_URL =
+    "https://api.eleva.care/webhooks/stripe"
+  if (
+    apiKey.startsWith("sk_live_") &&
+    platformUrl !== PRODUCTION_PLATFORM_WEBHOOK_URL
+  ) {
+    console.error(
+      "[stripe:webhooks] Live keys may only register " +
+        `${PRODUCTION_PLATFORM_WEBHOOK_URL} (got ${platformUrl}).`
+    )
+    process.exit(1)
+  }
+
   const apiVersionRaw = process.env.STRIPE_API_VERSION ?? "2026-04-22.dahlia"
   const apiVersion =
     apiVersionRaw as Stripe.WebhookEndpointCreateParams.ApiVersion
@@ -182,7 +196,6 @@ async function main() {
     appInfo: { name: "Eleva.care Webhook Setup", version: "1.0.0" },
   })
 
-  const platformUrl = url.replace(/\/$/, "")
   const connectUrl = `${platformUrl}/connect`
   const plans: EndpointPlan[] = [
     {

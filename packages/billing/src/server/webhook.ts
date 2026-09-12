@@ -1378,16 +1378,9 @@ async function handlePaymentIntentEvent(
   let processingFeeCents = 0
   let stripeChargeId: string | null = null
   if (action === "succeeded") {
-    try {
-      const fee = await retrieveProcessingFeeCents(intent)
-      processingFeeCents = fee.feeCents
-      stripeChargeId = fee.chargeId
-    } catch (err) {
-      console.error(
-        "[stripe-webhook] processing fee retrieve failed; persisting 0",
-        err
-      )
-    }
+    const fee = await retrieveProcessingFeeCents(intent)
+    processingFeeCents = fee.feeCents
+    stripeChargeId = fee.chargeId
   }
 
   await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {

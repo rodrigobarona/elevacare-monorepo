@@ -200,6 +200,26 @@ describe("computeSettlement (D-03 / D-04 matrix)", () => {
     expect(result.currency).toBe("EUR")
   })
 
+  it("rejects non-integer or out-of-range settlement inputs", () => {
+    const base = {
+      grossCents: 10_000,
+      commissionBps: 1500,
+      vatRateBps: 2300,
+      vatTreatment: "pt_b2b" as const,
+      processingFeeCents: 340,
+      feeBearer: "platform" as const,
+    }
+    expect(() => computeSettlement({ ...base, grossCents: 10.5 })).toThrow(
+      /grossCents/
+    )
+    expect(() => computeSettlement({ ...base, commissionBps: 15_001 })).toThrow(
+      /commissionBps/
+    )
+    expect(() =>
+      computeSettlement({ ...base, processingFeeCents: -1 })
+    ).toThrow(/processingFeeCents/)
+  })
+
   it("intra-EU reverse charge: fee 15.00 net, 0 IVA, expert 85.00", () => {
     const result = computeSettlement({
       grossCents: 10_000,

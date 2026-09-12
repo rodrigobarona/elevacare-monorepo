@@ -199,6 +199,8 @@ export async function provisionConnectAccount(
 
   let created = true
   let stripeAccountId = account.id
+  let detailsSubmitted = account.detailsSubmitted
+  let payoutsEnabled = account.payoutsEnabled
 
   await withAudit(
     { orgId: input.orgId, actorUserId: input.actorUserId },
@@ -218,12 +220,6 @@ export async function provisionConnectAccount(
         )
         .returning({ id: main.expertProfiles.id })
 
-      await persistConnectStatus(
-        tx,
-        input.orgId,
-        snapshotFromAccount(retrieved)
-      )
-
       if (claimed.length === 0) {
         const [row] = await tx
           .select({ stripeAccountId: main.expertProfiles.stripeAccountId })
@@ -235,9 +231,19 @@ export async function provisionConnectAccount(
             )
           )
           .limit(1)
-        const stored = row?.stripeAccountId ?? account.id
+        const stored = row?.stripeAccountId
+        if (!stored) {
+          throw new Error("connect_account_claim_failed")
+        }
+        const winner =
+          stored === account.id
+            ? retrieved
+            : await stripe().accounts.retrieve(stored)
         created = false
         stripeAccountId = stored
+        detailsSubmitted = winner.details_submitted ?? false
+        payoutsEnabled = winner.payouts_enabled ?? false
+        await persistConnectStatus(tx, input.orgId, snapshotFromAccount(winner))
         await ctx.emit({
           entity: "connect_account",
           action: "synced",
@@ -247,6 +253,11 @@ export async function provisionConnectAccount(
         return
       }
 
+      await persistConnectStatus(
+        tx,
+        input.orgId,
+        snapshotFromAccount(retrieved)
+      )
       await ctx.emit({
         entity: "connect_account",
         action: "created",
@@ -263,7 +274,7 @@ export async function provisionConnectAccount(
   return {
     stripeAccountId,
     created,
-    detailsSubmitted: account.detailsSubmitted,
-    payoutsEnabled: account.payoutsEnabled,
+    detailsSubmitted,
+    payoutsEnabled,
   }
 }

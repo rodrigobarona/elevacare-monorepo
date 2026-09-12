@@ -146,8 +146,10 @@ on port 3002.
 
    Platform events use `STRIPE_WEBHOOK_SECRET`. Connected-account events
    (`account.updated`, `capability.updated`, `payout.*`) use
-   `STRIPE_CONNECT_WEBHOOK_SECRET`. The setup script writes the same pair
-   when you `--apply` a public URL.
+   `STRIPE_CONNECT_WEBHOOK_SECRET`. The setup script prints a signing secret
+   only when it **creates** an endpoint; it cannot retrieve secrets for
+   existing endpoints. For local CLI forwarding, copy both `whsec_` values
+   from `stripe listen`.
 
 5. Restart the API dev server so it picks up the new secret.
 
@@ -189,10 +191,12 @@ The Stripe Entitlements does NOT support Stripe Sandbox accounts (per ADR-016). 
 4. Run `pnpm stripe:setup:portal -- --apply`
 5. Save the printed Portal configuration ID as `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`
 6. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply`
-7. Save both signing secrets: `STRIPE_WEBHOOK_SECRET` (platform endpoint) and
-   `STRIPE_CONNECT_WEBHOOK_SECRET` (`{url}/connect`, `connect: true`)
+7. Save both signing secrets **only if the script created new endpoints**
+   (existing endpoints cannot reprint `whsec_`). `STRIPE_WEBHOOK_SECRET`
+   (platform) and `STRIPE_CONNECT_WEBHOOK_SECRET` (`{url}/connect`).
 8. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
-9. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
+9. Verify in Stripe Dashboard: Developers → Webhooks → **both** the platform
+   endpoint and `{url}/connect` are active with their canonical event lists
 10. Trigger a `customer.subscription.created` Stripe CLI fixture and verify a row appears in `stripe_webhook_events` with `status='ignored'` (CLI fixtures have no Eleva organization metadata). To assert `processed`, trigger the event for a provisioned Eleva customer.
 
 ## Idempotency

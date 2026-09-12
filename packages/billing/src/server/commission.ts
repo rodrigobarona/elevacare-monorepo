@@ -327,6 +327,15 @@ function allocateProportionally(
   )
 }
 
+function assertNonNegativeInt(name: string, value: number, max?: number): void {
+  if (!Number.isInteger(value) || value < 0 || Number.isNaN(value)) {
+    throw new Error(`${name} must be a non-negative integer`)
+  }
+  if (max != null && value > max) {
+    throw new Error(`${name} must be <= ${max}`)
+  }
+}
+
 /**
  * Single money-split function (D-03 / D-04). No other module may add,
  * subtract, or round money.
@@ -339,6 +348,10 @@ export function computeSettlement(input: {
   processingFeeCents: number
   feeBearer: SettlementFeeBearer
 }): SettlementResult {
+  assertNonNegativeInt("grossCents", input.grossCents)
+  assertNonNegativeInt("commissionBps", input.commissionBps, 10_000)
+  assertNonNegativeInt("vatRateBps", input.vatRateBps)
+  assertNonNegativeInt("processingFeeCents", input.processingFeeCents)
   if (input.feeBearer === "clinic" && input.commissionBps !== 0) {
     throw new Error(
       "clinic fee bearer requires commissionBps 0 (D-04 invariant)"
@@ -359,6 +372,9 @@ export function computeSettlement(input: {
     processingFeeCents: input.processingFeeCents,
     feeBearer: input.feeBearer,
   })
+  if (expertTransfer < 0) {
+    throw new Error("expertTransfer must be >= 0")
+  }
 
   const core = {
     bookingGross: input.grossCents,

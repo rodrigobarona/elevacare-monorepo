@@ -122,7 +122,7 @@ runner was deleted in PR 06.1).
 
 ### 09 — Clinic 0% vs marketplace settlement — proven (calculated from real fee)
 
-Working defaults for finance (D-03 / D-04 signed working pre-launch 2026-09-12):
+Working defaults for finance (D-03 / D-04 founder-recorded working pre-launch 2026-09-12):
 
 | Row                     | Gross  | Commission | Fee bearer | Processing | Fee gross | Fee net / IVA | Expert transfer |
 | ----------------------- | ------ | ---------- | ---------- | ---------- | --------- | ------------- | --------------- |

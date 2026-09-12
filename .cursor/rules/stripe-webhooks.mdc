@@ -1,5 +1,5 @@
 ---
-description: Stripe webhook events two-file contract. Apply when adding, removing, or modifying Stripe webhook event handling.
+description: Stripe webhook events three-file contract. Apply when adding, removing, or modifying Stripe webhook event handling.
 globs:
   - apps/api/src/app/webhooks/stripe/route.ts
   - apps/api/src/app/webhooks/stripe/connect/route.ts

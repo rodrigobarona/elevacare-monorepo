@@ -1193,7 +1193,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "stripeWebhook",
           summary: "Stripe webhook receiver",
           description:
-            "Stripe-signed webhook receiver. Verifies the `stripe-signature` header against `STRIPE_WEBHOOK_SECRET` and dispatches the event through `processStripeEvent`. Persists each `event.id` in `stripe_webhook_events` for idempotency. Returns 200 for processed/ignored/duplicate, 500 only for retryable handler failures (so Stripe redelivers).",
+            "Stripe-signed webhook receiver. Verifies the `stripe-signature` header against `STRIPE_WEBHOOK_SECRET` and dispatches the event through `processStripeEvent`. Persists each `event.id` in `stripe_webhook_events` for idempotency. Returns 200 for processed, ignored, duplicate, or failed_terminal; 500 for retryable handler failures, missing signing secret, or Stripe SDK init failure (so Stripe redelivers retryable cases).",
           tags: ["Webhooks"],
           security: [],
           parameters: [
@@ -1243,7 +1243,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "stripeConnectWebhook",
           summary: "Stripe Connect webhook receiver",
           description:
-            "Connected-account Stripe webhook receiver. Verifies `stripe-signature` against `STRIPE_CONNECT_WEBHOOK_SECRET` and dispatches through the same `processStripeEvent` as `/webhooks/stripe`.",
+            "Connected-account Stripe webhook receiver. Verifies `stripe-signature` against `STRIPE_CONNECT_WEBHOOK_SECRET` and dispatches through the same `processStripeEvent` as `/webhooks/stripe`. Returns 200 for processed, ignored, duplicate, or failed_terminal; 500 for retryable handler failures, missing signing secret, or Stripe SDK init failure.",
           tags: ["Webhooks"],
           security: [],
           parameters: [
