@@ -195,6 +195,20 @@ export function nextPayoutStatusAfterRefund(input: {
   return input.previousStatus
 }
 
+export function nextPayoutStatusAfterTransferReversed(input: {
+  full: boolean
+  status: PayoutStatus
+  holdReasons: readonly string[]
+  heldFromStatus: PayoutStatus | null
+}): PayoutStatus {
+  if (input.full) return "reversed"
+  if (input.holdReasons.filter(isHoldReason).length > 0) return "held"
+  if (input.status === "reversal_pending") {
+    return input.heldFromStatus ?? "transferred"
+  }
+  return input.status
+}
+
 export function clearHoldSet(input: {
   holdReasons: readonly string[]
   heldFromStatus: PayoutStatus | null

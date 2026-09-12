@@ -479,7 +479,10 @@ export async function executeTransfer(payoutStateId: string): Promise<{
       })
     }
     void captureException(err, { payoutStateId, probe: "execute-transfer" })
-    return { status: "failed", stripeTransferId: null }
+    return {
+      status: updated?.status === "failed" ? "failed" : "skipped",
+      stripeTransferId: null,
+    }
   }
 
   await withAudit(

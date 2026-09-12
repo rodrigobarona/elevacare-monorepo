@@ -7,6 +7,7 @@ import {
   evaluateRefundPolicy,
   needsPayoutApproval,
   nextPayoutStatusAfterRefund,
+  nextPayoutStatusAfterTransferReversed,
   snapToNext0400Lisbon,
 } from "./payout-math"
 
@@ -251,6 +252,30 @@ describe("nextPayoutStatusAfterRefund", () => {
         reversalOk: true,
       })
     ).toBe("reversed")
+  })
+})
+
+describe("nextPayoutStatusAfterTransferReversed", () => {
+  it("restores held when a dispute hold is still open after a partial reversal", () => {
+    expect(
+      nextPayoutStatusAfterTransferReversed({
+        full: false,
+        status: "reversal_pending",
+        holdReasons: ["dispute"],
+        heldFromStatus: "transferred",
+      })
+    ).toBe("held")
+  })
+
+  it("restores transferred after a partial reversal with no remaining holds", () => {
+    expect(
+      nextPayoutStatusAfterTransferReversed({
+        full: false,
+        status: "reversal_pending",
+        holdReasons: [],
+        heldFromStatus: "transferred",
+      })
+    ).toBe("transferred")
   })
 })
 

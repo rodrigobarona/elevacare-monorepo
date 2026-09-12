@@ -8,6 +8,7 @@ import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
   nextPayoutStatusAfterRefund,
+  nextPayoutStatusAfterTransferReversed,
   type RefundPolicyInput,
 } from "./payout-math"
 import { applyHold, clearHold } from "./payouts"
@@ -783,11 +784,12 @@ export async function confirmTransferReversed(input: {
         .update(main.payoutStates)
         .set({
           reversedCents: next,
-          status: full
-            ? "reversed"
-            : payout.status === "reversal_pending"
-              ? "transferred"
-              : payout.status,
+          status: nextPayoutStatusAfterTransferReversed({
+            full,
+            status: payout.status,
+            holdReasons: payout.holdReasons ?? [],
+            heldFromStatus: payout.heldFromStatus,
+          }),
           lastError: null,
           updatedAt: new Date(),
         })

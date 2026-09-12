@@ -119,6 +119,7 @@ export {
   applyHoldSet,
   clearHoldSet,
   nextPayoutStatusAfterRefund,
+  nextPayoutStatusAfterTransferReversed,
   DEFAULT_PAYOUT_APPROVAL_THRESHOLD_CENTS,
   type PayoutStatus,
   type HoldReason,
