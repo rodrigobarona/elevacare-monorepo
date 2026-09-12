@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted (UX subsection superseded by [ADR-016](ADR-016-subscription-ux-direction.md), 2026-05-18)
+Accepted (UX subsection superseded by [ADR-016](ADR-016-subscription-ux-direction.md), 2026-05-18; single-webhook clause amended 2026-09-11 — two endpoints)
 
 ## Date
 
@@ -29,7 +29,7 @@ Grounded in [Doctolib's business model](https://businessmodelcanvastemplate.com/
 - Stripe API pinned **≥ 2023-08-16** → Dynamic Payment Methods on by default
 - **Never hardcode `payment_method_types`** — methods auto-shown per country (PT gets MB WAY + card + wallets; EU gets SEPA/iDEAL/Bancontact per country). **Exception (carve-out introduced by [ADR-016](ADR-016-subscription-ux-direction.md), Accepted 2026-05-18)**: SaaS subscription Checkout Sessions (`mode: "subscription"`) MUST pin `payment_method_types: ["card", "sepa_debit"]` because MB WAY and Multibanco are one-time-only payment methods and cannot recur. Subscription Checkout is the only place `payment_method_types` may be hardcoded; booking PaymentIntents and booking Checkout Sessions continue to rely on Dynamic Payment Methods. This invariant is enforced in [`infra/stripe/seed-products.ts`](../../../infra/stripe/seed-products.ts).
 - **Multibanco reference vouchers excluded** (7-day delay + voucher reminder complexity, MB WAY covers PT)
-- **Single webhook endpoint** `/webhooks/stripe` per environment handles Payment + Subscriptions + Connect + Identity events; idempotency via Neon `stripe_webhook_events` (canonical table name; the ADR's original `stripe_event_log` proposal was renamed during Phase 1 implementation)
+- **Two webhook endpoints per environment (amended 2026-09-11, Phase 06.0):** `/webhooks/stripe` (`STRIPE_WEBHOOK_SECRET`) receives platform Payment + Subscriptions + Transfer + Identity events; `/webhooks/stripe/connect` (`connect: true`, `STRIPE_CONNECT_WEBHOOK_SECRET`) receives connected-account `account.updated`, `capability.updated`, and `payout.*`. Both routes verify their own signature and dispatch through the same `processStripeEvent` in `@eleva/billing`; idempotency remains Neon `stripe_webhook_events` (canonical table name; the ADR's original `stripe_event_log` proposal was renamed during Phase 1 implementation). The 2026-04-22 "single webhook" clause is superseded — Connect events do not arrive on the platform endpoint. See `payments-payouts-spec.md` and `spikes/06-stripe-funds-flow.md`.
 - Two accounts: `staging` + `production` (separate Connect platform, webhook, seed scripts)
 - **Stripe Tax** configured for PT (NIF, no billing-address requirement)
 - **Stripe Entitlements** for plan gating via `packages/flags`
@@ -91,8 +91,8 @@ Demoted behind `ff.three_party_revenue` (default off). Shipped only when a speci
 
 ## Consequences
 
-- `packages/billing` is large: Embedded Components wrappers, AccountSession minting, single webhook dispatcher, commission logic, subscription lifecycle for both expert and clinic tiers
+- `packages/billing` is large: Embedded Components wrappers, AccountSession minting, `processStripeEvent` in `packages/billing/src/server/webhook.ts`, commission logic, subscription lifecycle for both expert and clinic tiers. `apps/api` owns the platform webhook Route Handler (`/webhooks/stripe`) today. The Connect Route Handler (`/webhooks/stripe/connect`) is not implemented yet; `apps/api` will own it when Phase 06.1/06.2 adds it.
 - Clinic bookings route cleanly to clinic Connect account (single-leg Transfer); three-party complexity only exists when the flag is on
 - Entitlement bridge: Stripe Entitlements are the source of truth, `packages/flags` reads them to gate features
-- Webhook code is cleaner (one endpoint, one dispatcher, one idempotency table)
+- Webhook code stays one dispatcher and one idempotency table; two endpoints are required so connected-account events verify against `STRIPE_CONNECT_WEBHOOK_SECRET`
 - `payment_method_types` is never in our code → a dashboard toggle enables new methods (e.g. iDEAL for NL expansion) with zero deploy

@@ -44,7 +44,7 @@ Use sequential files: `ADR-<3-digit>-<kebab-title>.md`.
 - [`ADR-002-package-manager.md`](./ADR-002-package-manager.md) — pnpm installer + bun as task runner; bun install banned
 - [`ADR-003-tenancy-and-rls.md`](./ADR-003-tenancy-and-rls.md) — Neon RLS with `withOrgContext()`; two Neon projects (main + audit)
 - [`ADR-004-scheduling-and-calendar-oauth.md`](./ADR-004-scheduling-and-calendar-oauth.md) — Eleva-owned Google/Microsoft OAuth in `packages/calendar`; cal.com-inspired scheduling model with online/in-person/phone modes
-- [`ADR-005-payments-and-monetization.md`](./ADR-005-payments-and-monetization.md) — Stripe Connect Express + Dynamic Payment Methods + Embedded Components + single webhook; hybrid monetization (solo=commission, clinic=SaaS tiers); Multibanco vouchers excluded; three-party revenue demoted to phase-2 (UX subsection superseded by ADR-016)
+- [`ADR-005-payments-and-monetization.md`](./ADR-005-payments-and-monetization.md) — Stripe Connect Express + Dynamic Payment Methods + Embedded Components + two webhook endpoints (platform + Connect, amended 2026-09-11); hybrid monetization (solo=commission, clinic=SaaS tiers); Multibanco vouchers excluded; three-party revenue demoted to phase-2 (UX subsection superseded by ADR-016)
 - [`ADR-006-notifications-two-lane.md`](./ADR-006-notifications-two-lane.md) — Lane 1 transactional (Vercel Workflows + Resend + Twilio + Neon inbox + Expo push) and Lane 2 marketing (Resend Automations); Novu retired
 - [`ADR-007-durable-workflows.md`](./ADR-007-durable-workflows.md) — Vercel Workflows DevKit for durable orchestration; QStash scoped to periodic cron only
 - [`ADR-008-feature-flags.md`](./ADR-008-feature-flags.md) — Vercel Flags SDK + Edge Config; PostHog adapter reserved for experimentation
