@@ -809,6 +809,21 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
   [`notifications-spec.md`](./notifications-spec.md), ADR-007,
   [`execution-plan/phases/05-member-app.md`](./execution-plan/phases/05-member-app.md)
 
+### D-18 (2026-09-12): Phase 06.2 payout crons stay on QStash
+
+- Owner: engineering
+- Status: active — working pre-launch exception to ADR-007 for this slice
+- Review date: 2026-09-25 (revisit when payout orchestration moves to DevKit)
+- Summary: Phase 06.2 registers `process-expert-transfers`,
+  `process-pending-payouts`, and `check-upcoming-payouts` as QStash cron
+  schedules that call domain functions through `runInternalWorkflow`, matching
+  audit-outbox and stuck-event jobs. ADR-007 still assigns durable payout
+  orchestration to Vercel Workflows DevKit. Wrapping these crons as DevKit
+  step graphs is a follow-up, not a 06.2 merge gate. QStash remains the
+  periodic trigger.
+- Reference: ADR-007, [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md),
+  [`workflow-orchestration-spec.md`](./workflow-orchestration-spec.md)
+
 ## Related Docs
 
 - [`adrs/README.md`](./adrs/README.md)

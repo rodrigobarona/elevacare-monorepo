@@ -408,6 +408,24 @@ async function recordPayoutRefundShare(input: {
   )
 }
 
+async function findExistingStripeReversal(input: {
+  transferId: string
+  reversalRowId: string
+  refundId: string
+}): Promise<{ id: string } | null> {
+  const page = await stripe().transfers.listReversals(input.transferId, {
+    limit: 100,
+  })
+  const match = page.data.find((row) => {
+    const meta = row.metadata ?? {}
+    return (
+      meta.reversal_row_id === input.reversalRowId ||
+      meta.refund_row_id === input.refundId
+    )
+  })
+  return match ? { id: match.id } : null
+}
+
 async function reverseTransferShare(input: {
   payout: typeof main.payoutStates.$inferSelect
   refundId: string
@@ -428,18 +446,31 @@ async function reverseTransferShare(input: {
   const reversalAmount = reversalRow?.amountCents ?? input.reversalCents
   const idempotencyKey = `reversal:${reversalRowId}`
 
+  let stripeReversalId = reversalRow?.stripeReversalId ?? null
   try {
-    const reversal = await stripe().transfers.createReversal(
-      transferId,
-      {
-        amount: reversalAmount,
-        metadata: {
-          reversal_row_id: reversalRowId,
-          refund_row_id: input.refundId,
+    if (!stripeReversalId) {
+      const existing = await findExistingStripeReversal({
+        transferId,
+        reversalRowId,
+        refundId: input.refundId,
+      })
+      stripeReversalId = existing?.id ?? null
+    }
+    if (!stripeReversalId) {
+      const reversal = await stripe().transfers.createReversal(
+        transferId,
+        {
+          amount: reversalAmount,
+          metadata: {
+            reversal_row_id: reversalRowId,
+            refund_row_id: input.refundId,
+          },
         },
-      },
-      { idempotencyKey }
-    )
+        { idempotencyKey }
+      )
+      stripeReversalId = reversal.id
+    }
+    const reversal = { id: stripeReversalId }
     await withAudit(
       { orgId: input.payout.orgId, actorUserId: input.actorUserId },
       async (tx, ctx) => {
@@ -520,6 +551,14 @@ async function reverseTransferShare(input: {
       }
     )
   } catch (err) {
+    if (stripeReversalId) {
+      void captureException(err, {
+        payoutStateId: input.payout.id,
+        probe: "transfer-reversal-persist",
+        stripeReversalId,
+      })
+      return
+    }
     const message = err instanceof Error ? err.message : String(err)
     await withAudit(
       { orgId: input.payout.orgId, actorUserId: input.actorUserId },
