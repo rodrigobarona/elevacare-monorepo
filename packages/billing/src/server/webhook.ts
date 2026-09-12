@@ -1743,9 +1743,9 @@ async function handleTransferEvent(
       reversedCents: transfer.amount_reversed,
     })
   } else if (payoutStateId && event.type === "transfer.created") {
-    await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
-      const [current] = await tx
-        .select({ status: main.payoutStates.status })
+    const [probe] = await withPlatformAdminContext(async (tx) =>
+      tx
+        .select({ id: main.payoutStates.id })
         .from(main.payoutStates)
         .where(
           and(
@@ -1754,21 +1754,35 @@ async function handleTransferEvent(
           )
         )
         .limit(1)
-      if (!current) {
-        await ctx.emit({
-          entity: "payout",
-          action: "updated",
-          entityId: payoutStateId,
-          payload: { missing: true, stripeTransferId: transfer.id },
-        })
-        return
+    )
+    if (!probe) {
+      return {
+        kind: "ignored",
+        reason: "payout not found for transfer.created",
+        resolvedOrgId: orgId,
       }
-      if (current.status !== "scheduled") {
+    }
+    await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
+      const [scheduled] = await tx
+        .update(main.payoutStates)
+        .set({
+          stripeTransferId: transfer.id,
+          status: "transferred",
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(main.payoutStates.id, payoutStateId),
+            eq(main.payoutStates.orgId, orgId),
+            eq(main.payoutStates.status, "scheduled")
+          )
+        )
+        .returning({ status: main.payoutStates.status })
+      if (!scheduled) {
         void captureException(
           new Error("transfer.created for non-scheduled payout"),
           {
             payoutStateId,
-            status: current.status,
             probe: "transfer-created",
           }
         )
@@ -1791,24 +1805,11 @@ async function handleTransferEvent(
           payload: {
             stripeTransferId: transfer.id,
             type: event.type,
-            statusUnchanged: current.status,
+            statusUnchanged: true,
           },
         })
         return
       }
-      await tx
-        .update(main.payoutStates)
-        .set({
-          stripeTransferId: transfer.id,
-          status: "transferred",
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(main.payoutStates.id, payoutStateId),
-            eq(main.payoutStates.orgId, orgId)
-          )
-        )
       await ctx.emit({
         entity: "payout",
         action: "transferred",

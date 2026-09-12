@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm"
-import { withAudit } from "@eleva/audit"
+import { withAudit, withPlatformAudit } from "@eleva/audit"
 import {
   CLINIC_COMMISSION_BPS,
   PT_VAT_RATE_BPS,
@@ -359,33 +359,62 @@ export async function approvePayout(input: {
     )
   }
   const now = new Date()
-  const nextStatus: PayoutStatus =
-    now.getTime() >= current.eligibleAt.getTime() ? "scheduled" : "pending"
   return withAudit(
     { orgId: current.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {
+      const fresh = await loadPayout(tx, input.payoutStateId)
+      const [freshPayment] = await tx
+        .select({ disputeStatus: main.bookingPayments.disputeStatus })
+        .from(main.bookingPayments)
+        .where(eq(main.bookingPayments.id, fresh.bookingPaymentId))
+        .limit(1)
+      if (freshPayment?.disputeStatus === "open") {
+        throw new PayoutError(
+          "DISPUTE_OPEN",
+          "Cannot approve while a dispute is open"
+        )
+      }
+      if (fresh.status !== "approval_required") {
+        throw new PayoutError(
+          "NOT_APPROVAL_REQUIRED",
+          "Payout is not awaiting approval"
+        )
+      }
+      const nextStatus: PayoutStatus =
+        now.getTime() >= fresh.eligibleAt.getTime() ? "scheduled" : "pending"
       const [row] = await tx
         .update(main.payoutStates)
         .set({
           status: nextStatus,
           approvedBy: input.actorUserId,
           approvedAt: now,
-          scheduledFor: current.eligibleAt,
+          scheduledFor: fresh.eligibleAt,
           updatedAt: now,
         })
-        .where(eq(main.payoutStates.id, input.payoutStateId))
+        .where(
+          and(
+            eq(main.payoutStates.id, input.payoutStateId),
+            eq(main.payoutStates.status, "approval_required")
+          )
+        )
         .returning()
+      if (!row) {
+        throw new PayoutError(
+          "NOT_APPROVAL_REQUIRED",
+          "Payout is not awaiting approval"
+        )
+      }
       await ctx.emit({
         entity: "payout",
         action: "approved",
         entityId: input.payoutStateId,
         payload: {
           reason: input.reason,
-          previousStatus: current.status,
+          previousStatus: fresh.status,
           nextStatus,
         },
       })
-      return row!
+      return row
     }
   )
 }
@@ -438,7 +467,7 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     transferId = transfer.id
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    const updated = await withAudit(
+    const updated = await withPlatformAudit(
       { orgId: current.orgId, actorUserId: null },
       async (tx, ctx) => {
         const [row] = await tx
@@ -459,6 +488,16 @@ export async function executeTransfer(payoutStateId: string): Promise<{
             attempts: main.payoutStates.attempts,
             status: main.payoutStates.status,
           })
+        if (row?.status === "failed") {
+          await tx.insert(main.workflowDeadLetters).values({
+            orgId: current.orgId,
+            workflowName: "process-expert-transfers",
+            entityId: current.id,
+            payload: { payoutStateId, lastError: message.slice(0, 500) },
+            attempts: row.attempts,
+            lastError: message.slice(0, 2000),
+          })
+        }
         await ctx.emit({
           entity: "payout",
           action: "failed",
@@ -471,18 +510,6 @@ export async function executeTransfer(payoutStateId: string): Promise<{
         return row
       }
     )
-    if (updated?.status === "failed") {
-      await withPlatformAdminContext(async (tx) => {
-        await tx.insert(main.workflowDeadLetters).values({
-          orgId: current.orgId,
-          workflowName: "process-expert-transfers",
-          entityId: current.id,
-          payload: { payoutStateId, lastError: message.slice(0, 500) },
-          attempts: updated.attempts,
-          lastError: message.slice(0, 2000),
-        })
-      })
-    }
     void captureException(err, { payoutStateId, probe: "execute-transfer" })
     return {
       status: updated?.status === "failed" ? "failed" : "skipped",

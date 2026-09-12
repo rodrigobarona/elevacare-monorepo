@@ -7,6 +7,7 @@ import { isPayoutError, releaseHold } from "@eleva/billing/server"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireStaffPayoutMutator } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import { checkBot } from "@/lib/bot-protection"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -15,7 +16,7 @@ const PayoutIdSchema = z.string().uuid()
 export const ROUTE_POLICY = {
   auth: "session",
   rateLimit: true,
-  botId: false,
+  botId: true,
 } as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
@@ -34,6 +35,11 @@ export async function POST(
     const failure = apiAuthFailure(err, headers)
     if (failure) return failure
     throw err
+  }
+
+  const botVerdict = await checkBot()
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
   }
 
   const rateLimited = await applyRateLimit(

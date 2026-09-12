@@ -81,6 +81,20 @@ vi.mock("@eleva/audit", () => ({
     }
     return fn(tx, { emit: async () => undefined })
   },
+  withPlatformAudit: async (
+    _opts: unknown,
+    fn: (tx: unknown, ctx: { emit: () => Promise<void> }) => Promise<unknown>
+  ) => {
+    const tx = {
+      update: () => tx,
+      set: () => tx,
+      where: () => tx,
+      returning: () => [{ attempts: 1, status: "scheduled" }],
+      insert: () => tx,
+      values: () => tx,
+    }
+    return fn(tx, { emit: async () => undefined })
+  },
 }))
 
 const { executeTransfer } = await import("./payouts")
