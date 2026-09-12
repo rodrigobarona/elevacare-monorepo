@@ -32,6 +32,19 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-13: Phase 06.3 is Playwright closeout, not a new commercial gate
+
+- Owner: engineering
+- Status: active
+- Summary: The original Phase 06 plan listed 06.0 / 06.1 / 06.2 only. After 06.2
+  merged, closeout is a dedicated `phase-06.3/e2e-payouts` PR: Playwright
+  coverage of payout/refund OpenAPI paths, anonymous 401s, unsigned Stripe
+  webhooks, and payout-workflow drain-secret rejection. This does not invent
+  D-gates. D-03–D-06 remain founder working pre-launch. Phase 06 closes when
+  06.3 merges. There is no 06.4.
+- Reference:
+  [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
+
 ### 2026-09-11: Phase 06.0 Stripe funds-flow spike evidence
 
 - Owner: engineering
