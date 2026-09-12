@@ -58,16 +58,23 @@ export async function POST(
     )
   }
 
-  let actingOrgId: string | undefined = session.orgId
+  let actingOrgId: string | "platform"
   if (session.productLabel === "staff" || (staffRefund && !expertRefund)) {
     try {
       await requireStaffPayoutMutator(request, "admin_payouts:refund")
-      actingOrgId = undefined
+      actingOrgId = "platform"
     } catch (err) {
       const failure = apiAuthFailure(err, headers)
       if (failure) return failure
       throw err
     }
+  } else if (!session.orgId) {
+    return secureJson(
+      { error: "forbidden", code: "missing-organization" },
+      { status: 403, headers }
+    )
+  } else {
+    actingOrgId = session.orgId
   }
 
   const { bookingPaymentId: rawPaymentId } = await params

@@ -1626,13 +1626,24 @@ async function handleChargeDisputeClosed(
   }
 
   let orgId: string | null = charge ? orgIdFromMetadata(charge.metadata) : null
+  const paymentIntentFromDispute =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : (dispute.payment_intent?.id ?? null)
   const paymentIntentId = charge
     ? typeof charge.payment_intent === "string"
       ? charge.payment_intent
-      : (charge.payment_intent?.id ?? null)
-    : null
-  if (!orgId && charge?.payment_intent) {
-    orgId = await orgIdFromPaymentIntent(charge.payment_intent)
+      : (charge.payment_intent?.id ?? paymentIntentFromDispute)
+    : paymentIntentFromDispute
+  if (!orgId && paymentIntentId) {
+    orgId = await orgIdFromPaymentIntent(paymentIntentId)
+  }
+  const bookingPaymentId = await findBookingPaymentIdByCharge({
+    paymentIntentId,
+    chargeId,
+  })
+  if (!orgId && bookingPaymentId) {
+    orgId = await orgIdFromBookingPayment(bookingPaymentId)
   }
   if (!orgId) {
     return {
@@ -1642,10 +1653,6 @@ async function handleChargeDisputeClosed(
     }
   }
   const won = dispute.status === "won" || dispute.status === "warning_closed"
-  const bookingPaymentId = await findBookingPaymentIdByCharge({
-    paymentIntentId,
-    chargeId,
-  })
   if (bookingPaymentId) {
     await applyDisputeClosed({ bookingPaymentId, won })
   }
@@ -1931,4 +1938,17 @@ async function orgIdFromPaymentIntent(
     )
     return null
   }
+}
+
+async function orgIdFromBookingPayment(
+  bookingPaymentId: string
+): Promise<string | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ orgId: main.bookingPayments.orgId })
+      .from(main.bookingPayments)
+      .where(eq(main.bookingPayments.id, bookingPaymentId))
+      .limit(1)
+    return row?.orgId ?? null
+  })
 }

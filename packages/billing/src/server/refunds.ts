@@ -59,7 +59,7 @@ export async function refundBookingPayment(input: {
   reason: string
   actorUserId: string | null
   policy?: RefundPolicyInput
-  actingOrgId?: string
+  actingOrgId: string | "platform"
   idempotencyKey?: string
   actorIsStaffReviewer?: boolean
 }): Promise<{ refundId: string; status: "succeeded" | "pending" }> {
@@ -93,7 +93,10 @@ export async function refundBookingPayment(input: {
         404
       )
     }
-    if (input.actingOrgId && payment.orgId !== input.actingOrgId) {
+    if (
+      input.actingOrgId !== "platform" &&
+      payment.orgId !== input.actingOrgId
+    ) {
       throw new RefundError(
         "ORG_MISMATCH",
         "Payment is not in this organization",
@@ -126,7 +129,7 @@ export async function refundBookingPayment(input: {
   const paymentIntentId = snapshot.payment.stripePaymentIntentId
 
   const idempotencyKey = input.idempotencyKey?.trim()
-    ? `refund:${input.idempotencyKey.trim()}`
+    ? `refund:${snapshot.payment.id}:${input.idempotencyKey.trim()}`
     : `refund:${snapshot.payment.id}:${snapshot.amountCents}:${snapshot.refundSeq}`
   const [existingRefund] = await withPlatformAdminContext(async (tx) =>
     tx
@@ -135,13 +138,18 @@ export async function refundBookingPayment(input: {
         status: main.bookingRefunds.status,
       })
       .from(main.bookingRefunds)
-      .where(eq(main.bookingRefunds.idempotencyKey, idempotencyKey))
+      .where(
+        and(
+          eq(main.bookingRefunds.idempotencyKey, idempotencyKey),
+          eq(main.bookingRefunds.bookingPaymentId, snapshot.payment.id)
+        )
+      )
       .limit(1)
   )
   if (existingRefund?.status === "succeeded") {
     return { refundId: existingRefund.id, status: "succeeded" }
   }
-  const refundId = existingRefund?.id ?? crypto.randomUUID()
+  let refundId = existingRefund?.id ?? crypto.randomUUID()
   const reversalId = snapshot.payout?.stripeTransferId
     ? crypto.randomUUID()
     : null
@@ -175,7 +183,7 @@ export async function refundBookingPayment(input: {
     await withAudit(
       { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
       async (tx, ctx) => {
-        await tx
+        const [inserted] = await tx
           .insert(main.bookingRefunds)
           .values({
             id: refundId,
@@ -190,6 +198,28 @@ export async function refundBookingPayment(input: {
           .onConflictDoNothing({
             target: main.bookingRefunds.idempotencyKey,
           })
+          .returning({ id: main.bookingRefunds.id })
+        if (!inserted) {
+          const [existing] = await tx
+            .select({ id: main.bookingRefunds.id })
+            .from(main.bookingRefunds)
+            .where(eq(main.bookingRefunds.idempotencyKey, idempotencyKey))
+            .limit(1)
+          refundId = existing?.id ?? refundId
+          await ctx.emit({
+            entity: "refund",
+            action: "requested",
+            entityId: refundId,
+            payload: {
+              bookingPaymentId: input.bookingPaymentId,
+              amountCents: snapshot.amountCents,
+              refundSeq: snapshot.refundSeq,
+              idempotentReplay: true,
+            },
+          })
+          return
+        }
+        refundId = inserted.id
         if (reversalId && snapshot.payout && reversalCents > 0) {
           await tx.insert(main.transferReversals).values({
             id: reversalId,
@@ -456,7 +486,7 @@ async function reverseTransferShare(input: {
             entityId: input.payout.id,
             payload: {
               stripeReversalId: reversal.id,
-              reversalCents: input.reversalCents,
+              reversalCents: reversalAmount,
               duplicate: true,
             },
           })
@@ -465,8 +495,8 @@ async function reverseTransferShare(input: {
         const [updated] = await tx
           .update(main.payoutStates)
           .set({
-            reversedCents: sql`LEAST(${main.payoutStates.amountCents}, ${main.payoutStates.reversedCents} + ${input.reversalCents})`,
-            status: sql`CASE WHEN ${main.payoutStates.reversedCents} + ${input.reversalCents} >= ${main.payoutStates.amountCents} THEN 'reversed'::payout_status ELSE ${main.payoutStates.status} END`,
+            reversedCents: sql`LEAST(${main.payoutStates.amountCents}, ${main.payoutStates.reversedCents} + ${reversalAmount})`,
+            status: sql`CASE WHEN ${main.payoutStates.reversedCents} + ${reversalAmount} >= ${main.payoutStates.amountCents} THEN 'reversed'::payout_status ELSE ${main.payoutStates.status} END`,
             updatedAt: new Date(),
           })
           .where(eq(main.payoutStates.id, input.payout.id))
@@ -483,7 +513,7 @@ async function reverseTransferShare(input: {
           entityId: input.payout.id,
           payload: {
             stripeReversalId: reversal.id,
-            reversalCents: input.reversalCents,
+            reversalCents: reversalAmount,
             full,
           },
         })

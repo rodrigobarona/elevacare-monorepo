@@ -47,6 +47,56 @@ async function findTransferIdForPayoutState(input: {
   return match?.id ?? null
 }
 
+async function remintTransferIdempotencyKey(input: {
+  payout: PayoutRow
+  transferAmount: number
+}): Promise<string | null> {
+  const nextKey = crypto.randomUUID()
+  try {
+    return await withPlatformAudit(
+      { orgId: input.payout.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [row] = await tx
+          .update(main.payoutStates)
+          .set({
+            transferIdempotencyKey: nextKey,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(main.payoutStates.id, input.payout.id),
+              eq(main.payoutStates.status, "scheduled")
+            )
+          )
+          .returning({
+            transferIdempotencyKey: main.payoutStates.transferIdempotencyKey,
+          })
+        if (!row) {
+          throw new PayoutError(
+            "CONCURRENT_TRANSITION",
+            "Payout is no longer scheduled"
+          )
+        }
+        await ctx.emit({
+          entity: "payout",
+          action: "updated",
+          entityId: input.payout.id,
+          payload: {
+            remintedTransferKey: true,
+            transferAmount: input.transferAmount,
+          },
+        })
+        return row.transferIdempotencyKey
+      }
+    )
+  } catch (err) {
+    if (isPayoutError(err) && err.code === "CONCURRENT_TRANSITION") {
+      return null
+    }
+    throw err
+  }
+}
+
 const TRANSFER_MAX_ATTEMPTS = 8
 
 export class PayoutError extends Error {
@@ -283,7 +333,7 @@ export async function applyHold(input: {
           reason: input.reason,
           staffReason: input.staffReason ?? null,
           previousStatus: current.status,
-          holdReasons: next.holdReasons,
+          holdReasons: row?.holdReasons ?? next.holdReasons,
         },
       })
       return row!
@@ -496,16 +546,48 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     )
     transferId = transfer.id
   } catch (err) {
+    let failure: unknown = err
     if (isStripeIdempotencyError(err)) {
       transferId = await findTransferIdForPayoutState({
         payoutStateId: current.id,
         destination: current.destinationConnectAccountId,
         transferGroup: payment.bookingId,
       })
+      if (!transferId) {
+        const nextKey = await remintTransferIdempotencyKey({
+          payout: current,
+          transferAmount,
+        })
+        if (nextKey) {
+          try {
+            const transfer = await stripe().transfers.create(
+              {
+                amount: transferAmount,
+                currency: "eur",
+                destination: current.destinationConnectAccountId,
+                transfer_group: payment.bookingId,
+                source_transaction: payment.stripeChargeId,
+                metadata: {
+                  payout_state_id: current.id,
+                  booking_payment_id: current.bookingPaymentId,
+                },
+              },
+              { idempotencyKey: nextKey }
+            )
+            transferId = transfer.id
+          } catch (retryErr) {
+            failure = retryErr
+          }
+        }
+      }
     }
     if (!transferId) {
-      const message = err instanceof Error ? err.message : String(err)
-      void captureException(err, { payoutStateId, probe: "execute-transfer" })
+      const message =
+        failure instanceof Error ? failure.message : String(failure)
+      void captureException(failure, {
+        payoutStateId,
+        probe: "execute-transfer",
+      })
       try {
         const updated = await withPlatformAudit(
           { orgId: current.orgId, actorUserId: null },
