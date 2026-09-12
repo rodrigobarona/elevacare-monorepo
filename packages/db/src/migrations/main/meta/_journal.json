@@ -239,6 +239,13 @@
       "when": 1779580000000,
       "tag": "0033_connect_settlement",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1779590000000,
+      "tag": "0034_payout_engine",
+      "breakpoints": true
     }
   ]
 }

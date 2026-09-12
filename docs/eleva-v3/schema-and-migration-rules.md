@@ -157,6 +157,10 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `slot_reservations`         | tenant-owned                                                |
 | `bookings`                  | dual-organization                                           |
 | `booking_payments`          | tenant-owned                                                |
+| `payout_states`             | tenant-owned                                                |
+| `booking_refunds`           | tenant-owned                                                |
+| `transfer_reversals`        | tenant-owned                                                |
+| `workflow_dead_letters`     | service-only                                                |
 | `consents`                  | tenant-owned                                                |
 | `sessions`                  | participant-visible                                         |
 | `billing_customers`         | tenant-owned                                                |

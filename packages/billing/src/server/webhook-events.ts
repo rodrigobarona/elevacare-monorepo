@@ -1,7 +1,7 @@
 import type Stripe from "stripe"
 
 /**
- * Canonical Stripe webhook event lists (Phase 06.1).
+ * Canonical Stripe webhook event lists (Phase 06.2).
  *
  * Two endpoints per environment:
  *   - `/webhooks/stripe` — platform account (`STRIPE_WEBHOOK_SECRET`)
@@ -25,9 +25,16 @@ export const PLATFORM_WEBHOOK_EVENTS = [
   "identity.verification_session.requires_input",
   "identity.verification_session.canceled",
   "payment_intent.succeeded",
+  "payment_intent.processing",
   "payment_intent.payment_failed",
+  "payment_intent.canceled",
   "charge.refunded",
+  "refund.updated",
   "charge.dispute.created",
+  "charge.dispute.closed",
+  "transfer.created",
+  "transfer.updated",
+  "transfer.reversed",
 ] as const satisfies readonly Stripe.WebhookEndpointCreateParams.EnabledEvent[]
 
 export const CONNECT_WEBHOOK_EVENTS = [

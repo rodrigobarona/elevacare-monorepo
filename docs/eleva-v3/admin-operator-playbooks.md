@@ -70,6 +70,20 @@ Should cover:
 - payout approval process
 - when escalation is required
 
+#### Approve a payout (Phase 06.2 API; admin UI in Phase 12)
+
+1. Confirm the actor is `platform_admin` or `staff_finance` (not `staff_support`).
+2. `POST /payouts/{id}/approve` with `{ "reason": "..." }` — empty reason is 400.
+3. Open dispute on the booking payment → 409 `DISPUTE_OPEN`.
+4. First payout or `amount_cents >= PAYOUT_APPROVAL_THRESHOLD_CENTS` (default 50000, inclusive) is the only `approval_required` path.
+5. Audit: `payout.approved` with actor, reason, previous/next status.
+
+#### Hold / release
+
+1. `POST /payouts/{id}/hold` adds `manual` to `hold_reasons` (set). A dispute already present keeps the row `held`.
+2. `POST /payouts/{id}/release` removes `manual` only. If `dispute` remains, status stays `held`.
+3. Both require a reason and `admin_payouts:hold`.
+
 ### Transcript / AI report issue handling
 
 Should cover:

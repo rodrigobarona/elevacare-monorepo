@@ -51,7 +51,8 @@ Each entry should include:
   `STRIPE_WEBHOOK_SECRET`) and `/webhooks/stripe/connect` (`connect: true`,
   `STRIPE_CONNECT_WEBHOOK_SECRET`). Same dispatcher and
   `stripe_webhook_events` table. ADR-005 is amended to match. D-03, D-04,
-  D-05 are working pre-launch (founder) as of 2026-09-12. The Connect
+  D-05 are working pre-launch (founder) as of 2026-09-12. D-06 is
+  working pre-launch (founder) as of 2026-09-12. The Connect
   endpoint lands in PR 06.1.
 - Reference: [`spikes/06-stripe-funds-flow.md`](./spikes/06-stripe-funds-flow.md)
 
@@ -617,13 +618,16 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 
 ### D-06 (2026-09-07): Refund, dispute and no-show policy
 
-- Owner: finance + product
-- Status: proposed (sign before PR 06.2)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Owner: finance + product for production re-sign; founder acting as product
+  owner (working pre-launch)
+- Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
+  Barona (founder). Unblocks PR 06.2. Not a finance/legal production sign-off.
+- Review date: 2026-09-21 (finance + legal re-sign before production)
 - Summary: cancellation-window refund rules, dispute handling (hold payout, reverse on loss) and
   the no-show policy (Phase 9 records attendance only; this decision says refund / keep / partial
   per attendance outcome). Refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` (default 200 EUR) need
-  dual control in the admin console. Blocks: Phase 6 PR 06.2.
+  dual control in the admin console. Working pre-launch decision that unblocks PR 06.2; finance
+  and legal re-sign still required before production.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds", [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md) (attendance)
 
 ### D-07 (2026-09-07): Daily HIPAA domain, BAA/DPA and EU processing position

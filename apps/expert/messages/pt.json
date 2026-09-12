@@ -120,7 +120,30 @@
     "balance": "Saldo",
     "payouts": "Pagamentos",
     "accountDetails": "Dados da conta",
-    "taxSettings": "Definições fiscais"
+    "taxSettings": "Definições fiscais",
+    "gross": "Bruto",
+    "fees": "Taxas",
+    "net": "Líquido",
+    "pending": "Pendente",
+    "paid": "Pago",
+    "bookings": "Marcações",
+    "booking": "Marcação",
+    "payoutState": "Estado do pagamento",
+    "eligibleAt": "Elegível",
+    "exportCsv": "Exportar CSV",
+    "empty": "Ainda não há pagamentos de marcações.",
+    "noPayout": "Não agendado",
+    "status": {
+      "pending": "Pendente",
+      "scheduled": "Agendado",
+      "approvalRequired": "Precisa de aprovação",
+      "transferred": "Transferido",
+      "paidOut": "Pago",
+      "failed": "Falhou",
+      "held": "Em retenção",
+      "reversalPending": "Reversão pendente",
+      "reversed": "Revertido"
+    }
   },
   "onboarding": {
     "title": "Onboarding de especialista",

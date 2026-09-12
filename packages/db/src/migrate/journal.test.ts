@@ -38,9 +38,19 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0033_connect_settlement")
+    expect(last?.tag).toBe("0034_payout_engine")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
+    const payoutSql = last?.statements.join("\n") ?? ""
+    expect(payoutSql).toContain("payout_states")
+    expect(payoutSql).toContain("booking_refunds")
+    expect(payoutSql).toContain("transfer_reversals")
+    expect(payoutSql).toContain("workflow_dead_letters")
+    expect(payoutSql).toContain("payout_states_forbid_destination_update")
+    expect(payoutSql).toContain("payout_states_payment_org_fk")
+    expect(payoutSql).toContain("transfer_reversals_payout_payment_fk")
+    expect(payoutSql).toContain("payout_states_booking_payment_id_key")
+    expect(payoutSql).toContain("booking_refunds_idempotency_key")
     const privacy = migrations.find((m) => m.tag === "0031_member_privacy")
     expect(privacy?.statements.length).toBeGreaterThan(0)
     const offer = migrations.find((m) => m.tag === "0027_offer_model")
@@ -83,7 +93,8 @@ describe("migration journal helpers", () => {
     const lease = migrations.find((m) => m.tag === "0032_dsar_processing_lease")
     const leaseSql = lease?.statements.join("\n") ?? ""
     expect(leaseSql).toContain("processing_started_at")
-    const connectSql = last?.statements.join("\n") ?? ""
+    const connect = migrations.find((m) => m.tag === "0033_connect_settlement")
+    const connectSql = connect?.statements.join("\n") ?? ""
     expect(connectSql).toContain("stripe_connect_account_id")
     expect(connectSql).toContain("applied_commission_bps")
     expect(connectSql).toContain("processing_fee_cents")

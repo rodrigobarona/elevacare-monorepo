@@ -14,7 +14,7 @@ const statement = {
   invoicing: ["view", "manage"],
   integration: ["view", "manage"],
   adminUser: ["list", "set-role"],
-  adminPayout: ["view", "approve"],
+  adminPayout: ["view", "approve", "hold", "refund"],
   adminAccounting: ["reconcile"],
   adminFlag: ["manage"],
 } as const
@@ -71,5 +71,20 @@ export const adminRoles = {
 }
 
 export const adminAccess = defaultAc
+
+/** Better Auth admin roles allowed to approve, hold, release, or refund payouts. */
+export const PAYOUT_MUTATION_STAFF_ROLES = [
+  "platform_admin",
+  "staff_finance",
+] as const
+
+export type PayoutMutationStaffRole =
+  (typeof PAYOUT_MUTATION_STAFF_ROLES)[number]
+
+export function isPayoutMutationStaffRole(
+  role: string | null | undefined
+): role is PayoutMutationStaffRole {
+  return PAYOUT_MUTATION_STAFF_ROLES.some((allowed) => allowed === role)
+}
 
 export { statement }

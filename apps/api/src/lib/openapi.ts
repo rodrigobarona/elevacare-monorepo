@@ -32,6 +32,13 @@ import {
   ConfirmBookingResponseSchema,
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
+  RefundBookingPaymentRequestSchema,
+  RefundBookingPaymentResponseSchema,
+  ListPayoutsQuerySchema,
+  ListPayoutsResponseSchema,
+  PayoutActionRequestSchema,
+  PayoutActionResponseSchema,
+  FinanceSummaryResponseSchema,
   SetActiveOrganizationRequestSchema,
   SetActiveOrganizationResponseSchema,
   MeProfileSchema,
@@ -143,6 +150,26 @@ const stdWithNotFound = {
   ...stdErrors,
   "404": {
     description: "Not found",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+} as const
+
+const stdWithPayoutMutation = {
+  ...stdErrors,
+  "400": {
+    description: "Reason required",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "403": {
+    description: "Staff finance or platform_admin required",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "404": {
+    description: "Payout not found",
+    content: { "application/json": { schema: ErrorSchema } },
+  },
+  "409": {
+    description: "DISPUTE_OPEN or illegal payout state",
     content: { "application/json": { schema: ErrorSchema } },
   },
 } as const
@@ -1462,6 +1489,149 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Invalid reservationId or reservationToken",
               content: { "application/json": { schema: ErrorSchema } },
             },
+          },
+        },
+      },
+      "/payments/{bookingPaymentId}/refund": {
+        post: {
+          operationId: "refundBookingPayment",
+          summary: "Refund a booking payment (full or partial)",
+          description:
+            "Creates a Stripe refund then, when a transfer exists, a transfer reversal. Expert `billing:refund` on the owning org, or staff `admin_payouts:refund`.",
+          tags: ["Payments"],
+          requestParams: {
+            path: z.object({ bookingPaymentId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: RefundBookingPaymentRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Refund accepted",
+              content: {
+                "application/json": {
+                  schema: RefundBookingPaymentResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/payouts": {
+        get: {
+          operationId: "listPayouts",
+          summary: "List payout ledger rows",
+          description:
+            "Experts see their active org only (`orgId` must match or is implied). Staff with `admin_payouts:read` may filter by org.",
+          tags: ["Payouts"],
+          requestParams: {
+            query: ListPayoutsQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Payout list",
+              content: {
+                "application/json": { schema: ListPayoutsResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/payouts/{id}/approve": {
+        post: {
+          operationId: "approvePayout",
+          summary: "Approve an approval_required payout",
+          description:
+            "Staff-only (`platform_admin` or `staff_finance`) with `admin_payouts:approve`. Refused with 409 DISPUTE_OPEN while a dispute is open.",
+          tags: ["Payouts"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: PayoutActionRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Payout approved",
+              content: {
+                "application/json": { schema: PayoutActionResponseSchema },
+              },
+            },
+            ...stdWithPayoutMutation,
+          },
+        },
+      },
+      "/payouts/{id}/hold": {
+        post: {
+          operationId: "holdPayout",
+          summary: "Add a manual hold to a payout",
+          tags: ["Payouts"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: PayoutActionRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Hold applied",
+              content: {
+                "application/json": { schema: PayoutActionResponseSchema },
+              },
+            },
+            ...stdWithPayoutMutation,
+          },
+        },
+      },
+      "/payouts/{id}/release": {
+        post: {
+          operationId: "releasePayoutHold",
+          summary: "Remove a manual hold from a payout",
+          tags: ["Payouts"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: PayoutActionRequestSchema },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Hold released (or remaining dispute hold)",
+              content: {
+                "application/json": { schema: PayoutActionResponseSchema },
+              },
+            },
+            ...stdWithPayoutMutation,
+          },
+        },
+      },
+      "/me/finance/summary": {
+        get: {
+          operationId: "getExpertFinanceSummary",
+          summary: "Expert earnings summary and booking payout table",
+          tags: ["Finance"],
+          responses: {
+            "200": {
+              description: "Summary cards plus per-booking rows",
+              content: {
+                "application/json": { schema: FinanceSummaryResponseSchema },
+              },
+            },
+            ...stdErrors,
           },
         },
       },

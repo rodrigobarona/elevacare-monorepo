@@ -106,9 +106,16 @@ Stripe Identity:
 Booking payments + refunds + disputes:
 
 - `payment_intent.succeeded`
+- `payment_intent.processing`
 - `payment_intent.payment_failed`
+- `payment_intent.canceled`
 - `charge.refunded`
+- `refund.updated`
 - `charge.dispute.created`
+- `charge.dispute.closed`
+- `transfer.created`
+- `transfer.updated`
+- `transfer.reversed`
 
 Connect endpoint (`{url}/connect`):
 

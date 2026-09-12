@@ -120,7 +120,30 @@
     "balance": "Balance",
     "payouts": "Payouts",
     "accountDetails": "Account Details",
-    "taxSettings": "Tax Settings"
+    "taxSettings": "Tax Settings",
+    "gross": "Gross",
+    "fees": "Fees",
+    "net": "Net",
+    "pending": "Pending",
+    "paid": "Paid out",
+    "bookings": "Bookings",
+    "booking": "Booking",
+    "payoutState": "Payout state",
+    "eligibleAt": "Eligible",
+    "exportCsv": "Export CSV",
+    "empty": "No booking payments yet.",
+    "noPayout": "Not scheduled",
+    "status": {
+      "pending": "Pending",
+      "scheduled": "Scheduled",
+      "approvalRequired": "Needs approval",
+      "transferred": "Transferred",
+      "paidOut": "Paid out",
+      "failed": "Failed",
+      "held": "On hold",
+      "reversalPending": "Reversal pending",
+      "reversed": "Reversed"
+    }
   },
   "onboarding": {
     "title": "Expert onboarding",

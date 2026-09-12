@@ -298,7 +298,7 @@ no separate "released" state.
 
 ## Refunds
 
-- policy-based refunds (cancellation window rules; the no-show and dispute policy is decision D-06)
+- policy-based refunds (cancellation window rules; the no-show and dispute policy is decision D-06 — **working pre-launch**, founder recorded 2026-09-12; finance and legal re-sign before production)
 - linked to cancellation state
 - operational/admin review for edge cases; refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` need
   dual control (Phase 12)

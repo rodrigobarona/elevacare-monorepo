@@ -1,0 +1,108 @@
+import {
+  RefundBookingPaymentRequestSchema,
+  RefundBookingPaymentResponseSchema,
+} from "@eleva/api-client"
+import { isRefundError, refundBookingPayment } from "@eleva/billing/server"
+import { corsHeaders } from "@/lib/cors"
+import {
+  apiAuthFailure,
+  requireApiAuth,
+  requireStaffPayoutMutator,
+} from "@/lib/auth"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import { secureJson } from "@/lib/security-headers"
+import type { RoutePolicy } from "@/lib/route-policy"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ bookingPaymentId: string }> }
+) {
+  const headers = corsHeaders(request, "POST, OPTIONS")
+
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated
+  )
+  if (rateLimited) return rateLimited
+
+  const expertRefund = session.capabilities.includes("billing:refund")
+  const staffRefund = session.capabilities.includes("admin_payouts:refund")
+  if (!expertRefund && !staffRefund) {
+    return secureJson(
+      { error: "forbidden", code: "missing-capability" },
+      { status: 403, headers }
+    )
+  }
+
+  let actingOrgId: string | undefined = session.orgId
+  if (staffRefund) {
+    try {
+      await requireStaffPayoutMutator(request, "admin_payouts:refund")
+      actingOrgId = undefined
+    } catch (err) {
+      if (!expertRefund) {
+        const failure = apiAuthFailure(err, headers)
+        if (failure) return failure
+        throw err
+      }
+    }
+  }
+
+  const { bookingPaymentId } = await params
+  const parsed = RefundBookingPaymentRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
+  if (!parsed.success) {
+    return secureJson(
+      { error: "validation", issues: parsed.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  try {
+    const result = await refundBookingPayment({
+      bookingPaymentId,
+      amountCents: parsed.data.amountCents,
+      reason: parsed.data.reason,
+      actorUserId: session.user.id,
+      actingOrgId,
+    })
+    return secureJson(RefundBookingPaymentResponseSchema.parse(result), {
+      status: 200,
+      headers,
+    })
+  } catch (err) {
+    if (isRefundError(err)) {
+      return secureJson(
+        { error: err.code, code: err.code, message: err.message },
+        { status: err.status, headers }
+      )
+    }
+    throw err
+  }
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "POST, OPTIONS"),
+  })
+}

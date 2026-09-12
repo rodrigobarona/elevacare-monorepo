@@ -4,7 +4,12 @@ import {
   type ApiIdentity,
 } from "@eleva/auth/api-auth"
 import { expiredSessionCookies } from "@eleva/auth/api-auth"
-import { UnauthorizedError, type ElevaSession } from "@eleva/auth"
+import {
+  UnauthorizedError,
+  canMutateStaffPayouts,
+  type ElevaSession,
+} from "@eleva/auth"
+import { getAuthUserRole } from "@eleva/db"
 import { secureJson } from "@/lib/security-headers"
 
 export type { ApiIdentity }
@@ -57,6 +62,26 @@ export async function requireApiCapability(
   const session = await requireApiAuth(request)
   if (!session.capabilities.includes(capability)) {
     throw new UnauthorizedError("missing-capability", `missing: ${capability}`)
+  }
+  return session
+}
+
+export async function requireStaffPayoutMutator(
+  request: Request,
+  capability: string
+): Promise<ElevaSession> {
+  const session = await requireApiCapability(request, capability)
+  const authUserRole = await getAuthUserRole(session.user.id)
+  if (
+    !canMutateStaffPayouts({
+      productLabel: session.productLabel,
+      authUserRole,
+    })
+  ) {
+    throw new UnauthorizedError(
+      "missing-capability",
+      "staff_finance or platform_admin required"
+    )
   }
   return session
 }

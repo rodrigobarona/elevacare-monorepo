@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   capabilitiesFor,
+  canMutateStaffPayouts,
   CAPABILITY_BUNDLES,
   deriveProductLabel,
   hasCapability,
@@ -88,4 +89,23 @@ describe("capability bundles", () => {
       false
     )
   })
+})
+
+describe("canMutateStaffPayouts", () => {
+  const cases = [
+    { productLabel: "member", authUserRole: "user", allowed: false },
+    { productLabel: "expert", authUserRole: "user", allowed: false },
+    { productLabel: "staff", authUserRole: "staff_support", allowed: false },
+    { productLabel: "staff", authUserRole: "staff_finance", allowed: true },
+    { productLabel: "staff", authUserRole: "platform_admin", allowed: true },
+  ] as const
+
+  it.each(cases)(
+    "$productLabel / $authUserRole => $allowed",
+    ({ productLabel, authUserRole, allowed }) => {
+      expect(canMutateStaffPayouts({ productLabel, authUserRole })).toBe(
+        allowed
+      )
+    }
+  )
 })
