@@ -245,13 +245,23 @@ export async function provisionConnectAccount(
             input.orgId,
             snapshotFromAccount(retrieved)
           )
+          await ctx.emit({
+            entity: "connect_account",
+            action: "synced",
+            entityId: stored,
+            payload: { stripeAccountId: stored },
+          })
+        } else {
+          await ctx.emit({
+            entity: "connect_account",
+            action: "rejected",
+            entityId: account.id,
+            payload: {
+              stripeAccountId: stored,
+              discardedStripeAccountId: account.id,
+            },
+          })
         }
-        await ctx.emit({
-          entity: "connect_account",
-          action: "synced",
-          entityId: stored,
-          payload: { stripeAccountId: stored },
-        })
         return
       }
 

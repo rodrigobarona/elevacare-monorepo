@@ -161,13 +161,19 @@ async function syncEndpoint(
 
   console.log(`[stripe:webhooks] Created ${plan.kind} endpoint: ${created.id}`)
   console.log(`  URL: ${created.url}`)
-  console.log(`  Signing secret: ${created.secret}`)
-  console.log(
-    "[stripe:webhooks] IMPORTANT: Save this secret now — it cannot be retrieved later."
-  )
-  console.log(
-    `[stripe:webhooks] Set ${plan.secretEnv}=${created.secret} in your environment.`
-  )
+  if (process.stdout.isTTY) {
+    console.log(`  Signing secret: ${created.secret}`)
+    console.log(
+      "[stripe:webhooks] IMPORTANT: Save this secret now — it cannot be retrieved later."
+    )
+    console.log(
+      `[stripe:webhooks] Set ${plan.secretEnv}=<secret above> in your environment.`
+    )
+  } else {
+    console.log(
+      `[stripe:webhooks] Secret withheld from non-interactive output. Read it from the Stripe Dashboard and set ${plan.secretEnv}.`
+    )
+  }
 }
 
 async function main() {

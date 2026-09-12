@@ -448,7 +448,7 @@ export const bookingPayments = pgTable(
     feeChk: check("booking_payments_fee", sql`application_fee_cents >= 0`),
     commissionBpsChk: check(
       "booking_payments_commission_bps",
-      sql`applied_commission_bps >= 0`
+      sql`applied_commission_bps >= 0 AND applied_commission_bps <= 10000`
     ),
     platformFeeNetChk: check(
       "booking_payments_platform_fee_net",

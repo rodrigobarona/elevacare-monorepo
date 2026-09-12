@@ -45,10 +45,7 @@ export async function handleStripeWebhook(
           : "/webhooks/stripe",
       phase: "init",
     })
-    return secureJson(
-      { error: "stripe_init_failed", message },
-      { status: 500, headers }
-    )
+    return secureJson({ error: "stripe_init_failed" }, { status: 500, headers })
   }
 
   const body = await request.text()

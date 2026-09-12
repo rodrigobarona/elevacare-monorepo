@@ -106,3 +106,10 @@ export function requireUpdatedBillingCustomer(
     throw new Error(`billing_customers row missing for org ${orgId}`)
   }
 }
+
+export function isMissingBillingCustomerError(err: unknown): err is Error {
+  return (
+    err instanceof Error &&
+    err.message.startsWith("billing_customers row missing")
+  )
+}

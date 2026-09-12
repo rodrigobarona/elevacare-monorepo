@@ -34,7 +34,7 @@ ALTER TABLE "booking_payments" ADD COLUMN IF NOT EXISTS "processing_fee_cents" i
 ALTER TABLE "booking_payments" DROP CONSTRAINT IF EXISTS "booking_payments_commission_bps";
 --> statement-breakpoint
 ALTER TABLE "booking_payments" ADD CONSTRAINT "booking_payments_commission_bps"
-  CHECK (applied_commission_bps >= 0);
+  CHECK (applied_commission_bps >= 0 AND applied_commission_bps <= 10000);
 --> statement-breakpoint
 ALTER TABLE "booking_payments" DROP CONSTRAINT IF EXISTS "booking_payments_platform_fee_net";
 --> statement-breakpoint

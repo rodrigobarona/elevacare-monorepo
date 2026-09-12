@@ -574,7 +574,8 @@ Each entry should include:
 - Summary: the advertised commission (15% / 8% / 0%) is the gross platform fee; IVA is carved out
   of it per the Phase 7 IVA matrix (PT B2B 15.00 = 12.20 + 2.80; intra-EU reverse charge 15.00 net).
   100 EUR booking -> 15.00 fee -> 85.00 expert transfer. Implemented once in `computeSettlement`.
-  Blocks: Phase 6 PR 06.1 (and Phase 7 Tier 1 coding).
+  Working pre-launch decision that unblocks PR 06.1; finance re-sign still
+  required before production. Also blocks Phase 7 Tier 1 coding.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix", [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
 
 ### D-04 (2026-09-07): Processing-fee bearer
@@ -587,7 +588,8 @@ Each entry should include:
 - Summary: marketplace bookings — Eleva absorbs Stripe's processing fee out of its commission
   (`expertTransfer = gross − platformFeeGross`); clinic-attributed 0% bookings — the clinic bears
   the processing fee (`expertTransfer = gross − processingFeeCents`). `processing_fee_cents` is
-  stored on `booking_payments` from `balance_transaction.fee`. Blocks: Phase 6 PR 06.1.
+  stored on `booking_payments` from `balance_transaction.fee`. Working pre-launch
+  decision that unblocks PR 06.1; finance re-sign still required before production.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix"
 
 ### D-05 (2026-09-07): Connect capability model — `transfers` only, Identity behind a flag
@@ -608,8 +610,9 @@ Each entry should include:
   Publish gate = `details_submitted && payouts_enabled &&
 capabilities.transfers = active`. Stripe Identity stays implemented behind
   `ff.expert_identity_verification` (default off) in case legal requires a
-  second verification for clinical experts. Blocks: Phase 6 PR 06.1; Phase 12
-  partner checklist reads the same fields.
+  second verification for clinical experts. Working pre-launch decision that
+  unblocks PR 06.1; finance and legal re-sign still required before production.
+  Phase 12 partner checklist reads the same fields.
 - Reference: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md), [`execution-plan/phases/12-admin-console.md`](./execution-plan/phases/12-admin-console.md)
 
 ### D-06 (2026-09-07): Refund, dispute and no-show policy

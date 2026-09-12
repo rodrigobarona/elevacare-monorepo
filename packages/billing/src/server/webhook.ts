@@ -10,6 +10,7 @@ import {
 } from "@eleva/scheduling"
 import { stripe } from "./client"
 import {
+  isMissingBillingCustomerError,
   persistConnectStatus,
   persistIdentityStatus,
   snapshotFromAccount,
@@ -1069,7 +1070,16 @@ async function handleIdentityEvent(
         )
       )
 
-    await persistIdentityStatus(tx, orgId, status)
+    try {
+      await persistIdentityStatus(tx, orgId, status)
+    } catch (err) {
+      if (!isMissingBillingCustomerError(err)) {
+        throw err
+      }
+      console.warn(
+        `[stripe-webhook] identity mirror skipped for org ${orgId}: ${err.message}`
+      )
+    }
 
     await ctx.emit({
       entity: "identity_verification",

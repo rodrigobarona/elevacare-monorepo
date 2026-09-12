@@ -73,13 +73,20 @@ Open `packages/billing/src/server/webhook-events.ts` and add the event to
 grouped by domain (SaaS lifecycle, Identity, Connect, payouts, booking,
 refunds/disputes). `infra/stripe/setup-webhooks.ts` imports those arrays.
 
+Save both signing-secret variables the script prints for newly created
+endpoints: `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET`.
+Retain existing secret values for endpoints that already exist.
+
 ### Step 4: Update the live endpoint
 
+Dry-run is the default. Do **not** run `--apply` against a live production
+endpoint unless a human has explicitly approved live webhook registration.
+
 ```bash
-# Dry-run first
+# Dry-run (default) — always run this first
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe
 
-# Apply
+# Apply — only after explicit approval
 pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply
 ```
 
@@ -98,18 +105,25 @@ Update the "Current canonical events" list in
 1. Remove the `case` branch from `dispatchEvent` and the handler function.
 2. Remove the event from `PLATFORM_WEBHOOK_EVENTS` or `CONNECT_WEBHOOK_EVENTS`
    in `packages/billing/src/server/webhook-events.ts`.
-3. Re-run the setup script with `--apply`.
+3. Re-run the setup script with `--apply` only after explicit approval.
 4. Update the docs (rule file + README).
 
 ## Setup for a New Environment
 
+Dry-run is the default. Live `--apply` against production requires explicit
+approval before it runs.
+
 ```bash
-# Creates the endpoint and prints the signing secret
+# Dry-run (default)
+pnpm stripe:setup:webhooks -- --url https://<api-domain>/webhooks/stripe
+
+# Apply — only after explicit approval. Creates endpoints and prints secrets.
 pnpm stripe:setup:webhooks -- --url https://<api-domain>/webhooks/stripe --apply
 ```
 
-Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in the environment.
-The secret is only shown once at creation time.
+Save each `whsec_...` printed for a newly created endpoint as
+`STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET`. Retain existing
+secret values. Secrets are only shown once at creation time.
 
 For staging/dev, use Stripe **test mode** on a standard account, not a
 Sandbox account.
@@ -131,7 +145,9 @@ Use the Stripe CLI to forward events to the local API (port 3002). Do
      --forward-connect-to localhost:3002/webhooks/stripe/connect
    ```
 
-4. Copy the `whsec_...` from the CLI output into `.env.local`:
+4. Copy the single `whsec_...` from the CLI output into both
+   `STRIPE_WEBHOOK_SECRET` and `STRIPE_CONNECT_WEBHOOK_SECRET`. One listen
+   session signs platform and Connect deliveries with the same secret.
 
    ```bash
    STRIPE_WEBHOOK_SECRET=whsec_...

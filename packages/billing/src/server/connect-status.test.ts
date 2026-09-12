@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import type Stripe from "stripe"
 import {
   isConnectPublishReady,
+  isMissingBillingCustomerError,
   requireUpdatedBillingCustomer,
   snapshotFromAccount,
 } from "./connect-status"
@@ -76,6 +77,22 @@ describe("requireUpdatedBillingCustomer", () => {
     expect(() =>
       requireUpdatedBillingCustomer([{ orgId: "org_1" }], "org_1")
     ).not.toThrow()
+  })
+})
+
+describe("isMissingBillingCustomerError", () => {
+  it("matches the missing-row error from requireUpdatedBillingCustomer", () => {
+    try {
+      requireUpdatedBillingCustomer([], "org_1")
+    } catch (err) {
+      expect(isMissingBillingCustomerError(err)).toBe(true)
+      return
+    }
+    throw new Error("expected throw")
+  })
+
+  it("rejects unrelated errors", () => {
+    expect(isMissingBillingCustomerError(new Error("db down"))).toBe(false)
   })
 })
 

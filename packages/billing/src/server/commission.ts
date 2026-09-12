@@ -105,17 +105,16 @@ export type CreditNoteAllocation = {
   expertTransfer: number
 }
 
-export type SettlementResult = {
+export type SettlementAmounts = {
   bookingGross: number
   platformFeeGross: number
   platformFeeNet: number
   vatOnPlatformFee: number
   paymentProcessingFee: number
   expertTransfer: number
-  creditNoteAllocation: (
-    refundCents: number,
-    alreadyRefundedCents?: number
-  ) => CreditNoteAllocation
+}
+
+export type SettlementResult = SettlementAmounts & {
   rounding: "half-up-cents-on-fee"
   currency: "EUR"
 }
@@ -269,10 +268,7 @@ function subtractAllocations(
 }
 
 function allocationAtRefunded(
-  settlement: Omit<
-    SettlementResult,
-    "creditNoteAllocation" | "rounding" | "currency"
-  >,
+  settlement: SettlementAmounts,
   refundedCents: number
 ): CreditNoteAllocation {
   if (settlement.bookingGross <= 0 || refundedCents <= 0) {
@@ -306,10 +302,7 @@ function allocationAtRefunded(
 }
 
 function allocateProportionally(
-  settlement: Omit<
-    SettlementResult,
-    "creditNoteAllocation" | "rounding" | "currency"
-  >,
+  settlement: SettlementAmounts,
   refundCents: number,
   alreadyRefundedCents = 0
 ): CreditNoteAllocation {
@@ -387,9 +380,19 @@ export function computeSettlement(input: {
 
   return {
     ...core,
-    creditNoteAllocation: (refundCents: number, alreadyRefundedCents = 0) =>
-      allocateProportionally(core, refundCents, alreadyRefundedCents),
     rounding: "half-up-cents-on-fee",
     currency: "EUR",
   }
+}
+
+/**
+ * D-06 experiment only. Not part of the production settlement contract.
+ * Refund, dispute, and no-show flows must not call this until D-06 is signed.
+ */
+export function experimentalCreditNoteAllocation(
+  settlement: SettlementAmounts,
+  refundCents: number,
+  alreadyRefundedCents = 0
+): CreditNoteAllocation {
+  return allocateProportionally(settlement, refundCents, alreadyRefundedCents)
 }

@@ -7,6 +7,7 @@ import { provisionConnectAccount } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
+import { checkBot } from "@/lib/bot-protection"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -14,7 +15,7 @@ import type { RoutePolicy } from "@/lib/route-policy"
 export const ROUTE_POLICY = {
   auth: "session",
   rateLimit: true,
-  botId: false,
+  botId: true,
 } as const satisfies RoutePolicy
 
 /**
@@ -60,9 +61,21 @@ export async function POST(request: Request) {
     )
   }
 
+  if (
+    session.authMode !== "bearer" &&
+    session.authMode !== "jwt" &&
+    session.authMode !== "api-key"
+  ) {
+    const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+    if (botVerdict?.isBot) {
+      return secureJson({ error: "blocked" }, { status: 403, headers })
+    }
+  }
+
   const rateLimited = await applyRateLimit(
     rateLimitKey(request, session.user.id),
-    RATE_LIMITS.authenticated
+    RATE_LIMITS.authenticated,
+    headers
   )
   if (rateLimited) return rateLimited
 

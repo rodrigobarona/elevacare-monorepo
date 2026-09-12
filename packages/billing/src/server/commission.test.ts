@@ -3,6 +3,7 @@ import {
   computeApplicationFee,
   computeCommissionRate,
   computeSettlement,
+  experimentalCreditNoteAllocation,
   hasCRMAccess,
   isClinicSaaS,
   isPriorityRanked,
@@ -299,7 +300,7 @@ describe("computeSettlement (D-03 / D-04 matrix)", () => {
       processingFeeCents: 340,
       feeBearer: "platform",
     })
-    expect(result.creditNoteAllocation(5000)).toEqual({
+    expect(experimentalCreditNoteAllocation(result, 5000)).toEqual({
       platformFeeGross: 750,
       platformFeeNet: 610,
       vatOnPlatformFee: 140,
@@ -317,7 +318,7 @@ describe("computeSettlement (D-03 / D-04 matrix)", () => {
       processingFeeCents: 0,
       feeBearer: "platform",
     })
-    const note = result.creditNoteAllocation(5000)
+    const note = experimentalCreditNoteAllocation(result, 5000)
     expect(note.platformFeeGross).toBe(500)
     expect(note.platformFeeNet + note.vatOnPlatformFee).toBe(
       note.platformFeeGross
@@ -333,9 +334,9 @@ describe("computeSettlement (D-03 / D-04 matrix)", () => {
       processingFeeCents: 0,
       feeBearer: "platform",
     })
-    const first = result.creditNoteAllocation(3333, 0)
-    const second = result.creditNoteAllocation(3333, 3333)
-    const third = result.creditNoteAllocation(3334, 6666)
+    const first = experimentalCreditNoteAllocation(result, 3333, 0)
+    const second = experimentalCreditNoteAllocation(result, 3333, 3333)
+    const third = experimentalCreditNoteAllocation(result, 3334, 6666)
     expect(
       first.platformFeeNet + second.platformFeeNet + third.platformFeeNet
     ).toBe(result.platformFeeNet)
