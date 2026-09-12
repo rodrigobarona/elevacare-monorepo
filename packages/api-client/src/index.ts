@@ -178,6 +178,17 @@ export const CreateIdentitySessionResponseSchema = z.object({
   status: z.string(),
 })
 
+export const CreateConnectAccountRequestSchema = z.object({
+  businessType: z.enum(["individual", "company"]).optional(),
+})
+
+export const CreateConnectAccountResponseSchema = z.object({
+  stripeAccountId: z.string(),
+  created: z.boolean(),
+  detailsSubmitted: z.boolean(),
+  payoutsEnabled: z.boolean(),
+})
+
 export const ApiErrorSchema = z.object({
   error: z.string(),
   issues: z.array(z.unknown()).optional(),
@@ -246,6 +257,12 @@ export type CreateAccountSessionRequest = z.infer<
 >
 export type CreateAccountSessionResponse = z.infer<
   typeof CreateAccountSessionResponseSchema
+>
+export type CreateConnectAccountRequest = z.infer<
+  typeof CreateConnectAccountRequestSchema
+>
+export type CreateConnectAccountResponse = z.infer<
+  typeof CreateConnectAccountResponseSchema
 >
 export type CreateIdentitySessionResponse = z.infer<
   typeof CreateIdentitySessionResponseSchema
@@ -1100,6 +1117,13 @@ export function createApiClient(options: ApiClientOptions) {
           return request<CreateIdentitySessionResponse>(
             "POST",
             "/stripe/identity"
+          )
+        },
+      },
+      connectAccount: {
+        create(data: CreateConnectAccountRequest = {}) {
+          return request("POST", "/stripe/connect-account", data).then((raw) =>
+            CreateConnectAccountResponseSchema.parse(raw)
           )
         },
       },

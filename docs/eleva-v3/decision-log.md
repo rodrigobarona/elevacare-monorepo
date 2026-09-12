@@ -36,8 +36,8 @@ Each entry should include:
 
 - Owner: engineering
 - Status: active
-- Review date: 2026-09-21 (finance sign-off of D-03 / D-04 / D-05 still
-  required before PR 06.1)
+- Review date: 2026-09-21 (finance/legal re-sign D-03 / D-04 / D-05 before
+  go-live)
 - Summary: Test-mode spike committed. PT Custom receives transfers with
   `transfers` only (`card_payments` absent). US Custom rejects that pair.
   PT Express create without `card_payments` is accepted, but capability
@@ -50,8 +50,9 @@ Each entry should include:
   06.1/06.2 must register `/webhooks/stripe` (platform,
   `STRIPE_WEBHOOK_SECRET`) and `/webhooks/stripe/connect` (`connect: true`,
   `STRIPE_CONNECT_WEBHOOK_SECRET`). Same dispatcher and
-  `stripe_webhook_events` table. ADR-005 is amended to match. No Connect
-  endpoint exists yet. D-03, D-04, D-05 stay `proposed`.
+  `stripe_webhook_events` table. ADR-005 is amended to match. D-03, D-04,
+  D-05 are working pre-launch (founder) as of 2026-09-12. The Connect
+  endpoint lands in PR 06.1.
 - Reference: [`spikes/06-stripe-funds-flow.md`](./spikes/06-stripe-funds-flow.md)
 
 ### 2026-09-10: Private-link credential after reserve is reservationToken
@@ -564,44 +565,54 @@ Each entry should include:
 
 ### D-03 (2026-09-07): Commission is VAT-inclusive — the expert nets the headline
 
-- Owner: finance (accountant)
-- Status: proposed (sign before PR 06.1)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Owner: finance (accountant) for production re-sign; founder acting as product
+  owner (working pre-launch)
+- Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
+  Barona (founder). Unblocks PR 06.1. Not a finance/accountant production
+  sign-off.
+- Review date: 2026-09-21 (finance re-sign before production)
 - Summary: the advertised commission (15% / 8% / 0%) is the gross platform fee; IVA is carved out
   of it per the Phase 7 IVA matrix (PT B2B 15.00 = 12.20 + 2.80; intra-EU reverse charge 15.00 net).
   100 EUR booking -> 15.00 fee -> 85.00 expert transfer. Implemented once in `computeSettlement`.
-  Blocks: Phase 6 PR 06.1 (and Phase 7 Tier 1 coding).
+  Working pre-launch decision that unblocks PR 06.1; finance re-sign still
+  required before production. Also blocks Phase 7 Tier 1 coding.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix", [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
 
 ### D-04 (2026-09-07): Processing-fee bearer
 
-- Owner: finance
-- Status: proposed (sign before PR 06.1)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Owner: finance for production re-sign; founder acting as product owner
+  (working pre-launch)
+- Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
+  Barona (founder). Unblocks PR 06.1. Not a production finance sign-off.
+- Review date: 2026-09-21 (finance re-sign before production)
 - Summary: marketplace bookings — Eleva absorbs Stripe's processing fee out of its commission
   (`expertTransfer = gross − platformFeeGross`); clinic-attributed 0% bookings — the clinic bears
   the processing fee (`expertTransfer = gross − processingFeeCents`). `processing_fee_cents` is
-  stored on `booking_payments` from `balance_transaction.fee`. Blocks: Phase 6 PR 06.1.
+  stored on `booking_payments` from `balance_transaction.fee`. Working pre-launch
+  decision that unblocks PR 06.1; finance re-sign still required before production.
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix"
 
 ### D-05 (2026-09-07): Connect capability model — `transfers` only, Identity behind a flag
 
-- Owner: finance + legal
-- Status: proposed (06.0 spike confirms PT Custom transfers-only; PT Express
-  capability state unproven until hosted onboarding; sign before PR 06.1)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: proposed working default is `transfers` only (no `card_payments`)
-  because the connected account only receives transfers; `charges_enabled`
-  never gates anything. 06.0 evidence: PT Custom matches that default; US Custom
-  requires `card_payments`; PT Express create without `card_payments` is
-  accepted but capability state after hosted onboarding is unproven. Until
-  D-05 is signed, keep `card_payments` on Express and on unsupported
-  country/account-type combinations. Connect's own KYC is the identity check.
+- Owner: finance + legal for production re-sign; founder acting as product
+  owner (working pre-launch)
+- Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
+  Barona (founder). Unblocks PR 06.1. Not a finance/legal production sign-off.
+- Review date: 2026-09-21 (finance + legal re-sign before production)
+- Summary: working default is `transfers` only (no `card_payments`) for
+  **PT Custom**, because the connected account only receives transfers;
+  `charges_enabled` never gates anything. 06.0 evidence: PT Custom matches
+  that default; US Custom requires `card_payments`; PT Express create
+  without `card_payments` is accepted but capability state after hosted
+  onboarding is unproven. Keep `card_payments` on Express and on unsupported
+  country/account-type combinations until hosted onboarding proves
+  transfers-only is receivable. Connect's own KYC is the identity check.
   Publish gate = `details_submitted && payouts_enabled &&
 capabilities.transfers = active`. Stripe Identity stays implemented behind
   `ff.expert_identity_verification` (default off) in case legal requires a
-  second verification for clinical experts. Blocks: Phase 6 PR 06.1; Phase 12
-  partner checklist reads the same fields.
+  second verification for clinical experts. Working pre-launch decision that
+  unblocks PR 06.1; finance and legal re-sign still required before production.
+  Phase 12 partner checklist reads the same fields.
 - Reference: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md), [`execution-plan/phases/12-admin-console.md`](./execution-plan/phases/12-admin-console.md)
 
 ### D-06 (2026-09-07): Refund, dispute and no-show policy

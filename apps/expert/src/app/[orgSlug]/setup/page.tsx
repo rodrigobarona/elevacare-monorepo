@@ -2,6 +2,8 @@ import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { guardSessionForOrg } from "@eleva/auth"
+import { getConnectOnboardingState } from "@eleva/billing/server"
+import { getFlag } from "@eleva/flags"
 import { requiresExpertOnboarding } from "@/lib/expert-profile-guards"
 import { resolveOrCreateExpertProfileForSession } from "@/lib/resolve-expert-profile"
 import { expertWorkspaceBase, expertWorkspacePath } from "@/lib/workspace-paths"
@@ -28,19 +30,24 @@ export default async function OnboardingPage({
     redirect(expertWorkspacePath(session))
   }
 
+  const identityEnabled = await getFlag("ff.expert_identity_verification")
+  const connectState = await getConnectOnboardingState(profile.orgId)
+
   const completedSteps = (profile.metadata as Record<string, unknown>)
     ?.completedSteps
   const completed: string[] = Array.isArray(completedSteps)
     ? completedSteps
     : []
 
-  const currentStepIndex = ONBOARDING_STEPS.findIndex(
-    (s) => !completed.includes(s)
-  )
+  const wizardSteps = identityEnabled
+    ? ONBOARDING_STEPS
+    : ONBOARDING_STEPS.filter((step) => step !== "identity")
+
+  const currentStepIndex = wizardSteps.findIndex((s) => !completed.includes(s))
   const currentStep =
     currentStepIndex === -1
-      ? ONBOARDING_STEPS[ONBOARDING_STEPS.length - 1]
-      : ONBOARDING_STEPS[currentStepIndex]
+      ? wizardSteps[wizardSteps.length - 1]
+      : wizardSteps[currentStepIndex]
 
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
   const stripePublishableKey =
@@ -57,9 +64,10 @@ export default async function OnboardingPage({
       <OnboardingWizard
         orgSlug={orgSlug}
         workspaceBase={workspaceBase}
-        steps={ONBOARDING_STEPS as unknown as string[]}
+        steps={wizardSteps as unknown as string[]}
         completedSteps={completed}
         currentStep={currentStep!}
+        identityEnabled={identityEnabled}
         profile={{
           id: profile.id,
           orgId: profile.orgId,
@@ -71,6 +79,8 @@ export default async function OnboardingPage({
           sessionModes: profile.sessionModes,
           stripeAccountId: profile.stripeAccountId,
           stripeIdentityStatus: profile.stripeIdentityStatus,
+          requirementsCurrentlyDue:
+            connectState?.requirementsCurrentlyDue ?? [],
           invoicingProvider: profile.invoicingProvider,
           invoicingSetupStatus: profile.invoicingSetupStatus,
         }}

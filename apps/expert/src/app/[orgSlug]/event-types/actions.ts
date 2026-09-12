@@ -185,7 +185,12 @@ export async function togglePublishAction(
     return { ok: true }
   } catch (err) {
     console.error("[togglePublishAction]", err)
-    return { ok: false, error: mapExpertApiError(err, "toggle-failed") }
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "toggle-failed", {
+        connectIncomplete: "connect-incomplete",
+      }),
+    }
   }
 }
 

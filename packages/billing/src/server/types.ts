@@ -17,8 +17,8 @@ export interface CreateConnectAccountInput {
   country?: string
   /** Default currency (defaults to 'eur'). */
   defaultCurrency?: string
-  /** Locale hint for Stripe communications ('pt', 'en', 'es'). */
-  preferredLocale?: string
+  /** Stripe `business_type`. Defaults to individual. */
+  businessType?: "individual" | "company"
 }
 
 /**

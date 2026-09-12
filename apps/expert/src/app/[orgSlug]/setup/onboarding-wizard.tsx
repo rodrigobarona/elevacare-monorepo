@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import {
   SettingsFieldset,
@@ -17,14 +18,6 @@ import { StepInvoicing } from "./step-invoicing"
 import { StepSchedule } from "./step-schedule"
 import type { StripeIdentityStatus, InvoicingSetupStatus } from "@eleva/db"
 
-const STEP_LABELS: Record<string, string> = {
-  profile: "Profile & Fiscal Info",
-  connect: "Stripe Connect",
-  identity: "Identity Verification",
-  invoicing: "Invoicing Setup",
-  schedule: "First Event Type",
-}
-
 export interface OnboardingProfile {
   id: string
   orgId: string
@@ -36,6 +29,7 @@ export interface OnboardingProfile {
   sessionModes: string[]
   stripeAccountId: string | null
   stripeIdentityStatus: StripeIdentityStatus
+  requirementsCurrentlyDue: string[]
   invoicingProvider: string | null
   invoicingSetupStatus: InvoicingSetupStatus
 }
@@ -49,6 +43,7 @@ interface Props {
   apiBaseUrl: string
   stripePublishableKey: string
   workspaceBase: string
+  identityEnabled: boolean
 }
 
 export function OnboardingWizard({
@@ -60,10 +55,12 @@ export function OnboardingWizard({
   apiBaseUrl,
   stripePublishableKey,
   workspaceBase,
+  identityEnabled,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations("onboarding")
   const [activeStep, setActiveStep] = React.useState(initialStep)
-  const stepLabel = STEP_LABELS[activeStep] ?? activeStep
+  const stepLabel = t(`steps.${activeStep}` as "steps.profile")
 
   function handleStepDone() {
     const idx = steps.indexOf(activeStep)
@@ -83,7 +80,7 @@ export function OnboardingWizard({
         {steps.map((step, i) => {
           const done = completedSteps.includes(step)
           const isActive = step === activeStep
-          const label = STEP_LABELS[step] ?? step
+          const label = t(`steps.${step}` as "steps.profile")
           return (
             <button
               key={step}
@@ -122,7 +119,7 @@ export function OnboardingWizard({
                 onDone={handleStepDone}
               />
             )}
-            {activeStep === "identity" && (
+            {activeStep === "identity" && identityEnabled && (
               <StepIdentity
                 profile={profile}
                 apiBaseUrl={apiBaseUrl}

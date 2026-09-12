@@ -6,7 +6,23 @@
  * code.
  */
 export { stripe, __resetStripeForTests } from "./client"
-export { createConnectAccount } from "./connect"
+export {
+  createConnectAccount,
+  provisionConnectAccount,
+  requestedConnectCapabilities,
+  getConnectOnboardingState,
+} from "./connect"
+export {
+  isConnectPublishReady,
+  persistConnectStatus,
+  persistIdentityStatus,
+  snapshotFromAccount,
+} from "./connect-status"
+export {
+  CONNECT_WEBHOOK_EVENTS,
+  PLATFORM_WEBHOOK_EVENTS,
+  WEBHOOK_EVENTS,
+} from "./webhook-events"
 export { createAccountSession } from "./account-session"
 export { createIdentityVerificationSession } from "./identity"
 export {
@@ -50,6 +66,8 @@ export {
 export type { StripeEventResult } from "./webhook"
 export {
   computeCommissionRate,
+  computeApplicationFee,
+  computeSettlement,
   isPriorityRanked,
   hasCRMAccess,
   isTopExpert,
@@ -57,6 +75,10 @@ export {
   ENTITLEMENT_KEYS,
   type BillingSession,
   type EntitlementKey,
+  type BuyerKind,
+  type CreditNoteAllocation,
+  type SettlementResult,
+  type VatTreatment,
 } from "./commission"
 export type {
   ConnectAccountSession,

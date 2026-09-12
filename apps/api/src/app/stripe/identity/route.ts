@@ -2,6 +2,7 @@ import { UnauthorizedError } from "@eleva/auth"
 import type { CreateIdentitySessionResponse } from "@eleva/api-client"
 import { createIdentityVerificationSession } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
+import { getFlag } from "@eleva/flags"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -66,6 +67,17 @@ export async function POST(request: Request): Promise<Response> {
     RATE_LIMITS.authenticated
   )
   if (rateLimited) return rateLimited
+
+  if (!(await getFlag("ff.expert_identity_verification"))) {
+    return secureJson(
+      {
+        error: "IDENTITY_DISABLED",
+        code: "IDENTITY_DISABLED",
+        message: "Stripe Identity is not enabled",
+      },
+      { status: 409, headers }
+    )
+  }
 
   const expert = await getExpertProfileByUserId(session.user.id)
   if (!expert) {
