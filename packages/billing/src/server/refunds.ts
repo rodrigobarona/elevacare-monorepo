@@ -811,7 +811,7 @@ export async function confirmRefundFromCharge(input: {
       .limit(1)
   )
   if (!payment) return null
-  await withAudit(
+  const refundRowId = await withAudit(
     { orgId: payment.orgId, actorUserId: null },
     async (tx, ctx) => {
       const [fresh] = await tx
@@ -876,7 +876,7 @@ export async function confirmRefundFromCharge(input: {
             .where(eq(main.bookingRefunds.bookingPaymentId, payment.id))
             .orderBy(desc(main.bookingRefunds.refundSeq))
             .limit(1)
-          await tx
+          const [inserted] = await tx
             .insert(main.bookingRefunds)
             .values({
               orgId: payment.orgId,
@@ -891,17 +891,23 @@ export async function confirmRefundFromCharge(input: {
             .onConflictDoNothing({
               target: main.bookingRefunds.idempotencyKey,
             })
+            .returning({ id: main.bookingRefunds.id })
+          matchedRefundId = inserted?.id ?? null
         }
       }
       await ctx.emit({
         entity: "refund",
         action: "succeeded",
-        entityId: input.refundRowId ?? payment.id,
+        entityId: matchedRefundId ?? input.refundRowId ?? payment.id,
         payload: { amountRefunded: input.amountRefunded },
       })
+      return matchedRefundId
     }
   )
-  await completeTransferReversalForPayment(payment.id).catch((err) => {
+  await completeTransferReversalForPayment(
+    payment.id,
+    refundRowId ?? input.refundRowId
+  ).catch((err) => {
     void captureException(err, {
       bookingPaymentId: payment.id,
       probe: "confirm-refund-reversal-reconcile",
@@ -911,7 +917,8 @@ export async function confirmRefundFromCharge(input: {
 }
 
 export async function completeTransferReversalForPayment(
-  bookingPaymentId: string
+  bookingPaymentId: string,
+  refundRowId?: string | null
 ): Promise<void> {
   const snapshot = await withPlatformAdminContext(async (tx) => {
     const [payment] = await tx
@@ -924,15 +931,17 @@ export async function completeTransferReversalForPayment(
       .from(main.payoutStates)
       .where(eq(main.payoutStates.bookingPaymentId, bookingPaymentId))
       .limit(1)
+    const refundFilter = [
+      eq(main.bookingRefunds.bookingPaymentId, bookingPaymentId),
+      eq(main.bookingRefunds.status, "succeeded"),
+    ]
+    if (refundRowId) {
+      refundFilter.push(eq(main.bookingRefunds.id, refundRowId))
+    }
     const [refund] = await tx
       .select({ id: main.bookingRefunds.id })
       .from(main.bookingRefunds)
-      .where(
-        and(
-          eq(main.bookingRefunds.bookingPaymentId, bookingPaymentId),
-          eq(main.bookingRefunds.status, "succeeded")
-        )
-      )
+      .where(and(...refundFilter))
       .orderBy(desc(main.bookingRefunds.refundSeq))
       .limit(1)
     return {
@@ -1142,52 +1151,74 @@ export async function markRefundFailedFromStripe(input: {
       .limit(1)
   )
   if (!payment) return
-  const existing = await withPlatformAdminContext(async (tx) => {
-    const match = input.refundRowId
-      ? eq(main.bookingRefunds.id, input.refundRowId)
-      : eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId)
-    const [row] = await tx
-      .select()
-      .from(main.bookingRefunds)
-      .where(and(eq(main.bookingRefunds.bookingPaymentId, payment.id), match))
-      .limit(1)
-    return row ?? null
-  })
-  if (!existing || existing.status === "failed") return
-  await withAudit(
-    { orgId: payment.orgId, actorUserId: null },
-    async (tx, ctx) => {
-      const row = existing
-      if (row.status === "succeeded") {
-        await tx
-          .update(main.bookingPayments)
-          .set({
-            refundedCents: sql`GREATEST(0, ${main.bookingPayments.refundedCents} - ${row.amountCents})`,
-            status: sql`CASE
-            WHEN GREATEST(0, ${main.bookingPayments.refundedCents} - ${row.amountCents}) >= ${main.bookingPayments.amountCents} THEN 'refunded'
-            WHEN ${main.bookingPayments.status} = 'refunded' THEN 'succeeded'
-            ELSE ${main.bookingPayments.status}
-          END`,
-          })
-          .where(eq(main.bookingPayments.id, payment.id))
-      }
-      await tx
-        .update(main.bookingRefunds)
-        .set({
-          status: "failed",
+  const match = input.refundRowId
+    ? eq(main.bookingRefunds.id, input.refundRowId)
+    : eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId)
+  const refundScope = and(
+    eq(main.bookingRefunds.bookingPaymentId, payment.id),
+    match
+  )
+  try {
+    await withAudit(
+      { orgId: payment.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const failedPatch = {
+          status: "failed" as const,
           stripeRefundId: input.stripeRefundId,
           lastError: "stripe_refund_failed",
           updatedAt: new Date(),
+        }
+        const [fromSucceeded] = await tx
+          .update(main.bookingRefunds)
+          .set(failedPatch)
+          .where(and(refundScope, eq(main.bookingRefunds.status, "succeeded")))
+          .returning({
+            id: main.bookingRefunds.id,
+            amountCents: main.bookingRefunds.amountCents,
+          })
+        if (fromSucceeded) {
+          await tx
+            .update(main.bookingPayments)
+            .set({
+              refundedCents: sql`GREATEST(0, ${main.bookingPayments.refundedCents} - ${fromSucceeded.amountCents})`,
+              status: sql`CASE
+            WHEN GREATEST(0, ${main.bookingPayments.refundedCents} - ${fromSucceeded.amountCents}) >= ${main.bookingPayments.amountCents} THEN 'refunded'
+            WHEN ${main.bookingPayments.status} = 'refunded' THEN 'succeeded'
+            ELSE ${main.bookingPayments.status}
+          END`,
+            })
+            .where(eq(main.bookingPayments.id, payment.id))
+          await ctx.emit({
+            entity: "refund",
+            action: "failed",
+            entityId: fromSucceeded.id,
+            payload: { stripeRefundId: input.stripeRefundId },
+          })
+          return
+        }
+        const [fromPending] = await tx
+          .update(main.bookingRefunds)
+          .set(failedPatch)
+          .where(and(refundScope, eq(main.bookingRefunds.status, "pending")))
+          .returning({ id: main.bookingRefunds.id })
+        if (!fromPending) {
+          throw new RefundError(
+            "ALREADY_FAILED",
+            "Refund is already marked failed"
+          )
+        }
+        await ctx.emit({
+          entity: "refund",
+          action: "failed",
+          entityId: fromPending.id,
+          payload: { stripeRefundId: input.stripeRefundId },
         })
-        .where(eq(main.bookingRefunds.id, row.id))
-      await ctx.emit({
-        entity: "refund",
-        action: "failed",
-        entityId: row.id,
-        payload: { stripeRefundId: input.stripeRefundId },
-      })
-    }
-  )
+      }
+    )
+  } catch (err) {
+    if (isRefundError(err) && err.code === "ALREADY_FAILED") return
+    throw err
+  }
 }
 
 export async function findBookingPaymentIdByCharge(input: {

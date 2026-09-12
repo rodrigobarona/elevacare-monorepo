@@ -505,53 +505,69 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     }
     if (!transferId) {
       const message = err instanceof Error ? err.message : String(err)
-      const updated = await withPlatformAudit(
-        { orgId: current.orgId, actorUserId: null },
-        async (tx, ctx) => {
-          const [row] = await tx
-            .update(main.payoutStates)
-            .set({
-              status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
-              attempts: sql`${main.payoutStates.attempts} + 1`,
-              lastError: message.slice(0, 2000),
-              updatedAt: new Date(),
-            })
-            .where(
-              and(
-                eq(main.payoutStates.id, payoutStateId),
-                eq(main.payoutStates.status, "scheduled")
-              )
-            )
-            .returning({
-              attempts: main.payoutStates.attempts,
-              status: main.payoutStates.status,
-            })
-          if (row?.status === "failed") {
-            await tx.insert(main.workflowDeadLetters).values({
-              orgId: current.orgId,
-              workflowName: "process-expert-transfers",
-              entityId: current.id,
-              payload: { payoutStateId, lastError: message.slice(0, 500) },
-              attempts: row.attempts,
-              lastError: message.slice(0, 2000),
-            })
-          }
-          await ctx.emit({
-            entity: "payout",
-            action: "failed",
-            entityId: payoutStateId,
-            payload: {
-              attempts: row?.attempts ?? current.attempts + 1,
-              lastError: message.slice(0, 200),
-            },
-          })
-          return row
-        }
-      )
       void captureException(err, { payoutStateId, probe: "execute-transfer" })
-      return {
-        status: updated?.status === "failed" ? "failed" : "skipped",
-        stripeTransferId: null,
+      try {
+        const updated = await withPlatformAudit(
+          { orgId: current.orgId, actorUserId: null },
+          async (tx, ctx) => {
+            const [row] = await tx
+              .update(main.payoutStates)
+              .set({
+                status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
+                attempts: sql`${main.payoutStates.attempts} + 1`,
+                lastError: message.slice(0, 2000),
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(main.payoutStates.id, payoutStateId),
+                  eq(main.payoutStates.status, "scheduled")
+                )
+              )
+              .returning({
+                attempts: main.payoutStates.attempts,
+                status: main.payoutStates.status,
+              })
+            if (!row) {
+              throw new PayoutError(
+                "CONCURRENT_TRANSITION",
+                "Payout is no longer scheduled"
+              )
+            }
+            if (row.status === "failed") {
+              await tx.insert(main.workflowDeadLetters).values({
+                orgId: current.orgId,
+                workflowName: "process-expert-transfers",
+                entityId: current.id,
+                payload: { payoutStateId, lastError: message.slice(0, 500) },
+                attempts: row.attempts,
+                lastError: message.slice(0, 2000),
+              })
+            }
+            await ctx.emit({
+              entity: "payout",
+              action: "failed",
+              entityId: payoutStateId,
+              payload: {
+                attempts: row.attempts,
+                lastError: message.slice(0, 200),
+              },
+            })
+            return row
+          }
+        )
+        return {
+          status: updated.status === "failed" ? "failed" : "skipped",
+          stripeTransferId: null,
+        }
+      } catch (auditErr) {
+        if (
+          isPayoutError(auditErr) &&
+          auditErr.code === "CONCURRENT_TRANSITION"
+        ) {
+          return { status: "skipped", stripeTransferId: null }
+        }
+        throw auditErr
       }
     }
   }
@@ -938,29 +954,45 @@ export async function promoteEligiblePendingPayouts(): Promise<number> {
         )
       )
   )
+  let promoted = 0
   for (const row of rows) {
-    await withAudit(
-      { orgId: row.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        await tx
-          .update(main.payoutStates)
-          .set({ status: "scheduled", updatedAt: new Date() })
-          .where(
-            and(
-              eq(main.payoutStates.id, row.id),
-              eq(main.payoutStates.status, "pending")
+    try {
+      await withAudit(
+        { orgId: row.orgId, actorUserId: null },
+        async (tx, ctx) => {
+          const [updated] = await tx
+            .update(main.payoutStates)
+            .set({ status: "scheduled", updatedAt: new Date() })
+            .where(
+              and(
+                eq(main.payoutStates.id, row.id),
+                eq(main.payoutStates.status, "pending")
+              )
             )
-          )
-        await ctx.emit({
-          entity: "payout",
-          action: "scheduled",
-          entityId: row.id,
-          payload: { from: "pending" },
-        })
+            .returning({ id: main.payoutStates.id })
+          if (!updated) {
+            throw new PayoutError(
+              "CONCURRENT_TRANSITION",
+              "Payout is no longer pending"
+            )
+          }
+          await ctx.emit({
+            entity: "payout",
+            action: "scheduled",
+            entityId: row.id,
+            payload: { from: "pending" },
+          })
+        }
+      )
+      promoted += 1
+    } catch (err) {
+      if (isPayoutError(err) && err.code === "CONCURRENT_TRANSITION") {
+        continue
       }
-    )
+      throw err
+    }
   }
-  return rows.length
+  return promoted
 }
 
 export async function listUpcomingPayouts(

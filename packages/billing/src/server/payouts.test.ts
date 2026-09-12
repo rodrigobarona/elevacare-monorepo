@@ -43,6 +43,7 @@ const paidPayment = {
 
 let persistAttempts = 0
 let persistFailOnce = false
+let failUpdateEmpty = false
 
 vi.mock("@eleva/db", () => {
   let currentTable: unknown
@@ -105,7 +106,8 @@ vi.mock("@eleva/audit", () => ({
       update: () => tx,
       set: () => tx,
       where: () => tx,
-      returning: () => [{ attempts: 1, status: "scheduled" }],
+      returning: () =>
+        failUpdateEmpty ? [] : [{ attempts: 1, status: "scheduled" }],
       insert: () => tx,
       values: () => tx,
     }
@@ -119,6 +121,7 @@ describe("executeTransfer idempotency", () => {
   beforeEach(() => {
     persistAttempts = 0
     persistFailOnce = false
+    failUpdateEmpty = false
     transferCreate.mockReset()
     const created = new Map<
       string,
@@ -170,6 +173,15 @@ describe("executeTransfer idempotency", () => {
     })
     expect(transferCreate.mock.calls[1]?.[1]).toEqual({
       idempotencyKey: scheduledPayout.transferIdempotencyKey,
+    })
+  })
+
+  it("skips the failed audit when a concurrent transition already moved the payout", async () => {
+    failUpdateEmpty = true
+    transferCreate.mockRejectedValueOnce(new Error("stripe_unavailable"))
+    await expect(executeTransfer(scheduledPayout.id)).resolves.toEqual({
+      status: "skipped",
+      stripeTransferId: null,
     })
   })
 })
