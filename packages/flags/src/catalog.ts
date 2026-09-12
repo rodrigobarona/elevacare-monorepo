@@ -165,6 +165,17 @@ export const FLAG_CATALOG = {
     rolloutStage: "dev-only",
     killSwitchBehavior: "Press logos section hidden; page renders without it.",
   },
+  "ff.expert_identity_verification": {
+    name: "ff.expert_identity_verification",
+    purpose:
+      "Second Stripe Identity verification for clinical experts (D-05). Connect KYC remains the default identity check.",
+    owner: "payments",
+    scope: "global",
+    default: false,
+    rolloutStage: "dev-only",
+    killSwitchBehavior:
+      "Hide Identity onboarding step; POST /stripe/identity returns 409.",
+  },
 } as const satisfies Record<string, FlagEntry>
 
 export type FlagName = keyof typeof FLAG_CATALOG

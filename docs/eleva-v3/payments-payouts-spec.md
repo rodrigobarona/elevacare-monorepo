@@ -341,18 +341,19 @@ payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` 
 - on refund **succeeded** (never on request): Tier 1 credit note in TOConline from
   `computeSettlement.creditNoteAllocation`
 
-### Settlement matrix (`computeSettlement`, D-03 / D-04 — provisional until both are signed; accountant approval blocks Phase 6 PR 06.1)
+### Settlement matrix (`computeSettlement`, D-03 / D-04 — working pre-launch, 2026-09-12)
 
 `packages/billing/src/server/commission.ts` is the only place money is split. The rows below are
-the **working defaults** engineering proposes; they are not the financial SSOT until D-03 and
-D-04 carry a signature in `decision-log.md`, and PR 06.1 cannot open before that. To keep the
-contract testable under either outcome, the fee bearer is an **input**, not a constant: inputs
+the **working pre-launch** matrix (founder recorded D-03 / D-04 on 2026-09-12). Finance still
+re-signs before go-live. To keep the contract testable under either outcome, the fee bearer is an
+**input**, not a constant: inputs
 are `grossCents`, `commissionBps` (1500 default, 800 Top Expert, 0 clinic-attributed),
 `vatRateBps` and `vatTreatment` (from the IVA matrix below), `processingFeeCents` (Stripe's
 actual `balance_transaction.fee`) and `feeBearer: "platform" | "expert" | "clinic"` (resolved
-from `@eleva/config` `SETTLEMENT_FEE_BEARER` per booking kind once D-04 is signed). The unit
-tests cover every bearer variant so the D-04 outcome is a config change with a green suite, not a
-code change.
+from `@eleva/config` `SETTLEMENT_FEE_BEARER` per booking kind). Finance re-signs
+D-04 before go-live; that re-sign is not an implementation gate. The unit
+tests cover every bearer variant so a later finance outcome is a config change
+with a green suite, not a code change.
 
 | Output                                | Rule                                                                                                                                                                                                                                                                                          |
 | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

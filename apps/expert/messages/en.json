@@ -31,6 +31,7 @@
       "no-profile": "Your expert profile was not found.",
       "toggle-failed": "Could not update the event type. Please try again.",
       "delete-failed": "Could not delete the event type. Please try again.",
+      "connect-incomplete": "Complete Payments setup before publishing. Stripe still needs payout details.",
       "generic": "Something went wrong. Please try again."
     },
     "actions": {
@@ -123,6 +124,29 @@
   },
   "onboarding": {
     "title": "Expert onboarding",
-    "description": "Complete all steps to activate your expert profile."
+    "description": "Complete all steps to activate your expert profile.",
+    "steps": {
+      "profile": "Profile & Fiscal Info",
+      "connect": "Payments",
+      "identity": "Identity Verification",
+      "invoicing": "Invoicing Setup",
+      "schedule": "First Event Type"
+    },
+    "payments": {
+      "intro": "Complete Payments setup to receive payouts. This stays on this page — no redirects.",
+      "start": "Start Payments setup",
+      "provisioning": "Opening Payments…",
+      "later": "I'll finish this later",
+      "error": "Could not start Payments setup. Please try again.",
+      "missingStripe": "Stripe configuration is missing. Please contact support."
+    },
+    "requirements": {
+      "title": "Still needed",
+      "verification": "Verify your identity with a photo ID.",
+      "bank": "Add a bank account for payouts.",
+      "tos": "Accept Stripe's terms of service.",
+      "business": "Add a few details about your practice.",
+      "other": "Complete the remaining Payments details Stripe is asking for."
+    }
   }
 }

@@ -9,6 +9,8 @@ import {
   BillingSubscribeResponseSchema,
   CreateAccountSessionRequestSchema,
   CreateAccountSessionResponseSchema,
+  CreateConnectAccountRequestSchema,
+  CreateConnectAccountResponseSchema,
   CreateIdentitySessionResponseSchema,
   SyncExistingOnboardingResponseSchema,
   CreateEventTypeRequestSchema,
@@ -55,6 +57,26 @@ const ErrorSchema = z.object({
   error: z.string(),
   issues: z.array(z.unknown()).optional(),
   message: z.string().optional(),
+  code: z.string().optional(),
+})
+
+const ConnectIncompleteErrorSchema = z.object({
+  error: z.literal("CONNECT_INCOMPLETE"),
+  code: z.literal("CONNECT_INCOMPLETE"),
+  message: z.string(),
+})
+
+const IdentityDisabledErrorSchema = z.object({
+  error: z.literal("IDENTITY_DISABLED"),
+  code: z.literal("IDENTITY_DISABLED"),
+  message: z.string(),
+})
+
+const StripeWebhookAcceptedSchema = z.object({
+  received: z.literal(true),
+  status: z.enum(["processed", "ignored", "duplicate", "failed_terminal"]),
+  eventType: z.string().optional(),
+  error: z.string().optional(),
 })
 
 // `/webhooks/stripe` returns this richer payload on retryable handler
@@ -66,6 +88,15 @@ const StripeWebhookErrorSchema = z.object({
   eventType: z.string(),
   error: z.string(),
 })
+
+const StripeWebhookInitErrorSchema = z.union([
+  StripeWebhookErrorSchema,
+  z.object({ error: z.literal("webhook_not_configured") }),
+  z.object({
+    error: z.literal("stripe_init_failed"),
+    message: z.string(),
+  }),
+])
 
 const RateLimitErrorSchema = z.object({
   error: z.literal("rate_limit_exceeded"),
@@ -768,6 +799,13 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Publish state toggled",
               content: { "application/json": { schema: OkSchema } },
             },
+            "409": {
+              description:
+                "CONNECT_INCOMPLETE — Payments onboarding not ready (details submitted, payouts enabled, transfers active, and Identity verified when required)",
+              content: {
+                "application/json": { schema: ConnectIncompleteErrorSchema },
+              },
+            },
             ...stdWithNotFound,
           },
         },
@@ -1051,6 +1089,53 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "No expert profile for this user",
               content: { "application/json": { schema: ErrorSchema } },
             },
+            "409": {
+              description:
+                "ff.expert_identity_verification is off (IDENTITY_DISABLED)",
+              content: {
+                "application/json": { schema: IdentityDisabledErrorSchema },
+              },
+            },
+            "502": {
+              description: "Stripe API error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/stripe/connect-account": {
+        post: {
+          operationId: "createConnectAccount",
+          summary: "Provision a Stripe Connect Express account",
+          description:
+            "Creates a Connect Express account for the authenticated expert when Payments onboarding has no stripeAccountId. Idempotent: returns the existing account when already provisioned. Stripe create runs outside the DB transaction.",
+          tags: ["Stripe"],
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": {
+                schema: CreateConnectAccountRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Connect account provisioned or reused",
+              content: {
+                "application/json": {
+                  schema: CreateConnectAccountResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:onboard capability",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "No expert profile for this user",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
             "502": {
               description: "Stripe API error",
               content: { "application/json": { schema: ErrorSchema } },
@@ -1131,14 +1216,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
           responses: {
             "200": {
-              description: "Event accepted (processed | ignored | duplicate)",
+              description:
+                "Event accepted (processed | ignored | duplicate | failed_terminal)",
               content: {
                 "application/json": {
-                  schema: z.object({
-                    received: z.literal(true),
-                    status: z.enum(["processed", "ignored", "duplicate"]),
-                    eventType: z.string().optional(),
-                  }),
+                  schema: StripeWebhookAcceptedSchema,
                 },
               },
             },
@@ -1148,9 +1230,59 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "500": {
               description:
-                "Handler returned a retryable error; Stripe will retry with exponential backoff",
+                "Retryable handler failure, missing signing secret, or Stripe SDK init failure",
               content: {
-                "application/json": { schema: StripeWebhookErrorSchema },
+                "application/json": { schema: StripeWebhookInitErrorSchema },
+              },
+            },
+          },
+        },
+      },
+      "/webhooks/stripe/connect": {
+        post: {
+          operationId: "stripeConnectWebhook",
+          summary: "Stripe Connect webhook receiver",
+          description:
+            "Connected-account Stripe webhook receiver. Verifies `stripe-signature` against `STRIPE_CONNECT_WEBHOOK_SECRET` and dispatches through the same `processStripeEvent` as `/webhooks/stripe`.",
+          tags: ["Webhooks"],
+          security: [],
+          parameters: [
+            {
+              name: "stripe-signature",
+              in: "header",
+              required: true,
+              description: "Stripe signature header (`v1=...,t=...`).",
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            description: "Raw Stripe event body.",
+            content: {
+              "application/json": {
+                schema: z.object({}).passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description:
+                "Event accepted (processed | ignored | duplicate | failed_terminal)",
+              content: {
+                "application/json": {
+                  schema: StripeWebhookAcceptedSchema,
+                },
+              },
+            },
+            "400": {
+              description: "Missing or invalid signature",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description:
+                "Retryable handler failure, missing signing secret, or Stripe SDK init failure",
+              content: {
+                "application/json": { schema: StripeWebhookInitErrorSchema },
               },
             },
           },

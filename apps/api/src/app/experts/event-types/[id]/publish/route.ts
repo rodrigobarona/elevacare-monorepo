@@ -1,11 +1,17 @@
+import { eq } from "drizzle-orm"
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
-import { enqueueSeatSync, markSeatSyncPending } from "@eleva/billing/server"
-import { getExpertProfileByUserId, updateEventType } from "@eleva/db"
+import {
+  enqueueSeatSync,
+  isConnectPublishReady,
+  markSeatSyncPending,
+} from "@eleva/billing/server"
+import { getFlag } from "@eleva/flags"
+import { getExpertProfileByUserId, main, updateEventType } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -20,6 +26,13 @@ export const runtime = "nodejs"
 const PublishSchema = z.object({
   published: z.boolean(),
 })
+
+class ConnectIncompleteError extends Error {
+  constructor() {
+    super("Complete Payments onboarding before publishing an event type")
+    this.name = "ConnectIncompleteError"
+  }
+}
 
 export async function PATCH(
   request: Request,
@@ -59,10 +72,36 @@ export async function PATCH(
   }
 
   const { id } = await params
+  const identityRequired = body.data.published
+    ? await getFlag("ff.expert_identity_verification")
+    : false
+
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        if (body.data.published) {
+          const [connect] = await tx
+            .select({
+              detailsSubmitted: main.billingCustomers.detailsSubmitted,
+              payoutsEnabled: main.billingCustomers.payoutsEnabled,
+              connectCapabilities: main.billingCustomers.connectCapabilities,
+              identityStatus: main.billingCustomers.identityStatus,
+            })
+            .from(main.billingCustomers)
+            .where(eq(main.billingCustomers.orgId, profile.orgId))
+            .limit(1)
+            .for("update")
+          const ready = isConnectPublishReady({
+            detailsSubmitted: connect?.detailsSubmitted ?? false,
+            payoutsEnabled: connect?.payoutsEnabled ?? false,
+            transfersStatus: connect?.connectCapabilities?.transfers,
+            identityRequired,
+            identityStatus:
+              connect?.identityStatus ?? profile.stripeIdentityStatus ?? null,
+          })
+          if (!ready) throw new ConnectIncompleteError()
+        }
         await updateEventType(
           profile.orgId,
           id,
@@ -80,6 +119,16 @@ export async function PATCH(
       }
     )
   } catch (err) {
+    if (err instanceof ConnectIncompleteError) {
+      return secureJson(
+        {
+          error: "CONNECT_INCOMPLETE",
+          code: "CONNECT_INCOMPLETE",
+          message: err.message,
+        },
+        { status: 409, headers }
+      )
+    }
     const message = err instanceof Error ? err.message : "Internal server error"
     return secureJson({ error: "internal", message }, { status: 500, headers })
   }

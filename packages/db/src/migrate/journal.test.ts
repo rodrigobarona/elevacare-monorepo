@@ -38,7 +38,7 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0032_dsar_processing_lease")
+    expect(last?.tag).toBe("0033_connect_settlement")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
     const privacy = migrations.find((m) => m.tag === "0031_member_privacy")
@@ -80,8 +80,13 @@ describe("migration journal helpers", () => {
     expect(domainSql).toContain("'processing'")
     expect(domainSql).toContain("domain_events_publisher")
     expect(domainSql).toContain("guest_activation_sent_at")
-    const leaseSql = last?.statements.join("\n") ?? ""
+    const lease = migrations.find((m) => m.tag === "0032_dsar_processing_lease")
+    const leaseSql = lease?.statements.join("\n") ?? ""
     expect(leaseSql).toContain("processing_started_at")
+    const connectSql = last?.statements.join("\n") ?? ""
+    expect(connectSql).toContain("stripe_connect_account_id")
+    expect(connectSql).toContain("applied_commission_bps")
+    expect(connectSql).toContain("processing_fee_cents")
     const sql = privacy?.statements.join("\n") ?? ""
     expect(sql).toContain("notification_preferences")
     expect(sql).toContain("dsar_requests")

@@ -417,6 +417,12 @@ export const bookingPayments = pgTable(
       .default("intent_pending"),
     amountCents: integer("amount_cents").notNull(),
     applicationFeeCents: integer("application_fee_cents").notNull().default(0),
+    appliedCommissionBps: integer("applied_commission_bps")
+      .notNull()
+      .default(0),
+    platformFeeNetCents: integer("platform_fee_net_cents").notNull().default(0),
+    platformFeeVatCents: integer("platform_fee_vat_cents").notNull().default(0),
+    processingFeeCents: integer("processing_fee_cents").notNull().default(0),
     transferGroup: varchar("transfer_group", { length: 255 }),
     stripeIdempotencyKey: varchar("stripe_idempotency_key", {
       length: 255,
@@ -440,6 +446,26 @@ export const bookingPayments = pgTable(
     ),
     amountChk: check("booking_payments_amount", sql`amount_cents >= 0`),
     feeChk: check("booking_payments_fee", sql`application_fee_cents >= 0`),
+    commissionBpsChk: check(
+      "booking_payments_commission_bps",
+      sql`applied_commission_bps >= 0`
+    ),
+    platformFeeNetChk: check(
+      "booking_payments_platform_fee_net",
+      sql`platform_fee_net_cents >= 0`
+    ),
+    platformFeeVatChk: check(
+      "booking_payments_platform_fee_vat",
+      sql`platform_fee_vat_cents >= 0`
+    ),
+    processingFeeChk: check(
+      "booking_payments_processing_fee",
+      sql`processing_fee_cents >= 0`
+    ),
+    platformFeeSplitChk: check(
+      "booking_payments_platform_fee_split",
+      sql`application_fee_cents = platform_fee_net_cents + platform_fee_vat_cents`
+    ),
     refundedChk: check("booking_payments_refunded", sql`refunded_cents >= 0`),
     tenantPolicy: pgPolicy("booking_payments_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

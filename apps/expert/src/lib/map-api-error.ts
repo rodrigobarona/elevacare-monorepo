@@ -5,6 +5,7 @@ export function mapExpertApiError(
   fallback: string,
   codes?: Partial<{
     conflict: string
+    connectIncomplete: string
     forbidden: string
     notFound: string
     validation: string
@@ -12,6 +13,9 @@ export function mapExpertApiError(
 ): string {
   if (err instanceof ApiClientError) {
     if (err.status === 409 || err.body.error === "conflict") {
+      if (err.body.error === "CONNECT_INCOMPLETE") {
+        return codes?.connectIncomplete ?? "connect-incomplete"
+      }
       return codes?.conflict ?? "conflict"
     }
     if (err.status === 403) {

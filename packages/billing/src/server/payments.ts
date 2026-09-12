@@ -2,6 +2,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
+import { PT_VAT_RATE_BPS } from "@eleva/config"
 import { withAudit } from "@eleva/audit"
 import {
   main,
@@ -16,7 +17,12 @@ import {
   BookingError,
 } from "@eleva/scheduling"
 import { stripe } from "./client"
-import { computeCommissionRate } from "./commission"
+import {
+  computeApplicationFee,
+  computeSettlement,
+  isClinicSaaS,
+  type VatTreatment,
+} from "./commission"
 
 export { hashReservationToken }
 
@@ -236,10 +242,12 @@ export async function createPaymentIntentForReservation(
 
   let existing: Awaited<ReturnType<typeof loadBookingForReservation>>
   let entitlements: readonly string[]
+  let billing: Awaited<ReturnType<typeof loadBillingSettlementFields>>
   try {
-    ;[existing, entitlements] = await Promise.all([
+    ;[existing, entitlements, billing] = await Promise.all([
       loadBookingForReservation(reservation.orgId, reservation.id),
       loadOrgEntitlements(reservation.orgId),
+      loadBillingSettlementFields(reservation.orgId),
     ])
   } catch (err) {
     console.error("[payments/intent] booking/entitlements load failed", err)
@@ -251,8 +259,24 @@ export async function createPaymentIntentForReservation(
   let bookingId = existing?.bookingId ?? randomUUID()
   let paymentId = existing?.paymentId ?? randomUUID()
   const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
-  const rate = computeCommissionRate({ entitlements })
-  const applicationFeeCents = Math.round(priceCents * rate)
+  const buyerKind = isClinicSaaS({ entitlements }) ? "clinic" : "marketplace"
+  const fee = computeApplicationFee({
+    amountCents: priceCents,
+    entitlements,
+    buyerKind,
+    commissionOverrideBps: billing?.commissionOverrideBps,
+    commissionOverrideExpiresAt: billing?.commissionOverrideExpiresAt,
+  })
+  const settlement = computeSettlement({
+    grossCents: priceCents,
+    commissionBps: fee.commissionBps,
+    vatRateBps: PT_VAT_RATE_BPS,
+    vatTreatment: inferPlatformFeeVatTreatment(),
+    processingFeeCents: 0,
+    feeBearer: fee.feeBearer,
+  })
+  const applicationFeeCents = settlement.platformFeeGross
+  const rate = fee.commissionBps / 10_000
 
   if (!existing) {
     try {
@@ -267,6 +291,10 @@ export async function createPaymentIntentForReservation(
             priceCents,
             currency,
             applicationFeeCents,
+            appliedCommissionBps: fee.commissionBps,
+            platformFeeNetCents: settlement.platformFeeNet,
+            platformFeeVatCents: settlement.vatOnPlatformFee,
+            processingFeeCents: 0,
             idempotencyKey,
           })
           await ctx.emit({
@@ -410,6 +438,31 @@ async function loadReservationForIntent(reservationId: string) {
 
 const ENTITLED_SUBSCRIPTION_STATUSES = ["active", "trialing"] as const
 
+/**
+ * Working pre-launch VAT treatment for the platform fee (D-03).
+ * Phase 7 IVA matrix is SSOT (expert country + VAT-ID). Until then
+ * Portugal-first launch bills the fee to PT experts as PT B2B.
+ * Do not infer from the member's country.
+ */
+function inferPlatformFeeVatTreatment(): VatTreatment {
+  return "pt_b2b"
+}
+
+async function loadBillingSettlementFields(orgId: string) {
+  return withOrgContext(orgId, async (tx) => {
+    const [row] = await tx
+      .select({
+        commissionOverrideBps: main.billingCustomers.commissionOverrideBps,
+        commissionOverrideExpiresAt:
+          main.billingCustomers.commissionOverrideExpiresAt,
+      })
+      .from(main.billingCustomers)
+      .where(eq(main.billingCustomers.orgId, orgId))
+      .limit(1)
+    return row ?? null
+  })
+}
+
 async function loadOrgEntitlements(orgId: string): Promise<readonly string[]> {
   return withOrgContext(orgId, async (tx) => {
     const rows = await tx
@@ -467,6 +520,10 @@ async function insertPendingBooking(
     priceCents: number
     currency: string
     applicationFeeCents: number
+    appliedCommissionBps: number
+    platformFeeNetCents: number
+    platformFeeVatCents: number
+    processingFeeCents: number
     idempotencyKey: string
   }
 ) {
@@ -503,6 +560,10 @@ async function insertPendingBooking(
     status: "intent_pending",
     amountCents: input.priceCents,
     applicationFeeCents: input.applicationFeeCents,
+    appliedCommissionBps: input.appliedCommissionBps,
+    platformFeeNetCents: input.platformFeeNetCents,
+    platformFeeVatCents: input.platformFeeVatCents,
+    processingFeeCents: input.processingFeeCents,
     transferGroup: input.bookingId,
     stripeIdempotencyKey: input.idempotencyKey,
   })

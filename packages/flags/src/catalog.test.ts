@@ -34,6 +34,7 @@ describe("flag catalog", () => {
   it("phase-2 flags default off", () => {
     expect(FLAG_CATALOG["ff.three_party_revenue"].default).toBe(false)
     expect(FLAG_CATALOG["ff.ai_reports_beta"].default).toBe(false)
+    expect(FLAG_CATALOG["ff.expert_identity_verification"].default).toBe(false)
   })
 
   it("defaultsMap() reflects catalog defaults", () => {

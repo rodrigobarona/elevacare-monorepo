@@ -1,8 +1,10 @@
 import { UnauthorizedError } from "@eleva/auth"
-import type { CreateIdentitySessionResponse } from "@eleva/api-client"
-import { createIdentityVerificationSession } from "@eleva/billing/server"
+import {
+  CreateConnectAccountRequestSchema,
+  type CreateConnectAccountResponse,
+} from "@eleva/api-client"
+import { provisionConnectAccount } from "@eleva/billing/server"
 import { getExpertProfileByUserId } from "@eleva/db"
-import { getFlag } from "@eleva/flags"
 import { corsHeaders } from "@/lib/cors"
 import { requireApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -16,17 +18,13 @@ export const ROUTE_POLICY = {
 } as const satisfies RoutePolicy
 
 /**
- * POST /stripe/identity
+ * POST /stripe/connect-account
  *
- * Creates a Stripe Identity verification session for the currently
- * authenticated expert. Returns the client_secret that the embedded
- * Identity modal mounts with.
+ * Provisions a Stripe Connect Express account for the authenticated
+ * expert when Payments onboarding has no stripeAccountId yet.
  *
- * Auth model (api-first per AGENTS.md): session-based (cookie) OR
- * Bearer token. Caller must hold the `expert:onboard` capability.
- *
- * The OpenAPI spec for this route lives in apps/api/src/lib/openapi.ts
- * (Zod schemas there generate the JSON spec consumers download).
+ * Auth: session or Bearer. Caller must hold `expert:onboard`.
+ * Stripe create is outside any DB transaction; persist is withAudit.
  */
 
 export const dynamic = "force-dynamic"
@@ -39,7 +37,7 @@ export async function OPTIONS(request: Request) {
   })
 }
 
-export async function POST(request: Request): Promise<Response> {
+export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
   let session
@@ -68,14 +66,13 @@ export async function POST(request: Request): Promise<Response> {
   )
   if (rateLimited) return rateLimited
 
-  if (!(await getFlag("ff.expert_identity_verification"))) {
+  const parsed = CreateConnectAccountRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
+  if (!parsed.success) {
     return secureJson(
-      {
-        error: "IDENTITY_DISABLED",
-        code: "IDENTITY_DISABLED",
-        message: "Stripe Identity is not enabled",
-      },
-      { status: 409, headers }
+      { error: "validation", issues: parsed.error.issues },
+      { status: 422, headers }
     )
   }
 
@@ -84,28 +81,43 @@ export async function POST(request: Request): Promise<Response> {
     return secureJson({ error: "no_expert_profile" }, { status: 404, headers })
   }
 
+  const country = expert.practiceCountry.trim().toUpperCase()
+  if (!/^[A-Z]{2}$/.test(country)) {
+    return secureJson(
+      {
+        error: "validation",
+        message: "Practice country is required before Payments onboarding",
+      },
+      { status: 422, headers }
+    )
+  }
+
   try {
-    const result = await createIdentityVerificationSession({
+    const result = await provisionConnectAccount({
       expertProfileId: expert.id,
       orgId: expert.orgId,
-      stripeAccountId: expert.stripeAccountId ?? undefined,
+      email: session.user.email,
+      country,
+      businessType: parsed.data.businessType,
+      actorUserId: session.user.id,
     })
     return secureJson(
       {
-        id: result.id,
-        clientSecret: result.clientSecret,
-        status: result.status,
-      } satisfies CreateIdentitySessionResponse,
+        stripeAccountId: result.stripeAccountId,
+        created: result.created,
+        detailsSubmitted: result.detailsSubmitted,
+        payoutsEnabled: result.payoutsEnabled,
+      } satisfies CreateConnectAccountResponse,
       { headers }
     )
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error(
-      "[stripe/identity] Verification session creation failed:",
-      message
-    )
+    console.error("[stripe/connect-account] provision failed:", message)
     return secureJson(
-      { error: "stripe_error", message },
+      {
+        error: "stripe_error",
+        message: "Could not provision Payments account",
+      },
       { status: 502, headers }
     )
   }

@@ -31,6 +31,7 @@
       "no-profile": "O seu perfil de especialista não foi encontrado.",
       "toggle-failed": "Não foi possível atualizar o tipo de evento. Tente novamente.",
       "delete-failed": "Não foi possível eliminar o tipo de evento. Tente novamente.",
+      "connect-incomplete": "Conclua a configuração de Pagamentos antes de publicar. A Stripe ainda precisa de dados de pagamento.",
       "generic": "Algo correu mal. Tente novamente."
     },
     "actions": {
@@ -123,6 +124,29 @@
   },
   "onboarding": {
     "title": "Onboarding de especialista",
-    "description": "Complete todos os passos para ativar o seu perfil de especialista."
+    "description": "Complete todos os passos para ativar o seu perfil de especialista.",
+    "steps": {
+      "profile": "Perfil e dados fiscais",
+      "connect": "Pagamentos",
+      "identity": "Verificação de identidade",
+      "invoicing": "Faturação",
+      "schedule": "Primeiro tipo de evento"
+    },
+    "payments": {
+      "intro": "Conclua a configuração de Pagamentos para receber transferências. Tudo acontece nesta página — sem redirecionamentos.",
+      "start": "Começar configuração de Pagamentos",
+      "provisioning": "A abrir Pagamentos…",
+      "later": "Concluo isto mais tarde",
+      "error": "Não foi possível iniciar a configuração de Pagamentos. Tente novamente.",
+      "missingStripe": "A configuração Stripe está em falta. Contacte o suporte."
+    },
+    "requirements": {
+      "title": "Ainda em falta",
+      "verification": "Confirme a identidade com um documento com fotografia.",
+      "bank": "Adicione uma conta bancária para receber pagamentos.",
+      "tos": "Aceite os termos de serviço da Stripe.",
+      "business": "Indique alguns dados da sua prática.",
+      "other": "Conclua os restantes dados de Pagamentos que a Stripe está a pedir."
+    }
   }
 }

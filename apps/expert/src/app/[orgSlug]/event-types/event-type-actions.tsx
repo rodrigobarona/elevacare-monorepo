@@ -25,7 +25,12 @@ interface Props {
   workspaceBase: string
 }
 
-const ERROR_KEYS = ["no-profile", "toggle-failed", "delete-failed"] as const
+const ERROR_KEYS = [
+  "no-profile",
+  "toggle-failed",
+  "delete-failed",
+  "connect-incomplete",
+] as const
 
 export function EventTypeActions({
   eventTypeId,

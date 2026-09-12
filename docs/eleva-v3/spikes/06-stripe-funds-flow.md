@@ -7,8 +7,8 @@ capability state unproven until hosted onboarding; US Custom does not).
 **Stripe:** test mode (`sk_test_`), platform account used by local `.env.local`
 (named `--env staging` in the runner). Live keys refused.
 **Instance:** throwaway `pnpm exec tsx packages/billing/spikes/funds-flow.ts --env staging`
-**Raw captures:** `packages/billing/spikes/evidence.json` (ids only; no secrets).
-**Delete** `packages/billing/spikes/` before PR 06.1.
+**Raw captures:** ids in this document (the throwaway `packages/billing/spikes/`
+runner was deleted in PR 06.1).
 
 ## Versions / API
 
@@ -48,7 +48,7 @@ capability state unproven until hosted onboarding; US Custom does not).
   Express create without `card_payments` is accepted (check 01), but the
   receivable capability state is unproven until hosted onboarding. US Custom
   requires `card_payments`. Other countries if added later need their own
-  capability matrix. D-05 stays `proposed`.
+  capability matrix. D-05 is working pre-launch (founder, 2026-09-12).
 
 ### 02 — Platform PaymentIntent + PMC — proven
 
@@ -122,7 +122,7 @@ capability state unproven until hosted onboarding; US Custom does not).
 
 ### 09 — Clinic 0% vs marketplace settlement — proven (calculated from real fee)
 
-Working defaults for finance (D-03 / D-04 still **proposed**):
+Working defaults for finance (D-03 / D-04 signed working pre-launch 2026-09-12):
 
 | Row                     | Gross  | Commission | Fee bearer | Processing | Fee gross | Fee net / IVA | Expert transfer |
 | ----------------------- | ------ | ---------- | ---------- | ---------- | --------- | ------------- | --------------- |
@@ -137,17 +137,19 @@ IVA split uses 23% on the VAT-inclusive fee
 
 ## Plan changes to absorb in 06.1 / 06.2
 
-1. **D-05 stays `proposed`.** Proven scope is PT Custom (`transfers` only,
-   `card_payments` absent). US Custom requires `card_payments`. PT Express
-   capability state is unproven. Keep `card_payments` on Express and on any
-   unsupported or unproven country/account-type combination until hosted
-   onboarding proves otherwise or finance/legal signs D-05. Do not strip
-   `card_payments` from `connect.ts` in 06.1 on the strength of this spike.
-2. **Two webhook endpoints** — Connect list is empty today.
+1. **D-05 working pre-launch (founder, 2026-09-12).** Proven scope is PT
+   Custom (`transfers` only, `card_payments` absent). US Custom requires
+   `card_payments`. PT Express capability state is unproven. Keep
+   `card_payments` on Express and on any unsupported or unproven
+   country/account-type combination until hosted onboarding proves
+   otherwise. Do not strip `card_payments` from Express `connect.ts` on
+   the strength of this spike. Finance/legal re-sign before go-live.
+2. **Two webhook endpoints** — 06.1 registers `/webhooks/stripe/connect`.
 3. **`balance_insufficient`** is a real Stripe code on this platform; retries
    - DLQ as specified.
-4. **D-03 / D-04** remain unsigned. Matrix rows above are the working numbers
-   to hand to finance; PR 06.1 stays gated.
+4. **D-03 / D-04** are working pre-launch (founder, 2026-09-12). Matrix
+   rows above are the numbers 06.1 implements; finance re-signs before
+   go-live.
 
 ## Not in this spike
 

@@ -19,6 +19,7 @@
     "@eleva/config": "workspace:^",
     "@eleva/dashboard": "workspace:*",
     "@eleva/db": "workspace:^",
+    "@eleva/flags": "workspace:^",
     "@eleva/integrations": "workspace:^",
     "@eleva/observability": "workspace:^",
     "@eleva/storage": "workspace:^",

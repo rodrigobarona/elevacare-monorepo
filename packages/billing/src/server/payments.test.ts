@@ -18,9 +18,16 @@ vi.mock("@eleva/config/env", () => ({
   env: () => envState,
 }))
 
+const {
+  authorizeReservationAccess,
+  createBookingPaymentIntent,
+  hashReservationToken,
+  parseReservationFunnel,
+  paymentIntentIdempotencyKey,
+} = await import("./payments")
+
 describe("hashReservationToken", () => {
-  it("returns the sha256 hex of the raw token", async () => {
-    const { hashReservationToken } = await import("./payments")
+  it("returns the sha256 hex of the raw token", () => {
     expect(hashReservationToken("abc")).toMatch(/^[a-f0-9]{64}$/)
     expect(hashReservationToken("abc")).toBe(hashReservationToken("abc"))
     expect(hashReservationToken("abc")).not.toBe(hashReservationToken("def"))
@@ -28,8 +35,7 @@ describe("hashReservationToken", () => {
 })
 
 describe("paymentIntentIdempotencyKey", () => {
-  it("is stable per reservation id", async () => {
-    const { paymentIntentIdempotencyKey } = await import("./payments")
+  it("is stable per reservation id", () => {
     expect(
       paymentIntentIdempotencyKey("22222222-2222-4222-8222-222222222222")
     ).toBe("pi:22222222-2222-4222-8222-222222222222")
@@ -37,9 +43,7 @@ describe("paymentIntentIdempotencyKey", () => {
 })
 
 describe("authorizeReservationAccess", () => {
-  async function base() {
-    const { authorizeReservationAccess, hashReservationToken } =
-      await import("./payments")
+  function base() {
     const reservationToken = "reservation-token-16"
     return {
       authorizeReservationAccess,
@@ -50,7 +54,7 @@ describe("authorizeReservationAccess", () => {
 
   it("accepts a matching token for an active hold", async () => {
     const { authorizeReservationAccess, reservationToken, capabilityHash } =
-      await base()
+      base()
     expect(
       authorizeReservationAccess({
         capabilityHash,
@@ -64,7 +68,7 @@ describe("authorizeReservationAccess", () => {
   })
 
   it("returns not_found for a token mismatch", async () => {
-    const { authorizeReservationAccess, capabilityHash } = await base()
+    const { authorizeReservationAccess, capabilityHash } = base()
     expect(
       authorizeReservationAccess({
         capabilityHash,
@@ -79,7 +83,7 @@ describe("authorizeReservationAccess", () => {
 
   it("returns not_found when a bound user does not match the session", async () => {
     const { authorizeReservationAccess, reservationToken, capabilityHash } =
-      await base()
+      base()
     expect(
       authorizeReservationAccess({
         capabilityHash,
@@ -95,7 +99,7 @@ describe("authorizeReservationAccess", () => {
 
   it("returns not_found for an expired, inactive, or revoked-link hold", async () => {
     const { authorizeReservationAccess, reservationToken, capabilityHash } =
-      await base()
+      base()
     const ok = {
       capabilityHash,
       reservationToken,
@@ -117,8 +121,7 @@ describe("authorizeReservationAccess", () => {
 })
 
 describe("parseReservationFunnel", () => {
-  it("accepts a complete snapshot and rejects a missing timezone", async () => {
-    const { parseReservationFunnel } = await import("./payments")
+  it("accepts a complete snapshot and rejects a missing timezone", () => {
     const snapshot = {
       timezone: "Europe/Lisbon",
       language: "pt",
@@ -147,7 +150,6 @@ describe("createBookingPaymentIntent", () => {
 
   it("creates a platform charge with PMC and no transfer_data", async () => {
     create.mockResolvedValue({ id: "pi_1", client_secret: "secret" })
-    const { createBookingPaymentIntent } = await import("./payments")
     await createBookingPaymentIntent({
       amountCents: 4500,
       currency: "EUR",
@@ -180,7 +182,6 @@ describe("createBookingPaymentIntent", () => {
   it("refuses to create when STRIPE_PMC_BOOKING is missing", async () => {
     envState.STRIPE_PMC_BOOKING = undefined
     try {
-      const { createBookingPaymentIntent } = await import("./payments")
       await expect(
         createBookingPaymentIntent({
           amountCents: 4500,
@@ -198,7 +199,6 @@ describe("createBookingPaymentIntent", () => {
 
   it("passes the snapshot currency through and does not hardcode EUR", async () => {
     create.mockResolvedValue({ id: "pi_2", client_secret: "secret" })
-    const { createBookingPaymentIntent } = await import("./payments")
     await createBookingPaymentIntent({
       amountCents: 4500,
       currency: "CHF",

@@ -16,15 +16,16 @@ for a new environment.
 
 ## Architecture
 
-The webhook surface follows a **two-file contract**:
+The webhook surface follows a **three-file contract**:
 
-| File                                        | Purpose                                                             |
-| ------------------------------------------- | ------------------------------------------------------------------- |
-| `packages/billing/src/server/webhook.ts`    | `processStripeEvent` core — dispatch switch, idempotency, withAudit |
-| `infra/stripe/setup-webhooks.ts`            | Endpoint config script — `WEBHOOK_EVENTS` array                     |
-| `apps/api/src/app/webhooks/stripe/route.ts` | Thin route — signature verify, call processor, map result code      |
-| `infra/stripe/README.md`                    | Operational docs                                                    |
-| `.cursor/rules/stripe-webhooks.mdc`         | Auto-triggered rule for these files                                 |
+| File                                            | Purpose                                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------- |
+| `packages/billing/src/server/webhook-events.ts` | SSOT event lists for platform and Connect endpoints                 |
+| `packages/billing/src/server/webhook.ts`        | `processStripeEvent` core — dispatch switch, idempotency, withAudit |
+| `infra/stripe/setup-webhooks.ts`                | Endpoint config script — imports the registry                       |
+| `apps/api/src/app/webhooks/stripe/route.ts`     | Thin route — signature verify, call processor, map result code      |
+| `infra/stripe/README.md`                        | Operational docs                                                    |
+| `.cursor/rules/stripe-webhooks.mdc`             | Auto-triggered rule for these files                                 |
 
 **Idempotency.** Every event is recorded in the `stripe_webhook_events` DB
 table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are

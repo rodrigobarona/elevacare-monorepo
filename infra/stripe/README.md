@@ -17,8 +17,8 @@ Idempotent scripts to provision Stripe products, prices, entitlement features, a
 | `pnpm seed:entitlements --apply`             | Creates features and attaches them to products                                                                   |
 | `pnpm setup:portal`                          | Dry-run: shows Customer Portal configuration                                                                     |
 | `pnpm setup:portal --apply`                  | Creates a Customer Portal configuration                                                                          |
-| `pnpm setup:webhooks -- --url <URL>`         | Dry-run: shows webhook endpoint that would be configured                                                         |
-| `pnpm setup:webhooks -- --url <URL> --apply` | Creates or updates the webhook endpoint                                                                          |
+| `pnpm setup:webhooks -- --url <URL>`         | Dry-run: shows platform + Connect webhook endpoints that would be configured                                     |
+| `pnpm setup:webhooks -- --url <URL> --apply` | Creates or updates both endpoints (`{url}` and `{url}/connect`)                                                  |
 | `pnpm setup:payment-methods`                 | Dry-run: shows the eleva-booking Payment Method Config                                                           |
 | `pnpm setup:payment-methods -- --apply`      | Creates or updates PMC per [D-14](../../docs/eleva-v3/decision-log.md#d-14-2026-09-07-launch-payment-method-set) |
 
@@ -114,7 +114,7 @@ Booking payments + refunds + disputes:
 - `charge.refunded`
 - `charge.dispute.created`
 
-These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. The route handler `apps/api/src/app/webhooks/stripe/route.ts` is a thin wrapper that verifies the signature and calls `processStripeEvent`.
+These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. Event lists are SSOT in `packages/billing/src/server/webhook-events.ts`. The setup script registers **two** endpoints: platform `{url}` (`STRIPE_WEBHOOK_SECRET`) and `{url}/connect` (`connect: true`, `STRIPE_CONNECT_WEBHOOK_SECRET`). Route handlers in `apps/api` are thin wrappers that verify the matching secret and call `processStripeEvent`.
 
 **Idempotency.** Every event is recorded in the `stripe_webhook_events` table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are short-circuited via `INSERT ... ON CONFLICT DO NOTHING` and the route returns `200 { received: true, status: "duplicate" }`.
 
@@ -129,17 +129,25 @@ on port 3002.
 
 1. Install: `brew install stripe/stripe-cli/stripe`
 2. Log in: `stripe login`
-3. Start the listener:
+3. Start the listener (platform + Connect endpoints):
 
    ```bash
-   stripe listen --forward-to localhost:3002/webhooks/stripe
+   stripe listen \
+     --forward-to localhost:3002/webhooks/stripe \
+     --forward-connect-to localhost:3002/webhooks/stripe/connect
    ```
 
-4. Copy the `whsec_...` from the CLI output into `.env.local`:
+4. Copy the signing secrets from the CLI output into `.env.local`:
 
    ```bash
    STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
    ```
+
+   Platform events use `STRIPE_WEBHOOK_SECRET`. Connected-account events
+   (`account.updated`, `capability.updated`, `payout.*`) use
+   `STRIPE_CONNECT_WEBHOOK_SECRET`. The setup script writes the same pair
+   when you `--apply` a public URL.
 
 5. Restart the API dev server so it picks up the new secret.
 
@@ -150,7 +158,9 @@ on port 3002.
 pnpm --filter @eleva/api dev
 
 # Terminal 2 — Stripe event forwarding
-stripe listen --forward-to localhost:3002/webhooks/stripe
+stripe listen \
+  --forward-to localhost:3002/webhooks/stripe \
+  --forward-connect-to localhost:3002/webhooks/stripe/connect
 ```
 
 **Triggering test events:**
@@ -179,7 +189,8 @@ The Stripe Entitlements does NOT support Stripe Sandbox accounts (per ADR-016). 
 4. Run `pnpm stripe:setup:portal -- --apply`
 5. Save the printed Portal configuration ID as `STRIPE_BILLING_PORTAL_CONFIGURATION_ID`
 6. Run `pnpm stripe:setup:webhooks -- --url https://api.eleva.care/webhooks/stripe --apply`
-7. Save the `whsec_...` secret as `STRIPE_WEBHOOK_SECRET` in production env vars
+7. Save both signing secrets: `STRIPE_WEBHOOK_SECRET` (platform endpoint) and
+   `STRIPE_CONNECT_WEBHOOK_SECRET` (`{url}/connect`, `connect: true`)
 8. Verify in Stripe Dashboard: Products → each product shows "1 feature" attached
 9. Verify in Stripe Dashboard: Developers → Webhooks → endpoint is active with the full canonical event list (currently ~20 events)
 10. Trigger a `customer.subscription.created` Stripe CLI fixture and verify a row appears in `stripe_webhook_events` with `status='ignored'` (CLI fixtures have no Eleva organization metadata). To assert `processed`, trigger the event for a provisioned Eleva customer.

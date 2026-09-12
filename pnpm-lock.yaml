@@ -413,6 +413,9 @@ importers:
       '@eleva/encryption':
         specifier: workspace:^
         version: link:../../packages/encryption
+      '@eleva/flags':
+        specifier: workspace:^
+        version: link:../../packages/flags
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -702,6 +705,9 @@ importers:
       '@eleva/db':
         specifier: workspace:^
         version: link:../../packages/db
+      '@eleva/flags':
+        specifier: workspace:^
+        version: link:../../packages/flags
       '@eleva/icons':
         specifier: workspace:*
         version: link:../../packages/icons

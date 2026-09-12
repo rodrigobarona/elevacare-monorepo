@@ -1,6 +1,6 @@
-import { corsHeaders } from "../../../lib/cors"
+import { corsHeaders } from "../../../../lib/cors"
 import type { RoutePolicy } from "@/lib/route-policy"
-import { handleStripeWebhook } from "./handle-webhook"
+import { handleStripeWebhook } from "../handle-webhook"
 
 export const ROUTE_POLICY = {
   auth: "signature",
@@ -9,12 +9,11 @@ export const ROUTE_POLICY = {
 } as const satisfies RoutePolicy
 
 /**
- * POST /webhooks/stripe
+ * POST /webhooks/stripe/connect
  *
- * Platform Stripe webhook receiver. Verifies the Stripe signature against
- * STRIPE_WEBHOOK_SECRET and dispatches through `processStripeEvent`.
- *
- * Auth model: Stripe signature verification (no session required).
+ * Connected-account Stripe webhook receiver (`connect: true` endpoint).
+ * Verifies against STRIPE_CONNECT_WEBHOOK_SECRET, then the same
+ * `processStripeEvent` dispatcher as the platform route.
  */
 
 export const dynamic = "force-dynamic"
@@ -29,8 +28,8 @@ export async function OPTIONS(request: Request) {
 
 export async function POST(request: Request) {
   return handleStripeWebhook(request, {
-    secret: process.env.STRIPE_WEBHOOK_SECRET,
-    source: "platform",
-    secretName: "STRIPE_WEBHOOK_SECRET",
+    secret: process.env.STRIPE_CONNECT_WEBHOOK_SECRET,
+    source: "connect",
+    secretName: "STRIPE_CONNECT_WEBHOOK_SECRET",
   })
 }

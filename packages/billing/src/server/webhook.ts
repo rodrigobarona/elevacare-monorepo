@@ -9,6 +9,11 @@ import {
   markBookingPaymentFailed,
 } from "@eleva/scheduling"
 import { stripe } from "./client"
+import {
+  persistConnectStatus,
+  persistIdentityStatus,
+  snapshotFromAccount,
+} from "./connect-status"
 import { retrieveBookingPaymentIntent } from "./payments"
 
 /**
@@ -521,9 +526,9 @@ async function resolveOrgIdFromCustomer(
  */
 async function resolveOrgIdFromConnectAccount(
   stripeAccountId: string
-): Promise<{ orgId: string; expertProfileId: string } | null> {
+): Promise<{ orgId: string; expertProfileId: string | null } | null> {
   return withPlatformAdminContext(async (tx) => {
-    const rows = await tx
+    const profileRows = await tx
       .select({
         orgId: main.expertProfiles.orgId,
         expertProfileId: main.expertProfiles.id,
@@ -531,7 +536,17 @@ async function resolveOrgIdFromConnectAccount(
       .from(main.expertProfiles)
       .where(eq(main.expertProfiles.stripeAccountId, stripeAccountId))
       .limit(1)
-    return rows[0] ?? null
+    if (profileRows[0]) return profileRows[0]
+
+    const customerRows = await tx
+      .select({ orgId: main.billingCustomers.orgId })
+      .from(main.billingCustomers)
+      .where(eq(main.billingCustomers.stripeConnectAccountId, stripeAccountId))
+      .limit(1)
+    if (customerRows[0]) {
+      return { orgId: customerRows[0].orgId, expertProfileId: null }
+    }
+    return null
   })
 }
 
@@ -1054,6 +1069,8 @@ async function handleIdentityEvent(
         )
       )
 
+    await persistIdentityStatus(tx, orgId, status)
+
     await ctx.emit({
       entity: "identity_verification",
       action,
@@ -1114,7 +1131,12 @@ async function handleAccountUpdated(
 
   await withAudit(
     { orgId: resolved.orgId, actorUserId: null },
-    async (_tx, ctx) => {
+    async (tx, ctx) => {
+      await persistConnectStatus(
+        tx,
+        resolved.orgId,
+        snapshotFromAccount(account)
+      )
       await ctx.emit({
         entity: "connect_account",
         action: "updated",
@@ -1157,9 +1179,17 @@ async function handleCapabilityUpdated(
       resolvedOrgId: null,
     }
   }
+
+  const account = await stripe().accounts.retrieve(stripeAccountId)
+
   await withAudit(
     { orgId: resolved.orgId, actorUserId: null },
-    async (_tx, ctx) => {
+    async (tx, ctx) => {
+      await persistConnectStatus(
+        tx,
+        resolved.orgId,
+        snapshotFromAccount(account)
+      )
       await ctx.emit({
         entity: "connect_account",
         action: "capability_changed",
@@ -1269,6 +1299,27 @@ async function handlePayoutEvent(
 // Booking PaymentIntents (patient checkout) + refunds + disputes
 // =============================================================================
 
+async function retrieveProcessingFeeCents(
+  intent: Stripe.PaymentIntent
+): Promise<{ feeCents: number; chargeId: string | null }> {
+  const chargeRef = intent.latest_charge
+  const chargeId =
+    typeof chargeRef === "string"
+      ? chargeRef
+      : chargeRef && typeof chargeRef === "object" && "id" in chargeRef
+        ? String(chargeRef.id)
+        : null
+  if (!chargeId) return { feeCents: 0, chargeId: null }
+
+  const charge = await stripe().charges.retrieve(chargeId, {
+    expand: ["balance_transaction"],
+  })
+  const bt = charge.balance_transaction
+  const feeCents =
+    typeof bt === "object" && bt && "fee" in bt ? Number(bt.fee) : 0
+  return { feeCents, chargeId }
+}
+
 async function handlePaymentIntentEvent(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
@@ -1323,7 +1374,32 @@ async function handlePaymentIntentEvent(
   }
   const action: "succeeded" | "failed" =
     event.type === "payment_intent.succeeded" ? "succeeded" : "failed"
-  await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
+
+  let processingFeeCents = 0
+  let stripeChargeId: string | null = null
+  if (action === "succeeded") {
+    try {
+      const fee = await retrieveProcessingFeeCents(intent)
+      processingFeeCents = fee.feeCents
+      stripeChargeId = fee.chargeId
+    } catch (err) {
+      console.error(
+        "[stripe-webhook] processing fee retrieve failed; persisting 0",
+        err
+      )
+    }
+  }
+
+  await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
+    if (action === "succeeded") {
+      await tx
+        .update(main.bookingPayments)
+        .set({
+          processingFeeCents,
+          stripeChargeId: stripeChargeId ?? undefined,
+        })
+        .where(eq(main.bookingPayments.stripePaymentIntentId, intent.id))
+    }
     await ctx.emit({
       entity: "booking_payment",
       action,

@@ -92,6 +92,7 @@ const s2Schema = z.object({
   STRIPE_SECRET_KEY: stringOptional,
   STRIPE_PUBLISHABLE_KEY: stringOptional,
   STRIPE_WEBHOOK_SECRET: stringOptional,
+  STRIPE_CONNECT_WEBHOOK_SECRET: stringOptional,
   STRIPE_CONNECT_CLIENT_ID: stringOptional,
   /**
    * Stripe API version pin. We enforce >= 2023-08-16 (the floor for

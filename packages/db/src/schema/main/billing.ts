@@ -12,6 +12,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  check,
 } from "drizzle-orm/pg-core"
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization } from "../auth"
@@ -172,6 +173,29 @@ export const billingCustomers = pgTable(
       onDelete: "cascade",
     }),
     stripeCustomerId: varchar("stripe_customer_id", { length: 255 }).notNull(),
+    /** Connected Express/Custom account (acct_*), when provisioned. */
+    stripeConnectAccountId: varchar("stripe_connect_account_id", {
+      length: 255,
+    }),
+    payoutsEnabled: boolean("payouts_enabled").notNull().default(false),
+    detailsSubmitted: boolean("details_submitted").notNull().default(false),
+    requirementsCurrentlyDue: jsonb("requirements_currently_due")
+      .$type<string[]>()
+      .notNull()
+      .$defaultFn(() => []),
+    connectCapabilities: jsonb("connect_capabilities")
+      .$type<{
+        transfers?: string
+        card_payments?: string
+      }>()
+      .notNull()
+      .$defaultFn(() => ({})),
+    identityStatus: varchar("identity_status", { length: 32 }),
+    commissionOverrideBps: integer("commission_override_bps"),
+    commissionOverrideExpiresAt: timestamp("commission_override_expires_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     /** Snapshot of Stripe customer metadata at last sync. */
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
     createdAt: createdAt(),
@@ -181,6 +205,13 @@ export const billingCustomers = pgTable(
     orgIdx: uniqueIndex("billing_customers_org_idx").on(t.orgId),
     stripeIdx: uniqueIndex("billing_customers_stripe_idx").on(
       t.stripeCustomerId
+    ),
+    connectIdx: uniqueIndex("billing_customers_connect_account_idx").on(
+      t.stripeConnectAccountId
+    ),
+    commissionOverrideChk: check(
+      "billing_customers_commission_override_bps",
+      sql`commission_override_bps IS NULL OR (commission_override_bps >= 0 AND commission_override_bps <= 10000)`
     ),
     tenantPolicy: pgPolicy("billing_customers_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true) OR current_setting('eleva.platform_admin', true) = 'true'`,

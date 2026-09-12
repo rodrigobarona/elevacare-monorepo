@@ -31,6 +31,7 @@
       "no-profile": "No se encontró tu perfil de experto.",
       "toggle-failed": "No se pudo actualizar el tipo de evento. Inténtalo de nuevo.",
       "delete-failed": "No se pudo eliminar el tipo de evento. Inténtalo de nuevo.",
+      "connect-incomplete": "Completa la configuración de Pagos antes de publicar. Stripe aún necesita datos de cobro.",
       "generic": "Algo salió mal. Inténtalo de nuevo."
     },
     "actions": {
@@ -123,6 +124,29 @@
   },
   "onboarding": {
     "title": "Onboarding de experto",
-    "description": "Completa todos los pasos para activar tu perfil de experto."
+    "description": "Completa todos los pasos para activar tu perfil de experto.",
+    "steps": {
+      "profile": "Perfil y datos fiscales",
+      "connect": "Pagos",
+      "identity": "Verificación de identidad",
+      "invoicing": "Facturación",
+      "schedule": "Primer tipo de evento"
+    },
+    "payments": {
+      "intro": "Completa la configuración de Pagos para recibir transferencias. Todo ocurre en esta página — sin redirecciones.",
+      "start": "Empezar configuración de Pagos",
+      "provisioning": "Abriendo Pagos…",
+      "later": "Lo termino más tarde",
+      "error": "No se pudo iniciar la configuración de Pagos. Inténtalo de nuevo.",
+      "missingStripe": "Falta la configuración de Stripe. Contacta con soporte."
+    },
+    "requirements": {
+      "title": "Aún pendiente",
+      "verification": "Verifica tu identidad con un documento con foto.",
+      "bank": "Añade una cuenta bancaria para recibir pagos.",
+      "tos": "Acepta los términos de servicio de Stripe.",
+      "business": "Añade algunos datos de tu consulta.",
+      "other": "Completa el resto de datos de Pagos que Stripe está pidiendo."
+    }
   }
 }

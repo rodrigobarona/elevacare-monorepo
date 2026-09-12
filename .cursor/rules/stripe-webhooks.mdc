@@ -2,31 +2,46 @@
 description: Stripe webhook events two-file contract. Apply when adding, removing, or modifying Stripe webhook event handling.
 globs:
   - apps/api/src/app/webhooks/stripe/route.ts
+  - apps/api/src/app/webhooks/stripe/connect/route.ts
   - packages/billing/src/server/webhook.ts
+  - packages/billing/src/server/webhook-events.ts
   - infra/stripe/setup-webhooks.ts
 alwaysApply: false
 ---
 
-# Stripe Webhook Events — Two-File Contract
+# Stripe Webhook Events — Three-File Contract
 
-Stripe webhook handling in Eleva follows a two-file contract: the **handler**
-declares which events it processes, and the **setup script** declares which
-events the endpoint subscribes to. Both must stay in sync.
+Stripe webhook handling in Eleva follows a three-file contract: the **event
+registry** is the SSOT for which events each endpoint subscribes to, the
+**handler** dispatches those events, and the **setup script** registers them
+on Stripe. All three must stay in sync.
 
-## The two files
+## The three files
 
 | File | Owns |
 | --- | --- |
+| `packages/billing/src/server/webhook-events.ts` | SSOT event lists: `PLATFORM_WEBHOOK_EVENTS` + `CONNECT_WEBHOOK_EVENTS` |
 | `packages/billing/src/server/webhook.ts` | Runtime processor: idempotency log, dispatch switch, typed handlers, `withAudit` wiring |
-| `infra/stripe/setup-webhooks.ts` | Endpoint configuration: `WEBHOOK_EVENTS` array sent to Stripe API |
+| `infra/stripe/setup-webhooks.ts` | Endpoint configuration: imports the registry and applies it to Stripe |
 
-The route file `apps/api/src/app/webhooks/stripe/route.ts` is a thin
-wrapper: verify signature, call `processStripeEvent`, return status code.
-Do not put per-event business logic in the route.
+The route files are thin wrappers: verify signature, call `processStripeEvent`,
+return status code. Do not put per-event business logic in the route.
+
+## Two endpoints per environment
+
+| Path | Secret | `connect` | Events |
+| --- | --- | --- | --- |
+| `POST /webhooks/stripe` | `STRIPE_WEBHOOK_SECRET` | false | `PLATFORM_WEBHOOK_EVENTS` |
+| `POST /webhooks/stripe/connect` | `STRIPE_CONNECT_WEBHOOK_SECRET` | true | `CONNECT_WEBHOOK_EVENTS` |
+
+Canonical platform URL: `https://api.eleva.care/webhooks/stripe`. The setup
+script also manages `{url}/connect`. Do not `--apply` against live unless asked.
 
 ## Adding a new event
 
-1. Add a `case` branch in `dispatchEvent` inside
+1. Add the event string to `PLATFORM_WEBHOOK_EVENTS` or `CONNECT_WEBHOOK_EVENTS`
+   in `packages/billing/src/server/webhook-events.ts`.
+2. Add a `case` branch in `dispatchEvent` inside
    `packages/billing/src/server/webhook.ts`. Each handler must:
    - resolve the tenant `orgId` (via `resolveOrgIdFromCustomer`,
      `resolveOrgIdFromConnectAccount`, or metadata),
@@ -34,17 +49,14 @@ Do not put per-event business logic in the route.
      event has no resolvable tenant (Stripe must not retry — these are
      valid events the system chose not to act on),
    - wrap mirror writes in `withAudit({ orgId, actorUserId: null })` and
-     emit a closed-union `entity` + `action`.
-
-2. Add the same event string to `WEBHOOK_EVENTS` in
-   `infra/stripe/setup-webhooks.ts`.
-
+     emit a closed-union `entity` + `action`. Connect status writes go to
+     `billing_customers` via `persistConnectStatus`.
 3. If a new audit `entity` or `action` is needed, extend the closed
    unions in `packages/audit/src/types.ts` first.
-
-4. Run the setup script to update the live endpoint:
+4. Run the setup script (dry-run first) to update the live endpoints:
 
    ```bash
+   pnpm stripe:setup:webhooks -- --url <ENDPOINT_URL>
    pnpm stripe:setup:webhooks -- --url <ENDPOINT_URL> --apply
    ```
 
@@ -54,12 +66,12 @@ Do not put per-event business logic in the route.
 ## Removing an event
 
 1. Remove the `case` branch from `dispatchEvent`.
-2. Remove the event from `WEBHOOK_EVENTS` in the setup script.
-3. Re-run the setup script to update the endpoint.
+2. Remove the event from `webhook-events.ts`.
+3. Re-run the setup script to update the endpoints.
 
 ## Current canonical events
 
-SaaS lifecycle:
+Platform (`PLATFORM_WEBHOOK_EVENTS`):
 
 - `checkout.session.completed`
 - `customer.subscription.created`
@@ -69,14 +81,15 @@ SaaS lifecycle:
 - `invoice.payment_succeeded` (legacy alias kept for back-compat)
 - `invoice.payment_failed`
 - `invoice.payment_action_required`
-
-Stripe Identity:
-
 - `identity.verification_session.verified`
 - `identity.verification_session.requires_input`
 - `identity.verification_session.canceled`
+- `payment_intent.succeeded`
+- `payment_intent.payment_failed`
+- `charge.refunded`
+- `charge.dispute.created`
 
-Stripe Connect platform + payouts:
+Connect (`CONNECT_WEBHOOK_EVENTS`):
 
 - `account.updated`
 - `capability.updated`
@@ -84,17 +97,11 @@ Stripe Connect platform + payouts:
 - `payout.paid`
 - `payout.failed`
 
-Booking payments + refunds + disputes:
-
-- `payment_intent.succeeded`
-- `payment_intent.payment_failed`
-- `charge.refunded`
-- `charge.dispute.created`
-
 ## Endpoint URL
 
-Canonical: `POST /webhooks/stripe` (production:
-`https://api.eleva.care/webhooks/stripe`).
+Canonical: `POST /webhooks/stripe` and `POST /webhooks/stripe/connect`
+(production: `https://api.eleva.care/webhooks/stripe` and
+`https://api.eleva.care/webhooks/stripe/connect`).
 
 ## Idempotency contract
 
@@ -108,17 +115,20 @@ or `failed` (with truncated `error`) on retryable handler error.
 ## Rules
 
 - **Never** add an event to the setup script without a matching `case`.
-- **Never** add a `case` without adding the event to the setup script.
+- **Never** add a `case` without adding the event to `webhook-events.ts`.
 - The route handler must **always** verify the webhook signature via
   `stripe().webhooks.constructEventAsync()` before calling
   `processStripeEvent`.
 - Routes return `200` for `processed`, `duplicate`, and `ignored`
   results; `500` for `failed` (Stripe retries non-2xx with backoff).
 - Domain mirror writes inside handlers MUST use `withAudit` with the
-  resolved `orgId` and `actorUserId: null`.
-- The setup script is idempotent: safe to re-run at any time.
-- The signing secret (`STRIPE_WEBHOOK_SECRET`) is only shown once at
-  endpoint creation. If lost, delete and recreate the endpoint.
+  resolved `orgId` and `actorUserId: null`. Never call Stripe inside a DB
+  transaction.
+- The setup script is idempotent: safe to re-run at any time. Dry-run is
+  the default.
+- Signing secrets (`STRIPE_WEBHOOK_SECRET`, `STRIPE_CONNECT_WEBHOOK_SECRET`)
+  are only shown once at endpoint creation. If lost, delete and recreate
+  the endpoint.
 
 ## Local development
 
@@ -130,16 +140,18 @@ handles everything.
 
 1. Install the Stripe CLI: `brew install stripe/stripe-cli/stripe`
 2. Log in: `stripe login`
-3. Start the listener:
+3. Start the listeners:
 
    ```bash
    stripe listen --forward-to localhost:3002/webhooks/stripe
+   stripe listen --forward-to localhost:3002/webhooks/stripe/connect --connect
    ```
 
-4. Copy the `whsec_...` secret from the CLI output into `.env.local`:
+4. Copy the `whsec_...` secrets from the CLI output into `.env.local`:
 
    ```bash
    STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
    ```
 
 5. Restart the API dev server (`pnpm --filter @eleva/api dev`) so it
@@ -151,8 +163,11 @@ handles everything.
 # Terminal 1 — start the API
 pnpm --filter @eleva/api dev
 
-# Terminal 2 — forward Stripe events to the local API
+# Terminal 2 — forward Stripe platform events
 stripe listen --forward-to localhost:3002/webhooks/stripe
+
+# Terminal 3 — forward Connect events
+stripe listen --forward-to localhost:3002/webhooks/stripe/connect --connect
 ```
 
 The CLI forwards **all** event types. The dispatcher's `default` branch

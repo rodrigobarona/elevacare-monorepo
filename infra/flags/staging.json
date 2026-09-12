@@ -8,5 +8,6 @@
   "ff.toconline_invoicing_enabled": true,
   "ff.expert_invoicing_apps_enabled": true,
   "ff.invoicing.toconline": true,
-  "ff.invoicing.moloni": false
+  "ff.invoicing.moloni": false,
+  "ff.expert_identity_verification": false
 }

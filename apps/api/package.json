@@ -23,6 +23,7 @@
     "@eleva/compliance": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/encryption": "workspace:^",
+    "@eleva/flags": "workspace:^",
     "@eleva/observability": "workspace:*",
     "@eleva/scheduling": "workspace:*",
     "@eleva/storage": "workspace:*",
