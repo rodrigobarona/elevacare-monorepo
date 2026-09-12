@@ -3807,7 +3807,7 @@ Report: endpoints, migrations, tests, CodeRabbit CLI counts, PR URL, deferred it
 </thead>
 <tbody><tr>
 <td>Branch</td>
-<td><code>phase-06/payments-payouts</code> (split: <code>phase-06.0/spike-stripe-funds-flow</code>, <code>phase-06.1/connect-onboarding-hardening</code>, <code>phase-06.2/payout-engine-refunds</code>)</td>
+<td><code>phase-06/payments-payouts</code> (split: <code>phase-06.0/spike-stripe-funds-flow</code>, <code>phase-06.1/connect-onboarding-hardening</code>, <code>phase-06.2/payout-engine-refunds</code>, <code>phase-06.3/e2e-payouts</code>)</td>
 </tr>
 <tr>
 <td>Depends on</td>
@@ -3984,6 +3984,10 @@ schedules it; audited with actor.</li>
 <ul>
 <li>vitest: commission, eligibility (DST + Lisbon snap), transfer idempotency (mock Stripe),
 refund paths, webhook parity test, state machine transitions.</li>
+<li>Playwright <code>e2e/phase-06.spec.ts</code> (<code>pnpm e2e:phase06</code> / included in <code>pnpm e2e</code> / <code>pnpm e2e:smoke</code>):
+OpenAPI documents refund, payout, finance, and both Stripe webhook paths; anonymous callers
+get 401; unsigned webhooks never process; payout workflow routes reject missing drain secrets.
+Live pay → eligible → transfer → payout remains Stripe test-mode / staging (exit gate).</li>
 <li>Integration on staging: Stripe test mode, one pilot expert, one full cycle with test clock
 where possible.</li>
 </ul>
@@ -4048,7 +4052,13 @@ Workflow (mandatory) — this is the outer loop; the &quot;PHASE 6 TASK&quot; se
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-06.1/connect-onboarding-hardening
-- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Each PR: &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
+- After PR 06.1 merges: git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b
+  phase-06.2/payout-engine-refunds
+- After PR 06.2 merges: git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b
+  phase-06.3/e2e-payouts (Playwright closeout: OpenAPI payout/refund/finance + both Stripe
+  webhook paths, anonymous 401s, unsigned webhooks never process, payout workflows reject
+  missing drain secrets). Each PR: &lt;= 30 files / 400 lines where possible; split above 60 /
+  800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -&gt; fix all findings -&gt; repeat until clean
@@ -4216,6 +4226,21 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
     payout, failed reversal), admin-operator-playbooks.md (approve/hold), infra/stripe/README.md
     (two endpoints), infra/qstash/README.md, decision-log.md (commission SSOT; D-03, D-04, D-05
     marked approved with the approver).
+
+PR 06.3 — Playwright closeout (after 06.2 merges; no new D-gates):
+1. Add e2e/phase-06.spec.ts and pnpm e2e:phase06 (also included in pnpm e2e / e2e:smoke).
+2. Assert OpenAPI documents /payments/{bookingPaymentId}/refund, /payouts,
+   /payouts/{id}/approve|hold|release, /me/finance/summary, /webhooks/stripe and
+   /webhooks/stripe/connect with the expected HTTP methods.
+3. Assert anonymous callers get 401 unauthorized on payout list, finance summary,
+   refund, and payout approve/hold/release.
+4. Assert unsigned POSTs to both Stripe webhook paths never process (400 missing/
+   invalid signature, or fail-closed 500 webhook_not_configured / stripe_init_failed
+   when secrets are absent in CI).
+5. Assert payout workflow routes reject callers without the drain secret (401
+   unauthorized, or fail-closed 500 server_misconfiguration when QStash is unset).
+6. Keep RATE_LIMITS.public at 10/min; local Playwright workers=1 so the marketplace
+   quota is not burst. Do not weaken the public limit for e2e.
 
 Acceptance (paste evidence): spike report committed; expert completes Connect (transfers
 capability) and publishing unlocks; full cycle pay -&gt; eligible -&gt; transfer -&gt; payout in test

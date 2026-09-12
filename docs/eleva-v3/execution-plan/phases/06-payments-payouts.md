@@ -2,7 +2,7 @@
 
 | Field      | Value                                                                                                                                                                                                                                                                                                                                                                                                     |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-06/payments-payouts` (split: `phase-06.0/spike-stripe-funds-flow`, `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`)                                                                                                                                                                                                                                                  |
+| Branch     | `phase-06/payments-payouts` (split: `phase-06.0/spike-stripe-funds-flow`, `phase-06.1/connect-onboarding-hardening`, `phase-06.2/payout-engine-refunds`, `phase-06.3/e2e-payouts`)                                                                                                                                                                                                                        |
 | Depends on | Phase 4, Phase 4B (onboarding wizard registry)                                                                                                                                                                                                                                                                                                                                                            |
 | Entry gate | Before PR 06.1 opens, finance has approved in `decision-log.md`: the settlement matrix (D-03 VAT basis of the commission, D-04 processing-fee bearer for marketplace and clinic bookings) and the Connect capability/verification requirement (D-05). Before PR 06.2 opens: the refund, dispute and no-show policy (D-06). PR 06.0 (spike, test mode) produces the evidence those approvals are based on. |
 | Effort     | 2 weeks                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -177,6 +177,10 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 - vitest: commission, eligibility (DST + Lisbon snap), transfer idempotency (mock Stripe),
   refund paths, webhook parity test, state machine transitions.
+- Playwright `e2e/phase-06.spec.ts` (`pnpm e2e:phase06` / included in `pnpm e2e` / `pnpm e2e:smoke`):
+  OpenAPI documents refund, payout, finance, and both Stripe webhook paths; anonymous callers
+  get 401; unsigned webhooks never process; payout workflow routes reject missing drain secrets.
+  Live pay → eligible → transfer → payout remains Stripe test-mode / staging (exit gate).
 - Integration on staging: Stripe test mode, one pilot expert, one full cycle with test clock
   where possible.
 
@@ -243,7 +247,13 @@ Workflow (mandatory) — this is the outer loop; the "PHASE 6 TASK" section furt
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
 - git checkout main && git pull --ff-only && git checkout -b phase-06.1/connect-onboarding-hardening
-- Second PR (opened after the first merges): phase-06.2/payout-engine-refunds. Each PR: <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
+- After PR 06.1 merges: git checkout main && git pull --ff-only && git checkout -b
+  phase-06.2/payout-engine-refunds
+- After PR 06.2 merges: git checkout main && git pull --ff-only && git checkout -b
+  phase-06.3/e2e-payouts (Playwright closeout: OpenAPI payout/refund/finance + both Stripe
+  webhook paths, anonymous 401s, unsigned webhooks never process, payout workflows reject
+  missing drain secrets). Each PR: <= 30 files / 400 lines where possible; split above 60 /
+  800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
 - Run: pnpm review  (CodeRabbit CLI on uncommitted changes) -> fix all findings -> repeat until clean
@@ -411,6 +421,21 @@ PR 06.2 — payout engine, refunds, disputes, finance UI:
     payout, failed reversal), admin-operator-playbooks.md (approve/hold), infra/stripe/README.md
     (two endpoints), infra/qstash/README.md, decision-log.md (commission SSOT; D-03, D-04, D-05
     marked approved with the approver).
+
+PR 06.3 — Playwright closeout (after 06.2 merges; no new D-gates):
+1. Add e2e/phase-06.spec.ts and pnpm e2e:phase06 (also included in pnpm e2e / e2e:smoke).
+2. Assert OpenAPI documents /payments/{bookingPaymentId}/refund, /payouts,
+   /payouts/{id}/approve|hold|release, /me/finance/summary, /webhooks/stripe and
+   /webhooks/stripe/connect with the expected HTTP methods.
+3. Assert anonymous callers get 401 unauthorized on payout list, finance summary,
+   refund, and payout approve/hold/release.
+4. Assert unsigned POSTs to both Stripe webhook paths never process (400 missing/
+   invalid signature, or fail-closed 500 webhook_not_configured / stripe_init_failed
+   when secrets are absent in CI).
+5. Assert payout workflow routes reject callers without the drain secret (401
+   unauthorized, or fail-closed 500 server_misconfiguration when QStash is unset).
+6. Keep RATE_LIMITS.public at 10/min; local Playwright workers=1 so the marketplace
+   quota is not burst. Do not weaken the public limit for e2e.
 
 Acceptance (paste evidence): spike report committed; expert completes Connect (transfers
 capability) and publishing unlocks; full cycle pay -> eligible -> transfer -> payout in test

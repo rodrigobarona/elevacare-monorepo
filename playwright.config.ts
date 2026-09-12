@@ -57,6 +57,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,
+  // Local public marketplace is 10 req/min per IP. Parallel workers trip
+  // Upstash and SSR turns those 429s into 404/500. CI has no DATABASE_URL
+  // so seeded public tests skip; keep CI parallel.
+  workers: process.env.CI ? undefined : 1,
   reporter: process.env.CI
     ? [
         ["github"],

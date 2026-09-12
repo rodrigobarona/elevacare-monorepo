@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
+import { PAID_EXPERT } from "./helpers/local"
 
 const apiUrl = process.env.E2E_API_URL ?? "http://127.0.0.1:3002"
 
@@ -19,7 +20,14 @@ async function firstBookableExpert(): Promise<PublicExpert | null> {
   const body = (await list.json()) as {
     experts?: Array<{ username: string; displayName: string }>
   }
-  for (const card of body.experts ?? []) {
+  const cards = body.experts ?? []
+  const ordered = [
+    ...cards.filter((card) => card.username === PAID_EXPERT),
+    ...cards.filter(
+      (card) => card.username !== PAID_EXPERT && card.username !== "anaquick"
+    ),
+  ]
+  for (const card of ordered) {
     let profile: Response
     try {
       profile = await fetch(
