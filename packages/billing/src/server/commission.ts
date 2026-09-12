@@ -350,7 +350,7 @@ export function computeSettlement(input: {
 }): SettlementResult {
   assertNonNegativeInt("grossCents", input.grossCents)
   assertNonNegativeInt("commissionBps", input.commissionBps, 10_000)
-  assertNonNegativeInt("vatRateBps", input.vatRateBps)
+  assertNonNegativeInt("vatRateBps", input.vatRateBps, 10_000)
   assertNonNegativeInt("processingFeeCents", input.processingFeeCents)
   if (input.feeBearer === "clinic" && input.commissionBps !== 0) {
     throw new Error(

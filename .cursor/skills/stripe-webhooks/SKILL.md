@@ -18,14 +18,15 @@ for a new environment.
 
 The webhook surface follows a **three-file contract**:
 
-| File                                            | Purpose                                                             |
-| ----------------------------------------------- | ------------------------------------------------------------------- |
-| `packages/billing/src/server/webhook-events.ts` | SSOT event lists for platform and Connect endpoints                 |
-| `packages/billing/src/server/webhook.ts`        | `processStripeEvent` core — dispatch switch, idempotency, withAudit |
-| `infra/stripe/setup-webhooks.ts`                | Endpoint config script — imports the registry                       |
-| `apps/api/src/app/webhooks/stripe/route.ts`     | Thin route — signature verify, call processor, map result code      |
-| `infra/stripe/README.md`                        | Operational docs                                                    |
-| `.cursor/rules/stripe-webhooks.mdc`             | Auto-triggered rule for these files                                 |
+| File                                                | Purpose                                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------- |
+| `packages/billing/src/server/webhook-events.ts`     | SSOT event lists for platform and Connect endpoints                 |
+| `packages/billing/src/server/webhook.ts`            | `processStripeEvent` core — dispatch switch, idempotency, withAudit |
+| `infra/stripe/setup-webhooks.ts`                    | Endpoint config script — imports the registry                       |
+| `apps/api/src/app/webhooks/stripe/route.ts`         | Platform route — signature verify, call processor, map result code  |
+| `apps/api/src/app/webhooks/stripe/connect/route.ts` | Connect route — `STRIPE_CONNECT_WEBHOOK_SECRET`, same processor     |
+| `infra/stripe/README.md`                            | Operational docs                                                    |
+| `.cursor/rules/stripe-webhooks.mdc`                 | Auto-triggered rule for these files                                 |
 
 **Idempotency.** Every event is recorded in the `stripe_webhook_events` DB
 table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are
@@ -65,11 +66,12 @@ Then implement the handler. Each handler must:
 - wrap mirror writes in `withAudit({ orgId, actorUserId: null })` and
   emit a closed-union `entity` + `action`.
 
-### Step 3: Add the event to the setup script
+### Step 3: Add the event to the registry
 
-Open `infra/stripe/setup-webhooks.ts` and add the event to
-`WEBHOOK_EVENTS`. Keep the comments grouped by domain (SaaS lifecycle,
-Identity, Connect platform, payouts, booking, refunds/disputes).
+Open `packages/billing/src/server/webhook-events.ts` and add the event to
+`PLATFORM_WEBHOOK_EVENTS` or `CONNECT_WEBHOOK_EVENTS`. Keep the comments
+grouped by domain (SaaS lifecycle, Identity, Connect, payouts, booking,
+refunds/disputes). `infra/stripe/setup-webhooks.ts` imports those arrays.
 
 ### Step 4: Update the live endpoint
 
@@ -94,7 +96,8 @@ Update the "Current canonical events" list in
 ## Step-by-Step: Removing an Event
 
 1. Remove the `case` branch from `dispatchEvent` and the handler function.
-2. Remove the event from `WEBHOOK_EVENTS` in `setup-webhooks.ts`.
+2. Remove the event from `PLATFORM_WEBHOOK_EVENTS` or `CONNECT_WEBHOOK_EVENTS`
+   in `packages/billing/src/server/webhook-events.ts`.
 3. Re-run the setup script with `--apply`.
 4. Update the docs (rule file + README).
 
@@ -123,13 +126,16 @@ Use the Stripe CLI to forward events to the local API (port 3002). Do
 3. Start the listener:
 
    ```bash
-   stripe listen --forward-to localhost:3002/webhooks/stripe
+   stripe listen \
+     --forward-to localhost:3002/webhooks/stripe \
+     --forward-connect-to localhost:3002/webhooks/stripe/connect
    ```
 
 4. Copy the `whsec_...` from the CLI output into `.env.local`:
 
    ```bash
    STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_CONNECT_WEBHOOK_SECRET=whsec_...
    ```
 
 5. Restart the API dev server so it picks up the new secret.
@@ -141,7 +147,9 @@ Use the Stripe CLI to forward events to the local API (port 3002). Do
 pnpm --filter @eleva/api dev
 
 # Terminal 2 — Stripe event forwarding
-stripe listen --forward-to localhost:3002/webhooks/stripe
+stripe listen \
+  --forward-to localhost:3002/webhooks/stripe \
+  --forward-connect-to localhost:3002/webhooks/stripe/connect
 ```
 
 ### Triggering test events
@@ -163,8 +171,10 @@ Check the API logs for `[stripe-webhook]` output and the
 
 After any change, confirm:
 
-- [ ] Every event in `WEBHOOK_EVENTS` has a matching `case` in `dispatchEvent`
-- [ ] Every `case` in `dispatchEvent` is listed in `WEBHOOK_EVENTS`
+- [ ] Every event in `PLATFORM_WEBHOOK_EVENTS` and `CONNECT_WEBHOOK_EVENTS`
+      has a matching `case` in `dispatchEvent`
+- [ ] Every `case` in `dispatchEvent` is listed in those arrays
+      (`packages/billing/src/server/webhook-events.ts`)
 - [ ] The route handler verifies signatures via `stripe().webhooks.constructEventAsync()`
 - [ ] Unrecognized events fall through to the `default` branch and return `{ kind: "ignored" }` (route returns 200)
 - [ ] All mirror writes are wrapped in `withAudit` with the resolved `orgId`

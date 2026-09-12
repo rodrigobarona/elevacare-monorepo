@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest"
+import type Stripe from "stripe"
 import {
   isConnectPublishReady,
   requireUpdatedBillingCustomer,
+  snapshotFromAccount,
 } from "./connect-status"
 
 describe("isConnectPublishReady", () => {
@@ -74,5 +76,16 @@ describe("requireUpdatedBillingCustomer", () => {
     expect(() =>
       requireUpdatedBillingCustomer([{ orgId: "org_1" }], "org_1")
     ).not.toThrow()
+  })
+})
+
+describe("snapshotFromAccount", () => {
+  it("fail-closes omitted Stripe account fields", () => {
+    const snapshot = snapshotFromAccount({ id: "acct_1" } as Stripe.Account)
+    expect(snapshot.stripeConnectAccountId).toBe("acct_1")
+    expect(snapshot.payoutsEnabled).toBe(false)
+    expect(snapshot.detailsSubmitted).toBe(false)
+    expect(snapshot.requirementsCurrentlyDue).toEqual([])
+    expect(snapshot.connectCapabilities.transfers).toBeUndefined()
   })
 })

@@ -1122,10 +1122,8 @@ export function createApiClient(options: ApiClientOptions) {
       },
       connectAccount: {
         create(data: CreateConnectAccountRequest = {}) {
-          return request<CreateConnectAccountResponse>(
-            "POST",
-            "/stripe/connect-account",
-            data
+          return request("POST", "/stripe/connect-account", data).then((raw) =>
+            CreateConnectAccountResponseSchema.parse(raw)
           )
         },
       },

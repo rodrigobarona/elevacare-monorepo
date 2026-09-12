@@ -235,15 +235,17 @@ export async function provisionConnectAccount(
         if (!stored) {
           throw new Error("connect_account_claim_failed")
         }
-        const winner =
-          stored === account.id
-            ? retrieved
-            : await stripe().accounts.retrieve(stored)
         created = false
         stripeAccountId = stored
-        detailsSubmitted = winner.details_submitted ?? false
-        payoutsEnabled = winner.payouts_enabled ?? false
-        await persistConnectStatus(tx, input.orgId, snapshotFromAccount(winner))
+        if (stored === account.id) {
+          detailsSubmitted = retrieved.details_submitted ?? false
+          payoutsEnabled = retrieved.payouts_enabled ?? false
+          await persistConnectStatus(
+            tx,
+            input.orgId,
+            snapshotFromAccount(retrieved)
+          )
+        }
         await ctx.emit({
           entity: "connect_account",
           action: "synced",
@@ -270,6 +272,24 @@ export async function provisionConnectAccount(
       })
     }
   )
+
+  if (!created && stripeAccountId !== account.id) {
+    const winner = await stripe().accounts.retrieve(stripeAccountId)
+    detailsSubmitted = winner.details_submitted ?? false
+    payoutsEnabled = winner.payouts_enabled ?? false
+    await withAudit(
+      { orgId: input.orgId, actorUserId: input.actorUserId },
+      async (tx, ctx) => {
+        await persistConnectStatus(tx, input.orgId, snapshotFromAccount(winner))
+        await ctx.emit({
+          entity: "connect_account",
+          action: "synced",
+          entityId: stripeAccountId,
+          payload: { stripeAccountId },
+        })
+      }
+    )
+  }
 
   return {
     stripeAccountId,

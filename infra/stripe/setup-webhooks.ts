@@ -20,8 +20,7 @@ import {
  * asked.
  *
  * For local development, use the Stripe CLI instead:
- *   stripe listen --forward-to localhost:3002/webhooks/stripe
- *   stripe listen --forward-to localhost:3002/webhooks/stripe/connect --connect
+ *   stripe listen --forward-to localhost:3002/webhooks/stripe --forward-connect-to localhost:3002/webhooks/stripe/connect
  *
  * Uses STRIPE_SECRET_KEY from .env.local (staging by default).
  */
@@ -93,6 +92,35 @@ function warnApiVersionDrift(
   )
 }
 
+function endpointKindMarker(
+  existing: Stripe.WebhookEndpoint
+): string | undefined {
+  return existing.metadata?.eleva_kind
+}
+
+function assertEndpointScope(
+  existing: Stripe.WebhookEndpoint,
+  plan: EndpointPlan
+) {
+  const marker = endpointKindMarker(existing)
+  if (marker === plan.kind) return
+  console.error(
+    `[stripe:webhooks] ${plan.kind} endpoint ${existing.id} has unknown or mismatched scope ` +
+      `(metadata.eleva_kind=${marker ?? "missing"}). Stripe cannot change \`connect\` on update.`
+  )
+  console.error("[stripe:webhooks] Delete and recreate the endpoint:")
+  console.error(
+    `[stripe:webhooks]   stripe webhook_endpoints delete ${existing.id}`
+  )
+  console.error(
+    "[stripe:webhooks]   pnpm stripe:setup:webhooks -- --url <URL> --apply"
+  )
+  console.error(
+    `[stripe:webhooks] Recreating returns a new ${plan.secretEnv}; update env after.`
+  )
+  process.exit(1)
+}
+
 async function syncEndpoint(
   stripe: Stripe,
   plan: EndpointPlan,
@@ -100,6 +128,7 @@ async function syncEndpoint(
 ) {
   const existing = await findExistingEndpoint(stripe, plan.url)
   if (existing) {
+    assertEndpointScope(existing, plan)
     warnApiVersionDrift(existing, apiVersion, plan.secretEnv)
     if (eventsMatch(existing.enabled_events, plan.events)) {
       console.log(
@@ -127,6 +156,7 @@ async function syncEndpoint(
     api_version: apiVersion,
     connect: plan.connect,
     description: plan.description,
+    metadata: { eleva_kind: plan.kind },
   })
 
   console.log(`[stripe:webhooks] Created ${plan.kind} endpoint: ${created.id}`)

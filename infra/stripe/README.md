@@ -80,7 +80,11 @@ Each product has an attached Stripe Entitlement Feature with a `lookup_key` matc
 https://api.eleva.care/webhooks/stripe
 ```
 
-**Subscribed events** (from `setup-webhooks.ts` `WEBHOOK_EVENTS`):
+**Subscribed events.** Platform `{url}` uses `PLATFORM_WEBHOOK_EVENTS`;
+Connect `{url}/connect` uses `CONNECT_WEBHOOK_EVENTS`
+(`packages/billing/src/server/webhook-events.ts`).
+
+Platform endpoint (`{url}`):
 
 SaaS lifecycle:
 
@@ -99,14 +103,6 @@ Stripe Identity:
 - `identity.verification_session.requires_input`
 - `identity.verification_session.canceled`
 
-Stripe Connect platform + payouts:
-
-- `account.updated`
-- `capability.updated`
-- `account.application.deauthorized`
-- `payout.paid`
-- `payout.failed`
-
 Booking payments + refunds + disputes:
 
 - `payment_intent.succeeded`
@@ -114,7 +110,15 @@ Booking payments + refunds + disputes:
 - `charge.refunded`
 - `charge.dispute.created`
 
-These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. Event lists are SSOT in `packages/billing/src/server/webhook-events.ts`. The setup script registers **two** endpoints: platform `{url}` (`STRIPE_WEBHOOK_SECRET`) and `{url}/connect` (`connect: true`, `STRIPE_CONNECT_WEBHOOK_SECRET`). Route handlers in `apps/api` are thin wrappers that verify the matching secret and call `processStripeEvent`.
+Connect endpoint (`{url}/connect`):
+
+- `account.updated`
+- `capability.updated`
+- `account.application.deauthorized`
+- `payout.paid`
+- `payout.failed`
+
+These map to `case` branches in `dispatchEvent` inside `packages/billing/src/server/webhook.ts`. The setup script registers **two** endpoints: platform `{url}` (`STRIPE_WEBHOOK_SECRET`) and `{url}/connect` (`connect: true`, `STRIPE_CONNECT_WEBHOOK_SECRET`). Route handlers in `apps/api` are thin wrappers that verify the matching secret and call `processStripeEvent`.
 
 **Idempotency.** Every event is recorded in the `stripe_webhook_events` table keyed by Stripe `event.id` before dispatch. Duplicate deliveries are short-circuited via `INSERT ... ON CONFLICT DO NOTHING` and the route returns `200 { received: true, status: "duplicate" }`.
 
