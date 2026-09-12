@@ -815,8 +815,9 @@ export async function confirmRefundFromCharge(input: {
         : input.stripeRefundId
           ? eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId)
           : undefined
+      let matchedRefundId: string | null = null
       if (refundMatch) {
-        await tx
+        const [updated] = await tx
           .update(main.bookingRefunds)
           .set({
             status: "succeeded",
@@ -829,6 +830,43 @@ export async function confirmRefundFromCharge(input: {
               refundMatch
             )
           )
+          .returning({ id: main.bookingRefunds.id })
+        matchedRefundId = updated?.id ?? null
+      }
+      if (!matchedRefundId && input.stripeRefundId) {
+        const [existing] = await tx
+          .select({ id: main.bookingRefunds.id })
+          .from(main.bookingRefunds)
+          .where(eq(main.bookingRefunds.stripeRefundId, input.stripeRefundId))
+          .limit(1)
+        matchedRefundId = existing?.id ?? null
+      }
+      if (!matchedRefundId) {
+        const priorRefunded = fresh?.refundedCents ?? payment.refundedCents
+        const delta = input.amountRefunded - priorRefunded
+        if (delta > 0) {
+          const [last] = await tx
+            .select({ refundSeq: main.bookingRefunds.refundSeq })
+            .from(main.bookingRefunds)
+            .where(eq(main.bookingRefunds.bookingPaymentId, payment.id))
+            .orderBy(desc(main.bookingRefunds.refundSeq))
+            .limit(1)
+          await tx
+            .insert(main.bookingRefunds)
+            .values({
+              orgId: payment.orgId,
+              bookingPaymentId: payment.id,
+              amountCents: delta,
+              status: "succeeded",
+              stripeRefundId: input.stripeRefundId,
+              reason: "charge_refunded",
+              refundSeq: (last?.refundSeq ?? 0) + 1,
+              idempotencyKey: `charge-refunded:${payment.id}:${input.stripeRefundId ?? `seq-${(last?.refundSeq ?? 0) + 1}`}`,
+            })
+            .onConflictDoNothing({
+              target: main.bookingRefunds.idempotencyKey,
+            })
+        }
       }
       await ctx.emit({
         entity: "refund",
@@ -838,11 +876,16 @@ export async function confirmRefundFromCharge(input: {
       })
     }
   )
-  await completeTransferReversalForPayment(payment.id)
+  await completeTransferReversalForPayment(payment.id).catch((err) => {
+    void captureException(err, {
+      bookingPaymentId: payment.id,
+      probe: "confirm-refund-reversal-reconcile",
+    })
+  })
   return payment.id
 }
 
-async function completeTransferReversalForPayment(
+export async function completeTransferReversalForPayment(
   bookingPaymentId: string
 ): Promise<void> {
   const snapshot = await withPlatformAdminContext(async (tx) => {
@@ -891,12 +934,110 @@ async function completeTransferReversalForPayment(
     })
     return
   }
+  const refundId =
+    snapshot.refundId ??
+    (await persistSucceededRefundForReversal({
+      bookingPaymentId,
+      payment: snapshot.payment,
+      payout: snapshot.payout,
+      reversalCents,
+    }))
+  if (!refundId) {
+    void captureException(
+      new Error("no succeeded refund row for transfer reversal"),
+      { bookingPaymentId, probe: "complete-transfer-reversal" }
+    )
+    return
+  }
   await reverseTransferShare({
     payout: snapshot.payout,
-    refundId: snapshot.refundId ?? crypto.randomUUID(),
+    refundId,
     reversalCents,
     actorUserId: null,
   })
+}
+
+async function persistSucceededRefundForReversal(input: {
+  bookingPaymentId: string
+  payment: typeof main.bookingPayments.$inferSelect
+  payout: typeof main.payoutStates.$inferSelect
+  reversalCents: number
+}): Promise<string | null> {
+  return withAudit(
+    { orgId: input.payment.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      const customerRefundCents = input.payment.refundedCents
+      if (customerRefundCents <= 0) {
+        await ctx.emit({
+          entity: "refund",
+          action: "succeeded",
+          entityId: input.bookingPaymentId,
+          payload: {
+            reconciled: true,
+            skipped: "refunded_cents_missing",
+            reversalCents: input.reversalCents,
+          },
+        })
+        return null
+      }
+      const [last] = await tx
+        .select({ refundSeq: main.bookingRefunds.refundSeq })
+        .from(main.bookingRefunds)
+        .where(eq(main.bookingRefunds.bookingPaymentId, input.bookingPaymentId))
+        .orderBy(desc(main.bookingRefunds.refundSeq))
+        .limit(1)
+      const idempotencyKey = `charge-refunded:${input.bookingPaymentId}`
+      const [inserted] = await tx
+        .insert(main.bookingRefunds)
+        .values({
+          orgId: input.payment.orgId,
+          bookingPaymentId: input.bookingPaymentId,
+          amountCents: customerRefundCents,
+          status: "succeeded",
+          reason: "charge_refunded",
+          refundSeq: (last?.refundSeq ?? 0) + 1,
+          idempotencyKey,
+        })
+        .onConflictDoNothing({
+          target: main.bookingRefunds.idempotencyKey,
+        })
+        .returning({ id: main.bookingRefunds.id })
+      const refund = inserted
+        ? inserted
+        : (
+            await tx
+              .select({ id: main.bookingRefunds.id })
+              .from(main.bookingRefunds)
+              .where(eq(main.bookingRefunds.idempotencyKey, idempotencyKey))
+              .limit(1)
+          )[0]
+      if (refund?.id && input.payout.stripeTransferId) {
+        await tx
+          .insert(main.transferReversals)
+          .values({
+            orgId: input.payment.orgId,
+            payoutStateId: input.payout.id,
+            refundId: refund.id,
+            bookingPaymentId: input.bookingPaymentId,
+            amountCents: input.reversalCents,
+            status: "pending",
+          })
+          .onConflictDoNothing({
+            target: main.transferReversals.refundId,
+          })
+      }
+      await ctx.emit({
+        entity: "refund",
+        action: "succeeded",
+        entityId: refund?.id ?? input.bookingPaymentId,
+        payload: {
+          reconciled: true,
+          reversalCents: input.reversalCents,
+        },
+      })
+      return refund?.id ?? null
+    }
+  )
 }
 
 export async function confirmTransferReversed(input: {

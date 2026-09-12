@@ -103,6 +103,7 @@ export {
   applyDisputeOpened,
   applyDisputeClosed,
   confirmRefundFromCharge,
+  completeTransferReversalForPayment,
   confirmTransferReversed,
   markRefundFailedFromStripe,
   retryFailedTransferReversals,

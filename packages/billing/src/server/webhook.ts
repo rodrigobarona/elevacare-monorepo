@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type Stripe from "stripe"
 import { z } from "zod"
 import { withAudit } from "@eleva/audit"
@@ -24,6 +24,7 @@ import {
 import {
   applyDisputeClosed,
   applyDisputeOpened,
+  completeTransferReversalForPayment,
   confirmRefundFromCharge,
   confirmTransferReversed,
   findBookingPaymentIdByCharge,
@@ -1609,15 +1610,28 @@ async function handleChargeDisputeClosed(
   const dispute = event.data.object as Stripe.Dispute
   const chargeId =
     typeof dispute.charge === "string" ? dispute.charge : dispute.charge.id
-  let orgId: string | null = null
-  let paymentIntentId: string | null = null
-  const charge = await stripe().charges.retrieve(chargeId)
-  orgId = orgIdFromMetadata(charge.metadata)
-  paymentIntentId =
-    typeof charge.payment_intent === "string"
+
+  let charge: Stripe.Charge | null
+  if (typeof dispute.charge === "string") {
+    try {
+      charge = await stripe().charges.retrieve(chargeId)
+    } catch (err) {
+      charge = null
+      console.warn(
+        `[stripe-webhook] charge retrieve failed for dispute ${dispute.id}: ${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+  } else {
+    charge = dispute.charge as Stripe.Charge
+  }
+
+  let orgId: string | null = charge ? orgIdFromMetadata(charge.metadata) : null
+  const paymentIntentId = charge
+    ? typeof charge.payment_intent === "string"
       ? charge.payment_intent
       : (charge.payment_intent?.id ?? null)
-  if (!orgId && charge.payment_intent) {
+    : null
+  if (!orgId && charge?.payment_intent) {
     orgId = await orgIdFromPaymentIntent(charge.payment_intent)
   }
   if (!orgId) {
@@ -1745,7 +1759,10 @@ async function handleTransferEvent(
   } else if (payoutStateId && event.type === "transfer.created") {
     const [probe] = await withPlatformAdminContext(async (tx) =>
       tx
-        .select({ id: main.payoutStates.id })
+        .select({
+          id: main.payoutStates.id,
+          bookingPaymentId: main.payoutStates.bookingPaymentId,
+        })
         .from(main.payoutStates)
         .where(
           and(
@@ -1762,61 +1779,89 @@ async function handleTransferEvent(
         resolvedOrgId: orgId,
       }
     }
-    await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
-      const [scheduled] = await tx
-        .update(main.payoutStates)
-        .set({
-          stripeTransferId: transfer.id,
-          status: "transferred",
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(main.payoutStates.id, payoutStateId),
-            eq(main.payoutStates.orgId, orgId),
-            eq(main.payoutStates.status, "scheduled")
-          )
-        )
-        .returning({ status: main.payoutStates.status })
-      if (!scheduled) {
-        void captureException(
-          new Error("transfer.created for non-scheduled payout"),
-          {
-            payoutStateId,
-            probe: "transfer-created",
-          }
-        )
-        await tx
+    const persistedTransfer = await withAudit(
+      { orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [scheduled] = await tx
           .update(main.payoutStates)
           .set({
             stripeTransferId: transfer.id,
+            status: "transferred",
             updatedAt: new Date(),
           })
           .where(
             and(
               eq(main.payoutStates.id, payoutStateId),
-              eq(main.payoutStates.orgId, orgId)
+              eq(main.payoutStates.orgId, orgId),
+              eq(main.payoutStates.status, "scheduled")
             )
           )
+          .returning({ status: main.payoutStates.status })
+        if (!scheduled) {
+          const [backfilled] = await tx
+            .update(main.payoutStates)
+            .set({
+              stripeTransferId: transfer.id,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(main.payoutStates.id, payoutStateId),
+                eq(main.payoutStates.orgId, orgId),
+                or(
+                  isNull(main.payoutStates.stripeTransferId),
+                  eq(main.payoutStates.stripeTransferId, transfer.id)
+                )
+              )
+            )
+            .returning({ id: main.payoutStates.id })
+          if (!backfilled) {
+            void captureException(
+              new Error("transfer.created conflicts with stored transfer id"),
+              { payoutStateId, probe: "transfer-created" }
+            )
+            await ctx.emit({
+              entity: "payout",
+              action: "updated",
+              entityId: payoutStateId,
+              payload: {
+                type: event.type,
+                conflict: true,
+              },
+            })
+            return false
+          }
+          await ctx.emit({
+            entity: "payout",
+            action: "transferred",
+            entityId: payoutStateId,
+            payload: {
+              stripeTransferId: transfer.id,
+              type: event.type,
+              statusUnchanged: true,
+            },
+          })
+          return true
+        }
         await ctx.emit({
           entity: "payout",
           action: "transferred",
           entityId: payoutStateId,
-          payload: {
-            stripeTransferId: transfer.id,
-            type: event.type,
-            statusUnchanged: true,
-          },
+          payload: { stripeTransferId: transfer.id, type: event.type },
         })
-        return
+        return true
       }
-      await ctx.emit({
-        entity: "payout",
-        action: "transferred",
-        entityId: payoutStateId,
-        payload: { stripeTransferId: transfer.id, type: event.type },
-      })
-    })
+    )
+    if (persistedTransfer) {
+      try {
+        await completeTransferReversalForPayment(probe.bookingPaymentId)
+      } catch (err) {
+        void captureException(err, {
+          payoutStateId,
+          probe: "transfer-created-reversal-reconcile",
+        })
+      }
+    }
   }
   return { kind: "handled", resolvedOrgId: orgId }
 }

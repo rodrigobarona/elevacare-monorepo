@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm"
+import { and, eq, inArray, isNull, or, sql } from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import {
   CLINIC_COMMISSION_BPS,
@@ -520,7 +520,7 @@ export async function executeTransfer(payoutStateId: string): Promise<{
   await withAudit(
     { orgId: current.orgId, actorUserId: null },
     async (tx, ctx) => {
-      await tx
+      const [row] = await tx
         .update(main.payoutStates)
         .set({
           status: "transferred",
@@ -528,15 +528,55 @@ export async function executeTransfer(payoutStateId: string): Promise<{
           lastError: null,
           updatedAt: new Date(),
         })
-        .where(eq(main.payoutStates.id, payoutStateId))
+        .where(
+          and(
+            eq(main.payoutStates.id, payoutStateId),
+            eq(main.payoutStates.status, "scheduled")
+          )
+        )
+        .returning({ id: main.payoutStates.id })
+      if (!row) {
+        const [backfilled] = await tx
+          .update(main.payoutStates)
+          .set({ stripeTransferId: transferId, updatedAt: new Date() })
+          .where(
+            and(
+              eq(main.payoutStates.id, payoutStateId),
+              or(
+                isNull(main.payoutStates.stripeTransferId),
+                eq(main.payoutStates.stripeTransferId, transferId)
+              )
+            )
+          )
+          .returning({ id: main.payoutStates.id })
+        if (!backfilled) {
+          throw new PayoutError(
+            "TRANSFER_ID_CONFLICT",
+            "Payout already references another Stripe transfer"
+          )
+        }
+      }
       await ctx.emit({
         entity: "payout",
         action: "transferred",
         entityId: payoutStateId,
-        payload: { stripeTransferId: transferId },
+        payload: {
+          stripeTransferId: transferId,
+          statusUnchanged: !row,
+        },
       })
     }
   )
+  // Circular: refunds.ts imports applyHold/clearHold from this module.
+  const { completeTransferReversalForPayment } = await import("./refunds")
+  try {
+    await completeTransferReversalForPayment(current.bookingPaymentId)
+  } catch (err) {
+    void captureException(err, {
+      payoutStateId,
+      probe: "execute-transfer-reversal-reconcile",
+    })
+  }
   return { status: "transferred", stripeTransferId: transferId }
 }
 
@@ -735,6 +775,7 @@ export async function financeSummary(orgId: string): Promise<{
     const payouts = await tx
       .select({
         amountCents: main.payoutStates.amountCents,
+        reversedCents: main.payoutStates.reversedCents,
         status: main.payoutStates.status,
       })
       .from(main.payoutStates)
@@ -751,14 +792,15 @@ export async function financeSummary(orgId: string): Promise<{
     let pendingCents = 0
     let paidCents = 0
     for (const payout of payouts) {
-      if (payout.status === "paid_out") paidCents += payout.amountCents
+      const net = Math.max(0, payout.amountCents - payout.reversedCents)
+      if (payout.status === "paid_out") paidCents += net
       if (
         payout.status === "pending" ||
         payout.status === "scheduled" ||
         payout.status === "approval_required" ||
         payout.status === "held"
       ) {
-        pendingCents += payout.amountCents
+        pendingCents += net
       }
     }
     return {

@@ -14,6 +14,7 @@ vi.mock("@eleva/observability", () => ({
 
 const payoutStates = { id: "id", bookingPaymentId: "bookingPaymentId" }
 const bookingPayments = { id: "id" }
+const bookingRefunds = { id: "id" }
 
 const scheduledPayout = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -33,6 +34,8 @@ const paidPayment = {
   id: scheduledPayout.bookingPaymentId,
   bookingId: "55555555-5555-4333-8333-555555555555",
   stripeChargeId: "ch_test",
+  amountCents: 10_000,
+  refundedCents: 0,
 }
 
 let persistAttempts = 0
@@ -47,8 +50,12 @@ vi.mock("@eleva/db", () => {
       return tx
     },
     where: () => tx,
-    limit: () =>
-      currentTable === payoutStates ? [scheduledPayout] : [paidPayment],
+    orderBy: () => tx,
+    limit: () => {
+      if (currentTable === payoutStates) return [scheduledPayout]
+      if (currentTable === bookingPayments) return [paidPayment]
+      return []
+    },
     update: () => tx,
     set: () => tx,
     returning: () => [scheduledPayout],
@@ -56,7 +63,12 @@ vi.mock("@eleva/db", () => {
     values: () => tx,
   }
   return {
-    main: { payoutStates, bookingPayments, workflowDeadLetters: {} },
+    main: {
+      payoutStates,
+      bookingPayments,
+      bookingRefunds,
+      workflowDeadLetters: {},
+    },
     withPlatformAdminContext: (fn: (handle: typeof tx) => unknown) => fn(tx),
     withOrgContext: (_org: string, fn: (handle: typeof tx) => unknown) =>
       fn(tx),
@@ -76,6 +88,7 @@ vi.mock("@eleva/audit", () => ({
       update: () => tx,
       set: () => tx,
       where: () => tx,
+      returning: () => [{ id: scheduledPayout.id }],
       insert: () => tx,
       values: () => tx,
     }

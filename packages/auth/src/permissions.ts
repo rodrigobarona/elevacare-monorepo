@@ -59,6 +59,12 @@ export const member = ac.newRole({
 
 export const organizationRoles = { owner, admin, member }
 
+/**
+ * Better Auth admin-plugin user roles. These bind to plugin `adminAc`,
+ * not organization `ac` statements such as `adminPayout`. Payout
+ * mutations are gated by `PAYOUT_MUTATION_STAFF_ROLES` in
+ * `requireStaffPayoutMutator`.
+ */
 export const staffSupport = adminAc
 export const staffFinance = adminAc
 export const platformAdmin = adminAc
