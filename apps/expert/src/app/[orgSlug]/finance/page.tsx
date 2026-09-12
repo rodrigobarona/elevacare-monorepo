@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
+import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -22,12 +23,20 @@ export default async function FinancePage({
     redirect(expertWorkspacePath(session, "setup"))
   }
 
-  const t = await getTranslations("finance")
+  const [t, summary, bookings] = await Promise.all([
+    getTranslations("finance"),
+    financeSummary(session.orgId),
+    listFinanceBookings(session.orgId),
+  ])
 
   return (
     <div className="space-y-6">
       <AccountPageHeader title={t("title")} description={t("description")} />
-      <FinanceDashboard />
+      <FinanceDashboard
+        orgSlug={orgSlug}
+        summary={summary}
+        bookings={bookings}
+      />
     </div>
   )
 }

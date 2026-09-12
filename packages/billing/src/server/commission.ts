@@ -386,13 +386,17 @@ export function computeSettlement(input: {
 }
 
 /**
- * D-06 experiment only. Not part of the production settlement contract.
- * Refund, dispute, and no-show flows must not call this until D-06 is signed.
+ * Proportional credit-note split used by refunds (D-06 working pre-launch).
+ * Not a finance/legal production sign-off. Callers pass stored settlement
+ * amounts; this function does not introduce new commercial rates.
  */
-export function experimentalCreditNoteAllocation(
+export function creditNoteAllocation(
   settlement: SettlementAmounts,
   refundCents: number,
   alreadyRefundedCents = 0
 ): CreditNoteAllocation {
   return allocateProportionally(settlement, refundCents, alreadyRefundedCents)
 }
+
+/** @deprecated Use {@link creditNoteAllocation}. */
+export const experimentalCreditNoteAllocation = creditNoteAllocation

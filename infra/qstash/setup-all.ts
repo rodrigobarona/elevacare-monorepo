@@ -14,6 +14,7 @@
  */
 import { isDryRun, registerSchedule } from "./register-schedule"
 import { DOMAIN_EVENTS_PUBLISHER_SCHEDULE } from "./domain-events-schedule"
+import { PAYOUT_SCHEDULES } from "./payout-schedules"
 
 const dryRun = isDryRun()
 
@@ -64,6 +65,10 @@ async function main() {
   )
 
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
+
+  for (const spec of PAYOUT_SCHEDULES) {
+    await registerSchedule(spec, { dryRun })
+  }
 
   console.log("\n[qstash:setup:all] Done.")
   console.log(

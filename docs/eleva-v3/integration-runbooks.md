@@ -64,6 +64,26 @@ Should cover:
 - refund issue
 - payout transfer issue
 
+#### Stuck transfer
+
+1. Confirm `payout_states.status` is `scheduled` or `failed` and `attempts`.
+2. Check `last_error` (`balance_insufficient` vs network). Stripe is called **outside** the DB transaction with `transfer_idempotency_key` reused on retry.
+3. Replay `POST /workflows/process-expert-transfers` (Bearer `WORKFLOWS_DRAIN_SECRET`). Do not mint a new idempotency key.
+4. After `TRANSFER_MAX_ATTEMPTS` the row is `failed` and a `workflow_dead_letters` row is inserted. Inspect DLQ then retry after the **platform** available balance can cover the Transfer (a Transfer debits the platform and credits the connected account). Connected-account balance matters for reversals, not for the original Transfer.
+
+#### Failed payout (`payout.failed`)
+
+1. `payout.paid|failed` arrive on `/webhooks/stripe/connect`.
+2. `payout_states` moves to `failed` with `stripe_payout_id` and `last_error`.
+3. The expert must fix the connected-account bank details in Embedded Account Management; do not create a second Transfer.
+
+#### Failed reversal (`reversal_pending`)
+
+1. Member refund already succeeded — never undo it.
+2. Retry `transfers.createReversal` with stored idempotency `reversal:<refundId>`.
+3. `transfer.reversed` on the platform endpoint closes `reversal_pending`.
+4. If the connected account has insufficient balance, wait for a later payout/top-up then retry. Alert finance; do not block the member.
+
 ### Daily runbook
 
 Should cover:

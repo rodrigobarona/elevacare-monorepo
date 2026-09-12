@@ -36,6 +36,9 @@ export const TENANT_TABLES = [
   "slot_reservations",
   "bookings",
   "booking_payments",
+  "payout_states",
+  "booking_refunds",
+  "transfer_reversals",
   "consents",
   "sessions",
   "expert_practice_locations",
@@ -88,6 +91,9 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   // dropping the bypass clause on each run.
   "billing_customers",
   "billing_subscriptions",
+  "payout_states",
+  "booking_refunds",
+  "transfer_reversals",
 ])
 
 function isDualOrganization(table: string): boolean {

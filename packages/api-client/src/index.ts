@@ -909,6 +909,81 @@ export const CreatePaymentIntentResponseSchema = z.object({
   publishableKey: z.string().min(1),
 })
 
+export const RefundBookingPaymentRequestSchema = z.object({
+  amountCents: z.number().int().positive().optional(),
+  reason: z.string().trim().min(1).max(2000),
+  idempotencyKey: z.string().trim().min(8).max(255).optional(),
+})
+
+export const RefundBookingPaymentResponseSchema = z.object({
+  refundId: z.string().uuid(),
+  status: z.enum(["succeeded", "pending"]),
+})
+
+export const PayoutStatusSchema = z.enum([
+  "pending",
+  "scheduled",
+  "approval_required",
+  "transferred",
+  "paid_out",
+  "failed",
+  "held",
+  "reversal_pending",
+  "reversed",
+])
+
+export const ListPayoutsQuerySchema = z.object({
+  status: PayoutStatusSchema.optional(),
+  orgId: z.string().uuid().optional(),
+})
+
+export const PayoutRowSchema = z.object({
+  id: z.string().uuid(),
+  orgId: z.string().uuid(),
+  bookingPaymentId: z.string().uuid(),
+  status: PayoutStatusSchema,
+  amountCents: z.number().int(),
+  reversedCents: z.number().int(),
+  eligibleAt: z.string(),
+  holdReasons: z.array(z.enum(["dispute", "manual"])),
+  stripeTransferId: z.string().nullable(),
+})
+
+export const ListPayoutsResponseSchema = z.object({
+  payouts: z.array(PayoutRowSchema),
+})
+
+export const PayoutActionRequestSchema = z.object({
+  reason: z.string().trim().min(1).max(2000),
+})
+
+export const PayoutActionResponseSchema = z.object({
+  id: z.string().uuid(),
+  status: PayoutStatusSchema,
+  holdReasons: z.array(z.enum(["dispute", "manual"])),
+})
+
+export const FinanceSummaryResponseSchema = z.object({
+  summary: z.object({
+    grossCents: z.number().int(),
+    feesCents: z.number().int(),
+    netCents: z.number().int(),
+    pendingCents: z.number().int(),
+    paidCents: z.number().int(),
+  }),
+  bookings: z.array(
+    z.object({
+      bookingId: z.string().uuid(),
+      bookingPaymentId: z.string().uuid(),
+      amountCents: z.number().int(),
+      feeCents: z.number().int(),
+      netCents: z.number().int(),
+      payoutStatus: PayoutStatusSchema.nullable(),
+      eligibleAt: z.string().nullable(),
+    })
+  ),
+})
+
 export const ConfirmBookingRequestSchema = z.object({
   reservationId: z.string().uuid(),
   reservationToken: z.string().min(16).max(128),
@@ -933,6 +1008,20 @@ export type CreatePaymentIntentResponse = z.infer<
 export type ConfirmBookingRequest = z.infer<typeof ConfirmBookingRequestSchema>
 export type ConfirmBookingResponse = z.infer<
   typeof ConfirmBookingResponseSchema
+>
+export type RefundBookingPaymentRequest = z.infer<
+  typeof RefundBookingPaymentRequestSchema
+>
+export type RefundBookingPaymentResponse = z.infer<
+  typeof RefundBookingPaymentResponseSchema
+>
+export type ListPayoutsQuery = z.infer<typeof ListPayoutsQuerySchema>
+export type ListPayoutsResponse = z.infer<typeof ListPayoutsResponseSchema>
+export type PayoutActionRequest = z.infer<typeof PayoutActionRequestSchema>
+export type PayoutActionResponse = z.infer<typeof PayoutActionResponseSchema>
+export type PayoutStatus = z.infer<typeof PayoutStatusSchema>
+export type FinanceSummaryResponse = z.infer<
+  typeof FinanceSummaryResponseSchema
 >
 
 export interface SubCalendar {
@@ -1216,6 +1305,10 @@ export function createApiClient(options: ApiClientOptions) {
         )
         return RescheduleMeBookingResponseSchema.parse(raw)
       },
+      async financeSummary() {
+        const raw = await request<unknown>("GET", "/me/finance/summary")
+        return FinanceSummaryResponseSchema.parse(raw)
+      },
     },
 
     privacy: {
@@ -1414,6 +1507,55 @@ export function createApiClient(options: ApiClientOptions) {
       async intent(data: CreatePaymentIntentRequest) {
         const raw = await request<unknown>("POST", "/payments/intent", data)
         return CreatePaymentIntentResponseSchema.parse(raw)
+      },
+      async refund(
+        bookingPaymentId: string,
+        data: RefundBookingPaymentRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/payments/${encodeURIComponent(bookingPaymentId)}/refund`,
+          data
+        )
+        return RefundBookingPaymentResponseSchema.parse(raw)
+      },
+    },
+
+    payouts: {
+      async list(query: ListPayoutsQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.status) params.set("status", query.status)
+        if (query.orgId) params.set("orgId", query.orgId)
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          qs ? `/payouts?${qs}` : "/payouts"
+        )
+        return ListPayoutsResponseSchema.parse(raw)
+      },
+      async approve(id: string, data: PayoutActionRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          `/payouts/${encodeURIComponent(id)}/approve`,
+          data
+        )
+        return PayoutActionResponseSchema.parse(raw)
+      },
+      async hold(id: string, data: PayoutActionRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          `/payouts/${encodeURIComponent(id)}/hold`,
+          data
+        )
+        return PayoutActionResponseSchema.parse(raw)
+      },
+      async release(id: string, data: PayoutActionRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          `/payouts/${encodeURIComponent(id)}/release`,
+          data
+        )
+        return PayoutActionResponseSchema.parse(raw)
       },
     },
   }

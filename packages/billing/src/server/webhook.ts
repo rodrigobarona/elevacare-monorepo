@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type Stripe from "stripe"
 import { z } from "zod"
 import { withAudit } from "@eleva/audit"
@@ -16,6 +16,20 @@ import {
   snapshotFromAccount,
 } from "./connect-status"
 import { retrieveBookingPaymentIntent } from "./payments"
+import {
+  createPayoutStateForPaidPayment,
+  markPayoutFailedFromStripe,
+  markPayoutPaidOut,
+} from "./payouts"
+import {
+  applyDisputeClosed,
+  applyDisputeOpened,
+  completeTransferReversalForPayment,
+  confirmRefundFromCharge,
+  confirmTransferReversed,
+  findBookingPaymentIdByCharge,
+  markRefundFailedFromStripe,
+} from "./refunds"
 
 /**
  * Stripe webhook processor (Phase 1 of stripe-foundation-review).
@@ -354,16 +368,26 @@ async function dispatchEvent(event: Stripe.Event): Promise<DispatchOutcome> {
     case "payout.failed":
       return handlePayoutEvent(event)
 
-    // Booking PaymentIntents (patient checkout).
+    // Booking PaymentIntents (member checkout).
     case "payment_intent.succeeded":
+    case "payment_intent.processing":
     case "payment_intent.payment_failed":
+    case "payment_intent.canceled":
       return handlePaymentIntentEvent(event)
 
     // Refunds and disputes (booking payments).
     case "charge.refunded":
       return handleChargeRefunded(event)
+    case "refund.updated":
+      return handleRefundUpdated(event)
     case "charge.dispute.created":
       return handleChargeDisputeCreated(event)
+    case "charge.dispute.closed":
+      return handleChargeDisputeClosed(event)
+    case "transfer.created":
+    case "transfer.updated":
+    case "transfer.reversed":
+      return handleTransferEvent(event)
 
     default:
       return {
@@ -1282,6 +1306,20 @@ async function handlePayoutEvent(
   }
   const action: "succeeded" | "failed" =
     event.type === "payout.paid" ? "succeeded" : "failed"
+  if (event.type === "payout.paid") {
+    await markPayoutPaidOut({
+      destinationConnectAccountId: stripeAccountId,
+      stripePayoutId: payout.id,
+      amountCents: payout.amount,
+    })
+  } else {
+    await markPayoutFailedFromStripe({
+      destinationConnectAccountId: stripeAccountId,
+      stripePayoutId: payout.id,
+      lastError:
+        payout.failure_message ?? payout.failure_code ?? "payout.failed",
+    })
+  }
   await withAudit(
     { orgId: resolved.orgId, actorUserId: null },
     async (_tx, ctx) => {
@@ -1362,7 +1400,11 @@ async function handlePaymentIntentEvent(
       )
     }
   }
-  if (reservationId && event.type === "payment_intent.payment_failed") {
+  if (
+    reservationId &&
+    (event.type === "payment_intent.payment_failed" ||
+      event.type === "payment_intent.canceled")
+  ) {
     const marked = await markBookingPaymentFailed({
       paymentIntentId: intent.id,
       reservationId,
@@ -1382,8 +1424,14 @@ async function handlePaymentIntentEvent(
       resolvedOrgId: null,
     }
   }
-  const action: "succeeded" | "failed" =
-    event.type === "payment_intent.succeeded" ? "succeeded" : "failed"
+  const action =
+    event.type === "payment_intent.succeeded"
+      ? "succeeded"
+      : event.type === "payment_intent.payment_failed"
+        ? "failed"
+        : event.type === "payment_intent.canceled"
+          ? "canceled"
+          : "updated"
 
   let processingFeeCents = 0
   let stripeChargeId: string | null = null
@@ -1393,15 +1441,18 @@ async function handlePaymentIntentEvent(
     stripeChargeId = fee.chargeId
   }
 
+  let paymentId: string | null = null
   await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
     if (action === "succeeded") {
-      await tx
+      const [updated] = await tx
         .update(main.bookingPayments)
         .set({
           processingFeeCents,
           stripeChargeId: stripeChargeId ?? undefined,
         })
         .where(eq(main.bookingPayments.stripePaymentIntentId, intent.id))
+        .returning({ id: main.bookingPayments.id })
+      paymentId = updated?.id ?? null
     }
     await ctx.emit({
       entity: "booking_payment",
@@ -1417,6 +1468,13 @@ async function handlePaymentIntentEvent(
       },
     })
   })
+
+  if (action === "succeeded" && paymentId) {
+    await createPayoutStateForPaidPayment({
+      bookingPaymentId: paymentId,
+      orgId,
+    })
+  }
   return { kind: "handled", resolvedOrgId: orgId }
 }
 
@@ -1447,6 +1505,18 @@ async function handleChargeRefunded(
       resolvedOrgId: null,
     }
   }
+  const paymentIntentId =
+    typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : (charge.payment_intent?.id ?? null)
+  if (paymentIntentId) {
+    await confirmRefundFromCharge({
+      paymentIntentId,
+      amountRefunded: charge.amount_refunded,
+      stripeRefundId: null,
+      refundRowId: null,
+    })
+  }
   await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
     await ctx.emit({
       entity: "booking_payment",
@@ -1454,10 +1524,7 @@ async function handleChargeRefunded(
       entityId: charge.id,
       payload: {
         stripeChargeId: charge.id,
-        stripePaymentIntentId:
-          typeof charge.payment_intent === "string"
-            ? charge.payment_intent
-            : (charge.payment_intent?.id ?? null),
+        stripePaymentIntentId: paymentIntentId,
         amountRefunded: charge.amount_refunded,
         currency: charge.currency,
         bookingId: charge.metadata?.eleva_booking_id ?? null,
@@ -1508,8 +1575,8 @@ async function handleChargeDisputeCreated(
   }
   await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
     await ctx.emit({
-      entity: "booking_payment",
-      action: "disputed",
+      entity: "dispute",
+      action: "opened",
       entityId: dispute.id,
       payload: {
         stripeDisputeId: dispute.id,
@@ -1521,6 +1588,291 @@ async function handleChargeDisputeCreated(
       },
     })
   })
+  const paymentIntentId =
+    charge && charge.payment_intent
+      ? typeof charge.payment_intent === "string"
+        ? charge.payment_intent
+        : charge.payment_intent.id
+      : null
+  const bookingPaymentId = await findBookingPaymentIdByCharge({
+    paymentIntentId,
+    chargeId,
+  })
+  if (bookingPaymentId) {
+    await applyDisputeOpened({ bookingPaymentId })
+  }
+  return { kind: "handled", resolvedOrgId: orgId }
+}
+
+async function handleChargeDisputeClosed(
+  event: Stripe.Event
+): Promise<DispatchOutcome> {
+  const dispute = event.data.object as Stripe.Dispute
+  const chargeId =
+    typeof dispute.charge === "string" ? dispute.charge : dispute.charge.id
+
+  let charge: Stripe.Charge | null
+  if (typeof dispute.charge === "string") {
+    try {
+      charge = await stripe().charges.retrieve(chargeId)
+    } catch (err) {
+      charge = null
+      console.warn(
+        `[stripe-webhook] charge retrieve failed for dispute ${dispute.id}: ${err instanceof Error ? err.message : String(err)}`
+      )
+    }
+  } else {
+    charge = dispute.charge as Stripe.Charge
+  }
+
+  let orgId: string | null = charge ? orgIdFromMetadata(charge.metadata) : null
+  const paymentIntentFromDispute =
+    typeof dispute.payment_intent === "string"
+      ? dispute.payment_intent
+      : (dispute.payment_intent?.id ?? null)
+  const paymentIntentId = charge
+    ? typeof charge.payment_intent === "string"
+      ? charge.payment_intent
+      : (charge.payment_intent?.id ?? paymentIntentFromDispute)
+    : paymentIntentFromDispute
+  if (!orgId && paymentIntentId) {
+    orgId = await orgIdFromPaymentIntent(paymentIntentId)
+  }
+  const bookingPaymentId = await findBookingPaymentIdByCharge({
+    paymentIntentId,
+    chargeId,
+  })
+  if (!orgId && bookingPaymentId) {
+    orgId = await orgIdFromBookingPayment(bookingPaymentId)
+  }
+  if (!orgId) {
+    return {
+      kind: "ignored",
+      reason: "no org resolution for charge.dispute.closed",
+      resolvedOrgId: null,
+    }
+  }
+  const won = dispute.status === "won" || dispute.status === "warning_closed"
+  if (bookingPaymentId) {
+    await applyDisputeClosed({ bookingPaymentId, won })
+  }
+  await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
+    await ctx.emit({
+      entity: "dispute",
+      action: "closed",
+      entityId: dispute.id,
+      payload: {
+        stripeDisputeId: dispute.id,
+        outcome: won ? "won" : "lost",
+        status: dispute.status,
+      },
+    })
+  })
+  return { kind: "handled", resolvedOrgId: orgId }
+}
+
+async function handleRefundUpdated(
+  event: Stripe.Event
+): Promise<DispatchOutcome> {
+  const refund = event.data.object as Stripe.Refund
+  const paymentIntentId =
+    typeof refund.payment_intent === "string"
+      ? refund.payment_intent
+      : (refund.payment_intent?.id ?? null)
+  if (!paymentIntentId) {
+    return {
+      kind: "ignored",
+      reason: "refund.updated without payment_intent",
+      resolvedOrgId: null,
+    }
+  }
+  let orgId = await orgIdFromPaymentIntent(paymentIntentId)
+  if (!orgId) {
+    const chargeId =
+      typeof refund.charge === "string"
+        ? refund.charge
+        : (refund.charge?.id ?? null)
+    const bookingPaymentId = await findBookingPaymentIdByCharge({
+      paymentIntentId,
+      chargeId,
+    })
+    if (bookingPaymentId) {
+      const [payment] = await withPlatformAdminContext(async (tx) =>
+        tx
+          .select({ orgId: main.bookingPayments.orgId })
+          .from(main.bookingPayments)
+          .where(eq(main.bookingPayments.id, bookingPaymentId))
+          .limit(1)
+      )
+      orgId = payment?.orgId ?? null
+    }
+  }
+  if (!orgId) {
+    return {
+      kind: "ignored",
+      reason: "no org resolution for refund.updated",
+      resolvedOrgId: null,
+    }
+  }
+  const refundRowId = refund.metadata?.refund_row_id ?? null
+  if (refund.status === "succeeded") {
+    const chargeId =
+      typeof refund.charge === "string"
+        ? refund.charge
+        : (refund.charge?.id ?? null)
+    const charge = chargeId ? await stripe().charges.retrieve(chargeId) : null
+    await confirmRefundFromCharge({
+      paymentIntentId,
+      amountRefunded: charge?.amount_refunded ?? refund.amount,
+      stripeRefundId: refund.id,
+      refundRowId,
+    })
+  } else if (refund.status === "failed" || refund.status === "canceled") {
+    await markRefundFailedFromStripe({
+      paymentIntentId,
+      stripeRefundId: refund.id,
+      refundRowId,
+    })
+  }
+  return { kind: "handled", resolvedOrgId: orgId }
+}
+
+async function handleTransferEvent(
+  event: Stripe.Event
+): Promise<DispatchOutcome> {
+  const transfer = event.data.object as Stripe.Transfer
+  const destination =
+    typeof transfer.destination === "string"
+      ? transfer.destination
+      : (transfer.destination?.id ?? null)
+  const orgId =
+    orgIdFromMetadata(transfer.metadata) ??
+    (destination
+      ? ((await resolveOrgFromConnectAccount(null, destination))?.orgId ?? null)
+      : null)
+  if (!orgId) {
+    return {
+      kind: "ignored",
+      reason: `no org resolution for ${event.type}`,
+      resolvedOrgId: null,
+    }
+  }
+  const rawPayoutStateId = transfer.metadata?.payout_state_id
+  const payoutStateId = z.string().uuid().safeParse(rawPayoutStateId).success
+    ? rawPayoutStateId
+    : null
+  if (event.type === "transfer.reversed") {
+    await confirmTransferReversed({
+      stripeTransferId: transfer.id,
+      reversedCents: transfer.amount_reversed,
+    })
+  } else if (payoutStateId && event.type === "transfer.created") {
+    const [probe] = await withPlatformAdminContext(async (tx) =>
+      tx
+        .select({
+          id: main.payoutStates.id,
+          bookingPaymentId: main.payoutStates.bookingPaymentId,
+        })
+        .from(main.payoutStates)
+        .where(
+          and(
+            eq(main.payoutStates.id, payoutStateId),
+            eq(main.payoutStates.orgId, orgId)
+          )
+        )
+        .limit(1)
+    )
+    if (!probe) {
+      return {
+        kind: "ignored",
+        reason: "payout not found for transfer.created",
+        resolvedOrgId: orgId,
+      }
+    }
+    const persistedTransfer = await withAudit(
+      { orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [scheduled] = await tx
+          .update(main.payoutStates)
+          .set({
+            stripeTransferId: transfer.id,
+            status: "transferred",
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(main.payoutStates.id, payoutStateId),
+              eq(main.payoutStates.orgId, orgId),
+              eq(main.payoutStates.status, "scheduled")
+            )
+          )
+          .returning({ status: main.payoutStates.status })
+        if (!scheduled) {
+          const [backfilled] = await tx
+            .update(main.payoutStates)
+            .set({
+              stripeTransferId: transfer.id,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(main.payoutStates.id, payoutStateId),
+                eq(main.payoutStates.orgId, orgId),
+                or(
+                  isNull(main.payoutStates.stripeTransferId),
+                  eq(main.payoutStates.stripeTransferId, transfer.id)
+                )
+              )
+            )
+            .returning({ id: main.payoutStates.id })
+          if (!backfilled) {
+            void captureException(
+              new Error("transfer.created conflicts with stored transfer id"),
+              { payoutStateId, probe: "transfer-created" }
+            )
+            await ctx.emit({
+              entity: "payout",
+              action: "updated",
+              entityId: payoutStateId,
+              payload: {
+                type: event.type,
+                conflict: true,
+              },
+            })
+            return false
+          }
+          await ctx.emit({
+            entity: "payout",
+            action: "transferred",
+            entityId: payoutStateId,
+            payload: {
+              stripeTransferId: transfer.id,
+              type: event.type,
+              statusUnchanged: true,
+            },
+          })
+          return true
+        }
+        await ctx.emit({
+          entity: "payout",
+          action: "transferred",
+          entityId: payoutStateId,
+          payload: { stripeTransferId: transfer.id, type: event.type },
+        })
+        return true
+      }
+    )
+    if (persistedTransfer) {
+      try {
+        await completeTransferReversalForPayment(probe.bookingPaymentId)
+      } catch (err) {
+        void captureException(err, {
+          payoutStateId,
+          probe: "transfer-created-reversal-reconcile",
+        })
+      }
+    }
+  }
   return { kind: "handled", resolvedOrgId: orgId }
 }
 
@@ -1586,4 +1938,17 @@ async function orgIdFromPaymentIntent(
     )
     return null
   }
+}
+
+async function orgIdFromBookingPayment(
+  bookingPaymentId: string
+): Promise<string | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ orgId: main.bookingPayments.orgId })
+      .from(main.bookingPayments)
+      .where(eq(main.bookingPayments.id, bookingPaymentId))
+      .limit(1)
+    return row?.orgId ?? null
+  })
 }

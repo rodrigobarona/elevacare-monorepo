@@ -1,4 +1,5 @@
 import type { OrgType } from "@eleva/db/schema"
+import { isPayoutMutationStaffRole } from "./permissions"
 import type { MembershipRole, ProductLabel } from "./types"
 
 /**
@@ -68,6 +69,7 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "bookings:manage_own",
     "reports:manage_own",
     "payouts:view_own",
+    "billing:refund",
     "expert:onboard",
     "expert:profile_edit",
     "expert:invoicing_manage",
@@ -78,6 +80,7 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "bookings:manage_own",
     "reports:manage_own",
     "payouts:view_own",
+    "billing:refund",
     "expert:onboard",
     "expert:profile_edit",
     "expert:invoicing_manage",
@@ -100,6 +103,11 @@ export const CAPABILITY_BUNDLES: Record<ProductLabel, readonly string[]> = {
     "users:view_all",
     "payments:view_all",
     "payouts:approve",
+    "admin_payouts:read",
+    "admin_payouts:approve",
+    "admin_payouts:hold",
+    "admin_payouts:refund",
+    "billing:refund",
     "audit:view_all",
     "workflows:retry",
     "accounting:reconcile",
@@ -117,4 +125,15 @@ export function hasCapability(
   needed: string
 ): boolean {
   return capabilities.includes(needed)
+}
+
+/** Staff Better Auth roles allowed to approve, hold, or release payouts. */
+export { PAYOUT_MUTATION_STAFF_ROLES } from "./permissions"
+
+export function canMutateStaffPayouts(input: {
+  productLabel: string
+  authUserRole: string | null | undefined
+}): boolean {
+  if (input.productLabel !== "staff") return false
+  return isPayoutMutationStaffRole(input.authUserRole)
 }

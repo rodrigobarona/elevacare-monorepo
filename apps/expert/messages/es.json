@@ -120,7 +120,31 @@
     "balance": "Saldo",
     "payouts": "Pagos",
     "accountDetails": "Datos de la cuenta",
-    "taxSettings": "Ajustes fiscales"
+    "taxSettings": "Ajustes fiscales",
+    "gross": "Bruto",
+    "fees": "Comisiones",
+    "net": "Neto",
+    "pending": "Pendiente",
+    "paid": "Pagado",
+    "bookings": "Reservas",
+    "booking": "Reserva",
+    "payoutState": "Estado del pago",
+    "eligibleAt": "Elegible",
+    "exportCsv": "Exportar CSV",
+    "exportFailed": "No se pudo exportar el CSV. Inténtalo de nuevo.",
+    "empty": "Aún no hay pagos de reservas.",
+    "noPayout": "Sin programar",
+    "status": {
+      "pending": "Pendiente",
+      "scheduled": "Programado",
+      "approvalRequired": "Requiere aprobación",
+      "transferred": "Transferido",
+      "paidOut": "Pagado",
+      "failed": "Fallido",
+      "held": "En espera",
+      "reversalPending": "Reversión pendiente",
+      "reversed": "Revertido"
+    }
   },
   "onboarding": {
     "title": "Onboarding de experto",

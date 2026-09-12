@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   capabilitiesFor,
+  canMutateStaffPayouts,
   CAPABILITY_BUNDLES,
   deriveProductLabel,
   hasCapability,
@@ -87,5 +88,33 @@ describe("capability bundles", () => {
     expect(hasCapability(CAPABILITY_BUNDLES.expert, "audit:view_all")).toBe(
       false
     )
+  })
+})
+
+describe("canMutateStaffPayouts", () => {
+  const cases = [
+    { productLabel: "member", authUserRole: "user", allowed: false },
+    { productLabel: "expert", authUserRole: "user", allowed: false },
+    { productLabel: "staff", authUserRole: "staff_support", allowed: false },
+    { productLabel: "staff", authUserRole: "staff_finance", allowed: true },
+    { productLabel: "staff", authUserRole: "platform_admin", allowed: true },
+  ] as const
+
+  it.each(cases)(
+    "$productLabel / $authUserRole => $allowed",
+    ({ productLabel, authUserRole, allowed }) => {
+      expect(canMutateStaffPayouts({ productLabel, authUserRole })).toBe(
+        allowed
+      )
+    }
+  )
+})
+
+describe("refund capabilities", () => {
+  it("members cannot refund; experts and staff finance can", () => {
+    expect(CAPABILITY_BUNDLES.member).not.toContain("billing:refund")
+    expect(CAPABILITY_BUNDLES.expert).toContain("billing:refund")
+    expect(CAPABILITY_BUNDLES.staff).toContain("admin_payouts:refund")
+    expect(CAPABILITY_BUNDLES.staff).toContain("billing:refund")
   })
 })

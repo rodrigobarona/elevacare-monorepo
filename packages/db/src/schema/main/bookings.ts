@@ -430,6 +430,9 @@ export const bookingPayments = pgTable(
     paymentMethodType: varchar("payment_method_type", { length: 64 }),
     paidAt: timestamp("paid_at", { withTimezone: true, mode: "date" }),
     refundedCents: integer("refunded_cents").notNull().default(0),
+    disputeStatus: varchar("dispute_status", { length: 16 })
+      .notNull()
+      .default("none"),
     receiptUrl: text("receipt_url"),
     createdAt: createdAt(),
   },
@@ -438,6 +441,7 @@ export const bookingPayments = pgTable(
     // One payment row per booking. 04.2 /payments/intent retries UPDATE this
     // row via stripe_idempotency_key; they do not insert a second attempt.
     bookingKey: unique("booking_payments_booking_id_key").on(t.bookingId),
+    idOrgKey: unique("booking_payments_id_org_key").on(t.id, t.orgId),
     stripePiIdx: uniqueIndex("booking_payments_stripe_pi_idx")
       .on(t.stripePaymentIntentId)
       .where(sql`stripe_payment_intent_id IS NOT NULL`),
@@ -467,6 +471,10 @@ export const bookingPayments = pgTable(
       sql`application_fee_cents = platform_fee_net_cents + platform_fee_vat_cents`
     ),
     refundedChk: check("booking_payments_refunded", sql`refunded_cents >= 0`),
+    disputeChk: check(
+      "booking_payments_dispute_status",
+      sql`dispute_status IN ('none','open','won','lost')`
+    ),
     tenantPolicy: pgPolicy("booking_payments_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,

@@ -46,6 +46,7 @@
     "qstash:setup:audit-drainer": "pnpm --filter=@eleva/infra-qstash run setup:audit-drainer",
     "qstash:setup:stripe-stuck": "pnpm --filter=@eleva/infra-qstash run setup:stripe-stuck",
     "qstash:setup:domain-events": "pnpm --filter=@eleva/infra-qstash run setup:domain-events",
+    "qstash:setup:payouts": "pnpm --filter=@eleva/infra-qstash run setup:payouts",
     "flags:sync": "pnpm --filter=@eleva/flags flags:sync",
     "db:seed:demo": "pnpm --filter=@eleva/db db:seed:demo",
     "db:seed:categories": "pnpm --filter=@eleva/db db:seed:categories",

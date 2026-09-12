@@ -60,6 +60,10 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "slot_reservations", class: "tenant-owned" },
   { table: "bookings", class: "dual-organization" },
   { table: "booking_payments", class: "tenant-owned" },
+  { table: "payout_states", class: "tenant-owned" },
+  { table: "booking_refunds", class: "tenant-owned" },
+  { table: "transfer_reversals", class: "tenant-owned" },
+  { table: "workflow_dead_letters", class: "service-only" },
   { table: "consents", class: "tenant-owned" },
   { table: "notification_preferences", class: "owner-user-visible" },
   {
@@ -154,6 +158,12 @@ export function classPredicateSql(
         return (
           `current_setting('eleva.platform_admin', true) = 'true'` +
           ` OR current_setting('eleva.service', true) = 'domain_events_publisher'`
+        )
+      }
+      if (table === "workflow_dead_letters") {
+        return (
+          `current_setting('eleva.platform_admin', true) = 'true'` +
+          ` OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`
         )
       }
       return (

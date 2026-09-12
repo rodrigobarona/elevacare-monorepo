@@ -32,6 +32,17 @@ export async function getUserAvatarUrl(
  * as `actorUserId`; org membership is not a substitute (avatars are
  * user-owned, not tenant-owned).
  */
+export async function getAuthUserRole(userId: string): Promise<string | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({ role: user.role })
+      .from(user)
+      .where(eq(user.id, userId))
+      .limit(1)
+    return row?.role ?? null
+  })
+}
+
 export async function updateUserAvatarUrl(
   userId: string,
   avatarUrl: string | null,

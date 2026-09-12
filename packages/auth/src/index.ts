@@ -13,8 +13,11 @@ export {
   CAPABILITY_BUNDLES,
   normalizeMembershipRole,
   toMembershipSeniority,
+  canMutateStaffPayouts,
+  PAYOUT_MUTATION_STAFF_ROLES,
 } from "./capabilities"
 export { requirePermission, withSessionContext } from "./session"
+export { isPayoutMutationStaffRole } from "./permissions"
 export {
   ensurePersonalOrg,
   findExistingPersonalOrg,

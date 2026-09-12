@@ -89,7 +89,11 @@ export {
   replaceBusySources,
   replaceDestinationCalendar,
 } from "./queries/calendars"
-export { getUserAvatarUrl, updateUserAvatarUrl } from "./queries/users"
+export {
+  getUserAvatarUrl,
+  updateUserAvatarUrl,
+  getAuthUserRole,
+} from "./queries/users"
 export {
   getMemberProfile,
   updateMemberProfileRow,

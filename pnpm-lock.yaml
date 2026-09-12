@@ -1829,6 +1829,9 @@ importers:
       '@eleva/auth':
         specifier: workspace:*
         version: link:../auth
+      '@eleva/billing':
+        specifier: workspace:*
+        version: link:../billing
       '@eleva/calendar':
         specifier: workspace:*
         version: link:../calendar

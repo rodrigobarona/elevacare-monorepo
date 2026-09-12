@@ -102,6 +102,11 @@ const s2Schema = z.object({
   STRIPE_API_VERSION: stringOptional,
   /** Payment Method Configuration id for marketplace booking (pmc_...). */
   STRIPE_PMC_BOOKING: stringOptional,
+  PAYOUT_APPROVAL_THRESHOLD_CENTS: z
+    .string()
+    .regex(/^\d+$/, "must be a non-negative integer number of cents")
+    .optional()
+    .or(z.literal("")),
 
   TOCONLINE_CLIENT_ID: stringOptional,
   TOCONLINE_CLIENT_SECRET: stringOptional,

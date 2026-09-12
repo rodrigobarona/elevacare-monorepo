@@ -44,6 +44,9 @@ export type AuditEntity =
   | "account_deletion_request"
   | "session"
   | "org_data_key"
+  | "payout"
+  | "refund"
+  | "dispute"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -100,6 +103,13 @@ export type AuditAction =
   | "active_organization_changed"
   | "shredded"
   | "rotated"
+  | "held"
+  | "transferred"
+  | "reversed"
+  | "scheduled"
+  | "paid_out"
+  | "opened"
+  | "closed"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */
