@@ -3,7 +3,7 @@ import { withAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
 import { stripe } from "./client"
-import { experimentalCreditNoteAllocation } from "./commission"
+import { creditNoteAllocation } from "./commission"
 import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
@@ -60,6 +60,8 @@ export async function refundBookingPayment(input: {
   actorUserId: string | null
   policy?: RefundPolicyInput
   actingOrgId?: string
+  idempotencyKey?: string
+  actorIsStaffReviewer?: boolean
 }): Promise<{ refundId: string; status: "succeeded" | "pending" }> {
   if (!input.reason.trim()) {
     throw new RefundError("REASON_REQUIRED", "Reason is required", 400)
@@ -69,7 +71,7 @@ export async function refundBookingPayment(input: {
     if (outcome === "keep") {
       throw new RefundError("POLICY_KEEP", "Policy keeps the payment")
     }
-    if (outcome === "requires_review" && input.actorUserId === null) {
+    if (outcome === "requires_review" && !input.actorIsStaffReviewer) {
       throw new RefundError(
         "POLICY_REVIEW",
         "This refund needs staff review",
@@ -123,8 +125,23 @@ export async function refundBookingPayment(input: {
   }
   const paymentIntentId = snapshot.payment.stripePaymentIntentId
 
-  const refundId = crypto.randomUUID()
-  const idempotencyKey = `refund:${refundId}`
+  const idempotencyKey = input.idempotencyKey?.trim()
+    ? `refund:${input.idempotencyKey.trim()}`
+    : `refund:${snapshot.payment.id}:${snapshot.amountCents}:${snapshot.refundSeq}`
+  const [existingRefund] = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({
+        id: main.bookingRefunds.id,
+        status: main.bookingRefunds.status,
+      })
+      .from(main.bookingRefunds)
+      .where(eq(main.bookingRefunds.idempotencyKey, idempotencyKey))
+      .limit(1)
+  )
+  if (existingRefund?.status === "succeeded") {
+    return { refundId: existingRefund.id, status: "succeeded" }
+  }
+  const refundId = existingRefund?.id ?? crypto.randomUUID()
   const reversalId = snapshot.payout?.stripeTransferId
     ? crypto.randomUUID()
     : null
@@ -136,7 +153,7 @@ export async function refundBookingPayment(input: {
         reversedToDate: snapshot.payout.reversedCents,
       })
     : 0
-  const creditNote = experimentalCreditNoteAllocation(
+  const creditNote = creditNoteAllocation(
     {
       bookingGross: snapshot.payment.amountCents,
       platformFeeGross: snapshot.payment.applicationFeeCents,
@@ -154,42 +171,49 @@ export async function refundBookingPayment(input: {
     snapshot.payment.refundedCents
   )
 
-  await withAudit(
-    { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
-    async (tx, ctx) => {
-      await tx.insert(main.bookingRefunds).values({
-        id: refundId,
-        orgId: snapshot.payment.orgId,
-        bookingPaymentId: input.bookingPaymentId,
-        amountCents: snapshot.amountCents,
-        status: "pending",
-        reason: input.reason,
-        refundSeq: snapshot.refundSeq,
-        idempotencyKey,
-      })
-      if (reversalId && snapshot.payout && reversalCents > 0) {
-        await tx.insert(main.transferReversals).values({
-          id: reversalId,
-          orgId: snapshot.payment.orgId,
-          payoutStateId: snapshot.payout.id,
-          refundId,
-          bookingPaymentId: input.bookingPaymentId,
-          amountCents: reversalCents,
-          status: "pending",
+  if (!existingRefund) {
+    await withAudit(
+      { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
+      async (tx, ctx) => {
+        await tx
+          .insert(main.bookingRefunds)
+          .values({
+            id: refundId,
+            orgId: snapshot.payment.orgId,
+            bookingPaymentId: input.bookingPaymentId,
+            amountCents: snapshot.amountCents,
+            status: "pending",
+            reason: input.reason,
+            refundSeq: snapshot.refundSeq,
+            idempotencyKey,
+          })
+          .onConflictDoNothing({
+            target: main.bookingRefunds.idempotencyKey,
+          })
+        if (reversalId && snapshot.payout && reversalCents > 0) {
+          await tx.insert(main.transferReversals).values({
+            id: reversalId,
+            orgId: snapshot.payment.orgId,
+            payoutStateId: snapshot.payout.id,
+            refundId,
+            bookingPaymentId: input.bookingPaymentId,
+            amountCents: reversalCents,
+            status: "pending",
+          })
+        }
+        await ctx.emit({
+          entity: "refund",
+          action: "requested",
+          entityId: refundId,
+          payload: {
+            bookingPaymentId: input.bookingPaymentId,
+            amountCents: snapshot.amountCents,
+            refundSeq: snapshot.refundSeq,
+          },
         })
       }
-      await ctx.emit({
-        entity: "refund",
-        action: "requested",
-        entityId: refundId,
-        payload: {
-          bookingPaymentId: input.bookingPaymentId,
-          amountCents: snapshot.amountCents,
-          refundSeq: snapshot.refundSeq,
-        },
-      })
-    }
-  )
+    )
+  }
 
   let stripeRefundId: string
   let refundStatus: "succeeded" | "failed" | "pending" = "pending"
@@ -371,13 +395,14 @@ async function reverseTransferShare(input: {
   )
   if (reversalRow?.status === "succeeded") return
   const reversalRowId = reversalRow?.id ?? crypto.randomUUID()
-  const idempotencyKey = `reversal:${input.refundId}`
+  const reversalAmount = reversalRow?.amountCents ?? input.reversalCents
+  const idempotencyKey = `reversal:${reversalRowId}`
 
   try {
     const reversal = await stripe().transfers.createReversal(
       transferId,
       {
-        amount: input.reversalCents,
+        amount: reversalAmount,
         metadata: {
           reversal_row_id: reversalRowId,
           refund_row_id: input.refundId,

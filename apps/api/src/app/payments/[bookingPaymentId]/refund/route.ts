@@ -95,6 +95,10 @@ export async function POST(
       reason: parsed.data.reason,
       actorUserId: session.user.id,
       actingOrgId,
+      idempotencyKey:
+        request.headers.get("Idempotency-Key")?.trim() ||
+        parsed.data.idempotencyKey,
+      actorIsStaffReviewer: Boolean(staffRefund),
     })
     return secureJson(RefundBookingPaymentResponseSchema.parse(result), {
       status: 200,

@@ -4,7 +4,10 @@ const transferCreate = vi.fn()
 
 vi.mock("./client", () => ({
   stripe: () => ({
-    transfers: { create: (...args: unknown[]) => transferCreate(...args) },
+    transfers: {
+      create: (...args: unknown[]) => transferCreate(...args),
+      list: async () => ({ data: [] }),
+    },
   }),
 }))
 
@@ -117,17 +120,36 @@ describe("executeTransfer idempotency", () => {
     persistAttempts = 0
     persistFailOnce = false
     transferCreate.mockReset()
-    const created = new Map<string, { id: string }>()
+    const created = new Map<
+      string,
+      { id: string; amount: number; destination: string }
+    >()
     transferCreate.mockImplementation(
       async (
-        _params: unknown,
+        params: { amount: number; destination: string },
         opts: { idempotencyKey: string }
       ): Promise<{ id: string }> => {
         const existing = created.get(opts.idempotencyKey)
-        if (existing) return existing
-        const row = { id: "tr_once" }
+        if (existing) {
+          if (
+            existing.amount !== params.amount ||
+            existing.destination !== params.destination
+          ) {
+            const err = Object.assign(
+              new Error("Keys for idempotent requests must be unique"),
+              { code: "idempotency_error" }
+            )
+            throw err
+          }
+          return { id: existing.id }
+        }
+        const row = {
+          id: "tr_once",
+          amount: params.amount,
+          destination: params.destination,
+        }
         created.set(opts.idempotencyKey, row)
-        return row
+        return { id: row.id }
       }
     )
   })

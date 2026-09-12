@@ -390,10 +390,13 @@ export function computeSettlement(input: {
  * Not a finance/legal production sign-off. Callers pass stored settlement
  * amounts; this function does not introduce new commercial rates.
  */
-export function experimentalCreditNoteAllocation(
+export function creditNoteAllocation(
   settlement: SettlementAmounts,
   refundCents: number,
   alreadyRefundedCents = 0
 ): CreditNoteAllocation {
   return allocateProportionally(settlement, refundCents, alreadyRefundedCents)
 }
+
+/** @deprecated Use {@link creditNoteAllocation}. */
+export const experimentalCreditNoteAllocation = creditNoteAllocation

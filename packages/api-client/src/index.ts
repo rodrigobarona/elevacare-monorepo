@@ -912,6 +912,7 @@ export const CreatePaymentIntentResponseSchema = z.object({
 export const RefundBookingPaymentRequestSchema = z.object({
   amountCents: z.number().int().positive().optional(),
   reason: z.string().trim().min(1).max(2000),
+  idempotencyKey: z.string().trim().min(8).max(255).optional(),
 })
 
 export const RefundBookingPaymentResponseSchema = z.object({

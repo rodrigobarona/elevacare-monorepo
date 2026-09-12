@@ -1750,7 +1750,10 @@ async function handleTransferEvent(
       resolvedOrgId: null,
     }
   }
-  const payoutStateId = transfer.metadata?.payout_state_id
+  const rawPayoutStateId = transfer.metadata?.payout_state_id
+  const payoutStateId = z.string().uuid().safeParse(rawPayoutStateId).success
+    ? rawPayoutStateId
+    : null
   if (event.type === "transfer.reversed") {
     await confirmTransferReversed({
       stripeTransferId: transfer.id,

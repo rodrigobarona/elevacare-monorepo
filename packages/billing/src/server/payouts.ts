@@ -24,6 +24,29 @@ import {
   type PayoutStatus,
 } from "./payout-math"
 
+function isStripeIdempotencyError(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false
+  const code = "code" in err ? String(err.code) : ""
+  const type = "type" in err ? String(err.type) : ""
+  return code === "idempotency_error" || type.includes("Idempotency")
+}
+
+async function findTransferIdForPayoutState(input: {
+  payoutStateId: string
+  destination: string
+  transferGroup: string
+}): Promise<string | null> {
+  const page = await stripe().transfers.list({
+    destination: input.destination,
+    transfer_group: input.transferGroup,
+    limit: 100,
+  })
+  const match = page.data.find(
+    (row) => row.metadata?.payout_state_id === input.payoutStateId
+  )
+  return match?.id ?? null
+}
+
 const TRANSFER_MAX_ATTEMPTS = 8
 
 export class PayoutError extends Error {
@@ -239,7 +262,14 @@ export async function applyHold(input: {
         .update(main.payoutStates)
         .set({
           status: "held",
-          holdReasons: next.holdReasons,
+          holdReasons: sql`(
+            SELECT ARRAY(
+              SELECT DISTINCT unnest(
+                COALESCE(${main.payoutStates.holdReasons}, ARRAY[]::text[])
+                || ARRAY[${input.reason}]::text[]
+              )
+            )
+          )`,
           heldFromStatus: next.heldFromStatus,
           updatedAt: new Date(),
         })
@@ -448,7 +478,7 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     return { status: "skipped", stripeTransferId: current.stripeTransferId }
   }
 
-  let transferId: string
+  let transferId: string | null = null
   try {
     const transfer = await stripe().transfers.create(
       {
@@ -466,54 +496,63 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     )
     transferId = transfer.id
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
-    const updated = await withPlatformAudit(
-      { orgId: current.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        const [row] = await tx
-          .update(main.payoutStates)
-          .set({
-            status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
-            attempts: sql`${main.payoutStates.attempts} + 1`,
-            lastError: message.slice(0, 2000),
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(main.payoutStates.id, payoutStateId),
-              eq(main.payoutStates.status, "scheduled")
+    if (isStripeIdempotencyError(err)) {
+      transferId = await findTransferIdForPayoutState({
+        payoutStateId: current.id,
+        destination: current.destinationConnectAccountId,
+        transferGroup: payment.bookingId,
+      })
+    }
+    if (!transferId) {
+      const message = err instanceof Error ? err.message : String(err)
+      const updated = await withPlatformAudit(
+        { orgId: current.orgId, actorUserId: null },
+        async (tx, ctx) => {
+          const [row] = await tx
+            .update(main.payoutStates)
+            .set({
+              status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
+              attempts: sql`${main.payoutStates.attempts} + 1`,
+              lastError: message.slice(0, 2000),
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(main.payoutStates.id, payoutStateId),
+                eq(main.payoutStates.status, "scheduled")
+              )
             )
-          )
-          .returning({
-            attempts: main.payoutStates.attempts,
-            status: main.payoutStates.status,
+            .returning({
+              attempts: main.payoutStates.attempts,
+              status: main.payoutStates.status,
+            })
+          if (row?.status === "failed") {
+            await tx.insert(main.workflowDeadLetters).values({
+              orgId: current.orgId,
+              workflowName: "process-expert-transfers",
+              entityId: current.id,
+              payload: { payoutStateId, lastError: message.slice(0, 500) },
+              attempts: row.attempts,
+              lastError: message.slice(0, 2000),
+            })
+          }
+          await ctx.emit({
+            entity: "payout",
+            action: "failed",
+            entityId: payoutStateId,
+            payload: {
+              attempts: row?.attempts ?? current.attempts + 1,
+              lastError: message.slice(0, 200),
+            },
           })
-        if (row?.status === "failed") {
-          await tx.insert(main.workflowDeadLetters).values({
-            orgId: current.orgId,
-            workflowName: "process-expert-transfers",
-            entityId: current.id,
-            payload: { payoutStateId, lastError: message.slice(0, 500) },
-            attempts: row.attempts,
-            lastError: message.slice(0, 2000),
-          })
+          return row
         }
-        await ctx.emit({
-          entity: "payout",
-          action: "failed",
-          entityId: payoutStateId,
-          payload: {
-            attempts: row?.attempts ?? current.attempts + 1,
-            lastError: message.slice(0, 200),
-          },
-        })
-        return row
+      )
+      void captureException(err, { payoutStateId, probe: "execute-transfer" })
+      return {
+        status: updated?.status === "failed" ? "failed" : "skipped",
+        stripeTransferId: null,
       }
-    )
-    void captureException(err, { payoutStateId, probe: "execute-transfer" })
-    return {
-      status: updated?.status === "failed" ? "failed" : "skipped",
-      stripeTransferId: null,
     }
   }
 
@@ -698,7 +737,10 @@ export async function listTransferIdsForStripePayout(
 ): Promise<string[]> {
   const ids = new Set<string>()
   let startingAfter: string | undefined
+  let pages = 0
+  const maxPages = 5
   for (;;) {
+    pages += 1
     const page = await stripe().balanceTransactions.list(
       {
         payout: stripePayoutId,
@@ -716,7 +758,15 @@ export async function listTransferIdsForStripePayout(
             : null
       if (source?.startsWith("tr_")) ids.add(source)
     }
-    if (!page.has_more || page.data.length === 0) break
+    if (!page.has_more || page.data.length === 0 || pages >= maxPages) {
+      if (page.has_more && pages >= maxPages) {
+        void captureException(new Error("payout transfer listing truncated"), {
+          stripePayoutId,
+          probe: "list-transfer-ids",
+        })
+      }
+      break
+    }
     const lastId = page.data.at(-1)?.id
     if (!lastId || lastId === startingAfter) break
     startingAfter = lastId
