@@ -159,6 +159,7 @@ describe("retryFailedTransferReversals", () => {
     )
     listReversals.mockImplementation(async () => ({
       data: [...stripeReversals],
+      has_more: false,
     }))
   })
 
@@ -175,6 +176,39 @@ describe("retryFailedTransferReversals", () => {
     })
     expect(createReversal).not.toHaveBeenCalled()
     expect(listReversals).toHaveBeenCalledWith("tr_test", { limit: 100 })
+  })
+
+  it("walks later listReversals pages before creating", async () => {
+    listReversals
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "trr_other",
+            metadata: { refund_row_id: "other" },
+          },
+        ],
+        has_more: true,
+      })
+      .mockResolvedValueOnce({
+        data: [
+          {
+            id: "trr_page_two",
+            metadata: {
+              reversal_row_id: reversalRowId,
+              refund_row_id: refundId,
+            },
+          },
+        ],
+        has_more: false,
+      })
+    await expect(retryFailedTransferReversals()).resolves.toEqual({
+      retried: 1,
+    })
+    expect(createReversal).not.toHaveBeenCalled()
+    expect(listReversals).toHaveBeenNthCalledWith(2, "tr_test", {
+      limit: 100,
+      starting_after: "trr_other",
+    })
   })
 
   it("does not create a second reversal after a lost persist once Stripe already reversed", async () => {

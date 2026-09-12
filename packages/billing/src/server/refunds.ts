@@ -413,17 +413,25 @@ async function findExistingStripeReversal(input: {
   reversalRowId: string
   refundId: string
 }): Promise<{ id: string } | null> {
-  const page = await stripe().transfers.listReversals(input.transferId, {
-    limit: 100,
-  })
-  const match = page.data.find((row) => {
-    const meta = row.metadata ?? {}
-    return (
-      meta.reversal_row_id === input.reversalRowId ||
-      meta.refund_row_id === input.refundId
-    )
-  })
-  return match ? { id: match.id } : null
+  let startingAfter: string | undefined
+  for (;;) {
+    const page = await stripe().transfers.listReversals(input.transferId, {
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+    const match = page.data.find((row) => {
+      const meta = row.metadata ?? {}
+      return (
+        meta.reversal_row_id === input.reversalRowId ||
+        meta.refund_row_id === input.refundId
+      )
+    })
+    if (match) return { id: match.id }
+    if (!page.has_more || page.data.length === 0) return null
+    const lastId = page.data[page.data.length - 1]?.id
+    if (!lastId) return null
+    startingAfter = lastId
+  }
 }
 
 async function reverseTransferShare(input: {
