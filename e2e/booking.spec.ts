@@ -28,9 +28,7 @@ async function seededBookableOffer(): Promise<{
   if (profile.status === 404) return null
   skipUnlessPageOk(profile.status, "seeded offer lookup")
   const expert = (await profile.json()) as PublicExpert
-  const eventType =
-    expert.eventTypes.find((item) => item.slug === PAID_OFFER) ??
-    expert.eventTypes.find((item) => item.modes.length > 0)
+  const eventType = expert.eventTypes.find((item) => item.slug === PAID_OFFER)
   const modeId = eventType?.modes[0]?.id
   if (!eventType || !modeId) return null
   return { username: expert.username, slug: eventType.slug, modeId }

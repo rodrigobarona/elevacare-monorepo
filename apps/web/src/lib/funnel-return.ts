@@ -166,8 +166,9 @@ export function takeFunnelRestore(
 export function saveFunnelReturn(snapshot: FunnelReturnSnapshot): void {
   restoreMemo = null
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+    sessionStorage.removeItem(STORAGE_KEY)
     sessionStorage.removeItem(REDIRECT_KEY)
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
   } catch {
     // Private mode or quota — redirect restore will simply fail closed.
   }

@@ -24,6 +24,7 @@ describe("isLocalPublicRateLimitExempt", () => {
   it("skips loopback and unknown SSR keys only when the local flag is set", () => {
     delete process.env.VERCEL
     delete process.env.VERCEL_ENV
+    process.env.NODE_ENV = "test"
     process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = "1"
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(true)
     expect(isLocalPublicRateLimitExempt("ip:::1")).toBe(true)
