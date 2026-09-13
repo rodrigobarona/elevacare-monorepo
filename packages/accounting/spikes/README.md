@@ -26,10 +26,10 @@ Required env (see root `.env.example`):
 | `TOCONLINE_SERIES_PREFIX`                         | Must start with `TEST-` (example `TEST-ELEVA-FEE`)                             |
 
 Official docs (https://api-docs.toconline.pt/autenticacao-detalhada) treat
-`API_URL` and `OAUTH_URL` as **credentials issued per company**, not literals
-to copy from historical notes. Verify hostnames against that page and the
-Dados API screen during the spike; never hardcode them into
-`packages/accounting/src`.
+`API_URL` and `OAUTH_URL` as **credentials issued per company**. Eleva's
+current Dados API snapshot is `api33.toconline.pt` (API) and
+`app33.toconline.pt/oauth` (OAuth). Put those values in env; never paste them
+into `packages/accounting/src`.
 
 ## What this scaffold does not do
 

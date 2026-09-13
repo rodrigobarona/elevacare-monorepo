@@ -19,21 +19,23 @@
 | ----------- | ---------------------------- | ---------------------------------- |
 | Production  | `https://api33.toconline.pt` | `https://app33.toconline.pt/oauth` |
 
-> **Warning**: older internal docs reference `api.toconline.pt` — that is incorrect.
-> The correct production host is `api33.toconline.pt`.
+> **Warning**: older internal docs reference `api.toconline.pt` — that is
+> incorrect. Eleva's **current** Dados API snapshot is `api33.toconline.pt` /
+> `app33.toconline.pt/oauth`. Treat those as env values, not source literals.
 
 ## Authentication — OAuth 2.0 Authorization Code + PKCE
 
 TOConline uses **Authorization Code** flow with PKCE (S256), not client credentials.
+Hostnames come from `{TOCONLINE_OAUTH_BASE_URL}` (alias `TOCONLINE_OAUTH_URL`).
 
 ### Flow
 
 ```
 1. Redirect user to:
-   https://app33.toconline.pt/oauth/auth
+   {TOCONLINE_OAUTH_BASE_URL}/auth
      ?response_type=code
      &client_id={TOCONLINE_CLIENT_ID}
-     &redirect_uri={TOCONLINE_REDIRECT_URI}
+     &redirect_uri={TOCONLINE_OAUTH_REDIRECT}
      &scope=commercial
      &code_challenge={challenge}
      &code_challenge_method=S256
@@ -41,28 +43,30 @@ TOConline uses **Authorization Code** flow with PKCE (S256), not client credenti
 2. User authorizes → callback receives ?code=...
 
 3. Exchange code for token:
-   POST https://app33.toconline.pt/oauth/token
+   POST {TOCONLINE_OAUTH_BASE_URL}/token
+   Authorization: Basic base64(client_id:client_secret)  # official docs
    Content-Type: application/x-www-form-urlencoded
 
    grant_type=authorization_code
    &code={code}
-   &redirect_uri={TOCONLINE_REDIRECT_URI}
-   &client_id={TOCONLINE_CLIENT_ID}
-   &client_secret={TOCONLINE_CLIENT_SECRET}
+   &redirect_uri={TOCONLINE_OAUTH_REDIRECT}
    &code_verifier={verifier}
+
+   Historical Eleva adapter also sent client_id / client_secret in the body.
+   Confirm which TOConline accepts during the TEST- series run.
 
 4. Response: { access_token, refresh_token, expires_in, token_type }
 ```
 
 ### Key details
 
-| Parameter            | Value                           |
-| -------------------- | ------------------------------- |
-| Grant type           | `authorization_code`            |
-| Scope                | `commercial`                    |
-| PKCE challenge       | S256                            |
-| Client auth location | Request body (not Basic header) |
-| Token delivery       | Bearer header                   |
+| Parameter            | Value                                                       |
+| -------------------- | ----------------------------------------------------------- |
+| Grant type           | `authorization_code`                                        |
+| Scope                | `commercial`                                                |
+| PKCE challenge       | S256                                                        |
+| Client auth location | Official docs: HTTP Basic; historical adapter: request body |
+| Token delivery       | Bearer header                                               |
 
 ### Request headers (all authenticated calls)
 
