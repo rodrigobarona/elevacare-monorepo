@@ -22,18 +22,19 @@ Dados API (https://api-docs.toconline.pt/autenticacao-detalhada).
 Verified 2026-09-13 against https://api-docs.toconline.pt/llms.txt and
 https://api-docs.toconline.pt/autenticacao-detalhada:
 
-| Item                      | What the official docs say                                                                                                   |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `API_URL` / `OAUTH_URL`   | Issued **per company** on Dados API, not published as a global hostname                                                      |
-| OAuth                     | Authorization Code; `GET {OAUTH_URL}/auth` (`scope=commercial`); `POST {OAUTH_URL}/token` with HTTP Basic `client_id:secret` |
-| Access token TTL          | `expires_in` (example 14400 s ≈ 4 h); refresh grant `grant_type=refresh_token`                                               |
-| Default Postman redirect  | `https://oauth.pstmn.io/v1/callback`                                                                                         |
-| Authenticated API headers | `Authorization: Bearer`, `Content-Type: application/vnd.api+json`, `Accept: application/json`                                |
+| Item                                                                             | What the official docs say                                                                                                   |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `API_URL` / `OAUTH_URL`                                                          | Issued **per company** on Dados API, not published as a global hostname                                                      |
+| OAuth                                                                            | Authorization Code; `GET {OAUTH_URL}/auth` (`scope=commercial`); `POST {OAUTH_URL}/token` with HTTP Basic `client_id:secret` |
+| Access token TTL                                                                 | `expires_in` (example 14400 s ≈ 4 h); refresh grant `grant_type=refresh_token`                                               |
+| Default Postman redirect                                                         | `https://oauth.pstmn.io/v1/callback`                                                                                         |
+| v1 sales / purchase / receipt / payment headers                                  | `Authorization: Bearer`, `Content-Type: application/json`, `Accept: application/json`                                        |
+| Legacy JSON:API headers (customer, supplier, address, contact, product, service) | `Authorization: Bearer`, `Content-Type: application/vnd.api+json`, `Accept: application/json`                                |
 
 Historical internal table (`docs/eleva-v3/toconline-api-reference.md`) lists
-`https://api33.toconline.pt` and `https://app33.toconline.pt/oauth`. Those
-match the **current Eleva env values**, but 07.1 must read
-`TOCONLINE_API_BASE_URL` / `TOCONLINE_OAUTH_BASE_URL` from env (aliases
+`https://api33.toconline.pt` and `https://app33.toconline.pt/oauth` as a
+**historical snapshot only**. 07.1 must read `TOCONLINE_API_BASE_URL` /
+`TOCONLINE_OAUTH_BASE_URL` from the per-company Dados API credential (aliases
 `TOCONLINE_API_URL` / `TOCONLINE_OAUTH_URL`) and never paste those hosts into
 `packages/accounting/src`.
 

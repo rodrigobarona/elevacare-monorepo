@@ -15,13 +15,18 @@
 
 ## Base URLs
 
-| Environment | API base                     | OAuth base                         |
-| ----------- | ---------------------------- | ---------------------------------- |
-| Production  | `https://api33.toconline.pt` | `https://app33.toconline.pt/oauth` |
+Current hosts come from the per-company Dados API credential
+(`TOCONLINE_API_BASE_URL` / `TOCONLINE_OAUTH_BASE_URL`). Do not copy the
+row below into env or source.
 
-> **Warning**: older internal docs reference `api.toconline.pt` — that is
-> incorrect. Eleva's **current** Dados API snapshot is `api33.toconline.pt` /
-> `app33.toconline.pt/oauth`. Treat those as env values, not source literals.
+| Environment         | API base                     | OAuth base                         |
+| ------------------- | ---------------------------- | ---------------------------------- |
+| Historical snapshot | `https://api33.toconline.pt` | `https://app33.toconline.pt/oauth` |
+
+> **Warning**: `api33.toconline.pt` and `app33.toconline.pt/oauth` are a
+> **historical Eleva snapshot**, not hosts to copy as current. Configure the
+> per-company `API_URL` / `OAUTH_URL` from Empresa → Configurações → Dados API.
+> Older notes that used `api.toconline.pt` are also incorrect.
 
 ## Authentication — OAuth 2.0 Authorization Code + PKCE
 
