@@ -54,6 +54,26 @@ export const RATE_LIMITS = {
 } as const satisfies Record<string, RateLimitConfig>
 
 /**
+ * Local `pnpm dev` / Playwright on loopback share one public 10/min bucket.
+ * Requires `ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT=1`. Absence of Vercel env
+ * is not enough — self-hosted production must keep the cap.
+ * `ip:unknown` is the SSR fetch with no X-Forwarded-For.
+ */
+export function isLocalPublicRateLimitExempt(identifier: string): boolean {
+  if (process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT !== "1") return false
+  if (process.env.VERCEL || process.env.NODE_ENV === "production") return false
+  if (process.env.VERCEL_ENV === "production") return false
+  const host = identifier.replace(/^ip:/i, "").toLowerCase()
+  return (
+    host === "127.0.0.1" ||
+    host === "::1" ||
+    host === "localhost" ||
+    host === "unknown" ||
+    host === "::ffff:127.0.0.1"
+  )
+}
+
+/**
  * Apply rate limiting. Returns null if allowed, or a Response if blocked.
  * Gracefully degrades (allows request) if Redis is unavailable.
  * Pass `routeHeaders` to merge CORS/security headers into the 429 response.
@@ -63,6 +83,13 @@ export async function applyRateLimit(
   config: RateLimitConfig,
   routeHeaders?: HeadersInit
 ): Promise<Response | null> {
+  if (
+    config.prefix === RATE_LIMITS.public.prefix &&
+    isLocalPublicRateLimitExempt(identifier)
+  ) {
+    return null
+  }
+
   const limiter = getLimiter(config.prefix, config.maxRequests, config.windowMs)
   if (!limiter) return null
 

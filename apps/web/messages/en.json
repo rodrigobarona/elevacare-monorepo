@@ -107,6 +107,7 @@
     "description": "See offers and upcoming availability for {name} on Eleva.care.",
     "upcoming": "Upcoming availability",
     "noSlots": "No upcoming slots in the next two weeks.",
+    "rateLimited": "Too many requests just now. Wait a minute and try again.",
     "offers": "Offers",
     "offerMeta": "{duration} min · from {price} · {modes}",
     "book": "Choose a time",
@@ -257,7 +258,8 @@
       "consentsRequired": "Please confirm the three notices to continue.",
       "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
-      "generic": "We could not hold that time. Please try again."
+      "generic": "We could not hold that time. Please try again.",
+      "rateLimited": "Too many requests just now. Wait a minute and try again."
     }
   },
   "footer": {

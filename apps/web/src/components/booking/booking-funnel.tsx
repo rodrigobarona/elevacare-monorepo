@@ -1,6 +1,13 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { useTranslations } from "next-intl"
 import {
   ApiClientError,
@@ -39,9 +46,12 @@ import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,
   clearFunnelReturn,
-  loadFunnelReturn,
-  parseRedirectStatus,
+  confirmLockKey,
+  consumeFunnelRestore,
+  releaseConfirmLock,
   saveFunnelReturn,
+  takeFunnelRestore,
+  tryAcquireConfirmLock,
 } from "@/lib/funnel-return"
 import {
   initialFunnelLanguage,
@@ -202,7 +212,8 @@ export function BookingFunnel({
 
   const confirmPaidHold = useCallback(
     async (hold: Reservation, paid: Payment) => {
-      if (confirmInFlight.current) return
+      const lockKey = confirmLockKey(hold.reservationId, paid.paymentIntentId)
+      if (confirmInFlight.current || !tryAcquireConfirmLock(lockKey)) return
       confirmInFlight.current = true
       setConfirmState("pending")
       setFormError(null)
@@ -215,7 +226,9 @@ export function BookingFunnel({
         })
         setPayment({ ...paid, bookingId: result.bookingId })
         setConfirmState("confirmed")
+        clearFunnelReturn()
       } catch (error) {
+        releaseConfirmLock(lockKey)
         if (error instanceof ApiClientError) {
           setFormError(mapConfirmError(error.body?.error))
         } else {
@@ -235,44 +248,42 @@ export function BookingFunnel({
     return () => window.clearInterval(id)
   }, [reservation])
 
-  useEffect(() => {
-    const id = window.setTimeout(() => {
-      const status = parseRedirectStatus(window.location.search)
-      if (!status) return
-      const snapshot = loadFunnelReturn({
-        allowExpired: status === "succeeded" || status === "processing",
-      })
-      if (!snapshot) return
-      setReservation(snapshot.reservation)
-      setPayment(snapshot.payment)
-      setSlot(snapshot.slot)
-      setModeId(snapshot.modeId)
-      setName(snapshot.name)
-      setEmail(snapshot.email)
-      setPhone(snapshot.phone)
-      setTimeZone(resolvedTimeZone(snapshot.timeZone))
-      setCountry(snapshot.country)
-      if (
-        snapshot.language === "en" ||
-        snapshot.language === "pt" ||
-        snapshot.language === "es"
-      ) {
-        setLanguage(snapshot.language)
-      }
-      if (status === "succeeded") {
-        setStep("done")
-        void confirmPaidHold(snapshot.reservation, snapshot.payment)
-      } else if (status === "processing") {
-        setConfirmState("pending")
-        setStep("done")
-      } else {
-        setFormError("generic")
-        setStep("pay")
-      }
-      clearFunnelReturn()
-      window.history.replaceState({}, "", bookingReturnUrl())
-    }, 0)
-    return () => window.clearTimeout(id)
+  // Layout effect so Stripe query params are read before next-intl / App
+  // Router client navigations can strip search (setTimeout(0) was too late).
+  // Module memo in takeFunnelRestore survives Strict Mode remounts.
+  useLayoutEffect(() => {
+    const restored = takeFunnelRestore()
+    if (!restored) return
+    const { status, snapshot } = restored
+    setReservation(snapshot.reservation)
+    setPayment(snapshot.payment)
+    setSlot(snapshot.slot)
+    setModeId(snapshot.modeId)
+    setName(snapshot.name)
+    setEmail(snapshot.email)
+    setPhone(snapshot.phone)
+    setTimeZone(resolvedTimeZone(snapshot.timeZone))
+    setCountry(snapshot.country)
+    if (
+      snapshot.language === "en" ||
+      snapshot.language === "pt" ||
+      snapshot.language === "es"
+    ) {
+      setLanguage(snapshot.language)
+    }
+    if (status === "succeeded") {
+      setStep("done")
+      void confirmPaidHold(snapshot.reservation, snapshot.payment)
+    } else if (status === "processing") {
+      consumeFunnelRestore()
+      setConfirmState("pending")
+      setStep("done")
+    } else {
+      consumeFunnelRestore()
+      setFormError("generic")
+      setStep("pay")
+    }
+    window.history.replaceState({}, "", bookingReturnUrl())
   }, [confirmPaidHold])
 
   const holdExpired =

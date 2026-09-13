@@ -21,6 +21,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   /**
    * The gateway owns trailing-slash policy for the entire domain.
    *

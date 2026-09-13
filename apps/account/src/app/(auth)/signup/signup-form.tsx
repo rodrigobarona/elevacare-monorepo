@@ -1,9 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 import { useTranslations } from "next-intl"
 import { authClient } from "@eleva/auth/client"
-import { Button, LinkButton } from "@eleva/ui/components/button"
+import { LinkButton } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { cn } from "@eleva/ui/lib/utils"
 import {
   Card,
   CardContent,
@@ -25,8 +27,7 @@ export function SignupForm() {
   const [pending, setPending] = useState(false)
   const [sent, setSent] = useState(false)
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function submitSignup() {
     if (!consent) {
       setError(t("consentRequired"))
       return
@@ -45,6 +46,11 @@ export function SignupForm() {
       return
     }
     setSent(true)
+  }
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault()
+    void submitSignup()
   }
 
   if (sent) {
@@ -134,14 +140,14 @@ export function SignupForm() {
               {error}
             </p>
           ) : null}
-          <Button
+          <button
             type="submit"
-            className="w-full"
-            isDisabled={pending}
+            className={cn(buttonVariants(), "w-full")}
+            disabled={pending}
             data-testid="signup-submit"
           >
             {t("createAccount")}
-          </Button>
+          </button>
           <p className="text-center text-sm text-muted-foreground">
             {t("hasAccount")}{" "}
             <LinkButton href="/login" variant="link" className="h-auto p-0">

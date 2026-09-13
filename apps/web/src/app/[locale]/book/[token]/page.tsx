@@ -3,10 +3,11 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { BookingFunnel } from "@/components/booking/booking-funnel"
 import { BookingLayout } from "@/components/booking/booking-layout"
+import { PublicRateLimited } from "@/components/public-rate-limited"
 import { funnelConsentDocs } from "@/lib/booking-consents"
 import { readBookingGeo } from "@/lib/booking-geo"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
-import { createPublicApiClient } from "@/lib/public-api"
+import { getPublicBookingLink, isRateLimitedApiError } from "@/lib/public-api"
 
 type Props = {
   params: Promise<{ locale: string; token: string }>
@@ -18,8 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { robots: { index: false, follow: false } }
   }
   try {
-    const api = createPublicApiClient()
-    const link = await api.public.getBookingLink(token)
+    const link = await getPublicBookingLink(token)
     const t = await getTranslations({ locale, namespace: "booking" })
     return {
       title: t("meta.linkTitle", {
@@ -44,9 +44,12 @@ export default async function PrivateBookingPage({ params }: Props) {
 
   let link
   try {
-    const api = createPublicApiClient()
-    link = await api.public.getBookingLink(token)
-  } catch {
+    link = await getPublicBookingLink(token)
+  } catch (error) {
+    if (isRateLimitedApiError(error)) {
+      const t = await getTranslations("booking")
+      return <PublicRateLimited message={t("errors.rateLimited")} />
+    }
     notFound()
   }
 
