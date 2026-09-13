@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { cn } from "@eleva/ui/lib/utils"
 import {
   Card,
   CardContent,
@@ -32,8 +34,7 @@ export function LoginForm() {
 
   const next = callbackUrl(returnTo)
 
-  async function onPassword(e: React.FormEvent) {
-    e.preventDefault()
+  async function submitPassword() {
     setPending(true)
     setError(null)
     try {
@@ -56,6 +57,11 @@ export function LoginForm() {
       return
     }
     window.location.assign(next)
+  }
+
+  function onPassword(e: FormEvent) {
+    e.preventDefault()
+    void submitPassword()
   }
 
   async function onMagic() {
@@ -142,14 +148,14 @@ export function LoginForm() {
               {t("magicSent")}
             </p>
           ) : null}
-          <Button
+          <button
             type="submit"
-            className="w-full"
-            isDisabled={pending}
+            className={cn(buttonVariants(), "w-full")}
+            disabled={pending}
             data-testid="login-submit"
           >
             {t("signIn")}
-          </Button>
+          </button>
           <p className="text-center text-sm">
             <LinkButton
               href="/reset-password"

@@ -131,6 +131,11 @@ export async function publishPendingDomainEvents(input: {
       result.succeeded += 1
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err)
+      console.error("[domain-events] subscriber failed", {
+        subscriberId: delivery.subscriberId,
+        eventId: delivery.eventId,
+        message,
+      })
       const dead = delivery.attempts >= maxAttempts
       await markDeliveryFailed(delivery.id, message, dead)
       if (dead) result.dead += 1

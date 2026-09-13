@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { PAID_EXPERT } from "./helpers/local"
+import { PAID_EXPERT, PAID_OFFER } from "./helpers/local"
 
 const apiUrl = process.env.E2E_API_URL ?? "http://127.0.0.1:3002"
 
@@ -9,38 +9,40 @@ type PublicExpert = {
   eventTypes: Array<{ slug: string; modes: Array<{ id: string }> }>
 }
 
-async function firstBookableExpert(): Promise<PublicExpert | null> {
-  let list: Response
-  try {
-    list = await fetch(`${apiUrl}/public/experts`)
-  } catch {
+async function seededBookableOffer(): Promise<{
+  username: string
+  slug: string
+  modeId: string
+} | null> {
+  // e2e-smoke starts API without DATABASE_URL; public lookups 500.
+  if (process.env.CI && !process.env.DATABASE_URL) {
     return null
   }
-  if (!list.ok) return null
-  const body = (await list.json()) as {
-    experts?: Array<{ username: string; displayName: string }>
+
+  let profile: Response
+  try {
+    profile = await fetch(
+      `${apiUrl}/public/experts/${encodeURIComponent(PAID_EXPERT)}`
+    )
+  } catch {
+    if (process.env.CI) {
+      throw new Error("seeded offer lookup: API unreachable")
+    }
+    return null
   }
-  const cards = body.experts ?? []
-  const ordered = [
-    ...cards.filter((card) => card.username === PAID_EXPERT),
-    ...cards.filter(
-      (card) => card.username !== PAID_EXPERT && card.username !== "anaquick"
-    ),
-  ]
-  for (const card of ordered) {
-    let profile: Response
-    try {
-      profile = await fetch(
-        `${apiUrl}/public/experts/${encodeURIComponent(card.username)}`
-      )
-    } catch {
-      continue
-    }
-    if (!profile.ok) continue
-    const expert = (await profile.json()) as PublicExpert
-    if (expert.eventTypes.some((eventType) => eventType.modes.length > 0)) {
-      return expert
-    }
+
+  const expert =
+    profile.status === 200 ? ((await profile.json()) as PublicExpert) : null
+  const eventType = expert?.eventTypes.find((item) => item.slug === PAID_OFFER)
+  const modeId = eventType?.modes[0]?.id
+  if (expert && eventType && modeId) {
+    return { username: expert.username, slug: eventType.slug, modeId }
+  }
+
+  if (process.env.CI) {
+    throw new Error(
+      `seeded offer lookup: expected fisiomota / first-visit (HTTP ${profile.status})`
+    )
   }
   return null
 }
@@ -94,6 +96,16 @@ async function mockFunnelApis(page: Page, username: string, slug: string) {
   return { username, slug }
 }
 
+function skipUnlessPageOk(
+  status: number | undefined,
+  label: string
+): asserts status is number {
+  if (status === 429 && !process.env.CI) {
+    test.skip(true, `${label}: public rate limit (10/min)`)
+  }
+  expect(status, label).toBe(200)
+}
+
 test.describe("booking funnel", () => {
   test("unknown private link is not found", async ({ page }) => {
     const response = await page.goto("/book/this-token-does-not-exist-at-all")
@@ -103,18 +115,12 @@ test.describe("booking funnel", () => {
   test("walks meet → when → details when a published offer exists", async ({
     page,
   }) => {
-    const expert = await firstBookableExpert()
-    test.skip(!expert, "needs a published marketplace expert from the API")
+    const offer = await seededBookableOffer()
+    test.skip(!offer, "needs seeded fisiomota / first-visit from db:seed:demo")
 
-    const eventType = expert!.eventTypes.find((item) => item.modes.length > 0)
-    if (!eventType) {
-      test.skip(true, "expert has no bookable modes")
-      return
-    }
-
-    await mockFunnelApis(page, expert!.username, eventType.slug)
-    const response = await page.goto(`/${expert!.username}/${eventType.slug}`)
-    expect(response?.status()).toBe(200)
+    await mockFunnelApis(page, offer!.username, offer!.slug)
+    const response = await page.goto(`/${offer!.username}/${offer!.slug}`)
+    skipUnlessPageOk(response?.status(), "offer page")
 
     const heading = page.getByRole("heading", { level: 1 })
     await expect(heading).toBeVisible()
@@ -137,22 +143,15 @@ test.describe("booking funnel", () => {
   })
 
   test("confirms a paid hold after Stripe redirect", async ({ page }) => {
-    const expert = await firstBookableExpert()
-    test.skip(!expert, "needs a published marketplace expert from the API")
-
-    const eventType = expert!.eventTypes.find((item) => item.modes.length > 0)
-    const modeId = eventType?.modes[0]?.id
-    if (!eventType || !modeId) {
-      test.skip(true, "expert has no bookable modes")
-      return
-    }
+    const offer = await seededBookableOffer()
+    test.skip(!offer, "needs seeded fisiomota / first-visit from db:seed:demo")
 
     const start = new Date()
     start.setUTCDate(start.getUTCDate() + 2)
     start.setUTCHours(10, 0, 0, 0)
     const end = new Date(start.getTime() + 60 * 60 * 1000)
     const confirmBodies: unknown[] = []
-    await mockFunnelApis(page, expert!.username, eventType.slug)
+    await mockFunnelApis(page, offer!.username, offer!.slug)
 
     await page.route("**/bookings/confirm", async (route) => {
       confirmBodies.push(await route.request().postDataJSON())
@@ -168,6 +167,13 @@ test.describe("booking funnel", () => {
     await page.addInitScript(
       (snapshot) => {
         sessionStorage.setItem("bookingFunnel:v1", JSON.stringify(snapshot))
+        sessionStorage.setItem(
+          "bookingFunnel:redirect",
+          JSON.stringify({
+            status: "succeeded",
+            paymentIntentId: snapshot.payment.paymentIntentId,
+          })
+        )
       },
       {
         reservation: {
@@ -187,7 +193,7 @@ test.describe("booking funnel", () => {
           startLocal: "10:00",
           endLocal: "11:00",
         },
-        modeId,
+        modeId: offer!.modeId,
         name: "E2E Member",
         email: "member@example.com",
         phone: "",
@@ -197,9 +203,10 @@ test.describe("booking funnel", () => {
       }
     )
 
-    await page.goto(
-      `/${expert!.username}/${eventType.slug}?redirect_status=succeeded`
+    const response = await page.goto(
+      `/${offer!.username}/${offer!.slug}?redirect_status=succeeded&payment_intent=pi_e2e_intent`
     )
+    skipUnlessPageOk(response?.status(), "redirect restore page")
     await expect(page.getByTestId("booking-done-heading")).toHaveAttribute(
       "data-state",
       "confirmed",

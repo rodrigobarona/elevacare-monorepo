@@ -14,14 +14,19 @@ export function defaultDomainEventSubscribers(): Record<
 > {
   return {
     "guest-activation": async (event) => {
-      await activateGuestBooking({
-        orgId: event.orgId,
-        bookingId: requiredString(event.payload.bookingId, "bookingId"),
-        reservationId: requiredString(
-          event.payload.reservationId,
-          "reservationId"
-        ),
-      })
+      try {
+        await activateGuestBooking({
+          orgId: event.orgId,
+          bookingId: requiredString(event.payload.bookingId, "bookingId"),
+          reservationId: requiredString(
+            event.payload.reservationId,
+            "reservationId"
+          ),
+        })
+      } catch (err) {
+        console.error("[guest-activation] subscriber failed", event.id, err)
+        throw err
+      }
     },
   }
 }

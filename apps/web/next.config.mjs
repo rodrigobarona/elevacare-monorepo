@@ -1,5 +1,8 @@
 import createNextIntlPlugin from "next-intl/plugin"
-import { resolveGatewayStaticAssetRewrites } from "@eleva/config/next-dev"
+import {
+  resolveAllowedDevOrigins,
+  resolveGatewayStaticAssetRewrites,
+} from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
@@ -21,6 +24,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins: resolveAllowedDevOrigins(),
   /**
    * The gateway owns trailing-slash policy for the entire domain.
    *

@@ -27,6 +27,7 @@ import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
+import { magicLinkServerHeaders } from "./magic-link-headers"
 
 function requireSecret(): string {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -371,6 +372,7 @@ export interface AuthApi {
   generateOpenAPISchema?: () => Promise<unknown>
   signInMagicLink: (opts: {
     body: { email: string; callbackURL: string }
+    headers?: Headers
   }) => Promise<unknown>
 }
 
@@ -392,6 +394,7 @@ export async function requestMagicLinkSignIn(input: {
 }): Promise<void> {
   const result = await getAuthApi().signInMagicLink({
     body: { email: input.email, callbackURL: input.callbackURL },
+    headers: magicLinkServerHeaders(),
   })
   if (
     result &&

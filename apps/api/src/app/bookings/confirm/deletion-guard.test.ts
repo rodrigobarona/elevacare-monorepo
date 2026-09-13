@@ -12,7 +12,12 @@ vi.mock("@eleva/billing/server", () => ({
 }))
 
 vi.mock("@eleva/workflows/domain-events", () => ({
-  publishPendingDomainEvents: vi.fn(async () => undefined),
+  publishPendingDomainEvents: vi.fn(async () => ({
+    claimed: 0,
+    succeeded: 0,
+    failed: 0,
+    dead: 0,
+  })),
 }))
 
 vi.mock("@eleva/workflows/subscribers", () => ({

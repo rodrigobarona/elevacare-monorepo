@@ -1,5 +1,6 @@
 import { env } from "node:process"
 import createNextIntlPlugin from "next-intl/plugin"
+import { resolveAllowedDevOrigins } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
 
@@ -15,8 +16,11 @@ if (adminUrl) {
   }
 }
 
+const allowedDevOrigins = resolveAllowedDevOrigins(env)
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  allowedDevOrigins,
   skipTrailingSlashRedirect: true,
   experimental: {
     serverActions: {

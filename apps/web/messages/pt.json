@@ -107,6 +107,7 @@
     "description": "Veja ofertas e disponibilidade de {name} na Eleva.care.",
     "upcoming": "Disponibilidade próxima",
     "noSlots": "Sem horários nas próximas duas semanas.",
+    "rateLimited": "Demasiados pedidos neste momento. Espere um minuto e tente novamente.",
     "offers": "Ofertas",
     "offerMeta": "{duration} min · a partir de {price} · {modes}",
     "book": "Escolher horário",
@@ -257,7 +258,8 @@
       "consentsRequired": "Confirme os três avisos para continuar.",
       "confirmFailed": "O pagamento passou, mas ainda não confirmámos a sessão. Tente novamente.",
       "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
-      "generic": "Não foi possível reservar esse horário. Tente novamente."
+      "generic": "Não foi possível reservar esse horário. Tente novamente.",
+      "rateLimited": "Demasiados pedidos neste momento. Espere um minuto e tente novamente."
     }
   },
   "footer": {

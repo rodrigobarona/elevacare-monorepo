@@ -1,4 +1,8 @@
-const DEFAULT_GATEWAY_DEV_ORIGINS = ["localhost:3000", "127.0.0.1:3000"]
+const LOCAL_APP_PORTS = [
+  ...Array.from({ length: 10 }, (_, index) => 3000 + index),
+  3100,
+  3102,
+]
 const LOCAL_ZONE_ASSET_PREFIXES = {
   app: "/_app",
   account: "/_account",
@@ -27,9 +31,25 @@ export function resolveServerActionAllowedOrigins(env = process.env) {
   return [...origins]
 }
 
+function localDevOrigins() {
+  const origins = new Set(["localhost", "127.0.0.1"])
+  for (const port of LOCAL_APP_PORTS) {
+    origins.add(`localhost:${port}`)
+    origins.add(`127.0.0.1:${port}`)
+  }
+  return origins
+}
+
 export function resolveAllowedDevOrigins(env = process.env) {
-  const origins = new Set(DEFAULT_GATEWAY_DEV_ORIGINS)
+  const origins = localDevOrigins()
   addUrlHosts(origins, env.NEXT_PUBLIC_APP_URL)
+  addUrlHosts(origins, env.APP_URL)
+  addUrlHosts(origins, env.ACCOUNT_URL)
+  addUrlHosts(origins, env.NEXT_PUBLIC_ACCOUNT_URL)
+  addUrlHosts(origins, env.ADMIN_URL)
+  addUrlHosts(origins, env.NEXT_PUBLIC_ADMIN_URL)
+  addUrlHosts(origins, env.API_URL)
+  addUrlHosts(origins, env.NEXT_PUBLIC_API_URL)
   return [...origins]
 }
 

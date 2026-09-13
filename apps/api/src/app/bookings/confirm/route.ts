@@ -6,6 +6,7 @@ import {
 import { retrieveBookingPaymentIntent } from "@eleva/billing/server"
 import { confirmBookingPayment } from "@eleva/scheduling"
 import { publishPendingDomainEvents } from "@eleva/workflows/domain-events"
+import { shouldAwaitDomainEventPublish } from "@eleva/workflows/should-await-domain-event-publish"
 import { defaultDomainEventSubscribers } from "@eleva/workflows/subscribers"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
@@ -23,6 +24,19 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+
+async function kickGuestActivationPublisher(): Promise<void> {
+  try {
+    const result = await publishPendingDomainEvents({
+      subscribers: defaultDomainEventSubscribers(),
+    })
+    if (result.failed > 0 || result.dead > 0) {
+      console.error("[bookings/confirm] publisher deliveries failed", result)
+    }
+  } catch (err) {
+    console.error("[bookings/confirm] publisher kick failed", err)
+  }
+}
 
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
@@ -94,13 +108,11 @@ export async function POST(request: Request) {
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 
-  after(() =>
-    publishPendingDomainEvents({
-      subscribers: defaultDomainEventSubscribers(),
-    }).catch((err) => {
-      console.error("[bookings/confirm] publisher kick failed", err)
-    })
-  )
+  if (shouldAwaitDomainEventPublish()) {
+    await kickGuestActivationPublisher()
+  } else {
+    after(kickGuestActivationPublisher)
+  }
 
   return secureJson(
     ConfirmBookingResponseSchema.parse({

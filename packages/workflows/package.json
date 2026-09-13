@@ -10,6 +10,7 @@
     "./drainers": "./src/drainers/index.ts",
     "./scheduling": "./src/scheduling/index.ts",
     "./domain-events": "./src/domain-events.ts",
+    "./should-await-domain-event-publish": "./src/should-await-domain-event-publish.ts",
     "./subscribers": "./src/subscribers/index.ts",
     "./payments": "./src/payments/index.ts"
   },

@@ -2,9 +2,9 @@ import { Suspense } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
-import { ApiClientError } from "@eleva/api-client"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Link } from "@/i18n/navigation"
@@ -12,7 +12,12 @@ import { formatEur } from "@/lib/format-eur"
 import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { pickLocalizedText } from "@/lib/localized-text"
-import { createPublicApiClient } from "@/lib/public-api"
+import {
+  createPublicApiClient,
+  getPublicExpert,
+  isNotFoundApiError,
+  isRateLimitedApiError,
+} from "@/lib/public-api"
 
 type Props = {
   params: Promise<{ locale: string; username: string }>
@@ -24,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {}
   }
   try {
-    const expert = await createPublicApiClient().public.getExpert(username)
+    const expert = await getPublicExpert(username)
     const t = await getTranslations({ locale, namespace: "profile" })
     const path = `/${expert.username}`
     return {
@@ -53,10 +58,13 @@ export default async function ExpertProfilePage({ params }: Props) {
 
   let expert
   try {
-    expert = await createPublicApiClient().public.getExpert(username)
+    expert = await getPublicExpert(username)
   } catch (error) {
-    if (error instanceof ApiClientError && error.status === 404) {
+    if (isNotFoundApiError(error)) {
       notFound()
+    }
+    if (isRateLimitedApiError(error)) {
+      return <PublicRateLimited message={t("rateLimited")} />
     }
     throw error
   }
