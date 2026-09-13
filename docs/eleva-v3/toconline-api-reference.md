@@ -58,7 +58,7 @@ Hostnames come from `{TOCONLINE_OAUTH_BASE_URL}` (alias `TOCONLINE_OAUTH_URL`).
    &code_verifier={verifier}
 
    Historical Eleva adapter also sent client_id / client_secret in the body.
-   Confirm which TOConline accepts during the TEST- series run.
+   Confirm which TOConline accepts during the TEST series run.
 
 4. Response: { access_token, refresh_token, expires_in, token_type }
 ```

@@ -955,7 +955,7 @@ async function main(): Promise<void> {
   printSummary()
   const failed = checks.some(
     (check) =>
-      check.status === "failed" && ["01", "01c", "04"].includes(check.id)
+      check.status === "failed" && ["01", "01c", "04", "07"].includes(check.id)
   )
   process.exit(failed ? 1 : 0)
 }
