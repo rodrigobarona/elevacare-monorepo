@@ -14,6 +14,11 @@ async function seededBookableOffer(): Promise<{
   slug: string
   modeId: string
 } | null> {
+  // e2e-smoke starts API without DATABASE_URL; public lookups 500.
+  if (process.env.CI && !process.env.DATABASE_URL) {
+    return null
+  }
+
   let profile: Response
   try {
     profile = await fetch(
@@ -25,13 +30,21 @@ async function seededBookableOffer(): Promise<{
     }
     return null
   }
-  if (profile.status === 404) return null
-  skipUnlessPageOk(profile.status, "seeded offer lookup")
-  const expert = (await profile.json()) as PublicExpert
-  const eventType = expert.eventTypes.find((item) => item.slug === PAID_OFFER)
+
+  const expert =
+    profile.status === 200 ? ((await profile.json()) as PublicExpert) : null
+  const eventType = expert?.eventTypes.find((item) => item.slug === PAID_OFFER)
   const modeId = eventType?.modes[0]?.id
-  if (!eventType || !modeId) return null
-  return { username: expert.username, slug: eventType.slug, modeId }
+  if (expert && eventType && modeId) {
+    return { username: expert.username, slug: eventType.slug, modeId }
+  }
+
+  if (process.env.CI) {
+    throw new Error(
+      `seeded offer lookup: expected fisiomota / first-visit (HTTP ${profile.status})`
+    )
+  }
+  return null
 }
 
 async function mockFunnelApis(page: Page, username: string, slug: string) {

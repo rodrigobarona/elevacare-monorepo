@@ -53,22 +53,40 @@ export const RATE_LIMITS = {
   e2eBypass: { prefix: "e2e-verify", maxRequests: 5, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>
 
+function isLoopbackApiOrigin(env: NodeJS.ProcessEnv = process.env): boolean {
+  const raw =
+    env.API_URL ?? env.BETTER_AUTH_URL ?? env.NEXT_PUBLIC_API_URL ?? ""
+  if (!raw) return false
+  try {
+    const host = new URL(raw).hostname.toLowerCase()
+    return (
+      host === "localhost" ||
+      host === "127.0.0.1" ||
+      host === "::1" ||
+      host === "[::1]"
+    )
+  } catch {
+    return false
+  }
+}
+
 /**
  * Local `pnpm dev` / Playwright on loopback share one public 10/min bucket.
  * Requires `ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT=1`. Absence of Vercel env
- * is not enough — self-hosted production must keep the cap.
- * `ip:unknown` is the SSR fetch with no X-Forwarded-For.
+ * is not enough — self-hosted and externally reachable hosts must keep the
+ * cap. `ip:unknown` is local SSR with no X-Forwarded-For and is only
+ * exempt when the API origin itself is loopback.
  */
 export function isLocalPublicRateLimitExempt(identifier: string): boolean {
   if (process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT !== "1") return false
   if (process.env.VERCEL || process.env.NODE_ENV === "production") return false
   if (process.env.VERCEL_ENV === "production") return false
   const host = identifier.replace(/^ip:/i, "").toLowerCase()
+  if (host === "unknown") return isLoopbackApiOrigin()
   return (
     host === "127.0.0.1" ||
     host === "::1" ||
     host === "localhost" ||
-    host === "unknown" ||
     host === "::ffff:127.0.0.1"
   )
 }

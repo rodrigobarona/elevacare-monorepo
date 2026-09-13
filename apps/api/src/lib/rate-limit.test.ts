@@ -1,64 +1,72 @@
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 import { isLocalPublicRateLimitExempt } from "./rate-limit"
 
-const originalVercel = process.env.VERCEL
-const originalVercelEnv = process.env.VERCEL_ENV
-const originalExempt = process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT
-const originalNodeEnv = process.env.NODE_ENV
-
 afterEach(() => {
-  if (originalVercel === undefined) delete process.env.VERCEL
-  else process.env.VERCEL = originalVercel
-  if (originalVercelEnv === undefined) delete process.env.VERCEL_ENV
-  else process.env.VERCEL_ENV = originalVercelEnv
-  if (originalExempt === undefined) {
-    delete process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT
-  } else {
-    process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = originalExempt
-  }
-  if (originalNodeEnv === undefined) delete process.env.NODE_ENV
-  else process.env.NODE_ENV = originalNodeEnv
+  vi.unstubAllEnvs()
 })
 
 describe("isLocalPublicRateLimitExempt", () => {
   it("skips loopback and unknown SSR keys only when the local flag is set", () => {
-    delete process.env.VERCEL
-    delete process.env.VERCEL_ENV
-    process.env.NODE_ENV = "test"
-    process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = "1"
+    vi.stubEnv("VERCEL", "")
+    vi.stubEnv("VERCEL_ENV", "")
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("API_URL", "http://127.0.0.1:3002")
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(true)
     expect(isLocalPublicRateLimitExempt("ip:::1")).toBe(true)
     expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(true)
   })
 
+  it("never skips unknown SSR when no API origin is configured", () => {
+    vi.stubEnv("VERCEL", "")
+    vi.stubEnv("VERCEL_ENV", "")
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("API_URL", "")
+    vi.stubEnv("BETTER_AUTH_URL", "")
+    vi.stubEnv("NEXT_PUBLIC_API_URL", "")
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
+    expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(true)
+    expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
+  })
+
+  it("never skips unknown SSR when the API origin is not loopback", () => {
+    vi.stubEnv("VERCEL", "")
+    vi.stubEnv("VERCEL_ENV", "")
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("API_URL", "https://api.example.test")
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
+    expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(true)
+    expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
+  })
+
   it("never skips self-hosted production when the flag is unset", () => {
-    delete process.env.VERCEL
-    delete process.env.VERCEL_ENV
-    delete process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT
+    vi.stubEnv("VERCEL", "")
+    vi.stubEnv("VERCEL_ENV", "")
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "")
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(false)
     expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
   })
 
   it("never skips on Vercel production even with the flag", () => {
-    process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = "1"
-    process.env.VERCEL = "1"
-    process.env.VERCEL_ENV = "production"
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
+    vi.stubEnv("VERCEL", "1")
+    vi.stubEnv("VERCEL_ENV", "production")
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(false)
     expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
   })
 
   it("never skips on Vercel preview even with the flag", () => {
-    process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = "1"
-    process.env.VERCEL = "1"
-    process.env.VERCEL_ENV = "preview"
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
+    vi.stubEnv("VERCEL", "1")
+    vi.stubEnv("VERCEL_ENV", "preview")
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(false)
   })
 
   it("never skips when NODE_ENV is production even with the flag", () => {
-    process.env.ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT = "1"
-    delete process.env.VERCEL
-    delete process.env.VERCEL_ENV
-    process.env.NODE_ENV = "production"
+    vi.stubEnv("ELEVA_LOCAL_PUBLIC_RATE_LIMIT_EXEMPT", "1")
+    vi.stubEnv("VERCEL", "")
+    vi.stubEnv("VERCEL_ENV", "")
+    vi.stubEnv("NODE_ENV", "production")
     expect(isLocalPublicRateLimitExempt("ip:127.0.0.1")).toBe(false)
     expect(isLocalPublicRateLimitExempt("ip:unknown")).toBe(false)
   })
