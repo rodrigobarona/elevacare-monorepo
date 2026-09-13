@@ -145,12 +145,13 @@ function snapshotMatchesIntent(
  * Resolve Stripe return + funnel snapshot. Module memo survives React Strict
  * Mode remounts that would otherwise clear sessionStorage mid-restore.
  */
-export function takeFunnelRestore(): RestoreMemo | null {
-  const redirect = captureRedirect()
-  const status = redirect?.status ?? restoreMemo?.status
-  const paymentIntentId =
-    redirect?.paymentIntentId ?? restoreMemo?.paymentIntentId ?? null
-  if (!status) return null
+export function takeFunnelRestore(
+  search = typeof window === "undefined" ? "" : window.location.search
+): RestoreMemo | null {
+  const redirect = captureRedirect(search)
+  const source = redirect ?? restoreMemo
+  if (!source) return null
+  const { status, paymentIntentId } = source
   const snapshot =
     loadFunnelReturn({
       allowExpired: status === "succeeded" || status === "processing",

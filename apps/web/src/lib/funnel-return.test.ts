@@ -135,6 +135,21 @@ describe("takeFunnelRestore", () => {
     expect(takeFunnelRestore()).toBeNull()
   })
 
+  it("does not pair a new redirect status with the previous memo intent", () => {
+    stubSession({
+      "bookingFunnel:v1": JSON.stringify(snapshot),
+      "bookingFunnel:redirect": JSON.stringify({
+        status: "succeeded",
+        paymentIntentId: "pi_test",
+      }),
+    })
+    expect(takeFunnelRestore()).not.toBeNull()
+    stubSession({
+      "bookingFunnel:v1": JSON.stringify(snapshot),
+    })
+    expect(takeFunnelRestore("?redirect_status=processing")).toBeNull()
+  })
+
   it("rejects a stored snapshot that does not match the Stripe payment intent", () => {
     stubSession({
       "bookingFunnel:v1": JSON.stringify(snapshot),
