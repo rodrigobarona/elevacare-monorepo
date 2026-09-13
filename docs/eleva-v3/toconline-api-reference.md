@@ -5,6 +5,14 @@
 > **Last updated**: 2026-05-04
 > **Related**: [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 
+> **07.0 (2026-09-13):** Official docs treat `API_URL` / `OAUTH_URL` as
+> **per-company credentials** from Empresa → Configurações → Dados API
+> (https://api-docs.toconline.pt/autenticacao-detalhada), not literals to
+> paste into `packages/accounting/src`. The table below is a historical Eleva
+> snapshot. Spike 07.0 did **not** issue documents: local
+> `TOCONLINE_SERIES_PREFIX` is the live `ELEVA` series; re-run against a
+> `TEST-` series before PR 07.1. Evidence: `docs/eleva-v3/spikes/07-toconline.md`.
+
 ## Base URLs
 
 | Environment | API base                     | OAuth base                         |
@@ -67,13 +75,18 @@ Accept: application/json
 
 ## Environment Variables
 
+Copy values from Empresa → Configurações → Dados API. Do **not** paste the
+historical `api33` / `app33` hosts from the table above into application source.
+
+Canonical names (Phase 07). Empty canonical keys fall through to the aliases.
+
 ```bash
-TOCONLINE_API_URL=https://api33.toconline.pt
-TOCONLINE_OAUTH_URL=https://app33.toconline.pt/oauth
-TOCONLINE_CLIENT_ID=           # from TOConline API access request
-TOCONLINE_CLIENT_SECRET=       # from TOConline API access request
-TOCONLINE_REDIRECT_URI=        # your app's OAuth callback
-TOCONLINE_SERIES_PREFIX=ELEVA  # already configured in TOConline
+TOCONLINE_CLIENT_ID=
+TOCONLINE_CLIENT_SECRET=
+TOCONLINE_API_BASE_URL=       # from Dados API; alias TOCONLINE_API_URL
+TOCONLINE_OAUTH_BASE_URL=     # from Dados API; alias TOCONLINE_OAUTH_URL
+TOCONLINE_OAUTH_REDIRECT=     # alias TOCONLINE_URI_REDIRECT
+TOCONLINE_SERIES_PREFIX=TEST- # live ELEVA series is production; spike 07.0 refuses it
 ```
 
 ## API Format: v1 vs Legacy

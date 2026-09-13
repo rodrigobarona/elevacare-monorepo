@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-13: Phase 07.0 TOConline spike is TEST- series only; 07.1 still gated on D-09
+
+- Owner: engineering (spike) + accountant (TEST- series and D-09)
+- Status: active for the 07.0 scaffold; **D-09 remains `proposed`**
+- Review date: with D-09 (2026-09-21 while D-09 is `proposed`)
+- Summary: PR 07.0 records official-docs hostnames as per-company Dados API
+  credentials, adds a throwaway runner that **exits unless**
+  `TOCONLINE_SERIES_PREFIX` starts with `TEST-`, and does **not** issue
+  invoices, PDFs, AT submissions, or credit notes. Local env still points at
+  the live `ELEVA` series, so 07.0 is **not complete**. Do not invent D-09
+  commercial terms. PR 07.1 stays blocked until the accountant signs D-09 and
+  a TEST- series run fills `docs/eleva-v3/spikes/07-toconline.md`.
+- Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+
 ### 2026-09-13: Phase 06.3 is Playwright closeout, not a new commercial gate
 
 - Owner: engineering
