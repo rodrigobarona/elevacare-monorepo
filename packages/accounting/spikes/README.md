@@ -30,6 +30,11 @@ Official docs (https://api-docs.toconline.pt/autenticacao-detalhada) treat
 `API_URL` and `OAUTH_URL` as **credentials issued per company**. Put those
 values in env; never paste them into `packages/accounting/src`.
 
+`TOCONLINE_CLIENT_SECRET` must be the Dados API secret. If it equals
+`TOCONLINE_CLIENT_ID`, the runner stops at the authorization-code exchange
+(check 01) after the client-credentials probe (check 01b); that pair returns
+403 `access_denied`.
+
 Optional: `TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD` for AT communication
 (Portal das Finanças credentials required by the official payload).
 

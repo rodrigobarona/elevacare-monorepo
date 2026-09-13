@@ -32,18 +32,18 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-09-13: Phase 07.0 TOConline spike is TEST- series only; 07.1 still gated on D-09
+### 2026-09-13: Phase 07.0 TOConline spike is TEST series only; 07.1 still gated on D-09
 
-- Owner: engineering (spike) + accountant (TEST- series and D-09)
-- Status: active for the 07.0 scaffold; **D-09 remains `proposed`**
+- Owner: engineering (spike) + accountant (IVA / D-09) + operator (Dados API secret)
+- Status: active for the 07.0 runner; **07.0 issuance incomplete**; **D-09 remains `proposed`**
 - Review date: with D-09 (2026-09-21 while D-09 is `proposed`)
-- Summary: PR 07.0 records official-docs hostnames as per-company Dados API
-  credentials, adds a throwaway runner that **exits unless**
-  `TOCONLINE_SERIES_PREFIX` starts with `TEST-`, and does **not** issue
-  invoices, PDFs, AT submissions, or credit notes. Local env still points at
-  the live `ELEVA` series, so 07.0 is **not complete**. Do not invent D-09
-  commercial terms. PR 07.1 stays blocked until the accountant signs D-09 and
-  a TEST- series run fills `docs/eleva-v3/spikes/07-toconline.md`.
+- Summary: The founder created series prefix **TEST**. The throwaway runner
+  accepts exact `TEST` or `TEST-…` and refuses live `ELEVA`. Official `/auth`
+  302 + code is proven against env hosts. `/token` returns 403 `access_denied`
+  because local `TOCONLINE_CLIENT_SECRET` is a placeholder copy of the client
+  id. No TEST invoice, PDF, AT, or credit note was issued. Do not invent D-09
+  commercial terms. PR 07.1 stays blocked until D-09 is signed and a TEST
+  series run with a real secret fills `docs/eleva-v3/spikes/07-toconline.md`.
 - Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
   [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
 
