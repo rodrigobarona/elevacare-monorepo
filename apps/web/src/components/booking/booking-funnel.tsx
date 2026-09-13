@@ -279,7 +279,7 @@ export function BookingFunnel({
       setConfirmState("pending")
       setStep("done")
     } else {
-      consumeFunnelRestore()
+      // Keep the snapshot so a later Stripe retry can restore confirmation.
       setFormError("generic")
       setStep("pay")
     }

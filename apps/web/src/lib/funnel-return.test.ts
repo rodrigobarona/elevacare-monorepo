@@ -157,6 +157,21 @@ describe("takeFunnelRestore", () => {
     expect(takeFunnelRestore("?redirect_status=processing")).toBeNull()
   })
 
+  it("keeps the snapshot after a failed redirect so a later success can restore", () => {
+    stubSession({
+      "bookingFunnel:v1": JSON.stringify(snapshot),
+    })
+    expect(
+      takeFunnelRestore(
+        "?redirect_status=requires_payment_method&payment_intent=pi_test"
+      )?.status
+    ).toBe("failed")
+    expect(
+      takeFunnelRestore("?redirect_status=succeeded&payment_intent=pi_test")
+        ?.status
+    ).toBe("succeeded")
+  })
+
   it("rejects a stored snapshot that does not match the Stripe payment intent", () => {
     stubSession({
       "bookingFunnel:v1": JSON.stringify(snapshot),
