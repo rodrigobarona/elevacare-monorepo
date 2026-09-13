@@ -82,6 +82,10 @@ describe("captureRedirectStatus", () => {
       }),
     })
     expect(captureRedirectStatus("")).toBe("succeeded")
+    expect(captureRedirect("")).toEqual({
+      status: "succeeded",
+      paymentIntentId: "pi_test",
+    })
   })
 
   it("does not merge a URL status with a stored payment intent", () => {

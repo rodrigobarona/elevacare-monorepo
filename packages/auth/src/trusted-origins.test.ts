@@ -15,6 +15,8 @@ describe("trustedOrigins", () => {
     expect(origins).toContain("http://localhost:3006")
     expect(origins).toContain("http://127.0.0.1:3002")
     expect(origins).toContain("http://127.0.0.1:3006")
+    expect(origins).toContain("http://localhost:3100")
+    expect(origins).toContain("http://127.0.0.1:3102")
     expect(origins).toContain("https://api.eleva.care")
   })
 

@@ -74,9 +74,10 @@ function readStoredRedirect(): FunnelRedirect | null {
       return { status: stored, paymentIntentId: null }
     }
     const parsed = JSON.parse(stored) as Partial<FunnelRedirect>
-    if (!isRedirectStatus(parsed.status ?? null)) return null
+    const status = parsed.status ?? null
+    if (!isRedirectStatus(status)) return null
     return {
-      status: parsed.status,
+      status,
       paymentIntentId: parsed.paymentIntentId ?? null,
     }
   } catch {

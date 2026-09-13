@@ -38,8 +38,7 @@ export async function activateGuestBooking(
   if (!email) return
   if (booking.guestActivationSentAt) return
   if (booking.memberUserId) {
-    await sendActivationLink(email, deps)
-    await claimActivationSend(booking.orgId, booking.id)
+    await deliverActivationLink(booking.orgId, booking.id, email, deps)
     return
   }
 
@@ -86,8 +85,7 @@ export async function activateGuestBooking(
     }
   )
 
-  await sendActivationLink(email, deps)
-  await claimActivationSend(booking.orgId, booking.id)
+  await deliverActivationLink(booking.orgId, booking.id, email, deps)
 }
 
 class ActivationClaimSkip extends Error {
@@ -170,13 +168,39 @@ async function findPersonalSpace(userId: string) {
   return row ?? null
 }
 
-async function sendActivationLink(email: string, deps: GuestActivationDeps) {
-  if (deps.sendMagicLink) {
-    await deps.sendMagicLink(email)
-    return
+async function deliverActivationLink(
+  orgId: string,
+  bookingId: string,
+  email: string,
+  deps: GuestActivationDeps
+) {
+  const [latest] = await withOrgContext(orgId, async (tx) =>
+    tx
+      .select({
+        guestActivationSentAt: main.bookings.guestActivationSentAt,
+      })
+      .from(main.bookings)
+      .where(eq(main.bookings.id, bookingId))
+      .limit(1)
+  )
+  if (latest?.guestActivationSentAt) return
+
+  // Persist-before-send is owned by sendMagicLinkEmail. Claim after Better
+  // Auth accepts the request: signInMagicLink has no provider idempotency
+  // key, so a crash between send and claim can mint one extra link.
+  try {
+    if (deps.sendMagicLink) {
+      await deps.sendMagicLink(email)
+    } else {
+      await requestMagicLinkSignIn({
+        email,
+        callbackURL: "/account/activate",
+      })
+    }
+  } catch (err) {
+    console.error("[guest-activation] magic link send failed", err)
+    throw err
   }
-  await requestMagicLinkSignIn({
-    email,
-    callbackURL: "/account/activate",
-  })
+
+  await claimActivationSend(orgId, bookingId)
 }

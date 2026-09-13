@@ -21,7 +21,10 @@ personal still looks like a member.
 ## Automated (`pnpm e2e:auth`)
 
 Requires `pnpm dev` (API `:3002`, account `:3006`, admin `:3007`) and
-`E2E_SKIP_WEBSERVER=1`.
+`E2E_SKIP_WEBSERVER=1`. Helpers default to `http://localhost:3006` (not
+`127.0.0.1`). Hitting `http://127.0.0.1:3006` only hydrates when that host
+is in `resolveAllowedDevOrigins` (`packages/config/src/next-dev.mjs`). Do
+not point `E2E_*_URL` at Vercel Production.
 
 Must pass:
 

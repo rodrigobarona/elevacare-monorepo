@@ -1,4 +1,8 @@
-const LOCAL_APP_PORTS = Array.from({ length: 10 }, (_, index) => 3000 + index)
+const LOCAL_APP_PORTS = [
+  ...Array.from({ length: 10 }, (_, index) => 3000 + index),
+  3100,
+  3102,
+]
 
 const DEFAULT_TRUSTED_ORIGINS = [
   "https://eleva.care",
