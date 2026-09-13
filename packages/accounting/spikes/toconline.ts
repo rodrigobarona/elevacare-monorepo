@@ -410,6 +410,11 @@ async function upsertCustomer(accessToken: string): Promise<string> {
     `/api/customers?filter[tax_registration_number]=${SPIKE_CUSTOMER_NIF}`,
     accessToken
   )
+  if (search.status >= 400) {
+    throw new Error(
+      `Customer search failed (${search.status}): ${snippet(search.raw)}`
+    )
+  }
   const existing = jsonApiItems(search.body)[0]
   if (existing?.id) return String(existing.id)
 
@@ -441,6 +446,11 @@ async function upsertService(accessToken: string): Promise<string> {
     `/api/services?filter[item_code]=${encodeURIComponent(SPIKE_SERVICE_CODE)}`,
     accessToken
   )
+  if (search.status >= 400) {
+    throw new Error(
+      `Service search failed (${search.status}): ${snippet(search.raw)}`
+    )
+  }
   const existing = jsonApiItems(search.body)[0]
   if (existing?.id) return String(existing.id)
 
@@ -766,6 +776,18 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  if (!ncSeries) {
+    record(
+      "04",
+      "skipped",
+      "No TEST NC series; refusing to issue an FT that cannot be credited"
+    )
+    record("05", "skipped", "No TEST NC series")
+    record("06", "skipped", "No TEST NC series")
+    printSummary()
+    process.exit(1)
+  }
+
   let customerId: string
   try {
     customerId = await upsertCustomer(tokens.accessToken)
@@ -869,48 +891,56 @@ async function main(): Promise<void> {
       )
     }
 
+    let creditIssued = false
     try {
-      const at = await sendToAt(tokens.accessToken, invoice.id)
+      const credit = await issueSalesDocument(tokens.accessToken, {
+        documentType: "NC",
+        series: ncSeries,
+        customerId,
+        serviceId,
+        notes: `Eleva 07.0 spike credit note for FT ${invoice.number ?? invoice.id}`,
+        parentId: invoice.id,
+        parentReference: invoice.number,
+      })
+      creditIssued = true
       record(
-        "06",
-        at.status < 400 ? "proven" : "failed",
-        `AT status=${at.status}`,
-        at
+        "07",
+        "proven",
+        `NC id=${credit.id} number=${credit.number ?? "n/a"}`,
+        {
+          id: credit.id,
+          number: credit.number,
+          seriesPrefix: credit.seriesPrefix ?? ncSeries.prefix,
+        }
       )
     } catch (error) {
       record(
-        "06",
+        "07",
         "failed",
         error instanceof Error ? error.message : String(error)
       )
     }
 
-    if (!ncSeries) {
-      record("07", "skipped", "No TEST NC series")
+    if (process.env.TOCONLINE_SPIKE_SEND_AT !== "1") {
+      record(
+        "06",
+        "skipped",
+        "AT communication disabled; set TOCONLINE_SPIKE_SEND_AT=1 after a TEST NC exists"
+      )
+    } else if (!creditIssued) {
+      record("06", "skipped", "AT skipped because the TEST credit note failed")
     } else {
       try {
-        const credit = await issueSalesDocument(tokens.accessToken, {
-          documentType: "NC",
-          series: ncSeries,
-          customerId,
-          serviceId,
-          notes: `Eleva 07.0 spike credit note for FT ${invoice.number ?? invoice.id}`,
-          parentId: invoice.id,
-          parentReference: invoice.number,
-        })
+        const at = await sendToAt(tokens.accessToken, invoice.id)
         record(
-          "07",
-          "proven",
-          `NC id=${credit.id} number=${credit.number ?? "n/a"}`,
-          {
-            id: credit.id,
-            number: credit.number,
-            seriesPrefix: credit.seriesPrefix ?? ncSeries.prefix,
-          }
+          "06",
+          at.status < 400 ? "proven" : "failed",
+          `AT status=${at.status}`,
+          at
         )
       } catch (error) {
         record(
-          "07",
+          "06",
           "failed",
           error instanceof Error ? error.message : String(error)
         )

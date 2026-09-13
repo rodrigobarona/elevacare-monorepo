@@ -119,8 +119,9 @@ issued TEST FT.
 
 Official payload needs Portal das Finanças credentials
 (`TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD`). Those keys are **absent**
-from local env. Even after OAuth works, AT stays blocked until the operator
-adds them (or records the exact API error without them).
+from local env. The runner also requires `TOCONLINE_SPIKE_SEND_AT=1` and a
+successful TEST credit note before it calls AT, so a throwaway FT is never
+reported to the tax authority without a reversing NC.
 
 ### 07 — Credit note — unproven
 
