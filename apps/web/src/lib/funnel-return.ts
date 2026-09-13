@@ -44,15 +44,21 @@ type RestoreMemo = {
 let restoreMemo: RestoreMemo | null = null
 const confirmLocks = new Set<string>()
 
-function isRedirectStatus(value: string | null): value is FunnelRedirectStatus {
-  return value === "succeeded" || value === "processing" || value === "failed"
+function parseRedirectStatusValue(
+  value: string | null
+): FunnelRedirectStatus | null {
+  if (value === "succeeded" || value === "processing" || value === "failed") {
+    return value
+  }
+  // Stripe's failed-payment return uses requires_payment_method, not failed.
+  return value === "requires_payment_method" ? "failed" : null
 }
 
 export function parseRedirect(search: string): FunnelRedirect | null {
   const query = search.startsWith("?") ? search.slice(1) : search
   const params = new URLSearchParams(query)
-  const status = params.get("redirect_status")
-  if (!isRedirectStatus(status)) return null
+  const status = parseRedirectStatusValue(params.get("redirect_status"))
+  if (!status) return null
   const paymentIntentId = params.get("payment_intent")
   return {
     status,
@@ -70,12 +76,13 @@ function readStoredRedirect(): FunnelRedirect | null {
   try {
     const stored = sessionStorage.getItem(REDIRECT_KEY)
     if (!stored) return null
-    if (isRedirectStatus(stored)) {
-      return { status: stored, paymentIntentId: null }
+    const storedStatus = parseRedirectStatusValue(stored)
+    if (storedStatus) {
+      return { status: storedStatus, paymentIntentId: null }
     }
     const parsed = JSON.parse(stored) as Partial<FunnelRedirect>
-    const status = parsed.status ?? null
-    if (!isRedirectStatus(status)) return null
+    const status = parseRedirectStatusValue(parsed.status ?? null)
+    if (!status) return null
     return {
       status,
       paymentIntentId: parsed.paymentIntentId ?? null,

@@ -61,6 +61,9 @@ describe("parseRedirectStatus", () => {
 
   it("reads a failed Stripe redirect", () => {
     expect(parseRedirectStatus("?redirect_status=failed")).toBe("failed")
+    expect(
+      parseRedirectStatus("?redirect_status=requires_payment_method")
+    ).toBe("failed")
   })
 
   it("ignores other query values", () => {
