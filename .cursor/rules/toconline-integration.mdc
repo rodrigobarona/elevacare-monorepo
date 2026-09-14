@@ -34,36 +34,38 @@ interface ExpertInvoicingAdapter {
 
 ## API Base URLs
 
-```
-Production API:   https://api33.toconline.pt
-Production OAuth: https://app33.toconline.pt/oauth
-```
+Hosts come from the per-company Dados API credential in env
+(`TOCONLINE_API_BASE_URL` / `TOCONLINE_OAUTH_BASE_URL`, aliases
+`TOCONLINE_API_URL` / `TOCONLINE_OAUTH_URL`). Never paste hostnames into
+`packages/accounting/src`. `api.toconline.pt` is wrong. `api33` / `app33`
+are a historical snapshot only.
 
-**Do NOT use** `api.toconline.pt` — that is incorrect. The correct host is `api33.toconline.pt`.
+## Authentication — OAuth 2.0 Authorization Code (simplified)
 
-## Authentication — OAuth 2.0 Authorization Code + PKCE
-
-TOConline uses **Authorization Code** flow with PKCE (S256), **not** client credentials.
+TOConline uses **Authorization Code**, **not** client credentials (`grant_type=client_credentials`
+returns 501). Spike 07.0 proved the official simplified flow: no PKCE, HTTP Basic
+`client_id:secret` on `POST /token`. 07.1 uses that proven contract. Do not
+require `code_challenge` unless a future interactive login forces it.
 
 ```typescript
-const TOCONLINE_AUTH_URL = `${process.env.TOCONLINE_OAUTH_URL}/auth`;
-const TOCONLINE_TOKEN_URL = `${process.env.TOCONLINE_OAUTH_URL}/token`;
+const TOCONLINE_AUTH_URL = `${process.env.TOCONLINE_OAUTH_BASE_URL}/auth`;
+const TOCONLINE_TOKEN_URL = `${process.env.TOCONLINE_OAUTH_BASE_URL}/token`;
 ```
 
 - Scope: `commercial`
-- PKCE challenge: S256
-- Client auth: body params (not Basic header)
+- PKCE: not required on the proven simplified flow
+- Client auth: HTTP Basic header (not body params)
 - Store tokens via envelope encryption (`packages/encryption`)
 
 ## Environment Variables
 
 ```bash
-TOCONLINE_API_URL=https://api33.toconline.pt
-TOCONLINE_OAUTH_URL=https://app33.toconline.pt/oauth
+TOCONLINE_API_BASE_URL=       # from Dados API; alias TOCONLINE_API_URL
+TOCONLINE_OAUTH_BASE_URL=     # from Dados API; alias TOCONLINE_OAUTH_URL
 TOCONLINE_CLIENT_ID=
 TOCONLINE_CLIENT_SECRET=
-TOCONLINE_REDIRECT_URI=
-TOCONLINE_SERIES_PREFIX=ELEVA
+TOCONLINE_OAUTH_REDIRECT=     # alias TOCONLINE_URI_REDIRECT
+TOCONLINE_SERIES_PREFIX=ELEVA # production. TEST is TOConline-only sandbox — never communicate TEST to AT.
 ```
 
 ## API Format: v1 vs Legacy

@@ -21,6 +21,12 @@ paths = [
 ]
 
 [[allowlists]]
+description = "Redaction unit tests assemble fake Stripe/JWT shapes at runtime to prove scrubbing"
+paths = [
+  '''(^|/)packages/observability/src/redaction\.test\.ts$''',
+]
+
+[[allowlists]]
 description = "Playwright auth fixtures used only to sign in or assert rejection (not live credentials)"
 condition = "AND"
 regexTarget = "secret"
