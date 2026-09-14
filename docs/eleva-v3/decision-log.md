@@ -32,10 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-14: TEST FT/NC stay TOConline-only; never communicate TEST to AT
+
+- Owner: founder (Rodrigo Barona)
+- Status: active
+- Summary: TEST FT and NC series stay **active inside TOConline** for
+  sandbox/API testing. They are **never** communicated to AT (`Comunicar
+série`) — that would register them as official Portuguese document series.
+  TOConline refuses sales-document issuance until a series is AT-communicated;
+  that refusal is expected on TEST. When ready for live invoicing, communicate
+  and issue on **ELEVA** (and `ELEVA-FEE-*` / `ELEVA-SAAS-*`), not TEST.
+  Document AT (`send_document_at_webservice`) also stays off for TEST. This
+  closes 07.0 without a TEST invoice. 07.1 stays gated on D-09 (still
+  `proposed`) plus accountant IVA sign-off; next engineering slice is 07.2.
+- Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+
 ### 2026-09-14: Phase 07.0 OAuth + TEST series proven; issuance blocked on AT series communication
 
 - Owner: engineering (spike) + operator (communicate TEST series) + accountant (IVA / D-09)
-- Status: active for the 07.0 runner; **07.0 issuance still incomplete**; **D-09 remains `proposed`**
+- Status: superseded by the founder 2026-09-14 entry (TEST stays uncommunicated)
 - Review date: with D-09 (2026-09-21 while D-09 is `proposed`)
 - Summary: Re-run with a real Dados API secret (not a copy of the client id)
   proved official Authorization Code (`GET /auth` 302 Location code, no
@@ -44,9 +60,8 @@ Each entry should include:
   `ELEVA-SPIKE-070`. Both TEST series have `at_status=uncommunicated`, so
   `POST /api/v1/commercial_sales_documents` refuses issuance. Official
   payment codes are `MO`/`TR` (SAF-T `TB` is rejected). Document AT (check 06) stayed off (`TOCONLINE_SPIKE_SEND_AT` unset). Live `ELEVA` unused.
-  Operator: communicate TEST FT + NC only (Empresa → Configurações → Séries
-  de Documentos → Comunicar série), then re-run. Do not invent D-09 terms.
-  PR 07.1 stays blocked.
+  Superseded: founder decided not to communicate TEST to AT.
+  PR 07.1 stays blocked on D-09.
 - Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
   [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
 

@@ -35,19 +35,22 @@ values in env; never paste them into `packages/accounting/src`.
 (check 01) after the client-credentials probe (check 01b); that pair returns
 403 `access_denied`.
 
-Issuance also requires TEST FT and NC `at_status` other than
-`uncommunicated`. Communicate those series in TOConline
-(Empresa → Configurações → Séries de Documentos → Comunicar série) before
-re-running. Official payment codes are `MO` / `TR` (not SAF-T `TB`).
+`TOCONLINE_OAUTH_REDIRECT` (or alias `TOCONLINE_URI_REDIRECT`) is required and
+must match the Dados API app. There is no Postman callback fallback.
 
-Optional: `TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD` for AT communication
-(Portal das Finanças credentials required by the official payload). Document
-AT stays off unless `TOCONLINE_SPIKE_SEND_AT=1` and a TEST NC is issued.
+**Do not** communicate TEST FT/NC to AT (`Comunicar série`). Those series stay
+active inside TOConline only. TOConline refuses sales documents until a series
+is AT-communicated; the founder will communicate **ELEVA** at go-live, not TEST.
+Official payment codes are `MO` / `TR` (not SAF-T `TB`).
+
+Document AT (`send_document_at_webservice`) stays off for TEST. Optional
+`TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD` + `TOCONLINE_SPIKE_SEND_AT=1`
+are for ELEVA later, never for TEST.
 
 ## What this runner does
 
 Official Authorization Code (GET `/auth` without following the 302, then
-`POST /token` with HTTP Basic), series lookup, customer/service upsert, one
-throwaway FT + PDF + AT + NC on the **TEST** series only, refresh-token probe,
-and a sample error payload. AT is skipped unless the TEST NC +
-`TOCONLINE_SPIKE_SEND_AT=1` gates are set.
+`POST /token` with HTTP Basic — throwaway 07.0 exception matching the proven
+simplified flow; 07.1 uses the same contract). Series lookup, customer/service
+upsert, refresh-token probe, and a sample error payload. Invoice / PDF / NC
+are skipped while TEST remains uncommunicated to AT (by design).

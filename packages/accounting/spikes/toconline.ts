@@ -84,11 +84,14 @@ function oauthBase(): string {
 }
 
 function redirectUri(): string {
-  return (
-    process.env.TOCONLINE_OAUTH_REDIRECT ||
-    process.env.TOCONLINE_URI_REDIRECT ||
-    "https://oauth.pstmn.io/v1/callback"
-  )
+  const value =
+    process.env.TOCONLINE_OAUTH_REDIRECT || process.env.TOCONLINE_URI_REDIRECT
+  if (!value) {
+    throw new Error(
+      "Missing TOCONLINE_OAUTH_REDIRECT / TOCONLINE_URI_REDIRECT. It must match the Dados API app. Do not fall back to Postman."
+    )
+  }
+  return value
 }
 
 function basicAuthHeader(): string {
@@ -817,14 +820,26 @@ async function main(): Promise<void> {
       .join(", ")
     record(
       "04",
-      "failed",
-      `TEST series not communicated to AT (${labels}). Operator: Empresa → Configurações → Séries de Documentos → Comunicar série for TEST FT and NC only. Do not communicate or issue on ELEVA.`
+      "skipped",
+      `TEST series stay uncommunicated to AT by founder decision (${labels}). TOConline-only sandbox; issuance waits for ELEVA. Do not Comunicar série on TEST.`
     )
-    record("05", "skipped", "TEST series at_status is not communicated")
-    record("06", "skipped", "TEST series at_status is not communicated")
-    record("07", "skipped", "TEST series at_status is not communicated")
+    record(
+      "05",
+      "skipped",
+      "No TEST invoice: series remain TOConline-only, never communicated to AT"
+    )
+    record(
+      "06",
+      "skipped",
+      "Document AT stays off for TEST. Communicate ELEVA at go-live only."
+    )
+    record(
+      "07",
+      "skipped",
+      "No TEST credit note: series remain uncommunicated to AT"
+    )
     printSummary()
-    process.exit(1)
+    process.exit(0)
   }
 
   let customerId: string

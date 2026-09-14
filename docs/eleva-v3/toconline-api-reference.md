@@ -10,10 +10,10 @@
 > (https://api-docs.toconline.pt/autenticacao-detalhada), not literals to
 > paste into `packages/accounting/src`. The table below is a historical Eleva
 > snapshot. Spike 07.0 proved official `/auth` + `/token` (HTTP Basic),
-> refresh grant, TEST series lookup (`at_status=uncommunicated`), customer
-> and service upsert. FT/PDF/NC remain blocked until the founder communicates
-> TEST FT + NC to AT. Live `ELEVA` was never used. Evidence:
-> `docs/eleva-v3/spikes/07-toconline.md`.
+> refresh grant, TEST series lookup (`at_status=uncommunicated` **by design**),
+> customer and service upsert. TEST FT/PDF/NC are not issued: founder will
+> not communicate TEST to AT. Live invoicing uses `ELEVA` at go-live.
+> Evidence: `docs/eleva-v3/spikes/07-toconline.md`.
 
 ## Base URLs
 
@@ -99,8 +99,8 @@ TOCONLINE_CLIENT_ID=
 TOCONLINE_CLIENT_SECRET=
 TOCONLINE_API_BASE_URL=       # from Dados API; alias TOCONLINE_API_URL
 TOCONLINE_OAUTH_BASE_URL=     # from Dados API; alias TOCONLINE_OAUTH_URL
-TOCONLINE_OAUTH_REDIRECT=     # alias TOCONLINE_URI_REDIRECT
-TOCONLINE_SERIES_PREFIX=TEST  # founder test series; live ELEVA is production; spike 07.0 refuses it
+TOCONLINE_OAUTH_REDIRECT=     # alias TOCONLINE_URI_REDIRECT; required, no Postman fallback
+TOCONLINE_SERIES_PREFIX=ELEVA # production. TEST is TOConline-only sandbox; never communicate TEST to AT.
 ```
 
 ## API Format: v1 vs Legacy

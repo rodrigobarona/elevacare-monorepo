@@ -223,6 +223,6 @@ jobs:
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch --no-tags --depth=1 origin "$BASE_REF"
+          git fetch --no-tags origin "$BASE_REF"
           ./gitleaks detect --source . --config .gitleaks.toml --verbose --redact --no-banner \
             --log-opts="origin/${BASE_REF}..HEAD"

@@ -1,27 +1,30 @@
 # Spike 07.0 — TOConline test-series probe
 
-**Status:** partial — **not complete**. OAuth, refresh, TEST series lookup,
-customer, and service are proven. Invoice, PDF, credit-note, and document AT
-are blocked because TEST FT/NC are `at_status=uncommunicated`. Do not start
-PR 07.1.
-**Date:** 2026-09-14 (re-run after Dados API secret)
+**Status:** complete for 07.0 — TEST stays TOConline-only (never communicated
+to AT). OAuth, refresh, TEST series lookup, customer, and service are proven.
+Invoice, PDF, credit-note, and document AT are **out of scope on TEST** by
+founder decision (2026-09-14). Do not start PR 07.1 (still gated on D-09).
+**Date:** 2026-09-14 (founder: do not Comunicar série on TEST)
 **TOConline:** Eleva company credentials from local env. Live `ELEVA` series
 refused. Founder series **TEST** accepted by the runner.
 **Instance:** throwaway `pnpm exec tsx --env-file=.env.local packages/accounting/spikes/toconline.ts`
 
 ## Verdict
 
-07.0 is **still blocked**. Token exchange works. TEST series exist (FT id
-337, NC id 343) but TOConline refuses issuance until the founder communicates
-those series to AT in the UI. No FT, PDF, or NC was created. Document AT
-(check 06) stayed off.
+07.0 is **complete**. Token exchange works. TEST series exist (FT id 337, NC
+id 343) and stay `at_status=uncommunicated` **on purpose**: communicating them
+would register TEST as an official AT document series. They remain a TOConline
+sandbox. When live invoicing is ready, communicate and issue on **ELEVA**.
+TOConline refuses `POST /api/v1/commercial_sales_documents` on uncommunicated
+series (proven 500). No TEST FT, PDF, or NC was created. Document AT (check 06)
+stayed off. Live `ELEVA` was never used.
 
 ## Why issuance stopped
 
 Local env now has a Dados API secret that is **not** a copy of the client id
 (lengths differ; values not recorded). `TOCONLINE_SERIES_PREFIX=TEST`.
-Redirect is `https://oauth.pstmn.io/v1/callback`. `TOCONLINE_SPIKE_SEND_AT`
-is unset. `TOCONLINE_AT_*` keys are absent.
+Redirect must match the Dados API app (`TOCONLINE_OAUTH_REDIRECT`).
+`TOCONLINE_SPIKE_SEND_AT` is unset. `TOCONLINE_AT_*` keys are absent.
 
 OAuth follows official docs
 (https://api-docs.toconline.pt/autenticacao-simplificada): `GET {OAUTH_URL}/auth`
@@ -65,8 +68,8 @@ https://api-docs.toconline.pt/apis/vendas/recibos-de-venda:
 | OAuth                                                                            | Authorization Code; `GET {OAUTH_URL}/auth` (`scope=commercial`); `POST {OAUTH_URL}/token` with HTTP Basic `client_id:secret` | `/auth` 302 + code. `/token` Bearer + refresh, `expires_in=14400`.                              |
 | Client credentials                                                               | Not in official auth pages                                                                                                   | `POST /token` `grant_type=client_credentials` → **501** `BROK…` / “Not Implemented”             |
 | Access token TTL                                                                 | `expires_in` (example 14400 s ≈ 4 h); refresh grant `grant_type=refresh_token`                                               | Proven: authorization_code and refresh both return `expires_in=14400`, `token_type=Bearer`.     |
-| Default Postman redirect                                                         | `https://oauth.pstmn.io/v1/callback`                                                                                         | Matches env; Location code scraped, 302 not followed.                                           |
-| v1 sales / purchase / receipt / payment headers                                  | `Authorization: Bearer`, `Content-Type: application/json`, `Accept: application/json`                                        | Customer/service/series exercised. Sales POST refused (uncommunicated series).                  |
+| Default Postman redirect                                                         | `https://oauth.pstmn.io/v1/callback`                                                                                         | Historical docs default only. Runner requires `TOCONLINE_OAUTH_REDIRECT` (no Postman fallback). |
+| v1 sales / purchase / receipt / payment headers                                  | `Authorization: Bearer`, `Content-Type: application/json`, `Accept: application/json`                                        | Customer/service/series exercised. Sales POST refused (uncommunicated series, expected).        |
 | Legacy JSON:API headers (customer, supplier, address, contact, product, service) | `Authorization: Bearer`, `Content-Type: application/vnd.api+json`, `Accept: application/json`                                | Customer + service upsert proven.                                                               |
 | Sales document series fields                                                     | `document_series_id` and `document_series_prefix` on `POST /api/v1/commercial_sales_documents`                               | Runner passed TEST + looked-up id; never `ELEVA`. Series `at_status=uncommunicated`.            |
 | Payment mechanism                                                                | Receipts: `MO`, `CH`, `DC`, `CC`, `TR`, `DDA`, `MB`                                                                          | SAF-T `TB` rejected. Runner uses `MO`.                                                          |
@@ -110,7 +113,8 @@ Historical internal table (`docs/eleva-v3/toconline-api-reference.md`) lists
   and the NC equivalent.
 - **Response:** TEST FT id=337, TEST NC id=343, both `at_status=uncommunicated`,
   `communication_date=null`, `atcud_prefix=null`, `number=0`.
-- **Absorb:** 07.1 must refuse issuance when `at_status` is not communicated.
+- **Absorb:** TEST stays uncommunicated. 07.1 must refuse issuance when
+  `at_status` is not communicated. Communicate **ELEVA** at go-live only.
   Series communication is a TOConline UI step (Empresa → Configurações →
   Séries de Documentos → Comunicar série), not `send_document_at_webservice`.
 
@@ -124,30 +128,31 @@ Historical internal table (`docs/eleva-v3/toconline-api-reference.md`) lists
 - **Request:** search code `ELEVA-SPIKE-070`, create if missing.
 - **Response:** service id=6.
 
-### 04 — Invoice in TEST series — failed (series not communicated)
+### 04 — Invoice in TEST series — skipped (founder: never communicate TEST)
 
 - **Request:** `POST /api/v1/commercial_sales_documents` with
   `document_series_prefix=TEST`, `document_series_id=337`, `payment_mechanism=MO`.
 - **Response:** 500, series TEST (FT) not communicated. Earlier `TB` attempt
-  also 500 (unrecognized payment). Runner now exits before POST when
-  `at_status=uncommunicated`.
-- **Absorb:** communicate TEST FT + NC only. Never issue on `ELEVA` /
-  `ELEVA-FEE-{YYYY}`. Use official payment codes (`MO` / `TR`), not SAF-T `TB`.
+  also 500 (unrecognized payment). Runner now skips POST when TEST is
+  uncommunicated (by design).
+- **Absorb:** Do **not** communicate TEST FT + NC. Live issuance uses `ELEVA`
+  / `ELEVA-FEE-{YYYY}` after go-live. Use official payment codes (`MO` / `TR`),
+  not SAF-T `TB`.
 
 ### 05 — PDF retrieval — skipped
 
-No invoice id. Planned:
-`GET /api/url_for_print/:id?filter[type]=Document&filter[copies]=1`.
+No TEST invoice (series uncommunicated by design). Planned:
+`GET /api/url_for_print/:id?filter[type]=Document&filter[copies]=1` on ELEVA.
 
 ### 06 — AT communication — skipped
 
-`TOCONLINE_SPIKE_SEND_AT` unset (founder did not enable document AT). Official
-payload also needs Portal das Finanças credentials. The runner still requires
-a TEST NC before any AT call.
+Founder: never send TEST documents to AT. `TOCONLINE_SPIKE_SEND_AT` unset.
+Official payload also needs Portal das Finanças credentials. Check 06 is for
+ELEVA at go-live.
 
 ### 07 — Credit note — skipped
 
-No invoice id. TEST NC series exists (id=343) but is also uncommunicated.
+No TEST invoice. TEST NC series exists (id=343) and also stays uncommunicated.
 
 ### 08 — Refresh-token expiry — proven (TTL only)
 
@@ -170,9 +175,9 @@ TOCONLINE_CLIENT_ID=
 TOCONLINE_CLIENT_SECRET=   # real Dados API secret; must not equal client id
 TOCONLINE_API_BASE_URL=   # from Dados API; alias TOCONLINE_API_URL
 TOCONLINE_OAUTH_BASE_URL= # from Dados API; alias TOCONLINE_OAUTH_URL
-TOCONLINE_OAUTH_REDIRECT= # alias TOCONLINE_URI_REDIRECT; default Postman callback
-TOCONLINE_SERIES_PREFIX=TEST
-TOCONLINE_AT_USERNAME=    # Portal das Finanças; required for check 06
+TOCONLINE_OAUTH_REDIRECT= # alias TOCONLINE_URI_REDIRECT; must match Dados API (no Postman fallback)
+TOCONLINE_SERIES_PREFIX=TEST  # spike-local only; shared .env.example leaves this unset / ELEVA
+TOCONLINE_AT_USERNAME=    # Portal das Finanças; ELEVA go-live only — never TEST
 TOCONLINE_AT_PASSWORD=
 ```
 
@@ -181,10 +186,8 @@ D-09 stays `proposed`; this spike does not sign it.
 
 ## Follow-up
 
-1. Operator: in TOConline, communicate **TEST** FT and NC only
-   (Empresa → Configurações → Séries de Documentos → Comunicar série).
-   Do not communicate or issue on live `ELEVA`. Re-run this spike.
-2. Optional: Portal das Finanças AT user + `TOCONLINE_SPIKE_SEND_AT=1` for
-   check 06 after a TEST NC exists.
-3. Accountant: IVA matrix + **D-09 sign-off** (still `proposed`).
+1. Founder: keep TEST FT + NC **uncommunicated** to AT. Communicate **ELEVA**
+   only when live invoicing starts. Never issue TEST through AT.
+2. Accountant: IVA matrix + **D-09 sign-off** (still `proposed`).
+3. Engineering: PR 07.2 (Tier 2 expert adapters) next. Stop before 07.1.
 4. Delete `packages/accounting/spikes/` before PR 07.1.

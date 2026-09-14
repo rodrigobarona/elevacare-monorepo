@@ -29,11 +29,12 @@ the expert invoices the member for the service (Tier 2, the expert's own fiscal 
   issues a Tier 1 document for a booking paid before cutover; the accountant decides whether
   `legacy_missing` rows need a lawful backfill outside the system. Phase 14 consumes this rule.
 - **PR 07.0 spike** (`phase-07.0/spike-toconline`) completed against the Eleva TOConline account
-  in a **test series**: current OAuth flow, correct API hostnames, customer + service creation,
-  invoice, PDF, AT communication, credit note, refresh-token behaviour, rate limits and error
-  semantics — evidence in `docs/eleva-v3/spikes/07-toconline.md`. Hostnames and OAuth endpoints
-  are **configuration** (`TOCONLINE_API_BASE_URL`, `TOCONLINE_OAUTH_BASE_URL`), verified against
-  https://api-docs.toconline.pt during the spike, never hardcoded from historical notes.
+  in a **TEST series that is never communicated to AT** (TOConline-only sandbox): current OAuth
+  flow, correct API hostnames, customer + service creation, series lookup, refresh-token
+  behaviour, rate limits and error semantics — evidence in `docs/eleva-v3/spikes/07-toconline.md`.
+  Invoice / PDF / document AT / credit note wait for **ELEVA** at go-live. Hostnames and OAuth
+  endpoints are **configuration** (`TOCONLINE_API_BASE_URL`, `TOCONLINE_OAUTH_BASE_URL`), verified
+  against https://api-docs.toconline.pt during the spike, never hardcoded from historical notes.
 - Eleva TOConline production credentials and series `ELEVA-FEE-2026`, `ELEVA-SAAS-2026` created
   (operator task documented in `operator-tasks/`).
 
@@ -174,8 +175,9 @@ connected|disconnected`).
 
 ## Risks
 
-- TOConline has no sandbox: use a dedicated test series and cancel documents; never issue in the
-  production series from staging (env guard `TOCONLINE_SERIES_PREFIX`).
+- TOConline has no AT sandbox: TEST FT/NC stay **uncommunicated** (TOConline-only).
+  Never `Comunicar série` on TEST. Communicate and issue **ELEVA** at go-live
+  (env guard `TOCONLINE_SERIES_PREFIX`). Staging must not send AT documents.
 - Accountant sign-off delay blocks Tier 1: Tier 2 (07.2) can proceed in parallel.
 
 ## Copy-paste prompt
@@ -235,18 +237,21 @@ every paid booking, and expert -> member invoice through the expert's connected 
 
 PR 07.0 — spike (throwaway under packages/accounting/spikes/, evidence is the deliverable):
 against the Eleva TOConline account using a TEST series only (env guard
-TOCONLINE_SERIES_PREFIX=TEST-), prove and record in docs/eleva-v3/spikes/07-toconline.md: the
+TOCONLINE_SERIES_PREFIX=TEST). Prove and record in docs/eleva-v3/spikes/07-toconline.md: the
 current OAuth flow and hostnames from https://api-docs.toconline.pt, customer upsert, service
-upsert, invoice in the test series, PDF retrieval, AT communication, credit note, refresh-token
-expiry behaviour, rate limits and error payloads. Update toconline-api-reference.md with what
-was verified; delete the spike code before PR 07.1.
+upsert, series lookup, refresh-token behaviour, rate limits and error payloads. Do **not**
+communicate TEST to AT and do **not** issue TEST sales documents (TOConline refuses
+uncommunicated series; TEST must not become an official AT series). Invoice, PDF, AT
+communication and credit note wait for ELEVA at go-live. Update toconline-api-reference.md
+with what was verified; delete the spike code before PR 07.1.
 
 PR 07.1 — Tier 1 (Eleva platform):
 1. packages/accounting restructure: src/core/{iva.ts (decision table + tests), vies.ts (VIES
    check, 24h cache in Upstash Redis, typed result), types.ts, credentials.ts (encrypt/decrypt via
    @eleva/encryption encryptForOrg with orgId = Eleva staff org for Tier 1 or expert org for
-   Tier 2)}, src/eleva-platform/toconline-client.ts (OAuth 2.0 Authorization Code + PKCE S256,
-   scope commercial, token refresh, base URL and OAuth URL from TOCONLINE_API_BASE_URL /
+   Tier 2)}, src/eleva-platform/toconline-client.ts (OAuth 2.0 Authorization Code — proven
+   simplified flow: no PKCE, HTTP Basic client_id:secret, scope commercial;
+   token refresh, base URL and OAuth URL from TOCONLINE_API_BASE_URL /
    TOCONLINE_OAUTH_BASE_URL in @eleva/env — values verified in PR 07.0 against
    https://api-docs.toconline.pt, never literals in code; headers per reference;
    methods upsertCustomer, upsertService, createSalesDocumentV1, finalize, getPdfUrl,
@@ -258,7 +263,8 @@ PR 07.1 — Tier 1 (Eleva platform):
    src/eleva-platform/clinic-saas-invoices.ts (issueClinicSaasInvoice(subscriptionId, periodStart,
    periodEnd) — implemented, wired in Phase 11). Env: TOCONLINE_CLIENT_ID, TOCONLINE_CLIENT_SECRET,
    TOCONLINE_OAUTH_BASE_URL, TOCONLINE_API_BASE_URL, TOCONLINE_OAUTH_REDIRECT, TOCONLINE_SERIES_PREFIX
-   (staging uses TEST-ELEVA-FEE), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
+   (staging may set TEST locally; never communicate TEST to AT; production ELEVA is communicated
+   at go-live), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
 2. packages/db: platform_fee_invoices (booking_payment_id PK, expert_org_id, series, number,
    toconline_document_id, amount_cents, iva_rate_bps, iva_regime pt_standard|eu_reverse_charge|
    eu_standard|non_eu_zero, status pending|issued|failed|dead_lettered|credited|legacy|
@@ -329,7 +335,7 @@ PR 07.2 — Tier 2 (expert -> member):
 9. Trigger: payment_intent.succeeded handler enqueues issueExpertServiceInvoice(bookingId)
    (flag ff.expert_invoicing_apps_enabled + ff.invoicing.<provider>); retries via the same
    invoicing-retry workflow; failures surface in the expert session page.
-10. API: POST /accounting/connect/[provider] (starts OAuth PKCE, returns URL), GET
+10. API: POST /accounting/connect/[provider] (starts OAuth, returns URL), GET
     /accounting/callback (extend existing for provider + state), GET /accounting/status,
     POST /accounting/disconnect, POST /invoicing/expert/[bookingId]/retry, POST /invoicing/expert/
     [bookingId]/mark-manual, GET /invoicing/exports/saft?month= (CSV + XML zip via private Blob).
@@ -338,7 +344,7 @@ PR 07.2 — Tier 2 (expert -> member):
     (update expert/profile/steps/[step]/complete — singular since Phase 4B); session detail shows invoice status with
     Retry and "Mark as issued manually"; /[orgSlug]/finance/invoices lists expert_invoices with
     monthly export button.
-12. Tests: adapter dispatch, PKCE flow (mocked), idempotency per booking, manual export shape.
+12. Tests: adapter dispatch, OAuth flow (mocked), idempotency per booking, manual export shape.
     Docs: payments-payouts-spec.md Tier 2 section, admin-operator-playbooks.md (verify connection
     in Become-Partner review), decision-log.md.
 
