@@ -353,6 +353,7 @@ interface SeriesRow {
   prefix: string
   documentType: string
   description?: string
+  atStatus?: string
 }
 
 function seriesFromItem(item: Record<string, unknown>): SeriesRow | null {
@@ -367,6 +368,7 @@ function seriesFromItem(item: Record<string, unknown>): SeriesRow | null {
     prefix,
     documentType,
     description: String(attr(item, "description") ?? ""),
+    atStatus: String(attr(item, "at_status") ?? ""),
   }
 }
 
@@ -554,7 +556,9 @@ async function issueSalesDocument(
     customer_tax_registration_number: SPIKE_CUSTOMER_NIF,
     customer_business_name: SPIKE_CUSTOMER_NAME,
     customer_country: "PT",
-    payment_mechanism: "TB",
+    // Official TOConline codes (recibos-de-venda): MO cash, TR bank transfer,
+    // CC/DC card, MB, CH, DDA. SAF-T "TB" is rejected as unrecognized.
+    payment_mechanism: "MO",
     vat_included_prices: true,
     currency_iso_code: "EUR",
     notes: input.notes,
@@ -760,7 +764,7 @@ async function main(): Promise<void> {
     record(
       "01c",
       "proven",
-      `TEST series FT id=${ftSeries.id} NC id=${ncSeries?.id ?? "none"}`,
+      `TEST series FT id=${ftSeries.id} NC id=${ncSeries?.id ?? "none"} at_status=${ftSeries.atStatus || "unknown"}`,
       {
         ft: ftSeries,
         nc: ncSeries,
@@ -784,6 +788,28 @@ async function main(): Promise<void> {
     )
     record("05", "skipped", "No TEST NC series")
     record("06", "skipped", "No TEST NC series")
+    printSummary()
+    process.exit(1)
+  }
+
+  const notCommunicated = [ftSeries, ncSeries].filter(
+    (row) => row.atStatus !== "communicated"
+  )
+  if (notCommunicated.length > 0) {
+    const labels = notCommunicated
+      .map(
+        (row) =>
+          `${row.prefix}/${row.documentType} id=${row.id} at_status=${row.atStatus || "missing"}`
+      )
+      .join(", ")
+    record(
+      "04",
+      "failed",
+      `TEST series not communicated to AT (${labels}). Operator: Empresa → Configurações → Séries de Documentos → Comunicar série for TEST FT and NC only. Do not communicate or issue on ELEVA.`
+    )
+    record("05", "skipped", "TEST series at_status is not communicated")
+    record("06", "skipped", "TEST series at_status is not communicated")
+    record("07", "skipped", "TEST series at_status is not communicated")
     printSummary()
     process.exit(1)
   }

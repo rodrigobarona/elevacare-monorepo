@@ -5,13 +5,15 @@
 > **Last updated**: 2026-05-04
 > **Related**: [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 
-> **07.0 (2026-09-13):** Official docs treat `API_URL` / `OAUTH_URL` as
+> **07.0 (2026-09-14):** Official docs treat `API_URL` / `OAUTH_URL` as
 > **per-company credentials** from Empresa → Configurações → Dados API
 > (https://api-docs.toconline.pt/autenticacao-detalhada), not literals to
 > paste into `packages/accounting/src`. The table below is a historical Eleva
-> snapshot. Spike 07.0 accepted founder prefix `TEST` and proved `GET /auth`
-> 302 + code; `POST /token` is 403 until a real Dados API secret is in env.
-> No documents were issued. Evidence: `docs/eleva-v3/spikes/07-toconline.md`.
+> snapshot. Spike 07.0 proved official `/auth` + `/token` (HTTP Basic),
+> refresh grant, TEST series lookup (`at_status=uncommunicated`), customer
+> and service upsert. FT/PDF/NC remain blocked until the founder communicates
+> TEST FT + NC to AT. Live `ELEVA` was never used. Evidence:
+> `docs/eleva-v3/spikes/07-toconline.md`.
 
 ## Base URLs
 
@@ -28,50 +30,53 @@ row below into env or source.
 > per-company `API_URL` / `OAUTH_URL` from Empresa → Configurações → Dados API.
 > Older notes that used `api.toconline.pt` are also incorrect.
 
-## Authentication — OAuth 2.0 Authorization Code + PKCE
+## Authentication — OAuth 2.0 Authorization Code (simplified)
 
-TOConline uses **Authorization Code** flow with PKCE (S256), not client credentials.
-Hostnames come from `{TOCONLINE_OAUTH_BASE_URL}` (alias `TOCONLINE_OAUTH_URL`).
+TOConline uses **Authorization Code**, not client credentials (`grant_type=client_credentials`
+returns 501). Spike 07.0 proved the official simplified flow
+(https://api-docs.toconline.pt/autenticacao-simplificada): no PKCE, no browser
+follow. Hostnames come from `{TOCONLINE_OAUTH_BASE_URL}` (alias `TOCONLINE_OAUTH_URL`).
 
-### Flow
+### Flow (proven 2026-09-14)
 
 ```
-1. Redirect user to:
-   {TOCONLINE_OAUTH_BASE_URL}/auth
+1. GET {TOCONLINE_OAUTH_BASE_URL}/auth
      ?response_type=code
      &client_id={TOCONLINE_CLIENT_ID}
      &redirect_uri={TOCONLINE_OAUTH_REDIRECT}
      &scope=commercial
-     &code_challenge={challenge}
-     &code_challenge_method=S256
+   Do **not** follow the 302.
 
-2. User authorizes → callback receives ?code=...
+2. Read `code` from Location: {redirect}?code=…
 
-3. Exchange code for token:
-   POST {TOCONLINE_OAUTH_BASE_URL}/token
-   Authorization: Basic base64(client_id:client_secret)  # official docs
+3. POST {TOCONLINE_OAUTH_BASE_URL}/token
+   Authorization: Basic base64(client_id:client_secret)
    Content-Type: application/x-www-form-urlencoded
 
    grant_type=authorization_code
    &code={code}
    &redirect_uri={TOCONLINE_OAUTH_REDIRECT}
-   &code_verifier={verifier}
+   &scope=commercial
 
-   Historical Eleva adapter also sent client_id / client_secret in the body.
-   Confirm which TOConline accepts during the TEST series run.
+4. Response: { access_token, refresh_token, expires_in: 14400, token_type: Bearer }
 
-4. Response: { access_token, refresh_token, expires_in, token_type }
+5. Refresh: POST /token grant_type=refresh_token + HTTP Basic
+   (also returns expires_in=14400).
 ```
+
+The detailed/interactive docs still mention PKCE S256. 07.1 should implement the
+**proven simplified** contract first. Do not require `code_challenge` unless a
+future interactive login forces it.
 
 ### Key details
 
-| Parameter            | Value                                                       |
-| -------------------- | ----------------------------------------------------------- |
-| Grant type           | `authorization_code`                                        |
-| Scope                | `commercial`                                                |
-| PKCE challenge       | S256                                                        |
-| Client auth location | Official docs: HTTP Basic; historical adapter: request body |
-| Token delivery       | Bearer header                                               |
+| Parameter            | Value                                           |
+| -------------------- | ----------------------------------------------- |
+| Grant type           | `authorization_code`                            |
+| Scope                | `commercial`                                    |
+| PKCE                 | Not required on the proven simplified flow      |
+| Client auth location | HTTP Basic `client_id:secret` (official + 07.0) |
+| Token delivery       | Bearer header                                   |
 
 ### Request headers (all authenticated calls)
 
@@ -413,7 +418,8 @@ Key fields:
 - `finalize`: `0` = draft, `1` = finalize immediately
 - `lines`: array of line items (can be empty to add lines later)
 - `vat_included_prices`: whether unit prices include VAT
-- `payment_mechanism`: `MO` (dinheiro), `CC` (cartão crédito), `TB` (transferência bancária), etc.
+- `payment_mechanism`: official TOConline codes are `MO` (cash), `TR` (bank
+  transfer), `CC`/`DC` (card), `MB`, `CH`, `DDA`. SAF-T `TB` is rejected.
 
 ---
 
@@ -797,7 +803,7 @@ GET /api/taxes?filter[tax_code]=ISE&filter[tax_country_region]=PT
      "customer_country": "{PT|ES|BR|...}",
      "date": "2026-01-15",
      "due_date": "2026-02-15",
-     "payment_mechanism": "TB",
+     "payment_mechanism": "MO",
      "vat_included_prices": true,
      "currency_iso_code": "EUR",
      "notes": "Servico de plataforma Eleva Care - Consulta {booking_id}",

@@ -32,10 +32,29 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-14: Phase 07.0 OAuth + TEST series proven; issuance blocked on AT series communication
+
+- Owner: engineering (spike) + operator (communicate TEST series) + accountant (IVA / D-09)
+- Status: active for the 07.0 runner; **07.0 issuance still incomplete**; **D-09 remains `proposed`**
+- Review date: with D-09 (2026-09-21 while D-09 is `proposed`)
+- Summary: Re-run with a real Dados API secret (not a copy of the client id)
+  proved official Authorization Code (`GET /auth` 302 Location code, no
+  browser follow; `POST /token` HTTP Basic), refresh grant `expires_in=14400`,
+  TEST FT id=337 / NC id=343, customer NIF `999999990`, service
+  `ELEVA-SPIKE-070`. Both TEST series have `at_status=uncommunicated`, so
+  `POST /api/v1/commercial_sales_documents` refuses issuance. Official
+  payment codes are `MO`/`TR` (SAF-T `TB` is rejected). Document AT (check 06) stayed off (`TOCONLINE_SPIKE_SEND_AT` unset). Live `ELEVA` unused.
+  Operator: communicate TEST FT + NC only (Empresa → Configurações → Séries
+  de Documentos → Comunicar série), then re-run. Do not invent D-09 terms.
+  PR 07.1 stays blocked.
+- Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+
 ### 2026-09-13: Phase 07.0 TOConline spike is TEST series only; 07.1 still gated on D-09
 
 - Owner: engineering (spike) + accountant (IVA / D-09) + operator (Dados API secret)
-- Status: active for the 07.0 runner; **07.0 issuance incomplete**; **D-09 remains `proposed`**
+- Status: superseded by the 2026-09-14 entry (secret is in local env; new
+  blocker is TEST series AT communication)
 - Review date: with D-09 (2026-09-21 while D-09 is `proposed`)
 - Summary: The founder created series prefix **TEST**. The throwaway runner
   accepts exact `TEST` or `TEST-…` and refuses live `ELEVA`. Official `/auth`

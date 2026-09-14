@@ -35,12 +35,19 @@ values in env; never paste them into `packages/accounting/src`.
 (check 01) after the client-credentials probe (check 01b); that pair returns
 403 `access_denied`.
 
+Issuance also requires TEST FT and NC `at_status` other than
+`uncommunicated`. Communicate those series in TOConline
+(Empresa → Configurações → Séries de Documentos → Comunicar série) before
+re-running. Official payment codes are `MO` / `TR` (not SAF-T `TB`).
+
 Optional: `TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD` for AT communication
-(Portal das Finanças credentials required by the official payload).
+(Portal das Finanças credentials required by the official payload). Document
+AT stays off unless `TOCONLINE_SPIKE_SEND_AT=1` and a TEST NC is issued.
 
 ## What this runner does
 
 Official Authorization Code (GET `/auth` without following the 302, then
 `POST /token` with HTTP Basic), series lookup, customer/service upsert, one
 throwaway FT + PDF + AT + NC on the **TEST** series only, refresh-token probe,
-and a sample error payload.
+and a sample error payload. AT is skipped unless the TEST NC +
+`TOCONLINE_SPIKE_SEND_AT=1` gates are set.
