@@ -995,7 +995,17 @@ async function main(): Promise<void> {
   const failed = checks.some(
     (check) =>
       check.status === "failed" &&
-      ["01", "01c", "02", "03", "04", "05", "07", "08"].includes(check.id)
+      [
+        "01",
+        "01c",
+        "02",
+        "03",
+        "04",
+        "05",
+        "07",
+        "08",
+        ...(process.env.TOCONLINE_SPIKE_SEND_AT === "1" ? ["06"] : []),
+      ].includes(check.id)
   )
   process.exit(failed ? 1 : 0)
 }
