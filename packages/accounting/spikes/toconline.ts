@@ -57,13 +57,21 @@ function requiredEnv(name: string): string {
   return value
 }
 
+function httpsOrigin(name: string, value: string): string {
+  const url = new URL(value)
+  if (url.protocol !== "https:") {
+    throw new Error(`${name} must be https`)
+  }
+  return url.origin + url.pathname.replace(/\/$/, "")
+}
+
 function apiBase(): string {
   const value =
     process.env.TOCONLINE_API_BASE_URL || process.env.TOCONLINE_API_URL
   if (!value) {
     throw new Error("Missing TOCONLINE_API_BASE_URL / TOCONLINE_API_URL")
   }
-  return value.replace(/\/$/, "")
+  return httpsOrigin("TOCONLINE_API_BASE_URL", value)
 }
 
 function oauthBase(): string {
@@ -72,7 +80,7 @@ function oauthBase(): string {
   if (!value) {
     throw new Error("Missing TOCONLINE_OAUTH_BASE_URL / TOCONLINE_OAUTH_URL")
   }
-  return value.replace(/\/$/, "")
+  return httpsOrigin("TOCONLINE_OAUTH_BASE_URL", value)
 }
 
 function redirectUri(): string {
@@ -515,9 +523,13 @@ function assertIssuedOnTest(doc: IssuedDocument, expectedPrefix: string): void {
   if (!doc.id) {
     throw new Error("Issued document missing id")
   }
-  if (doc.seriesPrefix && !isAllowedTestSeriesPrefix(doc.seriesPrefix)) {
+  if (
+    !doc.seriesPrefix ||
+    normalizeTestSeriesPrefix(doc.seriesPrefix) !==
+      normalizeTestSeriesPrefix(expectedPrefix)
+  ) {
     throw new Error(
-      `Issued document series ${doc.seriesPrefix} is not TEST. Aborting.`
+      `Issued document series ${doc.seriesPrefix ?? "(missing)"} does not match ${expectedPrefix}. Aborting.`
     )
   }
   if (doc.number && /ELEVA/i.test(doc.number) && !/TEST/i.test(doc.number)) {
@@ -550,6 +562,7 @@ async function issueSalesDocument(
   }
   const body: Record<string, unknown> = {
     document_type: input.documentType,
+    finalize: 1,
     document_series_id: Number(input.series.id) || input.series.id,
     document_series_prefix: input.series.prefix,
     customer_id: Number(input.customerId) || input.customerId,
@@ -981,7 +994,8 @@ async function main(): Promise<void> {
   printSummary()
   const failed = checks.some(
     (check) =>
-      check.status === "failed" && ["01", "01c", "04", "07"].includes(check.id)
+      check.status === "failed" &&
+      ["01", "01c", "02", "03", "04", "05", "07", "08"].includes(check.id)
   )
   process.exit(failed ? 1 : 0)
 }
