@@ -17,6 +17,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@eleva/accounting": "workspace:*",
     "@eleva/audit": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",

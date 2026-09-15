@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { decryptOAuthToken, revokeOAuthToken } from "@eleva/encryption"
+import {
+  decryptOAuthToken,
+  encryptOAuthToken,
+  revokeOAuthToken,
+} from "@eleva/encryption"
 import { resetEnvCache } from "@eleva/config/env"
 import { TOC_V1_AUTO_FINALIZE_BLOCKED } from "./issuance-gate"
-import { toconlineAdapter } from "./index"
+import {
+  ensureToconlineAccessToken,
+  needsToconlineTokenRefresh,
+  toconlineAdapter,
+} from "./index"
 
 vi.mock("@eleva/encryption", () => ({
   encryptOAuthToken: vi.fn().mockResolvedValue("vault-ref"),
@@ -228,5 +236,67 @@ describe("toconlineAdapter", () => {
       })
     ).rejects.toMatchObject({ kind: "validation" })
     expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("does not refresh a token that is still valid", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "live-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    })
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+
+    const loaded = await ensureToconlineAccessToken(
+      "vault-ref",
+      creds.metadata.orgId,
+      creds.metadata.userId
+    )
+    expect(loaded).toMatchObject({
+      accessToken: "live-at",
+      vaultRef: "vault-ref",
+      rotated: false,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("refreshes an expired token with HTTP Basic and re-encrypts", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "stale-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() - 1000),
+    })
+    vi.mocked(encryptOAuthToken).mockResolvedValue("vault-ref-rotated")
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "new-at",
+        refresh_token: "new-rt",
+        expires_in: 3600,
+      }),
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const loaded = await ensureToconlineAccessToken(
+      "vault-ref",
+      creds.metadata.orgId,
+      creds.metadata.userId
+    )
+    expect(loaded.rotated).toBe(true)
+    expect(loaded.accessToken).toBe("new-at")
+    expect(loaded.vaultRef).toBe("vault-ref-rotated")
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    const init = fetchMock.mock.calls[0]?.[1] as RequestInit
+    const headers = init.headers as Record<string, string>
+    expect(headers.Authorization).toMatch(/^Basic /)
+    expect(String(init.body)).toContain("grant_type=refresh_token")
+    expect(encryptOAuthToken).toHaveBeenCalled()
+  })
+
+  it("treats tokens inside the refresh skew as expired", () => {
+    expect(needsToconlineTokenRefresh(new Date(Date.now() + 10_000))).toBe(true)
+    expect(
+      needsToconlineTokenRefresh(new Date(Date.now() + 10 * 60 * 1000))
+    ).toBe(false)
   })
 })

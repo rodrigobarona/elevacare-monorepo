@@ -200,11 +200,12 @@ async function status(creds: {
   orgId?: string
 }): Promise<AdapterStatus> {
   try {
-    const token = await loadAccessToken(
+    const loaded = await ensureToconlineAccessToken(
       creds.vaultRef,
       credsOrgId(creds.metadata, creds.orgId),
       credsUserId(creds.metadata)
     )
+    const token = loaded.accessToken
     const env = requireToconlineEnv()
     const res = await fetch(
       `${env.TOCONLINE_API_URL.replace(/\/$/, "")}/api/v1/companies`,
@@ -265,11 +266,28 @@ function credsUserId(metadata?: Record<string, unknown>): string {
   throw new AdapterError("credentials", "TOConline credentials missing userId")
 }
 
-async function loadAccessToken(
+const TOKEN_REFRESH_SKEW_MS = 60_000
+
+export interface LoadedToconlineToken {
+  accessToken: string
+  vaultRef: string
+  expiresAt: Date | null
+  rotated: boolean
+}
+
+export function needsToconlineTokenRefresh(
+  expiresAt: Date | null,
+  now = Date.now()
+): boolean {
+  if (!expiresAt) return false
+  return expiresAt.getTime() - TOKEN_REFRESH_SKEW_MS <= now
+}
+
+export async function ensureToconlineAccessToken(
   ciphertext: string,
   orgId: string,
   userId: string
-): Promise<string> {
+): Promise<LoadedToconlineToken> {
   try {
     const decrypted = await decryptOAuthToken(orgId, ciphertext, {
       provider: "toconline",
@@ -281,7 +299,25 @@ async function loadAccessToken(
         "TOConline credentials missing access_token"
       )
     }
-    return decrypted.accessToken
+    if (!needsToconlineTokenRefresh(decrypted.expiresAt)) {
+      return {
+        accessToken: decrypted.accessToken,
+        vaultRef: ciphertext,
+        expiresAt: decrypted.expiresAt,
+        rotated: false,
+      }
+    }
+    if (!decrypted.refreshToken) {
+      throw new AdapterError(
+        "credentials",
+        "TOConline credentials expired and have no refresh_token"
+      )
+    }
+    return refreshToconlineAccessToken({
+      refreshToken: decrypted.refreshToken,
+      orgId,
+      userId,
+    })
   } catch (err) {
     if (err instanceof AdapterError) throw err
     throw new AdapterError(
@@ -290,6 +326,68 @@ async function loadAccessToken(
         err instanceof Error ? err.message : String(err)
       }`
     )
+  }
+}
+
+async function refreshToconlineAccessToken(input: {
+  refreshToken: string
+  orgId: string
+  userId: string
+}): Promise<LoadedToconlineToken> {
+  const env = requireToconlineEnv()
+  const tokenRes = await fetch(
+    `${env.TOCONLINE_OAUTH_URL.replace(/\/$/, "")}/token`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        Authorization: basicAuthHeader(
+          env.TOCONLINE_CLIENT_ID,
+          env.TOCONLINE_CLIENT_SECRET
+        ),
+      },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: input.refreshToken,
+        scope: SCOPE,
+      }).toString(),
+    }
+  )
+  if (!tokenRes.ok) {
+    const body = await safeBody(tokenRes)
+    throw new AdapterError(
+      "credentials",
+      `TOConline token refresh failed: ${tokenRes.status} ${body}`
+    )
+  }
+  const json = (await tokenRes.json()) as {
+    access_token?: string
+    refresh_token?: string
+    expires_in?: number
+  }
+  if (!json.access_token) {
+    throw new AdapterError(
+      "credentials",
+      "TOConline token refresh returned no access_token"
+    )
+  }
+  const expiresAt = new Date(
+    Date.now() + Math.max(1, json.expires_in ?? 3600) * 1000
+  )
+  const vaultRef = await encryptOAuthToken({
+    provider: "toconline",
+    userId: input.userId,
+    orgId: input.orgId,
+    accessToken: json.access_token,
+    refreshToken: json.refresh_token ?? input.refreshToken,
+    expiresAt,
+  })
+  return {
+    accessToken: json.access_token,
+    vaultRef,
+    expiresAt,
+    rotated: true,
   }
 }
 
