@@ -38,10 +38,30 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0034_payout_engine")
+    expect(last?.tag).toBe("0035_expert_invoices")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const payoutSql = last?.statements.join("\n") ?? ""
+    const invoiceSql = last?.statements.join("\n") ?? ""
+    expect(invoiceSql).toContain("expert_invoices")
+    expect(invoiceSql).toContain("buyer_tax_id")
+    expect(invoiceSql).toContain("expert_invoice_status")
+    expect(invoiceSql).toContain("expert_invoices_booking_expert_key")
+    expect(invoiceSql).toContain("expert_invoices_id_org_key")
+    expect(invoiceSql).toContain(
+      'ADD CONSTRAINT "expert_invoices_booking_expert_key"'
+    )
+    expect(invoiceSql).toContain('ADD CONSTRAINT "expert_invoices_id_org_key"')
+    expect(invoiceSql).not.toContain(
+      'CREATE UNIQUE INDEX IF NOT EXISTS "expert_invoices_booking_expert_key"'
+    )
+    expect(invoiceSql).toContain("bookings_id_org_key")
+    expect(invoiceSql).toContain("expert_invoices_booking_org_fk")
+    expect(invoiceSql).toContain("eleva.platform_admin")
+    expect(invoiceSql.indexOf("expert_invoices_booking_org_fk")).toBeLessThan(
+      invoiceSql.indexOf('DROP CONSTRAINT IF EXISTS "bookings_id_org_key"')
+    )
+    const payout = migrations.find((m) => m.tag === "0034_payout_engine")
+    const payoutSql = payout?.statements.join("\n") ?? ""
     expect(payoutSql).toContain("payout_states")
     expect(payoutSql).toContain("booking_refunds")
     expect(payoutSql).toContain("transfer_reversals")

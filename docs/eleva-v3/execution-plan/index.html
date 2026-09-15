@@ -443,9 +443,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-09</td>
-<td>Historical MVP invoices: <code>legacy</code> / <code>legacy_missing</code>, no reissue</td>
+<td>Historical MVP invoices: <code>legacy</code> / <code>legacy_missing</code>, no reissue (Aprovado com condições 2026-09-15; regularization still required)</td>
 <td>accountant</td>
-<td>PR 07.1</td>
+<td>PR 07.1 production issuance (fiscal params still pending)</td>
 </tr>
 <tr>
 <td>D-10</td>
@@ -4267,7 +4267,7 @@ counts, PR URLs, deferred items.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phase 6 (PR 07.0 spike may start once PR 06.1 is merged); accountant sign-off of the IVA + settlement matrix and D-09 — entry gate below</td>
+<td>Phase 6 (PR 07.0 spike may start once PR 06.1 is merged); accountant 2026-09-15 written reply (<strong>Aprovado com condições</strong>): D-09 historical classification approved with regularization conditions; PR 07.1 automatic <strong>production</strong> issuance / intra-EU flows still blocked on pending fiscal-parameter confirmation — entry gate below</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -4289,23 +4289,46 @@ Eleva has to make an invoice for the service fees.&quot; Legally there are two i
 the expert invoices the member for the service (Tier 2, the expert&#39;s own fiscal software).</p>
 <h2 id="07-invoicing-toconline--entry-gate"><a class="anchor" href="#07-invoicing-toconline--entry-gate" aria-label="Link to section">#</a>Entry gate</h2>
 <ul>
-<li>IVA matrix <strong>and the Phase 6 settlement matrix</strong> (<code>computeSettlement</code>, D-03) in
-<code>payments-payouts-spec.md</code> signed off by the accountant (record in <code>decision-log.md</code> with date
-and name), including: invoice timing (charge time, not payout), VAT basis of the commission,
-reverse-charge conditions and VIES-failure behaviour, customer NIF/address requirements,
-credit-note timing (on refund <strong>succeeded</strong>), rounding, the payment/refund relationship, the
-test-series procedure and AT communication. Tier 1 code must not ship without it.</li>
-<li><strong>Historical invoices (D-09)</strong> decided with the accountant and recorded: migrated MVP paid
+<li>Accountant written reply <strong>2026-09-15</strong>: <strong>Aprovado com condições</strong> (date + name in
+<code>decision-log.md</code>; verbatim
+<a href="../accountant-approval-2026-09-15.md"><code>accountant-approval-2026-09-15.md</code></a>). This <strong>is</strong>
+the accountant reply, with conditions — not a founder D-03–D-06 substitute. Automatic
+issuance may be activated only after the conditions below and confirmation of pending fiscal
+parameters. This reply does <strong>not</strong> authorize activating flows whose fiscal configuration is
+not yet validated.</li>
+<li><strong>IVA / settlement (D-03) — Aprovado com condições.</strong> Commission VAT-inclusive model and
+issuance-not-tied-to-payout are <strong>Aprovado</strong> (100,00 € / 15,00 € / 85,00 € example; must
+appear in commercial terms). Still <strong>blocked</strong> for PR 07.1 automatic <strong>production</strong> issuance
+and for activating intra-EU flows until pending fiscal parameters are confirmed: tax codes,
+rates, legal mentions; VIES 24h cache reuse + downtime procedure; OSS classification (depends
+on service/operations — not an implemented fact); EU without a valid VIES NIF is <strong>not</strong>
+automatically a consumer; extra-EU is <strong>not</strong> an indiscriminate “zero rate”. Credit notes,
+billing data, and rounding follow the accountant conditions in <code>payments-payouts-spec.md</code>
+(credit note is not exclusively tied to technical refund success; no “single rounding” rule
+that diverges taxable base / IVA / total).</li>
+<li><strong>Historical invoices (D-09) — accountant-approved with conditions.</strong> Migrated MVP paid
 bookings are imported with <code>platform_fee_invoices.status = legacy</code> and the MVP&#39;s invoice
-reference (<code>legacy_document_ref</code>) when one exists, <code>legacy_missing</code> when none does; v3 <strong>never</strong>
-issues a Tier 1 document for a booking paid before cutover; the accountant decides whether
-<code>legacy_missing</code> rows need a lawful backfill outside the system. Phase 14 consumes this rule.</li>
+reference (<code>legacy_document_ref</code>) when one exists, <code>legacy_missing</code> when none does; v3
+<strong>never</strong> issues a Tier 1 document for a booking paid before cutover. Exclusion from v3
+automatic issuance does <strong>not</strong> waive Eleva&#39;s regularization duties. <code>legacy_missing</code> cases
+must be sent for analysis (values, dates, available documents). Regularization is a <strong>separate
+procedure under accountant guidance</strong>. Phase 14 consumes this rule. This does <strong>not</strong>
+unlock PR 07.1 automatic production issuance.</li>
+<li><strong>PR 07.1 automatic production issuance / activating intra-EU flows: STILL BLOCKED</strong> until
+those pending fiscal parameters are confirmed. <strong>07.2 / OAuth / schema / TEST-series-without-issuance
+can continue.</strong></li>
+<li><strong>TEST / series (accountant-approved):</strong> do not Comunicar TEST FT/NC to AT; do not finalize
+fictitious TOConline documents; do not use ELEVA production series to simulate. Non-communication
+of TEST does not make it a fiscal test environment and does not authorize fictitious documents.
+ELEVA production series depend on legally required procedures (including series communication
+and fiscal configuration).</li>
 <li><strong>PR 07.0 spike</strong> (<code>phase-07.0/spike-toconline</code>) completed against the Eleva TOConline account
-in a <strong>test series</strong>: current OAuth flow, correct API hostnames, customer + service creation,
-invoice, PDF, AT communication, credit note, refresh-token behaviour, rate limits and error
-semantics — evidence in <code>docs/eleva-v3/spikes/07-toconline.md</code>. Hostnames and OAuth endpoints
-are <strong>configuration</strong> (<code>TOCONLINE_API_BASE_URL</code>, <code>TOCONLINE_OAUTH_BASE_URL</code>), verified against
-<a href="https://api-docs.toconline.pt" target="_blank" rel="noreferrer noopener">https://api-docs.toconline.pt</a> during the spike, never hardcoded from historical notes.</li>
+in a <strong>TEST series that is never communicated to AT</strong> (TOConline-only sandbox): current OAuth
+flow, correct API hostnames, customer + service creation, series lookup, refresh-token
+behaviour, rate limits and error semantics — evidence in <code>docs/eleva-v3/spikes/07-toconline.md</code>.
+Invoice / PDF / document AT / credit note wait for <strong>ELEVA</strong> at go-live. Hostnames and OAuth
+endpoints are <strong>configuration</strong> (<code>TOCONLINE_API_BASE_URL</code>, <code>TOCONLINE_OAUTH_BASE_URL</code>), verified
+against <a href="https://api-docs.toconline.pt" target="_blank" rel="noreferrer noopener">https://api-docs.toconline.pt</a> during the spike, never hardcoded from historical notes.</li>
 <li>Eleva TOConline production credentials and series <code>ELEVA-FEE-2026</code>, <code>ELEVA-SAAS-2026</code> created
 (operator task documented in <code>operator-tasks/</code>).</li>
 </ul>
@@ -4313,18 +4336,25 @@ are <strong>configuration</strong> (<code>TOCONLINE_API_BASE_URL</code>, <code>T
 <p>In:</p>
 <ul>
 <li><code>packages/accounting</code> restructure per <code>.cursor/rules/toconline-integration.mdc</code>:
-<code>src/core/</code> (IVA rules, VIES check with 24h cache, invoice types, credential store using
-<code>@eleva/encryption</code>), <code>src/eleva-platform/</code> (Tier 1 TOConline client: OAuth PKCE, customers,
+<code>src/core/</code> (IVA rules per accountant 2026-09-15 conditions; VIES check at registration and
+before issuance with evidence retained — 24h cache + downtime procedure pending specific
+validation before activating intra-EU flows; invoice types; credential store using
+<code>@eleva/encryption</code>), <code>src/eleva-platform/</code> (Tier 1 TOConline client: OAuth Authorization
+Code without PKCE as proven in PR 07.0, customers,
 services, sales documents v1, PDF URL, AT communication, email), <code>src/expert-apps/adapters/ {toconline,moloni,manual}</code> implementing <code>ExpertInvoicingAdapter</code>, <code>src/registry.ts</code> kept.</li>
 <li>Tier 1: <code>issuePlatformFeeInvoice(bookingPaymentId)</code> — triggered by the <code>payment_intent.succeeded</code>
 handler (the fee is fixed at charge time in <code>booking_payments.application_fee_cents</code>; a later
-refund or reversal issues a credit note) so that every paid booking gets an invoice regardless
+commission reduction or cancellation issues a credit note per accountant conditions — not
+exclusively on technical refund success) so that every paid booking gets an invoice regardless
 of payout state (<code>approval_required</code>, <code>held</code>, <code>failed</code>) — creates/updates the expert as TOConline customer (NIF, address
 from <code>expert_profiles</code> + <code>expert_practice_location</code>), creates a sales document in series
 <code>ELEVA-FEE-{YYYY}</code> with one line <code>Platform service fee — booking #&lt;short id&gt;</code> at the applied
-fee, IVA per matrix (PT 23%; EU VIES valid -&gt; reverse charge; non-EU zero-rated), finalizes,
+fee, IVA per the accountant 2026-09-15 matrix (Aprovado com condições — pending fiscal
+parameters; do not ship the old automatic EU-without-VIES=consumer / extra-EU zero-rate
+table), finalizes,
 communicates to AT, emails the PDF; idempotent via <code>platform_fee_invoices(booking_payment_id PK, toconline_document_id, series, number, status, issued_at, pdf_url, error)</code>. Credit note on
-refund/reversal (<code>issuePlatformFeeCreditNote</code>).</li>
+commission reduction or cancellation (<code>issuePlatformFeeCreditNote</code>), not exclusively on
+technical refund success.</li>
 <li><strong>Invoice domain events</strong> (consumed by Phase 8) use the <strong>transactional outbox</strong> created in
 Phase 4 (<code>domain_events_outbox</code> — <code>id</code>, <code>type</code>, <code>payload jsonb</code>, <code>idempotency_key</code> unique,
 <code>created_at</code>, <code>published_at</code> nullable, <code>attempts</code> — plus <code>emitDomainEvent(tx, event)</code> in
@@ -4350,8 +4380,9 @@ member settings / at checkout), service descriptor from event type, amount = gro
 in <code>expert_invoices(booking_id + expert_org_id PK, adapter, external_id, status, pdf_url, issued_at, error, attempts)</code>; manual mode records <code>status = manual_pending</code> and appears in the
 expert&#39;s session page + monthly export (<code>GET /invoicing/exports/saft?month=</code>, CSV + SAF-T PT
 XML skeleton).</li>
-<li>Credentials: <code>expert_integration_credentials(id, expert_org_id, provider, encrypted_payload, status, installed_at)</code> encrypted with <code>encryptForOrg</code>; OAuth PKCE callback routes in <code>apps/api</code>
-(<code>/accounting/callback</code> exists — extend per provider) — redirect URI <code>TOCONLINE_OAUTH_REDIRECT</code>.</li>
+<li>Credentials: <code>expert_integration_credentials(id, expert_org_id, provider, encrypted_payload, status, installed_at)</code> encrypted with <code>encryptForOrg</code>; OAuth callback routes in <code>apps/api</code>
+(<code>/accounting/callback</code> exists — extend per provider; TOConline is Authorization Code
+<strong>without PKCE</strong> as proven in PR 07.0) — redirect URI <code>TOCONLINE_OAUTH_REDIRECT</code>.</li>
 <li>Expert onboarding step &quot;Invoicing&quot; (<code>apps/expert</code>): choose Auto (connect TOConline or Moloni)
 or Manual (acknowledge legal obligation); Become-Partner cannot complete without one; session
 page shows invoice status with retry and &quot;mark as issued manually&quot;.</li>
@@ -4380,27 +4411,41 @@ audit unions (<code>invoice: issued|failed|credited|manual_marked</code>; <code>
 <li>Operator docs: <code>operator-tasks/toconline-setup.md</code> (series creation, OAuth app, redirect URI).</li>
 </ol>
 <h2 id="07-invoicing-toconline--acceptance-criteria"><a class="anchor" href="#07-invoicing-toconline--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<p><strong>PR 07.1 issuance is deferred.</strong> Do not treat <code>issuePlatformFeeInvoice</code> reaching <code>issued</code>,
+finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
+Those checks wait for confirmed fiscal parameters (tax codes, rates, legal mentions, VIES
+24h cache + downtime procedure). 07.1 may land schema/adapter scaffolding that never POSTs
+<code>/api/v1/commercial_sales_documents</code>.</p>
 <ul>
 <li><input disabled="" type="checkbox"> Paid booking on staging -&gt; <code>platform_fee_invoices</code> row is <code>pending</code> synchronously in the
-<code>payment_intent.succeeded</code> handler and <code>issued</code> by the workflow worker within <strong>60 s</strong>
-(SLA asserted by the test with polling). Retry policy — fast stage: QStash retries the issuance job with exponential backoff up to <strong>5 attempts</strong>, then sets <code>status = failed</code> and alerts (Sentry + ops e-mail); slow stage: <code>invoicing-retry</code> (every 30 min) re-processes <code>failed</code> rows with backoff up to <strong>10 further attempts</strong>, then sets <code>status = dead_lettered</code>, writes <code>workflow_dead_letters</code> and raises the admin flag (Phase 12 queue). One policy, referenced by the workflow, the tests and <code>operator-tasks/toconline-setup.md</code>. Issuance is a hard precondition of the expert
-transfer: the Phase 6 payout engine refuses to create a Stripe transfer while the
-booking&#39;s fee invoice is not <code>issued</code> (also verified with a payout left in
-<code>approval_required</code>, where the invoice must still reach <code>issued</code> without any transfer).
-Issued row carries the TOConline document number in <code>ELEVA-FEE-2026</code>, PDF URL works, AT
-communication response stored (test/sandbox mode if available; otherwise a clearly
-separate test series).</li>
-<li><input disabled="" type="checkbox"> Refund after invoice -&gt; credit note issued and linked.</li>
-<li><input disabled="" type="checkbox"> Expert in Auto mode (TOConline) -&gt; <code>expert_invoices</code> <code>issued</code> with external id; Moloni path
-tested with mocked HTTP; Manual mode -&gt; <code>manual_pending</code>, visible in session page and in the
-monthly CSV/SAF-T export.</li>
+<code>payment_intent.succeeded</code> handler. Worker POST / finalize / AT communication / <code>issued</code>
+SLA are <strong>deferred</strong> until fiscal params are confirmed. Retry policy (document now, do not
+run against TOConline TEST): fast stage = QStash exponential backoff up to <strong>5 attempts</strong>,
+then <code>status = failed</code> and alerts (Sentry + ops e-mail); slow stage: <code>invoicing-retry</code>
+(every 30 min) re-processes <code>failed</code> rows with backoff up to <strong>10 further attempts</strong>, then
+<code>status = dead_lettered</code>, writes <code>workflow_dead_letters</code> and raises the admin flag
+(Phase 12 queue). Payout remaining <code>approval_required</code> until a real issued fee invoice
+exists is already the Phase 6 behavior — do not simulate an issued FT to unblock it.</li>
+<li><input disabled="" type="checkbox"> Credit-note path is implemented in code and tests with the issuance gate still closed;
+do not issue or communicate a TEST NC.</li>
+<li><input disabled="" type="checkbox"> Expert in Auto mode (TOConline) -&gt; OAuth connected, TEST series lookup,
+<code>issueInvoice()</code> refuses POST (<code>toconline_v1_auto_finalize_blocked</code>).
+<code>expert_invoices</code> may be <code>pending</code>/<code>failed</code> with the blocked code; <strong>do
+not</strong> POST <code>/api/v1/commercial_sales_documents</code> until fiscal params are
+signed. Moloni path tested with mocked HTTP; Manual mode -&gt;
+<code>manual_pending</code>, visible in session page and in the monthly CSV/SAF-T
+export.</li>
 <li><input disabled="" type="checkbox"> Expert cannot complete Become-Partner without Auto connection or Manual acknowledgment.</li>
 <li><input disabled="" type="checkbox"> Reconciliation job on a seeded month produces a run row and no false mismatch; injected
 mismatch triggers alert path (mocked).</li>
 <li><input disabled="" type="checkbox"> All TOConline calls originate from <code>packages/accounting</code> (boundary grep for
 <code>api33.toconline.pt</code> outside the package returns nothing).</li>
-<li><input disabled="" type="checkbox"> IVA matrix tests: PT NIF 23%, EU VIES-valid reverse charge with note text, EU invalid 23%,
-non-EU zero-rated.</li>
+<li><input disabled="" type="checkbox"> IVA matrix tests match the accountant 2026-09-15 conditions (not the old automatic
+table): PT applies the legally due rate (territorial rules pending confirmation); EU
+VIES-valid B2B general rule → no Portuguese IVA / reverse charge when legal requirements
+are met; EU without valid VIES NIF is <strong>not</strong> auto-classified as consumer; extra-EU is
+<strong>not</strong> indiscriminate zero-rate. Intra-EU flow activation stays blocked until VIES 24h
+cache + downtime procedure are validated. Tax codes, rates, legal mentions pending.</li>
 </ul>
 <h2 id="07-invoicing-toconline--tests"><a class="anchor" href="#07-invoicing-toconline--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
@@ -4409,11 +4454,13 @@ adapter registry dispatch, manual export shape, reconciliation math.</li>
 </ul>
 <h2 id="07-invoicing-toconline--docs-to-update"><a class="anchor" href="#07-invoicing-toconline--docs-to-update" aria-label="Link to section">#</a>Docs to update</h2>
 <ul>
-<li><code>payments-payouts-spec.md</code> (Tier 1 trigger = <code>payment_intent.succeeded</code>, credit note on refund
-succeeded; not <code>settled</code> or transfer; historical-invoice rule), <code>toconline-api-reference.md</code>
+<li><code>payments-payouts-spec.md</code> (Tier 1 trigger = charge / when commission becomes due, not
+payout; credit note on commission reduction, not exclusively refund succeeded; historical-invoice
+rule D-09 Aprovado com condições), <code>toconline-api-reference.md</code>
 (corrections verified in the spike), <code>integration-runbooks.md</code> (TOConline token expiry, AT
 failures), <code>admin-operator-playbooks.md</code>, <code>operator-tasks/toconline-setup.md</code>,
-<code>feature-flag-rollout-plan.md</code>, <code>decision-log.md</code> (accountant sign-off, D-09).</li>
+<code>feature-flag-rollout-plan.md</code>, <code>decision-log.md</code> (accountant 2026-09-15 Aprovado com
+condições, D-03, D-09).</li>
 </ul>
 <h2 id="07-invoicing-toconline--local-references"><a class="anchor" href="#07-invoicing-toconline--local-references" aria-label="Link to section">#</a>Local references</h2>
 <ul>
@@ -4439,9 +4486,14 @@ verified in PR 07.0, and the verified values go into env config, not code.</li>
 </ul>
 <h2 id="07-invoicing-toconline--risks"><a class="anchor" href="#07-invoicing-toconline--risks" aria-label="Link to section">#</a>Risks</h2>
 <ul>
-<li>TOConline has no sandbox: use a dedicated test series and cancel documents; never issue in the
-production series from staging (env guard <code>TOCONLINE_SERIES_PREFIX</code>).</li>
-<li>Accountant sign-off delay blocks Tier 1: Tier 2 (07.2) can proceed in parallel.</li>
+<li>TOConline has no AT sandbox: TEST FT/NC stay <strong>uncommunicated</strong> (TOConline-only).
+Never <code>Comunicar série</code> on TEST. Do not finalize fictitious TOConline documents. Do not
+use ELEVA production series to simulate. Communicate and issue <strong>ELEVA</strong> only after legally
+required procedures (env guard <code>TOCONLINE_SERIES_PREFIX</code>). Staging must not send AT documents.</li>
+<li>Accountant 2026-09-15 is <strong>Aprovado com condições</strong>: D-09 historical classification is
+approved (regularization track still required). PR 07.1 automatic <strong>production</strong> issuance
+and intra-EU flows stay blocked on pending fiscal parameters. Tier 2 (07.2), OAuth, schema,
+and TEST-series-without-issuance can proceed.</li>
 </ul>
 <h2 id="07-invoicing-toconline--copy-paste-prompt"><a class="anchor" href="#07-invoicing-toconline--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
 <div class="prompt"><div class="prompt-bar"><span>Copy-paste prompt</span><button type="button" class="copy" data-target="prompt-07-invoicing-toconline-1">Copy</button></div><pre id="prompt-07-invoicing-toconline-1"><code>You are a senior engineer working in the Eleva.care v3 monorepo at the repository root
@@ -4459,19 +4511,25 @@ Before writing code:
    official documentation (https://api-docs.toconline.pt) is the SOURCE OF TRUTH for hostnames,
    OAuth endpoints and payloads; the local toconline-api-reference.md is historical input used
    only to list what PR 07.0 must verify — never copy an endpoint from it into code.
-4. Entry gate (checked after PR 07.0 merges): confirm decision-log.md contains the accountant
-   sign-off of the IVA + settlement matrix (D-03) and the historical-invoice decision D-09, and
-   that docs/eleva-v3/spikes/07-toconline.md exists. If a sign-off is missing, implement PR 07.2
-   first and stop before Tier 1 issuance code, reporting the block.
+4. Entry gate (checked after PR 07.0 merges): D-09 historical classification is
+   accountant-approved with conditions (2026-09-15, Aprovado com condições). PR 07.1
+   automatic **production** issuance and activating intra-EU flows stay **BLOCKED** until
+   pending fiscal parameters are confirmed (tax codes, rates, legal mentions, VIES 24h
+   cache + downtime procedure, OSS classification, EU-without-VIES not auto-consumer,
+   extra-EU not indiscriminate zero-rate). Implement PR 07.2 / OAuth / schema /
+   TEST-series-without-issuance; stop before Tier 1 production issuance code. Do not
+   Comunicar TEST FT/NC, do not finalize fictitious TOConline docs, do not use ELEVA
+   production series to simulate.
 
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 7 TASK&quot; section further down is
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.0/spike-toconline
-- Then, after each merge, the order depends on the entry gate (step 4): with D-03 + D-09 signed
-  -&gt; phase-07.1/tier1-platform-fee-invoices, then phase-07.2/tier2-expert-adapters; WITHOUT the
-  sign-off -&gt; phase-07.2/tier2-expert-adapters only, then STOP and report the block (07.1 needs
-  the signed matrix; never write Tier 1 issuance code against a provisional one). Each PR:
+- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.2/tier2-expert-adapters
+- PR 07.0 spike is complete. PR 07.1 automatic **production** issuance stays BLOCKED on remaining
+  fiscal-parameter confirmation. Implement remaining 07.2 (OAuth / schema / TEST-series-without-issuance
+  if not already on main; then dispatch / token refresh without POST), then STOP and report the
+  07.1 production-issuance block. Never write Tier 1 production issuance code against unconfirmed
+  fiscal parameters. Each PR:
   &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
@@ -4498,33 +4556,46 @@ every paid booking, and expert -&gt; member invoice through the expert&#39;s con
 
 PR 07.0 — spike (throwaway under packages/accounting/spikes/, evidence is the deliverable):
 against the Eleva TOConline account using a TEST series only (env guard
-TOCONLINE_SERIES_PREFIX=TEST-), prove and record in docs/eleva-v3/spikes/07-toconline.md: the
+TOCONLINE_SERIES_PREFIX=TEST). Prove and record in docs/eleva-v3/spikes/07-toconline.md: the
 current OAuth flow and hostnames from https://api-docs.toconline.pt, customer upsert, service
-upsert, invoice in the test series, PDF retrieval, AT communication, credit note, refresh-token
-expiry behaviour, rate limits and error payloads. Update toconline-api-reference.md with what
-was verified; delete the spike code before PR 07.1.
+upsert, series lookup, refresh-token behaviour, rate limits and error payloads. Do **not**
+communicate TEST to AT and do **not** issue TEST sales documents (TOConline refuses
+uncommunicated series; TEST must not become an official AT series). Invoice, PDF, AT
+communication and credit note wait for ELEVA at go-live. Update toconline-api-reference.md
+with what was verified; delete the spike code before PR 07.1.
 
-PR 07.1 — Tier 1 (Eleva platform):
-1. packages/accounting restructure: src/core/{iva.ts (decision table + tests), vies.ts (VIES
-   check, 24h cache in Upstash Redis, typed result), types.ts, credentials.ts (encrypt/decrypt via
+PR 07.1 — Tier 1 (Eleva platform) — **DO NOT START production issuance**. D-09 historical
+classification is Aprovado com condições; automatic production issuance and intra-EU flows stay
+BLOCKED until pending fiscal parameters are confirmed. Schema / adapter scaffolding that does
+not issue FTs may wait; do not Comunicar TEST, do not finalize fictitious TOConline docs, do not
+use ELEVA production series to simulate.
+1. packages/accounting restructure: src/core/{iva.ts (decision table + tests matching the
+   accountant 2026-09-15 conditions — not the old automatic EU-without-VIES=consumer /
+   extra-EU zero-rate table; tax codes/rates/legal mentions pending), vies.ts (VIES
+   check at registration and before issuance with evidence retained; 24h cache + downtime
+   procedure pending specific validation before activating intra-EU), types.ts, credentials.ts (encrypt/decrypt via
    @eleva/encryption encryptForOrg with orgId = Eleva staff org for Tier 1 or expert org for
-   Tier 2)}, src/eleva-platform/toconline-client.ts (OAuth 2.0 Authorization Code + PKCE S256,
-   scope commercial, token refresh, base URL and OAuth URL from TOCONLINE_API_BASE_URL /
+   Tier 2)}, src/eleva-platform/toconline-client.ts (OAuth 2.0 Authorization Code — proven
+   simplified flow: no PKCE, HTTP Basic client_id:secret, scope commercial;
+   token refresh, base URL and OAuth URL from TOCONLINE_API_BASE_URL /
    TOCONLINE_OAUTH_BASE_URL in @eleva/env — values verified in PR 07.0 against
    https://api-docs.toconline.pt, never literals in code; headers per reference;
    methods upsertCustomer, upsertService, createSalesDocumentV1, finalize, getPdfUrl,
    sendToAT, emailDocument, createCreditNote), src/eleva-platform/platform-fee-invoices.ts
    (issuePlatformFeeInvoice(bookingPaymentId) — refuses bookings with paid_at before the
    cutover marker / platform_fee_invoices.status legacy|legacy_missing (D-09) —,
-   issuePlatformFeeCreditNote(refundId) triggered by refund succeeded, amounts from
-   computeSettlement.creditNoteAllocation),
+   issuePlatformFeeCreditNote on commission reduction or cancellation — not exclusively on
+   technical refund success — amounts from computeSettlement.creditNoteAllocation when
+   contractual conditions determine a proportional commission reduction),
    src/eleva-platform/clinic-saas-invoices.ts (issueClinicSaasInvoice(subscriptionId, periodStart,
    periodEnd) — implemented, wired in Phase 11). Env: TOCONLINE_CLIENT_ID, TOCONLINE_CLIENT_SECRET,
    TOCONLINE_OAUTH_BASE_URL, TOCONLINE_API_BASE_URL, TOCONLINE_OAUTH_REDIRECT, TOCONLINE_SERIES_PREFIX
-   (staging uses TEST-ELEVA-FEE), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
+   (staging may set TEST locally; never communicate TEST to AT; production ELEVA is communicated
+   at go-live), ELEVA_PLATFORM_NIF, ELEVA_PLATFORM_ADDRESS_*.
 2. packages/db: platform_fee_invoices (booking_payment_id PK, expert_org_id, series, number,
-   toconline_document_id, amount_cents, iva_rate_bps, iva_regime pt_standard|eu_reverse_charge|
-   eu_standard|non_eu_zero, status pending|issued|failed|dead_lettered|credited|legacy|
+   toconline_document_id, amount_cents, iva_rate_bps, iva_regime (labels are implementation
+   placeholders — do not treat eu_standard / non_eu_zero as a signed automatic table; see
+   accountant 2026-09-15), status pending|issued|failed|dead_lettered|credited|legacy|
    legacy_missing (the retry policy in item 3 uses pending -&gt; issued | failed -&gt; dead_lettered;
    credited after a credit note; legacy / legacy_missing are terminal statuses written ONLY by
    the Phase 14 importer for MVP bookings paid before cutover (D-09) and never by the issuance
@@ -4572,9 +4643,12 @@ PR 07.1 — Tier 1 (Eleva platform):
 5. API (staff capability admin_accounting:read): GET /invoicing/platform-fee?month=,
    GET /accounting/reconciliation, POST /invoicing/platform-fee/[bookingPaymentId]/retry.
    OpenAPI + client.
-6. Tests: IVA decision table (PT NIF 23%, EU VIES valid reverse charge with legal note, EU invalid
-   23%, non-EU zero-rated), VIES cache, client with recorded fixtures (msw), idempotent issuance,
-   credit note, reconciliation math. Docs: operator-tasks/toconline-setup.md (series creation
+6. Tests: IVA decision table matching accountant 2026-09-15 conditions (not EU-without-VIES
+   auto-consumer / extra-EU indiscriminate zero-rate), VIES check + evidence retention (24h
+   cache + downtime procedure pending validation before intra-EU activation), client with
+   recorded fixtures (msw), idempotent issuance,
+   credit note (commission reduction; refund without commission reduction does not by itself
+   originate an Eleva credit note), reconciliation math. Docs: operator-tasks/toconline-setup.md (series creation
    ELEVA-FEE-YYYY / ELEVA-SAAS-YYYY, OAuth app, redirect URI), payments-payouts-spec.md,
    integration-runbooks.md, feature-flag-rollout-plan.md, decision-log.md.
 
@@ -4590,9 +4664,11 @@ PR 07.2 — Tier 2 (expert -&gt; member):
    pdf_url, issued_at, error, attempts). Member NIF: optional field on member profile (PATCH /me)
    and optional at checkout step 2 (Phase 4 form) — store on booking as buyer_tax_id.
 9. Trigger: payment_intent.succeeded handler enqueues issueExpertServiceInvoice(bookingId)
-   (flag ff.expert_invoicing_apps_enabled + ff.invoicing.&lt;provider&gt;); retries via the same
-   invoicing-retry workflow; failures surface in the expert session page.
-10. API: POST /accounting/connect/[provider] (starts OAuth PKCE, returns URL), GET
+   (flag ff.expert_invoicing_apps_enabled + ff.invoicing.&lt;provider&gt;); the TOConline adapter
+   MUST refuse POST /api/v1/commercial_sales_documents (v1 auto-finalizes). Persist
+   document_series_id after OAuth; refresh tokens; record pending/failed with
+   toconline_v1_auto_finalize_blocked. Do not issue TEST or ELEVA FTs.
+10. API: POST /accounting/connect/[provider] (starts OAuth, returns URL), GET
     /accounting/callback (extend existing for provider + state), GET /accounting/status,
     POST /accounting/disconnect, POST /invoicing/expert/[bookingId]/retry, POST /invoicing/expert/
     [bookingId]/mark-manual, GET /invoicing/exports/saft?month= (CSV + XML zip via private Blob).
@@ -4601,17 +4677,21 @@ PR 07.2 — Tier 2 (expert -&gt; member):
     (update expert/profile/steps/[step]/complete — singular since Phase 4B); session detail shows invoice status with
     Retry and &quot;Mark as issued manually&quot;; /[orgSlug]/finance/invoices lists expert_invoices with
     monthly export button.
-12. Tests: adapter dispatch, PKCE flow (mocked), idempotency per booking, manual export shape.
+12. Tests: adapter dispatch, OAuth flow (mocked), idempotency per booking, manual export shape.
     Docs: payments-payouts-spec.md Tier 2 section, admin-operator-playbooks.md (verify connection
     in Become-Partner review), decision-log.md.
 
-Acceptance (paste evidence): staging booking -&gt; Tier 1 invoice in the test series with PDF + AT
-status, credit note on refund; Tier 2 issued via TOConline adapter, Moloni mocked, manual mode
-export; Become-Partner blocked without invoicing choice; reconciliation run row; boundary grep
-for api33.toconline.pt outside packages/accounting empty; IVA tests green.
+Acceptance (paste evidence): do **not** treat staging TEST issuance of FT/NC as an acceptance
+path (accountant: no fictitious fiscal documents; no TEST Comunicação à AT; no ELEVA simulation).
+07.2 evidence = OAuth + TEST lookups + closed issuance gate + token refresh; Moloni mocked;
+manual mode export. Become-Partner blocked without invoicing choice. Boundary grep for
+hardcoded api33.toconline.pt in application source empty (hosts are env). IVA tests match
+accountant 2026-09-15 conditions, not a locked 23/13/6 table. D-09/D-03 are in
+docs/eleva-v3/decision-log.md (Manolo (MB) 2026-09-15, Aprovado com condições).
 
 Report: migrations, endpoints, schedules, flags, tests, CodeRabbit CLI counts, PR URLs, and the
-operator tasks still pending (series, credentials, accountant sign-off).</code></pre></div>
+operator tasks still pending (series, credentials, remaining fiscal-parameter confirmation before
+07.1 production issuance).</code></pre></div>
 </article>
 <article id="08-notifications-lane1">
 <p class="doc-meta">Source: <code>docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md</code></p>

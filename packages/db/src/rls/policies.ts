@@ -39,6 +39,7 @@ export const TENANT_TABLES = [
   "payout_states",
   "booking_refunds",
   "transfer_reversals",
+  "expert_invoices",
   "consents",
   "sessions",
   "expert_practice_locations",
@@ -94,6 +95,9 @@ export const ADMIN_BYPASS_TABLES = new Set<string>([
   "payout_states",
   "booking_refunds",
   "transfer_reversals",
+  // Stripe webhook / invoicing dispatcher insert pending rows under a
+  // platform_admin context with no expert session.
+  "expert_invoices",
 ])
 
 function isDualOrganization(table: string): boolean {

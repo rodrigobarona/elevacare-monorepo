@@ -15,10 +15,15 @@ export const dynamic = "force-dynamic"
 
 export default async function OnboardingPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ orgSlug: string }>
+  searchParams: Promise<{
+    invoicing_error?: string
+    invoicing_connected?: string
+  }>
 }) {
-  const { orgSlug } = await params
+  const [{ orgSlug }, query] = await Promise.all([params, searchParams])
   const session = await guardSessionForOrg(orgSlug)
   if (!session.capabilities.includes("expert:onboard")) {
     redirectToMemberOrg(orgSlug)
@@ -30,7 +35,15 @@ export default async function OnboardingPage({
     redirect(expertWorkspacePath(session))
   }
 
-  const identityEnabled = await getFlag("ff.expert_identity_verification")
+  const [identityEnabled, expertInvoicingEnabled, toconlineInvoicingEnabled] =
+    await Promise.all([
+      getFlag("ff.expert_identity_verification"),
+      getFlag("ff.expert_invoicing_apps_enabled"),
+      getFlag("ff.invoicing.toconline"),
+    ])
+  const toconlineEnabled = Boolean(
+    expertInvoicingEnabled && toconlineInvoicingEnabled
+  )
   const connectState = await getConnectOnboardingState(profile.orgId)
 
   const completedSteps = (profile.metadata as Record<string, unknown>)
@@ -44,8 +57,11 @@ export default async function OnboardingPage({
     : ONBOARDING_STEPS.filter((step) => step !== "identity")
 
   const currentStepIndex = wizardSteps.findIndex((s) => !completed.includes(s))
-  const currentStep =
-    currentStepIndex === -1
+  const invoicingCallback =
+    Boolean(query.invoicing_error) || query.invoicing_connected === "true"
+  const currentStep = invoicingCallback
+    ? "invoicing"
+    : currentStepIndex === -1
       ? wizardSteps[wizardSteps.length - 1]
       : wizardSteps[currentStepIndex]
 
@@ -67,7 +83,9 @@ export default async function OnboardingPage({
         steps={wizardSteps as unknown as string[]}
         completedSteps={completed}
         currentStep={currentStep!}
+        invoicingError={query.invoicing_error}
         identityEnabled={identityEnabled}
+        toconlineEnabled={toconlineEnabled}
         profile={{
           id: profile.id,
           orgId: profile.orgId,

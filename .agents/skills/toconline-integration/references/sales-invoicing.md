@@ -10,10 +10,16 @@ Create a sales document with header + lines in one request:
 POST /api/v1/commercial_sales_documents
 ```
 
+v1 **auto-finalizes on create**. There is no `finalize` field. After create,
+finalize / cancel / update / delete are impossible on this API version.
+Drafts belong on the previous API. Eleva `issueInvoice()` refuses this POST
+unconditionally in Phase 07.2.1 (`toconline_v1_auto_finalize_blocked`). Do not
+create fictitious TEST fiscal documents and do not start production automatic
+issuance.
+
 ```json
 {
   "document_type": "FT",
-  "finalize": 1,
   "date": "2026-01-15",
   "customer_tax_registration_number": "229659179",
   "customer_business_name": "Dr. Maria Silva, Unip. Lda",
@@ -22,7 +28,7 @@ POST /api/v1/commercial_sales_documents
   "customer_city": "Lisboa",
   "customer_country": "PT",
   "due_date": "2026-02-15",
-  "payment_mechanism": "TB",
+  "payment_mechanism": "MO",
   "vat_included_prices": true,
   "currency_iso_code": "EUR",
   "notes": "Servico de plataforma Eleva Care - Consulta NUT-2026-001",
@@ -33,8 +39,8 @@ POST /api/v1/commercial_sales_documents
       "description": "Servico de plataforma Eleva Care",
       "quantity": 1,
       "unit_price": 15.0,
-      "tax_code": "NOR",
-      "tax_percentage": 23
+      "tax_code": "<accountant-pending>",
+      "tax_percentage": "<accountant-pending>"
     }
   ]
 }
@@ -42,16 +48,16 @@ POST /api/v1/commercial_sales_documents
 
 Key fields:
 
-| Field                              | Description                                                           |
-| ---------------------------------- | --------------------------------------------------------------------- |
-| `document_type`                    | `FT` (fatura), `NC` (nota de credito), `FR` (fatura-recibo)           |
-| `finalize`                         | `0` = draft, `1` = finalize immediately (assigns number + ATCUD)      |
-| `customer_tax_registration_number` | Expert's NIF / VAT number                                             |
-| `payment_mechanism`                | `TB` (transferencia bancaria), `CC` (cartao credito), `MO` (dinheiro) |
-| `vat_included_prices`              | `true` if unit_price includes VAT                                     |
-| `external_reference`               | Stripe session ID for traceability                                    |
-| `lines[].tax_code`                 | `NOR` (normal), `ISE` (isento/exempt)                                 |
-| `lines[].tax_percentage`           | `23`, `13`, `6`, or `0`                                               |
+| Field                              | Description                                                         |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `document_type`                    | v1 sales: `FT` / `FS` / `FR`. `NC` / `ND` are retificative          |
+| `finalize`                         | **Not a v1 field.** Submit auto-finalizes. Drafts = previous API    |
+| `customer_tax_registration_number` | Expert's NIF / VAT number                                           |
+| `payment_mechanism`                | `MO`, `TR`, `CC`/`DC`, `MB`, `CH`, `DDA` (SAF-T `TB` is rejected)   |
+| `vat_included_prices`              | `true` if unit_price includes VAT                                   |
+| `external_reference`               | Stripe session ID for traceability                                  |
+| `lines[].tax_code`                 | `NOR` (normal), `ISE` (isento/exempt)                               |
+| `lines[].tax_percentage`           | Accountant-pending. Do not copy 23/13/6 into issuance until signed. |
 
 ### Legacy API (multi-step)
 
@@ -144,7 +150,6 @@ async function issuePlatformFeeInvoice(
   const platformFee = parseInt(session.metadata.platformFee) / 100
   const invoice = await toconline.post("/api/v1/commercial_sales_documents", {
     document_type: "FT",
-    finalize: 1,
     date: new Date().toISOString().split("T")[0],
     customer_tax_registration_number: expert.fiscalNif,
     customer_business_name: expert.fiscalBusinessName,
@@ -152,7 +157,7 @@ async function issuePlatformFeeInvoice(
     customer_postcode: expert.fiscalPostcode,
     customer_city: expert.fiscalCity,
     customer_country: expert.fiscalCountry,
-    payment_mechanism: "TB",
+    payment_mechanism: "MO",
     vat_included_prices: true,
     currency_iso_code: "EUR",
     notes: `Servico de plataforma Eleva Care - ${session.metadata.eventName}`,
@@ -189,7 +194,6 @@ For refunds, create a `NC` (nota de credito) referencing the original invoice:
 ```json
 {
   "document_type": "NC",
-  "finalize": 1,
   "date": "2026-01-20",
   "customer_tax_registration_number": "229659179",
   "customer_business_name": "Dr. Maria Silva",
@@ -200,14 +204,17 @@ For refunds, create a `NC` (nota de credito) referencing the original invoice:
       "description": "Anulacao de servico de plataforma Eleva Care",
       "quantity": 1,
       "unit_price": 15.0,
-      "tax_code": "NOR",
-      "tax_percentage": 23
+      "tax_code": "<accountant-pending>",
+      "tax_percentage": "<accountant-pending>"
     }
   ]
 }
 ```
 
 ## VAT Matrix
+
+**Unsigned / not for issuance.** Do not copy 23/13/6 or exemption codes into
+production issuance until remaining fiscal parameters are confirmed.
 
 | Expert location     | VAT rate | Tax code | Exemption ID | Invoice note                         |
 | ------------------- | -------- | -------- | ------------ | ------------------------------------ |

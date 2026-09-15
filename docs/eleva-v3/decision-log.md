@@ -32,6 +32,79 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-15: Phase 07.2.1 keeps v1 issuance unconditionally closed
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 07.2.1 ships TOConline OAuth + TEST series lookup +
+  `expert_invoices` schema. `issueInvoice()` / `assertV1SalesDocumentPostAllowed()`
+  always throw `toconline_v1_auto_finalize_blocked`. Do not treat
+  `TOCONLINE_ALLOW_V1_AUTO_FINALIZE`, a TEST prefix, or PR 07.1 scaffolding as
+  permission to POST `/api/v1/commercial_sales_documents`. PR 07.1 acceptance
+  that required `issued` FTs, finalize, or Comunicação à AT is deferred until
+  remaining fiscal parameters are confirmed (tax codes, rates, legal
+  mentions, VIES 24h cache + downtime procedure). Accountant 2026-09-15
+  (Manolo (MB)): D-09/D-03 Aprovado com condições.
+- Reference: `issuance-gate.ts`, D-03, D-09,
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md)
+- Next review date: when the accountant confirms remaining fiscal parameters
+
+### 2026-09-15: Accountant written reply — Aprovado com condições (not a 07.1 issuance unlock)
+
+- Owner: accountant (`Manolo (MB)`);
+  recorded by engineering from the founder paste
+- Status: active — **Aprovado com condições**, 2026-09-15,
+  `Manolo (MB)`. This **is** the
+  accountant written reply, with conditions. It is **not** a founder
+  D-03–D-06 substitute for accountant production sign-off. It does **not**
+  authorize activating automatic issuance or intra-EU flows whose fiscal
+  configuration is not yet validated.
+- Summary: After review of the proposed Eleva v3 invoicing model, the
+  accountant authorized recording this reply in the decision diary as
+  **"Aprovado com condições"**, with the date and their name. Automatic
+  issuance may be activated only after the stated conditions are met and
+  pending fiscal parameters are confirmed. Full verbatim text:
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md).
+  Point-by-point (no invented legal terms): (1) two-tier invoicing model
+  **Aprovado**, presupposing that contracts and actual operation frame Eleva
+  as intermediary and that amounts collected on behalf of professionals are
+  treated that way in accounting; (2) historical `legacy` /
+  `legacy_missing` **Aprovado** — see D-09; (3) IVA matrix **Aprovado com
+  condições** — see D-03 and the payments spec (pending before production:
+  tax codes, rates, legal mentions; VIES 24h reuse + downtime procedure before
+  activating intra-EU flows; OSS depends on service/operation classification;
+  EU without a valid VIES NIF is not automatically a consumer; extra-EU is
+  not an indiscriminate “zero rate”); (4) issuance timing and VAT-inclusive
+  commission **Aprovado** — see D-03; (5) credit notes **Aprovado** with
+  conditions in the payments spec; (6) billing data + commercial cent rounding
+  **Aprovado**, provided taxable base, IVA and total stay compatible with
+  legal rules and TOConline — no “single rounding” rule that produces
+  divergences; (7) TEST series / no fictitious fiscal documents **Aprovado**;
+  ELEVA production series depend on legally required procedures including
+  series communication and fiscal configuration; (8) activation **Aprovado
+  com condições**.
+- Reference:
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md),
+  D-03, D-09,
+  [`payments-payouts-spec.md`](./payments-payouts-spec.md),
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+
+### 2026-09-15: `expert_invoices` is tenant-owned with platform-admin bypass
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 07.2.1 adds `expert_invoices` (Tier 2 expert → member
+  invoice log). RLS class is tenant-owned on `org_id` (= expert org).
+  Platform-admin bypass is required so the Stripe webhook / invoicing
+  dispatcher can insert `pending` rows with no expert session. A composite
+  foreign key `(booking_id, org_id)` → `bookings(id, org_id)` prevents
+  cross-tenant invoice rows. Optional `bookings.buyer_tax_id` stores the
+  member NIF for later issuance. This does not enable Tier 1 ELEVA
+  issuance. D-09 historical classification is recorded separately as
+  Aprovado com condições (2026-09-15).
+- Reference: ADR-013, `0035_expert_invoices`, D-09 (Aprovado com condições)
+- Next review date: with PR 07.2 issuance / Become-Partner gating
+
 ### 2026-09-14: TEST FT/NC stay TOConline-only; never communicate TEST to AT
 
 - Owner: founder (Rodrigo Barona)
@@ -43,8 +116,10 @@ série`) — that would register them as official Portuguese document series.
   that refusal is expected on TEST. When ready for live invoicing, communicate
   and issue on **ELEVA** (and `ELEVA-FEE-*` / `ELEVA-SAAS-*`), not TEST.
   Document AT (`send_document_at_webservice`) also stays off for TEST. This
-  closes 07.0 without a TEST invoice. 07.1 stays gated on D-09 (still
-  `proposed`) plus accountant IVA sign-off; next engineering slice is 07.2.
+  closes 07.0 without a TEST invoice. D-09 historical classification is
+  Aprovado com condições (2026-09-15). 07.1 automatic production issuance
+  stays blocked on remaining fiscal-parameter confirmation. Next
+  engineering slice is 07.2.
 - Reference: [`spikes/07-toconline.md`](./spikes/07-toconline.md), D-09,
   [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
 
@@ -318,7 +393,7 @@ série`) — that would register them as official Portuguese document series.
 
 - Owner: payments/compliance
 - Status: active
-- Summary: Tier 1 (Eleva→Expert/Clinic) uses TOConline OAuth — series `ELEVA-FEE-{YYYY}` for per-booking solo commission invoices, series `ELEVA-SAAS-{YYYY}` for monthly clinic SaaS invoices, idempotency via Neon. Tier 2 (Expert→Patient) uses a cal.com-style adapter registry in `packages/accounting/expert-apps/` with adapters for TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T (P1 seed = TOConline + Moloni + Manual). Expert onboarding forces a choice (auto or manual). Clinic→Expert third-leg invoicing = clinic's own bookkeeping, out of scope. IVA matrix: PT=23%, EU-VIES=reverse-charge, EU-nonVIES=23%, non-EU=zero-rated (requires accountant sign-off).
+- Summary: Tier 1 (Eleva→Expert/Clinic) uses TOConline OAuth — series `ELEVA-FEE-{YYYY}` for per-booking solo commission invoices, series `ELEVA-SAAS-{YYYY}` for monthly clinic SaaS invoices, idempotency via Neon. Tier 2 (Expert→Patient) uses a cal.com-style adapter registry in `packages/accounting/expert-apps/` with adapters for TOConline, Moloni, InvoiceXpress, Vendus, Primavera, Manual/SAF-T (P1 seed = TOConline + Moloni + Manual). Expert onboarding forces a choice (auto or manual). Clinic→Expert third-leg invoicing = clinic's own bookkeeping, out of scope. IVA matrix in this 2026-04-22 entry is **superseded in part** by the accountant 2026-09-15 written reply (Aprovado com condições): do not treat PT=23% / EU-VIES=reverse-charge / EU-nonVIES=23% / non-EU=zero-rated as a fully signed automatic table. See D-03, D-09, and [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md).
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md), ADR-013
 
 ### 2026-04-22: Tenancy isolation — Neon RLS with `withOrgContext()`
@@ -628,18 +703,50 @@ série`) — that would register them as official Portuguese document series.
 
 ### D-03 (2026-09-07): Commission is VAT-inclusive — the expert nets the headline
 
-- Owner: finance (accountant) for production re-sign; founder acting as product
-  owner (working pre-launch)
-- Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
-  Barona (founder). Unblocks PR 06.1. Not a finance/accountant production
-  sign-off.
-- Review date: 2026-09-21 (finance re-sign before production)
-- Summary: the advertised commission (15% / 8% / 0%) is the gross platform fee; IVA is carved out
-  of it per the Phase 7 IVA matrix (PT B2B 15.00 = 12.20 + 2.80; intra-EU reverse charge 15.00 net).
-  100 EUR booking -> 15.00 fee -> 85.00 expert transfer. Implemented once in `computeSettlement`.
-  Working pre-launch decision that unblocks PR 06.1; finance re-sign still
-  required before production. Also blocks Phase 7 Tier 1 coding.
-- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Settlement matrix", [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
+- Owner: accountant (`Manolo (MB)`) for the
+  2026-09-15 written reply; founder recorded the working pre-launch payout
+  default on 2026-09-12
+- Status: active — **Aprovado** (commission / issuance-timing model),
+  2026-09-15, `Manolo (MB)`, with the
+  commercial-terms condition below. Founder working pre-launch (2026-09-12)
+  still unblocks PR 06.1. This **is** the accountant reply for the commission
+  example and issuance-not-tied-to-payout rule; it is **not** a founder
+  D-03–D-06 substitute for remaining fiscal-parameter confirmation. IVA
+  matrix and automatic issuance: **Aprovado com condições** (see the
+  2026-09-15 accountant entry). Does **not** unlock PR 07.1 automatic
+  production issuance.
+- Review date: remaining fiscal-parameter confirmation before 07.1
+  production issuance (tax codes, rates, legal mentions, VIES 24h cache +
+  downtime procedure, OSS classification). D-04 / D-05 / D-06 stay founder
+  working pre-launch until finance/legal re-sign.
+- Summary: the advertised commission (15% / 8% / 0%) is the gross amount
+  deducted from the professional, including IVA when due. Accountant
+  2026-09-15 example, with no other deductions: 100,00 € booking, 15,00 €
+  total commission, professional receives 85,00 €; with 23% IVA the
+  commission is 12,20 € taxable base + 2,80 € IVA; in reverse charge
+  (autoliquidação) it is 15,00 € taxable base, with no IVA charged by Eleva.
+  This model must appear clearly in the commercial terms. Issuance does not
+  depend on payout (repasse) to the professional; issuance at collection must
+  respect when the commission becomes due, treatment of any advances, and
+  legal deadlines. IVA matrix **Aprovado com condições**: Portugal applies
+  the legally due rate considering applicable territorial rules; other EU
+  Member States, B2B under the general rule — no Portuguese IVA charged and
+  reverse charge by the acquirer when legal requirements are met; EU without
+  a valid VIES NIF — analyse the professional's tax status and available
+  evidence, **without** automatic classification as consumer; extra-EU —
+  determine treatment from acquirer status and location rules, **without**
+  indiscriminate “zero rate”. Eventual OSS use depends on service
+  classification and the operations covered (pending accountant validation —
+  not an implemented fact). VIES check at registration and before issuance,
+  with evidence retained; 24-hour reuse and downtime procedure need specific
+  validation before activating intra-EU flows. Tax codes, rates and legal
+  mentions must be confirmed before production. Implemented once in
+  `computeSettlement` for payouts; do not treat the old automatic table
+  (EU-without-VIES = 23% consumer / extra-EU = zero-rated) as fully signed.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md)
+  "Settlement matrix",
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md),
+  [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md)
 
 ### D-04 (2026-09-07): Processing-fee bearer
 
@@ -716,14 +823,31 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 
 ### D-09 (2026-09-07): Historical MVP invoices — `legacy` / `legacy_missing`, never reissued
 
-- Owner: accountant
-- Status: proposed (sign before PR 07.1)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
-- Summary: migrated MVP paid bookings are imported as `platform_fee_invoices.status = legacy`
-  (+ `legacy_document_ref`) or `legacy_missing`; v3 never issues a Tier 1 document for a booking
-  paid before cutover; the accountant decides any lawful backfill outside the system. Phase 14
-  reports the `legacy_missing` count. Blocks: Phase 7 PR 07.1.
-- Reference: [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md), [`execution-plan/phases/14-mvp-migration.md`](./execution-plan/phases/14-mvp-migration.md)
+- Owner: accountant (`Manolo (MB)`)
+- Status: active — **Aprovado com condições**, 2026-09-15,
+  `Manolo (MB)`. Approves the historical
+  classification and its exclusion from v3 automatic issuance. Does **not**
+  unlock PR 07.1 automatic production issuance (pending fiscal parameters —
+  see the 2026-09-15 accountant entry and D-03).
+- Review date: remaining fiscal-parameter confirmation before activating 07.1
+  production issuance; `legacy_missing` regularization is a separate
+  accountant-guided procedure (not a calendar substitute for either).
+- Summary: migrated MVP paid bookings are imported as
+  `platform_fee_invoices.status = legacy` (+ `legacy_document_ref`) or
+  `legacy_missing`; v3 never issues a Tier 1 document for a booking paid
+  before cutover (exclusion from v3 automatic issuance, to avoid
+  duplications or incorrect documents). Accountant 2026-09-15: this
+  exclusion does **not** waive Eleva's regularization duties. Cases
+  without a document (`legacy_missing`) must be sent for analysis with
+  the respective values, dates, and available documents. Regularization is a
+  separate procedure under accountant guidance — not automatic v3 issuance
+  and not a backfill invented by engineering. Phase 14 reports the
+  `legacy_missing` count. Does **not** unlock PR 07.1 automatic production
+  issuance.
+- Reference:
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md),
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md),
+  [`execution-plan/phases/14-mvp-migration.md`](./execution-plan/phases/14-mvp-migration.md)
 
 ### D-10 (2026-09-07): Public-site parity dispositions
 
@@ -888,6 +1012,7 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 
 ## Related Docs
 
+- [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md)
 - [`adrs/README.md`](./adrs/README.md)
 - [`master-architecture.md`](./master-architecture.md)
 - [`vendor-decision-matrix.md`](./vendor-decision-matrix.md)

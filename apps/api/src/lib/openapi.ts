@@ -58,6 +58,8 @@ import {
   DsarRequestStatusResponseSchema,
   DeleteAccountResponseSchema,
   CancelDeletionResponseSchema,
+  ConnectAccountingResponseSchema,
+  InvoicingRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -624,9 +626,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  provider: z.enum(["toconline", "moloni", "manual"]),
-                }),
+                schema: InvoicingRequestSchema,
               },
             },
           },
@@ -2030,6 +2030,44 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdErrors,
+          },
+        },
+      },
+      "/accounting/connect/{provider}": {
+        post: {
+          operationId: "connectAccountingProvider",
+          summary: "Start invoicing provider OAuth",
+          description:
+            "Returns the TOConline or Moloni authorization URL. Uses the proven simplified Authorization Code flow (no PKCE). The callback state is a one-time nonce bound to the expert session.",
+          tags: ["Accounting"],
+          requestParams: {
+            path: z.object({
+              provider: z.enum(["toconline", "moloni"]),
+            }),
+          },
+          responses: {
+            "200": {
+              description: "Authorization URL",
+              content: {
+                "application/json": {
+                  schema: ConnectAccountingResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Provider flag disabled or BotID blocked",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description:
+                "Provider URL generation failed or retryable adapter error",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "503": {
+              description: "Fatal adapter failure",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
           },
         },
       },

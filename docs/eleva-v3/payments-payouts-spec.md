@@ -338,31 +338,38 @@ payment_intent, amount })` with idempotency key `refund:<bookingPaymentId>:<n>` 
   reversal call). A successful
   refund with a failed reversal parks the payout in `reversal_pending` — the member never waits
   on the expert's balance
-- on refund **succeeded** (never on request): Tier 1 credit note in TOConline from
-  `computeSettlement.creditNoteAllocation`
+- on commission **reduction or cancellation** (not exclusively on technical refund
+  success): Tier 1 credit note in TOConline, referencing the original invoice, from
+  `computeSettlement.creditNoteAllocation` when contractual conditions determine a
+  proportional commission reduction. A member refund **without** a commission reduction does
+  not, by itself, originate an Eleva credit note. IVA regularization communication and evidence
+  requirements still apply (accountant 2026-09-15).
 
-### Settlement matrix (`computeSettlement`, D-03 / D-04 — working pre-launch, 2026-09-12)
+### Settlement matrix (`computeSettlement`, D-03 / D-04 — D-03 accountant 2026-09-15 Aprovado with conditions; D-04 still founder working pre-launch)
 
-`packages/billing/src/server/commission.ts` is the only place money is split. The rows below are
-the **working pre-launch** matrix (founder recorded D-03 / D-04 on 2026-09-12). Finance still
-re-signs before go-live. To keep the contract testable under either outcome, the fee bearer is an
+`packages/billing/src/server/commission.ts` is the only place money is split. D-03 commission
+VAT-inclusive model is **Aprovado** by the accountant written reply of 2026-09-15 (this **is**
+the accountant reply, with conditions — not a founder D-03–D-06 substitute). D-04 processing-fee
+bearer remains founder working pre-launch until finance re-signs. To keep the contract testable
+under either D-04 outcome, the fee bearer is an
 **input**, not a constant: inputs
 are `grossCents`, `commissionBps` (1500 default, 800 Top Expert, 0 clinic-attributed),
-`vatRateBps` and `vatTreatment` (from the IVA matrix below), `processingFeeCents` (Stripe's
+`vatRateBps` and `vatTreatment` (from the IVA matrix below — Aprovado com condições, not a fully
+signed automatic table), `processingFeeCents` (Stripe's
 actual `balance_transaction.fee`) and `feeBearer: "platform" | "expert" | "clinic"` (resolved
 from `@eleva/config` `SETTLEMENT_FEE_BEARER` per booking kind). Finance re-signs
 D-04 before go-live; that re-sign is not an implementation gate. The unit
 tests cover every bearer variant so a later finance outcome is a config change
 with a green suite, not a code change.
 
-| Output                                | Rule                                                                                                                                                                                                                                                                                          |
-| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `platformFeeGross`                    | advertised commission, **VAT-inclusive** — the expert nets the headline (100 EUR -> 15.00 fee, 85.00 transfer)                                                                                                                                                                                |
-| `platformFeeNet` / `vatOnPlatformFee` | PT B2B: 15.00 = 12.20 net + 2.80 IVA; intra-EU reverse charge: 15.00 net, 0 IVA                                                                                                                                                                                                               |
-| `expertTransfer`                      | `feeBearer = platform` (marketplace working default): gross − fee gross, Eleva absorbs Stripe processing out of its fee; `feeBearer = clinic` (clinic 0% working default): gross − processing fee; `feeBearer = expert`: gross − fee gross − processing fee — D-04 picks one per booking kind |
-| `creditNoteAllocation`                | proportional on partial refunds                                                                                                                                                                                                                                                               |
-| rounding                              | half-up on cents, applied once, on the fee                                                                                                                                                                                                                                                    |
-| `currency`                            | `EUR` (D-02; `CHECK (currency = 'EUR')` on offer tables at launch)                                                                                                                                                                                                                            |
+| Output                                | Rule                                                                                                                                                                                                                                                                                                                          |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `platformFeeGross`                    | advertised commission, **VAT-inclusive** when due — accountant 2026-09-15: this is the total deducted from the professional (100,00 € booking / 15,00 € commission / 85,00 € to the professional, with no other deductions). Must appear clearly in commercial terms.                                                         |
+| `platformFeeNet` / `vatOnPlatformFee` | accountant 2026-09-15 example: with 23% IVA → 12,20 € taxable base + 2,80 € IVA; in reverse charge (autoliquidação) → 15,00 € taxable base, no IVA charged by Eleva. Rates, tax codes and legal mentions are **pending accountant confirmation** before production — do not treat 23% as a fully signed production parameter. |
+| `expertTransfer`                      | `feeBearer = platform` (marketplace working default): gross − fee gross, Eleva absorbs Stripe processing out of its fee; `feeBearer = clinic` (clinic 0% working default): gross − processing fee; `feeBearer = expert`: gross − fee gross − processing fee — D-04 picks one per booking kind                                 |
+| `creditNoteAllocation`                | proportional on partial refunds **when contractual conditions determine a proportional commission reduction**. A member refund without a commission reduction does not, by itself, originate an Eleva credit note (accountant 2026-09-15).                                                                                    |
+| rounding                              | commercial rounding to the cent, with decimal precision, **provided** taxable base, IVA and total stay compatible with legal rules and TOConline. A “single rounding” rule that produces divergences among those values must **not** be applied (accountant 2026-09-15). Compatibility pending confirmation.                  |
+| `currency`                            | `EUR` (D-02; `CHECK (currency = 'EUR')` on offer tables at launch)                                                                                                                                                                                                                                                            |
 
 Every ledger row, transfer, Tier 1 invoice and finance-UI number comes from this function;
 `booking_payments` stores `applied_commission_bps`, `platform_fee_net_cents`,
@@ -372,7 +379,11 @@ Every ledger row, transfer, Tier 1 invoice and finance-UI number comes from this
 
 Migrated MVP paid bookings are imported with `platform_fee_invoices.status = legacy` (+
 `legacy_document_ref`) or `legacy_missing`; v3 never issues a Tier 1 document for a booking paid
-before cutover; the accountant decides any backfill outside the system.
+before cutover (accountant 2026-09-15 **Aprovado com condições**). Exclusion from v3 automatic
+issuance does **not** waive Eleva's regularization duties. `legacy_missing` cases must be sent
+for analysis with values, dates, and available documents. Regularization is a separate procedure
+under accountant guidance — not automatic v3 issuance. See
+[`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md).
 
 ## Two-Tier Invoicing Model (Crystal Clear)
 
@@ -385,19 +396,33 @@ flowchart TD
     expertPayout --> invoice2[INVOICE 2 Expert to Patient via Tier 2 adapter or manual]
 ```
 
-Two invoices, two different accounting systems, two different legal parties.
+Two invoices, two different accounting systems, two different legal parties. Accountant
+2026-09-15 **Aprovado** this separation (Eleva → professional for the platform commission;
+professional → client for the service via the professional's invoicing software), **presupposing**
+that contracts and actual operation frame Eleva as intermediary and that amounts collected on
+behalf of professionals are treated that way in accounting. Do not treat the “Eleva is the
+vendor” line below as a signed legal characterization beyond that presupposition.
 
 ### Tier 1 — Eleva → Expert / Clinic (automated)
 
-**Eleva is the vendor. Expert or clinic is the B2B customer. Issued automatically on Eleva's own TOConline account.**
+**Tier 1 production issuance is not unlocked.** Eleva invoices the professional for the
+platform commission on Eleva's TOConline account only after pending fiscal parameters are
+confirmed (accountant 2026-09-15, Aprovado com condições). Issuance does not depend on payout
+(repasse) to the professional; issuance at collection must respect when the commission becomes
+due, treatment of any advances, and legal deadlines.
 
 Two variants:
 
 #### 1a. Per-booking solo-expert commission invoice
 
 - Series: `ELEVA-FEE-{YYYY}`
-- Trigger: `issuePlatformFeeInvoice` step in `payoutEligibility` workflow when booking reaches `settled`
-- Recipient: expert (NIF + name + address from expert profile + `expert_practice_location`)
+- Trigger: issuance does **not** depend on payout (repasse) to the professional
+  (accountant 2026-09-15). Issuance at collection must respect when the commission becomes due,
+  treatment of any advances, and legal deadlines. The planned engineering hook remains
+  `issuePlatformFeeInvoice` on charge — **production issuance is still blocked** on pending
+  fiscal parameters.
+- Recipient: professional legal name or denomination, tax identification, address, and country,
+  with validation of the requirements applicable to each case (accountant 2026-09-15)
 - Line item: `"Platform service fee — booking #XYZ"` with `application_fee_breakdown.platform_fee`
 - Idempotency: Neon `platform_fee_invoices(booking_id PK, toconline_invoice_id, issued_at, status)`
 - PDF auto-sent via TOConline
@@ -411,20 +436,29 @@ Two variants:
 - Idempotency: Neon `clinic_saas_invoices(subscription_period PK, toconline_invoice_id, issued_at, status)`
 - PDF auto-sent
 
-#### IVA / VAT matrix (requires accountant sign-off before Tier 1 coding)
+#### IVA / VAT matrix (accountant 2026-09-15 — Aprovado com condições; not a full 07.1 unlock)
 
-| Recipient location | NIF status        | IVA treatment                            |
-| ------------------ | ----------------- | ---------------------------------------- |
-| Portugal           | valid NIF, B2B    | 23% IVA charged                          |
-| EU (intra-EU)      | valid VIES NIF    | reverse charge (0% IVA, note on invoice) |
-| EU (intra-EU)      | no valid VIES NIF | 23% IVA (or OSS depending on volume)     |
-| Non-EU             | —                 | zero-rated, outside scope                |
+The old automatic table (PT = 23%, EU-without-VIES = 23% consumer, extra-EU = zero-rated, OSS
+by volume) is **not** fully signed. Do not invent Art. 6 RITI, OSS thresholds, or rates the
+accountant did not confirm. Where the accountant left something for later validation, it is
+**pending accountant validation** — not an implemented fact.
 
-VIES validation:
+| Recipient location                                 | Accountant condition (2026-09-15)                                                                                      | Production status                                                                                                       |
+| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Portugal                                           | apply the legally due rate, considering applicable territorial rules                                                   | Approved in principle. Tax codes, rates, and legal mentions **pending confirmation** before production.                 |
+| Other EU Member States, B2B under the general rule | no Portuguese IVA charged; reverse charge (autoliquidação) by the acquirer when legal requirements are met             | Approved in principle. Intra-EU flows **blocked** until VIES 24h reuse + downtime procedure are specifically validated. |
+| EU without a valid VIES NIF                        | analyse the professional's tax status and available supporting evidence; **do not** automatically classify as consumer | Approved with this condition. Automatic consumer / 23% treatment is **not** signed.                                     |
+| Extra-EU                                           | determine treatment from acquirer status and location rules; **do not** apply indiscriminate “zero rate”               | Approved with this condition. Indiscriminate zero-rating is **not** signed.                                             |
+| OSS                                                | eventual use depends on service classification and the operations covered                                              | **Pending accountant validation** — not an implemented fact.                                                            |
 
-- live check on NIF entry in expert/clinic profile
-- result cached 24h
-- invoicing path chosen server-side at issuance time based on current VIES status
+VIES validation (accountant 2026-09-15):
+
+- check at registration and before issuance, with evidence retained — **Aprovado**
+- reusing results for 24 hours, and the procedure when VIES is unavailable — **pending specific validation** before activating intra-EU flows
+- invoicing path must not be activated for intra-EU until that validation exists
+
+Tax codes, rates, and legal mentions must be confirmed before production. PR 07.1 automatic
+production issuance stays blocked until then.
 
 #### Reconciliation
 

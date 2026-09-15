@@ -228,10 +228,11 @@ Email contacts for customers or suppliers.
 
 ### Create (flat JSON)
 
+v1 auto-finalizes on create (no `finalize` field).
+
 ```json
 {
   "document_type": "FT",
-  "finalize": 1,
   "date": "2026-01-15",
   "customer_tax_registration_number": "229659179",
   "customer_business_name": "Name",

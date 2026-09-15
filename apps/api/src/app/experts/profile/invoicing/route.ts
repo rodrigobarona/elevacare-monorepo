@@ -1,10 +1,11 @@
-import { z } from "zod"
+import { eq } from "drizzle-orm"
+import { InvoicingRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
-import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
+import { getExpertProfileByUserId, main } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -15,10 +16,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const InvoicingSchema = z.object({
-  provider: z.enum(["toconline", "moloni", "manual"]),
-})
 
 export async function PUT(request: Request) {
   const headers = corsHeaders(request, "PUT, OPTIONS")
@@ -38,7 +35,9 @@ export async function PUT(request: Request) {
   )
   if (rateLimited) return rateLimited
 
-  const body = InvoicingSchema.safeParse(await request.json().catch(() => ({})))
+  const body = InvoicingRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },
@@ -55,31 +54,50 @@ export async function PUT(request: Request) {
   }
 
   const { provider } = body.data
-
-  const completedSteps = (profile.metadata as Record<string, unknown>)
-    ?.completedSteps
-  const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
-  if (!steps.includes("invoicing")) steps.push("invoicing")
+  const isManual = provider === "manual"
 
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
-        await updateExpertProfile(profile.id, profile.orgId, {
+      async (tx, ctx) => {
+        const [current] = await tx
+          .select({ metadata: main.expertProfiles.metadata })
+          .from(main.expertProfiles)
+          .where(eq(main.expertProfiles.id, profile.id))
+          .limit(1)
+          .for("update")
+        const metadata: Record<string, unknown> = {
+          ...((current?.metadata ?? {}) as Record<string, unknown>),
           invoicingProvider: provider,
-          invoicingSetupStatus:
-            provider === "manual" ? "manual_acknowledged" : "connecting",
-          metadata: {
-            ...(profile.metadata ?? {}),
-            completedSteps: steps,
+        }
+        if (isManual) {
+          const completedSteps = metadata.completedSteps
+          const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
+          if (!steps.includes("invoicing")) steps.push("invoicing")
+          metadata.completedSteps = steps
+          metadata.manualInvoicingAcknowledgedAt = new Date().toISOString()
+        }
+
+        await tx
+          .update(main.expertProfiles)
+          .set({
             invoicingProvider: provider,
-          },
-        })
+            invoicingSetupStatus: isManual
+              ? "manual_acknowledged"
+              : "connecting",
+            metadata,
+            updatedAt: new Date(),
+          })
+          .where(eq(main.expertProfiles.id, profile.id))
         await ctx.emit({
           entity: "expert_profile",
           action: "updated",
           entityId: profile.id,
-          payload: { field: "invoicing", provider },
+          payload: {
+            field: "invoicing",
+            provider,
+            ...(isManual ? { acknowledged: true } : {}),
+          },
         })
       }
     )

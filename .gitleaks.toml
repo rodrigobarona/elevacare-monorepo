@@ -27,6 +27,12 @@ paths = [
 ]
 
 [[allowlists]]
+description = "Removed GitBook dump (example OAuth tokens and GitBook image query tokens); file deleted"
+paths = [
+  '''(^|/)(_context/TOConline-api/TOConline Full Documentation\.md)''',
+]
+
+[[allowlists]]
 description = "Playwright auth fixtures used only to sign in or assert rejection (not live credentials)"
 condition = "AND"
 regexTarget = "secret"

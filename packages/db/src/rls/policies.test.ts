@@ -73,6 +73,15 @@ describe("buildMainRlsStatements", () => {
     )
   })
 
+  it("includes platform_admin bypass for expert_invoices", () => {
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY expert_invoices_tenant_isolation")
+    )
+    expect(policy).toContain(
+      "current_setting('eleva.platform_admin', true) = 'true'"
+    )
+  })
+
   it("does NOT include platform_admin bypass for non-bypass tables", () => {
     const nonBypassTables = TENANT_TABLES.filter(
       (t) => !ADMIN_BYPASS_TABLES.has(t)

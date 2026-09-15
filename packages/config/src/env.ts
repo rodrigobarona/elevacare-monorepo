@@ -110,10 +110,22 @@ const s2Schema = z.object({
 
   TOCONLINE_CLIENT_ID: stringOptional,
   TOCONLINE_CLIENT_SECRET: stringOptional,
+  TOCONLINE_API_BASE_URL: urlOptional,
+  TOCONLINE_OAUTH_BASE_URL: urlOptional,
+  TOCONLINE_OAUTH_REDIRECT: urlOptional,
+  /** @deprecated Alias of TOCONLINE_OAUTH_BASE_URL. */
   TOCONLINE_OAUTH_URL: urlOptional,
+  /** @deprecated Alias of TOCONLINE_API_BASE_URL. */
   TOCONLINE_API_URL: urlOptional,
+  /** @deprecated Alias of TOCONLINE_OAUTH_REDIRECT. */
   TOCONLINE_URI_REDIRECT: urlOptional,
   TOCONLINE_SERIES_PREFIX: stringOptional,
+  /**
+   * Must stay unset. v1 POST /api/v1/commercial_sales_documents auto-finalizes
+   * on create. Only the explicit string `true` plus a TEST series prefix can
+   * open the issue() POST path (future 07.2.2+). Never Comunicar TEST.
+   */
+  TOCONLINE_ALLOW_V1_AUTO_FINALIZE: stringOptional,
 
   MOLONI_CLIENT_ID: stringOptional,
   MOLONI_CLIENT_SECRET: stringOptional,
@@ -258,26 +270,100 @@ export interface RequiredToconlineEnv {
   TOCONLINE_SERIES_PREFIX: string
 }
 
+const TOC_API_HOST_RE = /^api[0-9]+\.toconline\.pt$/
+const TOC_OAUTH_HOST_RE = /^app[0-9]+\.toconline\.pt$/
+
+/** Dados API hostname pattern (api33 today; do not pin the digit). */
+export function isToconlineApiHostname(hostname: string): boolean {
+  return TOC_API_HOST_RE.test(hostname.toLowerCase())
+}
+
+/** OAuth hostname pattern (app33 today; do not pin the digit). */
+export function isToconlineOAuthHostname(hostname: string): boolean {
+  return TOC_OAUTH_HOST_RE.test(hostname.toLowerCase())
+}
+
+function assertToconlineHost(
+  label: string,
+  value: string,
+  kind: "api" | "oauth"
+): void {
+  let url: URL
+  try {
+    url = new URL(value)
+  } catch {
+    throw new Error(
+      `@eleva/accounting toconline boot: ${label} is not a valid URL`
+    )
+  }
+  if (url.protocol !== "https:") {
+    throw new Error(`@eleva/accounting toconline boot: ${label} must use HTTPS`)
+  }
+  const hostname = url.hostname.toLowerCase()
+  const ok =
+    kind === "api"
+      ? isToconlineApiHostname(hostname)
+      : isToconlineOAuthHostname(hostname)
+  if (!ok) {
+    throw new Error(
+      kind === "api"
+        ? `@eleva/accounting toconline boot: ${label} host must be api{n}.toconline.pt`
+        : `@eleva/accounting toconline boot: ${label} host must be app{n}.toconline.pt`
+    )
+  }
+}
+
+function assertToconlineSeriesPrefix(
+  prefix: string,
+  nodeEnv: string | undefined
+): void {
+  if (nodeEnv === "production") return
+  if (/^TEST(?:-|$)/i.test(prefix)) return
+  throw new Error(
+    "@eleva/accounting toconline boot: TOCONLINE_SERIES_PREFIX must be TEST or TEST-… outside production"
+  )
+}
+
 export function requireToconlineEnv(): RequiredToconlineEnv {
   const e = env()
+  const oauthUrl = e.TOCONLINE_OAUTH_BASE_URL || e.TOCONLINE_OAUTH_URL
+  const apiUrl = e.TOCONLINE_API_BASE_URL || e.TOCONLINE_API_URL
+  const redirect = e.TOCONLINE_OAUTH_REDIRECT || e.TOCONLINE_URI_REDIRECT
+  const seriesPrefix = e.TOCONLINE_SERIES_PREFIX
   const missing: string[] = []
   if (!e.TOCONLINE_CLIENT_ID) missing.push("TOCONLINE_CLIENT_ID")
   if (!e.TOCONLINE_CLIENT_SECRET) missing.push("TOCONLINE_CLIENT_SECRET")
-  if (!e.TOCONLINE_OAUTH_URL) missing.push("TOCONLINE_OAUTH_URL")
-  if (!e.TOCONLINE_API_URL) missing.push("TOCONLINE_API_URL")
-  if (!e.TOCONLINE_URI_REDIRECT) missing.push("TOCONLINE_URI_REDIRECT")
+  if (!oauthUrl) {
+    missing.push("TOCONLINE_OAUTH_BASE_URL")
+  }
+  if (!apiUrl) {
+    missing.push("TOCONLINE_API_BASE_URL")
+  }
+  if (!redirect) {
+    missing.push("TOCONLINE_OAUTH_REDIRECT")
+  }
+  // Boot-time safety gate (AGENTS.md / 07.0): never send this prefix as
+  // TOConline series_id. Issuance uses document_series_id from the
+  // connected account. Requiring TEST-… outside production prevents
+  // accidental ELEVA live-series boot.
+  if (!seriesPrefix) {
+    missing.push("TOCONLINE_SERIES_PREFIX")
+  }
   if (missing.length > 0) {
     throw new Error(
       `@eleva/accounting toconline boot: missing env vars: ${missing.join(", ")}`
     )
   }
+  assertToconlineHost("TOCONLINE_OAUTH_BASE_URL", oauthUrl!, "oauth")
+  assertToconlineHost("TOCONLINE_API_BASE_URL", apiUrl!, "api")
+  assertToconlineSeriesPrefix(seriesPrefix!, e.NODE_ENV)
   return {
     TOCONLINE_CLIENT_ID: e.TOCONLINE_CLIENT_ID!,
     TOCONLINE_CLIENT_SECRET: e.TOCONLINE_CLIENT_SECRET!,
-    TOCONLINE_OAUTH_URL: e.TOCONLINE_OAUTH_URL!,
-    TOCONLINE_API_URL: e.TOCONLINE_API_URL!,
-    TOCONLINE_URI_REDIRECT: e.TOCONLINE_URI_REDIRECT!,
-    TOCONLINE_SERIES_PREFIX: e.TOCONLINE_SERIES_PREFIX || "ELEVA",
+    TOCONLINE_OAUTH_URL: oauthUrl!,
+    TOCONLINE_API_URL: apiUrl!,
+    TOCONLINE_URI_REDIRECT: redirect!,
+    TOCONLINE_SERIES_PREFIX: seriesPrefix!,
   }
 }
 

@@ -44,6 +44,8 @@ interface Props {
   stripePublishableKey: string
   workspaceBase: string
   identityEnabled: boolean
+  invoicingError?: string
+  toconlineEnabled: boolean
 }
 
 export function OnboardingWizard({
@@ -56,6 +58,8 @@ export function OnboardingWizard({
   stripePublishableKey,
   workspaceBase,
   identityEnabled,
+  invoicingError,
+  toconlineEnabled,
 }: Props) {
   const router = useRouter()
   const t = useTranslations("onboarding")
@@ -131,6 +135,8 @@ export function OnboardingWizard({
                 profile={profile}
                 onDone={handleStepDone}
                 workspaceBase={workspaceBase}
+                invoicingError={invoicingError}
+                toconlineEnabled={toconlineEnabled}
               />
             )}
             {activeStep === "schedule" && (

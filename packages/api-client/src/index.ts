@@ -571,11 +571,29 @@ export type PatchExpertProfileRequest = z.infer<
   typeof PatchExpertProfileRequestSchema
 >
 
-export const InvoicingRequestSchema = z.object({
-  provider: z.enum(["toconline", "moloni", "manual"]),
-})
+export const InvoicingRequestSchema = z.discriminatedUnion("provider", [
+  z.object({ provider: z.literal("toconline") }),
+  z.object({ provider: z.literal("moloni") }),
+  z.object({
+    provider: z.literal("manual"),
+    acknowledged: z.literal(true),
+  }),
+])
 
 export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
+
+export const ConnectAccountingProviderSchema = z.enum(["toconline", "moloni"])
+export type ConnectAccountingProvider = z.infer<
+  typeof ConnectAccountingProviderSchema
+>
+
+export const ConnectAccountingResponseSchema = z.object({
+  url: z.string().url(),
+})
+
+export type ConnectAccountingResponse = z.infer<
+  typeof ConnectAccountingResponseSchema
+>
 
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
@@ -1556,6 +1574,16 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return PayoutActionResponseSchema.parse(raw)
+      },
+    },
+
+    accounting: {
+      async connect(provider: ConnectAccountingProvider) {
+        const raw = await request<unknown>(
+          "POST",
+          `/accounting/connect/${encodeURIComponent(provider)}`
+        )
+        return ConnectAccountingResponseSchema.parse(raw)
       },
     },
   }
