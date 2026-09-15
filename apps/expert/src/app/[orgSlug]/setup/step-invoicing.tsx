@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@eleva/ui/components/button"
 import { Badge } from "@eleva/ui/components/badge"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
@@ -12,30 +11,40 @@ import {
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
-import { saveInvoicingChoice } from "./actions"
+import { useTranslations } from "next-intl"
+import { saveInvoicingChoice, startToconlineOAuth } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
+
+const INVOICING_ERROR_CODES = [
+  "flag_disabled",
+  "not_found",
+  "connect_failed",
+  "provider_denied",
+  "missing_params",
+  "invalid_state",
+  "invalid_provider",
+] as const
+
+type InvoicingErrorCode = (typeof INVOICING_ERROR_CODES)[number]
+
+function isInvoicingErrorCode(value: string): value is InvoicingErrorCode {
+  return (INVOICING_ERROR_CODES as readonly string[]).includes(value)
+}
 
 const ADAPTERS = [
   {
     slug: "toconline" as const,
-    name: "TOConline",
-    description: "Automatic invoicing via TOConline. OAuth connection.",
     installType: "oauth",
     countries: ["PT"],
   },
   {
     slug: "moloni" as const,
-    name: "Moloni",
-    description: "Automatic invoicing via Moloni. (Coming soon)",
     installType: "oauth",
     countries: ["PT"],
     disabled: true,
   },
   {
     slug: "manual" as const,
-    name: "Manual Invoicing",
-    description:
-      "You handle invoicing yourself outside of Eleva. Acknowledge to proceed.",
     installType: "manual",
     countries: ["PT", "ES", "BR"],
   },
@@ -45,12 +54,26 @@ interface Props {
   profile: OnboardingProfile
   onDone: () => void
   workspaceBase: string
+  invoicingError?: string
+  toconlineEnabled: boolean
 }
 
-export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
-  const router = useRouter()
+export function StepInvoicing({
+  profile,
+  onDone,
+  invoicingError,
+  toconlineEnabled,
+}: Props) {
+  const t = useTranslations("onboarding.invoicing")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const callbackError =
+    invoicingError && isInvoicingErrorCode(invoicingError)
+      ? t(`errors.${invoicingError}`)
+      : invoicingError
+        ? t("errors.connect_failed")
+        : null
+  const displayError = error ?? callbackError
 
   const alreadyConnected =
     profile.invoicingSetupStatus === "connected" ||
@@ -62,12 +85,16 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
 
     try {
       if (slug === "toconline") {
-        const result = await saveInvoicingChoice(slug)
-        if (!result.ok) {
-          setError(result.error)
+        const result = await startToconlineOAuth()
+        if (result.ok) {
+          window.location.assign(result.url)
           return
         }
-        router.push(`${workspaceBase}/setup/toconline-redirect`)
+        setError(
+          isInvoicingErrorCode(result.error)
+            ? t(`errors.${result.error}`)
+            : t("errors.connect_failed")
+        )
         return
       }
 
@@ -78,7 +105,7 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
         setError(result.error)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save choice")
+      setError(err instanceof Error ? err.message : t("errors.connect_failed"))
     } finally {
       setPending(false)
     }
@@ -90,16 +117,17 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-green-500 text-green-700">
             {profile.invoicingProvider === "manual"
-              ? "Acknowledged"
-              : "Connected"}
+              ? t("acknowledged")
+              : t("connected")}
           </Badge>
           <span className="text-sm text-muted-foreground">
-            Invoicing is set up via <strong>{profile.invoicingProvider}</strong>
-            .
+            {t("connectedVia", {
+              provider: profile.invoicingProvider ?? "",
+            })}
           </span>
         </div>
         <Button size="sm" onPress={onDone}>
-          Continue
+          {t("continue")}
         </Button>
       </div>
     )
@@ -107,50 +135,57 @@ export function StepInvoicing({ profile, onDone, workspaceBase }: Props) {
 
   return (
     <div className="space-y-4">
-      {error && (
+      {displayError ? (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{displayError}</AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      <p className="text-sm text-muted-foreground">
-        Choose how your invoices will be issued. You can connect an automated
-        provider or handle invoicing manually.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("intro")}</p>
 
       <div className="grid gap-3">
-        {ADAPTERS.map((adapter) => (
-          <Card
-            key={adapter.slug}
-            className={adapter.disabled ? "opacity-50" : ""}
-          >
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm">{adapter.name}</CardTitle>
-                <Badge variant="secondary">
-                  {adapter.countries.join(", ")}
-                </Badge>
-              </div>
-              <CardDescription className="text-xs">
-                {adapter.description}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button
-                size="sm"
-                variant={adapter.slug === "manual" ? "outline" : "default"}
-                isDisabled={pending || adapter.disabled}
-                onPress={() => handleSelect(adapter.slug)}
-              >
-                {adapter.slug === "manual"
-                  ? "Acknowledge manual invoicing"
-                  : adapter.slug === "toconline"
-                    ? "Connect TOConline"
-                    : "Connect"}
-              </Button>
-            </CardContent>
-          </Card>
-        ))}
+        {ADAPTERS.map((adapter) => {
+          const isDisabled =
+            pending ||
+            adapter.disabled ||
+            (adapter.slug === "toconline" && !toconlineEnabled)
+          return (
+            <Card
+              key={adapter.slug}
+              className={
+                isDisabled && adapter.slug !== "manual" ? "opacity-50" : ""
+              }
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">
+                    {t(`adapters.${adapter.slug}.name`)}
+                  </CardTitle>
+                  <Badge variant="secondary">
+                    {adapter.countries.join(", ")}
+                  </Badge>
+                </div>
+                <CardDescription className="text-xs">
+                  {t(`adapters.${adapter.slug}.description`)}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  size="sm"
+                  variant={adapter.slug === "manual" ? "outline" : "default"}
+                  isDisabled={isDisabled}
+                  onPress={() => handleSelect(adapter.slug)}
+                >
+                  {adapter.slug === "manual"
+                    ? t("acknowledgeManual")
+                    : adapter.slug === "toconline"
+                      ? t("connectToconline")
+                      : t("connectProvider")}
+                </Button>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )

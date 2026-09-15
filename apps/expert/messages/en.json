@@ -164,6 +164,39 @@
       "error": "Could not start Payments setup. Please try again.",
       "missingStripe": "Stripe configuration is missing. Please contact support."
     },
+    "invoicing": {
+      "intro": "Choose how invoices for members will be issued. You can connect an automated provider or handle invoicing yourself.",
+      "connected": "Connected",
+      "acknowledged": "Acknowledged",
+      "connectedVia": "Invoicing is set up via {provider}.",
+      "continue": "Continue",
+      "connectToconline": "Connect TOConline",
+      "connectProvider": "Connect",
+      "acknowledgeManual": "Acknowledge manual invoicing",
+      "adapters": {
+        "toconline": {
+          "name": "TOConline",
+          "description": "Automatic AT-certified invoices via your TOConline account."
+        },
+        "moloni": {
+          "name": "Moloni",
+          "description": "Automatic invoicing via Moloni. Coming soon."
+        },
+        "manual": {
+          "name": "Manual invoicing",
+          "description": "You issue invoices yourself outside Eleva. Acknowledge the legal obligation to proceed."
+        }
+      },
+      "errors": {
+        "flag_disabled": "Automatic invoicing is not enabled yet. Choose manual invoicing or try again later.",
+        "not_found": "We could not find your expert profile. Refresh and try again.",
+        "connect_failed": "Could not connect the invoicing provider. Please try again.",
+        "provider_denied": "Access to the invoicing provider was denied. Retry or choose manual invoicing.",
+        "missing_params": "The invoicing callback was incomplete. Please try connecting again.",
+        "invalid_state": "The invoicing callback was invalid. Please try connecting again.",
+        "invalid_provider": "That invoicing provider is not supported."
+      }
+    },
     "requirements": {
       "title": "Still needed",
       "verification": "Verify your identity with a photo ID.",

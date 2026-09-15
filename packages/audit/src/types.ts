@@ -47,6 +47,7 @@ export type AuditEntity =
   | "payout"
   | "refund"
   | "dispute"
+  | "invoice"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -110,6 +111,9 @@ export type AuditAction =
   | "paid_out"
   | "opened"
   | "closed"
+  | "issued"
+  | "credited"
+  | "manual_marked"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

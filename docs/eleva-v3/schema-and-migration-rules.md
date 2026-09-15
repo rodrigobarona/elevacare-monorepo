@@ -127,6 +127,11 @@ predicate (still the same seven classes, not an eighth). Audit DB `audit_events`
 `tenant-owned` (matching `eleva.org_id`, plus the `eleva.platform_admin` bypass on the
 policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` only — no platform-admin write).
 `public-read` is one class: published rows are world-readable; writes stay tenant-owned.
+Some tenant-owned tables also allow `eleva.platform_admin` writes (`ADMIN_BYPASS_TABLES` in
+`packages/db/src/rls/policies.ts`) so webhooks and dispatchers can insert without an expert
+session. `expert_invoices` is in that set: tenant `org_id` isolation stays the class; the
+bypass is a documented write hatch, not a new RLS class. Same pattern as `expert_profiles`,
+`payout_states`, and the billing mirrors.
 `public_handles` is the documented exception: SELECT is public-read (`USING true`) and
 writes are staff-only (`eleva.platform_admin`). The table has no `org_id` because
 handles are a global namespace (one citext PK), so a tenant-owned WITH CHECK cannot
@@ -160,6 +165,7 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `payout_states`             | tenant-owned                                                |
 | `booking_refunds`           | tenant-owned                                                |
 | `transfer_reversals`        | tenant-owned                                                |
+| `expert_invoices`           | tenant-owned + platform-admin write bypass                  |
 | `workflow_dead_letters`     | service-only                                                |
 | `consents`                  | tenant-owned                                                |
 | `sessions`                  | participant-visible                                         |

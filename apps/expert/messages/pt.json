@@ -164,6 +164,39 @@
       "error": "Não foi possível iniciar a configuração de Pagamentos. Tente novamente.",
       "missingStripe": "A configuração Stripe está em falta. Contacte o suporte."
     },
+    "invoicing": {
+      "intro": "Escolha como as faturas dos membros serão emitidas. Pode ligar um fornecedor automático ou tratar da faturação sozinho.",
+      "connected": "Ligado",
+      "acknowledged": "Confirmado",
+      "connectedVia": "A faturação está configurada via {provider}.",
+      "continue": "Continuar",
+      "connectToconline": "Ligar TOConline",
+      "connectProvider": "Ligar",
+      "acknowledgeManual": "Confirmar faturação manual",
+      "adapters": {
+        "toconline": {
+          "name": "TOConline",
+          "description": "Faturas certificadas pela AT automaticamente, com a sua conta TOConline."
+        },
+        "moloni": {
+          "name": "Moloni",
+          "description": "Faturação automática via Moloni. Em breve."
+        },
+        "manual": {
+          "name": "Faturação manual",
+          "description": "Emite as faturas fora da Eleva. Confirme a obrigação legal para avançar."
+        }
+      },
+      "errors": {
+        "flag_disabled": "A faturação automática ainda não está ativa. Escolha faturação manual ou tente mais tarde.",
+        "not_found": "Não encontrámos o seu perfil de especialista. Atualize a página e tente novamente.",
+        "connect_failed": "Não foi possível ligar o fornecedor de faturação. Tente novamente.",
+        "provider_denied": "O acesso ao fornecedor de faturação foi recusado. Tente outra vez ou escolha faturação manual.",
+        "missing_params": "O retorno da faturação ficou incompleto. Tente ligar novamente.",
+        "invalid_state": "O retorno da faturação era inválido. Tente ligar novamente.",
+        "invalid_provider": "Esse fornecedor de faturação não é suportado."
+      }
+    },
     "requirements": {
       "title": "Ainda em falta",
       "verification": "Confirme a identidade com um documento com fotografia.",

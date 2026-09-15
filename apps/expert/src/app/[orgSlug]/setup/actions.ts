@@ -4,6 +4,8 @@ import { requireSession } from "@eleva/auth/server"
 import {
   InvoicingRequestSchema,
   PatchExpertProfileRequestSchema,
+  ConnectAccountingProviderSchema,
+  ApiClientError,
 } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { mapExpertApiError } from "@/lib/map-api-error"
@@ -108,5 +110,34 @@ export async function saveInvoicingChoice(
       ok: false,
       error: mapExpertApiError(err, "save-failed"),
     }
+  }
+}
+
+export async function startToconlineOAuth(): Promise<
+  { ok: true; url: string } | { ok: false; error: string }
+> {
+  let provider
+  try {
+    provider = ConnectAccountingProviderSchema.parse("toconline")
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
+  try {
+    await requireSession("expert:invoicing_manage")
+    const api = await getAuthedApiClient()
+    const result = await api.accounting.connect(provider)
+    return { ok: true, url: result.url }
+  } catch (err) {
+    console.error("[onboarding] startToconlineOAuth failed", err)
+    if (err instanceof ApiClientError) {
+      if (err.status === 403 || err.body.error === "flag_disabled") {
+        return { ok: false, error: "flag_disabled" }
+      }
+      if (err.status === 404) {
+        return { ok: false, error: "not_found" }
+      }
+    }
+    return { ok: false, error: "connect_failed" }
   }
 }

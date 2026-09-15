@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto"
 import {
   decryptOAuthToken,
   encryptOAuthToken,
@@ -16,20 +15,22 @@ import type {
   IssueInvoiceInput,
   IssueInvoiceResult,
 } from "../../types"
+import { assertV1SalesDocumentPostAllowed } from "./issuance-gate"
+import { resolveDocumentSeriesId } from "./lookups"
+import { mapIssueInvoiceToV1Payload } from "./payload"
 
 /**
  * TOConline Tier 2 adapter — expert-side issuance.
  *
- * Tier 1 (Eleva → expert) lives separately under
- * `eleva-platform/toconline.ts` (S6); Tier 2 here is the
- * expert-owned account used to issue invoices.
+ * Authentication: OAuth 2.0 Authorization Code (simplified flow proven
+ * in PR 07.0). No PKCE. HTTP Basic `client_id:secret` on POST /token.
+ * Hosts come from env (`TOCONLINE_API_BASE_URL` /
+ * `TOCONLINE_OAUTH_BASE_URL`), never literals.
  *
- * Authentication: OAuth 2.0 Authorization Code + PKCE (S256)
- * against `app33.toconline.pt/oauth`. Tokens are encrypted via
- * @eleva/encryption and the vault ref is persisted in
- * `expert_integration_credentials.vault_ref`.
- *
- * Reference: docs/eleva-v3/toconline-api-reference.md
+ * v1 `POST /api/v1/commercial_sales_documents` auto-finalizes. This
+ * increment never POSTs that path — accountant 2026-09-15 forbids
+ * fictitious finalized docs on TEST and ELEVA. `issueInvoice` maps and
+ * validates, then throws `toconline_v1_auto_finalize_blocked`.
  */
 
 const MANIFEST: AdapterManifest = {
@@ -47,62 +48,58 @@ const MANIFEST: AdapterManifest = {
 const SCOPE = "commercial"
 
 interface ToconlineMetadata {
-  /** Authoritative TOConline series id used for ELEVA-prefixed docs. */
+  /** Authoritative TOConline series id (v1 `document_series_id`). */
+  document_series_id?: string
+  /** @deprecated Prefer `document_series_id`. */
   seriesId?: string
-  /** Cached business-name from the connected account for admin UI. */
   businessName?: string
-  /** Last `/v1/me`-style probe timestamp. */
   lastProbeAt?: string
   orgId?: string
   userId?: string
 }
 
+function basicAuthHeader(clientId: string, clientSecret: string): string {
+  return `Basic ${Buffer.from(`${clientId}:${clientSecret}`).toString("base64")}`
+}
+
 async function buildAuthUrl(input: {
   state: string
   expertProfileId: string
-}): Promise<{ url: string; codeVerifier: string }> {
+}): Promise<{ url: string }> {
   const env = requireToconlineEnv()
-  const codeVerifier = base64Url(randomBytes(32))
-  const codeChallenge = base64Url(
-    createHash("sha256").update(codeVerifier).digest()
-  )
-
   const url = new URL(`${env.TOCONLINE_OAUTH_URL.replace(/\/$/, "")}/auth`)
   url.searchParams.set("response_type", "code")
   url.searchParams.set("client_id", env.TOCONLINE_CLIENT_ID)
   url.searchParams.set("redirect_uri", env.TOCONLINE_URI_REDIRECT)
   url.searchParams.set("scope", SCOPE)
-  url.searchParams.set("code_challenge", codeChallenge)
-  url.searchParams.set("code_challenge_method", "S256")
   url.searchParams.set("state", input.state)
-
-  return { url: url.toString(), codeVerifier }
+  return { url: url.toString() }
 }
 
 async function connect(input: ConnectInput): Promise<ConnectResult> {
   const env = requireToconlineEnv()
-
   const code = stringOrThrow(
     input.payload.code,
     "TOConline callback missing 'code'"
-  )
-  const codeVerifier = stringOrThrow(
-    input.payload.codeVerifier,
-    "TOConline callback missing 'codeVerifier'"
   )
 
   const tokenRes = await fetch(
     `${env.TOCONLINE_OAUTH_URL.replace(/\/$/, "")}/token`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+        Authorization: basicAuthHeader(
+          env.TOCONLINE_CLIENT_ID,
+          env.TOCONLINE_CLIENT_SECRET
+        ),
+      },
       body: new URLSearchParams({
         grant_type: "authorization_code",
         code,
         redirect_uri: env.TOCONLINE_URI_REDIRECT,
-        client_id: env.TOCONLINE_CLIENT_ID,
-        client_secret: env.TOCONLINE_CLIENT_SECRET,
-        code_verifier: codeVerifier,
+        scope: SCOPE,
       }).toString(),
     }
   )
@@ -133,14 +130,32 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
     expiresAt,
   })
 
+  const metadata: ToconlineMetadata = {
+    orgId: input.orgId,
+    userId: input.userId,
+  }
+
+  try {
+    const seriesId = await resolveDocumentSeriesId(
+      {
+        apiBase: env.TOCONLINE_API_URL.replace(/\/$/, ""),
+        accessToken: json.access_token,
+      },
+      { documentType: "FT", prefix: env.TOCONLINE_SERIES_PREFIX }
+    )
+    if (seriesId) {
+      metadata.document_series_id = seriesId
+    }
+  } catch (err) {
+    console.warn(
+      "[toconline] document series lookup failed after OAuth; connect continues",
+      err instanceof Error ? err.message : err
+    )
+  }
+
   return {
     vaultRef,
-    metadata: {
-      seriesPrefix: env.TOCONLINE_SERIES_PREFIX,
-      seriesId: env.TOCONLINE_SERIES_PREFIX,
-      orgId: input.orgId,
-      userId: input.userId,
-    },
+    metadata: { ...metadata },
     expiresAt: expiresAt.toISOString(),
   }
 }
@@ -153,89 +168,18 @@ async function issueInvoice(
   },
   input: IssueInvoiceInput
 ): Promise<IssueInvoiceResult> {
-  const token = await loadAccessToken(
-    creds.vaultRef,
-    credsOrgId(creds.metadata, creds.orgId),
-    credsUserId(creds.metadata)
-  )
-  const env = requireToconlineEnv()
   const meta = (creds.metadata ?? {}) as ToconlineMetadata
+  const seriesId =
+    typeof meta.document_series_id === "string" &&
+    meta.document_series_id.length > 0
+      ? meta.document_series_id
+      : undefined
 
-  const total = input.lines.reduce(
-    (sum, l) => sum + l.quantity * l.unitPrice * (1 + l.taxRate / 100),
-    0
-  )
-  const currency = input.lines[0]?.currency ?? "EUR"
+  mapIssueInvoiceToV1Payload(input, {
+    documentSeriesId: seriesId,
+  })
 
-  const body = {
-    document_type: "FT",
-    date: input.date,
-    series_id: meta.seriesId,
-    customer_tax_registration_number: input.member.fiscalId || "999999990",
-    customer_business_name: input.member.name,
-    customer_country: input.member.country,
-    notes: input.notes,
-    lines: input.lines.map((l) => ({
-      description: l.description,
-      quantity: l.quantity,
-      unit_price: l.unitPrice,
-      tax_rate: l.taxRate,
-      currency: l.currency,
-    })),
-  }
-
-  const res = await fetch(
-    `${env.TOCONLINE_API_URL.replace(/\/$/, "")}/api/v1/sales-documents`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "Idempotency-Key": `eleva-booking-${input.bookingId}`,
-      },
-      body: JSON.stringify(body),
-    }
-  )
-
-  if (res.status === 401) {
-    throw new AdapterError(
-      "credentials",
-      "TOConline access token rejected (token expired or revoked)"
-    )
-  }
-  if (res.status === 429) {
-    const retryAfter = Number(res.headers.get("retry-after") ?? "60")
-    throw new AdapterError(
-      "retryable",
-      `TOConline rate limit hit (retry-after ${retryAfter}s)`
-    )
-  }
-  if (!res.ok) {
-    const errBody = await safeBody(res)
-    throw new AdapterError(
-      "provider",
-      `TOConline issueInvoice failed: ${res.status} ${errBody}`,
-      String(res.status)
-    )
-  }
-
-  const json = (await res.json()) as {
-    id: string
-    document_number: string
-    pdf_url?: string
-    total_amount?: number
-    issued_at?: string
-  }
-
-  return {
-    externalId: json.id,
-    invoiceNumber: json.document_number,
-    pdfUrl: json.pdf_url,
-    total: json.total_amount ?? total,
-    currency,
-    issuedAt: json.issued_at ?? new Date().toISOString(),
-  }
+  return assertV1SalesDocumentPostAllowed()
 }
 
 async function status(creds: {
@@ -289,9 +233,6 @@ async function status(creds: {
 async function disconnect(input: DisconnectInput): Promise<void> {
   if (!input.vaultRef) return
   await revokeOAuthToken(input.vaultRef)
-  // TOConline does not expose a public revoke endpoint; the access
-  // token will simply expire. Removing the vault ref is sufficient
-  // to lock the adapter out.
 }
 
 function credsOrgId(
@@ -340,14 +281,6 @@ async function loadAccessToken(
   }
 }
 
-function base64Url(buf: Buffer): string {
-  return buf
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "")
-}
-
 function stringOrThrow(value: unknown, msg: string): string {
   if (typeof value !== "string" || value.length === 0) {
     throw new AdapterError("validation", msg)
@@ -362,6 +295,22 @@ async function safeBody(res: Response): Promise<string> {
     return "<unreadable body>"
   }
 }
+
+export { mapIssueInvoiceToV1Payload } from "./payload"
+export {
+  listOssTaxes,
+  resolveCountryId,
+  resolveCurrencyId,
+  resolveCustomerId,
+  resolveDocumentSeriesId,
+  resolveExemptionReasonId,
+  resolveServiceId,
+  resolveTaxId,
+} from "./lookups"
+export {
+  TOC_V1_AUTO_FINALIZE_BLOCKED,
+  TOC_V1_AUTO_FINALIZE_MESSAGE,
+} from "./issuance-gate"
 
 export const toconlineAdapter: ExpertInvoicingAdapter = {
   manifest: MANIFEST,

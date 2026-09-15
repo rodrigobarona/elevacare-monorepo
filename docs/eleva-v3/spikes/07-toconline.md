@@ -3,7 +3,9 @@
 **Status:** complete for 07.0 — TEST stays TOConline-only (never communicated
 to AT). OAuth, refresh, TEST series lookup, customer, and service are proven.
 Invoice, PDF, credit-note, and document AT are **out of scope on TEST** by
-founder decision (2026-09-14). Do not start PR 07.1 (still gated on D-09).
+founder decision (2026-09-14). Do not start PR 07.1 automatic production issuance
+(D-09 historical classification is Aprovado com condições 2026-09-15; 07.1 issuance
+still blocked on remaining fiscal-parameter confirmation).
 **Date:** 2026-09-14 (founder: do not Comunicar série on TEST)
 **TOConline:** Eleva company credentials from local env. Live `ELEVA` series
 refused. Founder series **TEST** accepted by the runner.
@@ -181,13 +183,40 @@ TOCONLINE_AT_USERNAME=    # Portal das Finanças; ELEVA go-live only — never T
 TOCONLINE_AT_PASSWORD=
 ```
 
-Decision log: `docs/eleva-v3/decision-log.md` (2026-09-14 Phase 07.0 entry).
-D-09 stays `proposed`; this spike does not sign it.
+Decision log: `docs/eleva-v3/decision-log.md` (2026-09-14 Phase 07.0 entry;
+2026-09-15 accountant Aprovado com condições). This spike did not sign D-09;
+the accountant reply of 2026-09-15 did, with conditions. 07.1 automatic
+production issuance remains blocked on pending fiscal parameters.
 
 ## Follow-up
 
 1. Founder: keep TEST FT + NC **uncommunicated** to AT. Communicate **ELEVA**
    only when live invoicing starts. Never issue TEST through AT.
-2. Accountant: IVA matrix + **D-09 sign-off** (still `proposed`).
+2. Accountant 2026-09-15: D-09 historical classification Aprovado com condições;
+   remaining fiscal-parameter confirmation still required before 07.1 production
+   issuance (tax codes, rates, legal mentions, VIES 24h + downtime, OSS, etc.).
 3. Engineering: PR 07.2 (Tier 2 expert adapters) next. Stop before 07.1.
+
+## v1 sales-document contract (2026-09-15 full docs)
+
+Local SSOT: `_context/TOConline-api/TOConline Full Documentation.md`
+(no OpenAPI YAML in that folder). Official SSOT:
+https://api-docs.toconline.pt/apis/vendas/documentos-de-venda
+
+- v1 `POST /api/v1/commercial_sales_documents` auto-finalizes on submit.
+  There is no `finalize` field. After create, finalize / cancel / update /
+  delete are impossible on this API version.
+- Drafts: previous API (`POST /api/commercial_sales_documents` → lines →
+  PATCH `status: 1`).
+- Sales `document_type`: `FT` | `FS` | `FR`. `NC` / `ND` are Documentos
+  Retificativos on the same v1 path (`parent_documents_ids` recommended).
+- Extra countries: `PT-AC`, `PT-MA` (`iso_alpha_2` + `tax_country_region`).
+- Lookups: series (`document_type` + `prefix`, optional `number`), customer
+  NIF, taxes (+ optional percentage), `oss_taxes`, exemption
+  `filter[code]`, currencies `filter[iso_code]`, services
+  `filter[item_code]`, tax descriptors `filter[notation]`.
+- 07.0 runner sent `finalize: 1`; that field is not part of v1. The spike
+  never successfully created a document (uncommunicated TEST series).
+- Do not POST fictitious FTs. Do not Comunicar TEST. Do not start 07.1.
+
 4. Delete `packages/accounting/spikes/` before PR 07.1.

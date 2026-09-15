@@ -81,6 +81,46 @@ export const ConnectResult = z.object({
 export type ConnectResult = z.infer<typeof ConnectResult>
 
 /** Input passed to `issueInvoice()` — built from booking + payment data. */
+const InvoiceLineSchema = z
+  .object({
+    description: z.string(),
+    quantity: z.number().positive(),
+    unitPrice: z.number().nonnegative(),
+    /** Tax rate as percentage (23 for PT IVA). */
+    taxRate: z.number().nonnegative(),
+    /**
+     * IVA treatment from the payments-spec matrix. Do not infer
+     * reverse-charge vs export from a 0% rate — those need
+     * different TOConline exemption reason IDs (M07 vs M99).
+     */
+    taxTreatment: z
+      .enum(["standard", "reverse_charge", "zero_rated", "exempt"])
+      .optional(),
+    /** Currency in ISO 4217 (default 'EUR'). */
+    currency: z.string().length(3).default("EUR"),
+  })
+  .superRefine((line, ctx) => {
+    const treatment = line.taxTreatment ?? "standard"
+    if (treatment === "standard") {
+      if (line.taxRate === 0) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "standard IVA requires a positive taxRate; use reverse_charge, zero_rated, or exempt",
+          path: ["taxRate"],
+        })
+      }
+      return
+    }
+    if (line.taxRate !== 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: `${treatment} requires taxRate 0`,
+        path: ["taxRate"],
+      })
+    }
+  })
+
 export const IssueInvoiceInput = z.object({
   /** Eleva booking ID — used for idempotency. */
   bookingId: z.string().uuid(),
@@ -103,18 +143,17 @@ export const IssueInvoiceInput = z.object({
   }),
   /** One line per service rendered. */
   lines: z
-    .array(
-      z.object({
-        description: z.string(),
-        quantity: z.number().positive(),
-        unitPrice: z.number().nonnegative(),
-        /** Tax rate as percentage (23 for PT IVA). */
-        taxRate: z.number().nonnegative(),
-        /** Currency in ISO 4217 (default 'EUR'). */
-        currency: z.string().length(3).default("EUR"),
-      })
-    )
-    .min(1),
+    .array(InvoiceLineSchema)
+    .min(1)
+    .superRefine((lines, ctx) => {
+      const currencies = new Set(lines.map((line) => line.currency))
+      if (currencies.size > 1) {
+        ctx.addIssue({
+          code: "custom",
+          message: "all invoice lines must use the same currency",
+        })
+      }
+    }),
   /** Issue date (ISO date string YYYY-MM-DD). */
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   /** Free-form notes printed on the invoice. */
@@ -189,8 +228,8 @@ export interface ConnectInput {
   userId: string
   /**
    * Adapter-specific bag from the OAuth callback. For TOConline this
-   * carries `code` + `code_verifier`; for Moloni `code`; for manual
-   * an `acknowledged: true` flag.
+   * carries `code`; for Moloni `code`; for manual an
+   * `acknowledged: true` flag.
    */
   payload: Record<string, unknown>
 }
@@ -215,9 +254,9 @@ export interface ExpertInvoicingAdapter {
   readonly manifest: AdapterManifest
   /**
    * Build the OAuth authorization URL the browser redirects to.
-   * Returns null for non-OAuth adapters (manual). For PKCE adapters
-   * the verifier is returned so the dispatcher can persist it
-   * server-side and replay on callback.
+   * Returns null for non-OAuth adapters (manual). TOConline uses the
+   * proven simplified Authorization Code flow (no PKCE). `codeVerifier`
+   * remains optional for adapters that still need it.
    */
   buildAuthUrl?: (input: {
     state: string

@@ -577,6 +577,19 @@ export const InvoicingRequestSchema = z.object({
 
 export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
 
+export const ConnectAccountingProviderSchema = z.enum(["toconline", "moloni"])
+export type ConnectAccountingProvider = z.infer<
+  typeof ConnectAccountingProviderSchema
+>
+
+export const ConnectAccountingResponseSchema = z.object({
+  url: z.string().url(),
+})
+
+export type ConnectAccountingResponse = z.infer<
+  typeof ConnectAccountingResponseSchema
+>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -1556,6 +1569,16 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return PayoutActionResponseSchema.parse(raw)
+      },
+    },
+
+    accounting: {
+      async connect(provider: ConnectAccountingProvider) {
+        const raw = await request<unknown>(
+          "POST",
+          `/accounting/connect/${encodeURIComponent(provider)}`
+        )
+        return ConnectAccountingResponseSchema.parse(raw)
       },
     },
   }

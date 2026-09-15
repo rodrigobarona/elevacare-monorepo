@@ -1,8 +1,13 @@
 # TOConline Open API Reference
 
-> **Source**: Postman collection `_context/Postman OAuth2 Credentials.json`
-> **API version**: v1 (current) + legacy JSON:API endpoints
-> **Last updated**: 2026-05-04
+> **Source (local SSOT for field names, 2026-09-15):**
+> `_context/TOConline-api/TOConline Full Documentation.md`
+> (founder dump of current GitBook). That folder has **no OpenAPI YAML** —
+> only the markdown. Official published SSOT remains
+> https://api-docs.toconline.pt (and its `/llms.txt`). Do not invent fields
+> that are in neither source.
+> **API version**: v1 (current, auto-finalize) + previous JSON:API (drafts)
+> **Last updated**: 2026-09-15
 > **Related**: [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 
 > **07.0 (2026-09-14):** Official docs treat `API_URL` / `OAUTH_URL` as
@@ -14,6 +19,15 @@
 > customer and service upsert. TEST FT/PDF/NC are not issued: founder will
 > not communicate TEST to AT. Live invoicing uses `ELEVA` at go-live.
 > Evidence: `docs/eleva-v3/spikes/07-toconline.md`.
+
+> **07.2.1 (2026-09-15):** v1 `POST /api/v1/commercial_sales_documents`
+> **auto-finalizes on submit**. After create, finalize / cancel / update /
+> delete are impossible on this API version. Drafts use the previous API
+> (`POST /api/commercial_sales_documents` → lines → `status: 1`). Eleva
+> `issueInvoice()` refuses the v1 POST by default (accountant: no fictitious
+> finalized docs; no Comunicar série TEST). Lookups GET series / taxes /
+> customers / exemption reasons / currencies / services / countries / OSS
+> taxes. Do not start Phase 07.1 Tier 1.
 
 ## Base URLs
 
@@ -101,6 +115,7 @@ TOCONLINE_API_BASE_URL=       # from Dados API; alias TOCONLINE_API_URL
 TOCONLINE_OAUTH_BASE_URL=     # from Dados API; alias TOCONLINE_OAUTH_URL
 TOCONLINE_OAUTH_REDIRECT=     # alias TOCONLINE_URI_REDIRECT; required, no Postman fallback
 TOCONLINE_SERIES_PREFIX=ELEVA # production. TEST is TOConline-only sandbox; never communicate TEST to AT.
+TOCONLINE_ALLOW_V1_AUTO_FINALIZE= # must stay unset. v1 POST auto-finalizes.
 ```
 
 ## API Format: v1 vs Legacy
@@ -374,22 +389,50 @@ Email contacts linked to customers or suppliers.
 
 ### Sales Documents — v1 (`/api/v1/commercial_sales_documents`)
 
-The primary API for creating invoices (FT), credit notes (NC), etc. Uses flat JSON.
+Flat JSON. **On submit the document is automatically finalized.** There is no
+`finalize` field. After create, these operations are impossible on this API
+version: finalize, cancel, update, delete. If you need drafts, use the
+previous API below (`/api/commercial_sales_documents`).
 
-| Method | Path                                                  | Description                            |
-| ------ | ----------------------------------------------------- | -------------------------------------- |
-| `POST` | `/api/v1/commercial_sales_documents`                  | Create sales document (header + lines) |
-| `GET`  | `/api/v1/commercial_sales_documents/`                 | List all sales documents               |
-| `GET`  | `/api/v1/commercial_sales_documents/:salesDocumentId` | Get by ID                              |
-| `GET`  | `/api/commercial_sales_documents?filter[status]=1`    | List finalized documents               |
+`document_type` on this page: `FT` | `FS` | `FR`. Credit/debit notes (`NC` |
+`ND`) use the same v1 path under **Documentos Retificativos**, plus
+`parent_documents_ids` / `parent_document_reference`.
 
-#### Create sales document body (v1)
+| Method | Path                                                  | Description                                     |
+| ------ | ----------------------------------------------------- | ----------------------------------------------- |
+| `POST` | `/api/v1/commercial_sales_documents`                  | Create + auto-finalize (header + lines)         |
+| `GET`  | `/api/v1/commercial_sales_documents/`                 | List all sales documents                        |
+| `GET`  | `/api/v1/commercial_sales_documents/:salesDocumentId` | Get by ID                                       |
+| `GET`  | `/api/commercial_sales_documents?filter[status]=1`    | List finalized documents (previous-API listing) |
+
+Required header fields: `document_type`, `customer_business_name`, `lines`.
+
+Optional header fields: `date`, `document_series_id`, `document_series_prefix`,
+`customer_id`, `customer_tax_registration_number`, `customer_address_detail`,
+`customer_postcode` (`0000-000`), `customer_city`, `customer_country` (default
+`PT`; extra values `PT-AC` Açores and `PT-MA` Madeira), `due_date`,
+`settlement_expression`, `payment_mechanism`, `bank_account_id`,
+`cash_account_id`, `vat_included_prices` (default `false`),
+`tax_exemption_reason_id`, `operation_country`, `currency_id`,
+`currency_iso_code`, `currency_conversion_rate`, `retention`,
+`retention_type` (`IRS` \| `IRC`, default `IRS`),
+`apply_retention_when_paid`, `notes`, `external_reference`.
+
+Required line fields: `item_type` (`Service` \| `Product` \| `TaxDescriptor`),
+`description`, `quantity`, `unit_price`.
+
+Optional line fields: `item_id`, `item_code`, `unit_of_measure_id`,
+`unit_of_measure`, `settlement_expression`, `tax_id`, `tax_code`,
+`tax_percentage`, `tax_country_region`.
+
+FR: the associated receipt is created automatically when the FR is finalized
+(and v1 finalizes on create).
 
 ```json
 {
   "document_type": "FT",
   "date": "2026-01-15",
-  "finalize": 0,
+  "document_series_id": "337",
   "customer_tax_registration_number": "229659179",
   "customer_business_name": "Ricardo Ribeiro",
   "customer_address_detail": "Praceta da Liberdade n5",
@@ -397,35 +440,47 @@ The primary API for creating invoices (FT), credit notes (NC), etc. Uses flat JS
   "customer_city": "Lisboa",
   "customer_country": "PT",
   "due_date": "2026-02-15",
-  "settlement_expression": "7.5",
   "payment_mechanism": "MO",
   "vat_included_prices": false,
   "operation_country": "PT-MA",
   "currency_iso_code": "EUR",
-  "currency_conversion_rate": 1.0,
-  "retention": 7.5,
-  "retention_type": "IRS",
-  "apply_retention_when_paid": true,
   "notes": "Notas ao documento",
   "external_reference": "Referência externa",
-  "lines": [{}]
+  "lines": [
+    {
+      "item_type": "Service",
+      "description": "Consulta",
+      "quantity": 1,
+      "unit_price": 50,
+      "tax_code": "NOR",
+      "tax_percentage": 23
+    }
+  ]
 }
 ```
 
-Key fields:
+`payment_mechanism`: official codes are `MO`, `TR`, `CC`/`DC`, `MB`, `CH`,
+`DDA`. SAF-T `TB` is rejected (spike 07.0).
 
-- `document_type`: `FT` (fatura), `NC` (nota de crédito), `FR` (fatura-recibo), etc.
-- `finalize`: `0` = draft, `1` = finalize immediately
-- `lines`: array of line items (can be empty to add lines later)
-- `vat_included_prices`: whether unit prices include VAT
-- `payment_mechanism`: official TOConline codes are `MO` (cash), `TR` (bank
-  transfer), `CC`/`DC` (card), `MB`, `CH`, `DDA`. SAF-T `TB` is rejected.
+**Lookups (GET only — never Comunicar série):**
+
+1. Series: `GET /api/commercial_document_series?filter[document_type]=<type>&filter[prefix]=<prefix>` (optional `filter[number]`)
+2. Customer: `GET /api/customers?filter[tax_registration_number]=<NIF>`
+3. Countries: `GET /api/countries?filter[iso_alpha_2]=<code>` (`PT-AC` / `PT-MA` are extra “countries”; example attributes use `iso_alpha_2: "PT-MA"`, `tax_country_region: "PT-MA"`)
+4. Bank: `GET /api/company_bank_accounts?filter[iban]=` or `filter[name]=`
+5. Cash: `GET /api/cash_accounts?filter[name]=`
+6. Exemption reason: `GET /api/tax_exemption_reasons?filter[code]=<legal code>`
+7. Currency: `GET /api/currencies?filter[iso_code]=`
+8. Item: `GET /api/services?filter[item_code]=` or `/products?filter[item_code]=` or `/tax_descriptors?filter[notation]=`
+9. UoM: `GET /api/units_of_measure?filter[unit_of_measure]=`
+10. Tax: `GET /api/taxes?filter[tax_code]=&filter[tax_country_region]=` and optionally `filter[tax_percentage]=`
 
 ---
 
-### Sales Documents — Legacy (`/api/commercial_sales_documents`)
+### Sales Documents — previous API / drafts (`/api/commercial_sales_documents`)
 
-Older JSON:API style. Header and lines are separate calls.
+Previous JSON:API. Header, lines, and finalize are **separate** calls. Use
+this only when a draft is required. v1 cannot create an unfinalized document.
 
 | Method   | Path                                                        | Description                |
 | -------- | ----------------------------------------------------------- | -------------------------- |
@@ -700,11 +755,11 @@ For receipts, set `"type": "Receipt"` in attributes.
 
 #### Countries (`/api/countries`)
 
-| Method | Path                                    | Description        |
-| ------ | --------------------------------------- | ------------------ |
-| `GET`  | `/api/countries`                        | List all countries |
-| `GET`  | `/api/countries?filter[iso_alpha_2]=PT` | Filter by ISO code |
-| `GET`  | `/api/oss_countries`                    | List OSS countries |
+| Method | Path                                    | Description                                  |
+| ------ | --------------------------------------- | -------------------------------------------- |
+| `GET`  | `/api/countries`                        | List all countries                           |
+| `GET`  | `/api/countries?filter[iso_alpha_2]=PT` | Filter by ISO code (`PT-AC` / `PT-MA` extra) |
+| `GET`  | `/api/oss_countries`                    | List OSS countries                           |
 
 #### Units of Measure (`/api/units_of_measure`)
 
@@ -716,14 +771,16 @@ For receipts, set `"type": "Receipt"` in attributes.
 | `POST`   | `/api/units_of_measure`                               | Create unit    |
 | `DELETE` | `/api/units_of_measure/:unitsOfMeasureId`             | Delete unit    |
 
-#### Bank Accounts (`/api/bank_accounts`)
+#### Bank Accounts (`/api/bank_accounts` and `/api/company_bank_accounts`)
 
-| Method   | Path                                | Description                                |
-| -------- | ----------------------------------- | ------------------------------------------ |
-| `POST`   | `/api/bank_accounts`                | Create (entity_type: `User` or `Supplier`) |
-| `GET`    | `/api/bank_accounts`                | List all                                   |
-| `GET`    | `/api/bank_accounts/:bankAccountId` | Get by ID                                  |
-| `DELETE` | `/api/bank_accounts/:bankAccountId` | Delete                                     |
+| Method   | Path                                       | Description                                |
+| -------- | ------------------------------------------ | ------------------------------------------ |
+| `POST`   | `/api/bank_accounts`                       | Create (entity_type: `User` or `Supplier`) |
+| `GET`    | `/api/bank_accounts`                       | List all                                   |
+| `GET`    | `/api/bank_accounts/:bankAccountId`        | Get by ID                                  |
+| `DELETE` | `/api/bank_accounts/:bankAccountId`        | Delete                                     |
+| `GET`    | `/api/company_bank_accounts?filter[iban]=` | Company IBAN lookup (v1 sales note 4)      |
+| `GET`    | `/api/company_bank_accounts?filter[name]=` | Company account name lookup                |
 
 #### Cash Accounts (`/api/cash_accounts`)
 
@@ -744,10 +801,17 @@ For receipts, set `"type": "Receipt"` in attributes.
 
 #### Currencies (`/api/currencies`)
 
-| Method | Path                          | Description |
-| ------ | ----------------------------- | ----------- |
-| `GET`  | `/api/currencies`             | List all    |
-| `GET`  | `/api/currencies/:currencyId` | Get by ID   |
+| Method | Path                                   | Description        |
+| ------ | -------------------------------------- | ------------------ |
+| `GET`  | `/api/currencies`                      | List all           |
+| `GET`  | `/api/currencies/:currencyId`          | Get by ID          |
+| `GET`  | `/api/currencies?filter[iso_code]=EUR` | Filter by ISO code |
+
+#### Tax exemption reasons (`/api/tax_exemption_reasons`)
+
+| Method | Path                                       | Description          |
+| ------ | ------------------------------------------ | -------------------- |
+| `GET`  | `/api/tax_exemption_reasons?filter[code]=` | Legal exemption code |
 
 #### Expense Categories (`/api/expense_categories`)
 
@@ -758,10 +822,11 @@ For receipts, set `"type": "Receipt"` in attributes.
 
 #### Document Series (`/api/commercial_document_series`)
 
-| Method | Path                                                                            | Description               |
-| ------ | ------------------------------------------------------------------------------- | ------------------------- |
-| `GET`  | `/api/commercial_document_series`                                               | List all series           |
-| `GET`  | `/api/commercial_document_series?filter[document_type]=FT&filter[prefix]=ELEVA` | Filter by type and prefix |
+| Method | Path                                                                                            | Description               |
+| ------ | ----------------------------------------------------------------------------------------------- | ------------------------- |
+| `GET`  | `/api/commercial_document_series`                                                               | List all series           |
+| `GET`  | `/api/commercial_document_series?filter[document_type]=FT&filter[prefix]=ELEVA`                 | Filter by type and prefix |
+| `GET`  | `/api/commercial_document_series?filter[document_type]=FT&filter[prefix]=2023&filter[number]=3` | Type + prefix + number    |
 
 ---
 
@@ -774,12 +839,36 @@ For receipts, set `"type": "Receipt"` in attributes.
 | EU (no valid VIES)  | 23%      | `NOR`    | —         | —                                    |
 | Non-EU              | 0%       | `ISE`    | M99       | "IVA - Nao sujeito (Art. 6 CIVA)"    |
 
-Look up tax IDs via:
+Look up tax IDs via `GET /api/taxes` (do not hardcode TEST company ids 7/99
+as production-signed). Response shape:
+
+```json
+{
+  "data": [
+    {
+      "type": "taxes",
+      "id": "103",
+      "attributes": {
+        "tax_country_region": "BE",
+        "tax_code": "NOR",
+        "description": "Normal",
+        "tax_percentage": "21",
+        "tax_expiration_date": null,
+        "vat_tax_id": null
+      }
+    }
+  ]
+}
+```
 
 ```
 GET /api/taxes?filter[tax_code]=NOR&filter[tax_country_region]=PT&filter[tax_percentage]=23
 GET /api/taxes?filter[tax_code]=ISE&filter[tax_country_region]=PT
+GET /api/oss_taxes
 ```
+
+Tax codes on services: `NOR`, `INT`, `RED`, `ISE`. Exemption legal codes
+(M07 / M99) are **pending accountant confirmation** before production.
 
 ---
 
@@ -794,7 +883,6 @@ GET /api/taxes?filter[tax_code]=ISE&filter[tax_country_region]=PT
    POST /api/v1/commercial_sales_documents
    {
      "document_type": "FT",
-     "finalize": 1,
      "customer_tax_registration_number": "{expert_nif}",
      "customer_business_name": "{expert_name}",
      "customer_address_detail": "...",
@@ -826,12 +914,17 @@ GET /api/taxes?filter[tax_code]=ISE&filter[tax_country_region]=PT
    GET /api/url_for_print/{doc_id}?filter[type]=Document
 ```
 
-Set `finalize: 1` to finalize in a single call. The document number (e.g. `ELEVA FT 2026/1`) and ATCUD are assigned upon finalization.
+v1 assigns the document number (e.g. `ELEVA FT 2026/1`) and ATCUD on create
+because the document is already finalized. Eleva must not POST this path
+until accountant fiscal params are signed and
+`TOCONLINE_ALLOW_V1_AUTO_FINALIZE=true` with a TEST prefix (never ELEVA to
+simulate). Default: refuse.
 
 ---
 
 ## References
 
+- [TOConline Full Documentation (local)](../../_context/TOConline-api/TOConline%20Full%20Documentation.md)
 - [TOConline API docs](https://api-docs.toconline.pt/llms.txt)
 - [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 - [Stripe + TOConline Flow](../_context/clone-repo/eleva-care-app/_docs/09-integrations/STRIPE-TOCONLINE-FLOW.md)

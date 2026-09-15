@@ -235,6 +235,8 @@ export const bookings = pgTable(
     eventTypeModeId: uuid("event_type_mode_id"),
     language: varchar("language", { length: 16 }),
     memberCountry: varchar("member_country", { length: 2 }),
+    /** Optional member NIF / VAT captured at checkout or from profile. */
+    buyerTaxId: varchar("buyer_tax_id", { length: 32 }),
     bookingLinkId: uuid("booking_link_id"),
     priceCents: integer("price_cents").notNull(),
 
@@ -299,6 +301,7 @@ export const bookings = pgTable(
       .on(t.counterpartyOrgId)
       .where(sql`counterparty_org_id IS NOT NULL`),
     reservationKey: unique("bookings_reservation_id_key").on(t.reservationId),
+    idOrgKey: unique("bookings_id_org_key").on(t.id, t.orgId),
     priceChk: check("bookings_price_cents", sql`price_cents >= 0`),
     priceMatchChk: check(
       "bookings_price_amount_match",

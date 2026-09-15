@@ -164,6 +164,39 @@
       "error": "No se pudo iniciar la configuración de Pagos. Inténtalo de nuevo.",
       "missingStripe": "Falta la configuración de Stripe. Contacta con soporte."
     },
+    "invoicing": {
+      "intro": "Elige cómo se emitirán las facturas de los miembros. Puedes conectar un proveedor automático o gestionar la facturación tú.",
+      "connected": "Conectado",
+      "acknowledged": "Confirmado",
+      "connectedVia": "La facturación está configurada con {provider}.",
+      "continue": "Continuar",
+      "connectToconline": "Conectar TOConline",
+      "connectProvider": "Conectar",
+      "acknowledgeManual": "Confirmar facturación manual",
+      "adapters": {
+        "toconline": {
+          "name": "TOConline",
+          "description": "Facturas certificadas por AT de forma automática, con tu cuenta TOConline."
+        },
+        "moloni": {
+          "name": "Moloni",
+          "description": "Facturación automática con Moloni. Próximamente."
+        },
+        "manual": {
+          "name": "Facturación manual",
+          "description": "Emites las facturas fuera de Eleva. Confirma la obligación legal para continuar."
+        }
+      },
+      "errors": {
+        "flag_disabled": "La facturación automática aún no está activa. Elige facturación manual o inténtalo más tarde.",
+        "not_found": "No encontramos tu perfil de experto. Actualiza la página e inténtalo de nuevo.",
+        "connect_failed": "No se pudo conectar el proveedor de facturación. Inténtalo de nuevo.",
+        "provider_denied": "Se denegó el acceso al proveedor de facturación. Reintenta o elige facturación manual.",
+        "missing_params": "El retorno de facturación quedó incompleto. Vuelve a conectar.",
+        "invalid_state": "El retorno de facturación no era válido. Vuelve a conectar.",
+        "invalid_provider": "Ese proveedor de facturación no es compatible."
+      }
+    },
     "requirements": {
       "title": "Aún pendiente",
       "verification": "Verifica tu identidad con un documento con foto.",
