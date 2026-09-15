@@ -16,12 +16,14 @@ export {
   AdapterError,
   type AdapterManifest,
   type AdapterStatus,
+  type AdapterStatusResult,
   type ConnectInput,
   type ConnectResult,
   type DisconnectInput,
   type ExpertInvoicingAdapter,
   type IssueInvoiceInput,
   type IssueInvoiceResult,
+  type RotatedAdapterCredentials,
   InvoicingProviderSlug,
 } from "./types"
 
@@ -31,6 +33,11 @@ export {
   buildMemberInvoiceInput,
   invoiceStatusFromAdapterError,
 } from "./dispatch"
+export {
+  persistExpertIntegrationCredentials,
+  probeExpertInvoicingStatus,
+  toPublicAdapterStatus,
+} from "./persist-credentials"
 export type {
   IssueExpertServiceInvoiceInput,
   IssueExpertServiceInvoiceResult,

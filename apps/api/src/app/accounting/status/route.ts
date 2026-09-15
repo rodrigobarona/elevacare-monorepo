@@ -1,7 +1,10 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { NextResponse } from "next/server"
 import { getSession } from "@eleva/auth"
-import { getAdapter, type InvoicingProviderSlug } from "@eleva/accounting"
+import {
+  probeExpertInvoicingStatus,
+  type InvoicingProviderSlug,
+} from "@eleva/accounting"
 import {
   main,
   withOrgContext,
@@ -115,12 +118,18 @@ export async function GET(request: Request) {
         adapterStatus = { status: "error", message: "missing_credentials" }
       } else {
         try {
-          const adapter = getAdapter(
-            expert.invoicingProvider as InvoicingProviderSlug
-          )
-          adapterStatus = await adapter.status({
+          adapterStatus = await probeExpertInvoicingStatus({
+            orgId: expert.orgId,
+            provider: expert.invoicingProvider as InvoicingProviderSlug,
+            integrationId: cred.id,
             vaultRef: cred.vaultRef,
-            metadata: cred.metadata ?? undefined,
+            metadata: {
+              ...(cred.metadata ?? {}),
+              userId:
+                typeof cred.metadata?.userId === "string"
+                  ? cred.metadata.userId
+                  : session.user.id,
+            },
           })
         } catch (err) {
           console.error("[accounting/status] Adapter status check failed:", err)

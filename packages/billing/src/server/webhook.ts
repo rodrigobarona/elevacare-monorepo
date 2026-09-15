@@ -1482,7 +1482,11 @@ async function handlePaymentIntentEvent(
       })
     } catch (err) {
       console.error("[billing] expert invoice dispatch failed", err)
-      captureException(err)
+      void captureException(err, {
+        bookingPaymentId: paymentId,
+        orgId,
+        stripePaymentIntentId: intent.id,
+      }).catch(() => {})
     }
   }
   return { kind: "handled", resolvedOrgId: orgId }

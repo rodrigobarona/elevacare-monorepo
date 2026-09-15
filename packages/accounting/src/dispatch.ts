@@ -5,6 +5,7 @@ import { main, withOrgContext } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
 import { AdapterError } from "./types"
 import type { IssueInvoiceInput, InvoicingProviderSlug } from "./types"
+import { persistExpertIntegrationCredentials } from "./persist-credentials"
 import { getAdapter } from "./registry"
 import {
   ensureToconlineAccessToken,
@@ -280,30 +281,14 @@ export async function issueExpertServiceInvoice(
           }
         }
         vaultRef = loaded.vaultRef
-        await withAudit(
-          { orgId: input.orgId, actorUserId: null },
-          async (tx, ctx) => {
-            await tx
-              .update(main.expertIntegrations)
-              .set({
-                vaultRef: loaded.vaultRef,
-                metadata,
-                expiresAt: loaded.expiresAt,
-                updatedAt: new Date(),
-                ...(loaded.rotated ? { lastRefreshAt: new Date() } : {}),
-              })
-              .where(eq(main.expertIntegrations.id, snapshot.integration!.id))
-            await ctx.emit({
-              entity: "expert_integration_credential",
-              action: "updated",
-              entityId: snapshot.integration!.id,
-              payload: {
-                rotated: loaded.rotated,
-                documentSeriesPersisted: Boolean(metadata.document_series_id),
-              },
-            })
-          }
-        )
+        await persistExpertIntegrationCredentials({
+          orgId: input.orgId,
+          integrationId: snapshot.integration!.id,
+          vaultRef: loaded.vaultRef,
+          expiresAt: loaded.expiresAt,
+          metadata,
+          rotated: loaded.rotated,
+        })
       }
     }
 

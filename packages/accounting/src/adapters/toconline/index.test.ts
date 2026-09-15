@@ -325,4 +325,82 @@ describe("toconlineAdapter", () => {
       needsToconlineTokenRefresh(new Date(Date.now() + 10 * 60 * 1000))
     ).toBe(false)
   })
+
+  it("exposes rotated credentials from status so the framework can persist them", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "stale-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() - 1000),
+    })
+    vi.mocked(encryptOAuthToken).mockResolvedValue("vault-ref-rotated")
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-at",
+          refresh_token: "new-rt",
+          expires_in: 3600,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+      })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await toconlineAdapter.status(creds)
+    expect(result.status).toBe("healthy")
+    expect(result.rotatedCredentials).toEqual({
+      vaultRef: "vault-ref-rotated",
+      expiresAt: expect.any(Date),
+    })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it("still returns rotated credentials when the companies probe fails", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "stale-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() - 1000),
+    })
+    vi.mocked(encryptOAuthToken).mockResolvedValue("vault-ref-rotated")
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "new-at",
+          refresh_token: "new-rt",
+          expires_in: 3600,
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await toconlineAdapter.status(creds)
+    expect(result.status).toBe("expired")
+    expect(result.rotatedCredentials?.vaultRef).toBe("vault-ref-rotated")
+  })
+
+  it("does not expose rotated credentials when the token is still valid", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "live-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000),
+    })
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+    })
+    vi.stubGlobal("fetch", fetchMock)
+
+    const result = await toconlineAdapter.status(creds)
+    expect(result.status).toBe("healthy")
+    expect(result.rotatedCredentials).toBeUndefined()
+    expect(encryptOAuthToken).not.toHaveBeenCalled()
+  })
 })
