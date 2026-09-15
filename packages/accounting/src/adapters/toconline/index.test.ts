@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
-import { decryptOAuthToken } from "@eleva/encryption"
+import { decryptOAuthToken, revokeOAuthToken } from "@eleva/encryption"
 import { resetEnvCache } from "@eleva/config/env"
 import { TOC_V1_AUTO_FINALIZE_BLOCKED } from "./issuance-gate"
 import { toconlineAdapter } from "./index"
@@ -41,6 +41,7 @@ const creds = {
 describe("toconlineAdapter", () => {
   beforeEach(() => {
     resetEnvCache()
+    vi.clearAllMocks()
     vi.stubEnv("TOCONLINE_CLIENT_ID", "test-client-id")
     vi.stubEnv("TOCONLINE_CLIENT_SECRET", "test-secret")
     vi.stubEnv("TOCONLINE_OAUTH_BASE_URL", "https://app33.toconline.pt/oauth")
@@ -145,6 +146,7 @@ describe("toconlineAdapter", () => {
     expect(result.vaultRef).toBe("vault-ref")
     expect(result.metadata?.document_series_id).toBeUndefined()
     expect(warn).toHaveBeenCalled()
+    expect(revokeOAuthToken).not.toHaveBeenCalled()
     warn.mockRestore()
   })
 
@@ -174,6 +176,7 @@ describe("toconlineAdapter", () => {
         payload: { code: "auth-code" },
       })
     ).rejects.toMatchObject({ kind: "credentials" })
+    expect(revokeOAuthToken).toHaveBeenCalledWith("vault-ref")
   })
 
   it("refuses issueInvoice by default because v1 auto-finalizes", async () => {

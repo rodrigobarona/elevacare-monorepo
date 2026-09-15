@@ -88,11 +88,14 @@ export async function markStepComplete(
 }
 
 export async function saveInvoicingChoice(
-  provider: "toconline" | "moloni" | "manual"
+  provider: "toconline" | "moloni" | "manual",
+  acknowledged?: boolean
 ): Promise<ActionResult> {
   let payload
   try {
-    payload = InvoicingRequestSchema.parse({ provider })
+    payload = InvoicingRequestSchema.parse(
+      provider === "manual" ? { provider, acknowledged } : { provider }
+    )
   } catch {
     return { ok: false, error: "validation" }
   }
@@ -131,7 +134,7 @@ export async function startToconlineOAuth(): Promise<
   } catch (err) {
     console.error("[onboarding] startToconlineOAuth failed", err)
     if (err instanceof ApiClientError) {
-      if (err.status === 403 || err.body.error === "flag_disabled") {
+      if (err.body.error === "flag_disabled") {
         return { ok: false, error: "flag_disabled" }
       }
       if (err.status === 404) {

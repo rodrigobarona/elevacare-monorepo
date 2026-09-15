@@ -156,6 +156,7 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
     }
   } catch (err) {
     if (isFatalSeriesLookupFailure(err)) {
+      await revokeOAuthToken(vaultRef)
       throw err
     }
     console.warn(

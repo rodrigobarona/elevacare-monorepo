@@ -59,6 +59,7 @@ import {
   DeleteAccountResponseSchema,
   CancelDeletionResponseSchema,
   ConnectAccountingResponseSchema,
+  InvoicingRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -625,9 +626,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({
-                  provider: z.enum(["toconline", "moloni", "manual"]),
-                }),
+                schema: InvoicingRequestSchema,
               },
             },
           },

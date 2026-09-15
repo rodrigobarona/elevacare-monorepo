@@ -13,7 +13,9 @@ POST /api/v1/commercial_sales_documents
 v1 **auto-finalizes on create**. There is no `finalize` field. After create,
 finalize / cancel / update / delete are impossible on this API version.
 Drafts belong on the previous API. Eleva `issueInvoice()` refuses this POST
-by default.
+unconditionally in Phase 07.2.1 (`toconline_v1_auto_finalize_blocked`). Do not
+create fictitious TEST fiscal documents and do not start production automatic
+issuance.
 
 ```json
 {
@@ -37,8 +39,8 @@ by default.
       "description": "Servico de plataforma Eleva Care",
       "quantity": 1,
       "unit_price": 15.0,
-      "tax_code": "NOR",
-      "tax_percentage": 23
+      "tax_code": "<accountant-pending>",
+      "tax_percentage": "<accountant-pending>"
     }
   ]
 }
@@ -46,16 +48,16 @@ by default.
 
 Key fields:
 
-| Field                              | Description                                                       |
-| ---------------------------------- | ----------------------------------------------------------------- |
-| `document_type`                    | v1 sales: `FT` / `FS` / `FR`. `NC` / `ND` are retificative        |
-| `finalize`                         | **Not a v1 field.** Submit auto-finalizes. Drafts = previous API  |
-| `customer_tax_registration_number` | Expert's NIF / VAT number                                         |
-| `payment_mechanism`                | `MO`, `TR`, `CC`/`DC`, `MB`, `CH`, `DDA` (SAF-T `TB` is rejected) |
-| `vat_included_prices`              | `true` if unit_price includes VAT                                 |
-| `external_reference`               | Stripe session ID for traceability                                |
-| `lines[].tax_code`                 | `NOR` (normal), `ISE` (isento/exempt)                             |
-| `lines[].tax_percentage`           | `23`, `13`, `6`, or `0`                                           |
+| Field                              | Description                                                         |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `document_type`                    | v1 sales: `FT` / `FS` / `FR`. `NC` / `ND` are retificative          |
+| `finalize`                         | **Not a v1 field.** Submit auto-finalizes. Drafts = previous API    |
+| `customer_tax_registration_number` | Expert's NIF / VAT number                                           |
+| `payment_mechanism`                | `MO`, `TR`, `CC`/`DC`, `MB`, `CH`, `DDA` (SAF-T `TB` is rejected)   |
+| `vat_included_prices`              | `true` if unit_price includes VAT                                   |
+| `external_reference`               | Stripe session ID for traceability                                  |
+| `lines[].tax_code`                 | `NOR` (normal), `ISE` (isento/exempt)                               |
+| `lines[].tax_percentage`           | Accountant-pending. Do not copy 23/13/6 into issuance until signed. |
 
 ### Legacy API (multi-step)
 
@@ -202,14 +204,17 @@ For refunds, create a `NC` (nota de credito) referencing the original invoice:
       "description": "Anulacao de servico de plataforma Eleva Care",
       "quantity": 1,
       "unit_price": 15.0,
-      "tax_code": "NOR",
-      "tax_percentage": 23
+      "tax_code": "<accountant-pending>",
+      "tax_percentage": "<accountant-pending>"
     }
   ]
 }
 ```
 
 ## VAT Matrix
+
+**Unsigned / not for issuance.** Do not copy 23/13/6 or exemption codes into
+production issuance until remaining fiscal parameters are confirmed.
 
 | Expert location     | VAT rate | Tax code | Exemption ID | Invoice note                         |
 | ------------------- | -------- | -------- | ------------ | ------------------------------------ |

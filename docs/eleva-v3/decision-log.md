@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-15: Phase 07.2.1 keeps v1 issuance unconditionally closed
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 07.2.1 ships TOConline OAuth + TEST series lookup +
+  `expert_invoices` schema. `issueInvoice()` / `assertV1SalesDocumentPostAllowed()`
+  always throw `toconline_v1_auto_finalize_blocked`. Do not treat
+  `TOCONLINE_ALLOW_V1_AUTO_FINALIZE`, a TEST prefix, or PR 07.1 scaffolding as
+  permission to POST `/api/v1/commercial_sales_documents`. PR 07.1 acceptance
+  that required `issued` FTs, finalize, or Comunicação à AT is deferred until
+  remaining fiscal parameters are confirmed (tax codes, rates, legal
+  mentions, VIES 24h cache + downtime procedure). Accountant 2026-09-15
+  (Manolo (MB)): D-09/D-03 Aprovado com condições.
+- Reference: `issuance-gate.ts`, D-03, D-09,
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md)
+- Next review date: when the accountant confirms remaining fiscal parameters
+
 ### 2026-09-15: Accountant written reply — Aprovado com condições (not a 07.1 issuance unlock)
 
 - Owner: accountant (`Manolo (MB)`);

@@ -571,9 +571,14 @@ export type PatchExpertProfileRequest = z.infer<
   typeof PatchExpertProfileRequestSchema
 >
 
-export const InvoicingRequestSchema = z.object({
-  provider: z.enum(["toconline", "moloni", "manual"]),
-})
+export const InvoicingRequestSchema = z.discriminatedUnion("provider", [
+  z.object({ provider: z.literal("toconline") }),
+  z.object({ provider: z.literal("moloni") }),
+  z.object({
+    provider: z.literal("manual"),
+    acknowledged: z.literal(true),
+  }),
+])
 
 export type InvoicingRequest = z.infer<typeof InvoicingRequestSchema>
 

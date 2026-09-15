@@ -830,6 +830,12 @@ For receipts, set `"type": "Receipt"` in attributes.
 
 ## VAT Treatment for Eleva Platform Fees
 
+**Unsigned / not for issuance.** The table below is a pre-accountant sketch.
+Do not copy 23/13/6, `NOR`/`ISE`, or exemption codes into production issuance
+until remaining fiscal parameters are confirmed (accountant 2026-09-15
+conditions). EU without VIES is not automatically a consumer; extra-EU is
+not an indiscriminate zero-rate.
+
 | Expert location     | VAT rate | Tax code | Exemption | Invoice note                         |
 | ------------------- | -------- | -------- | --------- | ------------------------------------ |
 | PT (valid NIF)      | 23%      | `NOR`    | —         | —                                    |
@@ -913,10 +919,11 @@ Tax codes on services: `NOR`, `INT`, `RED`, `ISE`. Exemption legal codes
 ```
 
 v1 assigns the document number (e.g. `ELEVA FT 2026/1`) and ATCUD on create
-because the document is already finalized. Eleva must not POST this path
-until accountant fiscal params are signed and
-`TOCONLINE_ALLOW_V1_AUTO_FINALIZE=true` with a TEST prefix (never ELEVA to
-simulate). Default: refuse.
+because the document is already finalized. Phase 07.2.1 keeps this POST
+unconditionally blocked in `assertV1SalesDocumentPostAllowed()`. Do not
+enable it with a flag, a TEST prefix, or `TOCONLINE_ALLOW_V1_AUTO_FINALIZE`.
+Do not create fictitious TEST fiscal documents. Re-open only after accountant
+fiscal params are signed.
 
 ---
 

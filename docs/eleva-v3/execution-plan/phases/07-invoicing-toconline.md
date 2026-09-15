@@ -68,7 +68,8 @@ In:
   `src/core/` (IVA rules per accountant 2026-09-15 conditions; VIES check at registration and
   before issuance with evidence retained — 24h cache + downtime procedure pending specific
   validation before activating intra-EU flows; invoice types; credential store using
-  `@eleva/encryption`), `src/eleva-platform/` (Tier 1 TOConline client: OAuth PKCE, customers,
+  `@eleva/encryption`), `src/eleva-platform/` (Tier 1 TOConline client: OAuth Authorization
+  Code without PKCE as proven in PR 07.0, customers,
   services, sales documents v1, PDF URL, AT communication, email), `src/expert-apps/adapters/
 {toconline,moloni,manual}` implementing `ExpertInvoicingAdapter`, `src/registry.ts` kept.
 - Tier 1: `issuePlatformFeeInvoice(bookingPaymentId)` — triggered by the `payment_intent.succeeded`
@@ -112,8 +113,9 @@ issued_at, error, attempts)`; manual mode records `status = manual_pending` and 
   expert's session page + monthly export (`GET /invoicing/exports/saft?month=`, CSV + SAF-T PT
   XML skeleton).
 - Credentials: `expert_integration_credentials(id, expert_org_id, provider, encrypted_payload,
-status, installed_at)` encrypted with `encryptForOrg`; OAuth PKCE callback routes in `apps/api`
-  (`/accounting/callback` exists — extend per provider) — redirect URI `TOCONLINE_OAUTH_REDIRECT`.
+status, installed_at)` encrypted with `encryptForOrg`; OAuth callback routes in `apps/api`
+  (`/accounting/callback` exists — extend per provider; TOConline is Authorization Code
+  **without PKCE** as proven in PR 07.0) — redirect URI `TOCONLINE_OAUTH_REDIRECT`.
 - Expert onboarding step "Invoicing" (`apps/expert`): choose Auto (connect TOConline or Moloni)
   or Manual (acknowledge legal obligation); Become-Partner cannot complete without one; session
   page shows invoice status with retry and "mark as issued manually".
@@ -145,16 +147,23 @@ connected|disconnected`).
 
 ## Acceptance criteria
 
+**PR 07.1 issuance is deferred.** Do not treat `issuePlatformFeeInvoice` reaching `issued`,
+finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
+Those checks wait for confirmed fiscal parameters (tax codes, rates, legal mentions, VIES
+24h cache + downtime procedure). 07.1 may land schema/adapter scaffolding that never POSTs
+`/api/v1/commercial_sales_documents`.
+
 - [ ] Paid booking on staging -> `platform_fee_invoices` row is `pending` synchronously in the
-      `payment_intent.succeeded` handler and `issued` by the workflow worker within **60 s**
-      (SLA asserted by the test with polling). Retry policy — fast stage: QStash retries the issuance job with exponential backoff up to **5 attempts**, then sets `status = failed` and alerts (Sentry + ops e-mail); slow stage: `invoicing-retry` (every 30 min) re-processes `failed` rows with backoff up to **10 further attempts**, then sets `status = dead_lettered`, writes `workflow_dead_letters` and raises the admin flag (Phase 12 queue). One policy, referenced by the workflow, the tests and `operator-tasks/toconline-setup.md`. Issuance is a hard precondition of the expert
-      transfer: the Phase 6 payout engine refuses to create a Stripe transfer while the
-      booking's fee invoice is not `issued` (also verified with a payout left in
-      `approval_required`, where the invoice must still reach `issued` without any transfer).
-      Issued row carries the TOConline document number in `ELEVA-FEE-2026`, PDF URL works, AT
-      communication response stored (test/sandbox mode if available; otherwise a clearly
-      separate test series).
-- [ ] Refund after invoice -> credit note issued and linked.
+      `payment_intent.succeeded` handler. Worker POST / finalize / AT communication / `issued`
+      SLA are **deferred** until fiscal params are confirmed. Retry policy (document now, do not
+      run against TOConline TEST): fast stage = QStash exponential backoff up to **5 attempts**,
+      then `status = failed` and alerts (Sentry + ops e-mail); slow stage: `invoicing-retry`
+      (every 30 min) re-processes `failed` rows with backoff up to **10 further attempts**, then
+      `status = dead_lettered`, writes `workflow_dead_letters` and raises the admin flag
+      (Phase 12 queue). Payout remaining `approval_required` until a real issued fee invoice
+      exists is already the Phase 6 behavior — do not simulate an issued FT to unblock it.
+- [ ] Credit-note path is implemented in code and tests with the issuance gate still closed;
+      do not issue or communicate a TEST NC.
 - [ ] Expert in Auto mode (TOConline) -> OAuth connected, TEST series lookup,
       `issueInvoice()` refuses POST (`toconline_v1_auto_finalize_blocked`).
       `expert_invoices` may be `pending`/`failed` with the blocked code; **do

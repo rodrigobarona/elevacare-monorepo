@@ -173,10 +173,12 @@
       "connectToconline": "Connect TOConline",
       "connectProvider": "Connect",
       "acknowledgeManual": "Acknowledge manual invoicing",
+      "manualLegal": "You remain legally responsible for issuing a certified invoice to each member for sessions paid through Eleva, using your own invoicing software.",
+      "manualCheckbox": "I understand and accept this invoicing obligation",
       "adapters": {
         "toconline": {
           "name": "TOConline",
-          "description": "Automatic AT-certified invoices via your TOConline account."
+          "description": "Connect your TOConline account. Automatic invoice issuance is not active yet."
         },
         "moloni": {
           "name": "Moloni",
@@ -194,7 +196,8 @@
         "provider_denied": "Access to the invoicing provider was denied. Retry or choose manual invoicing.",
         "missing_params": "The invoicing callback was incomplete. Please try connecting again.",
         "invalid_state": "The invoicing callback was invalid. Please try connecting again.",
-        "invalid_provider": "That invoicing provider is not supported."
+        "invalid_provider": "That invoicing provider is not supported.",
+        "manual_ack_required": "Confirm the invoicing obligation before continuing with manual invoicing."
       }
     },
     "requirements": {

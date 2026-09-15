@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@eleva/ui/components/card"
+import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { useTranslations } from "next-intl"
 import { saveInvoicingChoice, startToconlineOAuth } from "./actions"
 import type { OnboardingProfile } from "./onboarding-wizard"
@@ -67,6 +68,7 @@ export function StepInvoicing({
   const t = useTranslations("onboarding.invoicing")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [manualAcknowledged, setManualAcknowledged] = React.useState(false)
   const callbackError =
     invoicingError && isInvoicingErrorCode(invoicingError)
       ? t(`errors.${invoicingError}`)
@@ -80,6 +82,11 @@ export function StepInvoicing({
     profile.invoicingSetupStatus === "manual_acknowledged"
 
   async function handleSelect(slug: "toconline" | "moloni" | "manual") {
+    if (slug === "manual" && !manualAcknowledged) {
+      setError(t("errors.manual_ack_required"))
+      return
+    }
+
     setPending(true)
     setError(null)
 
@@ -98,14 +105,18 @@ export function StepInvoicing({
         return
       }
 
-      const result = await saveInvoicingChoice(slug)
+      const result = await saveInvoicingChoice(
+        slug,
+        slug === "manual" ? manualAcknowledged : undefined
+      )
       if (result.ok) {
         onDone()
       } else {
         setError(result.error)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : t("errors.connect_failed"))
+      console.error("[onboarding] invoicing select failed", err)
+      setError(t("errors.connect_failed"))
     } finally {
       setPending(false)
     }
@@ -169,11 +180,27 @@ export function StepInvoicing({
                   {t(`adapters.${adapter.slug}.description`)}
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-3">
+                {adapter.slug === "manual" ? (
+                  <>
+                    <p className="text-xs text-muted-foreground">
+                      {t("manualLegal")}
+                    </p>
+                    <CheckboxField
+                      isSelected={manualAcknowledged}
+                      onChange={setManualAcknowledged}
+                      isDisabled={pending}
+                      label={t("manualCheckbox")}
+                    />
+                  </>
+                ) : null}
                 <Button
                   size="sm"
                   variant={adapter.slug === "manual" ? "outline" : "default"}
-                  isDisabled={isDisabled}
+                  isDisabled={
+                    isDisabled ||
+                    (adapter.slug === "manual" && !manualAcknowledged)
+                  }
                   onPress={() => handleSelect(adapter.slug)}
                 >
                   {adapter.slug === "manual"

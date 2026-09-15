@@ -75,6 +75,7 @@ export async function PUT(request: Request) {
           const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
           if (!steps.includes("invoicing")) steps.push("invoicing")
           metadata.completedSteps = steps
+          metadata.manualInvoicingAcknowledgedAt = new Date().toISOString()
         }
 
         await tx
@@ -92,7 +93,11 @@ export async function PUT(request: Request) {
           entity: "expert_profile",
           action: "updated",
           entityId: profile.id,
-          payload: { field: "invoicing", provider },
+          payload: {
+            field: "invoicing",
+            provider,
+            ...(isManual ? { acknowledged: true } : {}),
+          },
         })
       }
     )

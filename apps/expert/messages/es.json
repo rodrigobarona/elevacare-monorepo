@@ -173,10 +173,12 @@
       "connectToconline": "Conectar TOConline",
       "connectProvider": "Conectar",
       "acknowledgeManual": "Confirmar facturación manual",
+      "manualLegal": "Sigues siendo legalmente responsable de emitir una factura certificada a cada miembro por las sesiones pagadas a través de Eleva, usando tu propio software de facturación.",
+      "manualCheckbox": "Entiendo y acepto esta obligación de facturación",
       "adapters": {
         "toconline": {
           "name": "TOConline",
-          "description": "Facturas certificadas por AT de forma automática, con tu cuenta TOConline."
+          "description": "Conecta tu cuenta TOConline. La emisión automática de facturas aún no está activa."
         },
         "moloni": {
           "name": "Moloni",
@@ -194,7 +196,8 @@
         "provider_denied": "Se denegó el acceso al proveedor de facturación. Reintenta o elige facturación manual.",
         "missing_params": "El retorno de facturación quedó incompleto. Vuelve a conectar.",
         "invalid_state": "El retorno de facturación no era válido. Vuelve a conectar.",
-        "invalid_provider": "Ese proveedor de facturación no es compatible."
+        "invalid_provider": "Ese proveedor de facturación no es compatible.",
+        "manual_ack_required": "Confirma la obligación de facturación antes de continuar con facturación manual."
       }
     },
     "requirements": {
