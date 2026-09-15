@@ -17,7 +17,6 @@ import type {
 } from "../../types"
 import { assertV1SalesDocumentPostAllowed } from "./issuance-gate"
 import { resolveDocumentSeriesId } from "./lookups"
-import { mapIssueInvoiceToV1Payload } from "./payload"
 
 /**
  * TOConline Tier 2 adapter — expert-side issuance.
@@ -173,24 +172,16 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
 }
 
 async function issueInvoice(
-  creds: {
+  _creds: {
     vaultRef: string
     metadata?: Record<string, unknown>
     orgId?: string
   },
-  input: IssueInvoiceInput
+  _input: IssueInvoiceInput
 ): Promise<IssueInvoiceResult> {
-  const meta = (creds.metadata ?? {}) as ToconlineMetadata
-  const seriesId =
-    typeof meta.document_series_id === "string" &&
-    meta.document_series_id.length > 0
-      ? meta.document_series_id
-      : undefined
-
-  mapIssueInvoiceToV1Payload(input, {
-    documentSeriesId: seriesId,
-  })
-
+  // Closed until 07.1: v1 create auto-finalizes. Assert the gate before
+  // mapping so dispatch records `toconline_v1_auto_finalize_blocked`
+  // instead of unsigned-IVA mapper errors (`exempt` has no signed code).
   return assertV1SalesDocumentPostAllowed()
 }
 

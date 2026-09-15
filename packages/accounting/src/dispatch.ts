@@ -87,6 +87,9 @@ export function buildMemberInvoiceInput(input: {
         description: "Session",
         quantity: 1,
         unitPrice,
+        // Unsigned IVA: mapper refuses `exempt` without a signed legal
+        // code. issueInvoice asserts the v1 auto-finalize gate first so
+        // dispatch records `toconline_v1_auto_finalize_blocked`.
         taxRate: 0,
         taxTreatment: "exempt",
         currency: input.currency || "EUR",

@@ -6,6 +6,7 @@ import {
 } from "@eleva/encryption"
 import { resetEnvCache } from "@eleva/config/env"
 import { TOC_V1_AUTO_FINALIZE_BLOCKED } from "./issuance-gate"
+import { buildMemberInvoiceInput } from "../../dispatch"
 import {
   ensureToconlineAccessToken,
   needsToconlineTokenRefresh,
@@ -216,7 +217,7 @@ describe("toconlineAdapter", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
-  it("refuses mixed-currency lines before any sales POST", async () => {
+  it("refuses mixed-currency lines via the issuance gate, never POSTing", async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal("fetch", fetchMock)
 
@@ -234,7 +235,32 @@ describe("toconlineAdapter", () => {
           },
         ],
       })
-    ).rejects.toMatchObject({ kind: "validation" })
+    ).rejects.toMatchObject({
+      providerCode: TOC_V1_AUTO_FINALIZE_BLOCKED,
+    })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it("records the issuance gate for unsigned dispatch IVA, not mapper exempt errors", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+    const input = buildMemberInvoiceInput({
+      bookingId: "00000000-0000-4000-8000-000000000010",
+      expertProfileId: "00000000-0000-4000-8000-000000000001",
+      buyerTaxId: "999999990",
+      guestName: "Ana",
+      guestEmail: "ana@example.com",
+      memberCountry: "PT",
+      amountCents: 6000,
+      currency: "EUR",
+      paidAt: new Date("2026-09-15T10:00:00.000Z"),
+    })
+
+    await expect(
+      toconlineAdapter.issueInvoice(creds, input)
+    ).rejects.toMatchObject({
+      providerCode: TOC_V1_AUTO_FINALIZE_BLOCKED,
+    })
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
