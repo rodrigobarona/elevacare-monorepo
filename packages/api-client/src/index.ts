@@ -595,6 +595,62 @@ export type ConnectAccountingResponse = z.infer<
   typeof ConnectAccountingResponseSchema
 >
 
+export const ExpertInvoiceStatusSchema = z.enum([
+  "pending",
+  "issued",
+  "failed",
+  "manual_pending",
+  "manual_issued",
+])
+export type ExpertInvoiceStatus = z.infer<typeof ExpertInvoiceStatusSchema>
+
+export const ExpertInvoiceAdapterSchema = z.enum([
+  "toconline",
+  "moloni",
+  "manual",
+])
+export type ExpertInvoiceAdapter = z.infer<typeof ExpertInvoiceAdapterSchema>
+
+export const ExpertInvoiceSchema = z.object({
+  id: z.string().uuid(),
+  bookingId: z.string().uuid(),
+  adapter: ExpertInvoiceAdapterSchema,
+  status: ExpertInvoiceStatusSchema,
+  amountCents: z.number().int().nonnegative(),
+  number: z.string().nullable(),
+  issuedAt: z.string().nullable(),
+  error: z.string().nullable(),
+  attempts: z.number().int().nonnegative(),
+  pdfUrl: z.string().nullable(),
+})
+export type ExpertInvoice = z.infer<typeof ExpertInvoiceSchema>
+
+export const ListExpertInvoicesQuerySchema = z.object({
+  status: ExpertInvoiceStatusSchema.optional(),
+  cursor: z.string().uuid().optional(),
+})
+export type ListExpertInvoicesQuery = z.infer<
+  typeof ListExpertInvoicesQuerySchema
+>
+
+export const ListExpertInvoicesResponseSchema = z.object({
+  invoices: z.array(ExpertInvoiceSchema),
+  nextCursor: z.string().uuid().nullable(),
+})
+export type ListExpertInvoicesResponse = z.infer<
+  typeof ListExpertInvoicesResponseSchema
+>
+
+export const ExpertInvoiceActionRequestSchema = z.object({}).strict()
+export type ExpertInvoiceActionRequest = z.infer<
+  typeof ExpertInvoiceActionRequestSchema
+>
+
+export const ExpertInvoiceActionResponseSchema = ExpertInvoiceSchema
+export type ExpertInvoiceActionResponse = z.infer<
+  typeof ExpertInvoiceActionResponseSchema
+>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -1584,6 +1640,42 @@ export function createApiClient(options: ApiClientOptions) {
           `/accounting/connect/${encodeURIComponent(provider)}`
         )
         return ConnectAccountingResponseSchema.parse(raw)
+      },
+    },
+
+    invoicing: {
+      async listExpert(query: ListExpertInvoicesQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.status) params.set("status", query.status)
+        if (query.cursor) params.set("cursor", query.cursor)
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          qs ? `/invoicing/expert?${qs}` : "/invoicing/expert"
+        )
+        return ListExpertInvoicesResponseSchema.parse(raw)
+      },
+      async retryExpert(
+        bookingId: string,
+        data: ExpertInvoiceActionRequest = {}
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/invoicing/expert/${encodeURIComponent(bookingId)}/retry`,
+          data
+        )
+        return ExpertInvoiceActionResponseSchema.parse(raw)
+      },
+      async markExpertManual(
+        bookingId: string,
+        data: ExpertInvoiceActionRequest = {}
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/invoicing/expert/${encodeURIComponent(bookingId)}/mark-manual`,
+          data
+        )
+        return ExpertInvoiceActionResponseSchema.parse(raw)
       },
     },
   }

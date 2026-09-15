@@ -60,6 +60,10 @@ import {
   CancelDeletionResponseSchema,
   ConnectAccountingResponseSchema,
   InvoicingRequestSchema,
+  ListExpertInvoicesQuerySchema,
+  ListExpertInvoicesResponseSchema,
+  ExpertInvoiceActionRequestSchema,
+  ExpertInvoiceActionResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2065,6 +2069,115 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "503": {
               description: "Fatal adapter failure",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/invoicing/expert": {
+        get: {
+          operationId: "listExpertInvoices",
+          summary: "List expert → member invoices",
+          description:
+            "Returns the authenticated expert organization's Tier 2 invoices. Does not include member tax IDs. Automatic TOConline issuance stays closed until fiscal parameters are signed.",
+          tags: ["Invoicing"],
+          requestParams: {
+            query: ListExpertInvoicesQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Invoice list",
+              content: {
+                "application/json": {
+                  schema: ListExpertInvoicesResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:invoicing_manage",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/invoicing/expert/{bookingId}/retry": {
+        post: {
+          operationId: "retryExpertInvoice",
+          summary: "Retry a failed expert invoice dispatch",
+          description:
+            "Re-runs closed-gate adapter dispatch for a failed invoice after an exclusive pending claim. Does not POST TOConline v1 sales documents. Manual invoices cannot be retried — use mark-manual.",
+          tags: ["Invoicing"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+            }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: ExpertInvoiceActionRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated invoice",
+              content: {
+                "application/json": {
+                  schema: ExpertInvoiceActionResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Flag disabled or BotID blocked",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Invoice is not retryable",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/invoicing/expert/{bookingId}/mark-manual": {
+        post: {
+          operationId: "markExpertInvoiceManual",
+          summary: "Mark an expert invoice as issued manually",
+          description:
+            "Records that the expert issued a certified invoice to the member outside Eleva. Does not create a TOConline document.",
+          tags: ["Invoicing"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+            }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: ExpertInvoiceActionRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Updated invoice",
+              content: {
+                "application/json": {
+                  schema: ExpertInvoiceActionResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Flag disabled or BotID blocked",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Invoice is already issued",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

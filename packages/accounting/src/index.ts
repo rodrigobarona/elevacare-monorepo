@@ -38,10 +38,25 @@ export {
   probeExpertInvoicingStatus,
   toPublicAdapterStatus,
 } from "./persist-credentials"
+export {
+  ExpertInvoiceOpError,
+  canMarkInvoiceManual,
+  canRetryInvoice,
+  isExpertInvoiceOpError,
+  listExpertInvoices,
+  markExpertInvoiceManual,
+  retryExpertInvoice,
+  toPublicExpertInvoice,
+} from "./invoice-ops"
 export type {
   IssueExpertServiceInvoiceInput,
   IssueExpertServiceInvoiceResult,
 } from "./dispatch"
+export type {
+  ExpertInvoiceOpCode,
+  ExpertInvoiceStatus,
+  PublicExpertInvoice,
+} from "./invoice-ops"
 
 export {
   ACCOUNTING_OAUTH_STATE_TTL_MS,

@@ -8,7 +8,7 @@ import {
   ConnectAccountManagement,
   ConnectTaxSettings,
 } from "@eleva/billing/embedded"
-import { Button } from "@eleva/ui/components/button"
+import { Button, LinkButton } from "@eleva/ui/components/button"
 import {
   Card,
   CardContent,
@@ -65,9 +65,10 @@ function payoutStatusLabel(
 
 export function FinanceDashboard({
   orgSlug,
+  invoicesHref,
   summary,
   bookings,
-}: FinanceSummaryResponse & { orgSlug: string }) {
+}: FinanceSummaryResponse & { orgSlug: string; invoicesHref: string | null }) {
   const t = useTranslations("finance")
   const rawLocale = useLocale()
   const localeKey = (["en", "pt", "es"] as const).includes(
@@ -91,32 +92,39 @@ export function FinanceDashboard({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-4">
           <CardTitle>{t("bookings")}</CardTitle>
-          <Button
-            variant="outline"
-            onPress={() => {
-              void (async () => {
-                try {
-                  const result = await exportFinanceCsv(orgSlug)
-                  if (!result.ok) {
+          <div className="flex flex-wrap gap-2">
+            {invoicesHref ? (
+              <LinkButton href={invoicesHref} variant="outline">
+                {t("invoices.link")}
+              </LinkButton>
+            ) : null}
+            <Button
+              variant="outline"
+              onPress={() => {
+                void (async () => {
+                  try {
+                    const result = await exportFinanceCsv(orgSlug)
+                    if (!result.ok) {
+                      toast.error(t("exportFailed"))
+                      return
+                    }
+                    if (typeof window === "undefined") return
+                    const blob = new Blob([result.csv], { type: "text/csv" })
+                    const url = URL.createObjectURL(blob)
+                    const link = document.createElement("a")
+                    link.href = url
+                    link.download = "finance.csv"
+                    link.click()
+                    URL.revokeObjectURL(url)
+                  } catch {
                     toast.error(t("exportFailed"))
-                    return
                   }
-                  if (typeof window === "undefined") return
-                  const blob = new Blob([result.csv], { type: "text/csv" })
-                  const url = URL.createObjectURL(blob)
-                  const link = document.createElement("a")
-                  link.href = url
-                  link.download = "finance.csv"
-                  link.click()
-                  URL.revokeObjectURL(url)
-                } catch {
-                  toast.error(t("exportFailed"))
-                }
-              })()
-            }}
-          >
-            {t("exportCsv")}
-          </Button>
+                })()
+              }}
+            >
+              {t("exportCsv")}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {bookings.length === 0 ? (
