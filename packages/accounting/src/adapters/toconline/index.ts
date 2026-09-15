@@ -7,13 +7,14 @@ import { requireToconlineEnv } from "@eleva/config/env"
 import { AdapterError } from "../../types"
 import type {
   AdapterManifest,
-  AdapterStatus,
+  AdapterStatusResult,
   ConnectInput,
   ConnectResult,
   DisconnectInput,
   ExpertInvoicingAdapter,
   IssueInvoiceInput,
   IssueInvoiceResult,
+  RotatedAdapterCredentials,
 } from "../../types"
 import { assertV1SalesDocumentPostAllowed } from "./issuance-gate"
 import { resolveDocumentSeriesId } from "./lookups"
@@ -185,17 +186,31 @@ async function issueInvoice(
   return assertV1SalesDocumentPostAllowed()
 }
 
+function withRotatedCredentials(
+  status: AdapterStatusResult,
+  rotatedCredentials: RotatedAdapterCredentials | undefined
+): AdapterStatusResult {
+  return rotatedCredentials ? { ...status, rotatedCredentials } : status
+}
+
 async function status(creds: {
   vaultRef: string
   metadata?: Record<string, unknown>
   orgId?: string
-}): Promise<AdapterStatus> {
+}): Promise<AdapterStatusResult> {
+  let rotatedCredentials: RotatedAdapterCredentials | undefined
   try {
     const loaded = await ensureToconlineAccessToken(
       creds.vaultRef,
       credsOrgId(creds.metadata, creds.orgId),
       credsUserId(creds.metadata)
     )
+    if (loaded.rotated) {
+      rotatedCredentials = {
+        vaultRef: loaded.vaultRef,
+        expiresAt: loaded.expiresAt,
+      }
+    }
     const token = loaded.accessToken
     const env = requireToconlineEnv()
     const res = await fetch(
@@ -208,29 +223,41 @@ async function status(creds: {
       }
     )
     if (res.status === 401) {
-      return {
-        status: "expired",
-        message: "TOConline token expired. Reconnect to resume invoicing.",
-      }
+      return withRotatedCredentials(
+        {
+          status: "expired",
+          message: "TOConline token expired. Reconnect to resume invoicing.",
+        },
+        rotatedCredentials
+      )
     }
     if (res.status === 429) {
-      return {
-        status: "rate_limited",
-        message: "TOConline rate limit; retry shortly.",
-      }
+      return withRotatedCredentials(
+        {
+          status: "rate_limited",
+          message: "TOConline rate limit; retry shortly.",
+        },
+        rotatedCredentials
+      )
     }
     if (!res.ok) {
-      return {
-        status: "error",
-        message: `TOConline probe failed: ${res.status}`,
-      }
+      return withRotatedCredentials(
+        {
+          status: "error",
+          message: `TOConline probe failed: ${res.status}`,
+        },
+        rotatedCredentials
+      )
     }
-    return { status: "healthy" }
+    return withRotatedCredentials({ status: "healthy" }, rotatedCredentials)
   } catch (err) {
-    return {
-      status: "error",
-      message: err instanceof Error ? err.message : String(err),
-    }
+    return withRotatedCredentials(
+      {
+        status: "error",
+        message: err instanceof Error ? err.message : String(err),
+      },
+      rotatedCredentials
+    )
   }
 }
 

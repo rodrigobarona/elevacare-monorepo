@@ -187,6 +187,19 @@ export const AdapterStatus = z.object({
 export type AdapterStatus = z.infer<typeof AdapterStatus>
 
 /**
+ * Internal status result. `rotatedCredentials` is stripped before any
+ * HTTP response — vault ciphertext must not leave the framework.
+ */
+export interface RotatedAdapterCredentials {
+  vaultRef: string
+  expiresAt: Date | null
+}
+
+export type AdapterStatusResult = AdapterStatus & {
+  rotatedCredentials?: RotatedAdapterCredentials
+}
+
+/**
  * Adapter error shape mapped to dispatcher behavior:
  *   retryable     -> exponential backoff retry
  *   credentials   -> mark credential expired, notify expert
@@ -275,6 +288,6 @@ export interface ExpertInvoicingAdapter {
     vaultRef: string
     metadata?: Record<string, unknown>
     orgId?: string
-  }) => Promise<AdapterStatus>
+  }) => Promise<AdapterStatusResult>
   disconnect: (input: DisconnectInput) => Promise<void>
 }
