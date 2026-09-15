@@ -47,6 +47,13 @@ describe("migration journal helpers", () => {
     expect(invoiceSql).toContain("expert_invoice_status")
     expect(invoiceSql).toContain("expert_invoices_booking_expert_key")
     expect(invoiceSql).toContain("expert_invoices_id_org_key")
+    expect(invoiceSql).toContain(
+      'ADD CONSTRAINT "expert_invoices_booking_expert_key"'
+    )
+    expect(invoiceSql).toContain('ADD CONSTRAINT "expert_invoices_id_org_key"')
+    expect(invoiceSql).not.toContain(
+      'CREATE UNIQUE INDEX IF NOT EXISTS "expert_invoices_booking_expert_key"'
+    )
     expect(invoiceSql).toContain("bookings_id_org_key")
     expect(invoiceSql).toContain("expert_invoices_booking_org_fk")
     expect(invoiceSql).toContain("eleva.platform_admin")

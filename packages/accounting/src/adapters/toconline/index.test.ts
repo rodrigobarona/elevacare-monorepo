@@ -148,6 +148,34 @@ describe("toconlineAdapter", () => {
     warn.mockRestore()
   })
 
+  it("fails OAuth when the access token is rejected during series lookup", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          access_token: "at",
+          refresh_token: "rt",
+          expires_in: 3600,
+          token_type: "Bearer",
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+      })
+    vi.stubGlobal("fetch", fetchMock)
+
+    await expect(
+      toconlineAdapter.connect({
+        expertProfileId: "00000000-0000-4000-8000-000000000001",
+        orgId: "00000000-0000-4000-8000-000000000002",
+        userId: "00000000-0000-4000-8000-000000000003",
+        payload: { code: "auth-code" },
+      })
+    ).rejects.toMatchObject({ kind: "credentials" })
+  })
+
   it("refuses issueInvoice by default because v1 auto-finalizes", async () => {
     const fetchMock = vi.fn()
     vi.stubGlobal("fetch", fetchMock)

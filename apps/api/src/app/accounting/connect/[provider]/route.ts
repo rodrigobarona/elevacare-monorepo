@@ -115,6 +115,17 @@ export async function POST(
   })
 
   try {
+    const auth = await adapter.buildAuthUrl({
+      state,
+      expertProfileId: profile.id,
+    })
+    if (!auth?.url) {
+      return secureJson(
+        { error: "provider", message: "failed to build authorization URL" },
+        { status: 502, headers }
+      )
+    }
+
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
@@ -135,11 +146,12 @@ export async function POST(
           },
         }
 
+        // Do not replace invoicingProvider / invoicingSetupStatus until the
+        // callback succeeds. A denied OAuth or URL failure must leave an
+        // existing manual or connected setup intact.
         await tx
           .update(main.expertProfiles)
           .set({
-            invoicingProvider: provider,
-            invoicingSetupStatus: "connecting",
             metadata,
             updatedAt: new Date(),
           })
@@ -149,21 +161,11 @@ export async function POST(
           entity: "expert_profile",
           action: "updated",
           entityId: profile.id,
-          payload: { field: "invoicing", provider, status: "connecting" },
+          payload: { field: "invoicing_oauth_nonce", provider },
         })
       }
     )
 
-    const auth = await adapter.buildAuthUrl({
-      state,
-      expertProfileId: profile.id,
-    })
-    if (!auth?.url) {
-      return secureJson(
-        { error: "provider", message: "failed to build authorization URL" },
-        { status: 502, headers }
-      )
-    }
     return secureJson({ url: auth.url }, { status: 200, headers })
   } catch (err) {
     if (err instanceof AdapterError) {

@@ -73,7 +73,9 @@ reviews:
     - path: packages/accounting/**
       instructions: >-
         Only TOConline/Moloni importer. Tier 1 vs Tier 2 boundaries.
-        Host api33.toconline.pt. IVA matrix from the payments spec.
+        Hosts from TOCONLINE_API_BASE_URL (pattern api{n}.toconline.pt; never
+        pin historical api33). IVA matrix from the payments spec; do not lock
+        23/13/6 until accountant rates are signed.
         Flag vendor calls inside a DB transaction.
     - path: e2e/**
       instructions: >-

@@ -54,11 +54,29 @@ ALTER TABLE "expert_invoices" ADD CONSTRAINT "expert_invoices_booking_org_fk"
   FOREIGN KEY ("booking_id", "org_id") REFERENCES "bookings" ("id", "org_id")
   ON DELETE RESTRICT;
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "expert_invoices_booking_expert_key"
-  ON "expert_invoices" ("booking_id", "expert_org_id");
+ALTER TABLE "expert_invoices" DROP CONSTRAINT IF EXISTS "expert_invoices_booking_expert_key";
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "expert_invoices_id_org_key"
-  ON "expert_invoices" ("id", "org_id");
+DROP INDEX IF EXISTS "expert_invoices_booking_expert_key";
+--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "expert_invoices"
+    ADD CONSTRAINT "expert_invoices_booking_expert_key"
+    UNIQUE ("booking_id", "expert_org_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+--> statement-breakpoint
+ALTER TABLE "expert_invoices" DROP CONSTRAINT IF EXISTS "expert_invoices_id_org_key";
+--> statement-breakpoint
+DROP INDEX IF EXISTS "expert_invoices_id_org_key";
+--> statement-breakpoint
+DO $$ BEGIN
+  ALTER TABLE "expert_invoices"
+    ADD CONSTRAINT "expert_invoices_id_org_key"
+    UNIQUE ("id", "org_id");
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 --> statement-breakpoint
 CREATE INDEX IF NOT EXISTS "expert_invoices_org_idx" ON "expert_invoices" ("org_id");
 --> statement-breakpoint

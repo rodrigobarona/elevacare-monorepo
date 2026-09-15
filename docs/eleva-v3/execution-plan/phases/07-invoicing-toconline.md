@@ -155,9 +155,13 @@ connected|disconnected`).
       communication response stored (test/sandbox mode if available; otherwise a clearly
       separate test series).
 - [ ] Refund after invoice -> credit note issued and linked.
-- [ ] Expert in Auto mode (TOConline) -> `expert_invoices` `issued` with external id; Moloni path
-      tested with mocked HTTP; Manual mode -> `manual_pending`, visible in session page and in the
-      monthly CSV/SAF-T export.
+- [ ] Expert in Auto mode (TOConline) -> OAuth connected, TEST series lookup,
+      `issueInvoice()` refuses POST (`toconline_v1_auto_finalize_blocked`).
+      `expert_invoices` may be `pending`/`failed` with the blocked code; **do
+      not** POST `/api/v1/commercial_sales_documents` until fiscal params are
+      signed. Moloni path tested with mocked HTTP; Manual mode ->
+      `manual_pending`, visible in session page and in the monthly CSV/SAF-T
+      export.
 - [ ] Expert cannot complete Become-Partner without Auto connection or Manual acknowledgment.
 - [ ] Reconciliation job on a seeded month produces a run row and no false mismatch; injected
       mismatch triggers alert path (mocked).
@@ -249,13 +253,12 @@ Before writing code:
 Workflow (mandatory) — this is the outer loop; the "PHASE 7 TASK" section further down is
 what you implement at the "Implement the deliverables" step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main && git pull --ff-only && git checkout -b phase-07.0/spike-toconline
-- Then, after each merge, the order depends on the entry gate (step 4): D-09 historical
-  classification is Aprovado com condições (2026-09-15); PR 07.1 automatic **production**
-  issuance stays BLOCKED on remaining fiscal-parameter confirmation -> implement
-  phase-07.2/tier2-expert-adapters (OAuth / schema / TEST-series-without-issuance), then STOP
-  and report the 07.1 production-issuance block. Never write Tier 1 production issuance code
-  against unconfirmed fiscal parameters. Each PR:
+- git checkout main && git pull --ff-only && git checkout -b phase-07.2/tier2-expert-adapters
+- PR 07.0 spike is complete. PR 07.1 automatic **production** issuance stays BLOCKED on remaining
+  fiscal-parameter confirmation. Implement remaining 07.2 (OAuth / schema / TEST-series-without-issuance
+  if not already on main; then dispatch / token refresh without POST), then STOP and report the
+  07.1 production-issuance block. Never write Tier 1 production issuance code against unconfirmed
+  fiscal parameters. Each PR:
   <= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint && pnpm typecheck && pnpm test && pnpm check:api-first-actions && pnpm build &&
   pnpm check:i18n-parity
@@ -390,8 +393,10 @@ PR 07.2 — Tier 2 (expert -> member):
    pdf_url, issued_at, error, attempts). Member NIF: optional field on member profile (PATCH /me)
    and optional at checkout step 2 (Phase 4 form) — store on booking as buyer_tax_id.
 9. Trigger: payment_intent.succeeded handler enqueues issueExpertServiceInvoice(bookingId)
-   (flag ff.expert_invoicing_apps_enabled + ff.invoicing.<provider>); retries via the same
-   invoicing-retry workflow; failures surface in the expert session page.
+   (flag ff.expert_invoicing_apps_enabled + ff.invoicing.<provider>); the TOConline adapter
+   MUST refuse POST /api/v1/commercial_sales_documents (v1 auto-finalizes). Persist
+   document_series_id after OAuth; refresh tokens; record pending/failed with
+   toconline_v1_auto_finalize_blocked. Do not issue TEST or ELEVA FTs.
 10. API: POST /accounting/connect/[provider] (starts OAuth, returns URL), GET
     /accounting/callback (extend existing for provider + state), GET /accounting/status,
     POST /accounting/disconnect, POST /invoicing/expert/[bookingId]/retry, POST /invoicing/expert/
@@ -407,9 +412,11 @@ PR 07.2 — Tier 2 (expert -> member):
 
 Acceptance (paste evidence): do **not** treat staging TEST issuance of FT/NC as an acceptance
 path (accountant: no fictitious fiscal documents; no TEST Comunicação à AT; no ELEVA simulation).
-Tier 2 issued via TOConline adapter, Moloni mocked, manual mode
-export; Become-Partner blocked without invoicing choice; reconciliation run row; boundary grep
-for api33.toconline.pt outside packages/accounting empty; IVA tests green.
+07.2 evidence = OAuth + TEST lookups + closed issuance gate + token refresh; Moloni mocked;
+manual mode export. Become-Partner blocked without invoicing choice. Boundary grep for
+hardcoded api33.toconline.pt in application source empty (hosts are env). IVA tests match
+accountant 2026-09-15 conditions, not a locked 23/13/6 table. D-09/D-03 are in
+docs/eleva-v3/decision-log.md (Manolo (MB) 2026-09-15, Aprovado com condições).
 
 Report: migrations, endpoints, schedules, flags, tests, CodeRabbit CLI counts, PR URLs, and the
 operator tasks still pending (series, credentials, remaining fiscal-parameter confirmation before

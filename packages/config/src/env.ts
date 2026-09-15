@@ -270,9 +270,24 @@ export interface RequiredToconlineEnv {
   TOCONLINE_SERIES_PREFIX: string
 }
 
-const TOCONLINE_HOST_SUFFIX = ".toconline.pt"
+const TOC_API_HOST_RE = /^api[0-9]+\.toconline\.pt$/
+const TOC_OAUTH_HOST_RE = /^app[0-9]+\.toconline\.pt$/
 
-function assertToconlineHost(label: string, value: string): void {
+/** Dados API hostname pattern (api33 today; do not pin the digit). */
+export function isToconlineApiHostname(hostname: string): boolean {
+  return TOC_API_HOST_RE.test(hostname.toLowerCase())
+}
+
+/** OAuth hostname pattern (app33 today; do not pin the digit). */
+export function isToconlineOAuthHostname(hostname: string): boolean {
+  return TOC_OAUTH_HOST_RE.test(hostname.toLowerCase())
+}
+
+function assertToconlineHost(
+  label: string,
+  value: string,
+  kind: "api" | "oauth"
+): void {
   let url: URL
   try {
     url = new URL(value)
@@ -285,14 +300,15 @@ function assertToconlineHost(label: string, value: string): void {
     throw new Error(`@eleva/accounting toconline boot: ${label} must use HTTPS`)
   }
   const hostname = url.hostname.toLowerCase()
-  // Hosts are configuration (07.0): never pin historical literals such as
-  // api33.toconline.pt. HTTPS + *.toconline.pt still blocks credential leak.
-  if (
-    hostname !== "toconline.pt" &&
-    !hostname.endsWith(TOCONLINE_HOST_SUFFIX)
-  ) {
+  const ok =
+    kind === "api"
+      ? isToconlineApiHostname(hostname)
+      : isToconlineOAuthHostname(hostname)
+  if (!ok) {
     throw new Error(
-      `@eleva/accounting toconline boot: ${label} host must be *.toconline.pt`
+      kind === "api"
+        ? `@eleva/accounting toconline boot: ${label} host must be api{n}.toconline.pt`
+        : `@eleva/accounting toconline boot: ${label} host must be app{n}.toconline.pt`
     )
   }
 }
@@ -338,8 +354,8 @@ export function requireToconlineEnv(): RequiredToconlineEnv {
       `@eleva/accounting toconline boot: missing env vars: ${missing.join(", ")}`
     )
   }
-  assertToconlineHost("TOCONLINE_OAUTH_BASE_URL", oauthUrl!)
-  assertToconlineHost("TOCONLINE_API_BASE_URL", apiUrl!)
+  assertToconlineHost("TOCONLINE_OAUTH_BASE_URL", oauthUrl!, "oauth")
+  assertToconlineHost("TOCONLINE_API_BASE_URL", apiUrl!, "api")
   assertToconlineSeriesPrefix(seriesPrefix!, e.NODE_ENV)
   return {
     TOCONLINE_CLIENT_ID: e.TOCONLINE_CLIENT_ID!,

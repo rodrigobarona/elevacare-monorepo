@@ -1,11 +1,11 @@
+import { isToconlineApiHostname } from "@eleva/config/env"
 import { AdapterError } from "../../types"
 
 /**
  * TOConline JSON:API lookups used to resolve internal ids before a v1
  * sales-document POST. Paths follow
- * `_context/TOConline-api/TOConline Full Documentation.md` (Documentos de
- * Venda notes 1–10 + APIs Auxiliares). Official SSOT remains
- * https://api-docs.toconline.pt — do not invent fields.
+ * https://api-docs.toconline.pt (Documentos de Venda notes 1–10 + APIs
+ * Auxiliares). Do not invent fields.
  *
  * These helpers only GET. They never Comunicar a série and never POST
  * `/api/v1/commercial_sales_documents`.
@@ -100,7 +100,6 @@ function filterQuery(
 }
 
 const LOOKUP_TIMEOUT_MS = 10_000
-const TOC_HOST_SUFFIX = ".toconline.pt"
 
 function assertToconlineApiBase(apiBase: string): string {
   let url: URL
@@ -116,10 +115,12 @@ function assertToconlineApiBase(apiBase: string): string {
     throw new AdapterError("validation", "TOConline API base must use HTTPS")
   }
   const hostname = url.hostname.toLowerCase()
-  if (hostname !== "toconline.pt" && !hostname.endsWith(TOC_HOST_SUFFIX)) {
+  // Dados API hosts are api{n}.toconline.pt per company. Do not pin api33;
+  // still reject apex, nested, and arbitrary *.toconline.pt hosts.
+  if (!isToconlineApiHostname(hostname)) {
     throw new AdapterError(
       "validation",
-      "TOConline API host must be *.toconline.pt"
+      "TOConline API host must be api{n}.toconline.pt"
     )
   }
   return apiBase.replace(/\/$/, "")

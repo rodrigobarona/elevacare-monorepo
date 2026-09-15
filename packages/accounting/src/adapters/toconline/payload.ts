@@ -3,7 +3,7 @@ import { AdapterError, IssueInvoiceInput } from "../../types"
 /**
  * Map Eleva `IssueInvoiceInput` to a v1 commercial sales-document body.
  *
- * Field names follow `_context/TOConline-api/TOConline Full Documentation.md`
+ * Field names follow https://api-docs.toconline.pt (Documentos de Venda).
  * (Documentos de Venda). Official SSOT: https://api-docs.toconline.pt
  *
  * v1 has no `finalize` field — submit auto-finalizes. Do not send drafts

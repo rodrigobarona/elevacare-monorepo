@@ -199,9 +199,8 @@ production issuance remains blocked on pending fiscal parameters.
 
 ## v1 sales-document contract (2026-09-15 full docs)
 
-Local SSOT: `_context/TOConline-api/TOConline Full Documentation.md`
-(no OpenAPI YAML in that folder). Official SSOT:
-https://api-docs.toconline.pt/apis/vendas/documentos-de-venda
+Official SSOT: https://api-docs.toconline.pt/apis/vendas/documentos-de-venda
+How to query: `_context/TOConline-api/toconline-docs.md`.
 
 - v1 `POST /api/v1/commercial_sales_documents` auto-finalizes on submit.
   There is no `finalize` field. After create, finalize / cancel / update /

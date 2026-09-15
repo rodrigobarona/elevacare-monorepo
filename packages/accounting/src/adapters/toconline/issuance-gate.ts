@@ -2,7 +2,7 @@ import { AdapterError } from "../../types"
 
 /**
  * v1 POST /api/v1/commercial_sales_documents auto-finalizes on submit
- * (`_context/TOConline-api/TOConline Full Documentation.md`, Documentos de
+ * (`https://api-docs.toconline.pt`, Documentos de
  * Venda). After create, finalize / cancel / update / delete are impossible
  * on this API version. Drafts belong on the previous API
  * (`POST /api/commercial_sales_documents` + lines + `status: 1`).

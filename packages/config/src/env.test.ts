@@ -228,6 +228,16 @@ describe("requireToconlineEnv", () => {
     expect(() => requireToconlineEnv()).toThrow(/TOCONLINE_SERIES_PREFIX/)
   })
 
+  it("rejects an arbitrary *.toconline.pt API host without pinning api33", () => {
+    process.env.TOCONLINE_CLIENT_ID = "id"
+    process.env.TOCONLINE_CLIENT_SECRET = "secret"
+    process.env.TOCONLINE_API_BASE_URL = "https://evil.toconline.pt"
+    process.env.TOCONLINE_OAUTH_BASE_URL = "https://app33.toconline.pt/oauth"
+    process.env.TOCONLINE_OAUTH_REDIRECT = "https://eleva.care/callback"
+    process.env.TOCONLINE_SERIES_PREFIX = "TEST"
+    expect(() => requireToconlineEnv()).toThrow(/api\{n\}\.toconline\.pt/)
+  })
+
   it("rejects plaintext HTTP TOConline API hosts", () => {
     process.env.TOCONLINE_CLIENT_ID = "id"
     process.env.TOCONLINE_CLIENT_SECRET = "secret"

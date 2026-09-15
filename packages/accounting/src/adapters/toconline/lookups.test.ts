@@ -173,6 +173,18 @@ describe("TOConline lookups", () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  it("refuses arbitrary *.toconline.pt hosts without pinning api33", async () => {
+    const fetchMock = vi.fn()
+    vi.stubGlobal("fetch", fetchMock)
+    await expect(
+      resolveDocumentSeriesId(
+        { apiBase: "https://evil.toconline.pt", accessToken: "tok" },
+        { documentType: "FT", prefix: "TEST" }
+      )
+    ).rejects.toMatchObject({ kind: "validation" })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it("never POSTs a sales document from a lookup", async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonApiResponse("337"))
     vi.stubGlobal("fetch", fetchMock)

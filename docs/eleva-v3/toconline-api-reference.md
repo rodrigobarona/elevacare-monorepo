@@ -1,11 +1,9 @@
 # TOConline Open API Reference
 
-> **Source (local SSOT for field names, 2026-09-15):**
-> `_context/TOConline-api/TOConline Full Documentation.md`
-> (founder dump of current GitBook). That folder has **no OpenAPI YAML** —
-> only the markdown. Official published SSOT remains
-> https://api-docs.toconline.pt (and its `/llms.txt`). Do not invent fields
-> that are in neither source.
+> **Source of truth for field names:** https://api-docs.toconline.pt
+> (and `/llms.txt` / `/llms-full.txt`). How to query:
+> `_context/TOConline-api/toconline-docs.md`. Do not invent fields.
+> Do not vendor the full GitBook corpus (gitleaks + size).
 > **API version**: v1 (current, auto-finalize) + previous JSON:API (drafts)
 > **Last updated**: 2026-09-15
 > **Related**: [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
@@ -924,8 +922,8 @@ simulate). Default: refuse.
 
 ## References
 
-- [TOConline Full Documentation (local)](../../_context/TOConline-api/TOConline%20Full%20Documentation.md)
 - [TOConline API docs](https://api-docs.toconline.pt/llms.txt)
+- [How to query TOConline docs](../../_context/TOConline-api/toconline-docs.md)
 - [ADR-013 — Accounting Integration](adrs/ADR-013-accounting-integration.md)
 - [Stripe + TOConline Flow](../_context/clone-repo/eleva-care-app/_docs/09-integrations/STRIPE-TOCONLINE-FLOW.md)
 - [Portuguese VAT Code (CIVA)](https://info.portaldasfinancas.gov.pt/pt/informacao_fiscal/codigos_tributarios/civa_rep/)

@@ -47,6 +47,14 @@ const MANIFEST: AdapterManifest = {
 
 const SCOPE = "commercial"
 
+const API_HOST_OR_BASE_RE = /API (base|host)/i
+
+function isFatalSeriesLookupFailure(err: unknown): boolean {
+  if (!(err instanceof AdapterError)) return false
+  if (err.kind === "credentials" || err.kind === "fatal") return true
+  return err.kind === "validation" && API_HOST_OR_BASE_RE.test(err.message)
+}
+
 interface ToconlineMetadata {
   /** Authoritative TOConline series id (v1 `document_series_id`). */
   document_series_id?: string
@@ -147,6 +155,9 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
       metadata.document_series_id = seriesId
     }
   } catch (err) {
+    if (isFatalSeriesLookupFailure(err)) {
+      throw err
+    }
     console.warn(
       "[toconline] document series lookup failed after OAuth; connect continues",
       err instanceof Error ? err.message : err

@@ -86,8 +86,8 @@ const InvoiceLineSchema = z
     description: z.string(),
     quantity: z.number().positive(),
     unitPrice: z.number().nonnegative(),
-    /** Tax rate as percentage (23 for PT IVA). */
-    taxRate: z.number().nonnegative(),
+    /** Tax rate as percentage (0–100). Do not lock 23/13/6 — accountant rates pending. */
+    taxRate: z.number().nonnegative().max(100),
     /**
      * IVA treatment from the payments-spec matrix. Do not infer
      * reverse-charge vs export from a 0% rate — those need
