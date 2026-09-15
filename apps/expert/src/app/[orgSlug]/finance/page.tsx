@@ -34,6 +34,11 @@ export default async function FinancePage({
       <AccountPageHeader title={t("title")} description={t("description")} />
       <FinanceDashboard
         orgSlug={orgSlug}
+        invoicesHref={
+          session.capabilities.includes("expert:invoicing_manage")
+            ? expertWorkspacePath(session, "finance/invoices")
+            : null
+        }
         summary={summary}
         bookings={bookings}
       />
