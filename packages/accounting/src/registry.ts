@@ -21,8 +21,8 @@ import type { ExpertInvoicingAdapter, InvoicingProviderSlug } from "./types"
  *   5. Add `ff.invoicing.<slug>` flag to
  *      packages/flags/src/catalog.ts.
  *
- * The dispatcher (S6: `issueExpertServiceInvoice` Vercel Workflow)
- * reads from this registry to fan out invoice issuance.
+ * The dispatcher (`issueExpertServiceInvoice`) reads from this registry
+ * to fan out invoice issuance. TOConline v1 POST stays blocked.
  */
 
 const ADAPTERS: Readonly<

@@ -1,6 +1,7 @@
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type Stripe from "stripe"
 import { z } from "zod"
+import { issueExpertServiceInvoice } from "@eleva/accounting"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { captureException } from "@eleva/observability"
@@ -1474,6 +1475,15 @@ async function handlePaymentIntentEvent(
       bookingPaymentId: paymentId,
       orgId,
     })
+    try {
+      await issueExpertServiceInvoice({
+        bookingPaymentId: paymentId,
+        orgId,
+      })
+    } catch (err) {
+      console.error("[billing] expert invoice dispatch failed", err)
+      captureException(err)
+    }
   }
   return { kind: "handled", resolvedOrgId: orgId }
 }

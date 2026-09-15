@@ -26,6 +26,15 @@ export {
 } from "./types"
 
 export { getAdapter, listAdapters, adapterCountriesIndex } from "./registry"
+export {
+  issueExpertServiceInvoice,
+  buildMemberInvoiceInput,
+  invoiceStatusFromAdapterError,
+} from "./dispatch"
+export type {
+  IssueExpertServiceInvoiceInput,
+  IssueExpertServiceInvoiceResult,
+} from "./dispatch"
 
 export {
   ACCOUNTING_OAUTH_STATE_TTL_MS,
