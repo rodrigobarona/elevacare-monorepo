@@ -79,7 +79,9 @@ export async function GET(request: Request) {
       month: query.data.month,
       rows,
       truncated,
-      generatedAt: saftMonthRange(query.data.month).end,
+      generatedAt: new Date(
+        `${saftMonthRange(query.data.month).endDate}T12:00:00.000Z`
+      ),
     })
     const zip = createZipBuffer([
       {
