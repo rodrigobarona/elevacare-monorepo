@@ -45,6 +45,7 @@ export {
   DSAR_SIGNED_URL_TTL_SECONDS,
   type DsarExportResult,
 } from "./dsar-export"
+export { createZipBuffer, type ZipEntry } from "./zip"
 export {
   createDsarRequest,
   getDsarRequestForUser,

@@ -64,6 +64,9 @@ import {
   ListExpertInvoicesResponseSchema,
   ExpertInvoiceActionRequestSchema,
   ExpertInvoiceActionResponseSchema,
+  ExportSaftQuerySchema,
+  ExportSaftResponseSchema,
+  ExportSaftFileQuerySchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2178,6 +2181,60 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description: "Invoice is already issued",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/invoicing/exports/saft": {
+        get: {
+          operationId: "exportSaft",
+          summary: "Build a monthly CSV + SAF-T PT skeleton zip",
+          description:
+            "Uploads a private zip of the expert organization's invoices for the Lisbon calendar month. The XML is a ledger skeleton, not a certified AT file, and is not submitted or Comunicado. Does not POST TOConline sales documents.",
+          tags: ["Invoicing"],
+          requestParams: {
+            query: ExportSaftQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Signed download metadata",
+              content: {
+                "application/json": {
+                  schema: ExportSaftResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:invoicing_manage",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/invoicing/exports/saft/file": {
+        get: {
+          operationId: "downloadSaftExport",
+          summary: "Download a signed monthly SAF-T zip",
+          description:
+            "Streams the private zip created by exportSaft. Requires expert:invoicing_manage and a token bound to the active organization.",
+          tags: ["Invoicing"],
+          requestParams: {
+            query: ExportSaftFileQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Zip attachment",
+              content: {
+                "application/zip": {
+                  schema: z.string().meta({ format: "binary" }),
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:invoicing_manage",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
