@@ -157,6 +157,13 @@
       "marking": "A guardar...",
       "cancel": "Cancelar",
       "blocked": "A emissão automática ainda não está ativa. Podes tentar novamente mais tarde ou marcar a fatura como emitida manualmente.",
+      "exportMonth": "Mês de exportação",
+      "exportSaft": "Preparar exportação mensal",
+      "exporting": "A preparar a exportação...",
+      "exportReady": "Exportação pronta. Abre o ficheiro para o descarregar.",
+      "openExport": "Abrir transferência",
+      "exportTruncated": "Este mês tem mais faturas do que o limite da exportação. O ficheiro descarregado está truncado.",
+      "exportHint": "CSV e um esqueleto SAF-T das faturas dos membros no mês selecionado. Não é um ficheiro fiscal certificado.",
       "invoiceStatus": {
         "pending": "Pendente",
         "issued": "Emitida",

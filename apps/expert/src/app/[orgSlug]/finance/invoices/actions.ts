@@ -5,8 +5,11 @@ import {
   ApiClientError,
   ExpertInvoiceActionRequestSchema,
   ExpertInvoiceActionResponseSchema,
+  ExportSaftQuerySchema,
+  ExportSaftResponseSchema,
   ListExpertInvoicesResponseSchema,
   type ExpertInvoice,
+  type ExportSaftResponse,
 } from "@eleva/api-client"
 import { requireSession } from "@eleva/auth/server"
 import { getAuthedApiClient } from "@/lib/server-api"
@@ -96,9 +99,32 @@ export async function markExpertInvoiceManualAction(
   )
 }
 
-export async function listMoreExpertInvoicesAction(
-  cursor: string
+export async function exportSaftAction(
+  month: string
 ): Promise<
+  { ok: true; export: ExportSaftResponse } | { ok: false; error: string }
+> {
+  let parsedMonth: string
+  try {
+    parsedMonth = ExportSaftQuerySchema.parse({ month }).month
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
+  try {
+    await requireSession("expert:invoicing_manage")
+    const api = await getAuthedApiClient()
+    const result = ExportSaftResponseSchema.parse(
+      await api.invoicing.exportSaft({ month: parsedMonth })
+    )
+    return { ok: true, export: result }
+  } catch (err) {
+    console.error("[invoices] exportSaft failed", err)
+    return { ok: false, error: mapInvoiceError(err) }
+  }
+}
+
+export async function listMoreExpertInvoicesAction(cursor: string): Promise<
   | {
       ok: true
       invoices: z.infer<typeof ListExpertInvoicesResponseSchema>["invoices"]

@@ -157,6 +157,13 @@
       "marking": "Saving...",
       "cancel": "Cancel",
       "blocked": "Automatic issuance is not active yet. You can retry later or mark the invoice as issued manually.",
+      "exportMonth": "Export month",
+      "exportSaft": "Prepare monthly export",
+      "exporting": "Preparing export...",
+      "exportReady": "Export ready. Open the file to download it.",
+      "openExport": "Open download",
+      "exportTruncated": "This month has more invoices than the export limit. The downloaded file is truncated.",
+      "exportHint": "CSV plus a SAF-T skeleton for member invoices in the selected month. This is not a certified tax file.",
       "invoiceStatus": {
         "pending": "Pending",
         "issued": "Issued",

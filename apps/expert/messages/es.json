@@ -157,6 +157,13 @@
       "marking": "Guardando...",
       "cancel": "Cancelar",
       "blocked": "La emisión automática aún no está activa. Puedes reintentar más tarde o marcar la factura como emitida manualmente.",
+      "exportMonth": "Mes de exportación",
+      "exportSaft": "Preparar exportación mensual",
+      "exporting": "Preparando la exportación...",
+      "exportReady": "Exportación lista. Abre el archivo para descargarlo.",
+      "openExport": "Abrir descarga",
+      "exportTruncated": "Este mes tiene más facturas que el límite de exportación. El archivo descargado está truncado.",
+      "exportHint": "CSV y un esqueleto SAF-T de las facturas de miembros del mes seleccionado. No es un fichero fiscal certificado.",
       "invoiceStatus": {
         "pending": "Pendiente",
         "issued": "Emitida",

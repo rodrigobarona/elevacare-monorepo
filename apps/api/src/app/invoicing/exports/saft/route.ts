@@ -10,9 +10,11 @@ import {
   isSaftExportError,
   listSaftExportRows,
   saftBlobPathname,
+  saftMonthRange,
 } from "@eleva/accounting"
 import { createZipBuffer } from "@eleva/compliance"
 import { uploadPrivateBlob } from "@eleva/storage"
+import { createHash } from "node:crypto"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -72,27 +74,32 @@ export async function GET(request: Request) {
       month: query.data.month,
     })
     const encoder = new TextEncoder()
+    const csv = buildSaftCsv(rows, { truncated })
+    const xml = buildSaftXmlSkeleton({
+      month: query.data.month,
+      rows,
+      truncated,
+      generatedAt: saftMonthRange(query.data.month).end,
+    })
     const zip = createZipBuffer([
       {
         name: `eleva-invoices-${query.data.month}.csv`,
-        data: encoder.encode(buildSaftCsv(rows, { truncated })),
+        data: encoder.encode(csv),
       },
       {
         name: `eleva-saft-${query.data.month}.xml`,
-        data: encoder.encode(
-          buildSaftXmlSkeleton({
-            month: query.data.month,
-            rows,
-            truncated,
-            generatedAt: new Date(),
-          })
-        ),
+        data: encoder.encode(xml),
       },
     ])
+    const contentHash = createHash("sha256")
+      .update(zip)
+      .digest("hex")
+      .slice(0, 16)
     const uploaded = await uploadPrivateBlob({
-      pathname: saftBlobPathname(session.orgId, query.data.month),
+      pathname: saftBlobPathname(session.orgId, query.data.month, contentHash),
       body: zip,
       contentType: "application/zip",
+      overwrite: true,
     })
     const expiresAt = new Date(Date.now() + SAFT_SIGNED_URL_TTL_SECONDS * 1000)
     const downloadUrl = buildSaftDownloadUrl({

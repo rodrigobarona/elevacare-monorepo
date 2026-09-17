@@ -411,6 +411,13 @@ export function buildSaftDownloadUrl(input: {
   return `${base}/invoicing/exports/saft/file?${params.toString()}`
 }
 
-export function saftBlobPathname(orgId: string, month: string): string {
+export function saftBlobPathname(
+  orgId: string,
+  month: string,
+  contentHash?: string
+): string {
+  if (contentHash) {
+    return `invoicing-exports/${orgId}/saft-${month}-${contentHash}.zip`
+  }
   return `invoicing-exports/${orgId}/saft-${month}.zip`
 }
