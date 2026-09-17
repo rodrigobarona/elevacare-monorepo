@@ -13,15 +13,16 @@ tying our deploy automation to the layout of any single app.
 
 ## Schedules registered today
 
-| Path                                  | Cron                                        | Auth                            | Owner               |
-| ------------------------------------- | ------------------------------------------- | ------------------------------- | ------------------- |
-| `/workflows/audit-outbox-drainer`     | `0 6,18 * * *`                              | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/audit`      |
-| `/workflows/stripe-stuck-events`      | `*/10 * * * *`                              | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
-| `/workflows/account-deletion-sweep`   | `0 * * * *`                                 | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/compliance` |
-| `/workflows/process-expert-transfers` | `0 */2 * * *`                               | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
-| `/workflows/process-pending-payouts`  | `0 5 * * *` (≈ 06:00 Europe/Lisbon in WEST) | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
-| `/workflows/check-upcoming-payouts`   | `0 7 * * *` (≈ 08:00 Europe/Lisbon in WEST) | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
-| `/workflows/invoicing-retry`          | `*/30 * * * *`                              | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/accounting` |
+| Path                                         | Cron                                             | Auth                            | Owner               |
+| -------------------------------------------- | ------------------------------------------------ | ------------------------------- | ------------------- |
+| `/workflows/audit-outbox-drainer`            | `0 6,18 * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/audit`      |
+| `/workflows/stripe-stuck-events`             | `*/10 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
+| `/workflows/account-deletion-sweep`          | `0 * * * *`                                      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/compliance` |
+| `/workflows/process-expert-transfers`        | `0 */2 * * *`                                    | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
+| `/workflows/process-pending-payouts`         | `0 5 * * *` (≈ 06:00 Europe/Lisbon in WEST)      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
+| `/workflows/check-upcoming-payouts`          | `0 7 * * *` (≈ 08:00 Europe/Lisbon in WEST)      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/billing`    |
+| `/workflows/invoicing-retry`                 | `*/30 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/accounting` |
+| `/workflows/stripe-toconline-reconciliation` | `0 4 1 * *` (04:00 UTC = 04:00 WET / 05:00 WEST) | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/accounting` |
 
 When you add a new schedule:
 
@@ -64,13 +65,13 @@ Read from `.env.local` (or the active env when running in CI):
 
 ## Commands
 
-| Command                           | What it does                                       |
-| --------------------------------- | -------------------------------------------------- |
-| `pnpm qstash:list`                | Print every schedule + cross-check expected paths  |
-| `pnpm qstash:setup:audit-drainer` | (Re)register the audit outbox drainer              |
-| `pnpm qstash:setup:stripe-stuck`  | (Re)register the Stripe stuck-event detector       |
-| `pnpm qstash:setup:payouts`       | (Re)register payout engine schedules               |
-| `pnpm qstash:setup:invoicing`     | (Re)register expert invoicing retry (every 30 min) |
-| `pnpm qstash:setup:all`           | Run every setup command in sequence                |
+| Command                           | What it does                                          |
+| --------------------------------- | ----------------------------------------------------- |
+| `pnpm qstash:list`                | Print every schedule + cross-check expected paths     |
+| `pnpm qstash:setup:audit-drainer` | (Re)register the audit outbox drainer                 |
+| `pnpm qstash:setup:stripe-stuck`  | (Re)register the Stripe stuck-event detector          |
+| `pnpm qstash:setup:payouts`       | (Re)register payout engine schedules                  |
+| `pnpm qstash:setup:invoicing`     | (Re)register invoicing retry + monthly reconciliation |
+| `pnpm qstash:setup:all`           | Run every setup command in sequence                   |
 
 All setup commands accept `-- --dry-run` to preview without writing.

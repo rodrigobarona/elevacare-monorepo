@@ -65,6 +65,7 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "transfer_reversals", class: "tenant-owned" },
   { table: "expert_invoices", class: "tenant-owned" },
   { table: "workflow_dead_letters", class: "service-only" },
+  { table: "accounting_reconciliation_runs", class: "service-only" },
   { table: "consents", class: "tenant-owned" },
   { table: "notification_preferences", class: "owner-user-visible" },
   {

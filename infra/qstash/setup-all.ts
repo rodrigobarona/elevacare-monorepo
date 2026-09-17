@@ -79,6 +79,19 @@ async function main() {
     { dryRun }
   )
 
+  await registerSchedule(
+    {
+      name: "Stripe TOConline reconciliation",
+      path: "/workflows/stripe-toconline-reconciliation",
+      cron: "0 4 1 * *",
+      retries: 3,
+      requireBearer: true,
+      description:
+        "Compare Stripe payments vs expert_invoices on the 1st at 04:00 UTC (04:00 WET / 05:00 WEST). Does not POST FTs.",
+    },
+    { dryRun }
+  )
+
   for (const spec of PAYOUT_SCHEDULES) {
     await registerSchedule(spec, { dryRun })
   }

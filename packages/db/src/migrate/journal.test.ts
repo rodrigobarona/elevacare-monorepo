@@ -38,10 +38,18 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0036_workflow_dead_letters_open_entity")
+    expect(last?.tag).toBe("0037_accounting_reconciliation_runs")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const dlqSql = last?.statements.join("\n") ?? ""
+    const reconSql = last?.statements.join("\n") ?? ""
+    expect(reconSql).toContain("accounting_reconciliation_runs")
+    expect(reconSql).toContain("accounting_reconciliation_status")
+    expect(reconSql).toContain("eleva.platform_admin")
+    expect(reconSql).toContain("accounting_reconciliation_runs_month_key")
+    const dlq = migrations.find(
+      (m) => m.tag === "0036_workflow_dead_letters_open_entity"
+    )
+    const dlqSql = dlq?.statements.join("\n") ?? ""
     expect(dlqSql).toContain("workflow_dead_letters_open_entity_uidx")
     expect(dlqSql).toContain("workflow_dead_letters")
     const invoice = migrations.find((m) => m.tag === "0035_expert_invoices")

@@ -48,6 +48,7 @@ export type AuditEntity =
   | "refund"
   | "dispute"
   | "invoice"
+  | "accounting_reconciliation_run"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.

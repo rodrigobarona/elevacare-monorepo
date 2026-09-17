@@ -40,13 +40,13 @@ QStash is shared across environments; schedules differentiate
 themselves by destination URL. Re-run after rotating tokens or
 changing API base URLs.
 
-| Command                           | What it does                                                        | Idempotent? |
-| --------------------------------- | ------------------------------------------------------------------- | ----------- |
-| `pnpm qstash:list`                | Print every schedule + cross-check expected paths.                  | Yes         |
-| `pnpm qstash:setup`               | Provision every QStash schedule (`setup:all`).                      | Yes         |
-| `pnpm qstash:setup:audit-drainer` | (Re)register `/workflows/audit-outbox-drainer` (06:00 + 18:00 UTC). | Yes         |
-| `pnpm qstash:setup:stripe-stuck`  | (Re)register `/workflows/stripe-stuck-events` (every 10 min).       | Yes         |
-| `pnpm qstash:setup:invoicing`     | (Re)register `/workflows/invoicing-retry` (every 30 min).           | Yes         |
+| Command                           | What it does                                                                                                         | Idempotent? |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `pnpm qstash:list`                | Print every schedule + cross-check expected paths.                                                                   | Yes         |
+| `pnpm qstash:setup`               | Provision every QStash schedule (`setup:all`).                                                                       | Yes         |
+| `pnpm qstash:setup:audit-drainer` | (Re)register `/workflows/audit-outbox-drainer` (06:00 + 18:00 UTC).                                                  | Yes         |
+| `pnpm qstash:setup:stripe-stuck`  | (Re)register `/workflows/stripe-stuck-events` (every 10 min).                                                        | Yes         |
+| `pnpm qstash:setup:invoicing`     | (Re)register `/workflows/invoicing-retry` (every 30 min) and `/workflows/stripe-toconline-reconciliation` (monthly). | Yes         |
 
 All QStash setup commands accept `-- --dry-run` for preview-only mode.
 

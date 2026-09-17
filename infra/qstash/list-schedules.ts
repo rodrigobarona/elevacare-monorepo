@@ -19,6 +19,7 @@ const EXPECTED_PATHS = [
   "/workflows/process-pending-payouts",
   "/workflows/check-upcoming-payouts",
   "/workflows/invoicing-retry",
+  "/workflows/stripe-toconline-reconciliation",
 ] as const
 
 function isExpectedDestination(destination: string, path: string): boolean {
