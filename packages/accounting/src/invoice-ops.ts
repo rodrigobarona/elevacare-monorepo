@@ -287,10 +287,20 @@ export async function retryExpertInvoice(input: {
     throw new ExpertInvoiceOpError("not_retryable", "invoice cannot be retried")
   }
 
-  await issueExpertServiceInvoice({
+  const dispatch = await issueExpertServiceInvoice({
     bookingPaymentId: snapshot.payment.id,
     orgId: input.orgId,
   })
+  if (dispatch.skipped) {
+    await restoreFailedAfterSkippedDispatch({
+      invoiceId: snapshot.invoice.id,
+      bookingId: input.bookingId,
+      orgId: input.orgId,
+      actorUserId: input.actorUserId,
+      reason: dispatch.reason,
+    })
+    throw skippedDispatchError(dispatch.reason)
+  }
 
   const latest = await loadInvoiceSnapshot(input)
   if (!latest) {
@@ -363,6 +373,60 @@ export async function markExpertInvoiceManual(input: {
     ...updated,
     adapter: updated.adapter as InvoicingProviderSlug,
   })
+}
+
+function skippedDispatchError(reason: string): ExpertInvoiceOpError {
+  if (reason === "flag_disabled") {
+    return new ExpertInvoiceOpError(
+      "flag_disabled",
+      "expert invoicing apps are not enabled"
+    )
+  }
+  return new ExpertInvoiceOpError(
+    "not_retryable",
+    "invoice dispatch did not start"
+  )
+}
+
+async function restoreFailedAfterSkippedDispatch(input: {
+  invoiceId: string
+  bookingId: string
+  orgId: string
+  actorUserId: string
+  reason: string
+}): Promise<void> {
+  await withAudit(
+    { orgId: input.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      const [row] = await tx
+        .update(main.expertInvoices)
+        .set({
+          status: "failed",
+          error: input.reason,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(main.expertInvoices.id, input.invoiceId),
+            eq(main.expertInvoices.status, "pending")
+          )
+        )
+        .returning({ id: main.expertInvoices.id })
+      await ctx.emit({
+        entity: "invoice",
+        action: "status_changed",
+        entityId: input.invoiceId,
+        payload: {
+          bookingId: input.bookingId,
+          from: "pending",
+          to: "failed",
+          skippedDispatch: true,
+          reason: input.reason,
+          restored: Boolean(row),
+        },
+      })
+    }
+  )
 }
 
 async function loadInvoiceSnapshot(input: {

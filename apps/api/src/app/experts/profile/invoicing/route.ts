@@ -1,11 +1,10 @@
-import { eq } from "drizzle-orm"
 import { InvoicingRequestSchema } from "@eleva/api-client"
+import { saveExpertInvoicingChoice } from "@eleva/auth"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
-import { withAudit } from "@eleva/audit"
-import { getExpertProfileByUserId, main } from "@eleva/db"
+import { getExpertProfileByUserId } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -53,57 +52,16 @@ export async function PUT(request: Request) {
     )
   }
 
-  const { provider } = body.data
-  const isManual = provider === "manual"
-
   try {
-    await withAudit(
-      { orgId: profile.orgId, actorUserId: session.user.id },
-      async (tx, ctx) => {
-        const [current] = await tx
-          .select({ metadata: main.expertProfiles.metadata })
-          .from(main.expertProfiles)
-          .where(eq(main.expertProfiles.id, profile.id))
-          .limit(1)
-          .for("update")
-        const metadata: Record<string, unknown> = {
-          ...((current?.metadata ?? {}) as Record<string, unknown>),
-          invoicingProvider: provider,
-        }
-        if (isManual) {
-          const completedSteps = metadata.completedSteps
-          const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
-          if (!steps.includes("invoicing")) steps.push("invoicing")
-          metadata.completedSteps = steps
-          metadata.manualInvoicingAcknowledgedAt = new Date().toISOString()
-        }
-
-        await tx
-          .update(main.expertProfiles)
-          .set({
-            invoicingProvider: provider,
-            invoicingSetupStatus: isManual
-              ? "manual_acknowledged"
-              : "connecting",
-            metadata,
-            updatedAt: new Date(),
-          })
-          .where(eq(main.expertProfiles.id, profile.id))
-        await ctx.emit({
-          entity: "expert_profile",
-          action: "updated",
-          entityId: profile.id,
-          payload: {
-            field: "invoicing",
-            provider,
-            ...(isManual ? { acknowledged: true } : {}),
-          },
-        })
-      }
-    )
+    await saveExpertInvoicingChoice({
+      profileId: profile.id,
+      orgId: profile.orgId,
+      actorUserId: session.user.id,
+      provider: body.data.provider,
+    })
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Internal server error"
-    return secureJson({ error: "internal", message }, { status: 500, headers })
+    console.error("[experts/profile/invoicing] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 
   return secureJson({ ok: true }, { status: 200, headers })

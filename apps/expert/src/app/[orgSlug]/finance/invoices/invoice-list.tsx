@@ -266,7 +266,9 @@ function InvoiceRow({
       </td>
       <td className="py-2 pr-4">
         {invoice.issuedAt
-          ? new Date(invoice.issuedAt).toLocaleString(intlLocale)
+          ? new Date(invoice.issuedAt).toLocaleString(intlLocale, {
+              timeZone: "Europe/Lisbon",
+            })
           : "—"}
       </td>
       <td className="py-2">

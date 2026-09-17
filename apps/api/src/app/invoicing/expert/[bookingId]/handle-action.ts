@@ -62,9 +62,27 @@ export async function handleExpertInvoiceAction(
     )
   }
 
-  const body = ExpertInvoiceActionRequestSchema.safeParse(
-    await request.json().catch(() => ({}))
-  )
+  let parsedBody: unknown
+  try {
+    const raw = (await request.text()).trim()
+    parsedBody = raw === "" ? {} : JSON.parse(raw)
+  } catch {
+    return secureJson(
+      {
+        error: "validation",
+        issues: [
+          {
+            code: "custom",
+            message: "invalid_json",
+            path: [],
+          },
+        ],
+      },
+      { status: 422, headers }
+    )
+  }
+
+  const body = ExpertInvoiceActionRequestSchema.safeParse(parsedBody)
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },
@@ -89,6 +107,7 @@ export async function handleExpertInvoiceAction(
         { status: err.status, headers }
       )
     }
-    throw err
+    console.error("[invoicing/expert] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }

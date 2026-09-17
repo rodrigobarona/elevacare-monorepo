@@ -28,6 +28,10 @@ export {
 } from "./provisioning"
 export { provisionPersonalSpace } from "./provision-personal-space"
 export {
+  saveExpertInvoicingChoice,
+  type ExpertInvoicingProvider,
+} from "./invoicing-choice"
+export {
   getMemberProfile,
   updateMemberProfile,
   updateMemberNotificationPreferences,

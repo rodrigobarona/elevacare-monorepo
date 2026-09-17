@@ -29,7 +29,7 @@ paths = [
 [[allowlists]]
 description = "Removed GitBook dump (example OAuth tokens and GitBook image query tokens); file deleted"
 paths = [
-  '''(^|/)(_context/TOConline-api/TOConline Full Documentation\.md)''',
+  '''(^|/)_context/TOConline-api/TOConline Full Documentation\.md$''',
 ]
 
 [[allowlists]]
