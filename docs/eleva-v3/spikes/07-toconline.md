@@ -4,8 +4,8 @@
 to AT). OAuth, refresh, TEST series lookup, customer, and service are proven.
 Invoice, PDF, credit-note, and document AT are **out of scope on TEST** by
 founder decision (2026-09-14). Do not start PR 07.1 automatic production issuance
-(D-09 historical classification is Aprovado com condições 2026-09-15; 07.1 issuance
-still blocked on remaining fiscal-parameter confirmation).
+(D-09 historical classification is Aprovado com condições 2026-09-15; founder
+2026-09-17 unblocks 07.1 **engineering**, not live POST or Comunicação).
 **Date:** 2026-09-14 (founder: do not Comunicar série on TEST)
 **TOConline:** Eleva company credentials from local env. Live `ELEVA` series
 refused. Founder series **TEST** accepted by the runner.
@@ -195,7 +195,8 @@ production issuance remains blocked on pending fiscal parameters.
 2. Accountant 2026-09-15: D-09 historical classification Aprovado com condições;
    remaining fiscal-parameter confirmation still required before 07.1 production
    issuance (tax codes, rates, legal mentions, VIES 24h + downtime, OSS, etc.).
-3. Engineering: PR 07.2 (Tier 2 expert adapters) next. Stop before 07.1.
+3. Engineering: 07.1 engineering (schema, lookups, dry-run) may proceed.
+   Stop before live v1 POST and production issuance.
 
 ## v1 sales-document contract (2026-09-15 full docs)
 
@@ -216,6 +217,7 @@ How to query: `_context/TOConline-api/toconline-docs.md`.
   `filter[item_code]`, tax descriptors `filter[notation]`.
 - 07.0 runner sent `finalize: 1`; that field is not part of v1. The spike
   never successfully created a document (uncommunicated TEST series).
-- Do not POST fictitious FTs. Do not Comunicar TEST. Do not start 07.1.
+- Do not POST fictitious FTs. Do not Comunicar TEST. 07.1 engineering may
+  proceed; live v1 POST stays closed.
 
 4. Delete `packages/accounting/spikes/` before PR 07.1.
