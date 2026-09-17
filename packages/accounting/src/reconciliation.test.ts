@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import { TOC_V1_AUTO_FINALIZE_BLOCKED } from "./adapters/toconline/issuance-gate"
 import {
   RECONCILIATION_MISMATCH_THRESHOLD_BPS,
@@ -92,14 +92,23 @@ describe("summarizeReconciliation", () => {
     expect(summary.mismatchBps).toBe(10_000)
   })
 
-  it("flags an injected amount mismatch", () => {
+  it("keeps amount mismatches informational while the issuance gate is closed", () => {
     const summary = summarizeReconciliation(
       [PAYMENT],
       [invoice({ amountCents: 9_000 })]
     )
-    expect(summary.status).toBe("mismatch")
+    expect(summary.status).toBe("matched")
     expect(summary.details.amountMismatchCount).toBe(1)
     expect(summary.mismatchBps).toBe(1_000)
+  })
+
+  it("flags an invoice-only month as extra, not matched", () => {
+    const summary = summarizeReconciliation([], [invoice()])
+    expect(summary.status).toBe("mismatch")
+    expect(summary.details.extraInvoiceCount).toBe(1)
+    expect(summary.details.missingInvoiceCount).toBe(0)
+    expect(summary.invoicedTotalCents).toBe(10_000)
+    expect(summary.mismatchBps).toBe(10_000)
   })
 
   it("counts issued rows toward the SAF-T export total", () => {
@@ -137,5 +146,74 @@ describe("summarizeReconciliation", () => {
     expect(summary.status).toBe("mismatch")
     expect(summary.details.missingInvoiceCount).toBe(1)
     expect(summary.details.extraInvoiceCount).toBe(1)
+  })
+})
+
+describe("loadLedgers", () => {
+  beforeEach(() => {
+    vi.resetModules()
+  })
+
+  it("loads invoices for the month even when no paid payments exist", async () => {
+    const invoiceRow = {
+      bookingId: PAYMENT.bookingId,
+      expertOrgId: PAYMENT.expertOrgId,
+      amountCents: 10_000,
+      status: "pending" as const,
+      error: TOC_V1_AUTO_FINALIZE_BLOCKED,
+    }
+    const bookingPayments = {
+      bookingId: "bookingId",
+      orgId: "orgId",
+      amountCents: "amountCents",
+      refundedCents: "refundedCents",
+      applicationFeeCents: "applicationFeeCents",
+      paidAt: "paidAt",
+      status: "status",
+    }
+    const expertInvoices = {
+      bookingId: "bookingId",
+      expertOrgId: "expertOrgId",
+      amountCents: "amountCents",
+      status: "status",
+      error: "error",
+      createdAt: "createdAt",
+    }
+    const queried: unknown[] = []
+
+    vi.doMock("@eleva/db", () => ({
+      auth: { organization: { id: "id", type: "type" } },
+      main: {
+        bookingPayments,
+        expertInvoices,
+        accountingReconciliationRuns: {},
+      },
+      withPlatformAdminContext: vi.fn(async (fn: (tx: unknown) => unknown) =>
+        fn({
+          select: () => ({
+            from: (table: unknown) => {
+              queried.push(table)
+              return {
+                where: () =>
+                  table === bookingPayments
+                    ? Promise.resolve([])
+                    : Promise.resolve([invoiceRow]),
+              }
+            },
+          }),
+        })
+      ),
+    }))
+    vi.doMock("@eleva/audit", () => ({
+      withPlatformAudit: vi.fn(),
+    }))
+
+    const { loadLedgers } = await import("./reconciliation")
+    const ledgers = await loadLedgers("2026-08")
+
+    expect(queried).toContain(bookingPayments)
+    expect(queried).toContain(expertInvoices)
+    expect(ledgers.payments).toEqual([])
+    expect(ledgers.invoices).toEqual([invoiceRow])
   })
 })

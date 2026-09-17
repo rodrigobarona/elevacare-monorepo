@@ -2,10 +2,7 @@ import { captureException } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
 import { secureJson } from "@/lib/security-headers"
 
-export async function runInternalWorkflow(
-  request: Request,
-  run: () => Promise<Record<string, unknown>>
-): Promise<Response> {
+export function authorizeInternalWorkflow(request: Request): Response | null {
   const headers = corsHeaders(request, "POST, OPTIONS")
   const secret = process.env.WORKFLOWS_DRAIN_SECRET
   if (!secret) {
@@ -21,6 +18,16 @@ export async function runInternalWorkflow(
   if (authHeader !== `Bearer ${secret}`) {
     return secureJson({ error: "unauthorized" }, { status: 401, headers })
   }
+  return null
+}
+
+export async function runInternalWorkflow(
+  request: Request,
+  run: () => Promise<Record<string, unknown>>
+): Promise<Response> {
+  const denied = authorizeInternalWorkflow(request)
+  if (denied) return denied
+  const headers = corsHeaders(request, "POST, OPTIONS")
   try {
     const result = await run()
     return secureJson({ ...result, ok: true }, { status: 200, headers })
