@@ -32,6 +32,30 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-17: 07.1 IVA matrix is conservative classifiers + GET lookups
+
+- Owner: engineering
+- Status: active
+- Summary: `classifyIvaRegime` / `resolveIvaLookups` may encode the
+  accountant 2026-09-15 conditions in code. PT territorial rates come from
+  `GET /api/taxes` (NOR + the expert's `tax_country_region`, including
+  `PT-AC` / `PT-MA`), not a hardcoded production rate. EU reverse
+  charge requires a VAT number, a valid VIES result, **and** an explicit
+  legal-requirement flag, then ISE + exemption code M07 lookup. EU without
+  valid VIES is `eu_unclassified` (not auto-consumer). Extra-EU is
+  `extra_eu_unclassified` (not indiscriminate zero-rate / not M99). VIES
+  downtime fail-closes and is not cached. A 24h VIES cache helper exists
+  for engineering; it does **not** supersede D-03 — intra-EU issuance
+  stays blocked until the accountant specifically validates 24h reuse +
+  downtime (`reverseChargeLegalReqsMet` must stay false until then). OSS
+  thresholds are not invented. Still no TOConline v1 POST and no AT
+  Comunicação.
+- Reference: `packages/accounting/src/core/iva-matrix.ts`,
+  `@eleva/accounting/adapters` (`resolveIvaLookups`), ADR-013 (package
+  already owns TOConline platform-fee and expert adapters), D-03, D-09
+- Next review date: remaining Manolo confirmation of live tax codes/rates
+  /legal mentions before production issuance
+
 ### 2026-09-17: Reconciliation status is existence-only; invoices load independently
 
 - Owner: engineering

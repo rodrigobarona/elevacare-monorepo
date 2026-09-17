@@ -434,7 +434,13 @@ export {
   resolveExemptionReasonId,
   resolveServiceId,
   resolveTaxId,
+  resolveTaxRecord,
 } from "./lookups"
+export {
+  REVERSE_CHARGE_EXEMPTION_CODE,
+  assertLookupsAreGetOnly,
+  resolveIvaLookups,
+} from "./iva-lookups"
 export {
   TOC_V1_AUTO_FINALIZE_BLOCKED,
   TOC_V1_AUTO_FINALIZE_MESSAGE,

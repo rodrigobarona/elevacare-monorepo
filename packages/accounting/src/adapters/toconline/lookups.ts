@@ -27,6 +27,13 @@ export interface ResolveTaxInput {
   taxPercentage?: number
 }
 
+export type ToconlineTaxRecord = {
+  id: string
+  taxCode: string | null
+  taxCountryRegion: string | null
+  taxPercentage: number | null
+}
+
 export interface ResolveCustomerInput {
   taxRegistrationNumber: string
 }
@@ -73,19 +80,58 @@ function jsonApiId(item: Record<string, unknown>): string | null {
   return null
 }
 
+function pickUniqueItem(
+  items: Array<Record<string, unknown>>,
+  context: string
+): Record<string, unknown> | null {
+  if (items.length === 0) return null
+  if (items.length > 1) {
+    throw new AdapterError(
+      "validation",
+      `TOConline ${context} lookup returned ${items.length} matches`
+    )
+  }
+  return items[0] ?? null
+}
+
 function pickUniqueId(
   items: Array<Record<string, unknown>>,
   context: string
 ): string | null {
-  const ids = items.map(jsonApiId).filter((id): id is string => id !== null)
-  if (ids.length === 0) return null
-  if (ids.length > 1) {
-    throw new AdapterError(
-      "validation",
-      `TOConline ${context} lookup returned ${ids.length} matches`
-    )
+  const item = pickUniqueItem(items, context)
+  return item ? jsonApiId(item) : null
+}
+
+function parseTaxPercentage(value: unknown): number | null {
+  const parsed =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && value.trim() !== ""
+        ? Number(value)
+        : Number.NaN
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 100) return null
+  return parsed
+}
+
+function taxRecordFromItem(
+  item: Record<string, unknown>
+): ToconlineTaxRecord | null {
+  const id = jsonApiId(item)
+  if (!id) return null
+  const attributes =
+    item.attributes && typeof item.attributes === "object"
+      ? (item.attributes as Record<string, unknown>)
+      : {}
+  return {
+    id,
+    taxCode:
+      typeof attributes.tax_code === "string" ? attributes.tax_code : null,
+    taxCountryRegion:
+      typeof attributes.tax_country_region === "string"
+        ? attributes.tax_country_region
+        : null,
+    taxPercentage: parseTaxPercentage(attributes.tax_percentage),
   }
-  return ids[0] ?? null
 }
 
 function filterQuery(
@@ -190,13 +236,49 @@ export async function resolveTaxId(
   client: ToconlineLookupClient,
   input: ResolveTaxInput
 ): Promise<string | null> {
+  const record = await resolveTaxRecord(client, input)
+  return record?.id ?? null
+}
+
+export async function resolveTaxRecord(
+  client: ToconlineLookupClient,
+  input: ResolveTaxInput
+): Promise<ToconlineTaxRecord | null> {
   const query = filterQuery({
     tax_code: input.taxCode,
     tax_country_region: input.taxCountryRegion,
     tax_percentage: input.taxPercentage,
   })
   const body = await getJsonApi(client, `/api/taxes?${query}`)
-  return pickUniqueId(jsonApiItems(body), "tax")
+  const item = pickUniqueItem(jsonApiItems(body), "tax")
+  const record = item ? taxRecordFromItem(item) : null
+  if (!record) return null
+  if (record.taxCode && record.taxCode !== input.taxCode) {
+    throw new AdapterError(
+      "validation",
+      "TOConline tax lookup returned a record that does not match tax_code"
+    )
+  }
+  if (
+    record.taxCountryRegion &&
+    record.taxCountryRegion !== input.taxCountryRegion
+  ) {
+    throw new AdapterError(
+      "validation",
+      "TOConline tax lookup returned a record that does not match tax_country_region"
+    )
+  }
+  if (
+    input.taxPercentage !== undefined &&
+    record.taxPercentage !== null &&
+    record.taxPercentage !== input.taxPercentage
+  ) {
+    throw new AdapterError(
+      "validation",
+      "TOConline tax lookup returned a record that does not match tax_percentage"
+    )
+  }
+  return record
 }
 
 export async function resolveCustomerId(

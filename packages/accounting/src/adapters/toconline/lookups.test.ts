@@ -8,6 +8,7 @@ import {
   resolveExemptionReasonId,
   resolveServiceId,
   resolveTaxId,
+  resolveTaxRecord,
 } from "./lookups"
 
 const client = {
@@ -64,6 +65,27 @@ describe("TOConline lookups", () => {
     expect(url).toContain("filter%5Btax_code%5D=NOR")
     expect(url).toContain("filter%5Btax_country_region%5D=PT")
     expect(url).toContain("filter%5Btax_percentage%5D=23")
+  })
+
+  it("returns tax percentage from GET /taxes attributes", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonApiResponse("103", {
+        tax_code: "NOR",
+        tax_country_region: "PT",
+        tax_percentage: "17.5",
+      })
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const record = await resolveTaxRecord(client, {
+      taxCode: "NOR",
+      taxCountryRegion: "PT",
+    })
+    expect(record).toEqual({
+      id: "103",
+      taxCode: "NOR",
+      taxCountryRegion: "PT",
+      taxPercentage: 17.5,
+    })
   })
 
   it("resolves customer, exemption, currency, service, and country ids", async () => {
