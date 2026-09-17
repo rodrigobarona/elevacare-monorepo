@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, lt, or } from "drizzle-orm"
+import { and, desc, eq, inArray, lt, or, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withOrgContext } from "@eleva/db"
 import { getFlag } from "@eleva/flags"
@@ -415,6 +415,7 @@ async function restoreFailedAfterSkippedDispatch(input: {
         .set({
           status: "failed",
           error: input.reason,
+          attempts: sql`${main.expertInvoices.attempts} + 1`,
           updatedAt: new Date(),
         })
         .where(

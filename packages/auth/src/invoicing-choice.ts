@@ -4,6 +4,20 @@ import { main } from "@eleva/db"
 
 export type ExpertInvoicingProvider = "toconline" | "moloni" | "manual"
 
+export type ExpertInvoicingSetupStatus =
+  | "not_started"
+  | "connecting"
+  | "connected"
+  | "manual_acknowledged"
+  | "expired"
+
+/** Become-Partner invoicing step is complete only after Auto connect or Manual ack. */
+export function isExpertInvoicingChoiceComplete(
+  status: ExpertInvoicingSetupStatus | string | null | undefined
+): boolean {
+  return status === "connected" || status === "manual_acknowledged"
+}
+
 export async function saveExpertInvoicingChoice(input: {
   profileId: string
   orgId: string

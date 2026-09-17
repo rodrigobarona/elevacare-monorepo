@@ -67,7 +67,21 @@ vi.mock("@eleva/db", () => ({
   },
 }))
 
-import { saveExpertInvoicingChoice } from "./invoicing-choice"
+import {
+  isExpertInvoicingChoiceComplete,
+  saveExpertInvoicingChoice,
+} from "./invoicing-choice"
+
+describe("isExpertInvoicingChoiceComplete", () => {
+  it("accepts only connected or manual acknowledgement", () => {
+    expect(isExpertInvoicingChoiceComplete("connected")).toBe(true)
+    expect(isExpertInvoicingChoiceComplete("manual_acknowledged")).toBe(true)
+    expect(isExpertInvoicingChoiceComplete("not_started")).toBe(false)
+    expect(isExpertInvoicingChoiceComplete("connecting")).toBe(false)
+    expect(isExpertInvoicingChoiceComplete("expired")).toBe(false)
+    expect(isExpertInvoicingChoiceComplete(null)).toBe(false)
+  })
+})
 
 describe("saveExpertInvoicingChoice", () => {
   beforeEach(() => {

@@ -218,4 +218,4 @@ How to query: `_context/TOConline-api/toconline-docs.md`.
   never successfully created a document (uncommunicated TEST series).
 - Do not POST fictitious FTs. Do not Comunicar TEST. Do not start 07.1.
 
-4. Delete `packages/accounting/spikes/` before PR 07.1.
+4. Deleted `packages/accounting/spikes/` before PR 07.1 (throwaway 07.0 runner).
