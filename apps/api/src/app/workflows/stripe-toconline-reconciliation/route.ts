@@ -3,6 +3,7 @@ import { processStripeToconlineReconciliation } from "@eleva/workflows/invoicing
 import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import {
+  authorizeInternalWorkflow,
   internalWorkflowOptions,
   runInternalWorkflow,
 } from "@/lib/internal-workflow"
@@ -35,6 +36,8 @@ const BodySchema = z
   .strict()
 
 export async function POST(request: Request) {
+  const denied = authorizeInternalWorkflow(request)
+  if (denied) return denied
   const headers = corsHeaders(request, "POST, OPTIONS")
   const raw = await request.text()
   let json: unknown = {}

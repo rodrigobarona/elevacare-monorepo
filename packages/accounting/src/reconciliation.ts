@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, lt } from "drizzle-orm"
+import { and, desc, eq, gte, inArray, lt, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import type {
@@ -141,6 +141,13 @@ export function summarizeReconciliation(
   let pendingInvoiceCount = 0
   let blockedInvoiceCount = 0
 
+  for (const invoice of invoices) {
+    invoicedTotalCents += invoice.amountCents
+    if (isIssuedExportStatus(invoice.status)) {
+      issuedExportCents += invoice.amountCents
+    }
+  }
+
   const paidKeys = new Set<string>()
   for (const payment of payments) {
     paidKeys.add(ledgerKey(payment))
@@ -151,10 +158,6 @@ export function summarizeReconciliation(
     if (!invoice) {
       missingInvoiceCount += 1
       continue
-    }
-    invoicedTotalCents += invoice.amountCents
-    if (isIssuedExportStatus(invoice.status)) {
-      issuedExportCents += invoice.amountCents
     }
     if (invoice.amountCents !== net) amountMismatchCount += 1
     switch (invoice.status) {
@@ -184,13 +187,10 @@ export function summarizeReconciliation(
   }
 
   const bps = mismatchBps(stripeGrossCents, invoicedTotalCents)
+  // While the v1 issuance gate is closed, status is row existence only.
+  // Amount and bps stay on the run as informational details.
   const status: "matched" | "mismatch" =
-    bps > RECONCILIATION_MISMATCH_THRESHOLD_BPS ||
-    missingInvoiceCount > 0 ||
-    extraInvoiceCount > 0 ||
-    amountMismatchCount > 0
-      ? "mismatch"
-      : "matched"
+    missingInvoiceCount > 0 || extraInvoiceCount > 0 ? "mismatch" : "matched"
 
   return {
     stripeGrossCents,
@@ -258,14 +258,14 @@ export async function getAccountingReconciliation(input: {
   return row ? toPublicRun(row) : null
 }
 
-async function loadLedgers(
+export async function loadLedgers(
   month: string
 ): Promise<{ payments: PaymentLedgerRow[]; invoices: InvoiceLedgerRow[] }> {
   parseSaftMonth(month)
   const range = saftMonthRange(month)
 
   return withPlatformAdminContext(async (tx) => {
-    const payments = await tx
+    const paymentsPromise = tx
       .select({
         bookingId: main.bookingPayments.bookingId,
         expertOrgId: main.bookingPayments.orgId,
@@ -282,15 +282,7 @@ async function loadLedgers(
         )
       )
 
-    const bookingIds = payments.map((row) => row.bookingId)
-    if (bookingIds.length === 0) {
-      return { payments, invoices: [] }
-    }
-
-    // Only invoices for this month's paid bookings. Invoices created in
-    // this month for earlier payments are covered when that earlier month
-    // is reconciled; including them here would false-mismatch as extra.
-    const invoices = await tx
+    const invoicesPromise = tx
       .select({
         bookingId: main.expertInvoices.bookingId,
         expertOrgId: main.expertInvoices.expertOrgId,
@@ -299,8 +291,17 @@ async function loadLedgers(
         error: main.expertInvoices.error,
       })
       .from(main.expertInvoices)
-      .where(inArray(main.expertInvoices.bookingId, bookingIds))
+      .where(
+        and(
+          gte(main.expertInvoices.createdAt, range.start),
+          lt(main.expertInvoices.createdAt, range.end)
+        )
+      )
 
+    const [payments, invoices] = await Promise.all([
+      paymentsPromise,
+      invoicesPromise,
+    ])
     return { payments, invoices }
   })
 }
@@ -329,12 +330,6 @@ export async function runStripeToconlineReconciliation(input: {
   return withPlatformAudit(
     { orgId: staffOrgId, actorUserId: null },
     async (tx, ctx) => {
-      const [existing] = await tx
-        .select({ id: main.accountingReconciliationRuns.id })
-        .from(main.accountingReconciliationRuns)
-        .where(eq(main.accountingReconciliationRuns.month, month))
-        .limit(1)
-
       const values = {
         month,
         stripeFeeTotalCents: summary.stripeFeeTotalCents,
@@ -344,7 +339,7 @@ export async function runStripeToconlineReconciliation(input: {
         details: summary.details,
       }
 
-      const [row] = await tx
+      const [persisted] = await tx
         .insert(main.accountingReconciliationRuns)
         .values(values)
         .onConflictDoUpdate({
@@ -357,15 +352,29 @@ export async function runStripeToconlineReconciliation(input: {
             details: values.details,
           },
         })
-        .returning()
+        .returning({
+          id: main.accountingReconciliationRuns.id,
+          month: main.accountingReconciliationRuns.month,
+          stripeFeeTotalCents:
+            main.accountingReconciliationRuns.stripeFeeTotalCents,
+          invoicedTotalCents:
+            main.accountingReconciliationRuns.invoicedTotalCents,
+          mismatchBps: main.accountingReconciliationRuns.mismatchBps,
+          status: main.accountingReconciliationRuns.status,
+          details: main.accountingReconciliationRuns.details,
+          createdAt: main.accountingReconciliationRuns.createdAt,
+          inserted: sql<boolean>`(xmax = 0)`,
+        })
 
-      if (!row) {
+      if (!persisted) {
         throw new Error("reconciliation_run_persist_failed")
       }
 
+      const { inserted, ...row } = persisted
+
       await ctx.emit({
         entity: "accounting_reconciliation_run",
-        action: existing ? "updated" : "created",
+        action: inserted ? "created" : "updated",
         entityId: row.id,
         payload: {
           month,

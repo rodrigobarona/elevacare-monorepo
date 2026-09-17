@@ -139,7 +139,7 @@ URL. After your prod API is deployed:
 
 ```bash
 API_BASE_URL=https://api.eleva.care pnpm qstash:setup
-pnpm qstash:list   # confirm audit-drainer + stripe-stuck (two schedules)
+pnpm qstash:list   # confirm expected destinations (audit-drainer, stripe-stuck, invoicing-retry, monthly reconciliation, payouts, …)
 ```
 
 ### DB — apply migrations

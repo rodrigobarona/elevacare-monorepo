@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-17: Reconciliation status is existence-only; invoices load independently
+
+- Owner: engineering
+- Status: active
+- Summary: Follow-up to 07.2.6. While the v1 issuance gate is closed,
+  `accounting_reconciliation_runs.status` is `mismatch` only when a paid
+  booking lacks an invoice row or an invoice has no paid booking in the
+  month (`missingInvoiceCount` / `extraInvoiceCount`). Amount differences
+  and `mismatchBps` stay informational. `loadLedgers` queries
+  `expert_invoices` by Lisbon `createdAt` independently of paid booking
+  IDs, so invoice-only months cannot report as matched. Invoice totals
+  include extras. Pending, failed, and blocked rows are not mismatches.
+  Tier 1 `platform_fee_invoices` comparison stays skipped until 07.1. No
+  FT POST and `issueInvoice()` stays closed.
+- Reference: `packages/accounting/src/reconciliation.ts`, 07.2.6 entry,
+  D-03, D-09, D-18
+- Next review date: remaining fiscal-parameter confirmation before 07.1
+
 ### 2026-09-17: Phase 07.2.6 Stripe vs expert_invoices reconciliation does not issue
 
 - Owner: engineering
