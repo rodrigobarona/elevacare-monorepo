@@ -217,7 +217,12 @@ export function buildSaftCsv(
   }
   if (options.truncated) {
     lines.push(
-      `# truncated: export hit ${SAFT_EXPORT_MAX_ROWS}-row cap; later invoices omitted`
+      [
+        csvField(
+          `# truncated: export hit ${SAFT_EXPORT_MAX_ROWS}-row cap; later invoices omitted`
+        ),
+        ...Array.from({ length: header.length - 1 }, () => ""),
+      ].join(",")
     )
   }
   return `${lines.join("\n")}\n`
