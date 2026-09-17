@@ -21,8 +21,11 @@ export async function saveExpertInvoicingChoice(input: {
         .where(eq(main.expertProfiles.id, input.profileId))
         .limit(1)
         .for("update")
+      if (!current) {
+        throw new Error("expert profile not found")
+      }
       const metadata: Record<string, unknown> = {
-        ...((current?.metadata ?? {}) as Record<string, unknown>),
+        ...((current.metadata ?? {}) as Record<string, unknown>),
         invoicingProvider: input.provider,
       }
       if (isManual) {
@@ -40,7 +43,7 @@ export async function saveExpertInvoicingChoice(input: {
         }
       }
 
-      await tx
+      const [updated] = await tx
         .update(main.expertProfiles)
         .set({
           invoicingProvider: input.provider,
@@ -49,6 +52,10 @@ export async function saveExpertInvoicingChoice(input: {
           updatedAt: new Date(),
         })
         .where(eq(main.expertProfiles.id, input.profileId))
+        .returning({ id: main.expertProfiles.id })
+      if (!updated) {
+        throw new Error("expert profile not found")
+      }
       await ctx.emit({
         entity: "expert_profile",
         action: "updated",

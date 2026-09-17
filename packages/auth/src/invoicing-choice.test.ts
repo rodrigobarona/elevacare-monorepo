@@ -35,7 +35,11 @@ const { emit, set, selectLimit, withAudit } = vi.hoisted(() => {
           update: () => ({
             set: (vals: unknown) => {
               setFn(vals)
-              return { where: () => undefined }
+              return {
+                where: () => ({
+                  returning: async () => [{ id: "profile-1" }],
+                }),
+              }
             },
           }),
         },
@@ -101,6 +105,21 @@ describe("saveExpertInvoicingChoice", () => {
         payload: { field: "invoicing", provider: "manual", acknowledged: true },
       })
     )
+  })
+
+  it("refuses to emit when the profile row is gone", async () => {
+    selectLimit.mockResolvedValue([])
+
+    await expect(
+      saveExpertInvoicingChoice({
+        profileId: "00000000-0000-4000-8000-000000000001",
+        orgId: "00000000-0000-4000-8000-000000000002",
+        actorUserId: "00000000-0000-4000-8000-000000000003",
+        provider: "toconline",
+      })
+    ).rejects.toThrow("expert profile not found")
+    expect(set).not.toHaveBeenCalled()
+    expect(emit).not.toHaveBeenCalled()
   })
 
   it("clears manual acknowledgement when switching to an automatic provider", async () => {
