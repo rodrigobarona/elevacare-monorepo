@@ -1,10 +1,10 @@
 /**
- * @eleva/accounting — Tier 2 expert→member invoicing adapter
- * registry. See ADR-013.
+ * @eleva/accounting — invoicing domain (ADR-013).
  *
- * Owns ALL provider SDK access (TOConline, Moloni, ...). Other
- * packages MUST NOT import provider SDKs directly — boundary lint
- * enforces.
+ * Owns Tier 1 Eleva→expert platform-fee ledgers, Tier 2 expert→member
+ * adapters, reconciliation, and ALL provider SDK access (TOConline,
+ * Moloni, ...). Other packages MUST NOT import provider SDKs directly —
+ * boundary lint enforces.
  *
  * Sub-entrypoints:
  *   - "@eleva/accounting"          — types + AdapterError
@@ -113,3 +113,14 @@ export type {
   PublicAccountingReconciliationRun,
   ReconciliationSummary,
 } from "./reconciliation"
+export {
+  PLATFORM_FEE_INVOICE_PAGE_SIZE,
+  listPlatformFeeInvoices,
+  toPublicPlatformFeeInvoice,
+} from "./platform-fee-invoices"
+export type {
+  PlatformFeeAtStatus,
+  PlatformFeeInvoiceStatus,
+  PlatformFeeIvaRegime,
+  PublicPlatformFeeInvoice,
+} from "./platform-fee-invoices"

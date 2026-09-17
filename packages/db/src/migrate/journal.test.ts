@@ -38,10 +38,26 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0038_workflow_dead_letters_open_entity_cleanup")
+    expect(last?.tag).toBe("0039_platform_fee_invoices")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const dlqCleanupSql = last?.statements.join("\n") ?? ""
+    const platformFeeSql = last?.statements.join("\n") ?? ""
+    expect(platformFeeSql).toContain("platform_fee_invoices")
+    expect(platformFeeSql).toContain("platform_fee_credit_notes")
+    expect(platformFeeSql).toContain("clinic_saas_invoices")
+    expect(platformFeeSql).toContain("eu_unclassified")
+    expect(platformFeeSql).toContain("extra_eu_unclassified")
+    expect(platformFeeSql).toContain("vies_unavailable")
+    expect(platformFeeSql).toContain("commission_reduction")
+    expect(platformFeeSql).toContain("operator_gated")
+    expect(platformFeeSql).toContain("eleva.platform_admin")
+    expect(platformFeeSql).toContain("platform_fee_invoices_payment_key")
+    expect(platformFeeSql).toContain("clinic_saas_invoices_subscription_org_fk")
+    expect(platformFeeSql).toContain("billing_subscriptions_id_org_key")
+    const dlqCleanup = migrations.find(
+      (m) => m.tag === "0038_workflow_dead_letters_open_entity_cleanup"
+    )
+    const dlqCleanupSql = dlqCleanup?.statements.join("\n") ?? ""
     expect(dlqCleanupSql).toContain("workflow_dead_letters")
     expect(dlqCleanupSql).toContain("discarded")
     expect(dlqCleanupSql).toContain("workflow_dead_letters_open_entity_uidx")
