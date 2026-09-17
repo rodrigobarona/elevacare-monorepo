@@ -67,6 +67,8 @@ import {
   ExportSaftQuerySchema,
   ExportSaftResponseSchema,
   ExportSaftFileQuerySchema,
+  GetAccountingReconciliationQuerySchema,
+  GetAccountingReconciliationResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2072,6 +2074,33 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "503": {
               description: "Fatal adapter failure",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/accounting/reconciliation": {
+        get: {
+          operationId: "getAccountingReconciliation",
+          summary: "Read Stripe vs expert invoice reconciliation",
+          description:
+            "Staff-only. Returns the latest monthly run, or a specific Lisbon calendar month. Compares booking payments to expert_invoices. Does not POST TOConline sales documents. Tier 1 platform-fee comparison is skipped until 07.1.",
+          tags: ["Accounting"],
+          requestParams: {
+            query: GetAccountingReconciliationQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Reconciliation run",
+              content: {
+                "application/json": {
+                  schema: GetAccountingReconciliationResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing accounting:reconcile",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,

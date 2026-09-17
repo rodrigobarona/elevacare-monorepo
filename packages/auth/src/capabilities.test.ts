@@ -74,9 +74,10 @@ describe("capability bundles", () => {
     expect(CAPABILITY_BUNDLES.member).not.toContain("events:manage")
   })
 
-  it("staff has audit:view_all + workflows:retry", () => {
+  it("staff has audit:view_all + workflows:retry + accounting:reconcile", () => {
     expect(CAPABILITY_BUNDLES.staff).toContain("audit:view_all")
     expect(CAPABILITY_BUNDLES.staff).toContain("workflows:retry")
+    expect(CAPABILITY_BUNDLES.staff).toContain("accounting:reconcile")
   })
 
   it("capabilitiesFor returns the matching bundle", () => {

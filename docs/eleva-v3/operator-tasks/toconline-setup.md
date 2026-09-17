@@ -38,6 +38,11 @@ auto-finalizes). Retries record `toconline_v1_auto_finalize_blocked`.
 `POST /workflows/invoicing-retry` (every 30 min) re-dispatches **failed**
 expert invoices through that same closed gate.
 
+`POST /workflows/stripe-toconline-reconciliation` (monthly, 1st 04:00 UTC
+= 04:00 WET / 05:00 WEST) compares Stripe `booking_payments` to
+`expert_invoices`. It does **not** POST FTs. Provision with
+`pnpm qstash:setup:invoicing`.
+
 ## Still to do before 07.1
 
 - [ ] Confirm remaining fiscal parameters with the accountant

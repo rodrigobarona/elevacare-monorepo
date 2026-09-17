@@ -677,6 +677,49 @@ export const ExportSaftFileQuerySchema = z.object({
 })
 export type ExportSaftFileQuery = z.infer<typeof ExportSaftFileQuerySchema>
 
+export const AccountingReconciliationDetailsSchema = z.object({
+  comparison: z.literal("expert_invoices"),
+  issuanceGateClosed: z.literal(true),
+  stripeGrossCents: z.number().int().nonnegative(),
+  invoicedCents: z.number().int().nonnegative(),
+  issuedExportCents: z.number().int().nonnegative(),
+  missingInvoiceCount: z.number().int().nonnegative(),
+  extraInvoiceCount: z.number().int().nonnegative(),
+  amountMismatchCount: z.number().int().nonnegative(),
+  failedInvoiceCount: z.number().int().nonnegative(),
+  pendingInvoiceCount: z.number().int().nonnegative(),
+  blockedInvoiceCount: z.number().int().nonnegative(),
+  tier1Skipped: z.literal(true),
+})
+
+export const AccountingReconciliationRunSchema = z.object({
+  id: z.string().uuid(),
+  month: SaftMonthSchema,
+  stripeFeeTotalCents: z.number().int().nonnegative(),
+  invoicedTotalCents: z.number().int().nonnegative(),
+  mismatchBps: z.number().int().nonnegative(),
+  status: z.enum(["matched", "mismatch"]),
+  details: AccountingReconciliationDetailsSchema,
+  createdAt: z.string().datetime(),
+})
+export type AccountingReconciliationRun = z.infer<
+  typeof AccountingReconciliationRunSchema
+>
+
+export const GetAccountingReconciliationQuerySchema = z.object({
+  month: SaftMonthSchema.optional(),
+})
+export type GetAccountingReconciliationQuery = z.infer<
+  typeof GetAccountingReconciliationQuerySchema
+>
+
+export const GetAccountingReconciliationResponseSchema = z.object({
+  run: AccountingReconciliationRunSchema,
+})
+export type GetAccountingReconciliationResponse = z.infer<
+  typeof GetAccountingReconciliationResponseSchema
+>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -1666,6 +1709,16 @@ export function createApiClient(options: ApiClientOptions) {
           `/accounting/connect/${encodeURIComponent(provider)}`
         )
         return ConnectAccountingResponseSchema.parse(raw)
+      },
+      async reconciliation(query: GetAccountingReconciliationQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.month) params.set("month", query.month)
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          qs ? `/accounting/reconciliation?${qs}` : "/accounting/reconciliation"
+        )
+        return GetAccountingReconciliationResponseSchema.parse(raw)
       },
     },
 

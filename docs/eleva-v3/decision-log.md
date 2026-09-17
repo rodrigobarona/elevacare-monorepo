@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-17: Phase 07.2.6 Stripe vs expert_invoices reconciliation does not issue
+
+- Owner: engineering
+- Status: active
+- Summary: `POST /workflows/stripe-toconline-reconciliation` (QStash monthly,
+  1st 04:00 UTC) compares paid `booking_payments` to `expert_invoices` for the
+  previous Lisbon calendar month. It persists `accounting_reconciliation_runs`
+  and staff can read via `GET /accounting/reconciliation`. Coverage is invoice
+  **row existence** (pending/failed/blocked is not a mismatch while the v1
+  gate is closed). The job must not POST `/api/v1/commercial_sales_documents`,
+  never Comunicar TEST, and never use ELEVA to simulate. Tier 1
+  `platform_fee_invoices` comparison is skipped until 07.1.
+- Reference: `reconciliation.ts`, D-03, D-09, D-18, 07.2.1 issuance-gate entry
+- Next review date: remaining fiscal-parameter confirmation before 07.1
+
 ### 2026-09-17: Phase 07.2.5 retry + operator stub stay behind the closed gate
 
 - Owner: engineering
