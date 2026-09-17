@@ -64,8 +64,9 @@ export async function GET(request: Request) {
   let blob: Awaited<ReturnType<typeof getPrivateDocument>>
   try {
     blob = await getPrivateDocument(query.data.pathname)
-  } catch {
-    return secureJson({ error: "not found" }, { status: 404, headers })
+  } catch (err) {
+    console.error("[invoicing/exports/saft/file] storage error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
   }
   if (!blob?.stream) {
     return secureJson({ error: "not found" }, { status: 404, headers })

@@ -31,7 +31,7 @@ describe("parseSaftMonth", () => {
 
   it("rejects malformed months", () => {
     expect(() => parseSaftMonth("2026-13")).toThrow(/YYYY-MM/)
-    expect(() => parseSaftMonth("26-03")).toThrow(/YYYY-MM/)
+    expect(() => parseSaftMonth("0026-03")).toThrow(/YYYY-MM/)
   })
 })
 
@@ -62,8 +62,12 @@ describe("buildSaftCsv", () => {
   })
 
   it("neutralizes spreadsheet formulas in invoice numbers", () => {
-    const csv = buildSaftCsv([{ ...ROW, number: "=cmd|'/c calc'!A0" }])
+    const csv = buildSaftCsv([
+      { ...ROW, number: "=cmd|'/c calc'!A0" },
+      { ...ROW, id: "00000000-0000-4000-8000-000000000002", number: "\t=cmd" },
+    ])
     expect(csv).toContain("'=cmd|'/c calc'!A0")
+    expect(csv).toContain("'\t=cmd")
   })
 
   it("records truncation inside the CSV", () => {

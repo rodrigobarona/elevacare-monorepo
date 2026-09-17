@@ -3,6 +3,12 @@ import { and, asc, eq, sql } from "drizzle-orm"
 import { main, withOrgContext } from "@eleva/db"
 import type { ExpertInvoiceStatus } from "./invoice-ops"
 
+/**
+ * Monthly CSV + SAF-T PT skeleton for expert → member invoices.
+ * Lives in `@eleva/accounting` with the manual adapter (ADR-013 / Phase 07.2).
+ * This is not a TOConline importer and does not POST sales documents.
+ */
+
 export const LISBON_TZ = "Europe/Lisbon"
 export const SAFT_EXPORT_MAX_ROWS = 5_000
 export const SAFT_SIGNED_URL_TTL_SECONDS = 60 * 60
@@ -106,7 +112,7 @@ function pad2(value: number): string {
 
 export function parseSaftMonth(month: string): { year: number; month: number } {
   const match = SAFT_MONTH_RE.exec(month)
-  if (!match) {
+  if (!match || Number(match[1]) < 2000 || Number(match[1]) > 2100) {
     throw new SaftExportError("month must be YYYY-MM")
   }
   return {
@@ -143,7 +149,7 @@ function lisbonDateTime(date: Date): string {
 }
 
 function csvField(value: string): string {
-  const safeValue = /^[=+\-@]/.test(value) ? `'${value}` : value
+  const safeValue = /^[\t\r\n=+\-@]/.test(value) ? `'${value}` : value
   if (/[",\n\r]/.test(safeValue)) {
     return `"${safeValue.replaceAll('"', '""')}"`
   }
