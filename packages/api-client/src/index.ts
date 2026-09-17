@@ -651,6 +651,32 @@ export type ExpertInvoiceActionResponse = z.infer<
   typeof ExpertInvoiceActionResponseSchema
 >
 
+export const SaftMonthSchema = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, "month must be YYYY-MM")
+
+export const ExportSaftQuerySchema = z.object({
+  month: SaftMonthSchema,
+})
+export type ExportSaftQuery = z.infer<typeof ExportSaftQuerySchema>
+
+export const ExportSaftResponseSchema = z.object({
+  month: SaftMonthSchema,
+  invoiceCount: z.number().int().nonnegative(),
+  truncated: z.boolean(),
+  expiresAt: z.string().datetime(),
+  downloadUrl: z.string().url(),
+})
+export type ExportSaftResponse = z.infer<typeof ExportSaftResponseSchema>
+
+export const ExportSaftFileQuerySchema = z.object({
+  month: SaftMonthSchema,
+  pathname: z.string().min(1).max(500),
+  exp: z.coerce.number().int().positive(),
+  sig: z.string().min(1).max(128),
+})
+export type ExportSaftFileQuery = z.infer<typeof ExportSaftFileQuerySchema>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -1676,6 +1702,14 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return ExpertInvoiceActionResponseSchema.parse(raw)
+      },
+      async exportSaft(query: ExportSaftQuery) {
+        const params = new URLSearchParams({ month: query.month })
+        const raw = await request<unknown>(
+          "GET",
+          `/invoicing/exports/saft?${params.toString()}`
+        )
+        return ExportSaftResponseSchema.parse(raw)
       },
     },
   }
