@@ -66,6 +66,19 @@ async function main() {
 
   await registerSchedule(DOMAIN_EVENTS_PUBLISHER_SCHEDULE, { dryRun })
 
+  await registerSchedule(
+    {
+      name: "Invoicing retry",
+      path: "/workflows/invoicing-retry",
+      cron: "*/30 * * * *",
+      retries: 3,
+      requireBearer: true,
+      description:
+        "Retry failed expert invoices every 30 min (issuance gate stays closed)",
+    },
+    { dryRun }
+  )
+
   for (const spec of PAYOUT_SCHEDULES) {
     await registerSchedule(spec, { dryRun })
   }

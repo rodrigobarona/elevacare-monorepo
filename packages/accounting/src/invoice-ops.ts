@@ -223,7 +223,7 @@ export async function listExpertInvoices(input: {
 export async function retryExpertInvoice(input: {
   bookingId: string
   orgId: string
-  actorUserId: string
+  actorUserId: string | null
 }): Promise<PublicExpertInvoice> {
   const appsEnabled = await getFlag("ff.expert_invoicing_apps_enabled")
   if (!appsEnabled) {
@@ -287,10 +287,22 @@ export async function retryExpertInvoice(input: {
     throw new ExpertInvoiceOpError("not_retryable", "invoice cannot be retried")
   }
 
-  const dispatch = await issueExpertServiceInvoice({
-    bookingPaymentId: snapshot.payment.id,
-    orgId: input.orgId,
-  })
+  let dispatch: Awaited<ReturnType<typeof issueExpertServiceInvoice>>
+  try {
+    dispatch = await issueExpertServiceInvoice({
+      bookingPaymentId: snapshot.payment.id,
+      orgId: input.orgId,
+    })
+  } catch (err) {
+    await restoreFailedAfterSkippedDispatch({
+      invoiceId: snapshot.invoice.id,
+      bookingId: input.bookingId,
+      orgId: input.orgId,
+      actorUserId: input.actorUserId,
+      reason: err instanceof Error ? err.message : "dispatch_error",
+    })
+    throw err
+  }
   if (dispatch.skipped) {
     await restoreFailedAfterSkippedDispatch({
       invoiceId: snapshot.invoice.id,
@@ -392,7 +404,7 @@ async function restoreFailedAfterSkippedDispatch(input: {
   invoiceId: string
   bookingId: string
   orgId: string
-  actorUserId: string
+  actorUserId: string | null
   reason: string
 }): Promise<void> {
   await withAudit(

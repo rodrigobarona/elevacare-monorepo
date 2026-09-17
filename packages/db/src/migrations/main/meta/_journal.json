@@ -253,6 +253,13 @@
       "when": 1779600000000,
       "tag": "0035_expert_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779610000000,
+      "tag": "0036_workflow_dead_letters_open_entity",
+      "breakpoints": true
     }
   ]
 }
