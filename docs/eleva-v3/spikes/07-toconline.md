@@ -220,4 +220,4 @@ How to query: `_context/TOConline-api/toconline-docs.md`.
 - Do not POST fictitious FTs. Do not Comunicar TEST. 07.1 engineering may
   proceed; live v1 POST stays closed.
 
-4. Delete `packages/accounting/spikes/` before PR 07.1.
+4. Deleted `packages/accounting/spikes/` before PR 07.1 (throwaway 07.0 runner).
