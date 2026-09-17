@@ -22,10 +22,11 @@
 > **auto-finalizes on submit**. After create, finalize / cancel / update /
 > delete are impossible on this API version. Drafts use the previous API
 > (`POST /api/commercial_sales_documents` → lines → `status: 1`). Eleva
-> `issueInvoice()` refuses the v1 POST by default (accountant: no fictitious
+> `issueInvoice()` refuses the v1 POST **unconditionally** (accountant: no fictitious
 > finalized docs; no Comunicar série TEST). Lookups GET series / taxes /
 > customers / exemption reasons / currencies / services / countries / OSS
-> taxes. Do not start Phase 07.1 Tier 1.
+> taxes. Founder 2026-09-17 unblocks 07.1 **engineering** (schema, lookups,
+> dry-run). Do not POST v1 sales documents; do not Comunicar TEST.
 
 ## Base URLs
 
