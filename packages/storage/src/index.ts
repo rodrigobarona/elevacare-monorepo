@@ -230,6 +230,12 @@ export interface UploadPrivateBlobInput {
   pathname: string
   body: ArrayBuffer | Buffer | Blob
   contentType: string
+  /**
+   * When true, keep the given pathname and replace any existing blob
+   * at that path. Default adds a random suffix so callers cannot
+   * clobber another object's key.
+   */
+  overwrite?: boolean
 }
 
 /**
@@ -248,10 +254,14 @@ export async function uploadPrivateBlob(
     return { url, pathname: input.pathname }
   }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
+  const overwrite = input.overwrite === true
   const result: PutBlobResult = await put(input.pathname, buf, {
     access: "private",
     contentType: input.contentType,
-    addRandomSuffix: true,
+    addRandomSuffix: !overwrite,
+    allowOverwrite: overwrite,
+    // Overwritten keys must not linger on the CDN for 30 days.
+    ...(overwrite ? { cacheControlMaxAge: 60 } : {}),
     token: BLOB_PRIVATE_READ_WRITE_TOKEN,
   })
   return { url: result.url, pathname: result.pathname }

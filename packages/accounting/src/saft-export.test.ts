@@ -178,5 +178,8 @@ describe("SAF-T download token", () => {
     expect(url).toContain("/invoicing/exports/saft/file?")
     expect(url).not.toContain("blob.vercel-storage.com")
     expect(saftBlobPathname(orgId, "2026-03")).toBe(pathname)
+    expect(saftBlobPathname(orgId, "2026-03", "abc123def456")).toBe(
+      `invoicing-exports/${orgId}/saft-2026-03-abc123def456.zip`
+    )
   })
 })

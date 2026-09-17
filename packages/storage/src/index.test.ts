@@ -66,6 +66,30 @@ describe("e2e private blob mock", () => {
     expect(await getPrivateDocument(uploaded.pathname)).toBeNull()
   })
 
+  it("overwrites a deterministic pathname on repeat uploads", async () => {
+    vi.stubEnv("NODE_ENV", "test")
+    vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")
+    const pathname = "invoicing-exports/org-1/saft-2026-03.zip"
+    const first = await uploadPrivateBlob({
+      pathname,
+      body: Buffer.from("first"),
+      contentType: "application/zip",
+      overwrite: true,
+    })
+    const second = await uploadPrivateBlob({
+      pathname,
+      body: Buffer.from("second"),
+      contentType: "application/zip",
+      overwrite: true,
+    })
+    expect(first.pathname).toBe(pathname)
+    expect(second.pathname).toBe(pathname)
+    const got = await getPrivateDocument(pathname)
+    expect(got?.stream).toBeInstanceOf(ReadableStream)
+    const text = await new Response(got!.stream).text()
+    expect(text).toBe("second")
+  })
+
   it("never mocks when VERCEL_ENV is production", async () => {
     vi.stubEnv("VERCEL_ENV", "production")
     vi.stubEnv("E2E_MOCK_PRIVATE_BLOB", "1")

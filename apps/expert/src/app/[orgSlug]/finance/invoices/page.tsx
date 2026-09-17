@@ -5,6 +5,7 @@ import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { getAuthedApiClient } from "@/lib/server-api"
 import { InvoiceList } from "./invoice-list"
+import { MonthlyExport } from "./monthly-export"
 
 export const dynamic = "force-dynamic"
 
@@ -38,6 +39,7 @@ export default async function ExpertInvoicesPage({
         <span>{t("title")}</span>
       </div>
       <AccountPageHeader title={t("title")} description={t("description")} />
+      <MonthlyExport />
       <InvoiceList invoices={invoices} nextCursor={nextCursor} />
     </div>
   )
