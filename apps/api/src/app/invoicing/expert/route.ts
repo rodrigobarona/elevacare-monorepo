@@ -49,16 +49,21 @@ export async function GET(request: Request) {
     )
   }
 
-  const result = await listExpertInvoices({
-    orgId: session.orgId,
-    status: query.data.status,
-    cursor: query.data.cursor,
-  })
+  try {
+    const result = await listExpertInvoices({
+      orgId: session.orgId,
+      status: query.data.status,
+      cursor: query.data.cursor,
+    })
 
-  return secureJson(ListExpertInvoicesResponseSchema.parse(result), {
-    status: 200,
-    headers,
-  })
+    return secureJson(ListExpertInvoicesResponseSchema.parse(result), {
+      status: 200,
+      headers,
+    })
+  } catch (err) {
+    console.error("[invoicing/expert] unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
+  }
 }
 
 export async function OPTIONS(request: Request) {

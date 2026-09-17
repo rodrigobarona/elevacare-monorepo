@@ -1,6 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { NextResponse } from "next/server"
-import { getSession } from "@eleva/auth"
 import {
   probeExpertInvoicingStatus,
   type InvoicingProviderSlug,
@@ -12,6 +11,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { corsHeaders } from "@/lib/cors"
+import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -42,12 +42,13 @@ export async function OPTIONS(request: Request) {
 export async function GET(request: Request) {
   const cors = corsHeaders(request, "GET, OPTIONS")
 
-  const session = await getSession()
-  if (!session) {
-    return NextResponse.json(
-      { error: "unauthorized" },
-      { status: 401, headers: cors }
-    )
+  let session
+  try {
+    session = await requireApiCapability(request, "expert:invoicing_manage")
+  } catch (err) {
+    const failure = apiAuthFailure(err, cors)
+    if (failure) return failure
+    throw err
   }
 
   const rateLimited = await applyRateLimit(
