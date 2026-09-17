@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-17: Phase 07.2.5 retry + operator stub stay behind the closed gate
+
+- Owner: engineering
+- Status: active
+- Summary: `POST /workflows/invoicing-retry` (QStash every 30 min) re-dispatches
+  **failed** expert invoices through `retryExpertInvoice` / `issueInvoice()`.
+  The v1 auto-finalize gate stays closed: retries must record
+  `toconline_v1_auto_finalize_blocked` (blocked/skip), never POST
+  `/api/v1/commercial_sales_documents`, never Comunicar TEST, and never use
+  ELEVA to simulate. The cron follows D-18: QStash + `runInternalWorkflow`,
+  not Vercel Workflows DevKit `"use workflow"`. Operator checklist:
+  [`operator-tasks/toconline-setup.md`](./operator-tasks/toconline-setup.md).
+- Reference: `invoicing-retry.ts`, D-03, D-09, D-18, 07.2.1 issuance-gate entry
+- Next review date: remaining fiscal-parameter confirmation before 07.1
+
 ### 2026-09-15: Phase 07.2.1 keeps v1 issuance unconditionally closed
 
 - Owner: engineering

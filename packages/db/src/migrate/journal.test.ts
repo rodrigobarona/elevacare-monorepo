@@ -38,10 +38,14 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0035_expert_invoices")
+    expect(last?.tag).toBe("0036_workflow_dead_letters_open_entity")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const invoiceSql = last?.statements.join("\n") ?? ""
+    const dlqSql = last?.statements.join("\n") ?? ""
+    expect(dlqSql).toContain("workflow_dead_letters_open_entity_uidx")
+    expect(dlqSql).toContain("workflow_dead_letters")
+    const invoice = migrations.find((m) => m.tag === "0035_expert_invoices")
+    const invoiceSql = invoice?.statements.join("\n") ?? ""
     expect(invoiceSql).toContain("expert_invoices")
     expect(invoiceSql).toContain("buyer_tax_id")
     expect(invoiceSql).toContain("expert_invoice_status")

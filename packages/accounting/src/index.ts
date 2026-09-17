@@ -57,6 +57,19 @@ export type {
   ExpertInvoiceStatus,
   PublicExpertInvoice,
 } from "./invoice-ops"
+export {
+  INVOICING_RETRY_BATCH_SIZE,
+  INVOICING_RETRY_MAX_ATTEMPTS,
+  INVOICING_RETRY_MIN_AGE_MS,
+  INVOICING_RETRY_WORKFLOW_NAME,
+  classifyFailedInvoiceForRetry,
+  classifyRetryResult,
+  retryFailedExpertInvoices,
+} from "./invoicing-retry"
+export type {
+  FailedInvoiceRetryAction,
+  InvoicingRetryResult,
+} from "./invoicing-retry"
 
 export {
   ACCOUNTING_OAUTH_STATE_TTL_MS,

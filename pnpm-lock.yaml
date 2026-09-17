@@ -1838,6 +1838,9 @@ importers:
 
   packages/workflows:
     dependencies:
+      '@eleva/accounting':
+        specifier: workspace:*
+        version: link:../accounting
       '@eleva/audit':
         specifier: workspace:*
         version: link:../audit

@@ -43,9 +43,10 @@ changing API base URLs.
 | Command                           | What it does                                                        | Idempotent? |
 | --------------------------------- | ------------------------------------------------------------------- | ----------- |
 | `pnpm qstash:list`                | Print every schedule + cross-check expected paths.                  | Yes         |
-| `pnpm qstash:setup`               | Provision audit-drainer + stripe-stuck schedules.                   | Yes         |
+| `pnpm qstash:setup`               | Provision every QStash schedule (`setup:all`).                      | Yes         |
 | `pnpm qstash:setup:audit-drainer` | (Re)register `/workflows/audit-outbox-drainer` (06:00 + 18:00 UTC). | Yes         |
 | `pnpm qstash:setup:stripe-stuck`  | (Re)register `/workflows/stripe-stuck-events` (every 10 min).       | Yes         |
+| `pnpm qstash:setup:invoicing`     | (Re)register `/workflows/invoicing-retry` (every 30 min).           | Yes         |
 
 All QStash setup commands accept `-- --dry-run` for preview-only mode.
 
@@ -74,19 +75,19 @@ Every script reads from `.env.local` by default. To run against a
 different environment, prefix the command with the env override or
 swap your `.env.local` to the target environment's values.
 
-| Var                                      | Used by                                                                   |
-| ---------------------------------------- | ------------------------------------------------------------------------- |
-| `STRIPE_SECRET_KEY`                      | All `stripe:*` commands                                                   |
-| `STRIPE_API_VERSION`                     | `stripe:setup:webhooks` (pins endpoint api_version)                       |
-| `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` | `apps/api` `/billing/portal` route after `stripe:setup:portal -- --apply` |
-| `STRIPE_PUBLISHABLE_KEY`                 | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                      |
-| `STRIPE_CONNECT_CLIENT_ID`               | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                      |
-| `QSTASH_TOKEN`                           | All `qstash:*` commands                                                   |
-| `QSTASH_URL`                             | All `qstash:*` commands (defaults to `https://qstash.upstash.io`)         |
-| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:audit-drainer`, `qstash:setup:stripe-stuck`, `qstash:setup` |
-| `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).   |
-| `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands               |
-| `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                         |
+| Var                                      | Used by                                                                                             |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`                      | All `stripe:*` commands                                                                             |
+| `STRIPE_API_VERSION`                     | `stripe:setup:webhooks` (pins endpoint api_version)                                                 |
+| `STRIPE_BILLING_PORTAL_CONFIGURATION_ID` | `apps/api` `/billing/portal` route after `stripe:setup:portal -- --apply`                           |
+| `STRIPE_PUBLISHABLE_KEY`                 | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                                |
+| `STRIPE_CONNECT_CLIENT_ID`               | `stripe:setup:webhooks` (loaded by `@eleva/billing`)                                                |
+| `QSTASH_TOKEN`                           | All `qstash:*` commands                                                                             |
+| `QSTASH_URL`                             | All `qstash:*` commands (defaults to `https://qstash.upstash.io`)                                   |
+| `WORKFLOWS_DRAIN_SECRET`                 | `qstash:setup:audit-drainer`, `qstash:setup:stripe-stuck`, `qstash:setup:invoicing`, `qstash:setup` |
+| `API_BASE_URL`                           | All `qstash:*` setup commands. **Must be a public URL** (no localhost).                             |
+| `DATABASE_URL`                           | All `stripe:backfill:*`, `stripe:replay:*`, `db:*` commands                                         |
+| `AUDIT_DATABASE_URL`                     | `db:*` commands that touch the audit Neon project                                                   |
 
 the previous identity provider API keys and session JWTs (removed, see ADR-017).
 

@@ -11,6 +11,7 @@
     "setup:stripe-stuck": "tsx --env-file=../../.env.local setup-stripe-stuck-events.ts",
     "setup:domain-events": "tsx --env-file=../../.env.local setup-domain-events-publisher.ts",
     "setup:payouts": "tsx --env-file=../../.env.local setup-payouts.ts",
+    "setup:invoicing": "tsx --env-file=../../.env.local setup-invoicing.ts",
     "setup:all": "tsx --env-file=../../.env.local setup-all.ts"
   },
   "dependencies": {

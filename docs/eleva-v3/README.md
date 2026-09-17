@@ -150,7 +150,7 @@ Unless a document says otherwise, assume it is `Living` and should be updated wh
 - [`launch-readiness-checklist.md`](./launch-readiness-checklist.md): final cross-functional launch checklist
 - [`admin-operator-playbooks.md`](./admin-operator-playbooks.md): internal staff playbooks for approvals, support, and sensitive operations
 - [`integration-runbooks.md`](./integration-runbooks.md): provider failure handling and investigation paths
-- [`operator-tasks/`](./operator-tasks/): one-shot cutover and provisioning checklists tied to specific releases ([Sprint 0 Vercel setup](./operator-tasks/s0-vercel-setup.md), [Stripe Phase 1+2 cutover](./operator-tasks/stripe-phase-1-2-cutover.md), [Operator scripts catalog](./operator-tasks/scripts-catalog.md))
+- [`operator-tasks/`](./operator-tasks/): one-shot cutover and provisioning checklists tied to specific releases ([Sprint 0 Vercel setup](./operator-tasks/s0-vercel-setup.md), [Stripe Phase 1+2 cutover](./operator-tasks/stripe-phase-1-2-cutover.md), [TOConline setup](./operator-tasks/toconline-setup.md), [Operator scripts catalog](./operator-tasks/scripts-catalog.md))
 - [`schema-and-migration-rules.md`](./schema-and-migration-rules.md): schema ownership, migration discipline, and rollout safety rules
 - [`testing-strategy.md`](./testing-strategy.md): test layering, critical-flow coverage, and validation priorities
 - [`execution-plan/README.md`](./execution-plan/README.md): **authoritative** phase-by-phase build plan (phases 0-16), review loop, and copy-paste prompts; `execution-plan/index.html` is the generated single-page version

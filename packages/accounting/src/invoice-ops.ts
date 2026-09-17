@@ -223,7 +223,7 @@ export async function listExpertInvoices(input: {
 export async function retryExpertInvoice(input: {
   bookingId: string
   orgId: string
-  actorUserId: string
+  actorUserId: string | null
 }): Promise<PublicExpertInvoice> {
   const appsEnabled = await getFlag("ff.expert_invoicing_apps_enabled")
   if (!appsEnabled) {
@@ -392,7 +392,7 @@ async function restoreFailedAfterSkippedDispatch(input: {
   invoiceId: string
   bookingId: string
   orgId: string
-  actorUserId: string
+  actorUserId: string | null
   reason: string
 }): Promise<void> {
   await withAudit(

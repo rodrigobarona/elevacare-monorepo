@@ -285,6 +285,9 @@ export const workflowDeadLetters = pgTable(
   (t) => ({
     workflowIdx: index("workflow_dead_letters_workflow_idx").on(t.workflowName),
     statusIdx: index("workflow_dead_letters_status_idx").on(t.status),
+    openEntityIdx: uniqueIndex("workflow_dead_letters_open_entity_uidx")
+      .on(t.workflowName, t.entityId)
+      .where(sql`status = 'open' AND entity_id IS NOT NULL`),
     tenantPolicy: pgPolicy("workflow_dead_letters_tenant_isolation", {
       using: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`,
       withCheck: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) IN ('stripe_webhook', 'audit_drainer')`,
