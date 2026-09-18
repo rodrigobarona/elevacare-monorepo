@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-18: Closed-gate invoice emails go to expert-org operators
+
+- Owner: engineering
+- Status: active
+- Summary: `send-notification` is registered for `invoice.blocked` /
+  `invoice.skipped` / `invoice.pending`. It emails owner/admin members of
+  `expertOrgId` (payment category, required) using `@eleva/email` closed-gate
+  templates and Resend. Payloads with a document number or PDF are rejected.
+  `invoice.issued` / `invoice.failed` stay off the union. No TOConline POST
+  and `issueInvoice()` stays closed.
+- Reference: `packages/notifications/src/send-closed-gate-invoice.ts`,
+  `packages/workflows/src/subscribers/send-notification.ts`
+- Next review date: when `issueInvoice()` is allowed to POST
+
 ### 2026-09-18: Phase 08 consumes closed-gate invoice events, not issued FTs
 
 - Owner: engineering
@@ -42,9 +56,8 @@ Each entry should include:
   (`invoice.blocked` | `invoice.skipped` | `invoice.pending`). Payloads
   keep `number` and `pdfUrl` null. `invoice.issued` / `invoice.failed` /
   `invoice.credited` stay off the union until a real document exists.
-  Outbox deliveries use `send-notification` and stay pending until that
-  handler is registered. Diagnostic logging is not a delivery and must
-  not mark the event succeeded without sending.
+  Outbox deliveries use `send-notification`. Diagnostic logging is not a
+  delivery and must not mark the event succeeded without sending.
 - Reference: `packages/accounting/src/platform-fee-events.ts`,
   `packages/workflows/src/domain-events.ts`, D-09
 - Next review date: when `issueInvoice()` is allowed to POST

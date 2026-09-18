@@ -48,7 +48,7 @@ describe("closed-gate invoice event contract", () => {
     })
   })
 
-  it("registers send-notification until the handler exists", () => {
+  it("registers send-notification as the closed-gate subscriber", () => {
     expect(CLOSED_GATE_INVOICE_SUBSCRIBERS).toEqual(["send-notification"])
   })
 })

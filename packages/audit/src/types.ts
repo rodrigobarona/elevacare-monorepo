@@ -49,6 +49,7 @@ export type AuditEntity =
   | "dispute"
   | "invoice"
   | "accounting_reconciliation_run"
+  | "notification"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.
@@ -115,6 +116,8 @@ export type AuditAction =
   | "issued"
   | "credited"
   | "manual_marked"
+  | "sent"
+  | "suppressed"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

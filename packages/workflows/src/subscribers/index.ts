@@ -1,5 +1,6 @@
 import type { DomainEventSubscriber } from "../domain-events"
 import { activateGuestBooking } from "./guest-activation"
+import { handleSendNotification } from "./send-notification"
 
 function requiredString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.length === 0) {
@@ -28,7 +29,16 @@ export function defaultDomainEventSubscribers(): Record<
         throw err
       }
     },
+    "send-notification": async (event) => {
+      try {
+        await handleSendNotification(event)
+      } catch (err) {
+        console.error("[send-notification] subscriber failed", event.id, err)
+        throw err
+      }
+    },
   }
 }
 
 export { activateGuestBooking } from "./guest-activation"
+export { handleSendNotification } from "./send-notification"
