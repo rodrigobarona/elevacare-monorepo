@@ -39,6 +39,12 @@ export function supportedSendChannels(
     (channel): channel is Exclude<NotificationChannel, "sms"> =>
       channel !== "sms"
   )
+  if (channelsOverride && selected.length === 0) {
+    throw new SendNotificationError(
+      "CHANNEL_OVERRIDE_INVALID",
+      `channelsOverride for ${kind} resolves to no supported channel`
+    )
+  }
   return [...selected].sort(
     (left, right) =>
       CHANNEL_SEND_ORDER.indexOf(left) - CHANNEL_SEND_ORDER.indexOf(right)

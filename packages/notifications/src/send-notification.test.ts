@@ -246,6 +246,17 @@ describe("sendNotification", () => {
     expect(store.rows.size).toBe(0)
   })
 
+  it("rejects an SMS-only override until Twilio ships", async () => {
+    await expect(
+      sendNotification(
+        bookingInput({ channelsOverride: ["sms"] }),
+        store.deps(now)
+      )
+    ).rejects.toMatchObject({ code: "CHANNEL_OVERRIDE_INVALID" })
+    expect(store.rows.size).toBe(0)
+    expect(store.sendCalls).toBe(0)
+  })
+
   it("claims before calling Resend and writes an in-app row", async () => {
     const result = await sendNotification(bookingInput(), store.deps(now))
     expect(result.deliveries.map((row) => row.channel)).toEqual([
