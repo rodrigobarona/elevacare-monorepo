@@ -57,6 +57,8 @@ describe("migration journal helpers", () => {
     const dlqCleanup = migrations.find(
       (m) => m.tag === "0038_workflow_dead_letters_open_entity_cleanup"
     )
+    expect(dlqCleanup?.statements.length).toBeGreaterThan(0)
+    expect(dlqCleanup?.hash).toHaveLength(64)
     const dlqCleanupSql = dlqCleanup?.statements.join("\n") ?? ""
     expect(dlqCleanupSql).toContain("workflow_dead_letters")
     expect(dlqCleanupSql).toContain("discarded")

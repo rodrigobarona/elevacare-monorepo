@@ -436,12 +436,18 @@ Two variants:
 - Idempotency: Neon `clinic_saas_invoices(subscription_period PK, toconline_invoice_id, issued_at, status)`
 - PDF auto-sent
 
-#### IVA / VAT matrix (accountant 2026-09-15 — Aprovado com condições; not a full 07.1 unlock)
+#### IVA / VAT matrix (accountant 2026-09-15 — Aprovado com condições; 07.1 engineering unblocked 2026-09-17)
 
 The old automatic table (PT = 23%, EU-without-VIES = 23% consumer, extra-EU = zero-rated, OSS
 by volume) is **not** fully signed. Do not invent Art. 6 RITI, OSS thresholds, or rates the
 accountant did not confirm. Where the accountant left something for later validation, it is
 **pending accountant validation** — not an implemented fact.
+
+Founder 2026-09-17: remaining tax codes, rates, and legal mentions from this matrix plus the
+Manolo (MB) conditions may now be **implemented in code**. That is **not** DPO/legal production
+sign-off and **not** permission to Comunicar TEST or issue fictitious finalized documents.
+AT Comunicação stays operator-gated. `issueInvoice()` stays **unconditionally
+closed**. Do not treat `TOCONLINE_ALLOW_V1_AUTO_FINALIZE` as a bypass.
 
 | Recipient location                                 | Accountant condition (2026-09-15)                                                                                      | Production status                                                                                                       |
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
@@ -457,8 +463,18 @@ VIES validation (accountant 2026-09-15):
 - reusing results for 24 hours, and the procedure when VIES is unavailable — **pending specific validation** before activating intra-EU flows
 - invoicing path must not be activated for intra-EU until that validation exists
 
-Tax codes, rates, and legal mentions must be confirmed before production. PR 07.1 automatic
-production issuance stays blocked until then.
+- [x] Engineering may encode tax codes, rates, and legal mentions from this spec + Manolo
+      conditions (founder 2026-09-17).
+- [ ] Live tax codes, rates, and legal mentions still need Manolo confirmation before
+      production issuance.
+- [ ] VIES 24h reuse + downtime procedure: code must fail closed / queue; intra-EU
+      activation stays pending specific validation.
+- [ ] AT Comunicação of ELEVA series is operator-gated; never Comunicar TEST.
+- [ ] `TOCONLINE_ALLOW_V1_AUTO_FINALIZE` is not a bypass; no live v1 POST.
+
+PR 07.1 automatic **production** issuance stays blocked until ELEVA series communication
+and remaining Manolo confirmation. 07.1 **engineering** (schema, lookups, dry-run
+orchestration) is unblocked.
 
 #### Reconciliation
 
