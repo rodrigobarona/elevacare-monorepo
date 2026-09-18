@@ -63,9 +63,12 @@ sendNotification({
 
 Urgency is a property of the kind (`NOTIFICATION_KINDS[kind].urgency`), never a call argument.
 Delivery guarantees: e-mail = idempotent provider submission (Resend `Idempotency-Key` =
-delivery row id, deduplicated by Resend for 24 h — not a recipient-delivery guarantee); SMS =
-at-least-once (Twilio status callback + per-delivery `Ref` body fingerprint reconciliation
-before any re-send) — see execution-plan Phase 8.
+delivery row id, deduplicated by Resend for 24 h — not a recipient-delivery guarantee). The
+accepted Resend message id is persisted on `notification_deliveries.provider_id` immediately
+after the provider accepts, before the CAS complete, so a lost lease after 24 h does not
+depend on listing the account. `emails.list` / `emails.get` tag adoption is the fallback for
+rows that never stored the id. SMS = at-least-once (Twilio status callback + per-delivery `Ref`
+body fingerprint reconciliation before any re-send) — see execution-plan Phase 8.
 
 Responsibilities (`{ userId }` mode):
 
@@ -207,8 +210,9 @@ Lane 1, when the Diary mobile app ships:
 `NOTIFICATION_KINDS` in `@eleva/notifications` is the closed union.
 A kind that is not in that const does not compile.
 
-Registered kinds (schema + `NOTIFICATION_KINDS`; only closed-gate invoice
-emails send until `sendNotification` lands):
+Registered kinds (schema + `NOTIFICATION_KINDS`; `sendNotification`
+claims delivery rows before Resend / in-app insert. Closed-gate invoice
+emails also still send via `sendClosedGateInvoiceNotification`):
 
 - `booking.confirmed` (member + expert variants at send time)
 - `booking.reminder_24h`

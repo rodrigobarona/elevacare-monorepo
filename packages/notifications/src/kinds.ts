@@ -136,10 +136,20 @@ export type NotificationKind = keyof typeof NOTIFICATION_KINDS
 export type NotificationKindConfig =
   (typeof NOTIFICATION_KINDS)[NotificationKind]
 
+export type ScopedKind<S extends "org" | "user"> = {
+  [K in NotificationKind]: (typeof NOTIFICATION_KINDS)[K]["scope"] extends S
+    ? K
+    : never
+}[NotificationKind]
+
 export const NOTIFICATION_KIND_VALUES = Object.keys(
   NOTIFICATION_KINDS
 ) as NotificationKind[]
 
 export const USER_SCOPED_NOTIFICATION_KINDS = NOTIFICATION_KIND_VALUES.filter(
   (kind) => NOTIFICATION_KINDS[kind].scope === "user"
-)
+) as ScopedKind<"user">[]
+
+export const ORG_SCOPED_NOTIFICATION_KINDS = NOTIFICATION_KIND_VALUES.filter(
+  (kind) => NOTIFICATION_KINDS[kind].scope === "org"
+) as ScopedKind<"org">[]
