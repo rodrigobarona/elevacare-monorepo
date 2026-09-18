@@ -38,10 +38,29 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0039_platform_fee_invoices")
+    expect(last?.tag).toBe("0041_platform_fee_credit_note_refund")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const platformFeeSql = last?.statements.join("\n") ?? ""
+    const creditNoteRefundSql = last?.statements.join("\n") ?? ""
+    expect(creditNoteRefundSql).toContain("booking_refund_id")
+    expect(creditNoteRefundSql).toContain(
+      "platform_fee_credit_notes_refund_key"
+    )
+    const blockedSkipped = migrations.find(
+      (m) => m.tag === "0040_platform_fee_invoice_blocked_skipped"
+    )
+    expect(blockedSkipped?.statements.length).toBeGreaterThan(0)
+    const blockedSkippedSql = blockedSkipped?.statements.join("\n") ?? ""
+    expect(blockedSkippedSql).toContain("platform_fee_invoice_status")
+    expect(blockedSkippedSql).toContain("'blocked'")
+    expect(blockedSkippedSql).toContain("'skipped'")
+    expect(blockedSkippedSql).toContain("BEFORE 'dead_lettered'")
+    const platformFee = migrations.find(
+      (m) => m.tag === "0039_platform_fee_invoices"
+    )
+    expect(platformFee?.statements.length).toBeGreaterThan(0)
+    expect(platformFee?.hash).toHaveLength(64)
+    const platformFeeSql = platformFee?.statements.join("\n") ?? ""
     expect(platformFeeSql).toContain("platform_fee_invoices")
     expect(platformFeeSql).toContain("platform_fee_credit_notes")
     expect(platformFeeSql).toContain("clinic_saas_invoices")

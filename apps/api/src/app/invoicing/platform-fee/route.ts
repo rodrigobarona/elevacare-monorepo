@@ -1,8 +1,14 @@
 import {
+  IssuePlatformFeeInvoiceRequestSchema,
+  IssuePlatformFeeInvoiceResponseSchema,
   ListPlatformFeeInvoicesQuerySchema,
   ListPlatformFeeInvoicesResponseSchema,
 } from "@eleva/api-client"
-import { isSaftExportError, listPlatformFeeInvoices } from "@eleva/accounting"
+import {
+  isSaftExportError,
+  issuePlatformFeeInvoice,
+  listPlatformFeeInvoices,
+} from "@eleva/accounting"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -25,7 +31,7 @@ export const runtime = "nodejs"
  * TOConline v1 sales documents and does not Comunicar série.
  */
 export async function GET(request: Request) {
-  const headers = corsHeaders(request, "GET, OPTIONS")
+  const headers = corsHeaders(request, "GET, POST, OPTIONS")
 
   let session
   try {
@@ -74,9 +80,58 @@ export async function GET(request: Request) {
   }
 }
 
+/**
+ * POST /invoicing/platform-fee
+ *
+ * Staff/agent replay of closed-gate `issuePlatformFeeInvoice`. Records
+ * blocked/skipped rows. Does not POST TOConline v1 sales documents.
+ */
+export async function POST(request: Request) {
+  const headers = corsHeaders(request, "GET, POST, OPTIONS")
+
+  let session
+  try {
+    session = await requireApiCapability(request, "accounting:reconcile")
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated,
+    headers
+  )
+  if (rateLimited) return rateLimited
+
+  const body = IssuePlatformFeeInvoiceRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
+  if (!body.success) {
+    return secureJson(
+      { error: "validation", issues: body.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  try {
+    const result = await issuePlatformFeeInvoice({
+      bookingPaymentId: body.data.bookingPaymentId,
+    })
+    return secureJson(IssuePlatformFeeInvoiceResponseSchema.parse(result), {
+      status: 200,
+      headers,
+    })
+  } catch (err) {
+    console.error("[invoicing/platform-fee] issue unexpected error", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
+  }
+}
+
 export async function OPTIONS(request: Request) {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders(request, "GET, OPTIONS"),
+    headers: corsHeaders(request, "GET, POST, OPTIONS"),
   })
 }

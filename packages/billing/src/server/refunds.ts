@@ -1,4 +1,8 @@
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
+import {
+  issuePlatformFeeCreditNote,
+  shouldIssuePlatformFeeCreditNote,
+} from "@eleva/accounting"
 import { withAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
@@ -26,6 +30,26 @@ export class RefundError extends Error {
 
 export function isRefundError(err: unknown): err is RefundError {
   return err instanceof RefundError
+}
+
+async function dispatchPlatformFeeCreditNote(input: {
+  bookingPaymentId: string
+  bookingRefundId: string
+  commissionReductionCents: number
+}): Promise<void> {
+  if (!shouldIssuePlatformFeeCreditNote(input.commissionReductionCents)) {
+    return
+  }
+  try {
+    await issuePlatformFeeCreditNote(input)
+  } catch (err) {
+    console.error("[billing] platform-fee credit note dispatch failed", err)
+    void captureException(err, {
+      bookingPaymentId: input.bookingPaymentId,
+      bookingRefundId: input.bookingRefundId,
+      commissionReductionCents: input.commissionReductionCents,
+    }).catch(() => {})
+  }
 }
 
 function mapStripeRefundStatus(
@@ -146,21 +170,6 @@ export async function refundBookingPayment(input: {
       )
       .limit(1)
   )
-  if (existingRefund?.status === "succeeded") {
-    return { refundId: existingRefund.id, status: "succeeded" }
-  }
-  let refundId = existingRefund?.id ?? crypto.randomUUID()
-  const reversalId = snapshot.payout?.stripeTransferId
-    ? crypto.randomUUID()
-    : null
-  const reversalCents = snapshot.payout
-    ? cumulativeReversalCents({
-        refundedToDate: snapshot.payment.refundedCents + snapshot.amountCents,
-        grossCents: snapshot.payment.amountCents,
-        transferredCents: snapshot.payout.amountCents,
-        reversedToDate: snapshot.payout.reversedCents,
-      })
-    : 0
   const creditNote = creditNoteAllocation(
     {
       bookingGross: snapshot.payment.amountCents,
@@ -178,6 +187,26 @@ export async function refundBookingPayment(input: {
     snapshot.amountCents,
     snapshot.payment.refundedCents
   )
+  if (existingRefund?.status === "succeeded") {
+    await dispatchPlatformFeeCreditNote({
+      bookingPaymentId: input.bookingPaymentId,
+      bookingRefundId: existingRefund.id,
+      commissionReductionCents: creditNote.platformFeeGross,
+    })
+    return { refundId: existingRefund.id, status: "succeeded" }
+  }
+  let refundId = existingRefund?.id ?? crypto.randomUUID()
+  const reversalId = snapshot.payout?.stripeTransferId
+    ? crypto.randomUUID()
+    : null
+  const reversalCents = snapshot.payout
+    ? cumulativeReversalCents({
+        refundedToDate: snapshot.payment.refundedCents + snapshot.amountCents,
+        grossCents: snapshot.payment.amountCents,
+        transferredCents: snapshot.payout.amountCents,
+        reversedToDate: snapshot.payout.reversedCents,
+      })
+    : 0
 
   if (!existingRefund) {
     await withAudit(
@@ -325,6 +354,13 @@ export async function refundBookingPayment(input: {
 
   if (refundStatus === "failed") {
     throw new RefundError("STRIPE_REFUND_FAILED", "Stripe refund failed", 502)
+  }
+  if (refundStatus === "succeeded") {
+    await dispatchPlatformFeeCreditNote({
+      bookingPaymentId: input.bookingPaymentId,
+      bookingRefundId: refundId,
+      commissionReductionCents: creditNote.platformFeeGross,
+    })
   }
   if (refundStatus === "pending") {
     if (snapshot.payout && reversalCents > 0) {

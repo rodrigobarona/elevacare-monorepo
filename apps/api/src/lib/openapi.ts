@@ -71,6 +71,8 @@ import {
   GetAccountingReconciliationResponseSchema,
   ListPlatformFeeInvoicesQuerySchema,
   ListPlatformFeeInvoicesResponseSchema,
+  IssuePlatformFeeInvoiceRequestSchema,
+  IssuePlatformFeeInvoiceResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2125,6 +2127,36 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: {
                 "application/json": {
                   schema: ListPlatformFeeInvoicesResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing accounting:reconcile",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+        post: {
+          operationId: "issuePlatformFeeInvoice",
+          summary: "Record a closed-gate platform-fee invoice",
+          description:
+            "Staff/agent replay of issuePlatformFeeInvoice. Classifies IVA conservatively, may GET tax lookups, and records blocked, skipped, or retryable pending. Never POSTs /api/v1/commercial_sales_documents and never Comunica série.",
+          tags: ["Invoicing"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: IssuePlatformFeeInvoiceRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Blocked or skipped invoice outcome",
+              content: {
+                "application/json": {
+                  schema: IssuePlatformFeeInvoiceResponseSchema,
                 },
               },
             },
