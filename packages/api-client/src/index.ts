@@ -788,6 +788,37 @@ export type ListPlatformFeeInvoicesResponse = z.infer<
   typeof ListPlatformFeeInvoicesResponseSchema
 >
 
+export const ClosedGateInvoiceEventTypeSchema = z.enum([
+  "invoice.blocked",
+  "invoice.skipped",
+  "invoice.pending",
+])
+export type ClosedGateInvoiceEventType = z.infer<
+  typeof ClosedGateInvoiceEventTypeSchema
+>
+
+export const ClosedGateInvoicePayloadSchema = z.object({
+  invoiceKind: z.literal("platform_fee"),
+  invoiceId: z.string().uuid(),
+  bookingPaymentId: z.string().uuid(),
+  expertOrgId: z.string().uuid(),
+  status: z.enum(["blocked", "skipped", "pending"]),
+  number: z.null(),
+  pdfUrl: z.null(),
+  error: z.string().nullable(),
+})
+export type ClosedGateInvoicePayload = z.infer<
+  typeof ClosedGateInvoicePayloadSchema
+>
+
+export const ClosedGateInvoiceEventRefSchema = z.object({
+  type: ClosedGateInvoiceEventTypeSchema,
+  idempotencyKey: z.string().min(1),
+})
+export type ClosedGateInvoiceEventRef = z.infer<
+  typeof ClosedGateInvoiceEventRefSchema
+>
+
 export const IssuePlatformFeeInvoiceRequestSchema = z.object({
   bookingPaymentId: z.string().uuid(),
 })
@@ -799,6 +830,7 @@ export const IssuePlatformFeeInvoiceResponseSchema = z.object({
   invoice: PlatformFeeInvoiceSchema.nullable(),
   outcome: z.enum(["skipped", "blocked", "pending", "already_recorded"]),
   reason: z.string().nullable(),
+  domainEvent: ClosedGateInvoiceEventRefSchema.nullable(),
 })
 export type IssuePlatformFeeInvoiceResponse = z.infer<
   typeof IssuePlatformFeeInvoiceResponseSchema

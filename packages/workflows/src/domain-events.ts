@@ -1,7 +1,15 @@
 import { and, eq, inArray, sql } from "drizzle-orm"
+import {
+  CLOSED_GATE_INVOICE_EVENT_TYPES,
+  CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  type ClosedGateInvoicePayload,
+} from "@eleva/accounting/platform-fee-events"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 
-export const DOMAIN_EVENT_TYPES = ["booking.guest_activation_required"] as const
+export const DOMAIN_EVENT_TYPES = [
+  "booking.guest_activation_required",
+  ...CLOSED_GATE_INVOICE_EVENT_TYPES,
+] as const
 
 export type DomainEventType = (typeof DOMAIN_EVENT_TYPES)[number]
 
@@ -10,15 +18,25 @@ export type GuestActivationPayload = {
   reservationId: string
 }
 
-export type DomainEvent = {
-  type: "booking.guest_activation_required"
-  orgId: string
-  idempotencyKey: string
-  payload: GuestActivationPayload
-}
+export type DomainEvent =
+  | {
+      type: "booking.guest_activation_required"
+      orgId: string
+      idempotencyKey: string
+      payload: GuestActivationPayload
+    }
+  | {
+      type: (typeof CLOSED_GATE_INVOICE_EVENT_TYPES)[number]
+      orgId: string
+      idempotencyKey: string
+      payload: ClosedGateInvoicePayload
+    }
 
 export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "booking.guest_activation_required": ["guest-activation"],
+  "invoice.blocked": CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  "invoice.skipped": CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,
 }
 
 export type DomainEventSubscriber = (event: {

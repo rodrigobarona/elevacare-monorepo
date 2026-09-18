@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-18: Phase 08 consumes closed-gate invoice events, not issued FTs
+
+- Owner: engineering
+- Status: active
+- Summary: Live FT issuance is still closed (`issueInvoice()` and v1 POST
+  stay shut). Phase 08.1 therefore emits domain events only when
+  `platform_fee_invoices` persist as `blocked`, `skipped`, or `pending`
+  (`invoice.blocked` | `invoice.skipped` | `invoice.pending`). Payloads
+  keep `number` and `pdfUrl` null. `invoice.issued` / `invoice.failed` /
+  `invoice.credited` stay off the union until a real document exists.
+  The outbox subscriber is `logger` until `sendNotification` lands; do
+  not mark a notifications delivery succeeded without sending.
+- Reference: `packages/accounting/src/platform-fee-events.ts`,
+  `packages/workflows/src/domain-events.ts`, D-09
+- Next review date: when `issueInvoice()` is allowed to POST
+
 ### 2026-09-18: 07.1 issuePlatformFeeInvoice is closed-gate
 
 - Owner: engineering

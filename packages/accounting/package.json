@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./adapters": "./src/adapters/index.ts",
-    "./registry": "./src/registry.ts"
+    "./registry": "./src/registry.ts",
+    "./platform-fee-events": "./src/platform-fee-events.ts"
   },
   "scripts": {
     "lint": "eslint .",
