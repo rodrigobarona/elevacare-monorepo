@@ -37,8 +37,9 @@ Each entry should include:
 - Owner: engineering
 - Status: active
 - Summary: Better Auth callbacks (verify, reset, magic link, 2FA OTP,
-  org invitation) persist e2e URLs in `@eleva/auth` then call an injected
-  `AuthTransactionalMailer`. `apps/api` instrumentation constructs
+  org invitation) call an injected `AuthTransactionalMailer`. Verify,
+  reset, and magic-link persist e2e URLs in `@eleva/auth`; OTP and org
+  invitation do not. `apps/api` instrumentation constructs
   `createAuthMailer()` from `@eleva/notifications`. There is no import
   edge between `@eleva/auth` and `@eleva/notifications`. `@eleva/email`
   is renderer-only (no `resend`). `invoice.issued` stays off the union.

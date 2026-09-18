@@ -106,4 +106,17 @@ describe("createAuthMailer", () => {
     })
     expect(send).not.toHaveBeenCalled()
   })
+
+  it("throws in production when RESEND_API_KEY is missing", async () => {
+    delete process.env.RESEND_API_KEY
+    process.env.VERCEL_ENV = "production"
+    const mailer = createAuthMailer({ send })
+    await expect(
+      mailer.sendMagicLink({
+        email: "guest@example.com",
+        url: "https://eleva.care/magic",
+      })
+    ).rejects.toThrow(/RESEND_API_KEY is required/)
+    expect(send).not.toHaveBeenCalled()
+  })
 })

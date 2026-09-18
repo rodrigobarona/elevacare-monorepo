@@ -131,9 +131,10 @@ export function createAuthMailer(
 
   async function deliver(input: Parameters<AuthMailerSend>[0]): Promise<void> {
     if (!process.env.RESEND_API_KEY) {
-      console.info(
-        `[notifications] skip ${input.kind} to ${input.to} (no RESEND_API_KEY)`
-      )
+      if (isProductionRuntime()) {
+        throw new Error("RESEND_API_KEY is required in production")
+      }
+      console.info(`[notifications] skip ${input.kind} (no RESEND_API_KEY)`)
       return
     }
     try {
