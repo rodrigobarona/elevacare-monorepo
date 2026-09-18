@@ -38,10 +38,45 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0041_platform_fee_credit_note_refund")
+    expect(last?.tag).toBe("0042_notifications")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const creditNoteRefundSql = last?.statements.join("\n") ?? ""
+    const notificationsSql = last?.statements.join("\n") ?? ""
+    expect(notificationsSql).toContain("notification_deliveries")
+    expect(notificationsSql).toContain('"org_id" uuid REFERENCES')
+    expect(notificationsSql).toContain("notification_deliveries_tenant_read")
+    expect(notificationsSql).toContain("notifications_owner_update_guard")
+    expect(notificationsSql).toContain("phone_verifications_service_only")
+    expect(notificationsSql).toContain("notifications_kind")
+    expect(notificationsSql).toContain("notification_deliveries_kind")
+    expect(notificationsSql).toContain("auth_user_phone_verification_state")
+    expect(notificationsSql).toContain(
+      "auth_user_phone_change_requires_verification"
+    )
+    expect(notificationsSql).toContain("notifications_owner_read")
+    expect(notificationsSql).toContain("email_suppressions")
+    expect(notificationsSql).toContain("phone_verifications")
+    expect(notificationsSql).toContain(
+      "notification_deliveries_idempotency_recipient_channel_key"
+    )
+    expect(notificationsSql).toContain("num_nonnulls(user_id, recipient_email)")
+    expect(notificationsSql).toContain(
+      "recipient_email IS NULL OR channel = 'email'"
+    )
+    expect(notificationsSql).toContain("notification_deliveries_org_idx")
+    expect(notificationsSql).toContain("CREATE EXTENSION IF NOT EXISTS citext")
+    expect(
+      last?.statements.some(
+        (s) => s.includes("CREATE EXTENSION") && s.includes("ALTER TABLE")
+      )
+    ).toBe(false)
+    expect(notificationsSql).toContain("phone_e164")
+    expect(notificationsSql).toContain('lower("recipient_email"::text)')
+    const creditNoteRefund = migrations.find(
+      (m) => m.tag === "0041_platform_fee_credit_note_refund"
+    )
+    expect(creditNoteRefund?.statements.length).toBeGreaterThan(0)
+    const creditNoteRefundSql = creditNoteRefund?.statements.join("\n") ?? ""
     expect(creditNoteRefundSql).toContain("booking_refund_id")
     expect(creditNoteRefundSql).toContain(
       "platform_fee_credit_notes_refund_key"

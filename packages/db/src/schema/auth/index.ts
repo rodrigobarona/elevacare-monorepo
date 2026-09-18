@@ -1,6 +1,7 @@
-import { relations } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 import {
   boolean,
+  check,
   index,
   integer,
   pgSchema,
@@ -34,8 +35,22 @@ export const user = authSchema.table(
     locale: text("locale"),
     /** App-owned. Only `scheduleAccountDeletion` writes this — not Better Auth input. */
     deletionScheduledAt: timestamptz("deletion_scheduled_at"),
+    /** App-owned E.164 for SMS. Set only after OTP confirm; phone
+     * changes must also update `phone_verified_at`. */
+    phoneE164: text("phone_e164"),
+    phoneVerifiedAt: timestamptz("phone_verified_at"),
   },
-  (table) => [uniqueIndex("auth_user_email_uidx").on(table.email)]
+  (table) => [
+    uniqueIndex("auth_user_email_uidx").on(table.email),
+    check(
+      "auth_user_phone_e164",
+      sql`phone_e164 IS NULL OR phone_e164 ~ '^\\+[1-9][0-9]{7,14}$'`
+    ),
+    check(
+      "auth_user_phone_verification_state",
+      sql`(phone_e164 IS NULL) = (phone_verified_at IS NULL)`
+    ),
+  ]
 )
 
 export const session = authSchema.table(

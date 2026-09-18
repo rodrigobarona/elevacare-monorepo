@@ -58,12 +58,38 @@ export type TenantTable = (typeof TENANT_TABLES)[number]
 
 /**
  * Main-DB tables keyed by `user_id = eleva.user_id` (owner-user-visible).
- * They do not carry `org_id`; `pnpm db:rls` must not apply the tenant
- * predicate.
+ * They do not carry tenant isolation via `org_id`; `pnpm db:rls` must
+ * not apply the tenant predicate.
  */
 export const OWNER_USER_TABLES = ["notification_preferences"] as const
 
 export type OwnerUserTable = (typeof OWNER_USER_TABLES)[number]
+
+/**
+ * In-app inbox. Owner SELECT/UPDATE; worker INSERT/DELETE.
+ * `org_id` is nullable for user-scoped auth kinds.
+ */
+export const INBOX_TABLES = ["notifications"] as const
+
+export type InboxTable = (typeof INBOX_TABLES)[number]
+
+/**
+ * SMS OTP hashes and the global bounce/complaint list. Service-only so
+ * members cannot SELECT `code_hash` or rewrite suppressions.
+ */
+export const SERVICE_ONLY_TABLES = [
+  "email_suppressions",
+  "phone_verifications",
+] as const
+
+export type ServiceOnlyTable = (typeof SERVICE_ONLY_TABLES)[number]
+
+/**
+ * Delivery log. Tenant SELECT when `org_id` is set; worker writes.
+ */
+export const DELIVERY_TABLES = ["notification_deliveries"] as const
+
+export type DeliveryTable = (typeof DELIVERY_TABLES)[number]
 
 /**
  * Member privacy workflow tables. Owner and platform-admin may SELECT
@@ -164,6 +190,64 @@ export function buildMainRlsStatements(): string[] {
     out.push(
       `CREATE POLICY ${table}_owner_user_visible ON ${table} ` +
         `USING (${pred}) WITH CHECK (${pred});`
+    )
+  }
+  for (const table of INBOX_TABLES) {
+    const ownerOrg = `user_id::text = current_setting('eleva.user_id', true) AND (org_id IS NULL OR org_id::text = current_setting('eleva.org_id', true))`
+    const worker = `current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_update ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_worker_insert ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_worker_delete ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_owner_read ON ${table} FOR SELECT ` +
+        `USING (${ownerOrg});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_owner_update ON ${table} FOR UPDATE ` +
+        `USING (${ownerOrg}) WITH CHECK (${ownerOrg});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_worker_insert ON ${table} FOR INSERT ` +
+        `WITH CHECK (${worker});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_worker_delete ON ${table} FOR DELETE ` +
+        `USING (${worker});`
+    )
+  }
+  for (const table of SERVICE_ONLY_TABLES) {
+    const worker = `current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_user_visible ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_owner_insert ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_worker_update ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_worker_delete ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_service_only ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_service_only ON ${table} ` +
+        `USING (${worker}) WITH CHECK (${worker});`
+    )
+  }
+  for (const table of DELIVERY_TABLES) {
+    const tenantRead = `org_id IS NOT NULL AND org_id::text = current_setting('eleva.org_id', true)`
+    const worker = `current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_tenant_read ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_service_only ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_tenant_read ON ${table} FOR SELECT ` +
+        `USING (${tenantRead});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_service_only ON ${table} ` +
+        `USING (${worker}) WITH CHECK (${worker});`
     )
   }
   for (const table of COMPLIANCE_WORKFLOW_TABLES) {

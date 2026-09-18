@@ -83,6 +83,9 @@ describe("RLS class taxonomy", () => {
       if (row.insertClass) {
         expect(allowed.has(row.insertClass)).toBe(true)
       }
+      if (row.updateClass) {
+        expect(allowed.has(row.updateClass)).toBe(true)
+      }
     }
   })
 
@@ -125,6 +128,48 @@ describe("RLS class taxonomy", () => {
     )
     expect(classPredicateSql("service-only", "audit_outbox")).toContain(
       "stripe_webhook"
+    )
+  })
+
+  it("models inbox as owner-visible with worker writes, deliveries as service-only", () => {
+    const inbox = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "notifications"
+    )
+    expect(inbox?.selectClass).toBe("owner-user-visible")
+    expect(inbox?.updateClass).toBe("owner-user-visible")
+    expect(inbox?.class).toBe("service-only")
+    expect(inbox?.insertClass).toBeUndefined()
+    expect(
+      RLS_TABLE_ASSIGNMENTS.find(
+        (item) => item.table === "notification_deliveries"
+      )
+    ).toEqual({
+      table: "notification_deliveries",
+      class: "service-only",
+      selectClass: "tenant-owned",
+    })
+    const phone = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "phone_verifications"
+    )
+    expect(phone).toEqual({
+      table: "phone_verifications",
+      class: "service-only",
+    })
+    expect(
+      RLS_TABLE_ASSIGNMENTS.find((item) => item.table === "email_suppressions")
+        ?.class
+    ).toBe("service-only")
+    expect(
+      classPredicateSql("service-only", "notification_deliveries")
+    ).toContain("domain_events_publisher")
+    expect(
+      classPredicateSql("service-only", "notification_deliveries")
+    ).not.toContain("stripe_webhook")
+    expect(classPredicateSql("service-only", "phone_verifications")).toContain(
+      "domain_events_publisher"
+    )
+    expect(classPredicateSql("service-only", "notifications")).toContain(
+      "domain_events_publisher"
     )
   })
 

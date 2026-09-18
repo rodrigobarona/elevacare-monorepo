@@ -204,37 +204,39 @@ Lane 1, when the Diary mobile app ships:
 
 ## Event Catalog (Lane 1)
 
-Initial build supports at minimum:
+`NOTIFICATION_KINDS` in `@eleva/notifications` is the closed union.
+A kind that is not in that const does not compile.
 
-- `account_activated`
-- `booking_confirmed`
-- `booking_payment_failed`
-- `booking_rescheduled`
-- `booking_cancelled`
-- `reminder_24h`
-- `reminder_1h`
-- `session_completed`
-- `report_available`
-- `payout_eligible`
-- `payout_approved`
-- `payout_transferred`
-- `payout_failed`
-- `suggested_follow_up_created`
-- `diary_share_visible_to_expert`
-- `calendar_disconnected`
-- `expert_kyc_required`
-- `stripe_account_capability_changed`
-- `clinic_seat_added`
-- `clinic_seat_removed`
-- `clinic_subscription_payment_failed`
+Registered kinds (schema + `NOTIFICATION_KINDS`; only closed-gate invoice
+emails send until `sendNotification` lands):
+
+- `booking.confirmed` (member + expert variants at send time)
+- `booking.reminder_24h`
+- `booking.reminder_1h` (urgent; bypasses quiet hours)
+- `booking.cancelled`
+- `booking.rescheduled`
+- `payment.failed` (urgent)
+- `payment.receipt`
+- `payout.paid`
+- `payout.approval_required` (staff)
 - `invoice.blocked` (platform-fee row recorded while v1 POST is closed;
   expert-org owner/admin email via `send-notification`)
 - `invoice.skipped` (no fee / classifier skip — expert-org owner/admin email)
 - `invoice.pending` (retryable lookup — expert-org owner/admin email)
+- `auth.magic_link`
+- `auth.verify_email`
+- `auth.reset_password`
+- `auth.two_factor_otp`
+- `auth.org_invitation`
 
 **Not in Lane 1 yet**: `invoice.issued` / `invoice.failed` wait on live FT
 issuance (`issueInvoice()` remains closed). Closed-gate emails never include
 a document number or PDF.
+
+Later phases append kinds in their own PR: Phase 10 `crm.follow_up_due`;
+Phase 11 `team.invitation`, `team.member_joined`, `clinic.verified`,
+`clinic.rejected`; Phase 12 `partner.approved` / `rejected` / `needs_changes`;
+Phase 14 `calendar.reconnect_required`, `migration.welcome`.
 
 **Not in Lane 1**: anything Multibanco-voucher-related (feature excluded).
 
