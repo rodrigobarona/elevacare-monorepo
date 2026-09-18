@@ -129,9 +129,10 @@ policy); `INSERT` is `service-only` (`eleva.service = 'audit_drainer'` only — 
 `public-read` is one class: published rows are world-readable; writes stay tenant-owned.
 Some tenant-owned tables also allow `eleva.platform_admin` writes (`ADMIN_BYPASS_TABLES` in
 `packages/db/src/rls/policies.ts`) so webhooks and dispatchers can insert without an expert
-session. `expert_invoices` is in that set: tenant `org_id` isolation stays the class; the
-bypass is a documented write hatch, not a new RLS class. Same pattern as `expert_profiles`,
-`payout_states`, and the billing mirrors.
+session. `expert_invoices`, `platform_fee_invoices`, `platform_fee_credit_notes`, and
+`clinic_saas_invoices` are in that set: tenant `org_id` isolation stays the class; the
+bypass is a documented **read/write** hatch (`USING` and `WITH CHECK`), not a new RLS
+class. Same pattern as `expert_profiles`, `payout_states`, and the billing mirrors.
 `public_handles` is the documented exception: SELECT is public-read (`USING true`) and
 writes are staff-only (`eleva.platform_admin`). The table has no `org_id` because
 handles are a global namespace (one citext PK), so a tenant-owned WITH CHECK cannot
@@ -165,7 +166,10 @@ be expressed. This is still the same seven classes — a split predicate, not an
 | `payout_states`                  | tenant-owned                                                |
 | `booking_refunds`                | tenant-owned                                                |
 | `transfer_reversals`             | tenant-owned                                                |
-| `expert_invoices`                | tenant-owned + platform-admin write bypass                  |
+| `expert_invoices`                | tenant-owned + platform-admin read/write bypass             |
+| `platform_fee_invoices`          | tenant-owned + platform-admin read/write bypass             |
+| `platform_fee_credit_notes`      | tenant-owned + platform-admin read/write bypass             |
+| `clinic_saas_invoices`           | tenant-owned + platform-admin read/write bypass             |
 | `workflow_dead_letters`          | service-only                                                |
 | `accounting_reconciliation_runs` | service-only                                                |
 | `consents`                       | tenant-owned                                                |

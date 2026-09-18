@@ -62,6 +62,26 @@ Each entry should include:
   confirmation of live tax codes/rates/legal mentions before production
   issuance
 
+### 2026-09-17: 07.1 platform_fee_invoices schema lands closed-gate
+
+- Owner: engineering
+- Status: active
+- Summary: Schema + RLS for `platform_fee_invoices`,
+  `platform_fee_credit_notes`, and `clinic_saas_invoices`. Staff
+  `GET /invoicing/platform-fee` lists rows by Lisbon month. No TOConline
+  v1 POST and no AT Comunicação. `at_status` defaults to `operator_gated`.
+  `iva_regime` is a conservative classifier (`eu_unclassified`,
+  `extra_eu_unclassified`, `vies_unavailable`) — not a signed automatic
+  table and not auto-consumer / indiscriminate zero-rate. Credit-note
+  reason is `commission_reduction` only. D-09 `legacy` / `legacy_missing`
+  exist so pre-cutover rows are never reissued. Platform-admin read/write
+  bypass matches `expert_invoices` so webhooks can insert without an
+  expert session. Live issuance stays closed.
+- Reference: `packages/db/src/schema/main/platform-fee-invoices.ts`,
+  D-03, D-09, 07.2.1 issuance-gate
+- Next review date: 07.1 tax-matrix + `issuePlatformFeeInvoice` slices;
+  still refuse v1 POST
+
 ### 2026-09-17: Reconciliation status is existence-only; invoices load independently
 
 - Owner: engineering

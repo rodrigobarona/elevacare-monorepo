@@ -10,6 +10,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  unique,
   uuid,
   varchar,
   check,
@@ -294,6 +295,7 @@ export const billingSubscriptions = pgTable(
     stripeIdx: uniqueIndex("billing_subscriptions_stripe_idx").on(
       t.stripeSubscriptionId
     ),
+    idOrgKey: unique("billing_subscriptions_id_org_key").on(t.id, t.orgId),
     customerIdx: index("billing_subscriptions_customer_idx").on(
       t.stripeCustomerId
     ),

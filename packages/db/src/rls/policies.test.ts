@@ -82,6 +82,21 @@ describe("buildMainRlsStatements", () => {
     )
   })
 
+  it("includes platform_admin bypass for platform fee and clinic SaaS invoices", () => {
+    for (const table of [
+      "platform_fee_invoices",
+      "platform_fee_credit_notes",
+      "clinic_saas_invoices",
+    ]) {
+      const policy = stmts.find((s) =>
+        s.startsWith(`CREATE POLICY ${table}_tenant_isolation`)
+      )
+      expect(policy).toContain(
+        "current_setting('eleva.platform_admin', true) = 'true'"
+      )
+    }
+  })
+
   it("does NOT include platform_admin bypass for non-bypass tables", () => {
     const nonBypassTables = TENANT_TABLES.filter(
       (t) => !ADMIN_BYPASS_TABLES.has(t)
