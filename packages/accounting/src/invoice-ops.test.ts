@@ -228,6 +228,7 @@ describe("retryExpertInvoice skipped dispatch", () => {
       status: "failed",
       error: "flag_disabled",
     })
+    expect(sets[1]).toHaveProperty("attempts")
   })
 
   it("restores failed when dispatch throws after claim", async () => {
@@ -336,5 +337,6 @@ describe("retryExpertInvoice skipped dispatch", () => {
       status: "failed",
       error: "db down",
     })
+    expect(sets[1]).toHaveProperty("attempts")
   })
 })

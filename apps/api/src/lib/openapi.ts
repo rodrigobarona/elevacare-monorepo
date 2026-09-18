@@ -69,6 +69,8 @@ import {
   ExportSaftFileQuerySchema,
   GetAccountingReconciliationQuerySchema,
   GetAccountingReconciliationResponseSchema,
+  ListPlatformFeeInvoicesQuerySchema,
+  ListPlatformFeeInvoicesResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2104,6 +2106,33 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+          },
+        },
+      },
+      "/invoicing/platform-fee": {
+        get: {
+          operationId: "listPlatformFeeInvoices",
+          summary: "List Eleva → expert platform-fee invoices",
+          description:
+            "Staff read of Tier 1 platform-fee invoice rows for a Lisbon calendar month. Does not POST TOConline v1 sales documents and does not Comunicar série. Live issuance stays closed.",
+          tags: ["Invoicing"],
+          requestParams: {
+            query: ListPlatformFeeInvoicesQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Platform-fee invoice list",
+              content: {
+                "application/json": {
+                  schema: ListPlatformFeeInvoicesResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing accounting:reconcile",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
           },
         },
       },

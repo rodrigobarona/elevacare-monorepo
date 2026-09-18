@@ -720,6 +720,72 @@ export type GetAccountingReconciliationResponse = z.infer<
   typeof GetAccountingReconciliationResponseSchema
 >
 
+export const PlatformFeeInvoiceStatusSchema = z.enum([
+  "pending",
+  "issued",
+  "failed",
+  "dead_lettered",
+  "credited",
+  "legacy",
+  "legacy_missing",
+])
+export type PlatformFeeInvoiceStatus = z.infer<
+  typeof PlatformFeeInvoiceStatusSchema
+>
+
+export const PlatformFeeIvaRegimeSchema = z.enum([
+  "pending",
+  "pt_territorial",
+  "eu_reverse_charge",
+  "eu_unclassified",
+  "extra_eu_unclassified",
+  "vies_unavailable",
+])
+export type PlatformFeeIvaRegime = z.infer<typeof PlatformFeeIvaRegimeSchema>
+
+export const PlatformFeeAtStatusSchema = z.enum([
+  "operator_gated",
+  "not_applicable",
+  "communicated",
+  "failed",
+])
+export type PlatformFeeAtStatus = z.infer<typeof PlatformFeeAtStatusSchema>
+
+export const PlatformFeeInvoiceSchema = z.object({
+  id: z.string().uuid(),
+  bookingPaymentId: z.string().uuid(),
+  expertOrgId: z.string().uuid(),
+  status: PlatformFeeInvoiceStatusSchema,
+  ivaRegime: PlatformFeeIvaRegimeSchema,
+  amountCents: z.number().int().nonnegative(),
+  ivaRateBps: z.number().int().min(0).max(10_000),
+  series: z.string().nullable(),
+  number: z.string().nullable(),
+  atStatus: PlatformFeeAtStatusSchema,
+  issuedAt: z.string().nullable(),
+  error: z.string().nullable(),
+  attempts: z.number().int().nonnegative(),
+})
+export type PlatformFeeInvoice = z.infer<typeof PlatformFeeInvoiceSchema>
+
+export const ListPlatformFeeInvoicesQuerySchema = z.object({
+  month: SaftMonthSchema.optional(),
+  status: PlatformFeeInvoiceStatusSchema.optional(),
+  cursor: z.string().uuid().optional(),
+})
+export type ListPlatformFeeInvoicesQuery = z.infer<
+  typeof ListPlatformFeeInvoicesQuerySchema
+>
+
+export const ListPlatformFeeInvoicesResponseSchema = z.object({
+  month: SaftMonthSchema,
+  invoices: z.array(PlatformFeeInvoiceSchema),
+  nextCursor: z.string().uuid().nullable(),
+})
+export type ListPlatformFeeInvoicesResponse = z.infer<
+  typeof ListPlatformFeeInvoicesResponseSchema
+>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -1723,6 +1789,18 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     invoicing: {
+      async listPlatformFee(query: ListPlatformFeeInvoicesQuery = {}) {
+        const params = new URLSearchParams()
+        if (query.month) params.set("month", query.month)
+        if (query.status) params.set("status", query.status)
+        if (query.cursor) params.set("cursor", query.cursor)
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          qs ? `/invoicing/platform-fee?${qs}` : "/invoicing/platform-fee"
+        )
+        return ListPlatformFeeInvoicesResponseSchema.parse(raw)
+      },
       async listExpert(query: ListExpertInvoicesQuery = {}) {
         const params = new URLSearchParams()
         if (query.status) params.set("status", query.status)

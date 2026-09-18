@@ -1,10 +1,11 @@
 /**
  * @eleva/accounting — invoicing domain (ADR-013).
  *
- * Owns TOConline/Moloni adapters, conservative IVA classification for
- * Eleva→expert platform fees, Tier 2 expert→member adapters,
- * reconciliation, and ALL provider SDK access. Other packages MUST NOT
- * import provider SDKs directly — boundary lint enforces.
+ * Owns Tier 1 Eleva→expert platform-fee ledgers, conservative IVA
+ * classification for platform fees, Tier 2 expert→member adapters,
+ * reconciliation, and ALL provider SDK access (TOConline, Moloni, ...).
+ * Other packages MUST NOT import provider SDKs directly — boundary lint
+ * enforces.
  *
  * Sub-entrypoints:
  *   - "@eleva/accounting"          — types + AdapterError + IVA classifier
@@ -130,3 +131,14 @@ export type {
   ViesLookupResult,
   ViesStatus,
 } from "./core/iva-matrix"
+export {
+  PLATFORM_FEE_INVOICE_PAGE_SIZE,
+  listPlatformFeeInvoices,
+  toPublicPlatformFeeInvoice,
+} from "./platform-fee-invoices"
+export type {
+  PlatformFeeAtStatus,
+  PlatformFeeInvoiceStatus,
+  PlatformFeeIvaRegime,
+  PublicPlatformFeeInvoice,
+} from "./platform-fee-invoices"

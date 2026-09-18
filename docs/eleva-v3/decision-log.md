@@ -56,6 +56,56 @@ Each entry should include:
 - Next review date: remaining Manolo confirmation of live tax codes/rates
   /legal mentions before production issuance
 
+### 2026-09-17: Founder instruction — IVA/TOC matrix is implementable; 07.1 engineering unblocked
+
+- Owner: founder (Rodrigo Barona)
+- Status: active
+- Summary: Remaining tax codes, rates, and legal mentions from
+  [`payments-payouts-spec.md`](./payments-payouts-spec.md) plus the
+  accountant 2026-09-15 Manolo (MB) **Aprovado com condições** may now be
+  **implemented in code** so Phase 07.1 engineering can start (schema,
+  tax lookups, `issuePlatformFeeInvoice` orchestration, credit notes on
+  commission reduction). This is **not** DPO/legal production sign-off and
+  **not** permission to Comunicar TEST or to issue fictitious finalized
+  documents. AT Comunicação stays operator-gated. TOConline v1
+  `POST /api/v1/commercial_sales_documents` auto-finalizes;
+  `issueInvoice()` / `assertV1SalesDocumentPostAllowed()` stay
+  **unconditionally closed**. Do not treat
+  `TOCONLINE_ALLOW_V1_AUTO_FINALIZE`, a TEST prefix, or 07.1 scaffolding
+  as permission to POST.
+  Accountant conditions still bind the code: EU without a valid VIES NIF
+  is **not** auto-classified as consumer; extra-EU is **not** an
+  indiscriminate zero-rate; VIES 24h reuse + downtime must fail closed
+  or queue — do not invent OSS thresholds. Prefer mapping, GET `/taxes`
+  lookups, and dry-run over creating finalized FTs. Do not Comunicar
+  TEST FT/NC. Do not use ELEVA production series to simulate.
+- Reference: D-03, D-09, 2026-09-15 accountant entry,
+  [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md),
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+- Next review date: ELEVA series communication and remaining Manolo
+  confirmation of live tax codes/rates/legal mentions before production
+  issuance
+
+### 2026-09-17: 07.1 platform_fee_invoices schema lands closed-gate
+
+- Owner: engineering
+- Status: active
+- Summary: Schema + RLS for `platform_fee_invoices`,
+  `platform_fee_credit_notes`, and `clinic_saas_invoices`. Staff
+  `GET /invoicing/platform-fee` lists rows by Lisbon month. No TOConline
+  v1 POST and no AT Comunicação. `at_status` defaults to `operator_gated`.
+  `iva_regime` is a conservative classifier (`eu_unclassified`,
+  `extra_eu_unclassified`, `vies_unavailable`) — not a signed automatic
+  table and not auto-consumer / indiscriminate zero-rate. Credit-note
+  reason is `commission_reduction` only. D-09 `legacy` / `legacy_missing`
+  exist so pre-cutover rows are never reissued. Platform-admin read/write
+  bypass matches `expert_invoices` so webhooks can insert without an
+  expert session. Live issuance stays closed.
+- Reference: `packages/db/src/schema/main/platform-fee-invoices.ts`,
+  D-03, D-09, 07.2.1 issuance-gate
+- Next review date: 07.1 tax-matrix + `issuePlatformFeeInvoice` slices;
+  still refuse v1 POST
+
 ### 2026-09-17: Reconciliation status is existence-only; invoices load independently
 
 - Owner: engineering
@@ -72,7 +122,7 @@ Each entry should include:
   FT POST and `issueInvoice()` stays closed.
 - Reference: `packages/accounting/src/reconciliation.ts`, 07.2.6 entry,
   D-03, D-09, D-18
-- Next review date: remaining fiscal-parameter confirmation before 07.1
+- Next review date: 07.1 engineering unblocked 2026-09-17; live POST still gated
 
 ### 2026-09-17: Phase 07.2.6 Stripe vs expert_invoices reconciliation does not issue
 
@@ -87,7 +137,7 @@ Each entry should include:
   never Comunicar TEST, and never use ELEVA to simulate. Tier 1
   `platform_fee_invoices` comparison is skipped until 07.1.
 - Reference: `reconciliation.ts`, D-03, D-09, D-18, 07.2.1 issuance-gate entry
-- Next review date: remaining fiscal-parameter confirmation before 07.1
+- Next review date: 07.1 engineering unblocked 2026-09-17; live POST still gated
 
 ### 2026-09-17: Phase 07.2.5 retry + operator stub stay behind the closed gate
 
@@ -102,7 +152,7 @@ Each entry should include:
   not Vercel Workflows DevKit `"use workflow"`. Operator checklist:
   [`operator-tasks/toconline-setup.md`](./operator-tasks/toconline-setup.md).
 - Reference: `invoicing-retry.ts`, D-03, D-09, D-18, 07.2.1 issuance-gate entry
-- Next review date: remaining fiscal-parameter confirmation before 07.1
+- Next review date: 07.1 engineering unblocked 2026-09-17; live POST still gated
 
 ### 2026-09-15: Phase 07.2.1 keeps v1 issuance unconditionally closed
 
@@ -113,13 +163,13 @@ Each entry should include:
   always throw `toconline_v1_auto_finalize_blocked`. Do not treat
   `TOCONLINE_ALLOW_V1_AUTO_FINALIZE`, a TEST prefix, or PR 07.1 scaffolding as
   permission to POST `/api/v1/commercial_sales_documents`. PR 07.1 acceptance
-  that required `issued` FTs, finalize, or Comunicação à AT is deferred until
-  remaining fiscal parameters are confirmed (tax codes, rates, legal
-  mentions, VIES 24h cache + downtime procedure). Accountant 2026-09-15
+  that required `issued` FTs, finalize, or Comunicação à AT stays deferred.
+  Founder 2026-09-17 unblocks **engineering** of the IVA matrix and 07.1
+  code paths; it does not open the v1 POST. Accountant 2026-09-15
   (Manolo (MB)): D-09/D-03 Aprovado com condições.
 - Reference: `issuance-gate.ts`, D-03, D-09,
   [`accountant-approval-2026-09-15.md`](./accountant-approval-2026-09-15.md)
-- Next review date: when the accountant confirms remaining fiscal parameters
+- Next review date: 07.1 engineering unblocked 2026-09-17; live POST still gated
 
 ### 2026-09-15: Accountant written reply — Aprovado com condições (not a 07.1 issuance unlock)
 
@@ -786,11 +836,12 @@ série`) — that would register them as official Portuguese document series.
   D-03–D-06 substitute for remaining fiscal-parameter confirmation. IVA
   matrix and automatic issuance: **Aprovado com condições** (see the
   2026-09-15 accountant entry). Does **not** unlock PR 07.1 automatic
-  production issuance.
-- Review date: remaining fiscal-parameter confirmation before 07.1
-  production issuance (tax codes, rates, legal mentions, VIES 24h cache +
-  downtime procedure, OSS classification). D-04 / D-05 / D-06 stay founder
-  working pre-launch until finance/legal re-sign.
+  production issuance. Founder 2026-09-17 unblocks 07.1 **engineering**
+  of the IVA matrix in code.
+- Review date: ELEVA series communication + remaining Manolo confirmation
+  of live tax codes/rates/legal mentions before 07.1 production issuance.
+  D-04 / D-05 / D-06 stay founder working pre-launch until finance/legal
+  re-sign.
 - Summary: the advertised commission (15% / 8% / 0%) is the gross amount
   deducted from the professional, including IVA when due. Accountant
   2026-09-15 example, with no other deductions: 100,00 € booking, 15,00 €
@@ -900,10 +951,13 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
   `Manolo (MB)`. Approves the historical
   classification and its exclusion from v3 automatic issuance. Does **not**
   unlock PR 07.1 automatic production issuance (pending fiscal parameters —
-  see the 2026-09-15 accountant entry and D-03).
-- Review date: remaining fiscal-parameter confirmation before activating 07.1
-  production issuance; `legacy_missing` regularization is a separate
-  accountant-guided procedure (not a calendar substitute for either).
+  see the 2026-09-15 accountant entry and D-03). Founder 2026-09-17
+  unblocks 07.1 **engineering** of `platform_fee_invoices` / D-09 statuses,
+  not live FT issuance.
+- Review date: ELEVA series communication + remaining Manolo confirmation
+  of live tax codes/rates/legal mentions before activating 07.1 production
+  issuance; `legacy_missing` regularization is a separate accountant-guided
+  procedure (not a calendar substitute for either).
 - Summary: migrated MVP paid bookings are imported as
   `platform_fee_invoices.status = legacy` (+ `legacy_document_ref`) or
   `legacy_missing`; v3 never issues a Tier 1 document for a booking paid

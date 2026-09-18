@@ -443,9 +443,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-09</td>
-<td>Historical MVP invoices: <code>legacy</code> / <code>legacy_missing</code>, no reissue (Aprovado com condições 2026-09-15; regularization still required)</td>
+<td>Historical MVP invoices: <code>legacy</code> / <code>legacy_missing</code>, no reissue (Aprovado com condições 2026-09-15; regularization still required). Founder 2026-09-17 unblocks 07.1 engineering, not live POST.</td>
 <td>accountant</td>
-<td>PR 07.1 production issuance (fiscal params still pending)</td>
+<td>PR 07.1 <strong>production issuance</strong> (ELEVA Comunicação + remaining Manolo confirmation); 07.1 engineering is unblocked</td>
 </tr>
 <tr>
 <td>D-10</td>
@@ -4315,8 +4315,12 @@ must be sent for analysis (values, dates, available documents). Regularization i
 procedure under accountant guidance</strong>. Phase 14 consumes this rule. This does <strong>not</strong>
 unlock PR 07.1 automatic production issuance.</li>
 <li><strong>PR 07.1 automatic production issuance / activating intra-EU flows: STILL BLOCKED</strong> until
-those pending fiscal parameters are confirmed. <strong>07.2 / OAuth / schema / TEST-series-without-issuance
-can continue.</strong></li>
+ELEVA series communication and remaining Manolo confirmation of live tax codes/rates/legal
+mentions. Founder 2026-09-17 unblocks <strong>07.1 engineering</strong>: schema, IVA lookups
+(<code>GET /taxes</code>), fail-closed VIES, <code>issuePlatformFeeInvoice</code> orchestration that still
+refuses v1 POST <strong>unconditionally</strong>. AT Comunicação stays operator-gated. <strong>07.2 / OAuth / schema /
+TEST-series-without-issuance can continue.</strong> Do not Comunicar TEST. Do not POST finalized
+FTs unless a later phase explicitly allows a non-AT TEST create.</li>
 <li><strong>TEST / series (accountant-approved):</strong> do not Comunicar TEST FT/NC to AT; do not finalize
 fictitious TOConline documents; do not use ELEVA production series to simulate. Non-communication
 of TEST does not make it a fiscal test environment and does not authorize fictitious documents.
@@ -4512,24 +4516,27 @@ Before writing code:
    OAuth endpoints and payloads; the local toconline-api-reference.md is historical input used
    only to list what PR 07.0 must verify — never copy an endpoint from it into code.
 4. Entry gate (checked after PR 07.0 merges): D-09 historical classification is
-   accountant-approved with conditions (2026-09-15, Aprovado com condições). PR 07.1
-   automatic **production** issuance and activating intra-EU flows stay **BLOCKED** until
-   pending fiscal parameters are confirmed (tax codes, rates, legal mentions, VIES 24h
-   cache + downtime procedure, OSS classification, EU-without-VIES not auto-consumer,
-   extra-EU not indiscriminate zero-rate). Implement PR 07.2 / OAuth / schema /
-   TEST-series-without-issuance; stop before Tier 1 production issuance code. Do not
-   Comunicar TEST FT/NC, do not finalize fictitious TOConline docs, do not use ELEVA
-   production series to simulate.
+   accountant-approved with conditions (2026-09-15, Aprovado com condições). Founder
+   2026-09-17 unblocks **07.1 engineering**. PR 07.1 automatic **production** issuance
+   and activating intra-EU flows stay **BLOCKED** (ELEVA Comunicação + remaining
+   Manolo confirmation of live tax codes/rates/legal mentions). Implement 07.1
+   schema, IVA lookups (`GET /taxes`), fail-closed VIES, and closed-gate
+   `issuePlatformFeeInvoice` orchestration. Stop before live v1 POST, finalize,
+   and AT communication. Do not Comunicar TEST FT/NC, do not finalize fictitious
+   TOConline docs, do not use ELEVA production series to simulate.
+   `issueInvoice()` stays unconditionally closed.
 
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 7 TASK&quot; section further down is
 what you implement at the &quot;Implement the deliverables&quot; step. Read the whole prompt before the
 first command; run the checks and both review loops only AFTER the task work exists:
-- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.2/tier2-expert-adapters
-- PR 07.0 spike is complete. PR 07.1 automatic **production** issuance stays BLOCKED on remaining
-  fiscal-parameter confirmation. Implement remaining 07.2 (OAuth / schema / TEST-series-without-issuance
-  if not already on main; then dispatch / token refresh without POST), then STOP and report the
-  07.1 production-issuance block. Never write Tier 1 production issuance code against unconfirmed
-  fiscal parameters. Each PR:
+- git checkout main &amp;&amp; git pull --ff-only &amp;&amp; git checkout -b phase-07.1/tier1-platform-fee-invoices
+- PR 07.0 spike is complete. PR 07.2 Tier 2 adapters are on main. Founder 2026-09-17
+  unblocks 07.1 **engineering**. Implement remaining 07.1 slices in order: schema + RLS
+  + OpenAPI stubs (no POST); tax matrix (GET /taxes, reverse charge ISE + exemption
+  lookup, fail-closed VIES / unclassified extra-EU); issuePlatformFeeInvoice
+  orchestration + webhook hook that still refuses v1 POST unconditionally; credit notes
+  on commission reduction. Then STOP and report the production-issuance / AT Comunicação
+  block. Never POST `/api/v1/commercial_sales_documents`. Each PR:
   &lt;= 30 files / 400 lines where possible; split above 60 / 800 and always before 100 reviewable files.
 - Run: pnpm lint &amp;&amp; pnpm typecheck &amp;&amp; pnpm test &amp;&amp; pnpm check:api-first-actions &amp;&amp; pnpm build &amp;&amp;
   pnpm check:i18n-parity
@@ -4542,6 +4549,7 @@ first command; run the checks and both review loops only AFTER the task work exi
 - Loop on CodeRabbit GitHub App comments + CI until zero unresolved and all green
   (after 2 App rounds escalate leftovers to the reviewer — README section 4 rule 6); request
   approval from @rodrigobarona; gh pr merge --squash --delete-branch.
+- git checkout main &amp;&amp; git pull --ff-only
 
 Hard constraints: API-first (all route handlers in apps/api), agentic-first (Bearer/API key auth,
 JSON, OpenAPI registered), secure by default (explicit auth model, Zod, rate limit, BotID on public
@@ -4564,11 +4572,12 @@ uncommunicated series; TEST must not become an official AT series). Invoice, PDF
 communication and credit note wait for ELEVA at go-live. Update toconline-api-reference.md
 with what was verified; delete the spike code before PR 07.1.
 
-PR 07.1 — Tier 1 (Eleva platform) — **DO NOT START production issuance**. D-09 historical
-classification is Aprovado com condições; automatic production issuance and intra-EU flows stay
-BLOCKED until pending fiscal parameters are confirmed. Schema / adapter scaffolding that does
-not issue FTs may wait; do not Comunicar TEST, do not finalize fictitious TOConline docs, do not
-use ELEVA production series to simulate.
+PR 07.1 — Tier 1 (Eleva platform) — **engineering unblocked; DO NOT START production issuance**.
+Founder 2026-09-17 allows schema, IVA lookups, fail-closed VIES, and closed-gate
+orchestration. D-09 historical classification is Aprovado com condições; automatic
+production issuance, v1 POST, finalize, and AT communication stay BLOCKED.
+`issueInvoice()` is unconditionally closed. Do not Comunicar TEST, do not finalize
+fictitious TOConline docs, do not use ELEVA production series to simulate.
 1. packages/accounting restructure: src/core/{iva.ts (decision table + tests matching the
    accountant 2026-09-15 conditions — not the old automatic EU-without-VIES=consumer /
    extra-EU zero-rate table; tax codes/rates/legal mentions pending), vies.ts (VIES

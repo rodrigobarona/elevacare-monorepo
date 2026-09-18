@@ -4,6 +4,7 @@ import { secureJson } from "@/lib/security-headers"
 import { checkBot } from "@/lib/bot-protection"
 import { ExpertOnboardingStepSchema } from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
+import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
 import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -65,6 +66,20 @@ export async function POST(
   }
 
   const step = parsedStep.data
+  if (
+    (step === "invoicing" || step === "schedule") &&
+    !isExpertInvoicingChoiceComplete(profile.invoicingSetupStatus)
+  ) {
+    return secureJson(
+      {
+        error: "invoicing_required",
+        message:
+          "Become-Partner cannot complete without Auto invoicing or Manual acknowledgment",
+      },
+      { status: 409, headers }
+    )
+  }
+
   const completedSteps = (profile.metadata as Record<string, unknown>)
     ?.completedSteps
   const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
