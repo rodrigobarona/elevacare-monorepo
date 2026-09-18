@@ -78,9 +78,8 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "notification_preferences", class: "owner-user-visible" },
   {
     table: "notifications",
-    class: "staff-only",
+    class: "service-only",
     selectClass: "owner-user-visible",
-    insertClass: "staff-only",
     updateClass: "owner-user-visible",
   },
   {
@@ -178,6 +177,7 @@ export function classPredicateSql(
       if (
         table === "domain_events_outbox" ||
         table === "domain_event_deliveries" ||
+        table === "notifications" ||
         table === "notification_deliveries" ||
         table === "email_suppressions" ||
         table === "phone_verifications"

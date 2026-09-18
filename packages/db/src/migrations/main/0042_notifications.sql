@@ -193,7 +193,10 @@ CREATE TABLE IF NOT EXISTS "notification_deliveries" (
   "created_at" timestamp with time zone DEFAULT now() NOT NULL,
   "updated_at" timestamp with time zone DEFAULT now() NOT NULL,
   CONSTRAINT "notification_deliveries_recipient"
-    CHECK (num_nonnulls(user_id, recipient_email) = 1)
+    CHECK (
+      num_nonnulls(user_id, recipient_email) = 1
+      AND (recipient_email IS NULL OR channel = 'email')
+    )
 );
 --> statement-breakpoint
 ALTER TABLE "notification_deliveries" DROP CONSTRAINT IF EXISTS "notification_deliveries_kind";

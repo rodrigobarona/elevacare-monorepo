@@ -136,9 +136,9 @@ describe("RLS class taxonomy", () => {
       (item) => item.table === "notifications"
     )
     expect(inbox?.selectClass).toBe("owner-user-visible")
-    expect(inbox?.insertClass).toBe("staff-only")
     expect(inbox?.updateClass).toBe("owner-user-visible")
-    expect(inbox?.class).toBe("staff-only")
+    expect(inbox?.class).toBe("service-only")
+    expect(inbox?.insertClass).toBeUndefined()
     expect(
       RLS_TABLE_ASSIGNMENTS.find(
         (item) => item.table === "notification_deliveries"
@@ -166,6 +166,9 @@ describe("RLS class taxonomy", () => {
       classPredicateSql("service-only", "notification_deliveries")
     ).not.toContain("stripe_webhook")
     expect(classPredicateSql("service-only", "phone_verifications")).toContain(
+      "domain_events_publisher"
+    )
+    expect(classPredicateSql("service-only", "notifications")).toContain(
       "domain_events_publisher"
     )
   })

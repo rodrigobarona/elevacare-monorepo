@@ -57,6 +57,9 @@ describe("migration journal helpers", () => {
       "notification_deliveries_idempotency_recipient_channel_key"
     )
     expect(notificationsSql).toContain("num_nonnulls(user_id, recipient_email)")
+    expect(notificationsSql).toContain(
+      "recipient_email IS NULL OR channel = 'email'"
+    )
     expect(notificationsSql).toContain("notification_deliveries_org_idx")
     expect(notificationsSql).toContain("citext")
     expect(notificationsSql).toContain("phone_e164")

@@ -184,7 +184,7 @@ export const notificationDeliveries = pgTable(
   (t) => ({
     recipientChk: check(
       "notification_deliveries_recipient",
-      sql`num_nonnulls(user_id, recipient_email) = 1`
+      sql`num_nonnulls(user_id, recipient_email) = 1 AND (recipient_email IS NULL OR channel = 'email')`
     ),
     kindChk: check("notification_deliveries_kind", notificationKindChk),
     orgScopeChk: check(
