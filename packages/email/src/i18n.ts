@@ -35,6 +35,7 @@ const translations = {
         zero_fee: "There was no platform fee on this payment.",
         iva_lookup_unavailable: "Tax details are not available yet.",
         generic: "We will retry automatically. No action is needed from you.",
+        genericSkipped: "No fiscal document was created for this payment.",
       },
     },
     labels: {
@@ -102,6 +103,7 @@ const translations = {
         iva_lookup_unavailable: "Os dados fiscais ainda não estão disponíveis.",
         generic:
           "Vamos tentar novamente automaticamente. Não precisa de fazer nada.",
+        genericSkipped: "Não foi criado documento fiscal para este pagamento.",
       },
     },
     labels: {
@@ -169,6 +171,7 @@ const translations = {
         iva_lookup_unavailable: "Los datos fiscales aún no están disponibles.",
         generic:
           "Lo intentaremos de nuevo automáticamente. No necesitas hacer nada.",
+        genericSkipped: "No se creó un documento fiscal para este pago.",
       },
     },
     labels: {
@@ -229,6 +232,7 @@ export interface EmailTranslations {
       zero_fee: string
       iva_lookup_unavailable: string
       generic: string
+      genericSkipped: string
     }
   }
   labels: {

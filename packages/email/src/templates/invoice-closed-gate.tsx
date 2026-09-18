@@ -58,6 +58,7 @@ function copyForStatus(
 
 function reasonForError(
   t: EmailTranslations,
+  status: InvoiceClosedGateStatus,
   error: string | null | undefined
 ): string {
   switch (error) {
@@ -68,7 +69,9 @@ function reasonForError(
     case "iva_lookup_unavailable":
       return t.invoice.reasons.iva_lookup_unavailable
     default:
-      return t.invoice.reasons.generic
+      return status === "skipped"
+        ? t.invoice.reasons.genericSkipped
+        : t.invoice.reasons.generic
   }
 }
 
@@ -104,7 +107,10 @@ export function InvoiceClosedGateEmail({
             bold
           />
           <DetailRow label={t.labels.reference} value={invoiceId} />
-          <DetailRow label={t.labels.reason} value={reasonForError(t, error)} />
+          <DetailRow
+            label={t.labels.reason}
+            value={reasonForError(t, status, error)}
+          />
         </Section>
       </Section>
     </EmailLayout>
