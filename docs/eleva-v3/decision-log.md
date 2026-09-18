@@ -32,6 +32,33 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-18: 07.1 issuePlatformFeeInvoice is closed-gate
+
+- Owner: engineering
+- Status: active
+- Summary: Payment-success (`payment_intent.succeeded`) calls
+  `issuePlatformFeeInvoice`, which classifies IVA with the conservative
+  matrix from #76, runs GET-only tax lookups when a lookup client is
+  supplied, and records `blocked`, `skipped`, or retryable `pending` on
+  `platform_fee_invoices`. When `ff.toconline_invoicing_enabled` is off, or
+  `paidAt` is missing, it returns skipped with no row so a later replay can
+  still write. Issuable PT territorial / reverse-charge rows stay
+  `pending` with `iva_lookup_unavailable` (ivaRateBps 0 until GET `/taxes`
+  succeeds) so a later replay can still classify. Classifier skips
+  (`eu_unclassified`, extra-EU, VIES fail-closed, zero fee) persist
+  `skipped`. Credit notes are
+  originated only when `creditNoteAllocation.platformFeeGross > 0`
+  (commission reduction / Manolo 2026-09-15) — a member refund without a
+  commission reduction does not create an Eleva NC. Each commission-reducing
+  refund records its own blocked NC keyed by `booking_refund_id` so later
+  partial refunds are not dropped. `issueInvoice()` and
+  v1 `POST /api/v1/commercial_sales_documents` stay unconditionally
+  closed. No Comunicar TEST. AT stays `operator_gated`.
+- Reference: `packages/accounting/src/platform-fee-issue.ts`, D-03, D-09,
+  07.2.1 issuance-gate
+- Next review date: remaining Manolo confirmation of live tax
+  codes/rates/legal mentions before production issuance
+
 ### 2026-09-17: 07.1 IVA matrix is conservative classifiers + GET lookups
 
 - Owner: engineering

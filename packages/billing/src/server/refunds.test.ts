@@ -16,6 +16,11 @@ vi.mock("@eleva/observability", () => ({
   captureException: vi.fn(),
 }))
 
+vi.mock("@eleva/accounting", () => ({
+  issuePlatformFeeCreditNote: vi.fn(),
+  shouldIssuePlatformFeeCreditNote: (cents: number) => cents > 0,
+}))
+
 const payout = {
   id: "11111111-1111-4111-8111-111111111111",
   orgId: "22222222-2222-4222-8222-222222222222",

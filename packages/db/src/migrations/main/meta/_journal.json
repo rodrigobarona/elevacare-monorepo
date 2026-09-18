@@ -281,6 +281,20 @@
       "when": 1779640000000,
       "tag": "0039_platform_fee_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1779650000000,
+      "tag": "0040_platform_fee_invoice_blocked_skipped",
+      "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1779660000000,
+      "tag": "0041_platform_fee_credit_note_refund",
+      "breakpoints": true
     }
   ]
 }

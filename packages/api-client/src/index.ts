@@ -724,6 +724,8 @@ export const PlatformFeeInvoiceStatusSchema = z.enum([
   "pending",
   "issued",
   "failed",
+  "blocked",
+  "skipped",
   "dead_lettered",
   "credited",
   "legacy",
@@ -784,6 +786,22 @@ export const ListPlatformFeeInvoicesResponseSchema = z.object({
 })
 export type ListPlatformFeeInvoicesResponse = z.infer<
   typeof ListPlatformFeeInvoicesResponseSchema
+>
+
+export const IssuePlatformFeeInvoiceRequestSchema = z.object({
+  bookingPaymentId: z.string().uuid(),
+})
+export type IssuePlatformFeeInvoiceRequest = z.infer<
+  typeof IssuePlatformFeeInvoiceRequestSchema
+>
+
+export const IssuePlatformFeeInvoiceResponseSchema = z.object({
+  invoice: PlatformFeeInvoiceSchema.nullable(),
+  outcome: z.enum(["skipped", "blocked", "pending", "already_recorded"]),
+  reason: z.string().nullable(),
+})
+export type IssuePlatformFeeInvoiceResponse = z.infer<
+  typeof IssuePlatformFeeInvoiceResponseSchema
 >
 
 export const EnsureExpertProfileRequestSchema = z.object({
@@ -1800,6 +1818,14 @@ export function createApiClient(options: ApiClientOptions) {
           qs ? `/invoicing/platform-fee?${qs}` : "/invoicing/platform-fee"
         )
         return ListPlatformFeeInvoicesResponseSchema.parse(raw)
+      },
+      async issuePlatformFee(data: IssuePlatformFeeInvoiceRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/invoicing/platform-fee",
+          data
+        )
+        return IssuePlatformFeeInvoiceResponseSchema.parse(raw)
       },
       async listExpert(query: ListExpertInvoicesQuery = {}) {
         const params = new URLSearchParams()

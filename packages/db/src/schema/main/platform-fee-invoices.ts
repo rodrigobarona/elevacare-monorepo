@@ -17,6 +17,7 @@ import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization } from "../auth"
 import { bookingPayments } from "./bookings"
 import { billingSubscriptions } from "./billing"
+import { bookingRefunds } from "./payouts"
 
 /**
  * Tier 1 Eleva → expert platform-fee invoices (Phase 07.1).
@@ -27,7 +28,8 @@ import { billingSubscriptions } from "./billing"
  * `iva_regime` is a conservative classifier, not a signed automatic table:
  * EU without VIES is `eu_unclassified` (not auto-consumer); extra-EU is
  * `extra_eu_unclassified` (not indiscriminate zero-rate); VIES downtime
- * is `vies_unavailable`.
+ * is `vies_unavailable`. Closed-gate orchestration records `blocked`
+ * (v1 POST refused) or `skipped` (IVA queued / zero fee / D-09).
  */
 export const platformFeeInvoiceStatusEnum = pgEnum(
   "platform_fee_invoice_status",
@@ -35,6 +37,8 @@ export const platformFeeInvoiceStatusEnum = pgEnum(
     "pending",
     "issued",
     "failed",
+    "blocked",
+    "skipped",
     "dead_lettered",
     "credited",
     "legacy",
@@ -147,6 +151,7 @@ export const platformFeeCreditNotes = pgTable(
       onDelete: "restrict",
     }),
     platformFeeInvoiceId: uuid("platform_fee_invoice_id").notNull(),
+    bookingRefundId: uuid("booking_refund_id").notNull(),
     reason: platformFeeCreditNoteReasonEnum("reason")
       .notNull()
       .default("commission_reduction"),
@@ -164,12 +169,23 @@ export const platformFeeCreditNotes = pgTable(
   },
   (t) => ({
     orgIdx: index("platform_fee_credit_notes_org_idx").on(t.orgId),
+    refundIdx: index("platform_fee_credit_notes_refund_idx").on(
+      t.bookingRefundId
+    ),
     invoiceOrgFk: foreignKey({
       name: "platform_fee_credit_notes_invoice_org_fk",
       columns: [t.platformFeeInvoiceId, t.orgId],
       foreignColumns: [platformFeeInvoices.id, platformFeeInvoices.orgId],
     }).onDelete("restrict"),
+    refundOrgFk: foreignKey({
+      name: "platform_fee_credit_notes_refund_org_fk",
+      columns: [t.bookingRefundId, t.orgId],
+      foreignColumns: [bookingRefunds.id, bookingRefunds.orgId],
+    }).onDelete("restrict"),
     idOrgKey: unique("platform_fee_credit_notes_id_org_key").on(t.id, t.orgId),
+    refundKey: unique("platform_fee_credit_notes_refund_key").on(
+      t.bookingRefundId
+    ),
     amountChk: check("platform_fee_credit_notes_amount", sql`amount_cents > 0`),
     tenantPolicy: pgPolicy(
       "platform_fee_credit_notes_tenant_isolation",

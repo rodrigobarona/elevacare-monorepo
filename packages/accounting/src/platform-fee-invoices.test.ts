@@ -27,6 +27,43 @@ describe("toPublicPlatformFeeInvoice", () => {
     expect(publicInvoice.atStatus).toBe("operator_gated")
     expect(publicInvoice).not.toHaveProperty("toconlineDocumentId")
   })
+
+  it("exposes blocked and skipped closed-gate statuses", () => {
+    expect(
+      toPublicPlatformFeeInvoice({
+        id: "00000000-0000-4000-8000-000000000002",
+        bookingPaymentId: "00000000-0000-4000-8000-000000000011",
+        expertOrgId: "00000000-0000-4000-8000-000000000020",
+        status: "blocked",
+        ivaRegime: "pt_territorial",
+        amountCents: 1500,
+        ivaRateBps: 2300,
+        series: "ELEVA-FEE-2026",
+        number: null,
+        atStatus: "operator_gated",
+        issuedAt: null,
+        error: "toconline_v1_auto_finalize_blocked",
+        attempts: 0,
+      }).status
+    ).toBe("blocked")
+    expect(
+      toPublicPlatformFeeInvoice({
+        id: "00000000-0000-4000-8000-000000000003",
+        bookingPaymentId: "00000000-0000-4000-8000-000000000012",
+        expertOrgId: "00000000-0000-4000-8000-000000000020",
+        status: "skipped",
+        ivaRegime: "extra_eu_unclassified",
+        amountCents: 1500,
+        ivaRateBps: 0,
+        series: null,
+        number: null,
+        atStatus: "operator_gated",
+        issuedAt: null,
+        error: "extra_eu_not_indiscriminate_zero_rate",
+        attempts: 0,
+      }).status
+    ).toBe("skipped")
+  })
 })
 
 describe("listPlatformFeeInvoices", () => {

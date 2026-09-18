@@ -1,7 +1,10 @@
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type Stripe from "stripe"
 import { z } from "zod"
-import { issueExpertServiceInvoice } from "@eleva/accounting"
+import {
+  issueExpertServiceInvoice,
+  issuePlatformFeeInvoice,
+} from "@eleva/accounting"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import { captureException } from "@eleva/observability"
@@ -1475,6 +1478,18 @@ async function handlePaymentIntentEvent(
       bookingPaymentId: paymentId,
       orgId,
     })
+    try {
+      await issuePlatformFeeInvoice({
+        bookingPaymentId: paymentId,
+      })
+    } catch (err) {
+      console.error("[billing] platform-fee invoice dispatch failed", err)
+      void captureException(err, {
+        bookingPaymentId: paymentId,
+        orgId,
+        stripePaymentIntentId: intent.id,
+      }).catch(() => {})
+    }
     try {
       await issueExpertServiceInvoice({
         bookingPaymentId: paymentId,

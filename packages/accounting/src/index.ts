@@ -142,3 +142,20 @@ export type {
   PlatformFeeIvaRegime,
   PublicPlatformFeeInvoice,
 } from "./platform-fee-invoices"
+export {
+  D09_PLATFORM_FEE_STATUSES,
+  decidePlatformFeeRecord,
+  elevaFeeSeries,
+  isD09PlatformFeeStatus,
+  isTerminalPlatformFeeStatus,
+  issuePlatformFeeCreditNote,
+  issuePlatformFeeInvoice,
+  ivaRateBpsFromLookups,
+  shouldIssuePlatformFeeCreditNote,
+} from "./platform-fee-issue"
+export type {
+  IssuePlatformFeeCreditNoteResult,
+  IssuePlatformFeeInvoiceResult,
+  PlatformFeeIssuanceOutcome,
+  PlatformFeeIvaLookup,
+} from "./platform-fee-issue"
