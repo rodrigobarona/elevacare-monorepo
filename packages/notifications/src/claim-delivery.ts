@@ -300,6 +300,25 @@ export async function isEmailSuppressed(email: string): Promise<boolean> {
   })
 }
 
+export async function loadUserByEmail(email: string): Promise<{
+  userId: string
+  email: string
+  locale: string | null
+} | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({
+        userId: auth.user.id,
+        email: auth.user.email,
+        locale: auth.user.locale,
+      })
+      .from(auth.user)
+      .where(sql`lower(${auth.user.email}::text) = ${email.toLowerCase()}`)
+      .limit(1)
+    return row ?? null
+  })
+}
+
 export async function loadUserRecipient(userId: string): Promise<{
   userId: string
   email: string

@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-18: Better Auth mail goes through sendNotification
+
+- Owner: engineering
+- Status: active
+- Summary: Better Auth callbacks (verify, reset, magic link, 2FA OTP,
+  org invitation) persist e2e URLs in `@eleva/auth` then call an injected
+  `AuthTransactionalMailer`. `apps/api` instrumentation constructs
+  `createAuthMailer()` from `@eleva/notifications`. There is no import
+  edge between `@eleva/auth` and `@eleva/notifications`. `@eleva/email`
+  is renderer-only (no `resend`). `invoice.issued` stays off the union.
+- Reference: `packages/notifications/src/auth-mailer.ts`,
+  `apps/api/src/instrumentation.ts`
+- Next review date: when booking fan-out lands
+
 ### 2026-09-18: Phase 08.3 notification tables do not imply issued FTs
 
 - Owner: engineering

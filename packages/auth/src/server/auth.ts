@@ -19,15 +19,18 @@ import { ac, adminAccess, adminRoles, organizationRoles } from "../permissions"
 import { provisionPersonalSpace } from "../provision-personal-space"
 import {
   sendMagicLinkEmail,
+  sendOrgInvitationEmail,
   sendResetPasswordEmail,
+  sendTwoFactorOtpEmail,
   sendVerificationEmail,
 } from "../send-auth-email"
-import { sendAuthEmail } from "@eleva/email"
 import { isTrustedOrigin, trustedOrigins } from "../trusted-origins"
 import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
+
+export { setAuthTransactionalMailer } from "../send-auth-email"
 
 function requireSecret(): string {
   const secret = process.env.BETTER_AUTH_SECRET
@@ -236,11 +239,13 @@ function createAuth() {
         sendInvitationEmail: async (data: {
           email: string
           invitation: { id: string }
+          organization: { id: string }
         }) => {
-          await sendAuthEmail({
-            kind: "organization-invitation",
-            to: data.email,
+          await sendOrgInvitationEmail({
+            email: data.email,
             url: invitationAcceptUrl(data.invitation.id),
+            orgId: data.organization.id,
+            invitationId: data.invitation.id,
           })
         },
         organizationHooks: {
@@ -279,15 +284,10 @@ function createAuth() {
           user,
           otp,
         }: {
-          user: { email: string; name?: string | null }
+          user: { id?: string; email: string; name?: string | null }
           otp: string
         }) => {
-          await sendAuthEmail({
-            kind: "two-factor-otp",
-            to: user.email,
-            name: user.name ?? undefined,
-            code: otp,
-          })
+          await sendTwoFactorOtpEmail({ user, otp })
         },
       }),
       passkey({

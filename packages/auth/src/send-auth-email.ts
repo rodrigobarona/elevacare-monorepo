@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis"
-import { sendAuthEmail } from "@eleva/email"
+import { getAuthTransactionalMailer } from "./auth-mailer"
 import {
   e2eAuthUrlKey,
   shouldPersistE2eAuthUrl,
@@ -7,6 +7,10 @@ import {
 } from "./e2e-auth-url"
 
 export { e2eAuthUrlKey, type E2eAuthLinkKind }
+export {
+  setAuthTransactionalMailer,
+  type AuthTransactionalMailer,
+} from "./auth-mailer"
 
 async function persistE2eAuthUrl(
   kind: E2eAuthLinkKind,
@@ -27,29 +31,19 @@ async function persistE2eAuthUrl(
 }
 
 export async function sendVerificationEmail(input: {
-  user: { email: string; name?: string | null }
+  user: { id?: string; email: string; name?: string | null }
   url: string
 }): Promise<void> {
   await persistE2eAuthUrl("verify-email", input.user.email, input.url)
-  await sendAuthEmail({
-    kind: "verify-email",
-    to: input.user.email,
-    url: input.url,
-    name: input.user.name ?? undefined,
-  })
+  await getAuthTransactionalMailer().sendVerifyEmail(input)
 }
 
 export async function sendResetPasswordEmail(input: {
-  user: { email: string; name?: string | null }
+  user: { id?: string; email: string; name?: string | null }
   url: string
 }): Promise<void> {
   await persistE2eAuthUrl("reset-password", input.user.email, input.url)
-  await sendAuthEmail({
-    kind: "reset-password",
-    to: input.user.email,
-    url: input.url,
-    name: input.user.name ?? undefined,
-  })
+  await getAuthTransactionalMailer().sendResetPassword(input)
 }
 
 export async function sendMagicLinkEmail(input: {
@@ -57,9 +51,21 @@ export async function sendMagicLinkEmail(input: {
   url: string
 }): Promise<void> {
   await persistE2eAuthUrl("magic-link", input.email, input.url)
-  await sendAuthEmail({
-    kind: "magic-link",
-    to: input.email,
-    url: input.url,
-  })
+  await getAuthTransactionalMailer().sendMagicLink(input)
+}
+
+export async function sendTwoFactorOtpEmail(input: {
+  user: { id?: string; email: string; name?: string | null }
+  otp: string
+}): Promise<void> {
+  await getAuthTransactionalMailer().sendTwoFactorOtp(input)
+}
+
+export async function sendOrgInvitationEmail(input: {
+  email: string
+  url: string
+  orgId: string
+  invitationId: string
+}): Promise<void> {
+  await getAuthTransactionalMailer().sendOrgInvitation(input)
 }

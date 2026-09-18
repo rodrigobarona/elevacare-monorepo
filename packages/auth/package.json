@@ -39,7 +39,6 @@
     "@eleva/billing": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
-    "@eleva/email": "workspace:*",
     "@eleva/observability": "workspace:*",
     "@upstash/redis": "catalog:",
     "better-auth": "catalog:",

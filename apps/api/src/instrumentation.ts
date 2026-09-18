@@ -20,5 +20,9 @@ export async function register(): Promise<void> {
     assertE2eBypassNotInProduction()
     const { initSentry } = await import("@eleva/observability/sentry")
     await initSentry({ app: "api" })
+    const { setAuthTransactionalMailer } =
+      await import("@eleva/auth/server/auth")
+    const { createAuthMailer } = await import("@eleva/notifications")
+    setAuthTransactionalMailer(createAuthMailer())
   }
 }

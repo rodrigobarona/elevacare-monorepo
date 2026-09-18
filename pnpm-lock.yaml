@@ -416,6 +416,9 @@ importers:
       '@eleva/flags':
         specifier: workspace:^
         version: link:../../packages/flags
+      '@eleva/notifications':
+        specifier: workspace:*
+        version: link:../../packages/notifications
       '@eleva/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -1186,9 +1189,6 @@ importers:
       '@eleva/db':
         specifier: workspace:*
         version: link:../db
-      '@eleva/email':
-        specifier: workspace:*
-        version: link:../email
       '@eleva/observability':
         specifier: workspace:*
         version: link:../observability
@@ -1477,9 +1477,6 @@ importers:
       react-email:
         specifier: ^6.1.4
         version: 6.1.4(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
-      resend:
-        specifier: 'catalog:'
-        version: 6.12.3(@react-email/render@2.0.8(react-dom@19.2.6(react@19.2.6))(react@19.2.6))
     devDependencies:
       '@eleva/eslint-config':
         specifier: workspace:*
