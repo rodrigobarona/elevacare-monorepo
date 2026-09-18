@@ -10,12 +10,24 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@eleva/accounting": "workspace:*",
+    "@eleva/audit": "workspace:*",
+    "@eleva/db": "workspace:*",
+    "@eleva/email": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "resend": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
+    "@types/react": "catalog:",
     "eslint": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }

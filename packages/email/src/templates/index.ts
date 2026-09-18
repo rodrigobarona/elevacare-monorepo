@@ -15,3 +15,8 @@ export {
   BookingCancelledEmail,
   type BookingCancelledProps,
 } from "./booking-cancelled"
+export {
+  InvoiceClosedGateEmail,
+  type InvoiceClosedGateProps,
+  type InvoiceClosedGateStatus,
+} from "./invoice-closed-gate"

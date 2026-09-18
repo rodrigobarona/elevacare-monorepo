@@ -227,12 +227,14 @@ Initial build supports at minimum:
 - `clinic_seat_added`
 - `clinic_seat_removed`
 - `clinic_subscription_payment_failed`
-- `invoice.blocked` (platform-fee row recorded while v1 POST is closed)
-- `invoice.skipped` (no fee / classifier skip — outbox only, not a send yet)
-- `invoice.pending` (retryable lookup — outbox only, not a send yet)
+- `invoice.blocked` (platform-fee row recorded while v1 POST is closed;
+  expert-org owner/admin email via `send-notification`)
+- `invoice.skipped` (no fee / classifier skip — expert-org owner/admin email)
+- `invoice.pending` (retryable lookup — expert-org owner/admin email)
 
 **Not in Lane 1 yet**: `invoice.issued` / `invoice.failed` wait on live FT
-issuance (`issueInvoice()` remains closed).
+issuance (`issueInvoice()` remains closed). Closed-gate emails never include
+a document number or PDF.
 
 **Not in Lane 1**: anything Multibanco-voucher-related (feature excluded).
 

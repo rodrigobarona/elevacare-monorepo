@@ -29,6 +29,7 @@
     "@eleva/compliance": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
+    "@eleva/notifications": "workspace:*",
     "@eleva/observability": "workspace:*",
     "drizzle-orm": "catalog:",
     "resend": "catalog:"
