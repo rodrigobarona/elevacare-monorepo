@@ -21,7 +21,8 @@ export type RlsPolicyClass = (typeof RLS_POLICY_CLASSES)[number]
 
 export type RlsTableAssignment = {
   table: string
-  /** UPDATE / DELETE (and INSERT unless `insertClass` is set). */
+  /** UPDATE / DELETE (and INSERT unless `insertClass` is set).
+   * Owner inbox UPDATE is `updateClass` when set. */
   class: RlsPolicyClass
   /**
    * SELECT / USING class when it differs from writes. Splits today:
@@ -29,10 +30,14 @@ export type RlsTableAssignment = {
    * `public_handles` (public-read SELECT, staff-only writes), and
    * `dsar_requests` / `account_deletion_requests` (owner SELECT +
    * owner pending INSERT, staff-only UPDATE/DELETE).
+   * `notifications` also splits owner UPDATE (`read_at`) via
+   * `updateClass`.
    */
   selectClass?: RlsPolicyClass
   /** INSERT / WITH CHECK class when it differs from `class`. */
   insertClass?: RlsPolicyClass
+  /** UPDATE class when it differs from `class` (DELETE). */
+  updateClass?: RlsPolicyClass
 }
 
 /** Current table → class map. Keep in sync with schema-and-migration-rules.md. */
@@ -71,6 +76,20 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
   { table: "accounting_reconciliation_runs", class: "service-only" },
   { table: "consents", class: "tenant-owned" },
   { table: "notification_preferences", class: "owner-user-visible" },
+  {
+    table: "notifications",
+    class: "staff-only",
+    selectClass: "owner-user-visible",
+    insertClass: "staff-only",
+    updateClass: "owner-user-visible",
+  },
+  {
+    table: "notification_deliveries",
+    class: "service-only",
+    selectClass: "tenant-owned",
+  },
+  { table: "email_suppressions", class: "service-only" },
+  { table: "phone_verifications", class: "service-only" },
   {
     table: "dsar_requests",
     class: "staff-only",
@@ -158,7 +177,10 @@ export function classPredicateSql(
       }
       if (
         table === "domain_events_outbox" ||
-        table === "domain_event_deliveries"
+        table === "domain_event_deliveries" ||
+        table === "notification_deliveries" ||
+        table === "email_suppressions" ||
+        table === "phone_verifications"
       ) {
         return (
           `current_setting('eleva.platform_admin', true) = 'true'` +

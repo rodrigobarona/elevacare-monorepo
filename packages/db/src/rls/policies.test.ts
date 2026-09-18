@@ -5,6 +5,9 @@ import {
   buildMainRlsStatements,
   TENANT_TABLES,
   OWNER_USER_TABLES,
+  INBOX_TABLES,
+  SERVICE_ONLY_TABLES,
+  DELIVERY_TABLES,
   COMPLIANCE_WORKFLOW_TABLES,
   ADMIN_BYPASS_TABLES,
 } from "./policies"
@@ -130,6 +133,81 @@ describe("owner-user-visible RLS", () => {
       expect(policy).toContain("WITH CHECK")
       expect(policy).not.toContain("eleva.org_id")
     }
+  })
+
+  it("lets the notification worker insert inbox rows as platform_admin", () => {
+    const stmts = buildMainRlsStatements()
+    expect(INBOX_TABLES).toEqual(["notifications"])
+    const read = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notifications_owner_read")
+    )
+    const update = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notifications_owner_update")
+    )
+    const insert = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notifications_worker_insert")
+    )
+    const del = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notifications_worker_delete")
+    )
+    expect(read).toContain("FOR SELECT")
+    expect(read).toContain("eleva.user_id")
+    expect(read).toContain("eleva.org_id")
+    expect(read).not.toContain("eleva.platform_admin")
+    expect(update).toContain("FOR UPDATE")
+    expect(update).toContain("eleva.user_id")
+    expect(update).not.toContain("eleva.platform_admin")
+    expect(insert).toContain("FOR INSERT")
+    expect(insert).toContain("eleva.platform_admin")
+    expect(insert).toContain("domain_events_publisher")
+    expect(insert).not.toContain("eleva.user_id")
+    expect(del).toContain("FOR DELETE")
+    expect(del).toContain("eleva.platform_admin")
+  })
+
+  it("keeps phone OTP hashes service-only", () => {
+    const stmts = buildMainRlsStatements()
+    expect(SERVICE_ONLY_TABLES).toEqual([
+      "email_suppressions",
+      "phone_verifications",
+    ])
+    const phone = stmts.find((s) =>
+      s.startsWith("CREATE POLICY phone_verifications_service_only")
+    )
+    expect(phone).toContain("eleva.platform_admin")
+    expect(phone).toContain("domain_events_publisher")
+    expect(phone).not.toContain("eleva.user_id")
+    expect(
+      stmts.find((s) =>
+        s.startsWith("CREATE POLICY phone_verifications_owner_read")
+      )
+    ).toBeUndefined()
+    expect(
+      stmts.find((s) =>
+        s.startsWith("CREATE POLICY phone_verifications_owner_insert")
+      )
+    ).toBeUndefined()
+    const suppressions = stmts.find((s) =>
+      s.startsWith("CREATE POLICY email_suppressions_service_only")
+    )
+    expect(suppressions).toContain("domain_events_publisher")
+    expect(suppressions).not.toContain("eleva.org_id")
+  })
+
+  it("lets tenants read delivery rows for their org", () => {
+    const stmts = buildMainRlsStatements()
+    expect(DELIVERY_TABLES).toEqual(["notification_deliveries"])
+    const read = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notification_deliveries_tenant_read")
+    )
+    const writes = stmts.find((s) =>
+      s.startsWith("CREATE POLICY notification_deliveries_service_only")
+    )
+    expect(read).toContain("FOR SELECT")
+    expect(read).toContain("eleva.org_id")
+    expect(read).not.toContain("eleva.platform_admin")
+    expect(writes).toContain("eleva.platform_admin")
+    expect(writes).toContain("domain_events_publisher")
   })
 })
 

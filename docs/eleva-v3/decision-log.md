@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-18: Phase 08.3 notification tables do not imply issued FTs
+
+- Owner: engineering
+- Status: active
+- Summary: Lane 1 schema (`notifications`, `notification_deliveries`,
+  `email_suppressions`, `phone_verifications`) and `NOTIFICATION_KINDS`
+  land without `invoice.issued` / `invoice.failed`. Kind CHECKs and
+  org-scope CHECKs keep the union honest. OTP `code_hash` is
+  service-only. Delivery rows are claimed before any provider call.
+  Closed-gate invoice emails remain the only live send path until
+  `sendNotification` is wired.
+- Reference: `packages/db/src/schema/main/notifications.ts`,
+  `packages/notifications/src/kinds.ts`
+- Next review date: when `sendNotification` claims delivery rows
+
 ### 2026-09-18: Closed-gate invoice emails go to expert-org operators
 
 - Owner: engineering

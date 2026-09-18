@@ -1,16 +1,15 @@
 # @eleva/notifications
 
-Lane 1 transactional notifications. This slice registers the
-`send-notification` handler for closed-gate invoice events only:
+Lane 1 transactional notifications.
 
-- `invoice.blocked`
-- `invoice.skipped`
-- `invoice.pending`
+Closed-gate invoice emails (`invoice.blocked` / `invoice.skipped` /
+`invoice.pending`) already send through Resend to expert-org operators.
+This slice adds the Lane 1 tables and the closed `NOTIFICATION_KINDS`
+union used by later `sendNotification` PRs.
 
-It sends expert-org operator email through Resend using `@eleva/email`
-templates and Phase 5 `notification_preferences` (`payment` is required
-and cannot be turned off at send time). It does **not** send
-`invoice.issued` / `invoice.failed`, attach a PDF, or call TOConline.
+`invoice.issued` / `invoice.failed` stay off the union until live FT
+issuance exists. This package does not POST TOConline, attach a PDF, or
+Comunicar TEST.
 
-The full `sendNotification({ kind, recipient, ... })` contract, SMS,
-in-app inbox, and remaining kinds land in later Phase 8 PRs.
+Later Phase 8 PRs: `sendNotification` claim/lease, auth mailer rewire,
+booking/payment/payout fans-out, SMS, in-app API, Resend webhooks.

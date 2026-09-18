@@ -13,6 +13,9 @@ import {
 import {
   TENANT_TABLES,
   OWNER_USER_TABLES,
+  INBOX_TABLES,
+  SERVICE_ONLY_TABLES,
+  DELIVERY_TABLES,
   COMPLIANCE_WORKFLOW_TABLES,
 } from "../rls/policies"
 
@@ -376,6 +379,9 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
         const managed = new Set<string>([
           ...TENANT_TABLES,
           ...OWNER_USER_TABLES,
+          ...INBOX_TABLES,
+          ...SERVICE_ONLY_TABLES,
+          ...DELIVERY_TABLES,
           ...COMPLIANCE_WORKFLOW_TABLES,
         ])
         for (const row of RLS_TABLE_ASSIGNMENTS) {
@@ -424,11 +430,27 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
             .filter(Boolean)
             .join(" ")
           const ownerUserTables = new Set<string>(OWNER_USER_TABLES)
+          const inboxTables = new Set<string>(INBOX_TABLES)
+          const serviceOnlyTables = new Set<string>(SERVICE_ONLY_TABLES)
+          const deliveryTables = new Set<string>(DELIVERY_TABLES)
           const complianceTables = new Set<string>(COMPLIANCE_WORKFLOW_TABLES)
           if (ownerUserTables.has(row.table)) {
             expect(combined, row.table).toContain("eleva.user_id")
             expect(combined, row.table).toContain("user_id")
             expect(combined, row.table).not.toContain("eleva.org_id")
+          } else if (inboxTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.user_id")
+            expect(combined, row.table).toContain("eleva.org_id")
+            expect(combined, row.table).toContain("eleva.platform_admin")
+          } else if (serviceOnlyTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.platform_admin")
+            expect(combined, row.table).toContain("domain_events_publisher")
+            expect(combined, row.table).not.toContain("eleva.user_id")
+            expect(combined, row.table).not.toContain("eleva.org_id")
+          } else if (deliveryTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.org_id")
+            expect(combined, row.table).toContain("eleva.platform_admin")
+            expect(combined, row.table).toContain("domain_events_publisher")
           } else if (complianceTables.has(row.table)) {
             expect(combined, row.table).toContain("eleva.user_id")
             expect(combined, row.table).toContain("eleva.platform_admin")

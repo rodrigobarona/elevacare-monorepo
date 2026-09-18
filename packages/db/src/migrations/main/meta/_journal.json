@@ -295,6 +295,13 @@
       "when": 1779660000000,
       "tag": "0041_platform_fee_credit_note_refund",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1779670000000,
+      "tag": "0042_notifications",
+      "breakpoints": true
     }
   ]
 }
