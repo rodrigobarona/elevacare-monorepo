@@ -42,8 +42,9 @@ Each entry should include:
   (`invoice.blocked` | `invoice.skipped` | `invoice.pending`). Payloads
   keep `number` and `pdfUrl` null. `invoice.issued` / `invoice.failed` /
   `invoice.credited` stay off the union until a real document exists.
-  The outbox subscriber is `logger` until `sendNotification` lands; do
-  not mark a notifications delivery succeeded without sending.
+  Outbox deliveries use `send-notification` and stay pending until that
+  handler is registered. Diagnostic logging is not a delivery and must
+  not mark the event succeeded without sending.
 - Reference: `packages/accounting/src/platform-fee-events.ts`,
   `packages/workflows/src/domain-events.ts`, D-09
 - Next review date: when `issueInvoice()` is allowed to POST

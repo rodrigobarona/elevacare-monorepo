@@ -48,13 +48,14 @@ describe("closed-gate invoice event contract", () => {
     })
   })
 
-  it("registers only the logger until sendNotification exists", () => {
-    expect(CLOSED_GATE_INVOICE_SUBSCRIBERS).toEqual(["logger"])
+  it("registers send-notification until the handler exists", () => {
+    expect(CLOSED_GATE_INVOICE_SUBSCRIBERS).toEqual(["send-notification"])
   })
 })
 
 describe("emitClosedGateInvoiceDomainEvent", () => {
-  it("inserts one outbox row and a logger delivery", async () => {
+  it("inserts one outbox row and a send-notification delivery", async () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => undefined)
     const deliveryInsert = vi.fn().mockReturnValue({
       onConflictDoNothing: vi.fn().mockResolvedValue(undefined),
     })
@@ -87,6 +88,14 @@ describe("emitClosedGateInvoiceDomainEvent", () => {
       idempotencyKey: `invoice:platform_fee:${INVOICE_ID}:skipped`,
     })
     expect(tx.insert).toHaveBeenCalledTimes(2)
+    expect(info).toHaveBeenCalledWith("[domain-events] closed-gate invoice", {
+      eventId: "evt-1",
+      type: "invoice.skipped",
+      orgId: ORG_ID,
+      invoiceId: INVOICE_ID,
+      status: "skipped",
+    })
+    info.mockRestore()
   })
 
   it("reuses the existing outbox row on idempotency conflict", async () => {

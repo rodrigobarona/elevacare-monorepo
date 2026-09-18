@@ -14,8 +14,14 @@ describe("closed-gate invoice domain events", () => {
     expect(DOMAIN_EVENT_TYPES).not.toContain("invoice.issued")
     expect(DOMAIN_EVENT_TYPES).not.toContain("invoice.failed")
     expect(DOMAIN_EVENT_TYPES).not.toContain("invoice.credited")
-    expect(DEFAULT_SUBSCRIBERS["invoice.blocked"]).toEqual(["logger"])
-    expect(DEFAULT_SUBSCRIBERS["invoice.skipped"]).toEqual(["logger"])
-    expect(DEFAULT_SUBSCRIBERS["invoice.pending"]).toEqual(["logger"])
+    expect(DEFAULT_SUBSCRIBERS["invoice.blocked"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["invoice.skipped"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["invoice.pending"]).toEqual([
+      "send-notification",
+    ])
   })
 })
