@@ -73,6 +73,7 @@ import {
   ListPlatformFeeInvoicesResponseSchema,
   IssuePlatformFeeInvoiceRequestSchema,
   IssuePlatformFeeInvoiceResponseSchema,
+  ClosedGateInvoicePayloadSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -2141,7 +2142,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "issuePlatformFeeInvoice",
           summary: "Record a closed-gate platform-fee invoice",
           description:
-            "Staff/agent replay of issuePlatformFeeInvoice. Classifies IVA conservatively, may GET tax lookups, and records blocked, skipped, or retryable pending. Never POSTs /api/v1/commercial_sales_documents and never Comunica série.",
+            "Staff/agent replay of issuePlatformFeeInvoice. Classifies IVA conservatively, may GET tax lookups, and records blocked, skipped, or retryable pending. On a new row it also inserts a domain_events_outbox event (invoice.blocked | invoice.skipped | invoice.pending) for Phase 8 notifications. Never POSTs /api/v1/commercial_sales_documents, never Comunica série, and never emits invoice.issued or invoice.failed.",
           tags: ["Invoicing"],
           requestBody: {
             required: true,
@@ -2153,7 +2154,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
           responses: {
             "200": {
-              description: "Blocked or skipped invoice outcome",
+              description:
+                "Closed-gate invoice outcome plus the outbox event ref when a row was written",
               content: {
                 "application/json": {
                   schema: IssuePlatformFeeInvoiceResponseSchema,
@@ -2365,6 +2367,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Better Auth session cookie (`better-auth.session_token` or `__Secure-better-auth.session_token`)",
         },
+      },
+      schemas: {
+        ClosedGateInvoicePayload: ClosedGateInvoicePayloadSchema,
       },
     },
   })

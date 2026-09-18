@@ -84,7 +84,8 @@ export async function GET(request: Request) {
  * POST /invoicing/platform-fee
  *
  * Staff/agent replay of closed-gate `issuePlatformFeeInvoice`. Records
- * blocked/skipped rows. Does not POST TOConline v1 sales documents.
+ * blocked/skipped/pending rows and queues matching domain events. Does
+ * not POST TOConline v1 sales documents.
  */
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "GET, POST, OPTIONS")

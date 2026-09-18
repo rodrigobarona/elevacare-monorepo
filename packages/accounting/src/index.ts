@@ -11,6 +11,7 @@
  *   - "@eleva/accounting"          — types + AdapterError + IVA classifier
  *   - "@eleva/accounting/registry" — getAdapter / listAdapters
  *   - "@eleva/accounting/adapters" — TOConline lookups including GET /taxes
+ *   - "@eleva/accounting/platform-fee-events" — closed-gate invoice outbox
  */
 
 export {
@@ -159,3 +160,18 @@ export type {
   PlatformFeeIssuanceOutcome,
   PlatformFeeIvaLookup,
 } from "./platform-fee-issue"
+export {
+  CLOSED_GATE_INVOICE_EVENT_TYPES,
+  CLOSED_GATE_INVOICE_STATUSES,
+  CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  closedGateInvoiceEventType,
+  closedGateInvoiceIdempotencyKey,
+  closedGateInvoicePayload,
+  emitClosedGateInvoiceDomainEvent,
+} from "./platform-fee-events"
+export type {
+  ClosedGateInvoiceEventRef,
+  ClosedGateInvoiceEventType,
+  ClosedGateInvoicePayload,
+  ClosedGateInvoiceStatus,
+} from "./platform-fee-events"

@@ -28,6 +28,19 @@ export function defaultDomainEventSubscribers(): Record<
         throw err
       }
     },
+    logger: async (event) => {
+      if (!event.type.startsWith("invoice.")) return
+      requiredString(event.payload.invoiceKind, "invoiceKind")
+      requiredString(event.payload.invoiceId, "invoiceId")
+      requiredString(event.payload.bookingPaymentId, "bookingPaymentId")
+      console.info("[domain-events] logger", {
+        eventId: event.id,
+        type: event.type,
+        orgId: event.orgId,
+        invoiceId: event.payload.invoiceId,
+        status: event.payload.status,
+      })
+    },
   }
 }
 

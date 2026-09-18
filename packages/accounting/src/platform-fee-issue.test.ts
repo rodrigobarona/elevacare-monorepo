@@ -178,6 +178,7 @@ describe("issuePlatformFeeInvoice flag gate", () => {
       invoice: null,
       outcome: "skipped",
       reason: "flag_disabled",
+      domainEvent: null,
     })
   })
 })
@@ -196,6 +197,9 @@ describe("closed-gate source", () => {
     expect(src).toContain("iva_lookup_unavailable")
     expect(src).toContain("bookingRefundId")
     expect(src).toContain("platformFeeCreditNotes.bookingRefundId")
+    expect(src).toContain("emitClosedGateInvoiceDomainEvent")
+    expect(src).not.toContain("invoice.issued")
+    expect(src).not.toContain("invoice.failed")
   })
 })
 

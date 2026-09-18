@@ -5,6 +5,8 @@
  * lookups, and records `blocked` / `skipped` on `platform_fee_invoices`.
  * It never POSTs `/api/v1/commercial_sales_documents`. Credit notes are
  * originated only when commission is reduced (Manolo 2026-09-15).
+ * A successful persist emits `invoice.blocked` / `invoice.skipped` /
+ * `invoice.pending` on the domain-events outbox for Phase 8.
  */
 
 import { and, eq } from "drizzle-orm"
@@ -18,6 +20,10 @@ import {
 } from "./adapters/toconline/issuance-gate"
 import { classifyIvaRegime, type IvaDecision } from "./core/iva-matrix"
 import { invoiceStatusFromAdapterError, isUniqueViolation } from "./dispatch"
+import {
+  emitClosedGateInvoiceDomainEvent,
+  type ClosedGateInvoiceEventRef,
+} from "./platform-fee-events"
 import {
   toPublicPlatformFeeInvoice,
   type PlatformFeeInvoiceStatus,
@@ -40,6 +46,7 @@ export type IssuePlatformFeeInvoiceResult = {
   invoice: PublicPlatformFeeInvoice | null
   outcome: PlatformFeeIssuanceOutcome
   reason: string | null
+  domainEvent: ClosedGateInvoiceEventRef | null
 }
 
 export type IssuePlatformFeeCreditNoteResult =
@@ -193,18 +200,29 @@ export async function issuePlatformFeeInvoice(input: {
 }): Promise<IssuePlatformFeeInvoiceResult> {
   const enabled = await getFlag("ff.toconline_invoicing_enabled")
   if (!enabled) {
-    return { invoice: null, outcome: "skipped", reason: "flag_disabled" }
+    return {
+      invoice: null,
+      outcome: "skipped",
+      reason: "flag_disabled",
+      domainEvent: null,
+    }
   }
 
   const snapshot = await loadIssuanceSnapshot(input.bookingPaymentId)
   if (!snapshot) {
-    return { invoice: null, outcome: "skipped", reason: "payment_not_found" }
+    return {
+      invoice: null,
+      outcome: "skipped",
+      reason: "payment_not_found",
+      domainEvent: null,
+    }
   }
   if (snapshot.payment.status !== "succeeded") {
     return {
       invoice: null,
       outcome: "skipped",
       reason: "payment_not_succeeded",
+      domainEvent: null,
     }
   }
   if (!snapshot.payment.paidAt) {
@@ -212,6 +230,7 @@ export async function issuePlatformFeeInvoice(input: {
       invoice: null,
       outcome: "skipped",
       reason: "payment_paid_at_missing",
+      domainEvent: null,
     }
   }
   if (
@@ -224,6 +243,7 @@ export async function issuePlatformFeeInvoice(input: {
       reason: isD09PlatformFeeStatus(snapshot.existing.status)
         ? "d09_legacy"
         : snapshot.existing.error,
+      domainEvent: null,
     }
   }
   if (!snapshot.profile) {
@@ -231,6 +251,7 @@ export async function issuePlatformFeeInvoice(input: {
       invoice: null,
       outcome: "skipped",
       reason: "expert_profile_missing",
+      domainEvent: null,
     }
   }
 
@@ -278,9 +299,10 @@ export async function issuePlatformFeeInvoice(input: {
   })
 
   return {
-    invoice: persisted,
+    invoice: persisted.invoice,
     outcome: decision.status,
     reason: decision.error,
+    domainEvent: persisted.domainEvent,
   }
 }
 
@@ -406,7 +428,10 @@ async function persistPlatformFeeInvoice(input: {
     ivaRegime: PlatformFeeIvaRegime
     ivaRateBps: number
   }
-}): Promise<PublicPlatformFeeInvoice> {
+}): Promise<{
+  invoice: PublicPlatformFeeInvoice
+  domainEvent: ClosedGateInvoiceEventRef | null
+}> {
   try {
     return await withAudit(
       { orgId: input.orgId, actorUserId: null },
@@ -461,6 +486,14 @@ async function persistPlatformFeeInvoice(input: {
         if (!row) {
           throw new PlatformFeeInvoiceAlreadyRecordedError()
         }
+        const domainEvent = await emitClosedGateInvoiceDomainEvent(tx, {
+          orgId: input.orgId,
+          invoiceId: row.id,
+          bookingPaymentId: input.bookingPaymentId,
+          expertOrgId: row.expertOrgId,
+          status: input.decision.status,
+          error: row.error,
+        })
         await ctx.emit({
           entity: "invoice",
           action: "status_changed",
@@ -471,9 +504,10 @@ async function persistPlatformFeeInvoice(input: {
             ivaRegime: row.ivaRegime,
             error: row.error,
             posted: false,
+            domainEventType: domainEvent.type,
           },
         })
-        return row
+        return { invoice: row, domainEvent }
       }
     )
   } catch (err) {
@@ -485,7 +519,10 @@ async function persistPlatformFeeInvoice(input: {
     }
     const existing = await loadIssuanceSnapshot(input.bookingPaymentId)
     if (existing?.existing) {
-      return toPublicPlatformFeeInvoice(existing.existing)
+      return {
+        invoice: toPublicPlatformFeeInvoice(existing.existing),
+        domainEvent: null,
+      }
     }
     throw err
   }
