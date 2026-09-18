@@ -22,6 +22,27 @@ ALTER TABLE "auth"."user" DROP CONSTRAINT IF EXISTS "auth_user_phone_verificatio
 ALTER TABLE "auth"."user" ADD CONSTRAINT "auth_user_phone_verification_state"
   CHECK ((phone_e164 IS NULL) = (phone_verified_at IS NULL));
 --> statement-breakpoint
+CREATE OR REPLACE FUNCTION auth_user_phone_change_requires_verification()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  IF NEW.phone_e164 IS DISTINCT FROM OLD.phone_e164
+     AND NEW.phone_verified_at IS NOT DISTINCT FROM OLD.phone_verified_at THEN
+    RAISE EXCEPTION 'phone_e164 change must update phone_verified_at';
+  END IF;
+  RETURN NEW;
+END;
+$$;
+--> statement-breakpoint
+DROP TRIGGER IF EXISTS auth_user_phone_change_requires_verification
+  ON "auth"."user";
+--> statement-breakpoint
+CREATE TRIGGER auth_user_phone_change_requires_verification
+  BEFORE UPDATE ON "auth"."user"
+  FOR EACH ROW
+  EXECUTE FUNCTION auth_user_phone_change_requires_verification();
+--> statement-breakpoint
 DO $$ BEGIN
   CREATE TYPE "public"."notification_delivery_status" AS ENUM (
     'queued',

@@ -50,6 +50,9 @@ describe("migration journal helpers", () => {
     expect(notificationsSql).toContain("notifications_kind")
     expect(notificationsSql).toContain("notification_deliveries_kind")
     expect(notificationsSql).toContain("auth_user_phone_verification_state")
+    expect(notificationsSql).toContain(
+      "auth_user_phone_change_requires_verification"
+    )
     expect(notificationsSql).toContain("notifications_owner_read")
     expect(notificationsSql).toContain("email_suppressions")
     expect(notificationsSql).toContain("phone_verifications")

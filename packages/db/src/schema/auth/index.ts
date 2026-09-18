@@ -35,7 +35,8 @@ export const user = authSchema.table(
     locale: text("locale"),
     /** App-owned. Only `scheduleAccountDeletion` writes this — not Better Auth input. */
     deletionScheduledAt: timestamptz("deletion_scheduled_at"),
-    /** App-owned E.164 for SMS. Set only after OTP confirm. */
+    /** App-owned E.164 for SMS. Set only after OTP confirm; phone
+     * changes must also update `phone_verified_at`. */
     phoneE164: text("phone_e164"),
     phoneVerifiedAt: timestamptz("phone_verified_at"),
   },
