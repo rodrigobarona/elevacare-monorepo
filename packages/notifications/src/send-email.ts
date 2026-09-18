@@ -119,9 +119,6 @@ export async function listResendEmails(input: {
       }
       if (!emailMatches(item, input.to)) continue
       matched.push(item)
-      if (matched.length >= MAX_RESEND_ADOPT_GETS) {
-        return matched
-      }
     }
     if (reachedWindowStart || !data?.has_more || items.length === 0) {
       break
@@ -165,12 +162,12 @@ export async function adoptResendDelivery(input: {
   ].sort((left, right) => {
     const leftAt = createdAtOf(left)?.getTime() ?? 0
     const rightAt = createdAtOf(right)?.getTime() ?? 0
-    return rightAt - leftAt
+    return leftAt - rightAt
   })
   let gets = 0
   for (const candidate of candidates) {
     const createdAt = createdAtOf(candidate)
-    if (createdAt && createdAt < input.firstAttemptAt) break
+    if (createdAt && createdAt < input.firstAttemptAt) continue
     if (gets >= MAX_RESEND_ADOPT_GETS) break
     gets += 1
     const email = await getEmail(candidate.id)

@@ -551,4 +551,43 @@ describe("sendNotification", () => {
     ).rejects.toMatchObject({ code: "VALIDATION" })
     expect(store.rows.size).toBe(0)
   })
+
+  it("sends a user-scoped auth email without org audit", async () => {
+    let audits = 0
+    const result = await sendNotification(
+      {
+        kind: "auth.magic_link",
+        recipient: { userId: USER_ID },
+        ctx: content,
+        idempotencyKey: "auth:magic:1",
+      },
+      {
+        ...store.deps(now),
+        recordAudit: async () => {
+          audits += 1
+        },
+      }
+    )
+    expect(result.deliveries.map((row) => row.channel)).toEqual(["email"])
+    expect(result.deliveries[0]?.status).toBe("sent")
+    expect(store.sendCalls).toBe(1)
+    expect(audits).toBe(0)
+  })
+
+  it("rejects orgId on a user-scoped kind", async () => {
+    await expect(
+      sendNotification(
+        {
+          kind: "auth.magic_link",
+          orgId: ORG_ID,
+          recipient: { userId: USER_ID },
+          ctx: content,
+          idempotencyKey: "auth:magic:1",
+        } as unknown as SendNotificationInput,
+        store.deps(now)
+      )
+    ).rejects.toMatchObject({ code: "USER_KIND_HAS_NO_ORG" })
+    expect(store.rows.size).toBe(0)
+    expect(store.sendCalls).toBe(0)
+  })
 })
