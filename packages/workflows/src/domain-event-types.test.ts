@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { DEFAULT_SUBSCRIBERS, DOMAIN_EVENT_TYPES } from "./domain-events"
+import {
+  claimSkipSubscriberIds,
+  DEFAULT_SUBSCRIBERS,
+  DOMAIN_EVENT_TYPES,
+} from "./domain-events"
 
 describe("closed-gate invoice domain events", () => {
   it("exposes blocked/skipped/pending and never issued or failed", () => {
@@ -23,5 +27,19 @@ describe("closed-gate invoice domain events", () => {
     expect(DEFAULT_SUBSCRIBERS["invoice.pending"]).toEqual([
       "send-notification",
     ])
+  })
+
+  it("defers only logger and unregistered send-notification at claim time", () => {
+    const noop = async () => undefined
+    expect(claimSkipSubscriberIds({ "guest-activation": noop })).toEqual([
+      "logger",
+      "send-notification",
+    ])
+    expect(
+      claimSkipSubscriberIds({
+        "guest-activation": noop,
+        "send-notification": noop,
+      })
+    ).toEqual(["logger"])
   })
 })

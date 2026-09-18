@@ -116,25 +116,7 @@ describe("publishPendingDomainEvents", () => {
 
   it("does not claim logging-only deliveries or mark them succeeded", async () => {
     const updates: Array<Record<string, unknown>> = []
-    mockPublisherDb(
-      [
-        {
-          id: "d1",
-          eventId: "e1",
-          subscriberId: "logger",
-          attempts: 1,
-          orgId: "org-1",
-          type: "invoice.blocked",
-          payload: {
-            invoiceKind: "platform_fee",
-            invoiceId: "inv-1",
-            bookingPaymentId: "pay-1",
-            status: "blocked",
-          },
-        },
-      ],
-      updates
-    )
+    mockPublisherDb([], updates)
 
     const { publishPendingDomainEvents } = await import("./domain-events")
     const logger = vi.fn()
@@ -147,6 +129,33 @@ describe("publishPendingDomainEvents", () => {
     expect(result.succeeded).toBe(0)
     expect(result.failed).toBe(0)
     expect(updates).toEqual([])
+  })
+
+  it("fails unknown non-deferred subscribers instead of leaving them pending", async () => {
+    const updates: Array<Record<string, unknown>> = []
+    mockPublisherDb(
+      [
+        {
+          id: "d1",
+          eventId: "e1",
+          subscriberId: "typo-subscriber",
+          attempts: 1,
+          orgId: "org-1",
+          type: "booking.guest_activation_required",
+          payload: { bookingId: "b1" },
+        },
+      ],
+      updates
+    )
+
+    const { publishPendingDomainEvents } = await import("./domain-events")
+    const result = await publishPendingDomainEvents({
+      subscribers: { ok: vi.fn() },
+    })
+
+    expect(result.succeeded).toBe(0)
+    expect(result.failed).toBe(1)
+    expect(updates.map((row) => row.status)).toContain("failed")
   })
 
   it("succeeds send-notification once the handler is registered", async () => {
