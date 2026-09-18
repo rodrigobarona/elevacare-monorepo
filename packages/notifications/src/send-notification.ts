@@ -14,6 +14,7 @@ import {
   isEmailSuppressed,
   loadUserRecipient,
   markFirstAttempt,
+  recordProviderId,
   type ClaimInput,
   type ClaimOutcome,
   type DeliveryRow,
@@ -100,6 +101,11 @@ export type SendNotificationDeps = {
     error?: string | null
     now: Date
   }) => Promise<boolean>
+  recordProviderId?: (input: {
+    id: string
+    providerId: string
+    now: Date
+  }) => Promise<void>
   insertInbox?: typeof insertInboxRow
   isEmailSuppressed?: (email: string) => Promise<boolean>
   loadUser?: typeof loadUserRecipient
@@ -173,13 +179,17 @@ function parseInput(input: SendNotificationInput): ParsedSend {
   }
 
   const config = NOTIFICATION_KINDS[kind]
-  if (config.scope === "org" && !input.orgId) {
-    throw new SendNotificationError(
-      "ORG_CONTEXT_REQUIRED",
-      "ORG_CONTEXT_REQUIRED"
-    )
-  }
-  if (config.scope === "user" && input.orgId) {
+  let orgId: string | undefined
+  if (config.scope === "org") {
+    const parsedOrgId = z.string().uuid().safeParse(input.orgId)
+    if (!parsedOrgId.success) {
+      throw new SendNotificationError(
+        input.orgId ? "VALIDATION" : "ORG_CONTEXT_REQUIRED",
+        input.orgId ? "orgId must be a UUID" : "ORG_CONTEXT_REQUIRED"
+      )
+    }
+    orgId = parsedOrgId.data
+  } else if (input.orgId) {
     throw new SendNotificationError(
       "USER_KIND_HAS_NO_ORG",
       "user-scoped kinds must not include orgId"
@@ -191,7 +201,7 @@ function parseInput(input: SendNotificationInput): ParsedSend {
 
   return {
     kind,
-    orgId: input.orgId,
+    orgId,
     recipient: recipient.data,
     ctx: ctx.data,
     idempotencyKey: idempotencyKey.data,
@@ -239,6 +249,7 @@ export async function sendNotification(
   const claim = deps.claimDelivery ?? claimDelivery
   const markAttempt = deps.markFirstAttempt ?? markFirstAttempt
   const complete = deps.completeDelivery ?? completeDelivery
+  const persistProviderId = deps.recordProviderId ?? recordProviderId
   const inbox = deps.insertInbox ?? insertInboxRow
   const suppressed = deps.isEmailSuppressed ?? isEmailSuppressed
   const loadUser = deps.loadUser ?? loadUserRecipient
@@ -294,6 +305,7 @@ export async function sendNotification(
           claim,
           markAttempt,
           complete,
+          persistProviderId,
           inbox,
           suppressed,
           sendEmail,
@@ -321,6 +333,7 @@ async function deliverChannel(input: {
   claim: NonNullable<SendNotificationDeps["claimDelivery"]>
   markAttempt: NonNullable<SendNotificationDeps["markFirstAttempt"]>
   complete: NonNullable<SendNotificationDeps["completeDelivery"]>
+  persistProviderId: NonNullable<SendNotificationDeps["recordProviderId"]>
   inbox: NonNullable<SendNotificationDeps["insertInbox"]>
   suppressed: NonNullable<SendNotificationDeps["isEmailSuppressed"]>
   sendEmail: NonNullable<SendNotificationDeps["sendEmail"]>
@@ -368,6 +381,7 @@ async function deliverChannel(input: {
         now: input.now,
         markAttempt: input.markAttempt,
         complete: input.complete,
+        persistProviderId: input.persistProviderId,
         suppressed: input.suppressed,
         sendEmail: input.sendEmail,
         listEmails: input.listEmails,
@@ -452,6 +466,7 @@ async function deliverEmail(input: {
   now: Date
   markAttempt: NonNullable<SendNotificationDeps["markFirstAttempt"]>
   complete: NonNullable<SendNotificationDeps["completeDelivery"]>
+  persistProviderId: NonNullable<SendNotificationDeps["recordProviderId"]>
   suppressed: NonNullable<SendNotificationDeps["isEmailSuppressed"]>
   sendEmail: NonNullable<SendNotificationDeps["sendEmail"]>
   listEmails: SendNotificationDeps["listEmails"]
@@ -460,6 +475,14 @@ async function deliverEmail(input: {
 }): Promise<ChannelDeliveryResult> {
   if (await input.suppressed(input.email)) {
     return finish({ ...input, status: "suppressed" })
+  }
+
+  if (input.row.providerId) {
+    return finish({
+      ...input,
+      status: "sent",
+      providerId: input.row.providerId,
+    })
   }
 
   const firstAttemptAt = await input.markAttempt({
@@ -476,6 +499,11 @@ async function deliverEmail(input: {
     getEmail: input.getEmail,
   })
   if (adopted) {
+    await input.persistProviderId({
+      id: input.row.id,
+      providerId: adopted,
+      now: input.now,
+    })
     return finish({
       ...input,
       status: "sent",
@@ -488,6 +516,11 @@ async function deliverEmail(input: {
     subject: input.parsed.ctx.subject,
     html: input.parsed.ctx.html,
     deliveryId: input.row.id,
+  })
+  await input.persistProviderId({
+    id: input.row.id,
+    providerId: sent.providerId,
+    now: input.now,
   })
   return finish({
     ...input,

@@ -6,8 +6,10 @@ Lane 1 transactional notifications.
 `queued` with `lease_owner` + `claimed_at`) before calling Resend or
 inserting an in-app inbox row. Resend is an idempotent provider
 submission: `Idempotency-Key` is the delivery row id (24 h dedupe) plus
-a `deliveryId` tag. Retries older than 24 h reconcile via `emails.list`
-/ `emails.get` and adopt a matching tag instead of sending again.
+a `deliveryId` tag. The Resend message id is written to `provider_id`
+immediately after accept, before the CAS complete, so a lost lease after
+24 h adopts the stored id instead of listing the account. List/get
+adoption remains a fallback for rows that never persisted the id.
 Completion is compare-and-swap on `lease_owner` + `claimed_at` so a
 worker whose lease was taken over never overwrites the newer result.
 

@@ -61,12 +61,22 @@ export async function sendViaResend(
     { idempotencyKey: input.deliveryId }
   )
   if (error) {
-    throw new Error(error.message)
+    throwResendError("send", error)
   }
   if (!data?.id) {
     throw new Error("[email] Resend accepted the send without an id")
   }
   return { providerId: data.id }
+}
+
+function throwResendError(
+  operation: string,
+  error: { name?: string; message: string }
+): never {
+  throw new Error(
+    `[email] resend ${operation} failed: ${error.name ?? "Error"}: ${error.message}`,
+    { cause: error }
+  )
 }
 
 function emailMatches(listed: ListedEmail, recipient: string): boolean {
@@ -97,7 +107,7 @@ export async function listResendEmails(input: {
       ...(after ? { after } : {}),
     })
     if (error) {
-      throw new Error(error.message)
+      throwResendError("list", error)
     }
     const items = (data?.data ?? []) as ListedEmail[]
     let reachedWindowStart = false
@@ -128,7 +138,7 @@ export async function getResendEmail(
   const resend = getResend()
   const { data, error } = await resend.emails.get(id)
   if (error) {
-    throw new Error(error.message)
+    throwResendError("get", error)
   }
   if (!data) return null
   return data as RetrievedEmail

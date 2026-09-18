@@ -63,9 +63,12 @@ sendNotification({
 
 Urgency is a property of the kind (`NOTIFICATION_KINDS[kind].urgency`), never a call argument.
 Delivery guarantees: e-mail = idempotent provider submission (Resend `Idempotency-Key` =
-delivery row id, deduplicated by Resend for 24 h — not a recipient-delivery guarantee); SMS =
-at-least-once (Twilio status callback + per-delivery `Ref` body fingerprint reconciliation
-before any re-send) — see execution-plan Phase 8.
+delivery row id, deduplicated by Resend for 24 h — not a recipient-delivery guarantee). The
+accepted Resend message id is persisted on `notification_deliveries.provider_id` immediately
+after the provider accepts, before the CAS complete, so a lost lease after 24 h does not
+depend on listing the account. `emails.list` / `emails.get` tag adoption is the fallback for
+rows that never stored the id. SMS = at-least-once (Twilio status callback + per-delivery `Ref`
+body fingerprint reconciliation before any re-send) — see execution-plan Phase 8.
 
 Responsibilities (`{ userId }` mode):
 

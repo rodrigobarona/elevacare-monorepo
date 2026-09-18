@@ -207,6 +207,30 @@ export async function markFirstAttempt(input: {
   })
 }
 
+export async function recordProviderId(input: {
+  id: string
+  providerId: string
+  now: Date
+}): Promise<void> {
+  await withPlatformAdminContext(async (tx) => {
+    await tx
+      .update(main.notificationDeliveries)
+      .set({
+        providerId: input.providerId,
+        updatedAt: input.now,
+      })
+      .where(
+        and(
+          eq(main.notificationDeliveries.id, input.id),
+          or(
+            isNull(main.notificationDeliveries.providerId),
+            eq(main.notificationDeliveries.providerId, input.providerId)
+          )
+        )
+      )
+  })
+}
+
 export async function completeDelivery(input: {
   id: string
   runId: string
@@ -221,9 +245,9 @@ export async function completeDelivery(input: {
       .update(main.notificationDeliveries)
       .set({
         status: input.status,
-        providerId: input.providerId ?? null,
         error: input.error ?? null,
         updatedAt: input.now,
+        ...(input.providerId ? { providerId: input.providerId } : {}),
       })
       .where(
         and(

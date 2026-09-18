@@ -55,9 +55,11 @@ Each entry should include:
   `lease_owner` + `claimed_at` before any provider call. Unique conflict
   returns `sent` as a no-op, or reclaims `queued` rows older than 60 s.
   Completion is CAS on `lease_owner` + `claimed_at`. Email uses Resend
-  `Idempotency-Key` = delivery id (24 h) and `deliveryId` tags; retries
-  older than 24 h adopt a matching Resend message instead of sending
-  again. In-app inserts are keyed by `data.deliveryId`. SMS is not sent
+  `Idempotency-Key` = delivery id (24 h) and `deliveryId` tags. The
+  accepted Resend id is persisted on `provider_id` before CAS complete so
+  a lost lease after 24 h does not list-scan. List/get tag adoption is
+  the fallback for rows that never stored the id. In-app inserts are
+  keyed by `data.deliveryId`. SMS is not sent
   in this slice. `invoice.issued` stays off the union.
 - Reference: `packages/notifications/src/send-notification.ts`,
   `docs/eleva-v3/notifications-spec.md`

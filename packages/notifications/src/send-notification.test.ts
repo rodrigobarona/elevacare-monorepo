@@ -108,9 +108,18 @@ class MemoryStore {
     if (row.leaseOwner !== input.runId) return false
     if (row.claimedAt.getTime() !== input.claimedAt.getTime()) return false
     row.status = input.status
-    row.providerId = input.providerId ?? null
+    if (input.providerId !== undefined) {
+      row.providerId = input.providerId
+    }
     row.error = input.error ?? null
     return true
+  }
+
+  recordProviderId(input: { id: string; providerId: string }): void {
+    const row = this.byId(input.id)
+    if (!row) return
+    if (row.providerId && row.providerId !== input.providerId) return
+    row.providerId = input.providerId
   }
 
   byId(id: string): DeliveryRow | undefined {
@@ -130,6 +139,7 @@ class MemoryStore {
       claimDelivery: async (input) => this.claim(input),
       markFirstAttempt: async (input) => this.markFirstAttempt(input),
       completeDelivery: async (input) => this.complete(input),
+      recordProviderId: async (input) => this.recordProviderId(input),
       insertInbox: async (input) => {
         if (this.inbox.some((row) => row.deliveryId === input.deliveryId)) {
           return
@@ -210,6 +220,14 @@ describe("sendNotification", () => {
         store.deps(now)
       )
     ).rejects.toMatchObject({ code: "ORG_CONTEXT_REQUIRED" })
+    expect(store.rows.size).toBe(0)
+    expect(store.sendCalls).toBe(0)
+  })
+
+  it("rejects a malformed orgId before any write", async () => {
+    await expect(
+      sendNotification(bookingInput({ orgId: "not-a-uuid" }), store.deps(now))
+    ).rejects.toMatchObject({ code: "VALIDATION" })
     expect(store.rows.size).toBe(0)
     expect(store.sendCalls).toBe(0)
   })
@@ -421,7 +439,7 @@ describe("sendNotification", () => {
     expect(store.byId(claimed.row.id)?.firstAttemptAt).toEqual(firstAttempt)
   })
 
-  it("adopts a Resend message after 24h instead of sending again", async () => {
+  it("persists the Resend id before complete so a 24h retry does not list or resend", async () => {
     const deps = store.deps(now)
     deps.completeDelivery = async () => false
     await sendNotification(bookingInput({ channelsOverride: ["email"] }), {
@@ -431,6 +449,32 @@ describe("sendNotification", () => {
     expect(store.sendCalls).toBe(1)
     const row = [...store.rows.values()][0]
     expect(row?.status).toBe("queued")
+    expect(row?.providerId).toBe("re_1")
+
+    now.current = new Date(
+      now.current.getTime() + RESEND_IDEMPOTENCY_WINDOW_MS + 1
+    )
+    const retry = await sendNotification(
+      bookingInput({ channelsOverride: ["email"] }),
+      { ...store.deps(now), runId: "worker-b" }
+    )
+    expect(retry.deliveries[0]?.status).toBe("sent")
+    expect(store.sendCalls).toBe(1)
+    expect(store.listCalls).toBe(0)
+  })
+
+  it("falls back to Resend list adoption when the provider id was never persisted", async () => {
+    const deps = store.deps(now)
+    deps.completeDelivery = async () => false
+    deps.recordProviderId = async () => undefined
+    await sendNotification(bookingInput({ channelsOverride: ["email"] }), {
+      ...deps,
+      runId: "worker-a",
+    })
+    expect(store.sendCalls).toBe(1)
+    const row = [...store.rows.values()][0]
+    expect(row?.status).toBe("queued")
+    expect(row?.providerId).toBeNull()
 
     now.current = new Date(
       now.current.getTime() + RESEND_IDEMPOTENCY_WINDOW_MS + 1
