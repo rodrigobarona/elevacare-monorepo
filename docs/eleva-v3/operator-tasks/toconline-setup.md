@@ -1,19 +1,23 @@
 # TOConline setup (operator)
 
-Status: **stub** for Phase 07.2. Automatic **production** issuance (PR 07.1)
-stays blocked until remaining fiscal parameters are confirmed (tax codes,
-rates, legal mentions, VIES 24h cache + downtime procedure). This file is
-the operator checklist for credentials and series — not permission to issue.
+Status: **operator-gated**. Founder 2026-09-17 unblocked **07.1 engineering**
+(schema, tax lookups, closed-gate orchestration). Automatic **production**
+issuance and AT Comunicação stay blocked until remaining fiscal parameters
+are confirmed with the accountant (live tax codes, rates, legal mentions,
+VIES 24h reuse + downtime). This file is the operator checklist for
+credentials and series — not permission to issue, Comunicar TEST, or POST
+fictitious FTs.
 
 ## TEST vs ELEVA
 
-| Series prefix | What it is                                        | Allowed now                                                                                                                                          |
-| ------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `TEST`        | TOConline-only sandbox. Not a tax sandbox.        | Lookups, OAuth, token refresh. **Never** `Comunicar série` to AT. **Never** finalize fictitious documents. **Never** POST FT/NC.                     |
-| `ELEVA`       | Production (`ELEVA-FEE-YYYY`, `ELEVA-SAAS-YYYY`). | Create the series in TOConline when legal procedures are ready. **Do not** use ELEVA to simulate. Communicate and issue only after those procedures. |
+| Series prefix | What it is                                        | Allowed now                                                                                                                                                                   |
+| ------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TEST`        | TOConline-only sandbox. Not a tax sandbox.        | Lookups, OAuth, token refresh. **Never** `Comunicar série` to AT. **Never** finalize fictitious documents. **Never** POST FT/NC.                                              |
+| `ELEVA`       | Production (`ELEVA-FEE-YYYY`, `ELEVA-SAAS-YYYY`). | Create the series in TOConline when legal procedures are ready. Communicate to AT **only** after the legally required series communication. **Do not** use ELEVA to simulate. |
 
 Accountant 2026-09-15: non-communication of TEST does not make it a fiscal
-test environment and does not authorize fictitious documents.
+test environment and does not authorize fictitious documents. Founder
+2026-09-17 does not change that.
 
 ## OAuth app (Dados API)
 
@@ -31,6 +35,9 @@ Also set: `TOCONLINE_CLIENT_ID`, `TOCONLINE_CLIENT_SECRET`,
 `TOCONLINE_SERIES_PREFIX` (staging may use `TEST` locally; production is
 `ELEVA` at go-live).
 
+`TOCONLINE_ALLOW_V1_AUTO_FINALIZE` must stay unset. It is **not** a bypass:
+`issueInvoice()` refuses v1 POST unconditionally.
+
 ## Issuance gate (still closed)
 
 `issueInvoice()` must not POST `/api/v1/commercial_sales_documents` (v1
@@ -43,10 +50,13 @@ expert invoices through that same closed gate.
 `expert_invoices`. It does **not** POST FTs. Provision with
 `pnpm qstash:setup:invoicing`.
 
-## Still to do before 07.1
+## Still to do before production issuance
 
-- [ ] Confirm remaining fiscal parameters with the accountant
-- [ ] Create and communicate **ELEVA** series only after legal procedures
+- [ ] Confirm remaining live tax codes/rates/legal mentions with Manolo
+- [ ] Accountant-specific validation of VIES 24h reuse + downtime procedure
+      before intra-EU reverse-charge issuance
+- [ ] Create and **Comunicar** ELEVA series only after legally required
+      series communication
 - [ ] Provision QStash: `pnpm qstash:setup:invoicing` (or `pnpm qstash:setup`)
 - [ ] Do **not** Comunicar TEST; do **not** issue TEST or ELEVA FTs to simulate
 
