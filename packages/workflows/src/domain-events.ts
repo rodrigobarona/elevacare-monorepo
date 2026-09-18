@@ -1,7 +1,8 @@
-import { and, eq, inArray, sql } from "drizzle-orm"
+import { and, eq, inArray, notInArray, sql } from "drizzle-orm"
 import {
   CLOSED_GATE_INVOICE_EVENT_TYPES,
   CLOSED_GATE_INVOICE_SUBSCRIBERS,
+  SEND_NOTIFICATION_SUBSCRIBER,
   type ClosedGateInvoicePayload,
 } from "@eleva/accounting/platform-fee-events"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
@@ -39,12 +40,24 @@ export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,
 }
 
+export const OBSERVATIONAL_SUBSCRIBERS = ["logger"] as const
+
 export type DomainEventSubscriber = (event: {
   id: string
   type: DomainEventType
   orgId: string
   payload: Record<string, unknown>
 }) => Promise<void>
+
+export function claimSkipSubscriberIds(
+  subscribers: Record<string, DomainEventSubscriber>
+): string[] {
+  const skipped: string[] = [...OBSERVATIONAL_SUBSCRIBERS]
+  if (!subscribers[SEND_NOTIFICATION_SUBSCRIBER]) {
+    skipped.push(SEND_NOTIFICATION_SUBSCRIBER)
+  }
+  return skipped
+}
 
 const MAX_ATTEMPTS = 10
 const STALE_PROCESSING_MS = 10 * 60 * 1000
@@ -121,8 +134,13 @@ export async function publishPendingDomainEvents(input: {
   const batchSize = input.batchSize ?? 25
   const maxAttempts = input.maxAttempts ?? MAX_ATTEMPTS
   const subscribers = input.subscribers
+  const skipSubscriberIds = claimSkipSubscriberIds(subscribers)
 
-  const deliveries = await claimPendingDeliveries(batchSize, maxAttempts)
+  const deliveries = await claimPendingDeliveries(
+    batchSize,
+    maxAttempts,
+    skipSubscriberIds
+  )
   const result: PublishDomainEventsResult = {
     claimed: deliveries.length,
     succeeded: 0,
@@ -170,8 +188,13 @@ export async function publishPendingDomainEvents(input: {
 
 async function claimPendingDeliveries(
   batchSize: number,
-  maxAttempts: number
+  maxAttempts: number,
+  skipSubscriberIds: string[]
 ): Promise<ClaimedDelivery[]> {
+  const skipList = sql.join(
+    skipSubscriberIds.map((id) => sql`${id}`),
+    sql`, `
+  )
   return withPlatformAdminContext(async (tx) => {
     const claimed = await tx.execute(sql<{ id: string }>`
       UPDATE domain_event_deliveries AS d
@@ -194,6 +217,7 @@ async function claimPendingDeliveries(
           )
         )
           AND c.attempts < ${maxAttempts}
+          AND c.subscriber_id NOT IN (${skipList})
         ORDER BY c.id
         LIMIT ${batchSize}
         FOR UPDATE SKIP LOCKED
@@ -255,6 +279,19 @@ async function markDeliveryFailed(
 
 async function markEventPublishedIfComplete(eventId: string) {
   await withPlatformAdminContext(async (tx) => {
+    const observational = [...OBSERVATIONAL_SUBSCRIBERS]
+    const [real] = await tx
+      .select({ id: main.domainEventDeliveries.id })
+      .from(main.domainEventDeliveries)
+      .where(
+        and(
+          eq(main.domainEventDeliveries.eventId, eventId),
+          notInArray(main.domainEventDeliveries.subscriberId, observational)
+        )
+      )
+      .limit(1)
+    if (!real) return
+
     const [open] = await tx
       .select({ id: main.domainEventDeliveries.id })
       .from(main.domainEventDeliveries)
@@ -265,7 +302,8 @@ async function markEventPublishedIfComplete(eventId: string) {
             "pending",
             "processing",
             "failed",
-          ])
+          ]),
+          notInArray(main.domainEventDeliveries.subscriberId, observational)
         )
       )
       .limit(1)

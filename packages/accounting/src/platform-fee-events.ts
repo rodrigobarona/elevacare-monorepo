@@ -29,7 +29,11 @@ export const CLOSED_GATE_INVOICE_STATUSES = [
 export type ClosedGateInvoiceStatus =
   (typeof CLOSED_GATE_INVOICE_STATUSES)[number]
 
-export const CLOSED_GATE_INVOICE_SUBSCRIBERS = ["logger"] as const
+export const SEND_NOTIFICATION_SUBSCRIBER = "send-notification" as const
+
+export const CLOSED_GATE_INVOICE_SUBSCRIBERS = [
+  SEND_NOTIFICATION_SUBSCRIBER,
+] as const
 
 export type ClosedGateInvoicePayload = {
   invoiceKind: "platform_fee"
@@ -134,6 +138,14 @@ export async function emitClosedGateInvoiceDomainEvent(
       )
     }
     eventId = existing.id
+  } else {
+    console.info("[domain-events] closed-gate invoice", {
+      eventId,
+      type,
+      orgId: input.orgId,
+      invoiceId: input.invoiceId,
+      status: input.status,
+    })
   }
 
   for (const subscriberId of CLOSED_GATE_INVOICE_SUBSCRIBERS) {
