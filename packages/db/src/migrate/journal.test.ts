@@ -64,7 +64,12 @@ describe("migration journal helpers", () => {
       "recipient_email IS NULL OR channel = 'email'"
     )
     expect(notificationsSql).toContain("notification_deliveries_org_idx")
-    expect(notificationsSql).toContain("citext")
+    expect(notificationsSql).toContain("CREATE EXTENSION IF NOT EXISTS citext")
+    expect(
+      last?.statements.some(
+        (s) => s.includes("CREATE EXTENSION") && s.includes("ALTER TABLE")
+      )
+    ).toBe(false)
     expect(notificationsSql).toContain("phone_e164")
     expect(notificationsSql).toContain('lower("recipient_email"::text)')
     const creditNoteRefund = migrations.find(

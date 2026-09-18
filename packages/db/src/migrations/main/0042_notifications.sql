@@ -4,7 +4,7 @@
 -- (statement-by-statement apply, no enclosing transaction) can finish.
 
 CREATE EXTENSION IF NOT EXISTS citext;
-
+--> statement-breakpoint
 ALTER TABLE "auth"."user" ADD COLUMN IF NOT EXISTS "phone_e164" text;
 --> statement-breakpoint
 ALTER TABLE "auth"."user" ADD COLUMN IF NOT EXISTS "phone_verified_at" timestamp with time zone;
