@@ -207,8 +207,9 @@ Lane 1, when the Diary mobile app ships:
 `NOTIFICATION_KINDS` in `@eleva/notifications` is the closed union.
 A kind that is not in that const does not compile.
 
-Registered kinds (schema + `NOTIFICATION_KINDS`; only closed-gate invoice
-emails send until `sendNotification` lands):
+Registered kinds (schema + `NOTIFICATION_KINDS`; `sendNotification`
+claims delivery rows before Resend / in-app insert. Closed-gate invoice
+emails also still send via `sendClosedGateInvoiceNotification`):
 
 - `booking.confirmed` (member + expert variants at send time)
 - `booking.reminder_24h`

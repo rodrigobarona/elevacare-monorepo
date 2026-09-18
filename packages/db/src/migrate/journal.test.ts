@@ -38,10 +38,15 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0042_notifications")
+    expect(last?.tag).toBe("0043_notifications_inbox_delivery_id")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    const notificationsSql = last?.statements.join("\n") ?? ""
+    expect(last?.statements.join("\n")).toContain(
+      "notifications_delivery_id_key"
+    )
+    const notifications = migrations.find((m) => m.tag === "0042_notifications")
+    expect(notifications?.statements.length).toBeGreaterThan(0)
+    const notificationsSql = notifications?.statements.join("\n") ?? ""
     expect(notificationsSql).toContain("notification_deliveries")
     expect(notificationsSql).toContain('"org_id" uuid REFERENCES')
     expect(notificationsSql).toContain("notification_deliveries_tenant_read")
@@ -66,7 +71,7 @@ describe("migration journal helpers", () => {
     expect(notificationsSql).toContain("notification_deliveries_org_idx")
     expect(notificationsSql).toContain("CREATE EXTENSION IF NOT EXISTS citext")
     expect(
-      last?.statements.some(
+      notifications?.statements.some(
         (s) => s.includes("CREATE EXTENSION") && s.includes("ALTER TABLE")
       )
     ).toBe(false)

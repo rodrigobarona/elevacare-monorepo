@@ -5,6 +5,7 @@ import {
   CLOSED_GATE_INVOICE_NOTIFICATION_KINDS,
   NOTIFICATION_KINDS,
   NOTIFICATION_KIND_VALUES,
+  ORG_SCOPED_NOTIFICATION_KINDS,
   USER_SCOPED_NOTIFICATION_KINDS,
 } from "./kinds"
 
@@ -73,6 +74,8 @@ describe("NOTIFICATION_KINDS", () => {
       "auth.reset_password",
       "auth.two_factor_otp",
     ])
+    expect(ORG_SCOPED_NOTIFICATION_KINDS).not.toContain("auth.magic_link")
+    expect(ORG_SCOPED_NOTIFICATION_KINDS).toContain("auth.org_invitation")
   })
 
   it("keeps SQL CHECK kinds in lockstep with NOTIFICATION_KINDS", () => {

@@ -101,6 +101,9 @@ export const notifications = pgTable(
       .on(t.userId, t.createdAt)
       .where(sql`read_at IS NULL`),
     orgIdx: index("notifications_org_idx").on(t.orgId),
+    deliveryIdKey: uniqueIndex("notifications_delivery_id_key")
+      .on(t.userId, sql`(data ->> 'deliveryId')`)
+      .where(sql`(data ->> 'deliveryId') IS NOT NULL`),
     dataChk: check(
       "notifications_data_object",
       sql`jsonb_typeof(data) = 'object'`

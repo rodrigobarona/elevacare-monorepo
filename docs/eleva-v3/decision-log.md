@@ -35,7 +35,7 @@ Each entry should include:
 ### 2026-09-18: Phase 08.3 notification tables do not imply issued FTs
 
 - Owner: engineering
-- Status: active
+- Status: superseded
 - Summary: Lane 1 schema (`notifications`, `notification_deliveries`,
   `email_suppressions`, `phone_verifications`) and `NOTIFICATION_KINDS`
   land without `invoice.issued` / `invoice.failed`. Kind CHECKs and
@@ -45,7 +45,23 @@ Each entry should include:
   `sendNotification` is wired.
 - Reference: `packages/db/src/schema/main/notifications.ts`,
   `packages/notifications/src/kinds.ts`
-- Next review date: when `sendNotification` claims delivery rows
+- Next review date: superseded the same day by the sendNotification claim/lease entry
+
+### 2026-09-18: sendNotification claims before provider and uses Resend idempotency
+
+- Owner: engineering
+- Status: active
+- Summary: `sendNotification` inserts a `queued` delivery row with
+  `lease_owner` + `claimed_at` before any provider call. Unique conflict
+  returns `sent` as a no-op, or reclaims `queued` rows older than 60 s.
+  Completion is CAS on `lease_owner` + `claimed_at`. Email uses Resend
+  `Idempotency-Key` = delivery id (24 h) and `deliveryId` tags; retries
+  older than 24 h adopt a matching Resend message instead of sending
+  again. In-app inserts are keyed by `data.deliveryId`. SMS is not sent
+  in this slice. `invoice.issued` stays off the union.
+- Reference: `packages/notifications/src/send-notification.ts`,
+  `docs/eleva-v3/notifications-spec.md`
+- Next review date: when Twilio SMS lands
 
 ### 2026-09-18: Closed-gate invoice emails go to expert-org operators
 
