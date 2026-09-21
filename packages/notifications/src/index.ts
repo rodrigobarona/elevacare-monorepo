@@ -32,8 +32,12 @@ export {
 export {
   sendBookingNotification,
   isBookingNotificationKind,
+  isBookingSendKind,
   BOOKING_NOTIFICATION_KINDS,
+  BOOKING_REMINDER_KINDS,
   type BookingNotificationKind,
+  type BookingReminderKind,
+  type BookingSendKind,
   type BookingNotificationEvent,
 } from "./send-booking-notification"
 export {

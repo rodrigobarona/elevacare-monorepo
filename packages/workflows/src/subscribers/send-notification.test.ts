@@ -29,6 +29,17 @@ vi.mock("@eleva/notifications", () => ({
     type === "payout.approval_required",
 }))
 
+const { scheduleBookingReminders } = vi.hoisted(() => ({
+  scheduleBookingReminders: vi.fn().mockResolvedValue({
+    scheduled: [],
+    skipped: [],
+  }),
+}))
+
+vi.mock("../notifications/reminders", () => ({
+  scheduleBookingReminders,
+}))
+
 import { handleSendNotification } from "./send-notification"
 
 describe("handleSendNotification", () => {
@@ -53,21 +64,73 @@ describe("handleSendNotification", () => {
   it("forwards booking events to sendBookingNotification", async () => {
     sendClosedGateInvoiceNotification.mockClear()
     sendBookingNotification.mockClear()
+    scheduleBookingReminders.mockClear()
     const event = {
       id: "evt-2",
       type: "booking.confirmed" as const,
       orgId: "org-1",
-      payload: { bookingId: "booking-1" },
+      payload: {
+        bookingId: "00000000-0000-4000-8000-000000000002",
+        startsAt: "2026-09-22T15:00:00.000Z",
+      },
     }
     await handleSendNotification(event)
     expect(sendBookingNotification).toHaveBeenCalledWith({
       id: "evt-2",
       type: "booking.confirmed",
       orgId: "org-1",
-      payload: { bookingId: "booking-1" },
+      payload: {
+        bookingId: "00000000-0000-4000-8000-000000000002",
+        startsAt: "2026-09-22T15:00:00.000Z",
+      },
     })
+    expect(scheduleBookingReminders).toHaveBeenCalledWith({
+      bookingId: "00000000-0000-4000-8000-000000000002",
+      orgId: "org-1",
+      startsAt: new Date("2026-09-22T15:00:00.000Z"),
+    })
+    expect(scheduleBookingReminders.mock.invocationCallOrder[0]).toBeLessThan(
+      sendBookingNotification.mock.invocationCallOrder[0] ??
+        Number.MAX_SAFE_INTEGER
+    )
     expect(sendClosedGateInvoiceNotification).not.toHaveBeenCalled()
     expect(sendPaymentPayoutNotification).not.toHaveBeenCalled()
+  })
+
+  it("schedules reminders for a reschedule before sending mail", async () => {
+    sendBookingNotification.mockClear()
+    scheduleBookingReminders.mockClear()
+    await handleSendNotification({
+      id: "evt-reschedule",
+      type: "booking.rescheduled" as const,
+      orgId: "org-1",
+      payload: {
+        bookingId: "00000000-0000-4000-8000-000000000002",
+        startsAt: "2026-09-23T15:00:00.000Z",
+      },
+    })
+    expect(scheduleBookingReminders).toHaveBeenCalledWith({
+      bookingId: "00000000-0000-4000-8000-000000000002",
+      orgId: "org-1",
+      startsAt: new Date("2026-09-23T15:00:00.000Z"),
+    })
+    expect(sendBookingNotification).toHaveBeenCalledTimes(1)
+  })
+
+  it("does not schedule reminders for cancelled bookings", async () => {
+    sendBookingNotification.mockClear()
+    scheduleBookingReminders.mockClear()
+    await handleSendNotification({
+      id: "evt-cancel",
+      type: "booking.cancelled" as const,
+      orgId: "org-1",
+      payload: {
+        bookingId: "00000000-0000-4000-8000-000000000002",
+        startsAt: "2026-09-22T15:00:00.000Z",
+      },
+    })
+    expect(sendBookingNotification).toHaveBeenCalledTimes(1)
+    expect(scheduleBookingReminders).not.toHaveBeenCalled()
   })
 
   it("forwards payment events to sendPaymentPayoutNotification", async () => {

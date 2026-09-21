@@ -30,6 +30,8 @@ import {
   ReserveBookingResponseSchema,
   ConfirmBookingRequestSchema,
   ConfirmBookingResponseSchema,
+  BookingReminderRequestSchema,
+  BookingReminderResponseSchema,
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
   RefundBookingPaymentRequestSchema,
@@ -2330,6 +2332,46 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+          },
+        },
+      },
+      "/workflows/booking-reminder": {
+        post: {
+          operationId: "deliverBookingReminder",
+          summary: "Send a scheduled booking reminder",
+          description:
+            "Internal QStash handler for T-24h and T-1h reminders. Re-checks that the booking is still confirmed before sendNotification. Cancel does not delete the delayed message. Auth is WORKFLOWS_DRAIN_SECRET.",
+          tags: ["Workflows"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: BookingReminderRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description:
+                "Reminder processed or skipped after status re-check",
+              content: {
+                "application/json": {
+                  schema: BookingReminderResponseSchema,
+                },
+              },
+            },
+            "401": {
+              description: "Unauthorized",
+              content: {
+                "application/json": { schema: ErrorSchema },
+              },
+            },
+            "422": {
+              description: "Validation error",
+              content: {
+                "application/json": { schema: ErrorSchema },
+              },
+            },
           },
         },
       },

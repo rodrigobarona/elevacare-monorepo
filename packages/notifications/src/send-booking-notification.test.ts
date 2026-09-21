@@ -5,16 +5,20 @@ const {
   renderBookingConfirmed,
   renderBookingCancelled,
   renderBookingRescheduled,
+  renderBookingReminder,
   getEmailTranslations,
 } = vi.hoisted(() => ({
   renderBookingConfirmed: vi.fn(async () => "<p>confirmed</p>"),
   renderBookingCancelled: vi.fn(async () => "<p>cancelled</p>"),
   renderBookingRescheduled: vi.fn(async () => "<p>rescheduled</p>"),
+  renderBookingReminder: vi.fn(async () => "<p>reminder</p>"),
   getEmailTranslations: vi.fn(() => ({
     booking: {
       confirmedTitle: "New Booking Confirmed",
       rescheduledTitle: "Booking Rescheduled",
       cancelledTitle: "Booking Cancelled",
+      reminder24hTitle: "Session reminder (24 h)",
+      reminder1hTitle: "Session reminder (1 h)",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -23,6 +27,10 @@ const {
         `Rescheduled: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
         `Cancelled: ${member} — ${date}`,
+      reminder24h: (member: string, date: string) =>
+        `Reminder (24 h): ${member} — ${date}`,
+      reminder1h: (member: string, date: string) =>
+        `Reminder (1 h): ${member} — ${date}`,
     },
   })),
 }))
@@ -31,6 +39,7 @@ vi.mock("@eleva/email", () => ({
   renderBookingConfirmed,
   renderBookingCancelled,
   renderBookingRescheduled,
+  renderBookingReminder,
   getEmailTranslations,
 }))
 vi.mock("@eleva/db", () => ({
@@ -91,6 +100,7 @@ describe("sendBookingNotification", () => {
     renderBookingConfirmed.mockClear()
     renderBookingCancelled.mockClear()
     renderBookingRescheduled.mockClear()
+    renderBookingReminder.mockClear()
     getEmailTranslations.mockClear()
   })
 
@@ -264,6 +274,67 @@ describe("sendBookingNotification", () => {
       {
         id: "evt-stale",
         type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ status: "cancelled" }),
+        send,
+      }
+    )
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it("sends a 24h reminder only while the booking is still confirmed", async () => {
+    const send = vi.fn().mockResolvedValue({
+      kind: "booking.reminder_24h",
+      deliveries: [],
+    })
+    await sendBookingNotification(
+      {
+        id: "evt-reminder",
+        type: "booking.reminder_24h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    expect(send).toHaveBeenCalledTimes(2)
+    expect(send.mock.calls[0]?.[0]).toEqual(
+      expect.objectContaining({
+        kind: "booking.reminder_24h",
+        idempotencyKey: `booking:${BOOKING_ID}:reminder_24h`,
+      })
+    )
+    expect(send.mock.calls[0]?.[0].ctx.body).toMatch(/^Your session with Ana /)
+  })
+
+  it("still sends reminders after a reschedule when startsAt matches", async () => {
+    const send = vi.fn().mockResolvedValue({
+      kind: "booking.reminder_1h",
+      deliveries: [],
+    })
+    await sendBookingNotification(
+      {
+        id: "evt-reminder-rescheduled",
+        type: "booking.reminder_1h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ status: "rescheduled" }),
+        send,
+      }
+    )
+    expect(send).toHaveBeenCalledTimes(2)
+  })
+
+  it("skips reminders after cancel without deleting QStash", async () => {
+    const send = vi.fn()
+    await sendBookingNotification(
+      {
+        id: "evt-stale-reminder",
+        type: "booking.reminder_1h",
         orgId: ORG_ID,
         payload: eventPayload(),
       },

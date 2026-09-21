@@ -215,8 +215,14 @@ claims delivery rows before Resend / in-app insert. Closed-gate invoice
 emails also still send via `sendClosedGateInvoiceNotification`):
 
 - `booking.confirmed` (member + expert variants at send time)
-- `booking.reminder_24h`
-- `booking.reminder_1h` (urgent; bypasses quiet hours)
+- `booking.reminder_24h` (scheduled on `booking.confirmed` and
+  `booking.rescheduled` via QStash `notBefore` at T-24h; see
+  decision-log 2026-09-21 QStash exception to ADR-007. Handler
+  `POST /workflows/booking-reminder` re-checks `confirmed` /
+  `rescheduled` and matching `startsAt` at send time — cancel does
+  not delete the QStash message)
+- `booking.reminder_1h` (urgent; bypasses quiet hours; same schedule +
+  re-check contract at T-1h)
 - `booking.cancelled`
 - `booking.rescheduled`
 - `payment.failed` (urgent)

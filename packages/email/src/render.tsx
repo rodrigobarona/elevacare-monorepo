@@ -19,6 +19,10 @@ import {
   type BookingCancelledProps,
 } from "./templates/booking-cancelled"
 import {
+  BookingReminderEmail,
+  type BookingReminderProps,
+} from "./templates/booking-reminder"
+import {
   InvoiceClosedGateEmail,
   type InvoiceClosedGateProps,
 } from "./templates/invoice-closed-gate"
@@ -73,6 +77,12 @@ export async function renderBookingCancelled(
   props: BookingCancelledProps
 ): Promise<string> {
   return render(<BookingCancelledEmail {...props} />)
+}
+
+export async function renderBookingReminder(
+  props: BookingReminderProps
+): Promise<string> {
+  return render(<BookingReminderEmail {...props} />)
 }
 
 export async function renderInvoiceClosedGate(

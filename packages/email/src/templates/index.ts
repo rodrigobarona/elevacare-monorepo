@@ -16,6 +16,11 @@ export {
   type BookingCancelledProps,
 } from "./booking-cancelled"
 export {
+  BookingReminderEmail,
+  type BookingReminderProps,
+  type BookingReminderWindow,
+} from "./booking-reminder"
+export {
   InvoiceClosedGateEmail,
   type InvoiceClosedGateProps,
   type InvoiceClosedGateStatus,
