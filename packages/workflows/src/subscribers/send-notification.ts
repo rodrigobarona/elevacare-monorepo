@@ -25,7 +25,31 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
       event.type === "booking.confirmed" ||
       event.type === "booking.rescheduled"
     ) {
-      await scheduleActiveBookingReminders(event)
+      const parsed = parseBookingNotificationPayload(event.type, event.payload)
+      const results = await Promise.allSettled([
+        scheduleBookingReminders({
+          bookingId: parsed.bookingId,
+          orgId: event.orgId,
+          startsAt: new Date(parsed.startsAt),
+        }),
+        sendBookingNotification({
+          id: event.id,
+          type: event.type,
+          orgId: event.orgId,
+          payload: event.payload,
+        }),
+      ])
+      const failures = results.filter(
+        (result): result is PromiseRejectedResult =>
+          result.status === "rejected"
+      )
+      if (failures.length > 0) {
+        throw new AggregateError(
+          failures.map((failure) => failure.reason),
+          "send-notification: booking reminder schedule or send failed"
+        )
+      }
+      return
     }
     await sendBookingNotification({
       id: event.id,
@@ -45,17 +69,4 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
     return
   }
   throw new Error(`send-notification: unsupported event type ${event.type}`)
-}
-
-async function scheduleActiveBookingReminders(event: {
-  type: string
-  orgId: string
-  payload: Record<string, unknown>
-}): Promise<void> {
-  const parsed = parseBookingNotificationPayload(event.type, event.payload)
-  await scheduleBookingReminders({
-    bookingId: parsed.bookingId,
-    orgId: event.orgId,
-    startsAt: new Date(parsed.startsAt),
-  })
 }

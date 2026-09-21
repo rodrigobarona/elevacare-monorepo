@@ -116,10 +116,6 @@ describe("handleSendNotification", () => {
       orgId: "org-1",
       startsAt: new Date("2026-09-22T15:00:00.000Z"),
     })
-    expect(scheduleBookingReminders.mock.invocationCallOrder[0]).toBeLessThan(
-      sendBookingNotification.mock.invocationCallOrder[0] ??
-        Number.MAX_SAFE_INTEGER
-    )
     expect(sendClosedGateInvoiceNotification).not.toHaveBeenCalled()
     expect(sendPaymentPayoutNotification).not.toHaveBeenCalled()
   })
@@ -162,6 +158,26 @@ describe("handleSendNotification", () => {
     })
     expect(sendBookingNotification).toHaveBeenCalledTimes(1)
     expect(scheduleBookingReminders).not.toHaveBeenCalled()
+  })
+
+  it("still sends mail when reminder scheduling fails", async () => {
+    sendBookingNotification.mockClear()
+    scheduleBookingReminders.mockReset()
+    scheduleBookingReminders.mockRejectedValueOnce(new Error("qstash down"))
+    await expect(
+      handleSendNotification({
+        id: "evt-schedule-fail",
+        type: "booking.confirmed" as const,
+        orgId: "org-1",
+        payload: {
+          bookingId: "00000000-0000-4000-8000-000000000002",
+          startsAt: "2026-09-22T15:00:00.000Z",
+          occurredAt: "2026-09-21T14:00:00.000Z",
+        },
+      })
+    ).rejects.toThrow(/schedule or send failed/)
+    expect(sendBookingNotification).toHaveBeenCalledTimes(1)
+    scheduleBookingReminders.mockResolvedValue({ scheduled: [], skipped: [] })
   })
 
   it("rejects a malformed reschedule before publishing reminder jobs", async () => {

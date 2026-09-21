@@ -2372,6 +2372,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+            "429": {
+              description: "Internal workflow rate limit exceeded",
+              content: {
+                "application/json": { schema: ErrorSchema },
+              },
+            },
             "500": {
               description: "Reminder delivery failed after status re-check",
               content: {

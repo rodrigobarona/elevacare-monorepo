@@ -121,23 +121,29 @@ export function isLocalReminderApiBase(apiBase: string): boolean {
   }
 }
 
+export function isDeployedReminderRuntime(
+  env: NodeJS.ProcessEnv = process.env
+): boolean {
+  return env.VERCEL_ENV === "production" || env.VERCEL_ENV === "preview"
+}
+
 export async function publishReminderJob(
   job: PlannedReminder
 ): Promise<"published" | "skipped"> {
   const token = process.env.QSTASH_TOKEN
   const secret = process.env.WORKFLOWS_DRAIN_SECRET
-  const apiBase = (
-    process.env.API_URL ??
-    process.env.NEXT_PUBLIC_API_URL ??
-    ""
-  ).replace(/\/+$/, "")
+  const apiBase = (process.env.API_URL ?? "").replace(/\/+$/, "")
+  const deployed = isDeployedReminderRuntime()
 
-  if (isLocalReminderApiBase(apiBase)) {
+  if (!deployed && (!apiBase || isLocalReminderApiBase(apiBase))) {
     return "skipped"
   }
   if (!apiBase) {
+    throw new Error("booking-reminder: API_URL is required")
+  }
+  if (isLocalReminderApiBase(apiBase)) {
     throw new Error(
-      "booking-reminder: API_URL or NEXT_PUBLIC_API_URL is required"
+      "booking-reminder: loopback API_URL is not allowed in deployed environments"
     )
   }
   if (!token || !secret) {

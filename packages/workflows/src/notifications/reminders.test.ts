@@ -83,11 +83,7 @@ describe("booking reminder scheduling math", () => {
 })
 
 function restoreEnv(
-  key:
-    | "QSTASH_TOKEN"
-    | "WORKFLOWS_DRAIN_SECRET"
-    | "API_URL"
-    | "NEXT_PUBLIC_API_URL",
+  key: "QSTASH_TOKEN" | "WORKFLOWS_DRAIN_SECRET" | "API_URL" | "VERCEL_ENV",
   previous: string | undefined
 ): void {
   if (previous === undefined) delete process.env[key]
@@ -111,10 +107,10 @@ describe("publishReminderJob", () => {
       token: process.env.QSTASH_TOKEN,
       secret: process.env.WORKFLOWS_DRAIN_SECRET,
       apiUrl: process.env.API_URL,
-      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+      vercelEnv: process.env.VERCEL_ENV,
     }
     process.env.API_URL = "http://localhost:3002"
-    delete process.env.NEXT_PUBLIC_API_URL
+    delete process.env.VERCEL_ENV
     delete process.env.QSTASH_TOKEN
     delete process.env.WORKFLOWS_DRAIN_SECRET
     try {
@@ -135,7 +131,7 @@ describe("publishReminderJob", () => {
       restoreEnv("QSTASH_TOKEN", previous.token)
       restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
       restoreEnv("API_URL", previous.apiUrl)
-      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
+      restoreEnv("VERCEL_ENV", previous.vercelEnv)
     }
   })
 
@@ -144,10 +140,8 @@ describe("publishReminderJob", () => {
       token: process.env.QSTASH_TOKEN,
       secret: process.env.WORKFLOWS_DRAIN_SECRET,
       apiUrl: process.env.API_URL,
-      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
     }
     process.env.API_URL = "https://not-localhost.example"
-    delete process.env.NEXT_PUBLIC_API_URL
     delete process.env.QSTASH_TOKEN
     delete process.env.WORKFLOWS_DRAIN_SECRET
     try {
@@ -168,19 +162,51 @@ describe("publishReminderJob", () => {
       restoreEnv("QSTASH_TOKEN", previous.token)
       restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
       restoreEnv("API_URL", previous.apiUrl)
-      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
     }
   })
 
-  it("throws when the production API base URL is missing", async () => {
+  it("skips a missing API_URL only outside Vercel production and preview", async () => {
     const previous = {
       token: process.env.QSTASH_TOKEN,
       secret: process.env.WORKFLOWS_DRAIN_SECRET,
       apiUrl: process.env.API_URL,
-      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+      vercelEnv: process.env.VERCEL_ENV,
     }
     delete process.env.API_URL
-    delete process.env.NEXT_PUBLIC_API_URL
+    delete process.env.VERCEL_ENV
+    process.env.QSTASH_TOKEN = "qstash-token"
+    process.env.WORKFLOWS_DRAIN_SECRET = "workflow-secret"
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).resolves.toBe("skipped")
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("VERCEL_ENV", previous.vercelEnv)
+    }
+  })
+
+  it("throws when a deployed environment is missing API_URL", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      vercelEnv: process.env.VERCEL_ENV,
+    }
+    delete process.env.API_URL
+    process.env.VERCEL_ENV = "production"
     process.env.QSTASH_TOKEN = "qstash-token"
     process.env.WORKFLOWS_DRAIN_SECRET = "workflow-secret"
     try {
@@ -201,7 +227,40 @@ describe("publishReminderJob", () => {
       restoreEnv("QSTASH_TOKEN", previous.token)
       restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
       restoreEnv("API_URL", previous.apiUrl)
-      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
+      restoreEnv("VERCEL_ENV", previous.vercelEnv)
+    }
+  })
+
+  it("throws when a deployed environment points at loopback", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      vercelEnv: process.env.VERCEL_ENV,
+    }
+    process.env.API_URL = "http://localhost:3002"
+    process.env.VERCEL_ENV = "production"
+    process.env.QSTASH_TOKEN = "qstash-token"
+    process.env.WORKFLOWS_DRAIN_SECRET = "workflow-secret"
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).rejects.toThrow(/loopback/)
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("VERCEL_ENV", previous.vercelEnv)
     }
   })
 

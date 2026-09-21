@@ -5,12 +5,13 @@ import {
   authorizeInternalWorkflow,
   internalWorkflowOptions,
 } from "@/lib/internal-workflow"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
   auth: "internal",
-  rateLimit: false,
+  rateLimit: true,
   botId: false,
 } as const satisfies RoutePolicy
 
@@ -31,6 +32,12 @@ export async function POST(request: Request) {
   const denied = authorizeInternalWorkflow(request)
   if (denied) return denied
   const headers = corsHeaders(request, "POST, OPTIONS")
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request),
+    RATE_LIMITS.internalWorkflow,
+    headers
+  )
+  if (rateLimited) return rateLimited
   const parsed = BookingReminderRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
