@@ -22,7 +22,12 @@ vi.mock("@eleva/db", () => ({
   listExpertBusyBookings: (...args: unknown[]) =>
     listExpertBusyBookings(...args),
   main: {
-    bookings: { id: "bookings.id", status: "bookings.status" },
+    bookings: {
+      id: "bookings.id",
+      status: "bookings.status",
+      startsAt: "bookings.starts_at",
+      scheduleRevision: "bookings.schedule_revision",
+    },
     bookingPayments: { id: "payments.id" },
     slotReservations: { id: "slots.id", status: "slots.status" },
   },

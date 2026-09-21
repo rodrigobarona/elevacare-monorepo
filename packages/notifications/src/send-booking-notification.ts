@@ -25,6 +25,7 @@ const BookingPayloadSchema = z.object({
   startsAt: z.string().datetime(),
   occurredAt: z.string().datetime(),
   previousStartsAt: z.string().datetime().optional(),
+  scheduleRevision: z.number().int().positive().optional(),
 })
 
 export type BookingNotificationEvent = {
@@ -81,9 +82,12 @@ export async function sendBookingNotification(
   if (!parsed.success) {
     throw new Error("send-notification: booking payload is invalid")
   }
-  if (event.type === "booking.rescheduled" && !parsed.data.previousStartsAt) {
+  if (
+    event.type === "booking.rescheduled" &&
+    (!parsed.data.previousStartsAt || parsed.data.scheduleRevision == null)
+  ) {
     throw new Error(
-      "send-notification: reschedule payload missing previousStartsAt"
+      "send-notification: reschedule payload missing previousStartsAt or scheduleRevision"
     )
   }
   const loadBooking = deps.loadBooking ?? loadBookingForNotification
@@ -149,7 +153,8 @@ export async function sendBookingNotification(
     event.type,
     booking.id,
     parsed.data.startsAt,
-    parsed.data.previousStartsAt
+    parsed.data.previousStartsAt,
+    parsed.data.scheduleRevision
   )
   const results = await Promise.allSettled([
     send({
@@ -206,14 +211,18 @@ function deliveryIdempotencyKey(
   kind: BookingNotificationKind,
   bookingId: string,
   startsAt: string,
-  previousStartsAt?: string
+  previousStartsAt?: string,
+  scheduleRevision?: number
 ): string {
   const suffix = kind.slice("booking.".length)
   if (kind === "booking.rescheduled") {
     if (!previousStartsAt) {
       throw new Error("booking.rescheduled requires previousStartsAt")
     }
-    return `booking:${bookingId}:${suffix}:${previousStartsAt}:${startsAt}`
+    if (scheduleRevision === undefined) {
+      throw new Error("booking.rescheduled requires scheduleRevision")
+    }
+    return `booking:${bookingId}:${suffix}:${previousStartsAt}:${startsAt}:${scheduleRevision}`
   }
   return `booking:${bookingId}:${suffix}`
 }

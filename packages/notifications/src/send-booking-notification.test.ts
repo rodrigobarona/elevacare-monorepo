@@ -144,7 +144,7 @@ describe("sendBookingNotification", () => {
         id: "evt-reschedule",
         type: "booking.rescheduled",
         orgId: ORG_ID,
-        payload: eventPayload({ previousStartsAt }),
+        payload: eventPayload({ previousStartsAt, scheduleRevision: 1 }),
       },
       {
         loadBooking: async () => booking({ status: "rescheduled" }),
@@ -152,7 +152,7 @@ describe("sendBookingNotification", () => {
       }
     )
     expect(send.mock.calls[0]?.[0].idempotencyKey).toBe(
-      `booking:${BOOKING_ID}:rescheduled:${previousStartsAt}:${STARTS_AT}`
+      `booking:${BOOKING_ID}:rescheduled:${previousStartsAt}:${STARTS_AT}:1`
     )
   })
 
@@ -283,6 +283,7 @@ describe("sendBookingNotification", () => {
         orgId: ORG_ID,
         payload: eventPayload({
           previousStartsAt: "2026-09-20T10:00:00.000Z",
+          scheduleRevision: 1,
         }),
       },
       {

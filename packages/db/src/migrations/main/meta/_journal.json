@@ -309,6 +309,13 @@
       "when": 1779680000000,
       "tag": "0043_notifications_inbox_delivery_id",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1779690000000,
+      "tag": "0044_booking_schedule_revision",
+      "breakpoints": true
     }
   ]
 }

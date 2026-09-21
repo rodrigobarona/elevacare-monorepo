@@ -17,6 +17,7 @@ export type BookingNotificationPayload = {
   startsAt: string
   occurredAt: string
   previousStartsAt?: string
+  scheduleRevision?: number
 }
 
 export function bookingNotificationIdempotencyKey(input: {
@@ -24,13 +25,21 @@ export function bookingNotificationIdempotencyKey(input: {
   type: BookingNotificationEventType
   startsAt: string
   previousStartsAt?: string
+  scheduleRevision?: number
 }): string {
   const suffix = input.type.slice("booking.".length)
   if (input.type === "booking.rescheduled") {
     if (!input.previousStartsAt) {
       throw new Error("booking.rescheduled requires previousStartsAt")
     }
-    return `booking:${input.bookingId}:${suffix}:${input.previousStartsAt}:${input.startsAt}`
+    if (
+      input.scheduleRevision === undefined ||
+      !Number.isInteger(input.scheduleRevision) ||
+      input.scheduleRevision < 1
+    ) {
+      throw new Error("booking.rescheduled requires scheduleRevision")
+    }
+    return `booking:${input.bookingId}:${suffix}:${input.previousStartsAt}:${input.startsAt}:${input.scheduleRevision}`
   }
   return `booking:${input.bookingId}:${suffix}`
 }
@@ -50,6 +59,7 @@ export type EmitBookingNotificationInput =
       startsAt: Date
       previousStartsAt: Date
       occurredAt: Date
+      scheduleRevision: number
     }
 
 /**
@@ -66,6 +76,8 @@ export async function emitBookingNotificationEvent(
     input.type === "booking.rescheduled"
       ? input.previousStartsAt.toISOString()
       : undefined
+  const scheduleRevision =
+    input.type === "booking.rescheduled" ? input.scheduleRevision : undefined
   if (input.type === "booking.rescheduled" && !previousStartsAt) {
     throw new Error("booking.rescheduled requires previousStartsAt")
   }
@@ -74,12 +86,14 @@ export async function emitBookingNotificationEvent(
     type: input.type,
     startsAt,
     previousStartsAt,
+    scheduleRevision,
   })
   const payload: BookingNotificationPayload = {
     bookingId: input.bookingId,
     startsAt,
     occurredAt,
     ...(previousStartsAt ? { previousStartsAt } : {}),
+    ...(scheduleRevision !== undefined ? { scheduleRevision } : {}),
   }
 
   const inserted = await tx

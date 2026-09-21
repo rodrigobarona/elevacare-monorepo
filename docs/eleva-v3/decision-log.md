@@ -42,9 +42,12 @@ Each entry should include:
   outbox (same tx as the booking write). The `send-notification`
   subscriber loads the booking and calls `sendNotification` for the
   member (or guest email) and the expert with the same idempotency
-  key. Direct Resend ICS mail is a no-op so those emails are not
-  sent twice; ICS attachments stay a later slice.
-  `invoice.issued` / `invoice.failed` stay off the union.
+  key. Reschedule keys include `bookings.schedule_revision` so an
+  A→B→A→B sequence does not reuse the first outbox row; the revision
+  increments in the same transaction as the slot write. Direct Resend
+  ICS mail is a no-op so those emails are not sent twice; ICS
+  attachments stay a later slice. `invoice.issued` / `invoice.failed`
+  stay off the union.
 - Reference: `packages/notifications/src/send-booking-notification.ts`,
   `packages/scheduling/src/emit-domain-event.ts`
 - Next review date: when 24h/1h reminders land

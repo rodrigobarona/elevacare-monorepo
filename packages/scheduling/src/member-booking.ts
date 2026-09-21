@@ -218,14 +218,19 @@ export async function rescheduleMemberBooking(input: {
           endsAt: input.endsAt,
           status: "rescheduled",
           updatedAt: now,
+          scheduleRevision: sql`${main.bookings.scheduleRevision} + 1`,
         })
         .where(
           and(
             eq(main.bookings.id, row.id),
-            eq(main.bookings.status, row.status)
+            eq(main.bookings.status, row.status),
+            eq(main.bookings.startsAt, row.startsAt)
           )
         )
-        .returning({ id: main.bookings.id })
+        .returning({
+          id: main.bookings.id,
+          scheduleRevision: main.bookings.scheduleRevision,
+        })
       if (!updated) {
         throw new MemberBookingPolicyError("INVALID_STATUS")
       }
@@ -237,6 +242,7 @@ export async function rescheduleMemberBooking(input: {
         startsAt: input.startsAt,
         previousStartsAt: row.startsAt,
         occurredAt: now,
+        scheduleRevision: updated.scheduleRevision,
       })
       await ctx.emit({
         entity: "booking",
