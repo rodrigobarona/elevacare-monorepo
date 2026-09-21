@@ -21,6 +21,9 @@ function walk(dir: string): string[] {
   return files
 }
 
+const RESEND_IMPORT =
+  /(?:from\s+|import\s*\(\s*|require\s*\(\s*|import\s+)["']resend(?:\/[^"']*)?["']/
+
 describe("auth notification boundary", () => {
   it("does not import @eleva/notifications or resend", () => {
     const files = walk(join(root, "src"))
@@ -29,11 +32,19 @@ describe("auth notification boundary", () => {
       const source = readFileSync(file, "utf8")
       if (
         source.includes("@eleva/notifications") ||
-        /from ["']resend["']/.test(source)
+        RESEND_IMPORT.test(source)
       ) {
         hits.push(file.slice(root.length + 1))
       }
     }
     expect(hits).toEqual([])
+  })
+
+  it("detects side-effect, dynamic, require, and subpath Resend imports", () => {
+    expect(RESEND_IMPORT.test('import "resend"')).toBe(true)
+    expect(RESEND_IMPORT.test("import('resend')")).toBe(true)
+    expect(RESEND_IMPORT.test('require("resend")')).toBe(true)
+    expect(RESEND_IMPORT.test('from "resend/emails"')).toBe(true)
+    expect(RESEND_IMPORT.test('from "@eleva/email"')).toBe(false)
   })
 })

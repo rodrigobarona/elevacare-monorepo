@@ -23,18 +23,25 @@ export type AuthMailerSend = (input: {
   idempotencyKey: string
 }) => Promise<SendNotificationResult | void>
 
+export type AuthMailerUser = {
+  id?: string
+  email: string
+  name?: string | null
+  locale?: string | null
+}
+
 export type AuthTransactionalMailer = {
   sendVerifyEmail: (input: {
-    user: { id?: string; email: string; name?: string | null }
+    user: AuthMailerUser
     url: string
   }) => Promise<void>
   sendResetPassword: (input: {
-    user: { id?: string; email: string; name?: string | null }
+    user: AuthMailerUser
     url: string
   }) => Promise<void>
   sendMagicLink: (input: { email: string; url: string }) => Promise<void>
   sendTwoFactorOtp: (input: {
-    user: { id?: string; email: string; name?: string | null }
+    user: AuthMailerUser
     otp: string
   }) => Promise<void>
   sendOrgInvitation: (input: {
@@ -67,9 +74,10 @@ function toLocale(value: string | null | undefined): EmailLocale {
   return "en"
 }
 
-function isProductionRuntime(): boolean {
+function isDeployedRuntime(): boolean {
   return (
     process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
     process.env.NODE_ENV === "production"
   )
 }
@@ -131,8 +139,8 @@ export function createAuthMailer(
 
   async function deliver(input: Parameters<AuthMailerSend>[0]): Promise<void> {
     if (!process.env.RESEND_API_KEY) {
-      if (isProductionRuntime()) {
-        throw new Error("RESEND_API_KEY is required in production")
+      if (isDeployedRuntime()) {
+        throw new Error("RESEND_API_KEY is required in production and preview")
       }
       console.info(`[notifications] skip ${input.kind} (no RESEND_API_KEY)`)
       return
@@ -142,7 +150,7 @@ export function createAuthMailer(
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       console.error(`[notifications] ${input.kind} send failed: ${message}`)
-      if (isProductionRuntime()) {
+      if (isDeployedRuntime()) {
         throw error instanceof Error ? error : new Error(message)
       }
     }
@@ -155,6 +163,7 @@ export function createAuthMailer(
         to: user.email,
         url,
         name: user.name ?? undefined,
+        locale: toLocale(user.locale),
         recipient: recipientForUser(user),
         idempotencyKey: `auth.verify_email:${user.email}:${digest(url)}`,
       })
@@ -165,6 +174,7 @@ export function createAuthMailer(
         to: user.email,
         url,
         name: user.name ?? undefined,
+        locale: toLocale(user.locale),
         recipient: recipientForUser(user),
         idempotencyKey: `auth.reset_password:${user.email}:${digest(url)}`,
       })
@@ -184,6 +194,7 @@ export function createAuthMailer(
         to: user.email,
         code: otp,
         name: user.name ?? undefined,
+        locale: toLocale(user.locale),
         recipient: recipientForUser(user),
         idempotencyKey: `auth.two_factor_otp:${user.email}:${digest(otp)}`,
       })

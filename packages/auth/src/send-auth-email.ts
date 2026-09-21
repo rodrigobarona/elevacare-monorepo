@@ -1,5 +1,5 @@
 import { Redis } from "@upstash/redis"
-import { getAuthTransactionalMailer } from "./auth-mailer"
+import { getAuthTransactionalMailer, type AuthMailerUser } from "./auth-mailer"
 import {
   e2eAuthUrlKey,
   shouldPersistE2eAuthUrl,
@@ -31,7 +31,7 @@ async function persistE2eAuthUrl(
 }
 
 export async function sendVerificationEmail(input: {
-  user: { id?: string; email: string; name?: string | null }
+  user: AuthMailerUser
   url: string
 }): Promise<void> {
   await persistE2eAuthUrl("verify-email", input.user.email, input.url)
@@ -39,7 +39,7 @@ export async function sendVerificationEmail(input: {
 }
 
 export async function sendResetPasswordEmail(input: {
-  user: { id?: string; email: string; name?: string | null }
+  user: AuthMailerUser
   url: string
 }): Promise<void> {
   await persistE2eAuthUrl("reset-password", input.user.email, input.url)
@@ -55,7 +55,7 @@ export async function sendMagicLinkEmail(input: {
 }
 
 export async function sendTwoFactorOtpEmail(input: {
-  user: { id?: string; email: string; name?: string | null }
+  user: AuthMailerUser
   otp: string
 }): Promise<void> {
   await getAuthTransactionalMailer().sendTwoFactorOtp(input)

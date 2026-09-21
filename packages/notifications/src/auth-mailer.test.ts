@@ -18,12 +18,18 @@ describe("createAuthMailer", () => {
   it("sends user-scoped auth.verify_email through sendNotification", async () => {
     const mailer = createAuthMailer({ send })
     await mailer.sendVerifyEmail({
-      user: { id: USER_ID, email: "ana@example.com", name: "Ana" },
+      user: {
+        id: USER_ID,
+        email: "ana@example.com",
+        name: "Ana",
+        locale: "pt",
+      },
       url: "https://eleva.care/verify?t=1",
     })
     expect(send).toHaveBeenCalledWith(
       expect.objectContaining({
         kind: "verify-email",
+        locale: "pt",
         recipient: { userId: USER_ID },
         idempotencyKey: expect.stringMatching(
           /^auth\.verify_email:ana@example.com:/
@@ -118,5 +124,30 @@ describe("createAuthMailer", () => {
       })
     ).rejects.toThrow(/RESEND_API_KEY is required/)
     expect(send).not.toHaveBeenCalled()
+  })
+
+  it("throws on preview when RESEND_API_KEY is missing", async () => {
+    delete process.env.RESEND_API_KEY
+    process.env.VERCEL_ENV = "preview"
+    const mailer = createAuthMailer({ send })
+    await expect(
+      mailer.sendMagicLink({
+        email: "guest@example.com",
+        url: "https://eleva.care/magic",
+      })
+    ).rejects.toThrow(/RESEND_API_KEY is required/)
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it("rethrows provider failures on preview", async () => {
+    process.env.VERCEL_ENV = "preview"
+    send.mockRejectedValueOnce(new Error("resend down"))
+    const mailer = createAuthMailer({ send })
+    await expect(
+      mailer.sendMagicLink({
+        email: "guest@example.com",
+        url: "https://eleva.care/magic",
+      })
+    ).rejects.toThrow(/resend down/)
   })
 })

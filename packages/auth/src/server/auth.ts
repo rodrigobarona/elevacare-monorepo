@@ -140,7 +140,12 @@ function createAuth() {
         user,
         url,
       }: {
-        user: { email: string; name?: string | null }
+        user: {
+          id?: string
+          email: string
+          name?: string | null
+          locale?: string | null
+        }
         url: string
       }) => {
         await sendResetPasswordEmail({ user, url })
@@ -151,7 +156,12 @@ function createAuth() {
         user,
         url,
       }: {
-        user: { email: string; name?: string | null }
+        user: {
+          id?: string
+          email: string
+          name?: string | null
+          locale?: string | null
+        }
         url: string
       }) => {
         await sendVerificationEmail({ user, url })
@@ -284,7 +294,12 @@ function createAuth() {
           user,
           otp,
         }: {
-          user: { id?: string; email: string; name?: string | null }
+          user: {
+            id?: string
+            email: string
+            name?: string | null
+            locale?: string | null
+          }
           otp: string
         }) => {
           await sendTwoFactorOtpEmail({ user, otp })

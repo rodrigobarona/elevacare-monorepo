@@ -2,7 +2,7 @@ export type AuthMailerUser = {
   id?: string
   email: string
   name?: string | null
-  locale?: "en" | "pt" | "es" | null
+  locale?: string | null
 }
 
 export type AuthTransactionalMailer = {
