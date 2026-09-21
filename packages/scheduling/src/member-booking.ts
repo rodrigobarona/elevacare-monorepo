@@ -11,6 +11,7 @@ import {
 } from "@eleva/db"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { MEMBER_CANCEL_MIN_HOURS, canCancel } from "./booking-rules"
+import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { resolveOffer } from "./resolve-offer"
 
 export { MEMBER_CANCEL_MIN_HOURS }
@@ -148,6 +149,12 @@ export async function cancelMemberBooking(input: {
           )
       }
 
+      await emitBookingNotificationEvent(tx, {
+        orgId: row.orgId,
+        type: "booking.cancelled",
+        bookingId: row.id,
+        startsAt: row.startsAt,
+      })
       await ctx.emit({
         entity: "booking",
         action: "canceled",
@@ -222,6 +229,13 @@ export async function rescheduleMemberBooking(input: {
         throw new MemberBookingPolicyError("INVALID_STATUS")
       }
 
+      await emitBookingNotificationEvent(tx, {
+        orgId: row.orgId,
+        type: "booking.rescheduled",
+        bookingId: row.id,
+        startsAt: input.startsAt,
+        previousStartsAt: row.startsAt,
+      })
       await ctx.emit({
         entity: "booking",
         action: "rescheduled",

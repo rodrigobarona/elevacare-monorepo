@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-21: Booking confirm/cancel/reschedule fan out through sendNotification
+
+- Owner: engineering
+- Status: active
+- Summary: `confirmBookingPayment`, `cancelMemberBooking`, and
+  `rescheduleMemberBooking` emit `booking.confirmed` /
+  `booking.cancelled` / `booking.rescheduled` on the domain-events
+  outbox (same tx as the booking write). The `send-notification`
+  subscriber loads the booking and calls `sendNotification` for the
+  member (or guest email) and the expert with the same idempotency
+  key. Direct Resend ICS mail is a no-op so those emails are not
+  sent twice; ICS attachments stay a later slice.
+  `invoice.issued` / `invoice.failed` stay off the union.
+- Reference: `packages/notifications/src/send-booking-notification.ts`,
+  `packages/scheduling/src/emit-domain-event.ts`
+- Next review date: when 24h/1h reminders land
+
 ### 2026-09-18: Better Auth mail goes through sendNotification
 
 - Owner: engineering
@@ -45,7 +62,7 @@ Each entry should include:
   is renderer-only (no `resend`). `invoice.issued` stays off the union.
 - Reference: `packages/notifications/src/auth-mailer.ts`,
   `apps/api/src/instrumentation.ts`
-- Next review date: when booking fan-out lands
+- Next review date: booking fan-out landed 2026-09-21
 
 ### 2026-09-18: Phase 08.3 notification tables do not imply issued FTs
 

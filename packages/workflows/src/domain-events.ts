@@ -6,9 +6,14 @@ import {
   type ClosedGateInvoicePayload,
 } from "@eleva/accounting/platform-fee-events"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
+import {
+  BOOKING_NOTIFICATION_EVENT_TYPES,
+  type BookingNotificationPayload,
+} from "@eleva/scheduling"
 
 export const DOMAIN_EVENT_TYPES = [
   "booking.guest_activation_required",
+  ...BOOKING_NOTIFICATION_EVENT_TYPES,
   ...CLOSED_GATE_INVOICE_EVENT_TYPES,
 ] as const
 
@@ -27,14 +32,27 @@ export type DomainEvent =
       payload: GuestActivationPayload
     }
   | {
+      type: (typeof BOOKING_NOTIFICATION_EVENT_TYPES)[number]
+      orgId: string
+      idempotencyKey: string
+      payload: BookingNotificationPayload
+    }
+  | {
       type: (typeof CLOSED_GATE_INVOICE_EVENT_TYPES)[number]
       orgId: string
       idempotencyKey: string
       payload: ClosedGateInvoicePayload
     }
 
+const BOOKING_NOTIFICATION_SUBSCRIBERS = {
+  "booking.confirmed": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.cancelled": [SEND_NOTIFICATION_SUBSCRIBER],
+  "booking.rescheduled": [SEND_NOTIFICATION_SUBSCRIBER],
+} as const
+
 export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "booking.guest_activation_required": ["guest-activation"],
+  ...BOOKING_NOTIFICATION_SUBSCRIBERS,
   "invoice.blocked": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.skipped": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,

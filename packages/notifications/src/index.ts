@@ -29,6 +29,13 @@ export {
   type OrgScopedKind,
   type UserScopedKind,
 } from "./send-notification"
+export {
+  sendBookingNotification,
+  isBookingNotificationKind,
+  BOOKING_NOTIFICATION_KINDS,
+  type BookingNotificationKind,
+  type BookingNotificationEvent,
+} from "./send-booking-notification"
 export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"
 export { SendNotificationError } from "./errors"
 export { LEASE_TTL_MS, RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
