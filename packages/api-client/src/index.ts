@@ -1266,11 +1266,17 @@ export const BookingReminderRequestSchema = z.object({
   startsAt: z.string().datetime(),
 })
 
-export const BookingReminderResponseSchema = z.object({
-  ok: z.literal(true),
-  status: z.enum(["sent", "skipped"]),
-  reason: z.enum(["not_found", "not_active", "starts_at_mismatch"]).optional(),
-})
+export const BookingReminderResponseSchema = z.discriminatedUnion("status", [
+  z.object({
+    ok: z.literal(true),
+    status: z.literal("sent"),
+  }),
+  z.object({
+    ok: z.literal(true),
+    status: z.literal("skipped"),
+    reason: z.enum(["not_found", "not_active", "starts_at_mismatch"]),
+  }),
+])
 
 export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
 export type ReserveBookingResponse = z.infer<

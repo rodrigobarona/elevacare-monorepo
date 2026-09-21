@@ -18,8 +18,9 @@ export const ROUTE_POLICY = {
  * POST /workflows/booking-reminder
  *
  * QStash delayed handler for T-24h / T-1h booking reminders. Re-checks
- * that the booking is still confirmed before sendNotification. Cancel
- * does not delete the QStash message.
+ * that the booking is still confirmed or rescheduled and that startsAt
+ * still matches before sendNotification. Cancel does not delete the
+ * QStash message.
  *
  * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.
  */
