@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-21: Payment and payout mail fan out through sendNotification
+
+- Owner: engineering
+- Status: active
+- Summary: `payment.failed` emits from `markBookingPaymentFailed`.
+  `payment.receipt` emits on Stripe `payment_intent.succeeded` after the
+  booking payment row is updated. `payout.approval_required` emits when a
+  payout state is created above the staff threshold. `payout.paid` emits
+  from `markPayoutPaidOut`. Billing and scheduling mirror the outbox
+  insert because they cannot import `@eleva/workflows`. Recipients:
+  member (or guest email) for payment kinds, expert-org operators for
+  `payout.paid`, Better Auth `platform_admin` / `staff_finance` for
+  `payout.approval_required`. `invoice.issued` stays off the union.
+- Reference: `packages/notifications/src/send-payment-payout-notification.ts`,
+  `packages/billing/src/emit-domain-event.ts`
+- Next review date: when 24h/1h reminders land
+
 ### 2026-09-21: Booking confirm/cancel/reschedule fan out through sendNotification
 
 - Owner: engineering

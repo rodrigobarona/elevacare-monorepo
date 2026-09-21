@@ -12,6 +12,7 @@ import {
   confirmBookingPayment,
   markBookingPaymentFailed,
 } from "@eleva/scheduling"
+import { emitPaymentPayoutNotificationEvent } from "../emit-domain-event"
 import { stripe } from "./client"
 import {
   isMissingBillingCustomerError,
@@ -1455,8 +1456,22 @@ async function handlePaymentIntentEvent(
           stripeChargeId: stripeChargeId ?? undefined,
         })
         .where(eq(main.bookingPayments.stripePaymentIntentId, intent.id))
-        .returning({ id: main.bookingPayments.id })
+        .returning({
+          id: main.bookingPayments.id,
+          bookingId: main.bookingPayments.bookingId,
+          amountCents: main.bookingPayments.amountCents,
+        })
       paymentId = updated?.id ?? null
+      if (updated) {
+        await emitPaymentPayoutNotificationEvent(tx, {
+          orgId,
+          type: "payment.receipt",
+          paymentId: updated.id,
+          bookingId: updated.bookingId,
+          amountCents: updated.amountCents,
+          currency: intent.currency.toUpperCase(),
+        })
+      }
     }
     await ctx.emit({
       entity: "booking_payment",

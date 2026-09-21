@@ -22,6 +22,10 @@ import {
   InvoiceClosedGateEmail,
   type InvoiceClosedGateProps,
 } from "./templates/invoice-closed-gate"
+import {
+  PaymentPayoutNoticeEmail,
+  type PaymentPayoutNoticeProps,
+} from "./templates/payment-payout-notice"
 import type { EmailLocale } from "./i18n"
 
 export type AuthEmailContent = {
@@ -75,4 +79,10 @@ export async function renderInvoiceClosedGate(
   props: InvoiceClosedGateProps
 ): Promise<string> {
   return render(<InvoiceClosedGateEmail {...props} />)
+}
+
+export async function renderPaymentPayoutNotice(
+  props: PaymentPayoutNoticeProps
+): Promise<string> {
+  return render(<PaymentPayoutNoticeEmail {...props} />)
 }

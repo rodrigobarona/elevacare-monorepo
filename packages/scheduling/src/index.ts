@@ -68,6 +68,12 @@ export type {
   BookingNotificationPayload,
 } from "./emit-domain-event"
 export {
+  PAYMENT_FAILED_EVENT_TYPE,
+  emitPaymentFailedEvent,
+  paymentFailedIdempotencyKey,
+} from "./emit-payment-event"
+export type { PaymentFailedPayload } from "./emit-payment-event"
+export {
   cancelMemberBooking,
   rescheduleMemberBooking,
   MemberBookingPolicyError,

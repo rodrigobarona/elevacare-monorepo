@@ -36,6 +36,13 @@ export {
   type BookingNotificationKind,
   type BookingNotificationEvent,
 } from "./send-booking-notification"
-export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"
+export {
+  sendPaymentPayoutNotification,
+  isPaymentPayoutNotificationKind,
+  PAYMENT_PAYOUT_NOTIFICATION_KINDS,
+  type PaymentPayoutNotificationKind,
+  type PaymentPayoutNotificationEvent,
+} from "./send-payment-payout-notification"
 export { SendNotificationError } from "./errors"
 export { LEASE_TTL_MS, RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
+export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"

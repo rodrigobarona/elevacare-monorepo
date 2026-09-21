@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm"
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   lockMemberHealthConsentInvariant,
@@ -7,6 +7,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { emitPaymentFailedEvent } from "./emit-payment-event"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -200,6 +201,7 @@ export async function confirmBookingPayment(
     return { ok: false, error: "payment_mismatch" }
   }
 
+  let alreadyConfirmed = false
   try {
     await withAudit(
       { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
@@ -208,13 +210,30 @@ export async function confirmBookingPayment(
         if (memberId) {
           await lockMemberHealthConsentInvariant(tx, memberId)
         }
-        await flipConfirmed(tx, {
+        const flip = await flipConfirmed(tx, {
           reservationId: reservation.id,
           bookingId: booking.id,
           paymentId: payment.id,
           paymentIntentId: input.paymentIntentId,
           paymentMethodType: intent.paymentMethodType ?? null,
         })
+        if (flip === "payment_mismatch") {
+          throw new Error("PAYMENT_MISMATCH")
+        }
+        if (flip === "already_confirmed") {
+          alreadyConfirmed = true
+          await ctx.emit({
+            entity: "booking",
+            action: "confirmed",
+            entityId: booking.id,
+            payload: {
+              reservationId: reservation.id,
+              paymentIntentId: input.paymentIntentId,
+              idempotentReplay: true,
+            },
+          })
+          return
+        }
         await emitGuestActivationRequired(tx, {
           orgId: reservation.orgId,
           bookingId: booking.id,
@@ -253,13 +272,16 @@ export async function confirmBookingPayment(
         }
       }
     }
+    if (err instanceof Error && err.message === "PAYMENT_MISMATCH") {
+      return { ok: false, error: "payment_mismatch" }
+    }
     console.error("[bookings/confirm] flip failed", err)
     return { ok: false, error: "db_error" }
   }
 
   return {
     ok: true,
-    alreadyConfirmed: false,
+    alreadyConfirmed,
     bookingId: booking.id,
     orgId: reservation.orgId,
   }
@@ -279,15 +301,78 @@ export async function markBookingPaymentFailed(input: {
     await withAudit(
       { orgId: loaded.reservation.orgId, actorUserId: null },
       async (tx, ctx) => {
-        await tx
+        const [booking] = await tx
+          .select({
+            status: main.bookings.status,
+            currency: main.bookings.currency,
+          })
+          .from(main.bookings)
+          .where(eq(main.bookings.id, loaded.booking.id))
+          .for("update")
+          .limit(1)
+        if (!booking || booking.status === "confirmed") {
+          await ctx.emit({
+            entity: "booking_payment",
+            action: "failed",
+            entityId: loaded.payment.id,
+            payload: {
+              paymentIntentId: input.paymentIntentId,
+              skipped: true,
+              reason: "already_confirmed",
+            },
+          })
+          return
+        }
+
+        const [updated] = await tx
           .update(main.bookingPayments)
           .set({ status: "failed" })
-          .where(eq(main.bookingPayments.id, loaded.payment.id))
+          .where(
+            and(
+              eq(main.bookingPayments.id, loaded.payment.id),
+              inArray(main.bookingPayments.status, [
+                "intent_pending",
+                "requires_payment",
+              ]),
+              or(
+                isNull(main.bookingPayments.stripePaymentIntentId),
+                eq(
+                  main.bookingPayments.stripePaymentIntentId,
+                  input.paymentIntentId
+                )
+              )
+            )
+          )
+          .returning({
+            id: main.bookingPayments.id,
+            amountCents: main.bookingPayments.amountCents,
+          })
+        if (!updated) {
+          await ctx.emit({
+            entity: "booking_payment",
+            action: "failed",
+            entityId: loaded.payment.id,
+            payload: {
+              paymentIntentId: input.paymentIntentId,
+              skipped: true,
+              reason: "not_pre_success",
+            },
+          })
+          return
+        }
+
         await ctx.emit({
           entity: "booking_payment",
           action: "failed",
-          entityId: loaded.payment.id,
+          entityId: updated.id,
           payload: { paymentIntentId: input.paymentIntentId },
+        })
+        await emitPaymentFailedEvent(tx, {
+          orgId: loaded.reservation.orgId,
+          paymentId: updated.id,
+          bookingId: loaded.booking.id,
+          amountCents: updated.amountCents,
+          currency: booking.currency,
         })
       }
     )
@@ -359,8 +444,38 @@ async function flipConfirmed(
     paymentIntentId: string
     paymentMethodType: string | null
   }
-) {
+): Promise<"confirmed" | "already_confirmed" | "payment_mismatch"> {
   const now = new Date()
+  const [booking] = await tx
+    .select({
+      status: main.bookings.status,
+      stripePaymentIntentId: main.bookings.stripePaymentIntentId,
+    })
+    .from(main.bookings)
+    .where(eq(main.bookings.id, input.bookingId))
+    .for("update")
+    .limit(1)
+  if (!booking) {
+    throw new Error("flipConfirmed: booking not found")
+  }
+  const [payment] = await tx
+    .select({
+      status: main.bookingPayments.status,
+      stripePaymentIntentId: main.bookingPayments.stripePaymentIntentId,
+    })
+    .from(main.bookingPayments)
+    .where(eq(main.bookingPayments.id, input.paymentId))
+    .for("update")
+    .limit(1)
+  if (!payment) {
+    throw new Error("flipConfirmed: payment not found")
+  }
+  if (booking.status === "confirmed") {
+    const sameIntent =
+      booking.stripePaymentIntentId === input.paymentIntentId ||
+      payment.stripePaymentIntentId === input.paymentIntentId
+    return sameIntent ? "already_confirmed" : "payment_mismatch"
+  }
   await tx
     .update(main.bookings)
     .set({
@@ -386,6 +501,7 @@ async function flipConfirmed(
       stripePaymentIntentId: input.paymentIntentId,
     })
     .where(eq(main.slotReservations.id, input.reservationId))
+  return "confirmed"
 }
 
 async function loadConfirmTarget(

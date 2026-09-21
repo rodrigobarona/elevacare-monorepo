@@ -20,3 +20,8 @@ export {
   type InvoiceClosedGateProps,
   type InvoiceClosedGateStatus,
 } from "./invoice-closed-gate"
+export {
+  PaymentPayoutNoticeEmail,
+  type PaymentPayoutNoticeProps,
+  type PaymentPayoutNoticeKind,
+} from "./payment-payout-notice"

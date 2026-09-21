@@ -38,6 +38,20 @@ const translations = {
         genericSkipped: "No fiscal document was created for this payment.",
       },
     },
+    payment: {
+      failedTitle: "Payment could not be completed",
+      failedSubtitle:
+        "We could not complete this session payment. You can try again from your booking.",
+      receiptTitle: "Payment received",
+      receiptSubtitle: "We received your payment for this session.",
+    },
+    payout: {
+      paidTitle: "Payout sent",
+      paidSubtitle: "Your payout is on the way to your bank account.",
+      approvalTitle: "Payout needs approval",
+      approvalSubtitle:
+        "A payout is waiting for staff review before it is sent.",
+    },
     labels: {
       member: "Member",
       service: "Service",
@@ -50,6 +64,7 @@ const translations = {
       status: "Status",
       reference: "Reference",
       reason: "Reason",
+      amount: "Amount",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -61,6 +76,10 @@ const translations = {
       invoiceBlocked: "Platform-fee invoice could not be issued yet",
       invoiceSkipped: "No platform-fee invoice for this payment",
       invoicePending: "Platform-fee invoice is waiting on tax details",
+      paymentFailed: "Payment could not be completed",
+      paymentReceipt: "Payment received",
+      payoutPaid: "Payout sent",
+      payoutApprovalRequired: "Payout needs approval",
     },
     layout: {
       footer:
@@ -106,6 +125,20 @@ const translations = {
         genericSkipped: "Não foi criado documento fiscal para este pagamento.",
       },
     },
+    payment: {
+      failedTitle: "O pagamento não foi concluído",
+      failedSubtitle:
+        "Não foi possível concluir o pagamento desta sessão. Pode tentar novamente a partir da marcação.",
+      receiptTitle: "Pagamento recebido",
+      receiptSubtitle: "Recebemos o pagamento desta sessão.",
+    },
+    payout: {
+      paidTitle: "Pagamento enviado",
+      paidSubtitle: "O seu payout está a caminho da conta bancária.",
+      approvalTitle: "Payout precisa de aprovação",
+      approvalSubtitle:
+        "Um payout está à espera de revisão da equipa antes de ser enviado.",
+    },
     labels: {
       member: "Membro",
       service: "Serviço",
@@ -118,6 +151,7 @@ const translations = {
       status: "Estado",
       reference: "Referência",
       reason: "Motivo",
+      amount: "Montante",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -130,6 +164,10 @@ const translations = {
         "A fatura da taxa de plataforma ainda não pôde ser emitida",
       invoiceSkipped: "Não há fatura da taxa de plataforma para este pagamento",
       invoicePending: "A fatura da taxa de plataforma aguarda dados fiscais",
+      paymentFailed: "O pagamento não foi concluído",
+      paymentReceipt: "Pagamento recebido",
+      payoutPaid: "Pagamento enviado",
+      payoutApprovalRequired: "Payout precisa de aprovação",
     },
     layout: {
       footer: "Recebeu este email porque tem uma conta ativa na Eleva Care.",
@@ -174,6 +212,20 @@ const translations = {
         genericSkipped: "No se creó un documento fiscal para este pago.",
       },
     },
+    payment: {
+      failedTitle: "No se pudo completar el pago",
+      failedSubtitle:
+        "No pudimos completar el pago de esta sesión. Puedes intentarlo de nuevo desde la reserva.",
+      receiptTitle: "Pago recibido",
+      receiptSubtitle: "Recibimos el pago de esta sesión.",
+    },
+    payout: {
+      paidTitle: "Pago enviado",
+      paidSubtitle: "Tu payout está en camino a tu cuenta bancaria.",
+      approvalTitle: "El payout necesita aprobación",
+      approvalSubtitle:
+        "Un payout espera revisión del equipo antes de enviarse.",
+    },
     labels: {
       member: "Miembro",
       service: "Servicio",
@@ -186,6 +238,7 @@ const translations = {
       status: "Estado",
       reference: "Referencia",
       reason: "Motivo",
+      amount: "Importe",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -199,6 +252,10 @@ const translations = {
       invoiceSkipped: "No hay factura de la tasa de plataforma para este pago",
       invoicePending:
         "La factura de la tasa de plataforma espera datos fiscales",
+      paymentFailed: "No se pudo completar el pago",
+      paymentReceipt: "Pago recibido",
+      payoutPaid: "Pago enviado",
+      payoutApprovalRequired: "El payout necesita aprobación",
     },
     layout: {
       footer:
@@ -235,6 +292,18 @@ export interface EmailTranslations {
       genericSkipped: string
     }
   }
+  payment: {
+    failedTitle: string
+    failedSubtitle: string
+    receiptTitle: string
+    receiptSubtitle: string
+  }
+  payout: {
+    paidTitle: string
+    paidSubtitle: string
+    approvalTitle: string
+    approvalSubtitle: string
+  }
   labels: {
     member: string
     service: string
@@ -247,6 +316,7 @@ export interface EmailTranslations {
     status: string
     reference: string
     reason: string
+    amount: string
   }
   subject: {
     newBooking: (member: string, date: string) => string
@@ -255,6 +325,10 @@ export interface EmailTranslations {
     invoiceBlocked: string
     invoiceSkipped: string
     invoicePending: string
+    paymentFailed: string
+    paymentReceipt: string
+    payoutPaid: string
+    payoutApprovalRequired: string
   }
   layout: {
     footer: string

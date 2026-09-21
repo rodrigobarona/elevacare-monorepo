@@ -5,15 +5,23 @@ import {
   SEND_NOTIFICATION_SUBSCRIBER,
   type ClosedGateInvoicePayload,
 } from "@eleva/accounting/platform-fee-events"
+import {
+  PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
+  type PaymentPayoutNotificationPayload,
+} from "@eleva/billing/notification-events"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   BOOKING_NOTIFICATION_EVENT_TYPES,
+  PAYMENT_FAILED_EVENT_TYPE,
   type BookingNotificationPayload,
+  type PaymentFailedPayload,
 } from "@eleva/scheduling"
 
 export const DOMAIN_EVENT_TYPES = [
   "booking.guest_activation_required",
   ...BOOKING_NOTIFICATION_EVENT_TYPES,
+  PAYMENT_FAILED_EVENT_TYPE,
+  ...PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
   ...CLOSED_GATE_INVOICE_EVENT_TYPES,
 ] as const
 
@@ -38,6 +46,18 @@ export type DomainEvent =
       payload: BookingNotificationPayload
     }
   | {
+      type: typeof PAYMENT_FAILED_EVENT_TYPE
+      orgId: string
+      idempotencyKey: string
+      payload: PaymentFailedPayload
+    }
+  | {
+      type: (typeof PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES)[number]
+      orgId: string
+      idempotencyKey: string
+      payload: PaymentPayoutNotificationPayload
+    }
+  | {
       type: (typeof CLOSED_GATE_INVOICE_EVENT_TYPES)[number]
       orgId: string
       idempotencyKey: string
@@ -50,9 +70,17 @@ const BOOKING_NOTIFICATION_SUBSCRIBERS = {
   "booking.rescheduled": [SEND_NOTIFICATION_SUBSCRIBER],
 } as const
 
+const PAYMENT_PAYOUT_NOTIFICATION_SUBSCRIBERS = {
+  "payment.failed": [SEND_NOTIFICATION_SUBSCRIBER],
+  "payment.receipt": [SEND_NOTIFICATION_SUBSCRIBER],
+  "payout.paid": [SEND_NOTIFICATION_SUBSCRIBER],
+  "payout.approval_required": [SEND_NOTIFICATION_SUBSCRIBER],
+} as const
+
 export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "booking.guest_activation_required": ["guest-activation"],
   ...BOOKING_NOTIFICATION_SUBSCRIBERS,
+  ...PAYMENT_PAYOUT_NOTIFICATION_SUBSCRIBERS,
   "invoice.blocked": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.skipped": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,

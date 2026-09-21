@@ -12,8 +12,9 @@ import {
   type Tx,
 } from "@eleva/db"
 import { captureException } from "@eleva/observability"
-import { computeSettlement } from "./commission"
+import { emitPaymentPayoutNotificationEvent } from "../emit-domain-event"
 import { stripe } from "./client"
+import { computeSettlement } from "./commission"
 import {
   applyHoldSet,
   clearHoldSet,
@@ -273,6 +274,15 @@ export async function createPayoutStateForPaidPayment(input: {
           firstPayout: snapshot.isFirstPayout,
         },
       })
+      if (approval) {
+        await emitPaymentPayoutNotificationEvent(tx, {
+          orgId: input.orgId,
+          type: "payout.approval_required",
+          payoutStateId: inserted.id,
+          amountCents,
+          currency: "EUR",
+        })
+      }
       return { created: true, payoutStateId: inserted.id }
     }
   )
@@ -757,6 +767,13 @@ export async function markPayoutPaidOut(input: {
             stripePayoutId: input.stripePayoutId,
             amountCents: input.amountCents,
           },
+        })
+        await emitPaymentPayoutNotificationEvent(tx, {
+          orgId: row.orgId,
+          type: "payout.paid",
+          payoutStateId: row.id,
+          amountCents: row.amountCents,
+          currency: "EUR",
         })
       }
     )
