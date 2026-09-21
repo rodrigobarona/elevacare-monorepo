@@ -1254,6 +1254,30 @@ export const ConfirmBookingResponseSchema = z.object({
   alreadyConfirmed: z.boolean(),
 })
 
+export const BookingReminderKindSchema = z.enum([
+  "booking.reminder_24h",
+  "booking.reminder_1h",
+])
+
+export const BookingReminderRequestSchema = z.object({
+  bookingId: z.string().uuid(),
+  orgId: z.string().uuid(),
+  kind: BookingReminderKindSchema,
+  startsAt: z.string().datetime(),
+})
+
+export const BookingReminderResponseSchema = z.discriminatedUnion("status", [
+  z.object({
+    ok: z.literal(true),
+    status: z.literal("sent"),
+  }),
+  z.object({
+    ok: z.literal(true),
+    status: z.literal("skipped"),
+    reason: z.enum(["not_found", "not_active", "starts_at_mismatch"]),
+  }),
+])
+
 export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
 export type ReserveBookingResponse = z.infer<
   typeof ReserveBookingResponseSchema
@@ -1267,6 +1291,12 @@ export type CreatePaymentIntentResponse = z.infer<
 export type ConfirmBookingRequest = z.infer<typeof ConfirmBookingRequestSchema>
 export type ConfirmBookingResponse = z.infer<
   typeof ConfirmBookingResponseSchema
+>
+export type BookingReminderRequest = z.infer<
+  typeof BookingReminderRequestSchema
+>
+export type BookingReminderResponse = z.infer<
+  typeof BookingReminderResponseSchema
 >
 export type RefundBookingPaymentRequest = z.infer<
   typeof RefundBookingPaymentRequestSchema
@@ -1899,6 +1929,17 @@ export function createApiClient(options: ApiClientOptions) {
           `/invoicing/exports/saft?${params.toString()}`
         )
         return ExportSaftResponseSchema.parse(raw)
+      },
+    },
+
+    workflows: {
+      async bookingReminder(data: BookingReminderRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/workflows/booking-reminder",
+          data
+        )
+        return BookingReminderResponseSchema.parse(raw)
       },
     },
   }

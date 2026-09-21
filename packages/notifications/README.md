@@ -20,5 +20,6 @@ Closed-gate invoice emails (`invoice.blocked` / `invoice.skipped` /
 `invoice.pending`) still send through `sendClosedGateInvoiceNotification`.
 Better Auth callbacks send through `createAuthMailer()` injected at API
 startup (`setAuthTransactionalMailer`). `@eleva/auth` never imports this
-package. SMS / Twilio, booking fan-out, and Resend webhooks are later
-Phase 08 PRs.
+package. Booking / payment / payout fan-out and 24h/1h reminders are
+live. SMS / Twilio, inbox API + bell, Resend webhooks, and the Lane 2
+stub are later Phase 08 PRs.

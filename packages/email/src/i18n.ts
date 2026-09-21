@@ -12,6 +12,10 @@ const translations = {
       cancelledTitle: "Booking Cancelled",
       cancelledSubtitle:
         "A session has been cancelled. The cancellation invite is attached to remove it from your calendar.",
+      reminder24hTitle: "Session reminder (24 h)",
+      reminder24hSubtitle: "Your session is in 24 hours.",
+      reminder1hTitle: "Session reminder (1 h)",
+      reminder1hSubtitle: "Your session is in 1 hour.",
       icsHintAdd:
         "Open the attached .ics file to add this event to your calendar.",
       icsHintUpdate:
@@ -73,6 +77,10 @@ const translations = {
         `Rescheduled: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
         `Cancelled: ${member} — ${date}`,
+      reminder24h: (member: string, date: string) =>
+        `Reminder (24 h): ${member} — ${date}`,
+      reminder1h: (member: string, date: string) =>
+        `Reminder (1 h): ${member} — ${date}`,
       invoiceBlocked: "Platform-fee invoice could not be issued yet",
       invoiceSkipped: "No platform-fee invoice for this payment",
       invoicePending: "Platform-fee invoice is waiting on tax details",
@@ -97,6 +105,10 @@ const translations = {
       cancelledTitle: "Marcação Cancelada",
       cancelledSubtitle:
         "Uma sessão foi cancelada. O convite de cancelamento está em anexo para remover do seu calendário.",
+      reminder24hTitle: "Lembrete de sessão (24 h)",
+      reminder24hSubtitle: "A sua sessão é daqui a 24 horas.",
+      reminder1hTitle: "Lembrete de sessão (1 h)",
+      reminder1hSubtitle: "A sua sessão é daqui a 1 hora.",
       icsHintAdd:
         "Abra o ficheiro .ics em anexo para adicionar este evento ao seu calendário.",
       icsHintUpdate:
@@ -160,6 +172,10 @@ const translations = {
         `Reagendada: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
         `Cancelada: ${member} — ${date}`,
+      reminder24h: (member: string, date: string) =>
+        `Lembrete (24 h): ${member} — ${date}`,
+      reminder1h: (member: string, date: string) =>
+        `Lembrete (1 h): ${member} — ${date}`,
       invoiceBlocked:
         "A fatura da taxa de plataforma ainda não pôde ser emitida",
       invoiceSkipped: "Não há fatura da taxa de plataforma para este pagamento",
@@ -184,6 +200,10 @@ const translations = {
       cancelledTitle: "Reserva Cancelada",
       cancelledSubtitle:
         "Una sesión ha sido cancelada. La invitación de cancelación está adjunta para eliminarla de su calendario.",
+      reminder24hTitle: "Recordatorio de sesión (24 h)",
+      reminder24hSubtitle: "Tu sesión es en 24 horas.",
+      reminder1hTitle: "Recordatorio de sesión (1 h)",
+      reminder1hSubtitle: "Tu sesión es en 1 hora.",
       icsHintAdd:
         "Abra el archivo .ics adjunto para agregar este evento a su calendario.",
       icsHintUpdate:
@@ -247,6 +267,10 @@ const translations = {
         `Reprogramada: ${member} — ${date}`,
       cancelled: (member: string, date: string) =>
         `Cancelada: ${member} — ${date}`,
+      reminder24h: (member: string, date: string) =>
+        `Recordatorio (24 h): ${member} — ${date}`,
+      reminder1h: (member: string, date: string) =>
+        `Recordatorio (1 h): ${member} — ${date}`,
       invoiceBlocked:
         "Aún no se pudo emitir la factura de la tasa de plataforma",
       invoiceSkipped: "No hay factura de la tasa de plataforma para este pago",
@@ -272,6 +296,10 @@ export interface EmailTranslations {
     rescheduledSubtitle: string
     cancelledTitle: string
     cancelledSubtitle: string
+    reminder24hTitle: string
+    reminder24hSubtitle: string
+    reminder1hTitle: string
+    reminder1hSubtitle: string
     icsHintAdd: string
     icsHintUpdate: string
     icsHintRemove: string
@@ -322,6 +350,8 @@ export interface EmailTranslations {
     newBooking: (member: string, date: string) => string
     rescheduled: (member: string, date: string) => string
     cancelled: (member: string, date: string) => string
+    reminder24h: (member: string, date: string) => string
+    reminder1h: (member: string, date: string) => string
     invoiceBlocked: string
     invoiceSkipped: string
     invoicePending: string

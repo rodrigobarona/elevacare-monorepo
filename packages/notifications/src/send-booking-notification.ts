@@ -5,6 +5,7 @@ import {
   getEmailTranslations,
   renderBookingCancelled,
   renderBookingConfirmed,
+  renderBookingReminder,
   renderBookingRescheduled,
   type EmailLocale,
 } from "@eleva/email"
@@ -17,8 +18,22 @@ export const BOOKING_NOTIFICATION_KINDS = [
   "booking.rescheduled",
 ] as const
 
+export const BOOKING_REMINDER_KINDS = [
+  "booking.reminder_24h",
+  "booking.reminder_1h",
+] as const
+
 export type BookingNotificationKind =
   (typeof BOOKING_NOTIFICATION_KINDS)[number]
+
+export type BookingReminderKind = (typeof BOOKING_REMINDER_KINDS)[number]
+
+export type BookingSendKind = BookingNotificationKind | BookingReminderKind
+
+const BOOKING_SEND_KINDS = [
+  ...BOOKING_NOTIFICATION_KINDS,
+  ...BOOKING_REMINDER_KINDS,
+] as const
 
 const BookingPayloadSchema = z.object({
   bookingId: z.string().uuid(),
@@ -28,6 +43,29 @@ const BookingPayloadSchema = z.object({
   scheduleRevision: z.number().int().positive().optional(),
 })
 
+export type ParsedBookingNotificationPayload = z.infer<
+  typeof BookingPayloadSchema
+>
+
+export function parseBookingNotificationPayload(
+  type: string,
+  payload: Record<string, unknown>
+): ParsedBookingNotificationPayload {
+  const parsed = BookingPayloadSchema.safeParse(payload)
+  if (!parsed.success) {
+    throw new Error("send-notification: booking payload is invalid")
+  }
+  if (
+    type === "booking.rescheduled" &&
+    (!parsed.data.previousStartsAt || parsed.data.scheduleRevision == null)
+  ) {
+    throw new Error(
+      "send-notification: reschedule payload missing previousStartsAt or scheduleRevision"
+    )
+  }
+  return parsed.data
+}
+
 export type BookingNotificationEvent = {
   id: string
   type: string
@@ -36,11 +74,16 @@ export type BookingNotificationEvent = {
 }
 
 const BOOKING_KIND_SET = new Set<string>(BOOKING_NOTIFICATION_KINDS)
+const BOOKING_SEND_SET = new Set<string>(BOOKING_SEND_KINDS)
 
 export function isBookingNotificationKind(
   type: string
 ): type is BookingNotificationKind {
   return BOOKING_KIND_SET.has(type)
+}
+
+export function isBookingSendKind(type: string): type is BookingSendKind {
+  return BOOKING_SEND_SET.has(type)
 }
 
 type BookingSendDeps = {
@@ -73,30 +116,19 @@ export async function sendBookingNotification(
   event: BookingNotificationEvent,
   deps: BookingSendDeps = {}
 ): Promise<void> {
-  if (!isBookingNotificationKind(event.type)) {
+  if (!isBookingSendKind(event.type)) {
     throw new Error(
       `send-notification: unsupported booking event ${event.type}`
     )
   }
-  const parsed = BookingPayloadSchema.safeParse(event.payload)
-  if (!parsed.success) {
-    throw new Error("send-notification: booking payload is invalid")
-  }
-  if (
-    event.type === "booking.rescheduled" &&
-    (!parsed.data.previousStartsAt || parsed.data.scheduleRevision == null)
-  ) {
-    throw new Error(
-      "send-notification: reschedule payload missing previousStartsAt or scheduleRevision"
-    )
-  }
+  const parsed = parseBookingNotificationPayload(event.type, event.payload)
   const loadBooking = deps.loadBooking ?? loadBookingForNotification
   const send = deps.send ?? sendNotification
-  const booking = await loadBooking(parsed.data.bookingId)
+  const booking = await loadBooking(parsed.bookingId)
   if (!booking || booking.orgId !== event.orgId) {
     throw new Error("send-notification: booking not found for event org")
   }
-  if (!eventMatchesBooking(event.type, booking, parsed.data)) {
+  if (!eventMatchesBooking(event.type, booking, parsed)) {
     return
   }
 
@@ -105,7 +137,7 @@ export async function sendBookingNotification(
   const memberFirst = firstName(
     booking.memberName ?? booking.guestName ?? "member"
   )
-  const snapshotStartsAt = new Date(parsed.data.startsAt)
+  const snapshotStartsAt = new Date(parsed.startsAt)
   const formattedDate = formatDateTime(
     snapshotStartsAt,
     booking.timezone,
@@ -113,9 +145,9 @@ export async function sendBookingNotification(
   )
   const eventTypeName = localizedTitle(booking.eventTypeName, locale)
   const t = getEmailTranslations(locale)
-  const previousDate = parsed.data.previousStartsAt
+  const previousDate = parsed.previousStartsAt
     ? formatDateTime(
-        new Date(parsed.data.previousStartsAt),
+        new Date(parsed.previousStartsAt),
         booking.timezone,
         locale
       )
@@ -152,9 +184,9 @@ export async function sendBookingNotification(
   const idempotencyKey = deliveryIdempotencyKey(
     event.type,
     booking.id,
-    parsed.data.startsAt,
-    parsed.data.previousStartsAt,
-    parsed.data.scheduleRevision
+    parsed.startsAt,
+    parsed.previousStartsAt,
+    parsed.scheduleRevision
   )
   const results = await Promise.allSettled([
     send({
@@ -184,7 +216,7 @@ export async function sendBookingNotification(
 }
 
 function eventMatchesBooking(
-  kind: BookingNotificationKind,
+  kind: BookingSendKind,
   booking: LoadedBooking,
   payload: { startsAt: string; scheduleRevision?: number }
 ): boolean {
@@ -193,6 +225,12 @@ function eventMatchesBooking(
       return booking.status === "confirmed"
     case "booking.cancelled":
       return booking.status === "cancelled"
+    case "booking.reminder_24h":
+    case "booking.reminder_1h":
+      return (
+        (booking.status === "confirmed" || booking.status === "rescheduled") &&
+        booking.startsAt.toISOString() === payload.startsAt
+      )
     case "booking.rescheduled": {
       if (booking.status !== "rescheduled") return false
       if (booking.startsAt.toISOString() !== payload.startsAt) return false
@@ -206,7 +244,7 @@ function eventMatchesBooking(
 }
 
 function deliveryIdempotencyKey(
-  kind: BookingNotificationKind,
+  kind: BookingSendKind,
   bookingId: string,
   startsAt: string,
   previousStartsAt?: string,
@@ -221,6 +259,9 @@ function deliveryIdempotencyKey(
       throw new Error("booking.rescheduled requires scheduleRevision")
     }
     return `booking:${bookingId}:${suffix}:${previousStartsAt}:${startsAt}:${scheduleRevision}`
+  }
+  if (kind === "booking.reminder_24h" || kind === "booking.reminder_1h") {
+    return `booking:${bookingId}:${suffix}:${startsAt}`
   }
   return `booking:${bookingId}:${suffix}`
 }
@@ -245,11 +286,13 @@ function memberSessionBody(
 }
 
 function titleForKind(
-  kind: BookingNotificationKind,
+  kind: BookingSendKind,
   booking: {
     confirmedTitle: string
     rescheduledTitle: string
     cancelledTitle: string
+    reminder24hTitle: string
+    reminder1hTitle: string
   }
 ): string {
   switch (kind) {
@@ -259,6 +302,10 @@ function titleForKind(
       return booking.cancelledTitle
     case "booking.rescheduled":
       return booking.rescheduledTitle
+    case "booking.reminder_24h":
+      return booking.reminder24hTitle
+    case "booking.reminder_1h":
+      return booking.reminder1hTitle
     default: {
       const _exhaustive: never = kind
       return _exhaustive
@@ -267,11 +314,13 @@ function titleForKind(
 }
 
 function subjectForKind(
-  kind: BookingNotificationKind,
+  kind: BookingSendKind,
   subject: {
     newBooking: (member: string, date: string) => string
     rescheduled: (member: string, date: string) => string
     cancelled: (member: string, date: string) => string
+    reminder24h: (member: string, date: string) => string
+    reminder1h: (member: string, date: string) => string
   },
   memberFirst: string,
   formattedDate: string
@@ -283,6 +332,10 @@ function subjectForKind(
       return subject.cancelled(memberFirst, formattedDate)
     case "booking.rescheduled":
       return subject.rescheduled(memberFirst, formattedDate)
+    case "booking.reminder_24h":
+      return subject.reminder24h(memberFirst, formattedDate)
+    case "booking.reminder_1h":
+      return subject.reminder1h(memberFirst, formattedDate)
     default: {
       const _exhaustive: never = kind
       return _exhaustive
@@ -291,7 +344,7 @@ function subjectForKind(
 }
 
 async function renderBookingHtml(input: {
-  kind: BookingNotificationKind
+  kind: BookingSendKind
   memberName: string
   eventTypeName: string
   formattedDate: string
@@ -321,6 +374,24 @@ async function renderBookingHtml(input: {
         eventTypeName: input.eventTypeName,
         previousDate: input.previousDate,
         newDate: input.formattedDate,
+        sessionMode: input.sessionMode,
+        locale: input.locale,
+      })
+    case "booking.reminder_24h":
+      return renderBookingReminder({
+        window: "24h",
+        memberName: input.memberName,
+        eventTypeName: input.eventTypeName,
+        formattedDate: input.formattedDate,
+        sessionMode: input.sessionMode,
+        locale: input.locale,
+      })
+    case "booking.reminder_1h":
+      return renderBookingReminder({
+        window: "1h",
+        memberName: input.memberName,
+        eventTypeName: input.eventTypeName,
+        formattedDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
       })

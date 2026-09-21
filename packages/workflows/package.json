@@ -13,7 +13,8 @@
     "./should-await-domain-event-publish": "./src/should-await-domain-event-publish.ts",
     "./subscribers": "./src/subscribers/index.ts",
     "./payments": "./src/payments/index.ts",
-    "./invoicing": "./src/invoicing/index.ts"
+    "./invoicing": "./src/invoicing/index.ts",
+    "./notifications": "./src/notifications/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -32,6 +33,7 @@
     "@eleva/notifications": "workspace:*",
     "@eleva/scheduling": "workspace:*",
     "@eleva/observability": "workspace:*",
+    "@upstash/qstash": "^2.11.0",
     "drizzle-orm": "catalog:",
     "resend": "catalog:"
   },

@@ -51,6 +51,7 @@ export const RATE_LIMITS = {
   public: { prefix: "pub", maxRequests: 10, windowMs: 60_000 },
   onboarding: { prefix: "onboard", maxRequests: 5, windowMs: 60_000 },
   e2eBypass: { prefix: "e2e-verify", maxRequests: 5, windowMs: 60_000 },
+  internalWorkflow: { prefix: "wf", maxRequests: 300, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>
 
 function isLoopbackApiOrigin(env: NodeJS.ProcessEnv = process.env): boolean {

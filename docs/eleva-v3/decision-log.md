@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-21: Booking reminders use QStash notBefore (Phase 08 exception)
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 08 schedules T-24h and T-1h reminders as delayed
+  QStash messages (`notBefore`, dedup `bookingId:kind:startsAt`) on
+  `booking.confirmed` and `booking.rescheduled`. The handler
+  `POST /workflows/booking-reminder` re-checks that the booking is
+  still `confirmed` or `rescheduled` and that `startsAt` still matches;
+  cancel does not delete the QStash message. This is a documented
+  exception to ADR-007's "QStash is cron-only" wording: the Phase 08
+  plan names QStash `notBefore` for per-booking reminders, and Vercel
+  Workflows DevKit is not used for this delay. Recurring ops stay on
+  QStash cron. `invoice.issued` stays off the union.
+- Reference: `packages/workflows/src/notifications/reminders.ts`,
+  ADR-007, `docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md`
+- Next review date: Phase 09 video join-link reminder copy
+
 ### 2026-09-21: Payment and payout mail fan out through sendNotification
 
 - Owner: engineering
@@ -47,7 +65,7 @@ Each entry should include:
   `payout.approval_required`. `invoice.issued` stays off the union.
 - Reference: `packages/notifications/src/send-payment-payout-notification.ts`,
   `packages/billing/src/emit-domain-event.ts`
-- Next review date: when 24h/1h reminders land
+- Next review date: when inbox API + bell land
 
 ### 2026-09-21: Booking confirm/cancel/reschedule fan out through sendNotification
 
@@ -70,7 +88,7 @@ Each entry should include:
   stay off the union.
 - Reference: `packages/notifications/src/send-booking-notification.ts`,
   `packages/scheduling/src/emit-domain-event.ts`
-- Next review date: when 24h/1h reminders land
+- Next review date: when inbox API + bell land
 
 ### 2026-09-18: Better Auth mail goes through sendNotification
 

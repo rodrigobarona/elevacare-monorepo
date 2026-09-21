@@ -3,6 +3,7 @@ export {
   renderBookingConfirmed,
   renderBookingRescheduled,
   renderBookingCancelled,
+  renderBookingReminder,
   renderInvoiceClosedGate,
   renderPaymentPayoutNotice,
   type AuthEmailContent,
@@ -14,6 +15,7 @@ export type {
 export type { BookingConfirmedProps } from "./templates"
 export type { BookingRescheduledProps } from "./templates"
 export type { BookingCancelledProps } from "./templates"
+export type { BookingReminderProps, BookingReminderWindow } from "./templates"
 export type {
   InvoiceClosedGateProps,
   InvoiceClosedGateStatus,
