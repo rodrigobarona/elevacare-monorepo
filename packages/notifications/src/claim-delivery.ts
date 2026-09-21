@@ -2,6 +2,7 @@ import { and, eq, isNull, lt, or, sql } from "drizzle-orm"
 import { auth, main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import type { NotificationChannel } from "./channels"
 import type { NotificationKind } from "./kinds"
+import { pickUniqueEmailMatch } from "./unique-email-match"
 
 export type DeliveryStatus =
   | "queued"
@@ -300,13 +301,17 @@ export async function isEmailSuppressed(email: string): Promise<boolean> {
   })
 }
 
-export async function loadUserByEmail(email: string): Promise<{
+export type EmailUserRow = {
   userId: string
   email: string
   locale: string | null
-} | null> {
+}
+
+export async function loadUserByEmail(
+  email: string
+): Promise<EmailUserRow | null> {
   return withPlatformAdminContext(async (tx) => {
-    const [row] = await tx
+    const rows = await tx
       .select({
         userId: auth.user.id,
         email: auth.user.email,
@@ -314,8 +319,7 @@ export async function loadUserByEmail(email: string): Promise<{
       })
       .from(auth.user)
       .where(sql`lower(${auth.user.email}::text) = ${email.toLowerCase()}`)
-      .limit(1)
-    return row ?? null
+    return pickUniqueEmailMatch(rows, email)
   })
 }
 
