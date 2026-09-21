@@ -1,3 +1,4 @@
+import { createHash, createHmac } from "node:crypto"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createAuthMailer } from "./auth-mailer"
 
@@ -13,6 +14,7 @@ describe("createAuthMailer", () => {
     send.mockClear()
     process.env.RESEND_API_KEY = "re_test"
     delete process.env.VERCEL_ENV
+    delete process.env.BETTER_AUTH_SECRET
   })
 
   it("sends user-scoped auth.verify_email through sendNotification", async () => {
@@ -56,15 +58,25 @@ describe("createAuthMailer", () => {
     })
   })
 
-  it("hashes the OTP into the idempotency key", async () => {
+  it("HMACs the OTP into the idempotency key", async () => {
+    process.env.BETTER_AUTH_SECRET = "test-secret"
     const mailer = createAuthMailer({ send })
     await mailer.sendTwoFactorOtp({
       user: { email: "ana@example.com" },
       otp: "123456",
     })
     const key = send.mock.calls[0]?.[0].idempotencyKey as string
-    expect(key).toMatch(/^auth\.two_factor_otp:ana@example.com:/)
+    const expected = createHmac("sha256", "test-secret")
+      .update("ana@example.com:123456")
+      .digest("hex")
+      .slice(0, 24)
+    expect(key).toBe(`auth.two_factor_otp:ana@example.com:${expected}`)
     expect(key).not.toContain("123456")
+    const unsalted = createHash("sha256")
+      .update("123456")
+      .digest("hex")
+      .slice(0, 24)
+    expect(key).not.toContain(unsalted)
   })
 
   it("uses userId for an existing invitee and email-mode for an unknown address", async () => {
@@ -139,15 +151,21 @@ describe("createAuthMailer", () => {
     expect(send).not.toHaveBeenCalled()
   })
 
-  it("rethrows provider failures on preview", async () => {
+  it("rethrows provider failures on preview without logging PII", async () => {
     process.env.VERCEL_ENV = "preview"
-    send.mockRejectedValueOnce(new Error("resend down"))
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {})
+    send.mockRejectedValueOnce(new Error("recipient guest@example.com bounced"))
     const mailer = createAuthMailer({ send })
     await expect(
       mailer.sendMagicLink({
         email: "guest@example.com",
         url: "https://eleva.care/magic",
       })
-    ).rejects.toThrow(/resend down/)
+    ).rejects.toThrow("AUTH_MAIL_SEND_FAILED")
+    expect(logged.mock.calls.flat().join(" ")).toMatch(/AUTH_MAIL_SEND_FAILED/)
+    expect(logged.mock.calls.flat().join(" ")).not.toContain(
+      "guest@example.com"
+    )
+    logged.mockRestore()
   })
 })

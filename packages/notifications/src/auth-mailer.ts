@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto"
+import { createHash, createHmac } from "node:crypto"
 import {
   renderAuthEmail,
   type AuthEmailKind,
@@ -67,6 +67,19 @@ const KIND_TO_NOTIFICATION = {
 
 function digest(value: string): string {
   return createHash("sha256").update(value).digest("hex").slice(0, 24)
+}
+
+function keyedDigest(value: string): string {
+  const secret = process.env.BETTER_AUTH_SECRET
+  if (!secret) {
+    if (isDeployedRuntime()) {
+      throw new Error(
+        "BETTER_AUTH_SECRET is required to key auth mail idempotency"
+      )
+    }
+    return digest(`dev:${value}`)
+  }
+  return createHmac("sha256", secret).update(value).digest("hex").slice(0, 24)
 }
 
 function toLocale(value: string | null | undefined): EmailLocale {
@@ -147,11 +160,10 @@ export function createAuthMailer(
     }
     try {
       await send(input)
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error)
-      console.error(`[notifications] ${input.kind} send failed: ${message}`)
+    } catch {
+      console.error(`[notifications] ${input.kind} AUTH_MAIL_SEND_FAILED`)
       if (isDeployedRuntime()) {
-        throw error instanceof Error ? error : new Error(message)
+        throw new Error("AUTH_MAIL_SEND_FAILED")
       }
     }
   }
@@ -196,7 +208,7 @@ export function createAuthMailer(
         name: user.name ?? undefined,
         locale: toLocale(user.locale),
         recipient: recipientForUser(user),
-        idempotencyKey: `auth.two_factor_otp:${user.email}:${digest(otp)}`,
+        idempotencyKey: `auth.two_factor_otp:${user.email}:${keyedDigest(`${user.email}:${otp}`)}`,
       })
     },
     async sendOrgInvitation({ email, url, orgId, invitationId }) {
