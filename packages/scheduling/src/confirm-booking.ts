@@ -7,6 +7,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { emitPaymentFailedEvent } from "./emit-payment-event"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -288,6 +289,13 @@ export async function markBookingPaymentFailed(input: {
           action: "failed",
           entityId: loaded.payment.id,
           payload: { paymentIntentId: input.paymentIntentId },
+        })
+        await emitPaymentFailedEvent(tx, {
+          orgId: loaded.reservation.orgId,
+          paymentId: loaded.payment.id,
+          bookingId: loaded.booking.id,
+          amountCents: loaded.payment.amountCents,
+          currency: loaded.booking.currency,
         })
       }
     )

@@ -43,6 +43,22 @@ describe("closed-gate invoice domain events", () => {
     expect(DEFAULT_SUBSCRIBERS["booking.rescheduled"]).toEqual([
       "send-notification",
     ])
+    expect(DOMAIN_EVENT_TYPES).toEqual(
+      expect.arrayContaining([
+        "payment.failed",
+        "payment.receipt",
+        "payout.paid",
+        "payout.approval_required",
+      ])
+    )
+    expect(DEFAULT_SUBSCRIBERS["payment.failed"]).toEqual(["send-notification"])
+    expect(DEFAULT_SUBSCRIBERS["payment.receipt"]).toEqual([
+      "send-notification",
+    ])
+    expect(DEFAULT_SUBSCRIBERS["payout.paid"]).toEqual(["send-notification"])
+    expect(DEFAULT_SUBSCRIBERS["payout.approval_required"]).toEqual([
+      "send-notification",
+    ])
   })
 
   it("defers only logger and unregistered send-notification at claim time", () => {

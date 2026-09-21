@@ -4,6 +4,7 @@ export {
   renderBookingRescheduled,
   renderBookingCancelled,
   renderInvoiceClosedGate,
+  renderPaymentPayoutNotice,
   type AuthEmailContent,
 } from "./render"
 export type {
@@ -16,6 +17,10 @@ export type { BookingCancelledProps } from "./templates"
 export type {
   InvoiceClosedGateProps,
   InvoiceClosedGateStatus,
+} from "./templates"
+export type {
+  PaymentPayoutNoticeProps,
+  PaymentPayoutNoticeKind,
 } from "./templates"
 export type { EmailLocale } from "./i18n"
 export { getEmailTranslations } from "./i18n"
