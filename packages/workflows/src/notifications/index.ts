@@ -7,6 +7,7 @@ export {
   reminderDeduplicationId,
   reminderFireAt,
   scheduleBookingReminders,
+  type BookingReminderDelivery,
   type BookingReminderKind,
   type BookingReminderRequest,
   type PlannedReminder,

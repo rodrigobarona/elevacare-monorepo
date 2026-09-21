@@ -1,5 +1,8 @@
 import { Client } from "@upstash/qstash"
-import { sendBookingNotification } from "@eleva/notifications"
+import {
+  loadBookingForNotification,
+  sendBookingNotification,
+} from "@eleva/notifications"
 
 export const BOOKING_REMINDER_KINDS = [
   "booking.reminder_24h",
@@ -118,8 +121,15 @@ export async function publishReminderJob(
     ""
   ).replace(/\/+$/, "")
 
-  if (!token || !secret || !apiBase || apiBase.includes("localhost")) {
+  const isLocal =
+    !apiBase || apiBase.includes("localhost") || apiBase.includes("127.0.0.1")
+  if (isLocal) {
     return "skipped"
+  }
+  if (!token || !secret) {
+    throw new Error(
+      "booking-reminder: QSTASH_TOKEN and WORKFLOWS_DRAIN_SECRET are required"
+    )
   }
 
   const destination = `${apiBase}/workflows/booking-reminder`
@@ -144,11 +154,33 @@ export async function publishReminderJob(
   return "published"
 }
 
+export type BookingReminderDelivery =
+  | { ok: true; status: "sent" }
+  | {
+      ok: true
+      status: "skipped"
+      reason: "not_found" | "not_active" | "starts_at_mismatch"
+    }
+
 export async function deliverBookingReminder(
   input: BookingReminderRequest,
-  deps: { send?: typeof sendBookingNotification } = {}
-): Promise<{ ok: true; status: "processed" }> {
+  deps: {
+    send?: typeof sendBookingNotification
+    loadBooking?: typeof loadBookingForNotification
+  } = {}
+): Promise<BookingReminderDelivery> {
+  const load = deps.loadBooking ?? loadBookingForNotification
   const send = deps.send ?? sendBookingNotification
+  const booking = await load(input.bookingId)
+  if (!booking || booking.orgId !== input.orgId) {
+    return { ok: true, status: "skipped", reason: "not_found" }
+  }
+  if (booking.status !== "confirmed" && booking.status !== "rescheduled") {
+    return { ok: true, status: "skipped", reason: "not_active" }
+  }
+  if (booking.startsAt.toISOString() !== input.startsAt) {
+    return { ok: true, status: "skipped", reason: "starts_at_mismatch" }
+  }
   await send({
     id: `reminder:${input.bookingId}:${input.kind}`,
     type: input.kind,
@@ -159,5 +191,5 @@ export async function deliverBookingReminder(
       occurredAt: new Date().toISOString(),
     },
   })
-  return { ok: true, status: "processed" }
+  return { ok: true, status: "sent" }
 }

@@ -3,6 +3,7 @@ import {
   BOOKING_REMINDER_KINDS,
   deliverBookingReminder,
   planBookingReminders,
+  publishReminderJob,
   reminderDeduplicationId,
   reminderFireAt,
   scheduleBookingReminders,
@@ -80,6 +81,42 @@ describe("booking reminder scheduling math", () => {
   })
 })
 
+describe("publishReminderJob", () => {
+  it("throws in a deployed environment without QStash credentials", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+    }
+    process.env.API_URL = "https://api.eleva.care"
+    delete process.env.QSTASH_TOKEN
+    delete process.env.WORKFLOWS_DRAIN_SECRET
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).rejects.toThrow(/QSTASH_TOKEN/)
+    } finally {
+      if (previous.token === undefined) delete process.env.QSTASH_TOKEN
+      else process.env.QSTASH_TOKEN = previous.token
+      if (previous.secret === undefined)
+        delete process.env.WORKFLOWS_DRAIN_SECRET
+      else process.env.WORKFLOWS_DRAIN_SECRET = previous.secret
+      if (previous.apiUrl === undefined) delete process.env.API_URL
+      else process.env.API_URL = previous.apiUrl
+    }
+  })
+})
+
 describe("scheduleBookingReminders", () => {
   it("publishes planned jobs and reports skipped offsets", async () => {
     const publish = vi.fn(async () => "published" as const)
@@ -99,17 +136,39 @@ describe("scheduleBookingReminders", () => {
 })
 
 describe("deliverBookingReminder", () => {
-  it("sends through sendBookingNotification", async () => {
+  const activeBooking = {
+    id: BOOKING_ID,
+    orgId: ORG_ID,
+    status: "confirmed",
+    startsAt: STARTS_AT,
+    endsAt: new Date("2026-09-22T15:50:00.000Z"),
+    timezone: "Europe/Lisbon",
+    sessionMode: "online",
+    bookedLocale: "en",
+    memberUserId: "00000000-0000-4000-8000-000000000003",
+    memberEmail: "ada@example.com",
+    memberName: "Ada",
+    guestEmail: null,
+    guestName: null,
+    expertUserId: "00000000-0000-4000-8000-000000000004",
+    expertEmail: "ana@example.com",
+    expertName: "Ana",
+    eventTypeName: { en: "Visit" },
+    scheduleRevision: 0,
+  }
+
+  it("sends through sendBookingNotification when still confirmed", async () => {
     const send = vi.fn().mockResolvedValue(undefined)
-    await deliverBookingReminder(
+    const result = await deliverBookingReminder(
       {
         bookingId: BOOKING_ID,
         orgId: ORG_ID,
         kind: "booking.reminder_24h",
         startsAt: STARTS_AT.toISOString(),
       },
-      { send }
+      { send, loadBooking: async () => activeBooking }
     )
+    expect(result).toEqual({ ok: true, status: "sent" })
     expect(send).toHaveBeenCalledWith({
       id: `reminder:${BOOKING_ID}:booking.reminder_24h`,
       type: "booking.reminder_24h",
@@ -119,5 +178,27 @@ describe("deliverBookingReminder", () => {
         startsAt: STARTS_AT.toISOString(),
       }),
     })
+  })
+
+  it("skips cancelled bookings without sending", async () => {
+    const send = vi.fn()
+    const result = await deliverBookingReminder(
+      {
+        bookingId: BOOKING_ID,
+        orgId: ORG_ID,
+        kind: "booking.reminder_1h",
+        startsAt: STARTS_AT.toISOString(),
+      },
+      {
+        send,
+        loadBooking: async () => ({ ...activeBooking, status: "cancelled" }),
+      }
+    )
+    expect(result).toEqual({
+      ok: true,
+      status: "skipped",
+      reason: "not_active",
+    })
+    expect(send).not.toHaveBeenCalled()
   })
 })

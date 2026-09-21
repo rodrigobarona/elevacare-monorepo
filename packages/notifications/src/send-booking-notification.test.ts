@@ -303,7 +303,7 @@ describe("sendBookingNotification", () => {
     expect(send.mock.calls[0]?.[0]).toEqual(
       expect.objectContaining({
         kind: "booking.reminder_24h",
-        idempotencyKey: `booking:${BOOKING_ID}:reminder_24h`,
+        idempotencyKey: `booking:${BOOKING_ID}:reminder_24h:${STARTS_AT}`,
       })
     )
     expect(send.mock.calls[0]?.[0].ctx.body).toMatch(/^Your session with Ana /)

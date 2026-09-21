@@ -248,6 +248,9 @@ function deliveryIdempotencyKey(
     }
     return `booking:${bookingId}:${suffix}:${previousStartsAt}:${startsAt}:${scheduleRevision}`
   }
+  if (kind === "booking.reminder_24h" || kind === "booking.reminder_1h") {
+    return `booking:${bookingId}:${suffix}:${startsAt}`
+  }
   return `booking:${bookingId}:${suffix}`
 }
 

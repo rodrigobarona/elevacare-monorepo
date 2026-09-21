@@ -39,6 +39,7 @@ export {
   type BookingReminderKind,
   type BookingSendKind,
   type BookingNotificationEvent,
+  loadBookingForNotification,
 } from "./send-booking-notification"
 export {
   sendPaymentPayoutNotification,

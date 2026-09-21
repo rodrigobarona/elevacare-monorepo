@@ -1268,7 +1268,8 @@ export const BookingReminderRequestSchema = z.object({
 
 export const BookingReminderResponseSchema = z.object({
   ok: z.literal(true),
-  status: z.literal("processed"),
+  status: z.enum(["sent", "skipped"]),
+  reason: z.enum(["not_found", "not_active", "starts_at_mismatch"]).optional(),
 })
 
 export type ReserveBookingRequest = z.infer<typeof ReserveBookingRequestSchema>
