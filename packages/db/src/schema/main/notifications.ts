@@ -3,6 +3,7 @@ import {
   check,
   customType,
   index,
+  integer,
   jsonb,
   pgEnum,
   pgPolicy,
@@ -264,6 +265,7 @@ export const phoneVerifications = pgTable(
       withTimezone: true,
       mode: "date",
     }),
+    attempts: integer("attempts").notNull().default(0),
     createdAt: createdAt(),
   },
   (t) => ({

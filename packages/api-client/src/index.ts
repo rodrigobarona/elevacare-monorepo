@@ -1298,6 +1298,48 @@ export type BookingReminderRequest = z.infer<
 export type BookingReminderResponse = z.infer<
   typeof BookingReminderResponseSchema
 >
+
+export const PhoneE164Schema = z
+  .string()
+  .regex(/^\+[1-9][0-9]{7,14}$/, "phoneE164 must be E.164")
+
+export const VerifyPhoneStartRequestSchema = z.object({
+  phoneE164: PhoneE164Schema,
+})
+
+export const VerifyPhoneStartResponseSchema = z.discriminatedUnion("status", [
+  z.object({
+    status: z.literal("started"),
+    phoneE164: PhoneE164Schema,
+  }),
+  z.object({
+    status: z.literal("already_verified"),
+    phoneE164: PhoneE164Schema,
+  }),
+])
+
+export const VerifyPhoneConfirmRequestSchema = z.object({
+  phoneE164: PhoneE164Schema,
+  code: z.string().regex(/^\d{6}$/, "code must be 6 digits"),
+})
+
+export const VerifyPhoneConfirmResponseSchema = z.object({
+  status: z.literal("verified"),
+  phoneE164: PhoneE164Schema,
+})
+
+export type VerifyPhoneStartRequest = z.infer<
+  typeof VerifyPhoneStartRequestSchema
+>
+export type VerifyPhoneStartResponse = z.infer<
+  typeof VerifyPhoneStartResponseSchema
+>
+export type VerifyPhoneConfirmRequest = z.infer<
+  typeof VerifyPhoneConfirmRequestSchema
+>
+export type VerifyPhoneConfirmResponse = z.infer<
+  typeof VerifyPhoneConfirmResponseSchema
+>
 export type RefundBookingPaymentRequest = z.infer<
   typeof RefundBookingPaymentRequestSchema
 >
@@ -1567,6 +1609,22 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return MeNotificationPreferencesResponseSchema.parse(raw)
+      },
+      async verifyPhoneStart(data: VerifyPhoneStartRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/me/phone/verify-start",
+          data
+        )
+        return VerifyPhoneStartResponseSchema.parse(raw)
+      },
+      async verifyPhoneConfirm(data: VerifyPhoneConfirmRequest) {
+        const raw = await request<unknown>(
+          "POST",
+          "/me/phone/verify-confirm",
+          data
+        )
+        return VerifyPhoneConfirmResponseSchema.parse(raw)
       },
       async listConsents() {
         const raw = await request<unknown>("GET", "/me/consents")

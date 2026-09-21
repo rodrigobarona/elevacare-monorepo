@@ -7,8 +7,8 @@ export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number]
 
 export const REQUIRED_NOTIFICATION_CATEGORIES = ["payment", "system"] as const
 
-/** Spec fan-out order: in-app, then email (SMS is a later slice). */
-export const CHANNEL_SEND_ORDER = ["in_app", "email"] as const
+/** Spec fan-out order: in-app, then email, then SMS. */
+export const CHANNEL_SEND_ORDER = ["in_app", "email", "sms"] as const
 
 export type PreferenceRow = {
   channel: NotificationChannel
@@ -16,14 +16,10 @@ export type PreferenceRow = {
   enabled: boolean
 }
 
-/**
- * SMS is claimed and sent in a later Phase 08 PR (Twilio EU). This
- * slice only delivers email (Resend) and in-app inbox rows.
- */
 export function supportedSendChannels(
   kind: NotificationKind,
   channelsOverride: NotificationChannel[] | undefined
-): Array<Exclude<NotificationChannel, "sms">> {
+): NotificationChannel[] {
   const allowed = NOTIFICATION_KINDS[kind].channels
   if (channelsOverride) {
     for (const channel of channelsOverride) {
@@ -35,10 +31,7 @@ export function supportedSendChannels(
       }
     }
   }
-  const selected = (channelsOverride ?? [...allowed]).filter(
-    (channel): channel is Exclude<NotificationChannel, "sms"> =>
-      channel !== "sms"
-  )
+  const selected = channelsOverride ?? [...allowed]
   if (channelsOverride && selected.length === 0) {
     throw new SendNotificationError(
       "CHANNEL_OVERRIDE_INVALID",
@@ -53,7 +46,7 @@ export function supportedSendChannels(
 
 export function channelEnabled(input: {
   kind: NotificationKind
-  channel: Exclude<NotificationChannel, "sms">
+  channel: NotificationChannel
   preferences: PreferenceRow[]
 }): boolean {
   const category = NOTIFICATION_KINDS[input.kind].category

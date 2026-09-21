@@ -21,5 +21,10 @@ Closed-gate invoice emails (`invoice.blocked` / `invoice.skipped` /
 Better Auth callbacks send through `createAuthMailer()` injected at API
 startup (`setAuthTransactionalMailer`). `@eleva/auth` never imports this
 package. Booking / payment / payout fan-out and 24h/1h reminders are
-live. SMS / Twilio, inbox API + bell, Resend webhooks, and the Lane 2
+live. SMS sends through Twilio EU (`ie1` / `dublin`) only when the
+member has a verified phone and the category SMS preference is on.
+StatusCallback is `POST /webhooks/twilio/status`; the signature URL is
+rebuilt from server-only `API_URL` plus the raw query string. Phone
+opt-in is `POST /me/phone/verify-start` and `verify-confirm` (6-digit
+OTP, 10 min, hashed). Inbox API + bell, Resend webhooks, and the Lane 2
 stub are later Phase 08 PRs.

@@ -53,3 +53,20 @@ export {
 export { SendNotificationError } from "./errors"
 export { LEASE_TTL_MS, RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
 export { createAuthMailer, type AuthTransactionalMailer } from "./auth-mailer"
+export {
+  appendSmsRef,
+  hashSmsBody,
+  smsRefToken,
+  twilioSignedUrl,
+  validateTwilioSignature,
+} from "./send-sms"
+export { handleTwilioStatusWebhook } from "./handle-twilio-status"
+export {
+  PHONE_E164_PATTERN,
+  PHONE_OTP_MAX_ATTEMPTS,
+  PHONE_OTP_TTL_MS,
+  PhoneVerifyError,
+  hashPhoneOtp,
+  verifyPhoneConfirm,
+  verifyPhoneStart,
+} from "./verify-phone"

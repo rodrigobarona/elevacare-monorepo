@@ -84,6 +84,16 @@ export const boundariesConfig = [
               message:
                 "Use @eleva/storage/blob-upload-client (browser) or @eleva/storage/blob-upload-handler (route handler) (boundary lint).",
             },
+            {
+              name: "twilio",
+              message:
+                "Import Twilio only through @eleva/notifications (boundary lint).",
+            },
+            {
+              name: "resend",
+              message:
+                "Import Resend only through @eleva/notifications (boundary lint).",
+            },
           ],
           patterns: [
             {

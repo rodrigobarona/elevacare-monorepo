@@ -20,6 +20,7 @@
     "@eleva/email": "workspace:*",
     "drizzle-orm": "catalog:",
     "resend": "catalog:",
+    "twilio": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

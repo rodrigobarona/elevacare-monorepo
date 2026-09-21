@@ -26,6 +26,7 @@ The first runbooks should cover:
 - Stripe
 - Daily
 - Resend
+- Twilio EU SMS
 - calendar providers
 - PostHog where operationally relevant
 - Sentry
@@ -101,6 +102,15 @@ Should cover:
 - webhook issue
 - template issue
 - reminder delivery issue
+
+### Twilio EU SMS runbook
+
+Should cover:
+
+- OTP not received (`POST /me/phone/verify-start`)
+- StatusCallback signature failures (`API_URL` mismatch vs signed URL)
+- queued SMS never leaving `queued` (missing callback + list-adopt)
+- EU region/edge (`ie1` / `dublin`) and Messaging Service SID
 
 ### Calendar integration runbook
 

@@ -32,6 +32,10 @@ import {
   ConfirmBookingResponseSchema,
   BookingReminderRequestSchema,
   BookingReminderResponseSchema,
+  VerifyPhoneStartRequestSchema,
+  VerifyPhoneStartResponseSchema,
+  VerifyPhoneConfirmRequestSchema,
+  VerifyPhoneConfirmResponseSchema,
   CreatePaymentIntentRequestSchema,
   CreatePaymentIntentResponseSchema,
   RefundBookingPaymentRequestSchema,
@@ -1821,6 +1825,119 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdErrors,
+          },
+        },
+      },
+      "/me/phone/verify-start": {
+        post: {
+          operationId: "verifyPhoneStart",
+          summary: "Start SMS phone verification",
+          description:
+            "Sends a 6-digit OTP (10-minute TTL, hashed) via Twilio EU. Rate-limited at the public 10/min cap to prevent SMS bombing. Does not return the code.",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: VerifyPhoneStartRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "OTP sent or phone already verified for this user",
+              content: {
+                "application/json": {
+                  schema: VerifyPhoneStartResponseSchema,
+                },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/me/phone/verify-confirm": {
+        post: {
+          operationId: "verifyPhoneConfirm",
+          summary: "Confirm SMS phone verification",
+          description:
+            "Checks the hashed OTP, writes auth.user.phone_e164 + phone_verified_at, and emits phone.verified. SMS reminders stay off until this succeeds.",
+          tags: ["Me"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: VerifyPhoneConfirmRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Phone verified",
+              content: {
+                "application/json": {
+                  schema: VerifyPhoneConfirmResponseSchema,
+                },
+              },
+            },
+            "409": {
+              description: "Phone already verified on another account",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/webhooks/twilio/status": {
+        post: {
+          operationId: "twilioStatusWebhook",
+          summary: "Twilio SMS StatusCallback",
+          description:
+            "Validates X-Twilio-Signature against API_URL origin + path + the raw query string (never re-encoded). Marks the sms notification_deliveries row sent or failed.",
+          tags: ["Webhooks"],
+          security: [],
+          parameters: [
+            {
+              name: "deliveryId",
+              in: "query",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+            },
+            {
+              name: "x-twilio-signature",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/x-www-form-urlencoded": {
+                schema: z
+                  .object({
+                    MessageSid: z.string(),
+                    MessageStatus: z.string(),
+                    ErrorMessage: z.string().optional(),
+                  })
+                  .passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Callback accepted",
+              content: {
+                "application/json": {
+                  schema: z.object({ ok: z.literal(true) }),
+                },
+              },
+            },
+            ...stdErrors,
+            "401": {
+              description: "Missing or invalid Twilio signature",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

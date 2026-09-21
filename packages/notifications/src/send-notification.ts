@@ -14,6 +14,7 @@ import {
   isEmailSuppressed,
   loadUserRecipient,
   markFirstAttempt,
+  persistSmsBodyHash,
   recordProviderId,
   type ClaimInput,
   type ClaimOutcome,
@@ -33,6 +34,17 @@ import {
   type SendEmailInput,
   type SendEmailResult,
 } from "./send-email"
+import {
+  adoptTwilioMessage,
+  appendSmsRef,
+  hashSmsBody,
+  listTwilioMessages,
+  sendViaTwilio,
+  smsStatusCallbackUrl,
+  type ListedSms,
+  type SendSmsInput,
+  type SendSmsResult,
+} from "./send-sms"
 
 export type { NotificationChannel } from "./channels"
 
@@ -64,7 +76,7 @@ export type SendNotificationInput =
   | (SendBase & { kind: UserScopedKind; orgId?: undefined })
 
 export type ChannelDeliveryResult = {
-  channel: Exclude<NotificationChannel, "sms">
+  channel: NotificationChannel
   deliveryId: string
   status:
     | "sent"
@@ -113,11 +125,18 @@ export type SendNotificationDeps = {
   sendEmail?: (input: SendEmailInput) => Promise<SendEmailResult>
   listEmails?: (input: { to: string; since: Date }) => Promise<ListedEmail[]>
   getEmail?: (id: string) => Promise<RetrievedEmail | null>
+  persistSmsBodyHash?: (input: {
+    id: string
+    smsBodyHash: string
+    now: Date
+  }) => Promise<void>
+  sendSms?: (input: SendSmsInput) => Promise<SendSmsResult>
+  listSms?: (input: { to: string; dateSentAfter: Date }) => Promise<ListedSms[]>
   recordAudit?: (input: {
     orgId: string
     deliveryId: string
     kind: NotificationKind
-    channel: Exclude<NotificationChannel, "sms">
+    channel: NotificationChannel
     action: "sent" | "failed" | "suppressed"
   }) => Promise<void>
 }
@@ -213,7 +232,7 @@ async function defaultAudit(input: {
   orgId: string
   deliveryId: string
   kind: NotificationKind
-  channel: Exclude<NotificationChannel, "sms">
+  channel: NotificationChannel
   action: "sent" | "failed" | "suppressed"
 }): Promise<void> {
   await withAudit(
@@ -256,10 +275,15 @@ export async function sendNotification(
   const listPreferences =
     deps.listPreferences ?? listMemberNotificationPreferences
   const sendEmail = deps.sendEmail ?? sendViaResend
+  const sendSms = deps.sendSms ?? sendViaTwilio
+  const listSms = deps.listSms ?? listTwilioMessages
+  const persistHash = deps.persistSmsBodyHash ?? persistSmsBodyHash
   const recordAudit = deps.recordAudit ?? defaultAudit
 
   let userId: string | null = null
   let email: string
+  let phoneE164: string | null = null
+  let phoneVerified = false
   let preferences: PreferenceRow[] = []
 
   if (isUserRecipient(parsed.recipient)) {
@@ -272,6 +296,8 @@ export async function sendNotification(
     }
     userId = user.userId
     email = user.email
+    phoneE164 = user.phoneE164
+    phoneVerified = Boolean(user.phoneE164 && user.phoneVerifiedAt)
     preferences = await listPreferences(user.userId)
   } else {
     email = parsed.recipient.email
@@ -279,12 +305,19 @@ export async function sendNotification(
 
   const selected = isUserRecipient(parsed.recipient)
     ? supportedSendChannels(parsed.kind, parsed.channelsOverride).filter(
-        (channel) =>
-          channelEnabled({
-            kind: parsed.kind,
-            channel,
-            preferences,
-          })
+        (channel) => {
+          if (
+            !channelEnabled({
+              kind: parsed.kind,
+              channel,
+              preferences,
+            })
+          ) {
+            return false
+          }
+          if (channel === "sms") return phoneVerified
+          return true
+        }
       )
     : supportedSendChannels(parsed.kind, parsed.channelsOverride).filter(
         (channel) => channel === "email"
@@ -309,8 +342,12 @@ export async function sendNotification(
           inbox,
           suppressed,
           sendEmail,
+          sendSms,
+          persistHash,
           listEmails: deps.listEmails,
           getEmail: deps.getEmail,
+          listSms,
+          phoneE164,
           recordAudit,
         })
       )
@@ -325,20 +362,24 @@ export async function sendNotification(
 
 async function deliverChannel(input: {
   parsed: ParsedSend
-  channel: Exclude<NotificationChannel, "sms">
+  channel: NotificationChannel
   userId: string | null
   email: string
+  phoneE164: string | null
   runId: string
   now: Date
   claim: NonNullable<SendNotificationDeps["claimDelivery"]>
   markAttempt: NonNullable<SendNotificationDeps["markFirstAttempt"]>
   complete: NonNullable<SendNotificationDeps["completeDelivery"]>
   persistProviderId: NonNullable<SendNotificationDeps["recordProviderId"]>
+  persistHash: NonNullable<SendNotificationDeps["persistSmsBodyHash"]>
   inbox: NonNullable<SendNotificationDeps["insertInbox"]>
   suppressed: NonNullable<SendNotificationDeps["isEmailSuppressed"]>
   sendEmail: NonNullable<SendNotificationDeps["sendEmail"]>
+  sendSms: NonNullable<SendNotificationDeps["sendSms"]>
   listEmails: SendNotificationDeps["listEmails"]
   getEmail: SendNotificationDeps["getEmail"]
+  listSms: SendNotificationDeps["listSms"]
   recordAudit: NonNullable<SendNotificationDeps["recordAudit"]>
 }): Promise<ChannelDeliveryResult> {
   const claimed = await input.claim({
@@ -401,6 +442,22 @@ async function deliverChannel(input: {
         inbox: input.inbox,
         recordAudit: input.recordAudit,
       })
+    case "sms":
+      return deliverSms({
+        parsed: input.parsed,
+        channel: "sms",
+        phoneE164: input.phoneE164,
+        row,
+        runId: input.runId,
+        now: input.now,
+        markAttempt: input.markAttempt,
+        complete: input.complete,
+        persistProviderId: input.persistProviderId,
+        persistHash: input.persistHash,
+        sendSms: input.sendSms,
+        listSms: input.listSms,
+        recordAudit: input.recordAudit,
+      })
     default: {
       const _exhaustive: never = input.channel
       return _exhaustive
@@ -410,7 +467,7 @@ async function deliverChannel(input: {
 
 async function finish(input: {
   parsed: ParsedSend
-  channel: Exclude<NotificationChannel, "sms">
+  channel: NotificationChannel
   row: DeliveryRow
   runId: string
   now: Date
@@ -564,4 +621,87 @@ async function deliverInApp(input: {
     data: input.parsed.ctx.data,
   })
   return finish({ ...input, status: "sent" })
+}
+
+async function deliverSms(input: {
+  parsed: ParsedSend
+  channel: "sms"
+  phoneE164: string | null
+  row: DeliveryRow
+  runId: string
+  now: Date
+  markAttempt: NonNullable<SendNotificationDeps["markFirstAttempt"]>
+  complete: NonNullable<SendNotificationDeps["completeDelivery"]>
+  persistProviderId: NonNullable<SendNotificationDeps["recordProviderId"]>
+  persistHash: NonNullable<SendNotificationDeps["persistSmsBodyHash"]>
+  sendSms: NonNullable<SendNotificationDeps["sendSms"]>
+  listSms: SendNotificationDeps["listSms"]
+  recordAudit: NonNullable<SendNotificationDeps["recordAudit"]>
+}): Promise<ChannelDeliveryResult> {
+  if (!input.phoneE164) {
+    return finish({
+      ...input,
+      status: "failed",
+      error: "sms requires a verified phone",
+    })
+  }
+
+  const body = appendSmsRef(input.parsed.ctx.body, input.row.id)
+  const smsBodyHash = hashSmsBody(body)
+  await input.persistHash({
+    id: input.row.id,
+    smsBodyHash,
+    now: input.now,
+  })
+
+  if (input.row.providerId) {
+    return finish({
+      ...input,
+      status: "sent",
+      providerId: input.row.providerId,
+    })
+  }
+
+  if (input.row.firstAttemptAt && input.listSms) {
+    const listed = await input.listSms({
+      to: input.phoneE164,
+      dateSentAfter: input.row.firstAttemptAt,
+    })
+    const adopted = adoptTwilioMessage(listed, smsBodyHash)
+    if (adopted) {
+      await input.persistProviderId({
+        id: input.row.id,
+        providerId: adopted.sid,
+        now: input.now,
+      })
+      return finish({
+        ...input,
+        status: "sent",
+        providerId: adopted.sid,
+      })
+    }
+  }
+
+  await input.markAttempt({
+    id: input.row.id,
+    runId: input.runId,
+    now: input.now,
+  })
+
+  const sent = await input.sendSms({
+    to: input.phoneE164,
+    body,
+    deliveryId: input.row.id,
+    statusCallbackUrl: smsStatusCallbackUrl(input.row.id),
+  })
+  await input.persistProviderId({
+    id: input.row.id,
+    providerId: sent.providerId,
+    now: input.now,
+  })
+  return finish({
+    ...input,
+    status: "sent",
+    providerId: sent.providerId,
+  })
 }
