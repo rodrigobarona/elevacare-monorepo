@@ -122,7 +122,8 @@ export async function cancelMemberBooking(input: {
         .where(
           and(
             eq(main.bookings.id, row.id),
-            eq(main.bookings.status, row.status)
+            eq(main.bookings.status, row.status),
+            eq(main.bookings.startsAt, row.startsAt)
           )
         )
         .returning({ id: main.bookings.id })

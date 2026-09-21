@@ -44,7 +44,10 @@ Each entry should include:
   member (or guest email) and the expert with the same idempotency
   key. Reschedule keys include `bookings.schedule_revision` so an
   A→B→A→B sequence does not reuse the first outbox row; the revision
-  increments in the same transaction as the slot write. Direct Resend
+  increments in the same transaction as the slot write. Delayed
+  reschedule events skip unless `payload.scheduleRevision` matches
+  the booking row. Cancel/reschedule updates also lock `starts_at`
+  so a concurrent slot change cannot emit the previous time. Direct Resend
   ICS mail is a no-op so those emails are not sent twice; ICS
   attachments stay a later slice. `invoice.issued` / `invoice.failed`
   stay off the union.

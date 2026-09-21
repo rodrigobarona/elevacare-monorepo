@@ -54,7 +54,6 @@ export type LoadedBooking = {
   status: string
   startsAt: Date
   endsAt: Date
-  updatedAt: Date
   timezone: string
   sessionMode: string
   bookedLocale: string | null
@@ -67,6 +66,7 @@ export type LoadedBooking = {
   expertEmail: string
   expertName: string
   eventTypeName: { en: string; pt?: string; es?: string }
+  scheduleRevision: number
 }
 
 export async function sendBookingNotification(
@@ -186,7 +186,7 @@ export async function sendBookingNotification(
 function eventMatchesBooking(
   kind: BookingNotificationKind,
   booking: LoadedBooking,
-  payload: { startsAt: string; occurredAt: string }
+  payload: { startsAt: string; scheduleRevision?: number }
 ): boolean {
   switch (kind) {
     case "booking.confirmed":
@@ -196,9 +196,7 @@ function eventMatchesBooking(
     case "booking.rescheduled": {
       if (booking.status !== "rescheduled") return false
       if (booking.startsAt.toISOString() !== payload.startsAt) return false
-      const driftMs =
-        booking.updatedAt.getTime() - Date.parse(payload.occurredAt)
-      return Number.isFinite(driftMs) && driftMs <= 2000
+      return payload.scheduleRevision === booking.scheduleRevision
     }
     default: {
       const _exhaustive: never = kind
@@ -380,7 +378,6 @@ export async function loadBookingForNotification(
         status: main.bookings.status,
         startsAt: main.bookings.startsAt,
         endsAt: main.bookings.endsAt,
-        updatedAt: main.bookings.updatedAt,
         timezone: main.bookings.timezone,
         sessionMode: main.bookings.sessionMode,
         bookedLocale: main.bookings.bookedLocale,
@@ -389,6 +386,7 @@ export async function loadBookingForNotification(
         guestName: main.bookings.guestName,
         expertUserId: main.bookings.expertUserId,
         eventTypeName: main.eventTypes.title,
+        scheduleRevision: main.bookings.scheduleRevision,
       })
       .from(main.bookings)
       .innerJoin(

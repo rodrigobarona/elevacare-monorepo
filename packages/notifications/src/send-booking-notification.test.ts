@@ -69,7 +69,6 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     status: "confirmed",
     startsAt: new Date("2026-09-22T10:00:00.000Z"),
     endsAt: new Date("2026-09-22T10:50:00.000Z"),
-    updatedAt: new Date(OCCURRED_AT),
     timezone: "Europe/Lisbon",
     sessionMode: "online",
     bookedLocale: "en",
@@ -82,6 +81,7 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     expertEmail: "ana@example.com",
     expertName: "Ana Silva",
     eventTypeName: { en: "First visit" },
+    scheduleRevision: 0,
     ...overrides,
   }
 }
@@ -147,7 +147,8 @@ describe("sendBookingNotification", () => {
         payload: eventPayload({ previousStartsAt, scheduleRevision: 1 }),
       },
       {
-        loadBooking: async () => booking({ status: "rescheduled" }),
+        loadBooking: async () =>
+          booking({ status: "rescheduled", scheduleRevision: 1 }),
         send,
       }
     )
@@ -290,7 +291,7 @@ describe("sendBookingNotification", () => {
         loadBooking: async () =>
           booking({
             status: "rescheduled",
-            updatedAt: new Date("2026-09-21T18:00:00.000Z"),
+            scheduleRevision: 3,
           }),
         send,
       }
