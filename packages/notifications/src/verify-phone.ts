@@ -1,5 +1,5 @@
 import { createHash, randomInt, timingSafeEqual } from "node:crypto"
-import { and, desc, eq, isNotNull, isNull, ne } from "drizzle-orm"
+import { and, desc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
@@ -10,6 +10,7 @@ import {
 
 export const PHONE_E164_PATTERN = /^\+[1-9][0-9]{7,14}$/
 export const PHONE_OTP_TTL_MS = 10 * 60 * 1000
+export const PHONE_OTP_MAX_ATTEMPTS = 5
 
 export class PhoneVerifyError extends Error {
   constructor(
@@ -158,6 +159,44 @@ export async function verifyPhoneConfirm(
   }
   const now = deps.now?.() ?? new Date()
 
+  const pending = await withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select()
+      .from(main.phoneVerifications)
+      .where(
+        and(
+          eq(main.phoneVerifications.userId, input.userId),
+          eq(main.phoneVerifications.phoneE164, phoneE164),
+          isNull(main.phoneVerifications.verifiedAt)
+        )
+      )
+      .orderBy(desc(main.phoneVerifications.createdAt))
+      .limit(1)
+    return row ?? null
+  })
+  if (!pending) {
+    throw new PhoneVerifyError("EXPIRED", "no pending verification")
+  }
+  if (pending.expiresAt <= now || pending.attempts >= PHONE_OTP_MAX_ATTEMPTS) {
+    throw new PhoneVerifyError("EXPIRED", "verification code expired")
+  }
+  const computed = hashPhoneOtp({
+    userId: input.userId,
+    phoneE164,
+    code,
+  })
+  if (!otpMatches(pending.codeHash, computed)) {
+    await withPlatformAdminContext(async (tx) => {
+      await tx
+        .update(main.phoneVerifications)
+        .set({
+          attempts: sql`${main.phoneVerifications.attempts} + 1`,
+        })
+        .where(eq(main.phoneVerifications.id, pending.id))
+    })
+    throw new PhoneVerifyError("INVALID_CODE", "verification code invalid")
+  }
+
   return withPlatformAudit(
     { orgId: input.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
@@ -179,37 +218,10 @@ export async function verifyPhoneConfirm(
         )
       }
 
-      const [row] = await tx
-        .select()
-        .from(main.phoneVerifications)
-        .where(
-          and(
-            eq(main.phoneVerifications.userId, input.userId),
-            eq(main.phoneVerifications.phoneE164, phoneE164),
-            isNull(main.phoneVerifications.verifiedAt)
-          )
-        )
-        .orderBy(desc(main.phoneVerifications.createdAt))
-        .limit(1)
-      if (!row) {
-        throw new PhoneVerifyError("EXPIRED", "no pending verification")
-      }
-      if (row.expiresAt <= now) {
-        throw new PhoneVerifyError("EXPIRED", "verification code expired")
-      }
-      const computed = hashPhoneOtp({
-        userId: input.userId,
-        phoneE164,
-        code,
-      })
-      if (!otpMatches(row.codeHash, computed)) {
-        throw new PhoneVerifyError("INVALID_CODE", "verification code invalid")
-      }
-
       await tx
         .update(main.phoneVerifications)
         .set({ verifiedAt: now })
-        .where(eq(main.phoneVerifications.id, row.id))
+        .where(eq(main.phoneVerifications.id, pending.id))
       await tx
         .update(auth.user)
         .set({
@@ -222,7 +234,7 @@ export async function verifyPhoneConfirm(
         entity: "phone",
         action: "verified",
         entityId: input.userId,
-        payload: { phoneE164 },
+        payload: { verified: true },
       })
       return { status: "verified" as const, phoneE164 }
     }

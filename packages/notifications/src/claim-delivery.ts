@@ -226,6 +226,38 @@ export async function persistSmsBodyHash(input: {
   })
 }
 
+export async function completeSmsFromCallbackInTx(
+  tx: Tx,
+  input: {
+    id: string
+    providerId: string
+    status: Extract<DeliveryStatus, "sent" | "failed">
+    error?: string | null
+    now: Date
+  }
+): Promise<boolean> {
+  const updated = await tx
+    .update(main.notificationDeliveries)
+    .set({
+      status: input.status,
+      providerId: input.providerId,
+      error: input.error ?? null,
+      updatedAt: input.now,
+    })
+    .where(
+      and(
+        eq(main.notificationDeliveries.id, input.id),
+        eq(main.notificationDeliveries.channel, "sms"),
+        or(
+          eq(main.notificationDeliveries.status, "queued"),
+          eq(main.notificationDeliveries.status, "failed")
+        )
+      )
+    )
+    .returning({ id: main.notificationDeliveries.id })
+  return Boolean(updated[0])
+}
+
 export async function completeSmsFromCallback(input: {
   id: string
   providerId: string
@@ -233,28 +265,9 @@ export async function completeSmsFromCallback(input: {
   error?: string | null
   now: Date
 }): Promise<boolean> {
-  return withPlatformAdminContext(async (tx) => {
-    const updated = await tx
-      .update(main.notificationDeliveries)
-      .set({
-        status: input.status,
-        providerId: input.providerId,
-        error: input.error ?? null,
-        updatedAt: input.now,
-      })
-      .where(
-        and(
-          eq(main.notificationDeliveries.id, input.id),
-          eq(main.notificationDeliveries.channel, "sms"),
-          or(
-            eq(main.notificationDeliveries.status, "queued"),
-            eq(main.notificationDeliveries.status, "failed")
-          )
-        )
-      )
-      .returning({ id: main.notificationDeliveries.id })
-    return Boolean(updated[0])
-  })
+  return withPlatformAdminContext(async (tx) =>
+    completeSmsFromCallbackInTx(tx, input)
+  )
 }
 
 export async function loadDeliveryById(

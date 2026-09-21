@@ -63,6 +63,7 @@ export {
 export { handleTwilioStatusWebhook } from "./handle-twilio-status"
 export {
   PHONE_E164_PATTERN,
+  PHONE_OTP_MAX_ATTEMPTS,
   PHONE_OTP_TTL_MS,
   PhoneVerifyError,
   hashPhoneOtp,

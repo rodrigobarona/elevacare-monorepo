@@ -316,6 +316,13 @@
       "when": 1779690000000,
       "tag": "0044_booking_schedule_revision",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1779700000000,
+      "tag": "0045_phone_verification_attempts",
+      "breakpoints": true
     }
   ]
 }

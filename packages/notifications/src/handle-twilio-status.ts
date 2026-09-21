@@ -1,5 +1,10 @@
-import { withAudit } from "@eleva/audit"
-import { completeSmsFromCallback, loadDeliveryById } from "./claim-delivery"
+import { withPlatformAudit } from "@eleva/audit"
+import {
+  completeSmsFromCallback,
+  completeSmsFromCallbackInTx,
+  loadDeliveryById,
+  type DeliveryRow,
+} from "./claim-delivery"
 import { twilioSignedUrl, validateTwilioSignature } from "./send-sms"
 
 const SUCCESS_STATUSES = new Set(["sent", "delivered"])
@@ -43,49 +48,62 @@ export async function handleTwilioStatusWebhook(request: Request): Promise<{
 
   const now = new Date()
   if (SUCCESS_STATUSES.has(messageStatus)) {
-    const wrote = await completeSmsFromCallback({
-      id: deliveryId,
-      providerId: messageSid,
+    await finalizeSmsCallback({
+      row,
+      deliveryId,
+      messageSid,
       status: "sent",
       now,
     })
-    if (wrote && row.orgId) {
-      await withAudit(
-        { orgId: row.orgId, actorUserId: null },
-        async (_tx, ctx) => {
-          await ctx.emit({
-            entity: "notification",
-            action: "sent",
-            entityId: deliveryId,
-            payload: { channel: "sms", providerId: messageSid },
-          })
-        }
-      )
-    }
     return { status: 200, body: { ok: true } }
   }
   if (FAILURE_STATUSES.has(messageStatus)) {
-    const wrote = await completeSmsFromCallback({
-      id: deliveryId,
-      providerId: messageSid,
+    await finalizeSmsCallback({
+      row,
+      deliveryId,
+      messageSid,
       status: "failed",
       error: params.ErrorMessage ?? messageStatus,
       now,
     })
-    if (wrote && row.orgId) {
-      await withAudit(
-        { orgId: row.orgId, actorUserId: null },
-        async (_tx, ctx) => {
-          await ctx.emit({
-            entity: "notification",
-            action: "failed",
-            entityId: deliveryId,
-            payload: { channel: "sms", providerId: messageSid },
-          })
-        }
-      )
-    }
     return { status: 200, body: { ok: true } }
   }
   return { status: 200, body: { ok: true } }
+}
+
+async function finalizeSmsCallback(input: {
+  row: DeliveryRow
+  deliveryId: string
+  messageSid: string
+  status: "sent" | "failed"
+  error?: string | null
+  now: Date
+}): Promise<void> {
+  const patch = {
+    id: input.deliveryId,
+    providerId: input.messageSid,
+    status: input.status,
+    error: input.error ?? null,
+    now: input.now,
+  }
+  if (!input.row.orgId) {
+    await completeSmsFromCallback(patch)
+    return
+  }
+  await withPlatformAudit(
+    { orgId: input.row.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      const wrote = await completeSmsFromCallbackInTx(tx, patch)
+      await ctx.emit({
+        entity: "notification",
+        action: input.status,
+        entityId: input.deliveryId,
+        payload: {
+          channel: "sms",
+          providerId: input.messageSid,
+          applied: wrote,
+        },
+      })
+    }
+  )
 }

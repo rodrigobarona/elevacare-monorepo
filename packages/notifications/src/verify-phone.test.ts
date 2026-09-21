@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   hashPhoneOtp,
+  PHONE_OTP_MAX_ATTEMPTS,
   PhoneVerifyError,
   verifyPhoneConfirm,
   verifyPhoneStart,
@@ -26,6 +27,10 @@ describe("verifyPhone", () => {
         code: "12",
       })
     ).rejects.toBeInstanceOf(PhoneVerifyError)
+  })
+
+  it("caps OTP guesses at five attempts", () => {
+    expect(PHONE_OTP_MAX_ATTEMPTS).toBe(5)
   })
 
   it("fails closed when BETTER_AUTH_SECRET is missing", () => {
