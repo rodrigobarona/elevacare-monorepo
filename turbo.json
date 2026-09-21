@@ -100,6 +100,7 @@
     "TOCONLINE_SPIKE_SEND_AT",
     "ELEVA_API_BEARER_TOKEN",
     "API_BASE_URL",
+    "API_URL",
     "NEXT_RUNTIME"
   ],
   "tasks": {

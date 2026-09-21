@@ -42,11 +42,26 @@ export async function handleTwilioStatusWebhook(request: Request): Promise<{
   if (!row || row.channel !== "sms") {
     return { status: 200, body: { ok: true } }
   }
-  if (row.status === "sent" || row.status === "delivered") {
+  if (
+    row.status === "delivered" ||
+    row.status === "bounced" ||
+    row.status === "complained" ||
+    row.status === "suppressed"
+  ) {
     return { status: 200, body: { ok: true } }
   }
 
   const now = new Date()
+  if (messageStatus === "delivered") {
+    await finalizeSmsCallback({
+      row,
+      deliveryId,
+      messageSid,
+      status: "delivered",
+      now,
+    })
+    return { status: 200, body: { ok: true } }
+  }
   if (SUCCESS_STATUSES.has(messageStatus)) {
     await finalizeSmsCallback({
       row,
@@ -75,7 +90,7 @@ async function finalizeSmsCallback(input: {
   row: DeliveryRow
   deliveryId: string
   messageSid: string
-  status: "sent" | "failed"
+  status: "sent" | "failed" | "delivered"
   error?: string | null
   now: Date
 }): Promise<void> {
@@ -96,7 +111,7 @@ async function finalizeSmsCallback(input: {
       const wrote = await completeSmsFromCallbackInTx(tx, patch)
       await ctx.emit({
         entity: "notification",
-        action: input.status,
+        action: input.status === "failed" ? "failed" : "sent",
         entityId: input.deliveryId,
         payload: {
           channel: "sms",

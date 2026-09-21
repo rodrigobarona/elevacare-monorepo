@@ -231,7 +231,7 @@ export async function completeSmsFromCallbackInTx(
   input: {
     id: string
     providerId: string
-    status: Extract<DeliveryStatus, "sent" | "failed">
+    status: Extract<DeliveryStatus, "sent" | "failed" | "delivered">
     error?: string | null
     now: Date
   }
@@ -250,7 +250,8 @@ export async function completeSmsFromCallbackInTx(
         eq(main.notificationDeliveries.channel, "sms"),
         or(
           eq(main.notificationDeliveries.status, "queued"),
-          eq(main.notificationDeliveries.status, "failed")
+          eq(main.notificationDeliveries.status, "failed"),
+          eq(main.notificationDeliveries.status, "sent")
         )
       )
     )
@@ -261,7 +262,7 @@ export async function completeSmsFromCallbackInTx(
 export async function completeSmsFromCallback(input: {
   id: string
   providerId: string
-  status: Extract<DeliveryStatus, "sent" | "failed">
+  status: Extract<DeliveryStatus, "sent" | "failed" | "delivered">
   error?: string | null
   now: Date
 }): Promise<boolean> {
