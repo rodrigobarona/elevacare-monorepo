@@ -37,6 +37,7 @@ export type DeliveryRow = {
   leaseOwner: string
   claimedAt: Date
   firstAttemptAt: Date | null
+  smsBodyHash: string | null
   error: string | null
 }
 
@@ -78,6 +79,7 @@ function toRow(
     leaseOwner: row.leaseOwner,
     claimedAt: row.claimedAt,
     firstAttemptAt: row.firstAttemptAt,
+    smsBodyHash: row.smsBodyHash,
     error: row.error,
   }
 }
@@ -208,6 +210,66 @@ export async function markFirstAttempt(input: {
   })
 }
 
+export async function persistSmsBodyHash(input: {
+  id: string
+  smsBodyHash: string
+  now: Date
+}): Promise<void> {
+  await withPlatformAdminContext(async (tx) => {
+    await tx
+      .update(main.notificationDeliveries)
+      .set({
+        smsBodyHash: input.smsBodyHash,
+        updatedAt: input.now,
+      })
+      .where(eq(main.notificationDeliveries.id, input.id))
+  })
+}
+
+export async function completeSmsFromCallback(input: {
+  id: string
+  providerId: string
+  status: Extract<DeliveryStatus, "sent" | "failed">
+  error?: string | null
+  now: Date
+}): Promise<boolean> {
+  return withPlatformAdminContext(async (tx) => {
+    const updated = await tx
+      .update(main.notificationDeliveries)
+      .set({
+        status: input.status,
+        providerId: input.providerId,
+        error: input.error ?? null,
+        updatedAt: input.now,
+      })
+      .where(
+        and(
+          eq(main.notificationDeliveries.id, input.id),
+          eq(main.notificationDeliveries.channel, "sms"),
+          or(
+            eq(main.notificationDeliveries.status, "queued"),
+            eq(main.notificationDeliveries.status, "failed")
+          )
+        )
+      )
+      .returning({ id: main.notificationDeliveries.id })
+    return Boolean(updated[0])
+  })
+}
+
+export async function loadDeliveryById(
+  id: string
+): Promise<DeliveryRow | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select()
+      .from(main.notificationDeliveries)
+      .where(eq(main.notificationDeliveries.id, id))
+      .limit(1)
+    return row ? toRow(row) : null
+  })
+}
+
 export async function recordProviderId(input: {
   id: string
   providerId: string
@@ -327,6 +389,8 @@ export async function loadUserRecipient(userId: string): Promise<{
   userId: string
   email: string
   locale: string | null
+  phoneE164: string | null
+  phoneVerifiedAt: Date | null
 } | null> {
   return withPlatformAdminContext(async (tx) => {
     const [row] = await tx
@@ -334,6 +398,8 @@ export async function loadUserRecipient(userId: string): Promise<{
         userId: auth.user.id,
         email: auth.user.email,
         locale: auth.user.locale,
+        phoneE164: auth.user.phoneE164,
+        phoneVerifiedAt: auth.user.phoneVerifiedAt,
       })
       .from(auth.user)
       .where(eq(auth.user.id, userId))

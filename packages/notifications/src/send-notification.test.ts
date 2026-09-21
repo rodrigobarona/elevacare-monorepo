@@ -7,6 +7,7 @@ import {
   type DeliveryRow,
   type DeliveryStatus,
 } from "./claim-delivery"
+import { appendSmsRef } from "./send-sms"
 import {
   sendNotification,
   type NotificationChannel,
@@ -69,6 +70,7 @@ class MemoryStore {
         leaseOwner: input.runId,
         claimedAt: input.now,
         firstAttemptAt: null,
+        smsBodyHash: null,
         error: null,
       }
       this.rows.set(key, row)
@@ -133,6 +135,8 @@ class MemoryStore {
         userId,
         email: `${userId}@example.com`,
         locale: "pt",
+        phoneE164: null,
+        phoneVerifiedAt: null,
       }),
       listPreferences: async () => [],
       isEmailSuppressed: async () => false,
@@ -140,6 +144,11 @@ class MemoryStore {
       markFirstAttempt: async (input) => this.markFirstAttempt(input),
       completeDelivery: async (input) => this.complete(input),
       recordProviderId: async (input) => this.recordProviderId(input),
+      persistSmsBodyHash: async (input) => {
+        const row = this.byId(input.id)
+        if (row) row.smsBodyHash = input.smsBodyHash
+      },
+      listSms: async () => [],
       insertInbox: async (input) => {
         if (this.inbox.some((row) => row.deliveryId === input.deliveryId)) {
           return
@@ -246,15 +255,14 @@ describe("sendNotification", () => {
     expect(store.rows.size).toBe(0)
   })
 
-  it("rejects an SMS-only override until Twilio ships", async () => {
-    await expect(
-      sendNotification(
-        bookingInput({ channelsOverride: ["sms"] }),
-        store.deps(now)
-      )
-    ).rejects.toMatchObject({ code: "CHANNEL_OVERRIDE_INVALID" })
-    expect(store.rows.size).toBe(0)
-    expect(store.sendCalls).toBe(0)
+  it("skips SMS when the member has no verified phone", async () => {
+    await sendNotification(
+      bookingInput({ channelsOverride: ["sms"] }),
+      store.deps(now)
+    )
+    expect([...store.rows.values()].some((row) => row.channel === "sms")).toBe(
+      false
+    )
   })
 
   it("claims before calling Resend and writes an in-app row", async () => {
@@ -292,11 +300,95 @@ describe("sendNotification", () => {
     ).toBe("queued")
   })
 
-  it("does not claim or send SMS in this slice", async () => {
+  it("does not claim SMS without a verified phone", async () => {
     await sendNotification(bookingInput(), store.deps(now))
     expect([...store.rows.values()].some((row) => row.channel === "sms")).toBe(
       false
     )
+  })
+
+  it("sends SMS when the member has a verified phone", async () => {
+    const previous = process.env.API_URL
+    process.env.API_URL = "https://api.eleva.care"
+    let smsCalls = 0
+    try {
+      const result = await sendNotification(bookingInput(), {
+        ...store.deps(now),
+        loadUser: async (userId) => ({
+          userId,
+          email: `${userId}@example.com`,
+          locale: "pt",
+          phoneE164: "+351910000002",
+          phoneVerifiedAt: now.current,
+        }),
+        sendSms: async () => {
+          smsCalls += 1
+          return { providerId: "SM_test" }
+        },
+      })
+      expect(smsCalls).toBe(1)
+      expect(result.deliveries.some((row) => row.channel === "sms")).toBe(true)
+      expect(
+        result.deliveries.find((row) => row.channel === "sms")?.status
+      ).toBe("sent")
+    } finally {
+      if (previous === undefined) delete process.env.API_URL
+      else process.env.API_URL = previous
+    }
+  })
+
+  it("adopts an existing Twilio SID instead of sending again", async () => {
+    const previous = process.env.API_URL
+    process.env.API_URL = "https://api.eleva.care"
+    const claimed = store.claim({
+      runId: "worker-a",
+      now: now.current,
+      orgId: ORG_ID,
+      idempotencyKey: "booking:1:confirmed",
+      kind: "booking.confirmed",
+      userId: USER_ID,
+      recipientEmail: null,
+      channel: "sms",
+    })
+    store.markFirstAttempt({
+      id: claimed.row.id,
+      runId: "worker-a",
+      now: now.current,
+    })
+    now.current = new Date(now.current.getTime() + LEASE_TTL_MS + 1)
+    let smsCalls = 0
+    try {
+      const result = await sendNotification(
+        bookingInput({ channelsOverride: ["sms"] }),
+        {
+          ...store.deps(now),
+          runId: "worker-b",
+          loadUser: async (userId) => ({
+            userId,
+            email: `${userId}@example.com`,
+            locale: "pt",
+            phoneE164: "+351910000002",
+            phoneVerifiedAt: now.current,
+          }),
+          sendSms: async () => {
+            smsCalls += 1
+            throw new Error("should adopt")
+          },
+          listSms: async () => [
+            {
+              sid: "SM_adopted",
+              body: appendSmsRef(content.body, claimed.row.id),
+            },
+          ],
+        }
+      )
+      expect(smsCalls).toBe(0)
+      expect(result.deliveries[0]?.status).toBe("sent")
+      expect(result.deliveries[0]?.providerId).toBe("SM_adopted")
+    } finally {
+      if (previous === undefined) delete process.env.API_URL
+      else process.env.API_URL = previous
+    }
   })
 
   it("returns the existing sent row for the same idempotency key", async () => {

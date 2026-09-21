@@ -219,6 +219,7 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 | Concern                                                   | Production URL                                             |
 | --------------------------------------------------------- | ---------------------------------------------------------- |
 | Stripe webhook (external)                                 | `https://api.eleva.care/webhooks/stripe`                   |
+| Twilio SMS StatusCallback                                 | `https://api.eleva.care/webhooks/twilio/status`            |
 | Stripe AccountSession (session-aware, CORS + credentials) | `https://api.eleva.care/stripe/account-session`            |
 | Daily webhooks (room events + transcripts)                | `https://api.eleva.care/webhooks/daily`                    |
 | Resend delivery-events webhook                            | `https://api.eleva.care/resend/events`                     |

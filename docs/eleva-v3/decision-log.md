@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-21: Twilio EU SMS for Lane 1 (verified phone only)
+
+- Owner: engineering
+- Status: active
+- Summary: Lane 1 SMS uses Twilio Programmable Messaging with region
+  `ie1` / edge `dublin` and `TWILIO_MESSAGING_SERVICE_SID`. A member
+  gets SMS only after `POST /me/phone/verify-start` + `verify-confirm`
+  (6-digit OTP, 10 min, hashed) and when the category SMS preference
+  is on. StatusCallback is `POST /webhooks/twilio/status`; the
+  signature URL is rebuilt from server-only `API_URL` plus the raw
+  query string (never re-encoded). SMS is at-least-once: adopt by
+  `sha256(body) === sms_body_hash` before a re-send. `invoice.issued`
+  stays off `NOTIFICATION_KINDS`. No live FT / Comunicação.
+- Reference: `packages/notifications/src/send-sms.ts`,
+  `docs/eleva-v3/execution-plan/phases/08-notifications-lane1.md`
+- Next review date: when inbox API + bell land
+
 ### 2026-09-21: Booking reminders use QStash notBefore (Phase 08 exception)
 
 - Owner: engineering

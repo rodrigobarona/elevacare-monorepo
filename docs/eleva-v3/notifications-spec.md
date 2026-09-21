@@ -172,7 +172,10 @@ Lane 2:
 
 ### SMS (Twilio EU)
 
-Lane 1 only, opt-in, quiet-hours respected:
+Lane 1 only, opt-in, quiet-hours respected. Implementation is live for
+verified phones (`auth.user.phone_e164` + `phone_verified_at`) via
+Twilio `ie1`/`dublin`. StatusCallback and list-adopt reconciliation
+are in `@eleva/notifications`. `invoice.issued` is not a send kind.
 
 - booking confirmation
 - 24h pre-appointment reminder

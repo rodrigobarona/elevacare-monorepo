@@ -63,6 +63,9 @@ catalog:
   # Email
   resend: ^6.12.3
 
+  # SMS
+  twilio: ^5.11.1
+
   # Infrastructure
   "@upstash/redis": ^1.38.0
   "@neondatabase/serverless": ^1.1.0
