@@ -1,4 +1,4 @@
-import { and, eq, ne } from "drizzle-orm"
+import { and, eq, inArray, ne } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   lockMemberHealthConsentInvariant,
@@ -280,22 +280,47 @@ export async function markBookingPaymentFailed(input: {
     await withAudit(
       { orgId: loaded.reservation.orgId, actorUserId: null },
       async (tx, ctx) => {
-        await tx
+        const [booking] = await tx
+          .select({
+            status: main.bookings.status,
+            currency: main.bookings.currency,
+          })
+          .from(main.bookings)
+          .where(eq(main.bookings.id, loaded.booking.id))
+          .for("update")
+          .limit(1)
+        if (!booking || booking.status === "confirmed") return
+
+        const [updated] = await tx
           .update(main.bookingPayments)
           .set({ status: "failed" })
-          .where(eq(main.bookingPayments.id, loaded.payment.id))
+          .where(
+            and(
+              eq(main.bookingPayments.id, loaded.payment.id),
+              inArray(main.bookingPayments.status, [
+                "intent_pending",
+                "requires_payment",
+              ])
+            )
+          )
+          .returning({
+            id: main.bookingPayments.id,
+            amountCents: main.bookingPayments.amountCents,
+          })
+        if (!updated) return
+
         await ctx.emit({
           entity: "booking_payment",
           action: "failed",
-          entityId: loaded.payment.id,
+          entityId: updated.id,
           payload: { paymentIntentId: input.paymentIntentId },
         })
         await emitPaymentFailedEvent(tx, {
           orgId: loaded.reservation.orgId,
-          paymentId: loaded.payment.id,
+          paymentId: updated.id,
           bookingId: loaded.booking.id,
-          amountCents: loaded.payment.amountCents,
-          currency: loaded.booking.currency,
+          amountCents: updated.amountCents,
+          currency: booking.currency,
         })
       }
     )
@@ -369,6 +394,27 @@ async function flipConfirmed(
   }
 ) {
   const now = new Date()
+  const [booking] = await tx
+    .select({ status: main.bookings.status })
+    .from(main.bookings)
+    .where(eq(main.bookings.id, input.bookingId))
+    .for("update")
+    .limit(1)
+  if (!booking) {
+    throw new Error("flipConfirmed: booking not found")
+  }
+  if (booking.status === "confirmed") {
+    return
+  }
+  const [payment] = await tx
+    .select({ status: main.bookingPayments.status })
+    .from(main.bookingPayments)
+    .where(eq(main.bookingPayments.id, input.paymentId))
+    .for("update")
+    .limit(1)
+  if (!payment) {
+    throw new Error("flipConfirmed: payment not found")
+  }
   await tx
     .update(main.bookings)
     .set({
