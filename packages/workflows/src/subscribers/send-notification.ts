@@ -2,6 +2,7 @@ import {
   isBookingNotificationKind,
   isClosedGateKind,
   isPaymentPayoutNotificationKind,
+  parseBookingNotificationPayload,
   sendBookingNotification,
   sendClosedGateInvoiceNotification,
   sendPaymentPayoutNotification,
@@ -47,23 +48,14 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
 }
 
 async function scheduleActiveBookingReminders(event: {
+  type: string
   orgId: string
   payload: Record<string, unknown>
 }): Promise<void> {
-  const bookingId = event.payload.bookingId
-  const startsAt = event.payload.startsAt
-  if (typeof bookingId !== "string" || typeof startsAt !== "string") {
-    throw new Error(
-      "send-notification: booking reminder missing schedule fields"
-    )
-  }
-  const starts = new Date(startsAt)
-  if (Number.isNaN(starts.getTime())) {
-    throw new Error("send-notification: booking reminder startsAt is invalid")
-  }
+  const parsed = parseBookingNotificationPayload(event.type, event.payload)
   await scheduleBookingReminders({
-    bookingId,
+    bookingId: parsed.bookingId,
     orgId: event.orgId,
-    startsAt: starts,
+    startsAt: new Date(parsed.startsAt),
   })
 }

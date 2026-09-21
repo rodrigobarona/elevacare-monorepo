@@ -110,6 +110,17 @@ export async function scheduleBookingReminders(
   return { scheduled, skipped }
 }
 
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"])
+
+export function isLocalReminderApiBase(apiBase: string): boolean {
+  if (!apiBase) return false
+  try {
+    return LOOPBACK_HOSTS.has(new URL(apiBase).hostname)
+  } catch {
+    return false
+  }
+}
+
 export async function publishReminderJob(
   job: PlannedReminder
 ): Promise<"published" | "skipped"> {
@@ -121,10 +132,13 @@ export async function publishReminderJob(
     ""
   ).replace(/\/+$/, "")
 
-  const isLocal =
-    !apiBase || apiBase.includes("localhost") || apiBase.includes("127.0.0.1")
-  if (isLocal) {
+  if (isLocalReminderApiBase(apiBase)) {
     return "skipped"
+  }
+  if (!apiBase) {
+    throw new Error(
+      "booking-reminder: API_URL or NEXT_PUBLIC_API_URL is required"
+    )
   }
   if (!token || !secret) {
     throw new Error(

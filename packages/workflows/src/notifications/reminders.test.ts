@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest"
 import {
   BOOKING_REMINDER_KINDS,
   deliverBookingReminder,
+  isLocalReminderApiBase,
   planBookingReminders,
   publishReminderJob,
   reminderDeduplicationId,
@@ -81,7 +82,129 @@ describe("booking reminder scheduling math", () => {
   })
 })
 
+function restoreEnv(
+  key:
+    | "QSTASH_TOKEN"
+    | "WORKFLOWS_DRAIN_SECRET"
+    | "API_URL"
+    | "NEXT_PUBLIC_API_URL",
+  previous: string | undefined
+): void {
+  if (previous === undefined) delete process.env[key]
+  else process.env[key] = previous
+}
+
+describe("isLocalReminderApiBase", () => {
+  it("matches only loopback hostnames", () => {
+    expect(isLocalReminderApiBase("http://localhost:3002")).toBe(true)
+    expect(isLocalReminderApiBase("http://127.0.0.1:3002")).toBe(true)
+    expect(isLocalReminderApiBase("http://[::1]:3002")).toBe(true)
+    expect(isLocalReminderApiBase("https://not-localhost.example")).toBe(false)
+    expect(isLocalReminderApiBase("https://api.eleva.care")).toBe(false)
+    expect(isLocalReminderApiBase("")).toBe(false)
+  })
+})
+
 describe("publishReminderJob", () => {
+  it("skips only when the API base URL is explicit localhost", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+    }
+    process.env.API_URL = "http://localhost:3002"
+    delete process.env.NEXT_PUBLIC_API_URL
+    delete process.env.QSTASH_TOKEN
+    delete process.env.WORKFLOWS_DRAIN_SECRET
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).resolves.toBe("skipped")
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
+    }
+  })
+
+  it("does not skip a hostname that only contains localhost", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+    }
+    process.env.API_URL = "https://not-localhost.example"
+    delete process.env.NEXT_PUBLIC_API_URL
+    delete process.env.QSTASH_TOKEN
+    delete process.env.WORKFLOWS_DRAIN_SECRET
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).rejects.toThrow(/QSTASH_TOKEN/)
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
+    }
+  })
+
+  it("throws when the production API base URL is missing", async () => {
+    const previous = {
+      token: process.env.QSTASH_TOKEN,
+      secret: process.env.WORKFLOWS_DRAIN_SECRET,
+      apiUrl: process.env.API_URL,
+      publicApiUrl: process.env.NEXT_PUBLIC_API_URL,
+    }
+    delete process.env.API_URL
+    delete process.env.NEXT_PUBLIC_API_URL
+    process.env.QSTASH_TOKEN = "qstash-token"
+    process.env.WORKFLOWS_DRAIN_SECRET = "workflow-secret"
+    try {
+      await expect(
+        publishReminderJob({
+          kind: "booking.reminder_24h",
+          notBeforeUnix: 1_800_000_000,
+          deduplicationId: "dedupe",
+          body: {
+            bookingId: BOOKING_ID,
+            orgId: ORG_ID,
+            kind: "booking.reminder_24h",
+            startsAt: STARTS_AT.toISOString(),
+          },
+        })
+      ).rejects.toThrow(/API_URL/)
+    } finally {
+      restoreEnv("QSTASH_TOKEN", previous.token)
+      restoreEnv("WORKFLOWS_DRAIN_SECRET", previous.secret)
+      restoreEnv("API_URL", previous.apiUrl)
+      restoreEnv("NEXT_PUBLIC_API_URL", previous.publicApiUrl)
+    }
+  })
+
   it("throws in a deployed environment without QStash credentials", async () => {
     const previous = {
       token: process.env.QSTASH_TOKEN,

@@ -2340,7 +2340,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "deliverBookingReminder",
           summary: "Send a scheduled booking reminder",
           description:
-            "Internal QStash handler for T-24h and T-1h reminders. Re-checks that the booking is still confirmed before sendNotification. Cancel does not delete the delayed message. Auth is WORKFLOWS_DRAIN_SECRET.",
+            "Internal QStash handler for T-24h and T-1h reminders. Re-checks that the booking is still confirmed or rescheduled and that startsAt still matches before sendNotification. Cancel does not delete the delayed message. Auth is WORKFLOWS_DRAIN_SECRET.",
           tags: ["Workflows"],
           requestBody: {
             required: true,

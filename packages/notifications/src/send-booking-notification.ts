@@ -43,6 +43,29 @@ const BookingPayloadSchema = z.object({
   scheduleRevision: z.number().int().positive().optional(),
 })
 
+export type ParsedBookingNotificationPayload = z.infer<
+  typeof BookingPayloadSchema
+>
+
+export function parseBookingNotificationPayload(
+  type: string,
+  payload: Record<string, unknown>
+): ParsedBookingNotificationPayload {
+  const parsed = BookingPayloadSchema.safeParse(payload)
+  if (!parsed.success) {
+    throw new Error("send-notification: booking payload is invalid")
+  }
+  if (
+    type === "booking.rescheduled" &&
+    (!parsed.data.previousStartsAt || parsed.data.scheduleRevision == null)
+  ) {
+    throw new Error(
+      "send-notification: reschedule payload missing previousStartsAt or scheduleRevision"
+    )
+  }
+  return parsed.data
+}
+
 export type BookingNotificationEvent = {
   id: string
   type: string
@@ -98,25 +121,14 @@ export async function sendBookingNotification(
       `send-notification: unsupported booking event ${event.type}`
     )
   }
-  const parsed = BookingPayloadSchema.safeParse(event.payload)
-  if (!parsed.success) {
-    throw new Error("send-notification: booking payload is invalid")
-  }
-  if (
-    event.type === "booking.rescheduled" &&
-    (!parsed.data.previousStartsAt || parsed.data.scheduleRevision == null)
-  ) {
-    throw new Error(
-      "send-notification: reschedule payload missing previousStartsAt or scheduleRevision"
-    )
-  }
+  const parsed = parseBookingNotificationPayload(event.type, event.payload)
   const loadBooking = deps.loadBooking ?? loadBookingForNotification
   const send = deps.send ?? sendNotification
-  const booking = await loadBooking(parsed.data.bookingId)
+  const booking = await loadBooking(parsed.bookingId)
   if (!booking || booking.orgId !== event.orgId) {
     throw new Error("send-notification: booking not found for event org")
   }
-  if (!eventMatchesBooking(event.type, booking, parsed.data)) {
+  if (!eventMatchesBooking(event.type, booking, parsed)) {
     return
   }
 
@@ -125,7 +137,7 @@ export async function sendBookingNotification(
   const memberFirst = firstName(
     booking.memberName ?? booking.guestName ?? "member"
   )
-  const snapshotStartsAt = new Date(parsed.data.startsAt)
+  const snapshotStartsAt = new Date(parsed.startsAt)
   const formattedDate = formatDateTime(
     snapshotStartsAt,
     booking.timezone,
@@ -133,9 +145,9 @@ export async function sendBookingNotification(
   )
   const eventTypeName = localizedTitle(booking.eventTypeName, locale)
   const t = getEmailTranslations(locale)
-  const previousDate = parsed.data.previousStartsAt
+  const previousDate = parsed.previousStartsAt
     ? formatDateTime(
-        new Date(parsed.data.previousStartsAt),
+        new Date(parsed.previousStartsAt),
         booking.timezone,
         locale
       )
@@ -172,9 +184,9 @@ export async function sendBookingNotification(
   const idempotencyKey = deliveryIdempotencyKey(
     event.type,
     booking.id,
-    parsed.data.startsAt,
-    parsed.data.previousStartsAt,
-    parsed.data.scheduleRevision
+    parsed.startsAt,
+    parsed.previousStartsAt,
+    parsed.scheduleRevision
   )
   const results = await Promise.allSettled([
     send({
