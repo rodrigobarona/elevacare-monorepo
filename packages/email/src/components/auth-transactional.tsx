@@ -137,6 +137,45 @@ const COPY: Record<
   },
 }
 
+export const AUTH_EMAIL_SUBJECT: Record<
+  AuthEmailKind,
+  Record<EmailLocale, string>
+> = {
+  "verify-email": {
+    en: "Verify your Eleva.care email",
+    pt: "Confirme o seu email Eleva.care",
+    es: "Verifica tu correo de Eleva.care",
+  },
+  "reset-password": {
+    en: "Reset your Eleva.care password",
+    pt: "Redefina a sua palavra-passe Eleva.care",
+    es: "Restablece tu contraseña de Eleva.care",
+  },
+  "magic-link": {
+    en: "Your Eleva.care sign-in link",
+    pt: "A sua ligação de início de sessão Eleva.care",
+    es: "Tu enlace de acceso a Eleva.care",
+  },
+  "organization-invitation": {
+    en: "You are invited to an Eleva.care organization",
+    pt: "Foi convidado para uma organização Eleva.care",
+    es: "Te invitaron a una organización Eleva.care",
+  },
+  "two-factor-otp": {
+    en: "Your Eleva.care verification code",
+    pt: "O seu código de verificação Eleva.care",
+    es: "Tu código de verificación de Eleva.care",
+  },
+}
+
+export function authEmailText(
+  kind: AuthEmailKind,
+  locale: EmailLocale = "en"
+): { title: string; body: string } {
+  const copy = COPY[kind][locale] ?? COPY[kind].en
+  return { title: copy.title, body: copy.body }
+}
+
 /** Barebone-style activation layout (official React Email demo), Eleva tokens. */
 export function AuthTransactionalEmail({
   kind,

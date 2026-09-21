@@ -18,5 +18,7 @@ package does not POST TOConline, attach a PDF, or Comunicar TEST.
 
 Closed-gate invoice emails (`invoice.blocked` / `invoice.skipped` /
 `invoice.pending`) still send through `sendClosedGateInvoiceNotification`.
-SMS / Twilio, auth-mailer rewire, booking fan-out, and Resend webhooks
-are later Phase 08 PRs.
+Better Auth callbacks send through `createAuthMailer()` injected at API
+startup (`setAuthTransactionalMailer`). `@eleva/auth` never imports this
+package. SMS / Twilio, booking fan-out, and Resend webhooks are later
+Phase 08 PRs.

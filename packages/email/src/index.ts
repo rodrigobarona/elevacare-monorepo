@@ -1,10 +1,15 @@
 export {
+  renderAuthEmail,
   renderBookingConfirmed,
   renderBookingRescheduled,
   renderBookingCancelled,
   renderInvoiceClosedGate,
+  type AuthEmailContent,
 } from "./render"
-export { sendAuthEmail, type AuthEmailKind } from "./send-auth"
+export type {
+  AuthEmailKind,
+  AuthTransactionalProps,
+} from "./components/auth-transactional"
 export type { BookingConfirmedProps } from "./templates"
 export type { BookingRescheduledProps } from "./templates"
 export type { BookingCancelledProps } from "./templates"
