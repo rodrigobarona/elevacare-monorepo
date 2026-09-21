@@ -13,6 +13,17 @@
     "themeDark": "Dark",
     "themeSystem": "System"
   },
+  "inbox": {
+    "title": "Inbox",
+    "description": "Booking, payment, and organization alerts.",
+    "empty": "No notifications yet",
+    "loading": "Loading notifications…",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "viewAll": "View all",
+    "open": "Open",
+    "openInbox": "Open inbox"
+  },
   "orgSwitcher": {
     "findWorkspace": "Find workspace…",
     "createWorkspace": "Create workspace",

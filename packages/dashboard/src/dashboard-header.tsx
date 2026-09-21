@@ -1,5 +1,6 @@
 import { Separator } from "@eleva/ui/components/separator"
 import { SidebarTrigger } from "@eleva/ui/components/sidebar"
+import { NavBell } from "./nav-bell"
 import { NavUser } from "./nav-user"
 import type { DashboardUser } from "./nav-types"
 
@@ -9,6 +10,8 @@ interface DashboardHeaderProps {
   settingsUrl?: string
   homepageUrl?: string
   logoutUrl?: string
+  inboxUrl?: string
+  apiBaseUrl?: string
   children?: React.ReactNode
 }
 
@@ -18,6 +21,8 @@ export function DashboardHeader({
   settingsUrl,
   homepageUrl,
   logoutUrl,
+  inboxUrl,
+  apiBaseUrl,
   children,
 }: DashboardHeaderProps) {
   return (
@@ -30,6 +35,9 @@ export function DashboardHeader({
         </>
       )}
       <div className="ml-auto flex items-center gap-1">
+        {inboxUrl && apiBaseUrl ? (
+          <NavBell inboxUrl={inboxUrl} apiBaseUrl={apiBaseUrl} />
+        ) : null}
         <NavUser
           user={user}
           accountUrl={accountUrl}

@@ -33,6 +33,8 @@ export function DashboardShell({
           settingsUrl={config.settingsUrl}
           homepageUrl={config.homepageUrl}
           logoutUrl={config.logoutUrl}
+          inboxUrl={config.inboxUrl}
+          apiBaseUrl={config.apiBaseUrl}
         >
           {headerSlot}
         </DashboardHeader>

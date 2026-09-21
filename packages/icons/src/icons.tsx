@@ -8,6 +8,7 @@ export {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowsClockwiseIcon,
+  BellIcon,
   BookOpenIcon,
   BuildingsIcon,
   CalendarCheckIcon,

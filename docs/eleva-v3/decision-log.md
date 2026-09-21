@@ -32,6 +32,18 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-21: In-app inbox polls via SWR (30s)
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 08 inbox (NavBell + `/notifications` pages) uses SWR
+  polling every 30 seconds against `GET /notifications` instead of
+  `LISTEN/NOTIFY` realtime. RLS still scopes rows to the session user
+  and active org. Cache keys include `orgSlug` / `inboxUrl` so a
+  workspace switch does not flash another org's titles.
+- Related: `docs/eleva-v3/notifications-spec.md`, ADR-006
+- Next review: if inbox volume or unread latency needs push/realtime
+
 ### 2026-09-21: Twilio EU SMS for Lane 1 (verified phone only)
 
 - Owner: engineering

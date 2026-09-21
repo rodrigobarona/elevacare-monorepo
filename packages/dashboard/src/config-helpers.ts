@@ -71,6 +71,7 @@ export async function buildDashboardConfig(
     accountUrl: `${GATEWAY_URL}/account/settings`,
     homepageUrl: `${GATEWAY_URL}/home`,
     logoutUrl: `${GATEWAY_URL}/logout`,
+    apiBaseUrl: process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002",
     ...(homeUrl ? { homeUrl } : {}),
     ...configOverrides,
   }

@@ -53,4 +53,8 @@ export interface DashboardConfig {
   homepageUrl?: string
   /** Logout URL */
   logoutUrl?: string
+  /** Inbox page URL — shows NavBell when set with apiBaseUrl */
+  inboxUrl?: string
+  /** Public API origin for NavBell SWR (NEXT_PUBLIC_API_URL) */
+  apiBaseUrl?: string
 }

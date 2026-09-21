@@ -26,5 +26,7 @@ member has a verified phone and the category SMS preference is on.
 StatusCallback is `POST /webhooks/twilio/status`; the signature URL is
 rebuilt from server-only `API_URL` plus the raw query string. Phone
 opt-in is `POST /me/phone/verify-start` and `verify-confirm` (6-digit
-OTP, 10 min, hashed). Inbox API + bell, Resend webhooks, and the Lane 2
-stub are later Phase 08 PRs.
+OTP, 10 min, hashed). Inbox is `GET /notifications`, `POST
+/notifications/{id}/read`, and `POST /notifications/read-all` (owner RLS,
+`notification.updated`). NavBell polls unread count every 30s. Resend
+webhooks and the Lane 2 stub are later Phase 08 PRs.

@@ -32,6 +32,9 @@ import {
   ConfirmBookingResponseSchema,
   BookingReminderRequestSchema,
   BookingReminderResponseSchema,
+  ListInboxResponseSchema,
+  MarkInboxReadResponseSchema,
+  MarkInboxReadAllResponseSchema,
   VerifyPhoneStartRequestSchema,
   VerifyPhoneStartResponseSchema,
   VerifyPhoneConfirmRequestSchema,
@@ -2501,6 +2504,82 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 "application/json": { schema: ErrorSchema },
               },
             },
+          },
+        },
+      },
+      "/notifications": {
+        get: {
+          operationId: "listInbox",
+          summary: "List in-app inbox notifications",
+          description:
+            "Returns the current member's inbox rows for the active organization (RLS owner SELECT). Pass unread=true to filter unread. Always includes unreadCount.",
+          tags: ["Notifications"],
+          parameters: [
+            {
+              name: "unread",
+              in: "query",
+              required: false,
+              schema: { type: "string", enum: ["true", "1", "false", "0"] },
+            },
+            {
+              name: "limit",
+              in: "query",
+              required: false,
+              schema: { type: "integer", minimum: 1, maximum: 100 },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Inbox items and unread count",
+              content: {
+                "application/json": { schema: ListInboxResponseSchema },
+              },
+            },
+            ...stdErrors,
+          },
+        },
+      },
+      "/notifications/{id}/read": {
+        post: {
+          operationId: "markInboxRead",
+          summary: "Mark one inbox notification as read",
+          description:
+            "Owner UPDATE via RLS. Idempotent when already read. Emits notification.updated.",
+          tags: ["Notifications"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Notification marked read",
+              content: {
+                "application/json": { schema: MarkInboxReadResponseSchema },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/notifications/read-all": {
+        post: {
+          operationId: "markInboxReadAll",
+          summary: "Mark all inbox notifications as read",
+          description:
+            "Owner UPDATE for every unread row belonging to the session user. Emits notification.updated.",
+          tags: ["Notifications"],
+          responses: {
+            "200": {
+              description: "Unread rows marked read",
+              content: {
+                "application/json": { schema: MarkInboxReadAllResponseSchema },
+              },
+            },
+            ...stdErrors,
           },
         },
       },

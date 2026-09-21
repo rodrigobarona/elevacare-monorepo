@@ -68,6 +68,7 @@ export default async function OrgSlugLayout({
     {
       enableOrgSwitcher: false,
       organizations: onlyPersonalSpace ? [] : organizations,
+      inboxUrl: `/${orgSlug}/notifications`,
     }
   )
 

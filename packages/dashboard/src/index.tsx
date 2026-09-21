@@ -1,6 +1,8 @@
 export { AccountPageHeader } from "./account-page-header"
 export { DashboardShell } from "./dashboard-shell"
 export { DashboardHeader } from "./dashboard-header"
+export { InboxPage } from "./inbox-page"
+export { NavBell } from "./nav-bell"
 export { AppSidebar } from "./app-sidebar"
 export { NavMain } from "./nav-main"
 export { NavUser } from "./nav-user"

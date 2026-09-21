@@ -47,43 +47,47 @@ export default async function ExpertLayout({
   const t = await getTranslations("nav")
 
   const base = expertWorkspaceBase(session)
-  const dashboardConfig = await buildDashboardConfig(session, [
-    {
-      items: [
-        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
-        {
-          title: t("eventTypes"),
-          url: `${base}/event-types`,
-          icon: "CalendarDotsIcon",
-          needs: "events:manage",
-        },
-        {
-          title: t("schedule"),
-          url: `${base}/schedule`,
-          icon: "ClockIcon",
-          needs: "schedule:manage",
-        },
-        {
-          title: t("calendars"),
-          url: `${base}/calendars`,
-          icon: "CalendarIcon",
-          needs: "events:manage",
-        },
-        {
-          title: t("integrations"),
-          url: `${base}/integrations`,
-          icon: "PlugIcon",
-          needs: "events:manage",
-        },
-        {
-          title: t("finance"),
-          url: `${base}/finance`,
-          icon: "WalletIcon",
-          needs: "payouts:view_own",
-        },
-      ],
-    },
-  ])
+  const dashboardConfig = await buildDashboardConfig(
+    session,
+    [
+      {
+        items: [
+          { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
+          {
+            title: t("eventTypes"),
+            url: `${base}/event-types`,
+            icon: "CalendarDotsIcon",
+            needs: "events:manage",
+          },
+          {
+            title: t("schedule"),
+            url: `${base}/schedule`,
+            icon: "ClockIcon",
+            needs: "schedule:manage",
+          },
+          {
+            title: t("calendars"),
+            url: `${base}/calendars`,
+            icon: "CalendarIcon",
+            needs: "events:manage",
+          },
+          {
+            title: t("integrations"),
+            url: `${base}/integrations`,
+            icon: "PlugIcon",
+            needs: "events:manage",
+          },
+          {
+            title: t("finance"),
+            url: `${base}/finance`,
+            icon: "WalletIcon",
+            needs: "payouts:view_own",
+          },
+        ],
+      },
+    ],
+    { inboxUrl: `${base}/notifications` }
+  )
 
   const content = (
     <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
