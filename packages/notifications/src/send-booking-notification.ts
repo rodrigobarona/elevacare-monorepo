@@ -23,6 +23,7 @@ export type BookingNotificationKind =
 const BookingPayloadSchema = z.object({
   bookingId: z.string().uuid(),
   startsAt: z.string().datetime(),
+  occurredAt: z.string().datetime(),
   previousStartsAt: z.string().datetime().optional(),
 })
 
@@ -52,6 +53,7 @@ export type LoadedBooking = {
   status: string
   startsAt: Date
   endsAt: Date
+  updatedAt: Date
   timezone: string
   sessionMode: string
   bookedLocale: string | null
@@ -131,7 +133,7 @@ export async function sendBookingNotification(
     memberFirst,
     formattedDate
   )
-  const memberSubject = memberBody
+  const memberSubject = `${title} — ${formattedDate}`
   const expertBody = expertSubject
 
   const memberRecipient = booking.memberUserId
@@ -179,18 +181,20 @@ export async function sendBookingNotification(
 function eventMatchesBooking(
   kind: BookingNotificationKind,
   booking: LoadedBooking,
-  payload: { startsAt: string }
+  payload: { startsAt: string; occurredAt: string }
 ): boolean {
   switch (kind) {
     case "booking.confirmed":
       return booking.status === "confirmed"
     case "booking.cancelled":
       return booking.status === "cancelled"
-    case "booking.rescheduled":
-      return (
-        booking.status === "rescheduled" &&
-        booking.startsAt.toISOString() === payload.startsAt
-      )
+    case "booking.rescheduled": {
+      if (booking.status !== "rescheduled") return false
+      if (booking.startsAt.toISOString() !== payload.startsAt) return false
+      const driftMs =
+        booking.updatedAt.getTime() - Date.parse(payload.occurredAt)
+      return Number.isFinite(driftMs) && driftMs <= 2000
+    }
     default: {
       const _exhaustive: never = kind
       return _exhaustive
@@ -367,6 +371,7 @@ export async function loadBookingForNotification(
         status: main.bookings.status,
         startsAt: main.bookings.startsAt,
         endsAt: main.bookings.endsAt,
+        updatedAt: main.bookings.updatedAt,
         timezone: main.bookings.timezone,
         sessionMode: main.bookings.sessionMode,
         bookedLocale: main.bookings.bookedLocale,

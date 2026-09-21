@@ -36,6 +36,7 @@ describe("booking notification events", () => {
       type: "booking.confirmed",
       bookingId: "00000000-0000-4000-8000-000000000002",
       startsAt: new Date("2026-09-22T10:00:00.000Z"),
+      occurredAt: new Date("2026-09-21T10:00:00.000Z"),
     })
 
     expect(result).toEqual({ eventId: "evt-1", created: true })

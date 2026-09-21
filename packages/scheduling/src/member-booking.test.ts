@@ -167,6 +167,7 @@ describe("cancelMemberBooking", () => {
         type: "booking.cancelled",
         bookingId: "booking-1",
         startsAt: new Date("2026-09-12T10:00:00.000Z"),
+        occurredAt: now,
       }
     )
   })

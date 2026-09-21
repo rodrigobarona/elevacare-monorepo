@@ -154,6 +154,7 @@ export async function cancelMemberBooking(input: {
         type: "booking.cancelled",
         bookingId: row.id,
         startsAt: row.startsAt,
+        occurredAt: now,
       })
       await ctx.emit({
         entity: "booking",
@@ -235,6 +236,7 @@ export async function rescheduleMemberBooking(input: {
         bookingId: row.id,
         startsAt: input.startsAt,
         previousStartsAt: row.startsAt,
+        occurredAt: now,
       })
       await ctx.emit({
         entity: "booking",

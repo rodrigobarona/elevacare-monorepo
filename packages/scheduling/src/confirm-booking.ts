@@ -225,6 +225,7 @@ export async function confirmBookingPayment(
           type: "booking.confirmed",
           bookingId: booking.id,
           startsAt: booking.startsAt,
+          occurredAt: new Date(),
         })
         await ctx.emit({
           entity: "booking",

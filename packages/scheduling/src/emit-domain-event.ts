@@ -15,6 +15,7 @@ export const SEND_NOTIFICATION_SUBSCRIBER = "send-notification" as const
 export type BookingNotificationPayload = {
   bookingId: string
   startsAt: string
+  occurredAt: string
   previousStartsAt?: string
 }
 
@@ -40,6 +41,7 @@ export type EmitBookingNotificationInput =
       type: "booking.confirmed" | "booking.cancelled"
       bookingId: string
       startsAt: Date
+      occurredAt: Date
     }
   | {
       orgId: string
@@ -47,6 +49,7 @@ export type EmitBookingNotificationInput =
       bookingId: string
       startsAt: Date
       previousStartsAt: Date
+      occurredAt: Date
     }
 
 /**
@@ -58,6 +61,7 @@ export async function emitBookingNotificationEvent(
   input: EmitBookingNotificationInput
 ): Promise<{ eventId: string; created: boolean }> {
   const startsAt = input.startsAt.toISOString()
+  const occurredAt = input.occurredAt.toISOString()
   const previousStartsAt =
     input.type === "booking.rescheduled"
       ? input.previousStartsAt.toISOString()
@@ -74,6 +78,7 @@ export async function emitBookingNotificationEvent(
   const payload: BookingNotificationPayload = {
     bookingId: input.bookingId,
     startsAt,
+    occurredAt,
     ...(previousStartsAt ? { previousStartsAt } : {}),
   }
 

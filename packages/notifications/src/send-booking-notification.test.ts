@@ -49,11 +49,17 @@ const BOOKING_ID = "00000000-0000-4000-8000-000000000002"
 const MEMBER_ID = "00000000-0000-4000-8000-000000000003"
 const EXPERT_ID = "00000000-0000-4000-8000-000000000004"
 const STARTS_AT = "2026-09-22T10:00:00.000Z"
+const OCCURRED_AT = "2026-09-21T15:00:00.000Z"
 
 function eventPayload(
   overrides: Record<string, unknown> = {}
 ): Record<string, unknown> {
-  return { bookingId: BOOKING_ID, startsAt: STARTS_AT, ...overrides }
+  return {
+    bookingId: BOOKING_ID,
+    startsAt: STARTS_AT,
+    occurredAt: OCCURRED_AT,
+    ...overrides,
+  }
 }
 
 function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
@@ -63,6 +69,7 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     status: "confirmed",
     startsAt: new Date("2026-09-22T10:00:00.000Z"),
     endsAt: new Date("2026-09-22T10:50:00.000Z"),
+    updatedAt: new Date(OCCURRED_AT),
     timezone: "Europe/Lisbon",
     sessionMode: "online",
     bookedLocale: "en",
@@ -118,7 +125,7 @@ describe("sendBookingNotification", () => {
     )
     expect(send.mock.calls[0]?.[0].ctx.body).toMatch(/^Your session with Ana /)
     expect(send.mock.calls[0]?.[0].ctx.subject).toMatch(
-      /^Your session with Ana /
+      /^New Booking Confirmed — /
     )
     expect(send.mock.calls[1]?.[0].ctx.body).toMatch(/^New booking: Ada /)
     expect(send.mock.calls[1]?.[0].ctx.subject).toMatch(/^New booking: Ada /)
@@ -261,6 +268,29 @@ describe("sendBookingNotification", () => {
       },
       {
         loadBooking: async () => booking({ status: "cancelled" }),
+        send,
+      }
+    )
+    expect(send).not.toHaveBeenCalled()
+  })
+
+  it("skips a delayed reschedule after a later transition", async () => {
+    const send = vi.fn()
+    await sendBookingNotification(
+      {
+        id: "evt-stale-reschedule",
+        type: "booking.rescheduled",
+        orgId: ORG_ID,
+        payload: eventPayload({
+          previousStartsAt: "2026-09-20T10:00:00.000Z",
+        }),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            status: "rescheduled",
+            updatedAt: new Date("2026-09-21T18:00:00.000Z"),
+          }),
         send,
       }
     )
