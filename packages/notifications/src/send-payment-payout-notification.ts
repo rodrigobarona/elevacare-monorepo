@@ -106,7 +106,7 @@ async function sendPaymentKind(
     kind,
     amountFormatted,
     reference: parsed.data.paymentId,
-    name: firstName(booking.memberName ?? booking.guestName ?? "member"),
+    name: displayFirstName(booking.memberName ?? booking.guestName),
     locale,
   })
   const t = getEmailTranslations(locale)
@@ -173,7 +173,7 @@ async function sendPayoutKind(
         kind,
         amountFormatted,
         reference: parsed.data.payoutStateId,
-        name: firstName(row.name),
+        name: displayFirstName(row.name),
         locale,
       })
       const t = getEmailTranslations(locale)
@@ -335,7 +335,10 @@ function formatAmount(
   }
 }
 
-function firstName(value: string): string {
+function displayFirstName(
+  value: string | null | undefined
+): string | undefined {
+  if (!value) return undefined
   const token = value.trim().split(/\s+/)[0]
-  return token || "member"
+  return token || undefined
 }
