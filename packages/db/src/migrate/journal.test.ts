@@ -38,10 +38,15 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0043_notifications_inbox_delivery_id")
+    expect(last?.tag).toBe("0044_booking_schedule_revision")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain(
+    expect(last?.statements.join("\n")).toContain("schedule_revision")
+    const inboxDelivery = migrations.find(
+      (m) => m.tag === "0043_notifications_inbox_delivery_id"
+    )
+    expect(inboxDelivery?.statements.length).toBeGreaterThan(0)
+    expect(inboxDelivery?.statements.join("\n")).toContain(
       "notifications_delivery_id_key"
     )
     const notifications = migrations.find((m) => m.tag === "0042_notifications")

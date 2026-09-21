@@ -11,6 +11,7 @@ import {
 } from "@eleva/db"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { MEMBER_CANCEL_MIN_HOURS, canCancel } from "./booking-rules"
+import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { resolveOffer } from "./resolve-offer"
 
 export { MEMBER_CANCEL_MIN_HOURS }
@@ -121,7 +122,8 @@ export async function cancelMemberBooking(input: {
         .where(
           and(
             eq(main.bookings.id, row.id),
-            eq(main.bookings.status, row.status)
+            eq(main.bookings.status, row.status),
+            eq(main.bookings.startsAt, row.startsAt)
           )
         )
         .returning({ id: main.bookings.id })
@@ -148,6 +150,13 @@ export async function cancelMemberBooking(input: {
           )
       }
 
+      await emitBookingNotificationEvent(tx, {
+        orgId: row.orgId,
+        type: "booking.cancelled",
+        bookingId: row.id,
+        startsAt: row.startsAt,
+        occurredAt: now,
+      })
       await ctx.emit({
         entity: "booking",
         action: "canceled",
@@ -210,18 +219,32 @@ export async function rescheduleMemberBooking(input: {
           endsAt: input.endsAt,
           status: "rescheduled",
           updatedAt: now,
+          scheduleRevision: sql`${main.bookings.scheduleRevision} + 1`,
         })
         .where(
           and(
             eq(main.bookings.id, row.id),
-            eq(main.bookings.status, row.status)
+            eq(main.bookings.status, row.status),
+            eq(main.bookings.startsAt, row.startsAt)
           )
         )
-        .returning({ id: main.bookings.id })
+        .returning({
+          id: main.bookings.id,
+          scheduleRevision: main.bookings.scheduleRevision,
+        })
       if (!updated) {
         throw new MemberBookingPolicyError("INVALID_STATUS")
       }
 
+      await emitBookingNotificationEvent(tx, {
+        orgId: row.orgId,
+        type: "booking.rescheduled",
+        bookingId: row.id,
+        startsAt: input.startsAt,
+        previousStartsAt: row.startsAt,
+        occurredAt: now,
+        scheduleRevision: updated.scheduleRevision,
+      })
       await ctx.emit({
         entity: "booking",
         action: "rescheduled",

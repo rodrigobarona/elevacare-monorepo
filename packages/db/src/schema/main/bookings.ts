@@ -266,6 +266,12 @@ export const bookings = pgTable(
     rescheduledFromId: uuid("rescheduled_from_id").references(
       (): AnyPgColumn => bookings.id
     ),
+    /**
+     * Monotonic occurrence id incremented on each successful reschedule.
+     * Used in `booking.rescheduled` outbox keys so A→B→A→B is not a
+     * conflict with the first A→B event.
+     */
+    scheduleRevision: integer("schedule_revision").notNull().default(0),
 
     cancellationReason: text("cancellation_reason"),
     cancelledAt: timestamp("cancelled_at", {
@@ -303,6 +309,10 @@ export const bookings = pgTable(
     reservationKey: unique("bookings_reservation_id_key").on(t.reservationId),
     idOrgKey: unique("bookings_id_org_key").on(t.id, t.orgId),
     priceChk: check("bookings_price_cents", sql`price_cents >= 0`),
+    scheduleRevisionChk: check(
+      "bookings_schedule_revision_nonneg",
+      sql`schedule_revision >= 0`
+    ),
     priceMatchChk: check(
       "bookings_price_amount_match",
       sql`price_cents = price_amount`

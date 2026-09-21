@@ -59,6 +59,15 @@ export type {
 } from "./confirm-booking"
 export { hashReservationToken } from "./reservation-token"
 export {
+  BOOKING_NOTIFICATION_EVENT_TYPES,
+  bookingNotificationIdempotencyKey,
+  emitBookingNotificationEvent,
+} from "./emit-domain-event"
+export type {
+  BookingNotificationEventType,
+  BookingNotificationPayload,
+} from "./emit-domain-event"
+export {
   cancelMemberBooking,
   rescheduleMemberBooking,
   MemberBookingPolicyError,

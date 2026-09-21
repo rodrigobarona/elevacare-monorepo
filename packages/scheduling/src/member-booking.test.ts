@@ -12,6 +12,7 @@ const resolveOffer = vi.fn()
 const getExpertScheduleForBooking = vi.fn()
 const listExpertBusyBookings = vi.fn()
 const assertRequestedSlotAvailable = vi.fn()
+const emitBookingNotificationEvent = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   getMemberBookingForPolicy: (...args: unknown[]) =>
@@ -21,7 +22,12 @@ vi.mock("@eleva/db", () => ({
   listExpertBusyBookings: (...args: unknown[]) =>
     listExpertBusyBookings(...args),
   main: {
-    bookings: { id: "bookings.id", status: "bookings.status" },
+    bookings: {
+      id: "bookings.id",
+      status: "bookings.status",
+      startsAt: "bookings.starts_at",
+      scheduleRevision: "bookings.schedule_revision",
+    },
     bookingPayments: { id: "payments.id" },
     slotReservations: { id: "slots.id", status: "slots.status" },
   },
@@ -39,6 +45,11 @@ vi.mock("./resolve-offer", () => ({
 vi.mock("./assert-slot-available", () => ({
   assertRequestedSlotAvailable: (...args: unknown[]) =>
     assertRequestedSlotAvailable(...args),
+}))
+
+vi.mock("./emit-domain-event", () => ({
+  emitBookingNotificationEvent: (...args: unknown[]) =>
+    emitBookingNotificationEvent(...args),
 }))
 
 const now = new Date("2026-09-11T10:00:00.000Z")
@@ -80,6 +91,11 @@ describe("cancelMemberBooking", () => {
   beforeEach(() => {
     getMemberBookingForPolicy.mockReset()
     withAudit.mockReset()
+    emitBookingNotificationEvent.mockReset()
+    emitBookingNotificationEvent.mockResolvedValue({
+      eventId: "evt-1",
+      created: true,
+    })
     withAudit.mockImplementation(
       async (
         _opts: unknown,
@@ -149,6 +165,16 @@ describe("cancelMemberBooking", () => {
       now,
     })
     expect(paymentSets).toEqual([{ status: "refund_pending" }])
+    expect(emitBookingNotificationEvent).toHaveBeenCalledWith(
+      expect.anything(),
+      {
+        orgId: "org-1",
+        type: "booking.cancelled",
+        bookingId: "booking-1",
+        startsAt: new Date("2026-09-12T10:00:00.000Z"),
+        occurredAt: now,
+      }
+    )
   })
 })
 

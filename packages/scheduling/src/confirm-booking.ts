@@ -6,6 +6,7 @@ import {
   withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
+import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
 
@@ -218,6 +219,13 @@ export async function confirmBookingPayment(
           orgId: reservation.orgId,
           bookingId: booking.id,
           reservationId: reservation.id,
+        })
+        await emitBookingNotificationEvent(tx, {
+          orgId: reservation.orgId,
+          type: "booking.confirmed",
+          bookingId: booking.id,
+          startsAt: booking.startsAt,
+          occurredAt: new Date(),
         })
         await ctx.emit({
           entity: "booking",
