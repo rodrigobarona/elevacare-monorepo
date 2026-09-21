@@ -1,4 +1,4 @@
-import { and, eq, inArray, ne } from "drizzle-orm"
+import { and, eq, inArray, isNull, ne, or } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   lockMemberHealthConsentInvariant,
@@ -333,7 +333,14 @@ export async function markBookingPaymentFailed(input: {
               inArray(main.bookingPayments.status, [
                 "intent_pending",
                 "requires_payment",
-              ])
+              ]),
+              or(
+                isNull(main.bookingPayments.stripePaymentIntentId),
+                eq(
+                  main.bookingPayments.stripePaymentIntentId,
+                  input.paymentIntentId
+                )
+              )
             )
           )
           .returning({
