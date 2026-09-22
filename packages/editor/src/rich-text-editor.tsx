@@ -83,10 +83,10 @@ export function RichTextEditor({
   const lastEmittedRef = useRef<PlateValue | undefined>(value)
 
   useEffect(() => {
-    if (value === undefined) return
-    if (value === lastEmittedRef.current) return
-    lastEmittedRef.current = value
-    editor.tf.setValue(value as Value)
+    const next = value ?? EMPTY_VALUE
+    if (next === lastEmittedRef.current) return
+    lastEmittedRef.current = next
+    editor.tf.setValue(next as Value)
   }, [editor, value])
 
   return (

@@ -10,6 +10,8 @@ import { cn } from "@eleva/ui/lib/utils"
 import { RichTextEditor, type RichTextEditorLabels } from "./rich-text-editor"
 import type { PlateValue, RichTextSource } from "./types"
 
+const EMPTY_VALUE: PlateValue = [{ type: "p", children: [{ text: "" }] }]
+
 export type LocalizedRichTextFieldValue = Partial<
   Record<
     Locale,
@@ -120,7 +122,7 @@ export function LocalizedRichTextField({
       </div>
       <RichTextEditor
         key={activeLocale}
-        value={entry?.json}
+        value={entry?.json ?? EMPTY_VALUE}
         isDisabled={isDisabled}
         labels={editorLabels}
         onChange={(json) => {
