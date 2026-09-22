@@ -10,8 +10,10 @@ import {
   getExpertProfileByUserId,
   getPracticeLocation,
   listModeNamesUsingLocation,
+  listPublishedActiveModesForExpert,
   updatePracticeLocation,
 } from "@eleva/db"
+import { validatePracticeAgainstPublishedModes } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -158,6 +160,61 @@ export async function PATCH(request: Request, { params }: Params) {
     }
   }
 
+  const deactivating = body.data.active === false && existing.active
+  const countryChanging =
+    body.data.country !== undefined &&
+    body.data.country !== existing.country.toUpperCase()
+
+  if (deactivating) {
+    const modeCount = await countModesUsingLocation(profile.orgId, id)
+    if (modeCount > 0) {
+      const modes = await listModeNamesUsingLocation(profile.orgId, id)
+      return secureJson(
+        {
+          error: "LOCATION_IN_USE",
+          message:
+            "This location is used by one or more delivery modes. Reassign those modes first.",
+          modes,
+        },
+        { status: 409, headers }
+      )
+    }
+  }
+
+  if (countryChanging) {
+    const publishedModes = await listPublishedActiveModesForExpert(
+      profile.orgId,
+      profile.id
+    )
+    const candidateCountry = body.data.country!
+    const affected = publishedModes
+      .filter((mode) => mode.locationId === id)
+      .map((mode) => ({
+        modeId: mode.modeId,
+        eventTypeId: mode.eventTypeId,
+        eventTypeTitle: mode.eventTypeTitle,
+        kind: mode.kind,
+        mode: mode.mode,
+        countryScopeType: mode.countryScopeType,
+        countryScopeCodes: mode.countryScopeCodes,
+        languages: mode.languages,
+        locationCountry: candidateCountry,
+      }))
+
+    const violations = validatePracticeAgainstPublishedModes({
+      worldwideRemote: profile.worldwideRemote,
+      serviceCountries: profile.serviceCountries,
+      profileLanguages: profile.languages,
+      modes: affected,
+    })
+    if (violations.length > 0) {
+      return secureJson(
+        { error: "OFFER_INVARIANT_VIOLATION", violations },
+        { status: 409, headers }
+      )
+    }
+  }
+
   const location = await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -253,32 +310,14 @@ export async function DELETE(request: Request, { params }: Params) {
   const modeCount = await countModesUsingLocation(profile.orgId, id)
   if (modeCount > 0) {
     const modes = await listModeNamesUsingLocation(profile.orgId, id)
-    const location = await withAudit(
-      { orgId: profile.orgId, actorUserId: session.user.id },
-      async (tx, ctx) => {
-        const archived = await archivePracticeLocation(
-          profile.orgId,
-          id,
-          profile.id,
-          tx
-        )
-        await ctx.emit({
-          entity: "expert_location",
-          action: "updated",
-          entityId: id,
-          payload: { archived: true, modeCount },
-        })
-        return archived
-      }
-    )
     return secureJson(
       {
-        location,
-        archived: true,
-        reason: "LOCATION_IN_USE",
+        error: "LOCATION_IN_USE",
+        message:
+          "This location is used by one or more delivery modes. Reassign those modes first.",
         modes,
       },
-      { status: 200, headers }
+      { status: 409, headers }
     )
   }
 

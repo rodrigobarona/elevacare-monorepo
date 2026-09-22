@@ -141,11 +141,13 @@ export async function countModesUsingLocation(
     const [row] = await tx
       .select({ value: count() })
       .from(eventTypeModes)
+      .innerJoin(eventTypes, eq(eventTypes.id, eventTypeModes.eventTypeId))
       .where(
         and(
           eq(eventTypeModes.orgId, orgId),
           eq(eventTypeModes.locationId, locationId),
-          eq(eventTypeModes.active, true)
+          eq(eventTypeModes.active, true),
+          isNull(eventTypes.deletedAt)
         )
       )
     return Number(row?.value ?? 0)
@@ -199,6 +201,7 @@ export async function listPublishedActiveModesForExpert(
     countryScopeType: "worldwide" | "list"
     countryScopeCodes: string[]
     languages: string[]
+    locationId: string | null
     locationCountry: string | null
   }[]
 > {
@@ -213,6 +216,7 @@ export async function listPublishedActiveModesForExpert(
         countryScopeType: eventTypeModes.countryScopeType,
         countryScopeCodes: eventTypeModes.countryScopeCodes,
         languages: eventTypeModes.languages,
+        locationId: eventTypeModes.locationId,
         locationCountry: expertPracticeLocations.country,
       })
       .from(eventTypeModes)
@@ -247,6 +251,7 @@ export async function listPublishedActiveModesForExpert(
       countryScopeType: row.countryScopeType,
       countryScopeCodes: row.countryScopeCodes,
       languages: row.languages,
+      locationId: row.locationId ?? null,
       locationCountry: row.locationCountry ?? null,
     }))
   })

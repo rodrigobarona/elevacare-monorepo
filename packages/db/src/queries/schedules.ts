@@ -405,11 +405,13 @@ export async function countModesUsingSchedule(
     const [row] = await tx
       .select({ value: count() })
       .from(eventTypeModes)
+      .innerJoin(eventTypes, eq(eventTypes.id, eventTypeModes.eventTypeId))
       .where(
         and(
           eq(eventTypeModes.orgId, orgId),
           eq(eventTypeModes.scheduleId, scheduleId),
-          eq(eventTypeModes.active, true)
+          eq(eventTypeModes.active, true),
+          isNull(eventTypes.deletedAt)
         )
       )
     return Number(row?.value ?? 0)

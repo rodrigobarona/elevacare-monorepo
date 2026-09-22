@@ -48,4 +48,24 @@ describe("normalizeAvailabilityRules", () => {
       expect(result.error).toBe("INVALID_DAY")
     }
   })
+
+  it("rejects malformed time strings", () => {
+    const result = normalizeAvailabilityRules([
+      { dayOfWeek: 1, startTime: "9am", endTime: "10:00" },
+    ])
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error).toBe("INVALID_TIME")
+    }
+  })
+
+  it("rejects equal start and end times", () => {
+    const result = normalizeAvailabilityRules([
+      { dayOfWeek: 1, startTime: "09:00", endTime: "09:00" },
+    ])
+    expect(result.ok).toBe(false)
+    if (!result.ok) {
+      expect(result.error).toBe("START_AFTER_END")
+    }
+  })
 })

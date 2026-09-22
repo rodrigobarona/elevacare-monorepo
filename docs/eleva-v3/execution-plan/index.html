@@ -3240,15 +3240,21 @@ multi-calendar, destination overrides), <code>design-system-spec.md</code> (edit
 <h2 id="04b-expert-offer-builder--acceptance-criteria"><a class="anchor" href="#04b-expert-offer-builder--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
 <p><strong>Closeout status (2026-09-22):</strong> Phase 4B was skipped while 05–08 shipped.
-Ordered backlog: (1) <code>@eleva/editor</code> scaffold + boundary lint, (2) <code>/expert</code>
-practice/locations/schedules APIs + <code>experts→expert</code> rename, (3) builder UI +
-private links + calendar polish, (4) <code>e2e/expert-offer.spec.ts</code>. Do not start
-Phase 09 until this exit gate is honestly met or explicitly waived.</p>
+Ordered backlog: (1) <del><code>@eleva/editor</code> scaffold + boundary lint</del> (<strong>done</strong>,
+main via <code>#92</code>), (2) <code>/expert</code> practice/locations/schedules APIs (this
+slice; <code>experts→expert</code> rename of remaining routes deferred to 04b.2),
+(3) builder UI + private links + calendar polish, (4) <code>e2e/expert-offer.spec.ts</code>.
+Do not start Phase 09 until this exit gate is honestly met or explicitly waived.</p>
 </blockquote>
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> package exists with ADR-023 exports, sanitizer XSS tests, and
 boundary lint (<code>platejs</code> / <code>@platejs/*</code> / <code>slate*</code> / <code>@radix-ui/*</code> only inside
 <code>packages/editor</code>). Plate UI registry restyle + AI route still open.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>GET/PATCH /expert/practice</code>, <code>/expert/locations</code> CRUD, <code>/expert/schedules</code>
+CRUD + <code>PUT …/rules</code> + <code>PUT …/overrides</code> (Zod + OpenAPI + rate limit +
+<code>withAudit</code>); practice PATCH returns <code>409 OFFER_INVARIANT_VIOLATION</code> without
+silently unpublishing. Full <code>experts→expert</code> rename of profile/event-types
+still open (04b.2).</li>
 <li><input disabled="" type="checkbox"> Onboarding cannot complete without <code>practice_country</code>, &gt;= 1 language and a default schedule;
 <code>service_countries</code> outside the licence show the legal helper and are saved as declared.</li>
 <li><input disabled="" type="checkbox"> Builder refuses to publish a <code>clinical</code> event type whose mode is worldwide or outside

@@ -187,7 +187,8 @@ export async function PATCH(request: Request) {
         {
           ...(data.practiceCountry !== undefined && {
             practiceCountry: data.practiceCountry,
-            practiceCountries: [data.practiceCountry],
+            practiceCountries: nextServiceCountries,
+            serviceCountries: nextServiceCountries,
           }),
           ...(data.serviceCountries !== undefined && {
             serviceCountries: nextServiceCountries,
