@@ -1,6 +1,6 @@
 # @eleva/notifications
 
-Lane 1 transactional notifications.
+Lane 1 transactional notifications and Lane 2 marketing stub.
 
 `sendNotification` claims a `notification_deliveries` row (INSERT
 `queued` with `lease_owner` + `claimed_at`) before calling Resend or
@@ -32,5 +32,20 @@ OTP, 10 min, hashed). Inbox is `GET /notifications`, `POST
 delivery events land on `POST /webhooks/resend` (Svix
 `RESEND_WEBHOOK_SECRET`): `email.delivered` / `email.bounced` /
 `email.complained` update `notification_deliveries`; permanent bounce
-and complaint upsert `email_suppressions`. The Lane 2 stub is a later
-Phase 08 PR.
+and complaint upsert `email_suppressions`.
+
+## Lane 2 (marketing stub)
+
+- `syncMarketingContact({ userId, orgId? })` — Neon → Resend one-way
+  contact sync. Upserts only `email` / first name / `locale` when
+  account-scope `marketing` consent is active; deletes the Resend
+  contact on withdraw. Optional
+  `RESEND_MARKETING_SEGMENT_ID` (preferred) or legacy
+  `RESEND_AUDIENCE_ID`. `PUT /me/consents` awaits sync for
+  `kind=marketing` (502 on provider failure so clients retry the
+  idempotent PUT).
+- `triggerAutomation({ event, userId, marketingPayload? })` — derives
+  `first_name` / `locale` from the Neon user row; caller may only pass
+  closed `plan_tier` + `generic_booking_count`. Then
+  `resend.events.send`. Automations stay dashboard-seeded; domain
+  fan-out to this entrypoint is post–Phase 08.
