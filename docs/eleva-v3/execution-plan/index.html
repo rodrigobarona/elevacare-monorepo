@@ -3645,6 +3645,14 @@ it); this phase adds the <code>marketing</code> kind, the member view/withdraw A
 <li><code>e2e/member.spec.ts</code>.</li>
 </ol>
 <h2 id="05-member-app--acceptance-criteria"><a class="anchor" href="#05-member-app--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Closeout status (2026-09-22):</strong> Product surfaces for Phase 05 are on main.
+<code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> / <code>e2e:member:stripe</code>) and is
+loopback-gated. This closeout did <strong>not</strong> re-run the live Stripe journey
+(local web/api/app/account were not up). Leave the e2e checkbox open until
+someone runs it locally with <code>E2E_MEMBER=1 E2E_LIVE_STRIPE=1</code> against
+<code>fisiomota</code> / <code>first-visit</code> / €60 — never Production.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Guest from Phase 4 activates via magic link, lands on <code>/{space-slug}</code> dashboard showing the
 booking.</li>
@@ -3964,6 +3972,15 @@ scripts and root scripts (<code>qstash:setup:payouts</code>).</li>
 <li><code>infra/stripe/setup-webhooks.ts</code> event list updated and applied to staging.</li>
 </ol>
 <h2 id="06-payments-payouts--acceptance-criteria"><a class="anchor" href="#06-payments-payouts--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Closeout status (2026-09-22):</strong> Engineering for Phase 06 is on main.
+<code>e2e/phase-06.spec.ts</code> (<code>pnpm e2e:phase06</code>) asserts OpenAPI path coverage,
+anonymous 401s on payout/refund/finance mutations, unsigned Stripe webhook
+rejection, and workflow drain-secret gating. It does <strong>not</strong> exercise live
+pay → eligible → transfer → payout (that remains Stripe test-mode / staging
+exit-gate evidence; do not burn live Stripe quota in CI). Money-path e2e gap
+is intentional under Hobby / abuse constraints.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> New expert completes Connect onboarding in Embedded Components; <code>account.updated</code> /
 <code>capability.updated</code> flip <code>connect_status</code> and unlock publishing only when
@@ -4432,6 +4449,13 @@ audit unions (<code>invoice: issued|failed|credited|manual_marked</code>; <code>
 <li>Operator docs: <code>operator-tasks/toconline-setup.md</code> (series creation, OAuth app, redirect URI).</li>
 </ol>
 <h2 id="07-invoicing-toconline--acceptance-criteria"><a class="anchor" href="#07-invoicing-toconline--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Closeout status (2026-09-22):</strong> Closed-gate engineering for Phase 07 is on
+main. <strong>Exit gate remains BLOCKED:</strong> do not open live FT POST, do not
+Comunicar TEST, do not call <code>issueInvoice()</code> / finalize fictitious documents,
+do not invent DPO/legal production sign-off. Engineering checkboxes below may
+be met; production issuance / Comunicação acceptance is explicitly deferred.</p>
+</blockquote>
 <p><strong>PR 07.1 issuance is deferred.</strong> Do not treat <code>issuePlatformFeeInvoice</code> reaching <code>issued</code>,
 finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
 Those checks wait for confirmed fiscal parameters (tax codes, rates, legal mentions, VIES
@@ -4878,6 +4902,15 @@ status; suppress future sends on hard bounce.</li>
 <code>TWILIO_MESSAGING_SERVICE_SID</code>, <code>TWILIO_REGION=ie1</code>.</li>
 </ol>
 <h2 id="08-notifications-lane1--acceptance-criteria"><a class="anchor" href="#08-notifications-lane1--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Closeout status (2026-09-22):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
+main. <strong>Exit-gate items still BLOCKED / deferred:</strong> do not add
+<code>invoice.issued</code> / <code>invoice.failed</code> to <code>NOTIFICATION_KINDS</code> while
+<code>issueInvoice()</code> is closed. Local Twilio SMS smoke against Virtual Phone
+<code>+18777804236</code> was <strong>not</strong> re-run this closeout (no local stack). SMS
+channel remains engineered; treat live SMS evidence as operator-run when
+safe.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives
 before the session&quot; + join CTA (Phase 9), phone -&gt; &quot;your expert will call you on&quot; + the masked number (e-mail body only), in person -&gt; location name, address, &quot;Open in Maps&quot; link and the location&#39;s

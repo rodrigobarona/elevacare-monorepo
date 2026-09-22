@@ -143,6 +143,14 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Acceptance criteria
 
+> **Closeout status (2026-09-22):** Lane 1 + Resend webhooks + Lane 2 stub are on
+> main. **Exit-gate items still BLOCKED / deferred:** do not add
+> `invoice.issued` / `invoice.failed` to `NOTIFICATION_KINDS` while
+> `issueInvoice()` is closed. Local Twilio SMS smoke against Virtual Phone
+> `+18777804236` was **not** re-run this closeout (no local stack). SMS
+> channel remains engineered; treat live SMS evidence as operator-run when
+> safe.
+
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number (e-mail body only), in person -> location name, address, "Open in Maps" link and the location's
       instructions; the ICS `LOCATION` is `Video call` / `Phone call` / the location name +
