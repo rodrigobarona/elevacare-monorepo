@@ -91,9 +91,26 @@ export const localizedRichTextWriteSchema = z
         message: "sourceLocale must exist in locales",
         path: ["sourceLocale"],
       })
+      return
     }
-    // Empty source text is allowed: callers treat an all-empty write as a
-    // clear (null column) rather than a stored empty document.
+
+    const sourceHasText =
+      toPlainTextFromNodes(sourceEntry.json).trim().length > 0
+    const anyHasText = (["en", "pt", "es"] as const).some((locale) => {
+      const entry = value.locales[locale]
+      return entry ? toPlainTextFromNodes(entry.json).trim().length > 0 : false
+    })
+
+    // All-empty payload clears the field. If any locale has text, the source
+    // locale must also have text so sourceLocale stays valid after build.
+    if (anyHasText && !sourceHasText) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "source locale text must be non-empty when any locale has content",
+        path: ["locales", value.sourceLocale],
+      })
+    }
   })
 
 export type LocalizedRichTextWrite = z.infer<

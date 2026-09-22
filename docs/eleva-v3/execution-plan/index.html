@@ -3454,7 +3454,8 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    tested against XSS vectors), LocalizedRichTextField (tabs for pt/en/es; &quot;Translate from
    the source locale&quot; per tab calls the AI route and marks the tab &quot;AI draft — review&quot; until edited),
    toPlainText(value), toSanitizedHtml(value). Storage contract (LocalizedRichText,
-   packages/db/src/schema/main/shared.ts + localizedRichTextSchema in packages/db/src/zod/):
+   packages/db/src/schema/main/shared.ts types + localizedRichTextSchema in
+   @eleva/editor — Zod stays in packages/editor so platejs stays behind ADR-023):
    ONE jsonb column per field shaped { [locale]?: { json: PlateJSON, html, text, source } } and a
    sibling &lt;field&gt;_source_locale column; no locale is mandatory (an expert may write only pt);
    this PR: event_types.description + description_source_locale, expert_profiles.bio +
