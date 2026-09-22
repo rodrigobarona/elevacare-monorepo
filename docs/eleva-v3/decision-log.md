@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-22: Resend delivery webhooks update deliveries and suppressions
+
+- Owner: engineering
+- Status: active
+- Summary: `POST /webhooks/resend` verifies Svix headers with
+  `RESEND_WEBHOOK_SECRET`. Handled events: `email.delivered`,
+  `email.bounced`, `email.complained`. Rows match on `tags.deliveryId`
+  then `provider_id`. Permanent (`Permanent`) bounces and complaints
+  upsert `email_suppressions` (`hard_bounce` / `complaint`); transient
+  bounces update the delivery row only. Canonical URL is
+  `/webhooks/resend` (not `/resend/events`). Lane 2 marketing stub is
+  still outstanding. `invoice.issued` stays off the union.
+- Reference: `packages/notifications/src/handle-resend-webhook.ts`,
+  `apps/api/src/app/webhooks/resend/route.ts`
+- Next review date: when Lane 2 stub lands
+
 ### 2026-09-21: In-app inbox polls via SWR (30s)
 
 - Owner: engineering

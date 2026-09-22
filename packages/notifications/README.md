@@ -29,4 +29,8 @@ opt-in is `POST /me/phone/verify-start` and `verify-confirm` (6-digit
 OTP, 10 min, hashed). Inbox is `GET /notifications`, `POST
 /notifications/{id}/read`, and `POST /notifications/read-all` (owner RLS,
 `notification.updated`). NavBell polls unread count every 30s. Resend
-webhooks and the Lane 2 stub are later Phase 08 PRs.
+delivery events land on `POST /webhooks/resend` (Svix
+`RESEND_WEBHOOK_SECRET`): `email.delivered` / `email.bounced` /
+`email.complained` update `notification_deliveries`; permanent bounce
+and complaint upsert `email_suppressions`. The Lane 2 stub is a later
+Phase 08 PR.

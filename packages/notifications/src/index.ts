@@ -61,6 +61,7 @@ export {
   validateTwilioSignature,
 } from "./send-sms"
 export { handleTwilioStatusWebhook } from "./handle-twilio-status"
+export { handleResendWebhook } from "./handle-resend-webhook"
 export {
   InboxNotFoundError,
   listInbox,

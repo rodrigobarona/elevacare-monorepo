@@ -1944,6 +1944,80 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/webhooks/resend": {
+        post: {
+          operationId: "resendWebhook",
+          summary: "Resend delivery-events webhook",
+          description:
+            "Verifies Svix headers (`svix-id`, `svix-timestamp`, `svix-signature`) against `RESEND_WEBHOOK_SECRET`. Handles `email.delivered`, `email.bounced`, and `email.complained`: updates `notification_deliveries` (matched by `tags.deliveryId` or `provider_id`) and upserts `email_suppressions` on permanent bounce or complaint. Soft/transient bounces update the delivery row only.",
+          tags: ["Webhooks"],
+          security: [],
+          parameters: [
+            {
+              name: "svix-id",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "svix-timestamp",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "svix-signature",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z
+                  .object({
+                    type: z.string(),
+                    created_at: z.string(),
+                    data: z.record(z.string(), z.unknown()),
+                  })
+                  .passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Event accepted (handled or ignored)",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    handled: z.boolean().optional(),
+                  }),
+                },
+              },
+            },
+            ...stdErrors,
+            "401": {
+              description: "Missing or invalid Svix signature",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description:
+                "Missing RESEND_WEBHOOK_SECRET or unexpected handler failure",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(false),
+                    error: z.string(),
+                  }),
+                },
+              },
+            },
+          },
+        },
+      },
       "/me/notification-preferences": {
         put: {
           operationId: "putMeNotificationPreferences",

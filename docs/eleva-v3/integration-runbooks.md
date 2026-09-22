@@ -98,10 +98,18 @@ Should cover:
 
 Should cover:
 
-- email not sent
-- webhook issue
+- email not sent (`notification_deliveries` stuck `queued` / `failed`)
+- webhook issue (`POST /webhooks/resend`, Svix secret mismatch)
+- hard bounce / complaint → `email_suppressions` (check with the hashed
+  address in support tooling; further sends return `suppressed`)
 - template issue
 - reminder delivery issue
+
+Operator: register the webhook in the Resend dashboard for
+`email.delivered`, `email.bounced`, and `email.complained` pointing at
+`https://api.eleva.care/webhooks/resend` (staging:
+`https://api.dev.eleva.care/webhooks/resend`). Store the signing secret as
+`RESEND_WEBHOOK_SECRET`.
 
 ### Twilio EU SMS runbook
 
