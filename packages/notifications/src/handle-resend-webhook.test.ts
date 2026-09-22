@@ -40,6 +40,9 @@ function signedRequest(body: string): Request {
   })
 }
 
+const passthroughTx = async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> =>
+  fn({})
+
 describe("handleResendWebhook", () => {
   const previousSecret = process.env.RESEND_WEBHOOK_SECRET
 
@@ -121,10 +124,10 @@ describe("handleResendWebhook", () => {
 
   it("marks delivered by deliveryId tag", async () => {
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
-    const complete = vi.fn().mockResolvedValue(true)
     const completeInTx = vi.fn().mockResolvedValue(true)
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
         verify: () =>
           ({
             type: "email.delivered",
@@ -139,19 +142,18 @@ describe("handleResendWebhook", () => {
             },
           }) as WebhookEventPayload,
         loadById: async () => baseRow({ orgId: null }),
-        complete,
         completeInTx,
         now: () => new Date("2026-09-22T10:01:00.000Z"),
       })
       expect(result.body).toEqual({ ok: true, handled: true })
-      expect(complete).toHaveBeenCalledWith(
+      expect(completeInTx).toHaveBeenCalledWith(
+        {},
         expect.objectContaining({
           id: DELIVERY_ID,
           providerId: EMAIL_ID,
           status: "delivered",
         })
       )
-      expect(completeInTx).not.toHaveBeenCalled()
     } finally {
       restoreEnv()
     }
@@ -159,10 +161,13 @@ describe("handleResendWebhook", () => {
 
   it("suppresses on permanent bounce and adopts by provider id", async () => {
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
-    const complete = vi.fn().mockResolvedValue(true)
-    const suppress = vi.fn().mockResolvedValue({ id: "sup-1", created: true })
+    const completeInTx = vi.fn().mockResolvedValue(true)
+    const suppressInTx = vi
+      .fn()
+      .mockResolvedValue({ id: "sup-1", created: true, reason: "hard_bounce" })
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
         verify: () =>
           ({
             type: "email.bounced",
@@ -187,21 +192,25 @@ describe("handleResendWebhook", () => {
             recipientEmail: "bounced@example.com",
             userId: null,
           }),
-        complete,
-        suppress,
+        completeInTx,
+        suppressInTx,
         now: () => new Date("2026-09-22T10:01:00.000Z"),
       })
       expect(result.body).toEqual({ ok: true, handled: true })
-      expect(complete).toHaveBeenCalledWith(
+      expect(completeInTx).toHaveBeenCalledWith(
+        {},
         expect.objectContaining({
           status: "bounced",
           error: "550 user unknown",
         })
       )
-      expect(suppress).toHaveBeenCalledWith({
-        email: "bounced@example.com",
-        reason: "hard_bounce",
-      })
+      expect(suppressInTx).toHaveBeenCalledWith(
+        {},
+        {
+          email: "bounced@example.com",
+          reason: "hard_bounce",
+        }
+      )
     } finally {
       restoreEnv()
     }
@@ -209,10 +218,11 @@ describe("handleResendWebhook", () => {
 
   it("does not suppress transient bounces", async () => {
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
-    const complete = vi.fn().mockResolvedValue(true)
-    const suppress = vi.fn()
+    const completeInTx = vi.fn().mockResolvedValue(true)
+    const suppressInTx = vi.fn()
     try {
       await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
         verify: () =>
           ({
             type: "email.bounced",
@@ -231,13 +241,14 @@ describe("handleResendWebhook", () => {
             },
           }) as WebhookEventPayload,
         loadByProviderId: async () => baseRow({ orgId: null }),
-        complete,
-        suppress,
+        completeInTx,
+        suppressInTx,
       })
-      expect(complete).toHaveBeenCalledWith(
+      expect(completeInTx).toHaveBeenCalledWith(
+        {},
         expect.objectContaining({ status: "bounced" })
       )
-      expect(suppress).not.toHaveBeenCalled()
+      expect(suppressInTx).not.toHaveBeenCalled()
     } finally {
       restoreEnv()
     }
@@ -245,14 +256,15 @@ describe("handleResendWebhook", () => {
 
   it("suppresses complaints", async () => {
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
-    const complete = vi.fn().mockResolvedValue(true)
-    const suppress = vi.fn().mockResolvedValue({
+    const completeInTx = vi.fn().mockResolvedValue(true)
+    const suppressInTx = vi.fn().mockResolvedValue({
       id: "sup-2",
       created: true,
       reason: "complaint",
     })
     try {
       await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
         verify: () =>
           ({
             type: "email.complained",
@@ -266,13 +278,16 @@ describe("handleResendWebhook", () => {
             },
           }) as WebhookEventPayload,
         loadByProviderId: async () => baseRow({ orgId: null }),
-        complete,
-        suppress,
+        completeInTx,
+        suppressInTx,
       })
-      expect(suppress).toHaveBeenCalledWith({
-        email: "spam@example.com",
-        reason: "complaint",
-      })
+      expect(suppressInTx).toHaveBeenCalledWith(
+        {},
+        {
+          email: "spam@example.com",
+          reason: "complaint",
+        }
+      )
     } finally {
       restoreEnv()
     }
@@ -280,9 +295,10 @@ describe("handleResendWebhook", () => {
 
   it("ignores a tagged row whose provider_id belongs to a newer send", async () => {
     process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
-    const complete = vi.fn()
+    const completeInTx = vi.fn()
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
         verify: () =>
           ({
             type: "email.delivered",
@@ -298,10 +314,10 @@ describe("handleResendWebhook", () => {
           }) as WebhookEventPayload,
         loadById: async () => baseRow({ orgId: null, providerId: "re_new" }),
         loadByProviderId: async () => null,
-        complete,
+        completeInTx,
       })
       expect(result.body).toEqual({ ok: true, handled: false })
-      expect(complete).not.toHaveBeenCalled()
+      expect(completeInTx).not.toHaveBeenCalled()
     } finally {
       restoreEnv()
     }

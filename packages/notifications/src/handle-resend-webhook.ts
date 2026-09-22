@@ -1,12 +1,11 @@
 import { withPlatformAudit } from "@eleva/audit"
+import { withPlatformAdminContext } from "@eleva/db"
 import { Resend, type WebhookEventPayload } from "resend"
 import { z } from "zod"
 import {
-  completeEmailFromWebhook,
   completeEmailFromWebhookInTx,
   loadDeliveryById,
   loadDeliveryByProviderId,
-  upsertEmailSuppression,
   upsertEmailSuppressionInTx,
   type DeliveryRow,
   type EmailSuppressionReason,
@@ -53,10 +52,10 @@ export type ResendWebhookDeps = {
   }) => WebhookEventPayload
   loadById?: typeof loadDeliveryById
   loadByProviderId?: typeof loadDeliveryByProviderId
-  complete?: typeof completeEmailFromWebhook
   completeInTx?: typeof completeEmailFromWebhookInTx
-  suppress?: typeof upsertEmailSuppression
   suppressInTx?: typeof upsertEmailSuppressionInTx
+  /** Test seam for org-less transactional writes. */
+  runPlatformTx?: typeof withPlatformAdminContext
   now?: () => Date
 }
 
@@ -221,18 +220,23 @@ async function applyResendOutcome(input: {
   email: string | null
   deps: ResendWebhookDeps
 }): Promise<void> {
-  const complete = input.deps.complete ?? completeEmailFromWebhook
   const completeInTx = input.deps.completeInTx ?? completeEmailFromWebhookInTx
-  const suppress = input.deps.suppress ?? upsertEmailSuppression
   const suppressInTx = input.deps.suppressInTx ?? upsertEmailSuppressionInTx
+  const runPlatformTx = input.deps.runPlatformTx ?? withPlatformAdminContext
 
   if (!input.row.orgId) {
     // User-scoped auth / guest e-mail rows have org_id NULL by schema.
-    // withPlatformAudit requires orgId — same pattern as Twilio StatusCallback.
-    await complete(input.patch)
-    if (input.suppressReason && input.email) {
-      await suppress({ email: input.email, reason: input.suppressReason })
-    }
+    // audit_outbox.org_id is NOT NULL and withPlatformAudit requires orgId —
+    // same skip as sendNotification finish() and Twilio StatusCallback.
+    await runPlatformTx(async (tx) => {
+      await completeInTx(tx, input.patch)
+      if (input.suppressReason && input.email) {
+        await suppressInTx(tx, {
+          email: input.email,
+          reason: input.suppressReason,
+        })
+      }
+    })
     return
   }
 
