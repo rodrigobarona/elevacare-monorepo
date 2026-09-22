@@ -82,3 +82,8 @@ catalog:
   leaflet: ^1.9.4
   react-leaflet: ^5.0.0
   "@types/leaflet": ^1.9.21
+
+  # Rich text (Plate / ADR-023 — @eleva/editor)
+  platejs: ^53.3.14
+  "@platejs/basic-nodes": ^53.0.0
+  isomorphic-dompurify: ^2.17.0

@@ -22,6 +22,9 @@
  * - S4: `workflow` (Vercel Workflows DevKit) outside `@eleva/workflows`
  * - S5: `@daily-co/daily-js` outside session UI (app zone)
  * - S5: `ai` (Vercel AI SDK) outside `@eleva/ai`
+ * - Phase 4B: `platejs`, `@platejs/*`, `slate*`, `@radix-ui/*` outside
+ *   `@eleva/editor` (ADR-023). Owning package omits `boundariesConfig`
+ *   from its local eslint.config.js (same pattern as `@eleva/billing`).
  *
  * Each addition above must also land in docs/eleva-v3/implementation-sprints.md
  * under "Global Rules Applied Every Sprint".
@@ -94,6 +97,11 @@ export const boundariesConfig = [
               message:
                 "Import Resend only through @eleva/notifications (boundary lint).",
             },
+            {
+              name: "platejs",
+              message:
+                "Import Plate only through @eleva/editor (ADR-023 boundary lint).",
+            },
           ],
           patterns: [
             {
@@ -105,6 +113,26 @@ export const boundariesConfig = [
               group: ["@workos-inc", "@workos-inc/**"],
               message:
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
+            },
+            {
+              group: ["platejs/*", "platejs/**"],
+              message:
+                "Import Plate only through @eleva/editor (ADR-023 boundary lint).",
+            },
+            {
+              group: ["@platejs", "@platejs/**"],
+              message:
+                "Import @platejs/* only through @eleva/editor (ADR-023 boundary lint).",
+            },
+            {
+              group: ["slate", "slate-*", "@udecode/slate", "@udecode/slate-*"],
+              message:
+                "Import slate* only through @eleva/editor (ADR-023 boundary lint).",
+            },
+            {
+              group: ["@radix-ui", "@radix-ui/**"],
+              message:
+                "Radix is banned outside packages/editor (ADR-022 / ADR-023 exception).",
             },
             // Sprint 2: per-adapter SDKs land in @eleva/accounting.
             // No standalone npm packages today (TOConline + Moloni use
