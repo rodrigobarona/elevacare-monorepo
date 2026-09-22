@@ -115,6 +115,11 @@ export const boundariesConfig = [
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
             },
             {
+              group: ["platejs/*", "platejs/**"],
+              message:
+                "Import Plate only through @eleva/editor (ADR-023 boundary lint).",
+            },
+            {
               group: ["@platejs", "@platejs/**"],
               message:
                 "Import @platejs/* only through @eleva/editor (ADR-023 boundary lint).",

@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest"
 import { buildLocalizedRichText } from "./build-localized-rich-text"
 import { toSanitizedHtml } from "./sanitize"
 import { toPlainText, toSanitizedHtmlFromValue } from "./serialize"
-import { localizedRichTextWriteSchema, type PlateValue } from "./types"
+import {
+  localizedRichTextSchema,
+  localizedRichTextWriteSchema,
+  type PlateValue,
+} from "./types"
 
 const sample: PlateValue = [
   {
@@ -102,5 +106,18 @@ describe("localizedRichTextWriteSchema + buildLocalizedRichText", () => {
     expect(stored.en?.text).toBe("Hello world")
     expect(stored.en?.html).toContain("<strong>world</strong>")
     expect(stored.en?.source).toBe("human")
+  })
+
+  it("accepts empty stored value when clearing a field", () => {
+    const emptyJson = [{ type: "p", children: [{ text: "" }] }]
+    const write = localizedRichTextWriteSchema.parse({
+      sourceLocale: "en",
+      locales: {
+        en: { json: emptyJson, source: "human" },
+      },
+    })
+    const stored = buildLocalizedRichText(write)
+    expect(stored).toEqual({})
+    expect(localizedRichTextSchema.safeParse(stored).success).toBe(true)
   })
 })

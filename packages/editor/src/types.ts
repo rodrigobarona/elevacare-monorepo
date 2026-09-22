@@ -56,15 +56,12 @@ export const localizedRichTextEntrySchema = z.object({
   source: z.enum(RICH_TEXT_SOURCES),
 })
 
-export const localizedRichTextSchema = z
-  .object({
-    en: localizedRichTextEntrySchema.optional(),
-    pt: localizedRichTextEntrySchema.optional(),
-    es: localizedRichTextEntrySchema.optional(),
-  })
-  .refine((value) => Boolean(value.en || value.pt || value.es), {
-    message: "LocalizedRichText must include at least one locale",
-  })
+/** Stored shape. Empty `{}` is valid — clears the field (ADR-023). */
+export const localizedRichTextSchema = z.object({
+  en: localizedRichTextEntrySchema.optional(),
+  pt: localizedRichTextEntrySchema.optional(),
+  es: localizedRichTextEntrySchema.optional(),
+})
 
 /**
  * Client write payload: Plate JSON + source only. Server derives `html`/`text`.
