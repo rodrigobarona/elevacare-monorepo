@@ -32,6 +32,27 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-22: Lane 2 marketing stub (sync + triggerAutomation)
+
+- Owner: engineering
+- Status: active
+- Summary: Phase 08 Lane 2 stub lands `syncMarketingContact` and
+  `triggerAutomation` in `@eleva/notifications`. Sync upserts only
+  email / first name / locale into Resend Contacts when account-scope
+  `marketing` consent is active, and deletes the contact on withdraw.
+  `PUT /me/consents` awaits sync for `kind=marketing` (502 on Resend
+  failure so the idempotent PUT can be retried). Optional segment
+  targeting uses `RESEND_MARKETING_SEGMENT_ID` (preferred) or legacy
+  `RESEND_AUDIENCE_ID`. `triggerAutomation` derives first_name/locale
+  from the Neon user row; callers may only pass closed `plan_tier` and
+  `generic_booking_count`. Per-user in-process lock serializes sync.
+  `invoice.issued` / `invoice.failed` stay off the union.
+- Reference: `packages/notifications/src/sync-marketing-contact.ts`,
+  `packages/notifications/src/trigger-automation.ts`,
+  `apps/api/src/app/me/consents/route.ts`
+- Next review date: when Lane 2 domain fan-out (welcome / re-engagement)
+  is wired in a later phase
+
 ### 2026-09-22: Resend delivery webhooks update deliveries and suppressions
 
 - Owner: engineering
@@ -42,11 +63,12 @@ Each entry should include:
   then `provider_id`. Permanent (`Permanent`) bounces and complaints
   upsert `email_suppressions` (`hard_bounce` / `complaint`); transient
   bounces update the delivery row only. Canonical URL is
-  `/webhooks/resend` (not `/resend/events`). Lane 2 marketing stub is
-  still outstanding. `invoice.issued` stays off the union.
+  `/webhooks/resend` (not `/resend/events`). Lane 2 marketing stub
+  shipped in a follow-up PR the same day. `invoice.issued` stays off
+  the union.
 - Reference: `packages/notifications/src/handle-resend-webhook.ts`,
   `apps/api/src/app/webhooks/resend/route.ts`
-- Next review date: when Lane 2 stub lands
+- Next review date: when email.suppressed webhook handling is added
 
 ### 2026-09-21: In-app inbox polls via SWR (30s)
 

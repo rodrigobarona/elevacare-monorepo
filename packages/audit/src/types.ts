@@ -52,6 +52,7 @@ export type AuditEntity =
   | "notification"
   | "inbox"
   | "phone"
+  | "marketing_contact"
 
 // Action verbs follow "<verb>" shape and are combined with entity in
 // stored rows as "<entity>.<action>" to keep downstream filtering simple.

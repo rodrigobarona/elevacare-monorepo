@@ -63,6 +63,33 @@ export {
 export { handleTwilioStatusWebhook } from "./handle-twilio-status"
 export { handleResendWebhook } from "./handle-resend-webhook"
 export {
+  firstNameFromDisplayName,
+  hasActiveMarketingConsent,
+  syncMarketingContact,
+  MarketingSyncError,
+  type SyncMarketingContactDeps,
+  type SyncMarketingContactResult,
+} from "./sync-marketing-contact"
+export {
+  MARKETING_AUTOMATION_EVENTS,
+  MARKETING_PLAN_TIERS,
+  MarketingAutomationEventSchema,
+  MarketingCallerPayloadSchema,
+  MarketingPayloadSchema,
+  type MarketingAutomationEvent,
+  type MarketingCallerPayload,
+  type MarketingPayload,
+  type MarketingPlanTier,
+} from "./marketing-payload"
+export {
+  MarketingConsentRequiredError,
+  TriggerAutomationError,
+  triggerAutomation,
+  type TriggerAutomationDeps,
+  type TriggerAutomationInput,
+  type TriggerAutomationResult,
+} from "./trigger-automation"
+export {
   InboxNotFoundError,
   listInbox,
   markInboxRead,

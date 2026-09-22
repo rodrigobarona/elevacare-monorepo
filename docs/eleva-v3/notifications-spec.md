@@ -148,6 +148,10 @@ One-way, consent-gated:
 - no reverse sync — Neon is the source of truth
 - on `marketing_consent = false`: delete contact from Resend and log the action
 
+Phase 08 stub: `syncMarketingContact` + `triggerAutomation` live in
+`@eleva/notifications`; consent toggle wires sync from `PUT /me/consents`.
+Domain event fan-out into `triggerAutomation` is deferred.
+
 ## Channel Strategy
 
 ### Email (Resend)

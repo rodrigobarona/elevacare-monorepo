@@ -9,6 +9,7 @@ import {
   MemberConsentConflictError,
   updateMemberConsent,
 } from "@eleva/compliance"
+import { syncMarketingContact } from "@eleva/notifications"
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -94,6 +95,23 @@ export async function PUT(request: Request) {
       version: body.data.version,
       locale: body.data.locale,
     })
+    if (body.data.kind === "marketing") {
+      // Await sync so a failed Resend delete after withdraw surfaces as
+      // 500 and the client can retry the idempotent PUT. Serialization
+      // lives inside syncMarketingContact (per-user lock).
+      try {
+        await syncMarketingContact({
+          userId: session.user.id,
+          orgId: session.orgId,
+        })
+      } catch (err) {
+        console.error("[me/consents] marketing contact sync failed", err)
+        return secureJson(
+          { error: "marketing_sync_failed" },
+          { status: 502, headers }
+        )
+      }
+    }
     return secureJson(serializeConsents(consents), { status: 200, headers })
   } catch (err) {
     if (err instanceof MemberConsentConflictError) {
