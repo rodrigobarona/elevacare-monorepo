@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest"
 import type { WebhookEventPayload } from "resend"
+import type { Tx } from "@eleva/db"
 import { handleResendWebhook } from "./handle-resend-webhook"
 import type { DeliveryRow } from "./claim-delivery"
 
@@ -40,8 +41,10 @@ function signedRequest(body: string): Request {
   })
 }
 
-const passthroughTx = async <T>(fn: (tx: unknown) => Promise<T>): Promise<T> =>
-  fn({})
+const FAKE_TX = {} as Tx
+
+const passthroughTx = async <T>(fn: (tx: Tx) => Promise<T>): Promise<T> =>
+  fn(FAKE_TX)
 
 describe("handleResendWebhook", () => {
   const previousSecret = process.env.RESEND_WEBHOOK_SECRET
@@ -147,7 +150,7 @@ describe("handleResendWebhook", () => {
       })
       expect(result.body).toEqual({ ok: true, handled: true })
       expect(completeInTx).toHaveBeenCalledWith(
-        {},
+        FAKE_TX,
         expect.objectContaining({
           id: DELIVERY_ID,
           providerId: EMAIL_ID,
@@ -198,19 +201,16 @@ describe("handleResendWebhook", () => {
       })
       expect(result.body).toEqual({ ok: true, handled: true })
       expect(completeInTx).toHaveBeenCalledWith(
-        {},
+        FAKE_TX,
         expect.objectContaining({
           status: "bounced",
           error: "550 user unknown",
         })
       )
-      expect(suppressInTx).toHaveBeenCalledWith(
-        {},
-        {
-          email: "bounced@example.com",
-          reason: "hard_bounce",
-        }
-      )
+      expect(suppressInTx).toHaveBeenCalledWith(FAKE_TX, {
+        email: "bounced@example.com",
+        reason: "hard_bounce",
+      })
     } finally {
       restoreEnv()
     }
@@ -245,7 +245,7 @@ describe("handleResendWebhook", () => {
         suppressInTx,
       })
       expect(completeInTx).toHaveBeenCalledWith(
-        {},
+        FAKE_TX,
         expect.objectContaining({ status: "bounced" })
       )
       expect(suppressInTx).not.toHaveBeenCalled()
@@ -281,13 +281,10 @@ describe("handleResendWebhook", () => {
         completeInTx,
         suppressInTx,
       })
-      expect(suppressInTx).toHaveBeenCalledWith(
-        {},
-        {
-          email: "spam@example.com",
-          reason: "complaint",
-        }
-      )
+      expect(suppressInTx).toHaveBeenCalledWith(FAKE_TX, {
+        email: "spam@example.com",
+        reason: "complaint",
+      })
     } finally {
       restoreEnv()
     }
