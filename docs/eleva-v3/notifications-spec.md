@@ -85,6 +85,9 @@ applied and `notification_deliveries.recipient_email` as the delivery key.
 - write inbox row in Neon
 - propagate correlation ID to Sentry + audit log + Resend/Twilio metadata
 - enforce idempotency: same `idempotencyKey` must not fan out twice
+- Resend delivery webhooks (`POST /webhooks/resend`, Svix-signed): `email.delivered` /
+  `email.bounced` / `email.complained` update `notification_deliveries`; permanent bounce and
+  complaint upsert `email_suppressions` so later sends short-circuit as `suppressed`
 
 Workflow semantics:
 

@@ -284,6 +284,151 @@ export async function loadDeliveryById(
   })
 }
 
+export async function loadDeliveryByProviderId(
+  providerId: string
+): Promise<DeliveryRow | null> {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select()
+      .from(main.notificationDeliveries)
+      .where(
+        and(
+          eq(main.notificationDeliveries.providerId, providerId),
+          eq(main.notificationDeliveries.channel, "email")
+        )
+      )
+      .limit(1)
+    return row ? toRow(row) : null
+  })
+}
+
+/**
+ * Apply a Resend delivery-event status. Never demotes a stronger
+ * terminal state (bounced/complained/suppressed stay put; delivered
+ * does not overwrite bounced).
+ */
+export async function completeEmailFromWebhookInTx(
+  tx: Tx,
+  input: {
+    id: string
+    providerId: string
+    status: Extract<DeliveryStatus, "delivered" | "bounced" | "complained">
+    error?: string | null
+    now: Date
+  }
+): Promise<boolean> {
+  const allowedFrom =
+    input.status === "delivered"
+      ? or(
+          eq(main.notificationDeliveries.status, "queued"),
+          eq(main.notificationDeliveries.status, "sent"),
+          eq(main.notificationDeliveries.status, "failed")
+        )
+      : or(
+          eq(main.notificationDeliveries.status, "queued"),
+          eq(main.notificationDeliveries.status, "sent"),
+          eq(main.notificationDeliveries.status, "failed"),
+          eq(main.notificationDeliveries.status, "delivered")
+        )
+  const updated = await tx
+    .update(main.notificationDeliveries)
+    .set({
+      status: input.status,
+      providerId: input.providerId,
+      error: input.error ?? null,
+      updatedAt: input.now,
+    })
+    .where(
+      and(
+        eq(main.notificationDeliveries.id, input.id),
+        eq(main.notificationDeliveries.channel, "email"),
+        or(
+          isNull(main.notificationDeliveries.providerId),
+          eq(main.notificationDeliveries.providerId, input.providerId)
+        ),
+        allowedFrom
+      )
+    )
+    .returning({ id: main.notificationDeliveries.id })
+  return Boolean(updated[0])
+}
+
+export async function completeEmailFromWebhook(input: {
+  id: string
+  providerId: string
+  status: Extract<DeliveryStatus, "delivered" | "bounced" | "complained">
+  error?: string | null
+  now: Date
+}): Promise<boolean> {
+  return withPlatformAdminContext(async (tx) =>
+    completeEmailFromWebhookInTx(tx, input)
+  )
+}
+
+export type EmailSuppressionReason = "hard_bounce" | "complaint"
+
+export async function upsertEmailSuppressionInTx(
+  tx: Tx,
+  input: { email: string; reason: EmailSuppressionReason }
+): Promise<{ id: string; created: boolean; reason: EmailSuppressionReason }> {
+  const email = input.email.toLowerCase()
+  const inserted = await tx
+    .insert(main.emailSuppressions)
+    .values({
+      email,
+      reason: input.reason,
+    })
+    .onConflictDoNothing({ target: main.emailSuppressions.email })
+    .returning({
+      id: main.emailSuppressions.id,
+      reason: main.emailSuppressions.reason,
+    })
+  if (inserted[0]) {
+    return {
+      id: inserted[0].id,
+      created: true,
+      reason: inserted[0].reason,
+    }
+  }
+  const [existing] = await tx
+    .select({
+      id: main.emailSuppressions.id,
+      reason: main.emailSuppressions.reason,
+    })
+    .from(main.emailSuppressions)
+    .where(sql`lower(${main.emailSuppressions.email}::text) = ${email}`)
+    .limit(1)
+  if (!existing) {
+    throw new Error("email_suppressions upsert conflict without existing row")
+  }
+  // Complaint wins: never demote complaint → hard_bounce.
+  if (existing.reason === input.reason || existing.reason === "complaint") {
+    return { id: existing.id, created: false, reason: existing.reason }
+  }
+  const [updated] = await tx
+    .update(main.emailSuppressions)
+    .set({ reason: input.reason })
+    .where(eq(main.emailSuppressions.id, existing.id))
+    .returning({
+      id: main.emailSuppressions.id,
+      reason: main.emailSuppressions.reason,
+    })
+  return {
+    id: updated?.id ?? existing.id,
+    created: false,
+    reason: updated?.reason ?? input.reason,
+  }
+}
+
+export async function upsertEmailSuppression(input: {
+  email: string
+  reason: EmailSuppressionReason
+}): Promise<{ id: string; created: boolean; reason: EmailSuppressionReason }> {
+  return withPlatformAdminContext(async (tx) =>
+    upsertEmailSuppressionInTx(tx, input)
+  )
+}
+
 export async function recordProviderId(input: {
   id: string
   providerId: string

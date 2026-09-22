@@ -222,7 +222,7 @@ Locale prefixing uses next-intl `localePrefix: 'as-needed'`: EN serves at the ro
 | Twilio SMS StatusCallback                                 | `https://api.eleva.care/webhooks/twilio/status`            |
 | Stripe AccountSession (session-aware, CORS + credentials) | `https://api.eleva.care/stripe/account-session`            |
 | Daily webhooks (room events + transcripts)                | `https://api.eleva.care/webhooks/daily`                    |
-| Resend delivery-events webhook                            | `https://api.eleva.care/resend/events`                     |
+| Resend delivery-events webhook                            | `https://api.eleva.care/webhooks/resend`                   |
 | Calendar OAuth callback (Google)                          | `https://api.eleva.care/calendar/oauth/google/callback`    |
 | Calendar OAuth callback (Microsoft)                       | `https://api.eleva.care/calendar/oauth/microsoft/callback` |
 | TOConline OAuth callback (Tier 1 + expert-side)           | `https://api.eleva.care/accounting/toconline/callback`     |
@@ -349,7 +349,7 @@ Webhooks, OAuth callbacks, and session-aware APIs live on the `api.eleva.care` s
 | Microsoft Calendar OAuth                    | `localhost:3002/calendar/oauth/microsoft/callback`   | `api.dev.eleva.care/calendar/oauth/microsoft/callback` | `api.eleva.care/calendar/oauth/microsoft/callback` |
 | TOConline OAuth                             | `localhost:3002/accounting/toconline/callback`       | `api.dev.eleva.care/accounting/toconline/callback`     | `api.eleva.care/accounting/toconline/callback`     |
 | Daily transcript webhook (16.8)             | local tunnel when needed                             | `api.dev.eleva.care/webhooks/daily`                    | `api.eleva.care/webhooks/daily`                    |
-| Resend delivery events                      | local tunnel                                         | `api.dev.eleva.care/resend/events`                     | `api.eleva.care/resend/events`                     |
+| Resend delivery events                      | local tunnel                                         | `api.dev.eleva.care/webhooks/resend`                   | `api.eleva.care/webhooks/resend`                   |
 
 ## Secret Loading Mechanics
 
