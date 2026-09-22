@@ -6,6 +6,17 @@ export type {
   OfferKind,
   OfferMode,
 } from "./offer-invariants"
+export { normalizeAvailabilityRules } from "./normalize-rules"
+export type {
+  AvailabilityRuleInput,
+  NormalizeRulesError,
+  NormalizeRulesResult,
+} from "./normalize-rules"
+export { validatePracticeAgainstPublishedModes } from "./practice-invariants"
+export type {
+  PracticeInvariantViolation,
+  PracticeModeSnapshot,
+} from "./practice-invariants"
 export { getAvailableSlots } from "./availability"
 export { getAvailableSlotsForOffer, emptyBusyTimeProvider } from "./offer-slots"
 export type {
