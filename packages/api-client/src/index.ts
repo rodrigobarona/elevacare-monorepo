@@ -910,6 +910,108 @@ export const DateOverrideRequestSchema = z.object({
 
 export type DateOverrideRequest = z.infer<typeof DateOverrideRequestSchema>
 
+// ── Expert practice / locations / multi-schedule (Phase 04B.1) ───────
+
+const CountryCodeSchema = z
+  .string()
+  .length(2)
+  .regex(/^[A-Za-z]{2}$/)
+  .transform((v) => v.toUpperCase())
+
+export const PatchPracticeRequestSchema = z.object({
+  practiceCountry: CountryCodeSchema.optional(),
+  serviceCountries: z.array(CountryCodeSchema).min(1).optional(),
+  languages: z.array(z.string().min(2).max(16)).min(1).optional(),
+  licenseScope: z.string().max(500).nullish(),
+  worldwideRemote: z.boolean().optional(),
+  acceptingBookings: z.boolean().optional(),
+})
+export type PatchPracticeRequest = z.infer<typeof PatchPracticeRequestSchema>
+
+export const PracticeResponseSchema = z.object({
+  practice: z.object({
+    id: z.string().uuid(),
+    practiceCountry: z.string(),
+    serviceCountries: z.array(z.string()),
+    languages: z.array(z.string()),
+    licenseScope: z.string().nullable(),
+    worldwideRemote: z.boolean(),
+    acceptingBookings: z.boolean(),
+  }),
+})
+export type PracticeResponse = z.infer<typeof PracticeResponseSchema>
+
+export const CreatePracticeLocationRequestSchema = z.object({
+  name: z.string().min(1).max(200),
+  address: z.string().min(1).max(500),
+  line2: z.string().max(200).nullish(),
+  city: z.string().min(1).max(100),
+  region: z.string().max(100).nullish(),
+  country: CountryCodeSchema,
+  postalCode: z.string().max(20).nullish(),
+  timezone: z.string().nullish(),
+  instructions: LocalizedTextSchema.nullish(),
+  isPrimary: z.boolean().optional(),
+  latitude: z.number().min(-90).max(90).nullish(),
+  longitude: z.number().min(-180).max(180).nullish(),
+})
+export type CreatePracticeLocationRequest = z.infer<
+  typeof CreatePracticeLocationRequestSchema
+>
+
+export const PatchPracticeLocationRequestSchema =
+  CreatePracticeLocationRequestSchema.partial().extend({
+    active: z.boolean().optional(),
+  })
+export type PatchPracticeLocationRequest = z.infer<
+  typeof PatchPracticeLocationRequestSchema
+>
+
+export const CreateNamedScheduleRequestSchema = z.object({
+  name: z.string().min(1).max(100),
+  timezone: z.string(),
+  isDefault: z.boolean().optional(),
+})
+export type CreateNamedScheduleRequest = z.infer<
+  typeof CreateNamedScheduleRequestSchema
+>
+
+export const PatchNamedScheduleRequestSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  timezone: z.string().optional(),
+  isDefault: z.boolean().optional(),
+})
+export type PatchNamedScheduleRequest = z.infer<
+  typeof PatchNamedScheduleRequestSchema
+>
+
+export const PutScheduleRulesRequestSchema = z.object({
+  rules: z.array(
+    z.object({
+      dayOfWeek: z.number().int().min(0).max(6),
+      startTime: z.string(),
+      endTime: z.string(),
+    })
+  ),
+})
+export type PutScheduleRulesRequest = z.infer<
+  typeof PutScheduleRulesRequestSchema
+>
+
+export const PutScheduleOverridesRequestSchema = z.object({
+  overrides: z.array(
+    z.object({
+      overrideDate: z.string(),
+      startTime: z.string().nullish(),
+      endTime: z.string().nullish(),
+      isBlocked: z.boolean(),
+    })
+  ),
+})
+export type PutScheduleOverridesRequest = z.infer<
+  typeof PutScheduleOverridesRequestSchema
+>
+
 // ── Event Types ─────────────────────────────────────────────────────
 
 export const CreateEventTypeRequestSchema = z.object({
@@ -1825,6 +1927,98 @@ export function createApiClient(options: ApiClientOptions) {
           return request<{ ok: true }>(
             "PUT",
             `/experts/integrations/${encodeURIComponent(integrationId)}/destination`,
+            data
+          )
+        },
+      },
+    },
+
+    /** Singular /expert/* surface (Phase 04B.1). Legacy plural `/experts/*` stays until 04b.2. */
+    expert: {
+      practice: {
+        get() {
+          return request<PracticeResponse>("GET", "/expert/practice")
+        },
+        patch(data: PatchPracticeRequest) {
+          return request<PracticeResponse>("PATCH", "/expert/practice", data)
+        },
+      },
+      locations: {
+        list(includeInactive = false) {
+          const qs = includeInactive ? "?includeInactive=true" : ""
+          return request<{ locations: unknown[] }>(
+            "GET",
+            `/expert/locations${qs}`
+          )
+        },
+        create(data: CreatePracticeLocationRequest) {
+          return request<{ location: unknown }>(
+            "POST",
+            "/expert/locations",
+            data
+          )
+        },
+        get(id: string) {
+          return request<{ location: unknown }>(
+            "GET",
+            `/expert/locations/${encodeURIComponent(id)}`
+          )
+        },
+        patch(id: string, data: PatchPracticeLocationRequest) {
+          return request<{ location: unknown }>(
+            "PATCH",
+            `/expert/locations/${encodeURIComponent(id)}`,
+            data
+          )
+        },
+        remove(id: string) {
+          return request<{ location: unknown; archived: true }>(
+            "DELETE",
+            `/expert/locations/${encodeURIComponent(id)}`
+          )
+        },
+      },
+      schedules: {
+        list() {
+          return request<{ schedules: unknown[] }>("GET", "/expert/schedules")
+        },
+        create(data: CreateNamedScheduleRequest) {
+          return request<{ schedule: unknown }>(
+            "POST",
+            "/expert/schedules",
+            data
+          )
+        },
+        get(id: string) {
+          return request<{ schedule: unknown }>(
+            "GET",
+            `/expert/schedules/${encodeURIComponent(id)}`
+          )
+        },
+        patch(id: string, data: PatchNamedScheduleRequest) {
+          return request<{ schedule: unknown }>(
+            "PATCH",
+            `/expert/schedules/${encodeURIComponent(id)}`,
+            data
+          )
+        },
+        remove(id: string) {
+          return request<{ ok: true }>(
+            "DELETE",
+            `/expert/schedules/${encodeURIComponent(id)}`
+          )
+        },
+        putRules(id: string, data: PutScheduleRulesRequest) {
+          return request<{ rules: unknown[] }>(
+            "PUT",
+            `/expert/schedules/${encodeURIComponent(id)}/rules`,
+            data
+          )
+        },
+        putOverrides(id: string, data: PutScheduleOverridesRequest) {
+          return request<{ overrides: unknown[] }>(
+            "PUT",
+            `/expert/schedules/${encodeURIComponent(id)}/overrides`,
             data
           )
         },

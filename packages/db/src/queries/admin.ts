@@ -152,7 +152,8 @@ export async function _ensureExpertProfileForOrgDetailed(
 export async function updateExpertProfile(
   profileId: string,
   orgId: string,
-  data: Partial<main.NewExpertProfile>
+  data: Partial<main.NewExpertProfile>,
+  txOpt?: Tx
 ): Promise<void> {
   const next: Partial<main.NewExpertProfile> = { ...data }
   if (
@@ -180,10 +181,11 @@ export async function updateExpertProfile(
     next.worldwideMode = data.worldwideRemote
   }
 
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     await tx
       .update(main.expertProfiles)
       .set({ ...next, updatedAt: new Date() })
       .where(eq(main.expertProfiles.id, profileId))
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }

@@ -759,6 +759,402 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/expert/practice": {
+        get: {
+          operationId: "getExpertPractice",
+          summary: "Get expert practice scope",
+          tags: ["Expert Practice"],
+          responses: {
+            "200": {
+              description: "Practice scope",
+              content: {
+                "application/json": {
+                  schema: z.object({ practice: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        patch: {
+          operationId: "patchExpertPractice",
+          summary: "Update expert practice scope",
+          tags: ["Expert Practice"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  practiceCountry: z.string().length(2).optional(),
+                  serviceCountries: z.array(z.string().length(2)).optional(),
+                  languages: z.array(z.string()).optional(),
+                  licenseScope: z.string().nullable().optional(),
+                  worldwideRemote: z.boolean().optional(),
+                  acceptingBookings: z.boolean().optional(),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Practice updated",
+              content: {
+                "application/json": {
+                  schema: z.object({ practice: z.unknown() }),
+                },
+              },
+            },
+            "409": {
+              description: "Published modes would violate offer invariants",
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/locations": {
+        get: {
+          operationId: "listExpertLocations",
+          summary: "List practice locations",
+          tags: ["Expert Locations"],
+          responses: {
+            "200": {
+              description: "Locations",
+              content: {
+                "application/json": {
+                  schema: z.object({ locations: z.array(z.unknown()) }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "createExpertLocation",
+          summary: "Create a practice location",
+          tags: ["Expert Locations"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  name: z.string(),
+                  address: z.string(),
+                  city: z.string(),
+                  country: z.string().length(2),
+                }),
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Location created",
+              content: {
+                "application/json": {
+                  schema: z.object({ location: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/locations/{id}": {
+        get: {
+          operationId: "getExpertLocation",
+          summary: "Get a practice location",
+          tags: ["Expert Locations"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Location",
+              content: {
+                "application/json": {
+                  schema: z.object({ location: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        patch: {
+          operationId: "patchExpertLocation",
+          summary: "Update a practice location",
+          tags: ["Expert Locations"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": { schema: z.object({}).passthrough() },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Location updated",
+              content: {
+                "application/json": {
+                  schema: z.object({ location: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        delete: {
+          operationId: "deleteExpertLocation",
+          summary: "Archive a practice location",
+          tags: ["Expert Locations"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Location archived",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    location: z.unknown(),
+                    archived: z.literal(true),
+                  }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/schedules": {
+        get: {
+          operationId: "listExpertSchedules",
+          summary: "List named schedules",
+          tags: ["Expert Schedules"],
+          responses: {
+            "200": {
+              description: "Schedules",
+              content: {
+                "application/json": {
+                  schema: z.object({ schedules: z.array(z.unknown()) }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "createExpertSchedule",
+          summary: "Create a named schedule",
+          tags: ["Expert Schedules"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  name: z.string(),
+                  timezone: z.string(),
+                  isDefault: z.boolean().optional(),
+                }),
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Schedule created",
+              content: {
+                "application/json": {
+                  schema: z.object({ schedule: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/schedules/{id}": {
+        get: {
+          operationId: "getExpertSchedule",
+          summary: "Get a schedule with rules and overrides",
+          tags: ["Expert Schedules"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Schedule",
+              content: {
+                "application/json": {
+                  schema: z.object({ schedule: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        patch: {
+          operationId: "patchExpertSchedule",
+          summary: "Update schedule metadata",
+          tags: ["Expert Schedules"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  name: z.string().optional(),
+                  timezone: z.string().optional(),
+                  isDefault: z.boolean().optional(),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Schedule updated",
+              content: {
+                "application/json": {
+                  schema: z.object({ schedule: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        delete: {
+          operationId: "deleteExpertSchedule",
+          summary: "Soft-delete a non-default schedule",
+          tags: ["Expert Schedules"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Schedule deleted",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            "409": { description: "Schedule still referenced by modes" },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/schedules/{id}/rules": {
+        put: {
+          operationId: "putExpertScheduleRules",
+          summary: "Replace weekly availability rules",
+          tags: ["Expert Schedules"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  rules: z.array(
+                    z.object({
+                      dayOfWeek: z.number().int(),
+                      startTime: z.string(),
+                      endTime: z.string(),
+                    })
+                  ),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Rules replaced",
+              content: {
+                "application/json": {
+                  schema: z.object({ rules: z.array(z.unknown()) }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/schedules/{id}/overrides": {
+        put: {
+          operationId: "putExpertScheduleOverrides",
+          summary: "Replace date overrides for a schedule",
+          tags: ["Expert Schedules"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  overrides: z.array(
+                    z.object({
+                      overrideDate: z.string(),
+                      startTime: z.string().nullable().optional(),
+                      endTime: z.string().nullable().optional(),
+                      isBlocked: z.boolean(),
+                    })
+                  ),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Overrides replaced",
+              content: {
+                "application/json": {
+                  schema: z.object({ overrides: z.array(z.unknown()) }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/experts/event-types": {
         post: {
           operationId: "createEventType",

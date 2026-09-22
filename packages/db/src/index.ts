@@ -60,7 +60,24 @@ export {
   listDateOverrides,
   upsertDateOverride,
   deleteDateOverride,
+  listSchedules,
+  createSchedule,
+  updateSchedule,
+  softDeleteSchedule,
+  countModesUsingSchedule,
+  listModeNamesUsingSchedule,
+  replaceDateOverrides,
 } from "./queries/schedules"
+export {
+  listPracticeLocations,
+  getPracticeLocation,
+  createPracticeLocation,
+  updatePracticeLocation,
+  archivePracticeLocation,
+  countModesUsingLocation,
+  listModeNamesUsingLocation,
+  listPublishedActiveModesForExpert,
+} from "./queries/locations"
 export {
   getExpertScheduleForBooking,
   getScheduleForBooking,

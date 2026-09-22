@@ -1,14 +1,17 @@
-import { and, eq, isNull, asc } from "drizzle-orm"
+import { and, eq, isNull, asc, count } from "drizzle-orm"
 import { withOrgContext, type Tx } from "../context"
 import {
   schedules,
   availabilityRules,
   dateOverrides,
+  eventTypeModes,
+  eventTypes,
   type Schedule,
   type AvailabilityRule,
   type NewAvailabilityRule,
   type DateOverride,
   type NewDateOverride,
+  type NewSchedule,
 } from "../schema/main/index"
 
 export async function getOrCreateDefaultSchedule(
@@ -273,4 +276,223 @@ export async function deleteDateOverride(
     await tx.delete(dateOverrides).where(eq(dateOverrides.id, overrideId))
   }
   await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
+}
+
+export async function listSchedules(
+  orgId: string,
+  expertProfileId: string
+): Promise<Schedule[]> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    return tx
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .orderBy(asc(schedules.name))
+  })
+}
+
+export async function createSchedule(
+  orgId: string,
+  data: Omit<
+    NewSchedule,
+    "id" | "orgId" | "createdAt" | "updatedAt" | "deletedAt"
+  >,
+  txOpt?: Tx
+): Promise<Schedule> {
+  const run = async (tx: Tx) => {
+    if (data.isDefault) {
+      await tx
+        .update(schedules)
+        .set({ isDefault: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(schedules.expertProfileId, data.expertProfileId),
+            eq(schedules.isDefault, true),
+            isNull(schedules.deletedAt)
+          )
+        )
+    }
+
+    const [created] = await tx
+      .insert(schedules)
+      .values({ ...data, orgId })
+      .returning()
+    return created!
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
+}
+
+export async function updateSchedule(
+  orgId: string,
+  scheduleId: string,
+  expertProfileId: string,
+  data: Partial<Pick<Schedule, "name" | "timezone" | "isDefault">>,
+  txOpt?: Tx
+): Promise<Schedule | undefined> {
+  const run = async (tx: Tx) => {
+    if (data.isDefault === true) {
+      await tx
+        .update(schedules)
+        .set({ isDefault: false, updatedAt: new Date() })
+        .where(
+          and(
+            eq(schedules.expertProfileId, expertProfileId),
+            eq(schedules.isDefault, true),
+            isNull(schedules.deletedAt)
+          )
+        )
+    }
+
+    const [updated] = await tx
+      .update(schedules)
+      .set({ ...data, updatedAt: new Date() })
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .returning()
+    return updated
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
+}
+
+export async function softDeleteSchedule(
+  orgId: string,
+  scheduleId: string,
+  expertProfileId: string,
+  txOpt?: Tx
+): Promise<Schedule | undefined> {
+  const run = async (tx: Tx) => {
+    const [row] = await tx
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .limit(1)
+    if (!row) return undefined
+    if (row.isDefault) {
+      throw new Error("cannot-delete-default-schedule")
+    }
+
+    const [deleted] = await tx
+      .update(schedules)
+      .set({ deletedAt: new Date(), updatedAt: new Date(), isDefault: false })
+      .where(eq(schedules.id, scheduleId))
+      .returning()
+    return deleted
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
+}
+
+export async function countModesUsingSchedule(
+  orgId: string,
+  scheduleId: string
+): Promise<number> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({ value: count() })
+      .from(eventTypeModes)
+      .innerJoin(eventTypes, eq(eventTypes.id, eventTypeModes.eventTypeId))
+      .where(
+        and(
+          eq(eventTypeModes.orgId, orgId),
+          eq(eventTypeModes.scheduleId, scheduleId),
+          eq(eventTypeModes.active, true),
+          isNull(eventTypes.deletedAt)
+        )
+      )
+    return Number(row?.value ?? 0)
+  })
+}
+
+export async function listModeNamesUsingSchedule(
+  orgId: string,
+  scheduleId: string
+): Promise<{ modeId: string; eventTypeTitle: string | null; mode: string }[]> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const rows = await tx
+      .select({
+        modeId: eventTypeModes.id,
+        mode: eventTypeModes.mode,
+        eventTypeTitle: eventTypes.title,
+      })
+      .from(eventTypeModes)
+      .innerJoin(eventTypes, eq(eventTypes.id, eventTypeModes.eventTypeId))
+      .where(
+        and(
+          eq(eventTypeModes.orgId, orgId),
+          eq(eventTypeModes.scheduleId, scheduleId),
+          eq(eventTypeModes.active, true),
+          isNull(eventTypes.deletedAt)
+        )
+      )
+    return rows.map((row) => ({
+      modeId: row.modeId,
+      mode: row.mode,
+      eventTypeTitle:
+        typeof row.eventTypeTitle === "object" &&
+        row.eventTypeTitle &&
+        "en" in row.eventTypeTitle
+          ? ((row.eventTypeTitle as { en?: string }).en ?? null)
+          : null,
+    }))
+  })
+}
+
+export async function replaceDateOverrides(
+  orgId: string,
+  scheduleId: string,
+  expertProfileId: string,
+  overrides: Omit<
+    NewDateOverride,
+    "id" | "orgId" | "createdAt" | "scheduleId"
+  >[],
+  txOpt?: Tx
+): Promise<DateOverride[]> {
+  const run = async (tx: Tx) => {
+    const [sched] = await tx
+      .select({ id: schedules.id })
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.id, scheduleId),
+          eq(schedules.expertProfileId, expertProfileId),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .limit(1)
+
+    if (!sched) throw new Error("unauthorized-schedule")
+
+    await tx
+      .delete(dateOverrides)
+      .where(eq(dateOverrides.scheduleId, scheduleId))
+
+    if (overrides.length === 0) return []
+
+    return tx
+      .insert(dateOverrides)
+      .values(
+        overrides.map((o) => ({
+          ...o,
+          orgId,
+          scheduleId,
+        }))
+      )
+      .returning()
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }

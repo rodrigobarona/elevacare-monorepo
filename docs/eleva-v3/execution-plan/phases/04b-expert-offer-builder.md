@@ -117,14 +117,20 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 ## Acceptance criteria
 
 > **Closeout status (2026-09-22):** Phase 4B was skipped while 05–08 shipped.
-> Ordered backlog: (1) `@eleva/editor` scaffold + boundary lint, (2) `/expert`
-> practice/locations/schedules APIs + `experts→expert` rename, (3) builder UI +
-> private links + calendar polish, (4) `e2e/expert-offer.spec.ts`. Do not start
-> Phase 09 until this exit gate is honestly met or explicitly waived.
+> Ordered backlog: (1) ~~`@eleva/editor` scaffold + boundary lint~~ (**done**,
+> main via `#92`), (2) `/expert` practice/locations/schedules APIs (this
+> slice; `experts→expert` rename of remaining routes deferred to 04b.2),
+> (3) builder UI + private links + calendar polish, (4) `e2e/expert-offer.spec.ts`.
+> Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
       boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside
       `packages/editor`). Plate UI registry restyle + AI route still open.
+- [x] `GET/PATCH /expert/practice`, `/expert/locations` CRUD, `/expert/schedules`
+      CRUD + `PUT …/rules` + `PUT …/overrides` (Zod + OpenAPI + rate limit +
+      `withAudit`); practice PATCH returns `409 OFFER_INVARIANT_VIOLATION` without
+      silently unpublishing. Full `experts→expert` rename of profile/event-types
+      still open (04b.2).
 - [ ] Onboarding cannot complete without `practice_country`, >= 1 language and a default schedule;
       `service_countries` outside the licence show the legal helper and are saved as declared.
 - [ ] Builder refuses to publish a `clinical` event type whose mode is worldwide or outside
