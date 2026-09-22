@@ -13,6 +13,18 @@
     "themeDark": "Escuro",
     "themeSystem": "Sistema"
   },
+  "inbox": {
+    "title": "Caixa de entrada",
+    "description": "Alertas de sessões, pagamentos e da organização.",
+    "empty": "Ainda não há notificações",
+    "error": "Não foi possível carregar as notificações. Tente novamente.",
+    "loading": "A carregar notificações…",
+    "markAllRead": "Marcar todas como lidas",
+    "markRead": "Marcar como lida",
+    "viewAll": "Ver todas",
+    "open": "Abrir",
+    "openInbox": "Abrir caixa de entrada"
+  },
   "orgSwitcher": {
     "findWorkspace": "Encontrar workspace…",
     "createWorkspace": "Criar workspace",

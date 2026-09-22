@@ -13,6 +13,18 @@
     "themeDark": "Dark",
     "themeSystem": "System"
   },
+  "inbox": {
+    "title": "Inbox",
+    "description": "Booking, payment, and organization alerts.",
+    "empty": "No notifications yet",
+    "error": "Could not load notifications. Try again.",
+    "loading": "Loading notifications…",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "viewAll": "View all",
+    "open": "Open",
+    "openInbox": "Open inbox"
+  },
   "orgSwitcher": {
     "findWorkspace": "Find workspace…",
     "createWorkspace": "Create workspace",

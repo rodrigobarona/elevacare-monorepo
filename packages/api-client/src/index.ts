@@ -1340,6 +1340,48 @@ export type VerifyPhoneConfirmRequest = z.infer<
 export type VerifyPhoneConfirmResponse = z.infer<
   typeof VerifyPhoneConfirmResponseSchema
 >
+
+export const InboxNotificationIdSchema = z.string().uuid()
+
+export const InboxItemSchema = z.object({
+  id: z.string().uuid(),
+  kind: z.string(),
+  title: z.string(),
+  body: z.string(),
+  href: z.string().nullable(),
+  readAt: z.string().datetime().nullable(),
+  createdAt: z.string().datetime(),
+})
+
+export const ListInboxQuerySchema = z.object({
+  unread: z
+    .enum(["true", "1", "false", "0"])
+    .optional()
+    .transform((value) => value === "true" || value === "1"),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+})
+
+export const ListInboxResponseSchema = z.object({
+  items: z.array(InboxItemSchema),
+  unreadCount: z.number().int().nonnegative(),
+})
+
+export const MarkInboxReadResponseSchema = z.object({
+  id: z.string().uuid(),
+  readAt: z.string().datetime(),
+})
+
+export const MarkInboxReadAllResponseSchema = z.object({
+  updated: z.number().int().nonnegative(),
+})
+
+export type InboxItem = z.infer<typeof InboxItemSchema>
+export type ListInboxQuery = z.infer<typeof ListInboxQuerySchema>
+export type ListInboxResponse = z.infer<typeof ListInboxResponseSchema>
+export type MarkInboxReadResponse = z.infer<typeof MarkInboxReadResponseSchema>
+export type MarkInboxReadAllResponse = z.infer<
+  typeof MarkInboxReadAllResponseSchema
+>
 export type RefundBookingPaymentRequest = z.infer<
   typeof RefundBookingPaymentRequestSchema
 >
@@ -1987,6 +2029,31 @@ export function createApiClient(options: ApiClientOptions) {
           `/invoicing/exports/saft?${params.toString()}`
         )
         return ExportSaftResponseSchema.parse(raw)
+      },
+    },
+
+    notifications: {
+      async list(query?: { unread?: boolean; limit?: number }) {
+        const params = new URLSearchParams()
+        if (query?.unread) params.set("unread", "true")
+        if (query?.limit != null) params.set("limit", String(query.limit))
+        const qs = params.toString()
+        const raw = await request<unknown>(
+          "GET",
+          `/notifications${qs ? `?${qs}` : ""}`
+        )
+        return ListInboxResponseSchema.parse(raw)
+      },
+      async markRead(notificationId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/notifications/${encodeURIComponent(notificationId)}/read`
+        )
+        return MarkInboxReadResponseSchema.parse(raw)
+      },
+      async markReadAll() {
+        const raw = await request<unknown>("POST", "/notifications/read-all")
+        return MarkInboxReadAllResponseSchema.parse(raw)
       },
     },
 

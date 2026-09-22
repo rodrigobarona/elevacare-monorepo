@@ -197,7 +197,7 @@ Lane 1 fans out here when `in_app.enabled` is true for that category (required `
 - payout state changes
 - admin action-required items
 
-Schema: `notifications(id, user_id, org_id, kind, payload, link, read_at, created_at)`. Realtime via `pg_listen/notify` or short-poll.
+Schema: `notifications(id, user_id, org_id, kind, title, body, href, data, read_at, created_at)`. Bell + inbox poll via SWR (30s) on `GET /notifications`.
 
 ### Push (Expo, mobile later)
 

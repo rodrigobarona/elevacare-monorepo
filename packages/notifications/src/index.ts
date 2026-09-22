@@ -62,6 +62,14 @@ export {
 } from "./send-sms"
 export { handleTwilioStatusWebhook } from "./handle-twilio-status"
 export {
+  InboxNotFoundError,
+  listInbox,
+  markInboxRead,
+  markInboxReadAll,
+  type InboxItem,
+  type ListInboxResult,
+} from "./inbox"
+export {
   PHONE_E164_PATTERN,
   PHONE_OTP_MAX_ATTEMPTS,
   PHONE_OTP_TTL_MS,

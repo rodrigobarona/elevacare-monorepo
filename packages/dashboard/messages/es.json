@@ -13,6 +13,18 @@
     "themeDark": "Oscuro",
     "themeSystem": "Sistema"
   },
+  "inbox": {
+    "title": "Bandeja de entrada",
+    "description": "Alertas de sesiones, pagos y de la organización.",
+    "empty": "Aún no hay notificaciones",
+    "error": "No se pudieron cargar las notificaciones. Inténtalo de nuevo.",
+    "loading": "Cargando notificaciones…",
+    "markAllRead": "Marcar todas como leídas",
+    "markRead": "Marcar como leída",
+    "viewAll": "Ver todas",
+    "open": "Abrir",
+    "openInbox": "Abrir bandeja de entrada"
+  },
   "orgSwitcher": {
     "findWorkspace": "Buscar workspace…",
     "createWorkspace": "Crear workspace",

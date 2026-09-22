@@ -50,6 +50,7 @@ export type AuditEntity =
   | "invoice"
   | "accounting_reconciliation_run"
   | "notification"
+  | "inbox"
   | "phone"
 
 // Action verbs follow "<verb>" shape and are combined with entity in

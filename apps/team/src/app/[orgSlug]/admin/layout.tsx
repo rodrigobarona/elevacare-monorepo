@@ -35,15 +35,19 @@ export default async function TeamAdminLayout({
 
   const t = await getTranslations("nav")
 
-  const dashboardConfig = await buildDashboardConfig(session, [
-    {
-      items: [
-        { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
-        { title: t("members"), url: `${base}/members`, icon: "UsersIcon" },
-        { title: t("settings"), url: `${base}/settings`, icon: "GearIcon" },
-      ],
-    },
-  ])
+  const dashboardConfig = await buildDashboardConfig(
+    session,
+    [
+      {
+        items: [
+          { title: t("dashboard"), url: base, icon: "SquaresFourIcon" },
+          { title: t("members"), url: `${base}/members`, icon: "UsersIcon" },
+          { title: t("settings"), url: `${base}/settings`, icon: "GearIcon" },
+        ],
+      },
+    ],
+    { inboxUrl: `${base}/notifications` }
+  )
 
   return <DashboardShell config={dashboardConfig}>{children}</DashboardShell>
 }
