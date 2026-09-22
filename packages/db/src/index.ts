@@ -113,4 +113,8 @@ export {
   type MemberListResult,
 } from "./queries/member"
 export { countBillableSeats } from "./queries/seats"
-export type { LocalizedText } from "./schema/main/shared"
+export type {
+  LocalizedRichText,
+  LocalizedRichTextEntry,
+  LocalizedText,
+} from "./schema/main/shared"

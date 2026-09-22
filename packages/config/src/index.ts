@@ -21,6 +21,7 @@ export {
   locales,
   defaultLocale,
   localeNames,
+  LocaleSchema,
   cookieName as localeCookieName,
   isLocale,
   rewriteRetiredLocalePath,

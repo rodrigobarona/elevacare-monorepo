@@ -37,3 +37,23 @@ export type LocalizedText = {
   pt?: string
   es?: string
 }
+
+/**
+ * Rich-text JSONB contract (ADR-023 / Phase 4B). Plate JSON lives under `json`;
+ * `html` and `text` are server-derived. Full Zod schemas live in `@eleva/editor`
+ * so `platejs` stays inside that package boundary.
+ *
+ * Structural typing only here — do not import `platejs` into `@eleva/db`.
+ */
+export type LocalizedRichTextEntry = {
+  json: unknown
+  html: string
+  text: string
+  source: "human" | "ai_draft"
+}
+
+export type LocalizedRichText = Partial<{
+  en: LocalizedRichTextEntry
+  pt: LocalizedRichTextEntry
+  es: LocalizedRichTextEntry
+}>

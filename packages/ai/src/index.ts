@@ -1,2 +1,8 @@
-// @eleva/ai — scaffolded in Sprint 0. Implementation lands in later sprints.
-export {};
+export {
+  APPROVED_MODELS,
+  AI_MODEL_NOT_APPROVED,
+  AiModelNotApprovedError,
+  assertApprovedModel,
+  requireZeroRetentionModel,
+  type ApprovedModel,
+} from "./approved-models"

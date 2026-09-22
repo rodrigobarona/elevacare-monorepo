@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-22: Phase 01–08 closeout before Phase 09 (resume 04B)
+
+- Owner: engineering (founder directive)
+- Status: active
+- Summary: Before Phase 09, close remaining gaps for phases 01–08. Phase
+  **04B** (`@eleva/editor`, expert offer builder, `e2e/expert-offer.spec.ts`)
+  was deferred while 05–08 shipped and is now the first closable engineering
+  backlog. Phase **05** needs local `e2e/member.spec.ts` execution evidence.
+  Phase **06** money-path e2e stays Stripe test-mode / contract-level only
+  (no live Stripe abuse). Phase **07** exit gate stays **blocked** (no live
+  FT POST / Comunicação / `issueInvoice()`). Phase **08** may SMS-smoke with
+  local Twilio; **`invoice.issued` stays off** `NOTIFICATION_KINDS` until
+  invoicing opens. Do **not** invent DPO/legal sign-off. Phase 09 must not
+  start until this closeout is reported.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  ADR-023
+- Next review: after 04B exit gate or founder waiver
+- Clarification (same day): ADR-023 storage field is **`json`** (not `value`). The phase
+  prompt's `{ value, html, text }` spelling is corrected to match the ADR.
+
 ### 2026-09-22: Lane 2 marketing stub (sync + triggerAutomation)
 
 - Owner: engineering

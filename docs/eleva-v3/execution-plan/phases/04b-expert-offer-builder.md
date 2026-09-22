@@ -47,7 +47,7 @@ In:
   (`@eleva/editor`, short), "Open in Maps" link (no map SDK); archive guarded when a mode uses it.
 - **Services** `/[orgSlug]/services` (event types): list with visibility/published badges and
   mode icons; builder tabs — Basics (localized title + description in `@eleva/editor` with AI
-  "Improve", "Shorten", "Translate from English"), Kind (`clinical` | `non_clinical` with the
+  "Improve", "Shorten", "Translate from the source locale"), Kind (`clinical` | `non_clinical` with the
   legal consequence spelled out), Defaults (duration, price), **Delivery modes** (cards: Video /
   Phone / In person -> pick location; per card: schedule select, price and duration override,
   countries — "Worldwide" toggle only when allowed, otherwise a picker limited to
@@ -73,12 +73,12 @@ In:
 /expert/calendar/calendars/[id]`, `PATCH /expert/event-types/[id]/destination`, `PATCH
 /expert/event-types/[id]/modes/[modeId]/destination`, `POST /ai/editor` (streaming).
 - **`@eleva/editor`** (new package, ADR-023): `RichTextEditor`, `RichTextViewer` (server-safe,
-  sanitized), `LocalizedRichTextField` (locale tabs + "Translate from English"), value stored
+  sanitized), `LocalizedRichTextField` (locale tabs + "Translate from the source locale"), value stored
   under the **`LocalizedRichText` contract** in `packages/db/src/schema/main/shared.ts`: one
-  `jsonb` column per field shaped `{ [locale in Locale]?: { value: PlateJSON, html: string, text:
-  string } }` plus a sibling `<field>_source_locale` column (the language the expert wrote in —
+  `jsonb` column per field shaped `{ [locale in Locale]?: { json: PlateJSON, html: string, text:
+  string, source: "human" | "ai_draft" } }` plus a sibling `<field>_source_locale` column (the language the expert wrote in —
   no locale is mandatory, `en` is not privileged), Zod-validated (`localizedRichTextSchema`),
-  `html`/`text` derived server-side from `value`; full-text search uses expression indexes per
+  `html`/`text` derived server-side from `json`; full-text search uses expression indexes per
   locale (`to_tsvector('eleva_fts_pt', description->'pt'->>'text')`, same for `en`/`es`), never a
   GIN index on the whole JSONB; `LocalizedText` (plain strings) follows the same one-column shape;
   the duplicate `LocalizedString` in `expert-categories.ts` is removed in Phase 4 PR 04.1 (Phase 1 only marks it). Plate registry
@@ -116,6 +116,15 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 
 ## Acceptance criteria
 
+> **Closeout status (2026-09-22):** Phase 4B was skipped while 05–08 shipped.
+> Ordered backlog: (1) `@eleva/editor` scaffold + boundary lint, (2) `/expert`
+> practice/locations/schedules APIs + `experts→expert` rename, (3) builder UI +
+> private links + calendar polish, (4) `e2e/expert-offer.spec.ts`. Do not start
+> Phase 09 until this exit gate is honestly met or explicitly waived.
+
+- [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
+      boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside
+      `packages/editor`). Plate UI registry restyle + AI route still open.
 - [ ] Onboarding cannot complete without `practice_country`, >= 1 language and a default schedule;
       `service_countries` outside the licence show the legal helper and are saved as declared.
 - [ ] Builder refuses to publish a `clinical` event type whose mode is worldwide or outside
@@ -321,14 +330,14 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    RichTextEditor ({ value, onChange, locale, ai?: { enabled, context: "marketing" | "clinical" } }),
    RichTextViewer (server component; renders the stored sanitized HTML; sanitizer allow-list
    tested against XSS vectors), LocalizedRichTextField (tabs for pt/en/es; "Translate from
-   English" per tab calls the AI route and marks the tab "AI draft — review" until edited),
+   the source locale" per tab calls the AI route and marks the tab "AI draft — review" until edited),
    toPlainText(value), toSanitizedHtml(value). Storage contract (LocalizedRichText,
    packages/db/src/schema/main/shared.ts + localizedRichTextSchema in packages/db/src/zod/):
-   ONE jsonb column per field shaped { [locale]?: { value: PlateJSON, html, text } } and a
+   ONE jsonb column per field shaped { [locale]?: { json: PlateJSON, html, text, source } } and a
    sibling <field>_source_locale column; no locale is mandatory (an expert may write only pt);
    this PR: event_types.description + description_source_locale, expert_profiles.bio +
    bio_source_locale, expert_practice_locations.instructions (LocalizedText, short); html and
-   text are derived server-side from value — clients never send HTML; add per-locale expression
+   text are derived server-side from json — clients never send HTML; add per-locale expression
    indexes to_tsvector('eleva_fts_<locale>', col->'<locale>'->>'text') for the searchable
    fields (packages/db/src/migrations/run-fts.ts already defines the eleva_fts_pt/en configs;
    add es) and never a GIN index on the whole jsonb; API responses return the full localized
