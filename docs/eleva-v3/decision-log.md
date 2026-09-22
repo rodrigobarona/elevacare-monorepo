@@ -40,7 +40,9 @@ Each entry should include:
   polling every 30 seconds against `GET /notifications` instead of
   `LISTEN/NOTIFY` realtime. RLS still scopes rows to the session user
   and active org. Cache keys include `orgSlug` / `inboxUrl` so a
-  workspace switch does not flash another org's titles.
+  workspace switch does not flash another org's titles. Inbox rows
+  use `title` / `body` / `href` / `data` (not the earlier
+  `payload` / `link` sketch).
 - Related: `docs/eleva-v3/notifications-spec.md`, ADR-006
 - Next review: if inbox volume or unread latency needs push/realtime
 

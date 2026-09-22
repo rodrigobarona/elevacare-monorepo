@@ -2570,7 +2570,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "markInboxReadAll",
           summary: "Mark all inbox notifications as read",
           description:
-            "Owner UPDATE for every unread row belonging to the session user. Emits notification.updated.",
+            "Owner UPDATE for every unread row belonging to the session user. Emits inbox.updated.",
           tags: ["Notifications"],
           responses: {
             "200": {

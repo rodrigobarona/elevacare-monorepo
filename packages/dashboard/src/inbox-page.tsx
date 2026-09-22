@@ -2,10 +2,11 @@
 
 import { useMemo } from "react"
 import { useTranslations } from "next-intl"
-import useSWR from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { createApiClient, type ListInboxResponse } from "@eleva/api-client"
 import { AccountPageHeader } from "./account-page-header"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import { revalidateInboxCaches } from "./inbox-swr"
 
 interface InboxPageProps {
   apiBaseUrl: string
@@ -14,11 +15,12 @@ interface InboxPageProps {
 
 export function InboxPage({ apiBaseUrl, orgSlug }: InboxPageProps) {
   const t = useTranslations("inbox")
+  const { mutate: globalMutate } = useSWRConfig()
   const client = useMemo(
     () => createApiClient({ baseUrl: apiBaseUrl }),
     [apiBaseUrl]
   )
-  const { data, mutate, isLoading } = useSWR<ListInboxResponse>(
+  const { data, error, isLoading } = useSWR<ListInboxResponse>(
     ["inbox-page", apiBaseUrl, orgSlug],
     () => client.notifications.list({ limit: 50 }),
     { refreshInterval: 30_000 }
@@ -29,12 +31,12 @@ export function InboxPage({ apiBaseUrl, orgSlug }: InboxPageProps) {
 
   async function handleMarkAll() {
     await client.notifications.markReadAll()
-    await mutate()
+    await revalidateInboxCaches(globalMutate, apiBaseUrl)
   }
 
   async function handleMarkRead(id: string) {
     await client.notifications.markRead(id)
-    await mutate()
+    await revalidateInboxCaches(globalMutate, apiBaseUrl)
   }
 
   return (
@@ -50,12 +52,16 @@ export function InboxPage({ apiBaseUrl, orgSlug }: InboxPageProps) {
           ) : null
         }
       />
-      {isLoading && items.length === 0 ? (
+      {isLoading && items.length === 0 && !error ? (
         <p className="text-sm text-muted-foreground">{t("loading")}</p>
       ) : null}
-      {items.length === 0 && !isLoading ? (
+      {error ? (
+        <p className="text-sm text-muted-foreground">{t("error")}</p>
+      ) : null}
+      {!error && items.length === 0 && !isLoading ? (
         <p className="text-sm text-muted-foreground">{t("empty")}</p>
-      ) : (
+      ) : null}
+      {!error && items.length > 0 ? (
         <ul className="divide-y divide-border rounded-3xl border">
           {items.map((item) => (
             <li
@@ -93,7 +99,7 @@ export function InboxPage({ apiBaseUrl, orgSlug }: InboxPageProps) {
             </li>
           ))}
         </ul>
-      )}
+      ) : null}
     </div>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { useTranslations } from "next-intl"
-import useSWR from "swr"
+import useSWR, { useSWRConfig } from "swr"
 import { createApiClient, type ListInboxResponse } from "@eleva/api-client"
 import { BellIcon } from "@eleva/icons"
 import { Badge } from "@eleva/ui/components/badge"
@@ -13,6 +13,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@eleva/ui/components/popover"
+import { revalidateInboxCaches } from "./inbox-swr"
 
 const POLL_MS = 30_000
 
@@ -23,11 +24,12 @@ interface NavBellProps {
 
 export function NavBell({ inboxUrl, apiBaseUrl }: NavBellProps) {
   const t = useTranslations("inbox")
+  const { mutate: globalMutate } = useSWRConfig()
   const client = useMemo(
     () => createApiClient({ baseUrl: apiBaseUrl }),
     [apiBaseUrl]
   )
-  const { data, mutate } = useSWR<ListInboxResponse>(
+  const { data, error } = useSWR<ListInboxResponse>(
     ["inbox-bell", apiBaseUrl, inboxUrl],
     () => client.notifications.list({ unread: true, limit: 8 }),
     { refreshInterval: POLL_MS }
@@ -38,12 +40,12 @@ export function NavBell({ inboxUrl, apiBaseUrl }: NavBellProps) {
 
   async function handleMarkAll() {
     await client.notifications.markReadAll()
-    await mutate()
+    await revalidateInboxCaches(globalMutate, apiBaseUrl)
   }
 
   async function handleMarkRead(id: string) {
     await client.notifications.markRead(id)
-    await mutate()
+    await revalidateInboxCaches(globalMutate, apiBaseUrl)
   }
 
   return (
@@ -77,7 +79,9 @@ export function NavBell({ inboxUrl, apiBaseUrl }: NavBellProps) {
             </Button>
           ) : null}
         </PopoverHeader>
-        {items.length === 0 ? (
+        {error ? (
+          <p className="text-sm text-muted-foreground">{t("error")}</p>
+        ) : items.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t("empty")}</p>
         ) : (
           <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
