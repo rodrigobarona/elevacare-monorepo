@@ -76,30 +76,35 @@ export async function PATCH(request: Request) {
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
-      async (_tx, ctx) => {
-        await updateExpertProfile(profile.id, profile.orgId, {
-          ...(data.nif !== undefined && { nif: data.nif ?? null }),
-          ...(data.licenseScope !== undefined && {
-            licenseScope: data.licenseScope ?? null,
-          }),
-          ...(data.languages && { languages: data.languages }),
-          ...(data.practiceCountries && {
-            practiceCountries: data.practiceCountries,
-          }),
-          ...(data.worldwideMode !== undefined && {
-            worldwideMode: data.worldwideMode,
-          }),
-          ...(data.sessionModes && {
-            sessionModes:
-              data.sessionModes.length > 0 ? data.sessionModes : ["online"],
-          }),
-          ...(data.displayName && { displayName: data.displayName }),
-          ...(data.headline !== undefined && {
-            headline: data.headline ?? null,
-          }),
-          ...(data.bio !== undefined && { bio: data.bio ?? null }),
-          metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-        })
+      async (tx, ctx) => {
+        await updateExpertProfile(
+          profile.id,
+          profile.orgId,
+          {
+            ...(data.nif !== undefined && { nif: data.nif ?? null }),
+            ...(data.licenseScope !== undefined && {
+              licenseScope: data.licenseScope ?? null,
+            }),
+            ...(data.languages && { languages: data.languages }),
+            ...(data.practiceCountries && {
+              practiceCountries: data.practiceCountries,
+            }),
+            ...(data.worldwideMode !== undefined && {
+              worldwideMode: data.worldwideMode,
+            }),
+            ...(data.sessionModes && {
+              sessionModes:
+                data.sessionModes.length > 0 ? data.sessionModes : ["online"],
+            }),
+            ...(data.displayName && { displayName: data.displayName }),
+            ...(data.headline !== undefined && {
+              headline: data.headline ?? null,
+            }),
+            ...(data.bio !== undefined && { bio: data.bio ?? null }),
+            metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+          },
+          tx
+        )
         await ctx.emit({
           entity: "expert_profile",
           action: "updated",

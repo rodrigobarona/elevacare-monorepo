@@ -58,9 +58,10 @@ export async function listExpertIntegrations(
 export async function disconnectIntegration(
   orgId: string,
   integrationId: string,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<void> {
-  await withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     await tx
       .update(expertIntegrations)
       .set({ status: "disconnected", updatedAt: new Date() })
@@ -70,7 +71,8 @@ export async function disconnectIntegration(
           eq(expertIntegrations.expertProfileId, expertProfileId)
         )
       )
-  })
+  }
+  await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
 export async function replaceBusySources(

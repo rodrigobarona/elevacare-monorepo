@@ -61,8 +61,8 @@ export async function DELETE(
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await disconnectIntegration(profile.orgId, id, profile.id)
+    async (tx, ctx) => {
+      await disconnectIntegration(profile.orgId, id, profile.id, tx)
       await ctx.emit({
         entity: "expert_integration_credential",
         action: "disconnected",

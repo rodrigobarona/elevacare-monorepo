@@ -124,15 +124,15 @@ export async function PUT(request: Request) {
     )
   }
 
-  const schedule = await getOrCreateDefaultSchedule(
-    profile.orgId,
-    profile.id,
-    body.data.timezone
-  )
-
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
+      const schedule = await getOrCreateDefaultSchedule(
+        profile.orgId,
+        profile.id,
+        body.data.timezone,
+        tx
+      )
       await updateScheduleTimezone(
         profile.orgId,
         schedule.id,
