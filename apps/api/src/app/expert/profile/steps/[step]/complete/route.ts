@@ -87,10 +87,15 @@ export async function POST(
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
-    async (_tx, ctx) => {
-      await updateExpertProfile(profile.id, profile.orgId, {
-        metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
-      })
+    async (tx, ctx) => {
+      await updateExpertProfile(
+        profile.id,
+        profile.orgId,
+        {
+          metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+        },
+        tx
+      )
       await ctx.emit({
         entity: "expert_profile",
         action: "updated",

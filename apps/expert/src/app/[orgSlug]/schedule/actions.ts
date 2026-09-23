@@ -23,7 +23,7 @@ export async function initializeScheduleAction(
   try {
     const session = await requireSession("schedule:manage")
     const api = await getAuthedApiClient()
-    await api.experts.schedule.save({ timezone, rules: [] })
+    await api.expert.schedule.save({ timezone, rules: [] })
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }
   } catch (err) {
@@ -94,7 +94,7 @@ export async function saveScheduleAction(params: {
 
     const session = await requireSession("schedule:manage")
     const api = await getAuthedApiClient()
-    await api.experts.schedule.save(parsed.data)
+    await api.expert.schedule.save(parsed.data)
 
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }
@@ -113,7 +113,7 @@ export async function addDateOverrideAction(
 
     const session = await requireSession("schedule:manage")
     const api = await getAuthedApiClient()
-    await api.experts.schedule.addOverride({
+    await api.expert.schedule.addOverride({
       overrideDate: parsed.data.overrideDate,
       isBlocked: parsed.data.isBlocked,
       timezone: parsed.data.timezone,
@@ -142,7 +142,7 @@ export async function removeDateOverrideAction(
   try {
     const session = await requireSession("schedule:manage")
     const api = await getAuthedApiClient()
-    await api.experts.schedule.removeOverride(parsed.data)
+    await api.expert.schedule.removeOverride(parsed.data)
 
     revalidateExpertWorkspace(session, "schedule")
     return { ok: true }

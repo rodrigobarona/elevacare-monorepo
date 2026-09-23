@@ -1824,50 +1824,47 @@ export function createApiClient(options: ApiClientOptions) {
       },
     },
 
-    experts: {
+    /** Singular authenticated `/expert/*` surface (Phase 04B). Public reads stay under `/public/experts/*`. */
+    expert: {
       profile: {
         ensure(data: EnsureExpertProfileRequest) {
           return request<EnsureExpertProfileResponse>(
             "POST",
-            "/experts/profile/ensure",
+            "/expert/profile/ensure",
             data
           )
         },
         patch(data: PatchExpertProfileRequest) {
-          return request<{ ok: true }>("PATCH", "/experts/profile", data)
+          return request<{ ok: true }>("PATCH", "/expert/profile", data)
         },
         completeStep(step: string) {
           return request<{ ok: true }>(
             "POST",
-            `/experts/profile/steps/${encodeURIComponent(step)}/complete`
+            `/expert/profile/steps/${encodeURIComponent(step)}/complete`
           )
         },
         setInvoicing(data: InvoicingRequest) {
-          return request<{ ok: true }>(
-            "PUT",
-            "/experts/profile/invoicing",
-            data
-          )
+          return request<{ ok: true }>("PUT", "/expert/profile/invoicing", data)
         },
       },
       schedule: {
         get() {
-          return request<{ schedule: unknown }>("GET", "/experts/schedule")
+          return request<{ schedule: unknown }>("GET", "/expert/schedule")
         },
         save(data: SaveScheduleRequest) {
-          return request<{ ok: true }>("PUT", "/experts/schedule", data)
+          return request<{ ok: true }>("PUT", "/expert/schedule", data)
         },
         addOverride(data: DateOverrideRequest) {
           return request<{ ok: true }>(
             "POST",
-            "/experts/schedule/overrides",
+            "/expert/schedule/overrides",
             data
           )
         },
         removeOverride(overrideId: string) {
           return request<{ ok: true }>(
             "DELETE",
-            `/experts/schedule/overrides/${encodeURIComponent(overrideId)}`
+            `/expert/schedule/overrides/${encodeURIComponent(overrideId)}`
           )
         },
       },
@@ -1875,28 +1872,28 @@ export function createApiClient(options: ApiClientOptions) {
         create(data: CreateEventTypeRequest) {
           return request<{ ok: true; id: string }>(
             "POST",
-            "/experts/event-types",
+            "/expert/event-types",
             data
           )
         },
         update(id: string, data: UpdateEventTypeRequest) {
           return request<{ ok: true }>(
             "PATCH",
-            `/experts/event-types/${encodeURIComponent(id)}`,
+            `/expert/event-types/${encodeURIComponent(id)}`,
             data
           )
         },
         publish(id: string, data: PublishEventTypeRequest) {
           return request<{ ok: true }>(
             "PATCH",
-            `/experts/event-types/${encodeURIComponent(id)}/publish`,
+            `/expert/event-types/${encodeURIComponent(id)}/publish`,
             data
           )
         },
         remove(id: string) {
           return request<{ ok: true }>(
             "DELETE",
-            `/experts/event-types/${encodeURIComponent(id)}`
+            `/expert/event-types/${encodeURIComponent(id)}`
           )
         },
       },
@@ -1904,19 +1901,19 @@ export function createApiClient(options: ApiClientOptions) {
         disconnect(integrationId: string) {
           return request<{ ok: true }>(
             "DELETE",
-            `/experts/integrations/${encodeURIComponent(integrationId)}`
+            `/expert/integrations/${encodeURIComponent(integrationId)}`
           )
         },
         listCalendars(integrationId: string) {
           return request<{ calendars: SubCalendar[] }>(
             "GET",
-            `/experts/integrations/${encodeURIComponent(integrationId)}/calendars`
+            `/expert/integrations/${encodeURIComponent(integrationId)}/calendars`
           )
         },
         setBusySources(integrationId: string, data: BusySourcesRequest) {
           return request<{ ok: true }>(
             "PUT",
-            `/experts/integrations/${encodeURIComponent(integrationId)}/busy-sources`,
+            `/expert/integrations/${encodeURIComponent(integrationId)}/busy-sources`,
             data
           )
         },
@@ -1926,15 +1923,12 @@ export function createApiClient(options: ApiClientOptions) {
         ) {
           return request<{ ok: true }>(
             "PUT",
-            `/experts/integrations/${encodeURIComponent(integrationId)}/destination`,
+            `/expert/integrations/${encodeURIComponent(integrationId)}/destination`,
             data
           )
         },
       },
-    },
 
-    /** Singular /expert/* surface (Phase 04B.1). Legacy plural `/experts/*` stays until 04b.2. */
-    expert: {
       practice: {
         get() {
           return request<PracticeResponse>("GET", "/expert/practice")

@@ -22,7 +22,7 @@ export async function resolveOrCreateExpertProfileForSession(
     trimmedDisplayName || session.user.email.split("@")[0]?.trim() || orgSlug
 
   const api = await getAuthedApiClient()
-  const result = await api.experts.profile.ensure({
+  const result = await api.expert.profile.ensure({
     orgSlug,
     displayName,
   })

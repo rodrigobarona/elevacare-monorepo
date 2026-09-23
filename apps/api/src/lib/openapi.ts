@@ -538,7 +538,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/profile": {
+      "/expert/profile": {
         patch: {
           operationId: "patchExpertProfile",
           summary: "Update expert profile fields",
@@ -572,7 +572,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/profile/ensure": {
+      "/expert/profile/ensure": {
         post: {
           operationId: "ensureExpertProfile",
           summary: "Create expert profile if missing for the active org",
@@ -615,7 +615,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/profile/steps/{step}/complete": {
+      "/expert/profile/steps/{step}/complete": {
         post: {
           operationId: "completeOnboardingStep",
           summary: "Mark an onboarding step as complete",
@@ -640,7 +640,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/profile/invoicing": {
+      "/expert/profile/invoicing": {
         put: {
           operationId: "setInvoicingChoice",
           summary: "Set expert invoicing provider",
@@ -662,7 +662,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/schedule": {
+      "/expert/schedule": {
         get: {
           operationId: "getSchedule",
           summary: "Get expert schedule with rules and overrides",
@@ -709,7 +709,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/schedule/overrides": {
+      "/expert/schedule/overrides": {
         post: {
           operationId: "addDateOverride",
           summary: "Add or update a date override",
@@ -737,7 +737,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/schedule/overrides/{id}": {
+      "/expert/schedule/overrides/{id}": {
         delete: {
           operationId: "removeDateOverride",
           summary: "Delete a date override",
@@ -1155,7 +1155,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/event-types": {
+      "/expert/event-types": {
         post: {
           operationId: "createEventType",
           summary: "Create an event type",
@@ -1185,7 +1185,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/event-types/{id}": {
+      "/expert/event-types/{id}": {
         patch: {
           operationId: "updateEventType",
           summary: "Update an event type",
@@ -1239,7 +1239,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/event-types/{id}/publish": {
+      "/expert/event-types/{id}/publish": {
         patch: {
           operationId: "toggleEventTypePublish",
           summary: "Toggle event type published state",
@@ -1276,7 +1276,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/integrations/{id}": {
+      "/expert/integrations/{id}": {
         delete: {
           operationId: "disconnectIntegration",
           summary: "Disconnect a calendar integration",
@@ -1298,7 +1298,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/integrations/{id}/calendars": {
+      "/expert/integrations/{id}/calendars": {
         get: {
           operationId: "listSubCalendars",
           summary: "List sub-calendars from external provider",
@@ -1333,7 +1333,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/integrations/{id}/busy-sources": {
+      "/expert/integrations/{id}/busy-sources": {
         put: {
           operationId: "setBusySources",
           summary: "Replace busy calendar sources",
@@ -1374,7 +1374,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
-      "/experts/integrations/{id}/destination": {
+      "/expert/integrations/{id}/destination": {
         put: {
           operationId: "setDestinationCalendar",
           summary: "Set destination calendar for new bookings",

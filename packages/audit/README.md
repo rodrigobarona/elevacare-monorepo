@@ -172,7 +172,7 @@ export async function provisionOrganization(input) {
 When the route handler is the orchestration layer:
 
 ```typescript
-// apps/api/src/app/experts/event-types/route.ts
+// apps/api/src/app/expert/event-types/route.ts
 export async function POST(request: Request) {
   // ... auth, rate limit, validate ...
   const newId = crypto.randomUUID()
