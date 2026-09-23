@@ -44,6 +44,7 @@ export {
 export {
   listExpertEventTypes,
   getEventType,
+  lockEventTypeForUpdate,
   createEventType,
   updateEventType,
   deleteEventType,

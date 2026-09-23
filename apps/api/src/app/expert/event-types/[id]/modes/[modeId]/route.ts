@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { PatchEventTypeModeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -11,11 +11,14 @@ import {
   getExpertProfileByUserId,
   getPracticeLocation,
   getSchedule,
+  listEventTypeModes,
+  lockEventTypeForUpdate,
   updateEventTypeMode,
 } from "@eleva/db"
 import {
   assertOfferInvariants,
-  type OfferInvariantError,
+  isUniqueViolation,
+  OFFER_INVARIANT_MESSAGES,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -28,88 +31,43 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const MESSAGES: Record<OfferInvariantError, string> = {
-  CLINICAL_WORLDWIDE:
-    "Clinical services cannot be offered worldwide. Limit the mode to countries you are licensed to serve.",
-  SCOPE_OUTSIDE_SERVICE_COUNTRIES:
-    "This mode targets a country outside your declared service countries. Update practice countries or the mode scope.",
-  EMPTY_COUNTRY_LIST:
-    "This mode needs at least one country when scope is a country list.",
-  WORLDWIDE_WITH_COUNTRY_LIST:
-    "Worldwide scope cannot also list specific countries.",
-  IN_PERSON_COUNTRY_MISMATCH:
-    "In-person modes must target exactly the location country.",
-  IN_PERSON_LOCATION_REQUIRED: "In-person modes need a practice location.",
-  WORLDWIDE_REQUIRES_REMOTE:
-    "Worldwide remote requires worldwideRemote on your practice profile.",
-  LANGUAGE_NOT_ON_PROFILE:
-    "This mode uses a language that is not on your practice profile.",
-  EMPTY_LANGUAGE_LIST: "Each delivery mode needs at least one language.",
+type Params = { params: Promise<{ id: string; modeId: string }> }
+
+class LastActiveModeConflictError extends Error {
+  constructor() {
+    super("LAST_ACTIVE_MODE")
+    this.name = "LastActiveModeConflictError"
+  }
 }
 
-const countryCode = z
-  .string()
-  .length(2)
-  .regex(/^[A-Za-z]{2}$/)
-  .transform((v) => v.toUpperCase())
+async function assertNotLastActiveMode(
+  orgId: string,
+  eventTypeId: string,
+  modeId: string,
+  expertProfileId: string,
+  tx: Parameters<typeof lockEventTypeForUpdate>[3]
+): Promise<void> {
+  const locked = await lockEventTypeForUpdate(
+    orgId,
+    eventTypeId,
+    expertProfileId,
+    tx
+  )
+  if (!locked?.published) return
 
-const PatchModeSchema = z
-  .object({
-    locationId: z.string().uuid().nullish(),
-    scheduleId: z.string().uuid().optional(),
-    priceCents: z.number().int().nonnegative().nullish(),
-    currency: z.literal("EUR").nullish(),
-    durationMinutes: z.number().int().positive().nullish(),
-    countryScopeType: z.enum(["worldwide", "list"]).optional(),
-    countryScopeCodes: z.array(countryCode).optional(),
-    languages: z.array(z.string().min(2).max(16)).min(1).optional(),
-    label: z
-      .object({
-        en: z.string().min(1).max(200),
-        pt: z.string().min(1).max(200).optional(),
-        es: z.string().min(1).max(200).optional(),
-      })
-      .nullish(),
-    sortOrder: z.number().int().nonnegative().optional(),
-    active: z.boolean().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (
-      value.countryScopeType === "worldwide" &&
-      value.countryScopeCodes &&
-      value.countryScopeCodes.length > 0
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Worldwide scope cannot also list specific countries.",
-        path: ["countryScopeCodes"],
-      })
-    }
-    if (
-      value.countryScopeType === "list" &&
-      value.countryScopeCodes &&
-      value.countryScopeCodes.length === 0
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "List scope needs at least one country.",
-        path: ["countryScopeCodes"],
-      })
-    }
-    if (
-      value.priceCents !== undefined &&
-      value.currency !== undefined &&
-      (value.priceCents == null) !== (value.currency == null)
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "priceCents and currency must both be set or both omitted.",
-        path: ["priceCents"],
-      })
-    }
-  })
+  const mode = await getEventTypeMode(orgId, modeId, eventTypeId, tx)
+  if (!mode?.active) return
 
-type Params = { params: Promise<{ id: string; modeId: string }> }
+  const activeModes = await listEventTypeModes(
+    orgId,
+    eventTypeId,
+    undefined,
+    tx
+  )
+  if (!activeModes.some((row) => row.id !== modeId)) {
+    throw new LastActiveModeConflictError()
+  }
+}
 
 export async function GET(request: Request, { params }: Params) {
   const headers = corsHeaders(request, "GET, PATCH, DELETE, OPTIONS")
@@ -176,7 +134,9 @@ export async function PATCH(request: Request, { params }: Params) {
   )
   if (rateLimited) return rateLimited
 
-  const body = PatchModeSchema.safeParse(await request.json().catch(() => ({})))
+  const body = PatchEventTypeModeRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
   if (!body.success) {
     return secureJson(
       { error: "validation", issues: body.error.issues },
@@ -209,6 +169,23 @@ export async function PATCH(request: Request, { params }: Params) {
   }
 
   const data = body.data
+
+  const nextPriceCents =
+    data.priceCents !== undefined
+      ? (data.priceCents ?? null)
+      : existing.priceCents
+  const nextCurrency =
+    data.currency !== undefined ? (data.currency ?? null) : existing.currency
+  if ((nextPriceCents == null) !== (nextCurrency == null)) {
+    return secureJson(
+      {
+        error: "validation",
+        message: "priceCents and currency must both be set or both omitted.",
+      },
+      { status: 422, headers }
+    )
+  }
+
   const nextScheduleId = data.scheduleId ?? existing.scheduleId
   if (data.scheduleId) {
     const schedule = await getSchedule(
@@ -282,55 +259,95 @@ export async function PATCH(request: Request, { params }: Params) {
       {
         error: "OFFER_INVARIANT_VIOLATION",
         code: invariant,
-        message: MESSAGES[invariant],
+        message: OFFER_INVARIANT_MESSAGES[invariant],
       },
       { status: 422, headers }
     )
   }
 
-  const mode = await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      const updated = await updateEventTypeMode(
-        profile.orgId,
-        modeId,
-        eventTypeId,
+  let mode
+  try {
+    mode = await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        if (data.active === false) {
+          await assertNotLastActiveMode(
+            profile.orgId,
+            eventTypeId,
+            modeId,
+            profile.id,
+            tx
+          )
+        }
+
+        const updated = await updateEventTypeMode(
+          profile.orgId,
+          modeId,
+          eventTypeId,
+          {
+            ...(data.locationId !== undefined && {
+              locationId: data.locationId ?? null,
+            }),
+            ...(data.scheduleId !== undefined && {
+              scheduleId: nextScheduleId,
+            }),
+            ...(data.priceCents !== undefined && {
+              priceCents: data.priceCents ?? null,
+            }),
+            ...(data.currency !== undefined && {
+              currency: data.currency ?? null,
+            }),
+            ...(data.durationMinutes !== undefined && {
+              durationMinutes: data.durationMinutes ?? null,
+            }),
+            ...(data.countryScopeType !== undefined && {
+              countryScopeType: data.countryScopeType,
+            }),
+            ...(data.countryScopeCodes !== undefined && {
+              countryScopeCodes: data.countryScopeCodes,
+            }),
+            ...(data.languages !== undefined && { languages: data.languages }),
+            ...(data.label !== undefined && { label: data.label ?? null }),
+            ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
+            ...(data.active !== undefined && { active: data.active }),
+          },
+          tx
+        )
+        await ctx.emit({
+          entity: "event_type_mode",
+          action: "updated",
+          entityId: modeId,
+          payload: { eventTypeId, fields: Object.keys(data) },
+        })
+        return updated
+      }
+    )
+  } catch (err) {
+    if (err instanceof LastActiveModeConflictError) {
+      return secureJson(
         {
-          ...(data.locationId !== undefined && {
-            locationId: data.locationId ?? null,
-          }),
-          ...(data.scheduleId !== undefined && { scheduleId: nextScheduleId }),
-          ...(data.priceCents !== undefined && {
-            priceCents: data.priceCents ?? null,
-          }),
-          ...(data.currency !== undefined && {
-            currency: data.currency ?? null,
-          }),
-          ...(data.durationMinutes !== undefined && {
-            durationMinutes: data.durationMinutes ?? null,
-          }),
-          ...(data.countryScopeType !== undefined && {
-            countryScopeType: data.countryScopeType,
-          }),
-          ...(data.countryScopeCodes !== undefined && {
-            countryScopeCodes: data.countryScopeCodes,
-          }),
-          ...(data.languages !== undefined && { languages: data.languages }),
-          ...(data.label !== undefined && { label: data.label ?? null }),
-          ...(data.sortOrder !== undefined && { sortOrder: data.sortOrder }),
-          ...(data.active !== undefined && { active: data.active }),
+          error: "conflict",
+          message:
+            "Unpublish the event type before deactivating its last active mode.",
         },
-        tx
+        { status: 409, headers }
       )
-      await ctx.emit({
-        entity: "event_type_mode",
-        action: "updated",
-        entityId: modeId,
-        payload: { eventTypeId, fields: Object.keys(data) },
-      })
-      return updated
     }
-  )
+    if (isUniqueViolation(err)) {
+      return secureJson(
+        {
+          error: "conflict",
+          message: "This delivery mode already exists for the event type.",
+        },
+        { status: 409, headers }
+      )
+    }
+    console.error("[event-type-modes] update failed", err)
+    return secureJson(
+      { error: "internal", message: "Internal server error" },
+      { status: 500, headers }
+    )
+  }
 
   return secureJson({ mode }, { status: 200, headers })
 }
@@ -378,18 +395,43 @@ export async function DELETE(request: Request, { params }: Params) {
     )
   }
 
-  await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      await deactivateEventTypeMode(profile.orgId, modeId, eventTypeId, tx)
-      await ctx.emit({
-        entity: "event_type_mode",
-        action: "deleted",
-        entityId: modeId,
-        payload: { eventTypeId, soft: true },
-      })
+  try {
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        await assertNotLastActiveMode(
+          profile.orgId,
+          eventTypeId,
+          modeId,
+          profile.id,
+          tx
+        )
+        await deactivateEventTypeMode(profile.orgId, modeId, eventTypeId, tx)
+        await ctx.emit({
+          entity: "event_type_mode",
+          action: "deleted",
+          entityId: modeId,
+          payload: { eventTypeId, soft: true },
+        })
+      }
+    )
+  } catch (err) {
+    if (err instanceof LastActiveModeConflictError) {
+      return secureJson(
+        {
+          error: "conflict",
+          message:
+            "Unpublish the event type before deactivating its last active mode.",
+        },
+        { status: 409, headers }
+      )
     }
-  )
+    console.error("[event-type-modes] delete failed", err)
+    return secureJson(
+      { error: "internal", message: "Internal server error" },
+      { status: 500, headers }
+    )
+  }
 
   return secureJson({ ok: true }, { status: 200, headers })
 }

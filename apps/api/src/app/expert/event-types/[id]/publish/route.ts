@@ -14,10 +14,11 @@ import {
   getEventType,
   getExpertProfileByUserId,
   listEventTypeModesWithLocation,
+  lockEventTypeForUpdate,
   main,
   updateEventType,
 } from "@eleva/db"
-import { publishEventType } from "@eleva/scheduling"
+import { publishEventType, type PublishViolation } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -33,6 +34,22 @@ class ConnectIncompleteError extends Error {
   constructor() {
     super("Complete Payments onboarding before publishing an event type")
     this.name = "ConnectIncompleteError"
+  }
+}
+
+class EventTypeNotFoundError extends Error {
+  constructor() {
+    super("event type not found")
+    this.name = "EventTypeNotFoundError"
+  }
+}
+
+class OfferInvariantPublishError extends Error {
+  violations: PublishViolation[]
+  constructor(violations: PublishViolation[]) {
+    super("Event type cannot be published until offer invariants pass")
+    this.name = "OfferInvariantPublishError"
+    this.violations = violations
   }
 }
 
@@ -73,41 +90,49 @@ export async function POST(request: Request, { params }: Params) {
     )
   }
 
-  const modes = await listEventTypeModesWithLocation(profile.orgId, id)
-  const gate = publishEventType({
-    kind: eventType.kind,
-    hasPublicHandle: Boolean(profile.username && profile.username.length >= 3),
-    worldwideRemote: profile.worldwideRemote,
-    serviceCountries: profile.serviceCountries,
-    profileLanguages: profile.languages,
-    modes: modes.map((mode) => ({
-      modeId: mode.id,
-      mode: mode.mode,
-      countryScopeType: mode.countryScopeType,
-      countryScopeCodes: mode.countryScopeCodes,
-      languages: mode.languages,
-      locationCountry: mode.locationCountry,
-      active: mode.active,
-    })),
-  })
-  if (!gate.ok) {
-    return secureJson(
-      {
-        error: "OFFER_INVARIANT_VIOLATION",
-        code: "OFFER_INVARIANT_VIOLATION",
-        message: "Event type cannot be published until offer invariants pass",
-        violations: gate.violations,
-      },
-      { status: 422, headers }
-    )
-  }
-
   const identityRequired = await getFlag("ff.expert_identity_verification")
 
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const locked = await lockEventTypeForUpdate(
+          profile.orgId,
+          id,
+          profile.id,
+          tx
+        )
+        if (!locked) {
+          throw new EventTypeNotFoundError()
+        }
+
+        const modes = await listEventTypeModesWithLocation(
+          profile.orgId,
+          id,
+          tx
+        )
+        const gate = publishEventType({
+          kind: locked.kind,
+          hasPublicHandle: Boolean(
+            profile.username && profile.username.length >= 3
+          ),
+          worldwideRemote: profile.worldwideRemote,
+          serviceCountries: profile.serviceCountries,
+          profileLanguages: profile.languages,
+          modes: modes.map((mode) => ({
+            modeId: mode.id,
+            mode: mode.mode,
+            countryScopeType: mode.countryScopeType,
+            countryScopeCodes: mode.countryScopeCodes,
+            languages: mode.languages,
+            locationCountry: mode.locationCountry,
+            active: mode.active,
+          })),
+        })
+        if (!gate.ok) {
+          throw new OfferInvariantPublishError(gate.violations)
+        }
+
         const [connect] = await tx
           .select({
             detailsSubmitted: main.billingCustomers.detailsSubmitted,
@@ -146,6 +171,23 @@ export async function POST(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    if (err instanceof EventTypeNotFoundError) {
+      return secureJson(
+        { error: "not found", message: "event type not found" },
+        { status: 404, headers }
+      )
+    }
+    if (err instanceof OfferInvariantPublishError) {
+      return secureJson(
+        {
+          error: "OFFER_INVARIANT_VIOLATION",
+          code: "OFFER_INVARIANT_VIOLATION",
+          message: err.message,
+          violations: err.violations,
+        },
+        { status: 422, headers }
+      )
+    }
     if (err instanceof ConnectIncompleteError) {
       return secureJson(
         {
@@ -156,8 +198,11 @@ export async function POST(request: Request, { params }: Params) {
         { status: 409, headers }
       )
     }
-    const message = err instanceof Error ? err.message : "Internal server error"
-    return secureJson({ error: "internal", message }, { status: 500, headers })
+    console.error("[event-types] publish failed", err)
+    return secureJson(
+      { error: "internal", message: "Internal server error" },
+      { status: 500, headers }
+    )
   }
 
   try {

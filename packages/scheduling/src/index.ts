@@ -1,4 +1,7 @@
-export { assertOfferInvariants } from "./offer-invariants"
+export {
+  assertOfferInvariants,
+  OFFER_INVARIANT_MESSAGES,
+} from "./offer-invariants"
 export type {
   CountryScopeType,
   OfferInvariantError,

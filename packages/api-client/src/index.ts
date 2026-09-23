@@ -1046,33 +1046,130 @@ export type UpdateEventTypeRequest = z.infer<
   typeof UpdateEventTypeRequestSchema
 >
 
-export const CreateEventTypeModeRequestSchema = z.object({
-  mode: z.enum(["online", "phone", "in_person"]),
-  locationId: z.string().uuid().nullish(),
-  scheduleId: z.string().uuid(),
-  priceCents: z.number().int().nonnegative().nullish(),
-  currency: z.literal("EUR").nullish(),
-  durationMinutes: z.number().int().positive().nullish(),
-  countryScopeType: z.enum(["worldwide", "list"]),
-  countryScopeCodes: z.array(z.string().length(2)).default([]),
-  languages: z.array(z.string().min(2).max(16)).min(1),
-  label: z
-    .object({
-      en: z.string().min(1).max(200),
-      pt: z.string().min(1).max(200).optional(),
-      es: z.string().min(1).max(200).optional(),
-    })
-    .nullish(),
-  sortOrder: z.number().int().nonnegative().optional(),
-  active: z.boolean().optional(),
-})
+export const CreateEventTypeModeRequestSchema = z
+  .object({
+    mode: z.enum(["online", "phone", "in_person"]),
+    locationId: z.string().uuid().nullish(),
+    scheduleId: z.string().uuid(),
+    priceCents: z.number().int().nonnegative().nullish(),
+    currency: z.literal("EUR").nullish(),
+    durationMinutes: z.number().int().positive().nullish(),
+    countryScopeType: z.enum(["worldwide", "list"]),
+    countryScopeCodes: z.array(CountryCodeSchema).default([]),
+    languages: z.array(z.string().min(2).max(16)).min(1),
+    label: z
+      .object({
+        en: z.string().min(1).max(200),
+        pt: z.string().min(1).max(200).optional(),
+        es: z.string().min(1).max(200).optional(),
+      })
+      .nullish(),
+    sortOrder: z.number().int().nonnegative().optional(),
+    active: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.mode === "in_person" && !value.locationId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "In-person modes need a practice location.",
+        path: ["locationId"],
+      })
+    }
+    if (value.mode !== "in_person" && value.locationId) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Only in-person modes may set a location.",
+        path: ["locationId"],
+      })
+    }
+    if (
+      value.countryScopeType === "worldwide" &&
+      value.countryScopeCodes.length > 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Worldwide scope cannot also list specific countries.",
+        path: ["countryScopeCodes"],
+      })
+    }
+    if (
+      value.countryScopeType === "list" &&
+      value.countryScopeCodes.length === 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "List scope needs at least one country.",
+        path: ["countryScopeCodes"],
+      })
+    }
+    if ((value.priceCents == null) !== (value.currency == null)) {
+      ctx.addIssue({
+        code: "custom",
+        message: "priceCents and currency must both be set or both omitted.",
+        path: ["priceCents"],
+      })
+    }
+  })
 
 export type CreateEventTypeModeRequest = z.infer<
   typeof CreateEventTypeModeRequestSchema
 >
 
-export const PatchEventTypeModeRequestSchema =
-  CreateEventTypeModeRequestSchema.partial().omit({ mode: true })
+export const PatchEventTypeModeRequestSchema = z
+  .object({
+    locationId: z.string().uuid().nullish(),
+    scheduleId: z.string().uuid().optional(),
+    priceCents: z.number().int().nonnegative().nullish(),
+    currency: z.literal("EUR").nullish(),
+    durationMinutes: z.number().int().positive().nullish(),
+    countryScopeType: z.enum(["worldwide", "list"]).optional(),
+    countryScopeCodes: z.array(CountryCodeSchema).optional(),
+    languages: z.array(z.string().min(2).max(16)).min(1).optional(),
+    label: z
+      .object({
+        en: z.string().min(1).max(200),
+        pt: z.string().min(1).max(200).optional(),
+        es: z.string().min(1).max(200).optional(),
+      })
+      .nullish(),
+    sortOrder: z.number().int().nonnegative().optional(),
+    active: z.boolean().optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (
+      value.countryScopeType === "worldwide" &&
+      value.countryScopeCodes &&
+      value.countryScopeCodes.length > 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Worldwide scope cannot also list specific countries.",
+        path: ["countryScopeCodes"],
+      })
+    }
+    if (
+      value.countryScopeType === "list" &&
+      value.countryScopeCodes &&
+      value.countryScopeCodes.length === 0
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "List scope needs at least one country.",
+        path: ["countryScopeCodes"],
+      })
+    }
+    if (
+      value.priceCents !== undefined &&
+      value.currency !== undefined &&
+      (value.priceCents == null) !== (value.currency == null)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "priceCents and currency must both be set or both omitted.",
+        path: ["priceCents"],
+      })
+    }
+  })
 
 export type PatchEventTypeModeRequest = z.infer<
   typeof PatchEventTypeModeRequestSchema
