@@ -31,9 +31,10 @@ export async function listPracticeLocations(
 export async function getPracticeLocation(
   orgId: string,
   locationId: string,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<ExpertPracticeLocation | undefined> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .select()
       .from(expertPracticeLocations)
@@ -45,7 +46,8 @@ export async function getPracticeLocation(
       )
       .limit(1)
     return row
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function createPracticeLocation(

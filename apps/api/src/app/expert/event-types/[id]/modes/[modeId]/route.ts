@@ -238,7 +238,8 @@ export async function PATCH(request: Request, { params }: Params) {
           const schedule = await getSchedule(
             profile.orgId,
             data.scheduleId,
-            profile.id
+            profile.id,
+            tx
           )
           if (!schedule) {
             throw new ModeValidationError("Schedule not found for this expert.")
@@ -257,7 +258,8 @@ export async function PATCH(request: Request, { params }: Params) {
           const location = await getPracticeLocation(
             profile.orgId,
             nextLocationId,
-            profile.id
+            profile.id,
+            tx
           )
           if (!location || !location.active) {
             throw new ModeValidationError(
