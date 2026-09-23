@@ -43,7 +43,7 @@ export async function saveProfileStep(
   try {
     const session = await requireSession("expert:onboard")
     const api = await getAuthedApiClient()
-    await api.experts.profile.patch({
+    await api.expert.profile.patch({
       ...payload,
       sessionModes:
         payload.sessionModes && payload.sessionModes.length > 0
@@ -72,7 +72,7 @@ export async function markStepComplete(
   try {
     const session = await requireSession("expert:onboard")
     const api = await getAuthedApiClient()
-    await api.experts.profile.completeStep(stepName)
+    await api.expert.profile.completeStep(stepName)
 
     revalidateExpertWorkspace(session, "setup")
     return { ok: true }
@@ -103,7 +103,7 @@ export async function saveInvoicingChoice(
   try {
     const session = await requireSession("expert:onboard")
     const api = await getAuthedApiClient()
-    await api.experts.profile.setInvoicing(payload)
+    await api.expert.profile.setInvoicing(payload)
 
     revalidateExpertWorkspace(session, "setup")
     return { ok: true }

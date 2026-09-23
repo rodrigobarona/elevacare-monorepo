@@ -25,7 +25,7 @@ export async function disconnectCalendarAction(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.disconnect(parsedIntegrationId)
+    await api.expert.integrations.disconnect(parsedIntegrationId)
 
     revalidateExpertWorkspace(session, "calendars")
     revalidateExpertWorkspace(session, "integrations")
@@ -65,7 +65,7 @@ export async function loadSubCalendars(integrationId: string): Promise<
     await requireSession("events:manage")
     const api = await getAuthedApiClient()
     const result =
-      await api.experts.integrations.listCalendars(parsedIntegrationId)
+      await api.expert.integrations.listCalendars(parsedIntegrationId)
 
     return { ok: true, calendars: result.calendars }
   } catch (err) {
@@ -96,7 +96,7 @@ export async function saveBusySources(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.setBusySources(parsedIntegrationId, {
+    await api.expert.integrations.setBusySources(parsedIntegrationId, {
       sources: parsedSources,
     })
 
@@ -131,7 +131,7 @@ export async function saveDestinationCalendar(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.integrations.setDestination(parsedIntegrationId, {
+    await api.expert.integrations.setDestination(parsedIntegrationId, {
       externalCalendarId: parsedExternalCalendarId,
     })
 

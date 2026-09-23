@@ -2,6 +2,7 @@
 /**
  * CI guard: every apps/api route.ts must export a real ROUTE_POLICY object.
  */
+import { existsSync } from "node:fs"
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 import ts from "typescript"
@@ -118,6 +119,17 @@ if (missing.length > 0) {
     "Route guard check failed. Each apps/api route.ts must export ROUTE_POLICY with auth, rateLimit, and botId:\n"
   )
   for (const file of missing) console.error(`  ${file}`)
+  process.exit(1)
+}
+
+// Authenticated expert resources use singular `/expert/*`. Plural `/experts/*`
+// is reserved for public reads under `public/experts` only (Phase 04B).
+const authenticatedExpertsDir = path.join(APP_DIR, "experts")
+if (existsSync(authenticatedExpertsDir)) {
+  console.error(
+    "Route guard check failed. Authenticated routes must live under apps/api/src/app/expert/ (singular).\n" +
+      "Found apps/api/src/app/experts/ — move routes or keep only public reads under public/experts/.\n"
+  )
   process.exit(1)
 }
 

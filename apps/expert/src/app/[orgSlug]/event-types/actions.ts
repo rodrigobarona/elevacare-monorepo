@@ -85,7 +85,7 @@ export async function createEventTypeAction(
     }
 
     const api = await getAuthedApiClient()
-    const result = await api.experts.eventTypes.create(parsed.data)
+    const result = await api.expert.eventTypes.create(parsed.data)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true, id: result.id }
@@ -157,7 +157,7 @@ export async function updateEventTypeAction(
     }
 
     const api = await getAuthedApiClient()
-    await api.experts.eventTypes.update(eventTypeId, parsed.data)
+    await api.expert.eventTypes.update(eventTypeId, parsed.data)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
@@ -179,7 +179,7 @@ export async function togglePublishAction(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.eventTypes.publish(eventTypeId, { published })
+    await api.expert.eventTypes.publish(eventTypeId, { published })
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
@@ -200,7 +200,7 @@ export async function deleteEventTypeAction(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.experts.eventTypes.remove(eventTypeId)
+    await api.expert.eventTypes.remove(eventTypeId)
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }

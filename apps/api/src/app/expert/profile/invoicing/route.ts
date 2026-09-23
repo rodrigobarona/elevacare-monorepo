@@ -60,7 +60,7 @@ export async function PUT(request: Request) {
       provider: body.data.provider,
     })
   } catch (err) {
-    console.error("[experts/profile/invoicing] unexpected error", err)
+    console.error("[expert/profile/invoicing] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 

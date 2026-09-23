@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       { status: 200, headers }
     )
   } catch (err) {
-    console.error("[POST /experts/profile/ensure]", err)
+    console.error("[POST /expert/profile/ensure]", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
