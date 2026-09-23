@@ -8,6 +8,7 @@ export function mapExpertApiError(
     connectIncomplete: string
     forbidden: string
     notFound: string
+    offerInvariant: string
     validation: string
   }>
 ): string {
@@ -30,6 +31,9 @@ export function mapExpertApiError(
     }
     if (err.status === 404) {
       return codes?.notFound ?? "no-profile"
+    }
+    if (err.status === 422 && err.body.error === "OFFER_INVARIANT_VIOLATION") {
+      return codes?.offerInvariant ?? "offer-invariant"
     }
     if (err.status === 422 || err.body.error === "validation") {
       return codes?.validation ?? "validation"

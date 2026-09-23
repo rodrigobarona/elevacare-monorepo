@@ -1046,12 +1046,36 @@ export type UpdateEventTypeRequest = z.infer<
   typeof UpdateEventTypeRequestSchema
 >
 
-export const PublishEventTypeRequestSchema = z.object({
-  published: z.boolean(),
+export const CreateEventTypeModeRequestSchema = z.object({
+  mode: z.enum(["online", "phone", "in_person"]),
+  locationId: z.string().uuid().nullish(),
+  scheduleId: z.string().uuid(),
+  priceCents: z.number().int().nonnegative().nullish(),
+  currency: z.literal("EUR").nullish(),
+  durationMinutes: z.number().int().positive().nullish(),
+  countryScopeType: z.enum(["worldwide", "list"]),
+  countryScopeCodes: z.array(z.string().length(2)).default([]),
+  languages: z.array(z.string().min(2).max(16)).min(1),
+  label: z
+    .object({
+      en: z.string().min(1).max(200),
+      pt: z.string().min(1).max(200).optional(),
+      es: z.string().min(1).max(200).optional(),
+    })
+    .nullish(),
+  sortOrder: z.number().int().nonnegative().optional(),
+  active: z.boolean().optional(),
 })
 
-export type PublishEventTypeRequest = z.infer<
-  typeof PublishEventTypeRequestSchema
+export type CreateEventTypeModeRequest = z.infer<
+  typeof CreateEventTypeModeRequestSchema
+>
+
+export const PatchEventTypeModeRequestSchema =
+  CreateEventTypeModeRequestSchema.partial().omit({ mode: true })
+
+export type PatchEventTypeModeRequest = z.infer<
+  typeof PatchEventTypeModeRequestSchema
 >
 
 // ── Calendar Integrations ───────────────────────────────────────────
@@ -1883,17 +1907,55 @@ export function createApiClient(options: ApiClientOptions) {
             data
           )
         },
-        publish(id: string, data: PublishEventTypeRequest) {
+        publish(id: string) {
           return request<{ ok: true }>(
-            "PATCH",
-            `/expert/event-types/${encodeURIComponent(id)}/publish`,
-            data
+            "POST",
+            `/expert/event-types/${encodeURIComponent(id)}/publish`
+          )
+        },
+        unpublish(id: string) {
+          return request<{ ok: true }>(
+            "POST",
+            `/expert/event-types/${encodeURIComponent(id)}/unpublish`
           )
         },
         remove(id: string) {
           return request<{ ok: true }>(
             "DELETE",
             `/expert/event-types/${encodeURIComponent(id)}`
+          )
+        },
+        listModes(id: string, includeInactive = false) {
+          const qs = includeInactive ? "?includeInactive=true" : ""
+          return request<{ modes: unknown[] }>(
+            "GET",
+            `/expert/event-types/${encodeURIComponent(id)}/modes${qs}`
+          )
+        },
+        createMode(id: string, data: CreateEventTypeModeRequest) {
+          return request<{ mode: unknown }>(
+            "POST",
+            `/expert/event-types/${encodeURIComponent(id)}/modes`,
+            data
+          )
+        },
+        getMode(id: string, modeId: string) {
+          return request<{ mode: unknown }>(
+            "GET",
+            `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}`
+          )
+        },
+        patchMode(id: string, modeId: string, data: PatchEventTypeModeRequest) {
+          return request<{ mode: unknown }>(
+            "PATCH",
+            `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}`,
+            data
+          )
+        },
+        removeMode(id: string, modeId: string) {
+          return request<{ ok: true }>(
+            "DELETE",
+            `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}`
           )
         },
       },

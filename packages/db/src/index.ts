@@ -51,6 +51,15 @@ export {
   listPublicEventTypes,
 } from "./queries/event-types"
 export {
+  listEventTypeModes,
+  getEventTypeMode,
+  createEventTypeMode,
+  updateEventTypeMode,
+  deactivateEventTypeMode,
+  listEventTypeModesWithLocation,
+} from "./queries/event-type-modes"
+export type { EventTypeModeWithLocation } from "./queries/event-type-modes"
+export {
   getDefaultSchedule,
   getOrCreateDefaultSchedule,
   getSchedule,
