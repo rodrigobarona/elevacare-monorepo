@@ -87,6 +87,13 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Acceptance criteria
 
+> **Closeout status (2026-09-22):** Product surfaces for Phase 05 are on main.
+> `e2e/member.spec.ts` exists (`pnpm e2e:member` / `e2e:member:stripe`) and is
+> loopback-gated. This closeout did **not** re-run the live Stripe journey
+> (local web/api/app/account were not up). Leave the e2e checkbox open until
+> someone runs it locally with `E2E_MEMBER=1 E2E_LIVE_STRIPE=1` against
+> `fisiomota` / `first-visit` / €60 — never Production.
+
 - [ ] Guest from Phase 4 activates via magic link, lands on `/{space-slug}` dashboard showing the
       booking.
 - [ ] Cancel >= 24h before start: booking `cancelled`, payment `refund_pending` (executed in

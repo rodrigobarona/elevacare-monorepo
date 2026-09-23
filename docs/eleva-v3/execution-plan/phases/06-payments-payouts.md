@@ -141,6 +141,14 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 ## Acceptance criteria
 
+> **Closeout status (2026-09-22):** Engineering for Phase 06 is on main.
+> `e2e/phase-06.spec.ts` (`pnpm e2e:phase06`) asserts OpenAPI path coverage,
+> anonymous 401s on payout/refund/finance mutations, unsigned Stripe webhook
+> rejection, and workflow drain-secret gating. It does **not** exercise live
+> pay → eligible → transfer → payout (that remains Stripe test-mode / staging
+> exit-gate evidence; do not burn live Stripe quota in CI). Money-path e2e gap
+> is intentional under Hobby / abuse constraints.
+
 - [ ] New expert completes Connect onboarding in Embedded Components; `account.updated` /
       `capability.updated` flip `connect_status` and unlock publishing only when
       `details_submitted && payouts_enabled && capabilities.transfers === "active"` (and, when
