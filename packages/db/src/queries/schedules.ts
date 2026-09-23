@@ -73,9 +73,10 @@ export async function getDefaultSchedule(
 export async function getSchedule(
   orgId: string,
   scheduleId: string,
-  expertProfileId: string
+  expertProfileId: string,
+  txOpt?: Tx
 ): Promise<Schedule | undefined> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .select()
       .from(schedules)
@@ -88,7 +89,8 @@ export async function getSchedule(
       )
       .limit(1)
     return row
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function updateScheduleTimezone(

@@ -10,9 +10,10 @@ import {
 export async function listEventTypeModes(
   orgId: string,
   eventTypeId: string,
-  options?: { includeInactive?: boolean }
+  options?: { includeInactive?: boolean },
+  txOpt?: Tx
 ): Promise<EventTypeMode[]> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const filters = [eq(eventTypeModes.eventTypeId, eventTypeId)]
     if (!options?.includeInactive) {
       filters.push(eq(eventTypeModes.active, true))
@@ -22,15 +23,17 @@ export async function listEventTypeModes(
       .from(eventTypeModes)
       .where(and(...filters))
       .orderBy(asc(eventTypeModes.sortOrder), asc(eventTypeModes.createdAt))
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function getEventTypeMode(
   orgId: string,
   modeId: string,
-  eventTypeId: string
+  eventTypeId: string,
+  txOpt?: Tx
 ): Promise<EventTypeMode | undefined> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const [row] = await tx
       .select()
       .from(eventTypeModes)
@@ -42,7 +45,8 @@ export async function getEventTypeMode(
       )
       .limit(1)
     return row
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }
 
 export async function createEventTypeMode(
@@ -109,9 +113,10 @@ export type EventTypeModeWithLocation = EventTypeMode & {
 
 export async function listEventTypeModesWithLocation(
   orgId: string,
-  eventTypeId: string
+  eventTypeId: string,
+  txOpt?: Tx
 ): Promise<EventTypeModeWithLocation[]> {
-  return withOrgContext(orgId, async (tx: Tx) => {
+  const run = async (tx: Tx) => {
     const rows = await tx
       .select({
         mode: eventTypeModes,
@@ -129,5 +134,6 @@ export async function listEventTypeModesWithLocation(
       ...row.mode,
       locationCountry: row.locationCountry ?? null,
     }))
-  })
+  }
+  return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }

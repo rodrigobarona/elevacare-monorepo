@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { CreateEventTypeModeRequestSchema } from "@eleva/api-client"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -14,7 +14,8 @@ import {
 } from "@eleva/db"
 import {
   assertOfferInvariants,
-  type OfferInvariantError,
+  isUniqueViolation,
+  OFFER_INVARIANT_MESSAGES,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -26,77 +27,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const countryCode = z
-  .string()
-  .length(2)
-  .regex(/^[A-Za-z]{2}$/)
-  .transform((v) => v.toUpperCase())
-
-const CreateModeSchema = z
-  .object({
-    mode: z.enum(["online", "phone", "in_person"]),
-    locationId: z.string().uuid().nullish(),
-    scheduleId: z.string().uuid(),
-    priceCents: z.number().int().nonnegative().nullish(),
-    currency: z.literal("EUR").nullish(),
-    durationMinutes: z.number().int().positive().nullish(),
-    countryScopeType: z.enum(["worldwide", "list"]),
-    countryScopeCodes: z.array(countryCode).default([]),
-    languages: z.array(z.string().min(2).max(16)).min(1),
-    label: z
-      .object({
-        en: z.string().min(1).max(200),
-        pt: z.string().min(1).max(200).optional(),
-        es: z.string().min(1).max(200).optional(),
-      })
-      .nullish(),
-    sortOrder: z.number().int().nonnegative().optional(),
-    active: z.boolean().optional(),
-  })
-  .superRefine((value, ctx) => {
-    if (value.mode === "in_person" && !value.locationId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "In-person modes need a practice location.",
-        path: ["locationId"],
-      })
-    }
-    if (value.mode !== "in_person" && value.locationId) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Only in-person modes may set a location.",
-        path: ["locationId"],
-      })
-    }
-    if (
-      value.countryScopeType === "worldwide" &&
-      value.countryScopeCodes.length > 0
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Worldwide scope cannot also list specific countries.",
-        path: ["countryScopeCodes"],
-      })
-    }
-    if (
-      value.countryScopeType === "list" &&
-      value.countryScopeCodes.length === 0
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "List scope needs at least one country.",
-        path: ["countryScopeCodes"],
-      })
-    }
-    if ((value.priceCents == null) !== (value.currency == null)) {
-      ctx.addIssue({
-        code: "custom",
-        message: "priceCents and currency must both be set or both omitted.",
-        path: ["priceCents"],
-      })
-    }
-  })
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -163,7 +93,7 @@ export async function POST(request: Request, { params }: Params) {
   )
   if (rateLimited) return rateLimited
 
-  const body = CreateModeSchema.safeParse(
+  const body = CreateEventTypeModeRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
   if (!body.success) {
@@ -229,69 +159,69 @@ export async function POST(request: Request, { params }: Params) {
     profileLanguages: profile.languages,
   })
   if (invariant) {
-    const messages: Record<OfferInvariantError, string> = {
-      CLINICAL_WORLDWIDE:
-        "Clinical services cannot be offered worldwide. Limit the mode to countries you are licensed to serve.",
-      SCOPE_OUTSIDE_SERVICE_COUNTRIES:
-        "This mode targets a country outside your declared service countries. Update practice countries or the mode scope.",
-      EMPTY_COUNTRY_LIST:
-        "This mode needs at least one country when scope is a country list.",
-      WORLDWIDE_WITH_COUNTRY_LIST:
-        "Worldwide scope cannot also list specific countries.",
-      IN_PERSON_COUNTRY_MISMATCH:
-        "In-person modes must target exactly the location country.",
-      IN_PERSON_LOCATION_REQUIRED: "In-person modes need a practice location.",
-      WORLDWIDE_REQUIRES_REMOTE:
-        "Worldwide remote requires worldwideRemote on your practice profile.",
-      LANGUAGE_NOT_ON_PROFILE:
-        "This mode uses a language that is not on your practice profile.",
-      EMPTY_LANGUAGE_LIST: "Each delivery mode needs at least one language.",
-    }
     return secureJson(
       {
         error: "OFFER_INVARIANT_VIOLATION",
         code: invariant,
-        message: messages[invariant],
+        message: OFFER_INVARIANT_MESSAGES[invariant],
       },
       { status: 422, headers }
     )
   }
 
-  const mode = await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      const created = await createEventTypeMode(
-        profile.orgId,
+  let mode
+  try {
+    mode = await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        const created = await createEventTypeMode(
+          profile.orgId,
+          {
+            eventTypeId,
+            mode: data.mode,
+            locationId: data.locationId ?? null,
+            scheduleId: data.scheduleId,
+            priceCents: data.priceCents ?? null,
+            currency: data.currency ?? null,
+            durationMinutes: data.durationMinutes ?? null,
+            countryScopeType: data.countryScopeType,
+            countryScopeCodes: data.countryScopeCodes,
+            languages: data.languages,
+            label: data.label ?? null,
+            sortOrder: data.sortOrder ?? 0,
+            active: data.active ?? true,
+          },
+          tx
+        )
+        await ctx.emit({
+          entity: "event_type_mode",
+          action: "created",
+          entityId: created.id,
+          payload: {
+            eventTypeId,
+            mode: created.mode,
+            scheduleId: created.scheduleId,
+          },
+        })
+        return created
+      }
+    )
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      return secureJson(
         {
-          eventTypeId,
-          mode: data.mode,
-          locationId: data.locationId ?? null,
-          scheduleId: data.scheduleId,
-          priceCents: data.priceCents ?? null,
-          currency: data.currency ?? null,
-          durationMinutes: data.durationMinutes ?? null,
-          countryScopeType: data.countryScopeType,
-          countryScopeCodes: data.countryScopeCodes,
-          languages: data.languages,
-          label: data.label ?? null,
-          sortOrder: data.sortOrder ?? 0,
-          active: data.active ?? true,
+          error: "conflict",
+          message: "This delivery mode already exists for the event type.",
         },
-        tx
+        { status: 409, headers }
       )
-      await ctx.emit({
-        entity: "event_type_mode",
-        action: "created",
-        entityId: created.id,
-        payload: {
-          eventTypeId,
-          mode: created.mode,
-          scheduleId: created.scheduleId,
-        },
-      })
-      return created
     }
-  )
+    console.error("[event-type-modes] create failed", err)
+    return secureJson(
+      { error: "internal", message: "Internal server error" },
+      { status: 500, headers }
+    )
+  }
 
   return secureJson({ mode }, { status: 201, headers })
 }

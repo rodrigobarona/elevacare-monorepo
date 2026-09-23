@@ -45,6 +45,32 @@ export async function getEventType(
   })
 }
 
+/**
+ * Lock an event type row for the duration of an open tenant transaction.
+ * Callers must already be inside `withOrgContext` / `withAudit`.
+ */
+export async function lockEventTypeForUpdate(
+  orgId: string,
+  eventTypeId: string,
+  expertProfileId: string,
+  tx: Tx
+): Promise<EventType | undefined> {
+  const [row] = await tx
+    .select()
+    .from(eventTypes)
+    .where(
+      and(
+        eq(eventTypes.orgId, orgId),
+        eq(eventTypes.id, eventTypeId),
+        eq(eventTypes.expertProfileId, expertProfileId),
+        isNull(eventTypes.deletedAt)
+      )
+    )
+    .limit(1)
+    .for("update")
+  return row
+}
+
 export async function createEventType(
   orgId: string,
   data: Omit<NewEventType, "id" | "createdAt" | "updatedAt" | "deletedAt">,

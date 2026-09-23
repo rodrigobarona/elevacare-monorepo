@@ -57,25 +57,33 @@ export async function POST(request: Request, { params }: Params) {
     )
   }
 
-  await withAudit(
-    { orgId: profile.orgId, actorUserId: session.user.id },
-    async (tx, ctx) => {
-      await updateEventType(
-        profile.orgId,
-        id,
-        { published: false },
-        profile.id,
-        tx
-      )
-      await ctx.emit({
-        entity: "event_type",
-        action: "unpublished",
-        entityId: id,
-        payload: { published: false },
-      })
-      await markSeatSyncPending(profile.orgId, tx)
-    }
-  )
+  try {
+    await withAudit(
+      { orgId: profile.orgId, actorUserId: session.user.id },
+      async (tx, ctx) => {
+        await updateEventType(
+          profile.orgId,
+          id,
+          { published: false },
+          profile.id,
+          tx
+        )
+        await ctx.emit({
+          entity: "event_type",
+          action: "unpublished",
+          entityId: id,
+          payload: { published: false },
+        })
+        await markSeatSyncPending(profile.orgId, tx)
+      }
+    )
+  } catch (err) {
+    console.error("[event-types] unpublish failed", err)
+    return secureJson(
+      { error: "internal", message: "Internal server error" },
+      { status: 500, headers }
+    )
+  }
 
   try {
     await enqueueSeatSync(profile.orgId, session.user.id)
