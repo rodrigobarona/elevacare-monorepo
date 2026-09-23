@@ -1,12 +1,12 @@
 # Phase 8 — Notifications Lane 1 + reminder workflows
 
-| Field      | Value                                                                                                                                                                                                                                                                                          |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-08/notifications-lane1`                                                                                                                                                                                                                                                                 |
-| Depends on | Phases 5, 6, 7 (`invoice.*` kinds consume Phase 7 `invoices` events)                                                                                                                                                                                                                           |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                      |
-| Touches    | `packages/notifications/**`, `packages/email/**`, `apps/email/**` (React Email preview), `packages/workflows/src/notifications/**`, `packages/db/src/schema/main/notifications.ts`, `apps/api/src/app/{notifications,workflows}/**`, `packages/dashboard/**` (bell + inbox), `infra/qstash/**` |
-| Exit gate  | Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, payout paid, invoice issued are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently                                                 |
+| Field      | Value                                                                                                                                                                                                                                                                                                                  |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-08/notifications-lane1`                                                                                                                                                                                                                                                                                         |
+| Depends on | Phases 5, 6, 7 (`invoice.*` kinds consume Phase 7 `invoices` events)                                                                                                                                                                                                                                                   |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                              |
+| Touches    | `packages/notifications/**`, `packages/email/**`, `apps/email/**` (React Email preview), `packages/workflows/src/notifications/**`, `packages/db/src/schema/main/notifications.ts`, `apps/api/src/app/{notifications,workflows}/**`, `packages/dashboard/**` (bell + inbox), `infra/qstash/**`                         |
+| Exit gate  | Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently. `invoice.issued` / `invoice.failed` stay deferred while `issueInvoice()` is closed |
 
 ## Why this phase exists
 
@@ -74,14 +74,19 @@ WHERE id = :id AND status = 'queued' AND claimed_at < now() - interval '60 s' RE
   harmless if received twice (no one-time codes without expiry, reminders idempotent in
   wording). Kinds: `booking.confirmed`, `booking.reminder_24h`,
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
-  `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), `invoice.issued`,
-  `invoice.failed` (expert), and the auth kinds `auth.magic_link`, `auth.verify_email`,
-  `auth.reset_password`, `auth.two_factor_otp`, `auth.org_invitation`. Kinds are a closed
-  union exported as the `NOTIFICATION_KINDS` const from `@eleva/notifications` (each kind
-  declares its default channels, urgency and template id); **later phases extend the const in
-  their own PR** together with the template, channel policy, i18n copy and a delivery test —
-  the owning phase per kind: Phase 10 `crm.follow_up_due`; Phase 11 `team.invitation`,
-  `team.member_joined`, `clinic.verified`, `clinic.rejected`; Phase 12 `partner.approved`, `partner.rejected`,
+  `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), and the auth kinds
+  `auth.magic_link`, `auth.verify_email`, `auth.reset_password`, `auth.two_factor_otp`,
+  `auth.org_invitation`; the closed-gate invoice kinds `invoice.blocked`,
+  `invoice.skipped`, and `invoice.pending` are registered through
+  `CLOSED_GATE_INVOICE_NOTIFICATION_KINDS` and handled by
+  `sendClosedGateInvoiceNotification`. **`invoice.issued` and `invoice.failed` remain deferred** while
+  `issueInvoice()` is closed — do not add them to `NOTIFICATION_KINDS` in this phase.
+  Kinds are a closed union exported as the `NOTIFICATION_KINDS` const from
+  `@eleva/notifications` (each kind declares its default channels, urgency and template id);
+  **later phases extend the const in their own PR** together with the template, channel
+  policy, i18n copy and a delivery test — the owning phase per kind: Phase 10
+  `crm.follow_up_due`; Phase 11 `team.invitation`, `team.member_joined`, `clinic.verified`,
+  `clinic.rejected`; Phase 12 `partner.approved`, `partner.rejected`,
   `partner.needs_changes`; Phase 14 `calendar.reconnect_required`, `migration.welcome`. A kind
   that is not in the const does not compile. **Boundary:** this phase
   makes `@eleva/email` renderer-only (React Email templates, no `resend` import — boundary lint)
@@ -308,9 +313,13 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    notifications row; the same idempotencyKey sent twice -> one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
-   payout.approval_required (staff), invoice.issued, invoice.failed, plus the auth.* kinds.
-   Export NOTIFICATION_KINDS as a const object { kind: { channels, urgency, templateId } } and
-   derive the Kind type from it; sendNotification only accepts Kind. Document in the package
+   payout.approval_required (staff), the auth.* kinds, and the closed-gate invoice kinds
+   invoice.blocked, invoice.skipped, and invoice.pending. Preserve
+   CLOSED_GATE_INVOICE_NOTIFICATION_KINDS and sendClosedGateInvoiceNotification. Do NOT
+   register invoice.issued or invoice.failed while issueInvoice() is closed (keep them
+   deferred; kinds.test.ts asserts absence). Export NOTIFICATION_KINDS as a const object
+   { kind: { channels, urgency, templateId } }
+   and derive the Kind type from it; sendNotification only accepts Kind. Document in the package
    README that Phases 10/11/12/14 append crm.follow_up_due, team.invitation, team.member_joined,
    partner.approved|rejected|needs_changes, calendar.reconnect_required and migration.welcome in
    their own PRs (kind + template + channel policy + test each). Twilio client configured with

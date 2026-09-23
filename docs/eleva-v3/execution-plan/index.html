@@ -4771,7 +4771,7 @@ operator tasks still pending (series, credentials, remaining fiscal-parameter co
 </tr>
 <tr>
 <td>Exit gate</td>
-<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, payout paid, invoice issued are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently</td>
+<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently. <code>invoice.issued</code> / <code>invoice.failed</code> stay deferred while <code>issueInvoice()</code> is closed</td>
 </tr>
 </tbody></table>
 <h2 id="08-notifications-lane1--why-this-phase-exists"><a class="anchor" href="#08-notifications-lane1--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -4835,14 +4835,19 @@ at-least-once duplicate); SMS templates are written to be
 harmless if received twice (no one-time codes without expiry, reminders idempotent in
 wording). Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</code>,
 <code>booking.reminder_1h</code>, <code>booking.cancelled</code>, <code>booking.rescheduled</code>, <code>payment.failed</code>,
-<code>payment.receipt</code>, <code>payout.paid</code>, <code>payout.approval_required</code> (staff), <code>invoice.issued</code>,
-<code>invoice.failed</code> (expert), and the auth kinds <code>auth.magic_link</code>, <code>auth.verify_email</code>,
-<code>auth.reset_password</code>, <code>auth.two_factor_otp</code>, <code>auth.org_invitation</code>. Kinds are a closed
-union exported as the <code>NOTIFICATION_KINDS</code> const from <code>@eleva/notifications</code> (each kind
-declares its default channels, urgency and template id); <strong>later phases extend the const in
-their own PR</strong> together with the template, channel policy, i18n copy and a delivery test —
-the owning phase per kind: Phase 10 <code>crm.follow_up_due</code>; Phase 11 <code>team.invitation</code>,
-<code>team.member_joined</code>, <code>clinic.verified</code>, <code>clinic.rejected</code>; Phase 12 <code>partner.approved</code>, <code>partner.rejected</code>,
+<code>payment.receipt</code>, <code>payout.paid</code>, <code>payout.approval_required</code> (staff), and the auth kinds
+<code>auth.magic_link</code>, <code>auth.verify_email</code>, <code>auth.reset_password</code>, <code>auth.two_factor_otp</code>,
+<code>auth.org_invitation</code>; the closed-gate invoice kinds <code>invoice.blocked</code>,
+<code>invoice.skipped</code>, and <code>invoice.pending</code> are registered through
+<code>CLOSED_GATE_INVOICE_NOTIFICATION_KINDS</code> and handled by
+<code>sendClosedGateInvoiceNotification</code>. <strong><code>invoice.issued</code> and <code>invoice.failed</code> remain deferred</strong> while
+<code>issueInvoice()</code> is closed — do not add them to <code>NOTIFICATION_KINDS</code> in this phase.
+Kinds are a closed union exported as the <code>NOTIFICATION_KINDS</code> const from
+<code>@eleva/notifications</code> (each kind declares its default channels, urgency and template id);
+<strong>later phases extend the const in their own PR</strong> together with the template, channel
+policy, i18n copy and a delivery test — the owning phase per kind: Phase 10
+<code>crm.follow_up_due</code>; Phase 11 <code>team.invitation</code>, <code>team.member_joined</code>, <code>clinic.verified</code>,
+<code>clinic.rejected</code>; Phase 12 <code>partner.approved</code>, <code>partner.rejected</code>,
 <code>partner.needs_changes</code>; Phase 14 <code>calendar.reconnect_required</code>, <code>migration.welcome</code>. A kind
 that is not in the const does not compile. <strong>Boundary:</strong> this phase
 makes <code>@eleva/email</code> renderer-only (React Email templates, no <code>resend</code> import — boundary lint)
@@ -5067,9 +5072,13 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    notifications row; the same idempotencyKey sent twice -&gt; one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
-   payout.approval_required (staff), invoice.issued, invoice.failed, plus the auth.* kinds.
-   Export NOTIFICATION_KINDS as a const object { kind: { channels, urgency, templateId } } and
-   derive the Kind type from it; sendNotification only accepts Kind. Document in the package
+   payout.approval_required (staff), the auth.* kinds, and the closed-gate invoice kinds
+   invoice.blocked, invoice.skipped, and invoice.pending. Preserve
+   CLOSED_GATE_INVOICE_NOTIFICATION_KINDS and sendClosedGateInvoiceNotification. Do NOT
+   register invoice.issued or invoice.failed while issueInvoice() is closed (keep them
+   deferred; kinds.test.ts asserts absence). Export NOTIFICATION_KINDS as a const object
+   { kind: { channels, urgency, templateId } }
+   and derive the Kind type from it; sendNotification only accepts Kind. Document in the package
    README that Phases 10/11/12/14 append crm.follow_up_due, team.invitation, team.member_joined,
    partner.approved|rejected|needs_changes, calendar.reconnect_required and migration.welcome in
    their own PRs (kind + template + channel policy + test each). Twilio client configured with
