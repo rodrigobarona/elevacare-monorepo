@@ -76,7 +76,10 @@ WHERE id = :id AND status = 'queued' AND claimed_at < now() - interval '60 s' RE
   `booking.reminder_1h`, `booking.cancelled`, `booking.rescheduled`, `payment.failed`,
   `payment.receipt`, `payout.paid`, `payout.approval_required` (staff), and the auth kinds
   `auth.magic_link`, `auth.verify_email`, `auth.reset_password`, `auth.two_factor_otp`,
-  `auth.org_invitation`. **`invoice.issued` and `invoice.failed` remain deferred** while
+  `auth.org_invitation`; the closed-gate invoice kinds `invoice.blocked`,
+  `invoice.skipped`, and `invoice.pending` are registered through
+  `CLOSED_GATE_INVOICE_NOTIFICATION_KINDS` and handled by
+  `sendClosedGateInvoiceNotification`. **`invoice.issued` and `invoice.failed` remain deferred** while
   `issueInvoice()` is closed — do not add them to `NOTIFICATION_KINDS` in this phase.
   Kinds are a closed union exported as the `NOTIFICATION_KINDS` const from
   `@eleva/notifications` (each kind declares its default channels, urgency and template id);
@@ -310,9 +313,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    notifications row; the same idempotencyKey sent twice -> one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
-   payout.approval_required (staff), plus the auth.* kinds. Do NOT register invoice.issued or
-   invoice.failed while issueInvoice() is closed (keep them deferred; kinds.test.ts asserts
-   absence). Export NOTIFICATION_KINDS as a const object { kind: { channels, urgency, templateId } }
+   payout.approval_required (staff), the auth.* kinds, and the closed-gate invoice kinds
+   invoice.blocked, invoice.skipped, and invoice.pending. Preserve
+   CLOSED_GATE_INVOICE_NOTIFICATION_KINDS and sendClosedGateInvoiceNotification. Do NOT
+   register invoice.issued or invoice.failed while issueInvoice() is closed (keep them
+   deferred; kinds.test.ts asserts absence). Export NOTIFICATION_KINDS as a const object
+   { kind: { channels, urgency, templateId } }
    and derive the Kind type from it; sendNotification only accepts Kind. Document in the package
    README that Phases 10/11/12/14 append crm.follow_up_due, team.invitation, team.member_joined,
    partner.approved|rejected|needs_changes, calendar.reconnect_required and migration.welcome in

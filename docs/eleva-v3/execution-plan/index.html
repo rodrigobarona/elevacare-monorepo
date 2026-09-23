@@ -4837,7 +4837,10 @@ wording). Kinds: <code>booking.confirmed</code>, <code>booking.reminder_24h</cod
 <code>booking.reminder_1h</code>, <code>booking.cancelled</code>, <code>booking.rescheduled</code>, <code>payment.failed</code>,
 <code>payment.receipt</code>, <code>payout.paid</code>, <code>payout.approval_required</code> (staff), and the auth kinds
 <code>auth.magic_link</code>, <code>auth.verify_email</code>, <code>auth.reset_password</code>, <code>auth.two_factor_otp</code>,
-<code>auth.org_invitation</code>. <strong><code>invoice.issued</code> and <code>invoice.failed</code> remain deferred</strong> while
+<code>auth.org_invitation</code>; the closed-gate invoice kinds <code>invoice.blocked</code>,
+<code>invoice.skipped</code>, and <code>invoice.pending</code> are registered through
+<code>CLOSED_GATE_INVOICE_NOTIFICATION_KINDS</code> and handled by
+<code>sendClosedGateInvoiceNotification</code>. <strong><code>invoice.issued</code> and <code>invoice.failed</code> remain deferred</strong> while
 <code>issueInvoice()</code> is closed — do not add them to <code>NOTIFICATION_KINDS</code> in this phase.
 Kinds are a closed union exported as the <code>NOTIFICATION_KINDS</code> const from
 <code>@eleva/notifications</code> (each kind declares its default channels, urgency and template id);
@@ -5069,9 +5072,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    notifications row; the same idempotencyKey sent twice -&gt; one delivery. Kinds: booking.confirmed
    (member + expert variants), booking.reminder_24h, booking.reminder_1h (urgent), booking.
    cancelled, booking.rescheduled, payment.failed, payment.receipt, payout.paid,
-   payout.approval_required (staff), plus the auth.* kinds. Do NOT register invoice.issued or
-   invoice.failed while issueInvoice() is closed (keep them deferred; kinds.test.ts asserts
-   absence). Export NOTIFICATION_KINDS as a const object { kind: { channels, urgency, templateId } }
+   payout.approval_required (staff), the auth.* kinds, and the closed-gate invoice kinds
+   invoice.blocked, invoice.skipped, and invoice.pending. Preserve
+   CLOSED_GATE_INVOICE_NOTIFICATION_KINDS and sendClosedGateInvoiceNotification. Do NOT
+   register invoice.issued or invoice.failed while issueInvoice() is closed (keep them
+   deferred; kinds.test.ts asserts absence). Export NOTIFICATION_KINDS as a const object
+   { kind: { channels, urgency, templateId } }
    and derive the Kind type from it; sendNotification only accepts Kind. Document in the package
    README that Phases 10/11/12/14 append crm.follow_up_due, team.invitation, team.member_joined,
    partner.approved|rejected|needs_changes, calendar.reconnect_required and migration.welcome in
