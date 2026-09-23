@@ -14,11 +14,13 @@ import {
   listEventTypeModes,
   lockEventTypeForUpdate,
   updateEventTypeMode,
+  type Tx,
 } from "@eleva/db"
 import {
   assertOfferInvariants,
   isUniqueViolation,
   OFFER_INVARIANT_MESSAGES,
+  type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -35,8 +37,31 @@ type Params = { params: Promise<{ id: string; modeId: string }> }
 
 class LastActiveModeConflictError extends Error {
   constructor() {
-    super("LAST_ACTIVE_MODE")
+    super("Unpublish the event type before deactivating its last active mode.")
     this.name = "LastActiveModeConflictError"
+  }
+}
+
+class ModeValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ModeValidationError"
+  }
+}
+
+class ModeOfferInvariantError extends Error {
+  code: OfferInvariantError
+  constructor(code: OfferInvariantError) {
+    super(OFFER_INVARIANT_MESSAGES[code])
+    this.name = "ModeOfferInvariantError"
+    this.code = code
+  }
+}
+
+class ModeNotFoundError extends Error {
+  constructor() {
+    super("mode not found")
+    this.name = "ModeNotFoundError"
   }
 }
 
@@ -44,20 +69,11 @@ async function assertNotLastActiveMode(
   orgId: string,
   eventTypeId: string,
   modeId: string,
-  expertProfileId: string,
-  tx: Parameters<typeof lockEventTypeForUpdate>[3]
+  published: boolean,
+  modeActive: boolean,
+  tx: Tx
 ): Promise<void> {
-  const locked = await lockEventTypeForUpdate(
-    orgId,
-    eventTypeId,
-    expertProfileId,
-    tx
-  )
-  if (!locked?.published) return
-
-  const mode = await getEventTypeMode(orgId, modeId, eventTypeId, tx)
-  if (!mode?.active) return
-
+  if (!published || !modeActive) return
   const activeModes = await listEventTypeModes(
     orgId,
     eventTypeId,
@@ -160,124 +176,119 @@ export async function PATCH(request: Request, { params }: Params) {
     )
   }
 
-  const existing = await getEventTypeMode(profile.orgId, modeId, eventTypeId)
-  if (!existing) {
-    return secureJson(
-      { error: "not found", message: "mode not found" },
-      { status: 404, headers }
-    )
-  }
-
   const data = body.data
-
-  const nextPriceCents =
-    data.priceCents !== undefined
-      ? (data.priceCents ?? null)
-      : existing.priceCents
-  const nextCurrency =
-    data.currency !== undefined ? (data.currency ?? null) : existing.currency
-  if ((nextPriceCents == null) !== (nextCurrency == null)) {
-    return secureJson(
-      {
-        error: "validation",
-        message: "priceCents and currency must both be set or both omitted.",
-      },
-      { status: 422, headers }
-    )
-  }
-
-  const nextScheduleId = data.scheduleId ?? existing.scheduleId
-  if (data.scheduleId) {
-    const schedule = await getSchedule(
-      profile.orgId,
-      data.scheduleId,
-      profile.id
-    )
-    if (!schedule) {
-      return secureJson(
-        { error: "validation", message: "Schedule not found for this expert." },
-        { status: 422, headers }
-      )
-    }
-  }
-
-  const nextLocationId =
-    data.locationId !== undefined ? data.locationId : existing.locationId
-  let locationCountry: string | null = null
-  if (existing.mode === "in_person") {
-    if (!nextLocationId) {
-      return secureJson(
-        {
-          error: "validation",
-          message: "In-person modes need a practice location.",
-        },
-        { status: 422, headers }
-      )
-    }
-    const location = await getPracticeLocation(
-      profile.orgId,
-      nextLocationId,
-      profile.id
-    )
-    if (!location || !location.active) {
-      return secureJson(
-        {
-          error: "validation",
-          message: "Practice location not found or inactive.",
-        },
-        { status: 422, headers }
-      )
-    }
-    locationCountry = location.country
-  } else if (nextLocationId) {
-    return secureJson(
-      {
-        error: "validation",
-        message: "Only in-person modes may set a location.",
-      },
-      { status: 422, headers }
-    )
-  }
-
-  const nextScopeType = data.countryScopeType ?? existing.countryScopeType
-  const nextScopeCodes = data.countryScopeCodes ?? existing.countryScopeCodes
-  const nextLanguages = data.languages ?? existing.languages
-
-  const invariant = assertOfferInvariants({
-    kind: eventType.kind,
-    mode: existing.mode,
-    countryScopeType: nextScopeType,
-    countryScopeCodes: nextScopeCodes,
-    languages: nextLanguages,
-    locationCountry,
-    worldwideRemote: profile.worldwideRemote,
-    serviceCountries: profile.serviceCountries,
-    profileLanguages: profile.languages,
-  })
-  if (invariant) {
-    return secureJson(
-      {
-        error: "OFFER_INVARIANT_VIOLATION",
-        code: invariant,
-        message: OFFER_INVARIANT_MESSAGES[invariant],
-      },
-      { status: 422, headers }
-    )
-  }
 
   let mode
   try {
     mode = await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const locked = await lockEventTypeForUpdate(
+          profile.orgId,
+          eventTypeId,
+          profile.id,
+          tx
+        )
+        if (!locked) throw new ModeNotFoundError()
+
+        const current = await getEventTypeMode(
+          profile.orgId,
+          modeId,
+          eventTypeId,
+          tx
+        )
+        if (!current) throw new ModeNotFoundError()
+
         if (data.active === false) {
           await assertNotLastActiveMode(
             profile.orgId,
             eventTypeId,
             modeId,
-            profile.id,
+            locked.published,
+            current.active,
             tx
           )
+        }
+
+        const deactivateOnly =
+          data.active === false &&
+          Object.keys(data).every(
+            (key) => key === "active" || key === "sortOrder" || key === "label"
+          )
+
+        const nextPriceCents =
+          data.priceCents !== undefined
+            ? (data.priceCents ?? null)
+            : current.priceCents
+        const nextCurrency =
+          data.currency !== undefined
+            ? (data.currency ?? null)
+            : current.currency
+        if (
+          !deactivateOnly &&
+          (nextPriceCents == null) !== (nextCurrency == null)
+        ) {
+          throw new ModeValidationError(
+            "priceCents and currency must both be set or both omitted."
+          )
+        }
+
+        const nextScheduleId = data.scheduleId ?? current.scheduleId
+        if (!deactivateOnly && data.scheduleId) {
+          const schedule = await getSchedule(
+            profile.orgId,
+            data.scheduleId,
+            profile.id
+          )
+          if (!schedule) {
+            throw new ModeValidationError("Schedule not found for this expert.")
+          }
+        }
+
+        const nextLocationId =
+          data.locationId !== undefined ? data.locationId : current.locationId
+        let locationCountry: string | null = null
+        if (!deactivateOnly && current.mode === "in_person") {
+          if (!nextLocationId) {
+            throw new ModeValidationError(
+              "In-person modes need a practice location."
+            )
+          }
+          const location = await getPracticeLocation(
+            profile.orgId,
+            nextLocationId,
+            profile.id
+          )
+          if (!location || !location.active) {
+            throw new ModeValidationError(
+              "Practice location not found or inactive."
+            )
+          }
+          locationCountry = location.country
+        } else if (!deactivateOnly && nextLocationId) {
+          throw new ModeValidationError(
+            "Only in-person modes may set a location."
+          )
+        }
+
+        const nextScopeType = data.countryScopeType ?? current.countryScopeType
+        const nextScopeCodes =
+          data.countryScopeCodes ?? current.countryScopeCodes
+        const nextLanguages = data.languages ?? current.languages
+
+        if (!deactivateOnly) {
+          const invariant = assertOfferInvariants({
+            kind: locked.kind,
+            mode: current.mode,
+            countryScopeType: nextScopeType,
+            countryScopeCodes: nextScopeCodes,
+            languages: nextLanguages,
+            locationCountry,
+            worldwideRemote: profile.worldwideRemote,
+            serviceCountries: profile.serviceCountries,
+            profileLanguages: profile.languages,
+          })
+          if (invariant) throw new ModeOfferInvariantError(invariant)
         }
 
         const updated = await updateEventTypeMode(
@@ -323,14 +334,32 @@ export async function PATCH(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    if (err instanceof ModeNotFoundError) {
+      return secureJson(
+        { error: "not found", message: err.message },
+        { status: 404, headers }
+      )
+    }
     if (err instanceof LastActiveModeConflictError) {
       return secureJson(
-        {
-          error: "conflict",
-          message:
-            "Unpublish the event type before deactivating its last active mode.",
-        },
+        { error: "conflict", message: err.message },
         { status: 409, headers }
+      )
+    }
+    if (err instanceof ModeValidationError) {
+      return secureJson(
+        { error: "validation", message: err.message },
+        { status: 422, headers }
+      )
+    }
+    if (err instanceof ModeOfferInvariantError) {
+      return secureJson(
+        {
+          error: "OFFER_INVARIANT_VIOLATION",
+          code: err.code,
+          message: err.message,
+        },
+        { status: 422, headers }
       )
     }
     if (isUniqueViolation(err)) {
@@ -399,11 +428,26 @@ export async function DELETE(request: Request, { params }: Params) {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const locked = await lockEventTypeForUpdate(
+          profile.orgId,
+          eventTypeId,
+          profile.id,
+          tx
+        )
+        if (!locked) throw new ModeNotFoundError()
+        const current = await getEventTypeMode(
+          profile.orgId,
+          modeId,
+          eventTypeId,
+          tx
+        )
+        if (!current) throw new ModeNotFoundError()
         await assertNotLastActiveMode(
           profile.orgId,
           eventTypeId,
           modeId,
-          profile.id,
+          locked.published,
+          current.active,
           tx
         )
         await deactivateEventTypeMode(profile.orgId, modeId, eventTypeId, tx)
@@ -416,13 +460,15 @@ export async function DELETE(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    if (err instanceof ModeNotFoundError) {
+      return secureJson(
+        { error: "not found", message: err.message },
+        { status: 404, headers }
+      )
+    }
     if (err instanceof LastActiveModeConflictError) {
       return secureJson(
-        {
-          error: "conflict",
-          message:
-            "Unpublish the event type before deactivating its last active mode.",
-        },
+        { error: "conflict", message: err.message },
         { status: 409, headers }
       )
     }
