@@ -179,7 +179,11 @@ export async function togglePublishAction(
   try {
     const session = await requireSession("events:manage")
     const api = await getAuthedApiClient()
-    await api.expert.eventTypes.publish(eventTypeId, { published })
+    if (published) {
+      await api.expert.eventTypes.publish(eventTypeId)
+    } else {
+      await api.expert.eventTypes.unpublish(eventTypeId)
+    }
 
     revalidateExpertWorkspace(session, "event-types")
     return { ok: true }
@@ -189,6 +193,7 @@ export async function togglePublishAction(
       ok: false,
       error: mapExpertApiError(err, "toggle-failed", {
         connectIncomplete: "connect-incomplete",
+        offerInvariant: "offer-invariant",
       }),
     }
   }

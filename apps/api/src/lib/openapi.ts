@@ -15,6 +15,8 @@ import {
   SyncExistingOnboardingResponseSchema,
   CreateEventTypeRequestSchema,
   UpdateEventTypeRequestSchema,
+  CreateEventTypeModeRequestSchema,
+  PatchEventTypeModeRequestSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -1240,9 +1242,110 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         },
       },
       "/expert/event-types/{id}/publish": {
-        patch: {
-          operationId: "toggleEventTypePublish",
-          summary: "Toggle event type published state",
+        post: {
+          operationId: "publishEventType",
+          summary: "Publish an event type after offer-invariant checks",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Event type published",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            "409": {
+              description:
+                "CONNECT_INCOMPLETE — Payments onboarding not ready (details submitted, payouts enabled, transfers active, and Identity verified when required)",
+              content: {
+                "application/json": { schema: ConnectIncompleteErrorSchema },
+              },
+            },
+            ...stdWithNotFound,
+            "422": {
+              description:
+                "OFFER_INVARIANT_VIOLATION — active modes fail publishEventType gates (handle, modes, country/language scope)",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    error: z.literal("OFFER_INVARIANT_VIOLATION"),
+                    code: z.literal("OFFER_INVARIANT_VIOLATION"),
+                    message: z.string(),
+                    violations: z.array(
+                      z.object({
+                        modeId: z.string().nullable(),
+                        code: z.string(),
+                        message: z.string(),
+                      })
+                    ),
+                  }),
+                },
+              },
+            },
+          },
+        },
+      },
+      "/expert/event-types/{id}/unpublish": {
+        post: {
+          operationId: "unpublishEventType",
+          summary: "Unpublish an event type",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Event type unpublished",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/event-types/{id}/modes": {
+        get: {
+          operationId: "listEventTypeModes",
+          summary: "List delivery modes for an event type",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "includeInactive",
+              in: "query",
+              required: false,
+              schema: { type: "boolean" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Modes listed",
+              content: {
+                "application/json": {
+                  schema: z.object({ modes: z.array(z.unknown()) }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "createEventTypeMode",
+          summary: "Create a delivery mode (offer-invariants enforced)",
           tags: ["Expert Event Types"],
           parameters: [
             {
@@ -1256,21 +1359,114 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             required: true,
             content: {
               "application/json": {
-                schema: z.object({ published: z.boolean() }),
+                schema: CreateEventTypeModeRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Mode created",
+              content: {
+                "application/json": {
+                  schema: z.object({ mode: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/event-types/{id}/modes/{modeId}": {
+        get: {
+          operationId: "getEventTypeMode",
+          summary: "Get a delivery mode",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "modeId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Mode returned",
+              content: {
+                "application/json": {
+                  schema: z.object({ mode: z.unknown() }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        patch: {
+          operationId: "patchEventTypeMode",
+          summary: "Update a delivery mode (offer-invariants enforced)",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "modeId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: PatchEventTypeModeRequestSchema,
               },
             },
           },
           responses: {
             "200": {
-              description: "Publish state toggled",
-              content: { "application/json": { schema: OkSchema } },
-            },
-            "409": {
-              description:
-                "CONNECT_INCOMPLETE — Payments onboarding not ready (details submitted, payouts enabled, transfers active, and Identity verified when required)",
+              description: "Mode updated",
               content: {
-                "application/json": { schema: ConnectIncompleteErrorSchema },
+                "application/json": {
+                  schema: z.object({ mode: z.unknown() }),
+                },
               },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        delete: {
+          operationId: "deactivateEventTypeMode",
+          summary: "Soft-deactivate a delivery mode",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "modeId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Mode deactivated",
+              content: { "application/json": { schema: OkSchema } },
             },
             ...stdWithNotFound,
           },

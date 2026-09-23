@@ -17,6 +17,13 @@ export type {
   PracticeInvariantViolation,
   PracticeModeSnapshot,
 } from "./practice-invariants"
+export { publishEventType } from "./publish-event-type"
+export type {
+  PublishEventTypeInput,
+  PublishEventTypeResult,
+  PublishModeInput,
+  PublishViolation,
+} from "./publish-event-type"
 export { getAvailableSlots } from "./availability"
 export { getAvailableSlotsForOffer, emptyBusyTimeProvider } from "./offer-slots"
 export type {

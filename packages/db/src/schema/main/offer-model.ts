@@ -268,6 +268,7 @@ export const publicHandles = pgTable(
 )
 
 export type EventTypeMode = typeof eventTypeModes.$inferSelect
+export type NewEventTypeMode = typeof eventTypeModes.$inferInsert
 export type BookingLink = typeof bookingLinks.$inferSelect
 export type CalendarFeedToken = typeof calendarFeedTokens.$inferSelect
 export type PublicHandle = typeof publicHandles.$inferSelect

@@ -1,5 +1,4 @@
 import { eq } from "drizzle-orm"
-import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
@@ -11,7 +10,14 @@ import {
   markSeatSyncPending,
 } from "@eleva/billing/server"
 import { getFlag } from "@eleva/flags"
-import { getExpertProfileByUserId, main, updateEventType } from "@eleva/db"
+import {
+  getEventType,
+  getExpertProfileByUserId,
+  listEventTypeModesWithLocation,
+  main,
+  updateEventType,
+} from "@eleva/db"
+import { publishEventType } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -23,10 +29,6 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const PublishSchema = z.object({
-  published: z.boolean(),
-})
-
 class ConnectIncompleteError extends Error {
   constructor() {
     super("Complete Payments onboarding before publishing an event type")
@@ -34,11 +36,10 @@ class ConnectIncompleteError extends Error {
   }
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const headers = corsHeaders(request, "PATCH, OPTIONS")
+type Params = { params: Promise<{ id: string }> }
+
+export async function POST(request: Request, { params }: Params) {
+  const headers = corsHeaders(request, "POST, OPTIONS")
 
   let session
   try {
@@ -55,14 +56,6 @@ export async function PATCH(
   )
   if (rateLimited) return rateLimited
 
-  const body = PublishSchema.safeParse(await request.json().catch(() => ({})))
-  if (!body.success) {
-    return secureJson(
-      { error: "validation", issues: body.error.issues },
-      { status: 422, headers }
-    )
-  }
-
   const profile = await getExpertProfileByUserId(session.user.id)
   if (!profile) {
     return secureJson(
@@ -72,48 +65,82 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const identityRequired = body.data.published
-    ? await getFlag("ff.expert_identity_verification")
-    : false
+  const eventType = await getEventType(profile.orgId, id, profile.id)
+  if (!eventType) {
+    return secureJson(
+      { error: "not found", message: "event type not found" },
+      { status: 404, headers }
+    )
+  }
+
+  const modes = await listEventTypeModesWithLocation(profile.orgId, id)
+  const gate = publishEventType({
+    kind: eventType.kind,
+    hasPublicHandle: Boolean(profile.username && profile.username.length >= 3),
+    worldwideRemote: profile.worldwideRemote,
+    serviceCountries: profile.serviceCountries,
+    profileLanguages: profile.languages,
+    modes: modes.map((mode) => ({
+      modeId: mode.id,
+      mode: mode.mode,
+      countryScopeType: mode.countryScopeType,
+      countryScopeCodes: mode.countryScopeCodes,
+      languages: mode.languages,
+      locationCountry: mode.locationCountry,
+      active: mode.active,
+    })),
+  })
+  if (!gate.ok) {
+    return secureJson(
+      {
+        error: "OFFER_INVARIANT_VIOLATION",
+        code: "OFFER_INVARIANT_VIOLATION",
+        message: "Event type cannot be published until offer invariants pass",
+        violations: gate.violations,
+      },
+      { status: 422, headers }
+    )
+  }
+
+  const identityRequired = await getFlag("ff.expert_identity_verification")
 
   try {
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
-        if (body.data.published) {
-          const [connect] = await tx
-            .select({
-              detailsSubmitted: main.billingCustomers.detailsSubmitted,
-              payoutsEnabled: main.billingCustomers.payoutsEnabled,
-              connectCapabilities: main.billingCustomers.connectCapabilities,
-              identityStatus: main.billingCustomers.identityStatus,
-            })
-            .from(main.billingCustomers)
-            .where(eq(main.billingCustomers.orgId, profile.orgId))
-            .limit(1)
-            .for("update")
-          const ready = isConnectPublishReady({
-            detailsSubmitted: connect?.detailsSubmitted ?? false,
-            payoutsEnabled: connect?.payoutsEnabled ?? false,
-            transfersStatus: connect?.connectCapabilities?.transfers,
-            identityRequired,
-            identityStatus:
-              connect?.identityStatus ?? profile.stripeIdentityStatus ?? null,
+        const [connect] = await tx
+          .select({
+            detailsSubmitted: main.billingCustomers.detailsSubmitted,
+            payoutsEnabled: main.billingCustomers.payoutsEnabled,
+            connectCapabilities: main.billingCustomers.connectCapabilities,
+            identityStatus: main.billingCustomers.identityStatus,
           })
-          if (!ready) throw new ConnectIncompleteError()
-        }
+          .from(main.billingCustomers)
+          .where(eq(main.billingCustomers.orgId, profile.orgId))
+          .limit(1)
+          .for("update")
+        const ready = isConnectPublishReady({
+          detailsSubmitted: connect?.detailsSubmitted ?? false,
+          payoutsEnabled: connect?.payoutsEnabled ?? false,
+          transfersStatus: connect?.connectCapabilities?.transfers,
+          identityRequired,
+          identityStatus:
+            connect?.identityStatus ?? profile.stripeIdentityStatus ?? null,
+        })
+        if (!ready) throw new ConnectIncompleteError()
+
         await updateEventType(
           profile.orgId,
           id,
-          { published: body.data.published },
+          { published: true },
           profile.id,
           tx
         )
         await ctx.emit({
           entity: "event_type",
-          action: body.data.published ? "published" : "unpublished",
+          action: "published",
           entityId: id,
-          payload: { published: body.data.published },
+          payload: { published: true },
         })
         await markSeatSyncPending(profile.orgId, tx)
       }
@@ -146,6 +173,6 @@ export async function PATCH(
 export async function OPTIONS(request: Request) {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders(request, "PATCH, OPTIONS"),
+    headers: corsHeaders(request, "POST, OPTIONS"),
   })
 }
