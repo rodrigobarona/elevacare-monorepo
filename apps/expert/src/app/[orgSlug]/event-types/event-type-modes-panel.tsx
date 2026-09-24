@@ -161,9 +161,12 @@ export function EventTypeModesPanel({
       row.languages.length > 0 ? row.languages : profileLanguages.slice(0, 1)
     )
     setWorldwide(row.countryScopeType === "worldwide")
+    const editableCountries = row.countryScopeCodes.filter((c) =>
+      serviceCountries.includes(c)
+    )
     setCountryCodes(
-      row.countryScopeCodes.length > 0
-        ? row.countryScopeCodes
+      editableCountries.length > 0
+        ? editableCountries
         : serviceCountries.slice(0, 1)
     )
     setPriceOverride(
