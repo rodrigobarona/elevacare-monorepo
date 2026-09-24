@@ -54,6 +54,8 @@ export const RATE_LIMITS = {
   internalWorkflow: { prefix: "wf", maxRequests: 300, windowMs: 60_000 },
   /** Signed provider webhooks (Resend retries + bursts). */
   webhook: { prefix: "webhook", maxRequests: 120, windowMs: 60_000 },
+  /** Public ICS calendar subscription feed (per token). */
+  icsFeed: { prefix: "ics-feed", maxRequests: 60, windowMs: 3_600_000 },
 } as const satisfies Record<string, RateLimitConfig>
 
 function isLoopbackApiOrigin(env: NodeJS.ProcessEnv = process.env): boolean {

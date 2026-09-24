@@ -125,9 +125,9 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > (4) ~~onboarding Practice step~~ (**done**, `#101`), (5) ~~services builder
 > tabs (kind / policies / private links) + `/expert/booking-links`~~ (**done**,
 > `#102`), (6) ~~calendar busy/destination UI on connected accounts~~
-> (**done**, this PR), (7) still open before Phase 09: Eleva week view + ICS
-> feed tokens, Plate AI route, UI-built Quick chat / Physiotherapy fixtures
-> (not seed-only).
+> (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**this PR**);
+> still open before Phase 09: per-mode destination overrides, Plate AI route,
+> UI-built Quick chat / Physiotherapy fixtures (not seed-only).
 > Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and

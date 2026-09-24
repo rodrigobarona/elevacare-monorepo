@@ -20,6 +20,10 @@ import {
   CreateBookingLinkRequestSchema,
   BookingLinkListItemSchema,
   CreateBookingLinkResponseSchema,
+  CalendarFeedTokenStatusSchema,
+  RotateCalendarFeedTokenResponseSchema,
+  ListExpertBookingsQuerySchema,
+  ListExpertBookingsResponseSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -1680,6 +1684,107 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/bookings": {
+        get: {
+          operationId: "listExpertBookings",
+          summary: "List expert bookings in a date range",
+          tags: ["Expert Calendar"],
+          requestParams: {
+            query: ListExpertBookingsQuerySchema,
+          },
+          responses: {
+            "200": {
+              description: "Bookings in range",
+              content: {
+                "application/json": {
+                  schema: ListExpertBookingsResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/calendar/feed-token": {
+        get: {
+          operationId: "getCalendarFeedTokenStatus",
+          summary: "Whether an active ICS feed token exists",
+          tags: ["Expert Calendar"],
+          responses: {
+            "200": {
+              description: "Feed token status (raw token never returned)",
+              content: {
+                "application/json": {
+                  schema: CalendarFeedTokenStatusSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "rotateCalendarFeedToken",
+          summary: "Create or rotate the ICS feed token (raw token once)",
+          tags: ["Expert Calendar"],
+          responses: {
+            "201": {
+              description: "New feed token",
+              content: {
+                "application/json": {
+                  schema: RotateCalendarFeedTokenResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        delete: {
+          operationId: "revokeCalendarFeedToken",
+          summary: "Revoke the active ICS feed token",
+          tags: ["Expert Calendar"],
+          responses: {
+            "200": {
+              description: "Feed token revoked",
+              content: { "application/json": { schema: OkSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/calendar/feed/{token}": {
+        get: {
+          operationId: "getCalendarIcsFeed",
+          summary: "Public read-only ICS feed (append .ics to the token)",
+          tags: ["Public Calendar"],
+          parameters: [
+            {
+              name: "token",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+              description: "Raw feed token, optionally with .ics suffix",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "text/calendar VCALENDAR body",
+              content: {
+                "text/calendar": {
+                  schema: z.string(),
+                },
+              },
+            },
+            "304": {
+              description: "Not modified (ETag match)",
+            },
+            "404": {
+              description: "Unknown or revoked token",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdPublicErrors,
           },
         },
       },

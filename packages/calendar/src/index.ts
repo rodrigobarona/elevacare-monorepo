@@ -15,6 +15,7 @@ export {
   CalendarValidationError,
 } from "./errors"
 export { generateIcsRequest, generateIcsCancel } from "./ics-generator"
+export { generateIcsFeed, hashCalendarFeedToken, icsFeedEtag } from "./ics-feed"
 export type {
   CalendarProvider,
   CalendarAdapter,
@@ -24,3 +25,4 @@ export type {
   FreeBusyInterval,
 } from "./types"
 export type { IcsEventInput, IcsMethod } from "./ics-generator"
+export type { IcsFeedEvent, IcsFeedInput } from "./ics-feed"
