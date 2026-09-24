@@ -3257,10 +3257,11 @@ the modes panel, <code>createApiClient().ai.editorAssist</code> wired on event-t
 description, <code>check:i18n-parity</code> ignores <code>*.draft.json</code>,
 <code>E2E_EXPERT_OFFER=1</code> builder affordance tests);
 still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
-net-new fixtures (needs Connect-ready expert session), <code>pnpm i18n:draft</code>
-script + draft age gate, design-pass screenshots, multi-account calendar
-busy evidence. Do not start Phase 09 until the exit gate is honestly met or
-explicitly waived by the founder.</p>
+net-new fixtures (needs Connect-ready expert session), design-pass
+screenshots, multi-account calendar busy evidence. Do not start Phase 09
+until the exit gate is honestly met or explicitly waived by the founder.</p>
+<p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
+14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>).</p>
 </blockquote>
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> package exists with ADR-023 exports, sanitizer XSS tests, and
@@ -3303,9 +3304,9 @@ fail-closed and <code>clinical</code> rejected until Phase 10 (never <code>apps/
 member content). Expert editor UI hooks (<code>onAssist</code> / <code>ai_draft</code>) shipped;
 expert offer basics tab wires <code>createApiClient().ai.editorAssist</code> for
 description assist (LocalizedText; Plate description column still open).</li>
-<li><input disabled="" type="checkbox"> <code>pnpm i18n:draft</code> produces draft files and <code>check:i18n-parity</code> ignores them.
-(<code>check:i18n-parity</code> now ignores <code>*.draft.json</code>; draft script + age gate
-still open.)</li>
+<li><input checked="" disabled="" type="checkbox"> <code>pnpm i18n:draft</code> produces draft files and <code>check:i18n-parity</code> ignores them
+(and fails drafts older than 14 days). Glossary at
+<code>packages/config/glossary.json</code> (no separate <code>packages/i18n</code> package yet).</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
 <code>pt</code>/<code>en</code>, 360px and 1280px.</li>
 <li><input checked="" disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> covers seeded public-funnel modes + opt-in
@@ -3514,10 +3515,10 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    ({ command: improve|shorten|fix_grammar|translate, text, sourceLocale, targetLocale, context })
    using streamText through the Vercel AI Gateway (model from AI_GATEWAY_MODEL_EDITOR, pinned);
    translateMessages({ sourceLocale: &quot;en&quot;, targetLocales, glossary from
-   packages/i18n/glossary.json — &quot;members&quot;, &quot;Space&quot;, &quot;expert&quot; fixed terms }) + root script
+   packages/config/glossary.json — &quot;members&quot;, &quot;Space&quot;, &quot;expert&quot; fixed terms }) + root script
    &quot;i18n:draft&quot; writing messages/&lt;locale&gt;.draft.json in every app that has missing keys; extend
    scripts/check-i18n-parity.mjs to ignore *.draft.json and fail if a draft file is older than 14
-   days (drafts must be reviewed, not parked). apps/api POST /ai/editor (expert session only:
+   days (drafts must be reviewed, not parked; age from draft `generatedAt`, not mtime). apps/api POST /ai/editor (expert session only:
    requires an active organization whose membership grants expert-content editing, and the body
    carries { resource: &quot;expert_profile&quot; | &quot;event_type&quot; | &quot;location&quot;, resourceId } which the
    handler loads under withOrgContext and rejects with 404 when it is not owned by that org —

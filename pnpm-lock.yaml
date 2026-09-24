@@ -1115,6 +1115,9 @@ importers:
 
   packages/ai:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       ai:
         specifier: ^7.0.112
         version: 7.0.112(zod@4.5.4)
