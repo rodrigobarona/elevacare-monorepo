@@ -87,12 +87,29 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-22):** Product surfaces for Phase 05 are on main.
-> `e2e/member.spec.ts` exists (`pnpm e2e:member` / `e2e:member:stripe`) and is
-> loopback-gated. This closeout did **not** re-run the live Stripe journey
-> (local web/api/app/account were not up). Leave the e2e checkbox open until
-> someone runs it locally with `E2E_MEMBER=1 E2E_LIVE_STRIPE=1` against
-> `fisiomota` / `first-visit` / €60 — never Production.
+> **Closeout status (2026-09-24, post-#109):** Product surfaces for Phase 05 are
+> on main. `e2e/member.spec.ts` exists (`pnpm e2e:member` /
+> `e2e:member:stripe`) and is loopback-gated.
+>
+> ### Member e2e attempt (2026-09-24, loopback only — never Production)
+>
+> | Check                                                                    | Result                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+> | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Loopback host guard                                                      | **PASS**                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+> | Local stack                                                              | web/api/app/account brought up; applied main migrations `0035`–`0046` (local DB was behind — needed `phone_e164`)                                                                                                                                                                                                                                                                                                                                |
+> | Auth mailer injection                                                    | Fixed in this closeout (`globalThis` + `/auth` ensure) so signup/magic-link no longer 500 with "mailer not injected" under Turbopack                                                                                                                                                                                                                                                                                                             |
+> | Prefs + DSAR (no live Stripe)                                            | **Not green** — signup/verify/password sign-in succeed; Space settings RSC hits API `401 no-session` (`ACCOUNT_URL` in local `.env` points at `:3000` while account app is `:3006`; cookie/session handoff across zones needs operator fix). Password path kept for prefs/DSAR; separate magic-link → Space case remains in the suite (also blocked on the same session handoff). Guest magic-link **with booking** stays on `e2e:member:stripe` |
+> | Live Stripe journey (`E2E_LIVE_STRIPE=1`, fisiomota / first-visit / €60) | **Blocked** — Stripe CLI `stripe listen` fails with expired `sk_test_…` (401); do not weaken `RATE_LIMITS.public`                                                                                                                                                                                                                                                                                                                                |
+>
+> Leave acceptance checkboxes open until prefs/DSAR + live Stripe pass on a
+> healthy local session, or the founder waives. Never run against Production.
+>
+> ### Founder evidence checklist (05)
+>
+> | Item                           | Runnable now?                                           | Notes                          |
+> | ------------------------------ | ------------------------------------------------------- | ------------------------------ |
+> | `pnpm e2e:member` prefs + DSAR | After fixing local `ACCOUNT_URL`/session cookie handoff | Code + migrations ready        |
+> | `pnpm e2e:member:stripe`       | After `stripe login` / fresh CLI key + `stripe listen`  | Seeded fisiomota offer present |
 
 - [ ] Guest from Phase 4 activates via magic link, lands on `/{space-slug}` dashboard showing the
       booking.
