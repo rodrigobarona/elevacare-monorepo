@@ -30,6 +30,7 @@ const ERROR_KEYS = [
   "toggle-failed",
   "delete-failed",
   "connect-incomplete",
+  "offer-invariant",
 ] as const
 
 export function EventTypeActions({
@@ -43,7 +44,8 @@ export function EventTypeActions({
   const [deleteOpen, setDeleteOpen] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  function friendlyError(code: string): string {
+  function friendlyError(code: string, message?: string): string {
+    if (message && message.trim().length > 0) return message
     if ((ERROR_KEYS as readonly string[]).includes(code)) {
       return t(`error.${code}` as Parameters<typeof t>[0])
     }
@@ -56,7 +58,7 @@ export function EventTypeActions({
     try {
       const result = await togglePublishAction(eventTypeId, !published)
       if (!result.ok) {
-        setError(friendlyError(result.error))
+        setError(friendlyError(result.error, result.message))
         return
       }
       router.refresh()

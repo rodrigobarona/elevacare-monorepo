@@ -52,6 +52,20 @@ Each entry should include:
 - Next review: if Next.js documents a stable Turbopack google-font fix
   and we want to drop vendored binaries
 
+### 2026-09-24: Phase 04B modes panel + seeded offer e2e (partial exit)
+
+- Owner: engineering
+- Status: active
+- Summary: Ship the event-type **delivery modes** panel (create / edit /
+  deactivate via `/expert/event-types/.../modes`) and
+  `e2e/expert-offer.spec.ts` asserting **seeded** fisiomota mode cards on the
+  public funnel (`pnpm e2e:expert-offer` / included in `e2e:phase04`). This
+  does **not** close the Phase 04B exit gate: UI-built Quick chat /
+  Physiotherapy fixtures, onboarding Practice step, private links tab,
+  calendar polish, and Plate AI remain open. Do not start Phase 09.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
+- Next review: next 04B slice or founder waiver of remaining acceptance items
+
 ### 2026-09-22: Phase 01–08 closeout before Phase 09 (resume 04B)
 
 - Owner: engineering (founder directive)

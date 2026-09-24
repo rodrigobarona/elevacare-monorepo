@@ -41,3 +41,11 @@ export function mapExpertApiError(
   }
   return fallback
 }
+
+/** Human sentence from an API error body when present (e.g. offer invariants). */
+export function humanApiMessage(err: unknown): string | undefined {
+  if (err instanceof ApiClientError && typeof err.body.message === "string") {
+    return err.body.message
+  }
+  return undefined
+}

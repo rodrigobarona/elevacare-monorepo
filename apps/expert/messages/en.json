@@ -32,8 +32,10 @@
       "toggle-failed": "Could not update the event type. Please try again.",
       "delete-failed": "Could not delete the event type. Please try again.",
       "connect-incomplete": "Complete Payments setup before publishing. Stripe still needs payout details.",
+      "offer-invariant": "This offer cannot be published yet. Add a valid delivery mode and fix any country or language issues.",
       "generic": "Something went wrong. Please try again."
     },
+    "saved": "Event type saved.",
     "actions": {
       "ariaLabel": "Event type actions",
       "edit": "Edit",
@@ -44,6 +46,52 @@
       "deleteDescription": "This action cannot be undone. This will permanently delete the event type and all associated data.",
       "cancel": "Cancel",
       "deleting": "Deleting..."
+    },
+    "modes": {
+      "title": "Delivery modes",
+      "description": "How members can meet you — video, phone, or in person — each with its own schedule, countries, and price.",
+      "add": "Add a way to meet",
+      "edit": "Edit",
+      "editingHint": "Meeting type cannot change after create — deactivate and add a new mode instead.",
+      "count": "{count, plural, =0 {No delivery modes} one {# delivery mode} other {# delivery modes}}",
+      "empty": "Add at least one delivery mode before publishing.",
+      "needSchedule": "Create a schedule first, then come back to add delivery modes.",
+      "needLocation": "Add a practice location before creating an in-person mode.",
+      "pickLocation": "Choose a location",
+      "unknownSchedule": "Schedule",
+      "worldwide": "Worldwide",
+      "defaultSchedule": "default",
+      "deactivate": "Deactivate",
+      "save": "Save mode",
+      "saveEdit": "Save changes",
+      "saving": "Saving…",
+      "cancel": "Cancel",
+      "pricePlaceholder": "Leave blank to use the event default",
+      "labelPlaceholder": "Optional short label",
+      "kinds": {
+        "online": "Video",
+        "phone": "Phone",
+        "in_person": "In person"
+      },
+      "fields": {
+        "mode": "Meeting type",
+        "schedule": "Schedule",
+        "location": "Location",
+        "worldwide": "Offer worldwide (remote only)",
+        "countries": "Countries",
+        "languages": "Languages",
+        "priceOverride": "Price override (€)",
+        "label": "Label (English)"
+      },
+      "error": {
+        "create-failed": "Could not create the delivery mode. Please try again.",
+        "update-failed": "Could not update the delivery mode. Please try again.",
+        "mode-taken": "That delivery mode could not be saved because of a conflict.",
+        "invalid-input": "Check the delivery mode fields and try again.",
+        "validation": "Check the delivery mode fields and try again.",
+        "offer-invariant": "This delivery mode breaks a practice rule. Fix countries, languages, or location.",
+        "generic": "Something went wrong. Please try again."
+      }
     }
   },
   "schedule": {
