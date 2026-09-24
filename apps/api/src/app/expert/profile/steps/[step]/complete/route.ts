@@ -5,9 +5,29 @@ import { checkBot } from "@/lib/bot-protection"
 import { ExpertOnboardingStepSchema } from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
 import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
-import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
+import {
+  getExpertProfileByUserId,
+  getOrCreateDefaultSchedule,
+  main,
+  updateExpertProfile,
+} from "@eleva/db"
+import { eq } from "drizzle-orm"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+function isPracticeScopeComplete(profile: {
+  practiceCountry: string
+  languages: string[]
+  metadata: Record<string, unknown> | null
+}): boolean {
+  const declaredAt = profile.metadata?.practiceDeclaredAt
+  return (
+    typeof declaredAt === "string" &&
+    declaredAt.length > 0 &&
+    Boolean(profile.practiceCountry?.trim()) &&
+    profile.languages.length >= 1
+  )
+}
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -67,6 +87,23 @@ export async function POST(
 
   const step = parsedStep.data
   if (
+    step === "practice" &&
+    !isPracticeScopeComplete({
+      practiceCountry: profile.practiceCountry,
+      languages: profile.languages,
+      metadata: (profile.metadata as Record<string, unknown> | null) ?? null,
+    })
+  ) {
+    return secureJson(
+      {
+        error: "PRACTICE_INCOMPLETE",
+        message:
+          "Save Practice (country and languages) before completing this step",
+      },
+      { status: 409, headers }
+    )
+  }
+  if (
     (step === "invoicing" || step === "schedule") &&
     !isExpertInvoicingChoiceComplete(profile.invoicingSetupStatus)
   ) {
@@ -79,20 +116,52 @@ export async function POST(
       { status: 409, headers }
     )
   }
-
-  const completedSteps = (profile.metadata as Record<string, unknown>)
-    ?.completedSteps
-  const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
-  if (!steps.includes(step)) steps.push(step)
+  if (
+    step === "schedule" &&
+    !isPracticeScopeComplete({
+      practiceCountry: profile.practiceCountry,
+      languages: profile.languages,
+      metadata: (profile.metadata as Record<string, unknown> | null) ?? null,
+    })
+  ) {
+    return secureJson(
+      {
+        error: "PRACTICE_INCOMPLETE",
+        message:
+          "Complete the Practice step (country and languages) before finishing onboarding",
+      },
+      { status: 409, headers }
+    )
+  }
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
+      if (step === "schedule") {
+        await getOrCreateDefaultSchedule(
+          profile.orgId,
+          profile.id,
+          profile.timezone ?? "Europe/Lisbon",
+          tx
+        )
+      }
+      const [fresh] = await tx
+        .select({ metadata: main.expertProfiles.metadata })
+        .from(main.expertProfiles)
+        .where(eq(main.expertProfiles.id, profile.id))
+        .limit(1)
+        .for("update")
+      const currentMeta =
+        (fresh?.metadata as Record<string, unknown> | null) ?? {}
+      const completedSteps = currentMeta.completedSteps
+      const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
+      if (!steps.includes(step)) steps.push(step)
+
       await updateExpertProfile(
         profile.id,
         profile.orgId,
         {
-          metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+          metadata: { ...currentMeta, completedSteps: steps },
         },
         tx
       )

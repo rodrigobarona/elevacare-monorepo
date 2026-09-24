@@ -13,6 +13,12 @@ export function mapExpertApiError(
   }>
 ): string {
   if (err instanceof ApiClientError) {
+    if (err.body.error === "OFFER_INVARIANT_VIOLATION") {
+      return codes?.offerInvariant ?? "offer-invariant"
+    }
+    if (err.body.error === "PRACTICE_INCOMPLETE") {
+      return "practice-incomplete"
+    }
     if (err.status === 409 || err.body.error === "conflict") {
       if (err.body.error === "CONNECT_INCOMPLETE") {
         return codes?.connectIncomplete ?? "connect-incomplete"
@@ -31,9 +37,6 @@ export function mapExpertApiError(
     }
     if (err.status === 404) {
       return codes?.notFound ?? "no-profile"
-    }
-    if (err.status === 422 && err.body.error === "OFFER_INVARIANT_VIOLATION") {
-      return codes?.offerInvariant ?? "offer-invariant"
     }
     if (err.status === 422 || err.body.error === "validation") {
       return codes?.validation ?? "validation"

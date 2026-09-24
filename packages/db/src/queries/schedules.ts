@@ -44,8 +44,25 @@ export async function getOrCreateDefaultSchedule(
         timezone,
         isDefault: true,
       })
+      .onConflictDoNothing()
       .returning()
-    return created!
+    if (created) return created
+
+    const [concurrent] = await tx
+      .select()
+      .from(schedules)
+      .where(
+        and(
+          eq(schedules.expertProfileId, expertProfileId),
+          eq(schedules.isDefault, true),
+          isNull(schedules.deletedAt)
+        )
+      )
+      .limit(1)
+    if (!concurrent) {
+      throw new Error("failed to create or load default schedule")
+    }
+    return concurrent
   }
   return txOpt ? run(txOpt) : withOrgContext(orgId, run)
 }

@@ -12,6 +12,7 @@ import {
   SettingsFieldsetTitle,
 } from "@eleva/ui/components/settings-fieldset"
 import { StepProfile } from "./step-profile"
+import { StepPractice } from "./step-practice"
 import { StepConnect } from "./step-connect"
 import { StepIdentity } from "./step-identity"
 import { StepInvoicing } from "./step-invoicing"
@@ -24,8 +25,11 @@ export interface OnboardingProfile {
   nif: string | null
   licenseScope: string | null
   languages: string[]
+  practiceCountry: string
+  serviceCountries: string[]
   practiceCountries: string[]
   worldwideMode: boolean
+  worldwideRemote: boolean
   sessionModes: string[]
   stripeAccountId: string | null
   stripeIdentityStatus: StripeIdentityStatus
@@ -114,6 +118,21 @@ export function OnboardingWizard({
           <div className="mt-4">
             {activeStep === "profile" && (
               <StepProfile profile={profile} onDone={handleStepDone} />
+            )}
+            {activeStep === "practice" && (
+              <StepPractice
+                profile={{
+                  practiceCountry: profile.practiceCountry,
+                  serviceCountries:
+                    profile.serviceCountries.length > 0
+                      ? profile.serviceCountries
+                      : profile.practiceCountries,
+                  languages: profile.languages,
+                  licenseScope: profile.licenseScope,
+                  worldwideRemote: profile.worldwideRemote,
+                }}
+                onDone={handleStepDone}
+              />
             )}
             {activeStep === "connect" && (
               <StepConnect

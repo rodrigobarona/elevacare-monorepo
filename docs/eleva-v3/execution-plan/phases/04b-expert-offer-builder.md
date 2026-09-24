@@ -121,10 +121,11 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > `#92`), (2) ~~`/expert` practice/locations/schedules APIs~~ (**done**, `#93`) +
 > ~~`experts→expert` rename~~ (**done**, `#96`–`#98`), (3) ~~event-type modes
 > API + publish gates~~ (**done**, `#97`/`#98`) + ~~modes panel on event-type
-> edit + seeded public-funnel `e2e/expert-offer.spec.ts`~~ (**modes+e2e slice**),
-> (4) still open before Phase 09: onboarding Practice step, full services
-> builder tabs (kind/policies/private links), calendar polish, Plate AI route,
-> UI-built Quick chat / Physiotherapy fixtures (not seed-only).
+> edit + seeded public-funnel `e2e/expert-offer.spec.ts`~~ (**done**, `#99`),
+> (4) ~~onboarding Practice step~~ (**done**, this slice), (5) still open before
+> Phase 09: full services builder tabs (kind/policies/private links), calendar
+> polish, Plate AI route, UI-built Quick chat / Physiotherapy fixtures (not
+> seed-only).
 > Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
@@ -138,8 +139,10 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
       renamed to singular `/expert/*` (OpenAPI + `@eleva/api-client` + expert app
       callers; `check:route-guards` rejects a leftover `apps/api/src/app/experts/`
       folder). Public reads remain `/public/experts/*`.
-- [ ] Onboarding cannot complete without `practice_country`, >= 1 language and a default schedule;
+- [x] Onboarding cannot complete without `practice_country`, >= 1 language and a default schedule;
       `service_countries` outside the licence show the legal helper and are saved as declared.
+      (Practice wizard step + `/expert/practice` save + schedule-complete gate that
+      ensures a default schedule via `getOrCreateDefaultSchedule`.)
 - [ ] Builder refuses to publish a `clinical` event type whose mode is worldwide or outside
       `service_countries`, an in-person mode without a location, and a mode whose languages are not
       a subset of the profile; each refusal is a sentence a human understands, next to the field.

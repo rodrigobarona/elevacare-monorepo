@@ -255,10 +255,52 @@
     "description": "Complete todos os passos para ativar o seu perfil de especialista.",
     "steps": {
       "profile": "Perfil e dados fiscais",
+      "practice": "Prática",
       "connect": "Pagamentos",
       "identity": "Verificação de identidade",
       "invoicing": "Faturação",
       "schedule": "Primeiro tipo de evento"
+    },
+    "practice": {
+      "intro": "Indique onde está autorizado a trabalhar e que línguas usa com os membros. Isto define o que pode oferecer publicamente.",
+      "practiceCountry": "Onde está a sua prática?",
+      "practiceCountryPlaceholder": "Selecione um país",
+      "serviceCountries": "Onde está autorizado a trabalhar?",
+      "serviceCountriesHelp": "Selecione todos os países onde a sua licença o permite atender membros. O país da prática está sempre incluído. Use Adicionar ou o preset UE para outros códigos ISO.",
+      "addCountry": "Outro país (ISO)",
+      "addLanguage": "Outra língua (BCP-47)",
+      "add": "Adicionar",
+      "euPreset": "Adicionar países da UE",
+      "legalHelper": "Declarou países além da base da prática. Continua responsável por ter uma licença válida em cada país onde presta trabalho clínico.",
+      "whyWeAskTitle": "Porque perguntamos",
+      "whyWeAskBody": "A regulação de saúde é nacional: uma licença num país não cobre automaticamente outro. O remoto mundial só se aplica a trabalho não clínico (coaching, mentoring).",
+      "languagesLabel": "Línguas que usa com os membros",
+      "licenseScope": "Licença / registo",
+      "licenseScopePlaceholder": "ex. OPP 12345",
+      "licenseScopeHelp": "Opcional agora; necessário antes da aprovação administrativa para ofertas clínicas.",
+      "worldwideRemote": "Remoto mundial (apenas não clínico)",
+      "worldwideRemoteHelp": "Permite sessões não clínicas sem limite de país. Os modos clínicos continuam a seguir os países acima.",
+      "saving": "A guardar…",
+      "continue": "Guardar e continuar",
+      "countries": {
+        "PT": "Portugal",
+        "ES": "Espanha",
+        "BR": "Brasil"
+      },
+      "languageLabels": {
+        "pt": "Português",
+        "en": "Inglês",
+        "es": "Espanhol"
+      },
+      "errors": {
+        "required": "Escolha o país da prática e pelo menos uma língua.",
+        "validation": "Verifique o formulário e tente novamente.",
+        "save-failed": "Não foi possível guardar as definições da prática. Tente novamente.",
+        "offer-invariant": "Esta alteração quebraria uma oferta publicada. Atualize esses modos primeiro.",
+        "practice-incomplete": "Conclua primeiro o país da prática e as línguas.",
+        "invalidCountry": "Introduza um código de país válido de 2 letras (ISO 3166-1).",
+        "invalidLanguage": "Introduza um código de língua válido (ex. pt, en, fr)."
+      }
     },
     "payments": {
       "intro": "Conclua a configuração de Pagamentos para receber transferências. Tudo acontece nesta página — sem redirecionamentos.",

@@ -7,9 +7,11 @@ import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   listPublishedActiveModesForExpert,
+  main,
   updateExpertProfile,
 } from "@eleva/db"
 import { validatePracticeAgainstPublishedModes } from "@eleva/scheduling"
+import { eq } from "drizzle-orm"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -178,9 +180,28 @@ export async function PATCH(request: Request) {
     )
   }
 
+  // Explicit Practice declaration: both country and languages must be in this
+  // request body (not merely schema defaults on the row).
+  const isExplicitPracticeDeclaration =
+    data.practiceCountry !== undefined && data.languages !== undefined
+
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
+      let metadata: Record<string, unknown> | undefined
+      if (isExplicitPracticeDeclaration) {
+        const [fresh] = await tx
+          .select({ metadata: main.expertProfiles.metadata })
+          .from(main.expertProfiles)
+          .where(eq(main.expertProfiles.id, profile.id))
+          .limit(1)
+          .for("update")
+        metadata = {
+          ...((fresh?.metadata as Record<string, unknown> | null) ?? {}),
+          practiceDeclaredAt: new Date().toISOString(),
+        }
+      }
+
       await updateExpertProfile(
         profile.id,
         profile.orgId,
@@ -205,6 +226,7 @@ export async function PATCH(request: Request) {
           ...(data.acceptingBookings !== undefined && {
             acceptingBookings: data.acceptingBookings,
           }),
+          ...(metadata !== undefined && { metadata }),
         },
         tx
       )
@@ -212,7 +234,11 @@ export async function PATCH(request: Request) {
         entity: "expert_profile",
         action: "updated",
         entityId: profile.id,
-        payload: { fields: Object.keys(data), surface: "practice" },
+        payload: {
+          fields: Object.keys(data),
+          surface: "practice",
+          ...(isExplicitPracticeDeclaration && { practiceDeclared: true }),
+        },
       })
     }
   )

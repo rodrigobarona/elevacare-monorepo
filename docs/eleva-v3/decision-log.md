@@ -52,6 +52,20 @@ Each entry should include:
 - Next review: if Next.js documents a stable Turbopack google-font fix
   and we want to drop vendored binaries
 
+### 2026-09-24: Phase 04B onboarding Practice step
+
+- Owner: engineering
+- Status: active
+- Summary: Add the expert onboarding **Practice** wizard step (practice
+  country, service countries with legal helper, languages, licence scope,
+  worldwide remote) wired to `PATCH /expert/practice`. Completing Practice
+  requires `practice_country` + >= 1 language; completing schedule ensures a
+  default schedule exists. Does **not** close the Phase 04B exit gate:
+  services builder tabs (kind/policies/private links), calendar polish, Plate
+  AI, and UI-built Quick chat / Physiotherapy remain open. Do not start Phase 09.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
+- Next review: next 04B slice or founder waiver of remaining acceptance items
+
 ### 2026-09-24: Phase 04B modes panel + seeded offer e2e (partial exit)
 
 - Owner: engineering
@@ -61,8 +75,9 @@ Each entry should include:
   `e2e/expert-offer.spec.ts` asserting **seeded** fisiomota mode cards on the
   public funnel (`pnpm e2e:expert-offer` / included in `e2e:phase04`). This
   does **not** close the Phase 04B exit gate: UI-built Quick chat /
-  Physiotherapy fixtures, onboarding Practice step, private links tab,
-  calendar polish, and Plate AI remain open. Do not start Phase 09.
+  Physiotherapy fixtures, private links tab, calendar polish, and Plate AI
+  remain open (Practice step closed in a later 2026-09-24 slice). Do not start
+  Phase 09.
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
 - Next review: next 04B slice or founder waiver of remaining acceptance items
 
