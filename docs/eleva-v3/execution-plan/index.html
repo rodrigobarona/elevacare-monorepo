@@ -3250,15 +3250,16 @@ tabs (kind / policies / private links) + <code>/expert/booking-links</code></del
 <code>#102</code>), (6) <del>calendar busy/destination UI on connected accounts</del>
 (<strong>done</strong>, <code>#104</code>), (7) <del>Eleva week view + ICS feed tokens</del> (<strong>done</strong>,
 <code>#105</code>), (8) <del>per-mode / per-event-type destination overrides</del> (<strong>done</strong>,
-<code>#106</code>);
-still open before Phase 09: Plate AI route,
-UI-built Quick chat / Physiotherapy fixtures (not seed-only).
-Do not start Phase 09 until this exit gate is honestly met or explicitly waived.</p>
+<code>#106</code>), (9) <del>Plate AI route (<code>POST /ai/editor</code> + <code>editorAssist</code>)</del> (<strong>done</strong>);
+still open before Phase 09: UI-built Quick chat / Physiotherapy fixtures
+(not seed-only). <code>pnpm i18n:draft</code> / draft parity still open with fixtures or a
+follow-up. Do not start Phase 09 until this exit gate is honestly met or
+explicitly waived.</p>
 </blockquote>
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> package exists with ADR-023 exports, sanitizer XSS tests, and
 boundary lint (<code>platejs</code> / <code>@platejs/*</code> / <code>slate*</code> / <code>@radix-ui/*</code> only inside
-<code>packages/editor</code>). Plate UI registry restyle + AI route still open.</li>
+<code>packages/editor</code>). Plate UI registry restyle still open; AI route shipped.</li>
 <li><input checked="" disabled="" type="checkbox"> <code>GET/PATCH /expert/practice</code>, <code>/expert/locations</code> CRUD, <code>/expert/schedules</code>
 CRUD + <code>PUT …/rules</code> + <code>PUT …/overrides</code> (Zod + OpenAPI + rate limit +
 <code>withAudit</code>); practice PATCH returns <code>409 OFFER_INVARIANT_VIOLATION</code> without
@@ -3284,9 +3285,10 @@ slot on the override schedule, then shows &quot;used&quot;; revoked link 404s.</
 <code>use_for_busy</code> affect slots (test with a busy event); destination override per mode writes the
 booking to the right calendar; token revoke -&gt; reconnect banner; no calendar connected -&gt; ICS
 feed subscription shows bookings in Apple Calendar (manual evidence).</li>
-<li><input disabled="" type="checkbox"> <code>@eleva/editor</code> AI actions stream, respect the allow-list (unknown model -&gt; typed error), and
-never run on <code>apps/app</code> member content; <code>pnpm i18n:draft</code> produces draft files and
-<code>check:i18n-parity</code> ignores them.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> AI actions stream via <code>POST /ai/editor</code> + <code>@eleva/ai</code>
+<code>editorAssist</code>, respect the allow-list (unknown model -&gt; typed error), reject
+<code>clinical</code> until Phase 10, and never run on <code>apps/app</code> member content.
+<code>pnpm i18n:draft</code> / draft parity still open.</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
 <code>pt</code>/<code>en</code>, 360px and 1280px.</li>
 <li><input disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> green for UI-built Quick chat / Physiotherapy

@@ -93,6 +93,7 @@ import {
   IssuePlatformFeeInvoiceRequestSchema,
   IssuePlatformFeeInvoiceResponseSchema,
   ClosedGateInvoicePayloadSchema,
+  EditorAssistRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3528,6 +3529,58 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               },
             },
             ...stdErrors,
+          },
+        },
+      },
+      "/ai/editor": {
+        post: {
+          operationId: "editorAssist",
+          summary: "Stream Plate editor writing assistance",
+          description:
+            "Expert-session only. Streams plain-text revisions for improve / shorten / fix_grammar / translate. Context `clinical` is rejected until Phase 10. Rate limit 30/hour/org. Logs tokens/latency only — never prompt content.",
+          tags: ["AI"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: EditorAssistRequestSchema,
+              },
+            },
+          },
+          responses: {
+            ...stdErrors,
+            "200": {
+              description: "UTF-8 text stream of the assisted draft",
+              content: {
+                "text/plain": {
+                  schema: z.string(),
+                },
+              },
+            },
+            "403": {
+              description:
+                "Missing capability or clinical context rejected (Phase 10)",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "404": {
+              description: "Expert profile or resource not found for this org",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Validation error on request body",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "429": {
+              description: "Editor AI rate limit (30/hour/org)",
+              content: {
+                "application/json": { schema: RateLimitErrorSchema },
+              },
+            },
+            "503": {
+              description:
+                "AI_GATEWAY_MODEL_EDITOR missing or not on allow-list",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
           },
         },
       },

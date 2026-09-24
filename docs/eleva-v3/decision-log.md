@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Phase 04B Plate AI editor assist route
+
+- Decision: Ship `POST /ai/editor` + `@eleva/ai` `editorAssist` (streamText via
+  Vercel AI Gateway, model pinned by `AI_GATEWAY_MODEL_EDITOR` +
+  `assertApprovedModel`). Expert session + `expert:profile_edit`; org-owned
+  `resource`/`resourceId` under org-scoped DB helpers; rate limit 30/h/org;
+  context `clinical` rejected until Phase 10. Logs tokens/latency only.
+- Owner: engineering
+- Status: active
+- Related: ADR-023, `phases/04b-expert-offer-builder.md`, `#106` destination
+  overrides PR
+- Next review: next 04B slice (UI-built Quick chat / Physiotherapy fixtures) or
+  founder waiver of remaining acceptance items
+
 ### 2026-09-24: Phase 04B per-mode / per-event-type destination overrides
 
 - Owner: engineering

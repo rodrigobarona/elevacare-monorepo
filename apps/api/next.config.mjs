@@ -6,6 +6,7 @@ const nextConfig = {
   // cross-origin calls from the gateway / app zones.
   assetPrefix: process.env.API_ASSET_PREFIX || undefined,
   transpilePackages: [
+    "@eleva/ai",
     "@eleva/audit",
     "@eleva/auth",
     "@eleva/billing",
