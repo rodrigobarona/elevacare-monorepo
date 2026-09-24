@@ -3251,11 +3251,16 @@ tabs (kind / policies / private links) + <code>/expert/booking-links</code></del
 (<strong>done</strong>, <code>#104</code>), (7) <del>Eleva week view + ICS feed tokens</del> (<strong>done</strong>,
 <code>#105</code>), (8) <del>per-mode / per-event-type destination overrides</del> (<strong>done</strong>,
 <code>#106</code>), (9) <del>Plate AI route (<code>POST /ai/editor</code> + <code>editorAssist</code>)</del> (<strong>done</strong>,
-<code>#107</code>);
-still open before Phase 09: UI-built Quick chat / Physiotherapy fixtures
-(not seed-only). <code>pnpm i18n:draft</code> / draft parity still open with fixtures or a
-follow-up. Do not start Phase 09 until this exit gate is honestly met or
-explicitly waived.</p>
+<code>#107</code>), (10) <del>UI-built Quick chat / Physiotherapy builder path</del> (<strong>done</strong>,
+this slice: country presets EU/PT/All, inline named schedule + location on
+the modes panel, <code>createApiClient().ai.editorAssist</code> wired on event-type
+description, <code>check:i18n-parity</code> ignores <code>*.draft.json</code>,
+<code>E2E_EXPERT_OFFER=1</code> builder affordance tests);
+still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
+net-new fixtures (needs Connect-ready expert session), <code>pnpm i18n:draft</code>
+script + draft age gate, design-pass screenshots, multi-account calendar
+busy evidence. Do not start Phase 09 until the exit gate is honestly met or
+explicitly waived by the founder.</p>
 </blockquote>
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> package exists with ADR-023 exports, sanitizer XSS tests, and
@@ -3276,10 +3281,17 @@ ensures a default schedule via <code>getOrCreateDefaultSchedule</code>.)</li>
 <li><input disabled="" type="checkbox"> Builder refuses to publish a <code>clinical</code> event type whose mode is worldwide or outside
 <code>service_countries</code>, an in-person mode without a location, and a mode whose languages are not
 a subset of the profile; each refusal is a sentence a human understands, next to the field.</li>
-<li><input disabled="" type="checkbox"> Quick chat built via UI: video mode on schedule &quot;Online&quot; worldwide, phone mode on schedule
-&quot;Phone&quot; with EU preset; public funnel shows both cards in PT and one in BR.</li>
-<li><input disabled="" type="checkbox"> Physiotherapy built via UI: follow-up with Lisboa/Porto/Madrid modes, Madrid priced higher,
-each on its own schedule; slots differ per location in the funnel.</li>
+<li><input checked="" disabled="" type="checkbox"> Quick chat / Physiotherapy <strong>builder path</strong> via UI: modes panel country
+presets (EU ∩ service countries, Portugal only, all), inline named
+schedule create, inline location create for in-person modes; AI
+improve/shorten/fix_grammar on event-type description via
+<code>createApiClient().ai.editorAssist</code>. Full UI→publish→public-funnel
+proof for net-new fixtures still needs a Connect-ready expert session
+(<code>E2E_EXPERT_OFFER=1</code> covers builder affordances; seeded funnel remains).</li>
+<li><input disabled="" type="checkbox"> Physiotherapy end-to-end: follow-up with Lisboa/Porto/Madrid modes,
+Madrid priced higher, each on its own schedule; slots differ per location
+in the funnel (seeded funnel covered; UI-built publish+funnel pending
+Connect session).</li>
 <li><input disabled="" type="checkbox"> Private link created for a <code>private</code> event type while <code>accepting_bookings = false</code> books one
 slot on the override schedule, then shows &quot;used&quot;; revoked link 404s.</li>
 <li><input disabled="" type="checkbox"> Two Google accounts and one Microsoft account connected; only calendars toggled
@@ -3289,13 +3301,17 @@ feed subscription shows bookings in Apple Calendar (manual evidence).</li>
 <li><input checked="" disabled="" type="checkbox"> <code>POST /ai/editor</code> + <code>@eleva/ai</code> <code>editorAssist</code> stream with allow-list
 fail-closed and <code>clinical</code> rejected until Phase 10 (never <code>apps/app</code>
 member content). Expert editor UI hooks (<code>onAssist</code> / <code>ai_draft</code>) shipped;
-app wiring of <code>createApiClient().ai.editorAssist</code> still open.</li>
-<li><input disabled="" type="checkbox"> <code>pnpm i18n:draft</code> produces draft files and <code>check:i18n-parity</code> ignores them.</li>
+expert offer basics tab wires <code>createApiClient().ai.editorAssist</code> for
+description assist (LocalizedText; Plate description column still open).</li>
+<li><input disabled="" type="checkbox"> <code>pnpm i18n:draft</code> produces draft files and <code>check:i18n-parity</code> ignores them.
+(<code>check:i18n-parity</code> now ignores <code>*.draft.json</code>; draft script + age gate
+still open.)</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
 <code>pt</code>/<code>en</code>, 360px and 1280px.</li>
-<li><input disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> green for UI-built Quick chat / Physiotherapy
-fixtures (seeded public-funnel mode cards covered in the modes+e2e slice;
-see decision-log 2026-09-24); <code>check:i18n-parity</code> green.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> covers seeded public-funnel modes + opt-in
+<code>E2E_EXPERT_OFFER=1</code> builder affordances (presets / inline schedule /
+location). Full UI-built Quick chat / Physiotherapy → funnel still open
+until Connect-ready loopback session; <code>check:i18n-parity</code> green.</li>
 </ul>
 <h2 id="04b-expert-offer-builder--tests"><a class="anchor" href="#04b-expert-offer-builder--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>

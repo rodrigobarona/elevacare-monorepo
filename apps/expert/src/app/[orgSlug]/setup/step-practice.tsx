@@ -21,6 +21,7 @@ import {
   AccordionTrigger,
 } from "@eleva/ui/components/accordion"
 import { savePracticeStep } from "./actions"
+import { EU_SERVICE_COUNTRIES } from "@eleva/config"
 
 /** Launch practice-country picker (Portugal-first markets). */
 const PRACTICE_COUNTRY_OPTIONS = [
@@ -28,37 +29,6 @@ const PRACTICE_COUNTRY_OPTIONS = [
   { value: "ES", labelKey: "countries.ES" as const },
   { value: "BR", labelKey: "countries.BR" as const },
 ]
-
-/** EU ISO list for the service-countries preset (D-02 phone/EU reference). */
-const EU_SERVICE_COUNTRIES = [
-  "AT",
-  "BE",
-  "BG",
-  "HR",
-  "CY",
-  "CZ",
-  "DK",
-  "EE",
-  "FI",
-  "FR",
-  "DE",
-  "GR",
-  "HU",
-  "IE",
-  "IT",
-  "LV",
-  "LT",
-  "LU",
-  "MT",
-  "NL",
-  "PL",
-  "PT",
-  "RO",
-  "SK",
-  "SI",
-  "ES",
-  "SE",
-] as const
 
 const LANGUAGE_OPTIONS = [
   { value: "pt", labelKey: "languageLabels.pt" as const },

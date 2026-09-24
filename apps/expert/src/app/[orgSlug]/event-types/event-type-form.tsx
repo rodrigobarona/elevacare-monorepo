@@ -28,6 +28,8 @@ import {
   updateEventTypeAction,
   type EventTypeFormData,
 } from "./actions"
+import { editorAssistAction } from "./editor-assist-action"
+import type { EditorAssistCommand } from "@eleva/api-client"
 
 export type { EventTypeFormData }
 
@@ -69,7 +71,9 @@ export function EventTypeForm({
   const router = useRouter()
   const t = useTranslations("eventTypes")
   const [pending, setPending] = React.useState(false)
+  const [assistPending, setAssistPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
+  const [assistError, setAssistError] = React.useState<string | null>(null)
   const [activeLocale, setActiveLocale] = React.useState<string>("en")
 
   const [slug, setSlug] = React.useState(defaultValues?.slug ?? "")
@@ -210,6 +214,52 @@ export function EventTypeForm({
     )
   }
 
+  function descriptionForLocale(locale: string): string {
+    if (locale === "en") return description.en
+    return description[locale as "pt" | "es"] ?? ""
+  }
+
+  async function runAssist(command: EditorAssistCommand) {
+    setAssistError(null)
+    if (!eventTypeId) {
+      setAssistError(t("aiAssist.saveFirst"))
+      return
+    }
+    const text = descriptionForLocale(activeLocale).trim()
+    if (!text) {
+      setAssistError(t("aiAssist.empty"))
+      return
+    }
+    const localeAtRequest = activeLocale
+    setAssistPending(true)
+    try {
+      const result = await editorAssistAction({
+        command,
+        text,
+        sourceLocale: localeAtRequest as "en" | "pt" | "es",
+        resource: "event_type",
+        resourceId: eventTypeId,
+      })
+      if (!result.ok) {
+        setAssistError(result.message ?? t("aiAssist.failed"))
+        return
+      }
+      setDescription((prev) => {
+        const current =
+          localeAtRequest === "en"
+            ? prev.en
+            : (prev[localeAtRequest as "pt" | "es"] ?? "")
+        // Drop the result if the expert edited while the request was in flight.
+        if (current.trim() !== text) return prev
+        return { ...prev, [localeAtRequest]: result.text }
+      })
+    } catch {
+      setAssistError(t("aiAssist.failed"))
+    } finally {
+      setAssistPending(false)
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
@@ -271,11 +321,7 @@ export function EventTypeForm({
               <div className="space-y-1.5">
                 <Label>Description ({LOCALE_LABELS[activeLocale]})</Label>
                 <Textarea
-                  value={
-                    activeLocale === "en"
-                      ? description.en
-                      : (description[activeLocale as "pt" | "es"] ?? "")
-                  }
+                  value={descriptionForLocale(activeLocale)}
                   onChange={(e) =>
                     setDescription((prev) => ({
                       ...prev,
@@ -284,7 +330,52 @@ export function EventTypeForm({
                   }
                   placeholder="Describe what to expect"
                   rows={3}
+                  data-testid="event-type-description"
                 />
+                {panel === "basics" || mode === "edit" ? (
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isDisabled={assistPending || pending}
+                      onPress={() => void runAssist("improve")}
+                      data-testid="ai-assist-improve"
+                    >
+                      {assistPending
+                        ? t("aiAssist.pending")
+                        : t("aiAssist.improve")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isDisabled={assistPending || pending}
+                      onPress={() => void runAssist("shorten")}
+                      data-testid="ai-assist-shorten"
+                    >
+                      {t("aiAssist.shorten")}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      isDisabled={assistPending || pending}
+                      onPress={() => void runAssist("fix_grammar")}
+                      data-testid="ai-assist-fix-grammar"
+                    >
+                      {t("aiAssist.fixGrammar")}
+                    </Button>
+                  </div>
+                ) : null}
+                {assistError ? (
+                  <p
+                    className="text-sm text-destructive"
+                    data-testid="ai-assist-error"
+                  >
+                    {assistError}
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-1.5">
@@ -485,7 +576,9 @@ export function EventTypeForm({
       <div className="flex gap-3">
         <Button
           type="submit"
-          isDisabled={pending || (panel !== "policies" && !title.en)}
+          isDisabled={
+            pending || assistPending || (panel !== "policies" && !title.en)
+          }
         >
           {pending
             ? "Saving..."

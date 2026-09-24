@@ -141,6 +141,7 @@ export default async function EditEventTypePage(props: {
         profileLanguages={profile.languages as string[]}
         serviceCountries={profile.serviceCountries as string[]}
         worldwideRemote={profile.worldwideRemote}
+        defaultTimezone={profile.timezone ?? "Europe/Lisbon"}
         links={links}
         integrations={calendarOptions}
         eventTypeDestination={{

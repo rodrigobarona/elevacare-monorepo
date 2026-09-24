@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Phase 04B UI-built offer fixture builder path
+
+- Decision: Ship the minimal UI path for Quick chat / Physiotherapy fixtures:
+  modes-panel country presets (EU ∩ service countries, Portugal only, all),
+  inline named schedule + location create, and
+  `createApiClient().ai.editorAssist` on event-type description. Parity
+  ignores `*.draft.json`; `pnpm i18n:draft` script still open. Seeded public
+  funnel remains the default e2e; `E2E_EXPERT_OFFER=1` covers builder
+  affordances. Full UI→publish→funnel for net-new offers still needs a
+  Connect-ready expert session — Phase 04B exit gate is **not** fully closed.
+- Owner: engineering
+- Status: active
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  `#107` Plate AI route
+- Next review: Connect-ready UI-built funnel e2e, `pnpm i18n:draft`, design
+  pass, or founder waiver before Phase 09
+
 ### 2026-09-24: Phase 04B Plate AI editor assist route
 
 - Decision: Ship `POST /ai/editor` + `@eleva/ai` `editorAssist` (streamText via

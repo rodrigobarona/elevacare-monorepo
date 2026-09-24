@@ -32,6 +32,7 @@ interface Props {
   profileLanguages: string[]
   serviceCountries: string[]
   worldwideRemote: boolean
+  defaultTimezone: string
   links: BookingLinkListItem[]
   integrations: CalendarIntegrationOption[]
   eventTypeDestination: {
@@ -52,6 +53,7 @@ export function EventTypeBuilder({
   profileLanguages,
   serviceCountries,
   worldwideRemote,
+  defaultTimezone,
   links,
   integrations,
   eventTypeDestination,
@@ -61,11 +63,21 @@ export function EventTypeBuilder({
   return (
     <Tabs defaultSelectedKey="basics" className="w-full">
       <TabsList variant="line" className="mb-4 w-full max-w-full flex-wrap">
-        <TabsTrigger id="basics">{t("basics")}</TabsTrigger>
-        <TabsTrigger id="kind">{t("kind")}</TabsTrigger>
-        <TabsTrigger id="policies">{t("policies")}</TabsTrigger>
-        <TabsTrigger id="modes">{t("modes")}</TabsTrigger>
-        <TabsTrigger id="privateLinks">{t("privateLinks")}</TabsTrigger>
+        <TabsTrigger id="basics" data-testid="tab-basics">
+          {t("basics")}
+        </TabsTrigger>
+        <TabsTrigger id="kind" data-testid="tab-kind">
+          {t("kind")}
+        </TabsTrigger>
+        <TabsTrigger id="policies" data-testid="tab-policies">
+          {t("policies")}
+        </TabsTrigger>
+        <TabsTrigger id="modes" data-testid="tab-modes">
+          {t("modes")}
+        </TabsTrigger>
+        <TabsTrigger id="privateLinks" data-testid="tab-private-links">
+          {t("privateLinks")}
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent id="basics">
@@ -106,6 +118,7 @@ export function EventTypeBuilder({
           serviceCountries={serviceCountries}
           worldwideRemote={worldwideRemote}
           eventTypeKind={kind}
+          defaultTimezone={defaultTimezone}
           integrations={integrations}
           eventTypeDestination={eventTypeDestination}
         />

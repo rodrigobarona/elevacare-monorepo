@@ -52,8 +52,11 @@ export async function checkI18nParity(
     const messagesDir = path.join(appsRoot, entry.name, "messages")
     let files: string[]
     try {
-      files = (await readdir(messagesDir)).filter((name) =>
-        name.endsWith(".json")
+      // `*.draft.json` is for `pnpm i18n:draft` AI drafts (Phase 04B) — humans
+      // review and promote keys into the canonical locale files. Stale-draft
+      // age checks land with the draft script; parity only ignores them here.
+      files = (await readdir(messagesDir)).filter(
+        (name) => name.endsWith(".json") && !name.endsWith(".draft.json")
       )
     } catch {
       continue

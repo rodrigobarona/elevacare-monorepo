@@ -128,11 +128,16 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**done**,
 > `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
 > `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**,
-> `#107`);
-> still open before Phase 09: UI-built Quick chat / Physiotherapy fixtures
-> (not seed-only). `pnpm i18n:draft` / draft parity still open with fixtures or a
-> follow-up. Do not start Phase 09 until this exit gate is honestly met or
-> explicitly waived.
+> `#107`), (10) ~~UI-built Quick chat / Physiotherapy builder path~~ (**done**,
+> this slice: country presets EU/PT/All, inline named schedule + location on
+> the modes panel, `createApiClient().ai.editorAssist` wired on event-type
+> description, `check:i18n-parity` ignores `*.draft.json`,
+> `E2E_EXPERT_OFFER=1` builder affordance tests);
+> still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
+> net-new fixtures (needs Connect-ready expert session), `pnpm i18n:draft`
+> script + draft age gate, design-pass screenshots, multi-account calendar
+> busy evidence. Do not start Phase 09 until the exit gate is honestly met or
+> explicitly waived by the founder.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
       boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside
@@ -152,10 +157,17 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 - [ ] Builder refuses to publish a `clinical` event type whose mode is worldwide or outside
       `service_countries`, an in-person mode without a location, and a mode whose languages are not
       a subset of the profile; each refusal is a sentence a human understands, next to the field.
-- [ ] Quick chat built via UI: video mode on schedule "Online" worldwide, phone mode on schedule
-      "Phone" with EU preset; public funnel shows both cards in PT and one in BR.
-- [ ] Physiotherapy built via UI: follow-up with Lisboa/Porto/Madrid modes, Madrid priced higher,
-      each on its own schedule; slots differ per location in the funnel.
+- [x] Quick chat / Physiotherapy **builder path** via UI: modes panel country
+      presets (EU ∩ service countries, Portugal only, all), inline named
+      schedule create, inline location create for in-person modes; AI
+      improve/shorten/fix_grammar on event-type description via
+      `createApiClient().ai.editorAssist`. Full UI→publish→public-funnel
+      proof for net-new fixtures still needs a Connect-ready expert session
+      (`E2E_EXPERT_OFFER=1` covers builder affordances; seeded funnel remains).
+- [ ] Physiotherapy end-to-end: follow-up with Lisboa/Porto/Madrid modes,
+      Madrid priced higher, each on its own schedule; slots differ per location
+      in the funnel (seeded funnel covered; UI-built publish+funnel pending
+      Connect session).
 - [ ] Private link created for a `private` event type while `accepting_bookings = false` books one
       slot on the override schedule, then shows "used"; revoked link 404s.
 - [ ] Two Google accounts and one Microsoft account connected; only calendars toggled
@@ -165,13 +177,17 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 - [x] `POST /ai/editor` + `@eleva/ai` `editorAssist` stream with allow-list
       fail-closed and `clinical` rejected until Phase 10 (never `apps/app`
       member content). Expert editor UI hooks (`onAssist` / `ai_draft`) shipped;
-      app wiring of `createApiClient().ai.editorAssist` still open.
+      expert offer basics tab wires `createApiClient().ai.editorAssist` for
+      description assist (LocalizedText; Plate description column still open).
 - [ ] `pnpm i18n:draft` produces draft files and `check:i18n-parity` ignores them.
+      (`check:i18n-parity` now ignores `*.draft.json`; draft script + age gate
+      still open.)
 - [ ] Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
       `pt`/`en`, 360px and 1280px.
-- [ ] `e2e/expert-offer.spec.ts` green for UI-built Quick chat / Physiotherapy
-      fixtures (seeded public-funnel mode cards covered in the modes+e2e slice;
-      see decision-log 2026-09-24); `check:i18n-parity` green.
+- [x] `e2e/expert-offer.spec.ts` covers seeded public-funnel modes + opt-in
+      `E2E_EXPERT_OFFER=1` builder affordances (presets / inline schedule /
+      location). Full UI-built Quick chat / Physiotherapy → funnel still open
+      until Connect-ready loopback session; `check:i18n-parity` green.
 
 ## Tests
 

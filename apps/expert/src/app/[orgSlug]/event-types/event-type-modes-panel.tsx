@@ -31,6 +31,8 @@ import {
   createEventTypeModeAction,
   patchEventTypeModeAction,
   deactivateEventTypeModeAction,
+  createNamedScheduleAction,
+  createInlineLocationAction,
 } from "./mode-actions"
 import {
   DestinationOverrideSelect,
@@ -38,6 +40,7 @@ import {
   type SubCalendarOption,
 } from "./destination-override-select"
 import { loadSubCalendars } from "../calendars/actions"
+import { defaultTimezoneForCountry, euCountriesInService } from "@eleva/config"
 
 export type ModeRow = {
   id: string
@@ -83,6 +86,7 @@ interface Props {
   serviceCountries: string[]
   worldwideRemote: boolean
   eventTypeKind: "clinical" | "non_clinical"
+  defaultTimezone: string
   integrations: CalendarIntegrationOption[]
   eventTypeDestination: {
     destinationIntegrationId: string | null
@@ -99,6 +103,7 @@ export function EventTypeModesPanel({
   serviceCountries,
   worldwideRemote,
   eventTypeKind,
+  defaultTimezone,
   integrations,
   eventTypeDestination,
 }: Props) {
@@ -125,8 +130,22 @@ export function EventTypeModesPanel({
   )
   const [priceOverride, setPriceOverride] = React.useState("")
   const [labelEn, setLabelEn] = React.useState("")
+  const [showNewSchedule, setShowNewSchedule] = React.useState(false)
+  const [newScheduleName, setNewScheduleName] = React.useState("")
+  const [newScheduleTz, setNewScheduleTz] = React.useState(defaultTimezone)
+  const [showNewLocation, setShowNewLocation] = React.useState(false)
+  const [newLocName, setNewLocName] = React.useState("")
+  const [newLocAddress, setNewLocAddress] = React.useState("")
+  const [newLocCity, setNewLocCity] = React.useState("")
+  const [newLocCountry, setNewLocCountry] = React.useState(
+    serviceCountries[0] ?? "PT"
+  )
+  const [newLocTimezone, setNewLocTimezone] = React.useState(() =>
+    defaultTimezoneForCountry(serviceCountries[0] ?? "PT", defaultTimezone)
+  )
 
   const activeModes = initialModes.filter((m) => m.active)
+  const euPresetCountries = euCountriesInService(serviceCountries)
   const canUseWorldwide =
     eventTypeKind === "non_clinical" && worldwideRemote && mode !== "in_person"
   const isEditing = editingModeId != null
@@ -239,6 +258,101 @@ export function EventTypeModesPanel({
     setCountryCodes((prev) =>
       prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code]
     )
+  }
+
+  function applyCountryPreset(preset: "all" | "portugal" | "eu") {
+    if (preset === "all") {
+      setCountryCodes([...serviceCountries])
+      return
+    }
+    if (preset === "portugal") {
+      setCountryCodes(serviceCountries.filter((c) => c === "PT"))
+      return
+    }
+    setCountryCodes(euPresetCountries)
+  }
+
+  async function handleCreateSchedule() {
+    setPending(true)
+    setError(null)
+    try {
+      const result = await createNamedScheduleAction({
+        name: newScheduleName.trim(),
+        timezone: newScheduleTz.trim() || defaultTimezone,
+      })
+      if (!result.ok) {
+        setError(result.message ?? formatModeError(result.error))
+        return
+      }
+      setScheduleId(result.id)
+      setNewScheduleName("")
+      setShowNewSchedule(false)
+      router.refresh()
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : formatModeError("create-failed")
+      )
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function handleCreateLocation() {
+    setPending(true)
+    setError(null)
+    try {
+      const result = await createInlineLocationAction({
+        name: newLocName.trim(),
+        address: newLocAddress.trim(),
+        city: newLocCity.trim(),
+        country: newLocCountry,
+        timezone:
+          newLocTimezone.trim() ||
+          defaultTimezoneForCountry(newLocCountry, defaultTimezone),
+      })
+      if (!result.ok) {
+        setError(result.message ?? formatModeError(result.error))
+        return
+      }
+      setLocationId(result.id)
+      if (result.country) setCountryCodes([result.country])
+      setNewLocName("")
+      setNewLocAddress("")
+      setNewLocCity("")
+      setShowNewLocation(false)
+      router.refresh()
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : formatModeError("create-failed")
+      )
+    } finally {
+      setPending(false)
+    }
+  }
+
+  function onInlineScheduleKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== "Enter") return
+    e.preventDefault()
+    e.stopPropagation()
+    if (!pending && newScheduleName.trim()) void handleCreateSchedule()
+  }
+
+  function onInlineLocationKeyDown(e: React.KeyboardEvent) {
+    if (e.key !== "Enter") return
+    e.preventDefault()
+    e.stopPropagation()
+    if (
+      !pending &&
+      newLocName.trim() &&
+      newLocAddress.trim() &&
+      newLocCity.trim()
+    ) {
+      void handleCreateLocation()
+    }
   }
 
   function buildSharedFields(): {
@@ -362,6 +476,51 @@ export function EventTypeModesPanel({
           <CardTitle>{t("title")}</CardTitle>
           <CardDescription>{t("needSchedule")}</CardDescription>
         </CardHeader>
+        <CardContent className="space-y-4">
+          {error ? (
+            <Alert variant="destructive" data-testid="mode-error">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div
+            className="space-y-2 rounded-md border p-3"
+            data-testid="mode-new-schedule-form"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="new-schedule-name-empty">
+                {t("fields.scheduleName")}
+              </Label>
+              <Input
+                id="new-schedule-name-empty"
+                value={newScheduleName}
+                onChange={(e) => setNewScheduleName(e.target.value)}
+                onKeyDown={onInlineScheduleKeyDown}
+                placeholder={t("scheduleNamePlaceholder")}
+                data-testid="new-schedule-name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new-schedule-tz-empty">
+                {t("fields.timezone")}
+              </Label>
+              <Input
+                id="new-schedule-tz-empty"
+                value={newScheduleTz}
+                onChange={(e) => setNewScheduleTz(e.target.value)}
+                onKeyDown={onInlineScheduleKeyDown}
+                data-testid="new-schedule-tz"
+              />
+            </div>
+            <Button
+              size="sm"
+              isDisabled={pending || !newScheduleName.trim()}
+              onPress={() => void handleCreateSchedule()}
+              data-testid="save-new-schedule"
+            >
+              {t("saveSchedule")}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     )
   }
@@ -512,13 +671,25 @@ export function EventTypeModesPanel({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem id="online" textValue={t("kinds.online")}>
+                  <SelectItem
+                    id="online"
+                    textValue={t("kinds.online")}
+                    data-testid="mode-kind-online"
+                  >
                     {t("kinds.online")}
                   </SelectItem>
-                  <SelectItem id="phone" textValue={t("kinds.phone")}>
+                  <SelectItem
+                    id="phone"
+                    textValue={t("kinds.phone")}
+                    data-testid="mode-kind-phone"
+                  >
                     {t("kinds.phone")}
                   </SelectItem>
-                  <SelectItem id="in_person" textValue={t("kinds.in_person")}>
+                  <SelectItem
+                    id="in_person"
+                    textValue={t("kinds.in_person")}
+                    data-testid="mode-kind-in-person"
+                  >
                     {t("kinds.in_person")}
                   </SelectItem>
                 </SelectContent>
@@ -545,6 +716,69 @@ export function EventTypeModesPanel({
                   ))}
                 </SelectContent>
               </Select>
+              {!showNewSchedule ? (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  isDisabled={pending}
+                  onPress={() => setShowNewSchedule(true)}
+                  data-testid="mode-new-schedule"
+                >
+                  {t("newSchedule")}
+                </Button>
+              ) : (
+                <div
+                  className="space-y-2 rounded-md border p-3"
+                  data-testid="mode-new-schedule-form"
+                >
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-schedule-name">
+                      {t("fields.scheduleName")}
+                    </Label>
+                    <Input
+                      id="new-schedule-name"
+                      value={newScheduleName}
+                      onChange={(e) => setNewScheduleName(e.target.value)}
+                      onKeyDown={onInlineScheduleKeyDown}
+                      placeholder={t("scheduleNamePlaceholder")}
+                      data-testid="new-schedule-name"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="new-schedule-tz">
+                      {t("fields.timezone")}
+                    </Label>
+                    <Input
+                      id="new-schedule-tz"
+                      value={newScheduleTz}
+                      onChange={(e) => setNewScheduleTz(e.target.value)}
+                      onKeyDown={onInlineScheduleKeyDown}
+                      data-testid="new-schedule-tz"
+                    />
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      isDisabled={pending || !newScheduleName.trim()}
+                      onPress={() => void handleCreateSchedule()}
+                      data-testid="save-new-schedule"
+                    >
+                      {t("saveSchedule")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      isDisabled={pending}
+                      onPress={() => {
+                        setShowNewSchedule(false)
+                        setNewScheduleName("")
+                      }}
+                    >
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {mode === "in_person" ? (
@@ -578,6 +812,123 @@ export function EventTypeModesPanel({
                     {t("needLocation")}
                   </p>
                 ) : null}
+                {!showNewLocation ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    isDisabled={pending}
+                    onPress={() => setShowNewLocation(true)}
+                    data-testid="mode-new-location"
+                  >
+                    {t("newLocation")}
+                  </Button>
+                ) : (
+                  <div
+                    className="space-y-2 rounded-md border p-3"
+                    data-testid="mode-new-location-form"
+                  >
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-loc-name">
+                        {t("fields.locationName")}
+                      </Label>
+                      <Input
+                        id="new-loc-name"
+                        value={newLocName}
+                        onChange={(e) => setNewLocName(e.target.value)}
+                        onKeyDown={onInlineLocationKeyDown}
+                        placeholder={t("locationNamePlaceholder")}
+                        data-testid="new-location-name"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-loc-address">
+                        {t("fields.address")}
+                      </Label>
+                      <Input
+                        id="new-loc-address"
+                        value={newLocAddress}
+                        onChange={(e) => setNewLocAddress(e.target.value)}
+                        onKeyDown={onInlineLocationKeyDown}
+                        data-testid="new-location-address"
+                      />
+                    </div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="new-loc-city">{t("fields.city")}</Label>
+                        <Input
+                          id="new-loc-city"
+                          value={newLocCity}
+                          onChange={(e) => setNewLocCity(e.target.value)}
+                          onKeyDown={onInlineLocationKeyDown}
+                          data-testid="new-location-city"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Select
+                          selectedKey={newLocCountry}
+                          onSelectionChange={(key) => {
+                            if (typeof key === "string") {
+                              setNewLocCountry(key)
+                              setNewLocTimezone(
+                                defaultTimezoneForCountry(key, defaultTimezone)
+                              )
+                            }
+                          }}
+                        >
+                          <Label>{t("fields.locationCountry")}</Label>
+                          <SelectTrigger data-testid="new-location-country">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {serviceCountries.map((code) => (
+                              <SelectItem key={code} id={code} textValue={code}>
+                                {code}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="new-loc-tz">{t("fields.timezone")}</Label>
+                      <Input
+                        id="new-loc-tz"
+                        value={newLocTimezone}
+                        onChange={(e) => setNewLocTimezone(e.target.value)}
+                        onKeyDown={onInlineLocationKeyDown}
+                        data-testid="new-location-tz"
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        size="sm"
+                        isDisabled={
+                          pending ||
+                          !newLocName.trim() ||
+                          !newLocAddress.trim() ||
+                          !newLocCity.trim()
+                        }
+                        onPress={() => void handleCreateLocation()}
+                        data-testid="save-new-location"
+                      >
+                        {t("saveLocation")}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        isDisabled={pending}
+                        onPress={() => {
+                          setShowNewLocation(false)
+                          setNewLocName("")
+                          setNewLocAddress("")
+                          setNewLocCity("")
+                        }}
+                      >
+                        {t("cancel")}
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : null}
 
@@ -595,6 +946,42 @@ export function EventTypeModesPanel({
                 <legend className="text-sm font-medium">
                   {t("fields.countries")}
                 </legend>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    isDisabled={pending}
+                    onPress={() => applyCountryPreset("all")}
+                    data-testid="preset-all-countries"
+                  >
+                    {t("presets.all")}
+                  </Button>
+                  {serviceCountries.includes("PT") ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      isDisabled={pending}
+                      onPress={() => applyCountryPreset("portugal")}
+                      data-testid="preset-portugal"
+                    >
+                      {t("presets.portugal")}
+                    </Button>
+                  ) : null}
+                  {euPresetCountries.length > 0 ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      isDisabled={pending}
+                      onPress={() => applyCountryPreset("eu")}
+                      data-testid="preset-eu"
+                    >
+                      {t("presets.eu")}
+                    </Button>
+                  ) : null}
+                </div>
                 <div className="flex flex-wrap gap-3">
                   {serviceCountries.map((code) => (
                     <CheckboxField
