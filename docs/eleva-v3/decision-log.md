@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Self-host Eleva UI fonts via next/font/local
+
+- Owner: engineering
+- Status: active
+- Summary: `@eleva/ui` brand fonts (Lora, DM Sans, IBM Plex Mono) now load
+  through `next/font/local` with vendored latin WOFF2 files under
+  `packages/ui/src/fonts/files/`, not `next/font/google`. Next.js 16.2
+  Turbopack CI builds were flaking on GHA with
+  `Can't resolve '@vercel/turbopack-next/internal/font/google/font'` /
+  `next/font/google queries have exactly one entry` when parallel app
+  builds fetched Google Fonts (seen on main after #98 and on #99). Local
+  files remove the build-time network fetch so Turbopack no longer hits
+  that path. CSS variable names (`--font-lora`, `--font-dm-sans`,
+  `--font-ibm-plex-mono`) and `fontClassName` stay unchanged for app
+  layouts. Do not switch back to `next/font/google` without verifying
+  parallel Turbopack CI builds across all apps that import `@eleva/ui/fonts`.
+- Related: `packages/ui/src/fonts.ts`, `packages/ui/src/fonts/README.md`
+- Next review: if Next.js documents a stable Turbopack google-font fix
+  and we want to drop vendored binaries
+
 ### 2026-09-22: Phase 01–08 closeout before Phase 09 (resume 04B)
 
 - Owner: engineering (founder directive)
