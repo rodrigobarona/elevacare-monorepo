@@ -4,6 +4,7 @@ import { requireSession } from "@eleva/auth/server"
 import {
   InvoicingRequestSchema,
   PatchExpertProfileRequestSchema,
+  PatchPracticeRequestSchema,
   ConnectAccountingProviderSchema,
   ApiClientError,
 } from "@eleva/api-client"
@@ -14,11 +15,15 @@ import { isOnboardingStepName } from "@/app/[orgSlug]/setup/onboarding-steps"
 
 interface ProfileFormData {
   nif?: string
-  licenseScope?: string
-  languages: string[]
-  practiceCountries: string[]
-  worldwideMode: boolean
   sessionModes: string[]
+}
+
+interface PracticeFormData {
+  practiceCountry: string
+  serviceCountries: string[]
+  languages: string[]
+  licenseScope: string | null
+  worldwideRemote: boolean
 }
 
 type ActionResult = { ok: true } | { ok: false; error: string }
@@ -30,10 +35,6 @@ export async function saveProfileStep(
   try {
     payload = PatchExpertProfileRequestSchema.parse({
       nif: data.nif ?? null,
-      licenseScope: data.licenseScope ?? null,
-      languages: data.languages,
-      practiceCountries: data.practiceCountries,
-      worldwideMode: data.worldwideMode,
       sessionModes: data.sessionModes,
     })
   } catch {
@@ -58,6 +59,46 @@ export async function saveProfileStep(
     return {
       ok: false,
       error: mapExpertApiError(err, "save-failed"),
+    }
+  }
+}
+
+export async function savePracticeStep(
+  data: PracticeFormData
+): Promise<ActionResult> {
+  let payload
+  try {
+    payload = PatchPracticeRequestSchema.parse({
+      practiceCountry: data.practiceCountry,
+      serviceCountries: data.serviceCountries,
+      languages: data.languages,
+      licenseScope: data.licenseScope,
+      worldwideRemote: data.worldwideRemote,
+    })
+  } catch {
+    return { ok: false, error: "validation" }
+  }
+
+  if (!payload.practiceCountry || !payload.languages?.length) {
+    return { ok: false, error: "required" }
+  }
+
+  try {
+    const session = await requireSession("expert:onboard")
+    const api = await getAuthedApiClient()
+    await api.expert.practice.patch(payload)
+    await api.expert.profile.completeStep("practice")
+
+    revalidateExpertWorkspace(session, "setup")
+    return { ok: true }
+  } catch (err) {
+    console.error("[onboarding] savePracticeStep failed", err)
+    return {
+      ok: false,
+      error: mapExpertApiError(err, "save-failed", {
+        offerInvariant: "offer-invariant",
+        validation: "validation",
+      }),
     }
   }
 }

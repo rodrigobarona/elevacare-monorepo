@@ -865,6 +865,7 @@ export type EnsureExpertProfileResponse = z.infer<
 /** All completable expert onboarding / setup steps (API + metadata SSOT). */
 export const ExpertOnboardingStepSchema = z.enum([
   "profile",
+  "practice",
   "connect",
   "identity",
   "invoicing",
@@ -879,6 +880,7 @@ export type ExpertOnboardingStep = z.infer<typeof ExpertOnboardingStepSchema>
 /** Ordered steps shown in the expert onboarding wizard UI. */
 export const EXPERT_WIZARD_STEPS = [
   "profile",
+  "practice",
   "connect",
   "identity",
   "invoicing",

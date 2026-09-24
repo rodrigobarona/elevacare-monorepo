@@ -3244,10 +3244,11 @@ Ordered backlog: (1) <del><code>@eleva/editor</code> scaffold + boundary lint</d
 <code>#92</code>), (2) <del><code>/expert</code> practice/locations/schedules APIs</del> (<strong>done</strong>, <code>#93</code>) +
 <del><code>experts→expert</code> rename</del> (<strong>done</strong>, <code>#96</code>–<code>#98</code>), (3) <del>event-type modes
 API + publish gates</del> (<strong>done</strong>, <code>#97</code>/<code>#98</code>) + <del>modes panel on event-type
-edit + seeded public-funnel <code>e2e/expert-offer.spec.ts</code></del> (<strong>modes+e2e slice</strong>),
-(4) still open before Phase 09: onboarding Practice step, full services
-builder tabs (kind/policies/private links), calendar polish, Plate AI route,
-UI-built Quick chat / Physiotherapy fixtures (not seed-only).
+edit + seeded public-funnel <code>e2e/expert-offer.spec.ts</code></del> (<strong>done</strong>, <code>#99</code>),
+(4) <del>onboarding Practice step</del> (<strong>done</strong>, this slice), (5) still open before
+Phase 09: full services builder tabs (kind/policies/private links), calendar
+polish, Plate AI route, UI-built Quick chat / Physiotherapy fixtures (not
+seed-only).
 Do not start Phase 09 until this exit gate is honestly met or explicitly waived.</p>
 </blockquote>
 <ul>
@@ -3262,8 +3263,10 @@ silently unpublishing.</li>
 renamed to singular <code>/expert/*</code> (OpenAPI + <code>@eleva/api-client</code> + expert app
 callers; <code>check:route-guards</code> rejects a leftover <code>apps/api/src/app/experts/</code>
 folder). Public reads remain <code>/public/experts/*</code>.</li>
-<li><input disabled="" type="checkbox"> Onboarding cannot complete without <code>practice_country</code>, &gt;= 1 language and a default schedule;
-<code>service_countries</code> outside the licence show the legal helper and are saved as declared.</li>
+<li><input checked="" disabled="" type="checkbox"> Onboarding cannot complete without <code>practice_country</code>, &gt;= 1 language and a default schedule;
+<code>service_countries</code> outside the licence show the legal helper and are saved as declared.
+(Practice wizard step + <code>/expert/practice</code> save + schedule-complete gate that
+ensures a default schedule via <code>getOrCreateDefaultSchedule</code>.)</li>
 <li><input disabled="" type="checkbox"> Builder refuses to publish a <code>clinical</code> event type whose mode is worldwide or outside
 <code>service_countries</code>, an in-person mode without a location, and a mode whose languages are not
 a subset of the profile; each refusal is a sentence a human understands, next to the field.</li>

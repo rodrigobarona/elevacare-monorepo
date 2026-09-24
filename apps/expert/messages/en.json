@@ -255,10 +255,52 @@
     "description": "Complete all steps to activate your expert profile.",
     "steps": {
       "profile": "Profile & Fiscal Info",
+      "practice": "Practice",
       "connect": "Payments",
       "identity": "Identity Verification",
       "invoicing": "Invoicing Setup",
       "schedule": "First Event Type"
+    },
+    "practice": {
+      "intro": "Tell us where you are licensed to work and which languages you use with members. This shapes what you can offer publicly.",
+      "practiceCountry": "Where is your practice based?",
+      "practiceCountryPlaceholder": "Select a country",
+      "serviceCountries": "Where are you allowed to work?",
+      "serviceCountriesHelp": "Select every country where your licence lets you serve members. Your practice country is always included. Use Add or the EU preset for other ISO codes.",
+      "addCountry": "Other country (ISO)",
+      "addLanguage": "Other language (BCP-47)",
+      "add": "Add",
+      "euPreset": "Add EU countries",
+      "legalHelper": "You declared countries beyond your practice base. You remain responsible for holding a valid licence in each country you serve for clinical work.",
+      "whyWeAskTitle": "Why we ask",
+      "whyWeAskBody": "Health regulation is national: a licence in one country does not automatically cover another. Worldwide remote is only for non-clinical work (coaching, mentoring).",
+      "languagesLabel": "Languages you use with members",
+      "licenseScope": "Licence / registration",
+      "licenseScopePlaceholder": "e.g. OPP 12345",
+      "licenseScopeHelp": "Optional now; required before admin approval for clinical offers.",
+      "worldwideRemote": "Worldwide remote (non-clinical only)",
+      "worldwideRemoteHelp": "Lets you offer non-clinical sessions without a country limit. Clinical modes still follow the countries above.",
+      "saving": "Saving…",
+      "continue": "Save & continue",
+      "countries": {
+        "PT": "Portugal",
+        "ES": "Spain",
+        "BR": "Brazil"
+      },
+      "languageLabels": {
+        "pt": "Portuguese",
+        "en": "English",
+        "es": "Spanish"
+      },
+      "errors": {
+        "required": "Choose a practice country and at least one language.",
+        "validation": "Check the form and try again.",
+        "save-failed": "Could not save practice settings. Please try again.",
+        "offer-invariant": "This change would break a published offer. Update those modes first.",
+        "practice-incomplete": "Complete practice country and languages first.",
+        "invalidCountry": "Enter a valid 2-letter country code (ISO 3166-1).",
+        "invalidLanguage": "Enter a valid language code (e.g. pt, en, fr)."
+      }
     },
     "payments": {
       "intro": "Complete Payments setup to receive payouts. This stays on this page — no redirects.",

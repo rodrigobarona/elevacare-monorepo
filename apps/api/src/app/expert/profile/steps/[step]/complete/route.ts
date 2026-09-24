@@ -5,9 +5,27 @@ import { checkBot } from "@/lib/bot-protection"
 import { ExpertOnboardingStepSchema } from "@eleva/api-client"
 import { withAudit } from "@eleva/audit"
 import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
-import { getExpertProfileByUserId, updateExpertProfile } from "@eleva/db"
+import {
+  getExpertProfileByUserId,
+  getOrCreateDefaultSchedule,
+  updateExpertProfile,
+} from "@eleva/db"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+function isPracticeScopeComplete(profile: {
+  practiceCountry: string
+  languages: string[]
+  metadata: Record<string, unknown> | null
+}): boolean {
+  const declaredAt = profile.metadata?.practiceDeclaredAt
+  return (
+    typeof declaredAt === "string" &&
+    declaredAt.length > 0 &&
+    Boolean(profile.practiceCountry?.trim()) &&
+    profile.languages.length >= 1
+  )
+}
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -67,6 +85,23 @@ export async function POST(
 
   const step = parsedStep.data
   if (
+    step === "practice" &&
+    !isPracticeScopeComplete({
+      practiceCountry: profile.practiceCountry,
+      languages: profile.languages,
+      metadata: (profile.metadata as Record<string, unknown> | null) ?? null,
+    })
+  ) {
+    return secureJson(
+      {
+        error: "PRACTICE_INCOMPLETE",
+        message:
+          "Save Practice (country and languages) before completing this step",
+      },
+      { status: 409, headers }
+    )
+  }
+  if (
     (step === "invoicing" || step === "schedule") &&
     !isExpertInvoicingChoiceComplete(profile.invoicingSetupStatus)
   ) {
@@ -75,6 +110,23 @@ export async function POST(
         error: "invoicing_required",
         message:
           "Become-Partner cannot complete without Auto invoicing or Manual acknowledgment",
+      },
+      { status: 409, headers }
+    )
+  }
+  if (
+    step === "schedule" &&
+    !isPracticeScopeComplete({
+      practiceCountry: profile.practiceCountry,
+      languages: profile.languages,
+      metadata: (profile.metadata as Record<string, unknown> | null) ?? null,
+    })
+  ) {
+    return secureJson(
+      {
+        error: "PRACTICE_INCOMPLETE",
+        message:
+          "Complete the Practice step (country and languages) before finishing onboarding",
       },
       { status: 409, headers }
     )
@@ -88,6 +140,14 @@ export async function POST(
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
+      if (step === "schedule") {
+        await getOrCreateDefaultSchedule(
+          profile.orgId,
+          profile.id,
+          profile.timezone ?? "Europe/Lisbon",
+          tx
+        )
+      }
       await updateExpertProfile(
         profile.id,
         profile.orgId,

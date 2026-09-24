@@ -178,6 +178,15 @@ export async function PATCH(request: Request) {
     )
   }
 
+  // Explicit Practice declaration: both country and languages must be in this
+  // request body (not merely schema defaults on the row).
+  const isExplicitPracticeDeclaration =
+    data.practiceCountry !== undefined && data.languages !== undefined
+  const metadata = { ...(profile.metadata ?? {}) } as Record<string, unknown>
+  if (isExplicitPracticeDeclaration) {
+    metadata.practiceDeclaredAt = new Date().toISOString()
+  }
+
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -205,6 +214,7 @@ export async function PATCH(request: Request) {
           ...(data.acceptingBookings !== undefined && {
             acceptingBookings: data.acceptingBookings,
           }),
+          ...(isExplicitPracticeDeclaration && { metadata }),
         },
         tx
       )
@@ -212,7 +222,11 @@ export async function PATCH(request: Request) {
         entity: "expert_profile",
         action: "updated",
         entityId: profile.id,
-        payload: { fields: Object.keys(data), surface: "practice" },
+        payload: {
+          fields: Object.keys(data),
+          surface: "practice",
+          ...(isExplicitPracticeDeclaration && { practiceDeclared: true }),
+        },
       })
     }
   )
