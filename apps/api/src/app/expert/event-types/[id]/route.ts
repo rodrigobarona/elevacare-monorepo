@@ -9,14 +9,32 @@ import {
   getExpertProfileByUserId,
   getPracticeLocation,
   listEventTypeModes,
+  lockEventTypeForUpdate,
   updateEventType,
   deleteEventType,
 } from "@eleva/db"
 import {
   assertOfferInvariants,
   OFFER_INVARIANT_MESSAGES,
+  type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+class KindOfferInvariantError extends Error {
+  code: OfferInvariantError
+  constructor(code: OfferInvariantError) {
+    super(OFFER_INVARIANT_MESSAGES[code])
+    this.name = "KindOfferInvariantError"
+    this.code = code
+  }
+}
+
+class EventTypeNotFoundError extends Error {
+  constructor() {
+    super("event type not found")
+    this.name = "EventTypeNotFoundError"
+  }
+}
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -88,42 +106,6 @@ export async function PATCH(
     )
   }
 
-  if (data.kind !== undefined && data.kind !== existing.kind) {
-    const modes = await listEventTypeModes(profile.orgId, id)
-    for (const mode of modes) {
-      let locationCountry: string | null = null
-      if (mode.mode === "in_person" && mode.locationId) {
-        const location = await getPracticeLocation(
-          profile.orgId,
-          mode.locationId,
-          profile.id
-        )
-        locationCountry = location?.country ?? null
-      }
-      const invariant = assertOfferInvariants({
-        kind: data.kind,
-        mode: mode.mode,
-        countryScopeType: mode.countryScopeType,
-        countryScopeCodes: mode.countryScopeCodes as string[],
-        languages: mode.languages as string[],
-        locationCountry,
-        worldwideRemote: profile.worldwideRemote,
-        serviceCountries: profile.serviceCountries,
-        profileLanguages: profile.languages,
-      })
-      if (invariant) {
-        return secureJson(
-          {
-            error: "OFFER_INVARIANT_VIOLATION",
-            code: invariant,
-            message: OFFER_INVARIANT_MESSAGES[invariant],
-          },
-          { status: 422, headers }
-        )
-      }
-    }
-  }
-
   const updates: Record<string, unknown> = {}
   if (data.slug !== undefined) {
     const slug = normalizeSlug(data.slug)
@@ -171,6 +153,47 @@ export async function PATCH(
     await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const locked = await lockEventTypeForUpdate(
+          profile.orgId,
+          id,
+          profile.id,
+          tx
+        )
+        if (!locked) throw new EventTypeNotFoundError()
+
+        if (data.kind !== undefined && data.kind !== locked.kind) {
+          const modes = await listEventTypeModes(
+            profile.orgId,
+            id,
+            undefined,
+            tx
+          )
+          for (const mode of modes) {
+            let locationCountry: string | null = null
+            if (mode.mode === "in_person" && mode.locationId) {
+              const location = await getPracticeLocation(
+                profile.orgId,
+                mode.locationId,
+                profile.id,
+                tx
+              )
+              locationCountry = location?.country ?? null
+            }
+            const invariant = assertOfferInvariants({
+              kind: data.kind,
+              mode: mode.mode,
+              countryScopeType: mode.countryScopeType,
+              countryScopeCodes: mode.countryScopeCodes as string[],
+              languages: mode.languages as string[],
+              locationCountry,
+              worldwideRemote: profile.worldwideRemote,
+              serviceCountries: profile.serviceCountries,
+              profileLanguages: profile.languages,
+            })
+            if (invariant) throw new KindOfferInvariantError(invariant)
+          }
+        }
+
         await updateEventType(
           profile.orgId,
           id,
@@ -188,6 +211,22 @@ export async function PATCH(
     )
     return secureJson({ ok: true }, { status: 200, headers })
   } catch (err) {
+    if (err instanceof EventTypeNotFoundError) {
+      return secureJson(
+        { error: "not found", message: err.message },
+        { status: 404, headers }
+      )
+    }
+    if (err instanceof KindOfferInvariantError) {
+      return secureJson(
+        {
+          error: "OFFER_INVARIANT_VIOLATION",
+          code: err.code,
+          message: err.message,
+        },
+        { status: 422, headers }
+      )
+    }
     const dbErr = err as { code?: string; constraint?: string }
     if (
       dbErr?.code === "23505" ||

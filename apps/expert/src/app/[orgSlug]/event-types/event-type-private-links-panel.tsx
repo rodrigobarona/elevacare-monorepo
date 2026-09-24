@@ -43,6 +43,26 @@ import type {
   ScheduleOption,
 } from "./event-type-modes-panel"
 
+type PrivateLinkErrorKey =
+  | "error.create-failed"
+  | "error.revoke-failed"
+  | "error.invalid-input"
+  | "error.validation"
+  | "error.generic"
+
+function privateLinkErrorMessageKey(error: string): PrivateLinkErrorKey {
+  switch (error) {
+    case "create-failed":
+    case "revoke-failed":
+    case "invalid-input":
+    case "validation":
+    case "generic":
+      return `error.${error}`
+    default:
+      return "error.generic"
+  }
+}
+
 interface Props {
   eventTypeId: string
   links: BookingLinkListItem[]
@@ -184,7 +204,7 @@ export function EventTypePrivateLinksPanel({
         {error ? (
           <Alert variant="destructive">
             <AlertDescription>
-              {t(`error.${error}` as "error.generic")}
+              {t(privateLinkErrorMessageKey(error))}
             </AlertDescription>
           </Alert>
         ) : null}
