@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
+import { checkI18nDraftAges } from "./i18n-draft"
 import { locales, requiredLocalesForApp, type Locale } from "./i18n-locales"
 
 const LOCALE_UNION = new Set<string>(locales)
@@ -53,8 +54,8 @@ export async function checkI18nParity(
     let files: string[]
     try {
       // `*.draft.json` is for `pnpm i18n:draft` AI drafts (Phase 04B) — humans
-      // review and promote keys into the canonical locale files. Stale-draft
-      // age checks land with the draft script; parity only ignores them here.
+      // review and promote keys into the canonical locale files. Key parity
+      // ignores drafts; `checkI18nDraftAges` enforces the 14-day review gate.
       files = (await readdir(messagesDir)).filter(
         (name) => name.endsWith(".json") && !name.endsWith(".draft.json")
       )
@@ -129,12 +130,16 @@ export async function checkI18nParity(
 export async function runI18nParityCli(
   appsRoot = path.resolve(import.meta.dirname, "../../../apps")
 ): Promise<number> {
-  const result = await checkI18nParity(appsRoot)
-  if (result.ok) {
+  const [parity, drafts] = await Promise.all([
+    checkI18nParity(appsRoot),
+    checkI18nDraftAges(appsRoot),
+  ])
+  const issues = [...parity.issues, ...drafts.issues]
+  if (issues.length === 0) {
     console.log("i18n parity: ok")
     return 0
   }
-  for (const issue of result.issues) {
+  for (const issue of issues) {
     console.error(`[${issue.app}] ${issue.message}`)
   }
   return 1

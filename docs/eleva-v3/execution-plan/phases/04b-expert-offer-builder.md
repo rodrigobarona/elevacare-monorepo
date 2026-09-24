@@ -134,10 +134,12 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > description, `check:i18n-parity` ignores `*.draft.json`,
 > `E2E_EXPERT_OFFER=1` builder affordance tests);
 > still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
-> net-new fixtures (needs Connect-ready expert session), `pnpm i18n:draft`
-> script + draft age gate, design-pass screenshots, multi-account calendar
-> busy evidence. Do not start Phase 09 until the exit gate is honestly met or
-> explicitly waived by the founder.
+> net-new fixtures (needs Connect-ready expert session), design-pass
+> screenshots, multi-account calendar busy evidence. Do not start Phase 09
+> until the exit gate is honestly met or explicitly waived by the founder.
+>
+> **2026-09-24 i18n draft slice:** `pnpm i18n:draft` + `translateMessages` +
+> 14-day draft age gate in `check:i18n-parity` (**done**).
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
       boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside
@@ -179,9 +181,9 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
       member content). Expert editor UI hooks (`onAssist` / `ai_draft`) shipped;
       expert offer basics tab wires `createApiClient().ai.editorAssist` for
       description assist (LocalizedText; Plate description column still open).
-- [ ] `pnpm i18n:draft` produces draft files and `check:i18n-parity` ignores them.
-      (`check:i18n-parity` now ignores `*.draft.json`; draft script + age gate
-      still open.)
+- [x] `pnpm i18n:draft` produces draft files and `check:i18n-parity` ignores them
+      (and fails drafts older than 14 days). Glossary at
+      `packages/config/glossary.json` (no separate `packages/i18n` package yet).
 - [ ] Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
       `pt`/`en`, 360px and 1280px.
 - [x] `e2e/expert-offer.spec.ts` covers seeded public-funnel modes + opt-in
@@ -392,10 +394,10 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
    ({ command: improve|shorten|fix_grammar|translate, text, sourceLocale, targetLocale, context })
    using streamText through the Vercel AI Gateway (model from AI_GATEWAY_MODEL_EDITOR, pinned);
    translateMessages({ sourceLocale: "en", targetLocales, glossary from
-   packages/i18n/glossary.json — "members", "Space", "expert" fixed terms }) + root script
+   packages/config/glossary.json — "members", "Space", "expert" fixed terms }) + root script
    "i18n:draft" writing messages/<locale>.draft.json in every app that has missing keys; extend
    scripts/check-i18n-parity.mjs to ignore *.draft.json and fail if a draft file is older than 14
-   days (drafts must be reviewed, not parked). apps/api POST /ai/editor (expert session only:
+   days (drafts must be reviewed, not parked; age from draft `generatedAt`, not mtime). apps/api POST /ai/editor (expert session only:
    requires an active organization whose membership grants expert-content editing, and the body
    carries { resource: "expert_profile" | "event_type" | "location", resourceId } which the
    handler loads under withOrgContext and rejects with 404 when it is not owned by that org —

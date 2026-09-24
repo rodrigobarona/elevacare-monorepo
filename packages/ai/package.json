@@ -21,6 +21,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
+    "@eleva/config": "workspace:*",
     "ai": "^7.0.112"
   }
 }

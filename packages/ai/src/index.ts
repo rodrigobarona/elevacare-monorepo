@@ -27,3 +27,17 @@ export {
   type EditorAssistInput,
   type EditorAssistStream,
 } from "./editor-assist"
+
+export {
+  AI_TRANSLATE_MESSAGES_EMPTY,
+  AI_TRANSLATE_MESSAGES_PARSE,
+  AiTranslateMessagesEmptyError,
+  AiTranslateMessagesParseError,
+  DEFAULT_GLOSSARY,
+  buildTranslateMessagesPrompt,
+  projectToSourceShape,
+  translateMessages,
+  type MessageTree,
+  type TranslateMessagesInput,
+  type TranslateMessagesResult,
+} from "./translate-messages"
