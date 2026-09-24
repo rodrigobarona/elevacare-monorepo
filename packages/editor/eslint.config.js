@@ -70,7 +70,7 @@ export default [
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
             },
             {
-              group: ["@ai-sdk", "@ai-sdk/**"],
+              group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
               message:
                 "Import AI SDK providers only through @eleva/ai (boundary lint).",
             },

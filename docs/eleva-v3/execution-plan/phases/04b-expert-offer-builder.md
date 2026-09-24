@@ -162,10 +162,11 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
       `use_for_busy` affect slots (test with a busy event); destination override per mode writes the
       booking to the right calendar; token revoke -> reconnect banner; no calendar connected -> ICS
       feed subscription shows bookings in Apple Calendar (manual evidence).
-- [x] `@eleva/editor` AI actions stream via `POST /ai/editor` + `@eleva/ai`
-      `editorAssist`, respect the allow-list (unknown model -> typed error), reject
-      `clinical` until Phase 10, and never run on `apps/app` member content.
-      `pnpm i18n:draft` / draft parity still open.
+- [x] `POST /ai/editor` + `@eleva/ai` `editorAssist` stream with allow-list
+      fail-closed and `clinical` rejected until Phase 10 (never `apps/app`
+      member content). Expert editor UI hooks (`onAssist` / `ai_draft`) shipped;
+      app wiring of `createApiClient().ai.editorAssist` still open.
+- [ ] `pnpm i18n:draft` produces draft files and `check:i18n-parity` ignores them.
 - [ ] Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
       `pt`/`en`, 360px and 1280px.
 - [ ] `e2e/expert-offer.spec.ts` green for UI-built Quick chat / Physiotherapy

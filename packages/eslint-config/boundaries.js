@@ -140,7 +140,7 @@ export const boundariesConfig = [
                 "Radix is banned outside packages/editor (ADR-022 / ADR-023 exception).",
             },
             {
-              group: ["@ai-sdk", "@ai-sdk/**"],
+              group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
               message:
                 "Import AI SDK providers only through @eleva/ai (boundary lint).",
             },

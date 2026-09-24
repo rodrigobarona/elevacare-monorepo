@@ -3286,10 +3286,11 @@ slot on the override schedule, then shows &quot;used&quot;; revoked link 404s.</
 <code>use_for_busy</code> affect slots (test with a busy event); destination override per mode writes the
 booking to the right calendar; token revoke -&gt; reconnect banner; no calendar connected -&gt; ICS
 feed subscription shows bookings in Apple Calendar (manual evidence).</li>
-<li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> AI actions stream via <code>POST /ai/editor</code> + <code>@eleva/ai</code>
-<code>editorAssist</code>, respect the allow-list (unknown model -&gt; typed error), reject
-<code>clinical</code> until Phase 10, and never run on <code>apps/app</code> member content.
-<code>pnpm i18n:draft</code> / draft parity still open.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>POST /ai/editor</code> + <code>@eleva/ai</code> <code>editorAssist</code> stream with allow-list
+fail-closed and <code>clinical</code> rejected until Phase 10 (never <code>apps/app</code>
+member content). Expert editor UI hooks (<code>onAssist</code> / <code>ai_draft</code>) shipped;
+app wiring of <code>createApiClient().ai.editorAssist</code> still open.</li>
+<li><input disabled="" type="checkbox"> <code>pnpm i18n:draft</code> produces draft files and <code>check:i18n-parity</code> ignores them.</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
 <code>pt</code>/<code>en</code>, 360px and 1280px.</li>
 <li><input disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> green for UI-built Quick chat / Physiotherapy

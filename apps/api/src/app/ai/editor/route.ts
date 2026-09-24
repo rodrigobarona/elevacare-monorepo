@@ -113,9 +113,8 @@ export async function POST(request: Request) {
     )
   }
 
-  let modelId: string
   try {
-    modelId = resolveEditorModelId()
+    resolveEditorModelId()
   } catch (err) {
     if (err instanceof AiModelEnvMissingError) {
       return secureJson(
@@ -145,13 +144,8 @@ export async function POST(request: Request) {
         abortSignal: request.signal,
         maxOutputTokens: 2048,
         onFinish: ({ usage }) => {
+          // Tokens + latency only — never prompt/completion content (ADR-023 / 04B).
           console.info("[ai/editor]", {
-            command: body.data.command,
-            context: body.data.context,
-            resource: body.data.resource,
-            resourceId: body.data.resourceId,
-            orgId: profile.orgId,
-            modelId,
             inputTokens: usage?.inputTokens ?? null,
             outputTokens: usage?.outputTokens ?? null,
             latencyMs: Date.now() - startedAt,

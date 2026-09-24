@@ -33,6 +33,8 @@ export type RichTextEditorLabels = {
   improve: string
   shorten: string
   fixGrammar: string
+  assistEmpty: string
+  assistFailed: string
 }
 
 const DEFAULT_LABELS: RichTextEditorLabels = {
@@ -47,6 +49,8 @@ const DEFAULT_LABELS: RichTextEditorLabels = {
   improve: "Improve",
   shorten: "Shorten",
   fixGrammar: "Fix grammar",
+  assistEmpty: "AI assist returned no text",
+  assistFailed: "AI assist failed",
 }
 
 export type EditorAiAssistCommand = "improve" | "shorten" | "fix_grammar"
@@ -112,6 +116,7 @@ export function RichTextEditor({
     ],
     value: (value ?? EMPTY_VALUE) as Value,
   })
+  const suppressChangeRef = useRef(false)
   const lastEmittedRef = useRef<PlateValue | undefined>(value)
   const [assistError, setAssistError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -120,7 +125,9 @@ export function RichTextEditor({
     const next = value ?? EMPTY_VALUE
     if (next === lastEmittedRef.current) return
     lastEmittedRef.current = next
+    suppressChangeRef.current = true
     editor.tf.setValue(next as Value)
+    suppressChangeRef.current = false
   }, [editor, value])
 
   const emitChange = (plateValue: PlateValue, source: RichTextSource) => {
@@ -142,14 +149,20 @@ export function RichTextEditor({
       try {
         const nextText = await onAssist(command, text, locale)
         if (!nextText.trim()) {
-          setAssistError("AI assist returned no text")
+          setAssistError(labels.assistEmpty)
           return
         }
         const nextValue = plainTextToPlateValue(nextText)
+        suppressChangeRef.current = true
         editor.tf.setValue(nextValue as Value)
+        suppressChangeRef.current = false
         emitChange(nextValue, "ai_draft")
       } catch (err) {
-        setAssistError(err instanceof Error ? err.message : "AI assist failed")
+        setAssistError(
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : labels.assistFailed
+        )
       }
     })
   }
@@ -161,7 +174,7 @@ export function RichTextEditor({
     <Plate
       editor={editor}
       onChange={({ value: next }) => {
-        if (isPending) return
+        if (suppressChangeRef.current || isPending) return
         emitChange(next as PlateValue, "human")
       }}
     >
