@@ -1,4 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm"
+import { EU_PHONE_COUNTRIES } from "@eleva/config"
 import { db } from "../client"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import * as auth from "../schema/auth"
@@ -11,37 +12,6 @@ import {
   DEMO_PRIVATE_INVITE_SLUG,
   hashDemoBookingLinkToken,
 } from "./demo-booking-links"
-
-/** EU launch list for the reference phone mode (D-02). */
-export const EU_PHONE_COUNTRIES = [
-  "AT",
-  "BE",
-  "BG",
-  "HR",
-  "CY",
-  "CZ",
-  "DK",
-  "EE",
-  "FI",
-  "FR",
-  "DE",
-  "GR",
-  "HU",
-  "IE",
-  "IT",
-  "LV",
-  "LT",
-  "LU",
-  "MT",
-  "NL",
-  "PL",
-  "PT",
-  "RO",
-  "SK",
-  "SI",
-  "ES",
-  "SE",
-] as const
 
 const WEEKDAYS = [1, 2, 3, 4, 5] as const
 

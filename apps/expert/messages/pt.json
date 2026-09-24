@@ -38,6 +38,15 @@
     },
     "saved": "Tipo de evento guardado.",
     "policiesTitle": "Políticas",
+    "aiAssist": {
+      "improve": "Melhorar",
+      "shorten": "Encurtar",
+      "fixGrammar": "Corrigir gramática",
+      "pending": "A trabalhar…",
+      "empty": "Escreva uma descrição primeiro.",
+      "failed": "A assistência de IA falhou. Tente novamente.",
+      "saveFirst": "Guarde o serviço antes de usar a assistência de IA."
+    },
     "tabs": {
       "basics": "Básicos",
       "kind": "Tipo",
@@ -163,6 +172,17 @@
       "cancel": "Cancelar",
       "pricePlaceholder": "Deixe em branco para usar o preço do evento",
       "labelPlaceholder": "Etiqueta curta opcional",
+      "newSchedule": "Novo horário",
+      "saveSchedule": "Criar horário",
+      "scheduleNamePlaceholder": "ex. Online, Telefone, Clínica Lisboa",
+      "newLocation": "Adicionar um local",
+      "saveLocation": "Criar local",
+      "locationNamePlaceholder": "ex. Lisboa, Porto, Madrid",
+      "presets": {
+        "all": "Todos os meus países",
+        "portugal": "Só Portugal",
+        "eu": "UE"
+      },
       "kinds": {
         "online": "Vídeo",
         "phone": "Telefone",
@@ -171,7 +191,13 @@
       "fields": {
         "mode": "Tipo de encontro",
         "schedule": "Horário",
+        "scheduleName": "Nome do horário",
+        "timezone": "Fuso horário",
         "location": "Local",
+        "locationName": "Nome do local",
+        "address": "Morada",
+        "city": "Cidade",
+        "locationCountry": "País",
         "worldwide": "Oferecer em todo o mundo (apenas remoto)",
         "countries": "Países",
         "languages": "Idiomas",

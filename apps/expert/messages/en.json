@@ -38,6 +38,15 @@
     },
     "saved": "Event type saved.",
     "policiesTitle": "Policies",
+    "aiAssist": {
+      "improve": "Improve",
+      "shorten": "Shorten",
+      "fixGrammar": "Fix grammar",
+      "pending": "Working…",
+      "empty": "Write a description first.",
+      "failed": "AI assist failed. Try again.",
+      "saveFirst": "Save the service before using AI assist."
+    },
     "tabs": {
       "basics": "Basics",
       "kind": "Kind",
@@ -163,6 +172,17 @@
       "cancel": "Cancel",
       "pricePlaceholder": "Leave blank to use the event default",
       "labelPlaceholder": "Optional short label",
+      "newSchedule": "New schedule",
+      "saveSchedule": "Create schedule",
+      "scheduleNamePlaceholder": "e.g. Online, Phone, Lisboa clinic",
+      "newLocation": "Add a place",
+      "saveLocation": "Create location",
+      "locationNamePlaceholder": "e.g. Lisboa, Porto, Madrid",
+      "presets": {
+        "all": "All my countries",
+        "portugal": "Portugal only",
+        "eu": "EU"
+      },
       "kinds": {
         "online": "Video",
         "phone": "Phone",
@@ -171,7 +191,13 @@
       "fields": {
         "mode": "Meeting type",
         "schedule": "Schedule",
+        "scheduleName": "Schedule name",
+        "timezone": "Timezone",
         "location": "Location",
+        "locationName": "Place name",
+        "address": "Address",
+        "city": "City",
+        "locationCountry": "Country",
         "worldwide": "Offer worldwide (remote only)",
         "countries": "Countries",
         "languages": "Languages",

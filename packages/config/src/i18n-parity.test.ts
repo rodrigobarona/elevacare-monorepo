@@ -101,4 +101,21 @@ describe("checkI18nParity", () => {
       true
     )
   })
+
+  it("ignores *.draft.json AI draft files", async () => {
+    const appsRoot = await mkdtemp(path.join(tmpdir(), "i18n-parity-"))
+    dirs.push(appsRoot)
+    await writeAppMessages(appsRoot, "web", {
+      pt: { hello: "olá" },
+      en: { hello: "hello" },
+      es: { hello: "hola" },
+    })
+    await writeFile(
+      path.join(appsRoot, "web", "messages", "es.draft.json"),
+      JSON.stringify({ hello: "borrador", onlyInDraft: "x" })
+    )
+
+    const result = await checkI18nParity(appsRoot)
+    expect(result.ok).toBe(true)
+  })
 })
