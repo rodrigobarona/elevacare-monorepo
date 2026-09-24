@@ -77,6 +77,12 @@ function isSessionMode(value: unknown): value is SessionMode {
   )
 }
 
+function timezoneForCountry(country: string, fallback: string): string {
+  if (country === "ES") return "Europe/Madrid"
+  if (country === "PT") return "Europe/Lisbon"
+  return fallback
+}
+
 interface Props {
   eventTypeId: string
   modes: ModeRow[]
@@ -140,7 +146,9 @@ export function EventTypeModesPanel({
   const [newLocCountry, setNewLocCountry] = React.useState(
     serviceCountries[0] ?? "PT"
   )
-  const [newLocTimezone, setNewLocTimezone] = React.useState(defaultTimezone)
+  const [newLocTimezone, setNewLocTimezone] = React.useState(() =>
+    timezoneForCountry(serviceCountries[0] ?? "PT", defaultTimezone)
+  )
 
   const activeModes = initialModes.filter((m) => m.active)
   const euPresetCountries = euCountriesInService(serviceCountries)
@@ -258,12 +266,6 @@ export function EventTypeModesPanel({
     )
   }
 
-  function timezoneForCountry(country: string): string {
-    if (country === "ES") return "Europe/Madrid"
-    if (country === "PT") return "Europe/Lisbon"
-    return defaultTimezone
-  }
-
   function applyCountryPreset(preset: "all" | "portugal" | "eu") {
     if (preset === "all") {
       setCountryCodes([...serviceCountries])
@@ -292,6 +294,12 @@ export function EventTypeModesPanel({
       setNewScheduleName("")
       setShowNewSchedule(false)
       router.refresh()
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : formatModeError("create-failed")
+      )
     } finally {
       setPending(false)
     }
@@ -306,7 +314,9 @@ export function EventTypeModesPanel({
         address: newLocAddress.trim(),
         city: newLocCity.trim(),
         country: newLocCountry,
-        timezone: newLocTimezone.trim() || timezoneForCountry(newLocCountry),
+        timezone:
+          newLocTimezone.trim() ||
+          timezoneForCountry(newLocCountry, defaultTimezone),
       })
       if (!result.ok) {
         setError(result.message ?? formatModeError(result.error))
@@ -319,6 +329,12 @@ export function EventTypeModesPanel({
       setNewLocCity("")
       setShowNewLocation(false)
       router.refresh()
+    } catch (err) {
+      setError(
+        err instanceof Error && err.message.trim()
+          ? err.message
+          : formatModeError("create-failed")
+      )
     } finally {
       setPending(false)
     }
@@ -814,7 +830,9 @@ export function EventTypeModesPanel({
                           onSelectionChange={(key) => {
                             if (typeof key === "string") {
                               setNewLocCountry(key)
-                              setNewLocTimezone(timezoneForCountry(key))
+                              setNewLocTimezone(
+                                timezoneForCountry(key, defaultTimezone)
+                              )
                             }
                           }}
                         >
