@@ -159,11 +159,11 @@ Out: push (Expo) — post-launch; Novu (retired).
 >
 > ### Founder evidence checklist (08)
 >
-> | Item                                             | Engineering        | Evidence still needed                        |
-> | ------------------------------------------------ | ------------------ | -------------------------------------------- |
-> | Lane 1 booking confirm / reminder / cancel email | Shipped            | Operator inbox proof (locale + ICS) optional |
-> | Twilio SMS Virtual Phone smoke                   | Engineered         | Operator-run `+18777804236` when ready       |
-> | `invoice.issued` / `invoice.failed` kinds        | **Keep off** union | Opens only with Phase 07 issuance            |
+> | Item                                             | Engineering        | Evidence still needed                                                              |
+> | ------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------- |
+> | Lane 1 booking confirm / reminder / cancel email | Shipped            | Operator inbox proof (locale + ICS) — required unless founder explicitly waives    |
+> | Twilio SMS Virtual Phone smoke                   | Engineered         | Operator-run `+18777804236` when ready — required unless founder explicitly waives |
+> | `invoice.issued` / `invoice.failed` kinds        | **Keep off** union | Opens only with Phase 07 issuance                                                  |
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number (e-mail body only), in person -> location name, address, "Open in Maps" link and the location's
