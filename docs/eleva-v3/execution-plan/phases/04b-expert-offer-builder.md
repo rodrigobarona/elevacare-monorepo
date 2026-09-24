@@ -127,7 +127,8 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > `#102`), (6) ~~calendar busy/destination UI on connected accounts~~
 > (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**done**,
 > `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
-> `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**);
+> `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**,
+> `#107`);
 > still open before Phase 09: UI-built Quick chat / Physiotherapy fixtures
 > (not seed-only). `pnpm i18n:draft` / draft parity still open with fixtures or a
 > follow-up. Do not start Phase 09 until this exit gate is honestly met or
