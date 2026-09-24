@@ -4,7 +4,7 @@ import { headers } from "next/headers"
 import { CreateWorkspaceRequestSchema } from "@eleva/api-client"
 import { createApiClient } from "@eleva/api-client"
 import { deriveProductLabel } from "@eleva/auth/capabilities"
-import { requireSession } from "@eleva/auth/server"
+import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 import { resolveOrgHomeUrl } from "@eleva/dashboard/resolve-org-home-url"
 import { switchOrganization } from "@eleva/dashboard/switch-org-action"
 
@@ -21,10 +21,9 @@ function getApiBaseUrl(): string {
 async function getAuthedApiClient() {
   await requireSession()
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   return createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: buildApiSessionHeaders(incomingHeaders),
   })
 }
 

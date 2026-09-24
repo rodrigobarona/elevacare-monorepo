@@ -3748,7 +3748,7 @@ on main. <code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> /
 </tr>
 <tr>
 <td>Prefs + DSAR (no live Stripe)</td>
-<td><strong>Not green</strong> — signup/verify/password sign-in succeed; Space settings RSC hits API <code>401 no-session</code> (<code>ACCOUNT_URL</code> in local <code>.env</code> points at <code>:3000</code> while account app is <code>:3006</code>; cookie/session handoff across zones needs operator fix). Password path kept for prefs/DSAR; separate magic-link → Space case remains in the suite (also blocked on the same session handoff). Guest magic-link <strong>with booking</strong> stays on <code>e2e:member:stripe</code></td>
+<td><strong>Session handoff fixed</strong> — root cause was missing <code>session.activeOrganizationId</code> after raw-SQL <code>provisionPersonalSpace</code> (RSC fell back; API did not → <code>401 no-session</code>), plus Server Action → API mutations missing <code>Origin</code> (<code>CSRF_ORIGIN_MISMATCH</code>). Local <code>ACCOUNT_URL</code> must be <code>:3006</code> (not gateway <code>:3000</code>). Magic-link → Space <strong>PASS</strong> on loopback; prefs/DSAR needs warm <code>apps/app</code> (nested <code>/settings</code> 404 observed on cold turbopack restart — re-run). Guest magic-link <strong>with booking</strong> stays on <code>e2e:member:stripe</code></td>
 </tr>
 <tr>
 <td>Live Stripe journey (<code>E2E_LIVE_STRIPE=1</code>, fisiomota / first-visit / €60)</td>
@@ -3768,8 +3768,8 @@ healthy local session, or the founder waives. Never run against Production.</p>
 </thead>
 <tbody><tr>
 <td><code>pnpm e2e:member</code> prefs + DSAR</td>
-<td>After fixing local <code>ACCOUNT_URL</code>/session cookie handoff</td>
-<td>Code + migrations ready</td>
+<td>Yes (loopback; restart api after auth package change)</td>
+<td>Magic-link Space green; prefs needs warm app</td>
 </tr>
 <tr>
 <td><code>pnpm e2e:member:stripe</code></td>

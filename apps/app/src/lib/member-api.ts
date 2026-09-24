@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { createApiClient } from "@eleva/api-client"
 import { guardSessionForOrg, type ElevaSession } from "@eleva/auth"
-import { requireSession } from "@eleva/auth/server"
+import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 
 const LOCAL_API_HOSTS = new Set(["localhost", "127.0.0.1", "::1"])
@@ -34,10 +34,9 @@ function getApiBaseUrl(): string {
 export async function getAuthedApiClient() {
   await requireSession()
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   return createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: buildApiSessionHeaders(incomingHeaders),
   })
 }
 

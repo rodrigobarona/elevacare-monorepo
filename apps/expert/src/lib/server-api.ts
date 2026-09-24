@@ -1,6 +1,6 @@
 import { headers } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
-import { requireSession } from "@eleva/auth/server"
+import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 
 function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
@@ -15,9 +15,8 @@ function getApiBaseUrl(): string {
 export async function getAuthedApiClient() {
   await requireSession()
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   return createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: buildApiSessionHeaders(incomingHeaders),
   })
 }

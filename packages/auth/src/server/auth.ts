@@ -16,7 +16,10 @@ import { Redis } from "@upstash/redis"
 import * as authSchema from "@eleva/db/schema/auth"
 import { db } from "@eleva/db"
 import { ac, adminAccess, adminRoles, organizationRoles } from "../permissions"
-import { provisionPersonalSpace } from "../provision-personal-space"
+import {
+  findDefaultOrganizationId,
+  provisionPersonalSpace,
+} from "../provision-personal-space"
 import {
   sendMagicLinkEmail,
   sendOrgInvitationEmail,
@@ -207,6 +210,23 @@ function createAuth() {
               id: user.id,
               name: user.name,
             })
+          },
+        },
+      },
+      session: {
+        create: {
+          // Raw-SQL personal Space provisioning skips BA createOrganization,
+          // which normally sets activeOrganizationId. Without this, RSC
+          // loadElevaSession can fall back to the first membership while
+          // requireApiAuth rejects the same cookie with 401 no-session.
+          before: async (session: {
+            userId: string
+            activeOrganizationId?: string | null
+          }) => {
+            if (session.activeOrganizationId) return
+            const orgId = await findDefaultOrganizationId(session.userId)
+            if (!orgId) return
+            return { data: { activeOrganizationId: orgId } }
           },
         },
       },

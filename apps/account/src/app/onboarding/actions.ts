@@ -3,6 +3,7 @@
 import { headers } from "next/headers"
 import { cookies } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
+import { buildApiSessionHeaders } from "@eleva/auth/server"
 import { LAST_ACTIVE_ORG_COOKIE } from "@eleva/config/routing"
 
 function getApiBaseUrl(): string {
@@ -18,10 +19,9 @@ export async function checkExistingMembership(_locale?: string): Promise<{
   hasMembership: boolean
 }> {
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   const api = createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: buildApiSessionHeaders(incomingHeaders),
   })
 
   const result = await api.onboarding.syncExisting()

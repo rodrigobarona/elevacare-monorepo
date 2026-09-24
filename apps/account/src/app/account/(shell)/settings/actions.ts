@@ -2,7 +2,7 @@
 
 import { cookies, headers } from "next/headers"
 import { revalidatePath } from "next/cache"
-import { requireSession } from "@eleva/auth/server"
+import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 import { mintUploadToken } from "@eleva/auth/upload-token"
 import { createApiClient } from "@eleva/api-client"
 import {
@@ -25,10 +25,9 @@ function getApiBaseUrl(): string {
 async function getAuthedApiClient() {
   await requireSession()
   const incomingHeaders = await headers()
-  const cookie = incomingHeaders.get("cookie") ?? ""
   return createApiClient({
     baseUrl: getApiBaseUrl(),
-    headers: cookie ? { cookie } : undefined,
+    headers: buildApiSessionHeaders(incomingHeaders),
   })
 }
 
