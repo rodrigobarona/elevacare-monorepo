@@ -41,7 +41,9 @@ describe("migration journal helpers", () => {
     expect(last?.tag).toBe("0046_destination_overrides")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("attempts")
+    expect(last?.statements.join("\n")).toContain(
+      "destination_external_calendar_id"
+    )
     expect(
       migrations
         .find((m) => m.tag === "0044_booking_schedule_revision")
