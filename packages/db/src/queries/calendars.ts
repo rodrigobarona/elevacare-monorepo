@@ -75,6 +75,62 @@ export async function disconnectIntegration(
   await (txOpt ? run(txOpt) : withOrgContext(orgId, run))
 }
 
+export async function listBusySourcesForExpert(
+  orgId: string,
+  expertProfileId: string
+): Promise<
+  {
+    expertIntegrationId: string
+    externalCalendarId: string
+    displayName: string
+    enabled: boolean
+  }[]
+> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    return tx
+      .select({
+        expertIntegrationId: calendarBusySources.expertIntegrationId,
+        externalCalendarId: calendarBusySources.externalCalendarId,
+        displayName: calendarBusySources.displayName,
+        enabled: calendarBusySources.enabled,
+      })
+      .from(calendarBusySources)
+      .innerJoin(
+        expertIntegrations,
+        eq(calendarBusySources.expertIntegrationId, expertIntegrations.id)
+      )
+      .where(
+        and(
+          eq(expertIntegrations.expertProfileId, expertProfileId),
+          eq(expertIntegrations.orgId, orgId),
+          isNull(expertIntegrations.deletedAt)
+        )
+      )
+  })
+}
+
+export async function getDestinationCalendar(
+  orgId: string,
+  expertProfileId: string
+): Promise<{
+  expertIntegrationId: string
+  externalCalendarId: string
+  displayName: string
+} | null> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({
+        expertIntegrationId: calendarDestinations.expertIntegrationId,
+        externalCalendarId: calendarDestinations.externalCalendarId,
+        displayName: calendarDestinations.displayName,
+      })
+      .from(calendarDestinations)
+      .where(eq(calendarDestinations.expertProfileId, expertProfileId))
+      .limit(1)
+    return row ?? null
+  })
+}
+
 export async function replaceBusySources(
   orgId: string,
   integrationId: string,

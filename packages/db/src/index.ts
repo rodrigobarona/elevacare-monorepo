@@ -122,6 +122,8 @@ export type { BookingLink, NewBookingLink } from "./schema/main/offer-model"
 export {
   listCalendarIntegrations,
   listExpertIntegrations,
+  listBusySourcesForExpert,
+  getDestinationCalendar,
   disconnectIntegration,
   replaceBusySources,
   replaceDestinationCalendar,

@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Phase 04B calendar busy + destination UI
+
+- Owner: engineering
+- Status: active
+- Summary: Expert calendars page loads provider sub-calendars and wires
+  existing busy-sources / destination APIs into the UI (checkboxes for
+  conflict calendars, one destination radio per expert). Reconnect banner
+  for error/expired accounts. Does **not** close Phase 04B exit gate:
+  Eleva week view, ICS feed token routes, per-mode destination overrides,
+  Plate AI route, and UI-built offer fixtures remain.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  [`calendar-integration-spec.md`](./calendar-integration-spec.md)
+- Next review: next 04B slice or founder waiver of remaining acceptance items
+
 ### 2026-09-24: Phase 04B services builder tabs (kind / policies / private links)
 
 - Owner: engineering
