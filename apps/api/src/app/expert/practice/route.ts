@@ -7,9 +7,11 @@ import { withAudit } from "@eleva/audit"
 import {
   getExpertProfileByUserId,
   listPublishedActiveModesForExpert,
+  main,
   updateExpertProfile,
 } from "@eleva/db"
 import { validatePracticeAgainstPublishedModes } from "@eleva/scheduling"
+import { eq } from "drizzle-orm"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -182,14 +184,23 @@ export async function PATCH(request: Request) {
   // request body (not merely schema defaults on the row).
   const isExplicitPracticeDeclaration =
     data.practiceCountry !== undefined && data.languages !== undefined
-  const metadata = { ...(profile.metadata ?? {}) } as Record<string, unknown>
-  if (isExplicitPracticeDeclaration) {
-    metadata.practiceDeclaredAt = new Date().toISOString()
-  }
 
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
+      let metadata: Record<string, unknown> | undefined
+      if (isExplicitPracticeDeclaration) {
+        const [fresh] = await tx
+          .select({ metadata: main.expertProfiles.metadata })
+          .from(main.expertProfiles)
+          .where(eq(main.expertProfiles.id, profile.id))
+          .limit(1)
+        metadata = {
+          ...((fresh?.metadata as Record<string, unknown> | null) ?? {}),
+          practiceDeclaredAt: new Date().toISOString(),
+        }
+      }
+
       await updateExpertProfile(
         profile.id,
         profile.orgId,
@@ -214,7 +225,7 @@ export async function PATCH(request: Request) {
           ...(data.acceptingBookings !== undefined && {
             acceptingBookings: data.acceptingBookings,
           }),
-          ...(isExplicitPracticeDeclaration && { metadata }),
+          ...(metadata !== undefined && { metadata }),
         },
         tx
       )

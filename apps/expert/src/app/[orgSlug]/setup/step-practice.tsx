@@ -195,7 +195,17 @@ export function StepPractice({ profile, onDone }: Props) {
       if (result.ok) {
         onDone()
       } else {
-        setError(t(`errors.${result.error}` as "errors.save-failed"))
+        const known = new Set([
+          "required",
+          "validation",
+          "save-failed",
+          "offer-invariant",
+          "practice-incomplete",
+          "invalidCountry",
+          "invalidLanguage",
+        ])
+        const key = known.has(result.error) ? result.error : "save-failed"
+        setError(t(`errors.${key}` as "errors.save-failed"))
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t("errors.save-failed"))

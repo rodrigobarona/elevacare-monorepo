@@ -8,8 +8,10 @@ import { isExpertInvoicingChoiceComplete } from "@eleva/auth"
 import {
   getExpertProfileByUserId,
   getOrCreateDefaultSchedule,
+  main,
   updateExpertProfile,
 } from "@eleva/db"
+import { eq } from "drizzle-orm"
 import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -132,11 +134,6 @@ export async function POST(
     )
   }
 
-  const completedSteps = (profile.metadata as Record<string, unknown>)
-    ?.completedSteps
-  const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
-  if (!steps.includes(step)) steps.push(step)
-
   await withAudit(
     { orgId: profile.orgId, actorUserId: session.user.id },
     async (tx, ctx) => {
@@ -148,11 +145,22 @@ export async function POST(
           tx
         )
       }
+      const [fresh] = await tx
+        .select({ metadata: main.expertProfiles.metadata })
+        .from(main.expertProfiles)
+        .where(eq(main.expertProfiles.id, profile.id))
+        .limit(1)
+      const currentMeta =
+        (fresh?.metadata as Record<string, unknown> | null) ?? {}
+      const completedSteps = currentMeta.completedSteps
+      const steps = Array.isArray(completedSteps) ? [...completedSteps] : []
+      if (!steps.includes(step)) steps.push(step)
+
       await updateExpertProfile(
         profile.id,
         profile.orgId,
         {
-          metadata: { ...(profile.metadata ?? {}), completedSteps: steps },
+          metadata: { ...currentMeta, completedSteps: steps },
         },
         tx
       )
