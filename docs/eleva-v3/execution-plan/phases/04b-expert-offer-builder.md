@@ -124,7 +124,7 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > edit + seeded public-funnel `e2e/expert-offer.spec.ts`~~ (**done**, `#99`),
 > (4) ~~onboarding Practice step~~ (**done**, `#101`), (5) ~~services builder
 > tabs (kind / policies / private links) + `/expert/booking-links`~~ (**done**,
-> this slice), (6) still open before Phase 09: calendar polish, Plate AI route,
+> `#102`), (6) still open before Phase 09: calendar polish, Plate AI route,
 > UI-built Quick chat / Physiotherapy fixtures (not seed-only).
 > Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
 
