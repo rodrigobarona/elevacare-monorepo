@@ -70,6 +70,12 @@ export const eventTypeModes = pgTable(
     label: jsonb("label").$type<LocalizedText>(),
     sortOrder: integer("sort_order").notNull().default(0),
     active: boolean("active").notNull().default(true),
+    /**
+     * Optional destination override for this mode (wins over event type).
+     * Must both be null or both set; integration must belong to the expert.
+     */
+    destinationIntegrationId: uuid("destination_integration_id"),
+    destinationExternalCalendarId: text("destination_external_calendar_id"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -137,6 +143,10 @@ export const eventTypeModes = pgTable(
     durationChk: check(
       "event_type_modes_duration_minutes",
       sql`duration_minutes IS NULL OR duration_minutes > 0`
+    ),
+    destinationPairChk: check(
+      "event_type_modes_destination_pair",
+      sql`(destination_integration_id IS NULL) = (destination_external_calendar_id IS NULL)`
     ),
     tenantPolicy: pgPolicy("event_type_modes_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

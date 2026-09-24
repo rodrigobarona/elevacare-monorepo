@@ -38,10 +38,12 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0045_phone_verification_attempts")
+    expect(last?.tag).toBe("0046_destination_overrides")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("attempts")
+    expect(last?.statements.join("\n")).toContain(
+      "destination_external_calendar_id"
+    )
     expect(
       migrations
         .find((m) => m.tag === "0044_booking_schedule_revision")

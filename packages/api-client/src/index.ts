@@ -1259,6 +1259,33 @@ export type DestinationCalendarRequest = z.infer<
   typeof DestinationCalendarRequestSchema
 >
 
+/**
+ * Set or clear a destination override on an event type or mode.
+ * Both fields null = inherit (mode → event type → expert default → ICS).
+ * Both set = override; must be a connected calendar owned by the expert.
+ */
+export const EventTypeDestinationOverrideSchema = z
+  .object({
+    destinationIntegrationId: z.string().uuid().nullable(),
+    destinationExternalCalendarId: z.string().min(1).max(512).nullable(),
+  })
+  .superRefine((value, ctx) => {
+    const a = value.destinationIntegrationId == null
+    const b = value.destinationExternalCalendarId == null
+    if (a !== b) {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "destinationIntegrationId and destinationExternalCalendarId must both be set or both null.",
+        path: ["destinationIntegrationId"],
+      })
+    }
+  })
+
+export type EventTypeDestinationOverride = z.infer<
+  typeof EventTypeDestinationOverrideSchema
+>
+
 export const CalendarFeedTokenStatusSchema = z.object({
   hasToken: z.boolean(),
   createdAt: z.string().datetime().nullable(),
@@ -2180,6 +2207,30 @@ export function createApiClient(options: ApiClientOptions) {
           return request<{ ok: true }>(
             "DELETE",
             `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}`
+          )
+        },
+        setDestination(id: string, data: EventTypeDestinationOverride) {
+          return request<{
+            ok: true
+            destination: EventTypeDestinationOverride
+          }>(
+            "PATCH",
+            `/expert/event-types/${encodeURIComponent(id)}/destination`,
+            data
+          )
+        },
+        setModeDestination(
+          id: string,
+          modeId: string,
+          data: EventTypeDestinationOverride
+        ) {
+          return request<{
+            ok: true
+            destination: EventTypeDestinationOverride
+          }>(
+            "PATCH",
+            `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}/destination`,
+            data
           )
         },
       },

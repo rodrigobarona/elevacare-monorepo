@@ -94,6 +94,14 @@ export const eventTypes = pgTable(
     published: boolean("published").notNull().default(false),
     position: integer("position").notNull().default(0),
 
+    /**
+     * Optional destination override for this event type.
+     * Must both be null or both set; validated to an integration owned by
+     * the same expert. Mode override wins over this; see resolveCalendarDestination.
+     */
+    destinationIntegrationId: uuid("destination_integration_id"),
+    destinationExternalCalendarId: text("destination_external_calendar_id"),
+
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     deletedAt: deletedAt(),
@@ -119,6 +127,10 @@ export const eventTypes = pgTable(
     windowsChk: check(
       "event_types_windows_non_negative",
       sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (cancellation_window_hours IS NULL OR cancellation_window_hours >= 0) AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`
+    ),
+    destinationPairChk: check(
+      "event_types_destination_pair",
+      sql`(destination_integration_id IS NULL) = (destination_external_calendar_id IS NULL)`
     ),
     tenantPolicy: pgPolicy("event_types_tenant_isolation", {
       using: sql`org_id::text = current_setting('eleva.org_id', true)`,

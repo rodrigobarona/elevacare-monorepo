@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Phase 04B per-mode / per-event-type destination overrides
+
+- Owner: engineering
+- Status: active
+- Summary: Nullable `destination_integration_id` +
+  `destination_external_calendar_id` on `event_types` and
+  `event_type_modes`. PATCH `/expert/event-types/[id]/destination` and
+  `.../modes/[modeId]/destination`. Booking sync resolves mode >
+  event type > expert default > ICS e-mail. Expert modes tab exposes
+  override selects. Remaining 04B before Phase 09: Plate AI route,
+  UI-built Quick chat / Physiotherapy fixtures.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  [`calendar-integration-spec.md`](./calendar-integration-spec.md)
+- Next review: next 04B slice or founder waiver of remaining acceptance items
+
 ### 2026-09-24: Phase 04B calendar busy + destination UI
 
 - Owner: engineering

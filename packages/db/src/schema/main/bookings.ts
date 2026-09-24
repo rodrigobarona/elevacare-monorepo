@@ -391,6 +391,14 @@ export const sessions = pgTable(
 
     /** External calendar event ID for the destination calendar write. */
     calendarEventId: varchar("calendar_event_id", { length: 255 }),
+    /**
+     * Snapshot of the destination used at create time so reschedule/
+     * cancel target the same calendar even if overrides change later.
+     */
+    calendarDestinationIntegrationId: uuid(
+      "calendar_destination_integration_id"
+    ),
+    calendarDestinationExternalId: text("calendar_destination_external_id"),
 
     /** Vault refs for sensitive session artifacts (Sprint 5). */
     transcriptVaultRef: text("transcript_vault_ref"),

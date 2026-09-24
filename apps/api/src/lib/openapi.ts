@@ -17,6 +17,7 @@ import {
   UpdateEventTypeRequestSchema,
   CreateEventTypeModeRequestSchema,
   PatchEventTypeModeRequestSchema,
+  EventTypeDestinationOverrideSchema,
   CreateBookingLinkRequestSchema,
   BookingLinkListItemSchema,
   CreateBookingLinkResponseSchema,
@@ -1474,6 +1475,103 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "200": {
               description: "Mode deactivated",
               content: { "application/json": { schema: OkSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/event-types/{id}/destination": {
+        patch: {
+          operationId: "setEventTypeDestination",
+          summary: "Set or clear the event-type destination calendar override",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: EventTypeDestinationOverrideSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Destination override updated",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    destination: EventTypeDestinationOverrideSchema,
+                  }),
+                },
+              },
+            },
+            "403": {
+              description: "Calendar integration not owned by this expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Failed to fetch calendars from provider",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/event-types/{id}/modes/{modeId}/destination": {
+        patch: {
+          operationId: "setEventTypeModeDestination",
+          summary:
+            "Set or clear the per-mode destination calendar override (highest priority)",
+          tags: ["Expert Event Types"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "modeId",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: EventTypeDestinationOverrideSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Mode destination override updated",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    destination: EventTypeDestinationOverrideSchema,
+                  }),
+                },
+              },
+            },
+            "403": {
+              description: "Calendar integration not owned by this expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "502": {
+              description: "Failed to fetch calendars from provider",
+              content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdWithNotFound,
           },

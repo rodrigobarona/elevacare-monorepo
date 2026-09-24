@@ -18,6 +18,7 @@ import {
   type ScheduleOption,
 } from "./event-type-modes-panel"
 import { EventTypePrivateLinksPanel } from "./event-type-private-links-panel"
+import type { CalendarIntegrationOption } from "./destination-override-select"
 
 interface Props {
   eventTypeId: string
@@ -32,6 +33,11 @@ interface Props {
   serviceCountries: string[]
   worldwideRemote: boolean
   links: BookingLinkListItem[]
+  integrations: CalendarIntegrationOption[]
+  eventTypeDestination: {
+    destinationIntegrationId: string | null
+    destinationExternalCalendarId: string | null
+  }
 }
 
 export function EventTypeBuilder({
@@ -47,6 +53,8 @@ export function EventTypeBuilder({
   serviceCountries,
   worldwideRemote,
   links,
+  integrations,
+  eventTypeDestination,
 }: Props) {
   const t = useTranslations("eventTypes.tabs")
 
@@ -98,6 +106,8 @@ export function EventTypeBuilder({
           serviceCountries={serviceCountries}
           worldwideRemote={worldwideRemote}
           eventTypeKind={kind}
+          integrations={integrations}
+          eventTypeDestination={eventTypeDestination}
         />
       </TabsContent>
 
