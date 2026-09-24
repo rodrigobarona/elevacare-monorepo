@@ -4,6 +4,7 @@ import { AccountPageHeader } from "@eleva/dashboard"
 import {
   getEventType,
   listBookingLinksForEventType,
+  listCalendarIntegrations,
   listEventTypeModes,
   listPracticeLocations,
   listSchedules,
@@ -45,14 +46,16 @@ export default async function EditEventTypePage(props: {
   const eventType = await getEventType(profile.orgId, id, profile.id)
   if (!eventType) notFound()
 
-  const [modes, schedules, locations, bookingLinks] = await Promise.all([
-    listEventTypeModes(profile.orgId, id, { includeInactive: true }),
-    listSchedules(profile.orgId, profile.id),
-    listPracticeLocations(profile.orgId, profile.id, {
-      includeInactive: true,
-    }),
-    listBookingLinksForEventType(profile.orgId, id, profile.id),
-  ])
+  const [modes, schedules, locations, bookingLinks, integrations] =
+    await Promise.all([
+      listEventTypeModes(profile.orgId, id, { includeInactive: true }),
+      listSchedules(profile.orgId, profile.id),
+      listPracticeLocations(profile.orgId, profile.id, {
+        includeInactive: true,
+      }),
+      listBookingLinksForEventType(profile.orgId, id, profile.id),
+      listCalendarIntegrations(profile.orgId, profile.id),
+    ])
 
   const t = await getTranslations("eventTypes")
 
@@ -90,6 +93,8 @@ export default async function EditEventTypePage(props: {
     languages: m.languages as string[],
     label: (m.label as LocalizedText | null) ?? null,
     active: m.active,
+    destinationIntegrationId: m.destinationIntegrationId,
+    destinationExternalCalendarId: m.destinationExternalCalendarId,
   }))
 
   const scheduleOptions: ScheduleOption[] = schedules.map((s) => ({
@@ -106,6 +111,17 @@ export default async function EditEventTypePage(props: {
   }))
 
   const links: BookingLinkListItem[] = bookingLinks.map(toBookingLinkListItem)
+
+  const calendarOptions = integrations.map((i) => ({
+    id: i.id,
+    providerLabel:
+      i.slug === "google-calendar"
+        ? "Google"
+        : i.slug === "microsoft-calendar"
+          ? "Microsoft"
+          : i.slug,
+    accountIdentifier: i.accountIdentifier,
+  }))
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -126,6 +142,12 @@ export default async function EditEventTypePage(props: {
         serviceCountries={profile.serviceCountries as string[]}
         worldwideRemote={profile.worldwideRemote}
         links={links}
+        integrations={calendarOptions}
+        eventTypeDestination={{
+          destinationIntegrationId: eventType.destinationIntegrationId,
+          destinationExternalCalendarId:
+            eventType.destinationExternalCalendarId,
+        }}
       />
     </div>
   )

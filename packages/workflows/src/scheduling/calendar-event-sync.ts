@@ -1,6 +1,12 @@
 import { and, eq, sql } from "drizzle-orm"
 import { getProviderAccessToken } from "@eleva/auth"
-import { auth, db, main } from "@eleva/db"
+import {
+  auth,
+  db,
+  main,
+  getDestinationCalendar,
+  resolveBookingDestination,
+} from "@eleva/db"
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
 import {
@@ -232,6 +238,8 @@ export async function calendarEventCreate(params: {
       const [row] = await tx
         .select({
           expertProfileId: main.sessions.expertProfileId,
+          eventTypeId: main.sessions.eventTypeId,
+          eventTypeModeId: main.bookings.eventTypeModeId,
           startsAt: main.sessions.startsAt,
           endsAt: main.sessions.endsAt,
           sessionMode: main.sessions.sessionMode,
@@ -252,19 +260,12 @@ export async function calendarEventCreate(params: {
 
     if (!session) return { calendarEventId: null }
 
-    const destination = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
-          externalCalendarId: main.calendarDestinations.externalCalendarId,
-        })
-        .from(main.calendarDestinations)
-        .where(
-          eq(main.calendarDestinations.expertProfileId, session.expertProfileId)
-        )
-        .limit(1)
-      return row
-    })
+    const destination = await resolveBookingDestination(
+      orgId,
+      session.expertProfileId,
+      session.eventTypeId,
+      session.eventTypeModeId
+    )
 
     if (!destination) {
       return sendCreateIcsFallback(orgId, sessionId, bookingId)
@@ -305,7 +306,12 @@ export async function calendarEventCreate(params: {
     await withOrgContext(orgId, async (tx: Tx) => {
       await tx
         .update(main.sessions)
-        .set({ calendarEventId: calEvent.id, updatedAt: new Date() })
+        .set({
+          calendarEventId: calEvent.id,
+          calendarDestinationIntegrationId: destination.expertIntegrationId,
+          calendarDestinationExternalId: destination.externalCalendarId,
+          updatedAt: new Date(),
+        })
         .where(eq(main.sessions.id, sessionId))
     })
 
@@ -349,6 +355,10 @@ export async function calendarEventUpdate(params: {
         .select({
           expertProfileId: main.sessions.expertProfileId,
           calendarEventId: main.sessions.calendarEventId,
+          calendarDestinationIntegrationId:
+            main.sessions.calendarDestinationIntegrationId,
+          calendarDestinationExternalId:
+            main.sessions.calendarDestinationExternalId,
           bookingTimezone: main.bookings.timezone,
         })
         .from(main.sessions)
@@ -360,19 +370,28 @@ export async function calendarEventUpdate(params: {
 
     if (!session) return
 
-    const destination = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
-          externalCalendarId: main.calendarDestinations.externalCalendarId,
-        })
-        .from(main.calendarDestinations)
-        .where(
-          eq(main.calendarDestinations.expertProfileId, session.expertProfileId)
-        )
-        .limit(1)
-      return row
-    })
+    // No external event → create went through the ICS e-mail path.
+    if (!session.calendarEventId) {
+      await sendRescheduleIcsFallback(
+        orgId,
+        sessionId,
+        bookingId,
+        newStartTime,
+        newEndTime,
+        previousStartTime
+      )
+      return
+    }
+
+    const destination =
+      session.calendarDestinationIntegrationId &&
+      session.calendarDestinationExternalId
+        ? {
+            expertIntegrationId: session.calendarDestinationIntegrationId,
+            externalCalendarId: session.calendarDestinationExternalId,
+          }
+        : // Pre-0046 sessions: keep the expert default used at create.
+          await getDestinationCalendar(orgId, session.expertProfileId)
 
     if (!destination) {
       await sendRescheduleIcsFallback(
@@ -385,8 +404,6 @@ export async function calendarEventUpdate(params: {
       )
       return
     }
-
-    if (!session.calendarEventId) return
 
     const integration = await loadConnectedCalendar(
       orgId,
@@ -449,6 +466,10 @@ export async function calendarEventDelete(params: {
         .select({
           expertProfileId: main.sessions.expertProfileId,
           calendarEventId: main.sessions.calendarEventId,
+          calendarDestinationIntegrationId:
+            main.sessions.calendarDestinationIntegrationId,
+          calendarDestinationExternalId:
+            main.sessions.calendarDestinationExternalId,
         })
         .from(main.sessions)
         .where(eq(main.sessions.id, sessionId))
@@ -458,26 +479,25 @@ export async function calendarEventDelete(params: {
 
     if (!session) return
 
-    const destination = await withOrgContext(orgId, async (tx: Tx) => {
-      const [row] = await tx
-        .select({
-          expertIntegrationId: main.calendarDestinations.expertIntegrationId,
-          externalCalendarId: main.calendarDestinations.externalCalendarId,
-        })
-        .from(main.calendarDestinations)
-        .where(
-          eq(main.calendarDestinations.expertProfileId, session.expertProfileId)
-        )
-        .limit(1)
-      return row
-    })
+    // No external event → create went through the ICS e-mail path.
+    if (!session.calendarEventId) {
+      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
+      return
+    }
+
+    const destination =
+      session.calendarDestinationIntegrationId &&
+      session.calendarDestinationExternalId
+        ? {
+            expertIntegrationId: session.calendarDestinationIntegrationId,
+            externalCalendarId: session.calendarDestinationExternalId,
+          }
+        : await getDestinationCalendar(orgId, session.expertProfileId)
 
     if (!destination) {
       await sendCancellationIcsFallback(orgId, sessionId, bookingId)
       return
     }
-
-    if (!session.calendarEventId) return
 
     const integration = await loadConnectedCalendar(
       orgId,

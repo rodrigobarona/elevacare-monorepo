@@ -129,6 +129,14 @@ export {
   replaceDestinationCalendar,
 } from "./queries/calendars"
 export {
+  assertExpertOwnsCalendarIntegration,
+  setEventTypeDestination,
+  setEventTypeModeDestination,
+  resolveBookingDestination,
+  type DestinationOverridePatch,
+  type ResolvedDestination,
+} from "./queries/destination-overrides"
+export {
   getActiveCalendarFeedToken,
   rotateCalendarFeedToken,
   revokeCalendarFeedToken,

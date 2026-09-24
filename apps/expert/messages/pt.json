@@ -187,6 +187,22 @@
         "offer-invariant": "Este modo de entrega incumpre uma regra da prática. Corrija países, idiomas ou local.",
         "generic": "Algo correu mal. Tente novamente."
       }
+    },
+    "destination": {
+      "label": "Escrever reservas em",
+      "eventTypeHint": "Substituição opcional para este serviço. Os modos podem voltar a substituir.",
+      "inheritDefault": "Destino predefinido do especialista",
+      "inheritEventType": "Igual a este serviço",
+      "primary": "principal",
+      "noCalendars": "Ligue um calendário em Calendários para definir um destino alternativo.",
+      "saved": "Destino alternativo guardado.",
+      "error": {
+        "destination-failed": "Não foi possível guardar o destino alternativo.",
+        "unauthorized-calendar": "Esse calendário não está ligado à sua prática.",
+        "not-found": "Serviço ou modo de entrega não encontrado.",
+        "validation": "Escolha um calendário válido ou herde o predefinido.",
+        "invalid-input": "Escolha um calendário válido ou herde o predefinido."
+      }
     }
   },
   "schedule": {

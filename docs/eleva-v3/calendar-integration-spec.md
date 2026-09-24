@@ -128,7 +128,9 @@ Calendar connection is **not required**. Experts who choose not to connect Googl
 
 ### Detection
 
-Implicit: the absence of rows in `calendar_destinations` for the expert triggers the email fallback. No explicit "calendar-optional" flag is needed.
+Implicit: destination resolution returns null (no usable mode override, event
+type override, or `calendar_destinations` default) → ICS e-mail fallback. No
+explicit "calendar-optional" flag is needed.
 
 ### Expert UX
 
@@ -154,16 +156,22 @@ Implicit: the absence of rows in `calendar_destinations` for the expert triggers
 
 The model should leave room for:
 
-- event-level calendar rules
 - organization-managed calendar defaults
 - clinic/team calendar behavior
+
+Event-type and per-mode destination overrides shipped in Phase 04B
+(resolution: mode > event type > expert default > ICS e-mail).
 
 But MVP should remain focused and simple.
 
 ## Closed Questions
 
 - **Calendar connection required?** No — calendar-optional mode with .ics email fallback (decided 2026-05-06, see ADR-004).
-- **Event-level destination calendars at launch?** No — one destination per expert is sufficient for MVP.
+- **Event-level destination calendars at launch?** Yes — Phase 04B adds nullable
+  `destination_integration_id` + `destination_external_calendar_id` on
+  `event_types` and `event_type_modes`. Resolution order: mode override >
+  event type override > `calendar_destinations` expert default > ICS e-mail
+  fallback.
 
 ## Open Questions
 

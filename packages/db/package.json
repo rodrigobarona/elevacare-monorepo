@@ -36,6 +36,7 @@
     "db:backfill:auth-identity": "tsx --env-file=../../.env.local scripts/backfill-auth-identity.ts"
   },
   "dependencies": {
+    "@eleva/calendar": "workspace:*",
     "@eleva/config": "workspace:*",
     "@neondatabase/serverless": "catalog:",
     "drizzle-orm": "catalog:"

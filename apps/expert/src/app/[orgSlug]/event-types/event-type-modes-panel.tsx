@@ -32,6 +32,12 @@ import {
   patchEventTypeModeAction,
   deactivateEventTypeModeAction,
 } from "./mode-actions"
+import {
+  DestinationOverrideSelect,
+  type CalendarIntegrationOption,
+  type SubCalendarOption,
+} from "./destination-override-select"
+import { loadSubCalendars } from "../calendars/actions"
 
 export type ModeRow = {
   id: string
@@ -46,6 +52,8 @@ export type ModeRow = {
   languages: string[]
   label: { en: string; pt?: string; es?: string } | null
   active: boolean
+  destinationIntegrationId: string | null
+  destinationExternalCalendarId: string | null
 }
 
 export type ScheduleOption = { id: string; name: string; isDefault: boolean }
@@ -75,6 +83,11 @@ interface Props {
   serviceCountries: string[]
   worldwideRemote: boolean
   eventTypeKind: "clinical" | "non_clinical"
+  integrations: CalendarIntegrationOption[]
+  eventTypeDestination: {
+    destinationIntegrationId: string | null
+    destinationExternalCalendarId: string | null
+  }
 }
 
 export function EventTypeModesPanel({
@@ -86,8 +99,11 @@ export function EventTypeModesPanel({
   serviceCountries,
   worldwideRemote,
   eventTypeKind,
+  integrations,
+  eventTypeDestination,
 }: Props) {
   const t = useTranslations("eventTypes.modes")
+  const tDest = useTranslations("eventTypes.destination")
   const router = useRouter()
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -114,6 +130,35 @@ export function EventTypeModesPanel({
   const canUseWorldwide =
     eventTypeKind === "non_clinical" && worldwideRemote && mode !== "in_person"
   const isEditing = editingModeId != null
+
+  const integrationIdsKey = integrations.map((i) => i.id).join(",")
+  const [subCalendarsByIntegration, setSubCalendarsByIntegration] =
+    React.useState<Record<string, SubCalendarOption[]>>({})
+
+  React.useEffect(() => {
+    let cancelled = false
+    const ids = integrationIdsKey ? integrationIdsKey.split(",") : []
+    async function load() {
+      const next: Record<string, SubCalendarOption[]> = {}
+      await Promise.all(
+        ids.map(async (id) => {
+          const result = await loadSubCalendars(id)
+          if (result.ok) {
+            next[id] = result.calendars
+          }
+        })
+      )
+      if (!cancelled) setSubCalendarsByIntegration(next)
+    }
+    if (ids.length > 0) {
+      void load()
+    } else {
+      setSubCalendarsByIntegration({})
+    }
+    return () => {
+      cancelled = true
+    }
+  }, [integrationIdsKey])
 
   const MODE_ERROR_KEYS = [
     "create-failed",
@@ -346,6 +391,20 @@ export function EventTypeModesPanel({
           </Alert>
         ) : null}
 
+        <div className="space-y-1.5 rounded-md border p-3">
+          <p className="text-sm text-muted-foreground">
+            {tDest("eventTypeHint")}
+          </p>
+          <DestinationOverrideSelect
+            eventTypeId={eventTypeId}
+            integrations={integrations}
+            subCalendarsByIntegration={subCalendarsByIntegration}
+            value={eventTypeDestination}
+            inheritLabel={tDest("inheritDefault")}
+            testId="event-type-destination"
+          />
+        </div>
+
         {activeModes.length === 0 && !showForm ? (
           <p className="text-sm text-muted-foreground">{t("empty")}</p>
         ) : null}
@@ -383,6 +442,21 @@ export function EventTypeModesPanel({
                       ? ` · €${(row.priceCents / 100).toFixed(2)}`
                       : null}
                   </p>
+                  <div className="max-w-md pt-2">
+                    <DestinationOverrideSelect
+                      eventTypeId={eventTypeId}
+                      modeId={row.id}
+                      integrations={integrations}
+                      subCalendarsByIntegration={subCalendarsByIntegration}
+                      value={{
+                        destinationIntegrationId: row.destinationIntegrationId,
+                        destinationExternalCalendarId:
+                          row.destinationExternalCalendarId,
+                      }}
+                      inheritLabel={tDest("inheritEventType")}
+                      testId={`mode-destination-${row.id}`}
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   <Button

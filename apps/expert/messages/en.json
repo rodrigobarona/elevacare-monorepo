@@ -187,6 +187,22 @@
         "offer-invariant": "This delivery mode breaks a practice rule. Fix countries, languages, or location.",
         "generic": "Something went wrong. Please try again."
       }
+    },
+    "destination": {
+      "label": "Write bookings to",
+      "eventTypeHint": "Optional override for this service. Modes can override again.",
+      "inheritDefault": "Expert default destination",
+      "inheritEventType": "Same as this service",
+      "primary": "primary",
+      "noCalendars": "Connect a calendar under Calendars to set a destination override.",
+      "saved": "Destination override saved.",
+      "error": {
+        "destination-failed": "Could not save the destination override.",
+        "unauthorized-calendar": "That calendar is not connected to your practice.",
+        "not-found": "Service or delivery mode not found.",
+        "validation": "Choose a valid calendar or inherit the default.",
+        "invalid-input": "Choose a valid calendar or inherit the default."
+      }
     }
   },
   "schedule": {
