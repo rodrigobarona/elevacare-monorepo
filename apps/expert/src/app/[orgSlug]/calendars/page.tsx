@@ -2,7 +2,11 @@ import Link from "next/link"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { syncExpertCalendarAccounts } from "@eleva/auth"
-import { listCalendarIntegrations } from "@eleva/db"
+import {
+  getDestinationCalendar,
+  listBusySourcesForExpert,
+  listExpertIntegrations,
+} from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { CalendarManager } from "./calendar-manager"
@@ -33,15 +37,21 @@ export default async function CalendarsPage({
     actorUserId: session.user.id,
   })
 
-  const integrations = (
-    await listCalendarIntegrations(profile.orgId, profile.id)
-  ).map((i) => ({
-    id: i.id,
-    slug: i.slug,
-    providerLabel: SLUG_LABEL[i.slug] ?? i.slug,
-    accountIdentifier: i.accountIdentifier,
-    status: i.status,
-  }))
+  const [rawIntegrations, busySources, destination] = await Promise.all([
+    listExpertIntegrations(profile.orgId, profile.id, "calendar"),
+    listBusySourcesForExpert(profile.orgId, profile.id),
+    getDestinationCalendar(profile.orgId, profile.id),
+  ])
+
+  const integrations = rawIntegrations
+    .filter((i) => i.deletedAt == null && i.status !== "disconnected")
+    .map((i) => ({
+      id: i.id,
+      slug: i.slug,
+      providerLabel: SLUG_LABEL[i.slug] ?? i.slug,
+      accountIdentifier: i.accountIdentifier,
+      status: i.status,
+    }))
 
   const t = await getTranslations("calendars")
 
@@ -60,6 +70,12 @@ export default async function CalendarsPage({
       <CalendarManager
         integrations={integrations}
         callbackURL={`${base}/calendars`}
+        initialBusySources={busySources.map((s) => ({
+          expertIntegrationId: s.expertIntegrationId,
+          externalCalendarId: s.externalCalendarId,
+          displayName: s.displayName,
+        }))}
+        initialDestination={destination}
       />
     </div>
   )

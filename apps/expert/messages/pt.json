@@ -237,7 +237,17 @@
     "reconnectMicrosoft": "Voltar a ligar Microsoft Calendar",
     "connectedTitle": "Contas ligadas",
     "disconnect": "Desligar",
-    "noCalendarFallback": "Ainda não há calendário ligado. Os membros podem reservar; receberá convites por email até ligar um.",
+    "configureHint": "Escolha quais calendários contam como ocupados e onde a Eleva escreve as sessões confirmadas.",
+    "useForBusy": "Verificar conflitos",
+    "useAsDestination": "Escrever sessões aqui",
+    "destinationLabel": "Calendário de destino",
+    "primary": "principal",
+    "loadingCalendars": "A carregar calendários…",
+    "noSubCalendars": "Nenhum calendário encontrado nesta conta.",
+    "busySaved": "Calendários de conflitos atualizados.",
+    "destinationSaved": "Calendário de destino atualizado.",
+    "reconnectBanner": "Uma ou mais ligações de calendário precisam de atenção. Volte a ligar para manter a verificação de conflitos e a escrita de sessões.",
+    "noCalendarFallback": "A Eleva é o seu calendário. Os membros podem reservar; receberá convites por email até ligar Google ou Microsoft.",
     "status": {
       "connecting": "A ligar",
       "connected": "Ligado",
@@ -248,6 +258,8 @@
     "error": {
       "connect-failed": "Não foi possível iniciar a ligação do calendário.",
       "disconnect-failed": "Não foi possível desligar este calendário.",
+      "load-failed": "Não foi possível carregar os calendários desta conta.",
+      "save-failed": "Não foi possível guardar as definições do calendário.",
       "validation": "O pedido é inválido.",
       "unauthorized-calendar": "Não pode alterar este calendário."
     }

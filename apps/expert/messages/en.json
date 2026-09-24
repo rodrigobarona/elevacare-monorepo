@@ -237,7 +237,17 @@
     "reconnectMicrosoft": "Reconnect Microsoft Calendar",
     "connectedTitle": "Connected accounts",
     "disconnect": "Disconnect",
-    "noCalendarFallback": "No calendar is connected yet. Members can still book; you will receive email invites until you connect one.",
+    "configureHint": "Choose which calendars count as busy, and where Eleva writes confirmed sessions.",
+    "useForBusy": "Check for conflicts",
+    "useAsDestination": "Write sessions here",
+    "destinationLabel": "Destination calendar",
+    "primary": "primary",
+    "loadingCalendars": "Loading calendars…",
+    "noSubCalendars": "No calendars found for this account.",
+    "busySaved": "Busy calendars updated.",
+    "destinationSaved": "Destination calendar updated.",
+    "reconnectBanner": "One or more calendar connections need attention. Reconnect to keep conflict checks and session writes working.",
+    "noCalendarFallback": "Eleva is your calendar. Members can still book; you will receive email invites until you connect Google or Microsoft.",
     "status": {
       "connecting": "Connecting",
       "connected": "Connected",
@@ -248,6 +258,8 @@
     "error": {
       "connect-failed": "Could not start the calendar connection.",
       "disconnect-failed": "Could not disconnect this calendar.",
+      "load-failed": "Could not load calendars from this account.",
+      "save-failed": "Could not save calendar settings.",
       "validation": "The request was invalid.",
       "unauthorized-calendar": "You cannot change this calendar."
     }
