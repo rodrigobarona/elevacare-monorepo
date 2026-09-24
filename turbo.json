@@ -104,6 +104,9 @@
     "ELEVA_API_BEARER_TOKEN",
     "API_BASE_URL",
     "API_URL",
+    "AI_GATEWAY_API_KEY",
+    "AI_GATEWAY_BASE_URL",
+    "AI_GATEWAY_MODEL_EDITOR",
     "NEXT_RUNTIME"
   ],
   "tasks": {

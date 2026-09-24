@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState, useTransition } from "react"
 import type { Value } from "platejs"
 import {
   BoldPlugin,
@@ -16,7 +16,8 @@ import { Plate, PlateContent, usePlateEditor } from "platejs/react"
 import { Button } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 
-import type { EditorAiContext, PlateValue } from "./types"
+import type { EditorAiContext, PlateValue, RichTextSource } from "./types"
+import { toPlainTextFromNodes } from "./types"
 
 const EMPTY_VALUE: PlateValue = [{ type: "p", children: [{ text: "" }] }]
 
@@ -29,6 +30,11 @@ export type RichTextEditorLabels = {
   h2: string
   h3: string
   blockquote: string
+  improve: string
+  shorten: string
+  fixGrammar: string
+  assistEmpty: string
+  assistFailed: string
 }
 
 const DEFAULT_LABELS: RichTextEditorLabels = {
@@ -40,7 +46,14 @@ const DEFAULT_LABELS: RichTextEditorLabels = {
   h2: "H2",
   h3: "H3",
   blockquote: "Quote",
+  improve: "Improve",
+  shorten: "Shorten",
+  fixGrammar: "Fix grammar",
+  assistEmpty: "AI assist returned no text",
+  assistFailed: "AI assist failed",
 }
+
+export type EditorAiAssistCommand = "improve" | "shorten" | "fix_grammar"
 
 export type RichTextEditorProps = {
   value?: PlateValue
@@ -50,22 +63,45 @@ export type RichTextEditorProps = {
   isDisabled?: boolean
   labels?: Partial<RichTextEditorLabels>
   /**
-   * AI assist wiring lands with `POST /ai/editor` in a later 04B PR.
-   * `clinical` is rejected by the API until Phase 10.
+   * When `enabled`, shows assist actions. `clinical` is rejected by
+   * `POST /ai/editor` until Phase 10 — keep `context: "marketing"` in 04B.
+   * `onAssist` should call the API and return revised plain text for the
+   * full document (marks/headings are flattened on apply).
    */
   ai?: {
     enabled: boolean
     context: EditorAiContext
+    onAssist?: (
+      command: EditorAiAssistCommand,
+      text: string,
+      locale?: string
+    ) => Promise<string> | string
   }
+  /**
+   * When set, human edits and AI applies report a source so consumers can
+   * mark `ai_draft` until the next human edit.
+   */
+  onChangeWithSource?: (value: PlateValue, source: RichTextSource) => void
+}
+
+function plainTextToPlateValue(text: string): PlateValue {
+  const paragraphs = text.split(/\n+/u).filter((part) => part.length > 0)
+  if (paragraphs.length === 0) return EMPTY_VALUE
+  return paragraphs.map((paragraph) => ({
+    type: "p",
+    children: [{ text: paragraph }],
+  }))
 }
 
 export function RichTextEditor({
   value,
   onChange,
+  onChangeWithSource,
   className,
   isDisabled = false,
   labels: labelsProp,
-  ai: _ai,
+  locale,
+  ai,
 }: RichTextEditorProps) {
   const labels = { ...DEFAULT_LABELS, ...labelsProp }
   const editor = usePlateEditor({
@@ -80,22 +116,66 @@ export function RichTextEditor({
     ],
     value: (value ?? EMPTY_VALUE) as Value,
   })
+  const suppressChangeRef = useRef(false)
   const lastEmittedRef = useRef<PlateValue | undefined>(value)
+  const [assistError, setAssistError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     const next = value ?? EMPTY_VALUE
     if (next === lastEmittedRef.current) return
     lastEmittedRef.current = next
+    suppressChangeRef.current = true
     editor.tf.setValue(next as Value)
+    suppressChangeRef.current = false
   }, [editor, value])
+
+  const emitChange = (plateValue: PlateValue, source: RichTextSource) => {
+    lastEmittedRef.current = plateValue
+    onChange?.(plateValue)
+    onChangeWithSource?.(plateValue, source)
+  }
+
+  const runAssist = (command: EditorAiAssistCommand) => {
+    const onAssist = ai?.onAssist
+    if (!ai?.enabled || !onAssist || isDisabled) return
+    const text = toPlainTextFromNodes(
+      (editor.children as PlateValue) ?? EMPTY_VALUE
+    )
+    if (!text.trim()) return
+
+    setAssistError(null)
+    startTransition(async () => {
+      try {
+        const nextText = await onAssist(command, text, locale)
+        if (!nextText.trim()) {
+          setAssistError(labels.assistEmpty)
+          return
+        }
+        const nextValue = plainTextToPlateValue(nextText)
+        suppressChangeRef.current = true
+        editor.tf.setValue(nextValue as Value)
+        suppressChangeRef.current = false
+        emitChange(nextValue, "ai_draft")
+      } catch (err) {
+        setAssistError(
+          err instanceof Error && err.message.trim()
+            ? err.message
+            : labels.assistFailed
+        )
+      }
+    })
+  }
+
+  const aiDisabled = isDisabled || isPending || !ai?.enabled || !ai.onAssist
+  const contentDisabled = isDisabled || isPending
 
   return (
     <Plate
       editor={editor}
       onChange={({ value: next }) => {
-        const plateValue = next as PlateValue
-        lastEmittedRef.current = plateValue
-        onChange?.(plateValue)
+        if (suppressChangeRef.current || isPending) return
+        emitChange(next as PlateValue, "human")
       }}
     >
       <div
@@ -110,7 +190,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.h1?.toggle()}
           >
             {labels.h1}
@@ -119,7 +199,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.h2?.toggle()}
           >
             {labels.h2}
@@ -128,7 +208,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.h3?.toggle()}
           >
             {labels.h3}
@@ -137,7 +217,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.blockquote?.toggle()}
           >
             {labels.blockquote}
@@ -146,7 +226,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.bold.toggle()}
           >
             {labels.bold}
@@ -155,7 +235,7 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.italic.toggle()}
           >
             {labels.italic}
@@ -164,18 +244,55 @@ export function RichTextEditor({
             type="button"
             size="sm"
             variant="ghost"
-            isDisabled={isDisabled}
+            isDisabled={contentDisabled}
             onPress={() => editor.tf.underline.toggle()}
           >
             {labels.underline}
           </Button>
+          {ai?.enabled ? (
+            <>
+              <span aria-hidden className="mx-1 w-px self-stretch bg-border" />
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                isDisabled={aiDisabled}
+                onPress={() => runAssist("improve")}
+              >
+                {labels.improve}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                isDisabled={aiDisabled}
+                onPress={() => runAssist("shorten")}
+              >
+                {labels.shorten}
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                isDisabled={aiDisabled}
+                onPress={() => runAssist("fix_grammar")}
+              >
+                {labels.fixGrammar}
+              </Button>
+            </>
+          ) : null}
         </div>
         <PlateContent
           className="min-h-32 px-3 py-2 text-sm outline-none"
           placeholder={labels.placeholder}
-          disabled={isDisabled}
-          readOnly={isDisabled}
+          disabled={contentDisabled}
+          readOnly={contentDisabled}
         />
+        {assistError ? (
+          <p className="border-t border-border px-3 py-1.5 text-xs text-destructive">
+            {assistError}
+          </p>
+        ) : null}
       </div>
     </Plate>
   )

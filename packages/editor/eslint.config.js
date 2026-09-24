@@ -52,6 +52,11 @@ export default [
               message:
                 "Import Resend only through @eleva/notifications (boundary lint).",
             },
+            {
+              name: "ai",
+              message:
+                "Import the Vercel AI SDK only through @eleva/ai (boundary lint).",
+            },
           ],
           patterns: [
             {
@@ -63,6 +68,11 @@ export default [
               group: ["@workos-inc", "@workos-inc/**"],
               message:
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
+            },
+            {
+              group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
+              message:
+                "Import AI SDK providers only through @eleva/ai (boundary lint).",
             },
           ],
         },

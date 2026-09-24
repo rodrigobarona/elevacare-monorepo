@@ -8,6 +8,7 @@ import { Button } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 
 import { RichTextEditor, type RichTextEditorLabels } from "./rich-text-editor"
+import type { RichTextEditorProps } from "./rich-text-editor"
 import type { PlateValue, RichTextSource } from "./types"
 
 const EMPTY_VALUE: PlateValue = [{ type: "p", children: [{ text: "" }] }]
@@ -52,15 +53,20 @@ export type LocalizedRichTextFieldProps = {
   labels?: Partial<LocalizedRichTextFieldLabels>
   editorLabels?: Partial<RichTextEditorLabels>
   /**
-   * Translate action wires to `POST /ai/editor` in a later 04B PR.
-   * Until then the control is visible but inactive when no handler is passed.
+   * Optional AI assist for the active locale editor (improve / shorten /
+   * fix_grammar). Wire to `POST /ai/editor` via `@eleva/api-client`.
+   */
+  ai?: RichTextEditorProps["ai"]
+  /**
+   * Translate action should call `POST /ai/editor` with command `translate`
+   * and mark the tab `source: "ai_draft"` until the human edits.
    */
   onTranslateFromSource?: (targetLocale: Locale) => void | Promise<void>
 }
 
 /**
- * Locale tabs + per-locale Plate editor. "Translate from source" is a stub
- * hook until AI assist lands.
+ * Locale tabs + per-locale Plate editor. Pass `ai` / `onTranslateFromSource`
+ * to wire `POST /ai/editor`.
  */
 export function LocalizedRichTextField({
   value,
@@ -70,6 +76,7 @@ export function LocalizedRichTextField({
   isDisabled = false,
   labels: labelsProp,
   editorLabels,
+  ai,
   onTranslateFromSource,
 }: LocalizedRichTextFieldProps) {
   const labels: LocalizedRichTextFieldLabels = {
@@ -123,16 +130,18 @@ export function LocalizedRichTextField({
       <RichTextEditor
         key={activeLocale}
         value={entry?.json ?? EMPTY_VALUE}
+        locale={activeLocale}
         isDisabled={isDisabled}
         labels={editorLabels}
-        onChange={(json) => {
+        ai={ai}
+        onChangeWithSource={(json, source) => {
           onChange({
             sourceLocale,
             locales: {
               ...value,
               [activeLocale]: {
                 json,
-                source: "human",
+                source,
               },
             },
           })

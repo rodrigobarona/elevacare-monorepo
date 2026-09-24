@@ -127,14 +127,16 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > `#102`), (6) ~~calendar busy/destination UI on connected accounts~~
 > (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**done**,
 > `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
-> `#106`);
-> still open before Phase 09: Plate AI route,
-> UI-built Quick chat / Physiotherapy fixtures (not seed-only).
-> Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
+> `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**,
+> `#107`);
+> still open before Phase 09: UI-built Quick chat / Physiotherapy fixtures
+> (not seed-only). `pnpm i18n:draft` / draft parity still open with fixtures or a
+> follow-up. Do not start Phase 09 until this exit gate is honestly met or
+> explicitly waived.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
       boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside
-      `packages/editor`). Plate UI registry restyle + AI route still open.
+      `packages/editor`). Plate UI registry restyle still open; AI route shipped.
 - [x] `GET/PATCH /expert/practice`, `/expert/locations` CRUD, `/expert/schedules`
       CRUD + `PUT …/rules` + `PUT …/overrides` (Zod + OpenAPI + rate limit +
       `withAudit`); practice PATCH returns `409 OFFER_INVARIANT_VIOLATION` without
@@ -160,9 +162,11 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
       `use_for_busy` affect slots (test with a busy event); destination override per mode writes the
       booking to the right calendar; token revoke -> reconnect banner; no calendar connected -> ICS
       feed subscription shows bookings in Apple Calendar (manual evidence).
-- [ ] `@eleva/editor` AI actions stream, respect the allow-list (unknown model -> typed error), and
-      never run on `apps/app` member content; `pnpm i18n:draft` produces draft files and
-      `check:i18n-parity` ignores them.
+- [x] `POST /ai/editor` + `@eleva/ai` `editorAssist` stream with allow-list
+      fail-closed and `clinical` rejected until Phase 10 (never `apps/app`
+      member content). Expert editor UI hooks (`onAssist` / `ai_draft`) shipped;
+      app wiring of `createApiClient().ai.editorAssist` still open.
+- [ ] `pnpm i18n:draft` produces draft files and `check:i18n-parity` ignores them.
 - [ ] Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
       `pt`/`en`, 360px and 1280px.
 - [ ] `e2e/expert-offer.spec.ts` green for UI-built Quick chat / Physiotherapy

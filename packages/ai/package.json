@@ -19,5 +19,8 @@
     "eslint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "dependencies": {
+    "ai": "^7.0.112"
   }
 }

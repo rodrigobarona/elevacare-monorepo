@@ -1759,6 +1759,60 @@ export type MarkInboxReadResponse = z.infer<typeof MarkInboxReadResponseSchema>
 export type MarkInboxReadAllResponse = z.infer<
   typeof MarkInboxReadAllResponseSchema
 >
+
+// ---------------------------------------------------------------------------
+// AI editor assist (ADR-023 / Phase 04B)
+// ---------------------------------------------------------------------------
+
+export const EditorAssistCommandSchema = z.enum([
+  "improve",
+  "shorten",
+  "fix_grammar",
+  "translate",
+])
+
+export const EditorAssistContextSchema = z.enum(["marketing", "clinical"])
+
+export const EditorAssistResourceSchema = z.enum([
+  "expert_profile",
+  "event_type",
+  "location",
+])
+
+export const EditorAssistRequestSchema = z
+  .object({
+    command: EditorAssistCommandSchema,
+    text: z.string().min(1).max(20_000),
+    sourceLocale: LocaleSchema.optional(),
+    targetLocale: LocaleSchema.optional(),
+    context: EditorAssistContextSchema.default("marketing"),
+    resource: EditorAssistResourceSchema,
+    resourceId: z.string().uuid(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.command === "translate") {
+      if (!value.sourceLocale) {
+        ctx.addIssue({
+          code: "custom",
+          message: "sourceLocale is required for translate",
+          path: ["sourceLocale"],
+        })
+      }
+      if (!value.targetLocale) {
+        ctx.addIssue({
+          code: "custom",
+          message: "targetLocale is required for translate",
+          path: ["targetLocale"],
+        })
+      }
+    }
+  })
+
+export type EditorAssistCommand = z.infer<typeof EditorAssistCommandSchema>
+export type EditorAssistContext = z.infer<typeof EditorAssistContextSchema>
+export type EditorAssistResource = z.infer<typeof EditorAssistResourceSchema>
+export type EditorAssistRequest = z.infer<typeof EditorAssistRequestSchema>
+
 export type RefundBookingPaymentRequest = z.infer<
   typeof RefundBookingPaymentRequestSchema
 >
@@ -1849,6 +1903,43 @@ export function createApiClient(options: ApiClientOptions) {
 
     if (!text) return undefined as unknown as T
     return JSON.parse(text) as T
+  }
+
+  async function requestStream(
+    method: string,
+    path: string,
+    body?: unknown
+  ): Promise<Response> {
+    const url = `${baseUrl.replace(/\/$/, "")}${path}`
+    const headers: Record<string, string> = {
+      "content-type": "application/json",
+      accept: "text/plain",
+      ...(options.headers ?? {}),
+    }
+    if (bearerToken) {
+      headers["authorization"] = `Bearer ${bearerToken}`
+    }
+
+    const response = await fetchFn(url, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: bearerToken ? "omit" : "include",
+      signal: options.signal,
+    })
+
+    if (!response.ok) {
+      const text = await response.text()
+      let error: ApiError
+      try {
+        error = JSON.parse(text) as ApiError
+      } catch {
+        error = { error: "unknown", message: text || `HTTP ${response.status}` }
+      }
+      throw new ApiClientError(response.status, error)
+    }
+
+    return response
   }
 
   return {
@@ -2641,6 +2732,16 @@ export function createApiClient(options: ApiClientOptions) {
           data
         )
         return BookingReminderResponseSchema.parse(raw)
+      },
+    },
+
+    ai: {
+      /**
+       * Streams plain-text editor assist. Caller consumes `response.body`.
+       * Errors before the stream starts throw `ApiClientError`.
+       */
+      editorAssist(data: EditorAssistRequest) {
+        return requestStream("POST", "/ai/editor", data)
       },
     },
   }

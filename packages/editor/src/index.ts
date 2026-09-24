@@ -21,6 +21,7 @@ export {
   RichTextEditor,
   type RichTextEditorProps,
   type RichTextEditorLabels,
+  type EditorAiAssistCommand,
 } from "./rich-text-editor"
 export { RichTextViewer, type RichTextViewerProps } from "./rich-text-viewer"
 export {

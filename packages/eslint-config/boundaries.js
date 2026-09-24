@@ -21,7 +21,7 @@
  * - S4: `twilio` outside `@eleva/notifications`
  * - S4: `workflow` (Vercel Workflows DevKit) outside `@eleva/workflows`
  * - S5: `@daily-co/daily-js` outside session UI (app zone)
- * - S5: `ai` (Vercel AI SDK) outside `@eleva/ai`
+ * - S5: `ai` / `@ai-sdk/*` (Vercel AI SDK) outside `@eleva/ai`
  * - Phase 4B: `platejs`, `@platejs/*`, `slate*`, `@radix-ui/*` outside
  *   `@eleva/editor` (ADR-023). Owning package omits `boundariesConfig`
  *   from its local eslint.config.js (same pattern as `@eleva/billing`).
@@ -102,6 +102,11 @@ export const boundariesConfig = [
               message:
                 "Import Plate only through @eleva/editor (ADR-023 boundary lint).",
             },
+            {
+              name: "ai",
+              message:
+                "Import the Vercel AI SDK only through @eleva/ai (boundary lint).",
+            },
           ],
           patterns: [
             {
@@ -133,6 +138,11 @@ export const boundariesConfig = [
               group: ["@radix-ui", "@radix-ui/**"],
               message:
                 "Radix is banned outside packages/editor (ADR-022 / ADR-023 exception).",
+            },
+            {
+              group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
+              message:
+                "Import AI SDK providers only through @eleva/ai (boundary lint).",
             },
             // Sprint 2: per-adapter SDKs land in @eleva/accounting.
             // No standalone npm packages today (TOConline + Moloni use
