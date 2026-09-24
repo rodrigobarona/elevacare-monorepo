@@ -138,6 +138,8 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > | UI→publish→funnel for **net-new** Quick chat / Physiotherapy                              | Builder path + seeded funnel shipped | Connect-ready expert loopback session (`E2E_EXPERT_OFFER=1` covers affordances only) |
 > | Design-pass screenshots (wizard / builder / calendar; light+dark; pt+en; 360+1280)        | UI on main                           | Human screenshots — do not fake                                                      |
 > | Multi-account calendar busy (2× Google + 1× Microsoft; only `use_for_busy` affects slots) | Busy/destination UI shipped          | Human OAuth + busy-slot proof                                                        |
+> | Destination override per mode → booking lands on the right calendar; revoke → reconnect   | Overrides API + UI shipped (`#106`)  | Live multi-calendar booking proof                                                    |
+> | No calendar connected → ICS feed shows bookings in Apple Calendar                         | ICS feed tokens shipped (`#105`)     | Manual Apple Calendar subscribe proof                                                |
 > | Clinical worldwide / language subset publish refusals next to fields                      | Partial (invariants API)             | UX sentence-next-to-field proof                                                      |
 > | Private link book-while-closed + revoke 404                                               | API + builder tab                    | Live private-link e2e                                                                |
 >
