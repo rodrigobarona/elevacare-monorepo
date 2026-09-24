@@ -1,4 +1,5 @@
 import { GET as handleGet, POST as handlePost } from "@eleva/auth/server/auth"
+import { ensureAuthTransactionalMailer } from "@/lib/ensure-auth-mailer"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 // Better Auth owns sign-in, refresh, and callback throttling. Wrapping this
@@ -12,9 +13,17 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export const GET = handleGet
-export const POST = handlePost
+export async function GET(request: Request) {
+  ensureAuthTransactionalMailer()
+  return handleGet(request)
+}
+
+export async function POST(request: Request) {
+  ensureAuthTransactionalMailer()
+  return handlePost(request)
+}
 
 export function OPTIONS(request: Request) {
+  ensureAuthTransactionalMailer()
   return handleGet(request)
 }

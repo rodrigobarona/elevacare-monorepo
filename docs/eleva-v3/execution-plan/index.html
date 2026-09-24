@@ -3252,16 +3252,56 @@ tabs (kind / policies / private links) + <code>/expert/booking-links</code></del
 <code>#105</code>), (8) <del>per-mode / per-event-type destination overrides</del> (<strong>done</strong>,
 <code>#106</code>), (9) <del>Plate AI route (<code>POST /ai/editor</code> + <code>editorAssist</code>)</del> (<strong>done</strong>,
 <code>#107</code>), (10) <del>UI-built Quick chat / Physiotherapy builder path</del> (<strong>done</strong>,
-this slice: country presets EU/PT/All, inline named schedule + location on
-the modes panel, <code>createApiClient().ai.editorAssist</code> wired on event-type
-description, <code>check:i18n-parity</code> ignores <code>*.draft.json</code>,
-<code>E2E_EXPERT_OFFER=1</code> builder affordance tests);
-still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
-net-new fixtures (needs Connect-ready expert session), design-pass
-screenshots, multi-account calendar busy evidence. Do not start Phase 09
-until the exit gate is honestly met or explicitly waived by the founder.</p>
+<code>#108</code>), (11) <del><code>pnpm i18n:draft</code> + 14-day draft age gate</del> (<strong>done</strong>, <code>#109</code>).</p>
+<h3 id="04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run"><a class="anchor" href="#04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run" aria-label="Link to section">#</a>Founder evidence checklist (04B exit — waive or run)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Engineering</th>
+<th>Evidence still needed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>UI→publish→funnel for <strong>net-new</strong> Quick chat / Physiotherapy</td>
+<td>Builder path + seeded funnel shipped</td>
+<td>Connect-ready expert loopback session (<code>E2E_EXPERT_OFFER=1</code> covers affordances only)</td>
+</tr>
+<tr>
+<td>Design-pass screenshots (wizard / builder / calendar; light+dark; pt+en; 360+1280)</td>
+<td>UI on main</td>
+<td>Human screenshots — do not fake</td>
+</tr>
+<tr>
+<td>Multi-account calendar busy (2× Google + 1× Microsoft; only <code>use_for_busy</code> affects slots)</td>
+<td>Busy/destination UI shipped</td>
+<td>Human OAuth + busy-slot proof</td>
+</tr>
+<tr>
+<td>Destination override per mode → booking lands on the right calendar; revoke → reconnect</td>
+<td>Overrides API + UI shipped (<code>#106</code>)</td>
+<td>Live multi-calendar booking proof</td>
+</tr>
+<tr>
+<td>No calendar connected → ICS feed shows bookings in Apple Calendar</td>
+<td>ICS feed tokens shipped (<code>#105</code>)</td>
+<td>Manual Apple Calendar subscribe proof</td>
+</tr>
+<tr>
+<td>Clinical worldwide / language subset publish refusals next to fields</td>
+<td>Partial (invariants API)</td>
+<td>UX sentence-next-to-field proof</td>
+</tr>
+<tr>
+<td>Private link book-while-closed + revoke 404</td>
+<td>API + builder tab</td>
+<td>Live private-link e2e</td>
+</tr>
+</tbody></table>
+<p><strong>Phase 09 remains blocked</strong> until this checklist is met or the founder
+explicitly waives remaining items. Do not start FT POST / <code>invoice.issued</code>.</p>
 <p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
-14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>).</p>
+14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>, <code>#109</code>).</p>
 </blockquote>
 <ul>
 <li><input checked="" disabled="" type="checkbox"> <code>@eleva/editor</code> package exists with ADR-023 exports, sanitizer XSS tests, and
@@ -3683,12 +3723,60 @@ it); this phase adds the <code>marketing</code> kind, the member view/withdraw A
 </ol>
 <h2 id="05-member-app--acceptance-criteria"><a class="anchor" href="#05-member-app--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-22):</strong> Product surfaces for Phase 05 are on main.
-<code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> / <code>e2e:member:stripe</code>) and is
-loopback-gated. This closeout did <strong>not</strong> re-run the live Stripe journey
-(local web/api/app/account were not up). Leave the e2e checkbox open until
-someone runs it locally with <code>E2E_MEMBER=1 E2E_LIVE_STRIPE=1</code> against
-<code>fisiomota</code> / <code>first-visit</code> / €60 — never Production.</p>
+<p><strong>Closeout status (2026-09-24, post-#109):</strong> Product surfaces for Phase 05 are
+on main. <code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> /
+<code>e2e:member:stripe</code>) and is loopback-gated.</p>
+<h3 id="05-member-app--member-e2e-attempt-2026-09-24-loopback-only-never-production"><a class="anchor" href="#05-member-app--member-e2e-attempt-2026-09-24-loopback-only-never-production" aria-label="Link to section">#</a>Member e2e attempt (2026-09-24, loopback only — never Production)</h3>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Loopback host guard</td>
+<td><strong>PASS</strong></td>
+</tr>
+<tr>
+<td>Local stack</td>
+<td>web/api/app/account brought up; applied main migrations <code>0035</code>–<code>0046</code> (local DB was behind — needed <code>phone_e164</code>)</td>
+</tr>
+<tr>
+<td>Auth mailer injection</td>
+<td>Fixed in this closeout (<code>globalThis</code> + <code>/auth</code> ensure) so signup/magic-link no longer 500 with &quot;mailer not injected&quot; under Turbopack</td>
+</tr>
+<tr>
+<td>Prefs + DSAR (no live Stripe)</td>
+<td><strong>Not green</strong> — signup/verify/password sign-in succeed; Space settings RSC hits API <code>401 no-session</code> (<code>ACCOUNT_URL</code> in local <code>.env</code> points at <code>:3000</code> while account app is <code>:3006</code>; cookie/session handoff across zones needs operator fix). Password path kept for prefs/DSAR; separate magic-link → Space case remains in the suite (also blocked on the same session handoff). Guest magic-link <strong>with booking</strong> stays on <code>e2e:member:stripe</code></td>
+</tr>
+<tr>
+<td>Live Stripe journey (<code>E2E_LIVE_STRIPE=1</code>, fisiomota / first-visit / €60)</td>
+<td><strong>Blocked</strong> — Stripe CLI <code>stripe listen</code> fails with expired <code>sk_test_…</code> (401); do not weaken <code>RATE_LIMITS.public</code></td>
+</tr>
+</tbody></table>
+<p>Leave acceptance checkboxes open until prefs/DSAR + live Stripe pass on a
+healthy local session, or the founder waives. Never run against Production.</p>
+<h3 id="05-member-app--founder-evidence-checklist-05"><a class="anchor" href="#05-member-app--founder-evidence-checklist-05" aria-label="Link to section">#</a>Founder evidence checklist (05)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Runnable now?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pnpm e2e:member</code> prefs + DSAR</td>
+<td>After fixing local <code>ACCOUNT_URL</code>/session cookie handoff</td>
+<td>Code + migrations ready</td>
+</tr>
+<tr>
+<td><code>pnpm e2e:member:stripe</code></td>
+<td>After <code>stripe login</code> / fresh CLI key + <code>stripe listen</code></td>
+<td>Seeded fisiomota offer present</td>
+</tr>
+</tbody></table>
 </blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Guest from Phase 4 activates via magic link, lands on <code>/{space-slug}</code> dashboard showing the
@@ -4010,13 +4098,48 @@ scripts and root scripts (<code>qstash:setup:payouts</code>).</li>
 </ol>
 <h2 id="06-payments-payouts--acceptance-criteria"><a class="anchor" href="#06-payments-payouts--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-22):</strong> Engineering for Phase 06 is on main.
+<p><strong>Closeout status (2026-09-24):</strong> Engineering for Phase 06 is on main.
 <code>e2e/phase-06.spec.ts</code> (<code>pnpm e2e:phase06</code>) asserts OpenAPI path coverage,
 anonymous 401s on payout/refund/finance mutations, unsigned Stripe webhook
 rejection, and workflow drain-secret gating. It does <strong>not</strong> exercise live
 pay → eligible → transfer → payout (that remains Stripe test-mode / staging
 exit-gate evidence; do not burn live Stripe quota in CI). Money-path e2e gap
 is intentional under Hobby / abuse constraints.</p>
+<h3 id="06-payments-payouts--founder-evidence-checklist-06-money-path"><a class="anchor" href="#06-payments-payouts--founder-evidence-checklist-06-money-path" aria-label="Link to section">#</a>Founder evidence checklist (06 money-path)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Engineering</th>
+<th>Evidence still needed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Contract e2e (<code>pnpm e2e:phase06</code>)</td>
+<td>Shipped</td>
+<td>Re-run anytime on loopback</td>
+</tr>
+<tr>
+<td>Live pay → confirm (PaymentIntent)</td>
+<td>Code on main</td>
+<td>Stripe <strong>test-mode</strong> / staging — never Production</td>
+</tr>
+<tr>
+<td>Pay → eligible → <strong>transfer</strong> → payout</td>
+<td>Code on main</td>
+<td><strong>Blocked by Phase 07 issuance gate</strong> — a real issued platform-fee invoice is required before transfer; do not bypass <code>issueInvoice()</code> / FT POST to obtain this evidence. Until 07 opens, treat transfer/payout as staging-only after fiscal unlock, or founder-waive the transfer leg with that prerequisite named</td>
+</tr>
+<tr>
+<td>Connect Embedded onboarding unlock predicate</td>
+<td>Shipped</td>
+<td>Human Connect session proof</td>
+</tr>
+<tr>
+<td>Webhook two-file parity (platform + Connect)</td>
+<td>Shipped + unit parity</td>
+<td>Staging endpoint apply if rotated</td>
+</tr>
+</tbody></table>
 </blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> New expert completes Connect onboarding in Embedded Components; <code>account.updated</code> /
@@ -4487,11 +4610,40 @@ audit unions (<code>invoice: issued|failed|credited|manual_marked</code>; <code>
 </ol>
 <h2 id="07-invoicing-toconline--acceptance-criteria"><a class="anchor" href="#07-invoicing-toconline--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-22):</strong> Closed-gate engineering for Phase 07 is on
+<p><strong>Closeout status (2026-09-24):</strong> Closed-gate engineering for Phase 07 is on
 main. <strong>Exit gate remains BLOCKED:</strong> do not open live FT POST, do not
 Comunicar TEST, do not call <code>issueInvoice()</code> / finalize fictitious documents,
 do not invent DPO/legal production sign-off. Engineering checkboxes below may
 be met; production issuance / Comunicação acceptance is explicitly deferred.</p>
+<h3 id="07-invoicing-toconline--founder-evidence-checklist-07-blocked-vs-waive"><a class="anchor" href="#07-invoicing-toconline--founder-evidence-checklist-07-blocked-vs-waive" aria-label="Link to section">#</a>Founder evidence checklist (07 — blocked vs waive)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Closed-gate engineering (<code>issueInvoice()</code> refuses POST)</td>
+<td>Shipped — keep closed</td>
+</tr>
+<tr>
+<td>ELEVA series communication (legally required before auto-issue)</td>
+<td><strong>Blocked</strong> — operator/accountant prerequisite; not waived by founder engineering approval</td>
+</tr>
+<tr>
+<td>Remaining fiscal params (tax codes / rates / legal mentions)</td>
+<td><strong>Blocked</strong> — Manolo/accountant confirmation</td>
+</tr>
+<tr>
+<td>Live FT POST / Comunicação / finalize</td>
+<td><strong>Blocked</strong> — founder/DPO/fiscal params <strong>and</strong> ELEVA series communication; not waive-as-engineering</td>
+</tr>
+<tr>
+<td>Phase 09 start</td>
+<td><strong>Blocked</strong> until 01–08 closable gaps done or waived (this gate stays blocked regardless)</td>
+</tr>
+</tbody></table>
 </blockquote>
 <p><strong>PR 07.1 issuance is deferred.</strong> Do not treat <code>issuePlatformFeeInvoice</code> reaching <code>issued</code>,
 finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
@@ -4945,13 +5097,39 @@ status; suppress future sends on hard bounce.</li>
 </ol>
 <h2 id="08-notifications-lane1--acceptance-criteria"><a class="anchor" href="#08-notifications-lane1--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-22):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
+<p><strong>Closeout status (2026-09-24):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
 main. <strong>Exit-gate items still BLOCKED / deferred:</strong> do not add
 <code>invoice.issued</code> / <code>invoice.failed</code> to <code>NOTIFICATION_KINDS</code> while
 <code>issueInvoice()</code> is closed. Local Twilio SMS smoke against Virtual Phone
-<code>+18777804236</code> was <strong>not</strong> re-run this closeout (no local stack). SMS
-channel remains engineered; treat live SMS evidence as operator-run when
-safe.</p>
+<code>+18777804236</code> was <strong>not</strong> re-run this closeout (Stripe CLI / member e2e
+blocked first). Skipping the SMS smoke for <strong>this attempt</strong> does not waive
+Phase 08 acceptance — live SMS evidence remains required for the exit gate
+unless the founder explicitly waives it. SMS channel remains engineered.</p>
+<h3 id="08-notifications-lane1--founder-evidence-checklist-08"><a class="anchor" href="#08-notifications-lane1--founder-evidence-checklist-08" aria-label="Link to section">#</a>Founder evidence checklist (08)</h3>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Engineering</th>
+<th>Evidence still needed</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Lane 1 booking confirm / reminder / cancel email</td>
+<td>Shipped</td>
+<td>Operator inbox proof (locale + ICS) — required unless founder explicitly waives</td>
+</tr>
+<tr>
+<td>Twilio SMS Virtual Phone smoke</td>
+<td>Engineered</td>
+<td>Operator-run <code>+18777804236</code> when ready — required unless founder explicitly waives</td>
+</tr>
+<tr>
+<td><code>invoice.issued</code> / <code>invoice.failed</code> kinds</td>
+<td><strong>Keep off</strong> union</td>
+<td>Opens only with Phase 07 issuance</td>
+</tr>
+</tbody></table>
 </blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Templates are <strong>mode-aware</strong> (<code>bookings.mode</code> snapshot): online -&gt; &quot;your video link arrives

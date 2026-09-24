@@ -28,7 +28,7 @@ export default async function OrgHomePage({
   const ts = await getTranslations("sessions")
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="member-space-home">
       <AccountPageHeader
         title={t("welcome", { name: memberName })}
         description={t("subtitle")}

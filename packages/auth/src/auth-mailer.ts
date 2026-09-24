@@ -27,15 +27,21 @@ export type AuthTransactionalMailer = {
   }) => Promise<void>
 }
 
-let mailer: AuthTransactionalMailer | undefined
+// Cache on `globalThis` so Turbopack/Next instrumentation and route
+// handlers share one instance (module-level `let` is duplicated across
+// the instrumentation graph vs the request graph in monorepo dev).
+const globalForAuthMailer = globalThis as unknown as {
+  __elevaAuthTransactionalMailer?: AuthTransactionalMailer
+}
 
 export function setAuthTransactionalMailer(
   next: AuthTransactionalMailer
 ): void {
-  mailer = next
+  globalForAuthMailer.__elevaAuthTransactionalMailer = next
 }
 
 export function getAuthTransactionalMailer(): AuthTransactionalMailer {
+  const mailer = globalForAuthMailer.__elevaAuthTransactionalMailer
   if (!mailer) {
     throw new Error(
       "Auth transactional mailer is not injected. Call setAuthTransactionalMailer at API startup."

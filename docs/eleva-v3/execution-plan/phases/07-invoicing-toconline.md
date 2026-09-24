@@ -151,11 +151,21 @@ connected|disconnected`).
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-22):** Closed-gate engineering for Phase 07 is on
+> **Closeout status (2026-09-24):** Closed-gate engineering for Phase 07 is on
 > main. **Exit gate remains BLOCKED:** do not open live FT POST, do not
 > Comunicar TEST, do not call `issueInvoice()` / finalize fictitious documents,
 > do not invent DPO/legal production sign-off. Engineering checkboxes below may
 > be met; production issuance / Comunicação acceptance is explicitly deferred.
+>
+> ### Founder evidence checklist (07 — blocked vs waive)
+>
+> | Item                                                            | Status                                                                                               |
+> | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+> | Closed-gate engineering (`issueInvoice()` refuses POST)         | Shipped — keep closed                                                                                |
+> | ELEVA series communication (legally required before auto-issue) | **Blocked** — operator/accountant prerequisite; not waived by founder engineering approval           |
+> | Remaining fiscal params (tax codes / rates / legal mentions)    | **Blocked** — Manolo/accountant confirmation                                                         |
+> | Live FT POST / Comunicação / finalize                           | **Blocked** — founder/DPO/fiscal params **and** ELEVA series communication; not waive-as-engineering |
+> | Phase 09 start                                                  | **Blocked** until 01–08 closable gaps done or waived (this gate stays blocked regardless)            |
 
 **PR 07.1 issuance is deferred.** Do not treat `issuePlatformFeeInvoice` reaching `issued`,
 finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.

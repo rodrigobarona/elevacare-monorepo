@@ -5,6 +5,7 @@ import {
   type Page,
 } from "@playwright/test"
 import {
+  ACCOUNT_ORIGIN,
   E2E_PASSWORD,
   accountUrl,
   apiUrl,
@@ -204,11 +205,11 @@ test.describe("member Space without live Stripe", () => {
   )
   test.skip(runLiveStripe, "live Stripe journey already covers prefs + DSAR")
 
-  test("magic-link member can persist a preference and request a DSAR with mocked private Blob", async ({
+  test("password member can persist a preference and request a DSAR with mocked private Blob", async ({
     page,
     request,
   }) => {
-    test.setTimeout(60_000)
+    test.setTimeout(120_000)
     const health = await request.get(`${apiUrl}/health`)
     test.skip(health.status() !== 200, "needs local API on :3002")
 
@@ -221,8 +222,56 @@ test.describe("member Space without live Stripe", () => {
     await page.getByTestId("signup-password").fill(E2E_PASSWORD)
     await page.getByTestId("signup-consent").click()
     await page.getByTestId("signup-submit").click()
+    // Local Resend rejects @example.com and can take ~15s before Better Auth
+    // returns 200 with AUTH_MAIL_SEND_FAILED — keep the UI wait above that.
     await expect(page.getByTestId("verify-email")).toBeVisible({
-      timeout: 15_000,
+      timeout: 45_000,
+    })
+    await verifyEmail(request, email)
+
+    // Password sign-in (same path as e2e/auth.spec.ts) — magic-link verify on
+    // :3002 then gateway /dashboard can leave the app RSC without a session
+    // cookie when ACCOUNT_URL points at the web port in local .env.
+    await page.goto(`${accountUrl}/login`)
+    await page.getByTestId("login-email").fill(email)
+    await page.getByTestId("login-password").fill(E2E_PASSWORD)
+    const signedIn = page.waitForResponse(
+      (response) =>
+        response.url().includes("/auth/sign-in/email") && response.ok()
+    )
+    await page.getByTestId("login-submit").click()
+    await signedIn
+
+    await page.goto(`${webUrl}/dashboard`)
+    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
+    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+
+    await persistMarketingPreference(page, request, spaceSlug)
+    await requestDsarWithMockedBlob(page, request, spaceSlug)
+  })
+
+  test("magic-link activation lands on a Space (session handoff)", async ({
+    page,
+    request,
+  }) => {
+    test.setTimeout(120_000)
+    // Guest magic-link activation with a booking remains on the live Stripe
+    // journey above. This case covers post-verify magic-link → Space without
+    // Stripe; keep it in the suite so Phase 05 cannot go green without it.
+    const health = await request.get(`${apiUrl}/health`)
+    test.skip(health.status() !== 200, "needs local API on :3002")
+
+    const email = uniqueEmail("member-magic")
+    const signup = await page.goto(`${accountUrl}/signup`)
+    test.skip(signup?.status() !== 200, "needs local account app on :3006")
+
+    await page.getByTestId("signup-name").fill("E2e Magic")
+    await page.getByTestId("signup-email").fill(email)
+    await page.getByTestId("signup-password").fill(E2E_PASSWORD)
+    await page.getByTestId("signup-consent").click()
+    await page.getByTestId("signup-submit").click()
+    await expect(page.getByTestId("verify-email")).toBeVisible({
+      timeout: 45_000,
     })
     await verifyEmail(request, email)
 
@@ -230,9 +279,9 @@ test.describe("member Space without live Stripe", () => {
     await page.getByTestId("login-email").fill(email)
     await page.getByTestId("login-magic").click()
     await expect(page.getByTestId("login-magic-sent")).toBeVisible({
-      timeout: 15_000,
+      timeout: 45_000,
     })
-    const magicUrl = await waitForE2eAuthUrl("magic-link", email, 12_000)
+    const magicUrl = await waitForE2eAuthUrl("magic-link", email, 20_000)
     test.skip(
       !magicUrl,
       "magic-link URL missing — set E2E_AUTH_CAPTURE=1 and restart pnpm dev"
@@ -242,9 +291,24 @@ test.describe("member Space without live Stripe", () => {
     await page.goto(`${webUrl}/dashboard`)
     await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
     const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+    expect(spaceSlug).toMatch(/^space-/)
 
-    await persistMarketingPreference(page, request, spaceSlug)
-    await requestDsarWithMockedBlob(page, request, spaceSlug)
+    // Cookie minting (Playwright page.request shares the browser jar).
+    const me = await page.request.get(`${apiUrl}/me`, {
+      headers: { Origin: ACCOUNT_ORIGIN },
+    })
+    expect(
+      me.status(),
+      "magic-link activation must leave a session cookie usable by GET /me"
+    ).toBe(200)
+
+    // Authenticated Space render — RSC must forward the session to the API.
+    // Local ACCOUNT_URL pointing at the web port has left this 401; keep the
+    // assertion so the suite cannot go green without the handoff.
+    await page.goto(`${webUrl}/${spaceSlug}`)
+    await expect(page.getByTestId("member-space-home")).toBeVisible({
+      timeout: 20_000,
+    })
   })
 })
 

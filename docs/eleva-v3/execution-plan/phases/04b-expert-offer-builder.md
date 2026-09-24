@@ -129,17 +129,25 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
 > `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**,
 > `#107`), (10) ~~UI-built Quick chat / Physiotherapy builder path~~ (**done**,
-> this slice: country presets EU/PT/All, inline named schedule + location on
-> the modes panel, `createApiClient().ai.editorAssist` wired on event-type
-> description, `check:i18n-parity` ignores `*.draft.json`,
-> `E2E_EXPERT_OFFER=1` builder affordance tests);
-> still open before Phase 09 (not this PR): full UI→publish→funnel e2e for
-> net-new fixtures (needs Connect-ready expert session), design-pass
-> screenshots, multi-account calendar busy evidence. Do not start Phase 09
-> until the exit gate is honestly met or explicitly waived by the founder.
+> `#108`), (11) ~~`pnpm i18n:draft` + 14-day draft age gate~~ (**done**, `#109`).
+>
+> ### Founder evidence checklist (04B exit — waive or run)
+>
+> | Item                                                                                      | Engineering                          | Evidence still needed                                                                |
+> | ----------------------------------------------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------ |
+> | UI→publish→funnel for **net-new** Quick chat / Physiotherapy                              | Builder path + seeded funnel shipped | Connect-ready expert loopback session (`E2E_EXPERT_OFFER=1` covers affordances only) |
+> | Design-pass screenshots (wizard / builder / calendar; light+dark; pt+en; 360+1280)        | UI on main                           | Human screenshots — do not fake                                                      |
+> | Multi-account calendar busy (2× Google + 1× Microsoft; only `use_for_busy` affects slots) | Busy/destination UI shipped          | Human OAuth + busy-slot proof                                                        |
+> | Destination override per mode → booking lands on the right calendar; revoke → reconnect   | Overrides API + UI shipped (`#106`)  | Live multi-calendar booking proof                                                    |
+> | No calendar connected → ICS feed shows bookings in Apple Calendar                         | ICS feed tokens shipped (`#105`)     | Manual Apple Calendar subscribe proof                                                |
+> | Clinical worldwide / language subset publish refusals next to fields                      | Partial (invariants API)             | UX sentence-next-to-field proof                                                      |
+> | Private link book-while-closed + revoke 404                                               | API + builder tab                    | Live private-link e2e                                                                |
+>
+> **Phase 09 remains blocked** until this checklist is met or the founder
+> explicitly waives remaining items. Do not start FT POST / `invoice.issued`.
 >
 > **2026-09-24 i18n draft slice:** `pnpm i18n:draft` + `translateMessages` +
-> 14-day draft age gate in `check:i18n-parity` (**done**).
+> 14-day draft age gate in `check:i18n-parity` (**done**, `#109`).
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
       boundary lint (`platejs` / `@platejs/*` / `slate*` / `@radix-ui/*` only inside

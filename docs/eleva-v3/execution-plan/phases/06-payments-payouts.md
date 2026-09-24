@@ -141,13 +141,23 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-22):** Engineering for Phase 06 is on main.
+> **Closeout status (2026-09-24):** Engineering for Phase 06 is on main.
 > `e2e/phase-06.spec.ts` (`pnpm e2e:phase06`) asserts OpenAPI path coverage,
 > anonymous 401s on payout/refund/finance mutations, unsigned Stripe webhook
 > rejection, and workflow drain-secret gating. It does **not** exercise live
 > pay → eligible → transfer → payout (that remains Stripe test-mode / staging
 > exit-gate evidence; do not burn live Stripe quota in CI). Money-path e2e gap
 > is intentional under Hobby / abuse constraints.
+>
+> ### Founder evidence checklist (06 money-path)
+>
+> | Item                                         | Engineering           | Evidence still needed                                                                                                                                                                                                                                                                                               |
+> | -------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Contract e2e (`pnpm e2e:phase06`)            | Shipped               | Re-run anytime on loopback                                                                                                                                                                                                                                                                                          |
+> | Live pay → confirm (PaymentIntent)           | Code on main          | Stripe **test-mode** / staging — never Production                                                                                                                                                                                                                                                                   |
+> | Pay → eligible → **transfer** → payout       | Code on main          | **Blocked by Phase 07 issuance gate** — a real issued platform-fee invoice is required before transfer; do not bypass `issueInvoice()` / FT POST to obtain this evidence. Until 07 opens, treat transfer/payout as staging-only after fiscal unlock, or founder-waive the transfer leg with that prerequisite named |
+> | Connect Embedded onboarding unlock predicate | Shipped               | Human Connect session proof                                                                                                                                                                                                                                                                                         |
+> | Webhook two-file parity (platform + Connect) | Shipped + unit parity | Staging endpoint apply if rotated                                                                                                                                                                                                                                                                                   |
 
 - [ ] New expert completes Connect onboarding in Embedded Components; `account.updated` /
       `capability.updated` flip `connect_status` and unlock publishing only when

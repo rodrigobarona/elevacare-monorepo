@@ -32,6 +32,26 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Pre-Phase-09 evidence stamp (post-#109) + auth mailer Turbopack fix
+
+- Decision: After `#109` (`pnpm i18n:draft` age gate) on main, attempt local
+  `e2e/member.spec.ts` and stamp Phase 04B / 05–08 with founder evidence
+  checklists (shipped engineering vs still-needed human/operator proof).
+  Auth transactional mailer now lives on `globalThis` (and `/auth` ensures
+  injection) so Turbopack instrumentation vs route graphs share one instance —
+  fixes local signup/magic-link 500s ("mailer not injected"). Member prefs/DSAR
+  and live Stripe remain **not green** this turn (Space settings `401
+no-session` under local zone URLs; Stripe CLI key expired). Phase 07
+  issuance stays closed. **Do not start Phase 09.**
+- Owner: engineering
+- Status: active
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  [`05-member-app.md`](./execution-plan/phases/05-member-app.md),
+  [`06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md),
+  [`07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md),
+  [`08-notifications-lane1.md`](./execution-plan/phases/08-notifications-lane1.md)
+- Next review: founder waive or run evidence checklist; then Phase 09.0 only
+
 ### 2026-09-24: Phase 04B `pnpm i18n:draft` + draft age gate
 
 - Decision: Ship `@eleva/ai` `translateMessages`, root `pnpm i18n:draft` (writes

@@ -148,13 +148,22 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-22):** Lane 1 + Resend webhooks + Lane 2 stub are on
+> **Closeout status (2026-09-24):** Lane 1 + Resend webhooks + Lane 2 stub are on
 > main. **Exit-gate items still BLOCKED / deferred:** do not add
 > `invoice.issued` / `invoice.failed` to `NOTIFICATION_KINDS` while
 > `issueInvoice()` is closed. Local Twilio SMS smoke against Virtual Phone
-> `+18777804236` was **not** re-run this closeout (no local stack). SMS
-> channel remains engineered; treat live SMS evidence as operator-run when
-> safe.
+> `+18777804236` was **not** re-run this closeout (Stripe CLI / member e2e
+> blocked first). Skipping the SMS smoke for **this attempt** does not waive
+> Phase 08 acceptance — live SMS evidence remains required for the exit gate
+> unless the founder explicitly waives it. SMS channel remains engineered.
+>
+> ### Founder evidence checklist (08)
+>
+> | Item                                             | Engineering        | Evidence still needed                                                              |
+> | ------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------- |
+> | Lane 1 booking confirm / reminder / cancel email | Shipped            | Operator inbox proof (locale + ICS) — required unless founder explicitly waives    |
+> | Twilio SMS Virtual Phone smoke                   | Engineered         | Operator-run `+18777804236` when ready — required unless founder explicitly waives |
+> | `invoice.issued` / `invoice.failed` kinds        | **Keep off** union | Opens only with Phase 07 issuance                                                  |
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number (e-mail body only), in person -> location name, address, "Open in Maps" link and the location's
