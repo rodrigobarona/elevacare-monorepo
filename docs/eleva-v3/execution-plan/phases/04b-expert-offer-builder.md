@@ -126,7 +126,8 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > tabs (kind / policies / private links) + `/expert/booking-links`~~ (**done**,
 > `#102`), (6) ~~calendar busy/destination UI on connected accounts~~
 > (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**done**,
-> `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**);
+> `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
+> `#106`);
 > still open before Phase 09: Plate AI route,
 > UI-built Quick chat / Physiotherapy fixtures (not seed-only).
 > Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
