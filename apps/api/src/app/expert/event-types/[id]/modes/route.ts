@@ -11,13 +11,38 @@ import {
   getPracticeLocation,
   getSchedule,
   listEventTypeModes,
+  lockEventTypeForUpdate,
 } from "@eleva/db"
 import {
   assertOfferInvariants,
   isUniqueViolation,
   OFFER_INVARIANT_MESSAGES,
+  type OfferInvariantError,
 } from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
+
+class ModeCreateNotFoundError extends Error {
+  constructor() {
+    super("event type not found")
+    this.name = "ModeCreateNotFoundError"
+  }
+}
+
+class ModeCreateValidationError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = "ModeCreateValidationError"
+  }
+}
+
+class ModeCreateOfferInvariantError extends Error {
+  code: OfferInvariantError
+  constructor(code: OfferInvariantError) {
+    super(OFFER_INVARIANT_MESSAGES[code])
+    this.name = "ModeCreateOfferInvariantError"
+    this.code = code
+  }
+}
 
 export const ROUTE_POLICY = {
   auth: "session",
@@ -120,60 +145,61 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const data = body.data
-  const schedule = await getSchedule(profile.orgId, data.scheduleId, profile.id)
-  if (!schedule) {
-    return secureJson(
-      { error: "validation", message: "Schedule not found for this expert." },
-      { status: 422, headers }
-    )
-  }
-
-  let locationCountry: string | null = null
-  if (data.locationId) {
-    const location = await getPracticeLocation(
-      profile.orgId,
-      data.locationId,
-      profile.id
-    )
-    if (!location || !location.active) {
-      return secureJson(
-        {
-          error: "validation",
-          message: "Practice location not found or inactive.",
-        },
-        { status: 422, headers }
-      )
-    }
-    locationCountry = location.country
-  }
-
-  const invariant = assertOfferInvariants({
-    kind: eventType.kind,
-    mode: data.mode,
-    countryScopeType: data.countryScopeType,
-    countryScopeCodes: data.countryScopeCodes,
-    languages: data.languages,
-    locationCountry,
-    worldwideRemote: profile.worldwideRemote,
-    serviceCountries: profile.serviceCountries,
-    profileLanguages: profile.languages,
-  })
-  if (invariant) {
-    return secureJson(
-      {
-        error: "OFFER_INVARIANT_VIOLATION",
-        code: invariant,
-        message: OFFER_INVARIANT_MESSAGES[invariant],
-      },
-      { status: 422, headers }
-    )
-  }
 
   let mode
   try {
     mode = await withAudit(
       { orgId: profile.orgId, actorUserId: session.user.id },
       async (tx, ctx) => {
+        const locked = await lockEventTypeForUpdate(
+          profile.orgId,
+          eventTypeId,
+          profile.id,
+          tx
+        )
+        if (!locked) throw new ModeCreateNotFoundError()
+
+        const schedule = await getSchedule(
+          profile.orgId,
+          data.scheduleId,
+          profile.id,
+          tx
+        )
+        if (!schedule) {
+          throw new ModeCreateValidationError(
+            "Schedule not found for this expert."
+          )
+        }
+
+        let locationCountry: string | null = null
+        if (data.locationId) {
+          const location = await getPracticeLocation(
+            profile.orgId,
+            data.locationId,
+            profile.id,
+            tx
+          )
+          if (!location || !location.active) {
+            throw new ModeCreateValidationError(
+              "Practice location not found or inactive."
+            )
+          }
+          locationCountry = location.country
+        }
+
+        const invariant = assertOfferInvariants({
+          kind: locked.kind,
+          mode: data.mode,
+          countryScopeType: data.countryScopeType,
+          countryScopeCodes: data.countryScopeCodes,
+          languages: data.languages,
+          locationCountry,
+          worldwideRemote: profile.worldwideRemote,
+          serviceCountries: profile.serviceCountries,
+          profileLanguages: profile.languages,
+        })
+        if (invariant) throw new ModeCreateOfferInvariantError(invariant)
+
         const created = await createEventTypeMode(
           profile.orgId,
           {
@@ -207,6 +233,28 @@ export async function POST(request: Request, { params }: Params) {
       }
     )
   } catch (err) {
+    if (err instanceof ModeCreateNotFoundError) {
+      return secureJson(
+        { error: "not found", message: err.message },
+        { status: 404, headers }
+      )
+    }
+    if (err instanceof ModeCreateValidationError) {
+      return secureJson(
+        { error: "validation", message: err.message },
+        { status: 422, headers }
+      )
+    }
+    if (err instanceof ModeCreateOfferInvariantError) {
+      return secureJson(
+        {
+          error: "OFFER_INVARIANT_VIOLATION",
+          code: err.code,
+          message: err.message,
+        },
+        { status: 422, headers }
+      )
+    }
     if (isUniqueViolation(err)) {
       return secureJson(
         {
