@@ -1016,6 +1016,16 @@ export type PutScheduleOverridesRequest = z.infer<
 
 // ── Event Types ─────────────────────────────────────────────────────
 
+export const EventTypeKindSchema = z.enum(["clinical", "non_clinical"])
+export type EventTypeKind = z.infer<typeof EventTypeKindSchema>
+
+export const EventTypeVisibilitySchema = z.enum([
+  "public",
+  "unlisted",
+  "private",
+])
+export type EventTypeVisibility = z.infer<typeof EventTypeVisibilitySchema>
+
 export const CreateEventTypeRequestSchema = z.object({
   slug: z.string().optional(),
   title: LocalizedTextSchema,
@@ -1025,6 +1035,8 @@ export const CreateEventTypeRequestSchema = z.object({
   currency: z.literal("EUR"),
   languages: z.array(z.string()),
   sessionMode: z.enum(["online", "in_person", "phone"]),
+  kind: EventTypeKindSchema.optional(),
+  visibility: EventTypeVisibilitySchema.optional(),
   bookingWindowDays: z.number().int().positive().nullish(),
   minimumNoticeMinutes: z.number().int().nonnegative(),
   bufferBeforeMinutes: z.number().int().nonnegative(),
@@ -1046,6 +1058,55 @@ export const UpdateEventTypeRequestSchema =
 
 export type UpdateEventTypeRequest = z.infer<
   typeof UpdateEventTypeRequestSchema
+>
+
+export const BookingLinkStatusSchema = z.enum([
+  "active",
+  "used",
+  "expired",
+  "revoked",
+])
+export type BookingLinkStatus = z.infer<typeof BookingLinkStatusSchema>
+
+export const CreateBookingLinkRequestSchema = z.object({
+  eventTypeId: z.string().uuid(),
+  eventTypeModeId: z.string().uuid().nullish(),
+  scheduleId: z.string().uuid().nullish(),
+  recipientEmail: z.string().email().max(320).nullish(),
+  priceCents: z.number().int().nonnegative().nullish(),
+  note: z.string().max(2000).nullish(),
+  expiresAt: z.string().datetime(),
+  maxUses: z.number().int().positive().max(100).default(1),
+})
+export type CreateBookingLinkRequest = z.infer<
+  typeof CreateBookingLinkRequestSchema
+>
+
+export const BookingLinkListItemSchema = z.object({
+  id: z.string().uuid(),
+  eventTypeId: z.string().uuid(),
+  eventTypeModeId: z.string().uuid().nullable(),
+  scheduleId: z.string().uuid().nullable(),
+  recipientEmail: z.string().nullable(),
+  priceCents: z.number().int().nonnegative().nullable(),
+  note: z.string().nullable(),
+  expiresAt: z.string().datetime(),
+  maxUses: z.number().int().positive(),
+  useCount: z.number().int().nonnegative(),
+  status: BookingLinkStatusSchema,
+  createdAt: z.string().datetime(),
+  revokedAt: z.string().datetime().nullable(),
+})
+export type BookingLinkListItem = z.infer<typeof BookingLinkListItemSchema>
+
+export const CreateBookingLinkResponseSchema = z.object({
+  id: z.string().uuid(),
+  token: z.string().min(16),
+  urlPath: z.string().min(1),
+  link: BookingLinkListItemSchema,
+})
+export type CreateBookingLinkResponse = z.infer<
+  typeof CreateBookingLinkResponseSchema
 >
 
 export const CreateEventTypeModeRequestSchema = z
@@ -2055,6 +2116,28 @@ export function createApiClient(options: ApiClientOptions) {
           return request<{ ok: true }>(
             "DELETE",
             `/expert/event-types/${encodeURIComponent(id)}/modes/${encodeURIComponent(modeId)}`
+          )
+        },
+      },
+      bookingLinks: {
+        list(eventTypeId: string) {
+          const qs = new URLSearchParams({ eventTypeId })
+          return request<{ links: BookingLinkListItem[] }>(
+            "GET",
+            `/expert/booking-links?${qs.toString()}`
+          )
+        },
+        create(data: CreateBookingLinkRequest) {
+          return request<CreateBookingLinkResponse>(
+            "POST",
+            "/expert/booking-links",
+            data
+          )
+        },
+        revoke(id: string) {
+          return request<{ ok: true; link: BookingLinkListItem }>(
+            "POST",
+            `/expert/booking-links/${encodeURIComponent(id)}/revoke`
           )
         },
       },

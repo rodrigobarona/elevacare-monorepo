@@ -29,6 +29,8 @@ import {
   type EventTypeFormData,
 } from "./actions"
 
+export type { EventTypeFormData }
+
 type LocalizedText = { en: string; pt?: string; es?: string }
 
 interface Props {
@@ -36,6 +38,8 @@ interface Props {
   eventTypeId?: string
   defaultValues?: Partial<EventTypeFormData>
   workspaceBase: string
+  /** Restrict which cards render (edit builder tabs). Default: full form. */
+  panel?: "full" | "basics" | "policies"
 }
 
 type SessionMode = "online" | "in_person" | "phone"
@@ -60,6 +64,7 @@ export function EventTypeForm({
   eventTypeId,
   defaultValues,
   workspaceBase,
+  panel = "full",
 }: Props) {
   const router = useRouter()
   const t = useTranslations("eventTypes")
@@ -159,7 +164,29 @@ export function EventTypeForm({
     const result =
       mode === "create"
         ? await createEventTypeAction(formData)
-        : await updateEventTypeAction(eventTypeId!, formData)
+        : panel === "policies"
+          ? await updateEventTypeAction(eventTypeId!, {
+              bookingWindowDays: formData.bookingWindowDays,
+              minimumNoticeMinutes: formData.minimumNoticeMinutes,
+              bufferBeforeMinutes: formData.bufferBeforeMinutes,
+              bufferAfterMinutes: formData.bufferAfterMinutes,
+              cancellationWindowHours: formData.cancellationWindowHours,
+              rescheduleWindowHours: formData.rescheduleWindowHours,
+              requiresApproval: formData.requiresApproval,
+              worldwideMode: formData.worldwideMode,
+            })
+          : panel === "basics"
+            ? await updateEventTypeAction(eventTypeId!, {
+                slug: formData.slug,
+                title: formData.title,
+                description: formData.description,
+                durationMinutes: formData.durationMinutes,
+                priceAmount: formData.priceAmount,
+                currency: formData.currency,
+                languages: formData.languages,
+                sessionMode: formData.sessionMode,
+              })
+            : await updateEventTypeAction(eventTypeId!, formData)
 
     if (result.ok) {
       if (mode === "create" && result.id) {
@@ -197,271 +224,284 @@ export function EventTypeForm({
         </Alert>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-1 border-b">
-            {LOCALES.map((loc) => (
-              <button
-                key={loc}
-                type="button"
-                onClick={() => setActiveLocale(loc)}
-                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  activeLocale === loc
-                    ? "border-b-2 border-primary text-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {LOCALE_LABELS[loc]}
-              </button>
-            ))}
-          </div>
+      {panel === "full" || panel === "basics" ? (
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Basic Information</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-1 border-b">
+                {LOCALES.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    onClick={() => setActiveLocale(loc)}
+                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                      activeLocale === loc
+                        ? "border-b-2 border-primary text-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {LOCALE_LABELS[loc]}
+                  </button>
+                ))}
+              </div>
 
-          <div className="space-y-1.5">
-            <Label>Title ({LOCALE_LABELS[activeLocale]})</Label>
-            <Input
-              value={
-                activeLocale === "en"
-                  ? title.en
-                  : (title[activeLocale as "pt" | "es"] ?? "")
-              }
-              onChange={(e) => {
-                const val = e.target.value
-                setTitle((prev) => ({ ...prev, [activeLocale]: val }))
-                if (activeLocale === "en" && mode === "create" && !slug) {
-                  setSlug(autoSlug(val))
-                }
-              }}
-              placeholder="e.g., Initial Consultation"
-              required={activeLocale === "en"}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Description ({LOCALE_LABELS[activeLocale]})</Label>
-            <Textarea
-              value={
-                activeLocale === "en"
-                  ? description.en
-                  : (description[activeLocale as "pt" | "es"] ?? "")
-              }
-              onChange={(e) =>
-                setDescription((prev) => ({
-                  ...prev,
-                  [activeLocale]: e.target.value,
-                }))
-              }
-              placeholder="Describe what to expect"
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="slug">URL Slug</Label>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>eleva.care/[username]/</span>
-              <Input
-                id="slug"
-                value={slug}
-                onChange={(e) => setSlug(e.target.value.toLowerCase())}
-                placeholder="initial-consultation"
-                pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
-                className="max-w-xs"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Session Details</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="duration">Duration (min)</Label>
-              <Input
-                id="duration"
-                type="number"
-                min={15}
-                max={480}
-                step={5}
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="price">Price</Label>
-              <Input
-                id="price"
-                type="number"
-                min={0}
-                step={0.01}
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                placeholder="50.00"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Currency</Label>
-              <p className="text-sm text-muted-foreground">{currency}</p>
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <Select
-              selectedKey={sessionMode}
-              onSelectionChange={(key) => {
-                if (isSessionMode(key)) setSessionMode(key)
-              }}
-            >
-              <Label>Session mode</Label>
-              <SelectTrigger className="max-w-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem id="online">Online (video)</SelectItem>
-                <SelectItem id="in_person">In person</SelectItem>
-                <SelectItem id="phone">Phone</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Languages supported</Label>
-            <div className="flex gap-4">
-              {LOCALES.map((lang) => (
-                <CheckboxField
-                  key={lang}
-                  id={`event-type-lang-${lang}`}
-                  label={LOCALE_LABELS[lang]}
-                  isSelected={languages.includes(lang)}
-                  onChange={() => toggleLanguage(lang)}
+              <div className="space-y-1.5">
+                <Label>Title ({LOCALE_LABELS[activeLocale]})</Label>
+                <Input
+                  value={
+                    activeLocale === "en"
+                      ? title.en
+                      : (title[activeLocale as "pt" | "es"] ?? "")
+                  }
+                  onChange={(e) => {
+                    const val = e.target.value
+                    setTitle((prev) => ({ ...prev, [activeLocale]: val }))
+                    if (activeLocale === "en" && mode === "create" && !slug) {
+                      setSlug(autoSlug(val))
+                    }
+                  }}
+                  placeholder="e.g., Initial Consultation"
+                  required={activeLocale === "en"}
                 />
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+              </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Booking Rules</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="bookingWindow">
-                Booking window (days in advance)
-              </Label>
-              <Input
-                id="bookingWindow"
-                type="number"
-                min={1}
-                value={bookingWindow}
-                onChange={(e) => setBookingWindow(e.target.value)}
-                placeholder="No limit"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="minimumNotice">Minimum notice (min)</Label>
-              <Input
-                id="minimumNotice"
-                type="number"
-                min={0}
-                value={minimumNotice}
-                onChange={(e) => setMinimumNotice(e.target.value)}
-              />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <Label>Description ({LOCALE_LABELS[activeLocale]})</Label>
+                <Textarea
+                  value={
+                    activeLocale === "en"
+                      ? description.en
+                      : (description[activeLocale as "pt" | "es"] ?? "")
+                  }
+                  onChange={(e) =>
+                    setDescription((prev) => ({
+                      ...prev,
+                      [activeLocale]: e.target.value,
+                    }))
+                  }
+                  placeholder="Describe what to expect"
+                  rows={3}
+                />
+              </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="bufferBefore">Buffer before (min)</Label>
-              <Input
-                id="bufferBefore"
-                type="number"
-                min={0}
-                value={bufferBefore}
-                onChange={(e) => setBufferBefore(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="bufferAfter">Buffer after (min)</Label>
-              <Input
-                id="bufferAfter"
-                type="number"
-                min={0}
-                value={bufferAfter}
-                onChange={(e) => setBufferAfter(e.target.value)}
-              />
-            </div>
-          </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="slug">URL Slug</Label>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>eleva.care/[username]/</span>
+                  <Input
+                    id="slug"
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value.toLowerCase())}
+                    placeholder="initial-consultation"
+                    pattern="[a-z0-9][a-z0-9-]*[a-z0-9]"
+                    className="max-w-xs"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="cancellationWindow">
-                Cancellation window (hours)
-              </Label>
-              <Input
-                id="cancellationWindow"
-                type="number"
-                min={0}
-                value={cancellationWindow}
-                onChange={(e) => setCancellationWindow(e.target.value)}
-                placeholder="No limit"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="rescheduleWindow">
-                Reschedule window (hours)
-              </Label>
-              <Input
-                id="rescheduleWindow"
-                type="number"
-                min={0}
-                value={rescheduleWindow}
-                onChange={(e) => setRescheduleWindow(e.target.value)}
-                placeholder="No limit"
-              />
-            </div>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Session Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="duration">Duration (min)</Label>
+                  <Input
+                    id="duration"
+                    type="number"
+                    min={15}
+                    max={480}
+                    step={5}
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="price">Price</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    min={0}
+                    step={0.01}
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="50.00"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Currency</Label>
+                  <p className="text-sm text-muted-foreground">{currency}</p>
+                </div>
+              </div>
 
-          <div className="space-y-3">
-            <CheckboxField
-              id="event-type-requires-approval"
-              label="Require manual approval for bookings"
-              isSelected={requiresApproval}
-              onChange={setRequiresApproval}
-            />
-            <CheckboxField
-              id="event-type-worldwide-mode"
-              label="Worldwide mode (bypass country-license validation)"
-              isSelected={worldwideMode}
-              onChange={setWorldwideMode}
-            />
-          </div>
-        </CardContent>
-      </Card>
+              <div className="space-y-1.5">
+                <Select
+                  selectedKey={sessionMode}
+                  onSelectionChange={(key) => {
+                    if (isSessionMode(key)) setSessionMode(key)
+                  }}
+                >
+                  <Label>Session mode</Label>
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem id="online">Online (video)</SelectItem>
+                    <SelectItem id="in_person">In person</SelectItem>
+                    <SelectItem id="phone">Phone</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label>Languages supported</Label>
+                <div className="flex gap-4">
+                  {LOCALES.map((lang) => (
+                    <CheckboxField
+                      key={lang}
+                      id={`event-type-lang-${lang}`}
+                      label={LOCALE_LABELS[lang]}
+                      isSelected={languages.includes(lang)}
+                      onChange={() => toggleLanguage(lang)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      ) : null}
+
+      {panel === "full" || panel === "policies" ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              {panel === "policies" ? t("policiesTitle") : "Booking Rules"}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="bookingWindow">
+                  Booking window (days in advance)
+                </Label>
+                <Input
+                  id="bookingWindow"
+                  type="number"
+                  min={1}
+                  value={bookingWindow}
+                  onChange={(e) => setBookingWindow(e.target.value)}
+                  placeholder="No limit"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="minimumNotice">Minimum notice (min)</Label>
+                <Input
+                  id="minimumNotice"
+                  type="number"
+                  min={0}
+                  value={minimumNotice}
+                  onChange={(e) => setMinimumNotice(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="bufferBefore">Buffer before (min)</Label>
+                <Input
+                  id="bufferBefore"
+                  type="number"
+                  min={0}
+                  value={bufferBefore}
+                  onChange={(e) => setBufferBefore(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="bufferAfter">Buffer after (min)</Label>
+                <Input
+                  id="bufferAfter"
+                  type="number"
+                  min={0}
+                  value={bufferAfter}
+                  onChange={(e) => setBufferAfter(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="cancellationWindow">
+                  Cancellation window (hours)
+                </Label>
+                <Input
+                  id="cancellationWindow"
+                  type="number"
+                  min={0}
+                  value={cancellationWindow}
+                  onChange={(e) => setCancellationWindow(e.target.value)}
+                  placeholder="No limit"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="rescheduleWindow">
+                  Reschedule window (hours)
+                </Label>
+                <Input
+                  id="rescheduleWindow"
+                  type="number"
+                  min={0}
+                  value={rescheduleWindow}
+                  onChange={(e) => setRescheduleWindow(e.target.value)}
+                  placeholder="No limit"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <CheckboxField
+                id="event-type-requires-approval"
+                label="Require manual approval for bookings"
+                isSelected={requiresApproval}
+                onChange={setRequiresApproval}
+              />
+              <CheckboxField
+                id="event-type-worldwide-mode"
+                label="Worldwide mode (bypass country-license validation)"
+                isSelected={worldwideMode}
+                onChange={setWorldwideMode}
+              />
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="flex gap-3">
-        <Button type="submit" isDisabled={pending || !title.en}>
+        <Button
+          type="submit"
+          isDisabled={pending || (panel !== "policies" && !title.en)}
+        >
           {pending
             ? "Saving..."
             : mode === "create"
               ? "Create event type"
               : "Save changes"}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onPress={() => router.push(`${workspaceBase}/event-types`)}
-        >
-          Cancel
-        </Button>
+        {panel === "full" ? (
+          <Button
+            type="button"
+            variant="outline"
+            onPress={() => router.push(`${workspaceBase}/event-types`)}
+          >
+            Cancel
+          </Button>
+        ) : null}
       </div>
     </form>
   )

@@ -5,10 +5,17 @@ import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
 import {
+  getEventType,
   getExpertProfileByUserId,
+  getPracticeLocation,
+  listEventTypeModes,
   updateEventType,
   deleteEventType,
 } from "@eleva/db"
+import {
+  assertOfferInvariants,
+  OFFER_INVARIANT_MESSAGES,
+} from "@eleva/scheduling"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -73,6 +80,50 @@ export async function PATCH(
   const { id } = await params
   const data = body.data
 
+  const existing = await getEventType(profile.orgId, id, profile.id)
+  if (!existing) {
+    return secureJson(
+      { error: "not found", message: "event type not found" },
+      { status: 404, headers }
+    )
+  }
+
+  if (data.kind !== undefined && data.kind !== existing.kind) {
+    const modes = await listEventTypeModes(profile.orgId, id)
+    for (const mode of modes) {
+      let locationCountry: string | null = null
+      if (mode.mode === "in_person" && mode.locationId) {
+        const location = await getPracticeLocation(
+          profile.orgId,
+          mode.locationId,
+          profile.id
+        )
+        locationCountry = location?.country ?? null
+      }
+      const invariant = assertOfferInvariants({
+        kind: data.kind,
+        mode: mode.mode,
+        countryScopeType: mode.countryScopeType,
+        countryScopeCodes: mode.countryScopeCodes as string[],
+        languages: mode.languages as string[],
+        locationCountry,
+        worldwideRemote: profile.worldwideRemote,
+        serviceCountries: profile.serviceCountries,
+        profileLanguages: profile.languages,
+      })
+      if (invariant) {
+        return secureJson(
+          {
+            error: "OFFER_INVARIANT_VIOLATION",
+            code: invariant,
+            message: OFFER_INVARIANT_MESSAGES[invariant],
+          },
+          { status: 422, headers }
+        )
+      }
+    }
+  }
+
   const updates: Record<string, unknown> = {}
   if (data.slug !== undefined) {
     const slug = normalizeSlug(data.slug)
@@ -92,6 +143,8 @@ export async function PATCH(
   if (data.currency !== undefined) updates.currency = data.currency
   if (data.languages !== undefined) updates.languages = data.languages
   if (data.sessionMode !== undefined) updates.sessionMode = data.sessionMode
+  if (data.kind !== undefined) updates.kind = data.kind
+  if (data.visibility !== undefined) updates.visibility = data.visibility
   if (data.bookingWindowDays !== undefined)
     updates.bookingWindowDays = data.bookingWindowDays
   if (data.minimumNoticeMinutes !== undefined)
@@ -109,6 +162,10 @@ export async function PATCH(
   if (data.worldwideMode !== undefined)
     updates.worldwideMode = data.worldwideMode
   if (data.published !== undefined) updates.published = data.published
+
+  if (Object.keys(updates).length === 0) {
+    return secureJson({ ok: true }, { status: 200, headers })
+  }
 
   try {
     await withAudit(
@@ -197,7 +254,7 @@ export async function DELETE(
   return secureJson({ ok: true }, { status: 200, headers })
 }
 
-export async function OPTIONS(request: Request) {
+export function OPTIONS(request: Request) {
   return new Response(null, {
     status: 204,
     headers: corsHeaders(request, "PATCH, DELETE, OPTIONS"),

@@ -24,6 +24,8 @@ export interface EventTypeFormData {
   currency: "EUR"
   languages: string[]
   sessionMode: "online" | "in_person" | "phone"
+  kind?: "clinical" | "non_clinical"
+  visibility?: "public" | "unlisted" | "private"
   bookingWindowDays?: number | null
   minimumNoticeMinutes: number
   bufferBeforeMinutes: number
@@ -54,6 +56,8 @@ function toCreatePayload(data: EventTypeFormData): CreateEventTypeRequest {
     currency: data.currency,
     languages: data.languages,
     sessionMode: data.sessionMode,
+    kind: data.kind,
+    visibility: data.visibility,
     bookingWindowDays: data.bookingWindowDays ?? null,
     minimumNoticeMinutes: data.minimumNoticeMinutes,
     bufferBeforeMinutes: data.bufferBeforeMinutes,
@@ -122,6 +126,8 @@ export async function updateEventTypeAction(
     if (data.currency !== undefined) updates.currency = data.currency
     if (data.languages !== undefined) updates.languages = data.languages
     if (data.sessionMode !== undefined) updates.sessionMode = data.sessionMode
+    if (data.kind !== undefined) updates.kind = data.kind
+    if (data.visibility !== undefined) updates.visibility = data.visibility
     if (data.bookingWindowDays !== undefined) {
       updates.bookingWindowDays = data.bookingWindowDays
     }
@@ -163,11 +169,14 @@ export async function updateEventTypeAction(
     return { ok: true }
   } catch (err) {
     console.error("[updateEventTypeAction]", err)
+    const error = mapExpertApiError(err, "update-failed", {
+      conflict: "slug-taken",
+      offerInvariant: "offer-invariant",
+    })
     return {
       ok: false,
-      error: mapExpertApiError(err, "update-failed", {
-        conflict: "slug-taken",
-      }),
+      error,
+      message: error === "offer-invariant" ? humanApiMessage(err) : undefined,
     }
   }
 }

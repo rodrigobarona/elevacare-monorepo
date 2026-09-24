@@ -17,6 +17,9 @@ import {
   UpdateEventTypeRequestSchema,
   CreateEventTypeModeRequestSchema,
   PatchEventTypeModeRequestSchema,
+  CreateBookingLinkRequestSchema,
+  BookingLinkListItemSchema,
+  CreateBookingLinkResponseSchema,
   CreateOrganizationRequestSchema,
   CreateOrganizationResponseSchema,
   ExpertOnboardingStepSchema,
@@ -1467,6 +1470,82 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             "200": {
               description: "Mode deactivated",
               content: { "application/json": { schema: OkSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/booking-links": {
+        get: {
+          operationId: "listExpertBookingLinks",
+          summary: "List private booking links for an event type",
+          tags: ["Expert Booking Links"],
+          requestParams: {
+            query: z.object({ eventTypeId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Booking links",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    links: z.array(BookingLinkListItemSchema),
+                  }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+        post: {
+          operationId: "createExpertBookingLink",
+          summary: "Create a private booking link (raw token returned once)",
+          tags: ["Expert Booking Links"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: CreateBookingLinkRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "201": {
+              description: "Booking link created",
+              content: {
+                "application/json": {
+                  schema: CreateBookingLinkResponseSchema,
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/expert/booking-links/{id}/revoke": {
+        post: {
+          operationId: "revokeExpertBookingLink",
+          summary: "Revoke a private booking link",
+          tags: ["Expert Booking Links"],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Booking link revoked",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    ok: z.literal(true),
+                    link: BookingLinkListItemSchema,
+                  }),
+                },
+              },
             },
             ...stdWithNotFound,
           },
