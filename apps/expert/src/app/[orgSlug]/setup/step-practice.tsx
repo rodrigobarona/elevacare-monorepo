@@ -109,6 +109,19 @@ export function StepPractice({ profile, onDone }: Props) {
           : []
     )
   )
+  // Countries the expert chose beyond the auto-included practice base.
+  const [explicitServiceCountries, setExplicitServiceCountries] =
+    React.useState(() => {
+      const base = (profile.practiceCountry || "").toUpperCase()
+      const all = uniqueUpper(
+        profile.serviceCountries.length > 0
+          ? profile.serviceCountries
+          : base
+            ? [base]
+            : []
+      )
+      return new Set(all.filter((c) => c !== base))
+    })
   const [languages, setLanguages] = React.useState<string[]>(profile.languages)
   const [licenseScope, setLicenseScope] = React.useState(
     profile.licenseScope ?? ""
@@ -124,11 +137,35 @@ export function StepPractice({ profile, onDone }: Props) {
     serviceCountries.some((c) => c !== practiceCountry)
 
   function setPracticeCountryAndSync(code: string) {
-    // Keep prior service countries; only ensure the new practice base is included.
-    setPracticeCountry(code)
+    setPracticeCountry((prevBase) => {
+      setServiceCountries((prev) => {
+        const withoutImplicitPrev =
+          prevBase && !explicitServiceCountries.has(prevBase)
+            ? prev.filter((c) => c !== prevBase)
+            : prev
+        return withoutImplicitPrev.includes(code)
+          ? withoutImplicitPrev
+          : [...withoutImplicitPrev, code]
+      })
+      return code
+    })
+  }
+
+  function toggleServiceCountry(code: string, selected: boolean) {
+    if (code === practiceCountry) return
     setServiceCountries((prev) =>
-      prev.includes(code) ? prev : [...prev, code]
+      selected
+        ? prev.includes(code)
+          ? prev
+          : [...prev, code]
+        : prev.filter((c) => c !== code)
     )
+    setExplicitServiceCountries((prev) => {
+      const next = new Set(prev)
+      if (selected) next.add(code)
+      else next.delete(code)
+      return next
+    })
   }
 
   function addExtraCountry() {
@@ -140,6 +177,7 @@ export function StepPractice({ profile, onDone }: Props) {
     setServiceCountries((prev) =>
       prev.includes(code) ? prev : [...prev, code]
     )
+    setExplicitServiceCountries((prev) => new Set(prev).add(code))
     setExtraCountry("")
     setError(null)
   }
@@ -163,6 +201,13 @@ export function StepPractice({ profile, onDone }: Props) {
     setServiceCountries((prev) =>
       uniqueUpper([...prev, ...EU_SERVICE_COUNTRIES, practiceCountry])
     )
+    setExplicitServiceCountries((prev) => {
+      const next = new Set(prev)
+      for (const c of EU_SERVICE_COUNTRIES) {
+        if (c !== practiceCountry) next.add(c)
+      }
+      return next
+    })
     setError(null)
   }
 
@@ -270,9 +315,8 @@ export function StepPractice({ profile, onDone }: Props) {
               label={t(opt.labelKey)}
               isSelected={serviceCountries.includes(opt.value)}
               isDisabled={opt.value === practiceCountry}
-              onChange={() => {
-                if (opt.value === practiceCountry) return
-                setServiceCountries(toggleItem(serviceCountries, opt.value))
+              onChange={(selected) => {
+                toggleServiceCountry(opt.value, selected)
               }}
             />
           ))}
@@ -285,9 +329,14 @@ export function StepPractice({ profile, onDone }: Props) {
                 type="button"
                 size="sm"
                 variant="outline"
-                onPress={() =>
+                onPress={() => {
                   setServiceCountries((prev) => prev.filter((c) => c !== code))
-                }
+                  setExplicitServiceCountries((prev) => {
+                    const next = new Set(prev)
+                    next.delete(code)
+                    return next
+                  })
+                }}
               >
                 {code} ×
               </Button>
