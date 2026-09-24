@@ -1,5 +1,6 @@
 "use server"
 
+import { z } from "zod"
 import { requireSession } from "@eleva/auth/server"
 import {
   CreateEventTypeModeRequestSchema,
@@ -11,6 +12,8 @@ import { getAuthedApiClient } from "@/lib/server-api"
 import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
+const IdSchema = z.string().uuid()
+
 type ActionResult =
   | { ok: true; id?: string }
   | { ok: false; error: string; message?: string }
@@ -21,6 +24,9 @@ export async function createEventTypeModeAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
+    if (!IdSchema.safeParse(eventTypeId).success) {
+      return { ok: false, error: "invalid-input" }
+    }
     const parsed = CreateEventTypeModeRequestSchema.safeParse(data)
     if (!parsed.success) {
       return {
@@ -61,6 +67,12 @@ export async function patchEventTypeModeAction(
 ): Promise<ActionResult> {
   try {
     const session = await requireSession("events:manage")
+    if (
+      !IdSchema.safeParse(eventTypeId).success ||
+      !IdSchema.safeParse(modeId).success
+    ) {
+      return { ok: false, error: "invalid-input" }
+    }
     const parsed = PatchEventTypeModeRequestSchema.safeParse(data)
     if (!parsed.success) {
       return {
