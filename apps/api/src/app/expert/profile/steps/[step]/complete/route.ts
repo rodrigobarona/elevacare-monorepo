@@ -150,6 +150,7 @@ export async function POST(
         .from(main.expertProfiles)
         .where(eq(main.expertProfiles.id, profile.id))
         .limit(1)
+        .for("update")
       const currentMeta =
         (fresh?.metadata as Record<string, unknown> | null) ?? {}
       const completedSteps = currentMeta.completedSteps

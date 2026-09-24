@@ -195,6 +195,7 @@ export async function PATCH(request: Request) {
           .from(main.expertProfiles)
           .where(eq(main.expertProfiles.id, profile.id))
           .limit(1)
+          .for("update")
         metadata = {
           ...((fresh?.metadata as Record<string, unknown> | null) ?? {}),
           practiceDeclaredAt: new Date().toISOString(),
