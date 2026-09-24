@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { getTranslations, getLocale } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { listExpertEventTypes } from "@eleva/db"
+import { listEventTypeModes, listExpertEventTypes } from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { Button } from "@eleva/ui/components/button"
@@ -31,6 +31,14 @@ export default async function EventTypesPage({
   const base = expertWorkspaceBase(session)
 
   const eventTypes = await listExpertEventTypes(profile.orgId, profile.id)
+  const modeCounts = await Promise.all(
+    eventTypes.map(async (et) => {
+      const modes = await listEventTypeModes(profile.orgId, et.id)
+      return [et.id, modes.length] as const
+    })
+  )
+  const modeCountById = new Map(modeCounts)
+
   const t = await getTranslations("eventTypes")
   const locale = await getLocale()
 
@@ -62,12 +70,18 @@ export default async function EventTypesPage({
         <div className="grid gap-4">
           {eventTypes.map((et) => {
             const etTitle = et.title as LocalizedText
+            const modeCount = modeCountById.get(et.id) ?? 0
             return (
-              <Card key={et.id}>
+              <Card key={et.id} data-testid={`event-type-card-${et.slug}`}>
                 <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
                     <CardTitle className="text-base">
-                      {etTitle[locale as keyof typeof etTitle] ?? etTitle.en}
+                      <Link
+                        href={`${base}/event-types/${et.id}`}
+                        className="hover:underline"
+                      >
+                        {etTitle[locale as keyof typeof etTitle] ?? etTitle.en}
+                      </Link>
                     </CardTitle>
                     <p className="text-sm text-muted-foreground">
                       /{profile.username}/{et.slug}
@@ -95,8 +109,8 @@ export default async function EventTypesPage({
                         currency: et.currency.toUpperCase(),
                       }).format(et.priceAmount / 100)}
                     </span>
-                    <span className="capitalize">
-                      {et.sessionMode.replace("_", " ")}
+                    <span data-testid={`mode-count-${et.slug}`}>
+                      {t("modes.count", { count: modeCount })}
                     </span>
                     <span>
                       {(et.languages as string[]).join(", ").toUpperCase()}

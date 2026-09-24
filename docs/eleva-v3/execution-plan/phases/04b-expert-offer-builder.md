@@ -116,11 +116,15 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-23):** Phase 4B was skipped while 05–08 shipped.
+> **Closeout status (2026-09-24):** Phase 4B was skipped while 05–08 shipped.
 > Ordered backlog: (1) ~~`@eleva/editor` scaffold + boundary lint~~ (**done**,
-> main via `#92`), (2) ~~`/expert` practice/locations/schedules APIs~~ (**done**,
-> `#93`) + ~~`experts→expert` rename~~ (**this slice**),
-> (3) builder UI + private links + calendar polish, (4) `e2e/expert-offer.spec.ts`.
+> `#92`), (2) ~~`/expert` practice/locations/schedules APIs~~ (**done**, `#93`) +
+> ~~`experts→expert` rename~~ (**done**, `#96`–`#98`), (3) ~~event-type modes
+> API + publish gates~~ (**done**, `#97`/`#98`) + ~~modes panel on event-type
+> edit + seeded public-funnel `e2e/expert-offer.spec.ts`~~ (**modes+e2e slice**),
+> (4) still open before Phase 09: onboarding Practice step, full services
+> builder tabs (kind/policies/private links), calendar polish, Plate AI route,
+> UI-built Quick chat / Physiotherapy fixtures (not seed-only).
 > Do not start Phase 09 until this exit gate is honestly met or explicitly waived.
 
 - [x] `@eleva/editor` package exists with ADR-023 exports, sanitizer XSS tests, and
@@ -154,7 +158,9 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
       `check:i18n-parity` ignores them.
 - [ ] Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
       `pt`/`en`, 360px and 1280px.
-- [ ] `e2e/expert-offer.spec.ts` green; `check:i18n-parity` green.
+- [ ] `e2e/expert-offer.spec.ts` green for UI-built Quick chat / Physiotherapy
+      fixtures (seeded public-funnel mode cards covered in the modes+e2e slice;
+      see decision-log 2026-09-24); `check:i18n-parity` green.
 
 ## Tests
 

@@ -3239,11 +3239,15 @@ multi-calendar, destination overrides), <code>design-system-spec.md</code> (edit
 </ol>
 <h2 id="04b-expert-offer-builder--acceptance-criteria"><a class="anchor" href="#04b-expert-offer-builder--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-23):</strong> Phase 4B was skipped while 05–08 shipped.
+<p><strong>Closeout status (2026-09-24):</strong> Phase 4B was skipped while 05–08 shipped.
 Ordered backlog: (1) <del><code>@eleva/editor</code> scaffold + boundary lint</del> (<strong>done</strong>,
-main via <code>#92</code>), (2) <del><code>/expert</code> practice/locations/schedules APIs</del> (<strong>done</strong>,
-<code>#93</code>) + <del><code>experts→expert</code> rename</del> (<strong>this slice</strong>),
-(3) builder UI + private links + calendar polish, (4) <code>e2e/expert-offer.spec.ts</code>.
+<code>#92</code>), (2) <del><code>/expert</code> practice/locations/schedules APIs</del> (<strong>done</strong>, <code>#93</code>) +
+<del><code>experts→expert</code> rename</del> (<strong>done</strong>, <code>#96</code>–<code>#98</code>), (3) <del>event-type modes
+API + publish gates</del> (<strong>done</strong>, <code>#97</code>/<code>#98</code>) + <del>modes panel on event-type
+edit + seeded public-funnel <code>e2e/expert-offer.spec.ts</code></del> (<strong>modes+e2e slice</strong>),
+(4) still open before Phase 09: onboarding Practice step, full services
+builder tabs (kind/policies/private links), calendar polish, Plate AI route,
+UI-built Quick chat / Physiotherapy fixtures (not seed-only).
 Do not start Phase 09 until this exit gate is honestly met or explicitly waived.</p>
 </blockquote>
 <ul>
@@ -3278,7 +3282,9 @@ never run on <code>apps/app</code> member content; <code>pnpm i18n:draft</code> 
 <code>check:i18n-parity</code> ignores them.</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
 <code>pt</code>/<code>en</code>, 360px and 1280px.</li>
-<li><input disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> green; <code>check:i18n-parity</code> green.</li>
+<li><input disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> green for UI-built Quick chat / Physiotherapy
+fixtures (seeded public-funnel mode cards covered in the modes+e2e slice;
+see decision-log 2026-09-24); <code>check:i18n-parity</code> green.</li>
 </ul>
 <h2 id="04b-expert-offer-builder--tests"><a class="anchor" href="#04b-expert-offer-builder--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>

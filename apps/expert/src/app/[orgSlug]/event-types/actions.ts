@@ -8,12 +8,12 @@ import {
   type UpdateEventTypeRequest,
 } from "@eleva/api-client"
 import { getAuthedApiClient } from "@/lib/server-api"
-import { mapExpertApiError } from "@/lib/map-api-error"
+import { humanApiMessage, mapExpertApiError } from "@/lib/map-api-error"
 import { revalidateExpertWorkspace } from "@/lib/revalidate-workspace"
 
 type ActionResult =
   | { ok: true; id?: string }
-  | { ok: false; error: string; details?: unknown }
+  | { ok: false; error: string; message?: string; details?: unknown }
 
 export interface EventTypeFormData {
   slug: string
@@ -189,12 +189,14 @@ export async function togglePublishAction(
     return { ok: true }
   } catch (err) {
     console.error("[togglePublishAction]", err)
+    const error = mapExpertApiError(err, "toggle-failed", {
+      connectIncomplete: "connect-incomplete",
+      offerInvariant: "offer-invariant",
+    })
     return {
       ok: false,
-      error: mapExpertApiError(err, "toggle-failed", {
-        connectIncomplete: "connect-incomplete",
-        offerInvariant: "offer-invariant",
-      }),
+      error,
+      message: error === "offer-invariant" ? humanApiMessage(err) : undefined,
     }
   }
 }

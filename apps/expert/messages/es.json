@@ -32,8 +32,10 @@
       "toggle-failed": "No se pudo actualizar el tipo de evento. Inténtalo de nuevo.",
       "delete-failed": "No se pudo eliminar el tipo de evento. Inténtalo de nuevo.",
       "connect-incomplete": "Completa la configuración de Pagos antes de publicar. Stripe aún necesita datos de cobro.",
+      "offer-invariant": "Esta oferta aún no se puede publicar. Añade un modo de entrega válido y corrige países o idiomas.",
       "generic": "Algo salió mal. Inténtalo de nuevo."
     },
+    "saved": "Tipo de evento guardado.",
     "actions": {
       "ariaLabel": "Acciones del tipo de evento",
       "edit": "Editar",
@@ -44,6 +46,52 @@
       "deleteDescription": "Esta acción no se puede deshacer. Se eliminará permanentemente el tipo de evento y todos los datos asociados.",
       "cancel": "Cancelar",
       "deleting": "Eliminando..."
+    },
+    "modes": {
+      "title": "Modos de entrega",
+      "description": "Cómo pueden encontrarte los miembros — vídeo, teléfono o presencial — cada uno con horario, países y precio propios.",
+      "add": "Añadir forma de encuentro",
+      "edit": "Editar",
+      "editingHint": "El tipo de encuentro no se puede cambiar después de crearlo — desactiva y añade un modo nuevo.",
+      "count": "{count, plural, =0 {Sin modos de entrega} one {# modo de entrega} other {# modos de entrega}}",
+      "empty": "Añade al menos un modo de entrega antes de publicar.",
+      "needSchedule": "Crea primero un horario y luego vuelve para añadir modos de entrega.",
+      "needLocation": "Añade una ubicación de práctica antes de crear un modo presencial.",
+      "pickLocation": "Elige una ubicación",
+      "unknownSchedule": "Horario",
+      "worldwide": "Mundial",
+      "defaultSchedule": "predeterminado",
+      "deactivate": "Desactivar",
+      "save": "Guardar modo",
+      "saveEdit": "Guardar cambios",
+      "saving": "Guardando…",
+      "cancel": "Cancelar",
+      "pricePlaceholder": "Déjalo vacío para usar el precio del evento",
+      "labelPlaceholder": "Etiqueta corta opcional",
+      "kinds": {
+        "online": "Vídeo",
+        "phone": "Teléfono",
+        "in_person": "Presencial"
+      },
+      "fields": {
+        "mode": "Tipo de encuentro",
+        "schedule": "Horario",
+        "location": "Ubicación",
+        "worldwide": "Ofrecer en todo el mundo (solo remoto)",
+        "countries": "Países",
+        "languages": "Idiomas",
+        "priceOverride": "Precio alternativo (€)",
+        "label": "Etiqueta (inglés)"
+      },
+      "error": {
+        "create-failed": "No se pudo crear el modo de entrega. Inténtalo de nuevo.",
+        "update-failed": "No se pudo actualizar el modo de entrega. Inténtalo de nuevo.",
+        "mode-taken": "No se pudo guardar el modo de entrega por un conflicto.",
+        "invalid-input": "Revisa los campos del modo de entrega e inténtalo de nuevo.",
+        "validation": "Revisa los campos del modo de entrega e inténtalo de nuevo.",
+        "offer-invariant": "Este modo de entrega incumple una regla de la práctica. Corrige países, idiomas o ubicación.",
+        "generic": "Algo salió mal. Inténtalo de nuevo."
+      }
     }
   },
   "schedule": {

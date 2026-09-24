@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
+import { toast } from "sonner"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -60,6 +62,7 @@ export function EventTypeForm({
   workspaceBase,
 }: Props) {
   const router = useRouter()
+  const t = useTranslations("eventTypes")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [activeLocale, setActiveLocale] = React.useState<string>("en")
@@ -159,7 +162,15 @@ export function EventTypeForm({
         : await updateEventTypeAction(eventTypeId!, formData)
 
     if (result.ok) {
-      router.push(`${workspaceBase}/event-types`)
+      if (mode === "create" && result.id) {
+        // Land on edit so the expert can add delivery modes before publishing.
+        router.push(`${workspaceBase}/event-types/${result.id}`)
+      } else if (mode === "edit") {
+        toast.success(t("saved"))
+        router.refresh()
+      } else {
+        router.push(`${workspaceBase}/event-types`)
+      }
     } else {
       setError(result.error)
     }

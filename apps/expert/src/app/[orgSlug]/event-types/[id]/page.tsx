@@ -1,15 +1,34 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { AccountPageHeader } from "@eleva/dashboard"
-import { getEventType } from "@eleva/db"
+import {
+  getEventType,
+  listEventTypeModes,
+  listPracticeLocations,
+  listSchedules,
+} from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { EventTypeForm } from "../event-type-form"
+import {
+  EventTypeModesPanel,
+  type LocationOption,
+  type ModeRow,
+  type ScheduleOption,
+} from "../event-type-modes-panel"
 import type { EventTypeFormData } from "../actions"
 
 export const dynamic = "force-dynamic"
 
 type LocalizedText = { en: string; pt?: string; es?: string }
+
+function locationLabel(row: {
+  name: string
+  city: string
+  country: string
+}): string {
+  return `${row.name} · ${row.city}, ${row.country}`
+}
 
 export default async function EditEventTypePage(props: {
   params: Promise<{ orgSlug: string; id: string }>
@@ -23,6 +42,14 @@ export default async function EditEventTypePage(props: {
 
   const eventType = await getEventType(profile.orgId, id, profile.id)
   if (!eventType) notFound()
+
+  const [modes, schedules, locations] = await Promise.all([
+    listEventTypeModes(profile.orgId, id, { includeInactive: true }),
+    listSchedules(profile.orgId, profile.id),
+    listPracticeLocations(profile.orgId, profile.id, {
+      includeInactive: true,
+    }),
+  ])
 
   const t = await getTranslations("eventTypes")
 
@@ -45,6 +72,34 @@ export default async function EditEventTypePage(props: {
     worldwideMode: eventType.worldwideMode,
   }
 
+  const modeRows: ModeRow[] = modes.map((m) => ({
+    id: m.id,
+    mode: m.mode,
+    locationId: m.locationId,
+    scheduleId: m.scheduleId,
+    priceCents: m.priceCents,
+    currency: m.currency,
+    durationMinutes: m.durationMinutes,
+    countryScopeType: m.countryScopeType,
+    countryScopeCodes: m.countryScopeCodes as string[],
+    languages: m.languages as string[],
+    label: (m.label as LocalizedText | null) ?? null,
+    active: m.active,
+  }))
+
+  const scheduleOptions: ScheduleOption[] = schedules.map((s) => ({
+    id: s.id,
+    name: s.name,
+    isDefault: s.isDefault,
+  }))
+
+  const locationOptions: LocationOption[] = locations.map((l) => ({
+    id: l.id,
+    label: locationLabel(l),
+    country: l.country,
+    active: l.active,
+  }))
+
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <AccountPageHeader
@@ -56,6 +111,16 @@ export default async function EditEventTypePage(props: {
         eventTypeId={id}
         defaultValues={defaults}
         workspaceBase={base}
+      />
+      <EventTypeModesPanel
+        eventTypeId={id}
+        modes={modeRows}
+        schedules={scheduleOptions}
+        locations={locationOptions}
+        profileLanguages={profile.languages as string[]}
+        serviceCountries={profile.serviceCountries as string[]}
+        worldwideRemote={profile.worldwideRemote}
+        eventTypeKind={eventType.kind}
       />
     </div>
   )
