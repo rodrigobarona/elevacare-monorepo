@@ -3,7 +3,8 @@
     "dashboard": "Painel",
     "eventTypes": "Tipos de Evento",
     "schedule": "Horário",
-    "calendars": "Calendários",
+    "calendar": "Calendário",
+    "calendars": "Calendários ligados",
     "integrations": "Integrações",
     "finance": "Finanças"
   },
@@ -223,6 +224,49 @@
       "startBeforeEnd": "{day}: a hora de início tem de ser anterior à hora de fim",
       "overrideStartBeforeEnd": "A hora de início da exceção tem de ser anterior à hora de fim",
       "overlappingWindows": "{day}: os intervalos de disponibilidade não se podem sobrepor"
+    }
+  },
+  "calendar": {
+    "title": "Calendário",
+    "description": "A sua semana Eleva — todas as marcações em todos os modos.",
+    "prevWeek": "Anterior",
+    "nextWeek": "Seguinte",
+    "thisWeek": "Esta semana",
+    "loading": "A carregar…",
+    "emptyWeek": "Sem sessões esta semana.",
+    "emptyState": "A Eleva é o seu calendário. Ligue o Google ou a Microsoft só se já viver noutro.",
+    "closeDrawer": "Fechar",
+    "member": "Membro",
+    "memberUnknown": "Convidado",
+    "mode": "Modo",
+    "location": "Onde",
+    "locationOnline": "Online",
+    "locationPhone": "Telefone",
+    "locationUnknown": "—",
+    "ics": {
+      "title": "Feed ICS",
+      "description": "Subscreva no Apple Calendar, Google Calendar ou Outlook com um link privado só de leitura.",
+      "empty": "Ainda não há feed. Crie um para subscrever noutro calendário.",
+      "active": "Há um token de feed ativo.",
+      "activeSince": "Feed ativo desde {date}.",
+      "create": "Criar feed",
+      "rotate": "Rodar link",
+      "revoke": "Revogar",
+      "urlOnce": "Copie este URL agora — só é mostrado uma vez.",
+      "urlLabel": "URL do feed",
+      "copy": "Copiar",
+      "copied": "URL do feed copiado.",
+      "rotated": "Novo link de feed criado.",
+      "revoked": "Feed revogado.",
+      "subscribeHint": "Apple: Ficheiro → Nova subscrição de calendário. Google: Definições → Adicionar calendário → Por URL. Outlook: Adicionar calendário → Subscrever da web."
+    },
+    "error": {
+      "load-failed": "Não foi possível carregar as marcações.",
+      "rotate-failed": "Não foi possível criar o link do feed.",
+      "revoke-failed": "Não foi possível revogar o feed.",
+      "no-token": "Não há feed ativo para revogar.",
+      "validation": "Intervalo de datas inválido.",
+      "copy-failed": "Não foi possível copiar o URL."
     }
   },
   "calendars": {

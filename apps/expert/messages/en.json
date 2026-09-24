@@ -3,7 +3,8 @@
     "dashboard": "Dashboard",
     "eventTypes": "Event Types",
     "schedule": "Schedule",
-    "calendars": "Calendars",
+    "calendar": "Calendar",
+    "calendars": "Connected calendars",
     "integrations": "Integrations",
     "finance": "Finance"
   },
@@ -223,6 +224,49 @@
       "startBeforeEnd": "{day}: start time must be before end time",
       "overrideStartBeforeEnd": "Override start time must be before end time",
       "overlappingWindows": "{day}: availability windows must not overlap"
+    }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "description": "Your Eleva week — every booking across modes in one place.",
+    "prevWeek": "Previous",
+    "nextWeek": "Next",
+    "thisWeek": "This week",
+    "loading": "Loading…",
+    "emptyWeek": "No sessions this week.",
+    "emptyState": "Eleva is your calendar. Connect Google or Microsoft only if you already live in another.",
+    "closeDrawer": "Close",
+    "member": "Member",
+    "memberUnknown": "Guest",
+    "mode": "Mode",
+    "location": "Where",
+    "locationOnline": "Online",
+    "locationPhone": "Phone",
+    "locationUnknown": "—",
+    "ics": {
+      "title": "ICS feed",
+      "description": "Subscribe in Apple Calendar, Google Calendar, or Outlook with a private read-only link.",
+      "empty": "No feed yet. Create one to subscribe from another calendar app.",
+      "active": "A feed token is active.",
+      "activeSince": "Feed active since {date}.",
+      "create": "Create feed",
+      "rotate": "Rotate link",
+      "revoke": "Revoke",
+      "urlOnce": "Copy this URL now — it is shown only once.",
+      "urlLabel": "Feed URL",
+      "copy": "Copy",
+      "copied": "Feed URL copied.",
+      "rotated": "New feed link created.",
+      "revoked": "Feed revoked.",
+      "subscribeHint": "Apple: File → New Calendar Subscription. Google: Settings → Add calendar → From URL. Outlook: Add calendar → Subscribe from web."
+    },
+    "error": {
+      "load-failed": "Could not load bookings.",
+      "rotate-failed": "Could not create the feed link.",
+      "revoke-failed": "Could not revoke the feed.",
+      "no-token": "No active feed to revoke.",
+      "validation": "Invalid date range.",
+      "copy-failed": "Could not copy the URL."
     }
   },
   "calendars": {

@@ -3,7 +3,8 @@
     "dashboard": "Panel",
     "eventTypes": "Tipos de Evento",
     "schedule": "Horario",
-    "calendars": "Calendarios",
+    "calendar": "Calendario",
+    "calendars": "Calendarios conectados",
     "integrations": "Integraciones",
     "finance": "Finanzas"
   },
@@ -223,6 +224,49 @@
       "startBeforeEnd": "{day}: la hora de inicio debe ser anterior a la de fin",
       "overrideStartBeforeEnd": "La hora de inicio de la excepción debe ser anterior a la de fin",
       "overlappingWindows": "{day}: los intervalos de disponibilidad no pueden solaparse"
+    }
+  },
+  "calendar": {
+    "title": "Calendario",
+    "description": "Tu semana Eleva — todas las reservas en todos los modos.",
+    "prevWeek": "Anterior",
+    "nextWeek": "Siguiente",
+    "thisWeek": "Esta semana",
+    "loading": "Cargando…",
+    "emptyWeek": "No hay sesiones esta semana.",
+    "emptyState": "Eleva es tu calendario. Conecta Google o Microsoft solo si ya vives en otro.",
+    "closeDrawer": "Cerrar",
+    "member": "Miembro",
+    "memberUnknown": "Invitado",
+    "mode": "Modo",
+    "location": "Dónde",
+    "locationOnline": "En línea",
+    "locationPhone": "Teléfono",
+    "locationUnknown": "—",
+    "ics": {
+      "title": "Feed ICS",
+      "description": "Suscríbete en Apple Calendar, Google Calendar u Outlook con un enlace privado de solo lectura.",
+      "empty": "Aún no hay feed. Crea uno para suscribirte desde otra app.",
+      "active": "Hay un token de feed activo.",
+      "activeSince": "Feed activo desde {date}.",
+      "create": "Crear feed",
+      "rotate": "Rotar enlace",
+      "revoke": "Revocar",
+      "urlOnce": "Copia esta URL ahora — solo se muestra una vez.",
+      "urlLabel": "URL del feed",
+      "copy": "Copiar",
+      "copied": "URL del feed copiada.",
+      "rotated": "Nuevo enlace de feed creado.",
+      "revoked": "Feed revocado.",
+      "subscribeHint": "Apple: Archivo → Nueva suscripción de calendario. Google: Ajustes → Añadir calendario → Desde URL. Outlook: Añadir calendario → Suscribirse desde la web."
+    },
+    "error": {
+      "load-failed": "No se pudieron cargar las reservas.",
+      "rotate-failed": "No se pudo crear el enlace del feed.",
+      "revoke-failed": "No se pudo revocar el feed.",
+      "no-token": "No hay feed activo para revocar.",
+      "validation": "Rango de fechas no válido.",
+      "copy-failed": "No se pudo copiar la URL."
     }
   },
   "calendars": {

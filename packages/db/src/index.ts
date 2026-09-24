@@ -129,6 +129,18 @@ export {
   replaceDestinationCalendar,
 } from "./queries/calendars"
 export {
+  getActiveCalendarFeedToken,
+  rotateCalendarFeedToken,
+  revokeCalendarFeedToken,
+  findActiveCalendarFeedTokenByHash,
+} from "./queries/calendar-feed-tokens"
+export {
+  listExpertBookings,
+  listExpertBookingsForFeed,
+  type ExpertBookingListItem,
+} from "./queries/expert-bookings"
+export type { CalendarFeedToken } from "./schema/main/offer-model"
+export {
   getUserAvatarUrl,
   updateUserAvatarUrl,
   getAuthUserRole,

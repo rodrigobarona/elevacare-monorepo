@@ -1259,6 +1259,70 @@ export type DestinationCalendarRequest = z.infer<
   typeof DestinationCalendarRequestSchema
 >
 
+export const CalendarFeedTokenStatusSchema = z.object({
+  hasToken: z.boolean(),
+  createdAt: z.string().datetime().nullable(),
+})
+
+export type CalendarFeedTokenStatus = z.infer<
+  typeof CalendarFeedTokenStatusSchema
+>
+
+export const RotateCalendarFeedTokenResponseSchema = z.object({
+  token: z.string().min(16).max(128),
+  createdAt: z.string().datetime(),
+})
+
+export type RotateCalendarFeedTokenResponse = z.infer<
+  typeof RotateCalendarFeedTokenResponseSchema
+>
+
+export const ListExpertBookingsQuerySchema = z.object({
+  from: z.string().datetime(),
+  to: z.string().datetime(),
+})
+
+export type ListExpertBookingsQuery = z.infer<
+  typeof ListExpertBookingsQuerySchema
+>
+
+export const ExpertBookingSchema = z.object({
+  id: z.string().uuid(),
+  status: z.string(),
+  startsAt: z.string().datetime(),
+  endsAt: z.string().datetime(),
+  timezone: z.string(),
+  sessionMode: z.enum(["online", "in_person", "phone"]),
+  memberFirstName: z.string().nullable(),
+  eventTypeTitle: z.object({
+    en: z.string(),
+    pt: z.string().optional(),
+    es: z.string().optional(),
+  }),
+  eventTypeSlug: z.string(),
+  modeLabel: z
+    .object({
+      en: z.string(),
+      pt: z.string().optional(),
+      es: z.string().optional(),
+    })
+    .nullable(),
+  locationName: z.string().nullable(),
+  locationCity: z.string().nullable(),
+  locationCountry: z.string().nullable(),
+  locationAddress: z.string().nullable(),
+})
+
+export type ExpertBooking = z.infer<typeof ExpertBookingSchema>
+
+export const ListExpertBookingsResponseSchema = z.object({
+  bookings: z.array(ExpertBookingSchema),
+})
+
+export type ListExpertBookingsResponse = z.infer<
+  typeof ListExpertBookingsResponseSchema
+>
+
 export const PublicLocalizedTextSchema = z.object({
   en: z.string(),
   pt: z.string().optional(),
@@ -2170,6 +2234,35 @@ export function createApiClient(options: ApiClientOptions) {
             `/expert/integrations/${encodeURIComponent(integrationId)}/destination`,
             data
           )
+        },
+      },
+      bookings: {
+        list(query: ListExpertBookingsQuery) {
+          const qs = new URLSearchParams({
+            from: query.from,
+            to: query.to,
+          })
+          return request<ListExpertBookingsResponse>(
+            "GET",
+            `/expert/bookings?${qs.toString()}`
+          ).then((raw) => ListExpertBookingsResponseSchema.parse(raw))
+        },
+      },
+      calendar: {
+        getFeedTokenStatus() {
+          return request<CalendarFeedTokenStatus>(
+            "GET",
+            "/expert/calendar/feed-token"
+          ).then((raw) => CalendarFeedTokenStatusSchema.parse(raw))
+        },
+        rotateFeedToken() {
+          return request<RotateCalendarFeedTokenResponse>(
+            "POST",
+            "/expert/calendar/feed-token"
+          ).then((raw) => RotateCalendarFeedTokenResponseSchema.parse(raw))
+        },
+        revokeFeedToken() {
+          return request<{ ok: true }>("DELETE", "/expert/calendar/feed-token")
         },
       },
 
