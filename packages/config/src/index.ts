@@ -38,6 +38,8 @@ export { countryToLocale } from "./country-to-locale"
 export {
   EU_SERVICE_COUNTRIES,
   EU_PHONE_COUNTRIES,
+  EU_COUNTRY_DEFAULT_TIMEZONES,
+  defaultTimezoneForCountry,
   euCountriesInService,
   type EuServiceCountry,
 } from "./eu-countries"

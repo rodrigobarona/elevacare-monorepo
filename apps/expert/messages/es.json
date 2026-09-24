@@ -159,7 +159,7 @@
       "editingHint": "El tipo de encuentro no se puede cambiar después de crearlo — desactiva y añade un modo nuevo.",
       "count": "{count, plural, =0 {Sin modos de entrega} one {# modo de entrega} other {# modos de entrega}}",
       "empty": "Añade al menos un modo de entrega antes de publicar.",
-      "needSchedule": "Crea primero un horario y luego vuelve para añadir modos de entrega.",
+      "needSchedule": "Crea un horario abajo para desbloquear modos de entrega.",
       "needLocation": "Añade una ubicación de práctica antes de crear un modo presencial.",
       "pickLocation": "Elige una ubicación",
       "unknownSchedule": "Horario",

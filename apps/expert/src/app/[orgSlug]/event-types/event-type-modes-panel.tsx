@@ -40,7 +40,7 @@ import {
   type SubCalendarOption,
 } from "./destination-override-select"
 import { loadSubCalendars } from "../calendars/actions"
-import { euCountriesInService } from "@eleva/config"
+import { defaultTimezoneForCountry, euCountriesInService } from "@eleva/config"
 
 export type ModeRow = {
   id: string
@@ -75,12 +75,6 @@ function isSessionMode(value: unknown): value is SessionMode {
     typeof value === "string" &&
     (SESSION_MODES as readonly string[]).includes(value)
   )
-}
-
-function timezoneForCountry(country: string, fallback: string): string {
-  if (country === "ES") return "Europe/Madrid"
-  if (country === "PT") return "Europe/Lisbon"
-  return fallback
 }
 
 interface Props {
@@ -147,7 +141,7 @@ export function EventTypeModesPanel({
     serviceCountries[0] ?? "PT"
   )
   const [newLocTimezone, setNewLocTimezone] = React.useState(() =>
-    timezoneForCountry(serviceCountries[0] ?? "PT", defaultTimezone)
+    defaultTimezoneForCountry(serviceCountries[0] ?? "PT", defaultTimezone)
   )
 
   const activeModes = initialModes.filter((m) => m.active)
@@ -316,7 +310,7 @@ export function EventTypeModesPanel({
         country: newLocCountry,
         timezone:
           newLocTimezone.trim() ||
-          timezoneForCountry(newLocCountry, defaultTimezone),
+          defaultTimezoneForCountry(newLocCountry, defaultTimezone),
       })
       if (!result.ok) {
         setError(result.message ?? formatModeError(result.error))
@@ -482,6 +476,51 @@ export function EventTypeModesPanel({
           <CardTitle>{t("title")}</CardTitle>
           <CardDescription>{t("needSchedule")}</CardDescription>
         </CardHeader>
+        <CardContent className="space-y-4">
+          {error ? (
+            <Alert variant="destructive" data-testid="mode-error">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div
+            className="space-y-2 rounded-md border p-3"
+            data-testid="mode-new-schedule-form"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="new-schedule-name-empty">
+                {t("fields.scheduleName")}
+              </Label>
+              <Input
+                id="new-schedule-name-empty"
+                value={newScheduleName}
+                onChange={(e) => setNewScheduleName(e.target.value)}
+                onKeyDown={onInlineScheduleKeyDown}
+                placeholder={t("scheduleNamePlaceholder")}
+                data-testid="new-schedule-name"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new-schedule-tz-empty">
+                {t("fields.timezone")}
+              </Label>
+              <Input
+                id="new-schedule-tz-empty"
+                value={newScheduleTz}
+                onChange={(e) => setNewScheduleTz(e.target.value)}
+                onKeyDown={onInlineScheduleKeyDown}
+                data-testid="new-schedule-tz"
+              />
+            </div>
+            <Button
+              size="sm"
+              isDisabled={pending || !newScheduleName.trim()}
+              onPress={() => void handleCreateSchedule()}
+              data-testid="save-new-schedule"
+            >
+              {t("saveSchedule")}
+            </Button>
+          </div>
+        </CardContent>
       </Card>
     )
   }
@@ -831,7 +870,7 @@ export function EventTypeModesPanel({
                             if (typeof key === "string") {
                               setNewLocCountry(key)
                               setNewLocTimezone(
-                                timezoneForCountry(key, defaultTimezone)
+                                defaultTimezoneForCountry(key, defaultTimezone)
                               )
                             }
                           }}
