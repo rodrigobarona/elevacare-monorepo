@@ -140,6 +140,27 @@ describe("translateMessages", () => {
     ).rejects.toThrow(AiTranslateMessagesParseError)
   })
 
+  it("throws when the model output is truncated", async () => {
+    const generate = vi.fn(async () => ({
+      text: '{"hello":',
+      finishReason: "length",
+    }))
+
+    await expect(
+      translateMessages(
+        {
+          sourceLocale: "en",
+          targetLocales: ["pt"],
+          messages: { hello: "Hello" },
+        },
+        {
+          env: { AI_GATEWAY_MODEL_EDITOR: "openai/gpt-4.1-mini" },
+          generate: generate as never,
+        }
+      )
+    ).rejects.toThrow(/truncated/)
+  })
+
   it("throws when the model returns non-JSON", async () => {
     const generate = vi.fn(async () => ({ text: "not json" }))
 

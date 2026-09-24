@@ -149,11 +149,16 @@ export async function translateMessages(
 
   for (const targetLocale of input.targetLocales) {
     const prompt = buildTranslateMessagesPrompt({ ...input, targetLocale })
-    const { text } = await generate({
+    const { text, finishReason } = await generate({
       model: modelId,
       prompt,
       maxOutputTokens: options?.maxOutputTokens ?? 8192,
     })
+    if (finishReason === "length") {
+      throw new AiTranslateMessagesParseError(
+        `output truncated for ${targetLocale}; reduce missing-key batch size`
+      )
+    }
 
     let parsed: unknown
     try {
