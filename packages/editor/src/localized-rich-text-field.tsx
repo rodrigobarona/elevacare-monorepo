@@ -130,17 +130,18 @@ export function LocalizedRichTextField({
       <RichTextEditor
         key={activeLocale}
         value={entry?.json ?? EMPTY_VALUE}
+        locale={activeLocale}
         isDisabled={isDisabled}
         labels={editorLabels}
         ai={ai}
-        onChange={(json) => {
+        onChangeWithSource={(json, source) => {
           onChange({
             sourceLocale,
             locales: {
               ...value,
               [activeLocale]: {
                 json,
-                source: "human",
+                source,
               },
             },
           })
