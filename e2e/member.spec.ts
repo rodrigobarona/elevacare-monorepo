@@ -229,9 +229,8 @@ test.describe("member Space without live Stripe", () => {
     })
     await verifyEmail(request, email)
 
-    // Password sign-in (same path as e2e/auth.spec.ts) — magic-link verify on
-    // :3002 then gateway /dashboard can leave the app RSC without a session
-    // cookie when ACCOUNT_URL points at the web port in local .env.
+    // Password sign-in (same path as e2e/auth.spec.ts). Session mint must set
+    // activeOrganizationId (personal Space) so Space RSC → API /me succeeds.
     await page.goto(`${accountUrl}/login`)
     await page.getByTestId("login-email").fill(email)
     await page.getByTestId("login-password").fill(E2E_PASSWORD)
@@ -303,7 +302,7 @@ test.describe("member Space without live Stripe", () => {
     ).toBe(200)
 
     // Authenticated Space render — RSC must forward the session to the API.
-    // Local ACCOUNT_URL pointing at the web port has left this 401; keep the
+    // Sessions without activeOrganizationId used to 401 here; keep the
     // assertion so the suite cannot go green without the handoff.
     await page.goto(`${webUrl}/${spaceSlug}`)
     await expect(page.getByTestId("member-space-home")).toBeVisible({

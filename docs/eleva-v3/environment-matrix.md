@@ -288,18 +288,18 @@ Apps run via `pnpm dev` through Turborepo; `.env.local` in the monorepo root pop
 
 **Port assignments:**
 
-| App           | Port | Env var                |
-| ------------- | ---- | ---------------------- |
-| web (gateway) | 3000 | --                     |
-| app (member)  | 3001 | `APP_ASSET_PREFIX`     |
-| api           | 3002 | --                     |
-| expert        | 3003 | `EXPERT_ASSET_PREFIX`  |
-| team          | 3004 | `TEAM_ASSET_PREFIX`    |
-| academy       | 3005 | `ACADEMY_ASSET_PREFIX` |
-| account       | 3006 | `ACCOUNT_URL`          |
-| admin         | 3007 | `ADMIN_URL`            |
-| docs          | 3008 | `DOCS_URL`             |
-| email         | 3009 | --                     |
+| App           | Port | Env var                                                         |
+| ------------- | ---- | --------------------------------------------------------------- |
+| web (gateway) | 3000 | --                                                              |
+| app (member)  | 3001 | `APP_ASSET_PREFIX`                                              |
+| api           | 3002 | --                                                              |
+| expert        | 3003 | `EXPERT_ASSET_PREFIX`                                           |
+| team          | 3004 | `TEAM_ASSET_PREFIX`                                             |
+| academy       | 3005 | `ACADEMY_ASSET_PREFIX`                                          |
+| account       | 3006 | `ACCOUNT_URL` / `NEXT_PUBLIC_ACCOUNT_URL` (not gateway `:3000`) |
+| admin         | 3007 | `ADMIN_URL`                                                     |
+| docs          | 3008 | `DOCS_URL`                                                      |
+| email         | 3009 | --                                                              |
 
 - Gateway's asset prefix env vars point at sibling ports so proxy rewrites resolve locally.
 - API is **not** rewritten; apps call `localhost:3002` directly.

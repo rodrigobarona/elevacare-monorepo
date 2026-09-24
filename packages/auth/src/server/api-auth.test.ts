@@ -1,10 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { UnauthorizedError } from "../types"
 
-const getSession = vi.fn()
-const verifyApiKey = vi.fn()
-const verifyBetterAuthJwt = vi.fn()
-const dbSelect = vi.fn()
+const {
+  getSession,
+  verifyApiKey,
+  verifyBetterAuthJwt,
+  dbSelect,
+  findDefaultOrganizationId,
+} = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  verifyApiKey: vi.fn(),
+  verifyBetterAuthJwt: vi.fn(),
+  dbSelect: vi.fn(),
+  findDefaultOrganizationId: vi.fn(),
+}))
 
 vi.mock("./auth", () => ({
   getAuthApi: () => ({ getSession, verifyApiKey }),
@@ -12,6 +21,11 @@ vi.mock("./auth", () => ({
 
 vi.mock("./jwt-verify", () => ({
   verifyBetterAuthJwt: (...args: unknown[]) => verifyBetterAuthJwt(...args),
+}))
+
+vi.mock("../provision-personal-space", () => ({
+  findDefaultOrganizationId: (...args: unknown[]) =>
+    findDefaultOrganizationId(...args),
 }))
 
 vi.mock("@eleva/db", () => ({
@@ -47,6 +61,7 @@ function membershipRow() {
     role: "owner",
     orgType: "personal",
     orgSlug: "space-user1",
+    orgId: "org-1",
   }
 }
 
@@ -68,6 +83,8 @@ describe("requireApiAuth", () => {
     verifyApiKey.mockReset()
     verifyBetterAuthJwt.mockReset()
     dbSelect.mockReset()
+    findDefaultOrganizationId.mockReset()
+    findDefaultOrganizationId.mockResolvedValue(null)
     mockMembership()
   })
 
@@ -84,6 +101,41 @@ describe("requireApiAuth", () => {
     expect(identity.authMode).toBe("cookie")
     expect(identity.user.id).toBe("user-1")
     expect(identity.productLabel).toBe("member")
+    expect(findDefaultOrganizationId).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the personal Space when activeOrganizationId is null", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: null },
+    })
+    findDefaultOrganizationId.mockResolvedValue("org-1")
+    const identity = await requireApiAuth(
+      new Request("http://localhost/x", {
+        headers: { cookie: "better-auth.session_token=abc" },
+      })
+    )
+    expect(identity.orgId).toBe("org-1")
+    expect(identity.productLabel).toBe("member")
+    expect(findDefaultOrganizationId).toHaveBeenCalledWith("user-1")
+  })
+
+  it("rejects when there is no active org and no membership fallback", async () => {
+    getSession.mockResolvedValue({
+      user: { id: "user-1", email: "a@b.c", name: "Ada", image: null },
+      session: { activeOrganizationId: null },
+    })
+    findDefaultOrganizationId.mockResolvedValue(null)
+    await expect(
+      requireApiAuth(
+        new Request("http://localhost/x", {
+          headers: { cookie: "better-auth.session_token=abc" },
+        })
+      )
+    ).rejects.toMatchObject({
+      code: "no-session",
+      message: "active organization required",
+    })
   })
 
   it("resolves an opaque bearer token alone", async () => {

@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { limit, withAudit } = vi.hoisted(() => {
+const { limit, orderByLimit, withAudit } = vi.hoisted(() => {
   const limit = vi.fn()
+  const orderByLimit = vi.fn()
   const withAudit = vi.fn(
     async (
       _opts: unknown,
@@ -13,7 +14,7 @@ const { limit, withAudit } = vi.hoisted(() => {
       await fn({ execute: vi.fn() }, { emit: vi.fn() })
     }
   )
-  return { limit, withAudit }
+  return { limit, orderByLimit, withAudit }
 })
 
 vi.mock("@eleva/audit", () => ({ withAudit }))
@@ -22,22 +23,33 @@ vi.mock("@eleva/db", () => ({
     select: () => ({
       from: () => ({
         innerJoin: () => ({
-          where: () => ({ limit }),
+          where: () => ({
+            limit,
+            orderBy: () => ({ limit: orderByLimit }),
+          }),
         }),
       }),
     }),
   }),
   auth: {
     organization: { id: "id", type: "type" },
-    member: { organizationId: "organization_id", userId: "user_id" },
+    member: {
+      organizationId: "organization_id",
+      userId: "user_id",
+      createdAt: "created_at",
+    },
   },
 }))
 
-import { provisionPersonalSpace } from "./provision-personal-space"
+import {
+  findDefaultOrganizationId,
+  provisionPersonalSpace,
+} from "./provision-personal-space"
 
 describe("provisionPersonalSpace", () => {
   beforeEach(() => {
     limit.mockReset()
+    orderByLimit.mockReset()
     withAudit.mockClear()
   })
 
@@ -69,5 +81,32 @@ describe("provisionPersonalSpace", () => {
         payload: { type: "personal", name: "Ada's Space" },
       })
     )
+  })
+})
+
+describe("findDefaultOrganizationId", () => {
+  beforeEach(() => {
+    limit.mockReset()
+    orderByLimit.mockReset()
+  })
+
+  it("returns the personal Space when present", async () => {
+    limit.mockResolvedValue([{ id: "personal-1" }])
+    await expect(findDefaultOrganizationId("user-1")).resolves.toBe(
+      "personal-1"
+    )
+    expect(orderByLimit).not.toHaveBeenCalled()
+  })
+
+  it("falls back to the oldest membership when no personal Space", async () => {
+    limit.mockResolvedValue([])
+    orderByLimit.mockResolvedValue([{ id: "expert-1" }])
+    await expect(findDefaultOrganizationId("user-1")).resolves.toBe("expert-1")
+  })
+
+  it("returns null when the user has no memberships", async () => {
+    limit.mockResolvedValue([])
+    orderByLimit.mockResolvedValue([])
+    await expect(findDefaultOrganizationId("user-1")).resolves.toBeNull()
   })
 })

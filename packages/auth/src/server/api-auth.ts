@@ -6,6 +6,7 @@ import {
   normalizeMembershipRole,
   toMembershipSeniority,
 } from "../capabilities"
+import { findDefaultOrganizationId } from "../provision-personal-space"
 import {
   UnauthorizedError,
   type ApiAuthMode,
@@ -169,7 +170,11 @@ async function buildIdentity(input: {
   orgId: string | null
   authMode: ApiAuthMode
 }): Promise<ApiIdentity> {
-  if (!input.orgId) {
+  // Match loadElevaSession: when the cookie has no activeOrganizationId
+  // (legacy sessions minted before the session.create hook), prefer the
+  // personal Space / first membership instead of 401 no-session.
+  const orgId = input.orgId ?? (await findDefaultOrganizationId(input.userId))
+  if (!orgId) {
     throw new UnauthorizedError("no-session", "active organization required")
   }
 
@@ -178,6 +183,7 @@ async function buildIdentity(input: {
       role: authTables.member.role,
       orgType: authTables.organization.type,
       orgSlug: authTables.organization.slug,
+      orgId: authTables.organization.id,
     })
     .from(authTables.member)
     .innerJoin(
@@ -187,7 +193,7 @@ async function buildIdentity(input: {
     .where(
       and(
         eq(authTables.member.userId, input.userId),
-        eq(authTables.member.organizationId, input.orgId)
+        eq(authTables.member.organizationId, orgId)
       )
     )
     .limit(1)
@@ -208,7 +214,7 @@ async function buildIdentity(input: {
       displayName: input.name,
       avatarUrl: input.image,
     },
-    orgId: input.orgId,
+    orgId: membership.orgId,
     orgSlug: membership.orgSlug,
     productLabel,
     orgType,

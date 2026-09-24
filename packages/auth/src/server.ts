@@ -173,3 +173,5 @@ export async function getUserOrganizations(): Promise<UserOrganization[]> {
   const session = await requireSession()
   return listAuthOrganizations(session.user.id, session.orgId)
 }
+
+export { buildApiSessionHeaders } from "./server/api-session-headers"
