@@ -36,6 +36,100 @@
       "generic": "Something went wrong. Please try again."
     },
     "saved": "Event type saved.",
+    "policiesTitle": "Policies",
+    "tabs": {
+      "basics": "Basics",
+      "kind": "Kind",
+      "policies": "Policies",
+      "modes": "Delivery modes",
+      "privateLinks": "Private links"
+    },
+    "kind": {
+      "title": "Service kind & visibility",
+      "description": "Choose the legal category and who can find this service.",
+      "save": "Save kind",
+      "saving": "Saving…",
+      "errorGeneric": "Could not save kind or visibility. Please try again.",
+      "options": {
+        "non_clinical": {
+          "title": "Non-clinical",
+          "body": "Coaching, education, or wellness — no regulated health practice rules apply to country scope."
+        },
+        "clinical": {
+          "title": "Clinical",
+          "body": "Regulated care — delivery modes must stay inside your licensed service countries."
+        }
+      },
+      "visibilityLabel": "Visibility",
+      "visibility": {
+        "public": {
+          "title": "Public",
+          "body": "Listed on your profile and searchable."
+        },
+        "unlisted": {
+          "title": "Unlisted",
+          "body": "Bookable via direct link, not listed publicly."
+        },
+        "private": {
+          "title": "Private",
+          "body": "Only reachable through a private booking link."
+        }
+      }
+    },
+    "privateLinks": {
+      "title": "Private links",
+      "description": "Invite someone when your public agenda is closed. The token is shown once.",
+      "create": "Create private link",
+      "save": "Create link",
+      "saving": "Creating…",
+      "cancel": "Cancel",
+      "empty": "No private links yet.",
+      "needMode": "Add an active delivery mode before creating a private link.",
+      "created": "Private link created. Copy it now — it will not be shown again.",
+      "tokenOnce": "Copy this link now. Eleva only stores a hash; the token cannot be recovered later.",
+      "copyLink": "Copy link",
+      "sendEmail": "Send by e-mail",
+      "dismissToken": "Done",
+      "copied": "Link copied.",
+      "copyFailed": "Could not copy. Select the link and copy manually.",
+      "mailtoSubject": "Your Eleva booking invite",
+      "mailtoBody": "Use this private link to book:",
+      "defaultSchedule": "default",
+      "uses": "{used}/{max} uses",
+      "expires": "Expires {date}",
+      "revoke": "Revoke",
+      "revokeTitle": "Revoke this private link?",
+      "revokeDescription": "Anyone with the link will get a 404. This cannot be undone.",
+      "revokeConfirm": "Revoke link",
+      "revoking": "Revoking…",
+      "revoked": "Private link revoked.",
+      "status": {
+        "active": "Active",
+        "used": "Used",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "fields": {
+        "mode": "Delivery mode",
+        "schedule": "Schedule override",
+        "scheduleModeDefault": "Use mode schedule",
+        "recipient": "Recipient e-mail (optional)",
+        "recipientPlaceholder": "member@example.com",
+        "price": "Price override (€)",
+        "pricePlaceholder": "Leave blank for event default",
+        "expires": "Expires",
+        "maxUses": "Max uses",
+        "note": "Note for the member",
+        "notePlaceholder": "Optional message shown on the booking page"
+      },
+      "error": {
+        "create-failed": "Could not create the private link. Please try again.",
+        "revoke-failed": "Could not revoke the private link. Please try again.",
+        "invalid-input": "Check the private link fields and try again.",
+        "validation": "Check the private link fields and try again.",
+        "generic": "Something went wrong. Please try again."
+      }
+    },
     "actions": {
       "ariaLabel": "Event type actions",
       "edit": "Edit",

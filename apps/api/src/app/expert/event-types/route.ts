@@ -89,6 +89,8 @@ export async function POST(request: Request) {
             currency: data.currency,
             languages: data.languages.length > 0 ? data.languages : ["en"],
             sessionMode: data.sessionMode,
+            kind: data.kind ?? "non_clinical",
+            visibility: data.visibility ?? "public",
             bookingWindowDays: data.bookingWindowDays ?? null,
             minimumNoticeMinutes: data.minimumNoticeMinutes,
             bufferBeforeMinutes: data.bufferBeforeMinutes,

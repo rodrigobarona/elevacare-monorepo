@@ -100,6 +100,8 @@ export async function updateEventType(
       | "currency"
       | "languages"
       | "sessionMode"
+      | "kind"
+      | "visibility"
       | "bookingWindowDays"
       | "minimumNoticeMinutes"
       | "bufferBeforeMinutes"

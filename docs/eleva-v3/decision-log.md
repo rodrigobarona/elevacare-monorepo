@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-24: Phase 04B services builder tabs (kind / policies / private links)
+
+- Owner: engineering
+- Status: active
+- Summary: Expert event-type edit is a tabbed builder (Basics, Kind,
+  Policies, Delivery modes, Private links). API gains `kind` /
+  `visibility` on event-type create/update (kind changes re-check
+  offer-invariants against active modes) and `/expert/booking-links`
+  (list / create with one-time token / revoke). Closes backlog item (5)
+  on the Phase 04B ordered list; exit gate still open for calendar
+  polish, Plate AI route, and UI-built Quick chat / Physiotherapy
+  fixtures.
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
+- Next review: next 04B slice or founder waiver of remaining acceptance items
+
 ### 2026-09-24: Self-host Eleva UI fonts via next/font/local
 
 - Owner: engineering

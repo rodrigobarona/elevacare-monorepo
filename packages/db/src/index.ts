@@ -110,6 +110,16 @@ export {
   type PublicBookingLink,
 } from "./queries/public-offers"
 export {
+  deriveBookingLinkStatus,
+  toBookingLinkListItem,
+  listBookingLinksForEventType,
+  createBookingLink,
+  getBookingLinkForExpert,
+  revokeBookingLink,
+  type BookingLinkStatus,
+} from "./queries/booking-links"
+export type { BookingLink, NewBookingLink } from "./schema/main/offer-model"
+export {
   listCalendarIntegrations,
   listExpertIntegrations,
   disconnectIntegration,

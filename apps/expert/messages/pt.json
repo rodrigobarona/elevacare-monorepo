@@ -36,6 +36,100 @@
       "generic": "Algo correu mal. Tente novamente."
     },
     "saved": "Tipo de evento guardado.",
+    "policiesTitle": "Políticas",
+    "tabs": {
+      "basics": "Básicos",
+      "kind": "Tipo",
+      "policies": "Políticas",
+      "modes": "Modos de entrega",
+      "privateLinks": "Links privados"
+    },
+    "kind": {
+      "title": "Tipo de serviço e visibilidade",
+      "description": "Escolha a categoria legal e quem pode encontrar este serviço.",
+      "save": "Guardar tipo",
+      "saving": "A guardar…",
+      "errorGeneric": "Não foi possível guardar o tipo ou a visibilidade. Tente novamente.",
+      "options": {
+        "non_clinical": {
+          "title": "Não clínico",
+          "body": "Coaching, educação ou bem-estar — não aplicam regras de prática de saúde regulada ao âmbito por país."
+        },
+        "clinical": {
+          "title": "Clínico",
+          "body": "Cuidado regulado — os modos de entrega devem ficar dentro dos seus países de serviço licenciados."
+        }
+      },
+      "visibilityLabel": "Visibilidade",
+      "visibility": {
+        "public": {
+          "title": "Público",
+          "body": "Listado no seu perfil e pesquisável."
+        },
+        "unlisted": {
+          "title": "Não listado",
+          "body": "Reservável por link direto, sem listagem pública."
+        },
+        "private": {
+          "title": "Privado",
+          "body": "Só acessível através de um link de reserva privado."
+        }
+      }
+    },
+    "privateLinks": {
+      "title": "Links privados",
+      "description": "Convide alguém quando a agenda pública está fechada. O token é mostrado uma vez.",
+      "create": "Criar link privado",
+      "save": "Criar link",
+      "saving": "A criar…",
+      "cancel": "Cancelar",
+      "empty": "Ainda não há links privados.",
+      "needMode": "Adicione um modo de entrega ativo antes de criar um link privado.",
+      "created": "Link privado criado. Copie agora — não será mostrado outra vez.",
+      "tokenOnce": "Copie este link agora. A Eleva só guarda um hash; o token não pode ser recuperado depois.",
+      "copyLink": "Copiar link",
+      "sendEmail": "Enviar por e-mail",
+      "dismissToken": "Concluído",
+      "copied": "Link copiado.",
+      "copyFailed": "Não foi possível copiar. Selecione o link e copie manualmente.",
+      "mailtoSubject": "O seu convite de reserva Eleva",
+      "mailtoBody": "Use este link privado para reservar:",
+      "defaultSchedule": "predefinido",
+      "uses": "{used}/{max} usos",
+      "expires": "Expira {date}",
+      "revoke": "Revogar",
+      "revokeTitle": "Revogar este link privado?",
+      "revokeDescription": "Quem tiver o link verá um 404. Não é possível anular.",
+      "revokeConfirm": "Revogar link",
+      "revoking": "A revogar…",
+      "revoked": "Link privado revogado.",
+      "status": {
+        "active": "Ativo",
+        "used": "Usado",
+        "expired": "Expirado",
+        "revoked": "Revogado"
+      },
+      "fields": {
+        "mode": "Modo de entrega",
+        "schedule": "Horário alternativo",
+        "scheduleModeDefault": "Usar o horário do modo",
+        "recipient": "E-mail do destinatário (opcional)",
+        "recipientPlaceholder": "membro@exemplo.com",
+        "price": "Preço alternativo (€)",
+        "pricePlaceholder": "Deixe em branco para o preço do evento",
+        "expires": "Expira",
+        "maxUses": "Usos máximos",
+        "note": "Nota para o membro",
+        "notePlaceholder": "Mensagem opcional na página de reserva"
+      },
+      "error": {
+        "create-failed": "Não foi possível criar o link privado. Tente novamente.",
+        "revoke-failed": "Não foi possível revogar o link privado. Tente novamente.",
+        "invalid-input": "Verifique os campos do link privado e tente novamente.",
+        "validation": "Verifique os campos do link privado e tente novamente.",
+        "generic": "Algo correu mal. Tente novamente."
+      }
+    },
     "actions": {
       "ariaLabel": "Ações do tipo de evento",
       "edit": "Editar",
