@@ -184,8 +184,9 @@ Those checks wait for confirmed fiscal parameters (tax codes, rates, legal menti
       then `status = failed` and alerts (Sentry + ops e-mail); slow stage: `invoicing-retry`
       (every 30 min) re-processes `failed` rows with backoff up to **10 further attempts**, then
       `status = dead_lettered`, writes `workflow_dead_letters` and raises the admin flag
-      (Phase 12 queue). Payout remaining `approval_required` until a real issued fee invoice
-      exists is already the Phase 6 behavior — do not simulate an issued FT to unblock it.
+      (Phase 12 queue). Payouts do **not** wait for an issued fee invoice today (founder
+      waiver AUD-007, 2026-09-25, while `issueInvoice()` is closed); the PR that opens
+      issuance adds that gate. Never simulate an issued FT to unblock anything.
 - [ ] Credit-note path is implemented in code and tests with the issuance gate still closed;
       do not issue or communicate a TEST NC.
 - [ ] Expert in Auto mode (TOConline) -> OAuth connected, TEST series lookup,
@@ -392,16 +393,19 @@ fictitious TOConline docs, do not use ELEVA production series to simulate.
    structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
    Tests: the same webhook replayed twice -> one invoice row, one outbox row; a simulated crash
    after commit and before publish -> exactly one delivered event on the next publisher run.
-   Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
-   platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
-   skip (not fail) the payout run for that booking until it is — add that check and its test in
-   this phase. On refund or transfer
+   Transfer gate (waived while issueInvoice() is closed — founder AUD-007, 2026-09-25): do NOT
+   add it in this phase. The PR that opens issueInvoice() / FT POST adds the check that the Phase
+   6 payout engine (packages/billing payouts) sees platform_fee_invoices.status = issued for the
+   booking before creating any Stripe transfer, skipping (not failing) the payout run until it
+   is, with its test. On refund or transfer
    reversal with an issued invoice -> issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min; slow stage of
    the retry policy in item 3: re-processes failed rows with backoff, max 10 further attempts,
    then dead_lettered + workflow_dead_letters + admin flag; test the 5 + 10 boundary), stripe-toconline-
-   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
+   reconciliation.ts (deferred — founder AUD-006, 2026-09-25: the job shipped in this phase
+   compares against expert_invoices (Tier 2) and its mismatches are not a signal; the PR that
+   opens issueInvoice() retargets it to the platform-fee spec that follows) (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
    per expert net of refunds — there is NO Stripe application-fee object in the separate charges
    and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
    totals against Stripe balance transactions only as a sanity check; write run row; mismatch >

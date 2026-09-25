@@ -4685,8 +4685,9 @@ run against TOConline TEST): fast stage = QStash exponential backoff up to <stro
 then <code>status = failed</code> and alerts (Sentry + ops e-mail); slow stage: <code>invoicing-retry</code>
 (every 30 min) re-processes <code>failed</code> rows with backoff up to <strong>10 further attempts</strong>, then
 <code>status = dead_lettered</code>, writes <code>workflow_dead_letters</code> and raises the admin flag
-(Phase 12 queue). Payout remaining <code>approval_required</code> until a real issued fee invoice
-exists is already the Phase 6 behavior — do not simulate an issued FT to unblock it.</li>
+(Phase 12 queue). Payouts do <strong>not</strong> wait for an issued fee invoice today (founder
+waiver AUD-007, 2026-09-25, while <code>issueInvoice()</code> is closed); the PR that opens
+issuance adds that gate. Never simulate an issued FT to unblock anything.</li>
 <li><input disabled="" type="checkbox"> Credit-note path is implemented in code and tests with the issuance gate still closed;
 do not issue or communicate a TEST NC.</li>
 <li><input disabled="" type="checkbox"> Expert in Auto mode (TOConline) -&gt; OAuth connected, TEST series lookup,
@@ -4891,16 +4892,19 @@ fictitious TOConline docs, do not use ELEVA production series to simulate.
    structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
    Tests: the same webhook replayed twice -&gt; one invoice row, one outbox row; a simulated crash
    after commit and before publish -&gt; exactly one delivered event on the next publisher run.
-   Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
-   platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
-   skip (not fail) the payout run for that booking until it is — add that check and its test in
-   this phase. On refund or transfer
+   Transfer gate (waived while issueInvoice() is closed — founder AUD-007, 2026-09-25): do NOT
+   add it in this phase. The PR that opens issueInvoice() / FT POST adds the check that the Phase
+   6 payout engine (packages/billing payouts) sees platform_fee_invoices.status = issued for the
+   booking before creating any Stripe transfer, skipping (not failing) the payout run until it
+   is, with its test. On refund or transfer
    reversal with an issued invoice -&gt; issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min; slow stage of
    the retry policy in item 3: re-processes failed rows with backoff, max 10 further attempts,
    then dead_lettered + workflow_dead_letters + admin flag; test the 5 + 10 boundary), stripe-toconline-
-   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
+   reconciliation.ts (deferred — founder AUD-006, 2026-09-25: the job shipped in this phase
+   compares against expert_invoices (Tier 2) and its mismatches are not a signal; the PR that
+   opens issueInvoice() retargets it to the platform-fee spec that follows) (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
    per expert net of refunds — there is NO Stripe application-fee object in the separate charges
    and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
    totals against Stripe balance transactions only as a sanity check; write run row; mismatch &gt;
@@ -4987,7 +4991,7 @@ operator tasks still pending (series, credentials, remaining fiscal-parameter co
 </tr>
 <tr>
 <td>Exit gate</td>
-<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently. <code>invoice.issued</code> / <code>invoice.failed</code> stay deferred while <code>issueInvoice()</code> is closed</td>
+<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences (quiet hours deferred to Phase 13, AUD-004), idempotently. <code>invoice.issued</code> / <code>invoice.failed</code> stay deferred while <code>issueInvoice()</code> is closed</td>
 </tr>
 </tbody></table>
 <h2 id="08-notifications-lane1--why-this-phase-exists"><a class="anchor" href="#08-notifications-lane1--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -5012,7 +5016,7 @@ rows) — where
 mode exists for recipients who have no account yet (<code>auth.org_invitation</code> to a new address,
 guest booking confirmations before activation) and is <strong>email-only</strong>: no preferences lookup,
 no SMS, no in-app row, suppression list still applied; the <code>{ userId }</code> mode resolves
-preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders the
+preferences + locale (quiet hours: Phase 13, AUD-004) and fans out to email / SMS / in-app. Renders the
 <code>@eleva/email</code> template (React Email) / SMS text / in-app payload -&gt; delivers -&gt; writes
 <code>notification_deliveries</code> (idempotent on key + recipient + channel, where the recipient column
 is <code>user_id</code> or, for e-mail mode, <code>recipient_email</code>). The delivery row is <strong>claimed before the
@@ -5193,7 +5197,7 @@ untouched (per-subscriber outbox test).</li>
 </ul>
 <h2 id="08-notifications-lane1--tests"><a class="anchor" href="#08-notifications-lane1--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
-<li>vitest: preference resolution, quiet hours, idempotency, template rendering snapshots per
+<li>vitest: preference resolution, idempotency, template rendering snapshots per
 locale, reminder scheduling math, webhook signature verification.</li>
 </ul>
 <h2 id="08-notifications-lane1--docs-to-update"><a class="anchor" href="#08-notifications-lane1--docs-to-update" aria-label="Link to section">#</a>Docs to update</h2>
@@ -5285,7 +5289,7 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    NOTIFICATION_KINDS[kind].scope is &quot;org&quot; | &quot;user&quot; and orgId is required (overloaded signature +
    Zod refine, error ORG_CONTEXT_REQUIRED, checked before any write) for every org-scoped kind.
    userId mode -&gt; load user locale, preferences (Phase 5
-   table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list -&gt;
+   table), suppression list (quiet-hours deferral is Phase 13 — AUD-004 — do not implement it here) -&gt;
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app -&gt;
    CLAIM the notification_deliveries row FIRST (INSERT status queued WITH lease_owner = runId
    and claimed_at = now() — both NOT NULL, the insert is the first claim; on unique conflict
@@ -5375,12 +5379,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID, TWILIO_REGION=ie1 in
    .env.example, turbo.json, environment-matrix.md. Operator task: verify eleva.care in Resend
    (DKIM/SPF/DMARC) and create the Twilio EU messaging service.
-8. Tests: preference/quiet-hour resolution, idempotency, template snapshots per locale, reminder
+8. Tests: preference resolution, idempotency, template snapshots per locale, reminder
    scheduling, webhook signature, suppression. Docs: notifications-spec.md, integration-runbooks.md,
    decision-log.md.
 
 Acceptance (paste evidence): confirmation emails (member + expert) with ICS in the right locale;
-reminders scheduled and skipped on cancel; quiet hours deferral; idempotency; SMS only with
+reminders scheduled and skipped on cancel; idempotency; SMS only with
 verified opt-in; bounce suppression; preview renders all templates in pt/en/es; no PHI in
 subjects/SMS.
 
