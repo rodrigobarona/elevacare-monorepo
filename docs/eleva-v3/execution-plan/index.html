@@ -3776,9 +3776,8 @@ booking. (Evidenced 2026-09-25 loopback <code>e2e:member:stripe</code>.)</li>
 <code>data-status=cancelled</code>; payment <code>refund_pending</code> remains Phase 6 webhook path).</li>
 <li><input checked="" disabled="" type="checkbox"> Receipt URL opens Stripe-hosted receipt when Stripe returns <code>charges.receipt_url</code>;
 payments list matches <code>booking_payments</code> (<code>GET /me/payments</code> + <code>/payments</code> row
-<code>data-testid=member-payment-row</code>). Receipt href asserted when <code>receiptUrl</code> is
-present after list-time resolve; leave open only if webhook never stores a
-charge id (then <code>receiptUrl</code> stays null — re-prove on a green Stripe leg).</li>
+<code>data-testid=member-payment-row</code>). Live Stripe journey polls until <code>receiptUrl</code>
+is present and asserts the payments-page link matches.</li>
 <li><input checked="" disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
 <li><input checked="" disabled="" type="checkbox"> <code>GET /me/consents</code> lists every kind with its version; <code>PUT /me/consents</code> withdraws
 <code>marketing</code> immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend

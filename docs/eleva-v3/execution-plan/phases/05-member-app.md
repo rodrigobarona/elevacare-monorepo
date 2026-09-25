@@ -118,9 +118,8 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
       `data-status=cancelled`; payment `refund_pending` remains Phase 6 webhook path).
 - [x] Receipt URL opens Stripe-hosted receipt when Stripe returns `charges.receipt_url`;
       payments list matches `booking_payments` (`GET /me/payments` + `/payments` row
-      `data-testid=member-payment-row`). Receipt href asserted when `receiptUrl` is
-      present after list-time resolve; leave open only if webhook never stores a
-      charge id (then `receiptUrl` stays null — re-prove on a green Stripe leg).
+      `data-testid=member-payment-row`). Live Stripe journey polls until `receiptUrl`
+      is present and asserts the payments-page link matches.
 - [x] Preferences persist and are returned by `GET /me`.
 - [x] `GET /me/consents` lists every kind with its version; `PUT /me/consents` withdraws
       `marketing` immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend

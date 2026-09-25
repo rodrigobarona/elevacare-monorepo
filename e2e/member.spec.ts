@@ -504,32 +504,51 @@ async function assertPaymentsListShowsBooking(
   bookingId: string
 ): Promise<void> {
   const headers = await sessionAuthHeaders(page)
-  const paymentsRes = await request.get(`${apiUrl}/me/payments`, { headers })
-  expect(paymentsRes.status()).toBe(200)
-  const payload = (await paymentsRes.json()) as {
-    payments: Array<{
-      bookingId: string
-      status: string
-      amountCents: number
-      receiptUrl: string | null
-    }>
-  }
-  const match = payload.payments.find((row) => row.bookingId === bookingId)
+  let match: {
+    bookingId: string
+    status: string
+    amountCents: number
+    receiptUrl: string | null
+  } | null = null
+
+  // Webhook may land after confirm; poll until receipt is cached or timeout.
+  await expect
+    .poll(
+      async () => {
+        const paymentsRes = await request.get(`${apiUrl}/me/payments`, {
+          headers,
+        })
+        if (paymentsRes.status() !== 200) return null
+        const payload = (await paymentsRes.json()) as {
+          payments: Array<{
+            bookingId: string
+            status: string
+            amountCents: number
+            receiptUrl: string | null
+          }>
+        }
+        match =
+          payload.payments.find((row) => row.bookingId === bookingId) ?? null
+        return match?.receiptUrl ?? null
+      },
+      { timeout: 45_000 }
+    )
+    .toMatch(/^https:\/\//)
+
   expect(match).toBeTruthy()
   expect(match!.amountCents).toBe(6000)
   expect(["succeeded", "refund_pending", "refunded"]).toContain(match!.status)
+  expect(match!.receiptUrl).toMatch(/^https:\/\//)
 
   await page.goto(`${webUrl}/${spaceSlug}/payments`)
   const row = page
     .locator(`[data-testid="member-payment-row"][data-booking="${bookingId}"]`)
     .first()
   await expect(row).toBeVisible({ timeout: 15_000 })
-  if (match!.receiptUrl) {
-    const receipt = row.getByTestId("member-payment-receipt")
-    await expect(receipt).toBeVisible()
-    const href = await receipt.getAttribute("href")
-    expect(href).toMatch(/^https:\/\//)
-  }
+  const receipt = row.getByTestId("member-payment-receipt")
+  await expect(receipt).toBeVisible()
+  const href = await receipt.getAttribute("href")
+  expect(href).toBe(match!.receiptUrl)
 }
 
 async function assertDeleteAccountBlocksReserve(
@@ -541,7 +560,11 @@ async function assertDeleteAccountBlocksReserve(
   const offer = await request.get(
     `${apiUrl}/public/experts/${PAID_EXPERT}/event-types/${PAID_OFFER}`
   )
-  test.skip(offer.status() !== 200, "needs seeded fisiomota / first-visit")
+  if (offer.status() !== 200) {
+    throw new Error(
+      `delete-account block needs seeded fisiomota / first-visit (GET offer ${offer.status()})`
+    )
+  }
   const detail = (await offer.json()) as {
     modes: Array<{ id: string }>
   }
@@ -567,13 +590,16 @@ async function assertDeleteAccountBlocksReserve(
   }
 
   await page.goto(`${webUrl}/${spaceSlug}/privacy`)
-  await page.getByTestId("member-deletion-request").click()
-  await page.getByTestId("member-deletion-confirm").click()
-  await expect(page.getByTestId("member-deletion-scheduled")).toBeVisible({
-    timeout: 15_000,
-  })
-
+  let deletionRequested = false
   try {
+    await page.getByTestId("member-deletion-request").click()
+    await page.getByTestId("member-deletion-confirm").click()
+    // Mark before the visibility wait so a toast/UI flake still cleans up.
+    deletionRequested = true
+    await expect(page.getByTestId("member-deletion-scheduled")).toBeVisible({
+      timeout: 15_000,
+    })
+
     const reserve = await request.post(`${apiUrl}/bookings/reserve`, {
       headers,
       data: reserveBody,
@@ -585,6 +611,7 @@ async function assertDeleteAccountBlocksReserve(
     const body = (await reserve.json()) as { error?: string }
     expect(body.error).toBe("ACCOUNT_DELETION_SCHEDULED")
   } finally {
+    if (!deletionRequested) return
     // Always clear the schedule so a failed assert does not strand the member.
     const cancelBtn = page.getByTestId("member-deletion-cancel")
     if (await cancelBtn.isVisible().catch(() => false)) {
