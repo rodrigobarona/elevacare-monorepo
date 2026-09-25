@@ -120,6 +120,23 @@ Should cover:
 - queued SMS never leaving `queued` (missing callback + list-adopt)
 - EU region/edge (`ie1` / `dublin`) and Messaging Service SID
 
+#### Loopback Virtual Phone smoke (operator)
+
+1. Env (no secrets in tickets): `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`,
+   **`TWILIO_MESSAGING_SERVICE_SID`** (`MG…` — not a raw `From` / not the typo
+   `TWILIO_MESSAGE_SERVICE_SID`), optional `TWILIO_REGION` / `TWILIO_EDGE`.
+2. Auth tokens are **Region-specific**. A US1 token with `TWILIO_REGION=ie1`
+   yields Twilio `20003`. For EU prod, create/copy the **IE1** Auth Token (or
+   API key) from Console → API keys & tokens → Region = Ireland (IE1), then set
+   `TWILIO_REGION=ie1` and `TWILIO_EDGE=dublin`.
+3. Smoke To: Twilio Virtual Phone `+18777804236` (Console → Messaging →
+   Virtual Phone). Trial accounts may send here without verifying a personal
+   number.
+4. Path: `sendViaTwilio` (same client as verify-start OTP) via Messaging
+   Service → poll message status to `delivered`.
+5. Evidence stamped 2026-09-25: US1 Trial deliver SID
+   `SM8417964bd3affb356325af38530cb5d2`. IE1 path still needs IE1 credentials.
+
 ### Calendar integration runbook
 
 Should cover:

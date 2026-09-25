@@ -83,13 +83,21 @@ export function twilioSignedUrl(request: Request): string | null {
   return `${apiBase}${pathname}${rawQuery}`
 }
 
+function resolveMessagingServiceSid(): string {
+  const correct = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim()
+  if (correct) return correct
+  // Common typo in local env — accept once, prefer the documented name.
+  const typo = process.env.TWILIO_MESSAGE_SERVICE_SID?.trim()
+  if (typo) return typo
+  throw new Error(
+    "[sms] TWILIO_MESSAGING_SERVICE_SID is required (MG… Messaging Service; not a raw From)"
+  )
+}
+
 export async function sendViaTwilio(
   input: SendSmsInput
 ): Promise<SendSmsResult> {
-  const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID?.trim()
-  if (!messagingServiceSid) {
-    throw new Error("[sms] TWILIO_MESSAGING_SERVICE_SID is required")
-  }
+  const messagingServiceSid = resolveMessagingServiceSid()
   const client = createTwilioClient()
   const message = await client.messages.create({
     to: input.to,
