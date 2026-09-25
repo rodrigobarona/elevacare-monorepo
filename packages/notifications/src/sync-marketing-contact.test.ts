@@ -127,6 +127,7 @@ describe("syncMarketingContact", () => {
         { userId: USER_ID },
         {
           loadUser: async () => ({
+            userId: USER_ID,
             email: "e2e@example.com",
             name: "E2e",
             locale: "en",
