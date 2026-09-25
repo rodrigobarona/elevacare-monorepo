@@ -193,6 +193,22 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md)
 - Next review: next 04B slice or founder waiver of remaining acceptance items
 
+### 2026-09-25: Phase 08 Twilio Virtual Phone SMS smoke (US1 Trial)
+
+- Owner: engineering (loopback operator)
+- Status: closed (channel smoke); IE1 credentials still open
+- Summary: Loopback SMS to Twilio Virtual Phone `+18777804236` via
+  `TWILIO_MESSAGING_SERVICE_SID` delivered (`SM8417964bd3affb356325af38530cb5d2`,
+  status `delivered`) using the same `sendViaTwilio` client as
+  `POST /me/phone/verify-start`. Account type Trial, **US1** Auth Token.
+  `region=ie1`/`edge=dublin` with the US1 token returns Twilio `20003` —
+  install an IE1 Auth Token (or API key) before claiming EU residency. Env
+  typo `TWILIO_MESSAGE_SERVICE_SID` is ignored by code. **`invoice.issued` /
+  `invoice.failed` stay off** `NOTIFICATION_KINDS`. No Phase 09 / FT POST.
+- Related: [`execution-plan/phases/08-notifications-lane1.md`](./execution-plan/phases/08-notifications-lane1.md),
+  [`integration-runbooks.md`](./integration-runbooks.md)
+- Next review: when IE1 credentials land in env (Vercel + local)
+
 ### 2026-09-22: Phase 01–08 closeout before Phase 09 (resume 04B)
 
 - Owner: engineering (founder directive)
@@ -207,6 +223,10 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
   local Twilio; **`invoice.issued` stays off** `NOTIFICATION_KINDS` until
   invoicing opens. Do **not** invent DPO/legal sign-off. Phase 09 must not
   start until this closeout is reported.
+- Clarification (2026-09-25): Phase **05** loopback evidence closed via `#113`.
+  Phase **08** Virtual Phone SMS smoke closed (US1 Trial deliver); IE1 Auth
+  Token still required for EU path. Remaining closeout is mostly **04B founder
+  human evidence** + hard-blocked **07** FT / `invoice.issued`.
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
   ADR-023
 - Next review: after 04B exit gate or founder waiver

@@ -5097,14 +5097,20 @@ status; suppress future sends on hard bounce.</li>
 </ol>
 <h2 id="08-notifications-lane1--acceptance-criteria"><a class="anchor" href="#08-notifications-lane1--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-24):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
+<p><strong>Closeout status (2026-09-25):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
 main. <strong>Exit-gate items still BLOCKED / deferred:</strong> do not add
 <code>invoice.issued</code> / <code>invoice.failed</code> to <code>NOTIFICATION_KINDS</code> while
-<code>issueInvoice()</code> is closed. Local Twilio SMS smoke against Virtual Phone
-<code>+18777804236</code> was <strong>not</strong> re-run this closeout (Stripe CLI / member e2e
-blocked first). Skipping the SMS smoke for <strong>this attempt</strong> does not waive
-Phase 08 acceptance — live SMS evidence remains required for the exit gate
-unless the founder explicitly waives it. SMS channel remains engineered.</p>
+<code>issueInvoice()</code> is closed.</p>
+<p><strong>Twilio SMS Virtual Phone smoke (2026-09-25, loopback):</strong> <strong>PASS</strong> —
+Messaging Service SID (<code>TWILIO_MESSAGING_SERVICE_SID</code> / <code>MG…</code>) →
+<code>+18777804236</code>, message SID <code>SM8417964bd3affb356325af38530cb5d2</code>, status
+<code>delivered</code> (Twilio Trial, <strong>US1</strong> credentials). Same <code>sendViaTwilio</code> path
+used by <code>POST /me/phone/verify-start</code> OTP. <strong>Not claimed:</strong> IE1 EU residency
+— local <code>TWILIO_AUTH_TOKEN</code> is US1-only; <code>region=ie1</code>/<code>edge=dublin</code> returns
+Twilio <code>20003</code> until an IE1 Auth Token (or API key) is installed from Console
+Region selector. Do not set <code>TWILIO_REGION=ie1</code> against a US1 token. Env typo
+watch: <code>TWILIO_MESSAGE_SERVICE_SID</code> (singular) is ignored — use
+<code>TWILIO_MESSAGING_SERVICE_SID</code>.</p>
 <h3 id="08-notifications-lane1--founder-evidence-checklist-08"><a class="anchor" href="#08-notifications-lane1--founder-evidence-checklist-08" aria-label="Link to section">#</a>Founder evidence checklist (08)</h3>
 <table>
 <thead>
@@ -5121,8 +5127,8 @@ unless the founder explicitly waives it. SMS channel remains engineered.</p>
 </tr>
 <tr>
 <td>Twilio SMS Virtual Phone smoke</td>
-<td>Engineered</td>
-<td>Operator-run <code>+18777804236</code> when ready — required unless founder explicitly waives</td>
+<td><strong>PASS</strong> (US1 Trial deliver)</td>
+<td>IE1 regional Auth Token for prod EU path — operator; not a fake EU pass</td>
 </tr>
 <tr>
 <td><code>invoice.issued</code> / <code>invoice.failed</code> kinds</td>

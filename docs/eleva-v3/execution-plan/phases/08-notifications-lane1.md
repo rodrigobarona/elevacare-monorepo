@@ -148,22 +148,29 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-24):** Lane 1 + Resend webhooks + Lane 2 stub are on
+> **Closeout status (2026-09-25):** Lane 1 + Resend webhooks + Lane 2 stub are on
 > main. **Exit-gate items still BLOCKED / deferred:** do not add
 > `invoice.issued` / `invoice.failed` to `NOTIFICATION_KINDS` while
-> `issueInvoice()` is closed. Local Twilio SMS smoke against Virtual Phone
-> `+18777804236` was **not** re-run this closeout (Stripe CLI / member e2e
-> blocked first). Skipping the SMS smoke for **this attempt** does not waive
-> Phase 08 acceptance — live SMS evidence remains required for the exit gate
-> unless the founder explicitly waives it. SMS channel remains engineered.
+> `issueInvoice()` is closed.
+>
+> **Twilio SMS Virtual Phone smoke (2026-09-25, loopback):** **PASS** —
+> Messaging Service SID (`TWILIO_MESSAGING_SERVICE_SID` / `MG…`) →
+> `+18777804236`, message SID `SM8417964bd3affb356325af38530cb5d2`, status
+> `delivered` (Twilio Trial, **US1** credentials). Same `sendViaTwilio` path
+> used by `POST /me/phone/verify-start` OTP. **Not claimed:** IE1 EU residency
+> — local `TWILIO_AUTH_TOKEN` is US1-only; `region=ie1`/`edge=dublin` returns
+> Twilio `20003` until an IE1 Auth Token (or API key) is installed from Console
+> Region selector. Do not set `TWILIO_REGION=ie1` against a US1 token. Env typo
+> watch: `TWILIO_MESSAGE_SERVICE_SID` (singular) is ignored — use
+> `TWILIO_MESSAGING_SERVICE_SID`.
 >
 > ### Founder evidence checklist (08)
 >
-> | Item                                             | Engineering        | Evidence still needed                                                              |
-> | ------------------------------------------------ | ------------------ | ---------------------------------------------------------------------------------- |
-> | Lane 1 booking confirm / reminder / cancel email | Shipped            | Operator inbox proof (locale + ICS) — required unless founder explicitly waives    |
-> | Twilio SMS Virtual Phone smoke                   | Engineered         | Operator-run `+18777804236` when ready — required unless founder explicitly waives |
-> | `invoice.issued` / `invoice.failed` kinds        | **Keep off** union | Opens only with Phase 07 issuance                                                  |
+> | Item                                             | Engineering                  | Evidence still needed                                                           |
+> | ------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------- |
+> | Lane 1 booking confirm / reminder / cancel email | Shipped                      | Operator inbox proof (locale + ICS) — required unless founder explicitly waives |
+> | Twilio SMS Virtual Phone smoke                   | **PASS** (US1 Trial deliver) | IE1 regional Auth Token for prod EU path — operator; not a fake EU pass         |
+> | `invoice.issued` / `invoice.failed` kinds        | **Keep off** union           | Opens only with Phase 07 issuance                                               |
 
 - [ ] Templates are **mode-aware** (`bookings.mode` snapshot): online -> "your video link arrives
       before the session" + join CTA (Phase 9), phone -> "your expert will call you on" + the masked number (e-mail body only), in person -> location name, address, "Open in Maps" link and the location's
