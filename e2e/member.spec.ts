@@ -29,7 +29,7 @@ import {
 
 const runMemberJourney = process.env.E2E_MEMBER === "1"
 const runLiveStripe = process.env.E2E_LIVE_STRIPE === "1"
-const CANCEL_MIN_START = () => new Date(Date.now() + 25 * 60 * 60 * 1000)
+const CANCEL_MIN_START = () => new Date(Date.now() + 48 * 60 * 60 * 1000)
 
 function cookieHeaderFromPage(
   cookies: Array<{ name: string; value: string }>
@@ -125,10 +125,14 @@ test.describe("member Space journey", () => {
     )
     await page.getByTestId("booking-continue-details").click()
     const reserveResponse = await reserve
-    test.skip(
-      reserveResponse.status() !== 201,
-      `POST /bookings/reserve returned ${reserveResponse.status()}`
-    )
+    if (reserveResponse.status() !== 201) {
+      // Drop the dangling intent waiter so skip does not throw "Test ended".
+      void intent.catch(() => undefined)
+      test.skip(
+        true,
+        `POST /bookings/reserve returned ${reserveResponse.status()}`
+      )
+    }
     const intentResponse = await intent
     test.skip(
       ![200, 201].includes(intentResponse.status()),
