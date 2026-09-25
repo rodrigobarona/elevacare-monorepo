@@ -127,6 +127,10 @@ status, installed_at)` encrypted with `encryptForOrg`; OAuth callback routes in 
   (monthly, 1st at 05:00 Lisbon) comparing ledger platform fees (`booking_payments.application_fee_cents`,
   net of refunds) per expert vs Tier 1 invoice minus credit-note totals;
   mismatch > 0.1% -> BetterStack alert + `accounting_reconciliation_runs` row for admin.
+  **Deferred** (audit AUD-006, founder-approved 2026-09-25): the shipped job
+  compares against `expert_invoices` (Tier 2). Retarget it to platform-fee
+  invoices minus credit notes in the PR that opens `issueInvoice()`; until then
+  its mismatches are not a signal.
 - Flags: `ff.toconline_invoicing_enabled`, `ff.expert_invoicing_apps_enabled`,
   `ff.invoicing.toconline`, `ff.invoicing.moloni` via `@eleva/flags`.
 
@@ -159,13 +163,13 @@ connected|disconnected`).
 >
 > ### Founder evidence checklist (07 — blocked vs waive)
 >
-> | Item                                                            | Status                                                                                                                                                                                                                                                                                                                       |
-> | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | Closed-gate engineering (`issueInvoice()` refuses POST)         | Shipped — keep closed                                                                                                                                                                                                                                                                                                        |
-> | ELEVA series communication (legally required before auto-issue) | **Blocked** — operator/accountant prerequisite; not waived by founder engineering approval                                                                                                                                                                                                                                   |
-> | Remaining fiscal params (tax codes / rates / legal mentions)    | **Blocked** — Manolo/accountant confirmation                                                                                                                                                                                                                                                                                 |
-> | Live FT POST / Comunicação / finalize                           | **Blocked** — founder/DPO/fiscal params **and** ELEVA series communication; **not waived** (04B human-evidence waiver 2026-09-25 does not cover this)                                                                                                                                                                        |
-> | Phase 09 start                                                  | **Blocked** on these hard tax/issuance gates **and** D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do **not** start Phase 09 until FT POST / Comunicação / `invoice.issued` open or a separate founder waiver explicitly names all three gates, **and** D-07 is signed |
+> | Item                                                            | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+> | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Closed-gate engineering (`issueInvoice()` refuses POST)         | Shipped — keep closed                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+> | ELEVA series communication (legally required before auto-issue) | **Blocked** — operator/accountant prerequisite; not waived by founder engineering approval                                                                                                                                                                                                                                                                                                                                                                                                              |
+> | Remaining fiscal params (tax codes / rates / legal mentions)    | **Blocked** — Manolo/accountant confirmation                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+> | Live FT POST / Comunicação / finalize                           | **Blocked** — founder/DPO/fiscal params **and** ELEVA series communication; **not waived** (04B human-evidence waiver 2026-09-25 does not cover this)                                                                                                                                                                                                                                                                                                                                                   |
+> | Phase 09 start                                                  | **Blocked** on these hard tax/issuance gates **and** D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do **not** start Phase 09 until the audit fix pack (AUD-001/002/003/008/009/013) is merged, FT POST / Comunicação / `invoice.issued` open or a separate founder waiver explicitly names all three gates, **and** D-07 is signed. Only exception: the docs/evidence-only 09.0 spike may start while D-07 is in motion (decision log 2026-09-25) |
 
 **PR 07.1 issuance is deferred.** Do not treat `issuePlatformFeeInvoice` reaching `issued`,
 finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
@@ -180,8 +184,9 @@ Those checks wait for confirmed fiscal parameters (tax codes, rates, legal menti
       then `status = failed` and alerts (Sentry + ops e-mail); slow stage: `invoicing-retry`
       (every 30 min) re-processes `failed` rows with backoff up to **10 further attempts**, then
       `status = dead_lettered`, writes `workflow_dead_letters` and raises the admin flag
-      (Phase 12 queue). Payout remaining `approval_required` until a real issued fee invoice
-      exists is already the Phase 6 behavior — do not simulate an issued FT to unblock it.
+      (Phase 12 queue). Payouts do **not** wait for an issued fee invoice today (founder
+      waiver AUD-007, 2026-09-25, while `issueInvoice()` is closed); the PR that opens
+      issuance adds that gate. Never simulate an issued FT to unblock anything.
 - [ ] Credit-note path is implemented in code and tests with the issuance gate still closed;
       do not issue or communicate a TEST NC.
 - [ ] Expert in Auto mode (TOConline) -> OAuth connected, TEST series lookup,
@@ -194,6 +199,9 @@ Those checks wait for confirmed fiscal parameters (tax codes, rates, legal menti
 - [ ] Expert cannot complete Become-Partner without Auto connection or Manual acknowledgment.
 - [ ] Reconciliation job on a seeded month produces a run row and no false mismatch; injected
       mismatch triggers alert path (mocked).
+      **Deferred** (audit AUD-006, founder-approved 2026-09-25): not a phase-closure
+      criterion until the job is retargeted to platform-fee invoices minus credit notes in
+      the PR that opens `issueInvoice()`.
 - [ ] All TOConline calls originate from `packages/accounting` (boundary grep for
       `api33.toconline.pt` outside the package returns nothing).
 - [ ] IVA matrix tests match the accountant 2026-09-15 conditions (not the old automatic
@@ -388,16 +396,19 @@ fictitious TOConline docs, do not use ELEVA production series to simulate.
    structured-log subscriber now (Phase 8 registers sendNotification, idempotent on that key).
    Tests: the same webhook replayed twice -> one invoice row, one outbox row; a simulated crash
    after commit and before publish -> exactly one delivered event on the next publisher run.
-   Transfer gate: the Phase 6 payout engine (packages/billing payouts) must check
-   platform_fee_invoices.status = issued for the booking before creating any Stripe transfer and
-   skip (not fail) the payout run for that booking until it is — add that check and its test in
-   this phase. On refund or transfer
+   Transfer gate (waived while issueInvoice() is closed — founder AUD-007, 2026-09-25): do NOT
+   add it in this phase. The PR that opens issueInvoice() / FT POST adds the check that the Phase
+   6 payout engine (packages/billing payouts) sees platform_fee_invoices.status = issued for the
+   booking before creating any Stripe transfer, skipping (not failing) the payout run until it
+   is, with its test. On refund or transfer
    reversal with an issued invoice -> issuePlatformFeeCreditNote (full or proportional). Flag gate ff.toconline_invoicing_enabled (default off;
    on for staging).
 4. Workflows: packages/workflows/src/invoicing/{invoicing-retry.ts (every 30 min; slow stage of
    the retry policy in item 3: re-processes failed rows with backoff, max 10 further attempts,
    then dead_lettered + workflow_dead_letters + admin flag; test the 5 + 10 boundary), stripe-toconline-
-   reconciliation.ts (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
+   reconciliation.ts (deferred — founder AUD-006, 2026-09-25: the job shipped in this phase
+   compares against expert_invoices (Tier 2) and its mismatches are not a signal; the PR that
+   opens issueInvoice() retargets it to the platform-fee spec that follows) (monthly 1st 05:00 Europe/Lisbon; sum booking_payments.application_fee_cents
    per expert net of refunds — there is NO Stripe application-fee object in the separate charges
    and transfers flow — vs platform_fee_invoices minus credit notes; cross-check gross charge
    totals against Stripe balance transactions only as a sanity check; write run row; mismatch >
