@@ -127,6 +127,10 @@ status, installed_at)` encrypted with `encryptForOrg`; OAuth callback routes in 
   (monthly, 1st at 05:00 Lisbon) comparing ledger platform fees (`booking_payments.application_fee_cents`,
   net of refunds) per expert vs Tier 1 invoice minus credit-note totals;
   mismatch > 0.1% -> BetterStack alert + `accounting_reconciliation_runs` row for admin.
+  **Deferred** (audit AUD-006, founder-approved 2026-09-25): the shipped job
+  compares against `expert_invoices` (Tier 2). Retarget it to platform-fee
+  invoices minus credit notes in the PR that opens `issueInvoice()`; until then
+  its mismatches are not a signal.
 - Flags: `ff.toconline_invoicing_enabled`, `ff.expert_invoicing_apps_enabled`,
   `ff.invoicing.toconline`, `ff.invoicing.moloni` via `@eleva/flags`.
 

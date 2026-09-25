@@ -4150,7 +4150,7 @@ is intentional under Hobby / abuse constraints.</p>
 <tr>
 <td>Pay → eligible → <strong>transfer</strong> → payout</td>
 <td>Code on main</td>
-<td><strong>Blocked by Phase 07 issuance gate</strong> — a real issued platform-fee invoice is required before transfer; do not bypass <code>issueInvoice()</code> / FT POST to obtain this evidence. Until 07 opens, treat transfer/payout as staging-only after fiscal unlock, or founder-waive the transfer leg with that prerequisite named</td>
+<td>Stripe <strong>test-mode</strong> / staging. Code does <strong>not</strong> wait for an issued platform-fee invoice before transfer — founder waiver AUD-007 (2026-09-25) while <code>issueInvoice()</code> is closed; the PR that opens issuance adds the skip-until-issued check. Never bypass <code>issueInvoice()</code> / FT POST</td>
 </tr>
 <tr>
 <td>Connect Embedded onboarding unlock predicate</td>
@@ -4610,7 +4610,11 @@ page shows invoice status with retry and &quot;mark as issued manually&quot;.</l
 <li>Workflows: <code>invoicing-retry</code> DLQ processor (every 30 min) and <code>stripe-toconline-reconciliation</code>
 (monthly, 1st at 05:00 Lisbon) comparing ledger platform fees (<code>booking_payments.application_fee_cents</code>,
 net of refunds) per expert vs Tier 1 invoice minus credit-note totals;
-mismatch &gt; 0.1% -&gt; BetterStack alert + <code>accounting_reconciliation_runs</code> row for admin.</li>
+mismatch &gt; 0.1% -&gt; BetterStack alert + <code>accounting_reconciliation_runs</code> row for admin.
+<strong>Deferred</strong> (audit AUD-006, founder-approved 2026-09-25): the shipped job
+compares against <code>expert_invoices</code> (Tier 2). Retarget it to platform-fee
+invoices minus credit notes in the PR that opens <code>issueInvoice()</code>; until then
+its mismatches are not a signal.</li>
 <li>Flags: <code>ff.toconline_invoicing_enabled</code>, <code>ff.expert_invoicing_apps_enabled</code>,
 <code>ff.invoicing.toconline</code>, <code>ff.invoicing.moloni</code> via <code>@eleva/flags</code>.</li>
 </ul>
@@ -5171,7 +5175,9 @@ ICS because calendar files sync to third-party providers).</li>
 <li><input disabled="" type="checkbox"> Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash <code>notBefore</code>
 or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
 <li><input disabled="" type="checkbox"> Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
-(<code>booking.reminder_1h</code>) bypass.</li>
+(<code>booking.reminder_1h</code>) bypass.
+<strong>Deferred to Phase 13</strong> (audit AUD-004, founder-approved 2026-09-25):
+preferences store quiet hours but <code>sendNotification</code> does not read them.</li>
 <li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice for the same recipient -&gt; one delivery per channel; the same
 <code>idempotencyKey</code> for member and expert (booking.confirmed) -&gt; both delivered (test both).</li>
 <li><input disabled="" type="checkbox"> SMS sent only with verified phone + opt-in; Twilio EU region used.</li>

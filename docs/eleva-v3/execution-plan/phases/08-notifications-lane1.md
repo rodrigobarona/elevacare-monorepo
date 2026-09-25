@@ -183,6 +183,8 @@ Out: push (Expo) — post-launch; Novu (retired).
       or a shortened test schedule); cancelled booking -> reminders skipped.
 - [ ] Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
       (`booking.reminder_1h`) bypass.
+      **Deferred to Phase 13** (audit AUD-004, founder-approved 2026-09-25):
+      preferences store quiet hours but `sendNotification` does not read them.
 - [ ] Same `idempotencyKey` twice for the same recipient -> one delivery per channel; the same
       `idempotencyKey` for member and expert (booking.confirmed) -> both delivered (test both).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.
