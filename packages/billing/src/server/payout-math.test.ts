@@ -5,11 +5,120 @@ import {
   computeEligibleAt,
   cumulativeReversalCents,
   evaluateRefundPolicy,
+  initialPayoutState,
+  isDefinitiveStripeRejection,
   needsPayoutApproval,
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
   snapToNext0400Lisbon,
+  transferBlockReason,
 } from "./payout-math"
+
+describe("transferBlockReason", () => {
+  const ok = {
+    paymentStatus: "succeeded",
+    disputeStatus: "none",
+    bookingStatus: "completed",
+  }
+
+  it("allows a succeeded, undisputed, delivered booking", () => {
+    expect(transferBlockReason(ok)).toBeNull()
+  })
+
+  it.each(["refund_pending", "refunded", "failed"])(
+    "blocks when the payment is %s",
+    (paymentStatus) => {
+      expect(transferBlockReason({ ...ok, paymentStatus })).toBe(
+        "payment_not_succeeded"
+      )
+    }
+  )
+
+  it("blocks while a dispute is open", () => {
+    expect(transferBlockReason({ ...ok, disputeStatus: "open" })).toBe(
+      "dispute_open"
+    )
+  })
+
+  it.each(["cancelled", "refunded"])(
+    "blocks a %s booking even if the payment flip was missed",
+    (bookingStatus) => {
+      expect(transferBlockReason({ ...ok, bookingStatus })).toBe(
+        "booking_cancelled"
+      )
+    }
+  )
+})
+
+describe("isDefinitiveStripeRejection", () => {
+  it("treats 4xx invalid-request errors as definitive", () => {
+    expect(
+      isDefinitiveStripeRejection({
+        type: "StripeInvalidRequestError",
+        statusCode: 400,
+        code: "balance_insufficient",
+      })
+    ).toBe(true)
+  })
+
+  it.each([
+    { type: "StripeIdempotencyError", statusCode: 400 },
+    { code: "idempotency_error", statusCode: 409 },
+    { code: "lock_timeout", statusCode: 400 },
+    { type: "StripeRateLimitError", statusCode: 429 },
+    { type: "StripeAPIError", statusCode: 500 },
+    { type: "StripeConnectionError" },
+    new Error("socket hang up"),
+  ])("keeps the key for ambiguous failures (%o)", (err) => {
+    expect(isDefinitiveStripeRejection(err)).toBe(false)
+  })
+})
+
+describe("initialPayoutState", () => {
+  const base = {
+    amountCents: 8_500,
+    grossCents: 10_000,
+    refundedCents: 0,
+    disputeStatus: "none",
+    needsApproval: false,
+  }
+
+  it("starts pending for an untouched charge", () => {
+    expect(initialPayoutState(base)).toEqual({
+      status: "pending",
+      reversedCents: 0,
+      holdReasons: [],
+      heldFromStatus: null,
+    })
+  })
+
+  it("carries a refund that landed before the payout row", () => {
+    expect(initialPayoutState({ ...base, refundedCents: 5_000 })).toMatchObject(
+      { status: "pending", reversedCents: 4_250 }
+    )
+  })
+
+  it("is reversed when the charge was already fully refunded", () => {
+    expect(
+      initialPayoutState({ ...base, refundedCents: 10_000 })
+    ).toMatchObject({ status: "reversed", reversedCents: 8_500 })
+  })
+
+  it("holds for a dispute opened before the payout row", () => {
+    expect(
+      initialPayoutState({
+        ...base,
+        disputeStatus: "open",
+        needsApproval: true,
+      })
+    ).toEqual({
+      status: "held",
+      reversedCents: 0,
+      holdReasons: ["dispute"],
+      heldFromStatus: "approval_required",
+    })
+  })
+})
 
 describe("needsPayoutApproval", () => {
   it("is inclusive at the 50000 cent threshold", () => {

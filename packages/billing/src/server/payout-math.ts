@@ -195,6 +195,103 @@ export function nextPayoutStatusAfterRefund(input: {
   return input.previousStatus
 }
 
+export type TransferBlockReason =
+  | "payment_not_succeeded"
+  | "dispute_open"
+  | "booking_cancelled"
+
+/**
+ * A scheduled payout must not move money once the member is owed a refund:
+ * cancel / account deletion flip the payment to `refund_pending` before the
+ * refund exists, so the transfer run is the last line of defence.
+ */
+export function transferBlockReason(input: {
+  paymentStatus: string
+  disputeStatus: string | null
+  bookingStatus: string | null
+}): TransferBlockReason | null {
+  if (input.paymentStatus !== "succeeded") return "payment_not_succeeded"
+  if (input.disputeStatus === "open") return "dispute_open"
+  if (
+    input.bookingStatus === "cancelled" ||
+    input.bookingStatus === "refunded"
+  ) {
+    return "booking_cancelled"
+  }
+  return null
+}
+
+/**
+ * Stripe v1 replays the saved response for an idempotency key, errors
+ * included, so a new key is only safe when Stripe definitively rejected the
+ * request (no transfer can exist). Conflicts, rate limits, 5xx and network
+ * errors are ambiguous: keep the key and let the next run replay it.
+ */
+export function isDefinitiveStripeRejection(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false
+  const statusCode =
+    "statusCode" in err && typeof err.statusCode === "number"
+      ? err.statusCode
+      : null
+  const code = "code" in err ? String(err.code) : ""
+  const type = "type" in err ? String(err.type) : ""
+  if (code === "idempotency_error" || type.includes("Idempotency")) {
+    return false
+  }
+  if (code === "lock_timeout") return false
+  return (
+    statusCode === 400 ||
+    statusCode === 402 ||
+    statusCode === 403 ||
+    statusCode === 404
+  )
+}
+
+/**
+ * Refunds and disputes can land before the payout row exists (webhook
+ * order is not guaranteed), so the row starts from the payment's current
+ * refund / dispute state instead of assuming an untouched charge.
+ */
+export function initialPayoutState(input: {
+  amountCents: number
+  grossCents: number
+  refundedCents: number
+  disputeStatus: string | null
+  needsApproval: boolean
+}): {
+  status: PayoutStatus
+  reversedCents: number
+  holdReasons: HoldReason[]
+  heldFromStatus: PayoutStatus | null
+} {
+  const reversedCents = cumulativeReversalCents({
+    refundedToDate: input.refundedCents,
+    grossCents: input.grossCents,
+    transferredCents: input.amountCents,
+    reversedToDate: 0,
+  })
+  const base: PayoutStatus = input.needsApproval
+    ? "approval_required"
+    : "pending"
+  if (input.amountCents > 0 && reversedCents >= input.amountCents) {
+    return {
+      status: "reversed",
+      reversedCents,
+      holdReasons: [],
+      heldFromStatus: null,
+    }
+  }
+  if (input.disputeStatus === "open") {
+    return {
+      status: "held",
+      reversedCents,
+      holdReasons: ["dispute"],
+      heldFromStatus: base,
+    }
+  }
+  return { status: base, reversedCents, holdReasons: [], heldFromStatus: null }
+}
+
 export function nextPayoutStatusAfterTransferReversed(input: {
   full: boolean
   status: PayoutStatus

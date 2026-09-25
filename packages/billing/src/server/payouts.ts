@@ -19,8 +19,11 @@ import {
   applyHoldSet,
   clearHoldSet,
   computeEligibleAt,
+  initialPayoutState,
+  isDefinitiveStripeRejection,
   needsPayoutApproval,
   payoutApprovalThresholdCents,
+  transferBlockReason,
   type HoldReason,
   type PayoutStatus,
 } from "./payout-math"
@@ -37,64 +40,21 @@ async function findTransferIdForPayoutState(input: {
   destination: string
   transferGroup: string
 }): Promise<string | null> {
-  const page = await stripe().transfers.list({
-    destination: input.destination,
-    transfer_group: input.transferGroup,
-    limit: 100,
-  })
-  const match = page.data.find(
-    (row) => row.metadata?.payout_state_id === input.payoutStateId
-  )
-  return match?.id ?? null
-}
-
-async function remintTransferIdempotencyKey(input: {
-  payout: PayoutRow
-  transferAmount: number
-}): Promise<string | null> {
-  const nextKey = crypto.randomUUID()
-  try {
-    return await withPlatformAudit(
-      { orgId: input.payout.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        const [row] = await tx
-          .update(main.payoutStates)
-          .set({
-            transferIdempotencyKey: nextKey,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(main.payoutStates.id, input.payout.id),
-              eq(main.payoutStates.status, "scheduled")
-            )
-          )
-          .returning({
-            transferIdempotencyKey: main.payoutStates.transferIdempotencyKey,
-          })
-        if (!row) {
-          throw new PayoutError(
-            "CONCURRENT_TRANSITION",
-            "Payout is no longer scheduled"
-          )
-        }
-        await ctx.emit({
-          entity: "payout",
-          action: "updated",
-          entityId: input.payout.id,
-          payload: {
-            remintedTransferKey: true,
-            transferAmount: input.transferAmount,
-          },
-        })
-        return row.transferIdempotencyKey
-      }
+  let startingAfter: string | undefined
+  for (;;) {
+    const page = await stripe().transfers.list({
+      destination: input.destination,
+      transfer_group: input.transferGroup,
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    })
+    const match = page.data.find(
+      (row) => row.metadata?.payout_state_id === input.payoutStateId
     )
-  } catch (err) {
-    if (isPayoutError(err) && err.code === "CONCURRENT_TRANSITION") {
-      return null
-    }
-    throw err
+    if (match) return match.id
+    const lastId = page.data.at(-1)?.id
+    if (!page.has_more || !lastId) return null
+    startingAfter = lastId
   }
 }
 
@@ -220,7 +180,14 @@ export async function createPayoutStateForPaidPayment(input: {
     isFirstPayoutForAccount: snapshot.isFirstPayout,
     thresholdCents,
   })
-  const status: PayoutStatus = approval ? "approval_required" : "pending"
+  const initial = initialPayoutState({
+    amountCents,
+    grossCents: snapshot.payment.amountCents,
+    refundedCents: snapshot.payment.refundedCents,
+    disputeStatus: snapshot.payment.disputeStatus,
+    needsApproval: approval,
+  })
+  const status = initial.status
   const id = crypto.randomUUID()
 
   const result = await withAudit(
@@ -237,6 +204,9 @@ export async function createPayoutStateForPaidPayment(input: {
           destinationConnectAccountId: snapshot.connectAccountId!,
           status,
           amountCents,
+          reversedCents: initial.reversedCents,
+          holdReasons: initial.holdReasons,
+          heldFromStatus: initial.heldFromStatus,
           eligibleAt,
           scheduledFor: approval ? null : eligibleAt,
         })
@@ -269,12 +239,14 @@ export async function createPayoutStateForPaidPayment(input: {
           bookingPaymentId: input.bookingPaymentId,
           status,
           amountCents,
+          reversedCents: initial.reversedCents,
+          holdReasons: initial.holdReasons,
           eligibleAt: eligibleAt.toISOString(),
           thresholdCents,
           firstPayout: snapshot.isFirstPayout,
         },
       })
-      if (approval) {
+      if (status === "approval_required") {
         await emitPaymentPayoutNotificationEvent(tx, {
           orgId: input.orgId,
           type: "payout.approval_required",
@@ -522,15 +494,32 @@ export async function executeTransfer(payoutStateId: string): Promise<{
   if (new Date().getTime() < current.eligibleAt.getTime()) {
     return { status: "skipped", stripeTransferId: null }
   }
-  const [payment] = await withOrgContext(current.orgId, async (tx) =>
+  const [row] = await withOrgContext(current.orgId, async (tx) =>
     tx
-      .select()
+      .select({
+        payment: main.bookingPayments,
+        bookingStatus: main.bookings.status,
+      })
       .from(main.bookingPayments)
+      .leftJoin(
+        main.bookings,
+        eq(main.bookings.id, main.bookingPayments.bookingId)
+      )
       .where(eq(main.bookingPayments.id, current.bookingPaymentId))
       .limit(1)
   )
+  const payment = row?.payment
   if (!payment?.stripeChargeId) {
     throw new PayoutError("CHARGE_MISSING", "No charge id on booking payment")
+  }
+  if (
+    transferBlockReason({
+      paymentStatus: payment.status,
+      disputeStatus: payment.disputeStatus,
+      bookingStatus: row?.bookingStatus ?? null,
+    })
+  ) {
+    return { status: "skipped", stripeTransferId: null }
   }
 
   const transferAmount = current.amountCents - current.reversedCents
@@ -539,6 +528,7 @@ export async function executeTransfer(payoutStateId: string): Promise<{
   }
 
   let transferId: string | null = null
+  let rotateKey = false
   try {
     const transfer = await stripe().transfers.create(
       {
@@ -556,40 +546,15 @@ export async function executeTransfer(payoutStateId: string): Promise<{
     )
     transferId = transfer.id
   } catch (err) {
-    let failure: unknown = err
+    const failure: unknown = err
     if (isStripeIdempotencyError(err)) {
       transferId = await findTransferIdForPayoutState({
         payoutStateId: current.id,
         destination: current.destinationConnectAccountId,
         transferGroup: payment.bookingId,
       })
-      if (!transferId) {
-        const nextKey = await remintTransferIdempotencyKey({
-          payout: current,
-          transferAmount,
-        })
-        if (nextKey) {
-          try {
-            const transfer = await stripe().transfers.create(
-              {
-                amount: transferAmount,
-                currency: "eur",
-                destination: current.destinationConnectAccountId,
-                transfer_group: payment.bookingId,
-                source_transaction: payment.stripeChargeId,
-                metadata: {
-                  payout_state_id: current.id,
-                  booking_payment_id: current.bookingPaymentId,
-                },
-              },
-              { idempotencyKey: nextKey }
-            )
-            transferId = transfer.id
-          } catch (retryErr) {
-            failure = retryErr
-          }
-        }
-      }
+    } else {
+      rotateKey = isDefinitiveStripeRejection(err)
     }
     if (!transferId) {
       const message =
@@ -608,6 +573,9 @@ export async function executeTransfer(payoutStateId: string): Promise<{
                 status: sql`CASE WHEN ${main.payoutStates.attempts} + 1 >= ${TRANSFER_MAX_ATTEMPTS} THEN 'failed'::payout_status ELSE 'scheduled'::payout_status END`,
                 attempts: sql`${main.payoutStates.attempts} + 1`,
                 lastError: message.slice(0, 2000),
+                transferIdempotencyKey: rotateKey
+                  ? crypto.randomUUID()
+                  : undefined,
                 updatedAt: new Date(),
               })
               .where(
@@ -643,6 +611,7 @@ export async function executeTransfer(payoutStateId: string): Promise<{
               payload: {
                 attempts: row.attempts,
                 lastError: message.slice(0, 200),
+                transferKeyRotated: rotateKey,
               },
             })
             return row

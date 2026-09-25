@@ -716,6 +716,61 @@ export async function retryFailedTransferReversals(): Promise<{
   return { retried: rows.length }
 }
 
+export const CANCELLATION_REFUND_BATCH_SIZE = 50
+
+/**
+ * Member cancel and account deletion only flip the payment to
+ * `refund_pending` inside their booking transaction (no Stripe calls in a
+ * DB tx). This sweep issues the refund. Payments whose refund is already in
+ * flight at Stripe are left to the `charge.refunded` / `refund.updated`
+ * webhooks.
+ */
+export async function processPendingCancellationRefunds(): Promise<{
+  scanned: number
+  refunded: number
+  pending: number
+  failed: number
+}> {
+  const rows = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({ id: main.bookingPayments.id })
+      .from(main.bookingPayments)
+      .where(
+        and(
+          eq(main.bookingPayments.status, "refund_pending"),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${main.bookingRefunds}
+            WHERE ${main.bookingRefunds.bookingPaymentId} = ${main.bookingPayments.id}
+              AND ${main.bookingRefunds.status} = 'pending'
+          )`
+        )
+      )
+      .orderBy(main.bookingPayments.id)
+      .limit(CANCELLATION_REFUND_BATCH_SIZE)
+  )
+  const result = { scanned: rows.length, refunded: 0, pending: 0, failed: 0 }
+  for (const row of rows) {
+    try {
+      const refund = await refundBookingPayment({
+        bookingPaymentId: row.id,
+        reason: "requested_by_customer",
+        actorUserId: null,
+        actingOrgId: "platform",
+        idempotencyKey: "cancellation",
+      })
+      if (refund.status === "succeeded") result.refunded += 1
+      else result.pending += 1
+    } catch (err) {
+      result.failed += 1
+      void captureException(err, {
+        bookingPaymentId: row.id,
+        probe: "cancellation-refund-sweep",
+      })
+    }
+  }
+  return result
+}
+
 export async function applyDisputeOpened(input: {
   bookingPaymentId: string
 }): Promise<void> {
@@ -808,7 +863,7 @@ export async function applyDisputeClosed(input: {
         .where(eq(main.payoutStates.bookingPaymentId, input.bookingPaymentId))
         .limit(1)
       let refundId: string | null = null
-      if (!input.won && row) {
+      if (!input.won && (row || chargeRefundCents > 0)) {
         const [inserted] = await tx
           .insert(main.bookingRefunds)
           .values({

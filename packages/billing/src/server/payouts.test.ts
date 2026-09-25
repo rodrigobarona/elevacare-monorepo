@@ -46,11 +46,16 @@ const paidPayment = {
   stripeChargeId: "ch_test",
   amountCents: 10_000,
   refundedCents: 0,
+  status: "succeeded",
+  disputeStatus: "none",
 }
 
 let persistAttempts = 0
 let persistFailOnce = false
 let failUpdateEmpty = false
+let paymentStatus = "succeeded"
+let bookingStatus = "completed"
+const failureSets: Record<string, unknown>[] = []
 
 vi.mock("@eleva/db", () => {
   let currentTable: unknown
@@ -60,11 +65,19 @@ vi.mock("@eleva/db", () => {
       currentTable = table
       return tx
     },
+    leftJoin: () => tx,
     where: () => tx,
     orderBy: () => tx,
     limit: () => {
       if (currentTable === payoutStates) return [scheduledPayout]
-      if (currentTable === bookingPayments) return [paidPayment]
+      if (currentTable === bookingPayments) {
+        return [
+          {
+            payment: { ...paidPayment, status: paymentStatus },
+            bookingStatus,
+          },
+        ]
+      }
       return []
     },
     update: () => tx,
@@ -78,6 +91,7 @@ vi.mock("@eleva/db", () => {
       payoutStates,
       bookingPayments,
       bookingRefunds,
+      bookings: { id: "id", status: "status" },
       workflowDeadLetters: {},
     },
     withPlatformAdminContext: (fn: (handle: typeof tx) => unknown) => fn(tx),
@@ -111,7 +125,10 @@ vi.mock("@eleva/audit", () => ({
   ) => {
     const tx = {
       update: () => tx,
-      set: () => tx,
+      set: (values: Record<string, unknown>) => {
+        failureSets.push(values)
+        return tx
+      },
       where: () => tx,
       returning: () =>
         failUpdateEmpty ? [] : [{ attempts: 1, status: "scheduled" }],
@@ -129,6 +146,9 @@ describe("executeTransfer idempotency", () => {
     persistAttempts = 0
     persistFailOnce = false
     failUpdateEmpty = false
+    paymentStatus = "succeeded"
+    bookingStatus = "completed"
+    failureSets.length = 0
     transferCreate.mockReset()
     const created = new Map<
       string,
@@ -182,6 +202,53 @@ describe("executeTransfer idempotency", () => {
       idempotencyKey: scheduledPayout.transferIdempotencyKey,
     })
   })
+
+  it("never mints a new key when Stripe reports an idempotency conflict", async () => {
+    transferCreate.mockRejectedValueOnce(
+      Object.assign(new Error("in-flight request with this key"), {
+        code: "idempotency_error",
+        statusCode: 409,
+      })
+    )
+    await expect(executeTransfer(scheduledPayout.id)).resolves.toEqual({
+      status: "skipped",
+      stripeTransferId: null,
+    })
+    expect(transferCreate).toHaveBeenCalledTimes(1)
+    expect(failureSets.at(-1)?.transferIdempotencyKey).toBeUndefined()
+  })
+
+  it("rotates the key only after a definitive Stripe rejection", async () => {
+    transferCreate.mockRejectedValueOnce(
+      Object.assign(new Error("Insufficient platform balance"), {
+        type: "StripeInvalidRequestError",
+        code: "balance_insufficient",
+        statusCode: 400,
+      })
+    )
+    await executeTransfer(scheduledPayout.id)
+    expect(transferCreate).toHaveBeenCalledTimes(1)
+    const rotated = failureSets.at(-1)?.transferIdempotencyKey
+    expect(typeof rotated).toBe("string")
+    expect(rotated).not.toBe(scheduledPayout.transferIdempotencyKey)
+  })
+
+  it.each([
+    ["refund_pending", "cancelled"],
+    ["succeeded", "cancelled"],
+    ["refunded", "completed"],
+  ])(
+    "does not transfer when payment is %s and booking is %s",
+    async (payment, booking) => {
+      paymentStatus = payment
+      bookingStatus = booking
+      await expect(executeTransfer(scheduledPayout.id)).resolves.toEqual({
+        status: "skipped",
+        stripeTransferId: null,
+      })
+      expect(transferCreate).not.toHaveBeenCalled()
+    }
+  )
 
   it("skips the failed audit when a concurrent transition already moved the payout", async () => {
     failUpdateEmpty = true
