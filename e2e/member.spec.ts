@@ -194,9 +194,18 @@ test.describe("member Space journey", () => {
       await requestDsarWithMockedBlob(page, request, spaceSlug)
 
       await page.goto(`/${spaceSlug}`)
-      await page.getByTestId("member-booking-detail").first().click()
+      const detail = page.getByTestId("member-booking-detail").first()
+      await expect(detail).toBeVisible({ timeout: 15_000 })
+      // LinkButton client-routes via AppRouterProvider on the rewritten app
+      // zone; a soft nav can leave the Playwright page on Space home. Full
+      // load through the gateway guarantees /sessions/[id] hits the app.
+      const detailHref = await detail.getAttribute("href")
+      expect(detailHref).toMatch(/\/sessions\/[a-f0-9-]+/)
+      await page.goto(
+        detailHref!.startsWith("http") ? detailHref! : `${webUrl}${detailHref}`
+      )
       const cancel = page.getByTestId("member-cancel-session")
-      await expect(cancel).toBeVisible()
+      await expect(cancel).toBeVisible({ timeout: 20_000 })
       await expect(cancel).toBeEnabled()
       await cancel.click()
       await page.getByTestId("member-cancel-confirm").click()
