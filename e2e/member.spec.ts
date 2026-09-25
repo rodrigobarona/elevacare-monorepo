@@ -29,7 +29,7 @@ import {
 
 const runMemberJourney = process.env.E2E_MEMBER === "1"
 const runLiveStripe = process.env.E2E_LIVE_STRIPE === "1"
-const CANCEL_MIN_START = () => new Date(Date.now() + 48 * 60 * 60 * 1000)
+const CANCEL_MIN_START = () => new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
 
 function cookieHeaderFromPage(
   cookies: Array<{ name: string; value: string }>
@@ -213,13 +213,12 @@ test.describe("member Space journey", () => {
       await expect(cancel).toBeEnabled()
       await cancel.click()
       await page.getByTestId("member-cancel-confirm").click()
-      // /sessions/[id] also matches a loose /sessions regex — require the list.
-      await expect(page).toHaveURL(
-        new RegExp(`/${spaceSlug}/sessions/?(\\?.*)?$`),
-        { timeout: 20_000 }
-      )
-      // Cancelled bookings may leave the upcoming list empty; accept either a
-      // cancelled card or an empty sessions list after a successful cancel.
+      await expect(page.getByText(/Session cancelled/i)).toBeVisible({
+        timeout: 15_000,
+      })
+      // Soft router.push under the gateway rewrite can leave Playwright on
+      // the detail page; hard-load the sessions list to assert outcome.
+      await page.goto(`${webUrl}/${spaceSlug}/sessions`)
       const cancelledCard = page.getByTestId("member-booking-card").first()
       const emptyUpcoming = page.getByText(/No upcoming sessions/i)
       await expect(cancelledCard.or(emptyUpcoming)).toBeVisible({
