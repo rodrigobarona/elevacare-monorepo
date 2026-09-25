@@ -12,6 +12,7 @@ import {
   nextPayoutStatusAfterTransferReversed,
   snapToNext0400Lisbon,
   transferBlockReason,
+  isInFlightIdempotencyConflict,
 } from "./payout-math"
 
 describe("transferBlockReason", () => {
@@ -412,5 +413,24 @@ describe("evaluateRefundPolicy", () => {
     expect(
       evaluateRefundPolicy({ initiator: "expert", hoursUntilStart: 1 })
     ).toBe("full")
+  })
+})
+
+describe("isInFlightIdempotencyConflict", () => {
+  it("matches a concurrent request holding the same key", () => {
+    expect(
+      isInFlightIdempotencyConflict({ code: "idempotency_key_in_use" })
+    ).toBe(true)
+    expect(isInFlightIdempotencyConflict({ statusCode: 409 })).toBe(true)
+  })
+
+  it("does not match a parameter mismatch or other errors", () => {
+    expect(
+      isInFlightIdempotencyConflict({
+        type: "StripeIdempotencyError",
+        statusCode: 400,
+      })
+    ).toBe(false)
+    expect(isInFlightIdempotencyConflict(new Error("boom"))).toBe(false)
   })
 })

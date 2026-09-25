@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm"
 import {
   issuePlatformFeeCreditNote,
   shouldIssuePlatformFeeCreditNote,
@@ -11,6 +11,7 @@ import { creditNoteAllocation } from "./commission"
 import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
+  isInFlightIdempotencyConflict,
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
   type RefundPolicyInput,
@@ -293,25 +294,38 @@ export async function refundBookingPayment(input: {
     refundStatus = mapStripeRefundStatus(refund.status)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    await withAudit(
-      { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
-      async (tx, ctx) => {
-        await tx
-          .update(main.bookingRefunds)
-          .set({
-            status: "failed",
-            lastError: message.slice(0, 2000),
-            updatedAt: new Date(),
+    // A concurrent call holding the same key will record the outcome.
+    if (!isInFlightIdempotencyConflict(err)) {
+      await withAudit(
+        { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
+        async (tx, ctx) => {
+          const marked = await tx
+            .update(main.bookingRefunds)
+            .set({
+              status: "failed",
+              lastError: message.slice(0, 2000),
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(main.bookingRefunds.id, refundId),
+                eq(main.bookingRefunds.status, "pending"),
+                isNull(main.bookingRefunds.stripeRefundId)
+              )
+            )
+            .returning({ id: main.bookingRefunds.id })
+          await ctx.emit({
+            entity: "refund",
+            action: "failed",
+            entityId: refundId,
+            payload: {
+              lastError: message.slice(0, 200),
+              rowMarkedFailed: marked.length > 0,
+            },
           })
-          .where(eq(main.bookingRefunds.id, refundId))
-        await ctx.emit({
-          entity: "refund",
-          action: "failed",
-          entityId: refundId,
-          payload: { lastError: message.slice(0, 200) },
-        })
-      }
-    )
+        }
+      )
+    }
     throw new RefundError("STRIPE_REFUND_FAILED", message, 502)
   }
 

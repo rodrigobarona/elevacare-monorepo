@@ -227,6 +227,14 @@ export function transferBlockReason(input: {
  * request (no transfer can exist). Conflicts, rate limits, 5xx and network
  * errors are ambiguous: keep the key and let the next run replay it.
  */
+/** Another request is still running with the same idempotency key. */
+export function isInFlightIdempotencyConflict(err: unknown): boolean {
+  if (!err || typeof err !== "object") return false
+  const code = "code" in err ? String(err.code) : ""
+  const statusCode = "statusCode" in err ? err.statusCode : null
+  return code === "idempotency_key_in_use" || statusCode === 409
+}
+
 export function isDefinitiveStripeRejection(err: unknown): boolean {
   if (!err || typeof err !== "object") return false
   const statusCode =

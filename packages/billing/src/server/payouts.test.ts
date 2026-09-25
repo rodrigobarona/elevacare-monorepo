@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 const transferCreate = vi.fn()
+const transferList = vi.fn(async (..._args: unknown[]) => ({
+  data: [] as unknown[],
+  has_more: false,
+}))
 
 vi.mock("./client", () => ({
   stripe: () => ({
     transfers: {
       create: (...args: unknown[]) => transferCreate(...args),
-      list: async () => ({ data: [] }),
+      list: (...args: unknown[]) => transferList(...args),
     },
   }),
 }))
@@ -51,6 +55,7 @@ const paidPayment = {
 }
 
 let persistAttempts = 0
+let payoutAttempts = 0
 let persistFailOnce = false
 let failUpdateEmpty = false
 let paymentStatus = "succeeded"
@@ -69,7 +74,8 @@ vi.mock("@eleva/db", () => {
     where: () => tx,
     orderBy: () => tx,
     limit: () => {
-      if (currentTable === payoutStates) return [scheduledPayout]
+      if (currentTable === payoutStates)
+        return [{ ...scheduledPayout, attempts: payoutAttempts }]
       if (currentTable === bookingPayments) {
         return [
           {
@@ -144,12 +150,14 @@ const { executeTransfer } = await import("./payouts")
 describe("executeTransfer idempotency", () => {
   beforeEach(() => {
     persistAttempts = 0
+    payoutAttempts = 0
     persistFailOnce = false
     failUpdateEmpty = false
     paymentStatus = "succeeded"
     bookingStatus = "completed"
     failureSets.length = 0
     transferCreate.mockReset()
+    transferList.mockClear()
     const created = new Map<
       string,
       { id: string; amount: number; destination: string }
@@ -216,6 +224,40 @@ describe("executeTransfer idempotency", () => {
     })
     expect(transferCreate).toHaveBeenCalledTimes(1)
     expect(failureSets.at(-1)?.transferIdempotencyKey).toBeUndefined()
+  })
+
+  it("reuses a transfer whose create response was lost before retrying", async () => {
+    payoutAttempts = 1
+    transferList.mockResolvedValueOnce({
+      data: [
+        { id: "tr_lost", metadata: { payout_state_id: scheduledPayout.id } },
+      ],
+      has_more: false,
+    })
+    await expect(executeTransfer(scheduledPayout.id)).resolves.toEqual({
+      status: "transferred",
+      stripeTransferId: "tr_lost",
+    })
+    expect(transferCreate).not.toHaveBeenCalled()
+  })
+
+  it("rotates the key when Stripe reports a parameter mismatch and no transfer exists", async () => {
+    transferCreate.mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          "Keys for idempotent requests can only be used with the same parameters"
+        ),
+        {
+          type: "StripeIdempotencyError",
+          statusCode: 400,
+        }
+      )
+    )
+    await executeTransfer(scheduledPayout.id)
+    expect(transferList).toHaveBeenCalledTimes(1)
+    const rotated = failureSets.at(-1)?.transferIdempotencyKey
+    expect(typeof rotated).toBe("string")
+    expect(rotated).not.toBe(scheduledPayout.transferIdempotencyKey)
   })
 
   it("rotates the key only after a definitive Stripe rejection", async () => {
