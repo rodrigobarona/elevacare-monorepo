@@ -3,7 +3,7 @@ import {
   issuePlatformFeeCreditNote,
   shouldIssuePlatformFeeCreditNote,
 } from "@eleva/accounting"
-import { withAudit } from "@eleva/audit"
+import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
 import { stripe } from "./client"
@@ -717,13 +717,15 @@ export async function retryFailedTransferReversals(): Promise<{
 }
 
 export const CANCELLATION_REFUND_BATCH_SIZE = 50
+export const CANCELLATION_REFUND_WORKFLOW_NAME = "cancellation-refund"
 
 /**
  * Member cancel and account deletion only flip the payment to
  * `refund_pending` inside their booking transaction (no Stripe calls in a
  * DB tx). This sweep issues the refund. Payments whose refund is already in
  * flight at Stripe are left to the `charge.refunded` / `refund.updated`
- * webhooks.
+ * webhooks. A failure is dead-lettered once and excluded until staff close
+ * it, so a stuck payment cannot starve later batches.
  */
 export async function processPendingCancellationRefunds(): Promise<{
   scanned: number
@@ -733,7 +735,10 @@ export async function processPendingCancellationRefunds(): Promise<{
 }> {
   const rows = await withPlatformAdminContext(async (tx) =>
     tx
-      .select({ id: main.bookingPayments.id })
+      .select({
+        id: main.bookingPayments.id,
+        orgId: main.bookingPayments.orgId,
+      })
       .from(main.bookingPayments)
       .where(
         and(
@@ -742,6 +747,12 @@ export async function processPendingCancellationRefunds(): Promise<{
             SELECT 1 FROM ${main.bookingRefunds}
             WHERE ${main.bookingRefunds.bookingPaymentId} = ${main.bookingPayments.id}
               AND ${main.bookingRefunds.status} = 'pending'
+          )`,
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${main.workflowDeadLetters}
+            WHERE ${main.workflowDeadLetters.workflowName} = ${CANCELLATION_REFUND_WORKFLOW_NAME}
+              AND ${main.workflowDeadLetters.entityId} = ${main.bookingPayments.id}
+              AND ${main.workflowDeadLetters.status} = 'open'
           )`
         )
       )
@@ -766,9 +777,54 @@ export async function processPendingCancellationRefunds(): Promise<{
         bookingPaymentId: row.id,
         probe: "cancellation-refund-sweep",
       })
+      await deadLetterCancellationRefund(row, err).catch((dlqErr) => {
+        void captureException(dlqErr, {
+          bookingPaymentId: row.id,
+          probe: "cancellation-refund-dead-letter",
+        })
+      })
     }
   }
   return result
+}
+
+async function deadLetterCancellationRefund(
+  row: { id: string; orgId: string },
+  err: unknown
+): Promise<void> {
+  const message = (err instanceof Error ? err.message : String(err)).slice(
+    0,
+    2000
+  )
+  await withPlatformAudit(
+    { orgId: row.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      await tx
+        .insert(main.workflowDeadLetters)
+        .values({
+          orgId: row.orgId,
+          workflowName: CANCELLATION_REFUND_WORKFLOW_NAME,
+          entityId: row.id,
+          payload: {
+            bookingPaymentId: row.id,
+            code: isRefundError(err) ? err.code : null,
+          },
+          attempts: 1,
+          lastError: message,
+        })
+        .onConflictDoNothing()
+      await ctx.emit({
+        entity: "refund",
+        action: "failed",
+        entityId: row.id,
+        payload: {
+          bookingPaymentId: row.id,
+          deadLettered: true,
+          lastError: message.slice(0, 200),
+        },
+      })
+    }
+  )
 }
 
 export async function applyDisputeOpened(input: {
