@@ -13,7 +13,7 @@ The single production blocker:
 
 - **AUD-001 (P0).** Member cancel and account-deletion mark `booking_payments.status = refund_pending` and then stop. Nothing executes the Stripe refund. `executeTransfer` never looks at payment or booking status, so the expert can still be paid for a cancelled session.
 
-Do not start Phase 09 until AUD-001 is fixed and the founder confirms the remaining P1 list (or waives specific items). D-07 (Daily HIPAA/BAA/DPA) remains a separate Phase 09 entry gate and is not waived by the 04B human-evidence waiver.
+Phase 09 implementation needs all of: the founder-approved fix pack (AUD-001, 002, 003, 008, 009, 013) merged; FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three; and D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver covers none of these. Only the docs/evidence 09.0 spike may start earlier (see Phase 09 readiness).
 
 ## W0 — Baseline pipeline
 
