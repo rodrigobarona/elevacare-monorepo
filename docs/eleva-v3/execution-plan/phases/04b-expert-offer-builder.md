@@ -116,20 +116,13 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-24):** Phase 4B was skipped while 05–08 shipped.
-> Ordered backlog: (1) ~~`@eleva/editor` scaffold + boundary lint~~ (**done**,
-> `#92`), (2) ~~`/expert` practice/locations/schedules APIs~~ (**done**, `#93`) +
-> ~~`experts→expert` rename~~ (**done**, `#96`–`#98`), (3) ~~event-type modes
-> API + publish gates~~ (**done**, `#97`/`#98`) + ~~modes panel on event-type
-> edit + seeded public-funnel `e2e/expert-offer.spec.ts`~~ (**done**, `#99`),
-> (4) ~~onboarding Practice step~~ (**done**, `#101`), (5) ~~services builder
-> tabs (kind / policies / private links) + `/expert/booking-links`~~ (**done**,
-> `#102`), (6) ~~calendar busy/destination UI on connected accounts~~
-> (**done**, `#104`), (7) ~~Eleva week view + ICS feed tokens~~ (**done**,
-> `#105`), (8) ~~per-mode / per-event-type destination overrides~~ (**done**,
-> `#106`), (9) ~~Plate AI route (`POST /ai/editor` + `editorAssist`)~~ (**done**,
-> `#107`), (10) ~~UI-built Quick chat / Physiotherapy builder path~~ (**done**,
-> `#108`), (11) ~~`pnpm i18n:draft` + 14-day draft age gate~~ (**done**, `#109`).
+> **Closeout status (2026-09-25, post-#112):** Phase 4B engineering is largely
+> on main (builder path, modes, calendar UI, ICS, AI assist, i18n draft gate).
+> Member live money path on loopback is evidenced via Phase 05
+> `e2e:member:stripe` (**PASS through cancel**, 2026-09-25) — that closes the
+> paid guest→Space→cancel funnel proof shared with Phase 04; it does **not**
+> close 04B founder items that still need human OAuth / design screenshots /
+> Connect-ready UI→publish.
 >
 > ### Founder evidence checklist (04B exit — waive or run)
 >

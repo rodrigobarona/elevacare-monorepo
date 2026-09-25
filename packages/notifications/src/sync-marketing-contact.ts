@@ -21,6 +21,13 @@ export type SyncMarketingContactResult =
   | {
       action: "skipped_no_user"
     }
+  | {
+      action: "skipped_no_provider"
+    }
+  | {
+      action: "skipped_test_recipient"
+      email: string
+    }
 
 export type SyncMarketingContactDeps = {
   loadUser?: typeof loadMarketingUser
@@ -46,6 +53,23 @@ function getResend(): Resend {
     throw new MarketingSyncError("RESEND_API_KEY is not configured")
   }
   return new Resend(apiKey)
+}
+
+function isVercelDeployedRuntime(): boolean {
+  // Prefer VERCEL_ENV so a local `next start` (NODE_ENV=production) still
+  // takes the e2e @example.com / missing-key skips. Preview + Production
+  // stay fail-closed for a missing RESEND_API_KEY.
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  )
+}
+
+/** Resend rejects @example.com outside their allowlist — local e2e uses it. */
+function isExampleComRecipient(email: string): boolean {
+  const at = email.lastIndexOf("@")
+  if (at === -1) return false
+  return email.slice(at + 1).toLowerCase() === "example.com"
 }
 
 function marketingSegmentId(): string | null {
@@ -305,6 +329,32 @@ async function syncMarketingContactUnlocked(
   const email = user.email.trim().toLowerCase()
   const firstName = firstNameFromDisplayName(user.name)
   const locale = normalizeLocale(user.locale)
+
+  const usingInjectedProvider =
+    deps.createContact !== undefined ||
+    deps.updateContact !== undefined ||
+    deps.removeContact !== undefined
+
+  // Local/dev e2e uses @example.com; Resend rejects it. Consent writes must
+  // still succeed — never call the live provider for test recipients off Vercel.
+  if (
+    !usingInjectedProvider &&
+    !isVercelDeployedRuntime() &&
+    isExampleComRecipient(email)
+  ) {
+    return { action: "skipped_test_recipient", email }
+  }
+
+  // Without a key the Neon consent write already committed; skip provider
+  // sync so PUT /me/consents does not 502 on local stacks. Vercel Preview /
+  // Production must keep failing closed (MarketingSyncError via getResend).
+  if (
+    !usingInjectedProvider &&
+    !isVercelDeployedRuntime() &&
+    !process.env.RESEND_API_KEY?.trim()
+  ) {
+    return { action: "skipped_no_provider" }
+  }
 
   if (!consent.granted) {
     const removed = await removeContact({ email })

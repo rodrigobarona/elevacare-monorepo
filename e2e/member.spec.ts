@@ -194,6 +194,7 @@ test.describe("member Space journey", () => {
       await expect(page.getByText(/€\s?60|60,00\s?€|€60/)).toBeVisible()
 
       await persistMarketingPreference(page, request, spaceSlug)
+      await assertMemberConsentsApi(page, request, spaceSlug)
       await requestDsarWithMockedBlob(page, request, spaceSlug)
 
       await page.goto(`/${spaceSlug}`)
@@ -207,6 +208,8 @@ test.describe("member Space journey", () => {
       await page.goto(
         detailHref!.startsWith("http") ? detailHref! : `${webUrl}${detailHref}`
       )
+      await assertHealthConsentBlockedWhileBooked(page, request)
+      await assertPaymentsListShowsBooking(page, request, spaceSlug, bookingId!)
       const cancel = page.getByTestId("member-cancel-session")
       await expect(cancel).toBeVisible({ timeout: 20_000 })
       await expect(cancel).toBeEnabled()
@@ -282,7 +285,9 @@ test.describe("member Space without live Stripe", () => {
     const spaceSlug = await landOnPersonalSpace(page)
 
     await persistMarketingPreference(page, request, spaceSlug)
+    await assertMemberConsentsApi(page, request, spaceSlug)
     await requestDsarWithMockedBlob(page, request, spaceSlug)
+    await assertDeleteAccountBlocksReserve(page, request, spaceSlug)
   })
 
   test("magic-link activation lands on a Space (session handoff)", async ({
@@ -415,6 +420,189 @@ async function requestDsarWithMockedBlob(
   )
   const body = await fileRes.body()
   expect(Buffer.from(body.subarray(0, 2)).toString("latin1")).toBe("PK")
+}
+
+const MEMBER_CONSENT_KINDS = [
+  "terms",
+  "privacy",
+  "health_data_processing",
+  "marketing",
+] as const
+
+async function sessionAuthHeaders(page: Page): Promise<Record<string, string>> {
+  return authHeaders(cookieHeaderFromPage(await page.context().cookies()))
+}
+
+async function assertMemberConsentsApi(
+  page: Page,
+  request: APIRequestContext,
+  spaceSlug: string
+): Promise<void> {
+  const headers = await sessionAuthHeaders(page)
+  const listed = await request.get(`${apiUrl}/me/consents`, { headers })
+  expect(listed.status()).toBe(200)
+  const body = (await listed.json()) as {
+    consents: Array<{
+      kind: string
+      version: string
+      grantedAt: string | null
+      withdrawnAt: string | null
+    }>
+  }
+  expect(body.consents.map((row) => row.kind).sort()).toEqual(
+    [...MEMBER_CONSENT_KINDS].sort()
+  )
+  for (const row of body.consents) {
+    expect(row.version.length).toBeGreaterThan(0)
+  }
+
+  const marketing = body.consents.find((row) => row.kind === "marketing")
+  expect(marketing).toBeTruthy()
+  if (!marketing!.grantedAt || marketing!.withdrawnAt) {
+    const grant = await request.put(`${apiUrl}/me/consents`, {
+      headers,
+      data: { kind: "marketing", granted: true },
+    })
+    expect(grant.status(), await grant.text()).toBe(200)
+  }
+
+  const withdraw = await request.put(`${apiUrl}/me/consents`, {
+    headers,
+    data: { kind: "marketing", granted: false },
+  })
+  expect(withdraw.status(), await withdraw.text()).toBe(200)
+  const after = (await withdraw.json()) as typeof body
+  const withdrawn = after.consents.find((row) => row.kind === "marketing")
+  expect(withdrawn?.withdrawnAt).toBeTruthy()
+
+  await page.goto(`${webUrl}/${spaceSlug}/privacy`)
+  await expect(page.getByTestId("member-consent-marketing")).toHaveAttribute(
+    "data-granted",
+    "false",
+    { timeout: 15_000 }
+  )
+}
+
+async function assertHealthConsentBlockedWhileBooked(
+  page: Page,
+  request: APIRequestContext
+): Promise<void> {
+  const headers = await sessionAuthHeaders(page)
+  const blocked = await request.put(`${apiUrl}/me/consents`, {
+    headers,
+    data: { kind: "health_data_processing", granted: false },
+  })
+  expect(blocked.status()).toBe(409)
+  const body = (await blocked.json()) as { code?: string; error?: string }
+  expect(body.code ?? body.error).toMatch(/HEALTH_DATA_CONSENT_IN_USE|conflict/)
+}
+
+async function assertPaymentsListShowsBooking(
+  page: Page,
+  request: APIRequestContext,
+  spaceSlug: string,
+  bookingId: string
+): Promise<void> {
+  const headers = await sessionAuthHeaders(page)
+  const paymentsRes = await request.get(`${apiUrl}/me/payments`, { headers })
+  expect(paymentsRes.status()).toBe(200)
+  const payload = (await paymentsRes.json()) as {
+    payments: Array<{
+      bookingId: string
+      status: string
+      amountCents: number
+      receiptUrl: string | null
+    }>
+  }
+  const match = payload.payments.find((row) => row.bookingId === bookingId)
+  expect(match).toBeTruthy()
+  expect(match!.amountCents).toBe(6000)
+  expect(["succeeded", "refund_pending", "refunded"]).toContain(match!.status)
+
+  await page.goto(`${webUrl}/${spaceSlug}/payments`)
+  const row = page
+    .locator(`[data-testid="member-payment-row"][data-booking="${bookingId}"]`)
+    .first()
+  await expect(row).toBeVisible({ timeout: 15_000 })
+  if (match!.receiptUrl) {
+    const receipt = row.getByTestId("member-payment-receipt")
+    await expect(receipt).toBeVisible()
+    const href = await receipt.getAttribute("href")
+    expect(href).toMatch(/^https:\/\//)
+  }
+}
+
+async function assertDeleteAccountBlocksReserve(
+  page: Page,
+  request: APIRequestContext,
+  spaceSlug: string
+): Promise<void> {
+  const headers = await sessionAuthHeaders(page)
+  const offer = await request.get(
+    `${apiUrl}/public/experts/${PAID_EXPERT}/event-types/${PAID_OFFER}`
+  )
+  test.skip(offer.status() !== 200, "needs seeded fisiomota / first-visit")
+  const detail = (await offer.json()) as {
+    modes: Array<{ id: string }>
+  }
+  const modeId = detail.modes[0]?.id
+  expect(modeId).toBeTruthy()
+
+  const startsAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+  startsAt.setMinutes(0, 0, 0)
+  const endsAt = new Date(startsAt.getTime() + 60 * 60 * 1000)
+  const reserveBody = {
+    username: PAID_EXPERT,
+    eventTypeModeId: modeId,
+    startsAt: startsAt.toISOString(),
+    endsAt: endsAt.toISOString(),
+    timezone: "Europe/Lisbon",
+    language: "en" as const,
+    memberCountry: "PT",
+    consents: [
+      { kind: "terms" as const, version: "dev-2026-09-09" },
+      { kind: "privacy" as const, version: "dev-2026-09-09" },
+      { kind: "health_data_processing" as const, version: "dev-2026-09-09" },
+    ],
+  }
+
+  await page.goto(`${webUrl}/${spaceSlug}/privacy`)
+  await page.getByTestId("member-deletion-request").click()
+  await page.getByTestId("member-deletion-confirm").click()
+  await expect(page.getByTestId("member-deletion-scheduled")).toBeVisible({
+    timeout: 15_000,
+  })
+
+  try {
+    const reserve = await request.post(`${apiUrl}/bookings/reserve`, {
+      headers,
+      data: reserveBody,
+    })
+    expect(
+      reserve.status(),
+      `expected ACCOUNT_DELETION_SCHEDULED, got ${reserve.status()}: ${await reserve.text()}`
+    ).toBe(409)
+    const body = (await reserve.json()) as { error?: string }
+    expect(body.error).toBe("ACCOUNT_DELETION_SCHEDULED")
+  } finally {
+    // Always clear the schedule so a failed assert does not strand the member.
+    const cancelBtn = page.getByTestId("member-deletion-cancel")
+    if (await cancelBtn.isVisible().catch(() => false)) {
+      await cancelBtn.click()
+      await expect(page.getByTestId("member-deletion-request")).toBeVisible({
+        timeout: 15_000,
+      })
+    } else {
+      const res = await request.post(`${apiUrl}/privacy/cancel-deletion`, {
+        headers,
+      })
+      expect(res.ok(), await res.text()).toBe(true)
+    }
+  }
+
+  // Cleared state: schedule UI is gone (no second reserve — avoids slot pollution).
+  await expect(page.getByTestId("member-deletion-scheduled")).toHaveCount(0)
+  await expect(page.getByTestId("member-deletion-request")).toBeVisible()
 }
 
 async function cancelCreatedBooking(

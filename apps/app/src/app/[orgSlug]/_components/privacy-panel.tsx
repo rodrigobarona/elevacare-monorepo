@@ -202,6 +202,8 @@ export function PrivacyPanel({
                 <li
                   key={kind}
                   className="flex flex-col gap-2 border-b border-border/60 pb-4 last:border-0 sm:flex-row sm:items-center sm:justify-between"
+                  data-testid={`member-consent-${kind}`}
+                  data-granted={granted ? "true" : "false"}
                 >
                   <div>
                     <p className="font-medium">{t(`consents.kinds.${kind}`)}</p>
@@ -222,6 +224,11 @@ export function PrivacyPanel({
                     variant={granted ? "outline" : "default"}
                     isDisabled={consentPending === kind}
                     onPress={() => handleConsent(kind, !granted)}
+                    data-testid={
+                      granted
+                        ? `member-consent-withdraw-${kind}`
+                        : `member-consent-grant-${kind}`
+                    }
                   >
                     {granted ? t("consents.withdraw") : t("consents.grant")}
                   </Button>
@@ -286,7 +293,7 @@ export function PrivacyPanel({
             <p className="text-muted-foreground">{t("deletion.ruleBody")}</p>
             <p className="text-muted-foreground">{t("deletion.grace")}</p>
             {scheduledFor ? (
-              <p>
+              <p data-testid="member-deletion-scheduled">
                 {t("deletion.scheduled", {
                   date: new Date(scheduledFor).toLocaleString(),
                 })}
@@ -302,6 +309,7 @@ export function PrivacyPanel({
                 variant="outline"
                 isDisabled={deletePending}
                 onPress={handleCancelDeletion}
+                data-testid="member-deletion-cancel"
               >
                 {deletePending
                   ? t("deletion.cancelling")
@@ -312,6 +320,7 @@ export function PrivacyPanel({
                 size="sm"
                 variant="destructive"
                 onPress={() => setDeleteOpen(true)}
+                data-testid="member-deletion-request"
               >
                 {t("deletion.title")}
               </Button>
@@ -335,6 +344,7 @@ export function PrivacyPanel({
             variant="destructive"
             isDisabled={deletePending}
             onPress={handleDelete}
+            data-testid="member-deletion-confirm"
           >
             {deletePending ? t("deletion.scheduling") : t("deletion.confirm")}
           </Button>
