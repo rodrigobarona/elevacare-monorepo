@@ -22,9 +22,6 @@ export type SyncMarketingContactResult =
       action: "skipped_no_user"
     }
   | {
-      action: "skipped_no_provider"
-    }
-  | {
       action: "skipped_test_recipient"
       email: string
     }
@@ -343,17 +340,6 @@ async function syncMarketingContactUnlocked(
     isExampleComRecipient(email)
   ) {
     return { action: "skipped_test_recipient", email }
-  }
-
-  // Without a key the Neon consent write already committed; skip provider
-  // sync so PUT /me/consents does not 502 on local stacks. Vercel Preview /
-  // Production must keep failing closed (MarketingSyncError via getResend).
-  if (
-    !usingInjectedProvider &&
-    !isVercelDeployedRuntime() &&
-    !process.env.RESEND_API_KEY?.trim()
-  ) {
-    return { action: "skipped_no_provider" }
   }
 
   if (!consent.granted) {
