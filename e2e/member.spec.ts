@@ -219,14 +219,13 @@ test.describe("member Space journey", () => {
       // Soft router.push under the gateway rewrite can leave Playwright on
       // the detail page; hard-load the sessions list to assert outcome.
       await page.goto(`${webUrl}/${spaceSlug}/sessions`)
-      const cancelledCard = page.getByTestId("member-booking-card").first()
-      const emptyUpcoming = page.getByText(/No upcoming sessions/i)
-      await expect(cancelledCard.or(emptyUpcoming)).toBeVisible({
-        timeout: 15_000,
-      })
-      if (await cancelledCard.isVisible()) {
-        await expect(cancelledCard).toHaveAttribute("data-status", "cancelled")
-      }
+      await expect(
+        page
+          .locator(
+            '[data-testid="member-booking-card"][data-status="cancelled"]'
+          )
+          .first()
+      ).toBeVisible({ timeout: 15_000 })
     } finally {
       await cancelCreatedBooking(page, request, bookingId)
     }
