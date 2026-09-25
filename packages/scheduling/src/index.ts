@@ -122,3 +122,11 @@ export type {
   BookingRuleCheck,
   BookingRuleError,
 } from "./types"
+export {
+  finalizeExpiredReservation,
+  listExpiredReservations,
+} from "./expire-reservation"
+export type {
+  ExpiredReservationCandidate,
+  FinalizeExpiredReservationResult,
+} from "./expire-reservation"

@@ -17,6 +17,7 @@ export type AuditEntity =
   | "event_type_mode"
   | "expert_location"
   | "booking_link"
+  | "slot_reservation"
   | "public_handle"
   | "calendar_feed_token"
   | "schedule"
