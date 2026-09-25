@@ -72,6 +72,15 @@ export type {
   FailedInvoiceRetryAction,
   InvoicingRetryResult,
 } from "./invoicing-retry"
+export {
+  PLATFORM_FEE_BACKFILL_BATCH_SIZE,
+  PLATFORM_FEE_BACKFILL_LOOKBACK_MS,
+  PLATFORM_FEE_BACKFILL_MIN_AGE_MS,
+  PLATFORM_FEE_BACKFILL_WORKFLOW_NAME,
+  backfillMissingPlatformFeeInvoices,
+  emptyPlatformFeeBackfillResult,
+} from "./platform-fee-backfill"
+export type { PlatformFeeBackfillResult } from "./platform-fee-backfill"
 
 export {
   ACCOUNTING_OAUTH_STATE_TTL_MS,
