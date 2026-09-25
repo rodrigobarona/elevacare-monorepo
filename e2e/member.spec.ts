@@ -611,19 +611,20 @@ async function assertDeleteAccountBlocksReserve(
     const body = (await reserve.json()) as { error?: string }
     expect(body.error).toBe("ACCOUNT_DELETION_SCHEDULED")
   } finally {
-    if (!deletionRequested) return
-    // Always clear the schedule so a failed assert does not strand the member.
-    const cancelBtn = page.getByTestId("member-deletion-cancel")
-    if (await cancelBtn.isVisible().catch(() => false)) {
-      await cancelBtn.click()
-      await expect(page.getByTestId("member-deletion-request")).toBeVisible({
-        timeout: 15_000,
-      })
-    } else {
-      const res = await request.post(`${apiUrl}/privacy/cancel-deletion`, {
-        headers,
-      })
-      expect(res.ok(), await res.text()).toBe(true)
+    if (deletionRequested) {
+      // Always clear the schedule so a failed assert does not strand the member.
+      const cancelBtn = page.getByTestId("member-deletion-cancel")
+      if (await cancelBtn.isVisible().catch(() => false)) {
+        await cancelBtn.click()
+        await expect(page.getByTestId("member-deletion-request")).toBeVisible({
+          timeout: 15_000,
+        })
+      } else {
+        const res = await request.post(`${apiUrl}/privacy/cancel-deletion`, {
+          headers,
+        })
+        expect(res.ok(), await res.text()).toBe(true)
+      }
     }
   }
 
