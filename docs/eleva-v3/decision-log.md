@@ -55,8 +55,11 @@ Each entry should include:
     `expert_invoices`, not platform-fee invoices minus credit notes) to the PR
     that opens issuance. Until then reconciliation mismatches are not a signal.
   - **Phase 09.0** (Daily account spike, docs/evidence only) may start as soon
-    as D-07 (Daily HIPAA/BAA/DPA, founder + DPO) is in motion. Phase 09
-    implementation waits for the fix pack above.
+    as D-07 (Daily HIPAA/BAA/DPA, founder + DPO) is in motion. This is a
+    carve-out for the docs/evidence spike only and supersedes nothing else.
+    Phase 09 implementation still needs all of: the fix pack above merged;
+    FT POST / Comunicação / `invoice.issued` open, or a separate founder
+    waiver naming all three; and D-07 signed by founder + DPO.
 - Owner: founder (directive); stamped by engineering
 - Status: active
 - Related: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md),

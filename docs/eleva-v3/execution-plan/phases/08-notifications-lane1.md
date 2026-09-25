@@ -181,8 +181,8 @@ Out: push (Expo) — post-launch; Novu (retired).
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
       or a shortened test schedule); cancelled booking -> reminders skipped.
-- [ ] Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
-      (`booking.reminder_1h`) bypass.
+- [ ] ~~Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
+      (`booking.reminder_1h`) bypass.~~ Not a Phase 08 requirement.
       **Deferred to Phase 13** (audit AUD-004, founder-approved 2026-09-25):
       preferences store quiet hours but `sendNotification` does not read them.
 - [ ] Same `idempotencyKey` twice for the same recipient -> one delivery per channel; the same

@@ -209,7 +209,8 @@ Approved pack, recorded in [`decision-log.md`](../decision-log.md) ("Phases 01�
 
 ## Phase 09 readiness
 
-- **Phase 09.0** (Daily account spike, docs and evidence only) may start as soon as D-07 is in motion.
-- **Phase 09 implementation** waits until AUD-001, 002, 003, 008, 009 and 013 are merged, and a paid-then-cancelled booking is proven on staging (refund issued, payout not transferred).
-- D-07 (Daily HIPAA/BAA/DPA) must be signed by founder + DPO. The 04B human-evidence waiver does not cover it.
-- Live FT POST / Comunicação / `invoice.issued` stay closed.
+- **Phase 09.0** (Daily account spike, docs and evidence only) may start as soon as D-07 is in motion. This carve-out does not change any other Phase 09 gate.
+- **Phase 09 implementation** needs all of the following. The Phase 07 gate row still applies unchanged.
+  - AUD-001, 002, 003, 008, 009 and 013 merged, and a paid-then-cancelled booking proven on staging (refund issued, payout not transferred).
+  - FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three. They stay closed today.
+  - D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver does not cover it.

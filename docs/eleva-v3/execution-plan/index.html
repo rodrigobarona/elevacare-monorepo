@@ -4668,7 +4668,7 @@ be met; production issuance / Comunicação acceptance is explicitly deferred.</
 </tr>
 <tr>
 <td>Phase 09 start</td>
-<td><strong>Blocked</strong> on these hard tax/issuance gates <strong>and</strong> D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do <strong>not</strong> start Phase 09 until FT POST / Comunicação / <code>invoice.issued</code> open or a separate founder waiver explicitly names all three gates, <strong>and</strong> D-07 is signed</td>
+<td><strong>Blocked</strong> on these hard tax/issuance gates <strong>and</strong> D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do <strong>not</strong> start Phase 09 until FT POST / Comunicação / <code>invoice.issued</code> open or a separate founder waiver explicitly names all three gates, <strong>and</strong> D-07 is signed. Only exception: the docs/evidence-only 09.0 spike may start while D-07 is in motion (decision log 2026-09-25)</td>
 </tr>
 </tbody></table>
 </blockquote>
@@ -4699,7 +4699,10 @@ signed. Moloni path tested with mocked HTTP; Manual mode -&gt;
 export.</li>
 <li><input disabled="" type="checkbox"> Expert cannot complete Become-Partner without Auto connection or Manual acknowledgment.</li>
 <li><input disabled="" type="checkbox"> Reconciliation job on a seeded month produces a run row and no false mismatch; injected
-mismatch triggers alert path (mocked).</li>
+mismatch triggers alert path (mocked).
+<strong>Deferred</strong> (audit AUD-006, founder-approved 2026-09-25): not a phase-closure
+criterion until the job is retargeted to platform-fee invoices minus credit notes in
+the PR that opens <code>issueInvoice()</code>.</li>
 <li><input disabled="" type="checkbox"> All TOConline calls originate from <code>packages/accounting</code> (boundary grep for
 <code>api33.toconline.pt</code> outside the package returns nothing).</li>
 <li><input disabled="" type="checkbox"> IVA matrix tests match the accountant 2026-09-15 conditions (not the old automatic
@@ -5178,8 +5181,8 @@ ICS because calendar files sync to third-party providers).</li>
 &quot;new booking&quot;; in-app rows created for both.</li>
 <li><input disabled="" type="checkbox"> Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash <code>notBefore</code>
 or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
-<li><input disabled="" type="checkbox"> Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
-(<code>booking.reminder_1h</code>) bypass.
+<li><input disabled="" type="checkbox"> <del>Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
+(<code>booking.reminder_1h</code>) bypass.</del> Not a Phase 08 requirement.
 <strong>Deferred to Phase 13</strong> (audit AUD-004, founder-approved 2026-09-25):
 preferences store quiet hours but <code>sendNotification</code> does not read them.</li>
 <li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice for the same recipient -&gt; one delivery per channel; the same
