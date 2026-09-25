@@ -4,8 +4,10 @@ const {
   settleExpiredReservationIntent,
   listExpiredReservations,
   finalizeExpiredReservation,
+  deferKeptReservation,
   captureException,
 } = vi.hoisted(() => ({
+  deferKeptReservation: vi.fn(async () => ({ deferred: true })),
   settleExpiredReservationIntent: vi.fn(),
   listExpiredReservations: vi.fn(),
   finalizeExpiredReservation: vi.fn(),
@@ -14,6 +16,7 @@ const {
 
 vi.mock("@eleva/billing/server", () => ({ settleExpiredReservationIntent }))
 vi.mock("@eleva/scheduling", () => ({
+  deferKeptReservation,
   listExpiredReservations,
   finalizeExpiredReservation,
 }))
@@ -64,6 +67,13 @@ describe("expireStaleReservations", () => {
 
     const result = await expireStaleReservations({ now })
 
+    expect(deferKeptReservation).toHaveBeenCalledWith({
+      orgId: "org-1",
+      reservationId: "res-mbway",
+      paymentIntentId: "pi_mbway",
+      reason: "processing",
+      now,
+    })
     expect(finalizeExpiredReservation).toHaveBeenCalledTimes(1)
     expect(finalizeExpiredReservation).toHaveBeenCalledWith({
       orgId: "org-1",

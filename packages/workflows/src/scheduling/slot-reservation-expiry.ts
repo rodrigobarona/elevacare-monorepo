@@ -1,6 +1,7 @@
 import { settleExpiredReservationIntent } from "@eleva/billing/server"
 import { captureException, heartbeat } from "@eleva/observability"
 import {
+  deferKeptReservation,
   finalizeExpiredReservation,
   listExpiredReservations,
 } from "@eleva/scheduling"
@@ -11,7 +12,7 @@ export const SLOT_RESERVATION_EXPIRY_BATCH_SIZE = 100
  * Expire active slot reservations whose hold has passed (every minute via
  * QStash). Stripe is consulted before any DB write: a reservation whose
  * intent can still settle (MB WAY `processing`, succeeded awaiting confirm)
- * is kept; otherwise the intent is cancelled and the reservation expired
+ * is kept and re-checked after 10 minutes; otherwise the intent is cancelled and the reservation expired
  * together with its `pending_payment` booking and private-link use.
  */
 
@@ -52,6 +53,13 @@ export async function expireStaleReservations(
           searchByReservation: reservation.hasIntentPendingPayment,
         })
         if (decision.action === "keep") {
+          await deferKeptReservation({
+            orgId: reservation.orgId,
+            reservationId: reservation.id,
+            paymentIntentId: decision.paymentIntentId,
+            reason: decision.reason,
+            now,
+          })
           result.kept += 1
           continue
         }

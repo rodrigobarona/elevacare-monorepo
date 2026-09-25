@@ -123,7 +123,9 @@ export type {
   BookingRuleError,
 } from "./types"
 export {
+  deferKeptReservation,
   finalizeExpiredReservation,
+  KEPT_RESERVATION_RECHECK_MS,
   listExpiredReservations,
 } from "./expire-reservation"
 export type {

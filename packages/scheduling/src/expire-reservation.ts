@@ -149,3 +149,49 @@ export async function finalizeExpiredReservation(input: {
     }
   )
 }
+
+export const KEPT_RESERVATION_RECHECK_MS = 10 * 60 * 1000
+
+/**
+ * Pushes a lapsed hold whose PaymentIntent can still settle out of the next
+ * scans (same 10-minute window `payment_intent.processing` grants) so kept
+ * holds cannot starve the sweep batch. The webhook converts or releases it.
+ */
+export async function deferKeptReservation(input: {
+  orgId: string
+  reservationId: string
+  paymentIntentId: string
+  reason: string
+  now: Date
+}): Promise<{ deferred: boolean }> {
+  const recheckAt = new Date(input.now.getTime() + KEPT_RESERVATION_RECHECK_MS)
+  return withAudit(
+    { orgId: input.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      const updated = await tx
+        .update(main.slotReservations)
+        .set({ expiresAt: recheckAt })
+        .where(
+          and(
+            eq(main.slotReservations.id, input.reservationId),
+            eq(main.slotReservations.status, "active"),
+            lte(main.slotReservations.expiresAt, input.now)
+          )
+        )
+        .returning({ id: main.slotReservations.id })
+      const deferred = updated.length > 0
+      await ctx.emit({
+        entity: "slot_reservation",
+        action: "updated",
+        entityId: input.reservationId,
+        payload: {
+          deferred,
+          expiresAt: recheckAt.toISOString(),
+          paymentIntentId: input.paymentIntentId,
+          reason: input.reason,
+        },
+      })
+      return { deferred }
+    }
+  )
+}
