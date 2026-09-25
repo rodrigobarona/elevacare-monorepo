@@ -89,7 +89,7 @@ export async function sendViaResend(
       isResendTestRecipientRejection(error.message)
     ) {
       console.info(
-        `[email] skip resend for test recipient ${input.to} (non-deployed)`
+        `[email] skip resend for test recipient (non-deployed) deliveryId=${input.deliveryId}`
       )
       return { providerId: `e2e-skipped:${input.deliveryId}` }
     }
