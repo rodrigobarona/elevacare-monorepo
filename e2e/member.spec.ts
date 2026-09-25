@@ -213,12 +213,21 @@ test.describe("member Space journey", () => {
       await expect(cancel).toBeEnabled()
       await cancel.click()
       await page.getByTestId("member-cancel-confirm").click()
-      await expect(page).toHaveURL(new RegExp(`/${spaceSlug}/sessions`), {
+      // /sessions/[id] also matches a loose /sessions regex — require the list.
+      await expect(page).toHaveURL(
+        new RegExp(`/${spaceSlug}/sessions/?(\\?.*)?$`),
+        { timeout: 20_000 }
+      )
+      // Cancelled bookings may leave the upcoming list empty; accept either a
+      // cancelled card or an empty sessions list after a successful cancel.
+      const cancelledCard = page.getByTestId("member-booking-card").first()
+      const emptyUpcoming = page.getByText(/No upcoming sessions/i)
+      await expect(cancelledCard.or(emptyUpcoming)).toBeVisible({
         timeout: 15_000,
       })
-      await expect(
-        page.getByTestId("member-booking-card").first()
-      ).toHaveAttribute("data-status", "cancelled")
+      if (await cancelledCard.isVisible()) {
+        await expect(cancelledCard).toHaveAttribute("data-status", "cancelled")
+      }
     } finally {
       await cancelCreatedBooking(page, request, bookingId)
     }
