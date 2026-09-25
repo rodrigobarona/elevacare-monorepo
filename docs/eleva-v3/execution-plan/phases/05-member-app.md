@@ -93,41 +93,50 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 >
 > ### Member e2e attempt (2026-09-25, loopback only — never Production)
 >
-> | Check                                                                    | Result                                                                                                                                                                                                                                                                                                                                                                            |
-> | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | Loopback host guard                                                      | **PASS**                                                                                                                                                                                                                                                                                                                                                                          |
-> | Local stack                                                              | web/api/app/account + `stripe listen` (CLI access restored; webhook secrets synced into `.env.local`)                                                                                                                                                                                                                                                                             |
-> | Prefs + DSAR (no live Stripe)                                            | **PASS** — password prefs + mocked-blob DSAR + magic-link → Space (warm stack). Gateway now rewrites `/[org]/{privacy,sessions,payments,notifications}` to the member app (was marketing 404 at depth 2). React Aria checkbox asserted via `data-selected`.                                                                                                                       |
-> | Live Stripe journey (`E2E_LIVE_STRIPE=1`, fisiomota / first-visit / €60) | **PASS through cancel** on loopback (reserve → Payment Element → confirm → magic-link Space → prefs → DSAR → cancel toast + cancelled card on sessions past). Final assertion green after list-path harden. Later re-runs can 409/500 on polluted slots / local DB write flakes — do not weaken `RATE_LIMITS.public`; clear leftover holds or pick a free slot before re-proving. |
+> | Check                                                                    | Result                                                                                                                                                                                                                                                                                                                                                             |
+> | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | Loopback host guard                                                      | **PASS**                                                                                                                                                                                                                                                                                                                                                           |
+> | Local stack                                                              | web/api/app/account + `stripe listen` (CLI access restored; webhook secrets synced into `.env.local`)                                                                                                                                                                                                                                                              |
+> | Prefs + DSAR (no live Stripe)                                            | **PASS** — password prefs + mocked-blob DSAR + magic-link → Space (warm stack). Also `GET/PUT /me/consents` (marketing withdraw) + delete-account schedule → reserve `ACCOUNT_DELETION_SCHEDULED` → cancel deletion. Gateway rewrites `/[org]/{privacy,sessions,payments,notifications}` to the member app. React Aria checkbox asserted via `data-selected`.      |
+> | Live Stripe journey (`E2E_LIVE_STRIPE=1`, fisiomota / first-visit / €60) | **PASS through cancel** on loopback (reserve → Payment Element → confirm → magic-link Space → prefs → consents → DSAR → health-consent 409 → payments list → cancel toast + cancelled card). Later re-runs can 409/500 on polluted slots / local DB write flakes — do not weaken `RATE_LIMITS.public`; clear leftover holds or pick a free slot before re-proving. |
 >
-> Acceptance checkboxes for delete-account sweep / receipt list polish may stay
-> open; prefs + DSAR + paid guest→Space→cancel are evidenced on loopback.
+> Acceptance checkboxes for hourly deletion-sweep refund races remain
+> vitest-covered; prefs + DSAR + consents API + delete-account schedule/409 +
+> paid guest→Space→cancel (+ payments list) are evidenced on loopback.
 > Never run against Production.
 >
 > ### Founder evidence checklist (05)
 >
-> | Item                           | Runnable now?                        | Notes                                                               |
-> | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
-> | `pnpm e2e:member` prefs + DSAR | **PASS** (2026-09-25 loopback)       | Warm web/api/app/account                                            |
-> | `pnpm e2e:member:stripe`       | **PASS through cancel** (2026-09-25) | Stripe CLI + listen; slot pollution may flake subsequent local runs |
+> | Item                           | Runnable now?                        | Notes                                                                                                   |
+> | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+> | `pnpm e2e:member` prefs + DSAR | **PASS** (2026-09-25 loopback)       | Warm web/api/app/account; also consents GET/PUT + delete-account schedule→reserve 409                   |
+> | `pnpm e2e:member:stripe`       | **PASS through cancel** (2026-09-25) | Stripe CLI + listen; payments list + health-consent 409; slot pollution may flake subsequent local runs |
 
 - [x] Guest from Phase 4 activates via magic link, lands on `/{space-slug}` dashboard showing the
       booking. (Evidenced 2026-09-25 loopback `e2e:member:stripe`.)
 - [x] Cancel >= 24h before start: booking `cancelled` (UI cancel + past card
       `data-status=cancelled`; payment `refund_pending` remains Phase 6 webhook path).
-- [ ] Receipt URL opens Stripe-hosted receipt; payments list matches `booking_payments`.
+- [x] Receipt URL opens Stripe-hosted receipt when Stripe returns `charges.receipt_url`;
+      payments list matches `booking_payments` (`GET /me/payments` + `/payments` row
+      `data-testid=member-payment-row`). Live Stripe journey polls until `receiptUrl`
+      is present and asserts the payments-page link matches.
 - [x] Preferences persist and are returned by `GET /me`.
-- [ ] `GET /me/consents` lists every kind with its version; `PUT /me/consents` withdraws
+- [x] `GET /me/consents` lists every kind with its version; `PUT /me/consents` withdraws
       `marketing` immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend
       Audience removal) and returns 409 for `health_data_processing` while a confirmed future
       booking exists. (`analytics` joins `CONSENT_KINDS` in Phase 13, which adds the PostHog
-      opt-out check to this route's tests.)
+      opt-out check to this route's tests.) Evidenced 2026-09-25 loopback
+      (`e2e:member` + health 409 on `e2e:member:stripe`). Loopback uses `@example.com`
+      so marketing sync returns `skipped_test_recipient` (Neon withdraw is asserted;
+      live Resend Audience delete stays Phase 8 / non-example evidence).
 - [x] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
       (signed URL) after 24h; audit rows present. (Mocked private Blob under `E2E_AUTH_CAPTURE`.)
-- [ ] Delete-account request schedules deletion and blocks new bookings at the API before money
+- [x] Delete-account request schedules deletion and blocks new bookings at the API before money
       moves (POST /bookings/reserve and POST /payments/intent -> 409 ACCOUNT_DELETION_SCHEDULED
       via assertMemberCanBook); a payment that already succeeded still confirms and is then
-      cancelled with refund_pending by the deletion sweep; audited.
+      cancelled with refund_pending by the deletion sweep; audited. Schedule + reserve 409 +
+      cancel-deletion evidenced on loopback (`e2e:member`); sweep refund_pending + consent
+      erase/pseudonymise remain vitest (`account-deletion.test.ts`).
 - [x] `e2e/member.spec.ts` prefs/DSAR + Stripe-through-cancel evidenced on loopback
       (2026-09-25); `check:i18n-parity` green in CI.
 

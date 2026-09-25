@@ -48,6 +48,9 @@ export default async function PaymentsPage({
             <li
               key={payment.id}
               className="flex flex-col gap-2 py-4 sm:flex-row sm:items-center sm:justify-between"
+              data-testid="member-payment-row"
+              data-status={payment.status}
+              data-booking={payment.bookingId}
             >
               <div className="space-y-1">
                 <p className="font-medium">
@@ -82,6 +85,7 @@ export default async function PaymentsPage({
                     size="sm"
                     href={payment.receiptUrl}
                     target="_blank"
+                    data-testid="member-payment-receipt"
                   >
                     {t("receipt")}
                   </LinkButton>
@@ -90,6 +94,7 @@ export default async function PaymentsPage({
                   variant="ghost"
                   size="sm"
                   href={`/${orgSlug}/sessions/${payment.bookingId}`}
+                  data-testid="member-payment-session"
                 >
                   {t("session")}
                 </LinkButton>

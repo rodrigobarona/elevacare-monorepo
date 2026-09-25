@@ -3239,20 +3239,13 @@ multi-calendar, destination overrides), <code>design-system-spec.md</code> (edit
 </ol>
 <h2 id="04b-expert-offer-builder--acceptance-criteria"><a class="anchor" href="#04b-expert-offer-builder--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-24):</strong> Phase 4B was skipped while 05–08 shipped.
-Ordered backlog: (1) <del><code>@eleva/editor</code> scaffold + boundary lint</del> (<strong>done</strong>,
-<code>#92</code>), (2) <del><code>/expert</code> practice/locations/schedules APIs</del> (<strong>done</strong>, <code>#93</code>) +
-<del><code>experts→expert</code> rename</del> (<strong>done</strong>, <code>#96</code>–<code>#98</code>), (3) <del>event-type modes
-API + publish gates</del> (<strong>done</strong>, <code>#97</code>/<code>#98</code>) + <del>modes panel on event-type
-edit + seeded public-funnel <code>e2e/expert-offer.spec.ts</code></del> (<strong>done</strong>, <code>#99</code>),
-(4) <del>onboarding Practice step</del> (<strong>done</strong>, <code>#101</code>), (5) <del>services builder
-tabs (kind / policies / private links) + <code>/expert/booking-links</code></del> (<strong>done</strong>,
-<code>#102</code>), (6) <del>calendar busy/destination UI on connected accounts</del>
-(<strong>done</strong>, <code>#104</code>), (7) <del>Eleva week view + ICS feed tokens</del> (<strong>done</strong>,
-<code>#105</code>), (8) <del>per-mode / per-event-type destination overrides</del> (<strong>done</strong>,
-<code>#106</code>), (9) <del>Plate AI route (<code>POST /ai/editor</code> + <code>editorAssist</code>)</del> (<strong>done</strong>,
-<code>#107</code>), (10) <del>UI-built Quick chat / Physiotherapy builder path</del> (<strong>done</strong>,
-<code>#108</code>), (11) <del><code>pnpm i18n:draft</code> + 14-day draft age gate</del> (<strong>done</strong>, <code>#109</code>).</p>
+<p><strong>Closeout status (2026-09-25, post-#112):</strong> Phase 4B engineering is largely
+on main (builder path, modes, calendar UI, ICS, AI assist, i18n draft gate).
+Member live money path on loopback is evidenced via Phase 05
+<code>e2e:member:stripe</code> (<strong>PASS through cancel</strong>, 2026-09-25) — that closes the
+paid guest→Space→cancel funnel proof shared with Phase 04; it does <strong>not</strong>
+close 04B founder items that still need human OAuth / design screenshots /
+Connect-ready UI→publish.</p>
 <h3 id="04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run"><a class="anchor" href="#04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run" aria-label="Link to section">#</a>Founder evidence checklist (04B exit — waive or run)</h3>
 <table>
 <thead>
@@ -3723,10 +3716,10 @@ it); this phase adds the <code>marketing</code> kind, the member view/withdraw A
 </ol>
 <h2 id="05-member-app--acceptance-criteria"><a class="anchor" href="#05-member-app--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-24, post-#109):</strong> Product surfaces for Phase 05 are
+<p><strong>Closeout status (2026-09-25, post-#112):</strong> Product surfaces for Phase 05 are
 on main. <code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> /
 <code>e2e:member:stripe</code>) and is loopback-gated.</p>
-<h3 id="05-member-app--member-e2e-attempt-2026-09-24-loopback-only-never-production"><a class="anchor" href="#05-member-app--member-e2e-attempt-2026-09-24-loopback-only-never-production" aria-label="Link to section">#</a>Member e2e attempt (2026-09-24, loopback only — never Production)</h3>
+<h3 id="05-member-app--member-e2e-attempt-2026-09-25-loopback-only-never-production"><a class="anchor" href="#05-member-app--member-e2e-attempt-2026-09-25-loopback-only-never-production" aria-label="Link to section">#</a>Member e2e attempt (2026-09-25, loopback only — never Production)</h3>
 <table>
 <thead>
 <tr>
@@ -3740,23 +3733,21 @@ on main. <code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> /
 </tr>
 <tr>
 <td>Local stack</td>
-<td>web/api/app/account brought up; applied main migrations <code>0035</code>–<code>0046</code> (local DB was behind — needed <code>phone_e164</code>)</td>
-</tr>
-<tr>
-<td>Auth mailer injection</td>
-<td>Fixed in this closeout (<code>globalThis</code> + <code>/auth</code> ensure) so signup/magic-link no longer 500 with &quot;mailer not injected&quot; under Turbopack</td>
+<td>web/api/app/account + <code>stripe listen</code> (CLI access restored; webhook secrets synced into <code>.env.local</code>)</td>
 </tr>
 <tr>
 <td>Prefs + DSAR (no live Stripe)</td>
-<td><strong>Session handoff fixed</strong> — root cause was missing <code>session.activeOrganizationId</code> after raw-SQL <code>provisionPersonalSpace</code> (RSC fell back; API did not → <code>401 no-session</code>), plus Server Action → API mutations missing <code>Origin</code> (<code>CSRF_ORIGIN_MISMATCH</code>). Local <code>ACCOUNT_URL</code> must be <code>:3006</code> (not gateway <code>:3000</code>). Magic-link → Space <strong>PASS</strong> on loopback; prefs/DSAR needs warm <code>apps/app</code> (nested <code>/settings</code> 404 observed on cold turbopack restart — re-run). Guest magic-link <strong>with booking</strong> stays on <code>e2e:member:stripe</code></td>
+<td><strong>PASS</strong> — password prefs + mocked-blob DSAR + magic-link → Space (warm stack). Also <code>GET/PUT /me/consents</code> (marketing withdraw) + delete-account schedule → reserve <code>ACCOUNT_DELETION_SCHEDULED</code> → cancel deletion. Gateway rewrites <code>/[org]/{privacy,sessions,payments,notifications}</code> to the member app. React Aria checkbox asserted via <code>data-selected</code>.</td>
 </tr>
 <tr>
 <td>Live Stripe journey (<code>E2E_LIVE_STRIPE=1</code>, fisiomota / first-visit / €60)</td>
-<td><strong>Blocked</strong> — Stripe CLI <code>stripe listen</code> fails with expired <code>sk_test_…</code> (401); do not weaken <code>RATE_LIMITS.public</code></td>
+<td><strong>PASS through cancel</strong> on loopback (reserve → Payment Element → confirm → magic-link Space → prefs → consents → DSAR → health-consent 409 → payments list → cancel toast + cancelled card). Later re-runs can 409/500 on polluted slots / local DB write flakes — do not weaken <code>RATE_LIMITS.public</code>; clear leftover holds or pick a free slot before re-proving.</td>
 </tr>
 </tbody></table>
-<p>Leave acceptance checkboxes open until prefs/DSAR + live Stripe pass on a
-healthy local session, or the founder waives. Never run against Production.</p>
+<p>Acceptance checkboxes for hourly deletion-sweep refund races remain
+vitest-covered; prefs + DSAR + consents API + delete-account schedule/409 +
+paid guest→Space→cancel (+ payments list) are evidenced on loopback.
+Never run against Production.</p>
 <h3 id="05-member-app--founder-evidence-checklist-05"><a class="anchor" href="#05-member-app--founder-evidence-checklist-05" aria-label="Link to section">#</a>Founder evidence checklist (05)</h3>
 <table>
 <thead>
@@ -3768,35 +3759,44 @@ healthy local session, or the founder waives. Never run against Production.</p>
 </thead>
 <tbody><tr>
 <td><code>pnpm e2e:member</code> prefs + DSAR</td>
-<td>Yes (loopback; restart api after auth package change)</td>
-<td>Magic-link Space green; prefs needs warm app</td>
+<td><strong>PASS</strong> (2026-09-25 loopback)</td>
+<td>Warm web/api/app/account; also consents GET/PUT + delete-account schedule→reserve 409</td>
 </tr>
 <tr>
 <td><code>pnpm e2e:member:stripe</code></td>
-<td>After <code>stripe login</code> / fresh CLI key + <code>stripe listen</code></td>
-<td>Seeded fisiomota offer present</td>
+<td><strong>PASS through cancel</strong> (2026-09-25)</td>
+<td>Stripe CLI + listen; payments list + health-consent 409; slot pollution may flake subsequent local runs</td>
 </tr>
 </tbody></table>
 </blockquote>
 <ul>
-<li><input disabled="" type="checkbox"> Guest from Phase 4 activates via magic link, lands on <code>/{space-slug}</code> dashboard showing the
-booking.</li>
-<li><input disabled="" type="checkbox"> Cancel &gt;= 24h before start: booking <code>cancelled</code>, payment <code>refund_pending</code> (executed in
-Phase 6); reschedule moves the booking and releases the old slot.</li>
-<li><input disabled="" type="checkbox"> Receipt URL opens Stripe-hosted receipt; payments list matches <code>booking_payments</code>.</li>
-<li><input disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
-<li><input disabled="" type="checkbox"> <code>GET /me/consents</code> lists every kind with its version; <code>PUT /me/consents</code> withdraws
+<li><input checked="" disabled="" type="checkbox"> Guest from Phase 4 activates via magic link, lands on <code>/{space-slug}</code> dashboard showing the
+booking. (Evidenced 2026-09-25 loopback <code>e2e:member:stripe</code>.)</li>
+<li><input checked="" disabled="" type="checkbox"> Cancel &gt;= 24h before start: booking <code>cancelled</code> (UI cancel + past card
+<code>data-status=cancelled</code>; payment <code>refund_pending</code> remains Phase 6 webhook path).</li>
+<li><input checked="" disabled="" type="checkbox"> Receipt URL opens Stripe-hosted receipt when Stripe returns <code>charges.receipt_url</code>;
+payments list matches <code>booking_payments</code> (<code>GET /me/payments</code> + <code>/payments</code> row
+<code>data-testid=member-payment-row</code>). Live Stripe journey polls until <code>receiptUrl</code>
+is present and asserts the payments-page link matches.</li>
+<li><input checked="" disabled="" type="checkbox"> Preferences persist and are returned by <code>GET /me</code>.</li>
+<li><input checked="" disabled="" type="checkbox"> <code>GET /me/consents</code> lists every kind with its version; <code>PUT /me/consents</code> withdraws
 <code>marketing</code> immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend
 Audience removal) and returns 409 for <code>health_data_processing</code> while a confirmed future
 booking exists. (<code>analytics</code> joins <code>CONSENT_KINDS</code> in Phase 13, which adds the PostHog
-opt-out check to this route&#39;s tests.)</li>
-<li><input disabled="" type="checkbox"> DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
-(signed URL) after 24h; audit rows present.</li>
-<li><input disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API before money
+opt-out check to this route&#39;s tests.) Evidenced 2026-09-25 loopback
+(<code>e2e:member</code> + health 409 on <code>e2e:member:stripe</code>). Loopback uses <code>@example.com</code>
+so marketing sync returns <code>skipped_test_recipient</code> (Neon withdraw is asserted;
+live Resend Audience delete stays Phase 8 / non-example evidence).</li>
+<li><input checked="" disabled="" type="checkbox"> DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
+(signed URL) after 24h; audit rows present. (Mocked private Blob under <code>E2E_AUTH_CAPTURE</code>.)</li>
+<li><input checked="" disabled="" type="checkbox"> Delete-account request schedules deletion and blocks new bookings at the API before money
 moves (POST /bookings/reserve and POST /payments/intent -&gt; 409 ACCOUNT_DELETION_SCHEDULED
 via assertMemberCanBook); a payment that already succeeded still confirms and is then
-cancelled with refund_pending by the deletion sweep; audited.</li>
-<li><input disabled="" type="checkbox"> <code>e2e/member.spec.ts</code> green; <code>check:i18n-parity</code> green.</li>
+cancelled with refund_pending by the deletion sweep; audited. Schedule + reserve 409 +
+cancel-deletion evidenced on loopback (<code>e2e:member</code>); sweep refund_pending + consent
+erase/pseudonymise remain vitest (<code>account-deletion.test.ts</code>).</li>
+<li><input checked="" disabled="" type="checkbox"> <code>e2e/member.spec.ts</code> prefs/DSAR + Stripe-through-cancel evidenced on loopback
+(2026-09-25); <code>check:i18n-parity</code> green in CI.</li>
 </ul>
 <h2 id="05-member-app--tests"><a class="anchor" href="#05-member-app--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>

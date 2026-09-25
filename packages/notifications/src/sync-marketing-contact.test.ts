@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 import {
   firstNameFromDisplayName,
   syncMarketingContact,
@@ -117,5 +117,30 @@ describe("syncMarketingContact", () => {
     expect(result).toEqual({ action: "skipped_no_user" })
     expect(createCalls).toEqual([])
     expect(removeCalls).toEqual([])
+  })
+
+  it("skips live provider for @example.com off Vercel runtimes", async () => {
+    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("VERCEL_ENV", "")
+    try {
+      const result = await syncMarketingContact(
+        { userId: USER_ID },
+        {
+          loadUser: async () => ({
+            userId: USER_ID,
+            email: "e2e@example.com",
+            name: "E2e",
+            locale: "en",
+          }),
+          hasMarketingConsent: async () => ({ granted: true, orgId: ORG_ID }),
+        }
+      )
+      expect(result).toEqual({
+        action: "skipped_test_recipient",
+        email: "e2e@example.com",
+      })
+    } finally {
+      vi.unstubAllEnvs()
+    }
   })
 })
