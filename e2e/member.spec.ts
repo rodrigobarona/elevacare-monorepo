@@ -61,7 +61,9 @@ test.describe("member Space journey", () => {
     page,
     request,
   }) => {
-    test.setTimeout(180_000)
+    // Cold Turbopack first compile of /bookings/reserve + /payments/intent
+    // can consume well over 2 minutes on a fresh local stack.
+    test.setTimeout(360_000)
     test.skip(
       !runLiveStripe,
       "set E2E_LIVE_STRIPE=1 to book the seeded paid offer fisiomota / first-visit / €60 (never anaquick)"
@@ -115,7 +117,8 @@ test.describe("member Space journey", () => {
       (res) =>
         res.url().includes("/bookings/confirm") &&
         res.request().method() === "POST",
-      { timeout: 45_000 }
+      // Cold compile of /bookings/confirm can exceed 45s on first hit.
+      { timeout: 120_000 }
     )
     const pay = page.getByTestId("booking-pay-submit")
     await pay.scrollIntoViewIfNeeded()
@@ -209,7 +212,8 @@ test.describe("member Space without live Stripe", () => {
     page,
     request,
   }) => {
-    test.setTimeout(120_000)
+    // Cold Turbopack compiles (account → gateway → app Space) routinely exceed 2m.
+    test.setTimeout(240_000)
     const health = await request.get(`${apiUrl}/health`)
     test.skip(health.status() !== 200, "needs local API on :3002")
 
@@ -253,7 +257,8 @@ test.describe("member Space without live Stripe", () => {
     page,
     request,
   }) => {
-    test.setTimeout(120_000)
+    // Cold Turbopack compiles (account → gateway → app Space) routinely exceed 2m.
+    test.setTimeout(240_000)
     // Guest magic-link activation with a booking remains on the live Stripe
     // journey above. This case covers post-verify magic-link → Space without
     // Stripe; keep it in the suite so Phase 05 cannot go green without it.
@@ -387,7 +392,13 @@ async function cancelCreatedBooking(
   bookingId: string | undefined
 ): Promise<void> {
   if (!bookingId) return
-  const cookies = cookieHeaderFromPage(await page.context().cookies())
+  let cookies: string
+  try {
+    cookies = cookieHeaderFromPage(await page.context().cookies())
+  } catch {
+    // Browser already closed (primary failure); skip cleanup.
+    return
+  }
   if (!cookies) return
   const response = await request.post(
     `${apiUrl}/me/bookings/${bookingId}/cancel`,

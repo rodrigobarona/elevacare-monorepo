@@ -25,8 +25,9 @@ export async function walkFunnelToDetails(
   }
 
   await expect(whenHeading).toBeVisible()
+  // Cold Turbopack first compile of /slots routinely exceeds 15s locally.
   await expect(page.getByTestId("booking-slots-loading")).toHaveCount(0, {
-    timeout: 15_000,
+    timeout: 60_000,
   })
   await expect(page.getByTestId("booking-slots-error")).toHaveCount(0)
 
