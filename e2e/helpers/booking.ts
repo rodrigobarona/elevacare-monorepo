@@ -58,7 +58,9 @@ async function selectSlotOnOrAfter(
     const days = picker.getByTestId("booking-slot-day")
     await expect(days.first()).toBeVisible({ timeout: 15_000 })
     const dayCount = await days.count()
-    for (let i = dayCount - 1; i >= 0; i--) {
+    // Walk days chronologically so retries do not keep landing on the same
+    // late-month slot that a prior e2e hold already claimed.
+    for (let i = 0; i < dayCount; i++) {
       await days.nth(i).click()
       const times = picker.getByTestId("booking-slot-time")
       await expect(times.first()).toBeVisible({ timeout: 10_000 })
