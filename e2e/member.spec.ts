@@ -326,18 +326,20 @@ async function persistMarketingPreference(
     .getByTestId("notify-email-marketing")
     .locator('[data-slot="checkbox"]')
   await expect(marketingEmail).toBeVisible()
+  // React Aria Checkbox exposes selection via data-selected, not aria-checked.
   const wasSelected =
-    (await marketingEmail.getAttribute("aria-checked")) === "true"
+    (await marketingEmail.getAttribute("data-selected")) === "true"
   await marketingEmail.click()
   await page.getByTestId("member-notifications-save").click()
   await expect(page.getByText(/Notification preferences saved/i)).toBeVisible({
     timeout: 15_000,
   })
   await page.reload()
-  await expect(marketingEmail).toHaveAttribute(
-    "aria-checked",
-    wasSelected ? "false" : "true"
-  )
+  if (wasSelected) {
+    await expect(marketingEmail).not.toHaveAttribute("data-selected", "true")
+  } else {
+    await expect(marketingEmail).toHaveAttribute("data-selected", "true")
+  }
 
   const me = await request.get(`${apiUrl}/me`, {
     headers: authHeaders(cookieHeaderFromPage(await page.context().cookies())),
