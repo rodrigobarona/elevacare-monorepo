@@ -37,6 +37,29 @@ function cookieHeaderFromPage(
   return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ")
 }
 
+const SPACE_PATH_RE = /\/space-[a-z0-9]+/
+
+/**
+ * After sign-in / magic-link, the app may already redirect to the personal
+ * Space. A second goto(/dashboard) then races and throws net::ERR_ABORTED.
+ */
+async function landOnPersonalSpace(page: Page): Promise<string> {
+  const onSpace = () => SPACE_PATH_RE.test(new URL(page.url()).pathname)
+  if (!onSpace()) {
+    try {
+      await page.waitForURL(SPACE_PATH_RE, { timeout: 3_000 })
+    } catch {
+      await page
+        .goto(`${webUrl}/dashboard`, { waitUntil: "domcontentloaded" })
+        .catch(() => undefined)
+    }
+  }
+  await expect(page).toHaveURL(SPACE_PATH_RE, { timeout: 20_000 })
+  const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+  expect(spaceSlug).toMatch(/^space-/)
+  return spaceSlug
+}
+
 test.describe("member e2e target", () => {
   test("does not run auth or member journeys against non-loopback hosts", () => {
     expect(
@@ -157,15 +180,7 @@ test.describe("member Space journey", () => {
       }
 
       await page.goto(magicUrl)
-      await page.goto(`${webUrl}/dashboard`)
-      await expect(page).toHaveURL(/\/space-[a-z0-9]+(?:\/)?(?:\?.*)?$/, {
-        timeout: 20_000,
-      })
-
-      const spaceSlug = new URL(page.url()).pathname
-        .split("/")
-        .filter(Boolean)[0]
-      expect(spaceSlug).toMatch(/^space-/)
+      const spaceSlug = await landOnPersonalSpace(page)
 
       const bookingCard = page.getByTestId("member-booking-card")
       await expect(bookingCard.first()).toBeVisible({ timeout: 15_000 })
@@ -245,9 +260,7 @@ test.describe("member Space without live Stripe", () => {
     await page.getByTestId("login-submit").click()
     await signedIn
 
-    await page.goto(`${webUrl}/dashboard`)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
-    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+    const spaceSlug = await landOnPersonalSpace(page)
 
     await persistMarketingPreference(page, request, spaceSlug)
     await requestDsarWithMockedBlob(page, request, spaceSlug)
@@ -292,10 +305,7 @@ test.describe("member Space without live Stripe", () => {
     )
 
     await page.goto(magicUrl!)
-    await page.goto(`${webUrl}/dashboard`)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
-    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
-    expect(spaceSlug).toMatch(/^space-/)
+    const spaceSlug = await landOnPersonalSpace(page)
 
     // Cookie minting (Playwright page.request shares the browser jar).
     const me = await page.request.get(`${apiUrl}/me`, {
