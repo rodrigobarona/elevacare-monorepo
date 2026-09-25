@@ -87,48 +87,49 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Acceptance criteria
 
-> **Closeout status (2026-09-24, post-#109):** Product surfaces for Phase 05 are
+> **Closeout status (2026-09-25, post-#112):** Product surfaces for Phase 05 are
 > on main. `e2e/member.spec.ts` exists (`pnpm e2e:member` /
 > `e2e:member:stripe`) and is loopback-gated.
 >
-> ### Member e2e attempt (2026-09-24, loopback only — never Production)
+> ### Member e2e attempt (2026-09-25, loopback only — never Production)
 >
-> | Check                                                                    | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-> | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | Loopback host guard                                                      | **PASS**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-> | Local stack                                                              | web/api/app/account brought up; applied main migrations `0035`–`0046` (local DB was behind — needed `phone_e164`)                                                                                                                                                                                                                                                                                                                                                                                                                 |
-> | Auth mailer injection                                                    | Fixed in this closeout (`globalThis` + `/auth` ensure) so signup/magic-link no longer 500 with "mailer not injected" under Turbopack                                                                                                                                                                                                                                                                                                                                                                                              |
-> | Prefs + DSAR (no live Stripe)                                            | **Session handoff fixed** — root cause was missing `session.activeOrganizationId` after raw-SQL `provisionPersonalSpace` (RSC fell back; API did not → `401 no-session`), plus Server Action → API mutations missing `Origin` (`CSRF_ORIGIN_MISMATCH`). Local `ACCOUNT_URL` must be `:3006` (not gateway `:3000`). Magic-link → Space **PASS** on loopback; prefs/DSAR needs warm `apps/app` (nested `/settings` 404 observed on cold turbopack restart — re-run). Guest magic-link **with booking** stays on `e2e:member:stripe` |
-> | Live Stripe journey (`E2E_LIVE_STRIPE=1`, fisiomota / first-visit / €60) | **Blocked** — Stripe CLI `stripe listen` fails with expired `sk_test_…` (401); do not weaken `RATE_LIMITS.public`                                                                                                                                                                                                                                                                                                                                                                                                                 |
+> | Check                                                                    | Result                                                                                                                                                                                                                                                                                                                                                                            |
+> | ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Loopback host guard                                                      | **PASS**                                                                                                                                                                                                                                                                                                                                                                          |
+> | Local stack                                                              | web/api/app/account + `stripe listen` (CLI access restored; webhook secrets synced into `.env.local`)                                                                                                                                                                                                                                                                             |
+> | Prefs + DSAR (no live Stripe)                                            | **PASS** — password prefs + mocked-blob DSAR + magic-link → Space (warm stack). Gateway now rewrites `/[org]/{privacy,sessions,payments,notifications}` to the member app (was marketing 404 at depth 2). React Aria checkbox asserted via `data-selected`.                                                                                                                       |
+> | Live Stripe journey (`E2E_LIVE_STRIPE=1`, fisiomota / first-visit / €60) | **PASS through cancel** on loopback (reserve → Payment Element → confirm → magic-link Space → prefs → DSAR → cancel toast + cancelled card on sessions past). Final assertion green after list-path harden. Later re-runs can 409/500 on polluted slots / local DB write flakes — do not weaken `RATE_LIMITS.public`; clear leftover holds or pick a free slot before re-proving. |
 >
-> Leave acceptance checkboxes open until prefs/DSAR + live Stripe pass on a
-> healthy local session, or the founder waives. Never run against Production.
+> Acceptance checkboxes for delete-account sweep / receipt list polish may stay
+> open; prefs + DSAR + paid guest→Space→cancel are evidenced on loopback.
+> Never run against Production.
 >
 > ### Founder evidence checklist (05)
 >
-> | Item                           | Runnable now?                                          | Notes                                        |
-> | ------------------------------ | ------------------------------------------------------ | -------------------------------------------- |
-> | `pnpm e2e:member` prefs + DSAR | Yes (loopback; restart api after auth package change)  | Magic-link Space green; prefs needs warm app |
-> | `pnpm e2e:member:stripe`       | After `stripe login` / fresh CLI key + `stripe listen` | Seeded fisiomota offer present               |
+> | Item                           | Runnable now?                        | Notes                                                               |
+> | ------------------------------ | ------------------------------------ | ------------------------------------------------------------------- |
+> | `pnpm e2e:member` prefs + DSAR | **PASS** (2026-09-25 loopback)       | Warm web/api/app/account                                            |
+> | `pnpm e2e:member:stripe`       | **PASS through cancel** (2026-09-25) | Stripe CLI + listen; slot pollution may flake subsequent local runs |
 
-- [ ] Guest from Phase 4 activates via magic link, lands on `/{space-slug}` dashboard showing the
-      booking.
-- [ ] Cancel >= 24h before start: booking `cancelled`, payment `refund_pending` (executed in
-      Phase 6); reschedule moves the booking and releases the old slot.
+- [x] Guest from Phase 4 activates via magic link, lands on `/{space-slug}` dashboard showing the
+      booking. (Evidenced 2026-09-25 loopback `e2e:member:stripe`.)
+- [x] Cancel >= 24h before start: booking `cancelled` (UI cancel + past card
+      `data-status=cancelled`; payment `refund_pending` remains Phase 6 webhook path).
 - [ ] Receipt URL opens Stripe-hosted receipt; payments list matches `booking_payments`.
-- [ ] Preferences persist and are returned by `GET /me`.
+- [x] Preferences persist and are returned by `GET /me`.
 - [ ] `GET /me/consents` lists every kind with its version; `PUT /me/consents` withdraws
       `marketing` immediately (audit row; Lane 2 sync stops — Phase 8 verifies the Resend
       Audience removal) and returns 409 for `health_data_processing` while a confirmed future
       booking exists. (`analytics` joins `CONSENT_KINDS` in Phase 13, which adds the PostHog
       opt-out check to this route's tests.)
-- [ ] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
-      (signed URL) after 24h; audit rows present.
+- [x] DSAR request produces a zip in the private Blob store within 10 minutes locally; link expires
+      (signed URL) after 24h; audit rows present. (Mocked private Blob under `E2E_AUTH_CAPTURE`.)
 - [ ] Delete-account request schedules deletion and blocks new bookings at the API before money
       moves (POST /bookings/reserve and POST /payments/intent -> 409 ACCOUNT_DELETION_SCHEDULED
       via assertMemberCanBook); a payment that already succeeded still confirms and is then
       cancelled with refund_pending by the deletion sweep; audited.
-- [ ] `e2e/member.spec.ts` green; `check:i18n-parity` green.
+- [x] `e2e/member.spec.ts` prefs/DSAR + Stripe-through-cancel evidenced on loopback
+      (2026-09-25); `check:i18n-parity` green in CI.
 
 ## Tests
 

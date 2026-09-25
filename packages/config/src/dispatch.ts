@@ -3,6 +3,7 @@ import {
   ACCOUNT_STANDALONE_PATHS,
   APP_FIXED_SEGMENTS,
   APP_STANDALONE_PATHS,
+  MEMBER_ORG_SEGMENTS,
   WEB_MARKETING_PATHS,
   RESERVED_SLUGS,
   isOrgSlugShape,
@@ -40,6 +41,7 @@ const appPrefixSegments = new Set<string>(APP_FIXED_SEGMENTS)
 const accountStandalone = new Set<string>(ACCOUNT_STANDALONE_PATHS)
 const appStandalone = new Set<string>(APP_STANDALONE_PATHS)
 const marketingPaths = new Set<string>(WEB_MARKETING_PATHS)
+const memberOrgSegments = new Set<string>(MEMBER_ORG_SEGMENTS)
 const localeSet = new Set<string>(locales)
 
 /**
@@ -55,8 +57,9 @@ const localeSet = new Set<string>(locales)
  *  6. Account standalone (/dashboard, /login, /callback, /logout,
  *     /signup) at depth 1 -> account zone
  *  7. App standalone at depth 1 -> app zone
- *  8. Org-scoped second segment (/:slug/team|admin|academy|settings)
- *     -> respective satellite app (team org experts → /team, managers → /admin)
+ *  8. Org-scoped second segment (/:slug/team|admin|academy|settings|privacy|
+ *     sessions|payments|notifications) -> respective satellite / member app
+ *     (team org experts → /team, managers → /admin; member Space chrome → app)
  *  9. Public marketplace (Phase 04):
  *       /:username            without session -> marketing (public profile)
  *       /:username/:eventSlug                 -> marketing (booking funnel)
@@ -109,7 +112,7 @@ export function resolveDispatch(
     return { kind: "rewrite", origin: origins.team }
   if (isSlug && second === "academy")
     return { kind: "rewrite", origin: origins.academy }
-  if (isSlug && second === "settings")
+  if (isSlug && memberOrgSegments.has(second))
     return { kind: "rewrite", origin: origins.app }
 
   if (isSlug) {

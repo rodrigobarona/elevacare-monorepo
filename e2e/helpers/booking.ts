@@ -25,8 +25,9 @@ export async function walkFunnelToDetails(
   }
 
   await expect(whenHeading).toBeVisible()
+  // Cold Turbopack first compile of /slots routinely exceeds 15s locally.
   await expect(page.getByTestId("booking-slots-loading")).toHaveCount(0, {
-    timeout: 15_000,
+    timeout: 60_000,
   })
   await expect(page.getByTestId("booking-slots-error")).toHaveCount(0)
 
@@ -57,18 +58,23 @@ async function selectSlotOnOrAfter(
     const days = picker.getByTestId("booking-slot-day")
     await expect(days.first()).toBeVisible({ timeout: 15_000 })
     const dayCount = await days.count()
-    for (let i = dayCount - 1; i >= 0; i--) {
+    // Walk days chronologically so retries do not keep landing on the same
+    // late-month slot that a prior e2e hold already claimed.
+    for (let i = 0; i < dayCount; i++) {
       await days.nth(i).click()
       const times = picker.getByTestId("booking-slot-time")
       await expect(times.first()).toBeVisible({ timeout: 10_000 })
       const timeCount = await times.count()
+      const eligible: number[] = []
       for (let t = 0; t < timeCount; t++) {
         const start = await times.nth(t).getAttribute("data-start")
-        if (start && Date.parse(start) >= minMs) {
-          await times.nth(t).click()
-          return
-        }
+        if (start && Date.parse(start) >= minMs) eligible.push(t)
       }
+      if (eligible.length === 0) continue
+      // Prefer a mid/late eligible slot so retries avoid a hot first slot.
+      const pick = eligible[Math.min(eligible.length - 1, 1)]!
+      await times.nth(pick).click()
+      return
     }
     if (month < 3) {
       await page.getByTestId("booking-slot-next").click()

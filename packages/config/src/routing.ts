@@ -33,12 +33,30 @@ export const APP_STANDALONE_PATHS = [] as const
 /**
  * Second-level segments that appear under /[orgSlug]/*. Used by
  * the web proxy to detect org-slug-prefixed app routes.
+ *
+ * Member Space chrome (`settings` / `privacy` / `sessions` / `payments` /
+ * `notifications`) must rewrite to the member app even at depth 2 —
+ * otherwise the gateway treats them as public booking event slugs and
+ * serves a marketing 404.
  */
 export const ORG_SCOPED_SEGMENTS = [
   "team",
   "admin",
   "academy",
   "settings",
+  "privacy",
+  "sessions",
+  "payments",
+  "notifications",
+] as const
+
+/** Member-app second segments under /[orgSlug]/* (subset of ORG_SCOPED). */
+export const MEMBER_ORG_SEGMENTS = [
+  "settings",
+  "privacy",
+  "sessions",
+  "payments",
+  "notifications",
 ] as const
 
 /**

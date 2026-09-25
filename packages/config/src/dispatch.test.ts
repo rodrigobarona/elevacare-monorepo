@@ -146,6 +146,19 @@ describe("resolveDispatch - org-scoped second segment", () => {
       origin: "http://app",
     })
   })
+
+  it("dispatches member Space chrome segments to app origin", () => {
+    for (const segment of [
+      "privacy",
+      "sessions",
+      "payments",
+      "notifications",
+    ] as const) {
+      expect(
+        resolveDispatch(`/space-abc123/${segment}`, true, origins)
+      ).toEqual({ kind: "rewrite", origin: "http://app" })
+    }
+  })
 })
 
 describe("resolveDispatch - bare org slug", () => {

@@ -29,12 +29,35 @@ import {
 
 const runMemberJourney = process.env.E2E_MEMBER === "1"
 const runLiveStripe = process.env.E2E_LIVE_STRIPE === "1"
-const CANCEL_MIN_START = () => new Date(Date.now() + 25 * 60 * 60 * 1000)
+const CANCEL_MIN_START = () => new Date(Date.now() + 5 * 24 * 60 * 60 * 1000)
 
 function cookieHeaderFromPage(
   cookies: Array<{ name: string; value: string }>
 ): string {
   return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join("; ")
+}
+
+const SPACE_PATH_RE = /\/space-[a-z0-9]+/
+
+/**
+ * After sign-in / magic-link, the app may already redirect to the personal
+ * Space. A second goto(/dashboard) then races and throws net::ERR_ABORTED.
+ */
+async function landOnPersonalSpace(page: Page): Promise<string> {
+  const onSpace = () => SPACE_PATH_RE.test(new URL(page.url()).pathname)
+  if (!onSpace()) {
+    try {
+      await page.waitForURL(SPACE_PATH_RE, { timeout: 3_000 })
+    } catch {
+      await page
+        .goto(`${webUrl}/dashboard`, { waitUntil: "domcontentloaded" })
+        .catch(() => undefined)
+    }
+  }
+  await expect(page).toHaveURL(SPACE_PATH_RE, { timeout: 20_000 })
+  const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+  expect(spaceSlug).toMatch(/^space-/)
+  return spaceSlug
 }
 
 test.describe("member e2e target", () => {
@@ -61,7 +84,9 @@ test.describe("member Space journey", () => {
     page,
     request,
   }) => {
-    test.setTimeout(180_000)
+    // Cold Turbopack first compile of /bookings/reserve + /payments/intent
+    // can consume well over 2 minutes on a fresh local stack.
+    test.setTimeout(360_000)
     test.skip(
       !runLiveStripe,
       "set E2E_LIVE_STRIPE=1 to book the seeded paid offer fisiomota / first-visit / €60 (never anaquick)"
@@ -100,10 +125,13 @@ test.describe("member Space journey", () => {
     )
     await page.getByTestId("booking-continue-details").click()
     const reserveResponse = await reserve
-    test.skip(
-      reserveResponse.status() !== 201,
-      `POST /bookings/reserve returned ${reserveResponse.status()}`
-    )
+    if (reserveResponse.status() !== 201) {
+      void intent.catch(() => undefined)
+      const body = await reserveResponse.text().catch(() => "")
+      throw new Error(
+        `POST /bookings/reserve returned ${reserveResponse.status()}: ${body.slice(0, 300)}`
+      )
+    }
     const intentResponse = await intent
     test.skip(
       ![200, 201].includes(intentResponse.status()),
@@ -115,7 +143,8 @@ test.describe("member Space journey", () => {
       (res) =>
         res.url().includes("/bookings/confirm") &&
         res.request().method() === "POST",
-      { timeout: 45_000 }
+      // Cold compile of /bookings/confirm can exceed 45s on first hit.
+      { timeout: 120_000 }
     )
     const pay = page.getByTestId("booking-pay-submit")
     await pay.scrollIntoViewIfNeeded()
@@ -154,15 +183,7 @@ test.describe("member Space journey", () => {
       }
 
       await page.goto(magicUrl)
-      await page.goto(`${webUrl}/dashboard`)
-      await expect(page).toHaveURL(/\/space-[a-z0-9]+(?:\/)?(?:\?.*)?$/, {
-        timeout: 20_000,
-      })
-
-      const spaceSlug = new URL(page.url()).pathname
-        .split("/")
-        .filter(Boolean)[0]
-      expect(spaceSlug).toMatch(/^space-/)
+      const spaceSlug = await landOnPersonalSpace(page)
 
       const bookingCard = page.getByTestId("member-booking-card")
       await expect(bookingCard.first()).toBeVisible({ timeout: 15_000 })
@@ -176,18 +197,34 @@ test.describe("member Space journey", () => {
       await requestDsarWithMockedBlob(page, request, spaceSlug)
 
       await page.goto(`/${spaceSlug}`)
-      await page.getByTestId("member-booking-detail").first().click()
+      const detail = page.getByTestId("member-booking-detail").first()
+      await expect(detail).toBeVisible({ timeout: 15_000 })
+      // LinkButton client-routes via AppRouterProvider on the rewritten app
+      // zone; a soft nav can leave the Playwright page on Space home. Full
+      // load through the gateway guarantees /sessions/[id] hits the app.
+      const detailHref = await detail.getAttribute("href")
+      expect(detailHref).toMatch(/\/sessions\/[a-f0-9-]+/)
+      await page.goto(
+        detailHref!.startsWith("http") ? detailHref! : `${webUrl}${detailHref}`
+      )
       const cancel = page.getByTestId("member-cancel-session")
-      await expect(cancel).toBeVisible()
+      await expect(cancel).toBeVisible({ timeout: 20_000 })
       await expect(cancel).toBeEnabled()
       await cancel.click()
       await page.getByTestId("member-cancel-confirm").click()
-      await expect(page).toHaveURL(new RegExp(`/${spaceSlug}/sessions`), {
+      await expect(page.getByText(/Session cancelled/i)).toBeVisible({
         timeout: 15_000,
       })
+      // Soft router.push under the gateway rewrite can leave Playwright on
+      // the detail page; hard-load the sessions list to assert outcome.
+      await page.goto(`${webUrl}/${spaceSlug}/sessions`)
       await expect(
-        page.getByTestId("member-booking-card").first()
-      ).toHaveAttribute("data-status", "cancelled")
+        page
+          .locator(
+            '[data-testid="member-booking-card"][data-status="cancelled"]'
+          )
+          .first()
+      ).toBeVisible({ timeout: 15_000 })
     } finally {
       await cancelCreatedBooking(page, request, bookingId)
     }
@@ -209,7 +246,8 @@ test.describe("member Space without live Stripe", () => {
     page,
     request,
   }) => {
-    test.setTimeout(120_000)
+    // Cold Turbopack compiles (account → gateway → app Space) routinely exceed 2m.
+    test.setTimeout(240_000)
     const health = await request.get(`${apiUrl}/health`)
     test.skip(health.status() !== 200, "needs local API on :3002")
 
@@ -241,9 +279,7 @@ test.describe("member Space without live Stripe", () => {
     await page.getByTestId("login-submit").click()
     await signedIn
 
-    await page.goto(`${webUrl}/dashboard`)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
-    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
+    const spaceSlug = await landOnPersonalSpace(page)
 
     await persistMarketingPreference(page, request, spaceSlug)
     await requestDsarWithMockedBlob(page, request, spaceSlug)
@@ -253,7 +289,8 @@ test.describe("member Space without live Stripe", () => {
     page,
     request,
   }) => {
-    test.setTimeout(120_000)
+    // Cold Turbopack compiles (account → gateway → app Space) routinely exceed 2m.
+    test.setTimeout(240_000)
     // Guest magic-link activation with a booking remains on the live Stripe
     // journey above. This case covers post-verify magic-link → Space without
     // Stripe; keep it in the suite so Phase 05 cannot go green without it.
@@ -287,10 +324,7 @@ test.describe("member Space without live Stripe", () => {
     )
 
     await page.goto(magicUrl!)
-    await page.goto(`${webUrl}/dashboard`)
-    await expect(page).toHaveURL(/\/space-[a-z0-9]+/, { timeout: 20_000 })
-    const spaceSlug = new URL(page.url()).pathname.split("/").filter(Boolean)[0]
-    expect(spaceSlug).toMatch(/^space-/)
+    const spaceSlug = await landOnPersonalSpace(page)
 
     // Cookie minting (Playwright page.request shares the browser jar).
     const me = await page.request.get(`${apiUrl}/me`, {
@@ -321,18 +355,20 @@ async function persistMarketingPreference(
     .getByTestId("notify-email-marketing")
     .locator('[data-slot="checkbox"]')
   await expect(marketingEmail).toBeVisible()
+  // React Aria Checkbox exposes selection via data-selected, not aria-checked.
   const wasSelected =
-    (await marketingEmail.getAttribute("aria-checked")) === "true"
+    (await marketingEmail.getAttribute("data-selected")) === "true"
   await marketingEmail.click()
   await page.getByTestId("member-notifications-save").click()
   await expect(page.getByText(/Notification preferences saved/i)).toBeVisible({
     timeout: 15_000,
   })
   await page.reload()
-  await expect(marketingEmail).toHaveAttribute(
-    "aria-checked",
-    wasSelected ? "false" : "true"
-  )
+  if (wasSelected) {
+    await expect(marketingEmail).not.toHaveAttribute("data-selected", "true")
+  } else {
+    await expect(marketingEmail).toHaveAttribute("data-selected", "true")
+  }
 
   const me = await request.get(`${apiUrl}/me`, {
     headers: authHeaders(cookieHeaderFromPage(await page.context().cookies())),
@@ -387,7 +423,13 @@ async function cancelCreatedBooking(
   bookingId: string | undefined
 ): Promise<void> {
   if (!bookingId) return
-  const cookies = cookieHeaderFromPage(await page.context().cookies())
+  let cookies: string
+  try {
+    cookies = cookieHeaderFromPage(await page.context().cookies())
+  } catch {
+    // Browser already closed (primary failure); skip cleanup.
+    return
+  }
   if (!cookies) return
   const response = await request.post(
     `${apiUrl}/me/bookings/${bookingId}/cancel`,

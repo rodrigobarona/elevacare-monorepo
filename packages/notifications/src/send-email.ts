@@ -46,6 +46,38 @@ function getResend(): Resend {
   return new Resend(apiKey)
 }
 
+function isDeployedRuntime(): boolean {
+  return (
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview" ||
+    process.env.NODE_ENV === "production"
+  )
+}
+
+/** Resend rejects @example.com outside their allowlist — local e2e uses it. */
+function isExampleComRecipient(to: string): boolean {
+  const at = to.lastIndexOf("@")
+  if (at === -1) return false
+  return to.slice(at + 1).toLowerCase() === "example.com"
+}
+
+/**
+ * Resend's allowlist rejection for test domains. Require the provider's
+ * "testing email address" phrasing so unrelated errors that happen to
+ * mention example.com are not swallowed.
+ */
+function isResendTestRecipientRejection(error: {
+  name?: string
+  message: string
+}): boolean {
+  const message = error.message.toLowerCase()
+  if (!message.includes("testing email address")) return false
+  if (!message.includes("example.com")) return false
+  // validation_error is the documented Resend name for this rejection;
+  // also accept missing name so SDK shape drift does not break local e2e.
+  return !error.name || error.name === "validation_error"
+}
+
 export async function sendViaResend(
   input: SendEmailInput
 ): Promise<SendEmailResult> {
@@ -61,6 +93,19 @@ export async function sendViaResend(
     { idempotencyKey: input.deliveryId }
   )
   if (error) {
+    // Local/dev e2e must not block booking confirm on Resend's @example.com
+    // rejection (guest activation still captures URLs). Only skip when the
+    // recipient itself is @example.com — never mask unrelated send failures.
+    if (
+      !isDeployedRuntime() &&
+      isExampleComRecipient(input.to) &&
+      isResendTestRecipientRejection(error)
+    ) {
+      console.info(
+        `[email] skip resend for test recipient (non-deployed) deliveryId=${input.deliveryId}`
+      )
+      return { providerId: `e2e-skipped:${input.deliveryId}` }
+    }
     throwResendError("send", error)
   }
   if (!data?.id) {
