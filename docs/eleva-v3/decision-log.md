@@ -45,13 +45,16 @@ Each entry should include:
   stays as shipped; waiver closes the 04B **human** exit gate only — it does
   **not** claim those flows were operator-proven. **Not waived:** live FT POST,
   Comunicação, `issueInvoice()` / `invoice.issued` (Phase 07 hard gates).
-  **Do not start Phase 09** — still blocked on those tax/issuance gates.
+  **Do not start Phase 09** — still blocked on those tax/issuance gates **and**
+  on D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off). The 04B waiver does not
+  close D-07.
 - Owner: founder (directive); stamped by engineering
 - Status: active
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
   [`07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
 - Next review: only when Phase 07 hard gates open (or a separate founder waiver
-  naming FT POST / Comunicação / `invoice.issued`)
+  that explicitly names FT POST / Comunicação / `invoice.issued`) **and** D-07
+  is signed (founder+DPO)
 
 ### 2026-09-24: Pre-Phase-09 evidence stamp (post-#109) + auth mailer Turbopack fix
 
@@ -249,7 +252,9 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
   Phase **08** Virtual Phone SMS smoke closed (US1 Trial deliver); IE1 Auth
   Token still required for EU path. **04B human evidence waived** by founder
   2026-09-25 (“Waivo toda a evidência humana 04B”). Remaining pre-Phase-09
-  blocker is hard-blocked **07** FT POST / Comunicação / `invoice.issued`.
+  blockers: hard-blocked **07** FT POST / Comunicação / `invoice.issued`,
+  **and** D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — the 04B waiver
+  closes neither. Do **not** start Phase 09 until both are satisfied.
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
   ADR-023
 - Next review: when Phase 07 hard gates open (do not start Phase 09 before then)

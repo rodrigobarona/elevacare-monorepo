@@ -139,8 +139,9 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > | Private link book-while-closed + revoke 404                                               | API + builder tab                    | **Waived** by founder 2026-09-25                                              |
 >
 > **Phase 09 remains blocked** on hard tax/issuance gates (live FT POST,
-> Comunicação, `issueInvoice()` / `invoice.issued`) — **not** waived by this
-> 04B human-evidence waiver. Do **not** start Phase 09. Do not start FT POST /
+> Comunicação, `issueInvoice()` / `invoice.issued`) **and** on D-07 (Daily
+> HIPAA/BAA/DPA founder+DPO sign-off) — **not** waived by this 04B
+> human-evidence waiver. Do **not** start Phase 09. Do not start FT POST /
 > `invoice.issued`.
 >
 > **2026-09-24 i18n draft slice:** `pnpm i18n:draft` + `translateMessages` +
@@ -470,8 +471,10 @@ not as operator-proven. Seeded funnel + `E2E_EXPERT_OFFER=1` affordances, AI
 fail-closed, `pnpm i18n:draft` / `check:i18n-parity`, and shipped APIs remain the
 engineering bar. Clinical field-level refusal UI stays incomplete engineering
 (backlog; not a Phase 09 blocker). **Do not start Phase 09** — still blocked on
-Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`), which are **not**
-waived.
+Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`; open them or a
+separate founder waiver that explicitly names all three) **and** D-07 (Daily
+HIPAA/BAA/DPA founder+DPO sign-off). Neither is waived by the 04B human-evidence
+waiver.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).
