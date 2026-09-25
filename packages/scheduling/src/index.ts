@@ -125,6 +125,7 @@ export type {
 export {
   deferKeptReservation,
   finalizeExpiredReservation,
+  INTENT_SEARCH_GRACE_MS,
   KEPT_RESERVATION_RECHECK_MS,
   listExpiredReservations,
 } from "./expire-reservation"

@@ -3,10 +3,12 @@ import { captureException, heartbeat } from "@eleva/observability"
 import {
   deferKeptReservation,
   finalizeExpiredReservation,
+  INTENT_SEARCH_GRACE_MS,
   listExpiredReservations,
 } from "@eleva/scheduling"
 
 export const SLOT_RESERVATION_EXPIRY_BATCH_SIZE = 100
+const SEARCH_RETRY_RECHECK_MS = 60 * 1000
 
 /**
  * Expire active slot reservations whose hold has passed (every minute via
@@ -20,6 +22,7 @@ export type SlotExpiryResult = {
   scanned: number
   expired: number
   kept: number
+  retried: number
   bookingsCancelled: number
   linkUsesReleased: number
   errors: number
@@ -33,6 +36,7 @@ export async function expireStaleReservations(
     scanned: 0,
     expired: 0,
     kept: 0,
+    retried: 0,
     bookingsCancelled: 0,
     linkUsesReleased: 0,
     errors: 0,
@@ -50,8 +54,24 @@ export async function expireStaleReservations(
         const decision = await settleExpiredReservationIntent({
           reservationId: reservation.id,
           paymentIntentId: reservation.stripePaymentIntentId,
-          searchByReservation: reservation.hasIntentPendingPayment,
+          searchByReservation: reservation.intentPendingSince != null,
+          searchMissIsFinal:
+            reservation.intentPendingSince != null &&
+            now.getTime() - reservation.intentPendingSince.getTime() >=
+              INTENT_SEARCH_GRACE_MS,
         })
+        if (decision.action === "retry") {
+          await deferKeptReservation({
+            orgId: reservation.orgId,
+            reservationId: reservation.id,
+            paymentIntentId: null,
+            reason: decision.reason,
+            now,
+            recheckMs: SEARCH_RETRY_RECHECK_MS,
+          })
+          result.retried += 1
+          continue
+        }
         if (decision.action === "keep") {
           await deferKeptReservation({
             orgId: reservation.orgId,

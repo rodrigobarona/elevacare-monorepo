@@ -16,6 +16,7 @@ const {
 
 vi.mock("@eleva/billing/server", () => ({ settleExpiredReservationIntent }))
 vi.mock("@eleva/scheduling", () => ({
+  INTENT_SEARCH_GRACE_MS: 10 * 60 * 1000,
   deferKeptReservation,
   listExpiredReservations,
   finalizeExpiredReservation,
@@ -40,13 +41,13 @@ describe("expireStaleReservations", () => {
         id: "res-mbway",
         orgId: "org-1",
         stripePaymentIntentId: "pi_mbway",
-        hasIntentPendingPayment: false,
+        intentPendingSince: null,
       },
       {
         id: "res-idle",
         orgId: "org-1",
         stripePaymentIntentId: "pi_idle",
-        hasIntentPendingPayment: false,
+        intentPendingSince: null,
       },
     ])
     settleExpiredReservationIntent.mockImplementation(
@@ -85,38 +86,61 @@ describe("expireStaleReservations", () => {
       scanned: 2,
       expired: 1,
       kept: 1,
+      retried: 0,
       bookingsCancelled: 1,
       linkUsesReleased: 1,
       errors: 0,
     })
   })
 
-  it("searches Stripe only for intent_pending reservations", async () => {
+  it("trusts an empty search only after the indexing grace period", async () => {
     listExpiredReservations.mockResolvedValue([
       {
-        id: "res-pending",
+        id: "res-fresh",
         orgId: "org-1",
         stripePaymentIntentId: null,
-        hasIntentPendingPayment: true,
+        intentPendingSince: new Date(now.getTime() - 2 * 60 * 1000),
+      },
+      {
+        id: "res-stale",
+        orgId: "org-1",
+        stripePaymentIntentId: null,
+        intentPendingSince: new Date(now.getTime() - 11 * 60 * 1000),
       },
     ])
-    settleExpiredReservationIntent.mockResolvedValue({
-      action: "release",
-      cancelledIntentIds: [],
-    })
+    settleExpiredReservationIntent.mockImplementation(
+      async (input: { searchMissIsFinal: boolean }) =>
+        input.searchMissIsFinal
+          ? { action: "release", cancelledIntentIds: [] }
+          : { action: "retry", reason: "search_empty" }
+    )
     finalizeExpiredReservation.mockResolvedValue({
       expired: true,
       bookingCancelled: true,
       linkUseReleased: false,
     })
 
-    await expireStaleReservations({ now })
+    const result = await expireStaleReservations({ now })
 
     expect(settleExpiredReservationIntent).toHaveBeenCalledWith({
-      reservationId: "res-pending",
+      reservationId: "res-fresh",
       paymentIntentId: null,
       searchByReservation: true,
+      searchMissIsFinal: false,
     })
+    expect(deferKeptReservation).toHaveBeenCalledWith({
+      orgId: "org-1",
+      reservationId: "res-fresh",
+      paymentIntentId: null,
+      reason: "search_empty",
+      now,
+      recheckMs: 60 * 1000,
+    })
+    expect(finalizeExpiredReservation).toHaveBeenCalledTimes(1)
+    expect(finalizeExpiredReservation).toHaveBeenCalledWith(
+      expect.objectContaining({ reservationId: "res-stale" })
+    )
+    expect(result).toMatchObject({ retried: 1, expired: 1 })
   })
 
   it("leaves the reservation active when Stripe fails so the next run retries", async () => {
@@ -125,7 +149,7 @@ describe("expireStaleReservations", () => {
         id: "res-err",
         orgId: "org-1",
         stripePaymentIntentId: "pi_err",
-        hasIntentPendingPayment: false,
+        intentPendingSince: null,
       },
     ])
     settleExpiredReservationIntent.mockRejectedValue(new Error("stripe down"))

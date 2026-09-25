@@ -51,11 +51,14 @@ const UUID_RE =
 export type ExpiredReservationIntentDecision =
   | { action: "release"; cancelledIntentIds: string[] }
   | { action: "keep"; paymentIntentId: string; reason: string }
+  | { action: "retry"; reason: "search_empty" }
 
 /**
  * Decide whether an expired reservation can release its slot. Finds the
  * intent by id, or by `metadata.reservationId` when tx B never stored it
  * (`intent_pending`), and cancels it when the member can no longer pay.
+ * Stripe search is eventually consistent, so an empty search result is only
+ * trusted once `searchMissIsFinal`; before that the caller should retry.
  * Must run outside any database transaction. Throws on Stripe errors so
  * the sweep retries on its next run.
  */
@@ -63,6 +66,7 @@ export async function settleExpiredReservationIntent(input: {
   reservationId: string
   paymentIntentId: string | null
   searchByReservation: boolean
+  searchMissIsFinal: boolean
 }): Promise<ExpiredReservationIntentDecision> {
   let intents: { id: string; status: string }[]
   if (input.paymentIntentId) {
@@ -73,6 +77,9 @@ export async function settleExpiredReservationIntent(input: {
       limit: 10,
     })
     intents = found.data
+    if (intents.length === 0 && !input.searchMissIsFinal) {
+      return { action: "retry", reason: "search_empty" }
+    }
   } else {
     intents = []
   }

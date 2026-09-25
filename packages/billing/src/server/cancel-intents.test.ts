@@ -90,6 +90,7 @@ describe("settleExpiredReservationIntent", () => {
         reservationId,
         paymentIntentId: "pi_mbway",
         searchByReservation: false,
+        searchMissIsFinal: true,
       })
     ).resolves.toEqual({
       action: "keep",
@@ -111,6 +112,7 @@ describe("settleExpiredReservationIntent", () => {
         reservationId,
         paymentIntentId: "pi_idle",
         searchByReservation: false,
+        searchMissIsFinal: true,
       })
     ).resolves.toEqual({ action: "release", cancelledIntentIds: ["pi_idle"] })
     expect(cancel).toHaveBeenCalledWith("pi_idle")
@@ -126,6 +128,7 @@ describe("settleExpiredReservationIntent", () => {
       reservationId,
       paymentIntentId: null,
       searchByReservation: true,
+      searchMissIsFinal: false,
     })
 
     expect(search).toHaveBeenCalledWith({
@@ -138,12 +141,35 @@ describe("settleExpiredReservationIntent", () => {
     })
   })
 
+  it("asks for a retry while an empty search may still be indexing", async () => {
+    search.mockResolvedValue({ data: [] })
+
+    await expect(
+      settleExpiredReservationIntent({
+        reservationId,
+        paymentIntentId: null,
+        searchByReservation: true,
+        searchMissIsFinal: false,
+      })
+    ).resolves.toEqual({ action: "retry", reason: "search_empty" })
+
+    await expect(
+      settleExpiredReservationIntent({
+        reservationId,
+        paymentIntentId: null,
+        searchByReservation: true,
+        searchMissIsFinal: true,
+      })
+    ).resolves.toEqual({ action: "release", cancelledIntentIds: [] })
+  })
+
   it("releases without calling Stripe when no intent can exist", async () => {
     await expect(
       settleExpiredReservationIntent({
         reservationId,
         paymentIntentId: null,
         searchByReservation: false,
+        searchMissIsFinal: true,
       })
     ).resolves.toEqual({ action: "release", cancelledIntentIds: [] })
     expect(retrieve).not.toHaveBeenCalled()
@@ -163,6 +189,7 @@ describe("settleExpiredReservationIntent", () => {
         reservationId,
         paymentIntentId: "pi_race",
         searchByReservation: false,
+        searchMissIsFinal: true,
       })
     ).resolves.toEqual({
       action: "keep",

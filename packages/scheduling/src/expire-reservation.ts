@@ -1,4 +1,4 @@
-import { and, eq, exists, inArray, lte, sql } from "drizzle-orm"
+import { and, eq, inArray, lte, min, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 
@@ -6,7 +6,8 @@ export type ExpiredReservationCandidate = {
   id: string
   orgId: string
   stripePaymentIntentId: string | null
-  hasIntentPendingPayment: boolean
+  /** Oldest `intent_pending` payment row, when tx B never bound an intent. */
+  intentPendingSince: Date | null
 }
 
 export type FinalizeExpiredReservationResult = {
@@ -25,21 +26,19 @@ export async function listExpiredReservations(input: {
         id: main.slotReservations.id,
         orgId: main.slotReservations.orgId,
         stripePaymentIntentId: main.slotReservations.stripePaymentIntentId,
-        hasIntentPendingPayment: exists(
-          tx
-            .select({ id: main.bookingPayments.id })
-            .from(main.bookingPayments)
-            .innerJoin(
-              main.bookings,
-              eq(main.bookings.id, main.bookingPayments.bookingId)
+        intentPendingSince: sql<Date | null>`(${tx
+          .select({ since: min(main.bookingPayments.createdAt) })
+          .from(main.bookingPayments)
+          .innerJoin(
+            main.bookings,
+            eq(main.bookings.id, main.bookingPayments.bookingId)
+          )
+          .where(
+            and(
+              eq(main.bookings.reservationId, main.slotReservations.id),
+              eq(main.bookingPayments.status, "intent_pending")
             )
-            .where(
-              and(
-                eq(main.bookings.reservationId, main.slotReservations.id),
-                eq(main.bookingPayments.status, "intent_pending")
-              )
-            )
-        ).mapWith(Boolean),
+          )})`.mapWith(main.bookingPayments.createdAt),
       })
       .from(main.slotReservations)
       .where(
@@ -151,6 +150,8 @@ export async function finalizeExpiredReservation(input: {
 }
 
 export const KEPT_RESERVATION_RECHECK_MS = 10 * 60 * 1000
+/** How long an unbound `intent_pending` row waits for Stripe search to index its intent. */
+export const INTENT_SEARCH_GRACE_MS = 10 * 60 * 1000
 
 /**
  * Pushes a lapsed hold whose PaymentIntent can still settle out of the next
@@ -160,11 +161,14 @@ export const KEPT_RESERVATION_RECHECK_MS = 10 * 60 * 1000
 export async function deferKeptReservation(input: {
   orgId: string
   reservationId: string
-  paymentIntentId: string
+  paymentIntentId: string | null
   reason: string
   now: Date
+  recheckMs?: number
 }): Promise<{ deferred: boolean }> {
-  const recheckAt = new Date(input.now.getTime() + KEPT_RESERVATION_RECHECK_MS)
+  const recheckAt = new Date(
+    input.now.getTime() + (input.recheckMs ?? KEPT_RESERVATION_RECHECK_MS)
+  )
   return withAudit(
     { orgId: input.orgId, actorUserId: null },
     async (tx, ctx) => {
