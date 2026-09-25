@@ -126,11 +126,10 @@ test.describe("member Space journey", () => {
     await page.getByTestId("booking-continue-details").click()
     const reserveResponse = await reserve
     if (reserveResponse.status() !== 201) {
-      // Drop the dangling intent waiter so skip does not throw "Test ended".
       void intent.catch(() => undefined)
-      test.skip(
-        true,
-        `POST /bookings/reserve returned ${reserveResponse.status()}`
+      const body = await reserveResponse.text().catch(() => "")
+      throw new Error(
+        `POST /bookings/reserve returned ${reserveResponse.status()}: ${body.slice(0, 300)}`
       )
     }
     const intentResponse = await intent
