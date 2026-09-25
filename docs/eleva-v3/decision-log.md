@@ -32,6 +32,27 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-25: Founder waives ALL Phase 04B human evidence
+
+- Decision: Founder explicitly waived **all** Phase 04B human evidence for
+  pre-Phase-09 closeout with intent “Waivo toda a evidência humana 04B”
+  (2026-09-25). Waived items: design-pass screenshots (wizard/builder/calendar;
+  light+dark; pt+en; 360+1280), multi-account calendar OAuth/busy
+  (`use_for_busy`), destination-override live booking + revoke/reconnect,
+  ICS→Apple Calendar subscribe proof, Connect UI→publish→funnel for net-new
+  Quick chat / Physiotherapy, clinical publish-refusal UX next to fields, and
+  private-link book-while-closed + revoke live UX. Engineering already on main
+  stays as shipped; waiver closes the 04B **human** exit gate only — it does
+  **not** claim those flows were operator-proven. **Not waived:** live FT POST,
+  Comunicação, `issueInvoice()` / `invoice.issued` (Phase 07 hard gates).
+  **Do not start Phase 09** — still blocked on those tax/issuance gates.
+- Owner: founder (directive); stamped by engineering
+- Status: active
+- Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
+  [`07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+- Next review: only when Phase 07 hard gates open (or a separate founder waiver
+  naming FT POST / Comunicação / `invoice.issued`)
+
 ### 2026-09-24: Pre-Phase-09 evidence stamp (post-#109) + auth mailer Turbopack fix
 
 - Decision: After `#109` (`pnpm i18n:draft` age gate) on main, attempt local
@@ -50,7 +71,8 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
   [`06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md),
   [`07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md),
   [`08-notifications-lane1.md`](./execution-plan/phases/08-notifications-lane1.md)
-- Next review: founder waive or run evidence checklist; then Phase 09.0 only
+- Next review: superseded for 04B human evidence by 2026-09-25 founder waiver;
+  Phase 09 still blocked on Phase 07 tax/issuance gates
 
 ### 2026-09-24: Phase 04B `pnpm i18n:draft` + draft age gate
 
@@ -225,11 +247,12 @@ no-session` under local zone URLs; Stripe CLI key expired). Phase 07
   start until this closeout is reported.
 - Clarification (2026-09-25): Phase **05** loopback evidence closed via `#113`.
   Phase **08** Virtual Phone SMS smoke closed (US1 Trial deliver); IE1 Auth
-  Token still required for EU path. Remaining closeout is mostly **04B founder
-  human evidence** + hard-blocked **07** FT / `invoice.issued`.
+  Token still required for EU path. **04B human evidence waived** by founder
+  2026-09-25 (“Waivo toda a evidência humana 04B”). Remaining pre-Phase-09
+  blocker is hard-blocked **07** FT POST / Comunicação / `invoice.issued`.
 - Related: [`execution-plan/phases/04b-expert-offer-builder.md`](./execution-plan/phases/04b-expert-offer-builder.md),
   ADR-023
-- Next review: after 04B exit gate or founder waiver
+- Next review: when Phase 07 hard gates open (do not start Phase 09 before then)
 - Clarification (same day): ADR-023 storage field is **`json`** (not `value`). The phase
   prompt's `{ value, html, text }` spelling is corrected to match the ADR.
 

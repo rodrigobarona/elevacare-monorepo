@@ -3239,60 +3239,64 @@ multi-calendar, destination overrides), <code>design-system-spec.md</code> (edit
 </ol>
 <h2 id="04b-expert-offer-builder--acceptance-criteria"><a class="anchor" href="#04b-expert-offer-builder--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
-<p><strong>Closeout status (2026-09-25, post-#112):</strong> Phase 4B engineering is largely
-on main (builder path, modes, calendar UI, ICS, AI assist, i18n draft gate).
-Member live money path on loopback is evidenced via Phase 05
-<code>e2e:member:stripe</code> (<strong>PASS through cancel</strong>, 2026-09-25) — that closes the
-paid guest→Space→cancel funnel proof shared with Phase 04; it does <strong>not</strong>
-close 04B founder items that still need human OAuth / design screenshots /
-Connect-ready UI→publish.</p>
-<h3 id="04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run"><a class="anchor" href="#04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waive-or-run" aria-label="Link to section">#</a>Founder evidence checklist (04B exit — waive or run)</h3>
+<p><strong>Closeout status (2026-09-25):</strong> Phase 4B engineering is on main (builder
+path, modes, calendar UI, ICS, AI assist, i18n draft gate). Member live money
+path on loopback is evidenced via Phase 05 <code>e2e:member:stripe</code> (<strong>PASS through
+cancel</strong>, 2026-09-25). <strong>Founder waived ALL Phase 04B human evidence</strong> for
+pre-Phase-09 closeout on 2026-09-25 with intent “Waivo toda a evidência humana
+04B” — design screenshots, multi-calendar OAuth/busy, ICS→Apple, Connect
+UI→publish→funnel, and clinical/private-link live UX are <strong>waived</strong> (not
+engineering-proven). This does <strong>not</strong> waive FT POST / Comunicação /
+<code>invoice.issued</code> (Phase 07 hard gates).</p>
+<h3 id="04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waived-2026-09-25"><a class="anchor" href="#04b-expert-offer-builder--founder-evidence-checklist-04b-exit-waived-2026-09-25" aria-label="Link to section">#</a>Founder evidence checklist (04B exit — <strong>waived</strong> 2026-09-25)</h3>
 <table>
 <thead>
 <tr>
 <th>Item</th>
 <th>Engineering</th>
-<th>Evidence still needed</th>
+<th>Evidence</th>
 </tr>
 </thead>
 <tbody><tr>
 <td>UI→publish→funnel for <strong>net-new</strong> Quick chat / Physiotherapy</td>
 <td>Builder path + seeded funnel shipped</td>
-<td>Connect-ready expert loopback session (<code>E2E_EXPERT_OFFER=1</code> covers affordances only)</td>
+<td><strong>Waived</strong> by founder 2026-09-25 (not Connect-ready loopback-proven)</td>
 </tr>
 <tr>
 <td>Design-pass screenshots (wizard / builder / calendar; light+dark; pt+en; 360+1280)</td>
 <td>UI on main</td>
-<td>Human screenshots — do not fake</td>
+<td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 <tr>
 <td>Multi-account calendar busy (2× Google + 1× Microsoft; only <code>use_for_busy</code> affects slots)</td>
 <td>Busy/destination UI shipped</td>
-<td>Human OAuth + busy-slot proof</td>
+<td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 <tr>
 <td>Destination override per mode → booking lands on the right calendar; revoke → reconnect</td>
 <td>Overrides API + UI shipped (<code>#106</code>)</td>
-<td>Live multi-calendar booking proof</td>
+<td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 <tr>
 <td>No calendar connected → ICS feed shows bookings in Apple Calendar</td>
 <td>ICS feed tokens shipped (<code>#105</code>)</td>
-<td>Manual Apple Calendar subscribe proof</td>
+<td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 <tr>
 <td>Clinical worldwide / language subset publish refusals next to fields</td>
 <td>Partial (invariants API)</td>
-<td>UX sentence-next-to-field proof</td>
+<td><strong>Waived</strong> by founder 2026-09-25 (UX sentence-next-to-field not human-proven)</td>
 </tr>
 <tr>
 <td>Private link book-while-closed + revoke 404</td>
 <td>API + builder tab</td>
-<td>Live private-link e2e</td>
+<td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 </tbody></table>
-<p><strong>Phase 09 remains blocked</strong> until this checklist is met or the founder
-explicitly waives remaining items. Do not start FT POST / <code>invoice.issued</code>.</p>
+<p><strong>Phase 09 remains blocked</strong> on hard tax/issuance gates (live FT POST,
+Comunicação, <code>issueInvoice()</code> / <code>invoice.issued</code>) — <strong>not</strong> waived by this
+04B human-evidence waiver. Do <strong>not</strong> start Phase 09. Do not start FT POST /
+<code>invoice.issued</code>.</p>
 <p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
 14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>, <code>#109</code>).</p>
 </blockquote>
@@ -3314,24 +3318,31 @@ folder). Public reads remain <code>/public/experts/*</code>.</li>
 ensures a default schedule via <code>getOrCreateDefaultSchedule</code>.)</li>
 <li><input disabled="" type="checkbox"> Builder refuses to publish a <code>clinical</code> event type whose mode is worldwide or outside
 <code>service_countries</code>, an in-person mode without a location, and a mode whose languages are not
-a subset of the profile; each refusal is a sentence a human understands, next to the field.</li>
+a subset of the profile; each refusal is a sentence a human understands, next to the field.
+(Invariants API partial on main; field-level UX sentences still incomplete.)
+<strong>Human UX proof waived</strong> by founder 2026-09-25 for pre-Phase-09 closeout — not a
+Phase 09 blocker; remaining UI polish is backlog.</li>
 <li><input checked="" disabled="" type="checkbox"> Quick chat / Physiotherapy <strong>builder path</strong> via UI: modes panel country
 presets (EU ∩ service countries, Portugal only, all), inline named
 schedule create, inline location create for in-person modes; AI
 improve/shorten/fix_grammar on event-type description via
-<code>createApiClient().ai.editorAssist</code>. Full UI→publish→public-funnel
-proof for net-new fixtures still needs a Connect-ready expert session
-(<code>E2E_EXPERT_OFFER=1</code> covers builder affordances; seeded funnel remains).</li>
+<code>createApiClient().ai.editorAssist</code>.
+(<code>E2E_EXPERT_OFFER=1</code> covers builder affordances; seeded funnel remains.)</li>
 <li><input disabled="" type="checkbox"> Physiotherapy end-to-end: follow-up with Lisboa/Porto/Madrid modes,
 Madrid priced higher, each on its own schedule; slots differ per location
-in the funnel (seeded funnel covered; UI-built publish+funnel pending
-Connect session).</li>
+in the funnel. Seeded funnel covered; <strong>UI-built publish+funnel unproven —
+human evidence WAIVED</strong> by founder 2026-09-25 (not a Phase 09 blocker).</li>
 <li><input disabled="" type="checkbox"> Private link created for a <code>private</code> event type while <code>accepting_bookings = false</code> books one
-slot on the override schedule, then shows &quot;used&quot;; revoked link 404s.</li>
+slot on the override schedule, then shows &quot;used&quot;; revoked link 404s.
+API + builder tab shipped; <strong>live UX unproven — human evidence WAIVED</strong> by
+founder 2026-09-25 (not a Phase 09 blocker).</li>
 <li><input disabled="" type="checkbox"> Two Google accounts and one Microsoft account connected; only calendars toggled
 <code>use_for_busy</code> affect slots (test with a busy event); destination override per mode writes the
 booking to the right calendar; token revoke -&gt; reconnect banner; no calendar connected -&gt; ICS
-feed subscription shows bookings in Apple Calendar (manual evidence).</li>
+feed subscription shows bookings in Apple Calendar.
+Busy/destination/ICS engineering shipped; <strong>multi-calendar OAuth / busy /
+ICS→Apple unproven — human evidence WAIVED</strong> by founder 2026-09-25 (not a
+Phase 09 blocker).</li>
 <li><input checked="" disabled="" type="checkbox"> <code>POST /ai/editor</code> + <code>@eleva/ai</code> <code>editorAssist</code> stream with allow-list
 fail-closed and <code>clinical</code> rejected until Phase 10 (never <code>apps/app</code>
 member content). Expert editor UI hooks (<code>onAssist</code> / <code>ai_draft</code>) shipped;
@@ -3341,11 +3352,14 @@ description assist (LocalizedText; Plate description column still open).</li>
 (and fails drafts older than 14 days). Glossary at
 <code>packages/config/glossary.json</code> (no separate <code>packages/i18n</code> package yet).</li>
 <li><input disabled="" type="checkbox"> Design pass attached (README section 4 rule 10): wizard, builder, calendar in light/dark,
-<code>pt</code>/<code>en</code>, 360px and 1280px.</li>
+<code>pt</code>/<code>en</code>, 360px and 1280px.
+<strong>Unproven — human screenshot evidence WAIVED</strong> by founder 2026-09-25 (not a
+Phase 09 blocker).</li>
 <li><input checked="" disabled="" type="checkbox"> <code>e2e/expert-offer.spec.ts</code> covers seeded public-funnel modes + opt-in
 <code>E2E_EXPERT_OFFER=1</code> builder affordances (presets / inline schedule /
-location). Full UI-built Quick chat / Physiotherapy → funnel still open
-until Connect-ready loopback session; <code>check:i18n-parity</code> green.</li>
+location); <code>check:i18n-parity</code> green. Full UI-built Quick chat /
+Physiotherapy → funnel remains <strong>unproven — human evidence WAIVED</strong> by
+founder 2026-09-25.</li>
 </ul>
 <h2 id="04b-expert-offer-builder--tests"><a class="anchor" href="#04b-expert-offer-builder--tests" aria-label="Link to section">#</a>Tests</h2>
 <ul>
@@ -3599,15 +3613,21 @@ PR 04b.2 — @eleva/editor, AI assist, services builder, delivery modes, private
     multi-calendar, destination order), design-system-spec.md (editor, wizard, weekly grid),
     api-contract-spec.md, monorepo-structure.md (packages/editor), decision-log.md.
 
-Acceptance (paste evidence): both fixtures built through the UI and visible in the public funnel
-with the expected cards per visitor country; invariant refusals shown inline; private link books
-with a closed agenda and shows used; two providers connected with busy/destination behaviour proven
-by tests; ICS feed subscribed in Apple Calendar (screenshot); AI actions stream and fail closed on
-an unapproved model; pnpm i18n:draft drafts ignored by parity check; design pass screenshots;
-e2e green; i18n parity green.
+Acceptance (2026-09-25 closeout): Phase 04B engineering on main is the acceptance
+baseline. Founder waived ALL Phase 04B human evidence on 2026-09-25 (“Waivo toda a
+evidência humana 04B”) — do **not** require paste evidence for design screenshots,
+multi-calendar OAuth/busy, destination override live booking, ICS→Apple subscribe,
+Connect UI→publish→funnel for net-new fixtures, clinical sentence-next-to-field UX,
+or private-link live UX. Report must still name those flows as **unproven / waived**,
+not as operator-proven. Seeded funnel + `E2E_EXPERT_OFFER=1` affordances, AI
+fail-closed, `pnpm i18n:draft` / `check:i18n-parity`, and shipped APIs remain the
+engineering bar. Clinical field-level refusal UI stays incomplete engineering
+(backlog; not a Phase 09 blocker). **Do not start Phase 09** — still blocked on
+Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`), which are **not**
+waived.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
-counts, PR URLs, deferred items.</code></pre></div>
+counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).</code></pre></div>
 </article>
 <article id="05-member-app">
 <p class="doc-meta">Source: <code>docs/eleva-v3/execution-plan/phases/05-member-app.md</code></p>
@@ -4637,11 +4657,11 @@ be met; production issuance / Comunicação acceptance is explicitly deferred.</
 </tr>
 <tr>
 <td>Live FT POST / Comunicação / finalize</td>
-<td><strong>Blocked</strong> — founder/DPO/fiscal params <strong>and</strong> ELEVA series communication; not waive-as-engineering</td>
+<td><strong>Blocked</strong> — founder/DPO/fiscal params <strong>and</strong> ELEVA series communication; <strong>not waived</strong> (04B human-evidence waiver 2026-09-25 does not cover this)</td>
 </tr>
 <tr>
 <td>Phase 09 start</td>
-<td><strong>Blocked</strong> until 01–08 closable gaps done or waived (this gate stays blocked regardless)</td>
+<td><strong>Blocked</strong> on these hard tax/issuance gates — 04B human evidence was founder-waived 2026-09-25; do <strong>not</strong> start Phase 09 until FT POST / Comunicação / <code>invoice.issued</code> open or are separately waived</td>
 </tr>
 </tbody></table>
 </blockquote>

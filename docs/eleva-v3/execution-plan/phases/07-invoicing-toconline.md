@@ -159,13 +159,13 @@ connected|disconnected`).
 >
 > ### Founder evidence checklist (07 — blocked vs waive)
 >
-> | Item                                                            | Status                                                                                               |
-> | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-> | Closed-gate engineering (`issueInvoice()` refuses POST)         | Shipped — keep closed                                                                                |
-> | ELEVA series communication (legally required before auto-issue) | **Blocked** — operator/accountant prerequisite; not waived by founder engineering approval           |
-> | Remaining fiscal params (tax codes / rates / legal mentions)    | **Blocked** — Manolo/accountant confirmation                                                         |
-> | Live FT POST / Comunicação / finalize                           | **Blocked** — founder/DPO/fiscal params **and** ELEVA series communication; not waive-as-engineering |
-> | Phase 09 start                                                  | **Blocked** until 01–08 closable gaps done or waived (this gate stays blocked regardless)            |
+> | Item                                                            | Status                                                                                                                                                                                                  |
+> | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | Closed-gate engineering (`issueInvoice()` refuses POST)         | Shipped — keep closed                                                                                                                                                                                   |
+> | ELEVA series communication (legally required before auto-issue) | **Blocked** — operator/accountant prerequisite; not waived by founder engineering approval                                                                                                              |
+> | Remaining fiscal params (tax codes / rates / legal mentions)    | **Blocked** — Manolo/accountant confirmation                                                                                                                                                            |
+> | Live FT POST / Comunicação / finalize                           | **Blocked** — founder/DPO/fiscal params **and** ELEVA series communication; **not waived** (04B human-evidence waiver 2026-09-25 does not cover this)                                                   |
+> | Phase 09 start                                                  | **Blocked** on these hard tax/issuance gates — 04B human evidence was founder-waived 2026-09-25; do **not** start Phase 09 until FT POST / Comunicação / `invoice.issued` open or are separately waived |
 
 **PR 07.1 issuance is deferred.** Do not treat `issuePlatformFeeInvoice` reaching `issued`,
 finalize, Comunicação à AT, or storing an AT communication response as 07.1 acceptance.
