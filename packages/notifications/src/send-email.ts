@@ -61,8 +61,21 @@ function isExampleComRecipient(to: string): boolean {
   return to.slice(at + 1).toLowerCase() === "example.com"
 }
 
-function isResendTestRecipientRejection(message: string): boolean {
-  return /example\.com|testing email address/i.test(message)
+/**
+ * Resend's allowlist rejection for test domains. Require the provider's
+ * "testing email address" phrasing so unrelated errors that happen to
+ * mention example.com are not swallowed.
+ */
+function isResendTestRecipientRejection(error: {
+  name?: string
+  message: string
+}): boolean {
+  const message = error.message.toLowerCase()
+  if (!message.includes("testing email address")) return false
+  if (!message.includes("example.com")) return false
+  // validation_error is the documented Resend name for this rejection;
+  // also accept missing name so SDK shape drift does not break local e2e.
+  return !error.name || error.name === "validation_error"
 }
 
 export async function sendViaResend(
@@ -86,7 +99,7 @@ export async function sendViaResend(
     if (
       !isDeployedRuntime() &&
       isExampleComRecipient(input.to) &&
-      isResendTestRecipientRejection(error.message)
+      isResendTestRecipientRejection(error)
     ) {
       console.info(
         `[email] skip resend for test recipient (non-deployed) deliveryId=${input.deliveryId}`
