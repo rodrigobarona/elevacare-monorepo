@@ -12,3 +12,12 @@ export function getAdapter(provider: CalendarProvider): CalendarAdapter {
   if (!adapter) throw new Error(`Unknown calendar provider: ${provider}`)
   return adapter
 }
+
+const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
+  "google-calendar": "google",
+  "microsoft-calendar": "microsoft",
+}
+
+export function calendarProviderForSlug(slug: string): CalendarProvider | null {
+  return SLUG_TO_PROVIDER[slug] ?? null
+}

@@ -1,18 +1,13 @@
 import { getProviderAccessToken } from "@eleva/auth"
 import {
+  calendarProviderForSlug,
   createCredentialManager,
   getAdapter,
   requireAuthAccountId,
-  type CalendarProvider,
 } from "@eleva/calendar"
 import { listCalendarIntegrations } from "@eleva/db"
 
 const credentials = createCredentialManager({ getProviderAccessToken })
-
-const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
-  "google-calendar": "google",
-  "microsoft-calendar": "microsoft",
-}
 
 /**
  * Confirm the external calendar ID belongs to the expert's connected
@@ -32,7 +27,7 @@ export async function assertExternalCalendarOwned(input: {
   const integration = integrations.find((i) => i.id === input.integrationId)
   if (!integration) return "not_found"
 
-  const provider = SLUG_TO_PROVIDER[integration.slug]
+  const provider = calendarProviderForSlug(integration.slug)
   if (!provider) return "not_found"
 
   try {

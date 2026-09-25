@@ -16,6 +16,7 @@ import type { Tx } from "@eleva/db/context"
 import { bookingLinks, consents } from "@eleva/db/schema"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
+import { emptyBusyTimeProvider, type BusyTimeProvider } from "./offer-slots"
 import { BookingError } from "./assert-member-can-book"
 import {
   linkRecipientMatches,
@@ -52,6 +53,7 @@ export type ReserveBookingInput = {
   session?: ReserveBookingSession
   phone?: string
   consents: { kind: string; version: string }[]
+  busyTimeProvider?: BusyTimeProvider
 }
 
 export type ReserveBookingError =
@@ -227,10 +229,17 @@ export async function reserveBooking(
     input.startsAt,
     input.endsAt
   )
-  const [{ schedule, rules, overrides }, existingBookings] = await Promise.all([
-    schedulePromise,
-    busyPromise,
-  ])
+  const externalBusyPromise = (
+    input.busyTimeProvider ?? emptyBusyTimeProvider
+  ).getBusy({
+    expertOrgId: expert.orgId,
+    expertProfileId: expert.id,
+    expertUserId: expert.userId,
+    from: input.startsAt,
+    to: input.endsAt,
+  })
+  const [{ schedule, rules, overrides }, existingBookings, externalBusyTimes] =
+    await Promise.all([schedulePromise, busyPromise, externalBusyPromise])
   if (!schedule) {
     return { ok: false, error: "not_found" }
   }
@@ -242,6 +251,7 @@ export async function reserveBooking(
     rules,
     overrides,
     existingBookings,
+    externalBusyTimes,
   })
   if (!slotOk.ok) {
     return slotOk

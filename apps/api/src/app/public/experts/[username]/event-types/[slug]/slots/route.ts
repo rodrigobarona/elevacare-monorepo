@@ -8,11 +8,8 @@ import {
   getScheduleForBooking,
   listExpertBusyBookings,
 } from "@eleva/db"
-import {
-  emptyBusyTimeProvider,
-  getAvailableSlotsForOffer,
-  resolveOffer,
-} from "@eleva/scheduling"
+import { getAvailableSlotsForOffer, resolveOffer } from "@eleva/scheduling"
+import { calendarBusyTimeProvider } from "@/lib/calendar-busy"
 import {
   handlePublicGet,
   isIanaTimeZone,
@@ -100,7 +97,9 @@ export async function GET(
 
     const [existingBookings, externalBusyTimes] = await Promise.all([
       listExpertBusyBookings(expert.id, rangeStart, rangeEnd),
-      emptyBusyTimeProvider.getBusy({
+      calendarBusyTimeProvider.getBusy({
+        expertOrgId: eventType.orgId,
+        expertProfileId: expert.id,
         expertUserId: expert.userId,
         from: rangeStart,
         to: rangeEnd,

@@ -11,6 +11,7 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { getBookingRedis } from "@/lib/booking-redis"
+import { calendarBusyTimeProvider } from "@/lib/calendar-busy"
 import { checkBot } from "@/lib/bot-protection"
 import { isIanaTimeZone, PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
 import { rejectIfMemberCannotBook } from "@/lib/member-bookability"
@@ -132,6 +133,7 @@ export async function POST(request: Request) {
       session,
       phone: body.phone,
       consents: body.consents,
+      busyTimeProvider: calendarBusyTimeProvider,
     })
   } catch (err) {
     if (err instanceof BookingError) {

@@ -67,6 +67,7 @@ export async function syncExpertCalendarAccounts(input: {
             id: main.expertIntegrations.id,
             authAccountId: main.expertIntegrations.authAccountId,
             accountIdentifier: main.expertIntegrations.accountIdentifier,
+            status: main.expertIntegrations.status,
           })
           .from(main.expertIntegrations)
           .where(
@@ -84,7 +85,8 @@ export async function syncExpertCalendarAccounts(input: {
         if (
           existing &&
           existing.authAccountId === account.id &&
-          existing.accountIdentifier === account.accountId
+          existing.accountIdentifier === account.accountId &&
+          existing.status === "connected"
         ) {
           continue
         }
@@ -96,6 +98,7 @@ export async function syncExpertCalendarAccounts(input: {
               authAccountId: account.id,
               accountIdentifier: account.accountId,
               status: "connected",
+              lastErrorCode: null,
               connectedAt: new Date(),
               updatedAt: new Date(),
             })
@@ -138,6 +141,45 @@ export async function syncExpertCalendarAccounts(input: {
         entityId: linked[0]?.id ?? input.expertProfileId,
         payload: linked.length > 0 ? { accounts: linked } : { unchanged: true },
       })
+    }
+  )
+}
+
+/**
+ * Flags a calendar integration whose provider token was revoked or expired
+ * so the expert sees a reconnect prompt; `syncExpertCalendarAccounts`
+ * restores `connected` on the next successful link.
+ */
+export async function markCalendarIntegrationExpired(input: {
+  orgId: string
+  integrationId: string
+  errorCode: string
+}): Promise<boolean> {
+  return withAudit(
+    { orgId: input.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      const [updated] = await tx
+        .update(main.expertIntegrations)
+        .set({
+          status: "expired",
+          lastErrorCode: input.errorCode.slice(0, 64),
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(main.expertIntegrations.id, input.integrationId),
+            eq(main.expertIntegrations.orgId, input.orgId),
+            eq(main.expertIntegrations.status, "connected")
+          )
+        )
+        .returning({ id: main.expertIntegrations.id })
+      await ctx.emit({
+        entity: "expert_integration_credential",
+        action: "expired",
+        entityId: input.integrationId,
+        payload: { errorCode: input.errorCode, changed: Boolean(updated) },
+      })
+      return Boolean(updated)
     }
   )
 }

@@ -10,6 +10,8 @@ export const DEFAULT_BOOKING_WINDOW_DAYS = 60
 
 export interface BusyTimeProvider {
   getBusy(input: {
+    expertOrgId: string
+    expertProfileId: string
     expertUserId: string
     from: Date
     to: Date

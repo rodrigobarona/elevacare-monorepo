@@ -1,4 +1,4 @@
-export { getAdapter } from "./registry"
+export { calendarProviderForSlug, getAdapter } from "./registry"
 export { GoogleCalendarAdapter } from "./adapters/google"
 export { MicrosoftCalendarAdapter } from "./adapters/microsoft"
 export {

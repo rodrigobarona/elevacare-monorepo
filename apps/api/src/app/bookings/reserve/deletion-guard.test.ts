@@ -42,6 +42,9 @@ vi.mock("@/lib/rate-limit", () => ({
   RATE_LIMITS: { public: { prefix: "pub", maxRequests: 10, windowMs: 60_000 } },
 }))
 
+vi.mock("@/lib/calendar-busy", () => ({
+  calendarBusyTimeProvider: { getBusy: async () => [] },
+}))
 vi.mock("@/lib/booking-redis", () => ({
   getBookingRedis: () => ({ set: vi.fn() }),
 }))

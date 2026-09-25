@@ -5,10 +5,10 @@ import { secureJson } from "@/lib/security-headers"
 import { getExpertProfileByUserId, listCalendarIntegrations } from "@eleva/db"
 import { getProviderAccessToken } from "@eleva/auth"
 import {
+  calendarProviderForSlug,
   createCredentialManager,
   getAdapter,
   requireAuthAccountId,
-  type CalendarProvider,
 } from "@eleva/calendar"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -22,11 +22,6 @@ const credentials = createCredentialManager({ getProviderAccessToken })
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
-  "google-calendar": "google",
-  "microsoft-calendar": "microsoft",
-}
 
 export async function GET(
   request: Request,
@@ -68,7 +63,7 @@ export async function GET(
     )
   }
 
-  const provider = SLUG_TO_PROVIDER[integration.slug]
+  const provider = calendarProviderForSlug(integration.slug)
   if (!provider) {
     return secureJson(
       { error: "not found", message: "unknown provider" },

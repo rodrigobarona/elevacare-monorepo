@@ -11,6 +11,7 @@ export type AssertSlotAvailableInput = {
   rules: GetAvailableSlotsInput["rules"]
   overrides: GetAvailableSlotsInput["overrides"]
   existingBookings: BusyInterval[]
+  externalBusyTimes?: BusyInterval[]
   now?: Date
 }
 
@@ -46,6 +47,7 @@ export function assertRequestedSlotAvailable(
     rules: input.rules,
     overrides: input.overrides,
     existingBookings: input.existingBookings,
+    externalBusyTimes: input.externalBusyTimes,
     from: input.startsAt,
     to: input.endsAt,
     bookingWindowDays: input.offer.bookingWindowDays,

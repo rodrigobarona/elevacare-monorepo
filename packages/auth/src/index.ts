@@ -75,7 +75,10 @@ export {
   type CreateOrganizationResult,
 } from "./organizations"
 export { getProviderAccessToken } from "./provider-token"
-export { syncExpertCalendarAccounts } from "./calendar-accounts"
+export {
+  markCalendarIntegrationExpired,
+  syncExpertCalendarAccounts,
+} from "./calendar-accounts"
 export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"
 export { SESSION_COOKIE_NAMES } from "./server/credentials"
