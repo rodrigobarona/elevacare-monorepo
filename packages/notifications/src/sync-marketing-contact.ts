@@ -54,8 +54,7 @@ function getResend(): Resend {
 
 function isVercelDeployedRuntime(): boolean {
   // Prefer VERCEL_ENV so a local `next start` (NODE_ENV=production) still
-  // takes the e2e @example.com / missing-key skips. Preview + Production
-  // stay fail-closed for a missing RESEND_API_KEY.
+  // takes the e2e @example.com skip. Preview + Production always hit Resend.
   return (
     process.env.VERCEL_ENV === "production" ||
     process.env.VERCEL_ENV === "preview"
