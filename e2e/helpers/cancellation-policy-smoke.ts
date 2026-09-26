@@ -8,7 +8,12 @@ import {
   waitForE2eAuthUrl,
   uniqueEmail,
 } from "./auth"
-import { PAID_EXPERT, PAID_OFFER, PAID_PRICE_CENTS } from "./local"
+import {
+  isApprovedE2eDatabaseUrl,
+  PAID_EXPERT,
+  PAID_OFFER,
+  PAID_PRICE_CENTS,
+} from "./local"
 
 const CONSENTS = [
   { kind: "terms" as const, version: "dev-2026-09-09" },
@@ -26,8 +31,10 @@ export async function setFirstVisitCancellationPolicy(
   policy: CancellationPolicy
 ): Promise<void> {
   const databaseUrl = process.env.DATABASE_URL
-  if (!databaseUrl) {
-    throw new Error("DATABASE_URL required to set cancellation policy")
+  if (!isApprovedE2eDatabaseUrl(databaseUrl)) {
+    throw new Error(
+      "cancellation smoke requires E2E_ALLOW_DB_WRITES=1 and an approved loopback test DATABASE_URL"
+    )
   }
   const sql = neon(databaseUrl)
   const rows = await sql`
@@ -227,6 +234,7 @@ export async function runPolicySmokeCase(
     input.testCase.hoursUntilSession,
     slotRank
   )
+  let reserveFailure: { status: number; body: string } | null = null
 
   for (let attempt = 0; attempt < 8; attempt++) {
     if (!slotMatchesLeadWindow(input.testCase, slot)) {
@@ -256,24 +264,31 @@ export async function runPolicySmokeCase(
       headers: authHeaders(),
       data: reserveBody,
     })
-    if (reserve.status() === 201) {
+    const reserveStatus = reserve.status()
+    if (reserveStatus === 201) {
       reserved = (await reserve.json()) as {
         reservationId: string
         reservationToken: string
       }
       break
     }
-    if (reserve.status() === 422) {
+    if (reserveStatus === 422) {
       const err = await reserve.text()
       throw new Error(
         `reserve unavailable for ${input.testCase.policy} @ ${slot.startsAt}: ${err}`
       )
     }
+    reserveFailure = { status: reserveStatus, body: await reserve.text() }
     slot = await pickSlotHoursFromNow(
       request,
       modeId,
       input.testCase.hoursUntilSession,
       slotRank + attempt + 1
+    )
+  }
+  if (!reserved && reserveFailure) {
+    throw new Error(
+      `reserve failed after retries (${reserveFailure.status}): ${reserveFailure.body}`
     )
   }
   if (!reserved) {

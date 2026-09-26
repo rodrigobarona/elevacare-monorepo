@@ -11,7 +11,10 @@ import {
   setFirstVisitCancellationPolicy,
   type PolicySmokeCase,
 } from "./helpers/cancellation-policy-smoke"
-import { isNonLoopbackE2eTarget } from "./helpers/local"
+import {
+  isApprovedE2eDatabaseUrl,
+  isNonLoopbackE2eTarget,
+} from "./helpers/local"
 
 const runSmoke = process.env.E2E_CANCELLATION_SMOKE === "1"
 
@@ -49,8 +52,8 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
     "needs WORKFLOWS_DRAIN_SECRET for refund sweep"
   )
   test.skip(
-    !process.env.DATABASE_URL,
-    "needs DATABASE_URL for policy + payment reads"
+    !isApprovedE2eDatabaseUrl(),
+    "needs E2E_ALLOW_DB_WRITES=1 and approved loopback test DATABASE_URL"
   )
 
   let originalPolicy: CancellationPolicy | undefined
