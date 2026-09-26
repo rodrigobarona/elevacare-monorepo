@@ -11,6 +11,10 @@ import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, resolveApiAuth } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { getBookingRedis } from "@/lib/booking-redis"
+import {
+  CalendarBusyUnavailableError,
+  holdCalendarBusyTimeProvider,
+} from "@/lib/calendar-busy"
 import { checkBot } from "@/lib/bot-protection"
 import { isIanaTimeZone, PUBLIC_NOT_FOUND } from "@/lib/public-marketplace"
 import { rejectIfMemberCannotBook } from "@/lib/member-bookability"
@@ -132,10 +136,17 @@ export async function POST(request: Request) {
       session,
       phone: body.phone,
       consents: body.consents,
+      busyTimeProvider: holdCalendarBusyTimeProvider,
     })
   } catch (err) {
     if (err instanceof BookingError) {
       return secureJson({ error: err.code }, { status: 409, headers })
+    }
+    if (err instanceof CalendarBusyUnavailableError) {
+      return secureJson(
+        { error: "calendar_unavailable" },
+        { status: 503, headers: { ...headers, "Retry-After": "30" } }
+      )
     }
     console.error("[bookings/reserve] reservation failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })

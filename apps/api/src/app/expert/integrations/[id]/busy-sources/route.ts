@@ -11,10 +11,10 @@ import {
 } from "@eleva/db"
 import { getProviderAccessToken } from "@eleva/auth"
 import {
+  calendarProviderForSlug,
   createCredentialManager,
   getAdapter,
   requireAuthAccountId,
-  type CalendarProvider,
 } from "@eleva/calendar"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -28,11 +28,6 @@ const credentials = createCredentialManager({ getProviderAccessToken })
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
-  "google-calendar": "google",
-  "microsoft-calendar": "microsoft",
-}
 
 const BusySourcesSchema = z.object({
   sources: z.array(
@@ -93,7 +88,7 @@ export async function PUT(
     )
   }
 
-  const provider = SLUG_TO_PROVIDER[integration.slug]
+  const provider = calendarProviderForSlug(integration.slug)
   if (!provider) {
     return secureJson(
       { error: "not found", message: "unknown provider" },

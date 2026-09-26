@@ -10,6 +10,7 @@ import {
 import { withOrgContext, type Tx } from "@eleva/db/context"
 import { captureException } from "@eleva/observability"
 import {
+  calendarProviderForSlug,
   createCredentialManager,
   requireAuthAccountId,
   getAdapter,
@@ -28,13 +29,8 @@ import {
 
 const credentials = createCredentialManager({ getProviderAccessToken })
 
-const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
-  "google-calendar": "google",
-  "microsoft-calendar": "microsoft",
-}
-
 function resolveProvider(slug: string): CalendarProvider {
-  const provider = SLUG_TO_PROVIDER[slug]
+  const provider = calendarProviderForSlug(slug)
   if (!provider) throw new Error(`Unknown calendar slug: ${slug}`)
   return provider
 }
