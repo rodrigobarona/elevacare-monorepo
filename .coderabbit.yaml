@@ -79,8 +79,12 @@ reviews:
         Flag vendor calls inside a DB transaction.
     - path: e2e/**
       instructions: >-
-        No secrets in specs. Stable selectors via data-testid. Smoke
-        specs must not call live Stripe/Daily/TOConline.
+        No secrets in specs. Stable selectors via data-testid. Default CI
+        smoke specs must not call live Stripe/Daily/TOConline. Opt-in operator
+        evidence specs (skipped unless E2E_* flags, loopback-only, Stripe TEST
+        keys) may use Stripe test mode for money-path proof — same pattern as
+        E2E_LIVE_STRIPE in phase-04.spec.ts and E2E_CANCELLATION_SMOKE in
+        cancellation-policy-smoke.spec.ts.
     - path: packages/db/**
       instructions: >-
         Every tenant-scoped table must have an org_id column + RLS

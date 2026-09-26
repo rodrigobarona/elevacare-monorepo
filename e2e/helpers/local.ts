@@ -30,3 +30,20 @@ export function isNonLoopbackE2eTarget(): boolean {
   }
   return false
 }
+
+/** Direct SQL e2e writes must not target production or a remote DB while API is loopback. */
+export function isApprovedE2eDatabaseUrl(
+  databaseUrl = process.env.DATABASE_URL
+): boolean {
+  if (!databaseUrl) return false
+  if (process.env.VERCEL_ENV === "production") return false
+  if (process.env.NODE_ENV === "production") return false
+  if (process.env.E2E_ALLOW_DB_WRITES !== "1") return false
+  if (isNonLoopbackE2eTarget()) return false
+  const hostMatch = databaseUrl.match(/@([^/?]+)/)
+  const host = hostMatch?.[1]?.split(":")[0]?.toLowerCase() ?? ""
+  if (isLoopbackHost(host)) return true
+  // Local dev Neon branches (pooler or direct) while stack is loopback-only.
+  if (host.endsWith(".neon.tech")) return true
+  return false
+}
