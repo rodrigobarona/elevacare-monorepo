@@ -50,6 +50,7 @@ export async function GET(
         currency: eventType.currency,
         languages: eventType.languages,
         sessionMode: eventType.sessionMode,
+        cancellationPolicy: eventType.cancellationPolicy,
         modes: modesByEventType.get(eventType.id) ?? [],
       }),
       { status: 200, headers }

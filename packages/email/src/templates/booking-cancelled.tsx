@@ -7,6 +7,9 @@ export interface BookingCancelledProps {
   memberName: string
   eventTypeName: string
   formattedDate: string
+  cancellationPolicyName?: string
+  /** Formatted refund amount; omitted when no refund was decided. */
+  refundAmount?: string
   locale?: EmailLocale
   jsonLd?: Record<string, unknown>
 }
@@ -15,6 +18,8 @@ export function BookingCancelledEmail({
   memberName,
   eventTypeName,
   formattedDate,
+  cancellationPolicyName,
+  refundAmount,
   locale = "en",
   jsonLd,
 }: BookingCancelledProps) {
@@ -42,6 +47,15 @@ export function BookingCancelledEmail({
             value={formattedDate}
             valueClassName="text-danger"
           />
+          {cancellationPolicyName ? (
+            <DetailRow
+              label={t.labels.cancellationPolicy}
+              value={cancellationPolicyName}
+            />
+          ) : null}
+          {refundAmount ? (
+            <DetailRow label={t.labels.refund} value={refundAmount} bold />
+          ) : null}
         </Section>
       </Section>
 
@@ -58,6 +72,8 @@ BookingCancelledEmail.PreviewProps = {
   memberName: "Maria Silva",
   eventTypeName: "Primeira Consulta",
   formattedDate: "Segunda-feira, 16 de junho de 2026, 10:00",
+  cancellationPolicyName: "Moderada",
+  refundAmount: "30,00 €",
   locale: "pt",
 } satisfies BookingCancelledProps
 

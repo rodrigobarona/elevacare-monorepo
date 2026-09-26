@@ -1732,6 +1732,9 @@ importers:
       '@eleva/audit':
         specifier: workspace:*
         version: link:../audit
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       '@eleva/db':
         specifier: workspace:*
         version: link:../db

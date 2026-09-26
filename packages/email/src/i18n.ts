@@ -69,6 +69,8 @@ const translations = {
       reference: "Reference",
       reason: "Reason",
       amount: "Amount",
+      cancellationPolicy: "Cancellation policy",
+      refund: "Refund",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -164,6 +166,8 @@ const translations = {
       reference: "Referência",
       reason: "Motivo",
       amount: "Montante",
+      cancellationPolicy: "Política de cancelamento",
+      refund: "Reembolso",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -259,6 +263,8 @@ const translations = {
       reference: "Referencia",
       reason: "Motivo",
       amount: "Importe",
+      cancellationPolicy: "Política de cancelación",
+      refund: "Reembolso",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -345,6 +351,8 @@ export interface EmailTranslations {
     reference: string
     reason: string
     amount: string
+    cancellationPolicy: string
+    refund: string
   }
   subject: {
     newBooking: (member: string, date: string) => string

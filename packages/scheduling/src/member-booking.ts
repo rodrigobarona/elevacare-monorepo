@@ -1,6 +1,11 @@
 import { and, eq, ne, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
+  cancellationRefundCents,
+  resolveCancellationRefund,
+  type CancellationRefundQuote,
+} from "@eleva/config/cancellation-policy"
+import {
   getExpertScheduleForBooking,
   getMemberBookingForPolicy,
   listExpertBusyBookings,
@@ -11,11 +16,6 @@ import {
 } from "@eleva/db"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { canReschedule } from "./booking-rules"
-import {
-  cancellationRefundCents,
-  resolveCancellationRefund,
-  type CancellationRefundQuote,
-} from "./cancellation-policy"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { resolveOffer } from "./resolve-offer"
 

@@ -115,7 +115,8 @@
       "online": "video",
       "in_person": "in person",
       "phone": "phone"
-    }
+    },
+    "cancellationPolicy": "Cancellation policy: {name}"
   },
   "booking": {
     "meta": {
@@ -259,7 +260,11 @@
       "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
       "generic": "We could not hold that time. Please try again.",
-      "rateLimited": "Too many requests just now. Wait a minute and try again."
+      "rateLimited": "Too many requests just now. Wait a minute and try again.",
+      "policyChanged": "The expert just updated the cancellation policy. Reload the page to review it before booking."
+    },
+    "policy": {
+      "heading": "Cancellation policy"
     }
   },
   "footer": {

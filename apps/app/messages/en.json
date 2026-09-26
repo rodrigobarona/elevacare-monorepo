@@ -45,17 +45,16 @@
     "cancel": "Cancel session",
     "reschedule": "Reschedule",
     "cancelTitle": "Cancel this session?",
-    "cancelDescription": "You can cancel up to 24 hours before the session starts. After that the policy no longer allows a member cancellation. If you already paid, a refund will be marked pending and processed later.",
     "cancelConfirm": "Cancel session",
     "cancelling": "Cancelling…",
     "cancelled": "Session cancelled.",
     "rescheduleTitle": "Reschedule this session",
-    "rescheduleDescription": "Choose a new start time at least 24 hours before the current session. The duration stays the same. The previous slot is released.",
+    "rescheduleDescription": "Choose a new start time. The duration stays the same and the previous slot is released.",
     "rescheduleWhen": "New start",
     "rescheduleConfirm": "Reschedule",
     "rescheduling": "Rescheduling…",
     "rescheduled": "Session rescheduled.",
-    "policyTooLate": "This session is inside the 24-hour window, so it cannot be cancelled or rescheduled here.",
+    "policyTooLate": "This session can no longer be cancelled or rescheduled here.",
     "receipt": "Receipt",
     "modes": {
       "online": "Online",
@@ -69,7 +68,14 @@
       "pending_payment": "Pending payment",
       "completed": "Completed",
       "no_show": "No show"
-    }
+    },
+    "refundFull": "You'll get a full refund of {amount} under the {policy} cancellation policy.",
+    "refundPartial": "You'll get a {percent}% refund of {amount} under the {policy} cancellation policy.",
+    "refundNone": "Under the {policy} cancellation policy, cancelling now gives no refund.",
+    "refundNothingPaid": "There is no payment to refund for this session.",
+    "refundDropsAt": "The refund goes down if you cancel after {date}.",
+    "cancelledRefund": "Session cancelled. {amount} will be refunded to your original payment method.",
+    "rescheduleUnavailable": "Rescheduling is only available while cancelling would still give a full refund. You can still cancel."
   },
   "payments": {
     "title": "Payments",
@@ -222,7 +228,7 @@
     "generic": "Something went wrong. Please try again.",
     "validation": "Please check the form and try again.",
     "notFound": "We could not find that session.",
-    "tooLate": "Changes are only allowed at least 24 hours before the session starts.",
+    "tooLate": "The session's cancellation policy no longer allows this change.",
     "invalidStatus": "This session can no longer be changed.",
     "slotTaken": "That time is no longer available. Choose another start time.",
     "notFoundSession": "Session not found."

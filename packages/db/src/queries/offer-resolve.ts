@@ -26,6 +26,7 @@ export type OfferResolveEventTypeRow = {
   minimumNoticeMinutes: number
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
+  cancellationPolicy: (typeof eventTypes.$inferSelect)["cancellationPolicy"]
 }
 
 export type OfferResolveLinkRow = {
@@ -88,6 +89,7 @@ export async function loadOfferForResolve(input: {
         minimumNoticeMinutes: eventTypes.minimumNoticeMinutes,
         bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
         bufferAfterMinutes: eventTypes.bufferAfterMinutes,
+        cancellationPolicy: eventTypes.cancellationPolicy,
       })
       .from(eventTypes)
       .where(

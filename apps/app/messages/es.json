@@ -45,17 +45,16 @@
     "cancel": "Cancelar sesión",
     "reschedule": "Reprogramar",
     "cancelTitle": "¿Cancelar esta sesión?",
-    "cancelDescription": "Puedes cancelar hasta 24 horas antes del inicio. Después, la política ya no permite la cancelación del miembro. Si ya pagaste, el reembolso quedará pendiente y se procesará más tarde.",
     "cancelConfirm": "Cancelar sesión",
     "cancelling": "Cancelando…",
     "cancelled": "Sesión cancelada.",
     "rescheduleTitle": "Reprogramar esta sesión",
-    "rescheduleDescription": "Elige un nuevo inicio al menos 24 horas antes de la sesión actual. La duración no cambia. El horario anterior se libera.",
+    "rescheduleDescription": "Elige una nueva hora de inicio. La duración se mantiene y el horario anterior queda libre.",
     "rescheduleWhen": "Nuevo inicio",
     "rescheduleConfirm": "Reprogramar",
     "rescheduling": "Reprogramando…",
     "rescheduled": "Sesión reprogramada.",
-    "policyTooLate": "Esta sesión está dentro de la ventana de 24 horas, así que no se puede cancelar ni reprogramar aquí.",
+    "policyTooLate": "Esta sesión ya no se puede cancelar ni reprogramar aquí.",
     "receipt": "Recibo",
     "modes": {
       "online": "En línea",
@@ -69,7 +68,14 @@
       "pending_payment": "Pago pendiente",
       "completed": "Completada",
       "no_show": "No se presentó"
-    }
+    },
+    "refundFull": "Recibirás un reembolso completo de {amount} según la política de cancelación {policy}.",
+    "refundPartial": "Recibirás un reembolso del {percent}% ({amount}) según la política de cancelación {policy}.",
+    "refundNone": "Según la política de cancelación {policy}, cancelar ahora no da derecho a reembolso.",
+    "refundNothingPaid": "No hay ningún pago que reembolsar para esta sesión.",
+    "refundDropsAt": "El reembolso baja si cancelas después del {date}.",
+    "cancelledRefund": "Sesión cancelada. Se reembolsarán {amount} a tu método de pago original.",
+    "rescheduleUnavailable": "Solo puedes reprogramar mientras cancelar aún dé un reembolso completo. Todavía puedes cancelar."
   },
   "payments": {
     "title": "Pagos",
@@ -222,7 +228,7 @@
     "generic": "Algo salió mal. Inténtalo de nuevo.",
     "validation": "Revisa el formulario e inténtalo de nuevo.",
     "notFound": "No encontramos esa sesión.",
-    "tooLate": "Los cambios solo se permiten al menos 24 horas antes del inicio de la sesión.",
+    "tooLate": "La política de cancelación de esta sesión ya no permite este cambio.",
     "invalidStatus": "Esta sesión ya no se puede cambiar.",
     "slotTaken": "Ese horario ya no está disponible. Elige otro inicio.",
     "notFoundSession": "Sesión no encontrada."

@@ -1,7 +1,3 @@
-export const MEMBER_CANCEL_POLICY_HOURS = 24
-
-const MUTABLE_STATUSES = new Set(["confirmed", "rescheduled"])
-
 export function eventTitle(
   title: { en: string; pt?: string; es?: string },
   locale: string
@@ -31,20 +27,6 @@ export function formatDateTime(
     timeStyle: "short",
     timeZone,
   }).format(new Date(iso))
-}
-
-export function canChangeBooking(
-  startsAt: string,
-  status: string,
-  now = new Date()
-): boolean {
-  if (!MUTABLE_STATUSES.has(status)) return false
-  const start = new Date(startsAt)
-  if (Number.isNaN(start.getTime())) return false
-  return (
-    start.getTime() - now.getTime() >=
-    MEMBER_CANCEL_POLICY_HOURS * 60 * 60 * 1000
-  )
 }
 
 export function toDatetimeLocalValue(iso: string, timeZone: string): string {

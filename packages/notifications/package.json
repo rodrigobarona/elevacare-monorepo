@@ -16,6 +16,7 @@
   "dependencies": {
     "@eleva/accounting": "workspace:*",
     "@eleva/audit": "workspace:*",
+    "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
     "drizzle-orm": "catalog:",

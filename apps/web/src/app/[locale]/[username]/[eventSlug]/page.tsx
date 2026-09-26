@@ -89,6 +89,7 @@ export default async function PublicBookingPage({ params }: Props) {
         eventSlug={eventType.slug}
         title={eventType.title}
         modes={eventType.modes}
+        cancellationPolicy={eventType.cancellationPolicy}
         geoCountry={geo.country}
         geoTimeZone={geo.timeZone}
         consents={funnelConsentDocs(locale)}

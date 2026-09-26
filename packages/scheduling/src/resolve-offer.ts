@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto"
 import { loadOfferForResolve } from "@eleva/db"
+import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import type { CountryScopeType, OfferMode } from "./offer-invariants"
 
 export type ResolvedOffer = {
@@ -23,6 +24,7 @@ export type ResolvedOffer = {
   minimumNoticeMinutes: number
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
+  cancellationPolicy: CancellationPolicy
 }
 
 export type ResolveOfferInput = {
@@ -62,6 +64,7 @@ export type OfferEventTypeRow = {
   minimumNoticeMinutes: number
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
+  cancellationPolicy: CancellationPolicy
 }
 
 export type OfferLinkRow = {
@@ -169,6 +172,7 @@ export function composeResolvedOffer(input: {
       minimumNoticeMinutes: eventType.minimumNoticeMinutes,
       bufferBeforeMinutes: eventType.bufferBeforeMinutes,
       bufferAfterMinutes: eventType.bufferAfterMinutes,
+      cancellationPolicy: eventType.cancellationPolicy,
     },
   }
 }

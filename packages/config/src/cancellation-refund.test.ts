@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
+  cancellationDeadlines,
   cancellationRefundCents,
+  describeCancellationDeadlines,
   resolveCancellationRefund,
 } from "./cancellation-policy"
 
@@ -141,5 +143,55 @@ describe("cancellationRefundCents", () => {
     expect(cancellationRefundCents(6001, 50)).toBe(3001)
     expect(cancellationRefundCents(6000, 0)).toBe(0)
     expect(cancellationRefundCents(0, 100)).toBe(0)
+  })
+})
+
+describe("cancellationDeadlines", () => {
+  const iso = (d: Date) => d.toISOString()
+
+  it("lists every refund step for a strict booking made weeks ahead", () => {
+    const deadlines = cancellationDeadlines({
+      policy: "strict",
+      bookedAt: longAgo,
+      startsAt,
+    })
+    expect(deadlines.map((d) => [d.refundPercent, iso(d.until)])).toEqual([
+      [100, iso(before(7 * 24))],
+      [50, iso(before(48))],
+    ])
+  })
+
+  it("extends the full refund to the grace period end", () => {
+    const deadlines = cancellationDeadlines({
+      policy: "strict",
+      bookedAt: before(100),
+      startsAt,
+    })
+    expect(deadlines.map((d) => [d.refundPercent, iso(d.until)])).toEqual([
+      [100, iso(before(76))],
+      [50, iso(before(48))],
+    ])
+  })
+
+  it("returns no steps when the booking is already past every refund", () => {
+    expect(
+      cancellationDeadlines({
+        policy: "flexible",
+        bookedAt: before(2),
+        startsAt,
+      })
+    ).toEqual([])
+  })
+
+  it("describes deadlines with the given date formatter", () => {
+    const lines = describeCancellationDeadlines(
+      [{ refundPercent: 100, until: before(24) }],
+      "en",
+      () => "19 Nov, 10:00"
+    )
+    expect(lines).toEqual([
+      "Full refund if you cancel before 19 Nov, 10:00.",
+      "No refund if you cancel after 19 Nov, 10:00.",
+    ])
   })
 })

@@ -1,5 +1,9 @@
 import { eq } from "drizzle-orm"
 import { z } from "zod"
+import {
+  describeCancellationPolicy,
+  type CancellationPolicy,
+} from "@eleva/config/cancellation-policy"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
   getEmailTranslations,
@@ -110,6 +114,10 @@ export type LoadedBooking = {
   expertName: string
   eventTypeName: { en: string; pt?: string; es?: string }
   scheduleRevision: number
+  cancellationPolicy: CancellationPolicy
+  currency: string
+  /** Cumulative refund target set on cancel; null when no refund was decided. */
+  refundDueCents: number | null
 }
 
 export async function sendBookingNotification(
@@ -160,6 +168,14 @@ export async function sendBookingNotification(
     previousDate,
     sessionMode: booking.sessionMode,
     locale,
+    cancellationPolicyName: describeCancellationPolicy(
+      booking.cancellationPolicy,
+      locale
+    ).name,
+    refundAmount:
+      booking.refundDueCents === null
+        ? undefined
+        : formatMoney(booking.refundDueCents, booking.currency, locale),
   })
   const title = titleForKind(event.type, t.booking)
   const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
@@ -351,6 +367,8 @@ async function renderBookingHtml(input: {
   previousDate: string
   sessionMode: string
   locale: EmailLocale
+  cancellationPolicyName: string
+  refundAmount?: string
 }): Promise<string> {
   switch (input.kind) {
     case "booking.confirmed":
@@ -366,6 +384,8 @@ async function renderBookingHtml(input: {
         memberName: input.memberName,
         eventTypeName: input.eventTypeName,
         formattedDate: input.formattedDate,
+        cancellationPolicyName: input.cancellationPolicyName,
+        refundAmount: input.refundAmount,
         locale: input.locale,
       })
     case "booking.rescheduled":
@@ -438,6 +458,13 @@ function formatDateTime(date: Date, tz: string, locale: EmailLocale): string {
   }
 }
 
+function formatMoney(cents: number, currency: string, locale: EmailLocale) {
+  return new Intl.NumberFormat(LOCALE_MAP[locale], {
+    style: "currency",
+    currency,
+  }).format(cents / 100)
+}
+
 export async function loadBookingForNotification(
   bookingId: string
 ): Promise<LoadedBooking | null> {
@@ -458,11 +485,18 @@ export async function loadBookingForNotification(
         expertUserId: main.bookings.expertUserId,
         eventTypeName: main.eventTypes.title,
         scheduleRevision: main.bookings.scheduleRevision,
+        cancellationPolicy: main.bookings.cancellationPolicy,
+        currency: main.bookings.currency,
+        refundDueCents: main.bookingPayments.refundDueCents,
       })
       .from(main.bookings)
       .innerJoin(
         main.eventTypes,
         eq(main.eventTypes.id, main.bookings.eventTypeId)
+      )
+      .leftJoin(
+        main.bookingPayments,
+        eq(main.bookingPayments.bookingId, main.bookings.id)
       )
       .where(eq(main.bookings.id, bookingId))
       .limit(1)

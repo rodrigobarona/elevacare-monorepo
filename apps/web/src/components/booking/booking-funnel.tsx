@@ -14,12 +14,19 @@ import {
   type PublicEventTypeMode,
   type PublicSlot,
 } from "@eleva/api-client"
+import {
+  cancellationDeadlines,
+  describeCancellationDeadlines,
+  describeCancellationPolicy,
+  type CancellationPolicy,
+} from "@eleva/config/cancellation-policy"
 import type { Locale } from "@eleva/config/i18n"
 import { BookingPaymentElement } from "@eleva/billing/client"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
 import { BookingSummary } from "@eleva/ui/components/booking/booking-summary"
+import { CancellationPolicySummary } from "@eleva/ui/components/booking/cancellation-policy-summary"
 import { ConsentCheckbox } from "@eleva/ui/components/booking/consent-checkbox"
 import { CountrySelect } from "@eleva/ui/components/booking/country-select"
 import { LanguageChips } from "@eleva/ui/components/booking/language-chips"
@@ -83,6 +90,7 @@ export function BookingFunnel({
   eventSlug,
   title,
   modes,
+  cancellationPolicy,
   geoCountry,
   geoTimeZone,
   consents,
@@ -97,6 +105,7 @@ export function BookingFunnel({
   eventSlug: string
   title: LocalizedText
   modes: PublicEventTypeMode[]
+  cancellationPolicy: CancellationPolicy
   geoCountry: string
   geoTimeZone: string
   consents: FunnelConsentDoc[]
@@ -321,6 +330,24 @@ export function BookingFunnel({
       }).format(new Date(slot.start))
     : t("summary.chooseTime")
 
+  const policyCopy = describeCancellationPolicy(cancellationPolicy, locale)
+  const deadlineFormat = new Intl.DateTimeFormat(locale, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  })
+  const policyDeadlines = slot
+    ? describeCancellationDeadlines(
+        cancellationDeadlines({
+          policy: cancellationPolicy,
+          bookedAt: new Date(nowMs),
+          startsAt: new Date(slot.start),
+        }),
+        locale,
+        (date) => deadlineFormat.format(date)
+      )
+    : undefined
+
   const locationCopy = selectedMode
     ? selectedMode.mode === "in_person" && selectedMode.location
       ? `${selectedMode.location.name}, ${selectedMode.location.city}`
@@ -374,6 +401,7 @@ export function BookingFunnel({
             kind: doc.kind,
             version: doc.version,
           })),
+          cancellationPolicy,
         }))
       if (!activeHold) setReservation(reserved)
       const intent = await api.payments.intent({
@@ -643,6 +671,13 @@ export function BookingFunnel({
                 {t("details.phoneHint")}
               </p>
             </Field>
+            <CancellationPolicySummary
+              heading={t("policy.heading")}
+              name={policyCopy.name}
+              lines={policyCopy.lines}
+              deadlines={policyDeadlines}
+              className="rounded-lg border p-4"
+            />
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {t("details.consentsIntro")}

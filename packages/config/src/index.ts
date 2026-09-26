@@ -97,10 +97,18 @@ export {
   CANCELLATION_POLICY_VALUES,
   CANCELLATION_POLICY_VERSION,
   DEFAULT_CANCELLATION_POLICY,
+  cancellationDeadlines,
+  cancellationRefundCents,
+  describeCancellationDeadlines,
   describeCancellationPolicy,
   isCancellationPolicy,
+  resolveCancellationRefund,
+  type CancellationDeadline,
   type CancellationPolicy,
   type CancellationPolicyLocale,
+  type CancellationRefundQuote,
+  type CancellationRefundReason,
+  type ResolveCancellationRefundInput,
   type CancellationTier,
 } from "./cancellation-policy"
 export {

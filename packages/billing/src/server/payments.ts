@@ -510,6 +510,18 @@ async function loadBookingForReservation(orgId: string, reservationId: string) {
   })
 }
 
+async function loadEventTypeCancellationPolicy(tx: Tx, eventTypeId: string) {
+  const [eventType] = await tx
+    .select({ cancellationPolicy: main.eventTypes.cancellationPolicy })
+    .from(main.eventTypes)
+    .where(eq(main.eventTypes.id, eventTypeId))
+    .limit(1)
+  if (!eventType) {
+    throw new Error(`event type ${eventTypeId} not found`)
+  }
+  return eventType.cancellationPolicy
+}
+
 async function insertPendingBooking(
   tx: Tx,
   input: {
@@ -528,16 +540,9 @@ async function insertPendingBooking(
   }
 ) {
   const { reservation, funnel } = input
-  const [eventType] = await tx
-    .select({ cancellationPolicy: main.eventTypes.cancellationPolicy })
-    .from(main.eventTypes)
-    .where(eq(main.eventTypes.id, reservation.eventTypeId))
-    .limit(1)
-  if (!eventType) {
-    throw new Error(
-      `event type ${reservation.eventTypeId} not found for booking ${input.bookingId}`
-    )
-  }
+  const cancellationPolicy =
+    reservation.cancellationPolicy ??
+    (await loadEventTypeCancellationPolicy(tx, reservation.eventTypeId))
   await tx.insert(main.bookings).values({
     id: input.bookingId,
     orgId: reservation.orgId,
@@ -562,7 +567,7 @@ async function insertPendingBooking(
     status: "pending_payment",
     sessionMode: funnel.sessionMode,
     bookedLocale: funnel.language,
-    cancellationPolicy: eventType.cancellationPolicy,
+    cancellationPolicy,
     cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
   })
   await tx.insert(main.bookingPayments).values({

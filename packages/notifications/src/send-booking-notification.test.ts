@@ -91,6 +91,9 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     expertName: "Ana Silva",
     eventTypeName: { en: "First visit" },
     scheduleRevision: 0,
+    cancellationPolicy: "moderate",
+    currency: "EUR",
+    refundDueCents: null,
     ...overrides,
   }
 }
@@ -102,6 +105,31 @@ describe("sendBookingNotification", () => {
     renderBookingRescheduled.mockClear()
     renderBookingReminder.mockClear()
     getEmailTranslations.mockClear()
+  })
+
+  it("states the policy and refund in the cancellation email", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.cancelled", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-cancel",
+        type: "booking.cancelled",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({ status: "cancelled", refundDueCents: 3000 }),
+        send,
+      }
+    )
+    expect(renderBookingCancelled).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cancellationPolicyName: "Moderate",
+        refundAmount: "€30.00",
+      })
+    )
   })
 
   it("sends member and expert with the same idempotency key", async () => {

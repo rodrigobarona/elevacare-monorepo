@@ -41,6 +41,7 @@ const RESERVE_ERROR_STATUS: Record<ReserveBookingError, number> = {
   SLOT_TAKEN: 409,
   ACCOUNT_DELETION_SCHEDULED: 409,
   ACCOUNT_BANNED: 409,
+  POLICY_CHANGED: 409,
   db_error: 500,
 }
 
@@ -136,6 +137,7 @@ export async function POST(request: Request) {
       session,
       phone: body.phone,
       consents: body.consents,
+      cancellationPolicy: body.cancellationPolicy,
       busyTimeProvider: holdCalendarBusyTimeProvider,
     })
   } catch (err) {
