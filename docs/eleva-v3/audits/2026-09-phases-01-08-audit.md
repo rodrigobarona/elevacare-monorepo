@@ -224,3 +224,7 @@ The fix pack merged the refund sweep and transfer gate for AUD-001. The per-serv
 - The member sees the policy before payment and the refund quote before cancelling.
 
 Staging smoke 3 above now covers the three policies. It has **not** been run yet, so AUD-001 is fixed in code and still **unproven** on staging.
+
+Still out of scope for this slice: expert-initiated cancel, no-show policy (Phase 09 + D-06),
+non-refundable / custom policies, and legal review of Strict under Portuguese consumer law (D-06
+re-sign).

@@ -326,6 +326,10 @@ no separate "released" state.
 refunded_cents`. A partial refund that reaches the target moves the payment back to
   `succeeded`; reaching the full amount moves it to `refunded`. A cancelled booking may transfer
   once `refunded_cents >= refund_due_cents`, so the expert is paid the kept share.
+- **Out of scope (follow-ups):** expert-initiated cancel (100% member refund; expert penalty TBD;
+  no path yet), no-show rules (Phase 09 attendance + D-06), discounted non-refundable and custom
+  policies, and legal review of Strict for health services under Portuguese consumer /
+  unfair-terms law (part of the D-06 re-sign; policies must stay visible before payment).
 - linked to cancellation state
 - operational/admin review for edge cases; refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` need
   dual control (Phase 12)

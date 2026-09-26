@@ -422,6 +422,11 @@ The system should support:
 - payment/refund interaction
 - reminders and follow-up workflow updates
 
+**Out of scope (follow-ups):** expert-initiated cancel (always 100% to the member; expert
+penalty TBD; no path yet), no-show handling (Phase 09 attendance + D-06), discounted
+non-refundable and custom policies, and legal review of Strict for health services (D-06
+re-sign; policies must be shown before payment).
+
 ## Reminder Model
 
 The system supports reminders for:

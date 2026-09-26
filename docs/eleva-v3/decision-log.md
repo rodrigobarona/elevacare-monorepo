@@ -66,6 +66,15 @@ Each entry should include:
 - Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds",
   [`scheduling-booking-spec.md`](./scheduling-booking-spec.md) "Cancellation Rules",
   `packages/config/src/cancellation-policy.ts`
+- **Out of scope (follow-ups):**
+  - Expert-initiated cancel (always a 100% refund to the member; an expert penalty
+    may apply later). No expert cancel path exists yet.
+  - No-show policy (Phase 09 records attendance; D-06 then decides refund / keep /
+    partial).
+  - Discounted non-refundable option and custom policies beyond the three presets.
+  - Legal review of the Strict preset for health services under Portuguese consumer
+    and unfair-terms law. Policies must be shown clearly before payment; that review
+    is part of the D-06 re-sign.
 
 ### 2026-09-25: Phases 01–08 audit triage (founder-approved pack)
 
