@@ -9,9 +9,9 @@ Hard limits still in force: no production mutation; `issueInvoice()` stays close
 
 Phases 01–08 are **engineering-mostly-on-main**, not **production-ready**. The pipeline on GitHub main is green. The code is not safe to take live money or to treat as closed for Phase 09.
 
-The single production blocker:
+The single production blocker (code fixed; loopback proof partial):
 
-- **AUD-001 (P0).** Member cancel and account-deletion mark `booking_payments.status = refund_pending` and then stop. Nothing executes the Stripe refund. `executeTransfer` never looks at payment or booking status, so the expert can still be paid for a cancelled session.
+- **AUD-001 (P0).** Was: member cancel set `refund_pending` with no Stripe refund and transfers ignored booking status. **Fix merged** (`processPendingCancellationRefunds` + transfer gate). **Loopback smoke 3 PASS 2026-09-26** for Flexible / Moderate / Strict refunds (see W3). Staging re-run still required before production money.
 
 Phase 09 implementation needs all of: the founder-approved fix pack (AUD-001, 002, 003, 008, 009, 013) merged; FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three; and D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver covers none of these. Only the docs/evidence 09.0 spike may start earlier (see Phase 09 readiness).
 
@@ -180,13 +180,13 @@ Lane 1 send/claim/lease, Resend + Twilio, reminders T-24h/T-1h with cancel skip,
 
 Defects: AUD-004 (quiet hours), AUD-005 (ICS), AUD-015 (PHI lint / svix dedupe). Twilio IE1 residency still operator-gated.
 
-## W3 — Staging smokes (not started)
+## W3 — Staging smokes (partial)
 
 Required before any “closed” stamp on 04/05/06:
 
 1. Auth: signup, magic link, 2FA, passkey, org switch, sign-out-everywhere.
 2. Funnel: reserve → card + MB WAY test → webhook confirm → email + in-app.
-3. Cancel paid bookings under each cancellation policy and prove the Stripe refund and payout (AUD-001 acceptance): Flexible more than 24 h out refunds €60; Moderate 30 h out refunds €30 and pays the expert the kept share; Strict 1 h out refunds €0.
+3. **Loopback PASS 2026-09-26** — Cancel paid bookings under each cancellation policy and prove the Stripe refund sweep (AUD-001 acceptance). Opt-in e2e: `pnpm e2e:cancellation-smoke` (`E2E_CANCELLATION_SMOKE=1`, `fisiomota` / `first-visit` / €60, loopback only). Evidence: Flexible (>24 h lead) → `refund_due_cents=6000`, Stripe refund €60; Moderate (~30 h lead) → `refund_due_cents=3000`, Stripe refund €30; Strict (inside 48 h tier; ~3 h lead because seeded schedule rarely exposes ~1 h slots) → `refund_due_cents=0`, payment stays `succeeded`, no Stripe refund. Each case: guest book → `pm_card_visa` confirm → magic-link Space → cancel → `POST /workflows/process-expert-transfers`. **Staging re-run still required** before production money.
 4. Expert: Connect test account, publish, private-link book.
 5. Transfer in test mode; refund after transfer; dispute test card.
 6. Reminders on a short-lead booking; cancel skips send.
@@ -223,7 +223,7 @@ The fix pack merged the refund sweep and transfer gate for AUD-001. The per-serv
 - A partial refund no longer leaves the payment stuck in `refund_pending`. A cancelled booking whose refund target is met can transfer, so the expert is paid the kept share.
 - The member sees the policy before payment and the refund quote before cancelling.
 
-Staging smoke 3 above now covers the three policies. It has **not** been run yet, so AUD-001 is fixed in code and still **unproven** on staging.
+Loopback smoke 3 **PASS 2026-09-26** (see W3 item 3). AUD-001 refund sweep + per-policy `refund_due_cents` are **proven on loopback**; **staging re-run still required** before production money or a full Phase 06 closeout stamp.
 
 Still out of scope for this slice: expert-initiated cancel, no-show policy (Phase 09 + D-06),
 non-refundable / custom policies, and legal review of Strict under Portuguese consumer law (D-06
