@@ -1,6 +1,7 @@
 import {
   executeTransfer,
   listScheduledDuePayouts,
+  processPendingCancellationRefunds,
   retryFailedTransferReversals,
 } from "@eleva/billing/server"
 
@@ -9,7 +10,11 @@ export async function processExpertTransfers(): Promise<{
   failed: number
   skipped: number
   reversalsRetried: number
+  cancellationRefunds: Awaited<
+    ReturnType<typeof processPendingCancellationRefunds>
+  >
 }> {
+  const cancellationRefunds = await processPendingCancellationRefunds()
   const { retried: reversalsRetried } = await retryFailedTransferReversals()
   const due = await listScheduledDuePayouts()
   let transferred = 0
@@ -21,5 +26,11 @@ export async function processExpertTransfers(): Promise<{
     else if (result.status === "failed") failed += 1
     else skipped += 1
   }
-  return { transferred, failed, skipped, reversalsRetried }
+  return {
+    transferred,
+    failed,
+    skipped,
+    reversalsRetried,
+    cancellationRefunds,
+  }
 }

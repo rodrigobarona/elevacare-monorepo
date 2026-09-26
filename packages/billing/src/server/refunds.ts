@@ -1,9 +1,9 @@
-import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
+import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm"
 import {
   issuePlatformFeeCreditNote,
   shouldIssuePlatformFeeCreditNote,
 } from "@eleva/accounting"
-import { withAudit } from "@eleva/audit"
+import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
 import { stripe } from "./client"
@@ -11,6 +11,7 @@ import { creditNoteAllocation } from "./commission"
 import {
   cumulativeReversalCents,
   evaluateRefundPolicy,
+  isInFlightIdempotencyConflict,
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
   type RefundPolicyInput,
@@ -293,25 +294,38 @@ export async function refundBookingPayment(input: {
     refundStatus = mapStripeRefundStatus(refund.status)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    await withAudit(
-      { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
-      async (tx, ctx) => {
-        await tx
-          .update(main.bookingRefunds)
-          .set({
-            status: "failed",
-            lastError: message.slice(0, 2000),
-            updatedAt: new Date(),
+    // A concurrent call holding the same key will record the outcome.
+    if (!isInFlightIdempotencyConflict(err)) {
+      await withAudit(
+        { orgId: snapshot.payment.orgId, actorUserId: input.actorUserId },
+        async (tx, ctx) => {
+          const marked = await tx
+            .update(main.bookingRefunds)
+            .set({
+              status: "failed",
+              lastError: message.slice(0, 2000),
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(main.bookingRefunds.id, refundId),
+                eq(main.bookingRefunds.status, "pending"),
+                isNull(main.bookingRefunds.stripeRefundId)
+              )
+            )
+            .returning({ id: main.bookingRefunds.id })
+          await ctx.emit({
+            entity: "refund",
+            action: "failed",
+            entityId: refundId,
+            payload: {
+              lastError: message.slice(0, 200),
+              rowMarkedFailed: marked.length > 0,
+            },
           })
-          .where(eq(main.bookingRefunds.id, refundId))
-        await ctx.emit({
-          entity: "refund",
-          action: "failed",
-          entityId: refundId,
-          payload: { lastError: message.slice(0, 200) },
-        })
-      }
-    )
+        }
+      )
+    }
     throw new RefundError("STRIPE_REFUND_FAILED", message, 502)
   }
 
@@ -716,6 +730,117 @@ export async function retryFailedTransferReversals(): Promise<{
   return { retried: rows.length }
 }
 
+export const CANCELLATION_REFUND_BATCH_SIZE = 50
+export const CANCELLATION_REFUND_WORKFLOW_NAME = "cancellation-refund"
+
+/**
+ * Member cancel and account deletion only flip the payment to
+ * `refund_pending` inside their booking transaction (no Stripe calls in a
+ * DB tx). This sweep issues the refund. Payments whose refund is already in
+ * flight at Stripe are left to the `charge.refunded` / `refund.updated`
+ * webhooks. A failure is dead-lettered once and excluded until staff close
+ * it, so a stuck payment cannot starve later batches.
+ */
+export async function processPendingCancellationRefunds(): Promise<{
+  scanned: number
+  refunded: number
+  pending: number
+  failed: number
+}> {
+  const rows = await withPlatformAdminContext(async (tx) =>
+    tx
+      .select({
+        id: main.bookingPayments.id,
+        orgId: main.bookingPayments.orgId,
+      })
+      .from(main.bookingPayments)
+      .where(
+        and(
+          eq(main.bookingPayments.status, "refund_pending"),
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${main.bookingRefunds}
+            WHERE ${main.bookingRefunds.bookingPaymentId} = ${main.bookingPayments.id}
+              AND ${main.bookingRefunds.status} = 'pending'
+          )`,
+          sql`NOT EXISTS (
+            SELECT 1 FROM ${main.workflowDeadLetters}
+            WHERE ${main.workflowDeadLetters.workflowName} = ${CANCELLATION_REFUND_WORKFLOW_NAME}
+              AND ${main.workflowDeadLetters.entityId} = ${main.bookingPayments.id}
+              AND ${main.workflowDeadLetters.status} = 'open'
+          )`
+        )
+      )
+      .orderBy(main.bookingPayments.id)
+      .limit(CANCELLATION_REFUND_BATCH_SIZE)
+  )
+  const result = { scanned: rows.length, refunded: 0, pending: 0, failed: 0 }
+  for (const row of rows) {
+    try {
+      const refund = await refundBookingPayment({
+        bookingPaymentId: row.id,
+        reason: "requested_by_customer",
+        actorUserId: null,
+        actingOrgId: "platform",
+        idempotencyKey: "cancellation",
+      })
+      if (refund.status === "succeeded") result.refunded += 1
+      else result.pending += 1
+    } catch (err) {
+      result.failed += 1
+      void captureException(err, {
+        bookingPaymentId: row.id,
+        probe: "cancellation-refund-sweep",
+      })
+      await deadLetterCancellationRefund(row, err).catch((dlqErr) => {
+        void captureException(dlqErr, {
+          bookingPaymentId: row.id,
+          probe: "cancellation-refund-dead-letter",
+        })
+      })
+    }
+  }
+  return result
+}
+
+async function deadLetterCancellationRefund(
+  row: { id: string; orgId: string },
+  err: unknown
+): Promise<void> {
+  const message = (err instanceof Error ? err.message : String(err)).slice(
+    0,
+    2000
+  )
+  await withPlatformAudit(
+    { orgId: row.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      await tx
+        .insert(main.workflowDeadLetters)
+        .values({
+          orgId: row.orgId,
+          workflowName: CANCELLATION_REFUND_WORKFLOW_NAME,
+          entityId: row.id,
+          payload: {
+            bookingPaymentId: row.id,
+            code: isRefundError(err) ? err.code : null,
+          },
+          attempts: 1,
+          lastError: message,
+        })
+        .onConflictDoNothing()
+      await ctx.emit({
+        entity: "refund",
+        action: "failed",
+        entityId: row.id,
+        payload: {
+          bookingPaymentId: row.id,
+          deadLettered: true,
+          lastError: message.slice(0, 200),
+        },
+      })
+    }
+  )
+}
+
 export async function applyDisputeOpened(input: {
   bookingPaymentId: string
 }): Promise<void> {
@@ -808,7 +933,7 @@ export async function applyDisputeClosed(input: {
         .where(eq(main.payoutStates.bookingPaymentId, input.bookingPaymentId))
         .limit(1)
       let refundId: string | null = null
-      if (!input.won && row) {
+      if (!input.won && (row || chargeRefundCents > 0)) {
         const [inserted] = await tx
           .insert(main.bookingRefunds)
           .values({
