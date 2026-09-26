@@ -186,7 +186,7 @@ Required before any “closed” stamp on 04/05/06:
 
 1. Auth: signup, magic link, 2FA, passkey, org switch, sign-out-everywhere.
 2. Funnel: reserve → card + MB WAY test → webhook confirm → email + in-app.
-3. Cancel a paid booking ≥24h out and prove Stripe refund + payout hold (AUD-001 acceptance).
+3. Cancel paid bookings under each cancellation policy and prove the Stripe refund and payout (AUD-001 acceptance): Flexible more than 24 h out refunds €60; Moderate 30 h out refunds €30 and pays the expert the kept share; Strict 1 h out refunds €0.
 4. Expert: Connect test account, publish, private-link book.
 5. Transfer in test mode; refund after transfer; dispute test card.
 6. Reminders on a short-lead booking; cancel skips send.
@@ -214,3 +214,17 @@ Approved pack, recorded in [`decision-log.md`](../decision-log.md) ("Phases 01�
   - AUD-001, 002, 003, 008, 009 and 013 merged, and a paid-then-cancelled booking proven on staging (refund issued, payout not transferred).
   - FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three. They stay closed today.
   - D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver does not cover it.
+
+## Follow-up (2026-09-26): cancellation policies
+
+The fix pack merged the refund sweep and transfer gate for AUD-001. The per-service cancellation policy work then changed what a member cancel refunds (decision log 2026-09-26, part of D-06):
+
+- Member cancel refunds a percentage set by the booking's snapshotted policy (Flexible, Moderate or Strict, plus a 24 h grace period), not always 100%. The target is stored in `booking_payments.refund_due_cents`, and the sweep refunds only that amount.
+- A partial refund no longer leaves the payment stuck in `refund_pending`. A cancelled booking whose refund target is met can transfer, so the expert is paid the kept share.
+- The member sees the policy before payment and the refund quote before cancelling.
+
+Staging smoke 3 above now covers the three policies. It has **not** been run yet, so AUD-001 is fixed in code and still **unproven** on staging.
+
+Still out of scope for this slice: expert-initiated cancel, no-show policy (Phase 09 + D-06),
+non-refundable / custom policies, and legal review of Strict under Portuguese consumer law (D-06
+re-sign).

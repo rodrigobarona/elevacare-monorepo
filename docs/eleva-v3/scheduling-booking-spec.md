@@ -411,10 +411,21 @@ Rescheduling should likely create a clear state transition history rather than s
 
 The system should support:
 
-- policy-based cancellation windows
+- policy-based cancellation windows: one preset per service (`flexible` default, `moderate`,
+  `strict`) with a 24 h grace period after booking; percentages and windows are in
+  [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds". The public profile names the
+  policy; the funnel shows the policy and the refund deadlines for the chosen slot in the
+  member's time zone before payment. The member can cancel any time before the session starts
+  and sees the refund quote first. Reschedule is allowed only while a cancel would still get a
+  full refund and within the service's reschedule window
 - optional cancellation reason capture
 - payment/refund interaction
 - reminders and follow-up workflow updates
+
+**Out of scope (follow-ups):** expert-initiated cancel (always 100% to the member; expert
+penalty TBD; no path yet), no-show handling (Phase 09 attendance + D-06), discounted
+non-refundable and custom policies, and legal review of Strict for health services (D-06
+re-sign; policies must be shown before payment).
 
 ## Reminder Model
 

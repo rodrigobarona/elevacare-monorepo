@@ -298,7 +298,38 @@ no separate "released" state.
 
 ## Refunds
 
-- policy-based refunds (cancellation window rules; the no-show and dispute policy is decision D-06 — **working pre-launch**, founder recorded 2026-09-12; finance and legal re-sign before production)
+- policy-based refunds (the no-show and dispute policy is decision D-06 — **working pre-launch**, founder recorded 2026-09-12; finance and legal re-sign before production)
+- **cancellation policy per service** (decision log 2026-09-26, part of D-06): each event type
+  has `cancellation_policy` = `flexible` (default) | `moderate` | `strict`. Member-cancel refund
+  percentage by time before the session:
+
+  | Policy   | 100%                  | 50%            | 0%         |
+  | -------- | --------------------- | -------------- | ---------- |
+  | Flexible | 24 h or more before   | —              | under 24 h |
+  | Moderate | 48 h or more before   | 48 h to 24 h   | under 24 h |
+  | Strict   | 7 days or more before | 7 days to 48 h | under 48 h |
+
+  A cancel exactly on a boundary gets the higher refund. Grace period: 100% within 24 h of booking when the session is at least 48 h away. Expert
+  cancel, account deletion, hold expiry and staff override always refund 100%. The rules live
+  in `@eleva/config/cancellation-policy` (`resolveCancellationRefund`); the booking snapshots
+  the policy shown to the member before payment (`bookings.cancellation_policy` +
+  `cancellation_policy_version`, copied from the hold), so expert edits never change existing
+  bookings.
+
+- **proportional split**: the refund is a percentage of what the member paid and still has
+  refundable (`amount_cents - refunded_cents`). There is no separate fee rule: a refund before
+  the transfer reduces the payout through `reversed_cents`; a refund after the transfer reverses
+  proportionally (below). Commission shrinks by the same proportion.
+- **refund target**: member cancel writes `booking_payments.refund_due_cents` (cumulative target,
+  `refunded_cents + refund`) and sets `refund_pending` only when the refund is above zero; null
+  means refund everything (account deletion). The refund sweep refunds `refund_due_cents -
+refunded_cents`. A partial refund that reaches the target moves the payment back to
+  `succeeded`; reaching the full amount moves it to `refunded`. A cancelled booking may transfer
+  once `refunded_cents >= refund_due_cents`, so the expert is paid the kept share.
+- **Out of scope (follow-ups):** expert-initiated cancel (100% member refund; expert penalty TBD;
+  no path yet), no-show rules (Phase 09 attendance + D-06), discounted non-refundable and custom
+  policies, and legal review of Strict for health services under Portuguese consumer /
+  unfair-terms law (part of the D-06 re-sign; policies must stay visible before payment).
 - linked to cancellation state
 - operational/admin review for edge cases; refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` need
   dual control (Phase 12)
