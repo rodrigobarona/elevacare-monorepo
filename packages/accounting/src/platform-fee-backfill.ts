@@ -110,6 +110,7 @@ export async function backfillMissingPlatformFeeInvoices(
     try {
       const issued = await issuePlatformFeeInvoice({
         bookingPaymentId: payment.id,
+        insertOnly: true,
       })
       result.recorded[issued.outcome] += 1
       if (issued.invoice || issued.reason === "flag_disabled") continue
@@ -127,6 +128,7 @@ export async function backfillMissingPlatformFeeInvoices(
         payment.id,
         err
       )
+      result.errors += 1
     }
   }
   return result

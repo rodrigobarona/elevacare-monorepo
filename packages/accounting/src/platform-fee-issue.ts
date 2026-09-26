@@ -197,6 +197,8 @@ export function decidePlatformFeeRecord(input: {
 export async function issuePlatformFeeInvoice(input: {
   bookingPaymentId: string
   lookupIva?: PlatformFeeIvaLookup
+  /** Never touch an existing row (backfill): a late webhook row wins. */
+  insertOnly?: boolean
 }): Promise<IssuePlatformFeeInvoiceResult> {
   const enabled = await getFlag("ff.toconline_invoicing_enabled")
   if (!enabled) {
@@ -235,7 +237,7 @@ export async function issuePlatformFeeInvoice(input: {
   }
   if (
     snapshot.existing &&
-    isTerminalPlatformFeeStatus(snapshot.existing.status)
+    (input.insertOnly || isTerminalPlatformFeeStatus(snapshot.existing.status))
   ) {
     return {
       invoice: toPublicPlatformFeeInvoice(snapshot.existing),
@@ -296,8 +298,17 @@ export async function issuePlatformFeeInvoice(input: {
     series,
     existingId: snapshot.existing?.id ?? null,
     decision,
+    insertOnly: input.insertOnly ?? false,
   })
 
+  if (input.insertOnly && !persisted.domainEvent) {
+    return {
+      invoice: persisted.invoice,
+      outcome: "already_recorded",
+      reason: persisted.invoice.error,
+      domainEvent: null,
+    }
+  }
   return {
     invoice: persisted.invoice,
     outcome: decision.status,
@@ -428,6 +439,7 @@ async function persistPlatformFeeInvoice(input: {
     ivaRegime: PlatformFeeIvaRegime
     ivaRateBps: number
   }
+  insertOnly: boolean
 }): Promise<{
   invoice: PublicPlatformFeeInvoice
   domainEvent: ClosedGateInvoiceEventRef | null
@@ -458,7 +470,7 @@ async function persistPlatformFeeInvoice(input: {
             .returning(invoiceSelect)
           if (inserted) row = toPublicPlatformFeeInvoice(inserted)
         }
-        if (!row) {
+        if (!row && !input.insertOnly) {
           const [updated] = await tx
             .update(main.platformFeeInvoices)
             .set({

@@ -7,6 +7,7 @@ function mockDeps(input: {
   flag?: boolean
   candidates: { id: string; orgId: string }[]
   issue: ReturnType<typeof vi.fn>
+  deadLetterFails?: boolean
 }) {
   const emit = vi.fn()
   const insertValues = vi.fn()
@@ -34,8 +35,9 @@ function mockDeps(input: {
   }))
   vi.doMock("@eleva/audit", () => ({
     withPlatformAudit: vi.fn(
-      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) =>
-        fn(
+      async (_opts: unknown, fn: (tx: unknown, ctx: unknown) => unknown) => {
+        if (input.deadLetterFails) throw new Error("db down")
+        return fn(
           {
             insert: () => ({
               values: (row: unknown) => {
@@ -50,6 +52,7 @@ function mockDeps(input: {
           },
           { emit }
         )
+      }
     ),
   }))
   vi.doMock("./platform-fee-issue", () => ({
@@ -100,8 +103,14 @@ describe("backfillMissingPlatformFeeInvoices", () => {
 
     const result = await backfillMissingPlatformFeeInvoices()
 
-    expect(issue).toHaveBeenNthCalledWith(1, { bookingPaymentId: "pay-1" })
-    expect(issue).toHaveBeenNthCalledWith(2, { bookingPaymentId: "pay-2" })
+    expect(issue).toHaveBeenNthCalledWith(1, {
+      bookingPaymentId: "pay-1",
+      insertOnly: true,
+    })
+    expect(issue).toHaveBeenNthCalledWith(2, {
+      bookingPaymentId: "pay-2",
+      insertOnly: true,
+    })
     expect(result).toEqual({
       scanned: 2,
       recorded: { skipped: 1, blocked: 1, pending: 0, already_recorded: 0 },
@@ -170,5 +179,26 @@ describe("backfillMissingPlatformFeeInvoices", () => {
 
     expect(result.deadLettered).toBe(0)
     expect(insertValues).not.toHaveBeenCalled()
+  })
+
+  it("counts a failed dead-letter write as an error", async () => {
+    const issue = vi.fn().mockResolvedValue({
+      invoice: null,
+      outcome: "skipped",
+      reason: "expert_profile_missing",
+      domainEvent: null,
+    })
+    mockDeps({
+      candidates: [{ id: "pay-1", orgId: "org-1" }],
+      issue,
+      deadLetterFails: true,
+    })
+    const { backfillMissingPlatformFeeInvoices } =
+      await import("./platform-fee-backfill")
+
+    const result = await backfillMissingPlatformFeeInvoices()
+
+    expect(result.deadLettered).toBe(0)
+    expect(result.errors).toBe(1)
   })
 })
