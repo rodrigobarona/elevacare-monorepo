@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-26: Per-service cancellation policies (D-06 refund rules)
+
+- Decision: each service (event type) carries one of three Airbnb-style
+  presets. The member's refund is a percentage of what they paid, and the
+  expert's payout and Eleva's commission shrink in proportion (no separate
+  fee split).
+  - **Flexible** (default): 100% until 24 h before the session, then 0%.
+  - **Moderate**: 100% until 48 h before, 50% from 48 h to 24 h, then 0%.
+  - **Strict**: 100% until 7 days before, 50% from 7 days to 48 h, then 0%.
+  - A cancel exactly on a boundary gets the higher refund (at exactly 48 h,
+    Moderate refunds 100%).
+  - **Grace period:** 100% for 24 h after booking, as long as the session is
+    at least 48 h away.
+  - **Always 100%:** expert cancel, account deletion, hold expiry and staff
+    override. Expert cancel does not exist in code yet; when it lands it must
+    refund in full.
+- Mechanics: the booking snapshots the policy and `cancellation_policy_version`
+  at booking time, taken from the hold, which records the policy shown to the
+  member before payment (same transaction as the funnel consents). A later
+  change by the expert never affects existing bookings, and a reserve that
+  sends a stale policy gets `409 POLICY_CHANGED`. Member cancel stores the
+  refund target in `booking_payments.refund_due_cents`; the refund sweep
+  refunds only that amount, and a partial refund before the transfer reduces
+  the payout. The member can cancel any time before the session starts and
+  sees the quote first (`GET /me/bookings/{id}/cancellation-quote`).
+  Reschedule is allowed only while a cancel would still get a full refund.
+- Owner: founder (product owner, working pre-launch)
+- Status: active — working pre-launch. This fills in the cancellation-window
+  part of D-06. It is **not** a finance/legal production sign-off, and it does
+  not change the dispute or no-show parts of D-06.
+- Review date: with the D-06 finance + legal re-sign before production.
+- Reference: [`payments-payouts-spec.md`](./payments-payouts-spec.md) "Refunds",
+  [`scheduling-booking-spec.md`](./scheduling-booking-spec.md) "Cancellation Rules",
+  `packages/config/src/cancellation-policy.ts`
+
 ### 2026-09-25: Phases 01–08 audit triage (founder-approved pack)
 
 - Decision: Founder approved the audit triage in
@@ -1413,7 +1448,8 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 - Status: active — working pre-launch decision recorded 2026-09-12 by Rodrigo
   Barona (founder). Unblocks PR 06.2. Not a finance/legal production sign-off.
 - Review date: 2026-09-21 (finance + legal re-sign before production)
-- Summary: cancellation-window refund rules, dispute handling (hold payout, reverse on loss) and
+- Summary: cancellation-window refund rules (per-service presets, see the
+  2026-09-26 entry "Per-service cancellation policies"), dispute handling (hold payout, reverse on loss) and
   the no-show policy (Phase 9 records attendance only; this decision says refund / keep / partial
   per attendance outcome). Refunds above `ADMIN_DUAL_CONTROL_REFUND_CENTS` (default 200 EUR) need
   dual control in the admin console. Working pre-launch decision that unblocks PR 06.2; finance
