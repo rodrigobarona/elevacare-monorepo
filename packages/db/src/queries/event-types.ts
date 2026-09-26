@@ -187,6 +187,7 @@ export async function findPublicEventType(
       | "bufferBeforeMinutes"
       | "bufferAfterMinutes"
       | "worldwideMode"
+      | "cancellationPolicy"
     >
   | undefined
 > {
@@ -208,6 +209,7 @@ export async function findPublicEventType(
         bufferBeforeMinutes: eventTypes.bufferBeforeMinutes,
         bufferAfterMinutes: eventTypes.bufferAfterMinutes,
         worldwideMode: eventTypes.worldwideMode,
+        cancellationPolicy: eventTypes.cancellationPolicy,
       })
       .from(eventTypes)
       .where(
@@ -241,6 +243,7 @@ export async function listPublicEventTypes(
     | "currency"
     | "languages"
     | "sessionMode"
+    | "cancellationPolicy"
   >[]
 > {
   return withPlatformAdminContext(async (tx: Tx) => {
@@ -255,6 +258,7 @@ export async function listPublicEventTypes(
         currency: eventTypes.currency,
         languages: eventTypes.languages,
         sessionMode: eventTypes.sessionMode,
+        cancellationPolicy: eventTypes.cancellationPolicy,
       })
       .from(eventTypes)
       .where(

@@ -337,6 +337,13 @@
       "when": 1779800000000,
       "tag": "0047_cancellation_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1779900000000,
+      "tag": "0048_reservation_cancellation_policy",
+      "breakpoints": true
     }
   ]
 }

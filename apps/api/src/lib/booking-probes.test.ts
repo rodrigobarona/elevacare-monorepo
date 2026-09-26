@@ -20,6 +20,7 @@ const offerBody = {
   currency: "EUR",
   languages: ["pt", "en"],
   sessionMode: "online",
+  cancellationPolicy: "flexible",
   modes: [
     {
       id: MODE_ID,

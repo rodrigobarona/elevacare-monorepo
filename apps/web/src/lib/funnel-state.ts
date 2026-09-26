@@ -68,6 +68,8 @@ export function mapReserveError(code: string | undefined): string {
       return "guestRequired"
     case "CONSENT_VERSION_OUTDATED":
       return "consentOutdated"
+    case "POLICY_CHANGED":
+      return "policyChanged"
     default:
       return "generic"
   }

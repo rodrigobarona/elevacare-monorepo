@@ -1441,6 +1441,7 @@ export const PublicEventTypeSchema = z.object({
   currency: z.literal("EUR"),
   languages: z.array(z.string()),
   sessionMode: z.enum(["online", "in_person", "phone"]),
+  cancellationPolicy: CancellationPolicySchema,
   modes: z.array(PublicEventTypeModeSchema),
 })
 
@@ -1492,6 +1493,7 @@ export const PublicBookingLinkResponseSchema = z.object({
   eventSlug: z.string().min(1).max(80),
   expertDisplayName: z.string().min(1).max(200),
   eventTitle: PublicLocalizedTextSchema,
+  cancellationPolicy: CancellationPolicySchema,
   modes: z.array(PublicEventTypeModeSchema).min(1),
 })
 
@@ -1526,6 +1528,8 @@ export const ReserveBookingRequestSchema = z.object({
     .refine((grants) => new Set(grants.map((grant) => grant.kind)).size === 3, {
       message: "consents must cover each kind exactly once",
     }),
+  /** Policy shown to the member; 409 POLICY_CHANGED when it no longer matches. */
+  cancellationPolicy: CancellationPolicySchema.optional(),
 })
 
 export const ReserveBookingResponseSchema = z.object({

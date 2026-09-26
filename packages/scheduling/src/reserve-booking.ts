@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto"
+import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { and, eq, isNull, or, sql } from "drizzle-orm"
 import type { Redis } from "@upstash/redis"
 import {
@@ -53,6 +54,8 @@ export type ReserveBookingInput = {
   session?: ReserveBookingSession
   phone?: string
   consents: { kind: string; version: string }[]
+  /** Policy the member was shown; a mismatch means the expert changed it. */
+  cancellationPolicy?: CancellationPolicy
   busyTimeProvider?: BusyTimeProvider
 }
 
@@ -67,6 +70,7 @@ export type ReserveBookingError =
   | "SLOT_TAKEN"
   | "ACCOUNT_DELETION_SCHEDULED"
   | "ACCOUNT_BANNED"
+  | "POLICY_CHANGED"
   | "db_error"
 
 export type ReserveBookingResult =
@@ -223,6 +227,13 @@ export async function reserveBooking(
     return { ok: false, error: "not_found" }
   }
 
+  if (
+    input.cancellationPolicy !== undefined &&
+    input.cancellationPolicy !== offer.cancellationPolicy
+  ) {
+    return { ok: false, error: "POLICY_CHANGED" }
+  }
+
   const schedulePromise = getScheduleForBooking(expert.orgId, offer.scheduleId)
   const busyPromise = listExpertBusyBookings(
     expert.id,
@@ -289,6 +300,7 @@ export async function reserveBooking(
         sessionMode: offer.mode,
         ...(funnelGuest ? { guest: funnelGuest } : {}),
       },
+      cancellationPolicy: offer.cancellationPolicy,
       audit: {
         actorUserId: input.session?.userId ?? null,
         payload: {
@@ -296,6 +308,7 @@ export async function reserveBooking(
           memberCountry: input.memberCountry,
           timezone: input.timezone,
           bookingLinkId: offer.bookingLinkId ?? null,
+          cancellationPolicy: offer.cancellationPolicy,
           consents: input.consents.map((grant) => ({
             kind: grant.kind,
             version: grant.version,

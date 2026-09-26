@@ -41,6 +41,7 @@ describe("mapReserveError", () => {
   it("maps known API codes", () => {
     expect(mapReserveError("SLOT_TAKEN")).toBe("slotTaken")
     expect(mapReserveError("CONSENT_VERSION_OUTDATED")).toBe("consentOutdated")
+    expect(mapReserveError("POLICY_CHANGED")).toBe("policyChanged")
     expect(mapReserveError("mystery")).toBe("generic")
     expect(mapReserveError(undefined)).toBe("generic")
   })

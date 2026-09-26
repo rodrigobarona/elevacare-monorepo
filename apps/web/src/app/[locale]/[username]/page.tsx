@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { PublicRateLimited } from "@/components/public-rate-limited"
@@ -11,7 +12,7 @@ import { Link } from "@/i18n/navigation"
 import { formatEur } from "@/lib/format-eur"
 import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
-import { pickLocalizedText } from "@/lib/localized-text"
+import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
 import {
   createPublicApiClient,
   getPublicExpert,
@@ -50,7 +51,7 @@ export default async function ExpertProfilePage({ params }: Props) {
   const { locale, username } = await params
   setRequestLocale(locale)
 
-  if (isReserved(username)) {
+  if (isReserved(username) || !isSupportedLocale(locale)) {
     notFound()
   }
 
@@ -166,6 +167,14 @@ export default async function ExpertProfilePage({ params }: Props) {
                       modes: eventType.modes
                         .map((mode) => t(`modes.${mode.mode}`))
                         .join(", "),
+                    })}
+                  </p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {t("cancellationPolicy", {
+                      name: describeCancellationPolicy(
+                        eventType.cancellationPolicy,
+                        locale
+                      ).name,
                     })}
                   </p>
                   {eventType.modes.length > 0 ? (

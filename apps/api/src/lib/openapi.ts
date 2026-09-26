@@ -2322,7 +2322,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "reserveBooking",
           summary: "Reserve a booking slot",
           description:
-            "Holds a public or private-link slot for 5 minutes after consent, mode, and availability checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged.",
+            "Holds a public or private-link slot for 5 minutes after consent, mode, and availability checks. Optional session; guests send email and name. Returns a one-time reservationToken that is never logged. Send the cancellationPolicy the member was shown; it is stored on the hold and snapshotted onto the booking.",
           tags: ["Bookings"],
           security: [],
           requestBody: {
@@ -2344,7 +2344,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
             },
             "409": {
               description:
-                "Slot already taken, or member cannot book (deletion scheduled / banned)",
+                "Slot already taken, member cannot book (deletion scheduled / banned), or POLICY_CHANGED when the sent cancellationPolicy no longer matches the service",
               content: { "application/json": { schema: ErrorSchema } },
             },
             "500": {

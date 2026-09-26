@@ -153,6 +153,8 @@ export const slotReservations = pgTable(
     priceCents: integer("price_cents"),
     currency: varchar("currency", { length: 3 }),
     funnel: jsonb("funnel").$type<ReservationFunnelSnapshot>(),
+    /** Policy disclosed to the member at reserve time; copied onto the booking. */
+    cancellationPolicy: cancellationPolicyEnum("cancellation_policy"),
 
     createdAt: createdAt(),
   },

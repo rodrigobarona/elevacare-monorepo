@@ -1,3 +1,4 @@
+import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import type { Tx } from "@eleva/db/context"
 import type {
   AvailabilityRule,
@@ -57,6 +58,8 @@ export interface ReserveSlotInput {
   eventTypeModeId?: string
   price?: { cents: number; currency: "EUR" }
   funnel?: ReservationFunnelSnapshot
+  /** Policy shown to the member; snapshotted onto the booking. */
+  cancellationPolicy?: CancellationPolicy
   afterInsert?: (tx: Tx, reservationId: string) => Promise<void>
   audit?: {
     actorUserId?: string | null

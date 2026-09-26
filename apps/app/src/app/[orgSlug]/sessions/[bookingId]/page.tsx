@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
+import { ApiClientError } from "@eleva/api-client"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
@@ -69,7 +70,13 @@ export default async function SessionDetailPage({
   const booking = await findBooking(api, bookingId)
   if (!booking) notFound()
 
-  const payments = await api.me.listPayments()
+  const [payments, quote] = await Promise.all([
+    api.me.listPayments(),
+    api.me.cancellationQuote(booking.id).catch((err: unknown) => {
+      if (err instanceof ApiClientError && err.status === 409) return null
+      throw err
+    }),
+  ])
   const payment = payments.payments.find((row) => row.bookingId === booking.id)
   const title = eventTitle(booking.eventType.title, locale)
   const memberName = session.user.displayName ?? session.user.email
@@ -147,7 +154,8 @@ export default async function SessionDetailPage({
         startsAt={booking.startsAt}
         endsAt={booking.endsAt}
         timezone={booking.timezone}
-        status={booking.status}
+        locale={locale}
+        quote={quote}
       />
     </div>
   )

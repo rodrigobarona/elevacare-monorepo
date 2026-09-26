@@ -59,6 +59,7 @@ const offer: ResolvedOffer = {
   minimumNoticeMinutes: 0,
   bufferBeforeMinutes: 0,
   bufferAfterMinutes: 0,
+  cancellationPolicy: "flexible",
 }
 
 const grants = FUNNEL_CONSENT_KINDS.map((kind) => ({
@@ -244,6 +245,16 @@ describe("reserveBooking", () => {
     expect(reserveSlot).not.toHaveBeenCalled()
   })
 
+  it("rejects a policy the expert changed since the member saw it", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      cancellationPolicy: "strict",
+    })
+    expect(result).toEqual({ ok: false, error: "POLICY_CHANGED" })
+    expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
   it("returns reservationId, reservationToken, and expiresAt", async () => {
     const { reserveBooking, RESERVE_TTL_SECONDS } =
       await import("./reserve-booking")
@@ -262,6 +273,7 @@ describe("reserveBooking", () => {
         eventTypeId: "et-1",
         expertProfileId: "expert-1",
         price: { cents: 4500, currency: "EUR" },
+        cancellationPolicy: "flexible",
         funnel: expect.objectContaining({
           timezone: "Europe/Lisbon",
           language: "pt",

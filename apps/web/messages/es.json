@@ -115,7 +115,8 @@
       "online": "vídeo",
       "in_person": "presencial",
       "phone": "teléfono"
-    }
+    },
+    "cancellationPolicy": "Política de cancelación: {name}"
   },
   "booking": {
     "meta": {
@@ -259,7 +260,11 @@
       "confirmFailed": "El pago se realizó, pero aún no pudimos confirmar la sesión. Inténtalo de nuevo.",
       "confirmMismatch": "Este pago no coincide con la hora reservada. Si te cobraron, contacta con soporte.",
       "generic": "No pudimos reservar esa hora. Inténtalo de nuevo.",
-      "rateLimited": "Demasiadas solicitudes ahora mismo. Espera un minuto e inténtalo de nuevo."
+      "rateLimited": "Demasiadas solicitudes ahora mismo. Espera un minuto e inténtalo de nuevo.",
+      "policyChanged": "El experto acaba de actualizar la política de cancelación. Recarga la página para revisarla antes de reservar."
+    },
+    "policy": {
+      "heading": "Política de cancelación"
     }
   },
   "footer": {

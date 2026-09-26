@@ -4,6 +4,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { toast } from "sonner"
+import type { CancellationQuote } from "@eleva/api-client"
+import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
+import { isLocale } from "@eleva/config/i18n"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
@@ -22,9 +25,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@eleva/ui/components/dialog"
-import { cancelBookingAction, rescheduleBookingAction } from "../actions"
 import {
-  canChangeBooking,
+  cancelBookingAction,
+  getCancellationQuoteAction,
+  rescheduleBookingAction,
+} from "../actions"
+import {
+  formatDateTime,
+  formatMoney,
   fromDatetimeLocalValue,
   toDatetimeLocalValue,
 } from "@/lib/member-format"
@@ -50,7 +58,9 @@ interface SessionActionsProps {
   startsAt: string
   endsAt: string
   timezone: string
-  status: string
+  locale: string
+  /** Null when the booking can no longer be changed by the member. */
+  quote: CancellationQuote | null
 }
 
 export function SessionActions({
@@ -59,13 +69,16 @@ export function SessionActions({
   startsAt,
   endsAt,
   timezone,
-  status,
+  locale,
+  quote,
 }: SessionActionsProps) {
   const t = useTranslations("sessions")
   const te = useTranslations("errors")
   const tc = useTranslations("common")
   const router = useRouter()
-  const mutable = canChangeBooking(startsAt, status)
+  const [current, setCurrent] = useState(quote)
+  const mutable = current !== null
+  const canReschedule = current?.refundPercent === 100
   const [cancelOpen, setCancelOpen] = useState(false)
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [pending, setPending] = useState(false)
@@ -73,20 +86,114 @@ export function SessionActions({
     toDatetimeLocalValue(startsAt, timezone)
   )
 
+  function refundCopy(current: CancellationQuote): string[] {
+    const policy = describeCancellationPolicy(
+      current.policy,
+      isLocale(locale) ? locale : "en"
+    ).name
+    const amount = formatMoney(current.refundCents, locale, current.currency)
+    const lines: string[] = []
+    if (current.refundCents > 0) {
+      lines.push(
+        current.refundPercent === 100
+          ? t("refundFull", { amount, policy })
+          : t("refundPartial", {
+              amount,
+              percent: current.refundPercent,
+              policy,
+            })
+      )
+    } else if (current.refundPercent > 0) {
+      lines.push(t("refundNothingPaid"))
+    } else {
+      lines.push(t("refundNone", { policy }))
+    }
+    if (current.nextChangeAt && current.refundCents > 0) {
+      lines.push(
+        t("refundDropsAt", {
+          date: formatDateTime(current.nextChangeAt, locale, timezone),
+        })
+      )
+    }
+    return lines
+  }
+
   function errorMessage(code: string): string {
     if (isErrorKey(code)) return te(code)
     return te("generic")
   }
 
+  /** Fresh quote from the API; undefined when it could not be loaded. */
+  async function refreshQuote(): Promise<CancellationQuote | null | undefined> {
+    const result = await getCancellationQuoteAction(orgSlug, bookingId)
+    if (!result.ok) {
+      toast.error(errorMessage(result.error))
+      return undefined
+    }
+    setCurrent(result.quote)
+    return result.quote
+  }
+
+  async function openCancel() {
+    setPending(true)
+    setCancelOpen(true)
+    try {
+      const fresh = await refreshQuote()
+      if (fresh === null) setCancelOpen(false)
+    } finally {
+      setPending(false)
+    }
+  }
+
+  async function openReschedule() {
+    setPending(true)
+    try {
+      const fresh = await refreshQuote()
+      if (fresh === undefined) return
+      if (fresh?.refundPercent !== 100) {
+        toast.error(t("rescheduleUnavailable"))
+        return
+      }
+      setRescheduleOpen(true)
+    } finally {
+      setPending(false)
+    }
+  }
+
   async function handleCancel() {
     setPending(true)
     try {
+      const shown = current
+      const fresh = await refreshQuote()
+      if (fresh === undefined) return
+      if (fresh === null) {
+        toast.error(te("tooLate"))
+        setCancelOpen(false)
+        return
+      }
+      if (
+        fresh.refundCents !== shown?.refundCents ||
+        fresh.refundPercent !== shown.refundPercent
+      ) {
+        toast.info(t("refundChanged"))
+        return
+      }
       const result = await cancelBookingAction(orgSlug, bookingId)
       if (!result.ok) {
         toast.error(errorMessage(result.error))
         return
       }
-      toast.success(t("cancelled"))
+      toast.success(
+        result.refund.refundCents > 0
+          ? t("cancelledRefund", {
+              amount: formatMoney(
+                result.refund.refundCents,
+                locale,
+                result.refund.currency
+              ),
+            })
+          : t("cancelled")
+      )
       setCancelOpen(false)
       router.push(`/${orgSlug}/sessions`)
       router.refresh()
@@ -125,19 +232,23 @@ export function SessionActions({
     <div className="space-y-3">
       {!mutable ? (
         <p className="text-sm text-muted-foreground">{t("policyTooLate")}</p>
+      ) : !canReschedule ? (
+        <p className="text-sm text-muted-foreground">
+          {t("rescheduleUnavailable")}
+        </p>
       ) : null}
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
-          isDisabled={!mutable}
-          onPress={() => setRescheduleOpen(true)}
+          isDisabled={!canReschedule || pending}
+          onPress={openReschedule}
         >
           {t("reschedule")}
         </Button>
         <Button
           variant="destructive"
-          isDisabled={!mutable}
-          onPress={() => setCancelOpen(true)}
+          isDisabled={!mutable || pending}
+          onPress={openCancel}
           data-testid="member-cancel-session"
         >
           {t("cancel")}
@@ -147,9 +258,13 @@ export function SessionActions({
       <AlertDialog isOpen={cancelOpen} onOpenChange={setCancelOpen}>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("cancelTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t("cancelDescription")}
-          </AlertDialogDescription>
+          {current
+            ? refundCopy(current).map((line) => (
+                <AlertDialogDescription key={line}>
+                  {line}
+                </AlertDialogDescription>
+              ))
+            : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel isDisabled={pending}>

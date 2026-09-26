@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import {
   ApiClientError,
+  type CancellationQuote,
   PatchMeRequestSchema,
   PutMeConsentRequestSchema,
   PutNotificationPreferencesRequestSchema,
@@ -173,19 +174,40 @@ export async function updateConsentAction(
   }
 }
 
-export async function cancelBookingAction(
+export async function getCancellationQuoteAction(
   orgSlug: string,
   bookingId: string
-): Promise<ActionResult> {
+): Promise<ActionResult<{ quote: CancellationQuote | null }>> {
   const slug = OrgSlugSchema.safeParse(orgSlug)
   const id = UuidSchema.safeParse(bookingId)
   if (!slug.success || !id.success) return { ok: false, error: "validation" }
   try {
     await requireMemberOrg(slug.data)
     const api = await getAuthedApiClient()
-    await api.me.cancelBooking(id.data)
+    const quote = await api.me.cancellationQuote(id.data)
+    return { ok: true, quote }
+  } catch (err) {
+    if (err instanceof ApiClientError && err.status === 409) {
+      return { ok: true, quote: null }
+    }
+    console.error("getCancellationQuoteAction failed", err)
+    return { ok: false, error: mapGenericError(err) }
+  }
+}
+
+export async function cancelBookingAction(
+  orgSlug: string,
+  bookingId: string
+): Promise<ActionResult<{ refund: CancellationQuote }>> {
+  const slug = OrgSlugSchema.safeParse(orgSlug)
+  const id = UuidSchema.safeParse(bookingId)
+  if (!slug.success || !id.success) return { ok: false, error: "validation" }
+  try {
+    await requireMemberOrg(slug.data)
+    const api = await getAuthedApiClient()
+    const { refund } = await api.me.cancelBooking(id.data)
     revalidateMember(slug.data)
-    return { ok: true }
+    return { ok: true, refund }
   } catch (err) {
     console.error("cancelBookingAction failed", err)
     return { ok: false, error: mapGenericError(err) }

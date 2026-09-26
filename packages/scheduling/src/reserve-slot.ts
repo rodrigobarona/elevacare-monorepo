@@ -78,6 +78,7 @@ export async function reserveSlot(
     afterInsert,
     audit,
     funnel,
+    cancellationPolicy,
   } = input
 
   if (userId) {
@@ -129,6 +130,7 @@ export async function reserveSlot(
           priceCents: price?.cents,
           currency: price?.currency,
           funnel,
+          cancellationPolicy,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),
