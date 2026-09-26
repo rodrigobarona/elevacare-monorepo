@@ -1,9 +1,5 @@
 import { describe, it, expect } from "vitest"
-import {
-  validateBookingRules,
-  canCancel,
-  canReschedule,
-} from "../src/booking-rules"
+import { validateBookingRules, canReschedule } from "../src/booking-rules"
 
 describe("validateBookingRules", () => {
   const now = new Date("2026-06-15T10:00:00Z")
@@ -104,30 +100,6 @@ describe("validateBookingRules", () => {
   })
 })
 
-describe("canCancel", () => {
-  it("allows cancellation when no window is set", () => {
-    expect(canCancel(null, new Date("2026-06-15T12:00:00Z"))).toBe(true)
-  })
-
-  it("allows cancellation within window", () => {
-    const now = new Date("2026-06-15T10:00:00Z")
-    const startsAt = new Date("2026-06-16T10:00:00Z")
-    expect(canCancel(12, startsAt, now)).toBe(true)
-  })
-
-  it("blocks cancellation outside window", () => {
-    const now = new Date("2026-06-15T10:00:00Z")
-    const startsAt = new Date("2026-06-15T14:00:00Z")
-    expect(canCancel(12, startsAt, now)).toBe(false)
-  })
-
-  it("handles exact boundary (hours equal to window)", () => {
-    const now = new Date("2026-06-15T10:00:00Z")
-    const startsAt = new Date("2026-06-15T22:00:00Z")
-    expect(canCancel(12, startsAt, now)).toBe(true)
-  })
-})
-
 describe("canReschedule", () => {
   it("allows reschedule when no window is set", () => {
     expect(canReschedule(null, new Date("2026-06-15T12:00:00Z"))).toBe(true)
@@ -149,12 +121,5 @@ describe("canReschedule", () => {
     const now = new Date("2026-06-15T10:00:00Z")
     const startsAt = new Date("2026-06-16T10:00:00Z")
     expect(canReschedule(24, startsAt, now)).toBe(true)
-  })
-})
-
-describe("MEMBER_CANCEL_MIN_HOURS", () => {
-  it("is the 24-hour member policy floor", async () => {
-    const { MEMBER_CANCEL_MIN_HOURS } = await import("../src/booking-rules")
-    expect(MEMBER_CANCEL_MIN_HOURS).toBe(24)
   })
 })

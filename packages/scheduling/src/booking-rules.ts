@@ -1,8 +1,5 @@
 import type { BookingRuleCheck, BookingRuleError } from "./types"
 
-/** Member cancel/reschedule floor. Phase 6 still executes the refund. */
-export const MEMBER_CANCEL_MIN_HOURS = 24
-
 /**
  * Validate whether a slot can be booked given the event type's booking
  * rules. Returns null on success or a machine-readable error code.
@@ -31,20 +28,6 @@ export function validateBookingRules(
   }
 
   return null
-}
-
-/**
- * Check whether a booking can still be cancelled given the event
- * type's cancellation window.
- */
-export function canCancel(
-  cancellationWindowHours: number | null,
-  startsAt: Date,
-  now: Date = new Date()
-): boolean {
-  if (cancellationWindowHours == null) return true
-  const hoursUntil = (startsAt.getTime() - now.getTime()) / 3_600_000
-  return hoursUntil >= cancellationWindowHours
 }
 
 /**

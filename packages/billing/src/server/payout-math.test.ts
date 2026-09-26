@@ -10,6 +10,7 @@ import {
   needsPayoutApproval,
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
+  paymentStatusAfterRefund,
   snapToNext0400Lisbon,
   transferBlockReason,
   isInFlightIdempotencyConflict,
@@ -20,6 +21,8 @@ describe("transferBlockReason", () => {
     paymentStatus: "succeeded",
     disputeStatus: "none",
     bookingStatus: "completed",
+    refundDueCents: null,
+    refundedCents: 0,
   }
 
   it("allows a succeeded, undisputed, delivered booking", () => {
@@ -49,6 +52,78 @@ describe("transferBlockReason", () => {
       )
     }
   )
+
+  it("pays the retained share once a policy cancellation is settled", () => {
+    expect(
+      transferBlockReason({
+        ...ok,
+        bookingStatus: "cancelled",
+        refundDueCents: 3000,
+        refundedCents: 3000,
+      })
+    ).toBeNull()
+    expect(
+      transferBlockReason({
+        ...ok,
+        bookingStatus: "cancelled",
+        refundDueCents: 0,
+        refundedCents: 0,
+      })
+    ).toBeNull()
+  })
+
+  it("blocks a policy cancellation whose refund has not landed", () => {
+    expect(
+      transferBlockReason({
+        ...ok,
+        bookingStatus: "cancelled",
+        refundDueCents: 3000,
+        refundedCents: 0,
+      })
+    ).toBe("booking_cancelled")
+  })
+})
+
+describe("paymentStatusAfterRefund", () => {
+  const base = { amountCents: 6000, refundDueCents: 3000 }
+
+  it("marks a fully refunded payment refunded", () => {
+    expect(
+      paymentStatusAfterRefund({
+        ...base,
+        status: "refund_pending",
+        refundedCents: 6000,
+      })
+    ).toBe("refunded")
+  })
+
+  it("returns a settled partial cancellation refund to succeeded", () => {
+    expect(
+      paymentStatusAfterRefund({
+        ...base,
+        status: "refund_pending",
+        refundedCents: 3000,
+      })
+    ).toBe("succeeded")
+  })
+
+  it("keeps refund_pending until the due amount is reached", () => {
+    expect(
+      paymentStatusAfterRefund({
+        ...base,
+        status: "refund_pending",
+        refundedCents: 1000,
+      })
+    ).toBe("refund_pending")
+    expect(
+      paymentStatusAfterRefund({
+        amountCents: 6000,
+        refundDueCents: null,
+        status: "refund_pending",
+        refundedCents: 3000,
+      })
+    ).toBe("refund_pending")
+  })
 })
 
 describe("isDefinitiveStripeRejection", () => {
@@ -258,6 +333,46 @@ describe("hold set", () => {
     })
     expect(cleared.status).toBe("pending")
     expect(cleared.holdReasons).toEqual([])
+  })
+})
+
+describe("cancellation policy refunds before the transfer", () => {
+  // €60 booking, expert share €51 after the platform fee.
+  const gross = 6000
+  const expertShare = 5100
+
+  it("a 50% refund on a scheduled payout halves what gets transferred", () => {
+    const reversed = cumulativeReversalCents({
+      refundedToDate: 3000,
+      grossCents: gross,
+      transferredCents: expertShare,
+      reversedToDate: 0,
+    })
+    expect(reversed).toBe(2550)
+    expect(expertShare - reversed).toBe(2550)
+  })
+
+  it("a payout created after the 50% refund starts already reduced", () => {
+    const initial = initialPayoutState({
+      amountCents: expertShare,
+      grossCents: gross,
+      refundedCents: 3000,
+      disputeStatus: "none",
+      needsApproval: false,
+    })
+    expect(initial.reversedCents).toBe(2550)
+    expect(initial.status).toBe("pending")
+  })
+
+  it("a 0% cancellation leaves the full share to transfer", () => {
+    expect(
+      cumulativeReversalCents({
+        refundedToDate: 0,
+        grossCents: gross,
+        transferredCents: expertShare,
+        reversedToDate: 0,
+      })
+    ).toBe(0)
   })
 })
 

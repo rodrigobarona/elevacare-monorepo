@@ -14,6 +14,7 @@ import {
   isInFlightIdempotencyConflict,
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
+  paymentStatusAfterRefund,
   type RefundPolicyInput,
 } from "./payout-math"
 import { applyHold, clearHold } from "./payouts"
@@ -348,7 +349,13 @@ export async function refundBookingPayment(input: {
             applicationFeeCents: sql`GREATEST(0, ${main.bookingPayments.applicationFeeCents} - ${creditNote.platformFeeGross})`,
             platformFeeNetCents: sql`GREATEST(0, ${main.bookingPayments.platformFeeNetCents} - ${creditNote.platformFeeNet})`,
             platformFeeVatCents: sql`GREATEST(0, ${main.bookingPayments.platformFeeVatCents} - ${creditNote.vatOnPlatformFee})`,
-            status: sql`CASE WHEN ${main.bookingPayments.refundedCents} + ${snapshot.amountCents} >= ${main.bookingPayments.amountCents} THEN 'refunded' ELSE ${main.bookingPayments.status} END`,
+            status: sql`CASE
+              WHEN ${main.bookingPayments.refundedCents} + ${snapshot.amountCents} >= ${main.bookingPayments.amountCents} THEN 'refunded'
+              WHEN ${main.bookingPayments.status} = 'refund_pending'
+                AND ${main.bookingPayments.refundDueCents} IS NOT NULL
+                AND ${main.bookingPayments.refundedCents} + ${snapshot.amountCents} >= ${main.bookingPayments.refundDueCents} THEN 'succeeded'
+              ELSE ${main.bookingPayments.status}
+            END`,
           })
           .where(eq(main.bookingPayments.id, input.bookingPaymentId))
       }
@@ -736,7 +743,8 @@ export const CANCELLATION_REFUND_WORKFLOW_NAME = "cancellation-refund"
 /**
  * Member cancel and account deletion only flip the payment to
  * `refund_pending` inside their booking transaction (no Stripe calls in a
- * DB tx). This sweep issues the refund. Payments whose refund is already in
+ * DB tx). This sweep issues the refund: up to `refund_due_cents` when the
+ * cancellation policy set one, otherwise everything still refundable. Payments whose refund is already in
  * flight at Stripe are left to the `charge.refunded` / `refund.updated`
  * webhooks. A failure is dead-lettered once and excluded until staff close
  * it, so a stuck payment cannot starve later batches.
@@ -752,6 +760,8 @@ export async function processPendingCancellationRefunds(): Promise<{
       .select({
         id: main.bookingPayments.id,
         orgId: main.bookingPayments.orgId,
+        refundDueCents: main.bookingPayments.refundDueCents,
+        refundedCents: main.bookingPayments.refundedCents,
       })
       .from(main.bookingPayments)
       .where(
@@ -775,9 +785,19 @@ export async function processPendingCancellationRefunds(): Promise<{
   )
   const result = { scanned: rows.length, refunded: 0, pending: 0, failed: 0 }
   for (const row of rows) {
+    const outstanding =
+      row.refundDueCents === null
+        ? undefined
+        : row.refundDueCents - row.refundedCents
     try {
+      if (outstanding !== undefined && outstanding <= 0) {
+        await settleCancellationRefund(row)
+        result.refunded += 1
+        continue
+      }
       const refund = await refundBookingPayment({
         bookingPaymentId: row.id,
+        amountCents: outstanding,
         reason: "requested_by_customer",
         actorUserId: null,
         actingOrgId: "platform",
@@ -800,6 +820,33 @@ export async function processPendingCancellationRefunds(): Promise<{
     }
   }
   return result
+}
+
+/** The due refund already landed (e.g. a webhook got there first). */
+async function settleCancellationRefund(row: {
+  id: string
+  orgId: string
+}): Promise<void> {
+  await withPlatformAudit(
+    { orgId: row.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      await tx
+        .update(main.bookingPayments)
+        .set({ status: "succeeded" })
+        .where(
+          and(
+            eq(main.bookingPayments.id, row.id),
+            eq(main.bookingPayments.status, "refund_pending")
+          )
+        )
+      await ctx.emit({
+        entity: "booking_payment",
+        action: "status_changed",
+        entityId: row.id,
+        payload: { from: "refund_pending", to: "succeeded", settled: true },
+      })
+    }
+  )
 }
 
 async function deadLetterCancellationRefund(
@@ -1057,6 +1104,7 @@ export async function confirmRefundFromCharge(input: {
           refundedCents: main.bookingPayments.refundedCents,
           amountCents: main.bookingPayments.amountCents,
           status: main.bookingPayments.status,
+          refundDueCents: main.bookingPayments.refundDueCents,
         })
         .from(main.bookingPayments)
         .where(eq(main.bookingPayments.id, payment.id))
@@ -1066,10 +1114,12 @@ export async function confirmRefundFromCharge(input: {
           .update(main.bookingPayments)
           .set({
             refundedCents: sql`GREATEST(${main.bookingPayments.refundedCents}, ${input.amountRefunded})`,
-            status:
-              input.amountRefunded >= fresh.amountCents
-                ? "refunded"
-                : fresh.status,
+            status: paymentStatusAfterRefund({
+              status: fresh.status,
+              amountCents: fresh.amountCents,
+              refundDueCents: fresh.refundDueCents,
+              refundedCents: input.amountRefunded,
+            }),
           })
           .where(eq(main.bookingPayments.id, payment.id))
       }

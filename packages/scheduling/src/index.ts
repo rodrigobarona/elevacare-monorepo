@@ -100,19 +100,16 @@ export {
 export type { PaymentFailedPayload } from "./emit-payment-event"
 export {
   cancelMemberBooking,
+  quoteMemberCancellation,
   rescheduleMemberBooking,
   MemberBookingPolicyError,
 } from "./member-booking"
 export type {
   MemberIcsPayload,
   MemberBookingPolicyErrorCode,
+  MemberCancellationQuote,
 } from "./member-booking"
-export {
-  validateBookingRules,
-  canCancel,
-  canReschedule,
-  MEMBER_CANCEL_MIN_HOURS,
-} from "./booking-rules"
+export { validateBookingRules, canReschedule } from "./booking-rules"
 export {
   cancellationRefundCents,
   resolveCancellationRefund,

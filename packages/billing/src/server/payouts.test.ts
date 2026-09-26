@@ -50,6 +50,7 @@ const paidPayment = {
   stripeChargeId: "ch_test",
   amountCents: 10_000,
   refundedCents: 0,
+  refundDueCents: null,
   status: "succeeded",
   disputeStatus: "none",
 }

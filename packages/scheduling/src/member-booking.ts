@@ -10,11 +10,14 @@ import {
   type Tx,
 } from "@eleva/db"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
-import { MEMBER_CANCEL_MIN_HOURS, canCancel } from "./booking-rules"
+import { canReschedule } from "./booking-rules"
+import {
+  cancellationRefundCents,
+  resolveCancellationRefund,
+  type CancellationRefundQuote,
+} from "./cancellation-policy"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { resolveOffer } from "./resolve-offer"
-
-export { MEMBER_CANCEL_MIN_HOURS }
 
 const MUTABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 
@@ -84,19 +87,39 @@ function toIcsPayload(
   }
 }
 
-function assertPolicyWindow(startsAt: Date, now: Date): void {
-  if (!canCancel(MEMBER_CANCEL_MIN_HOURS, startsAt, now)) {
-    throw new MemberBookingPolicyError("POLICY_TOO_LATE")
+export type MemberCancellationQuote = CancellationRefundQuote & {
+  /** What the member gets back now; 0 for unpaid bookings. */
+  refundCents: number
+  currency: string
+}
+
+function quoteFor(
+  row: MemberBookingPolicyRow,
+  now: Date
+): MemberCancellationQuote {
+  const quote = resolveCancellationRefund({
+    policy: row.cancellationPolicy,
+    bookedAt: row.bookedAt,
+    startsAt: row.startsAt,
+    now,
+  })
+  const refundable =
+    row.paymentStatus === "succeeded" && row.paymentAmountCents !== null
+      ? row.paymentAmountCents - (row.paymentRefundedCents ?? 0)
+      : 0
+  return {
+    ...quote,
+    refundCents: cancellationRefundCents(refundable, quote.refundPercent),
+    currency: row.currency,
   }
 }
 
-export async function cancelMemberBooking(input: {
+async function loadMutableBooking(input: {
   userId: string
   orgId: string
   bookingId: string
-  now?: Date
-}): Promise<{ ics: MemberIcsPayload }> {
-  const now = input.now ?? new Date()
+  now: Date
+}): Promise<MemberBookingPolicyRow> {
   const row = await getMemberBookingForPolicy({
     userId: input.userId,
     bookingId: input.bookingId,
@@ -106,7 +129,33 @@ export async function cancelMemberBooking(input: {
   if (!MUTABLE_STATUSES.has(row.status)) {
     throw new MemberBookingPolicyError("INVALID_STATUS")
   }
-  assertPolicyWindow(row.startsAt, now)
+  if (row.startsAt.getTime() <= input.now.getTime()) {
+    throw new MemberBookingPolicyError("POLICY_TOO_LATE")
+  }
+  return row
+}
+
+/** What cancelling right now would refund, under the booking's snapshot policy. */
+export async function quoteMemberCancellation(input: {
+  userId: string
+  orgId: string
+  bookingId: string
+  now?: Date
+}): Promise<MemberCancellationQuote> {
+  const now = input.now ?? new Date()
+  const row = await loadMutableBooking({ ...input, now })
+  return quoteFor(row, now)
+}
+
+export async function cancelMemberBooking(input: {
+  userId: string
+  orgId: string
+  bookingId: string
+  now?: Date
+}): Promise<{ ics: MemberIcsPayload; refund: MemberCancellationQuote }> {
+  const now = input.now ?? new Date()
+  const row = await loadMutableBooking({ ...input, now })
+  const refund = quoteFor(row, now)
 
   await withAudit(
     { orgId: row.orgId, actorUserId: input.userId },
@@ -132,10 +181,31 @@ export async function cancelMemberBooking(input: {
       }
 
       if (row.paymentId && row.paymentStatus === "succeeded") {
-        await tx
+        // refund_due_cents is the cumulative refunded total the payment must
+        // reach; at 0% the payment stays succeeded and the expert is paid.
+        const [payment] = await tx
           .update(main.bookingPayments)
-          .set({ status: "refund_pending" })
-          .where(eq(main.bookingPayments.id, row.paymentId))
+          .set({
+            refundDueCents:
+              (row.paymentRefundedCents ?? 0) + refund.refundCents,
+            ...(refund.refundCents > 0
+              ? { status: "refund_pending" as const }
+              : {}),
+          })
+          .where(
+            and(
+              eq(main.bookingPayments.id, row.paymentId),
+              eq(main.bookingPayments.status, "succeeded"),
+              eq(
+                main.bookingPayments.refundedCents,
+                row.paymentRefundedCents ?? 0
+              )
+            )
+          )
+          .returning({ id: main.bookingPayments.id })
+        if (!payment) {
+          throw new MemberBookingPolicyError("INVALID_STATUS")
+        }
       }
 
       if (row.reservationId) {
@@ -161,12 +231,19 @@ export async function cancelMemberBooking(input: {
         entity: "booking",
         action: "canceled",
         entityId: row.id,
-        payload: { reason: "member_cancel" },
+        payload: {
+          reason: "member_cancel",
+          policy: refund.policy,
+          policyVersion: row.cancellationPolicyVersion,
+          refundPercent: refund.refundPercent,
+          refundCents: refund.refundCents,
+          refundBasis: refund.reason,
+        },
       })
     }
   )
 
-  return { ics: toIcsPayload(row) }
+  return { ics: toIcsPayload(row), refund }
 }
 
 export async function rescheduleMemberBooking(input: {
@@ -178,16 +255,15 @@ export async function rescheduleMemberBooking(input: {
   now?: Date
 }): Promise<{ ics: MemberIcsPayload; previousStartsAt: Date }> {
   const now = input.now ?? new Date()
-  const row = await getMemberBookingForPolicy({
-    userId: input.userId,
-    bookingId: input.bookingId,
-    orgId: input.orgId,
-  })
-  if (!row) throw new MemberBookingPolicyError("not_found")
-  if (!MUTABLE_STATUSES.has(row.status)) {
-    throw new MemberBookingPolicyError("INVALID_STATUS")
+  const row = await loadMutableBooking({ ...input, now })
+  // Moving a session out of its penalty window would dodge the policy, so
+  // members can only reschedule while cancelling would still refund in full.
+  if (
+    quoteFor(row, now).refundPercent < 100 ||
+    !canReschedule(row.rescheduleWindowHours, row.startsAt, now)
+  ) {
+    throw new MemberBookingPolicyError("POLICY_TOO_LATE")
   }
-  assertPolicyWindow(row.startsAt, now)
 
   const duration = row.endsAt.getTime() - row.startsAt.getTime()
   if (input.endsAt.getTime() - input.startsAt.getTime() !== duration) {
