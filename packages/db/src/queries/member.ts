@@ -11,6 +11,7 @@ import {
   sql,
 } from "drizzle-orm"
 import { alias } from "drizzle-orm/pg-core"
+import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { user } from "../schema/auth"
 import * as main from "../schema/main"
 import type { LocalizedText } from "../schema/main/shared"
@@ -580,6 +581,13 @@ export type MemberBookingPolicyRow = {
   paymentStatus:
     | (typeof main.bookingPaymentStatusEnum.enumValues)[number]
     | null
+  paymentAmountCents: number | null
+  paymentRefundedCents: number | null
+  currency: string
+  cancellationPolicy: CancellationPolicy
+  cancellationPolicyVersion: number
+  bookedAt: Date
+  rescheduleWindowHours: number | null
   expertProfileId: string
   reservationId: string | null
   eventTypeModeId: string | null
@@ -631,6 +639,16 @@ export async function getMemberBookingForPolicy(input: {
         eventTypeName: main.eventTypes.title,
         paymentId: main.bookingPayments.id,
         paymentStatus: main.bookingPayments.status,
+        paymentAmountCents: main.bookingPayments.amountCents,
+        paymentRefundedCents: main.bookingPayments.refundedCents,
+        currency: main.bookings.currency,
+        cancellationPolicy: main.bookings.cancellationPolicy,
+        cancellationPolicyVersion: main.bookings.cancellationPolicyVersion,
+        bookedAt:
+          sql<Date>`COALESCE(${main.bookings.confirmedAt}, ${main.bookings.createdAt})`.mapWith(
+            main.bookings.createdAt
+          ),
+        rescheduleWindowHours: main.eventTypes.rescheduleWindowHours,
         expertProfileId: main.bookings.expertProfileId,
         reservationId: main.bookings.reservationId,
         eventTypeModeId: main.bookings.eventTypeModeId,

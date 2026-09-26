@@ -71,6 +71,7 @@ import {
   ListMeConsentsResponseSchema,
   PutMeConsentRequestSchema,
   CancelMeBookingResponseSchema,
+  CancellationQuoteSchema,
   RescheduleMeBookingRequestSchema,
   RescheduleMeBookingResponseSchema,
   CreateDsarRequestResponseSchema,
@@ -2964,12 +2965,37 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/me/bookings/{id}/cancellation-quote": {
+        get: {
+          operationId: "getMeBookingCancellationQuote",
+          summary: "Preview the refund for cancelling a member booking now",
+          description:
+            "Applies the cancellation policy snapshotted on the booking (flexible, moderate or strict, plus the 24h-after-booking grace period). Returns the refund percent and amount, when the full-refund window ends, and when the refund next drops. Returns the same numbers POST /cancel would apply at this instant.",
+          tags: ["Me"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Cancellation quote",
+              content: {
+                "application/json": { schema: CancellationQuoteSchema },
+              },
+            },
+            "409": {
+              description: "Session already started or invalid status",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/me/bookings/{id}/cancel": {
         post: {
           operationId: "cancelMeBooking",
           summary: "Cancel a confirmed member booking",
           description:
-            "Requires at least 24 hours before starts_at. Releases the slot and marks a succeeded payment refund_pending. Phase 6 executes the refund.",
+            "Allowed until the session starts. Refunds per the booking's cancellation policy snapshot: records refund_due_cents on the payment and, when above 0, marks it refund_pending for the cancellation-refund sweep. Returns the applied quote. Releases the slot.",
           tags: ["Me"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),
@@ -2994,7 +3020,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "rescheduleMeBooking",
           summary: "Reschedule a confirmed member booking",
           description:
-            "Requires at least 24 hours before the original starts_at. Moves times, releases the old slot, and sends ICS via existing helpers.",
+            "Allowed only while cancelling would still refund in full under the booking's cancellation policy (and within the service reschedule window, if set). Moves times, releases the old slot, and sends ICS via existing helpers.",
           tags: ["Me"],
           requestParams: {
             path: z.object({ id: z.string().uuid() }),

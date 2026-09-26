@@ -518,6 +518,8 @@ export async function executeTransfer(payoutStateId: string): Promise<{
       paymentStatus: payment.status,
       disputeStatus: payment.disputeStatus,
       bookingStatus: row?.bookingStatus ?? null,
+      refundDueCents: payment.refundDueCents,
+      refundedCents: payment.refundedCents,
     })
   ) {
     return { status: "skipped", stripeTransferId: null }

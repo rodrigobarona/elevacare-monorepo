@@ -10,6 +10,7 @@ import {
 import { sendRescheduleIcsEmail } from "@eleva/workflows/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
+import { MEMBER_BOOKING_POLICY_STATUS } from "@/lib/member-booking-http"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
@@ -22,13 +23,6 @@ export const ROUTE_POLICY = {
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
-
-const POLICY_STATUS: Record<MemberBookingPolicyError["code"], number> = {
-  not_found: 404,
-  POLICY_TOO_LATE: 409,
-  INVALID_STATUS: 409,
-  SLOT_TAKEN: 409,
-}
 
 export async function POST(
   request: Request,
@@ -104,7 +98,7 @@ export async function POST(
     if (err instanceof MemberBookingPolicyError) {
       return secureJson(
         { error: err.code },
-        { status: POLICY_STATUS[err.code], headers }
+        { status: MEMBER_BOOKING_POLICY_STATUS[err.code], headers }
       )
     }
     console.error("[me/bookings/reschedule] unexpected error", err)

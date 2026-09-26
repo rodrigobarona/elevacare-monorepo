@@ -1,10 +1,8 @@
-import { after } from "next/server"
-import { CancelMeBookingResponseSchema } from "@eleva/api-client"
+import { CancellationQuoteSchema } from "@eleva/api-client"
 import {
-  cancelMemberBooking,
   MemberBookingPolicyError,
+  quoteMemberCancellation,
 } from "@eleva/scheduling"
-import { sendCancellationIcsEmail } from "@eleva/workflows/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import {
@@ -24,11 +22,11 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-export async function POST(
+export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const headers = corsHeaders(request, "POST, OPTIONS")
+  const headers = corsHeaders(request, "GET, OPTIONS")
   const { id } = await params
 
   let session
@@ -48,22 +46,13 @@ export async function POST(
   if (rateLimited) return rateLimited
 
   try {
-    const result = await cancelMemberBooking({
+    const quote = await quoteMemberCancellation({
       userId: session.user.id,
       orgId: session.orgId,
       bookingId: id,
     })
-    after(() =>
-      sendCancellationIcsEmail(result.ics).catch((err) => {
-        console.error("[me/bookings/cancel] ICS email failed", err)
-      })
-    )
     return secureJson(
-      CancelMeBookingResponseSchema.parse({
-        ok: true,
-        bookingId: id,
-        refund: serializeCancellationQuote(result.refund),
-      }),
+      CancellationQuoteSchema.parse(serializeCancellationQuote(quote)),
       { status: 200, headers }
     )
   } catch (err) {
@@ -73,7 +62,7 @@ export async function POST(
         { status: MEMBER_BOOKING_POLICY_STATUS[err.code], headers }
       )
     }
-    console.error("[me/bookings/cancel] unexpected error", err)
+    console.error("[me/bookings/cancellation-quote] unexpected error", err)
     return secureJson({ error: "internal" }, { status: 500, headers })
   }
 }
@@ -81,6 +70,6 @@ export async function POST(
 export async function OPTIONS(request: Request) {
   return new Response(null, {
     status: 204,
-    headers: corsHeaders(request, "POST, OPTIONS"),
+    headers: corsHeaders(request, "GET, OPTIONS"),
   })
 }

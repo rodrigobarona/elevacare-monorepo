@@ -203,22 +203,50 @@ export type TransferBlockReason =
 /**
  * A scheduled payout must not move money once the member is owed a refund:
  * cancel / account deletion flip the payment to `refund_pending` before the
- * refund exists, so the transfer run is the last line of defence.
+ * refund exists, so the transfer run is the last line of defence. A
+ * cancellation the policy has fully settled (`refund_due_cents` reached)
+ * still pays the expert the share the member did not get back.
  */
 export function transferBlockReason(input: {
   paymentStatus: string
   disputeStatus: string | null
   bookingStatus: string | null
+  refundDueCents: number | null
+  refundedCents: number
 }): TransferBlockReason | null {
   if (input.paymentStatus !== "succeeded") return "payment_not_succeeded"
   if (input.disputeStatus === "open") return "dispute_open"
+  if (input.bookingStatus === "refunded") return "booking_cancelled"
   if (
-    input.bookingStatus === "cancelled" ||
-    input.bookingStatus === "refunded"
+    input.bookingStatus === "cancelled" &&
+    (input.refundDueCents === null ||
+      input.refundedCents < input.refundDueCents)
   ) {
     return "booking_cancelled"
   }
   return null
+}
+
+/**
+ * Payment status once Stripe confirms `refundedCents` in total. A
+ * cancellation refund that reaches the policy's `refundDueCents` returns the
+ * payment to `succeeded` so the retained share can still be paid out.
+ */
+export function paymentStatusAfterRefund<S extends string>(input: {
+  status: S
+  amountCents: number
+  refundDueCents: number | null
+  refundedCents: number
+}): S | "refunded" | "succeeded" {
+  if (input.refundedCents >= input.amountCents) return "refunded"
+  if (
+    input.status === "refund_pending" &&
+    input.refundDueCents !== null &&
+    input.refundedCents >= input.refundDueCents
+  ) {
+    return "succeeded"
+  }
+  return input.status
 }
 
 /**

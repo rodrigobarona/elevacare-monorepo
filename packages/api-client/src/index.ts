@@ -469,9 +469,23 @@ export const PutMeConsentRequestSchema = z.object({
   locale: LocaleSchema.optional(),
 })
 
+export const CancellationPolicySchema = z.enum(CANCELLATION_POLICY_VALUES)
+export type CancellationPolicy = z.infer<typeof CancellationPolicySchema>
+
+export const CancellationQuoteSchema = z.object({
+  policy: CancellationPolicySchema,
+  refundPercent: z.number().int().min(0).max(100),
+  refundCents: z.number().int().nonnegative(),
+  currency: z.string().length(3),
+  reason: z.enum(["grace_period", "policy_tier"]),
+  fullRefundUntil: z.string().datetime().nullable(),
+  nextChangeAt: z.string().datetime().nullable(),
+})
+
 export const CancelMeBookingResponseSchema = z.object({
   ok: z.literal(true),
   bookingId: z.string().uuid(),
+  refund: CancellationQuoteSchema,
 })
 
 export const RescheduleMeBookingRequestSchema = z.object({
@@ -528,6 +542,7 @@ export type MeNotificationPreferencesResponse = z.infer<
   typeof MeNotificationPreferencesResponseSchema
 >
 export type PutMeConsentRequest = z.infer<typeof PutMeConsentRequestSchema>
+export type CancellationQuote = z.infer<typeof CancellationQuoteSchema>
 export type CancelMeBookingResponse = z.infer<
   typeof CancelMeBookingResponseSchema
 >
@@ -1026,9 +1041,6 @@ export const EventTypeVisibilitySchema = z.enum([
   "private",
 ])
 export type EventTypeVisibility = z.infer<typeof EventTypeVisibilitySchema>
-
-export const CancellationPolicySchema = z.enum(CANCELLATION_POLICY_VALUES)
-export type CancellationPolicy = z.infer<typeof CancellationPolicySchema>
 
 export const CreateEventTypeRequestSchema = z.object({
   slug: z.string().optional(),
@@ -2147,6 +2159,13 @@ export function createApiClient(options: ApiClientOptions) {
       async putConsent(data: PutMeConsentRequest) {
         const raw = await request<unknown>("PUT", "/me/consents", data)
         return ListMeConsentsResponseSchema.parse(raw)
+      },
+      async cancellationQuote(bookingId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/me/bookings/${encodeURIComponent(bookingId)}/cancellation-quote`
+        )
+        return CancellationQuoteSchema.parse(raw)
       },
       async cancelBooking(bookingId: string) {
         const raw = await request<unknown>(
