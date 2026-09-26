@@ -118,28 +118,30 @@ function requireStripeTestSecretKey(): string {
   return key
 }
 
-function assertBookedSlotLeadWindow(
+function slotMatchesLeadWindow(
   testCase: PolicySmokeCase,
   slot: { startsAt: string; leadHours: number }
-): void {
+): boolean {
   if (testCase.policy === "strict") {
-    test.skip(
-      slot.leadHours < 2 || slot.leadHours > 47,
-      `no strict slot inside 48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
-    )
+    return slot.leadHours >= 2 && slot.leadHours <= 47
   }
   if (testCase.policy === "moderate") {
-    test.skip(
-      slot.leadHours < 24 || slot.leadHours > 48,
-      `no moderate slot in 24–48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
-    )
+    return slot.leadHours >= 24 && slot.leadHours <= 48
   }
-  if (testCase.policy === "flexible") {
-    test.skip(
-      slot.leadHours < 24,
-      `flexible needs >24h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
-    )
+  return slot.leadHours >= 24
+}
+
+function leadWindowSkipReason(
+  testCase: PolicySmokeCase,
+  slot: { startsAt: string; leadHours: number }
+): string {
+  if (testCase.policy === "strict") {
+    return `no strict slot inside 48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
   }
+  if (testCase.policy === "moderate") {
+    return `no moderate slot in 24–48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+  }
+  return `flexible needs >24h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
 }
 
 async function confirmStripePaymentIntent(
@@ -226,6 +228,16 @@ export async function runPolicySmokeCase(
   )
 
   for (let attempt = 0; attempt < 8; attempt++) {
+    if (!slotMatchesLeadWindow(input.testCase, slot)) {
+      slot = await pickSlotHoursFromNow(
+        request,
+        modeId,
+        input.testCase.hoursUntilSession,
+        slotRank + attempt + 1
+      )
+      continue
+    }
+
     const reserveBody = {
       username: PAID_EXPERT,
       eventTypeModeId: modeId,
@@ -244,7 +256,6 @@ export async function runPolicySmokeCase(
       data: reserveBody,
     })
     if (reserve.status() === 201) {
-      assertBookedSlotLeadWindow(input.testCase, slot)
       reserved = (await reserve.json()) as {
         reservationId: string
         reservationToken: string
@@ -263,6 +274,9 @@ export async function runPolicySmokeCase(
       input.testCase.hoursUntilSession,
       slotRank + attempt + 1
     )
+  }
+  if (!reserved) {
+    test.skip(true, leadWindowSkipReason(input.testCase, slot))
   }
   expect(reserved, "reserve failed after slot retries").toBeTruthy()
   const intent = await request.post(`${apiUrl}/payments/intent`, {

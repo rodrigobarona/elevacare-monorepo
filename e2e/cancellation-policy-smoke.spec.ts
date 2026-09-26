@@ -1,3 +1,4 @@
+import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { expect, test } from "@playwright/test"
 import { apiUrl } from "./helpers/auth"
 import {
@@ -48,6 +49,8 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
     "needs DATABASE_URL for policy + payment reads"
   )
 
+  let originalPolicy: CancellationPolicy | undefined
+
   test.beforeAll(async ({ request }) => {
     const health = await request.get(`${apiUrl}/health`)
     test.skip(health.status() !== 200, "needs local API on :3002")
@@ -58,10 +61,17 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
       offer.status() !== 200,
       "needs seeded fisiomota / first-visit from db:seed:demo"
     )
+    originalPolicy = (
+      (await offer.json()) as { cancellationPolicy: CancellationPolicy }
+    ).cancellationPolicy
   })
 
   test.afterAll(async () => {
-    await setFirstVisitCancellationPolicy("flexible").catch(() => undefined)
+    if (originalPolicy) {
+      await setFirstVisitCancellationPolicy(originalPolicy).catch(
+        () => undefined
+      )
+    }
   })
 
   for (const testCase of CASES) {
