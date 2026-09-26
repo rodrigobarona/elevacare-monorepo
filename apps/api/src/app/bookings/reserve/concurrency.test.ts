@@ -22,7 +22,8 @@ vi.mock("@/lib/rate-limit", () => ({
 }))
 
 vi.mock("@/lib/calendar-busy", () => ({
-  calendarBusyTimeProvider: { getBusy: async () => [] },
+  CalendarBusyUnavailableError: class extends Error {},
+  holdCalendarBusyTimeProvider: { getBusy: async () => [] },
 }))
 vi.mock("@/lib/booking-redis", () => ({
   getBookingRedis: () => ({ set: vi.fn() }),

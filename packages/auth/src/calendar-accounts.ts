@@ -154,6 +154,8 @@ export async function markCalendarIntegrationExpired(input: {
   orgId: string
   integrationId: string
   errorCode: string
+  /** `connectedAt` the failed lookup saw; a reconnect since then wins. */
+  observedConnectedAt: Date | null
 }): Promise<boolean> {
   return withAudit(
     { orgId: input.orgId, actorUserId: null },
@@ -169,7 +171,13 @@ export async function markCalendarIntegrationExpired(input: {
           and(
             eq(main.expertIntegrations.id, input.integrationId),
             eq(main.expertIntegrations.orgId, input.orgId),
-            eq(main.expertIntegrations.status, "connected")
+            eq(main.expertIntegrations.status, "connected"),
+            input.observedConnectedAt
+              ? eq(
+                  main.expertIntegrations.connectedAt,
+                  input.observedConnectedAt
+                )
+              : isNull(main.expertIntegrations.connectedAt)
           )
         )
         .returning({ id: main.expertIntegrations.id })

@@ -36,10 +36,15 @@ vi.mock("@eleva/db", () => ({
   listCalendarIntegrations,
   listBusySourcesForExpert,
 }))
-vi.mock("@/lib/booking-redis", () => ({ getBookingRedis: () => null }))
+const redisGet = vi.fn()
+const redisSet = vi.fn()
+vi.mock("@/lib/booking-redis", () => ({
+  getBookingRedis: () => ({ get: redisGet, set: redisSet }),
+}))
 
 const from = new Date("2026-10-01T00:00:00.000Z")
 const to = new Date("2026-10-08T00:00:00.000Z")
+const msConnectedAt = new Date("2026-09-01T00:00:00.000Z")
 const input = {
   expertOrgId: "org-1",
   expertProfileId: "profile-1",
@@ -52,9 +57,16 @@ describe("loadExternalBusy", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     getCalendarToken.mockResolvedValue("token")
+    redisGet.mockResolvedValue(null)
+    redisSet.mockResolvedValue("OK")
     listCalendarIntegrations.mockResolvedValue([
       { id: "int-google", slug: "google-calendar", authAccountId: "acc-g" },
-      { id: "int-ms", slug: "microsoft-calendar", authAccountId: "acc-m" },
+      {
+        id: "int-ms",
+        slug: "microsoft-calendar",
+        authAccountId: "acc-m",
+        connectedAt: msConnectedAt,
+      },
       { id: "int-idle", slug: "google-calendar", authAccountId: "acc-i" },
     ])
     listBusySourcesForExpert.mockResolvedValue([
@@ -125,7 +137,26 @@ describe("loadExternalBusy", () => {
       orgId: "org-1",
       integrationId: "int-ms",
       errorCode: "needs_reauthorization",
+      observedConnectedAt: msConnectedAt,
     })
+  })
+
+  it("does not expire an integration for an ambiguous token failure", async () => {
+    getCalendarToken.mockImplementation(
+      async (_user: string, provider: string) => {
+        if (provider === "microsoft") {
+          throw new CalendarTokenError("token_unavailable")
+        }
+        return "token"
+      }
+    )
+    googleBusy.mockResolvedValue([])
+    const { loadExternalBusy } = await import("./calendar-busy")
+
+    const result = await loadExternalBusy(input)
+
+    expect(result.degradedSources).toEqual(["int-ms"])
+    expect(markCalendarIntegrationExpired).not.toHaveBeenCalled()
   })
 
   it("drops a transient provider failure without flagging the integration", async () => {
@@ -137,5 +168,61 @@ describe("loadExternalBusy", () => {
 
     expect(result.degradedSources).toEqual(["int-google"])
     expect(markCalendarIntegrationExpired).not.toHaveBeenCalled()
+  })
+})
+
+describe("busy time providers", () => {
+  const cachedSlot = {
+    start: "2026-10-02T09:00:00.000Z",
+    end: "2026-10-02T10:00:00.000Z",
+  }
+  const liveSlot = {
+    start: new Date("2026-10-02T11:00:00.000Z"),
+    end: new Date("2026-10-02T12:00:00.000Z"),
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    getCalendarToken.mockResolvedValue("token")
+    redisSet.mockResolvedValue("OK")
+    listCalendarIntegrations.mockResolvedValue([
+      { id: "int-google", slug: "google-calendar", authAccountId: "acc-g" },
+    ])
+    listBusySourcesForExpert.mockResolvedValue([
+      {
+        expertIntegrationId: "int-google",
+        externalCalendarId: "primary",
+        enabled: true,
+      },
+    ])
+  })
+
+  it("serves public slots from cache but rechecks live data for a hold", async () => {
+    redisGet.mockResolvedValue([cachedSlot])
+    googleBusy.mockResolvedValue([liveSlot])
+    const { calendarBusyTimeProvider, holdCalendarBusyTimeProvider } =
+      await import("./calendar-busy")
+
+    const cached = await calendarBusyTimeProvider.getBusy(input)
+    expect(cached).toEqual([
+      { start: new Date(cachedSlot.start), end: new Date(cachedSlot.end) },
+    ])
+    expect(googleBusy).not.toHaveBeenCalled()
+
+    const live = await holdCalendarBusyTimeProvider.getBusy(input)
+    expect(live).toEqual([liveSlot])
+    expect(googleBusy).toHaveBeenCalledTimes(1)
+    expect(redisSet).toHaveBeenCalledTimes(1)
+  })
+
+  it("refuses a hold when a connected calendar could not be checked", async () => {
+    redisGet.mockResolvedValue(null)
+    googleBusy.mockRejectedValue(new Error("503"))
+    const { holdCalendarBusyTimeProvider, CalendarBusyUnavailableError } =
+      await import("./calendar-busy")
+
+    await expect(
+      holdCalendarBusyTimeProvider.getBusy(input)
+    ).rejects.toBeInstanceOf(CalendarBusyUnavailableError)
   })
 })

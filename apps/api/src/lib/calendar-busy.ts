@@ -18,6 +18,23 @@ const credentials = createCredentialManager({ getProviderAccessToken })
 
 export const CALENDAR_BUSY_CACHE_TTL_SECONDS = 5 * 60
 
+// Codes that prove the grant is gone; `token_unavailable` may be transient.
+const CONFIRMED_REAUTH_CODES = new Set([
+  "needs_reauthorization",
+  "not_installed",
+  "account_not_found",
+])
+
+/** A hold cannot be placed while a connected calendar could not be checked. */
+export class CalendarBusyUnavailableError extends Error {
+  readonly degradedSources: string[]
+  constructor(degradedSources: string[]) {
+    super("External calendar busy times unavailable")
+    this.name = "CalendarBusyUnavailableError"
+    this.degradedSources = degradedSources
+  }
+}
+
 type BusyInterval = { start: Date; end: Date }
 type CachedInterval = { start: string; end: string }
 
@@ -25,6 +42,7 @@ type IntegrationBusyTarget = {
   integrationId: string
   provider: CalendarProvider
   authAccountId: string | null
+  connectedAt: Date | null
   calendarIds: string[]
 }
 
@@ -69,11 +87,14 @@ async function fetchIntegrationBusy(
   userId: string,
   target: IntegrationBusyTarget,
   from: Date,
-  to: Date
+  to: Date,
+  fresh: boolean
 ): Promise<BusyInterval[]> {
   const key = cacheKey(target, from, to)
-  const cached = await readCache(key)
-  if (cached) return cached
+  if (!fresh) {
+    const cached = await readCache(key)
+    if (cached) return cached
+  }
 
   const accessToken = await credentials.getCalendarToken(
     userId,
@@ -96,6 +117,8 @@ export async function loadExternalBusy(input: {
   expertUserId: string
   from: Date
   to: Date
+  /** Skip the cache read (hold-time recheck); the result still refreshes it. */
+  fresh?: boolean
 }): Promise<{ busy: BusyInterval[]; degradedSources: string[] }> {
   const [integrations, sources] = await Promise.all([
     listCalendarIntegrations(input.expertOrgId, input.expertProfileId),
@@ -110,6 +133,7 @@ export async function loadExternalBusy(input: {
       integrationId: integration.id,
       provider,
       authAccountId: integration.authAccountId,
+      connectedAt: integration.connectedAt,
       calendarIds: [],
     })
   }
@@ -123,7 +147,13 @@ export async function loadExternalBusy(input: {
 
   const settled = await Promise.allSettled(
     active.map((target) =>
-      fetchIntegrationBusy(input.expertUserId, target, input.from, input.to)
+      fetchIntegrationBusy(
+        input.expertUserId,
+        target,
+        input.from,
+        input.to,
+        input.fresh ?? false
+      )
     )
   )
 
@@ -142,12 +172,16 @@ export async function loadExternalBusy(input: {
       provider: target.provider,
       error: reason instanceof Error ? reason.name : "unknown",
     })
-    if (reason instanceof CalendarTokenError) {
+    if (
+      reason instanceof CalendarTokenError &&
+      CONFIRMED_REAUTH_CODES.has(reason.code)
+    ) {
       try {
         await markCalendarIntegrationExpired({
           orgId: input.expertOrgId,
           integrationId: target.integrationId,
           errorCode: reason.code,
+          observedConnectedAt: target.connectedAt,
         })
       } catch (err) {
         console.error("[calendar-busy] could not flag integration", err)
@@ -157,9 +191,24 @@ export async function loadExternalBusy(input: {
   return { busy, degradedSources }
 }
 
+/** Public slot display: cached, and a failed calendar degrades to its other busy data. */
 export const calendarBusyTimeProvider: BusyTimeProvider = {
   async getBusy(input) {
     const { busy } = await loadExternalBusy(input)
+    return busy
+  },
+}
+
+/** Hold-time recheck: live provider data, and fails closed on any gap. */
+export const holdCalendarBusyTimeProvider: BusyTimeProvider = {
+  async getBusy(input) {
+    const { busy, degradedSources } = await loadExternalBusy({
+      ...input,
+      fresh: true,
+    })
+    if (degradedSources.length > 0) {
+      throw new CalendarBusyUnavailableError(degradedSources)
+    }
     return busy
   },
 }

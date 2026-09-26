@@ -2351,7 +2351,8 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "503": {
-              description: "Reservation lock unavailable",
+              description:
+                "Reservation lock unavailable, or `calendar_unavailable` when a connected external calendar could not be checked (retry after `Retry-After`)",
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdPublicWithNotFound,

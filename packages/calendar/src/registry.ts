@@ -19,5 +19,5 @@ const SLUG_TO_PROVIDER: Record<string, CalendarProvider> = {
 }
 
 export function calendarProviderForSlug(slug: string): CalendarProvider | null {
-  return SLUG_TO_PROVIDER[slug] ?? null
+  return Object.hasOwn(SLUG_TO_PROVIDER, slug) ? SLUG_TO_PROVIDER[slug]! : null
 }

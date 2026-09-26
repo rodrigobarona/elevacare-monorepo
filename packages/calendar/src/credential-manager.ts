@@ -18,6 +18,24 @@ const PROVIDER_ID: Record<CalendarProvider, string> = {
   microsoft: "microsoft",
 }
 
+/**
+ * Better Auth folds revoked grants and transient refresh failures into one
+ * `FAILED_TO_GET_ACCESS_TOKEN`, so only an unlinked account or a missing
+ * token is a confirmed reauthorization; everything else is `token_unavailable`.
+ */
+function tokenFailureCode(err: unknown): string {
+  if (err instanceof Error && err.message === "needs_reauthorization") {
+    return "needs_reauthorization"
+  }
+  const body =
+    err && typeof err === "object" && "body" in err ? err.body : undefined
+  const code =
+    body && typeof body === "object" && "code" in body ? String(body.code) : ""
+  return code === "ACCOUNT_NOT_FOUND"
+    ? "account_not_found"
+    : "token_unavailable"
+}
+
 export function createCredentialManager(deps: {
   getProviderAccessToken: GetProviderAccessToken
 }) {
@@ -35,7 +53,7 @@ export function createCredentialManager(deps: {
         })
       } catch (err) {
         if (err instanceof CalendarTokenError) throw err
-        throw new CalendarTokenError("needs_reauthorization")
+        throw new CalendarTokenError(tokenFailureCode(err))
       }
     },
   }
