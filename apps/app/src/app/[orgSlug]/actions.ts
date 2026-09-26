@@ -174,6 +174,27 @@ export async function updateConsentAction(
   }
 }
 
+export async function getCancellationQuoteAction(
+  orgSlug: string,
+  bookingId: string
+): Promise<ActionResult<{ quote: CancellationQuote | null }>> {
+  const slug = OrgSlugSchema.safeParse(orgSlug)
+  const id = UuidSchema.safeParse(bookingId)
+  if (!slug.success || !id.success) return { ok: false, error: "validation" }
+  try {
+    await requireMemberOrg(slug.data)
+    const api = await getAuthedApiClient()
+    const quote = await api.me.cancellationQuote(id.data)
+    return { ok: true, quote }
+  } catch (err) {
+    if (err instanceof ApiClientError && err.status === 409) {
+      return { ok: true, quote: null }
+    }
+    console.error("getCancellationQuoteAction failed", err)
+    return { ok: false, error: mapGenericError(err) }
+  }
+}
+
 export async function cancelBookingAction(
   orgSlug: string,
   bookingId: string

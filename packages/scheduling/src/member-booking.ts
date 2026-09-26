@@ -226,6 +226,9 @@ export async function cancelMemberBooking(input: {
         bookingId: row.id,
         startsAt: row.startsAt,
         occurredAt: now,
+        ...(row.paymentId && row.paymentStatus === "succeeded"
+          ? { refundCents: refund.refundCents }
+          : {}),
       })
       await ctx.emit({
         entity: "booking",

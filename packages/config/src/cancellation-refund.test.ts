@@ -114,6 +114,11 @@ describe("resolveCancellationRefund grace period", () => {
     expect(quote.reason).toBe("policy_tier")
   })
 
+  it("applies to a booking made exactly 48h before the session", () => {
+    const bookedAt = before(48)
+    expect(percent("strict", 48, bookedAt)).toBe(100)
+  })
+
   it("does not apply to a booking made under 48h before the session", () => {
     const bookedAt = before(30)
     expect(percent("moderate", 29, bookedAt)).toBe(50)

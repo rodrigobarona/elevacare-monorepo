@@ -93,7 +93,6 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     scheduleRevision: 0,
     cancellationPolicy: "moderate",
     currency: "EUR",
-    refundDueCents: null,
     ...overrides,
   }
 }
@@ -116,11 +115,10 @@ describe("sendBookingNotification", () => {
         id: "evt-cancel",
         type: "booking.cancelled",
         orgId: ORG_ID,
-        payload: eventPayload(),
+        payload: eventPayload({ refundCents: 3000 }),
       },
       {
-        loadBooking: async () =>
-          booking({ status: "cancelled", refundDueCents: 3000 }),
+        loadBooking: async () => booking({ status: "cancelled" }),
         send,
       }
     )

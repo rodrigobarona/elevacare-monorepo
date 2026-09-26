@@ -251,11 +251,16 @@ export function BookingFunnel({
     []
   )
 
+  const onDetails = step === "details"
   useEffect(() => {
-    if (!reservation) return
-    const id = window.setInterval(() => setNowMs(Date.now()), 1000)
+    if (!reservation && !onDetails) return
+    setNowMs(Date.now())
+    const id = window.setInterval(
+      () => setNowMs(Date.now()),
+      reservation ? 1000 : 30_000
+    )
     return () => window.clearInterval(id)
-  }, [reservation])
+  }, [reservation, onDetails])
 
   // Layout effect so Stripe query params are read before next-intl / App
   // Router client navigations can strip search (setTimeout(0) was too late).
@@ -374,6 +379,7 @@ export function BookingFunnel({
 
     setIsSubmitting(true)
     setFormError(null)
+    setNowMs(Date.now())
     const api = createPublicApiClient()
     try {
       const activeHold =

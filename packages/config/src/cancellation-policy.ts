@@ -217,7 +217,7 @@ function graceEndsAt(bookedAt: Date, startsAt: Date): Date | null {
   const leadEnd =
     startsAt.getTime() - CANCELLATION_GRACE_MIN_LEAD_HOURS * HOUR_MS
   const end = Math.min(graceEnd, leadEnd)
-  return end > bookedAt.getTime() ? new Date(end) : null
+  return end >= bookedAt.getTime() ? new Date(end) : null
 }
 
 /**

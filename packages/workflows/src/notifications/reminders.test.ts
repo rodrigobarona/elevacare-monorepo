@@ -339,7 +339,6 @@ describe("deliverBookingReminder", () => {
     scheduleRevision: 0,
     cancellationPolicy: "flexible" as const,
     currency: "EUR",
-    refundDueCents: null,
   }
 
   it("sends through sendBookingNotification when still confirmed", async () => {

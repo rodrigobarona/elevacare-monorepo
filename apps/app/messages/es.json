@@ -75,7 +75,8 @@
     "refundNothingPaid": "No hay ningún pago que reembolsar para esta sesión.",
     "refundDropsAt": "El reembolso baja si cancelas después del {date}.",
     "cancelledRefund": "Sesión cancelada. Se reembolsarán {amount} a tu método de pago original.",
-    "rescheduleUnavailable": "Solo puedes reprogramar mientras cancelar aún dé un reembolso completo. Todavía puedes cancelar."
+    "rescheduleUnavailable": "Solo puedes reprogramar mientras cancelar aún dé un reembolso completo. Todavía puedes cancelar.",
+    "refundChanged": "Tu reembolso ha cambiado desde que abriste esta ventana. Revisa el nuevo importe y confirma de nuevo."
   },
   "payments": {
     "title": "Pagos",

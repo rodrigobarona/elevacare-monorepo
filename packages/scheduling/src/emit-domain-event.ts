@@ -18,6 +18,8 @@ export type BookingNotificationPayload = {
   occurredAt: string
   previousStartsAt?: string
   scheduleRevision?: number
+  /** Refund this cancellation adds, in the payment currency's minor units. */
+  refundCents?: number
 }
 
 export function bookingNotificationIdempotencyKey(input: {
@@ -47,10 +49,19 @@ export function bookingNotificationIdempotencyKey(input: {
 export type EmitBookingNotificationInput =
   | {
       orgId: string
-      type: "booking.confirmed" | "booking.cancelled"
+      type: "booking.confirmed"
       bookingId: string
       startsAt: Date
       occurredAt: Date
+    }
+  | {
+      orgId: string
+      type: "booking.cancelled"
+      bookingId: string
+      startsAt: Date
+      occurredAt: Date
+      /** Omitted when nothing was paid. */
+      refundCents?: number
     }
   | {
       orgId: string
@@ -94,6 +105,9 @@ export async function emitBookingNotificationEvent(
     occurredAt,
     ...(previousStartsAt ? { previousStartsAt } : {}),
     ...(scheduleRevision !== undefined ? { scheduleRevision } : {}),
+    ...(input.type === "booking.cancelled" && input.refundCents !== undefined
+      ? { refundCents: input.refundCents }
+      : {}),
   }
 
   const inserted = await tx

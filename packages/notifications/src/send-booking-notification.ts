@@ -45,6 +45,7 @@ const BookingPayloadSchema = z.object({
   occurredAt: z.string().datetime(),
   previousStartsAt: z.string().datetime().optional(),
   scheduleRevision: z.number().int().positive().optional(),
+  refundCents: z.number().int().nonnegative().optional(),
 })
 
 export type ParsedBookingNotificationPayload = z.infer<
@@ -116,8 +117,6 @@ export type LoadedBooking = {
   scheduleRevision: number
   cancellationPolicy: CancellationPolicy
   currency: string
-  /** Cumulative refund target set on cancel; null when no refund was decided. */
-  refundDueCents: number | null
 }
 
 export async function sendBookingNotification(
@@ -173,9 +172,9 @@ export async function sendBookingNotification(
       locale
     ).name,
     refundAmount:
-      booking.refundDueCents === null
+      parsed.refundCents === undefined
         ? undefined
-        : formatMoney(booking.refundDueCents, booking.currency, locale),
+        : formatMoney(parsed.refundCents, booking.currency, locale),
   })
   const title = titleForKind(event.type, t.booking)
   const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
@@ -487,16 +486,11 @@ export async function loadBookingForNotification(
         scheduleRevision: main.bookings.scheduleRevision,
         cancellationPolicy: main.bookings.cancellationPolicy,
         currency: main.bookings.currency,
-        refundDueCents: main.bookingPayments.refundDueCents,
       })
       .from(main.bookings)
       .innerJoin(
         main.eventTypes,
         eq(main.eventTypes.id, main.bookings.eventTypeId)
-      )
-      .leftJoin(
-        main.bookingPayments,
-        eq(main.bookingPayments.bookingId, main.bookings.id)
       )
       .where(eq(main.bookings.id, bookingId))
       .limit(1)
