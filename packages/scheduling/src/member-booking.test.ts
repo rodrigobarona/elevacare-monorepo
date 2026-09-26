@@ -182,6 +182,7 @@ describe("cancelMemberBooking", () => {
         bookingId: "booking-1",
         startsAt: hoursFromNow(24),
         occurredAt: now,
+        refundCents: 6000,
       }
     )
   })
