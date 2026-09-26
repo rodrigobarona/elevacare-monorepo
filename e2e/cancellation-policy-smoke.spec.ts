@@ -1,3 +1,7 @@
+/**
+ * AUD-001 W3 operator evidence — not part of default `e2e-smoke` CI.
+ * Opt-in via E2E_CANCELLATION_SMOKE=1; loopback + Stripe TEST keys only.
+ */
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { expect, test } from "@playwright/test"
 import { apiUrl } from "./helpers/auth"
@@ -68,9 +72,7 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
 
   test.afterAll(async () => {
     if (originalPolicy) {
-      await setFirstVisitCancellationPolicy(originalPolicy).catch(
-        () => undefined
-      )
+      await setFirstVisitCancellationPolicy(originalPolicy)
     }
   })
 

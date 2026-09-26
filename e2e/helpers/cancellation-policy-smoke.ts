@@ -122,13 +122,14 @@ function slotMatchesLeadWindow(
   testCase: PolicySmokeCase,
   slot: { startsAt: string; leadHours: number }
 ): boolean {
+  // Margins avoid boundary drift while payment + cancel flow runs (~minutes).
   if (testCase.policy === "strict") {
-    return slot.leadHours >= 2 && slot.leadHours <= 47
+    return slot.leadHours >= 3 && slot.leadHours <= 46
   }
   if (testCase.policy === "moderate") {
-    return slot.leadHours >= 24 && slot.leadHours <= 48
+    return slot.leadHours >= 25 && slot.leadHours <= 47
   }
-  return slot.leadHours >= 24
+  return slot.leadHours >= 25
 }
 
 function leadWindowSkipReason(
@@ -136,12 +137,12 @@ function leadWindowSkipReason(
   slot: { startsAt: string; leadHours: number }
 ): string {
   if (testCase.policy === "strict") {
-    return `no strict slot inside 48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+    return `no strict slot in 3–46h window (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
   }
   if (testCase.policy === "moderate") {
-    return `no moderate slot in 24–48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+    return `no moderate slot in 25–47h window (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
   }
-  return `flexible needs >24h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+  return `flexible needs ≥25h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
 }
 
 async function confirmStripePaymentIntent(
