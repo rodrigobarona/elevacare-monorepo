@@ -229,6 +229,10 @@
         "validation": "Elige un calendario válido o hereda el predeterminado.",
         "invalid-input": "Elige un calendario válido o hereda el predeterminado."
       }
+    },
+    "cancellationPolicy": {
+      "label": "Política de cancelación",
+      "help": "Los miembros ven esta política antes de pagar. Se aplica a las reservas hechas después de cambiarla; las reservas existentes mantienen la política con la que se hicieron. Si cancelas tú, el miembro siempre recibe el reembolso completo."
     }
   },
   "schedule": {

@@ -74,10 +74,7 @@ export type ReserveSlotResult =
 export interface BookingRuleCheck {
   eventType: Pick<
     EventType,
-    | "bookingWindowDays"
-    | "minimumNoticeMinutes"
-    | "cancellationWindowHours"
-    | "rescheduleWindowHours"
+    "bookingWindowDays" | "minimumNoticeMinutes" | "rescheduleWindowHours"
   >
   slotStart: Date
   now?: Date

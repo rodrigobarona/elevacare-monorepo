@@ -19,6 +19,7 @@
     "./routing": "./src/routing.ts",
     "./dispatch": "./src/dispatch.ts",
     "./slug": "./src/slug.ts",
+    "./cancellation-policy": "./src/cancellation-policy.ts",
     "./public-site-parity": "./src/public-site-parity.ts"
   },
   "scripts": {

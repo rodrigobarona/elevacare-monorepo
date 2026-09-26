@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
 import { LocaleSchema } from "@eleva/config/i18n"
 
 // ---------------------------------------------------------------------------
@@ -1026,6 +1027,9 @@ export const EventTypeVisibilitySchema = z.enum([
 ])
 export type EventTypeVisibility = z.infer<typeof EventTypeVisibilitySchema>
 
+export const CancellationPolicySchema = z.enum(CANCELLATION_POLICY_VALUES)
+export type CancellationPolicy = z.infer<typeof CancellationPolicySchema>
+
 export const CreateEventTypeRequestSchema = z.object({
   slug: z.string().optional(),
   title: LocalizedTextSchema,
@@ -1041,7 +1045,7 @@ export const CreateEventTypeRequestSchema = z.object({
   minimumNoticeMinutes: z.number().int().nonnegative(),
   bufferBeforeMinutes: z.number().int().nonnegative(),
   bufferAfterMinutes: z.number().int().nonnegative(),
-  cancellationWindowHours: z.number().int().positive().nullish(),
+  cancellationPolicy: CancellationPolicySchema.optional(),
   rescheduleWindowHours: z.number().int().positive().nullish(),
   requiresApproval: z.boolean(),
   worldwideMode: z.boolean(),

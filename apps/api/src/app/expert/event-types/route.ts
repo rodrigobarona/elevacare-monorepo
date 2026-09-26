@@ -4,6 +4,7 @@ import { apiAuthFailure, requireApiCapability } from "@/lib/auth"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import { secureJson } from "@/lib/security-headers"
 import { withAudit } from "@eleva/audit"
+import { DEFAULT_CANCELLATION_POLICY } from "@eleva/config"
 import { getExpertProfileByUserId, createEventType } from "@eleva/db"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -95,7 +96,8 @@ export async function POST(request: Request) {
             minimumNoticeMinutes: data.minimumNoticeMinutes,
             bufferBeforeMinutes: data.bufferBeforeMinutes,
             bufferAfterMinutes: data.bufferAfterMinutes,
-            cancellationWindowHours: data.cancellationWindowHours ?? null,
+            cancellationPolicy:
+              data.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY,
             rescheduleWindowHours: data.rescheduleWindowHours ?? null,
             requiresApproval: data.requiresApproval,
             worldwideMode: data.worldwideMode,

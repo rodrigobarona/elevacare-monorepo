@@ -21,7 +21,7 @@ import {
 import { createdAt, orgIdColumn, pkColumn, updatedAt } from "./shared"
 import { organization, user } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
-import { eventTypes } from "./event-types"
+import { cancellationPolicyEnum, eventTypes } from "./event-types"
 import { bookingLinks, eventTypeModes } from "./offer-model"
 
 export const bookingStatusEnum = pgEnum("booking_status", [
@@ -273,6 +273,13 @@ export const bookings = pgTable(
      */
     scheduleRevision: integer("schedule_revision").notNull().default(0),
 
+    /** Policy the booking was sold under; later service edits never change it. */
+    cancellationPolicy: cancellationPolicyEnum("cancellation_policy")
+      .notNull()
+      .default("flexible"),
+    cancellationPolicyVersion: integer("cancellation_policy_version")
+      .notNull()
+      .default(1),
     cancellationReason: text("cancellation_reason"),
     cancelledAt: timestamp("cancelled_at", {
       withTimezone: true,
@@ -451,6 +458,8 @@ export const bookingPayments = pgTable(
     paymentMethodType: varchar("payment_method_type", { length: 64 }),
     paidAt: timestamp("paid_at", { withTimezone: true, mode: "date" }),
     refundedCents: integer("refunded_cents").notNull().default(0),
+    /** Policy refund owed after a member cancel; null means the full remainder. */
+    refundDueCents: integer("refund_due_cents"),
     disputeStatus: varchar("dispute_status", { length: 16 })
       .notNull()
       .default("none"),
@@ -492,6 +501,10 @@ export const bookingPayments = pgTable(
       sql`application_fee_cents = platform_fee_net_cents + platform_fee_vat_cents`
     ),
     refundedChk: check("booking_payments_refunded", sql`refunded_cents >= 0`),
+    refundDueChk: check(
+      "booking_payments_refund_due",
+      sql`refund_due_cents IS NULL OR (refund_due_cents >= 0 AND refund_due_cents <= amount_cents)`
+    ),
     disputeChk: check(
       "booking_payments_dispute_status",
       sql`dispute_status IN ('none','open','won','lost')`

@@ -74,7 +74,7 @@ export default async function EditEventTypePage(props: {
     minimumNoticeMinutes: eventType.minimumNoticeMinutes,
     bufferBeforeMinutes: eventType.bufferBeforeMinutes,
     bufferAfterMinutes: eventType.bufferAfterMinutes,
-    cancellationWindowHours: eventType.cancellationWindowHours,
+    cancellationPolicy: eventType.cancellationPolicy,
     rescheduleWindowHours: eventType.rescheduleWindowHours,
     requiresApproval: eventType.requiresApproval,
     worldwideMode: eventType.worldwideMode,

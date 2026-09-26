@@ -2,7 +2,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto"
 import { and, eq, inArray, sql } from "drizzle-orm"
 import { z } from "zod"
 import { env } from "@eleva/config/env"
-import { PT_VAT_RATE_BPS } from "@eleva/config"
+import { CANCELLATION_POLICY_VERSION, PT_VAT_RATE_BPS } from "@eleva/config"
 import { withAudit } from "@eleva/audit"
 import {
   main,
@@ -528,6 +528,16 @@ async function insertPendingBooking(
   }
 ) {
   const { reservation, funnel } = input
+  const [eventType] = await tx
+    .select({ cancellationPolicy: main.eventTypes.cancellationPolicy })
+    .from(main.eventTypes)
+    .where(eq(main.eventTypes.id, reservation.eventTypeId))
+    .limit(1)
+  if (!eventType) {
+    throw new Error(
+      `event type ${reservation.eventTypeId} not found for booking ${input.bookingId}`
+    )
+  }
   await tx.insert(main.bookings).values({
     id: input.bookingId,
     orgId: reservation.orgId,
@@ -552,6 +562,8 @@ async function insertPendingBooking(
     status: "pending_payment",
     sessionMode: funnel.sessionMode,
     bookedLocale: funnel.language,
+    cancellationPolicy: eventType.cancellationPolicy,
+    cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
   })
   await tx.insert(main.bookingPayments).values({
     id: input.paymentId,

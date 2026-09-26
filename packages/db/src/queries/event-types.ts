@@ -106,7 +106,7 @@ export async function updateEventType(
       | "minimumNoticeMinutes"
       | "bufferBeforeMinutes"
       | "bufferAfterMinutes"
-      | "cancellationWindowHours"
+      | "cancellationPolicy"
       | "rescheduleWindowHours"
       | "requiresApproval"
       | "worldwideMode"
