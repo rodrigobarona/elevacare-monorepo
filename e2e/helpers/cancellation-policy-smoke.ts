@@ -1,5 +1,5 @@
 import { neon } from "@neondatabase/serverless"
-import { expect, type APIRequestContext } from "@playwright/test"
+import { expect, test, type APIRequestContext } from "@playwright/test"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import {
   apiUrl,
@@ -100,11 +100,52 @@ async function fetchOfferModeId(request: APIRequestContext): Promise<string> {
   return modeId!
 }
 
+export function isStripeTestSecretKey(key: string | undefined): boolean {
+  return (
+    typeof key === "string" &&
+    (key.startsWith("sk_test_") || key.startsWith("rk_test_"))
+  )
+}
+
+function requireStripeTestSecretKey(): string {
+  const key = process.env.STRIPE_SECRET_KEY
+  if (!key) throw new Error("STRIPE_SECRET_KEY missing")
+  if (!isStripeTestSecretKey(key)) {
+    throw new Error(
+      "cancellation smoke requires a Stripe TEST key (sk_test_ or rk_test_)"
+    )
+  }
+  return key
+}
+
+function assertBookedSlotLeadWindow(
+  testCase: PolicySmokeCase,
+  slot: { startsAt: string; leadHours: number }
+): void {
+  if (testCase.policy === "strict") {
+    test.skip(
+      slot.leadHours < 2 || slot.leadHours > 47,
+      `no strict slot inside 48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+    )
+  }
+  if (testCase.policy === "moderate") {
+    test.skip(
+      slot.leadHours < 24 || slot.leadHours > 48,
+      `no moderate slot in 24–48h tier (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+    )
+  }
+  if (testCase.policy === "flexible") {
+    test.skip(
+      slot.leadHours < 24,
+      `flexible needs >24h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
+    )
+  }
+}
+
 async function confirmStripePaymentIntent(
   paymentIntentId: string
 ): Promise<void> {
-  const key = process.env.STRIPE_SECRET_KEY
-  if (!key) throw new Error("STRIPE_SECRET_KEY missing")
+  const key = requireStripeTestSecretKey()
   const response = await fetch(
     `https://api.stripe.com/v1/payment_intents/${paymentIntentId}/confirm`,
     {
@@ -203,6 +244,7 @@ export async function runPolicySmokeCase(
       data: reserveBody,
     })
     if (reserve.status() === 201) {
+      assertBookedSlotLeadWindow(input.testCase, slot)
       reserved = (await reserve.json()) as {
         reservationId: string
         reservationToken: string

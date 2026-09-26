@@ -1,12 +1,11 @@
 import { expect, test } from "@playwright/test"
 import { apiUrl } from "./helpers/auth"
 import {
-  pickSlotHoursFromNow,
+  isStripeTestSecretKey,
   runPolicySmokeCase,
   setFirstVisitCancellationPolicy,
   type PolicySmokeCase,
 } from "./helpers/cancellation-policy-smoke"
-import { PAID_EXPERT, PAID_OFFER } from "./helpers/local"
 import { isNonLoopbackE2eTarget } from "./helpers/local"
 
 const runSmoke = process.env.E2E_CANCELLATION_SMOKE === "1"
@@ -31,6 +30,10 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
   test.skip(
     !process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PMC_BOOKING,
     "needs STRIPE_SECRET_KEY and STRIPE_PMC_BOOKING"
+  )
+  test.skip(
+    !isStripeTestSecretKey(process.env.STRIPE_SECRET_KEY),
+    "needs Stripe TEST key (sk_test_ or rk_test_)"
   )
   test.skip(
     !process.env.CONSENT_HASH_KEY || process.env.CONSENT_HASH_KEY.length < 32,
@@ -66,30 +69,6 @@ test.describe("AUD-001 smoke 3 — cancellation policy refunds", () => {
       request,
     }) => {
       test.setTimeout(180_000)
-      const offer = await request.get(
-        `${apiUrl}/public/experts/${PAID_EXPERT}/event-types/${PAID_OFFER}`
-      )
-      const modeId = ((await offer.json()) as { modes: Array<{ id: string }> })
-        .modes[0]?.id
-      expect(modeId).toBeTruthy()
-      const slot = await pickSlotHoursFromNow(
-        request,
-        modeId!,
-        testCase.hoursUntilSession
-      )
-      if (testCase.policy === "strict") {
-        test.skip(
-          slot.leadHours < 2 || slot.leadHours > 47,
-          `no strict slot inside 48h tier (closest ${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
-        )
-      }
-      if (testCase.policy === "moderate") {
-        test.skip(
-          slot.leadHours < 24 || slot.leadHours > 48,
-          `no moderate slot near 30h lead (closest ${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
-        )
-      }
-
       const result = await runPolicySmokeCase(request, { testCase })
       expect(result.quoteRefundCents).toBe(testCase.expectedRefundCents)
       expect(result.refundDueCents).toBe(testCase.expectedRefundCents)
