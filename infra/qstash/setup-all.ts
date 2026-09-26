@@ -68,6 +68,19 @@ async function main() {
 
   await registerSchedule(
     {
+      name: "Slot reservation expiry",
+      path: "/workflows/slot-reservation-expiry",
+      cron: "* * * * *",
+      retries: 1,
+      requireBearer: true,
+      description:
+        "Expire lapsed slot holds every minute; cancels still-cancelable PaymentIntents and keeps MB WAY processing holds",
+    },
+    { dryRun }
+  )
+
+  await registerSchedule(
+    {
       name: "Invoicing retry",
       path: "/workflows/invoicing-retry",
       cron: "*/30 * * * *",
