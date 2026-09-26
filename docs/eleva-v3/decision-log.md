@@ -32,6 +32,43 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-09-25: Phases 01–08 audit triage (founder-approved pack)
+
+- Decision: Founder approved the audit triage in
+  [`audits/2026-09-phases-01-08-audit.md`](./audits/2026-09-phases-01-08-audit.md):
+  - **Fix before Phase 09 implementation:** AUD-001 (cancel / deletion
+    `refund_pending` never refunded; payout still transfers), AUD-008 (transfer
+    idempotency remint), AUD-009 (payout created from full gross ignoring
+    earlier refund/dispute), AUD-002 (public slots ignore external calendar
+    busy), AUD-003 (hold-expiry sweep incomplete). AUD-013 (platform-fee row
+    creation swallowed outside the ledger tx) rides in the billing PR.
+  - **AUD-007 waived — transfers do not wait for an issued platform-fee
+    invoice while `issueInvoice()` is closed.** Enforcing
+    `platform_fee_invoices.status = 'issued'` before `transfers.create` today
+    would freeze every payout. **Flip clause:** the PR that opens
+    `issueInvoice()` / FT POST / `invoice.issued` must add the
+    skip-transfer-until-issued check in `packages/billing/src/server/payouts.ts`
+    in the same PR, with tests; the waiver ends when that PR merges.
+  - **AUD-004 deferred** (quiet hours stored, not applied) to Phase 13. Phase 08
+    exit wording "respecting quiet hours" is not met; stamp it deferred.
+  - **AUD-006 deferred** (Stripe↔TOConline reconciliation compares
+    `expert_invoices`, not platform-fee invoices minus credit notes) to the PR
+    that opens issuance. Until then reconciliation mismatches are not a signal.
+  - **Phase 09.0** (Daily account spike, docs/evidence only) may start as soon
+    as D-07 (Daily HIPAA/BAA/DPA, founder + DPO) is in motion. This is a
+    carve-out for the docs/evidence spike only and supersedes nothing else.
+    Phase 09 implementation still needs all of: the fix pack above merged;
+    FT POST / Comunicação / `invoice.issued` open, or a separate founder
+    waiver naming all three; and D-07 signed by founder + DPO.
+- Owner: founder (directive); stamped by engineering
+- Status: active
+- Related: [`execution-plan/phases/06-payments-payouts.md`](./execution-plan/phases/06-payments-payouts.md),
+  [`07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md),
+  [`08-notifications-lane1.md`](./execution-plan/phases/08-notifications-lane1.md),
+  [`09-video-daily.md`](./execution-plan/phases/09-video-daily.md)
+- Next review: when the fix pack merges (stamp in the audit report), and when
+  `issueInvoice()` opens (AUD-007 flip + AUD-006)
+
 ### 2026-09-25: Founder waives ALL Phase 04B human evidence
 
 - Decision: Founder explicitly waived **all** Phase 04B human evidence for

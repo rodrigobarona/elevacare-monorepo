@@ -1,12 +1,12 @@
 # Phase 8 — Notifications Lane 1 + reminder workflows
 
-| Field      | Value                                                                                                                                                                                                                                                                                                                  |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Branch     | `phase-08/notifications-lane1`                                                                                                                                                                                                                                                                                         |
-| Depends on | Phases 5, 6, 7 (`invoice.*` kinds consume Phase 7 `invoices` events)                                                                                                                                                                                                                                                   |
-| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                              |
-| Touches    | `packages/notifications/**`, `packages/email/**`, `apps/email/**` (React Email preview), `packages/workflows/src/notifications/**`, `packages/db/src/schema/main/notifications.ts`, `apps/api/src/app/{notifications,workflows}/**`, `packages/dashboard/**` (bell + inbox), `infra/qstash/**`                         |
-| Exit gate  | Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences and quiet hours, idempotently. `invoice.issued` / `invoice.failed` stay deferred while `issueInvoice()` is closed |
+| Field      | Value                                                                                                                                                                                                                                                                                                                                              |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Branch     | `phase-08/notifications-lane1`                                                                                                                                                                                                                                                                                                                     |
+| Depends on | Phases 5, 6, 7 (`invoice.*` kinds consume Phase 7 `invoices` events)                                                                                                                                                                                                                                                                               |
+| Effort     | 1.5 weeks                                                                                                                                                                                                                                                                                                                                          |
+| Touches    | `packages/notifications/**`, `packages/email/**`, `apps/email/**` (React Email preview), `packages/workflows/src/notifications/**`, `packages/db/src/schema/main/notifications.ts`, `apps/api/src/app/{notifications,workflows}/**`, `packages/dashboard/**` (bell + inbox), `infra/qstash/**`                                                     |
+| Exit gate  | Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences (quiet hours deferred to Phase 13, AUD-004), idempotently. `invoice.issued` / `invoice.failed` stay deferred while `issueInvoice()` is closed |
 
 ## Why this phase exists
 
@@ -33,7 +33,7 @@ In:
   mode exists for recipients who have no account yet (`auth.org_invitation` to a new address,
   guest booking confirmations before activation) and is **email-only**: no preferences lookup,
   no SMS, no in-app row, suppression list still applied; the `{ userId }` mode resolves
-  preferences + quiet hours + locale and fans out to email / SMS / in-app. Renders the
+  preferences + locale (quiet hours: Phase 13, AUD-004) and fans out to email / SMS / in-app. Renders the
   `@eleva/email` template (React Email) / SMS text / in-app payload -> delivers -> writes
   `notification_deliveries` (idempotent on key + recipient + channel, where the recipient column
   is `user_id` or, for e-mail mode, `recipient_email`). The delivery row is **claimed before the
@@ -181,8 +181,10 @@ Out: push (Expo) — post-launch; Novu (retired).
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
       or a shortened test schedule); cancelled booking -> reminders skipped.
-- [ ] Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
-      (`booking.reminder_1h`) bypass.
+- [ ] ~~Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
+      (`booking.reminder_1h`) bypass.~~ Not a Phase 08 requirement.
+      **Deferred to Phase 13** (audit AUD-004, founder-approved 2026-09-25):
+      preferences store quiet hours but `sendNotification` does not read them.
 - [ ] Same `idempotencyKey` twice for the same recipient -> one delivery per channel; the same
       `idempotencyKey` for member and expert (booking.confirmed) -> both delivered (test both).
 - [ ] SMS sent only with verified phone + opt-in; Twilio EU region used.
@@ -198,7 +200,7 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Tests
 
-- vitest: preference resolution, quiet hours, idempotency, template rendering snapshots per
+- vitest: preference resolution, idempotency, template rendering snapshots per
   locale, reminder scheduling math, webhook signature verification.
 
 ## Docs to update
@@ -292,7 +294,7 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    NOTIFICATION_KINDS[kind].scope is "org" | "user" and orgId is required (overloaded signature +
    Zod refine, error ORG_CONTEXT_REQUIRED, checked before any write) for every org-scoped kind.
    userId mode -> load user locale, preferences (Phase 5
-   table), quiet hours (defer non-urgent to window end via QStash notBefore), suppression list ->
+   table), suppression list (quiet-hours deferral is Phase 13 — AUD-004 — do not implement it here) ->
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app ->
    CLAIM the notification_deliveries row FIRST (INSERT status queued WITH lease_owner = runId
    and claimed_at = now() — both NOT NULL, the insert is the first claim; on unique conflict
@@ -382,12 +384,12 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID, TWILIO_REGION=ie1 in
    .env.example, turbo.json, environment-matrix.md. Operator task: verify eleva.care in Resend
    (DKIM/SPF/DMARC) and create the Twilio EU messaging service.
-8. Tests: preference/quiet-hour resolution, idempotency, template snapshots per locale, reminder
+8. Tests: preference resolution, idempotency, template snapshots per locale, reminder
    scheduling, webhook signature, suppression. Docs: notifications-spec.md, integration-runbooks.md,
    decision-log.md.
 
 Acceptance (paste evidence): confirmation emails (member + expert) with ICS in the right locale;
-reminders scheduled and skipped on cancel; quiet hours deferral; idempotency; SMS only with
+reminders scheduled and skipped on cancel; idempotency; SMS only with
 verified opt-in; bounce suppression; preview renders all templates in pt/en/es; no PHI in
 subjects/SMS.
 
