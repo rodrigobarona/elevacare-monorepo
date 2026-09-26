@@ -2,7 +2,15 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { useLocale, useTranslations } from "next-intl"
+import {
+  CANCELLATION_POLICY_VALUES,
+  DEFAULT_CANCELLATION_POLICY,
+  describeCancellationPolicy,
+  isCancellationPolicy,
+  type CancellationPolicy,
+  type CancellationPolicyLocale,
+} from "@eleva/config/cancellation-policy"
 import { toast } from "sonner"
 import { Button } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
@@ -16,6 +24,7 @@ import {
   SelectValue,
 } from "@eleva/ui/components/select"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
+import { CancellationPolicyCards } from "@eleva/ui/components/booking/cancellation-policy-cards"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import {
   Card,
@@ -70,6 +79,13 @@ export function EventTypeForm({
 }: Props) {
   const router = useRouter()
   const t = useTranslations("eventTypes")
+  const uiLocale = useLocale()
+  const policyLocale: CancellationPolicyLocale =
+    uiLocale === "pt" || uiLocale === "es" ? uiLocale : "en"
+  const policyCards = CANCELLATION_POLICY_VALUES.map((id) => ({
+    id,
+    ...describeCancellationPolicy(id, policyLocale),
+  }))
   const [pending, setPending] = React.useState(false)
   const [assistPending, setAssistPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
@@ -110,11 +126,10 @@ export function EventTypeForm({
   const [bufferAfter, setBufferAfter] = React.useState(
     String(defaultValues?.bufferAfterMinutes ?? 0)
   )
-  const [cancellationWindow, setCancellationWindow] = React.useState(
-    defaultValues?.cancellationWindowHours != null
-      ? String(defaultValues.cancellationWindowHours)
-      : ""
-  )
+  const [cancellationPolicy, setCancellationPolicy] =
+    React.useState<CancellationPolicy>(
+      defaultValues?.cancellationPolicy ?? DEFAULT_CANCELLATION_POLICY
+    )
   const [rescheduleWindow, setRescheduleWindow] = React.useState(
     defaultValues?.rescheduleWindowHours != null
       ? String(defaultValues.rescheduleWindowHours)
@@ -157,9 +172,7 @@ export function EventTypeForm({
       minimumNoticeMinutes: minimumNotice === "" ? 60 : Number(minimumNotice),
       bufferBeforeMinutes: Number(bufferBefore) || 0,
       bufferAfterMinutes: Number(bufferAfter) || 0,
-      cancellationWindowHours: cancellationWindow
-        ? Number(cancellationWindow)
-        : null,
+      cancellationPolicy,
       rescheduleWindowHours: rescheduleWindow ? Number(rescheduleWindow) : null,
       requiresApproval,
       worldwideMode,
@@ -174,7 +187,7 @@ export function EventTypeForm({
               minimumNoticeMinutes: formData.minimumNoticeMinutes,
               bufferBeforeMinutes: formData.bufferBeforeMinutes,
               bufferAfterMinutes: formData.bufferAfterMinutes,
-              cancellationWindowHours: formData.cancellationWindowHours,
+              cancellationPolicy: formData.cancellationPolicy,
               rescheduleWindowHours: formData.rescheduleWindowHours,
               requiresApproval: formData.requiresApproval,
               worldwideMode: formData.worldwideMode,
@@ -526,20 +539,24 @@ export function EventTypeForm({
               </div>
             </div>
 
+            <div className="space-y-2">
+              <p className="text-sm font-medium">
+                {t("cancellationPolicy.label")}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {t("cancellationPolicy.help")}
+              </p>
+              <CancellationPolicyCards
+                label={t("cancellationPolicy.label")}
+                policies={policyCards}
+                selectedKey={cancellationPolicy}
+                onSelectionChange={(id) => {
+                  if (isCancellationPolicy(id)) setCancellationPolicy(id)
+                }}
+              />
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label htmlFor="cancellationWindow">
-                  Cancellation window (hours)
-                </Label>
-                <Input
-                  id="cancellationWindow"
-                  type="number"
-                  min={0}
-                  value={cancellationWindow}
-                  onChange={(e) => setCancellationWindow(e.target.value)}
-                  placeholder="No limit"
-                />
-              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="rescheduleWindow">
                   Reschedule window (hours)

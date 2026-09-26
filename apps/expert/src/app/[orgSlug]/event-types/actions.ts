@@ -4,6 +4,7 @@ import { requireSession } from "@eleva/auth/server"
 import {
   CreateEventTypeRequestSchema,
   UpdateEventTypeRequestSchema,
+  type CancellationPolicy,
   type CreateEventTypeRequest,
   type UpdateEventTypeRequest,
 } from "@eleva/api-client"
@@ -30,7 +31,7 @@ export interface EventTypeFormData {
   minimumNoticeMinutes: number
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
-  cancellationWindowHours?: number | null
+  cancellationPolicy?: CancellationPolicy
   rescheduleWindowHours?: number | null
   requiresApproval: boolean
   worldwideMode: boolean
@@ -62,7 +63,7 @@ function toCreatePayload(data: EventTypeFormData): CreateEventTypeRequest {
     minimumNoticeMinutes: data.minimumNoticeMinutes,
     bufferBeforeMinutes: data.bufferBeforeMinutes,
     bufferAfterMinutes: data.bufferAfterMinutes,
-    cancellationWindowHours: data.cancellationWindowHours ?? null,
+    cancellationPolicy: data.cancellationPolicy,
     rescheduleWindowHours: data.rescheduleWindowHours ?? null,
     requiresApproval: data.requiresApproval,
     worldwideMode: data.worldwideMode,
@@ -140,8 +141,8 @@ export async function updateEventTypeAction(
     if (data.bufferAfterMinutes !== undefined) {
       updates.bufferAfterMinutes = data.bufferAfterMinutes
     }
-    if (data.cancellationWindowHours !== undefined) {
-      updates.cancellationWindowHours = data.cancellationWindowHours
+    if (data.cancellationPolicy !== undefined) {
+      updates.cancellationPolicy = data.cancellationPolicy
     }
     if (data.rescheduleWindowHours !== undefined) {
       updates.rescheduleWindowHours = data.rescheduleWindowHours

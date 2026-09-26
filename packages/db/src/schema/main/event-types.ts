@@ -24,11 +24,17 @@ import {
 import { organization } from "../auth"
 import { expertProfiles, sessionModeEnum } from "./expert-profiles"
 import { schedules } from "./schedules"
+import { CANCELLATION_POLICY_VALUES } from "@eleva/config/cancellation-policy"
 
 export const eventTypeKindEnum = pgEnum("event_type_kind", [
   "clinical",
   "non_clinical",
 ])
+
+export const cancellationPolicyEnum = pgEnum(
+  "cancellation_policy",
+  CANCELLATION_POLICY_VALUES
+)
 
 export const eventTypeVisibilityEnum = pgEnum("event_type_visibility", [
   "public",
@@ -85,7 +91,9 @@ export const eventTypes = pgTable(
       .default(60),
     bufferBeforeMinutes: integer("buffer_before_minutes").notNull().default(0),
     bufferAfterMinutes: integer("buffer_after_minutes").notNull().default(0),
-    cancellationWindowHours: integer("cancellation_window_hours"),
+    cancellationPolicy: cancellationPolicyEnum("cancellation_policy")
+      .notNull()
+      .default("flexible"),
     rescheduleWindowHours: integer("reschedule_window_hours"),
 
     requiresApproval: boolean("requires_approval").notNull().default(false),
@@ -126,7 +134,7 @@ export const eventTypes = pgTable(
     currencyChk: check("event_types_currency_eur", sql`currency = 'EUR'`),
     windowsChk: check(
       "event_types_windows_non_negative",
-      sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (cancellation_window_hours IS NULL OR cancellation_window_hours >= 0) AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`
+      sql`(booking_window_days IS NULL OR booking_window_days >= 0) AND minimum_notice_minutes >= 0 AND buffer_before_minutes >= 0 AND buffer_after_minutes >= 0 AND (reschedule_window_hours IS NULL OR reschedule_window_hours >= 0) AND position >= 0`
     ),
     destinationPairChk: check(
       "event_types_destination_pair",

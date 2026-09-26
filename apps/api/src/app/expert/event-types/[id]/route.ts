@@ -135,8 +135,8 @@ export async function PATCH(
     updates.bufferBeforeMinutes = data.bufferBeforeMinutes
   if (data.bufferAfterMinutes !== undefined)
     updates.bufferAfterMinutes = data.bufferAfterMinutes
-  if (data.cancellationWindowHours !== undefined)
-    updates.cancellationWindowHours = data.cancellationWindowHours
+  if (data.cancellationPolicy !== undefined)
+    updates.cancellationPolicy = data.cancellationPolicy
   if (data.rescheduleWindowHours !== undefined)
     updates.rescheduleWindowHours = data.rescheduleWindowHours
   if (data.requiresApproval !== undefined)

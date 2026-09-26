@@ -13,7 +13,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: null,
         minimumNoticeMinutes: 0,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date("2026-06-15T09:00:00Z"),
@@ -28,7 +27,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: null,
         minimumNoticeMinutes: 120,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date("2026-06-15T11:00:00Z"),
@@ -43,7 +41,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: 7,
         minimumNoticeMinutes: 0,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date("2026-06-30T10:00:00Z"),
@@ -58,7 +55,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: 30,
         minimumNoticeMinutes: 60,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date("2026-06-16T10:00:00Z"),
@@ -73,7 +69,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: null,
         minimumNoticeMinutes: 0,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: now,
@@ -87,7 +82,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: null,
         minimumNoticeMinutes: 60,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date(now.getTime() + 60 * 60_000),
@@ -101,7 +95,6 @@ describe("validateBookingRules", () => {
       eventType: {
         bookingWindowDays: 7,
         minimumNoticeMinutes: 0,
-        cancellationWindowHours: null,
         rescheduleWindowHours: null,
       },
       slotStart: new Date(now.getTime() + 7 * 24 * 3_600_000),

@@ -229,6 +229,10 @@
         "validation": "Choose a valid calendar or inherit the default.",
         "invalid-input": "Choose a valid calendar or inherit the default."
       }
+    },
+    "cancellationPolicy": {
+      "label": "Cancellation policy",
+      "help": "Members see this policy before they pay. It applies to bookings made after you change it; existing bookings keep the policy they were booked under. If you cancel, the member always gets a full refund."
     }
   },
   "schedule": {

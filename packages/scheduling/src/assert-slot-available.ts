@@ -31,7 +31,6 @@ export function assertRequestedSlotAvailable(
     eventType: {
       bookingWindowDays: input.offer.bookingWindowDays,
       minimumNoticeMinutes: input.offer.minimumNoticeMinutes,
-      cancellationWindowHours: null,
       rescheduleWindowHours: null,
     },
     slotStart: input.startsAt,

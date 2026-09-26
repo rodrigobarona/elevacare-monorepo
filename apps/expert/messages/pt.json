@@ -229,6 +229,10 @@
         "validation": "Escolha um calendário válido ou herde o predefinido.",
         "invalid-input": "Escolha um calendário válido ou herde o predefinido."
       }
+    },
+    "cancellationPolicy": {
+      "label": "Política de cancelamento",
+      "help": "Os membros veem esta política antes de pagar. Aplica-se às marcações feitas depois de a alterar; as marcações existentes mantêm a política com que foram feitas. Se for você a cancelar, o membro recebe sempre o reembolso total."
     }
   },
   "schedule": {

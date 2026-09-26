@@ -330,6 +330,13 @@
       "when": 1779710000000,
       "tag": "0046_destination_overrides",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1779800000000,
+      "tag": "0047_cancellation_policies",
+      "breakpoints": true
     }
   ]
 }
