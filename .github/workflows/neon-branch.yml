@@ -127,7 +127,7 @@ jobs:
           AUDIT_DATABASE_URL: ${{ steps.audit-url.outputs.db_url }}
           AUDIT_DATABASE_URL_UNPOOLED: ${{ steps.audit-url.outputs.db_url }}
           ELEVA_RLS_INTEGRATION: "1"
-        run: pnpm --filter=@eleva/db exec vitest run src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts
+        run: pnpm --filter=@eleva/db exec vitest run src/__tests__/rls-isolation.test.ts src/__tests__/rls-classes.test.ts src/__tests__/rls-notifications.test.ts
 
   delete-branch:
     name: neon-branch-delete
