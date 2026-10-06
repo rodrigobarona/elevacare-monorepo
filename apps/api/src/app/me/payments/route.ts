@@ -36,6 +36,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const query = ListMePaymentsQuerySchema.safeParse({
     cursor: url.searchParams.get("cursor") ?? undefined,
+    bookingId: url.searchParams.get("bookingId") ?? undefined,
   })
   if (!query.success) {
     return secureJson(
@@ -47,6 +48,7 @@ export async function GET(request: Request) {
   const result = await listMemberPaymentsWithReceipts({
     userId: session.user.id,
     cursor: query.data.cursor,
+    bookingId: query.data.bookingId,
   })
 
   return secureJson(

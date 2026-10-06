@@ -469,6 +469,7 @@ async function loadMemberBookingDetails(
 export async function listMemberPayments(input: {
   userId: string
   cursor?: string
+  bookingId?: string
   limit?: number
 }): Promise<MemberListResult<MemberPaymentListItem>> {
   const limit = clampPageSize(input.limit, MEMBER_PAYMENT_PAGE_SIZE)
@@ -476,6 +477,9 @@ export async function listMemberPayments(input: {
 
   return withPlatformAdminContext(async (tx) => {
     const conditions = [eq(main.bookings.memberUserId, input.userId)]
+    if (input.bookingId) {
+      conditions.push(eq(main.bookingPayments.bookingId, input.bookingId))
+    }
     if (cursor) {
       conditions.push(
         or(

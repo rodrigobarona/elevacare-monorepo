@@ -454,6 +454,7 @@ export const MemberPaymentSchema = z.object({
 
 export const ListMePaymentsQuerySchema = z.object({
   cursor: z.string().min(1).max(200).optional(),
+  bookingId: z.string().uuid().optional(),
 })
 
 export const ListMePaymentsResponseSchema = z.object({
@@ -2137,6 +2138,7 @@ export function createApiClient(options: ApiClientOptions) {
       async listPayments(query: ListMePaymentsQuery = {}) {
         const params = new URLSearchParams()
         if (query.cursor) params.set("cursor", query.cursor)
+        if (query.bookingId) params.set("bookingId", query.bookingId)
         const qs = params.toString()
         const raw = await request<unknown>(
           "GET",

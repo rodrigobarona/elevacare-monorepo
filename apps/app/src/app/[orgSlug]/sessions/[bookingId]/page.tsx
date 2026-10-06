@@ -86,7 +86,7 @@ export default async function SessionDetailPage({
   if (!booking) notFound()
 
   const [payments, quote] = await Promise.all([
-    api.me.listPayments(),
+    api.me.listPayments({ bookingId: booking.id }),
     api.me.cancellationQuote(booking.id).catch((err: unknown) => {
       if (err instanceof ApiClientError && err.status === 409) return null
       throw err
