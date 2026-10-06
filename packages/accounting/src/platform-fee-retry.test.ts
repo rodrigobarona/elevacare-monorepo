@@ -5,6 +5,7 @@ const { state, getFlag, issuePlatformFeeInvoice } = vi.hoisted(() => ({
     row: null as null | Record<string, unknown>,
     transitions: [] as Array<{ to: unknown; claimed: boolean }>,
     claim: true,
+    failRestore: false,
   },
   getFlag: vi.fn(async () => true),
   issuePlatformFeeInvoice: vi.fn(),
@@ -47,6 +48,9 @@ vi.mock("@eleva/audit", () => ({
             return {
               where: () => ({
                 returning: async () => {
+                  if (state.failRestore && to !== "pending") {
+                    throw new Error("restore failed")
+                  }
                   state.transitions.push({ to, claimed: state.claim })
                   return state.claim ? [{ id: "fee-1" }] : []
                 },
@@ -82,6 +86,7 @@ describe("retryPlatformFeeInvoice", () => {
     state.row = null
     state.transitions = []
     state.claim = true
+    state.failRestore = false
     getFlag.mockResolvedValue(true)
     issuePlatformFeeInvoice.mockReset()
   })
@@ -146,6 +151,33 @@ describe("retryPlatformFeeInvoice", () => {
 
     await retryPlatformFeeInvoice(INPUT)
     expect(state.transitions.map((t) => t.to)).toEqual(["pending", "skipped"])
+  })
+
+  it("leaves an already-recorded row as the concurrent run left it", async () => {
+    state.row = row("failed")
+    const result = {
+      invoice: { id: "fee-1" },
+      outcome: "already_recorded",
+      reason: null,
+      domainEvent: null,
+    }
+    issuePlatformFeeInvoice.mockResolvedValue(result)
+
+    await expect(retryPlatformFeeInvoice(INPUT)).resolves.toBe(result)
+    expect(state.transitions.map((t) => t.to)).toEqual(["pending"])
+  })
+
+  it("rethrows the issuance error even when the restore also fails", async () => {
+    state.row = row("failed")
+    issuePlatformFeeInvoice.mockRejectedValue(new Error("db down"))
+    state.failRestore = true
+    const consoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => undefined)
+
+    await expect(retryPlatformFeeInvoice(INPUT)).rejects.toThrow("db down")
+    expect(consoleError).toHaveBeenCalled()
+    consoleError.mockRestore()
   })
 
   it("reports a conflict when the row changed before the claim", async () => {

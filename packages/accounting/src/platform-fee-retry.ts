@@ -133,7 +133,12 @@ export async function retryPlatformFeeInvoice(input: {
       bookingPaymentId: row.bookingPaymentId,
     })
   } catch (err) {
-    await restoreAfterRetry(row, input.actorUserId)
+    await restoreAfterRetry(row, input.actorUserId).catch((restoreErr) => {
+      console.error("[platform-fee-retry] restore after failed retry failed", {
+        invoiceId: row.id,
+        error: restoreErr,
+      })
+    })
     throw err
   }
   if (!result.invoice) {
