@@ -2,6 +2,7 @@ import { getTranslations, getLocale } from "next-intl/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { Badge } from "@eleva/ui/components/badge"
 import { LinkButton } from "@eleva/ui/components/button"
+import { EmptyState } from "@eleva/ui/components/empty-state"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { formatMoney } from "@/lib/member-format"
 
@@ -41,7 +42,7 @@ export default async function PaymentsPage({
       <PageHeader title={t("title")} description={t("subtitle")} />
 
       {payments.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("empty")}</p>
+        <EmptyState title={t("empty")} />
       ) : (
         <ul className="divide-y divide-border">
           {payments.map((payment) => (

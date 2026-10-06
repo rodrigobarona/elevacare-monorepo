@@ -1,7 +1,9 @@
-import { getTranslations } from "next-intl/server"
-import { PageHeader } from "@eleva/ui/components/page-header"
+import { getLocale, getTranslations } from "next-intl/server"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { PageHeader, Section } from "@eleva/ui/components/page-header"
+import { marketplaceExpertsUrl } from "@/lib/experts-url"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
-import { BookingCard } from "../_components/booking-card"
+import { BookingCard, FindExpertButton } from "../_components/booking-card"
 
 export const dynamic = "force-dynamic"
 
@@ -12,8 +14,11 @@ export default async function SessionsPage({
 }) {
   const { orgSlug } = await params
   const session = await requireMemberOrg(orgSlug)
-  const t = await getTranslations("sessions")
-  const api = await getAuthedApiClient()
+  const [t, locale, api] = await Promise.all([
+    getTranslations("sessions"),
+    getLocale(),
+    getAuthedApiClient(),
+  ])
   const [upcoming, past] = await Promise.all([
     api.me.listBookings({ range: "upcoming" }),
     api.me.listBookings({ range: "past" }),
@@ -24,10 +29,12 @@ export default async function SessionsPage({
     <div className="space-y-8">
       <PageHeader title={t("title")} description={t("subtitle")} />
 
-      <section className="space-y-4">
-        <h2 className="font-medium">{t("upcomingTitle")}</h2>
+      <Section title={t("upcomingTitle")}>
         {upcoming.bookings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("emptyUpcoming")}</p>
+          <EmptyState
+            title={t("emptyUpcoming")}
+            action={<FindExpertButton href={marketplaceExpertsUrl(locale)} />}
+          />
         ) : (
           <div className="grid gap-4">
             {upcoming.bookings.map((booking) => (
@@ -41,12 +48,11 @@ export default async function SessionsPage({
             ))}
           </div>
         )}
-      </section>
+      </Section>
 
-      <section className="space-y-4">
-        <h2 className="font-medium">{t("pastTitle")}</h2>
+      <Section title={t("pastTitle")}>
         {past.bookings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("emptyPast")}</p>
+          <EmptyState title={t("emptyPast")} />
         ) : (
           <div className="grid gap-4">
             {past.bookings.map((booking) => (
@@ -61,7 +67,7 @@ export default async function SessionsPage({
             ))}
           </div>
         )}
-      </section>
+      </Section>
     </div>
   )
 }
