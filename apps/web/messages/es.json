@@ -369,7 +369,26 @@
     "draftBanner": "Borrador previo al lanzamiento. Comisión, plazos de payout y términos legales no son finales. Finanzas y el DPO volverán a firmar antes del go-live.",
     "heading": "Ejercer en Eleva.care",
     "body": "Eleva.care es una plataforma digital de salud que permite la prestación de servicios de salud remotos (teleconsultas / telemedicina) por profesionales independientes y licenciados. Los especialistas mantienen autonomía clínica. Eleva opera la tecnología de agenda, reserva y pago. Los miembros reservan sesiones contigo — esta página no inventa porcentajes de payout ni liquidación semanal.",
-    "cta": "Crear tu cuenta"
+    "cta": "Crear tu cuenta",
+    "stepsHeading": "Cómo funciona",
+    "steps": [
+      {
+        "title": "Crea tu cuenta",
+        "body": "Regístrate y abre un área de trabajo de Experto desde tu cuenta. Empiezas en el plan comunidad y puedes cambiar de plan más adelante."
+      },
+      {
+        "title": "Configura tu consulta",
+        "body": "Añade tu perfil, idiomas, ubicaciones y disponibilidad semanal. Conecta tus calendarios para que las horas ocupadas se bloqueen automáticamente."
+      },
+      {
+        "title": "Publica tus servicios",
+        "body": "Ofrece sesiones online, presenciales o por teléfono, con precio y una política de cancelación Flexible, Moderada o Estricta para cada servicio. Antes de publicar, verifica tu identidad y conecta los pagos con Stripe."
+      },
+      {
+        "title": "Recibe reservas de miembros",
+        "body": "Los miembros reservan y pagan online. Tú y el miembro recibís confirmaciones y recordatorios por email."
+      }
+    ]
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",

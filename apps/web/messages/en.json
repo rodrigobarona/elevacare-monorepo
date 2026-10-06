@@ -369,7 +369,26 @@
     "draftBanner": "Working pre-launch draft. Commission, payout timing, and legal terms are not final. Finance and the DPO will re-sign before go-live.",
     "heading": "Practise on Eleva.care",
     "body": "Eleva.care is a digital health platform that enables the delivery of remote healthcare services (teleconsultations / telemedicine) by independent, licensed professionals. Experts keep clinical autonomy. Eleva operates the scheduling, booking, and payment technology. Members book sessions with you — Eleva does not invent payout percentages or weekly settlement here.",
-    "cta": "Create your account"
+    "cta": "Create your account",
+    "stepsHeading": "How it works",
+    "steps": [
+      {
+        "title": "Create your account",
+        "body": "Sign up and open an Expert workspace from your account. You start on the community plan and can upgrade later."
+      },
+      {
+        "title": "Set up your practice",
+        "body": "Add your profile, languages, locations and weekly availability. Connect your calendars so busy times are blocked automatically."
+      },
+      {
+        "title": "Publish your services",
+        "body": "Offer online, in-person or phone sessions with a price and a Flexible, Moderate or Strict cancellation policy for each service. Verify your identity and connect payouts with Stripe before you publish."
+      },
+      {
+        "title": "Get booked by members",
+        "body": "Members book and pay online. You and the member receive confirmations and reminders by email."
+      }
+    ]
   },
   "forClinics": {
     "title": "For clinics — Eleva.care",
