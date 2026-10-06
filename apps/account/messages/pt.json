@@ -137,7 +137,9 @@
     "useTotp": "Usar código do autenticador",
     "logoutTitle": "Terminar sessão",
     "logoutDescription": "Encerrar esta sessão neste dispositivo.",
-    "errorGeneric": "Algo correu mal. Tente novamente."
+    "errorGeneric": "Algo correu mal. Tente novamente.",
+    "brandHeadline": "Saúde da mulher, elevada",
+    "brandBody": "Marque especialistas verificados e tenha as suas sessões, pagamentos e definições de privacidade num só lugar."
   },
   "privacy": {
     "title": "Privacidade e Dados",

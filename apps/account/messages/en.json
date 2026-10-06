@@ -137,7 +137,9 @@
     "useTotp": "Use authenticator code",
     "logoutTitle": "Sign out",
     "logoutDescription": "End this session on this device.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "brandHeadline": "Women's health, elevated",
+    "brandBody": "Book verified experts and keep your sessions, payments and privacy settings in one place."
   },
   "privacy": {
     "title": "Privacy & Data",
