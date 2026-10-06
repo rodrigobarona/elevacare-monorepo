@@ -1,3 +1,6 @@
+import process from "node:process"
+import { URL } from "node:url"
+
 const LOCAL_APP_PORTS = [
   ...Array.from({ length: 10 }, (_, index) => 3000 + index),
   3100,

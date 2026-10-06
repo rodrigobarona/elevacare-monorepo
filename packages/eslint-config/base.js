@@ -37,6 +37,16 @@ export const config = [
               message:
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
             },
+            {
+              group: [
+                "lucide-react",
+                "lucide-react/**",
+                "@phosphor-icons/react",
+                "@phosphor-icons/react/**",
+              ],
+              message:
+                "Import icons from @eleva/icons (or @eleva/icons/client); only packages/icons wraps the vendor set.",
+            },
           ],
         },
       ],

@@ -8,7 +8,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./ics": "./src/ics-generator.ts",
-    "./ics-feed": "./src/ics-feed.ts"
+    "./ics-feed": "./src/ics-feed.ts",
+    "./ics-download": "./src/ics-download.ts"
   },
   "scripts": {
     "lint": "eslint .",

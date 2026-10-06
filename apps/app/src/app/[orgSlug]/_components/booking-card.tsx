@@ -18,7 +18,7 @@ import {
   CardTitle,
 } from "@eleva/ui/components/card"
 import type { ListMeBookingsResponse } from "@eleva/api-client"
-import { downloadBookingIcs } from "@/lib/booking-ics"
+import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import { eventTitle, formatDateTime, formatMoney } from "@/lib/member-format"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]
