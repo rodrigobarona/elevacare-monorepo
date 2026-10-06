@@ -35,19 +35,22 @@ the existing brand colour, kept exactly.
 
 ### Contrast rules (checked, WCAG 2.1 AA)
 
-| Use                           | Light mode                                                | Dark mode (on ink)                             |
-| ----------------------------- | --------------------------------------------------------- | ---------------------------------------------- |
-| Brand text and primary fill   | teal-700 `#006d77`: 6.08 : 1                              | teal-400 `#45bcca`: 8.59 : 1                   |
-| Coral as text                 | coral-700 `#973c12`: 7.09 : 1                             | coral-300 `#fbb196`: 10.96 : 1                 |
-| Coral brand `#e29578`         | **decorative only** (2.39 : 1)                            | text-safe (8.13 : 1)                           |
-| Muted text                    | neutral-700 `#545e61`: 6.64 : 1 (5.72 : 1 on neutral-100) | neutral-400 `#a1abae`: 5.49 : 1 on neutral-900 |
-| Danger text / fill            | danger-600 `#ce2930`: 5.26 : 1                            | danger-400 `#ff766f`: 7.43 : 1                 |
-| Success / warning / info text | 700 step (≥ 6.1 : 1)                                      | 400 step (≥ 8.0 : 1)                           |
+| Use                           | Light mode (on white)                                     | Dark mode (on neutral-950 page / neutral-900 card) |
+| ----------------------------- | --------------------------------------------------------- | -------------------------------------------------- |
+| Brand text and primary fill   | teal-700 `#006d77`: 6.08 : 1                              | teal-400 `#45bcca`: 7.37 / 5.70 : 1                |
+| Primary button label          | teal-50 on teal-700: 5.70 : 1                             | teal-950 on teal-400: 7.15 : 1                     |
+| Coral as text                 | coral-700 `#973c12`: 7.09 : 1                             | coral-300 `#fbb196`: 9.38 / 7.25 : 1               |
+| Coral brand `#e29578`         | **decorative only** (2.39 : 1)                            | text-safe (6.98 / 5.39 : 1)                        |
+| Muted text                    | neutral-700 `#545e61`: 6.64 : 1 (5.72 : 1 on neutral-100) | neutral-400 `#a1abae`: 7.09 / 5.49 : 1             |
+| Danger text / fill            | danger-600 `#ce2930`: 5.26 : 1                            | danger-400 `#ff766f`: 6.40 / 4.95 : 1              |
+| Success / warning / info text | 700 step (≥ 6.1 : 1)                                      | 400 step (≥ 6.9 / 5.3 : 1)                         |
 
-Every foreground/background pair in section 2 was checked: all reach ≥ 4.5 : 1, and the lowest is
-danger-400 on a neutral-900 card at 4.95 : 1. Neutral-600 on neutral-100 (4.07 : 1) failed, which
-is why muted text uses the 700 step. Teal-600 (4.40 : 1) and every 500 step fail AA for body text on white. They are allowed
-for large text, icons and fills with white foreground only when ≥ 3 : 1.
+Every **text** pair in section 2 was checked against its real surface and reaches ≥ 4.5 : 1; the
+lowest is danger-400 on a neutral-900 card at 4.95 : 1. Neutral-600 on neutral-100 (4.07 : 1)
+failed, which is why muted text uses the 700 step. Teal-600 (4.40 : 1) and every 500 step fail AA
+for body text on white. They are allowed for large text, icons and fills with white foreground
+only when ≥ 3 : 1. Non-text exception: the light-mode focus ring is teal-500 (3.09 : 1 on white),
+which meets the WCAG 1.4.11 non-text minimum of 3 : 1.
 
 ## 2. Semantic token mapping
 
