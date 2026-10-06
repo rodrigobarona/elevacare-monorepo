@@ -1,3 +1,4 @@
+import { LogoMark } from "@eleva/ui/components/brand"
 import { Separator } from "@eleva/ui/components/separator"
 import { SidebarTrigger } from "@eleva/ui/components/sidebar"
 import { NavBell } from "./nav-bell"
@@ -28,6 +29,7 @@ export function DashboardHeader({
   return (
     <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4">
       <SidebarTrigger className="md:hidden" />
+      <LogoMark title="" className="size-6 md:hidden" />
       {children && (
         <>
           <Separator orientation="vertical" className="h-4" />

@@ -2,11 +2,14 @@
 
 import { useTranslations } from "next-intl"
 import { ArrowLeftIcon } from "@eleva/icons"
+import { Logo } from "@eleva/ui/components/brand"
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarHeader,
 } from "@eleva/ui/components/sidebar"
+import { gatewayUrl } from "./gateway-url"
 import { OrgSwitcher } from "./org-switcher"
 import { NavMain } from "./nav-main"
 import type { NavGroup, OrgSwitcherItem } from "./nav-types"
@@ -45,6 +48,14 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain groups={navGroups} capabilities={capabilities} />
       </SidebarContent>
+      <SidebarFooter className="border-t border-sidebar-border p-4">
+        <a
+          href={gatewayUrl("/dashboard")}
+          className="w-fit rounded-sm text-sidebar-foreground/70 transition-colors hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none"
+        >
+          <Logo className="h-5 text-current" />
+        </a>
+      </SidebarFooter>
     </Sidebar>
   )
 }
