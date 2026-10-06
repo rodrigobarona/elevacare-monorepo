@@ -1158,7 +1158,9 @@ async function resolveOrgFromConnectAccount(
 async function handleAccountUpdated(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
-  const account = event.data.object as Stripe.Account
+  // Events can arrive out of order; persist the live account, not the payload.
+  const accountId = (event.data.object as Stripe.Account).id
+  const account = await stripe().accounts.retrieve(accountId)
   const resolved = await resolveOrgFromConnectAccount(account, account.id)
   if (!resolved) {
     return {

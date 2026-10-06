@@ -12,9 +12,63 @@ import {
   nextPayoutStatusAfterTransferReversed,
   paymentStatusAfterRefund,
   snapToNext0400Lisbon,
+  stripePayoutOutcomeTransition,
   transferBlockReason,
   isInFlightIdempotencyConflict,
 } from "./payout-math"
+
+describe("stripePayoutOutcomeTransition", () => {
+  it("moves a transferred payout to the bank outcome", () => {
+    expect(
+      stripePayoutOutcomeTransition({
+        status: "transferred",
+        heldFromStatus: null,
+        outcome: "paid_out",
+      })
+    ).toEqual({ status: "paid_out", heldFromStatus: null })
+    expect(
+      stripePayoutOutcomeTransition({
+        status: "transferred",
+        heldFromStatus: null,
+        outcome: "failed",
+      })
+    ).toEqual({ status: "failed", heldFromStatus: null })
+  })
+
+  it("keeps a post-transfer hold and records the outcome for release", () => {
+    const next = stripePayoutOutcomeTransition({
+      status: "held",
+      heldFromStatus: "transferred",
+      outcome: "paid_out",
+    })
+    expect(next).toEqual({ status: "held", heldFromStatus: "paid_out" })
+    expect(
+      clearHoldSet({
+        holdReasons: ["dispute"],
+        heldFromStatus: next!.heldFromStatus,
+        reason: "dispute",
+      }).status
+    ).toBe("paid_out")
+  })
+
+  it("ignores rows that never transferred or already settled", () => {
+    for (const [status, heldFromStatus] of [
+      ["pending", null],
+      ["scheduled", null],
+      ["held", "pending"],
+      ["paid_out", null],
+      ["reversed", null],
+    ] as const) {
+      expect(
+        stripePayoutOutcomeTransition({
+          status,
+          heldFromStatus,
+          outcome: "paid_out",
+        })
+      ).toBeNull()
+    }
+  })
+})
 
 describe("transferBlockReason", () => {
   const ok = {

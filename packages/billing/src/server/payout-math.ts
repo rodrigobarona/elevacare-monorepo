@@ -371,6 +371,25 @@ export function clearHoldSet(input: {
   }
 }
 
+/**
+ * Stripe `payout.paid` / `payout.failed` for a transferred payout. A row put
+ * on hold after its transfer keeps `status: "held"` and records the bank
+ * outcome in `heldFromStatus`, so releasing the hold restores it.
+ */
+export function stripePayoutOutcomeTransition(input: {
+  status: PayoutStatus
+  heldFromStatus: PayoutStatus | null
+  outcome: "paid_out" | "failed"
+}): { status: PayoutStatus; heldFromStatus: PayoutStatus | null } | null {
+  if (input.status === "transferred") {
+    return { status: input.outcome, heldFromStatus: input.heldFromStatus }
+  }
+  if (input.status === "held" && input.heldFromStatus === "transferred") {
+    return { status: "held", heldFromStatus: input.outcome }
+  }
+  return null
+}
+
 function isHoldReason(value: string): value is HoldReason {
   return value === "dispute" || value === "manual"
 }
