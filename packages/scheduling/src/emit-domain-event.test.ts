@@ -15,7 +15,7 @@ describe("booking notification events", () => {
     expect(BOOKING_NOTIFICATION_EVENT_TYPES).not.toContain("invoice.issued")
   })
 
-  it("inserts a send-notification delivery for booking.confirmed", async () => {
+  it("inserts send-notification and calendar-sync deliveries for booking.confirmed", async () => {
     const inserts: unknown[] = []
     const tx = {
       insert: () => ({
@@ -47,13 +47,18 @@ describe("booking notification events", () => {
           "booking:00000000-0000-4000-8000-000000000002:confirmed",
       })
     )
-    expect(inserts[1]).toEqual(
+    expect(inserts[1]).toEqual([
       expect.objectContaining({
         subscriberId: "send-notification",
         status: "pending",
         eventId: "evt-1",
-      })
-    )
+      }),
+      expect.objectContaining({
+        subscriberId: "calendar-sync",
+        status: "pending",
+        eventId: "evt-1",
+      }),
+    ])
   })
 
   it("stores scheduleRevision on a booking.rescheduled outbox row", async () => {

@@ -1,4 +1,5 @@
 import type { DomainEventSubscriber } from "../domain-events"
+import { handleCalendarSync } from "./calendar-sync"
 import { activateGuestBooking } from "./guest-activation"
 import { handleSendNotification } from "./send-notification"
 
@@ -37,8 +38,17 @@ export function defaultDomainEventSubscribers(): Record<
         throw err
       }
     },
+    "calendar-sync": async (event) => {
+      try {
+        await handleCalendarSync(event)
+      } catch (err) {
+        console.error("[calendar-sync] subscriber failed", event.id, err)
+        throw err
+      }
+    },
   }
 }
 
 export { activateGuestBooking } from "./guest-activation"
 export { handleSendNotification } from "./send-notification"
+export { handleCalendarSync } from "./calendar-sync"
