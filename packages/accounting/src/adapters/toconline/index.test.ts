@@ -19,6 +19,13 @@ vi.mock("@eleva/encryption", () => ({
   revokeOAuthToken: vi.fn(),
 }))
 
+vi.mock("./refresh-lock", () => ({
+  refreshToconlineSingleFlight: (input: {
+    refreshToken: string
+    refresh: (refreshToken: string) => Promise<unknown>
+  }) => input.refresh(input.refreshToken),
+}))
+
 const validIssueInput = {
   bookingId: "00000000-0000-4000-8000-000000000010",
   expertProfileId: "00000000-0000-4000-8000-000000000001",
@@ -317,6 +324,36 @@ describe("toconlineAdapter", () => {
     expect(headers.Authorization).toMatch(/^Basic /)
     expect(String(init.body)).toContain("grant_type=refresh_token")
     expect(encryptOAuthToken).toHaveBeenCalled()
+  })
+
+  it("surfaces only the OAuth error code when refresh fails", async () => {
+    vi.mocked(decryptOAuthToken).mockResolvedValue({
+      accessToken: "stale-at",
+      refreshToken: "rt",
+      expiresAt: new Date(Date.now() - 1000),
+    })
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: false,
+        status: 400,
+        json: async () => ({
+          error: "invalid_grant",
+          error_description: "refresh_token rt-secret-value revoked",
+        }),
+      })
+    )
+
+    await expect(
+      ensureToconlineAccessToken(
+        "vault-ref",
+        creds.metadata.orgId,
+        creds.metadata.userId
+      )
+    ).rejects.toMatchObject({
+      kind: "credentials",
+      message: "TOConline token refresh failed: 400 (invalid_grant)",
+    })
   })
 
   it("treats tokens inside the refresh skew as expired", () => {

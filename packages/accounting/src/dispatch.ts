@@ -259,6 +259,7 @@ export async function issueExpertServiceInvoice(
         input.orgId,
         snapshot.profile.userId
       )
+      vaultRef = loaded.vaultRef
       if (loaded.rotated || !metadata.document_series_id) {
         if (!metadata.document_series_id) {
           try {
@@ -280,7 +281,6 @@ export async function issueExpertServiceInvoice(
             )
           }
         }
-        vaultRef = loaded.vaultRef
         await persistExpertIntegrationCredentials({
           orgId: input.orgId,
           integrationId: snapshot.integration!.id,
