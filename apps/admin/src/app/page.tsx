@@ -13,7 +13,7 @@ export default async function AdminDashboardPage() {
         description={t("dashboard.subtitle")}
       />
       <p className="text-sm text-muted-foreground">
-        Signed in as {session?.user.email}
+        {t("dashboard.signedInAs", { email: session?.user.email ?? "" })}
       </p>
     </>
   )

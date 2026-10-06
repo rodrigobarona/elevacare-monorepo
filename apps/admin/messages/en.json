@@ -4,6 +4,7 @@
   },
   "dashboard": {
     "welcome": "Eleva operator console",
-    "subtitle": "Approvals, payouts, and audit."
+    "subtitle": "Approvals, payouts, and audit.",
+    "signedInAs": "Signed in as {email}"
   }
 }
