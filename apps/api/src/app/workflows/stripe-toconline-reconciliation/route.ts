@@ -1,6 +1,5 @@
-import { SaftMonthSchema } from "@eleva/api-client"
+import { ReconciliationWorkflowRequestSchema } from "@eleva/api-client"
 import { processStripeToconlineReconciliation } from "@eleva/workflows/invoicing"
-import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import {
   authorizeInternalWorkflow,
@@ -29,12 +28,6 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const BodySchema = z
-  .object({
-    month: SaftMonthSchema.optional(),
-  })
-  .strict()
-
 export async function POST(request: Request) {
   const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
@@ -51,7 +44,7 @@ export async function POST(request: Request) {
       )
     }
   }
-  const parsed = BodySchema.safeParse(json)
+  const parsed = ReconciliationWorkflowRequestSchema.safeParse(json)
   if (!parsed.success) {
     return secureJson(
       { error: "validation", issues: parsed.error.issues },

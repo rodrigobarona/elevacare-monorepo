@@ -1,4 +1,4 @@
-import { createDocument } from "zod-openapi"
+import { createDocument, type ZodOpenApiPathItemObject } from "zod-openapi"
 import { z } from "zod"
 import {
   BillingCheckoutRequestSchema,
@@ -95,6 +95,8 @@ import {
   IssuePlatformFeeInvoiceResponseSchema,
   ClosedGateInvoicePayloadSchema,
   EditorAssistRequestSchema,
+  DsarExportWorkflowRequestSchema,
+  ReconciliationWorkflowRequestSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -230,6 +232,110 @@ const stdWithPayoutMutation = {
     content: { "application/json": { schema: ErrorSchema } },
   },
 } as const
+
+const WorkflowResultSchema = z
+  .object({ ok: z.literal(true) })
+  .catchall(z.unknown())
+
+const WorkflowFailureSchema = z.union([
+  z
+    .object({
+      ok: z.literal(false),
+      error: z.string(),
+      message: z.string().optional(),
+    })
+    .catchall(z.unknown()),
+  ErrorSchema,
+])
+
+const ProbeReportSchema = z.object({
+  status: z.enum(["healthy", "degraded"]),
+  ranAt: z.string().datetime(),
+  durationMs: z.number().int(),
+  checks: z.unknown(),
+})
+
+function internalWorkflow(op: {
+  operationId: string
+  summary: string
+  description: string
+  requestSchema?: z.ZodType
+  requestRequired?: boolean
+}): ZodOpenApiPathItemObject {
+  return {
+    post: {
+      operationId: op.operationId,
+      summary: op.summary,
+      description: `${op.description} Auth: QStash signature or Bearer WORKFLOWS_DRAIN_SECRET.`,
+      tags: ["Workflows"],
+      ...(op.requestSchema
+        ? {
+            requestBody: {
+              required: op.requestRequired ?? false,
+              content: { "application/json": { schema: op.requestSchema } },
+            },
+          }
+        : {}),
+      responses: {
+        "200": {
+          description: "Run finished; counters vary per workflow",
+          content: { "application/json": { schema: WorkflowResultSchema } },
+        },
+        "401": {
+          description: "Unauthorized",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        ...(op.requestSchema
+          ? {
+              "422": {
+                description: "Validation error",
+                content: { "application/json": { schema: ErrorSchema } },
+              },
+            }
+          : {}),
+        "500": {
+          description:
+            "Run failed (safe to retry) or WORKFLOWS_DRAIN_SECRET missing",
+          content: { "application/json": { schema: WorkflowFailureSchema } },
+        },
+      },
+    },
+  }
+}
+
+function cronProbe(op: {
+  operationId: string
+  summary: string
+  description: string
+}): ZodOpenApiPathItemObject {
+  return {
+    get: {
+      operationId: op.operationId,
+      summary: op.summary,
+      description: `${op.description} Auth: Bearer CRON_SECRET (Vercel Cron).`,
+      tags: ["System"],
+      security: [{ bearerAuth: [] }],
+      responses: {
+        "200": {
+          description: "All checks healthy",
+          content: { "application/json": { schema: ProbeReportSchema } },
+        },
+        "401": {
+          description: "Unauthorized",
+          content: { "application/json": { schema: ErrorSchema } },
+        },
+        "500": {
+          description: "Degraded checks (same body) or CRON_SECRET missing",
+          content: {
+            "application/json": {
+              schema: z.union([ProbeReportSchema, ErrorSchema]),
+            },
+          },
+        },
+      },
+    },
+  }
+}
 
 export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
   return createDocument({
@@ -3611,6 +3717,204 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/accounting/callback": {
+        get: {
+          operationId: "accountingOAuthCallback",
+          summary: "Invoicing provider OAuth callback",
+          description:
+            "Browser redirect target after the expert authorizes TOConline. Verifies the signed state nonce bound to the session, exchanges the code, stores the encrypted credential, then 302-redirects to expert setup or onboarding with a status query. Requires the session cookie.",
+          tags: ["Accounting"],
+          security: [{ cookieAuth: [] }],
+          requestParams: {
+            query: z.object({
+              code: z.string().optional(),
+              state: z.string().optional(),
+              error: z.string().optional(),
+            }),
+          },
+          responses: {
+            "302": {
+              description:
+                "Redirect to setup/onboarding (success or error query), or to login without a session",
+            },
+            "429": {
+              description: "Rate limit exceeded",
+              content: { "application/json": { schema: RateLimitErrorSchema } },
+            },
+          },
+        },
+      },
+      "/accounting/status": {
+        get: {
+          operationId: "getAccountingStatus",
+          summary: "Expert invoicing connection status",
+          description:
+            "Returns the expert's invoicing provider and setup status, and a live adapter probe when connected to a non-manual provider.",
+          tags: ["Accounting"],
+          responses: {
+            "200": {
+              description: "Current status",
+              content: {
+                "application/json": {
+                  schema: z.object({
+                    provider: z.string().nullable(),
+                    setupStatus: z.string(),
+                    adapterStatus: z
+                      .object({ status: z.string() })
+                      .catchall(z.unknown())
+                      .nullable(),
+                  }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/blob/upload": {
+        post: {
+          operationId: "handleBlobUpload",
+          summary: "Vercel Blob client-upload handshake",
+          description:
+            "Implements the @vercel/blob client-upload protocol (token generation and upload-completed callback). Auth is a short-lived upload token in Authorization: Bearer, minted for the signed-in user; the pathname must match an allowed upload policy.",
+          tags: ["Users"],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({
+                  type: z.enum([
+                    "blob.generate-client-token",
+                    "blob.upload-completed",
+                  ]),
+                  payload: z.record(z.string(), z.unknown()),
+                }),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Client token or completion acknowledgement",
+              content: {
+                "application/json": {
+                  schema: z.record(z.string(), z.unknown()),
+                },
+              },
+            },
+            "400": {
+              description: "Upload rejected (bad token, pathname or payload)",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "429": {
+              description: "Rate limit exceeded",
+              content: { "application/json": { schema: RateLimitErrorSchema } },
+            },
+          },
+        },
+      },
+      "/privacy/dsar/{id}/file": {
+        get: {
+          operationId: "downloadDsarExport",
+          summary: "Download a ready data export",
+          description:
+            "Streams the member's private DSAR zip. Requires the owner's session and a signed, unexpired link (exp + sig). Any mismatch returns 404.",
+          tags: ["Privacy"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+            query: z.object({ exp: z.string(), sig: z.string() }),
+          },
+          responses: {
+            "200": {
+              description: "Zip attachment",
+              content: {
+                "application/zip": {
+                  schema: z.string().meta({ format: "binary" }),
+                },
+              },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/cron/keep-alive": cronProbe({
+        operationId: "cronKeepAlive",
+        summary: "Database keep-alive probe",
+        description:
+          "Pings the main and audit databases and sends a heartbeat when both answer.",
+      }),
+      "/cron/booking-probes": cronProbe({
+        operationId: "cronBookingProbes",
+        summary: "Booking funnel synthetic probes",
+        description:
+          "Runs read-only probes against the public booking funnel and reports failures.",
+      }),
+      "/workflows/account-deletion-sweep": internalWorkflow({
+        operationId: "sweepAccountDeletions",
+        summary: "Complete due account deletions",
+        description:
+          "Finishes deletions past their grace period, cancelling open PaymentIntents first.",
+      }),
+      "/workflows/audit-outbox-drainer": internalWorkflow({
+        operationId: "drainAuditOutbox",
+        summary: "Ship audit outbox rows",
+        description:
+          "Moves audit_outbox rows to the append-only audit_events store.",
+      }),
+      "/workflows/check-upcoming-payouts": internalWorkflow({
+        operationId: "checkUpcomingPayouts",
+        summary: "Count payouts due in 48 hours",
+        description: "Reports payouts scheduled within the next 48 hours.",
+      }),
+      "/workflows/domain-events-publisher": internalWorkflow({
+        operationId: "publishDomainEvents",
+        summary: "Publish pending domain events",
+        description:
+          "Delivers pending domain events to the default subscribers (guest activation, notifications).",
+      }),
+      "/workflows/dsar-export": internalWorkflow({
+        operationId: "processDsarExport",
+        summary: "Build a member data export",
+        description:
+          "Builds the DSAR zip into private storage. Returns 500 with dsar_export_in_progress while another run holds the job.",
+        requestSchema: DsarExportWorkflowRequestSchema,
+        requestRequired: true,
+      }),
+      "/workflows/invoicing-retry": internalWorkflow({
+        operationId: "retryFailedInvoices",
+        summary: "Retry failed expert invoices",
+        description:
+          "Re-dispatches failed expert invoices. The issuance gate stays closed, so retries record skipped/blocked and never post commercial documents.",
+      }),
+      "/workflows/process-expert-transfers": internalWorkflow({
+        operationId: "processExpertTransfers",
+        summary: "Run due expert transfers",
+        description:
+          "Processes pending cancellation refunds, retries failed transfer reversals, then transfers due payouts.",
+      }),
+      "/workflows/process-pending-payouts": internalWorkflow({
+        operationId: "processPendingPayouts",
+        summary: "Promote eligible pending payouts",
+        description: "Promotes pending payouts whose eligibleAt has passed.",
+      }),
+      "/workflows/slot-reservation-expiry": internalWorkflow({
+        operationId: "expireSlotReservations",
+        summary: "Expire lapsed slot holds",
+        description:
+          "Expires lapsed holds, cancelling still-cancelable PaymentIntents first and keeping holds whose payment can still settle.",
+      }),
+      "/workflows/stripe-stuck-events": internalWorkflow({
+        operationId: "detectStuckStripeEvents",
+        summary: "Detect stuck Stripe webhook events",
+        description:
+          "Reports stripe_webhook_events rows stuck in received or processing past their threshold.",
+      }),
+      "/workflows/stripe-toconline-reconciliation": internalWorkflow({
+        operationId: "reconcileStripeToconline",
+        summary: "Monthly Stripe vs invoices reconciliation",
+        description:
+          "Compares Stripe booking payments with expert invoices for a Lisbon month (default: previous month). Never posts to TOConline.",
+        requestSchema: ReconciliationWorkflowRequestSchema,
+      }),
       "/health": {
         get: {
           operationId: "healthCheck",

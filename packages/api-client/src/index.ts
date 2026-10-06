@@ -1663,6 +1663,18 @@ export const BookingReminderRequestSchema = z.object({
   startsAt: z.string().datetime(),
 })
 
+export const DsarExportWorkflowRequestSchema = z.object({
+  dsarId: z.string().uuid(),
+  userId: z.string().uuid(),
+  orgId: z.string().uuid(),
+})
+
+export const ReconciliationWorkflowRequestSchema = z
+  .object({
+    month: SaftMonthSchema.optional(),
+  })
+  .strict()
+
 export const BookingReminderResponseSchema = z.discriminatedUnion("status", [
   z.object({
     ok: z.literal(true),
