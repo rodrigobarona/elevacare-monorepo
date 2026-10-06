@@ -2,6 +2,7 @@ import { Suspense } from "react"
 import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
 import { SESSION_COOKIE_NAMES } from "@eleva/auth/credentials"
+import { Logo } from "@eleva/ui/components/brand"
 import { Link } from "@/i18n/navigation"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
@@ -31,8 +32,8 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
   return (
     <header className="border-b px-6 py-4">
       <nav className="mx-auto flex max-w-6xl items-center justify-between">
-        <Link href="/" className="text-lg font-semibold tracking-tight">
-          eleva<span className="text-primary">.care</span>
+        <Link href="/" className="rounded-sm">
+          <Logo className="h-6" />
         </Link>
         <div className="flex items-center gap-4">
           {nav.map((item) => (

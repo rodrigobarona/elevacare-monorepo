@@ -4,7 +4,9 @@ import { notFound } from "next/navigation"
 import type { Metadata } from "next"
 import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
 import { isReserved } from "@eleva/config/reserved-usernames"
+import { VerifiedBadge } from "@eleva/ui/components/brand"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { ExpertAvatar } from "@/components/expert-avatar"
 import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
@@ -55,7 +57,10 @@ export default async function ExpertProfilePage({ params }: Props) {
     notFound()
   }
 
-  const t = await getTranslations("profile")
+  const [t, tExperts] = await Promise.all([
+    getTranslations("profile"),
+    getTranslations("experts"),
+  ])
 
   let expert
   try {
@@ -85,25 +90,23 @@ export default async function ExpertProfilePage({ params }: Props) {
       />
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <div className="flex gap-5">
-          <div className="flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-2xl font-semibold">
-            {expert.avatarUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={expert.avatarUrl}
-                alt=""
-                className="size-full object-cover"
-              />
-            ) : (
-              expert.displayName.slice(0, 1)
-            )}
-          </div>
+          <ExpertAvatar
+            displayName={expert.displayName}
+            username={expert.username}
+            avatarUrl={expert.avatarUrl}
+            isPriority
+            className="size-20 text-2xl"
+          />
           <div>
-            <h1
-              data-testid="expert-profile-heading"
-              className="text-3xl font-bold tracking-tight"
-            >
-              {expert.displayName}
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1
+                data-testid="expert-profile-heading"
+                className="font-heading text-3xl tracking-tight"
+              >
+                {expert.displayName}
+              </h1>
+              <VerifiedBadge title={tExperts("verified")} className="size-6" />
+            </div>
             {expert.headline ? (
               <p className="mt-2 text-muted-foreground">{expert.headline}</p>
             ) : null}
@@ -124,7 +127,7 @@ export default async function ExpertProfilePage({ params }: Props) {
         ) : null}
 
         <section className="mt-10">
-          <h2 className="text-xl font-semibold">{t("upcoming")}</h2>
+          <h2 className="font-heading text-xl">{t("upcoming")}</h2>
           {firstEvent && firstMode ? (
             <Suspense
               fallback={
@@ -145,7 +148,7 @@ export default async function ExpertProfilePage({ params }: Props) {
         </section>
 
         <section className="mt-10">
-          <h2 className="text-xl font-semibold">{t("offers")}</h2>
+          <h2 className="font-heading text-xl">{t("offers")}</h2>
           <ul className="mt-4 space-y-3">
             {expert.eventTypes.map((eventType) => {
               const prices = eventType.modes.map((mode) => mode.priceCents)

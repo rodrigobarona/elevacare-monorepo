@@ -100,7 +100,8 @@
       "relevance": "Relevancia",
       "price": "Precio",
       "rating": "Valoración"
-    }
+    },
+    "verified": "Perfil verificado"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -401,5 +402,14 @@
         "body": "Esta página describirá la posición de Eleva ante ERS Portugal solo después de que la Fase 13 adjunte evidencia. No afirma licencia, registro ni revisión concluida."
       }
     }
+  },
+  "notFound": {
+    "title": "No encontramos esta página",
+    "description": "Es posible que el enlace esté desactualizado o que el perfil ya no esté disponible. Explora especialistas verificados o vuelve a la página de inicio.",
+    "findExpert": "Encontrar especialista",
+    "home": "Ir al inicio"
+  },
+  "states": {
+    "loading": "Cargando…"
   }
 }

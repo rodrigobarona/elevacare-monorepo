@@ -100,7 +100,8 @@
       "relevance": "Relevance",
       "price": "Price",
       "rating": "Rating"
-    }
+    },
+    "verified": "Verified profile"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -401,5 +402,14 @@
         "body": "This page will describe Eleva's position with ERS Portugal only after Phase 13 evidence is attached. It does not claim a licence, registration, or completed review."
       }
     }
+  },
+  "notFound": {
+    "title": "We could not find that page",
+    "description": "The link may be old or the profile may no longer be listed. Browse verified experts or go back to the home page.",
+    "findExpert": "Find an expert",
+    "home": "Go to home"
+  },
+  "states": {
+    "loading": "Loading…"
   }
 }
