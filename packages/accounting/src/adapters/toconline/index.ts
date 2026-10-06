@@ -18,6 +18,13 @@ import type {
 } from "../../types"
 import { assertV1SalesDocumentPostAllowed } from "./issuance-gate"
 import { resolveDocumentSeriesId } from "./lookups"
+import {
+  refreshToconlineSingleFlight,
+  type LoadedToconlineToken,
+  type StoredToconlineToken,
+} from "./refresh-lock"
+
+export type { LoadedToconlineToken } from "./refresh-lock"
 
 /**
  * TOConline Tier 2 adapter — expert-side issuance.
@@ -113,10 +120,9 @@ async function connect(input: ConnectInput): Promise<ConnectResult> {
   )
 
   if (!tokenRes.ok) {
-    const body = await safeBody(tokenRes)
     throw new AdapterError(
       "credentials",
-      `TOConline token exchange failed: ${tokenRes.status} ${body}`
+      `TOConline token exchange failed: ${tokenRes.status}${await oauthErrorSuffix(tokenRes)}`
     )
   }
 
@@ -286,13 +292,6 @@ function credsUserId(metadata?: Record<string, unknown>): string {
 
 const TOKEN_REFRESH_SKEW_MS = 60_000
 
-export interface LoadedToconlineToken {
-  accessToken: string
-  vaultRef: string
-  expiresAt: Date | null
-  rotated: boolean
-}
-
 export function needsToconlineTokenRefresh(
   expiresAt: Date | null,
   now = Date.now()
@@ -307,34 +306,15 @@ export async function ensureToconlineAccessToken(
   userId: string
 ): Promise<LoadedToconlineToken> {
   try {
-    const decrypted = await decryptOAuthToken(orgId, ciphertext, {
-      provider: "toconline",
-      userId,
-    })
-    if (!decrypted.accessToken) {
-      throw new AdapterError(
-        "credentials",
-        "TOConline credentials missing access_token"
-      )
-    }
-    if (!needsToconlineTokenRefresh(decrypted.expiresAt)) {
-      return {
-        accessToken: decrypted.accessToken,
-        vaultRef: ciphertext,
-        expiresAt: decrypted.expiresAt,
-        rotated: false,
-      }
-    }
-    if (!decrypted.refreshToken) {
-      throw new AdapterError(
-        "credentials",
-        "TOConline credentials expired and have no refresh_token"
-      )
-    }
-    return refreshToconlineAccessToken({
-      refreshToken: decrypted.refreshToken,
+    const stored = await resolveStoredToken(ciphertext, orgId, userId)
+    if ("fresh" in stored) return stored.fresh
+    return await refreshToconlineSingleFlight({
       orgId,
-      userId,
+      staleVaultRef: ciphertext,
+      refreshToken: stored.refreshToken,
+      resolveStored: (vaultRef) => resolveStoredToken(vaultRef, orgId, userId),
+      refresh: (refreshToken) =>
+        refreshToconlineAccessToken({ refreshToken, orgId, userId }),
     })
   } catch (err) {
     if (err instanceof AdapterError) throw err
@@ -345,6 +325,40 @@ export async function ensureToconlineAccessToken(
       }`
     )
   }
+}
+
+async function resolveStoredToken(
+  ciphertext: string,
+  orgId: string,
+  userId: string
+): Promise<StoredToconlineToken> {
+  const decrypted = await decryptOAuthToken(orgId, ciphertext, {
+    provider: "toconline",
+    userId,
+  })
+  if (!decrypted.accessToken) {
+    throw new AdapterError(
+      "credentials",
+      "TOConline credentials missing access_token"
+    )
+  }
+  if (!needsToconlineTokenRefresh(decrypted.expiresAt)) {
+    return {
+      fresh: {
+        accessToken: decrypted.accessToken,
+        vaultRef: ciphertext,
+        expiresAt: decrypted.expiresAt,
+        rotated: false,
+      },
+    }
+  }
+  if (!decrypted.refreshToken) {
+    throw new AdapterError(
+      "credentials",
+      "TOConline credentials expired and have no refresh_token"
+    )
+  }
+  return { refreshToken: decrypted.refreshToken }
 }
 
 async function refreshToconlineAccessToken(input: {
@@ -373,10 +387,9 @@ async function refreshToconlineAccessToken(input: {
     }
   )
   if (!tokenRes.ok) {
-    const body = await safeBody(tokenRes)
     throw new AdapterError(
       "credentials",
-      `TOConline token refresh failed: ${tokenRes.status} ${body}`
+      `TOConline token refresh failed: ${tokenRes.status}${await oauthErrorSuffix(tokenRes)}`
     )
   }
   const json = (await tokenRes.json()) as {
@@ -416,11 +429,21 @@ function stringOrThrow(value: unknown, msg: string): string {
   return value
 }
 
-async function safeBody(res: Response): Promise<string> {
+const OAUTH_ERROR_CODE_RE = /^[a-z0-9_.-]{1,64}$/i
+
+/**
+ * Token-endpoint bodies can echo grant material, so only the RFC 6749
+ * `error` code is surfaced in messages that reach logs and invoice rows.
+ */
+async function oauthErrorSuffix(res: Response): Promise<string> {
   try {
-    return (await res.text()).slice(0, 500)
+    const body = (await res.json()) as { error?: unknown }
+    return typeof body.error === "string" &&
+      OAUTH_ERROR_CODE_RE.test(body.error)
+      ? ` (${body.error})`
+      : ""
   } catch {
-    return "<unreadable body>"
+    return ""
   }
 }
 
