@@ -71,5 +71,15 @@
         "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
       }
     }
+  },
+  "routeStates": {
+    "loading": "A carregar…",
+    "errorTitle": "Algo correu mal",
+    "errorDescription": "Não foi possível carregar esta página. Os seus dados estão seguros — tente novamente ou volte daqui a um minuto.",
+    "errorReference": "Referência: {digest}",
+    "retry": "Tentar novamente",
+    "notFoundTitle": "Página não encontrada",
+    "notFoundDescription": "Esta página não existe ou já não tem acesso a ela.",
+    "goToDashboard": "Ir para o painel"
   }
 }
