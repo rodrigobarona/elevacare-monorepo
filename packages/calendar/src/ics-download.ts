@@ -1,5 +1,6 @@
 import { generateIcsRequest } from "./ics-generator"
 
+/** Browser-only: triggers a file download through a temporary anchor. */
 export function downloadBookingIcs(input: {
   uid: string
   summary: string
@@ -12,6 +13,9 @@ export function downloadBookingIcs(input: {
   memberName: string
   memberEmail: string
 }): void {
+  if (typeof document === "undefined") {
+    throw new Error("downloadBookingIcs: browser-only (no document)")
+  }
   const startTime = new Date(input.start)
   const endTime = new Date(input.end)
   if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
