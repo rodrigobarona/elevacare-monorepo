@@ -41,7 +41,9 @@ Each entry should include:
   (`booking.reminder_1h`, `payment.failed`) bypass quiet hours. Windows may
   wrap midnight; an equal start and end means no window.
 - Pulled forward from Phase 13 at the founder's request (production pass,
-  2026-10).
+  2026-10). Implements AUD-004 in
+  `audits/2026-09-phases-01-08-audit.md` and the quiet-hours rule in
+  `notifications-spec.md` (preferences section).
 - Out of scope (follow-up): deferring the skipped SMS to the end of the
   window. Today it is skipped, not queued; the email and in-app copies are
   the record. Push does not exist yet.

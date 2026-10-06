@@ -6,15 +6,20 @@ export type QuietHours = {
 
 const TIME = /^([01]\d|2[0-3]):([0-5]\d)(?::[0-5]\d)?$/
 
-/** Quiet hours are stored on every preference row; the first complete one wins. */
+/**
+ * Quiet hours are stored on every preference row. A complete SMS row wins
+ * because quiet hours only gate SMS; otherwise the first complete row.
+ */
 export function quietHoursFrom(
   rows: ReadonlyArray<{
+    channel?: string
     quietHoursStart?: string | null
     quietHoursEnd?: string | null
     timezone?: string | null
   }>
 ): QuietHours | null {
-  const row = rows.find((r) => r.quietHoursStart && r.quietHoursEnd)
+  const complete = rows.filter((r) => r.quietHoursStart && r.quietHoursEnd)
+  const row = complete.find((r) => r.channel === "sms") ?? complete[0]
   if (!row?.quietHoursStart || !row.quietHoursEnd) return null
   return {
     start: row.quietHoursStart,
@@ -60,5 +65,5 @@ function minutesInZone(now: Date, timeZone: string): number {
   }).formatToParts(now)
   const hour = Number(parts.find((p) => p.type === "hour")?.value ?? 0)
   const minute = Number(parts.find((p) => p.type === "minute")?.value ?? 0)
-  return hour * 60 + minute
+  return (hour % 24) * 60 + minute
 }

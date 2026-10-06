@@ -181,7 +181,7 @@ Out: push (Expo) — post-launch; Novu (retired).
       "new booking"; in-app rows created for both.
 - [ ] Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash `notBefore`
       or a shortened test schedule); cancelled booking -> reminders skipped.
-- [x] Quiet hours: non-urgent kinds skip SMS inside the member's window (member TZ);
+- [ ] Quiet hours: non-urgent kinds skip SMS inside the member's window (member TZ);
       email and in-app still deliver; urgent kinds (`booking.reminder_1h`,
       `payment.failed`) bypass. Unit-tested only (AUD-004, decision-log 2026-10-06).
       Deferring the skipped SMS to the end of the window is still a follow-up.

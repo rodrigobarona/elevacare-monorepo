@@ -94,4 +94,23 @@ describe("quietHoursSilence", () => {
       })
     ).toBe(false)
   })
+
+  it("prefers the SMS row when rows disagree", () => {
+    expect(
+      quietHoursFrom([
+        {
+          channel: "email",
+          quietHoursStart: "20:00",
+          quietHoursEnd: "06:00",
+          timezone: "UTC",
+        },
+        {
+          channel: "sms",
+          quietHoursStart: "22:00",
+          quietHoursEnd: "07:00",
+          timezone: "Europe/Lisbon",
+        },
+      ])
+    ).toEqual({ start: "22:00", end: "07:00", timezone: "Europe/Lisbon" })
+  })
 })
