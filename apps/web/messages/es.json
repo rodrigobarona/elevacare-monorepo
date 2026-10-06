@@ -427,8 +427,5 @@
     "description": "Es posible que el enlace esté desactualizado o que el perfil ya no esté disponible. Explora especialistas verificados o vuelve a la página de inicio.",
     "findExpert": "Encontrar especialista",
     "home": "Ir al inicio"
-  },
-  "states": {
-    "loading": "Cargando…"
   }
 }
