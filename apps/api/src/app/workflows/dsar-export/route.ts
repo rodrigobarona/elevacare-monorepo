@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { DsarExportWorkflowRequestSchema } from "@eleva/api-client"
 import { processDsarExport } from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
 import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
@@ -14,19 +14,15 @@ export const ROUTE_POLICY = {
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
-const BodySchema = z.object({
-  dsarId: z.string().uuid(),
-  userId: z.string().uuid(),
-  orgId: z.string().uuid(),
-})
-
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
   const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
 
-  const parsed = BodySchema.safeParse(await request.json().catch(() => ({})))
+  const parsed = DsarExportWorkflowRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
   if (!parsed.success) {
     return secureJson(
       { error: "validation", issues: parsed.error.issues },
