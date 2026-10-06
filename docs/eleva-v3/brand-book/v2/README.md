@@ -1,7 +1,7 @@
 # Eleva brand v2: evolution board
 
-**Status: proposal, awaiting founder approval.** Nothing in this folder is applied to
-`@eleva/ui` yet. After approval, the kit PR maps these tokens into
+**Status: approved by the founder on 2026-10-06, as proposed** (all three decisions at the
+end of this page accepted with the recommended option). The kit PR maps these tokens into
 `packages/ui/src/styles/globals.css` (WP2b of the phases 01–08 production pass).
 
 This is an **evolution**, not a rebrand. The logo, wordmark, name, teal `#006D77` and
