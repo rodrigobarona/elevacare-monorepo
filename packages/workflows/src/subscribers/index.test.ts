@@ -8,6 +8,10 @@ vi.mock("./send-notification", () => ({
   handleSendNotification: vi.fn(),
 }))
 
+vi.mock("./calendar-sync", () => ({
+  handleCalendarSync: vi.fn(),
+}))
+
 import { defaultDomainEventSubscribers } from "./index"
 import { handleSendNotification } from "./send-notification"
 
@@ -17,6 +21,7 @@ describe("defaultDomainEventSubscribers", () => {
     expect(Object.keys(subscribers)).toEqual([
       "guest-activation",
       "send-notification",
+      "calendar-sync",
     ])
 
     await subscribers["send-notification"]?.({
