@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-06: Staff refunds above the dual-control threshold fail closed (AUD-022)
+
+- Decision: a human staff refund acting for the platform above
+  `ADMIN_DUAL_CONTROL_REFUND_CENTS` (200 EUR) returns `409 DUAL_CONTROL_REQUIRED`.
+  The second-approver flow (`admin_action_requests`) is Phase 12, so until it ships
+  there is no way to approve these refunds in-product. The automated cancellation
+  refund sweep (no actor) and expert refunds in their own org are not gated.
+- Members now see their expert invoice status (and number once issued) on the session
+  detail. `issueInvoice()` stays closed, so rows read "Being prepared" until issuance
+  opens.
+- The AUD-022 "team app has no notifications page" item was stale: `/[orgSlug]/admin/notifications`
+  shipped in #89. The Moloni adapter stays a disabled stub (backlog).
+- Owner: engineering. Status: `active`. Revisit when Phase 12 dual control lands.
+
 ### 2026-10-06: Quiet hours silence non-urgent SMS (AUD-004)
 
 - Decision: `sendNotification` reads the member's stored quiet hours and
