@@ -44,11 +44,18 @@ describe.skipIf(!enabled || !databaseUrl)("rls notifications inbox", () => {
     { timeout: 30_000 },
     async () => {
       const rowA = randomUUID()
-      // RETURNING would need the owner-only SELECT policy, as in production.
+      // User-scoped kind (org_id null). RETURNING would need the owner-only
+      // SELECT policy, so insert like production does.
       await withPlatformAdminContext(async (tx) =>
         tx.insert(notifications).values([
-          { id: rowA, userId: userA, kind: "test", title: "A", body: "a" },
-          { userId: userB, kind: "test", title: "B", body: "b" },
+          {
+            id: rowA,
+            userId: userA,
+            kind: "auth.verify_email",
+            title: "A",
+            body: "a",
+          },
+          { userId: userB, kind: "auth.verify_email", title: "B", body: "b" },
         ])
       )
 
@@ -80,9 +87,12 @@ describe.skipIf(!enabled || !databaseUrl)("rls notifications inbox", () => {
 
       await expect(
         withUserContext(userA, async (tx) =>
-          tx
-            .insert(notifications)
-            .values({ userId: userA, kind: "test", title: "x", body: "x" })
+          tx.insert(notifications).values({
+            userId: userA,
+            kind: "auth.verify_email",
+            title: "x",
+            body: "x",
+          })
         )
       ).rejects.toThrow()
     }
