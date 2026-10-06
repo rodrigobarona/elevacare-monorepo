@@ -24,6 +24,7 @@ import {
   isInFlightIdempotencyConflict,
   needsPayoutApproval,
   payoutApprovalThresholdCents,
+  stripePayoutOutcomeTransition,
   transferBlockReason,
   type HoldReason,
   type PayoutStatus,
@@ -720,30 +721,22 @@ export async function markPayoutPaidOut(input: {
   const rows = await payoutStatesForStripePayout(input)
   const ids: string[] = []
   for (const row of rows) {
-    if (
-      row.status === "paid_out" &&
-      row.stripePayoutId === input.stripePayoutId
-    ) {
+    if (row.stripePayoutId === input.stripePayoutId) {
       ids.push(row.id)
       continue
     }
-    if (row.status !== "transferred") continue
-    await withAudit(
-      { orgId: row.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        await tx
-          .update(main.payoutStates)
-          .set({
-            status: "paid_out",
-            stripePayoutId: input.stripePayoutId,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(main.payoutStates.id, row.id),
-              eq(main.payoutStates.orgId, row.orgId)
-            )
-          )
+    const next = stripePayoutOutcomeTransition({
+      status: row.status,
+      heldFromStatus: row.heldFromStatus,
+      outcome: "paid_out",
+    })
+    if (!next) continue
+    const applied = await skipIfPayoutRaced(() =>
+      withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
+        await updatePayoutIfUnchanged(tx, row, {
+          ...next,
+          stripePayoutId: input.stripePayoutId,
+        })
         await ctx.emit({
           entity: "payout",
           action: "paid_out",
@@ -751,6 +744,7 @@ export async function markPayoutPaidOut(input: {
           payload: {
             stripePayoutId: input.stripePayoutId,
             amountCents: input.amountCents,
+            held: next.status === "held",
           },
         })
         await emitPaymentPayoutNotificationEvent(tx, {
@@ -760,11 +754,46 @@ export async function markPayoutPaidOut(input: {
           amountCents: row.amountCents,
           currency: "EUR",
         })
-      }
+      })
     )
-    ids.push(row.id)
+    if (applied) ids.push(row.id)
   }
   return ids
+}
+
+class PayoutRacedError extends Error {}
+
+async function skipIfPayoutRaced(run: () => Promise<void>): Promise<boolean> {
+  try {
+    await run()
+    return true
+  } catch (err) {
+    if (err instanceof PayoutRacedError) return false
+    throw err
+  }
+}
+
+/** Compare-and-set on status so a concurrent hold or reversal is not overwritten. */
+async function updatePayoutIfUnchanged(
+  tx: Tx,
+  row: PayoutRow,
+  set: Partial<typeof main.payoutStates.$inferInsert>
+): Promise<void> {
+  const updated = await tx
+    .update(main.payoutStates)
+    .set({ ...set, updatedAt: new Date() })
+    .where(
+      and(
+        eq(main.payoutStates.id, row.id),
+        eq(main.payoutStates.orgId, row.orgId),
+        eq(main.payoutStates.status, row.status),
+        row.heldFromStatus === null
+          ? isNull(main.payoutStates.heldFromStatus)
+          : eq(main.payoutStates.heldFromStatus, row.heldFromStatus)
+      )
+    )
+    .returning({ id: main.payoutStates.id })
+  if (updated.length === 0) throw new PayoutRacedError()
 }
 
 export async function markPayoutFailedFromStripe(input: {
@@ -775,33 +804,31 @@ export async function markPayoutFailedFromStripe(input: {
   const rows = await payoutStatesForStripePayout(input)
   const ids: string[] = []
   for (const row of rows) {
-    if (row.status !== "transferred") continue
-    await withAudit(
-      { orgId: row.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        await tx
-          .update(main.payoutStates)
-          .set({
-            status: "failed",
-            stripePayoutId: input.stripePayoutId,
-            lastError: input.lastError.slice(0, 2000),
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(main.payoutStates.id, row.id),
-              eq(main.payoutStates.orgId, row.orgId)
-            )
-          )
+    const next = stripePayoutOutcomeTransition({
+      status: row.status,
+      heldFromStatus: row.heldFromStatus,
+      outcome: "failed",
+    })
+    if (!next) continue
+    const applied = await skipIfPayoutRaced(() =>
+      withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
+        await updatePayoutIfUnchanged(tx, row, {
+          ...next,
+          stripePayoutId: input.stripePayoutId,
+          lastError: input.lastError.slice(0, 2000),
+        })
         await ctx.emit({
           entity: "payout",
           action: "failed",
           entityId: row.id,
-          payload: { stripePayoutId: input.stripePayoutId },
+          payload: {
+            stripePayoutId: input.stripePayoutId,
+            held: next.status === "held",
+          },
         })
-      }
+      })
     )
-    ids.push(row.id)
+    if (applied) ids.push(row.id)
   }
   return ids
 }
