@@ -62,6 +62,7 @@ export async function GET(request: Request) {
         refundedCents: payment.refundedCents,
         receiptUrl: payment.receiptUrl,
         stripeChargeId: payment.stripeChargeId,
+        invoice: payment.invoice,
       })),
       nextCursor: result.nextCursor,
     },

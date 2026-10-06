@@ -424,6 +424,20 @@ export const ListMeBookingsResponseSchema = z.object({
   nextCursor: z.string().nullable(),
 })
 
+export const ExpertInvoiceStatusSchema = z.enum([
+  "pending",
+  "issued",
+  "failed",
+  "manual_pending",
+  "manual_issued",
+])
+export type ExpertInvoiceStatus = z.infer<typeof ExpertInvoiceStatusSchema>
+
+export const MemberInvoiceSchema = z.object({
+  status: ExpertInvoiceStatusSchema,
+  number: z.string().nullable(),
+})
+
 export const MemberPaymentSchema = z.object({
   id: z.string().uuid(),
   orgId: z.string().uuid(),
@@ -435,6 +449,7 @@ export const MemberPaymentSchema = z.object({
   refundedCents: z.number().int().nonnegative(),
   receiptUrl: z.string().url().nullable(),
   stripeChargeId: z.string().nullable(),
+  invoice: MemberInvoiceSchema.nullable(),
 })
 
 export const ListMePaymentsQuerySchema = z.object({
@@ -610,15 +625,6 @@ export const ConnectAccountingResponseSchema = z.object({
 export type ConnectAccountingResponse = z.infer<
   typeof ConnectAccountingResponseSchema
 >
-
-export const ExpertInvoiceStatusSchema = z.enum([
-  "pending",
-  "issued",
-  "failed",
-  "manual_pending",
-  "manual_issued",
-])
-export type ExpertInvoiceStatus = z.infer<typeof ExpertInvoiceStatusSchema>
 
 export const ExpertInvoiceAdapterSchema = z.enum([
   "toconline",

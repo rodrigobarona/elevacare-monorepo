@@ -77,6 +77,10 @@ export type MemberPaymentListItem = {
   receiptUrl: string | null
   stripeChargeId: string | null
   stripePaymentIntentId: string | null
+  invoice: {
+    status: (typeof main.expertInvoiceStatusEnum.enumValues)[number]
+    number: string | null
+  } | null
 }
 
 export type MemberListResult<T> = {
@@ -498,11 +502,20 @@ export async function listMemberPayments(input: {
         stripeChargeId: main.bookingPayments.stripeChargeId,
         stripePaymentIntentId: main.bookingPayments.stripePaymentIntentId,
         createdAt: main.bookingPayments.createdAt,
+        invoiceStatus: main.expertInvoices.status,
+        invoiceNumber: main.expertInvoices.number,
       })
       .from(main.bookingPayments)
       .innerJoin(
         main.bookings,
         eq(main.bookings.id, main.bookingPayments.bookingId)
+      )
+      .leftJoin(
+        main.expertInvoices,
+        and(
+          eq(main.expertInvoices.bookingId, main.bookings.id),
+          eq(main.expertInvoices.expertOrgId, main.bookings.orgId)
+        )
       )
       .where(and(...conditions))
       .orderBy(
@@ -526,6 +539,9 @@ export async function listMemberPayments(input: {
         receiptUrl: row.receiptUrl,
         stripeChargeId: row.stripeChargeId,
         stripePaymentIntentId: row.stripePaymentIntentId,
+        invoice: row.invoiceStatus
+          ? { status: row.invoiceStatus, number: row.invoiceNumber }
+          : null,
       })),
       nextCursor:
         rows.length > limit && last

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
-import { ApiClientError } from "@eleva/api-client"
+import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
 import { AccountPageHeader } from "@eleva/dashboard"
 import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
@@ -31,6 +31,21 @@ type ModeKey = (typeof MODE_KEYS)[number]
 
 function isMode(value: string): value is ModeKey {
   return (MODE_KEYS as readonly string[]).includes(value)
+}
+
+function invoiceStatusKey(status: ExpertInvoiceStatus) {
+  switch (status) {
+    case "pending":
+    case "issued":
+    case "failed":
+    case "manual_pending":
+    case "manual_issued":
+      return `invoiceStatus.${status}` as const
+    default: {
+      const _exhaustive: never = status
+      return _exhaustive
+    }
+  }
 }
 
 async function findBooking(
@@ -131,6 +146,21 @@ export default async function SessionDetailPage({
               >
                 {t("receipt")}
               </LinkButton>
+            </dd>
+          </div>
+        ) : null}
+        {payment?.invoice ? (
+          <div>
+            <dt className="text-sm text-muted-foreground">{t("invoice")}</dt>
+            <dd className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">
+                {t(invoiceStatusKey(payment.invoice.status))}
+              </Badge>
+              {payment.invoice.number ? (
+                <span className="text-sm text-muted-foreground">
+                  {t("invoiceNumber", { number: payment.invoice.number })}
+                </span>
+              ) : null}
             </dd>
           </div>
         ) : null}
