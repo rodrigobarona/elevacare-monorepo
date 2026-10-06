@@ -1,4 +1,7 @@
+import { getTableName, is } from "drizzle-orm"
+import { PgTable } from "drizzle-orm/pg-core"
 import { describe, expect, it } from "vitest"
+import * as mainSchema from "../schema/main"
 import {
   RLS_CLASS_FIXTURES,
   RLS_POLICY_CLASSES,
@@ -63,6 +66,15 @@ describe("RLS class taxonomy", () => {
     expect(
       classPredicateSql("owner-user-visible", "notification_preferences")
     ).toContain("eleva.user_id")
+  })
+
+  it("assigns an RLS class to every main schema table", () => {
+    const assigned = new Set(RLS_TABLE_ASSIGNMENTS.map((row) => row.table))
+    const unassigned = (Object.values(mainSchema) as unknown[])
+      .filter((value): value is PgTable => is(value, PgTable))
+      .map((table) => getTableName(table))
+      .filter((name) => !assigned.has(name))
+    expect(unassigned).toEqual([])
   })
 
   it("never assigns a table two classes", () => {

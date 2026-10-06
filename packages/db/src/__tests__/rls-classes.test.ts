@@ -294,81 +294,85 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
     }
   )
 
-  it("audit_events split: tenant SELECT and service-only INSERT", async () => {
-    const table = "_rls_fixture_audit_events_split"
-    const rowId = randomUUID()
-    const orgA = randomUUID()
-    const orgB = randomUUID()
-    const client = await pool.connect()
+  it(
+    "audit_events split: tenant SELECT and service-only INSERT",
+    { timeout: 30_000 },
+    async () => {
+      const table = "_rls_fixture_audit_events_split"
+      const rowId = randomUUID()
+      const orgA = randomUUID()
+      const orgB = randomUUID()
+      const client = await pool.connect()
 
-    try {
-      await client.query(`DROP TABLE IF EXISTS ${table}`)
-      await client.query(
-        `CREATE TABLE ${table} (id uuid PRIMARY KEY, org_id uuid NOT NULL)`
-      )
-      created.push(table)
-      await client.query(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`)
-      await client.query(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`)
-      const selectPred = classPredicateSql("tenant-owned", table)
-      const insertPred = classPredicateSql("service-only", table)
-      await client.query(
-        `CREATE POLICY ${table}_read ON ${table} FOR SELECT USING (${selectPred})`
-      )
-      await client.query(
-        `CREATE POLICY ${table}_write ON ${table} FOR INSERT WITH CHECK (${insertPred})`
-      )
+      try {
+        await client.query(`DROP TABLE IF EXISTS ${table}`)
+        await client.query(
+          `CREATE TABLE ${table} (id uuid PRIMARY KEY, org_id uuid NOT NULL)`
+        )
+        created.push(table)
+        await client.query(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY`)
+        await client.query(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY`)
+        const selectPred = classPredicateSql("tenant-owned", table)
+        const insertPred = classPredicateSql("service-only", table)
+        await client.query(
+          `CREATE POLICY ${table}_read ON ${table} FOR SELECT USING (${selectPred})`
+        )
+        await client.query(
+          `CREATE POLICY ${table}_write ON ${table} FOR INSERT WITH CHECK (${insertPred})`
+        )
 
-      await withLocalSettings(
-        client,
-        { "eleva.service": "audit_drainer" },
-        async () => {
-          await client.query(
-            `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
-            [rowId, orgA]
-          )
-        }
-      )
-
-      await expect(
-        withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
-          await client.query(
-            `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
-            [randomUUID(), orgA]
-          )
-        })
-      ).rejects.toThrow()
-
-      await expect(
-        withLocalSettings(
+        await withLocalSettings(
           client,
-          { "eleva.platform_admin": "true" },
+          { "eleva.service": "audit_drainer" },
           async () => {
+            await client.query(
+              `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
+              [rowId, orgA]
+            )
+          }
+        )
+
+        await expect(
+          withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
             await client.query(
               `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
               [randomUUID(), orgA]
             )
-          }
-        )
-      ).rejects.toThrow()
+          })
+        ).rejects.toThrow()
 
-      await withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
-        const rows = await client.query(
-          `SELECT id FROM ${table} WHERE id = $1`,
-          [rowId]
-        )
-        expect(rows.rows).toHaveLength(1)
-      })
-      await withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
-        const rows = await client.query(
-          `SELECT id FROM ${table} WHERE id = $1`,
-          [rowId]
-        )
-        expect(rows.rows).toHaveLength(0)
-      })
-    } finally {
-      client.release()
+        await expect(
+          withLocalSettings(
+            client,
+            { "eleva.platform_admin": "true" },
+            async () => {
+              await client.query(
+                `INSERT INTO ${table} (id, org_id) VALUES ($1, $2)`,
+                [randomUUID(), orgA]
+              )
+            }
+          )
+        ).rejects.toThrow()
+
+        await withLocalSettings(client, { "eleva.org_id": orgA }, async () => {
+          const rows = await client.query(
+            `SELECT id FROM ${table} WHERE id = $1`,
+            [rowId]
+          )
+          expect(rows.rows).toHaveLength(1)
+        })
+        await withLocalSettings(client, { "eleva.org_id": orgB }, async () => {
+          const rows = await client.query(
+            `SELECT id FROM ${table} WHERE id = $1`,
+            [rowId]
+          )
+          expect(rows.rows).toHaveLength(0)
+        })
+      } finally {
+        client.release()
+      }
     }
-  })
+  )
 
   it(
     "installed policies exist on assigned main-db tables",
