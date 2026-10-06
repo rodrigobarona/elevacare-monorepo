@@ -38,7 +38,10 @@ export async function POST(request: Request) {
   }
 
   if (auth.type !== "bearer") {
-    const botVerdict = await checkBot({ checkLevel: "deepAnalysis" })
+    const botVerdict = await checkBot({
+      checkLevel: "deepAnalysis",
+      enforceable: true,
+    })
     if (botVerdict?.isBot) {
       return secureJson({ error: "blocked" }, { status: 403, headers })
     }

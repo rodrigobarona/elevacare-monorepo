@@ -22,6 +22,7 @@
     "@eleva/observability": "workspace:^",
     "@eleva/ui": "workspace:*",
     "@eleva/icons": "workspace:*",
+    "botid": "catalog:",
     "next": "catalog:",
     "next-intl": "catalog:",
     "react": "catalog:",
