@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@eleva/ui/components/select"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
+import { toast } from "sonner"
 import {
   Card,
   CardContent,
@@ -98,7 +99,6 @@ export function ScheduleEditor({
   const t = useTranslations("schedule")
   const [pending, setPending] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
-  const [success, setSuccess] = React.useState(false)
   const [timezone, setTimezone] = React.useState(
     () => initialTz || Intl.DateTimeFormat().resolvedOptions().timeZone
   )
@@ -181,7 +181,6 @@ export function ScheduleEditor({
   async function handleSave() {
     setPending(true)
     setError(null)
-    setSuccess(false)
 
     const rules: AvailabilityRuleInput[] = []
     for (let i = 0; i < 7; i++) {
@@ -213,7 +212,7 @@ export function ScheduleEditor({
     try {
       const result = await saveScheduleAction({ timezone, rules })
       if (result.ok) {
-        setSuccess(true)
+        toast.success(t("saved"))
       } else {
         setError(result.error)
       }
@@ -272,11 +271,6 @@ export function ScheduleEditor({
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-      {success && (
-        <Alert>
-          <AlertDescription>{t("saved")}</AlertDescription>
         </Alert>
       )}
 
