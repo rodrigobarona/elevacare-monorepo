@@ -175,6 +175,7 @@ jobs:
               --glob '!.git/**' \
               --glob '!_context/**' \
               --glob '!docs/eleva-v3/adrs/**' \
+              --glob '!docs/eleva-v3/audits/**' \
               --glob '!docs/eleva-v3/decision-log.md' \
               --glob '!docs/eleva-v3/execution-plan/**' \
               --glob '!pnpm-lock.yaml' \
@@ -182,7 +183,10 @@ jobs:
               --glob '!packages/db/src/migrations/**' \
               --glob '!packages/eslint-config/**' \
               --glob '!packages/auth/eslint.config.js' \
-              --glob '!.cursor/hooks/state/**'
+              --glob '!packages/editor/eslint.config.js' \
+              --glob '!packages/icons/eslint.config.js' \
+              --glob '!.cursor/hooks/state/**' \
+              .
           )"
           status=$?
           set -e

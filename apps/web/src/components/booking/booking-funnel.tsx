@@ -48,7 +48,7 @@ import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
 import { maskPhone, toE164 } from "@eleva/ui/lib/booking/e164"
 import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
-import { downloadBookingIcs } from "@/lib/booking-ics"
+import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
   bookingReturnUrl,

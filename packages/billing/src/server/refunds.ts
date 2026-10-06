@@ -539,7 +539,7 @@ async function reverseTransferShare(input: {
     await withAudit(
       { orgId: input.payout.orgId, actorUserId: input.actorUserId },
       async (tx, ctx) => {
-        let claimed = false
+        let claimed: boolean
         if (reversalRow) {
           const [row] = await tx
             .update(main.transferReversals)
@@ -628,7 +628,7 @@ async function reverseTransferShare(input: {
     await withAudit(
       { orgId: input.payout.orgId, actorUserId: input.actorUserId },
       async (tx, ctx) => {
-        let claimed = false
+        let claimed: boolean
         if (reversalRow) {
           const [row] = await tx
             .update(main.transferReversals)

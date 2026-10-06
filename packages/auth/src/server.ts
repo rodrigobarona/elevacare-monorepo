@@ -164,7 +164,7 @@ export function getCapabilities(
   return session.capabilities
 }
 
-export interface UserOrganization extends UserOrganizationItem {}
+export type UserOrganization = UserOrganizationItem
 
 /**
  * Fetch all organizations the current user belongs to.

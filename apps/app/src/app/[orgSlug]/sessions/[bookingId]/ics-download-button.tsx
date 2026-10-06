@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { CalendarCheckIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
 import type { ListMeBookingsResponse } from "@eleva/api-client"
-import { downloadBookingIcs } from "@/lib/booking-ics"
+import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import { eventTitle } from "@/lib/member-format"
 
 type MemberBooking = ListMeBookingsResponse["bookings"][number]

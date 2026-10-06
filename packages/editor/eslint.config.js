@@ -70,6 +70,16 @@ export default [
                 "Leftover identity-provider SDKs are removed. Use @eleva/auth.",
             },
             {
+              group: [
+                "lucide-react",
+                "lucide-react/**",
+                "@phosphor-icons/react",
+                "@phosphor-icons/react/**",
+              ],
+              message:
+                "Import icons from @eleva/icons (or @eleva/icons/client); only packages/icons wraps the vendor set.",
+            },
+            {
               group: ["@ai-sdk", "@ai-sdk/**", "ai/*", "ai/**"],
               message:
                 "Import AI SDK providers only through @eleva/ai (boundary lint).",

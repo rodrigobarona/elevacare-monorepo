@@ -1,4 +1,4 @@
-import { generateIcsRequest } from "@eleva/calendar/ics"
+import { generateIcsRequest } from "./ics-generator"
 
 export function downloadBookingIcs(input: {
   uid: string
