@@ -135,6 +135,41 @@ describe("refreshToconlineSingleFlight", () => {
     expect(state.updates).toHaveLength(0)
   })
 
+  it("hands the rotated token back for caller persistence when the locked write fails", async () => {
+    state.rows = [{ id: "int-1", vaultRef: "stale" }]
+    withAuditMock.mockImplementationOnce(async (_opts, fn) => {
+      await fn(
+        {
+          select: () => ({
+            from: () => ({
+              where: () => ({
+                limit: () => ({ for: async () => state.rows }),
+              }),
+            }),
+          }),
+          update: () => ({
+            set: () => ({
+              where: async () => {
+                throw new Error("connection reset")
+              },
+            }),
+          }),
+        } as never,
+        { emit: async () => undefined }
+      )
+    })
+
+    const result = await refreshToconlineSingleFlight({
+      orgId: ORG,
+      staleVaultRef: "stale",
+      refreshToken: "rt-stale",
+      resolveStored: vi.fn(),
+      refresh: vi.fn().mockResolvedValue(rotated("new")),
+    })
+
+    expect(result).toMatchObject({ vaultRef: "new", rotated: true })
+  })
+
   it("collapses concurrent refreshes for the same org into one", async () => {
     state.rows = [{ id: "int-1", vaultRef: "stale" }]
     let release: (v: ReturnType<typeof rotated>) => void = () => undefined

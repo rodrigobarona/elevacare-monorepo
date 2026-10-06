@@ -291,6 +291,7 @@ function credsUserId(metadata?: Record<string, unknown>): string {
 }
 
 const TOKEN_REFRESH_SKEW_MS = 60_000
+const TOKEN_REFRESH_TIMEOUT_MS = 10_000
 
 export function needsToconlineTokenRefresh(
   expiresAt: Date | null,
@@ -384,6 +385,8 @@ async function refreshToconlineAccessToken(input: {
         refresh_token: input.refreshToken,
         scope: SCOPE,
       }).toString(),
+      // Runs while the integration row lock is held.
+      signal: AbortSignal.timeout(TOKEN_REFRESH_TIMEOUT_MS),
     }
   )
   if (!tokenRes.ok) {

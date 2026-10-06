@@ -54,6 +54,7 @@ export function refreshToconlineSingleFlight(input: {
 async function refreshUnderRowLock(
   input: Parameters<typeof refreshToconlineSingleFlight>[0]
 ): Promise<LoadedToconlineToken> {
+  let unpersisted: LoadedToconlineToken | null = null
   try {
     return await withAudit(
       { orgId: input.orgId, actorUserId: null },
@@ -83,6 +84,7 @@ async function refreshUnderRowLock(
         }
 
         const refreshed = await input.refresh(refreshToken)
+        unpersisted = refreshed
         const now = new Date()
         await tx
           .update(main.expertIntegrations)
@@ -107,6 +109,9 @@ async function refreshUnderRowLock(
     if (err instanceof NoStoredIntegration) {
       return input.refresh(input.refreshToken)
     }
+    // The provider already rotated the grant; hand the new ciphertext back
+    // so the caller's own persistence retries instead of losing it.
+    if (unpersisted) return unpersisted
     throw err
   }
 }
