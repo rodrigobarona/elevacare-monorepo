@@ -8,6 +8,7 @@ import {
   runBookingFunnelProbes,
 } from "@/lib/booking-probes"
 import { corsHeaders } from "@/lib/cors"
+import { bearerMatches } from "@/lib/internal-auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
 
@@ -59,8 +60,7 @@ export async function GET(request: Request): Promise<Response> {
     )
   }
 
-  const authHeader = request.headers.get("authorization") ?? ""
-  if (authHeader !== `Bearer ${secret}`) {
+  if (!bearerMatches(request.headers.get("authorization"), secret)) {
     return secureJson({ error: "unauthorized" }, { status: 401, headers })
   }
 

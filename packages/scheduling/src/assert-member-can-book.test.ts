@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
-import { BookingError, assertMemberCanBook } from "./assert-member-can-book"
+import {
+  BookingError,
+  assertGuestEmailCanBook,
+  assertMemberCanBook,
+} from "./assert-member-can-book"
 
 const withPlatformAdminContext = vi.fn()
 
@@ -11,6 +15,7 @@ vi.mock("@eleva/db/context", () => ({
 vi.mock("@eleva/db/schema/auth", () => ({
   user: {
     id: "id",
+    email: "email",
     banned: "banned",
     deletionScheduledAt: "deletion_scheduled_at",
   },
@@ -67,5 +72,41 @@ describe("assertMemberCanBook", () => {
     await expect(assertMemberCanBook("missing")).rejects.toMatchObject({
       code: "ACCOUNT_BANNED",
     })
+  })
+})
+
+describe("assertGuestEmailCanBook", () => {
+  beforeEach(() => {
+    withPlatformAdminContext.mockReset()
+  })
+
+  it("allows unknown emails and members in good standing", async () => {
+    mockMember(undefined)
+    await expect(
+      assertGuestEmailCanBook("new@example.com")
+    ).resolves.toBeUndefined()
+    mockMember({ banned: false, deletionScheduledAt: null })
+    await expect(
+      assertGuestEmailCanBook("ok@example.com")
+    ).resolves.toBeUndefined()
+  })
+
+  it("blocks banned and deletion-pending emails with one opaque code", async () => {
+    mockMember({ banned: true, deletionScheduledAt: null })
+    await expect(
+      assertGuestEmailCanBook("Banned@Example.com")
+    ).rejects.toMatchObject({ code: "GUEST_EMAIL_BLOCKED" })
+    mockMember({
+      banned: false,
+      deletionScheduledAt: new Date("2026-09-25T00:00:00Z"),
+    })
+    await expect(
+      assertGuestEmailCanBook("leaving@example.com")
+    ).rejects.toMatchObject({ code: "GUEST_EMAIL_BLOCKED" })
+  })
+
+  it("skips the lookup for a blank email", async () => {
+    await expect(assertGuestEmailCanBook("  ")).resolves.toBeUndefined()
+    expect(withPlatformAdminContext).not.toHaveBeenCalled()
   })
 })

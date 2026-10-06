@@ -35,9 +35,3 @@ export async function publishWorkflowJob(
   })
   return "published"
 }
-
-export function authorizeWorkflowSecret(request: Request): boolean {
-  const secret = process.env.WORKFLOWS_DRAIN_SECRET
-  if (!secret) return false
-  return request.headers.get("authorization") === `Bearer ${secret}`
-}

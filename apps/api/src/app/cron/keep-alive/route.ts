@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { pingAuditDb, pingMainDb } from "@eleva/db"
 import { requireCronSecret } from "@eleva/config/env"
 import { heartbeat } from "@eleva/observability"
+import { bearerMatches } from "@/lib/internal-auth"
 import type { RoutePolicy } from "@/lib/route-policy"
 
 export const ROUTE_POLICY = {
@@ -21,7 +22,7 @@ export const ROUTE_POLICY = {
  *
  * Triggered daily at 06:00 UTC by Vercel Cron (apps/api/vercel.json),
  * which delivers `Authorization: Bearer ${CRON_SECRET}`. The handler:
- *   1. Validates the bearer token (strict equality, fail-closed if
+ *   1. Validates the bearer token (constant-time, fail-closed if
  *      CRON_SECRET is unset).
  *   2. Issues `SELECT 1` against both DATABASE_URL and
  *      AUDIT_DATABASE_URL via the @neondatabase/serverless HTTP
@@ -72,8 +73,7 @@ export async function GET(request: Request): Promise<Response> {
     )
   }
 
-  const authHeader = request.headers.get("authorization") ?? ""
-  if (authHeader !== `Bearer ${secret}`) {
+  if (!bearerMatches(request.headers.get("authorization"), secret)) {
     return NextResponse.json(
       { error: "unauthorized" },
       { status: 401, headers: { "Cache-Control": "no-store" } }

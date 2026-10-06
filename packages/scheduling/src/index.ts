@@ -41,7 +41,11 @@ export type {
   ModeBookableInput,
   ModeBookableResult,
 } from "./mode-bookable"
-export { assertMemberCanBook, BookingError } from "./assert-member-can-book"
+export {
+  assertGuestEmailCanBook,
+  assertMemberCanBook,
+  BookingError,
+} from "./assert-member-can-book"
 export type { MemberBookabilityError } from "./assert-member-can-book"
 export {
   resolveOffer,

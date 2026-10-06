@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { processDsarExport } from "@eleva/compliance"
 import { corsHeaders } from "@/lib/cors"
-import { authorizeWorkflowSecret } from "@/lib/qstash-publish"
+import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -23,18 +23,8 @@ const BodySchema = z.object({
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
-  if (!process.env.WORKFLOWS_DRAIN_SECRET) {
-    return secureJson(
-      {
-        error: "server_misconfiguration",
-        message: "WORKFLOWS_DRAIN_SECRET is required",
-      },
-      { status: 500, headers }
-    )
-  }
-  if (!authorizeWorkflowSecret(request)) {
-    return secureJson({ error: "unauthorized" }, { status: 401, headers })
-  }
+  const denied = await authorizeInternalWorkflow(request)
+  if (denied) return denied
 
   const parsed = BodySchema.safeParse(await request.json().catch(() => ({})))
   if (!parsed.success) {

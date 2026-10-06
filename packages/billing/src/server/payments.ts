@@ -13,8 +13,10 @@ import {
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
 import {
   hashReservationToken,
+  assertGuestEmailCanBook,
   assertMemberCanBook,
   BookingError,
+  type MemberBookabilityError,
 } from "@eleva/scheduling"
 import { stripe } from "./client"
 import {
@@ -133,12 +135,7 @@ export type CreatePaymentIntentForReservationResult =
     }
   | {
       ok: false
-      error:
-        | "not_found"
-        | "unavailable"
-        | "db_error"
-        | "ACCOUNT_DELETION_SCHEDULED"
-        | "ACCOUNT_BANNED"
+      error: "not_found" | "unavailable" | "db_error" | MemberBookabilityError
     }
 
 export async function retrieveBookingPaymentIntent(
@@ -213,9 +210,11 @@ export async function createPaymentIntentForReservation(
   }
 
   const memberId = reservation.userId ?? input.sessionUserId
-  if (memberId) {
+  const guestEmail = memberId ? undefined : funnel.guest?.email
+  if (memberId || guestEmail) {
     try {
-      await assertMemberCanBook(memberId)
+      if (memberId) await assertMemberCanBook(memberId)
+      else if (guestEmail) await assertGuestEmailCanBook(guestEmail)
     } catch (err) {
       if (err instanceof BookingError) {
         return { ok: false, error: err.code }

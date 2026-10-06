@@ -1,11 +1,13 @@
 import { captureException } from "@eleva/observability"
 import { corsHeaders } from "@/lib/cors"
+import { isAuthorizedWorkflowCall } from "@/lib/internal-auth"
 import { secureJson } from "@/lib/security-headers"
 
-export function authorizeInternalWorkflow(request: Request): Response | null {
+export async function authorizeInternalWorkflow(
+  request: Request
+): Promise<Response | null> {
   const headers = corsHeaders(request, "POST, OPTIONS")
-  const secret = process.env.WORKFLOWS_DRAIN_SECRET
-  if (!secret) {
+  if (!process.env.WORKFLOWS_DRAIN_SECRET) {
     return secureJson(
       {
         error: "server_misconfiguration",
@@ -14,8 +16,7 @@ export function authorizeInternalWorkflow(request: Request): Response | null {
       { status: 500, headers }
     )
   }
-  const authHeader = request.headers.get("authorization") ?? ""
-  if (authHeader !== `Bearer ${secret}`) {
+  if (!(await isAuthorizedWorkflowCall(request))) {
     return secureJson({ error: "unauthorized" }, { status: 401, headers })
   }
   return null
@@ -25,8 +26,16 @@ export async function runInternalWorkflow(
   request: Request,
   run: () => Promise<Record<string, unknown>>
 ): Promise<Response> {
-  const denied = authorizeInternalWorkflow(request)
+  const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
+  return executeInternalWorkflow(request, run)
+}
+
+/** For handlers that already called `authorizeInternalWorkflow` and read the body. */
+export async function executeInternalWorkflow(
+  request: Request,
+  run: () => Promise<Record<string, unknown>>
+): Promise<Response> {
   const headers = corsHeaders(request, "POST, OPTIONS")
   try {
     const result = await run()

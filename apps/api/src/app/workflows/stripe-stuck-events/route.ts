@@ -1,5 +1,6 @@
 import { detectStuckStripeEvents } from "@eleva/workflows/drainers"
 import { corsHeaders } from "@/lib/cors"
+import { authorizeInternalWorkflow } from "@/lib/internal-workflow"
 import { secureJson } from "@/lib/security-headers"
 import type { RoutePolicy } from "@/lib/route-policy"
 
@@ -17,9 +18,7 @@ export const ROUTE_POLICY = {
  * raises a Sentry error per stuck row. Triggered by a QStash schedule
  * (every 5-10 minutes in staging/prod).
  *
- * Authz: Bearer token matching `WORKFLOWS_DRAIN_SECRET` (same posture
- * as `audit-outbox-drainer`). QStash signing keys can replace this
- * once `infra/qstash` wiring is in place.
+ * Authz: QStash signature or Bearer `WORKFLOWS_DRAIN_SECRET`.
  *
  * Response shape:
  *   { ok: true, scanned: ISO_TIMESTAMP, stuckCount: number }
@@ -34,20 +33,8 @@ export const runtime = "nodejs"
 export async function POST(request: Request) {
   const headers = corsHeaders(request, "POST, OPTIONS")
 
-  const secret = process.env.WORKFLOWS_DRAIN_SECRET
-  if (!secret) {
-    return secureJson(
-      {
-        error: "server_misconfiguration",
-        message: "WORKFLOWS_DRAIN_SECRET is required",
-      },
-      { status: 500, headers }
-    )
-  }
-  const authHeader = request.headers.get("authorization") ?? ""
-  if (authHeader !== `Bearer ${secret}`) {
-    return secureJson({ error: "unauthorized" }, { status: 401, headers })
-  }
+  const denied = await authorizeInternalWorkflow(request)
+  if (denied) return denied
 
   try {
     const report = await detectStuckStripeEvents({
