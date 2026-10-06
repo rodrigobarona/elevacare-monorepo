@@ -63,6 +63,18 @@ Each entry should include:
   shipped in #89. The Moloni adapter stays a disabled stub (backlog).
 - Owner: engineering. Status: `active`. Revisit when Phase 12 dual control lands.
 
+### 2026-10-06: Brand v2 evolution board approved
+
+- Decision: the founder approved `brand-book/v2/README.md` as proposed. Teal
+  `#006D77` (teal-700) and coral `#E29578` (coral-400) stay exact and anchor
+  11-step OKLCH scales. `--secondary` becomes soft coral (coral-100 fill,
+  coral-800 text). Product-app page titles (h1) use Lora; all other UI uses
+  DM Sans, with IBM Plex Mono for data.
+- Brand evolution, not a rebrand: logo, wordmark and name are unchanged. The
+  only logo change is vectorising the PNG mark.
+- Next: the kit PR maps these tokens into `@eleva/ui/globals.css`.
+- Owner: founder (approval), engineering (kit). Status: `active`.
+
 ### 2026-10-06: Quiet hours silence non-urgent SMS (AUD-004)
 
 - Decision: `sendNotification` reads the member's stored quiet hours and
