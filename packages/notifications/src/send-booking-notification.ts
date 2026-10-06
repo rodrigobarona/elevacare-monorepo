@@ -1,6 +1,11 @@
 import { eq } from "drizzle-orm"
 import { z } from "zod"
 import {
+  generateIcsCancel,
+  generateIcsRequest,
+  type IcsEventInput,
+} from "@eleva/calendar/ics"
+import {
   describeCancellationPolicy,
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
@@ -13,6 +18,7 @@ import {
   renderBookingRescheduled,
   type EmailLocale,
 } from "@eleva/email"
+import type { EmailAttachment } from "./send-email"
 import { sendNotification } from "./send-notification"
 import { toEmailLocale } from "./send-closed-gate-invoice"
 
@@ -203,19 +209,41 @@ export async function sendBookingNotification(
     parsed.previousStartsAt,
     parsed.scheduleRevision
   )
+  const memberAttachments = calendarAttachments(
+    event.type,
+    booking,
+    icsSummary(locale, expertFirst)
+  )
+  const expertAttachments = calendarAttachments(
+    event.type,
+    booking,
+    icsSummary(locale, memberFirst)
+  )
   const results = await Promise.allSettled([
     send({
       kind: event.type,
       orgId: event.orgId,
       recipient: memberRecipient,
-      ctx: { title, body: memberBody, subject: memberSubject, html },
+      ctx: {
+        title,
+        body: memberBody,
+        subject: memberSubject,
+        html,
+        attachments: memberAttachments,
+      },
       idempotencyKey,
     }),
     send({
       kind: event.type,
       orgId: event.orgId,
       recipient: { userId: booking.expertUserId },
-      ctx: { title, body: expertBody, subject: expertSubject, html },
+      ctx: {
+        title,
+        body: expertBody,
+        subject: expertSubject,
+        html,
+        attachments: expertAttachments,
+      },
       idempotencyKey,
     }),
   ])
@@ -279,6 +307,83 @@ function deliveryIdempotencyKey(
     return `booking:${bookingId}:${suffix}:${startsAt}`
   }
   return `booking:${bookingId}:${suffix}`
+}
+
+/**
+ * Calendar files carry no service name or notes: calendars sync to third
+ * parties, so the summary names only the counterpart's first name.
+ */
+export function calendarAttachments(
+  kind: BookingSendKind,
+  booking: LoadedBooking,
+  summary: string
+): EmailAttachment[] | undefined {
+  const attendeeEmail = booking.memberEmail ?? booking.guestEmail
+  const event: IcsEventInput = {
+    uid: booking.id,
+    summary,
+    startTime: booking.startsAt,
+    endTime: booking.endsAt,
+    timezone: booking.timezone,
+    organizer: { name: booking.expertName, email: booking.expertEmail },
+    attendees: attendeeEmail
+      ? [
+          {
+            name: firstName(booking.memberName ?? booking.guestName ?? ""),
+            email: attendeeEmail,
+          },
+        ]
+      : undefined,
+    sequence: booking.scheduleRevision,
+  }
+  switch (kind) {
+    case "booking.confirmed":
+    case "booking.rescheduled":
+      return [icsAttachment("REQUEST", generateIcsRequest(event))]
+    case "booking.cancelled":
+      return [
+        icsAttachment(
+          "CANCEL",
+          generateIcsCancel({
+            ...event,
+            sequence: booking.scheduleRevision + 1,
+          })
+        ),
+      ]
+    case "booking.reminder_24h":
+    case "booking.reminder_1h":
+      return undefined
+    default: {
+      const _exhaustive: never = kind
+      return _exhaustive
+    }
+  }
+}
+
+function icsAttachment(
+  method: "REQUEST" | "CANCEL",
+  content: string
+): EmailAttachment {
+  return {
+    filename: method === "CANCEL" ? "cancel.ics" : "invite.ics",
+    content,
+    contentType: `text/calendar; charset=utf-8; method=${method}`,
+  }
+}
+
+function icsSummary(locale: EmailLocale, counterpartFirst: string): string {
+  switch (locale) {
+    case "pt":
+      return `Sessão Eleva com ${counterpartFirst}`
+    case "es":
+      return `Sesión Eleva con ${counterpartFirst}`
+    case "en":
+      return `Eleva session with ${counterpartFirst}`
+    default: {
+      const _exhaustive: never = locale
+      return _exhaustive
+    }
+  }
 }
 
 function memberSessionBody(

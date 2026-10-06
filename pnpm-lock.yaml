@@ -1732,6 +1732,9 @@ importers:
       '@eleva/audit':
         specifier: workspace:*
         version: link:../audit
+      '@eleva/calendar':
+        specifier: workspace:*
+        version: link:../calendar
       '@eleva/config':
         specifier: workspace:*
         version: link:../config

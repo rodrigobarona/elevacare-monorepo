@@ -37,56 +37,6 @@ export class MemberBookingPolicyError extends Error {
   }
 }
 
-export type MemberIcsPayload = {
-  expertEmail: string
-  expertName: string
-  memberName: string
-  memberEmail: string
-  eventTypeName: string
-  bookingId: string
-  startsAt: Date
-  endsAt: Date
-  timezone: string
-  sessionMode: string
-  locale?: "en" | "pt" | "es"
-  sequence?: number
-}
-
-function eventTitle(
-  title: { en: string; pt?: string; es?: string },
-  locale: string | null
-): string {
-  if (locale === "pt" && title.pt) return title.pt
-  if (locale === "es" && title.es) return title.es
-  return title.en
-}
-
-function icsLocale(value: string | null): "en" | "pt" | "es" | undefined {
-  if (value === "pt" || value === "es" || value === "en") return value
-  return undefined
-}
-
-function toIcsPayload(
-  row: MemberBookingPolicyRow,
-  times?: { startsAt: Date; endsAt: Date },
-  sequence?: number
-): MemberIcsPayload {
-  return {
-    expertEmail: row.expertEmail,
-    expertName: row.expertName,
-    memberName: row.memberName ?? row.guestName ?? "Member",
-    memberEmail: row.memberEmail ?? row.guestEmail ?? "",
-    eventTypeName: eventTitle(row.eventTypeName, row.bookedLocale),
-    bookingId: row.id,
-    startsAt: times?.startsAt ?? row.startsAt,
-    endsAt: times?.endsAt ?? row.endsAt,
-    timezone: row.timezone,
-    sessionMode: row.sessionMode,
-    locale: icsLocale(row.bookedLocale),
-    sequence,
-  }
-}
-
 export type MemberCancellationQuote = CancellationRefundQuote & {
   /** What the member gets back now; 0 for unpaid bookings. */
   refundCents: number
@@ -152,7 +102,7 @@ export async function cancelMemberBooking(input: {
   orgId: string
   bookingId: string
   now?: Date
-}): Promise<{ ics: MemberIcsPayload; refund: MemberCancellationQuote }> {
+}): Promise<{ refund: MemberCancellationQuote }> {
   const now = input.now ?? new Date()
   const row = await loadMutableBooking({ ...input, now })
   const refund = quoteFor(row, now)
@@ -246,7 +196,7 @@ export async function cancelMemberBooking(input: {
     }
   )
 
-  return { ics: toIcsPayload(row), refund }
+  return { refund }
 }
 
 export async function rescheduleMemberBooking(input: {
@@ -256,7 +206,7 @@ export async function rescheduleMemberBooking(input: {
   startsAt: Date
   endsAt: Date
   now?: Date
-}): Promise<{ ics: MemberIcsPayload; previousStartsAt: Date }> {
+}): Promise<void> {
   const now = input.now ?? new Date()
   const row = await loadMutableBooking({ ...input, now })
   // Moving a session out of its penalty window would dodge the policy, so
@@ -335,15 +285,6 @@ export async function rescheduleMemberBooking(input: {
       })
     }
   )
-
-  return {
-    ics: toIcsPayload(
-      row,
-      { startsAt: input.startsAt, endsAt: input.endsAt },
-      1
-    ),
-    previousStartsAt: row.startsAt,
-  }
 }
 
 async function assertDestinationAvailable(

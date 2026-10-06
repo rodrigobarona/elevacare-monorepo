@@ -4,11 +4,18 @@ import { RESEND_IDEMPOTENCY_WINDOW_MS } from "./claim-delivery"
 export const MAX_RESEND_LIST_PAGES = 3
 export const MAX_RESEND_ADOPT_GETS = 20
 
+export type EmailAttachment = {
+  filename: string
+  content: string
+  contentType: string
+}
+
 export type SendEmailInput = {
   to: string
   subject: string
   html: string
   deliveryId: string
+  attachments?: EmailAttachment[]
 }
 
 export type ListedEmail = {
@@ -88,6 +95,7 @@ export async function sendViaResend(
       to: input.to,
       subject: input.subject,
       html: input.html,
+      ...(input.attachments?.length ? { attachments: input.attachments } : {}),
       tags: [{ name: "deliveryId", value: input.deliveryId }],
     },
     { idempotencyKey: input.deliveryId }
