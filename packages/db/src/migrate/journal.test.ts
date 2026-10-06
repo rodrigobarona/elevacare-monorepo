@@ -38,10 +38,12 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0048_reservation_cancellation_policy")
+    expect(last?.tag).toBe("0049_notification_webhook_receipts")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("cancellation_policy")
+    expect(last?.statements.join("\n")).toContain(
+      "notification_webhook_receipts"
+    )
     expect(
       migrations
         .find((m) => m.tag === "0044_booking_schedule_revision")
