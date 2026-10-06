@@ -1,4 +1,3 @@
-import { after } from "next/server"
 import {
   RescheduleMeBookingRequestSchema,
   RescheduleMeBookingResponseSchema,
@@ -7,7 +6,6 @@ import {
   MemberBookingPolicyError,
   rescheduleMemberBooking,
 } from "@eleva/scheduling"
-import { sendRescheduleIcsEmail } from "@eleva/workflows/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import { MEMBER_BOOKING_POLICY_STATUS } from "@/lib/member-booking-http"
@@ -71,20 +69,13 @@ export async function POST(
   }
 
   try {
-    const result = await rescheduleMemberBooking({
+    await rescheduleMemberBooking({
       userId: session.user.id,
       orgId: session.orgId,
       bookingId: id,
       startsAt,
       endsAt,
     })
-    after(() =>
-      sendRescheduleIcsEmail(result.ics, result.previousStartsAt).catch(
-        (err) => {
-          console.error("[me/bookings/reschedule] ICS email failed", err)
-        }
-      )
-    )
     return secureJson(
       RescheduleMeBookingResponseSchema.parse({
         ok: true,

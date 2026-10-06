@@ -169,6 +169,78 @@ describe("sendBookingNotification", () => {
     expect(send.mock.calls[1]?.[0].ctx.html).toBe("<p>confirmed</p>")
   })
 
+  it("attaches a PHI-free calendar invite to both confirmation emails", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-ics",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    const [memberIcs] = send.mock.calls[0]?.[0].ctx.attachments ?? []
+    const [expertIcs] = send.mock.calls[1]?.[0].ctx.attachments ?? []
+    expect(memberIcs).toMatchObject({
+      filename: "invite.ics",
+      contentType: "text/calendar; charset=utf-8; method=REQUEST",
+    })
+    expect(memberIcs.content).toContain("METHOD:REQUEST")
+    expect(memberIcs.content).toContain(`UID:${BOOKING_ID}@eleva.care`)
+    expect(memberIcs.content).toContain("DTSTART:20260922T100000Z")
+    expect(memberIcs.content).toContain("SEQUENCE:0")
+    expect(memberIcs.content).toContain("SUMMARY:Eleva session with Ana")
+    expect(memberIcs.content).toContain("mailto:ada@example.com")
+    expect(expertIcs.content).toContain("SUMMARY:Eleva session with Ada")
+    for (const ics of [memberIcs.content, expertIcs.content]) {
+      expect(ics).not.toContain("First visit")
+      expect(ics).not.toContain("Lovelace")
+    }
+  })
+
+  it("attaches a CANCEL invite that supersedes the last revision", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.cancelled", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-ics-cancel",
+        type: "booking.cancelled",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({ status: "cancelled", scheduleRevision: 2 }),
+        send,
+      }
+    )
+    const [ics] = send.mock.calls[0]?.[0].ctx.attachments ?? []
+    expect(ics.filename).toBe("cancel.ics")
+    expect(ics.content).toContain("METHOD:CANCEL")
+    expect(ics.content).toContain("STATUS:CANCELLED")
+    expect(ics.content).toContain("SEQUENCE:3")
+  })
+
+  it("does not attach calendar files to reminders", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.reminder_24h", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-reminder-ics",
+        type: "booking.reminder_24h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    expect(send.mock.calls[0]?.[0].ctx.attachments).toBeUndefined()
+  })
+
   it("discriminates repeat reschedules in the idempotency key", async () => {
     const send = vi.fn().mockResolvedValue({
       kind: "booking.rescheduled",

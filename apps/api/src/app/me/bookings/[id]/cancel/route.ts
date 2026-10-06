@@ -1,10 +1,8 @@
-import { after } from "next/server"
 import { CancelMeBookingResponseSchema } from "@eleva/api-client"
 import {
   cancelMemberBooking,
   MemberBookingPolicyError,
 } from "@eleva/scheduling"
-import { sendCancellationIcsEmail } from "@eleva/workflows/scheduling"
 import { corsHeaders } from "@/lib/cors"
 import { apiAuthFailure, requireMemberApiAuth } from "@/lib/auth"
 import {
@@ -53,11 +51,6 @@ export async function POST(
       orgId: session.orgId,
       bookingId: id,
     })
-    after(() =>
-      sendCancellationIcsEmail(result.ics).catch((err) => {
-        console.error("[me/bookings/cancel] ICS email failed", err)
-      })
-    )
     return secureJson(
       CancelMeBookingResponseSchema.parse({
         ok: true,

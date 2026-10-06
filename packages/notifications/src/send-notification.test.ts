@@ -217,6 +217,48 @@ describe("sendNotification", () => {
     now = { current: new Date("2026-09-18T12:00:00.000Z") }
   })
 
+  it("forwards attachments to the email channel only", async () => {
+    const attachments = [
+      {
+        filename: "invite.ics",
+        content: "BEGIN:VCALENDAR\r\nEND:VCALENDAR\r\n",
+        contentType: "text/calendar; charset=utf-8; method=REQUEST",
+      },
+    ]
+    const sent: unknown[] = []
+    const deps = store.deps(now)
+    const sendEmail = deps.sendEmail!
+    await sendNotification(bookingInput({ ctx: { ...content, attachments } }), {
+      ...deps,
+      sendEmail: async (input) => {
+        sent.push(input.attachments)
+        return sendEmail(input)
+      },
+    })
+    expect(sent).toEqual([attachments])
+  })
+
+  it("rejects oversized attachments before any write", async () => {
+    await expect(
+      sendNotification(
+        bookingInput({
+          ctx: {
+            ...content,
+            attachments: [
+              {
+                filename: "invite.ics",
+                content: "x".repeat(64_001),
+                contentType: "text/calendar",
+              },
+            ],
+          },
+        }),
+        store.deps(now)
+      )
+    ).rejects.toMatchObject({ code: "VALIDATION" })
+    expect(store.rows.size).toBe(0)
+  })
+
   it("throws ORG_CONTEXT_REQUIRED before any write", async () => {
     await expect(
       sendNotification(

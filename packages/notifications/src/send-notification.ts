@@ -29,6 +29,7 @@ import {
 import {
   adoptResendDelivery,
   sendViaResend,
+  type EmailAttachment,
   type ListedEmail,
   type RetrievedEmail,
   type SendEmailInput,
@@ -59,6 +60,8 @@ export type NotificationContent = {
   html: string
   href?: string | null
   data?: Record<string, unknown>
+  /** Email channel only; in-app and SMS ignore attachments. */
+  attachments?: EmailAttachment[]
 }
 
 export type OrgScopedKind = ScopedKind<"org">
@@ -156,6 +159,16 @@ const ContentSchema = z.object({
   html: z.string().min(1),
   href: z.string().nullable().optional(),
   data: z.record(z.string(), z.unknown()).optional(),
+  attachments: z
+    .array(
+      z.object({
+        filename: z.string().min(1).max(100),
+        content: z.string().min(1).max(64_000),
+        contentType: z.string().min(1).max(100),
+      })
+    )
+    .max(3)
+    .optional(),
 })
 
 type ParsedSend = {
@@ -573,6 +586,7 @@ async function deliverEmail(input: {
     subject: input.parsed.ctx.subject,
     html: input.parsed.ctx.html,
     deliveryId: input.row.id,
+    attachments: input.parsed.ctx.attachments,
   })
   await input.persistProviderId({
     id: input.row.id,

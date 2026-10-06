@@ -10,7 +10,6 @@ import {
   or,
   sql,
 } from "drizzle-orm"
-import { alias } from "drizzle-orm/pg-core"
 import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import { user } from "../schema/auth"
 import * as main from "../schema/main"
@@ -566,17 +565,6 @@ export type MemberBookingPolicyRow = {
   status: (typeof main.bookingStatusEnum.enumValues)[number]
   startsAt: Date
   endsAt: Date
-  timezone: string
-  sessionMode: main.SessionMode
-  bookedLocale: string | null
-  memberEmail: string | null
-  memberName: string | null
-  guestEmail: string | null
-  guestName: string | null
-  expertUserId: string
-  expertEmail: string
-  expertName: string
-  eventTypeName: { en: string; pt?: string; es?: string }
   paymentId: string | null
   paymentStatus:
     | (typeof main.bookingPaymentStatusEnum.enumValues)[number]
@@ -617,7 +605,6 @@ export async function getMemberBookingForPolicy(input: {
   })
   if (!expertOrgId) return null
 
-  const expertUser = alias(user, "expert_user")
   return withOrgContext(expertOrgId, async (tx) => {
     const [row] = await tx
       .select({
@@ -626,17 +613,6 @@ export async function getMemberBookingForPolicy(input: {
         status: main.bookings.status,
         startsAt: main.bookings.startsAt,
         endsAt: main.bookings.endsAt,
-        timezone: main.bookings.timezone,
-        sessionMode: main.bookings.sessionMode,
-        bookedLocale: main.bookings.bookedLocale,
-        memberEmail: user.email,
-        memberName: user.name,
-        guestEmail: main.bookings.guestEmail,
-        guestName: main.bookings.guestName,
-        expertUserId: main.bookings.expertUserId,
-        expertEmail: expertUser.email,
-        expertName: expertUser.name,
-        eventTypeName: main.eventTypes.title,
         paymentId: main.bookingPayments.id,
         paymentStatus: main.bookingPayments.status,
         paymentAmountCents: main.bookingPayments.amountCents,
@@ -662,8 +638,6 @@ export async function getMemberBookingForPolicy(input: {
         main.eventTypes,
         eq(main.eventTypes.id, main.bookings.eventTypeId)
       )
-      .innerJoin(expertUser, eq(expertUser.id, main.bookings.expertUserId))
-      .leftJoin(user, eq(user.id, main.bookings.memberUserId))
       .leftJoin(
         main.bookingPayments,
         eq(main.bookingPayments.bookingId, main.bookings.id)

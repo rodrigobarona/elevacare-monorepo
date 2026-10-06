@@ -1,8 +1,6 @@
-import { and, eq, sql } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { getProviderAccessToken } from "@eleva/auth"
 import {
-  auth,
-  db,
   main,
   getDestinationCalendar,
   resolveBookingDestination,
@@ -20,28 +18,12 @@ import {
   type CalendarEventInput,
 } from "@eleva/calendar"
 
-import {
-  sendBookingIcsEmail,
-  sendRescheduleIcsEmail,
-  sendCancellationIcsEmail,
-  type IcsEmailPayload,
-} from "./ics-email"
-
 const credentials = createCredentialManager({ getProviderAccessToken })
 
 function resolveProvider(slug: string): CalendarProvider {
   const provider = calendarProviderForSlug(slug)
   if (!provider) throw new Error(`Unknown calendar slug: ${slug}`)
   return provider
-}
-
-async function loadAuthUser(userId: string) {
-  const [row] = await db()
-    .select({ email: auth.user.email, name: auth.user.name })
-    .from(auth.user)
-    .where(eq(auth.user.id, userId))
-    .limit(1)
-  return row
 }
 
 async function loadConnectedCalendar(orgId: string, integrationId: string) {
@@ -82,141 +64,12 @@ async function calendarAccessToken(
   return { provider, accessToken }
 }
 
-async function loadBookingContext(
-  orgId: string,
-  sessionId: string,
-  bookingId: string
-): Promise<IcsEmailPayload | null> {
-  const data = await withOrgContext(orgId, async (tx: Tx) => {
-    const [row] = await tx
-      .select({
-        expertUserId: main.expertProfiles.userId,
-        expertName: main.expertProfiles.displayName,
-        eventTypeTitle: main.eventTypes.title,
-        startsAt: main.sessions.startsAt,
-        endsAt: main.sessions.endsAt,
-        sessionMode: main.sessions.sessionMode,
-        timezone: main.bookings.timezone,
-        bookedLocale: main.bookings.bookedLocale,
-      })
-      .from(main.sessions)
-      .innerJoin(main.bookings, eq(main.sessions.bookingId, main.bookings.id))
-      .innerJoin(
-        main.expertProfiles,
-        eq(main.sessions.expertProfileId, main.expertProfiles.id)
-      )
-      .innerJoin(
-        main.eventTypes,
-        eq(main.sessions.eventTypeId, main.eventTypes.id)
-      )
-      .where(eq(main.sessions.id, sessionId))
-      .limit(1)
-    return row
-  })
-
-  if (!data) return null
-
-  const memberData = await withOrgContext(orgId, async (tx: Tx) => {
-    const [row] = await tx
-      .select({
-        memberUserId: main.bookings.memberUserId,
-      })
-      .from(main.bookings)
-      .where(eq(main.bookings.id, bookingId))
-      .limit(1)
-    return row
-  })
-
-  if (!memberData?.memberUserId) return null
-
-  const [expertUser, memberUser] = await Promise.all([
-    loadAuthUser(data.expertUserId),
-    loadAuthUser(memberData.memberUserId),
-  ])
-  if (!expertUser || !memberUser) return null
-
-  const locale = (data.bookedLocale as "en" | "pt" | "es") ?? "en"
-  const eventTypeName =
-    data.eventTypeTitle?.[locale] ?? data.eventTypeTitle?.en ?? "Session"
-
-  const memberName = memberUser.name || "Member"
-
-  return {
-    expertEmail: expertUser.email,
-    expertName: data.expertName,
-    memberName,
-    memberEmail: memberUser.email,
-    eventTypeName,
-    bookingId,
-    startsAt: data.startsAt,
-    endsAt: data.endsAt,
-    timezone: data.timezone,
-    sessionMode: data.sessionMode,
-    locale,
-  }
-}
-
-async function sendCreateIcsFallback(
-  orgId: string,
-  sessionId: string,
-  bookingId: string
-): Promise<{ calendarEventId: null }> {
-  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-  if (emailPayload) await sendBookingIcsEmail(emailPayload)
-  return { calendarEventId: null }
-}
-
-async function sendRescheduleIcsFallback(
-  orgId: string,
-  sessionId: string,
-  bookingId: string,
-  newStartTime: Date,
-  newEndTime: Date,
-  previousStartTime: Date
-): Promise<void> {
-  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-  if (emailPayload) {
-    await sendRescheduleIcsEmail(
-      {
-        ...emailPayload,
-        startsAt: newStartTime,
-        endsAt: newEndTime,
-        sequence: await nextIcsSequence(orgId, bookingId),
-      },
-      previousStartTime
-    )
-  }
-}
-
-async function nextIcsSequence(
-  orgId: string,
-  bookingId: string
-): Promise<number> {
-  const [row] = await withOrgContext(orgId, async (tx: Tx) => {
-    return tx
-      .update(main.bookings)
-      .set({ updatedAt: sql`clock_timestamp()` })
-      .where(eq(main.bookings.id, bookingId))
-      .returning({ updatedAt: main.bookings.updatedAt })
-  })
-  return row?.updatedAt.getTime() ?? Date.now()
-}
-
-async function sendCancellationIcsFallback(
-  orgId: string,
-  sessionId: string,
-  bookingId: string
-): Promise<void> {
-  const emailPayload = await loadBookingContext(orgId, sessionId, bookingId)
-  if (emailPayload) await sendCancellationIcsEmail(emailPayload)
-}
-
 /**
  * Create a calendar event in the expert's destination calendar when a
  * booking is confirmed.
  *
- * If no destination calendar is configured, sends an .ics email to
- * the expert instead (calendar-optional mode).
+ * Without a connected destination calendar this is a no-op: booking
+ * notification emails already carry an .ics attachment for both parties.
  *
  * Uses the idempotencyId (booking ID) to prevent duplicate events on
  * retry. Google returns 409 on duplicate client-supplied event IDs;
@@ -262,18 +115,13 @@ export async function calendarEventCreate(params: {
       session.eventTypeId,
       session.eventTypeModeId
     )
-
-    if (!destination) {
-      return sendCreateIcsFallback(orgId, sessionId, bookingId)
-    }
+    if (!destination) return { calendarEventId: null }
 
     const integration = await loadConnectedCalendar(
       orgId,
       destination.expertIntegrationId
     )
-    if (!integration?.authAccountId) {
-      return sendCreateIcsFallback(orgId, sessionId, bookingId)
-    }
+    if (!integration?.authAccountId) return { calendarEventId: null }
 
     const { provider, accessToken } = await calendarAccessToken(
       integration.userId,
@@ -323,27 +171,16 @@ export async function calendarEventCreate(params: {
 }
 
 /**
- * Update an existing calendar event (e.g., on reschedule).
- *
- * If no destination calendar is configured (calendar-optional mode),
- * sends an updated .ics email to the expert.
+ * Update an existing calendar event (e.g., on reschedule). No-op when the
+ * session has no external event; the reschedule email carries the .ics.
  */
 export async function calendarEventUpdate(params: {
   sessionId: string
-  bookingId: string
   orgId: string
   newStartTime: Date
   newEndTime: Date
-  previousStartTime: Date
 }): Promise<void> {
-  const {
-    sessionId,
-    bookingId,
-    orgId,
-    newStartTime,
-    newEndTime,
-    previousStartTime,
-  } = params
+  const { sessionId, orgId, newStartTime, newEndTime } = params
 
   try {
     const session = await withOrgContext(orgId, async (tx: Tx) => {
@@ -364,20 +201,7 @@ export async function calendarEventUpdate(params: {
       return row
     })
 
-    if (!session) return
-
-    // No external event → create went through the ICS e-mail path.
-    if (!session.calendarEventId) {
-      await sendRescheduleIcsFallback(
-        orgId,
-        sessionId,
-        bookingId,
-        newStartTime,
-        newEndTime,
-        previousStartTime
-      )
-      return
-    }
+    if (!session?.calendarEventId) return
 
     const destination =
       session.calendarDestinationIntegrationId &&
@@ -388,34 +212,13 @@ export async function calendarEventUpdate(params: {
           }
         : // Pre-0046 sessions: keep the expert default used at create.
           await getDestinationCalendar(orgId, session.expertProfileId)
-
-    if (!destination) {
-      await sendRescheduleIcsFallback(
-        orgId,
-        sessionId,
-        bookingId,
-        newStartTime,
-        newEndTime,
-        previousStartTime
-      )
-      return
-    }
+    if (!destination) return
 
     const integration = await loadConnectedCalendar(
       orgId,
       destination.expertIntegrationId
     )
-    if (!integration?.authAccountId) {
-      await sendRescheduleIcsFallback(
-        orgId,
-        sessionId,
-        bookingId,
-        newStartTime,
-        newEndTime,
-        previousStartTime
-      )
-      return
-    }
+    if (!integration?.authAccountId) return
 
     const { provider, accessToken } = await calendarAccessToken(
       integration.userId,
@@ -444,17 +247,14 @@ export async function calendarEventUpdate(params: {
 }
 
 /**
- * Delete a calendar event (e.g., on cancellation).
- *
- * If no destination calendar is configured (calendar-optional mode),
- * sends a cancellation .ics email to the expert.
+ * Delete a calendar event (e.g., on cancellation). No-op when the session
+ * has no external event; the cancellation email carries the .ics.
  */
 export async function calendarEventDelete(params: {
   sessionId: string
-  bookingId: string
   orgId: string
 }): Promise<void> {
-  const { sessionId, bookingId, orgId } = params
+  const { sessionId, orgId } = params
 
   try {
     const session = await withOrgContext(orgId, async (tx: Tx) => {
@@ -473,13 +273,7 @@ export async function calendarEventDelete(params: {
       return row
     })
 
-    if (!session) return
-
-    // No external event → create went through the ICS e-mail path.
-    if (!session.calendarEventId) {
-      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
-      return
-    }
+    if (!session?.calendarEventId) return
 
     const destination =
       session.calendarDestinationIntegrationId &&
@@ -489,20 +283,13 @@ export async function calendarEventDelete(params: {
             externalCalendarId: session.calendarDestinationExternalId,
           }
         : await getDestinationCalendar(orgId, session.expertProfileId)
-
-    if (!destination) {
-      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
-      return
-    }
+    if (!destination) return
 
     const integration = await loadConnectedCalendar(
       orgId,
       destination.expertIntegrationId
     )
-    if (!integration?.authAccountId) {
-      await sendCancellationIcsFallback(orgId, sessionId, bookingId)
-      return
-    }
+    if (!integration?.authAccountId) return
 
     const { provider, accessToken } = await calendarAccessToken(
       integration.userId,

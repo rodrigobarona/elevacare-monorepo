@@ -109,7 +109,6 @@ export {
   MemberBookingPolicyError,
 } from "./member-booking"
 export type {
-  MemberIcsPayload,
   MemberBookingPolicyErrorCode,
   MemberCancellationQuote,
 } from "./member-booking"
