@@ -3,6 +3,7 @@ import {
   Container,
   Head,
   Html,
+  Img,
   Preview,
   Section,
   Tailwind,
@@ -11,6 +12,9 @@ import {
 import type { ReactNode } from "react"
 import { elevaTailwindConfig } from "../theme"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
+
+/** Served by apps/web from `public/brand/`; email clients need an absolute PNG. */
+const LOGO_URL = "https://eleva.care/brand/eleva-logo-color.png"
 
 interface LayoutProps {
   preview: string
@@ -47,9 +51,7 @@ export function EmailLayout({
           <Preview>{preview}</Preview>
           <Container className="mx-auto max-w-[560px] px-4 py-10">
             <Section className="mb-6">
-              <Text className="text-brand text-[20px] font-semibold tracking-tight">
-                Eleva Care
-              </Text>
+              <Img src={LOGO_URL} alt="Eleva Care" width="141" height="28" />
             </Section>
             {children}
             <Section className="border-stroke mt-10 border-t pt-6">
