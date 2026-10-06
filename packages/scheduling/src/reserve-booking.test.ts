@@ -12,6 +12,7 @@ const getScheduleForBooking = vi.fn()
 const listExpertBusyBookings = vi.fn()
 const resolveOffer = vi.fn()
 const reserveSlot = vi.fn()
+const assertGuestEmailCanBook = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   findExpertByUsername: (...args: unknown[]) => findExpertByUsername(...args),
@@ -26,6 +27,17 @@ vi.mock("./resolve-offer", async () => {
   return {
     ...actual,
     resolveOffer: (...args: unknown[]) => resolveOffer(...args),
+  }
+})
+
+vi.mock("./assert-member-can-book", async () => {
+  const actual = await vi.importActual<
+    typeof import("./assert-member-can-book")
+  >("./assert-member-can-book")
+  return {
+    ...actual,
+    assertGuestEmailCanBook: (...args: unknown[]) =>
+      assertGuestEmailCanBook(...args),
   }
 })
 
@@ -125,6 +137,28 @@ describe("reserveBooking", () => {
     expect(findExpertByUsername).not.toHaveBeenCalled()
     expect(resolveOffer).not.toHaveBeenCalled()
     expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
+  it("blocks a guest whose email belongs to a blocked member", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    const { BookingError } = await import("./assert-member-can-book")
+    assertGuestEmailCanBook.mockRejectedValueOnce(
+      new BookingError("GUEST_EMAIL_BLOCKED")
+    )
+    const result = await reserveBooking(redis, baseInput)
+    expect(result).toEqual({ ok: false, error: "GUEST_EMAIL_BLOCKED" })
+    expect(assertGuestEmailCanBook).toHaveBeenCalledWith("member@eleva.care")
+    expect(reserveSlot).not.toHaveBeenCalled()
+  })
+
+  it("skips the guest email check for signed-in members", async () => {
+    const { reserveBooking } = await import("./reserve-booking")
+    await reserveBooking(redis, {
+      ...baseInput,
+      guest: undefined,
+      session: { userId: "user-1", email: "member@eleva.care" },
+    })
+    expect(assertGuestEmailCanBook).not.toHaveBeenCalled()
   })
 
   it("rejects a country-gated mode before the slot lock", async () => {

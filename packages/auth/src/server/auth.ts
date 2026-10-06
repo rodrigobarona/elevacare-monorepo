@@ -32,6 +32,7 @@ import { authRateLimitEnabled } from "../e2e-auth-url"
 import { invitationAcceptUrl } from "../invitation-accept-url"
 import { crossSubDomainCookieConfig } from "./cookie-domain"
 import { magicLinkServerHeaders } from "./magic-link-headers"
+import { passkeyOrigins } from "./passkey-origin"
 
 export { setAuthTransactionalMailer } from "../send-auth-email"
 
@@ -124,6 +125,7 @@ function createAuth() {
   const storage = secondaryStorage()
   requireSecondaryStorageWhenDeployed(storage)
   const issuer = baseURL()
+  const passkeyOrigin = passkeyOrigins()
 
   // Plugin packages resolve a second @better-auth/core copy; the runtime
   // contract is 1.7.3. Cast keeps tsc aligned with the spike-proven set.
@@ -328,7 +330,7 @@ function createAuth() {
       passkey({
         rpID: process.env.PASSKEY_RP_ID ?? "eleva.care",
         rpName: "Eleva.care",
-        origin: process.env.PASSKEY_ORIGIN ?? issuer,
+        origin: passkeyOrigin,
       }),
       magicLink({
         sendMagicLink: async ({ email, url }) => {

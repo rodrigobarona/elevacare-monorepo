@@ -13,8 +13,10 @@ import {
 import type { ReservationFunnelSnapshot } from "@eleva/db/schema"
 import {
   hashReservationToken,
+  assertGuestEmailCanBook,
   assertMemberCanBook,
   BookingError,
+  type MemberBookabilityError,
 } from "@eleva/scheduling"
 import { stripe } from "./client"
 import {
@@ -53,6 +55,21 @@ const bookingLinkIdSchema = z.string().uuid()
 
 export function paymentIntentIdempotencyKey(reservationId: string): string {
   return `pi:${reservationId}`
+}
+
+/**
+ * A guest hold keeps its guest email even if the payer signs in later, so
+ * both the session member and the reserved guest email must be bookable.
+ */
+export function reservationBookabilityTargets(input: {
+  reservationUserId: string | null
+  sessionUserId: string | null | undefined
+  guestEmail: string | undefined
+}): { memberId: string | null; guestEmail: string | undefined } {
+  return {
+    memberId: input.reservationUserId ?? input.sessionUserId ?? null,
+    guestEmail: input.reservationUserId ? undefined : input.guestEmail,
+  }
 }
 
 export function authorizeReservationAccess(input: {
@@ -133,12 +150,7 @@ export type CreatePaymentIntentForReservationResult =
     }
   | {
       ok: false
-      error:
-        | "not_found"
-        | "unavailable"
-        | "db_error"
-        | "ACCOUNT_DELETION_SCHEDULED"
-        | "ACCOUNT_BANNED"
+      error: "not_found" | "unavailable" | "db_error" | MemberBookabilityError
     }
 
 export async function retrieveBookingPaymentIntent(
@@ -212,10 +224,15 @@ export async function createPaymentIntentForReservation(
     return { ok: false, error: "unavailable" }
   }
 
-  const memberId = reservation.userId ?? input.sessionUserId
-  if (memberId) {
+  const { memberId, guestEmail } = reservationBookabilityTargets({
+    reservationUserId: reservation.userId,
+    sessionUserId: input.sessionUserId,
+    guestEmail: funnel.guest?.email,
+  })
+  if (memberId || guestEmail) {
     try {
-      await assertMemberCanBook(memberId)
+      if (memberId) await assertMemberCanBook(memberId)
+      if (guestEmail) await assertGuestEmailCanBook(guestEmail)
     } catch (err) {
       if (err instanceof BookingError) {
         return { ok: false, error: err.code }

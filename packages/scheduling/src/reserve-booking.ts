@@ -18,7 +18,7 @@ import { bookingLinks, consents } from "@eleva/db/schema"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
 import { emptyBusyTimeProvider, type BusyTimeProvider } from "./offer-slots"
-import { BookingError } from "./assert-member-can-book"
+import { BookingError, assertGuestEmailCanBook } from "./assert-member-can-book"
 import {
   linkRecipientMatches,
   normalizeEmail,
@@ -70,6 +70,7 @@ export type ReserveBookingError =
   | "SLOT_TAKEN"
   | "ACCOUNT_DELETION_SCHEDULED"
   | "ACCOUNT_BANNED"
+  | "GUEST_EMAIL_BLOCKED"
   | "POLICY_CHANGED"
   | "db_error"
 
@@ -177,6 +178,14 @@ export async function reserveBooking(
   const memberEmail = input.session?.email ?? input.guest?.email
   if (!memberEmail) {
     return { ok: false, error: "GUEST_REQUIRED" }
+  }
+  if (!input.session) {
+    try {
+      await assertGuestEmailCanBook(memberEmail)
+    } catch (err) {
+      if (err instanceof BookingError) return { ok: false, error: err.code }
+      throw err
+    }
   }
 
   const expert = await findExpertByUsername(input.username)

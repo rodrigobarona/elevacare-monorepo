@@ -18,7 +18,11 @@ export async function rejectIfMemberCannotBook(
 }
 
 export function paymentIntentBookabilityStatus(error: string): number | null {
-  if (error === "ACCOUNT_DELETION_SCHEDULED" || error === "ACCOUNT_BANNED") {
+  if (
+    error === "ACCOUNT_DELETION_SCHEDULED" ||
+    error === "ACCOUNT_BANNED" ||
+    error === "GUEST_EMAIL_BLOCKED"
+  ) {
     return 409
   }
   return null

@@ -4,8 +4,8 @@ import { z } from "zod"
 import { corsHeaders } from "@/lib/cors"
 import {
   authorizeInternalWorkflow,
+  executeInternalWorkflow,
   internalWorkflowOptions,
-  runInternalWorkflow,
 } from "@/lib/internal-workflow"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
@@ -24,7 +24,7 @@ export const ROUTE_POLICY = {
  * `{ "month": "YYYY-MM" }` reruns a specific Lisbon calendar month;
  * the QStash schedule compares the previous month.
  *
- * Authz: Bearer `WORKFLOWS_DRAIN_SECRET`.
+ * Authz: QStash signature or Bearer `WORKFLOWS_DRAIN_SECRET`.
  */
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -36,7 +36,7 @@ const BodySchema = z
   .strict()
 
 export async function POST(request: Request) {
-  const denied = authorizeInternalWorkflow(request)
+  const denied = await authorizeInternalWorkflow(request)
   if (denied) return denied
   const headers = corsHeaders(request, "POST, OPTIONS")
   const raw = await request.text()
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
       { status: 422, headers }
     )
   }
-  return runInternalWorkflow(request, async () =>
+  return executeInternalWorkflow(request, async () =>
     processStripeToconlineReconciliation({ month: parsed.data.month })
   )
 }
