@@ -1,5 +1,6 @@
 import { NOTIFICATION_KINDS, type NotificationKind } from "./kinds"
 import { SendNotificationError } from "./errors"
+import { isWithinQuietHours, quietHoursFrom } from "./quiet-hours"
 
 export const NOTIFICATION_CHANNELS = ["email", "sms", "in_app"] as const
 
@@ -14,6 +15,25 @@ export type PreferenceRow = {
   channel: NotificationChannel
   category: "booking" | "reminder" | "payment" | "marketing" | "system"
   enabled: boolean
+  quietHoursStart?: string | null
+  quietHoursEnd?: string | null
+  timezone?: string | null
+}
+
+/**
+ * Quiet hours silence SMS only (email and in-app stay passive). Urgent
+ * kinds such as the 1 h reminder and payment failures bypass them.
+ */
+export function quietHoursSilence(input: {
+  kind: NotificationKind
+  channel: NotificationChannel
+  preferences: PreferenceRow[]
+  now: Date
+}): boolean {
+  if (input.channel !== "sms") return false
+  if (NOTIFICATION_KINDS[input.kind].urgency === "urgent") return false
+  const quiet = quietHoursFrom(input.preferences)
+  return quiet !== null && isWithinQuietHours(quiet, input.now)
 }
 
 export function supportedSendChannels(
