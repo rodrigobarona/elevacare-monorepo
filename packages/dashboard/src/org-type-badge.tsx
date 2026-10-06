@@ -9,11 +9,9 @@ type OrgTypeKey = OrgSwitcherItem["orgType"]
 
 const badgeStyles: Record<string, string> = {
   personal: "border-border bg-muted/60 text-muted-foreground",
-  expert:
-    "border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-300",
-  team: "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-300",
-  academy:
-    "border-violet-200 bg-violet-50 text-violet-700 dark:border-violet-900 dark:bg-violet-950 dark:text-violet-300",
+  expert: "border-primary/30 bg-accent text-accent-foreground",
+  team: "border-secondary-foreground/20 bg-secondary text-secondary-foreground",
+  academy: "border-info/30 bg-info-subtle text-info",
   staff: "border-border bg-muted/60 text-muted-foreground",
 }
 

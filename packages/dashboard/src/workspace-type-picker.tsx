@@ -74,12 +74,9 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
                 <ElevaIcon
                   icon={icon}
                   weight={isSelected ? "fill" : "duotone"}
-                  className={cn(
-                    "size-20",
-                    isSelected ? "text-eleva-primary" : "text-eleva-primary"
-                  )}
+                  className="size-20 text-primary"
                   duotoneColor={
-                    isSelected ? undefined : "rgb(var(--eleva-primary-light))"
+                    isSelected ? undefined : "var(--color-teal-300)"
                   }
                 />
               ) : (
@@ -87,9 +84,9 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
                   <ElevaIcon
                     icon={icon}
                     weight={isSelected ? "fill" : "duotone"}
-                    className="size-6 text-eleva-primary"
+                    className="size-6 text-primary"
                     duotoneColor={
-                      isSelected ? undefined : "rgb(var(--eleva-primary-light))"
+                      isSelected ? undefined : "var(--color-teal-300)"
                     }
                   />
                 </span>

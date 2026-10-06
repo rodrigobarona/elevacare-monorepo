@@ -26,7 +26,7 @@ export function AccountPageHeader({
       )}
     >
       <div className="space-y-2">
-        <h1 className="font-serif text-3xl tracking-tight text-eleva-primary">
+        <h1 className="font-serif text-3xl tracking-tight text-primary">
           {title}
         </h1>
         {description ? (

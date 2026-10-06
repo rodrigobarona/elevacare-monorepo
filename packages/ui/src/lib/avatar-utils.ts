@@ -1,10 +1,10 @@
 import type { CSSProperties } from "react"
 
 const AVATAR_GRADIENTS = [
-  ["rgb(var(--eleva-primary))", "rgb(var(--eleva-primary-light))"],
-  ["rgb(var(--eleva-secondary))", "rgb(var(--eleva-secondary-light))"],
-  ["rgb(var(--eleva-highlight-purple))", "rgb(var(--eleva-primary-light))"],
-  ["rgb(var(--eleva-primary))", "rgb(var(--eleva-accent))"],
+  ["var(--color-teal-700)", "var(--color-teal-300)"],
+  ["var(--color-coral-400)", "var(--color-coral-100)"],
+  ["var(--color-highlight-purple)", "var(--color-teal-300)"],
+  ["var(--color-teal-700)", "var(--color-teal-50)"],
 ] as const
 
 function hashString(value: string): number {

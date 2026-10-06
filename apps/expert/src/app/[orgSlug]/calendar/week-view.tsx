@@ -36,9 +36,9 @@ const HOURS = Array.from(
 )
 
 const MODE_CLASS: Record<CalendarBooking["sessionMode"], string> = {
-  online: "bg-sky-500/90 text-white",
-  phone: "bg-emerald-600/90 text-white",
-  in_person: "bg-amber-600/90 text-white",
+  online: "bg-primary text-primary-foreground",
+  phone: "bg-info text-status-foreground",
+  in_person: "bg-coral-700 text-white dark:bg-coral-400 dark:text-coral-950",
 }
 
 function startOfWeek(date: Date, weekStartsOn: 0 | 1 = 1): Date {

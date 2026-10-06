@@ -14,7 +14,7 @@ export interface ElevaIconProps extends Omit<PhosphorIconProps, "ref"> {
   duotoneColor?: string
 }
 
-const DEFAULT_DUOTONE_SECONDARY = "rgb(var(--eleva-primary-light))"
+const DEFAULT_DUOTONE_SECONDARY = "var(--color-teal-300)"
 
 /** Phosphor duotone secondary paths use opacity 0.2; restyle without invalid DOM attrs. */
 const DUOTONE_SECONDARY_CLASS =
