@@ -26,11 +26,11 @@
     "openInbox": "Abrir caixa de entrada"
   },
   "orgSwitcher": {
-    "findWorkspace": "Encontrar workspace…",
-    "createWorkspace": "Criar workspace",
-    "createWorkspaceDescription": "Workspace expert, team ou academy",
+    "findWorkspace": "Encontrar área de trabalho…",
+    "createWorkspace": "Criar área de trabalho",
+    "createWorkspaceDescription": "Área de especialista, equipa ou academia",
     "close": "Fechar",
-    "noResults": "Nenhum workspace encontrado",
+    "noResults": "Nenhuma área de trabalho encontrada",
     "badgePersonal": "Pessoal",
     "badgeExpert": "Especialista",
     "badgeTeam": "Team",
@@ -38,39 +38,40 @@
     "badgeStaff": "Staff"
   },
   "picker": {
-    "title": "Selecionar um workspace",
-    "description": "Escolha a que workspace pretende aceder."
+    "title": "Selecionar uma área de trabalho",
+    "description": "Escolha a área de trabalho a que pretende aceder."
   },
   "createWorkspace": {
-    "pickerTitle": "Criar um workspace",
-    "pickerDescription": "Escolha o tipo de workspace que pretende criar.",
+    "pickerTitle": "Criar uma área de trabalho",
+    "pickerDescription": "Escolha o tipo de área de trabalho que pretende criar.",
     "continue": "Continuar",
     "cancel": "Cancelar",
-    "nameLabel": "Nome do workspace",
-    "namePlaceholder": "O meu workspace",
-    "submit": "Criar workspace",
+    "nameLabel": "Nome da área de trabalho",
+    "namePlaceholder": "A minha área de trabalho",
+    "submit": "Criar área de trabalho",
     "submitting": "A criar…",
-    "errorGeneric": "Não foi possível criar o workspace. Tente novamente.",
+    "errorGeneric": "Não foi possível criar a área de trabalho. Tente novamente.",
     "types": {
       "expert": {
         "title": "Especialista",
-        "description": "Gerencie a sua prática independente na Eleva.",
-        "wizardTitle": "Nome do workspace de especialista",
-        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+        "description": "Gira a sua prática independente na Eleva.",
+        "wizardTitle": "Nome da sua área de especialista",
+        "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva."
       },
       "team": {
-        "title": "Team",
-        "description": "Gerencie vários especialistas numa única organização.",
-        "wizardTitle": "Nome do workspace team",
-        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+        "title": "Equipa",
+        "description": "Gira vários especialistas numa única organização.",
+        "wizardTitle": "Nome da área da equipa",
+        "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva."
       },
       "academy": {
         "title": "Academia",
         "description": "Publique e gira cursos para os seus formandos.",
-        "wizardTitle": "Nome do workspace de academia",
-        "wizardDescription": "É assim que o seu workspace aparecerá na Eleva."
+        "wizardTitle": "Nome da área da academia",
+        "wizardDescription": "É assim que a sua área de trabalho aparecerá na Eleva."
       }
-    }
+    },
+    "back": "Voltar"
   },
   "routeStates": {
     "loading": "A carregar…",

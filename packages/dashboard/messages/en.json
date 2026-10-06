@@ -70,7 +70,8 @@
         "wizardTitle": "Name your academy workspace",
         "wizardDescription": "This is how your workspace will appear in Eleva."
       }
-    }
+    },
+    "back": "Back"
   },
   "routeStates": {
     "loading": "Loading…",
