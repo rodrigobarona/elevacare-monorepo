@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-06: BotID rollout is staged, production stays off (AUD-017)
+
+- Decision: BotID is installed but gated by `BOTID_MODE` (`off` by default,
+  then `monitor`, then `enforce`). Enforcement applies only to the booking
+  funnel routes (reserve, confirm, payment intent); other routes that call
+  `checkBot()` are also called server-to-server and stay monitor-only. In
+  enforce mode a failed check counts as a bot.
+- `extraAllowedHosts` alone cannot fix the cross-origin funnel: the BotID
+  client (1.5.11) never signs cross-origin requests. The funnel therefore
+  moves to a flagged same-origin `/api/*` rewrite on the gateway.
+- Promotion gate (founder, 2026-10-06): staging must show two networks give
+  two different rate-limit keys, the key matches Vercel's forwarded client IP,
+  and BotID blocks a scripted request while real bookings pass. Runbook:
+  `operator-tasks/botid-staging-validation.md`. Production stays `off` until
+  then.
+- Owner: engineering (code), operator (staging evidence). Status: `active`.
+
 ### 2026-10-06: Staff refunds above the dual-control threshold fail closed (AUD-022)
 
 - Decision: a human staff refund acting for the platform above

@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { Ratelimit } from "@upstash/ratelimit"
 import { Redis } from "@upstash/redis"
 import { secureJson } from "./security-headers"
@@ -158,5 +159,28 @@ export function rateLimitKey(request: Request, userId?: string): string {
   if (userId) return `user:${userId}`
   const forwarded = request.headers.get("x-forwarded-for")
   const ip = forwarded?.split(",")[0]?.trim() ?? "unknown"
+  if (process.env.RATE_LIMIT_IP_DEBUG === "true") logIpSource(request, ip)
   return `ip:${ip}`
+}
+
+/**
+ * Temporary AUD-017 staging check: proves the API still sees each member's
+ * own IP behind the gateway `/api/*` rewrite. Logs a hash, never the raw IP.
+ */
+function logIpSource(request: Request, ip: string): void {
+  const forwarded = request.headers.get("x-forwarded-for")
+  const realIp = request.headers.get("x-real-ip")
+  const vercelForwarded = request.headers.get("x-vercel-forwarded-for")
+  console.info(
+    JSON.stringify({
+      event: "rate_limit.ip_source",
+      path: new URL(request.url).pathname,
+      keyHash: createHash("sha256").update(ip).digest("hex").slice(0, 12),
+      forwardedHops: forwarded ? forwarded.split(",").length : 0,
+      matchesRealIp: realIp ? realIp.trim() === ip : null,
+      matchesVercelForwarded: vercelForwarded
+        ? vercelForwarded.split(",")[0]?.trim() === ip
+        : null,
+    })
+  )
 }
