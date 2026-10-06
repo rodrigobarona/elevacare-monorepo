@@ -3,7 +3,7 @@
  */
 
 export const DEFAULT_PAYOUT_APPROVAL_THRESHOLD_CENTS = 50_000
-/** Dual-control threshold from D-06. Enforcement is Phase 12 admin. */
+/** Dual-control threshold from D-06. Approval flow is Phase 12 admin. */
 export const ADMIN_DUAL_CONTROL_REFUND_CENTS = 20_000
 export const MEMBER_FULL_REFUND_WINDOW_HOURS = 24
 export const LISBON_TZ = "Europe/Lisbon"
@@ -392,4 +392,22 @@ export function stripePayoutOutcomeTransition(input: {
 
 function isHoldReason(value: string): value is HoldReason {
   return value === "dispute" || value === "manual"
+}
+
+/**
+ * Staff-initiated platform refunds above the threshold need a second
+ * approver. Until Phase 12 ships `admin_action_requests` there is no
+ * approval path, so they fail closed. System sweeps (no actor) and
+ * expert refunds in their own org are not gated.
+ */
+export function requiresDualControlApproval(input: {
+  amountCents: number
+  actingOrgId: string
+  actorUserId: string | null
+}): boolean {
+  return (
+    input.actingOrgId === "platform" &&
+    input.actorUserId !== null &&
+    input.amountCents > ADMIN_DUAL_CONTROL_REFUND_CENTS
+  )
 }
