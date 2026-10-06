@@ -19,7 +19,10 @@ function routePaths(dir: string): string[] {
     const full = join(dir, entry)
     if (statSync(full).isDirectory()) out.push(...routePaths(full))
     else if (entry === "route.ts") {
-      const rel = relative(APP_DIR, dir).split(sep).join("/")
+      const rel = relative(APP_DIR, dir)
+        .split(sep)
+        .filter((segment) => !/^\(.+\)$/.test(segment))
+        .join("/")
       out.push(`/${rel}`.replace(/\[([^\]]+)\]/g, "{$1}"))
     }
   }
