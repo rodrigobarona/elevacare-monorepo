@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { BookingCard } from "../_components/booking-card"
 
@@ -22,7 +22,7 @@ export default async function SessionsPage({
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
 
       <section className="space-y-4">
         <h2 className="font-medium">{t("upcomingTitle")}</h2>

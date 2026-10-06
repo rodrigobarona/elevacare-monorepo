@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import {
   getEventType,
   listBookingLinksForEventType,
@@ -125,10 +125,7 @@ export default async function EditEventTypePage(props: {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <AccountPageHeader
-        title={t("editTitle")}
-        description={t("editDescription")}
-      />
+      <PageHeader title={t("editTitle")} description={t("editDescription")} />
       <EventTypeBuilder
         eventTypeId={id}
         workspaceBase={base}

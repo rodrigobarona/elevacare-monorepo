@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { LinkButton } from "@eleva/ui/components/button"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
@@ -29,7 +29,7 @@ export default async function OrgHomePage({
 
   return (
     <div className="space-y-8" data-testid="member-space-home">
-      <AccountPageHeader
+      <PageHeader
         title={t("welcome", { name: memberName })}
         description={t("subtitle")}
         actions={<FindExpertButton href={expertsUrl} />}

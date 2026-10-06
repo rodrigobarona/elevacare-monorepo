@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { syncExpertCalendarAccounts } from "@eleva/auth"
 import {
   getDestinationCalendar,
@@ -65,7 +65,7 @@ export default async function CalendarsPage({
         <span>{t("title")}</span>
       </div>
 
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <CalendarManager
         integrations={integrations}

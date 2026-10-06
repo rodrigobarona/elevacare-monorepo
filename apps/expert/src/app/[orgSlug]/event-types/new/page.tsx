@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { EventTypeForm } from "../event-type-form"
@@ -19,7 +19,7 @@ export default async function NewEventTypePage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <AccountPageHeader
+      <PageHeader
         title={t("createTitle")}
         description={t("createDescription")}
       />

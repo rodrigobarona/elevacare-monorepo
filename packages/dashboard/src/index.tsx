@@ -1,4 +1,3 @@
-export { AccountPageHeader } from "./account-page-header"
 export { DashboardShell } from "./dashboard-shell"
 export { DashboardHeader } from "./dashboard-header"
 export { InboxPage } from "./inbox-page"

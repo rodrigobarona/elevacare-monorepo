@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { listExpertIntegrations } from "@eleva/db"
 import { listByCategory, listCategories } from "@eleva/integrations"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
@@ -36,7 +36,7 @@ export default async function IntegrationsPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
 
       {categories.map((category) => {
         const manifests = listByCategory(category)

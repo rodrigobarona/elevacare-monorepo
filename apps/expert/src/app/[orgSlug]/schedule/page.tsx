@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import {
   getDefaultSchedule,
   listAvailabilityRules,
@@ -34,7 +34,7 @@ export default async function SchedulePage({
 
     return (
       <div className="mx-auto max-w-2xl space-y-6">
-        <AccountPageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description")} />
         <InitScheduleButton timezone={fallbackTz} />
       </div>
     )
@@ -47,7 +47,7 @@ export default async function SchedulePage({
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
       <ScheduleEditor
         timezone={schedule.timezone}
         initialRules={rules.map((r) => ({

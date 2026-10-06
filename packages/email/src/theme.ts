@@ -1,19 +1,21 @@
+import { BRAND_SCALES as s } from "@eleva/config/brand-colors"
 import type { TailwindConfig } from "react-email"
 
-/** Eleva email tokens — brand book (`docs/eleva-v3/brand-book/email-system.md`). */
+/** Eleva email tokens — brand v2 hex scales; layout rules in `docs/eleva-v3/brand-book/email-system.md`. */
 const colors = {
-  canvas: "#F9FAFB",
+  canvas: s.neutral[50],
   bg: "#FFFFFF",
-  "bg-2": "#F3F4F6",
-  fg: "#4A5568",
-  "fg-2": "#374151",
-  "fg-3": "#6B7280",
+  "bg-2": s.neutral[100],
+  fg: s.neutral[700],
+  "fg-2": s.neutral[800],
+  "fg-3": s.neutral[600],
   "fg-inverted": "#FFFFFF",
-  stroke: "#E2E8F0",
-  brand: "#006D77",
-  "brand-dark": "#004D54",
-  danger: "#B91C1C",
-  success: "#15803D",
+  stroke: s.neutral[200],
+  brand: s.teal[700],
+  "brand-dark": s.teal[800],
+  accent: s.coral[400],
+  danger: s.danger[700],
+  success: s.success[700],
 } as const
 
 export const elevaTailwindConfig: TailwindConfig = {

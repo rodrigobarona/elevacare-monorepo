@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { financeSummary, listFinanceBookings } from "@eleva/billing/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { FinanceDashboard } from "./finance-dashboard"
@@ -31,7 +31,7 @@ export default async function FinancePage({
 
   return (
     <div className="space-y-6">
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
       <FinanceDashboard
         orgSlug={orgSlug}
         invoicesHref={

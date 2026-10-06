@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { expertWorkspacePath } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { getAuthedApiClient } from "@/lib/server-api"
@@ -38,7 +38,7 @@ export default async function ExpertInvoicesPage({
         <span>/</span>
         <span>{t("title")}</span>
       </div>
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
       <MonthlyExport />
       <InvoiceList invoices={invoices} nextCursor={nextCursor} />
     </div>

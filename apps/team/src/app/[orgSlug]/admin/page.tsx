@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getSessionForOrg } from "@eleva/auth/server"
 
 export default async function TeamAdminDashboardPage({
@@ -12,7 +12,7 @@ export default async function TeamAdminDashboardPage({
   const t = await getTranslations()
 
   return (
-    <AccountPageHeader
+    <PageHeader
       title={t("dashboard.welcome", {
         name: session?.user.displayName ?? "",
       })}

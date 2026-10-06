@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { getSession } from "@eleva/auth/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 
 export default async function AdminDashboardPage() {
   const session = await getSession()
@@ -8,7 +8,7 @@ export default async function AdminDashboardPage() {
 
   return (
     <>
-      <AccountPageHeader
+      <PageHeader
         title={t("dashboard.welcome")}
         description={t("dashboard.subtitle")}
       />

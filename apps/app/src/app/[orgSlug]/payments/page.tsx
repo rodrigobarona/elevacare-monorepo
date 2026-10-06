@@ -1,5 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { Badge } from "@eleva/ui/components/badge"
 import { LinkButton } from "@eleva/ui/components/button"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
@@ -38,7 +38,7 @@ export default async function PaymentsPage({
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
 
       {payments.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("empty")}</p>

@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations, getLocale } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { listEventTypeModes, listExpertEventTypes } from "@eleva/db"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
@@ -44,7 +44,7 @@ export default async function EventTypesPage({
 
   return (
     <div className="space-y-6">
-      <AccountPageHeader
+      <PageHeader
         title={t("title")}
         description={t("description")}
         actions={

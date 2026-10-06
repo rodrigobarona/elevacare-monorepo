@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getSession, getAuthenticatedLocale } from "@eleva/auth/server"
 import { SettingsWidgets } from "./settings-widgets"
 
@@ -14,7 +14,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <AccountPageHeader
+      <PageHeader
         title={t("settings.title")}
         description={t("settings.pageDescription")}
       />

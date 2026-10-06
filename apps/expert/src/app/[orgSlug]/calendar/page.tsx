@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getActiveCalendarFeedToken, listExpertBookings } from "@eleva/db"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 import { IcsFeedCard } from "./ics-feed-card"
@@ -44,7 +44,7 @@ export default async function CalendarPage({
   return (
     <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div className="space-y-6">
-        <AccountPageHeader title={t("title")} description={t("description")} />
+        <PageHeader title={t("title")} description={t("description")} />
         <WeekView
           initialFrom={fromIso}
           initialTo={toIso}
