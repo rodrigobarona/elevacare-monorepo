@@ -5,6 +5,10 @@
  */
 export const SAME_ORIGIN_API_PREFIX = "/api"
 
+/** Mirrors `resolveSameOriginApiRewrites`: no rewrite exists without an API URL. */
 export function isSameOriginApiEnabled(): boolean {
-  return process.env.NEXT_PUBLIC_BOTID_SAME_ORIGIN_API === "true"
+  return (
+    process.env.NEXT_PUBLIC_BOTID_SAME_ORIGIN_API === "true" &&
+    Boolean(process.env.NEXT_PUBLIC_API_URL)
+  )
 }

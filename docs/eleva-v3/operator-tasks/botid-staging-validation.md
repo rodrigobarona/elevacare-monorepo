@@ -15,9 +15,13 @@ that a frontend host proxied. The fix is to route the funnel through
 
 ## Flags
 
+The same-origin path turns on only when both web variables are set; without
+`NEXT_PUBLIC_API_URL` the funnel keeps calling apps/api directly.
+
 | Variable                            | Project       | Staging value               | Production    |
 | ----------------------------------- | ------------- | --------------------------- | ------------- |
 | `NEXT_PUBLIC_BOTID_SAME_ORIGIN_API` | elevacare-web | `true` (needs a rebuild)    | unset         |
+| `NEXT_PUBLIC_API_URL`               | elevacare-web | apps/api origin (required)  | unchanged     |
 | `BOTID_MODE`                        | elevacare-api | `monitor`, then `enforce`   | unset (`off`) |
 | `BOTID_EXTRA_ALLOWED_HOSTS`         | elevacare-api | `dev.eleva.care`            | unset         |
 | `RATE_LIMIT_IP_DEBUG`               | elevacare-api | `true` during the test only | unset         |
