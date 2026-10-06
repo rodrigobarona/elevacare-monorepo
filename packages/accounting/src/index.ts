@@ -36,6 +36,17 @@ export {
   invoiceStatusFromAdapterError,
 } from "./dispatch"
 export {
+  disconnectExpertInvoicing,
+  type DisconnectExpertInvoicingResult,
+} from "./invoicing-connection"
+export {
+  PlatformFeeRetryError,
+  canRetryPlatformFeeInvoice,
+  isPlatformFeeRetryError,
+  retryPlatformFeeInvoice,
+  type PlatformFeeRetryCode,
+} from "./platform-fee-retry"
+export {
   persistExpertIntegrationCredentials,
   probeExpertInvoicingStatus,
   toPublicAdapterStatus,

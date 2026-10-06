@@ -93,6 +93,7 @@ import {
   ListPlatformFeeInvoicesResponseSchema,
   IssuePlatformFeeInvoiceRequestSchema,
   IssuePlatformFeeInvoiceResponseSchema,
+  DisconnectAccountingResponseSchema,
   ClosedGateInvoicePayloadSchema,
   EditorAssistRequestSchema,
 } from "@eleva/api-client"
@@ -3145,6 +3146,30 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/accounting/disconnect": {
+        post: {
+          operationId: "disconnectAccountingProvider",
+          summary: "Disconnect the expert invoicing provider",
+          description:
+            "Deletes the expert's stored invoicing credentials and returns invoicing setup to not_started so a provider or manual invoicing must be chosen again. Issued documents and invoice rows are untouched. Returns disconnected=false when no provider is set.",
+          tags: ["Accounting"],
+          responses: {
+            "200": {
+              description: "Disconnect outcome",
+              content: {
+                "application/json": {
+                  schema: DisconnectAccountingResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing expert:invoicing_manage or BotID blocked",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
       "/accounting/connect/{provider}": {
         post: {
           operationId: "connectAccountingProvider",
@@ -3265,6 +3290,37 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             ...stdErrors,
+          },
+        },
+      },
+      "/invoicing/platform-fee/{id}/retry": {
+        post: {
+          operationId: "retryPlatformFeeInvoice",
+          summary: "Retry one platform-fee invoice row",
+          description:
+            "Staff replay of a pending, failed, blocked, skipped, or dead-lettered platform-fee row. Resets it to pending under an audited compare-and-set, then re-runs closed-gate classification; restores the prior state if nothing was recorded. Issued, credited, and D-09 legacy rows are final. Never POSTs /api/v1/commercial_sales_documents and never Comunica série.",
+          tags: ["Invoicing"],
+          requestParams: {
+            path: z.object({ id: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Closed-gate invoice outcome after the retry",
+              content: {
+                "application/json": {
+                  schema: IssuePlatformFeeInvoiceResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Missing accounting:reconcile or flag disabled",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Row is final or changed during the retry",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
           },
         },
       },

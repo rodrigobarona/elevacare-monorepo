@@ -852,6 +852,14 @@ export type IssuePlatformFeeInvoiceResponse = z.infer<
   typeof IssuePlatformFeeInvoiceResponseSchema
 >
 
+export const DisconnectAccountingResponseSchema = z.object({
+  disconnected: z.boolean(),
+  provider: z.enum(["toconline", "moloni", "manual"]).nullable(),
+})
+export type DisconnectAccountingResponse = z.infer<
+  typeof DisconnectAccountingResponseSchema
+>
+
 export const EnsureExpertProfileRequestSchema = z.object({
   orgSlug: z.string().min(1).max(30),
   displayName: z.string().min(1).max(200),
@@ -2650,6 +2658,10 @@ export function createApiClient(options: ApiClientOptions) {
         )
         return ConnectAccountingResponseSchema.parse(raw)
       },
+      async disconnect() {
+        const raw = await request<unknown>("POST", "/accounting/disconnect", {})
+        return DisconnectAccountingResponseSchema.parse(raw)
+      },
       async reconciliation(query: GetAccountingReconciliationQuery = {}) {
         const params = new URLSearchParams()
         if (query.month) params.set("month", query.month)
@@ -2680,6 +2692,14 @@ export function createApiClient(options: ApiClientOptions) {
           "POST",
           "/invoicing/platform-fee",
           data
+        )
+        return IssuePlatformFeeInvoiceResponseSchema.parse(raw)
+      },
+      async retryPlatformFee(invoiceId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/invoicing/platform-fee/${encodeURIComponent(invoiceId)}/retry`,
+          {}
         )
         return IssuePlatformFeeInvoiceResponseSchema.parse(raw)
       },
