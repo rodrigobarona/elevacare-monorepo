@@ -131,6 +131,7 @@ describe("handleResendWebhook", () => {
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
         runPlatformTx: passthroughTx,
+        claimReceiptInTx: async () => true,
         verify: () =>
           ({
             type: "email.delivered",
@@ -171,6 +172,7 @@ describe("handleResendWebhook", () => {
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
         runPlatformTx: passthroughTx,
+        claimReceiptInTx: async () => true,
         verify: () =>
           ({
             type: "email.bounced",
@@ -223,6 +225,7 @@ describe("handleResendWebhook", () => {
     try {
       await handleResendWebhook(signedRequest("{}"), {
         runPlatformTx: passthroughTx,
+        claimReceiptInTx: async () => true,
         verify: () =>
           ({
             type: "email.bounced",
@@ -265,6 +268,7 @@ describe("handleResendWebhook", () => {
     try {
       await handleResendWebhook(signedRequest("{}"), {
         runPlatformTx: passthroughTx,
+        claimReceiptInTx: async () => true,
         verify: () =>
           ({
             type: "email.complained",
@@ -296,6 +300,7 @@ describe("handleResendWebhook", () => {
     try {
       const result = await handleResendWebhook(signedRequest("{}"), {
         runPlatformTx: passthroughTx,
+        claimReceiptInTx: async () => true,
         verify: () =>
           ({
             type: "email.delivered",
@@ -314,6 +319,41 @@ describe("handleResendWebhook", () => {
         completeInTx,
       })
       expect(result.body).toEqual({ ok: true, handled: false })
+      expect(completeInTx).not.toHaveBeenCalled()
+    } finally {
+      restoreEnv()
+    }
+  })
+
+  it("skips a redelivered svix message without writing", async () => {
+    process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
+    const completeInTx = vi.fn()
+    const claimReceiptInTx = vi.fn().mockResolvedValue(false)
+    try {
+      const result = await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx: passthroughTx,
+        claimReceiptInTx,
+        verify: () =>
+          ({
+            type: "email.delivered",
+            created_at: "2026-09-22T10:01:00.000Z",
+            data: {
+              created_at: "2026-09-22T10:00:00.000Z",
+              email_id: EMAIL_ID,
+              from: "a@eleva.care",
+              to: ["member@example.com"],
+              subject: "hi",
+              tags: { deliveryId: DELIVERY_ID },
+            },
+          }) as WebhookEventPayload,
+        loadById: async () => baseRow({ orgId: null }),
+        completeInTx,
+      })
+      expect(result.body).toEqual({ ok: true, handled: true, duplicate: true })
+      expect(claimReceiptInTx).toHaveBeenCalledWith(FAKE_TX, {
+        provider: "resend",
+        messageId: "msg_1",
+      })
       expect(completeInTx).not.toHaveBeenCalled()
     } finally {
       restoreEnv()

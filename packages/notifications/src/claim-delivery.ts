@@ -367,6 +367,19 @@ export async function completeEmailFromWebhook(input: {
 
 export type EmailSuppressionReason = "hard_bounce" | "complaint"
 
+/** False when this provider message id was already applied. */
+export async function claimWebhookReceiptInTx(
+  tx: Tx,
+  input: { provider: "resend"; messageId: string }
+): Promise<boolean> {
+  const inserted = await tx
+    .insert(main.notificationWebhookReceipts)
+    .values({ provider: input.provider, messageId: input.messageId })
+    .onConflictDoNothing()
+    .returning({ messageId: main.notificationWebhookReceipts.messageId })
+  return inserted.length > 0
+}
+
 export async function upsertEmailSuppressionInTx(
   tx: Tx,
   input: { email: string; reason: EmailSuppressionReason }

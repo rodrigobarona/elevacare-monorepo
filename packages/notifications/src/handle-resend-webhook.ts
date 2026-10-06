@@ -3,6 +3,7 @@ import { withPlatformAdminContext } from "@eleva/db"
 import { Resend, type WebhookEventPayload } from "resend"
 import { z } from "zod"
 import {
+  claimWebhookReceiptInTx,
   completeEmailFromWebhookInTx,
   loadDeliveryById,
   loadDeliveryByProviderId,
@@ -54,6 +55,7 @@ export type ResendWebhookDeps = {
   loadByProviderId?: typeof loadDeliveryByProviderId
   completeInTx?: typeof completeEmailFromWebhookInTx
   suppressInTx?: typeof upsertEmailSuppressionInTx
+  claimReceiptInTx?: typeof claimWebhookReceiptInTx
   /** Test seam for org-less transactional writes. */
   runPlatformTx?: typeof withPlatformAdminContext
   now?: () => Date
@@ -97,6 +99,7 @@ export async function handleResendWebhook(
     ok: boolean
     error?: string
     handled?: boolean
+    duplicate?: boolean
     issues?: z.ZodIssue[]
   }
 }> {
@@ -196,7 +199,8 @@ export async function handleResendWebhook(
     now,
   }
 
-  await applyResendOutcome({
+  const applied = await applyResendOutcome({
+    messageId: id,
     row,
     patch,
     suppressReason,
@@ -204,10 +208,21 @@ export async function handleResendWebhook(
     deps,
   })
 
-  return { status: 200, body: { ok: true, handled: true } }
+  return {
+    status: 200,
+    body: { ok: true, handled: true, ...(applied ? {} : { duplicate: true }) },
+  }
 }
 
+class DuplicateResendWebhook extends Error {
+  constructor() {
+    super("resend_webhook_duplicate")
+  }
+}
+
+/** Returns false when the svix message id was already applied. */
 async function applyResendOutcome(input: {
+  messageId: string
   row: DeliveryRow
   patch: {
     id: string
@@ -219,16 +234,20 @@ async function applyResendOutcome(input: {
   suppressReason: EmailSuppressionReason | null
   email: string | null
   deps: ResendWebhookDeps
-}): Promise<void> {
+}): Promise<boolean> {
   const completeInTx = input.deps.completeInTx ?? completeEmailFromWebhookInTx
   const suppressInTx = input.deps.suppressInTx ?? upsertEmailSuppressionInTx
+  const claimReceiptInTx =
+    input.deps.claimReceiptInTx ?? claimWebhookReceiptInTx
   const runPlatformTx = input.deps.runPlatformTx ?? withPlatformAdminContext
+  const receipt = { provider: "resend" as const, messageId: input.messageId }
 
   if (!input.row.orgId) {
     // User-scoped auth / guest e-mail rows have org_id NULL by schema.
     // audit_outbox.org_id is NOT NULL and withPlatformAudit requires orgId —
     // same skip as sendNotification finish() and Twilio StatusCallback.
-    await runPlatformTx(async (tx) => {
+    return runPlatformTx(async (tx) => {
+      if (!(await claimReceiptInTx(tx, receipt))) return false
       await completeInTx(tx, input.patch)
       if (input.suppressReason && input.email) {
         await suppressInTx(tx, {
@@ -236,41 +255,50 @@ async function applyResendOutcome(input: {
           reason: input.suppressReason,
         })
       }
+      return true
     })
-    return
   }
 
-  await withPlatformAudit(
-    { orgId: input.row.orgId, actorUserId: null },
-    async (tx, ctx) => {
-      const wrote = await completeInTx(tx, input.patch)
-      let suppressionCreated = false
-      if (input.suppressReason && input.email) {
-        const result = await suppressInTx(tx, {
-          email: input.email,
-          reason: input.suppressReason,
+  try {
+    await withPlatformAudit(
+      { orgId: input.row.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        if (!(await claimReceiptInTx(tx, receipt))) {
+          throw new DuplicateResendWebhook()
+        }
+        const wrote = await completeInTx(tx, input.patch)
+        let suppressionCreated = false
+        if (input.suppressReason && input.email) {
+          const result = await suppressInTx(tx, {
+            email: input.email,
+            reason: input.suppressReason,
+          })
+          suppressionCreated = result.created
+        }
+        const action =
+          input.suppressReason !== null
+            ? ("suppressed" as const)
+            : input.patch.status === "delivered"
+              ? ("sent" as const)
+              : ("failed" as const)
+        await ctx.emit({
+          entity: "notification",
+          action,
+          entityId: input.patch.id,
+          payload: {
+            channel: "email",
+            providerId: input.patch.providerId,
+            status: input.patch.status,
+            applied: wrote,
+            suppression: input.suppressReason,
+            suppressionCreated,
+          },
         })
-        suppressionCreated = result.created
       }
-      const action =
-        input.suppressReason !== null
-          ? ("suppressed" as const)
-          : input.patch.status === "delivered"
-            ? ("sent" as const)
-            : ("failed" as const)
-      await ctx.emit({
-        entity: "notification",
-        action,
-        entityId: input.patch.id,
-        payload: {
-          channel: "email",
-          providerId: input.patch.providerId,
-          status: input.patch.status,
-          applied: wrote,
-          suppression: input.suppressReason,
-          suppressionCreated,
-        },
-      })
-    }
-  )
+    )
+  } catch (err) {
+    if (err instanceof DuplicateResendWebhook) return false
+    throw err
+  }
+  return true
 }

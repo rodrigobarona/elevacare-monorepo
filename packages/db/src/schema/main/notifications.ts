@@ -8,6 +8,7 @@ import {
   pgEnum,
   pgPolicy,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -238,6 +239,27 @@ export const emailSuppressions = pgTable(
   (t) => ({
     emailKey: unique("email_suppressions_email_key").on(t.email),
     servicePolicy: pgPolicy("email_suppressions_service_only", {
+      using: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`,
+      withCheck: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`,
+    }),
+  })
+)
+
+/**
+ * Durable dedupe for provider webhooks that redeliver with a stable message
+ * id (Resend `svix-id`). Inserted in the same transaction as the outcome so
+ * a failed apply is retried and a replay is a no-op. RLS class: service-only.
+ */
+export const notificationWebhookReceipts = pgTable(
+  "notification_webhook_receipts",
+  {
+    provider: text("provider").notNull(),
+    messageId: text("message_id").notNull(),
+    receivedAt: createdAt(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.provider, t.messageId] }),
+    servicePolicy: pgPolicy("notification_webhook_receipts_service_only", {
       using: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`,
       withCheck: sql`current_setting('eleva.platform_admin', true) = 'true' OR current_setting('eleva.service', true) = 'domain_events_publisher'`,
     }),

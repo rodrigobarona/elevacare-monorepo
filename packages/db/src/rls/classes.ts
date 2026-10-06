@@ -88,6 +88,7 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
     selectClass: "tenant-owned",
   },
   { table: "email_suppressions", class: "service-only" },
+  { table: "notification_webhook_receipts", class: "service-only" },
   { table: "phone_verifications", class: "service-only" },
   {
     table: "dsar_requests",
