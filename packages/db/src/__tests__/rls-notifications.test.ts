@@ -43,16 +43,14 @@ describe.skipIf(!enabled || !databaseUrl)("rls notifications inbox", () => {
     "service inserts; members read and mark read only their own rows",
     { timeout: 30_000 },
     async () => {
-      const [rowA] = await withPlatformAdminContext(async (tx) =>
-        tx
-          .insert(notifications)
-          .values([
-            { userId: userA, kind: "test", title: "A", body: "a" },
-            { userId: userB, kind: "test", title: "B", body: "b" },
-          ])
-          .returning({ id: notifications.id, userId: notifications.userId })
-      ).then((rows) => rows.filter((row) => row.userId === userA))
-      expect(rowA).toBeDefined()
+      const rowA = randomUUID()
+      // RETURNING would need the owner-only SELECT policy, as in production.
+      await withPlatformAdminContext(async (tx) =>
+        tx.insert(notifications).values([
+          { id: rowA, userId: userA, kind: "test", title: "A", body: "a" },
+          { userId: userB, kind: "test", title: "B", body: "b" },
+        ])
+      )
 
       const visibleToA = await withUserContext(userA, async (tx) =>
         tx
@@ -66,10 +64,19 @@ describe.skipIf(!enabled || !databaseUrl)("rls notifications inbox", () => {
         tx
           .update(notifications)
           .set({ readAt: new Date() })
-          .where(eq(notifications.id, rowA!.id))
+          .where(eq(notifications.id, rowA))
           .returning({ id: notifications.id })
       )
       expect(updatedByB).toHaveLength(0)
+
+      const updatedByA = await withUserContext(userA, async (tx) =>
+        tx
+          .update(notifications)
+          .set({ readAt: new Date() })
+          .where(eq(notifications.id, rowA))
+          .returning({ id: notifications.id })
+      )
+      expect(updatedByA).toEqual([{ id: rowA }])
 
       await expect(
         withUserContext(userA, async (tx) =>
