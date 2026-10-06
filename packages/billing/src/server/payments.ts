@@ -57,6 +57,21 @@ export function paymentIntentIdempotencyKey(reservationId: string): string {
   return `pi:${reservationId}`
 }
 
+/**
+ * A guest hold keeps its guest email even if the payer signs in later, so
+ * both the session member and the reserved guest email must be bookable.
+ */
+export function reservationBookabilityTargets(input: {
+  reservationUserId: string | null
+  sessionUserId: string | null | undefined
+  guestEmail: string | undefined
+}): { memberId: string | null; guestEmail: string | undefined } {
+  return {
+    memberId: input.reservationUserId ?? input.sessionUserId ?? null,
+    guestEmail: input.reservationUserId ? undefined : input.guestEmail,
+  }
+}
+
 export function authorizeReservationAccess(input: {
   capabilityHash: string
   reservationToken: string
@@ -209,12 +224,15 @@ export async function createPaymentIntentForReservation(
     return { ok: false, error: "unavailable" }
   }
 
-  const memberId = reservation.userId ?? input.sessionUserId
-  const guestEmail = memberId ? undefined : funnel.guest?.email
+  const { memberId, guestEmail } = reservationBookabilityTargets({
+    reservationUserId: reservation.userId,
+    sessionUserId: input.sessionUserId,
+    guestEmail: funnel.guest?.email,
+  })
   if (memberId || guestEmail) {
     try {
       if (memberId) await assertMemberCanBook(memberId)
-      else if (guestEmail) await assertGuestEmailCanBook(guestEmail)
+      if (guestEmail) await assertGuestEmailCanBook(guestEmail)
     } catch (err) {
       if (err instanceof BookingError) {
         return { ok: false, error: err.code }

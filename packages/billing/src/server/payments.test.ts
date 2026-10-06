@@ -24,6 +24,7 @@ const {
   hashReservationToken,
   parseReservationFunnel,
   paymentIntentIdempotencyKey,
+  reservationBookabilityTargets,
 } = await import("./payments")
 
 describe("hashReservationToken", () => {
@@ -117,6 +118,28 @@ describe("authorizeReservationAccess", () => {
     expect(authorizeReservationAccess({ ...ok, linkRevoked: true })).toBe(
       "not_found"
     )
+  })
+})
+
+describe("reservationBookabilityTargets", () => {
+  it("checks the reserved guest email even when the payer has a session", () => {
+    expect(
+      reservationBookabilityTargets({
+        reservationUserId: null,
+        sessionUserId: "user-1",
+        guestEmail: "blocked@example.com",
+      })
+    ).toEqual({ memberId: "user-1", guestEmail: "blocked@example.com" })
+  })
+
+  it("uses only the bound member for member reservations", () => {
+    expect(
+      reservationBookabilityTargets({
+        reservationUserId: "user-2",
+        sessionUserId: "user-2",
+        guestEmail: "other@example.com",
+      })
+    ).toEqual({ memberId: "user-2", guestEmail: undefined })
   })
 })
 
