@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-06: Quiet hours silence non-urgent SMS (AUD-004)
+
+- Decision: `sendNotification` reads the member's stored quiet hours and
+  evaluates them in the stored timezone (UTC when missing or invalid). Inside
+  the window, non-urgent kinds skip the SMS channel; email and in-app still
+  deliver immediately, as the notifications spec requires. Urgent kinds
+  (`booking.reminder_1h`, `payment.failed`) bypass quiet hours. Windows may
+  wrap midnight; an equal start and end means no window.
+- Pulled forward from Phase 13 at the founder's request (production pass,
+  2026-10). Implements AUD-004 in
+  `audits/2026-09-phases-01-08-audit.md` and the quiet-hours rule in
+  `notifications-spec.md` (preferences section).
+- Out of scope (follow-up): deferring the skipped SMS to the end of the
+  window. Today it is skipped, not queued; the email and in-app copies are
+  the record. Push does not exist yet.
+- Owner: engineering. Status: `active`.
+
 ### 2026-09-26: Per-service cancellation policies (D-06 refund rules)
 
 - Decision: each service (event type) carries one of three Airbnb-style

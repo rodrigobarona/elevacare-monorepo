@@ -3,6 +3,7 @@ import { withAudit } from "@eleva/audit"
 import { listMemberNotificationPreferences } from "@eleva/db"
 import {
   channelEnabled,
+  quietHoursSilence,
   supportedSendChannels,
   type NotificationChannel,
   type PreferenceRow,
@@ -324,6 +325,16 @@ export async function sendNotification(
               kind: parsed.kind,
               channel,
               preferences,
+            })
+          ) {
+            return false
+          }
+          if (
+            quietHoursSilence({
+              kind: parsed.kind,
+              channel,
+              preferences,
+              now: now(),
             })
           ) {
             return false

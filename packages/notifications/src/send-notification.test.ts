@@ -379,6 +379,52 @@ describe("sendNotification", () => {
     }
   })
 
+  it("holds non-urgent SMS during quiet hours but keeps email and urgent SMS", async () => {
+    const previous = process.env.API_URL
+    process.env.API_URL = "https://api.eleva.care"
+    // 12:00 UTC is 13:00 in Lisbon (WEST), inside a 12:30–14:00 window.
+    const quietDeps = (): SendNotificationDeps => ({
+      ...store.deps(now),
+      loadUser: async (userId) => ({
+        userId,
+        email: `${userId}@example.com`,
+        locale: "pt",
+        phoneE164: "+351910000002",
+        phoneVerifiedAt: now.current,
+      }),
+      listPreferences: async () => [
+        {
+          channel: "sms",
+          category: "booking",
+          enabled: true,
+          quietHoursStart: "12:30:00",
+          quietHoursEnd: "14:00:00",
+          timezone: "Europe/Lisbon",
+        },
+      ],
+      sendSms: async () => ({ providerId: "SM_test" }),
+    })
+    try {
+      const normal = await sendNotification(bookingInput(), quietDeps())
+      expect(normal.deliveries.map((d) => d.channel)).toEqual([
+        "in_app",
+        "email",
+      ])
+
+      const urgent = await sendNotification(
+        bookingInput({
+          kind: "booking.reminder_1h",
+          idempotencyKey: "booking:1:reminder_1h",
+        }),
+        quietDeps()
+      )
+      expect(urgent.deliveries.map((d) => d.channel)).toContain("sms")
+    } finally {
+      if (previous === undefined) delete process.env.API_URL
+      else process.env.API_URL = previous
+    }
+  })
+
   it("adopts an existing Twilio SID instead of sending again", async () => {
     const previous = process.env.API_URL
     process.env.API_URL = "https://api.eleva.care"
