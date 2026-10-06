@@ -1,45 +1,68 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-const { state, withAuditMock } = vi.hoisted(() => {
+const { state, withAuditMock, withOrgContextMock } = vi.hoisted(() => {
   const state = {
-    rows: [] as Array<{ id: string; vaultRef: string | null }>,
+    /** Successive reads of the integration row; the last one repeats. */
+    reads: [] as Array<Array<{ id: string; vaultRef: string | null }>>,
+    readCount: 0,
+    casMatches: true,
     updates: [] as Array<Record<string, unknown>>,
     emits: [] as Array<Record<string, unknown>>,
+    order: [] as string[],
   }
-  const tx = {
+  const readTx = {
     select: () => ({
       from: () => ({
         where: () => ({
-          limit: () => ({ for: async () => state.rows }),
+          limit: async () => {
+            state.order.push("read")
+            const index = Math.min(state.readCount, state.reads.length - 1)
+            state.readCount += 1
+            return state.reads[index] ?? []
+          },
         }),
       }),
     }),
+  }
+  const writeTx = {
     update: () => ({
       set: (values: Record<string, unknown>) => ({
-        where: async () => {
-          state.updates.push(values)
-        },
+        where: () => ({
+          returning: async () => {
+            state.order.push("write")
+            state.updates.push(values)
+            return state.casMatches ? [{ id: "int-1" }] : []
+          },
+        }),
       }),
     }),
   }
+  const withOrgContextMock = vi.fn(
+    async (_orgId: string, fn: (t: typeof readTx) => Promise<unknown>) =>
+      fn(readTx)
+  )
   const withAuditMock = vi.fn(
     async (
       _opts: unknown,
       fn: (
-        t: typeof tx,
+        t: typeof writeTx,
         ctx: { emit: (e: Record<string, unknown>) => Promise<void> }
       ) => Promise<unknown>
     ) =>
-      fn(tx, {
+      fn(writeTx, {
         emit: async (e) => {
           state.emits.push(e)
         },
       })
   )
-  return { state, withAuditMock }
+  return { state, withAuditMock, withOrgContextMock }
 })
 
 vi.mock("@eleva/audit", () => ({ withAudit: withAuditMock }))
+vi.mock("@eleva/db", () => ({
+  main: { expertIntegrations: {} },
+  withOrgContext: withOrgContextMock,
+}))
 
 import { refreshToconlineSingleFlight } from "./refresh-lock"
 
@@ -54,29 +77,41 @@ function rotated(vaultRef: string) {
   }
 }
 
+function input(overrides: Record<string, unknown> = {}) {
+  return {
+    orgId: ORG,
+    staleVaultRef: "stale",
+    refreshToken: "rt-stale",
+    resolveStored: vi.fn(),
+    refresh: vi.fn().mockResolvedValue(rotated("new")),
+    ...overrides,
+  }
+}
+
 describe("refreshToconlineSingleFlight", () => {
   beforeEach(() => {
-    state.rows = []
+    state.reads = []
+    state.readCount = 0
+    state.casMatches = true
     state.updates = []
     state.emits = []
+    state.order = []
     withAuditMock.mockClear()
   })
 
-  it("refreshes and persists under the row lock when the stored ref is the stale one", async () => {
-    state.rows = [{ id: "int-1", vaultRef: "stale" }]
-    const refresh = vi.fn().mockResolvedValue(rotated("new"))
-    const resolveStored = vi.fn()
-
-    const result = await refreshToconlineSingleFlight({
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
-      resolveStored,
-      refresh,
+  it("refreshes outside any transaction, then persists with compare-and-set", async () => {
+    state.reads = [[{ id: "int-1", vaultRef: "stale" }]]
+    const args = input({
+      refresh: vi.fn(async () => {
+        state.order.push("refresh")
+        return rotated("new")
+      }),
     })
 
-    expect(refresh).toHaveBeenCalledWith("rt-stale")
-    expect(resolveStored).not.toHaveBeenCalled()
+    const result = await refreshToconlineSingleFlight(args)
+
+    expect(args.refresh).toHaveBeenCalledWith("rt-stale")
+    expect(state.order).toEqual(["read", "refresh", "write"])
     expect(result).toMatchObject({ vaultRef: "new", rotated: false })
     expect(state.updates[0]).toMatchObject({ vaultRef: "new" })
     expect(state.emits[0]).toMatchObject({
@@ -87,109 +122,102 @@ describe("refreshToconlineSingleFlight", () => {
   })
 
   it("reuses a token another instance already rotated without refreshing", async () => {
-    state.rows = [{ id: "int-1", vaultRef: "already-rotated" }]
+    state.reads = [[{ id: "int-1", vaultRef: "already-rotated" }]]
     const fresh = { ...rotated("already-rotated"), rotated: false }
-    const refresh = vi.fn()
+    const args = input({ resolveStored: vi.fn().mockResolvedValue({ fresh }) })
 
-    const result = await refreshToconlineSingleFlight({
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
-      resolveStored: vi.fn().mockResolvedValue({ fresh }),
-      refresh,
-    })
+    const result = await refreshToconlineSingleFlight(args)
 
     expect(result).toEqual(fresh)
-    expect(refresh).not.toHaveBeenCalled()
-    expect(state.updates).toHaveLength(0)
-    expect(state.emits).toHaveLength(0)
+    expect(args.refresh).not.toHaveBeenCalled()
+    expect(withAuditMock).not.toHaveBeenCalled()
   })
 
   it("refreshes with the stored refresh token when the stored ref also expired", async () => {
-    state.rows = [{ id: "int-1", vaultRef: "newer-but-expired" }]
-    const refresh = vi.fn().mockResolvedValue(rotated("newest"))
-
-    await refreshToconlineSingleFlight({
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
+    state.reads = [[{ id: "int-1", vaultRef: "newer-but-expired" }]]
+    const args = input({
       resolveStored: vi.fn().mockResolvedValue({ refreshToken: "rt-newer" }),
-      refresh,
     })
 
-    expect(refresh).toHaveBeenCalledWith("rt-newer")
+    await refreshToconlineSingleFlight(args)
+
+    expect(args.refresh).toHaveBeenCalledWith("rt-newer")
   })
 
   it("falls back to an unpersisted refresh when no integration row exists", async () => {
-    const refresh = vi.fn().mockResolvedValue(rotated("new"))
-
-    const result = await refreshToconlineSingleFlight({
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
-      resolveStored: vi.fn(),
-      refresh,
-    })
+    state.reads = [[]]
+    const result = await refreshToconlineSingleFlight(input())
 
     expect(result.rotated).toBe(true)
-    expect(state.updates).toHaveLength(0)
+    expect(withAuditMock).not.toHaveBeenCalled()
   })
 
-  it("hands the rotated token back for caller persistence when the locked write fails", async () => {
-    state.rows = [{ id: "int-1", vaultRef: "stale" }]
-    withAuditMock.mockImplementationOnce(async (_opts, fn) => {
-      await fn(
-        {
-          select: () => ({
-            from: () => ({
-              where: () => ({
-                limit: () => ({ for: async () => state.rows }),
-              }),
-            }),
-          }),
-          update: () => ({
-            set: () => ({
-              where: async () => {
-                throw new Error("connection reset")
-              },
-            }),
-          }),
-        } as never,
-        { emit: async () => undefined }
-      )
+  it("adopts the winner's token when the compare-and-set loses the race", async () => {
+    state.reads = [
+      [{ id: "int-1", vaultRef: "stale" }],
+      [{ id: "int-1", vaultRef: "winner" }],
+    ]
+    state.casMatches = false
+    const winner = { ...rotated("winner"), rotated: false }
+    const args = input({
+      resolveStored: vi.fn().mockResolvedValue({ fresh: winner }),
     })
 
-    const result = await refreshToconlineSingleFlight({
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
-      resolveStored: vi.fn(),
-      refresh: vi.fn().mockResolvedValue(rotated("new")),
+    const result = await refreshToconlineSingleFlight(args)
+
+    expect(result).toEqual(winner)
+    expect(state.emits).toHaveLength(0)
+  })
+
+  it("adopts the winner's token when our refresh fails after a concurrent rotation", async () => {
+    state.reads = [
+      [{ id: "int-1", vaultRef: "stale" }],
+      [{ id: "int-1", vaultRef: "winner" }],
+    ]
+    const winner = { ...rotated("winner"), rotated: false }
+    const args = input({
+      refresh: vi.fn().mockRejectedValue(new Error("invalid_grant")),
+      resolveStored: vi.fn().mockResolvedValue({ fresh: winner }),
     })
+
+    await expect(refreshToconlineSingleFlight(args)).resolves.toEqual(winner)
+  })
+
+  it("rethrows a refresh failure when nobody else rotated", async () => {
+    state.reads = [[{ id: "int-1", vaultRef: "stale" }]]
+    const args = input({
+      refresh: vi.fn().mockRejectedValue(new Error("invalid_grant")),
+    })
+
+    await expect(refreshToconlineSingleFlight(args)).rejects.toThrow(
+      "invalid_grant"
+    )
+  })
+
+  it("hands the rotated token back for caller persistence when the write fails", async () => {
+    state.reads = [[{ id: "int-1", vaultRef: "stale" }]]
+    withAuditMock.mockRejectedValueOnce(new Error("connection reset"))
+
+    const result = await refreshToconlineSingleFlight(input())
 
     expect(result).toMatchObject({ vaultRef: "new", rotated: true })
   })
 
   it("collapses concurrent refreshes for the same org into one", async () => {
-    state.rows = [{ id: "int-1", vaultRef: "stale" }]
+    state.reads = [[{ id: "int-1", vaultRef: "stale" }]]
     let release: (v: ReturnType<typeof rotated>) => void = () => undefined
-    const refresh = vi.fn(
-      () =>
-        new Promise<ReturnType<typeof rotated>>((resolve) => {
-          release = resolve
-        })
-    )
-    const input = {
-      orgId: ORG,
-      staleVaultRef: "stale",
-      refreshToken: "rt-stale",
-      resolveStored: vi.fn(),
-      refresh,
-    }
+    const args = input({
+      refresh: vi.fn(
+        () =>
+          new Promise<ReturnType<typeof rotated>>((resolve) => {
+            release = resolve
+          })
+      ),
+    })
 
-    const first = refreshToconlineSingleFlight(input)
-    const second = refreshToconlineSingleFlight(input)
-    await vi.waitFor(() => expect(refresh).toHaveBeenCalledTimes(1))
+    const first = refreshToconlineSingleFlight(args)
+    const second = refreshToconlineSingleFlight(args)
+    await vi.waitFor(() => expect(args.refresh).toHaveBeenCalledTimes(1))
     release(rotated("new"))
 
     const [a, b] = await Promise.all([first, second])

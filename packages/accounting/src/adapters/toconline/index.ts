@@ -385,7 +385,6 @@ async function refreshToconlineAccessToken(input: {
         refresh_token: input.refreshToken,
         scope: SCOPE,
       }).toString(),
-      // Runs while the integration row lock is held.
       signal: AbortSignal.timeout(TOKEN_REFRESH_TIMEOUT_MS),
     }
   )
