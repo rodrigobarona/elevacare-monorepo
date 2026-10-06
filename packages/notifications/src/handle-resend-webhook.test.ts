@@ -4,6 +4,15 @@ import type { Tx } from "@eleva/db"
 import { handleResendWebhook } from "./handle-resend-webhook"
 import type { DeliveryRow } from "./claim-delivery"
 
+const { auditEmit } = vi.hoisted(() => ({ auditEmit: vi.fn() }))
+
+vi.mock("@eleva/audit", () => ({
+  withPlatformAudit: async (
+    _options: unknown,
+    fn: (tx: Tx, ctx: { emit: typeof auditEmit }) => Promise<unknown>
+  ) => fn({} as Tx, { emit: auditEmit }),
+}))
+
 const DELIVERY_ID = "00000000-0000-4000-8000-000000000001"
 const EMAIL_ID = "re_abc123"
 const ORG_ID = "00000000-0000-4000-8000-000000000010"
@@ -355,6 +364,45 @@ describe("handleResendWebhook", () => {
         messageId: "msg_1",
       })
       expect(completeInTx).not.toHaveBeenCalled()
+    } finally {
+      restoreEnv()
+    }
+  })
+
+  it("skips a redelivered svix message on the audited org path", async () => {
+    process.env.RESEND_WEBHOOK_SECRET = "whsec_test"
+    auditEmit.mockClear()
+    const completeInTx = vi.fn()
+    const runPlatformTx = vi.fn()
+    const claimReceiptInTx = vi.fn().mockResolvedValue(false)
+    try {
+      const result = await handleResendWebhook(signedRequest("{}"), {
+        runPlatformTx,
+        claimReceiptInTx,
+        verify: () =>
+          ({
+            type: "email.delivered",
+            created_at: "2026-09-22T10:01:00.000Z",
+            data: {
+              created_at: "2026-09-22T10:00:00.000Z",
+              email_id: EMAIL_ID,
+              from: "a@eleva.care",
+              to: ["member@example.com"],
+              subject: "hi",
+              tags: { deliveryId: DELIVERY_ID },
+            },
+          }) as WebhookEventPayload,
+        loadById: async () => baseRow(),
+        completeInTx,
+      })
+      expect(result.body).toEqual({ ok: true, handled: true, duplicate: true })
+      expect(claimReceiptInTx).toHaveBeenCalledWith(expect.anything(), {
+        provider: "resend",
+        messageId: "msg_1",
+      })
+      expect(runPlatformTx).not.toHaveBeenCalled()
+      expect(completeInTx).not.toHaveBeenCalled()
+      expect(auditEmit).not.toHaveBeenCalled()
     } finally {
       restoreEnv()
     }
