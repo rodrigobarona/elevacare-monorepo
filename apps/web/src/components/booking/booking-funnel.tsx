@@ -45,6 +45,7 @@ import {
   shouldSkipMeetStep,
 } from "@eleva/ui/lib/booking/mode-bookable"
 import { formatCountdown, isExpired } from "@eleva/ui/lib/booking/countdown"
+import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { maskPhone, toE164 } from "@eleva/ui/lib/booking/e164"
 import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
@@ -126,9 +127,9 @@ export function BookingFunnel({
       id,
       label: t.has(`languages.${id}` as "languages.en")
         ? t(`languages.${id}` as "languages.en")
-        : id,
+        : displayLanguage(id, locale),
     }))
-  }, [modes, t])
+  }, [locale, modes, t])
 
   const [country, setCountry] = useState(geoCountry)
   const [language, setLanguage] = useState(() =>

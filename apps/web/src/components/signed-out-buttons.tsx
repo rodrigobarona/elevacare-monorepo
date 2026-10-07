@@ -20,7 +20,12 @@ export function SignedOutButtons({
 }: SignedOutButtonsProps) {
   return (
     <>
-      <LinkButton variant="ghost" size="sm" href="/login">
+      <LinkButton
+        variant="ghost"
+        size="sm"
+        href="/login"
+        className="hidden sm:inline-flex"
+      >
         {loginLabel}
       </LinkButton>
       <LinkButton size="sm" href="/signup">

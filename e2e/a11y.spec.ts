@@ -51,13 +51,6 @@ test.describe("a11y: public marketplace", () => {
     ).toBeVisible()
     await expectNoBlockingViolations(page)
   })
-
-  test("dark mode home keeps AA contrast", async ({ page }) => {
-    await page.emulateMedia({ colorScheme: "dark" })
-    const res = await page.goto("/")
-    expect(res?.status()).toBe(200)
-    await expectNoBlockingViolations(page)
-  })
 })
 
 test.describe("a11y: account auth", () => {
@@ -77,4 +70,12 @@ test.describe("a11y: account auth", () => {
       await expectNoBlockingViolations(page)
     })
   }
+
+  test("dark /login keeps AA contrast", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "dark" })
+    const res = await page.goto(`${accountUrl}/login`)
+    expect(res?.status()).toBe(200)
+    await expect(page.locator("html")).toHaveClass(/\bdark\b/)
+    await expectNoBlockingViolations(page)
+  })
 })
