@@ -15,6 +15,7 @@ import {
   nextPayoutStatusAfterRefund,
   nextPayoutStatusAfterTransferReversed,
   paymentStatusAfterRefund,
+  requiresDualControlApproval,
   type RefundPolicyInput,
 } from "./payout-math"
 import { applyHold, clearHold } from "./payouts"
@@ -133,6 +134,19 @@ export async function refundBookingPayment(input: {
     const amountCents = input.amountCents ?? remaining
     if (amountCents <= 0 || amountCents > remaining) {
       throw new RefundError("AMOUNT_INVALID", "Refund amount is invalid", 422)
+    }
+    if (
+      requiresDualControlApproval({
+        amountCents,
+        actingOrgId: input.actingOrgId,
+        actorUserId: input.actorUserId,
+      })
+    ) {
+      throw new RefundError(
+        "DUAL_CONTROL_REQUIRED",
+        "Staff refunds above the dual-control threshold need a second approver",
+        409
+      )
     }
     const [last] = await tx
       .select({ refundSeq: main.bookingRefunds.refundSeq })
