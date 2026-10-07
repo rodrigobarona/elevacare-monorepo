@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { SESSION_COOKIE_NAMES } from "@eleva/auth/credentials"
+import { requestHasSessionCookie } from "@eleva/auth/credentials"
 import {
   getOrgTypeBySlug,
   orgSlugNeedingTypeLookup,
@@ -11,8 +11,6 @@ import {
   buildAdminRedirect,
   buildLoginRedirect,
   buildRewriteUrl,
-  buildRootRedirect,
-  isDocumentNavigation,
   resolveOriginsFromEnv,
 } from "./gateway-dispatch"
 
@@ -87,9 +85,7 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
       return NextResponse.redirect(destination, 301)
     }
 
-    const hasSession = SESSION_COOKIE_NAMES.some((name) =>
-      request.cookies.has(name)
-    )
+    const hasSession = requestHasSessionCookie(request.cookies)
 
     let decision = resolveDispatch(pathname, hasSession, origins)
 
@@ -129,10 +125,9 @@ export function createGatewayProxy(options: GatewayProxyOptions) {
       return buildAdminRedirect(request)
     }
 
-    if (pathname === "/" && hasSession && isDocumentNavigation(request)) {
-      return buildRootRedirect(request)
-    }
-
+    // Public `/` stays on marketing. Cookie presence is not a login —
+    // a leftover or empty session token must not bounce guests to
+    // /dashboard and then /login.
     return intlMiddleware(request)
   }
 }

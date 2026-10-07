@@ -29,12 +29,7 @@ export default async function ContactPage({ params }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/experts", labelKey: "experts" },
-        ]}
-      />
+      <SiteHeader />
       <main className="flex-1 px-6 py-16">
         <article className="mx-auto max-w-3xl">
           <p

@@ -14,25 +14,52 @@ export function hasDuplicateSessionCookie(
   )
 }
 
+const SESSION_COOKIE_EXPIRE_ATTRS = [
+  "Max-Age=0; Path=/; HttpOnly; SameSite=Lax",
+  "Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax",
+] as const
+
 export function expiredSessionCookies(): string[] {
-  const attrs = "Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax"
-  const hostOnly = SESSION_COOKIE_NAMES.map((name) => `${name}=; ${attrs}`)
+  const hostOnly = SESSION_COOKIE_NAMES.flatMap((name) =>
+    SESSION_COOKIE_EXPIRE_ATTRS.map((attrs) => `${name}=; ${attrs}`)
+  )
   if (process.env.VERCEL_ENV !== "production") {
     return hostOnly
   }
   const domain = process.env.ELEVA_COOKIE_DOMAIN ?? ".eleva.care"
   return [
-    ...SESSION_COOKIE_NAMES.map(
-      (name) => `${name}=; ${attrs}; Domain=${domain}`
+    ...SESSION_COOKIE_NAMES.flatMap((name) =>
+      SESSION_COOKIE_EXPIRE_ATTRS.map(
+        (attrs) => `${name}=; ${attrs}; Domain=${domain}`
+      )
     ),
     ...hostOnly,
   ]
 }
 
+export function cookieValueIsSession(
+  value: string | undefined | null
+): boolean {
+  return typeof value === "string" && value.length > 0
+}
+
+/** Cookie presence is not enough — empty leftovers must not look signed-in. */
+export function requestHasSessionCookie(cookies: {
+  get: (name: string) => { value: string } | undefined
+}): boolean {
+  return SESSION_COOKIE_NAMES.some((name) =>
+    cookieValueIsSession(cookies.get(name)?.value)
+  )
+}
+
 export function cookieHeaderHasSession(cookieHeader: string | null): boolean {
   if (!cookieHeader) return false
-  return SESSION_COOKIE_NAMES.some(
-    (name) => countCookieValues(cookieHeader, name) > 0
+  return SESSION_COOKIE_NAMES.some((name) =>
+    cookieHeader.split(";").some((part) => {
+      const trimmed = part.trim()
+      if (!trimmed.startsWith(`${name}=`)) return false
+      return trimmed.slice(name.length + 1).length > 0
+    })
   )
 }
 

@@ -1,11 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 import {
   compactJwsKid,
+  cookieHeaderHasSession,
   expiredSessionCookies,
   hasDuplicateSessionCookie,
   isCompactJws,
   isJwtBearer,
   listCredentialSources,
+  requestHasSessionCookie,
 } from "./credentials"
 
 function request(headers: Record<string, string>) {
@@ -84,6 +86,8 @@ describe("session cookie tossing", () => {
     const cookies = expiredSessionCookies()
     expect(cookies.every((value) => value.includes("Max-Age=0"))).toBe(true)
     expect(cookies.every((value) => !value.includes("Domain="))).toBe(true)
+    expect(cookies.some((value) => value.includes("Secure"))).toBe(true)
+    expect(cookies.some((value) => !value.includes("Secure"))).toBe(true)
   })
 
   it("emits Max-Age=0 cookies for domain and host in production", () => {
@@ -92,5 +96,20 @@ describe("session cookie tossing", () => {
     expect(cookies.every((value) => value.includes("Max-Age=0"))).toBe(true)
     expect(cookies.some((value) => value.includes("Domain="))).toBe(true)
     expect(cookies.some((value) => !value.includes("Domain="))).toBe(true)
+  })
+
+  it("ignores empty leftover session cookies", () => {
+    expect(cookieHeaderHasSession("better-auth.session_token=")).toBe(false)
+    expect(
+      requestHasSessionCookie({
+        get: () => ({ value: "" }),
+      })
+    ).toBe(false)
+    expect(
+      requestHasSessionCookie({
+        get: (name) =>
+          name === "better-auth.session_token" ? { value: "abc" } : undefined,
+      })
+    ).toBe(true)
   })
 })
