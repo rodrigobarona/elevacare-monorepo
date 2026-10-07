@@ -95,7 +95,8 @@ export type ReservationFunnelSnapshot = {
   memberCountry: string
   bookingLinkId: string | null
   sessionMode: "online" | "in_person" | "phone"
-  guest?: { email: string; name: string; phone?: string }
+  guest?: { email: string; name: string; phone?: string; taxId?: string }
+  promoCode?: string
 }
 
 /**

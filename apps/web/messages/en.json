@@ -203,8 +203,13 @@
       "email": "Email",
       "phone": "Phone number",
       "phoneHint": "Needed for a phone session. You can include the country code.",
+      "taxId": "NIF / VAT (optional)",
+      "taxIdHint": "Portuguese NIF or EU VAT, for invoices when issuance opens.",
+      "promo": "Promo code (optional)",
+      "promoHint": "We'll save this with your booking. Automatic discounts are not applied yet.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",
       "hold": "Continue to payment",
+      "confirmFree": "Confirm booking",
       "holding": "Holding your time…",
       "consents": {
         "terms": {
@@ -233,7 +238,7 @@
       "pendingError": "Payment is still pending. Please wait a moment and try again."
     },
     "done": {
-      "heading": "You're booked",
+      "heading": "Your reservation is confirmed",
       "sub": "We've saved your session. A confirmation email is on its way.",
       "pending": "Payment received",
       "pendingSub": "We're confirming your session. You'll get an email as soon as it's ready. Eleva.care is a digital health platform — the expert remains responsible for your care.",
@@ -259,6 +264,7 @@
       "guestRequired": "Please add your name and email to continue.",
       "consentOutdated": "Please review the latest notices and try again.",
       "consentsRequired": "Please confirm the three notices to continue.",
+      "taxIdInvalid": "Enter a valid NIF or VAT (letters and numbers only, 8–32 characters).",
       "confirmFailed": "Payment went through, but we could not confirm the session yet. Please try again.",
       "confirmMismatch": "This payment does not match the held time. Contact support if you were charged.",
       "generic": "We could not hold that time. Please try again.",

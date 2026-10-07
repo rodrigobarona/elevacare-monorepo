@@ -34,6 +34,7 @@ export type ReserveBookingGuest = {
   email: string
   name: string
   phone?: string
+  taxId?: string
 }
 
 export type ReserveBookingSession = {
@@ -56,6 +57,7 @@ export type ReserveBookingInput = {
   consents: { kind: string; version: string }[]
   /** Policy the member was shown; a mismatch means the expert changed it. */
   cancellationPolicy?: CancellationPolicy
+  promoCode?: string
   busyTimeProvider?: BusyTimeProvider
 }
 
@@ -284,6 +286,7 @@ export async function reserveBooking(
           email: input.guest.email,
           name: input.guest.name,
           ...(memberPhone ? { phone: memberPhone } : {}),
+          ...(input.guest.taxId ? { taxId: input.guest.taxId } : {}),
         }
       : undefined
 
@@ -308,6 +311,7 @@ export async function reserveBooking(
         bookingLinkId: offer.bookingLinkId ?? null,
         sessionMode: offer.mode,
         ...(funnelGuest ? { guest: funnelGuest } : {}),
+        ...(input.promoCode ? { promoCode: input.promoCode } : {}),
       },
       cancellationPolicy: offer.cancellationPolicy,
       audit: {

@@ -1521,6 +1521,13 @@ export const ReserveBookingGuestSchema = z.object({
   email: z.string().email().max(320),
   name: z.string().min(1).max(200).trim(),
   phone: z.string().min(8).max(32).optional(),
+  taxId: z
+    .string()
+    .trim()
+    .min(8)
+    .max(32)
+    .regex(/^[A-Za-z0-9]+$/)
+    .optional(),
 })
 
 export const ReserveBookingRequestSchema = z.object({
@@ -1545,6 +1552,7 @@ export const ReserveBookingRequestSchema = z.object({
     }),
   /** Policy shown to the member; 409 POLICY_CHANGED when it no longer matches. */
   cancellationPolicy: CancellationPolicySchema.optional(),
+  promoCode: z.string().trim().min(2).max(32).optional(),
 })
 
 export const ReserveBookingResponseSchema = z.object({
@@ -1658,7 +1666,7 @@ export const FinanceSummaryResponseSchema = z.object({
 export const ConfirmBookingRequestSchema = z.object({
   reservationId: z.string().uuid(),
   reservationToken: z.string().min(16).max(128),
-  paymentIntentId: z.string().min(1),
+  paymentIntentId: z.string().min(1).optional(),
 })
 
 export const ConfirmBookingResponseSchema = z.object({

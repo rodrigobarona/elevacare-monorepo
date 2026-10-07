@@ -17,10 +17,16 @@ import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 
-export function SignupForm() {
+export function SignupForm({
+  initialName = "",
+  initialEmail = "",
+}: {
+  initialName?: string
+  initialEmail?: string
+}) {
   const t = useTranslations("auth")
-  const [name, setName] = useState("")
-  const [email, setEmail] = useState("")
+  const [name, setName] = useState(initialName)
+  const [email, setEmail] = useState(initialEmail)
   const [password, setPassword] = useState("")
   const [consent, setConsent] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -4,7 +4,10 @@ import {
   ConfirmBookingResponseSchema,
 } from "@eleva/api-client"
 import { retrieveBookingPaymentIntent } from "@eleva/billing/server"
-import { confirmBookingPayment } from "@eleva/scheduling"
+import {
+  confirmBookingPayment,
+  confirmFreeReservation,
+} from "@eleva/scheduling"
 import { publishPendingDomainEvents } from "@eleva/workflows/domain-events"
 import { shouldAwaitDomainEventPublish } from "@eleva/workflows/should-await-domain-event-publish"
 import { defaultDomainEventSubscribers } from "@eleva/workflows/subscribers"
@@ -85,14 +88,20 @@ export async function POST(request: Request) {
 
   let result
   try {
-    result = await confirmBookingPayment({
-      reservationId: parsed.data.reservationId,
-      reservationToken: parsed.data.reservationToken,
-      paymentIntentId: parsed.data.paymentIntentId,
-      sessionUserId,
-      source: "public",
-      retrieveIntent: retrieveBookingPaymentIntent,
-    })
+    result = parsed.data.paymentIntentId
+      ? await confirmBookingPayment({
+          reservationId: parsed.data.reservationId,
+          reservationToken: parsed.data.reservationToken,
+          paymentIntentId: parsed.data.paymentIntentId,
+          sessionUserId,
+          source: "public",
+          retrieveIntent: retrieveBookingPaymentIntent,
+        })
+      : await confirmFreeReservation({
+          reservationId: parsed.data.reservationId,
+          reservationToken: parsed.data.reservationToken,
+          sessionUserId,
+        })
   } catch (err) {
     console.error("[bookings/confirm] failed", err)
     return secureJson({ error: "internal" }, { status: 500, headers })

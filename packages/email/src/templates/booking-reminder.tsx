@@ -1,7 +1,9 @@
-import { Section, Text } from "react-email"
 import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
+import { EmailCard } from "../components/email-card"
+import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
+import { formatSessionMode } from "../session-mode"
 
 export type BookingReminderWindow = "24h" | "1h"
 
@@ -38,21 +40,21 @@ export function BookingReminderEmail({
 
   return (
     <EmailLayout preview={preview} locale={locale} jsonLd={jsonLd}>
-      <Section className="border-stroke bg-bg rounded-xl border p-8">
-        <Text className="text-fg m-0 mb-1 text-[22px] leading-tight font-semibold tracking-tight">
-          {title}
-        </Text>
-        <Text className="text-fg-3 m-0 mb-6 text-[14px] leading-relaxed">
-          {subtitle}
-        </Text>
+      <EmailHeading>{title}</EmailHeading>
+      <EmailBodyText className="mb-[8px]">
+        {t.booking.greeting(memberName)}
+      </EmailBodyText>
+      <EmailBodyText className="mb-[24px]">{subtitle}</EmailBodyText>
 
-        <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow label={t.labels.member} value={memberName} bold />
-          <DetailRow label={t.labels.service} value={eventTypeName} />
-          <DetailRow label={t.labels.dateTime} value={formattedDate} />
-          <DetailRow label={t.labels.mode} value={sessionMode} />
-        </Section>
-      </Section>
+      <EmailCard>
+        <DetailRow label={t.labels.member} value={memberName} bold />
+        <DetailRow label={t.labels.service} value={eventTypeName} />
+        <DetailRow label={t.labels.dateTime} value={formattedDate} />
+        <DetailRow
+          label={t.labels.mode}
+          value={formatSessionMode(sessionMode, locale)}
+        />
+      </EmailCard>
     </EmailLayout>
   )
 }
