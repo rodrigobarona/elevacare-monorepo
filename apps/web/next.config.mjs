@@ -1,3 +1,4 @@
+import { withBotId } from "botid/next/config"
 import createNextIntlPlugin from "next-intl/plugin"
 import {
   resolveAllowedDevOrigins,
@@ -5,6 +6,25 @@ import {
 } from "@eleva/config/next-dev"
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts")
+
+/**
+ * AUD-017: same-origin `/api/*` → apps/api so BotID can sign booking-funnel
+ * requests (the BotID client skips cross-origin calls). Off unless
+ * NEXT_PUBLIC_BOTID_SAME_ORIGIN_API=true; staging-only until the per-IP rate
+ * limit is proven independent behind the rewrite.
+ */
+function resolveSameOriginApiRewrites() {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL
+  if (process.env.NEXT_PUBLIC_BOTID_SAME_ORIGIN_API !== "true" || !apiUrl) {
+    return []
+  }
+  return [
+    {
+      source: "/api/:path*",
+      destination: `${apiUrl.replace(/\/$/, "")}/:path*`,
+    },
+  ]
+}
 
 /**
  * Gateway zone routing for the marketing app.
@@ -41,7 +61,10 @@ const nextConfig = {
   skipTrailingSlashRedirect: true,
   async rewrites() {
     return {
-      beforeFiles: resolveGatewayStaticAssetRewrites(),
+      beforeFiles: [
+        ...resolveGatewayStaticAssetRewrites(),
+        ...resolveSameOriginApiRewrites(),
+      ],
     }
   },
   transpilePackages: [
@@ -54,4 +77,4 @@ const nextConfig = {
   ],
 }
 
-export default withNextIntl(nextConfig)
+export default withBotId(withNextIntl(nextConfig))
