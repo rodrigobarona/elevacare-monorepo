@@ -59,6 +59,9 @@ catalog:
   # Payments (Stripe)
   stripe: ^22.1.1
   "@stripe/stripe-js": ^9.5.0
+
+  # Bot protection (Vercel BotID)
+  botid: ^1.5.11
   "@stripe/react-stripe-js": 6.6.0
 
   # Email

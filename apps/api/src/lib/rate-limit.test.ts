@@ -1,8 +1,39 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { isLocalPublicRateLimitExempt } from "./rate-limit"
+import { isLocalPublicRateLimitExempt, rateLimitKey } from "./rate-limit"
 
 afterEach(() => {
   vi.unstubAllEnvs()
+  vi.restoreAllMocks()
+})
+
+describe("rateLimitKey IP debug", () => {
+  it("logs a hashed key and header agreement, never the raw IP", () => {
+    vi.stubEnv("RATE_LIMIT_IP_DEBUG", "true")
+    const info = vi.spyOn(console, "info").mockImplementation(() => {})
+    const request = new Request("https://api.eleva.care/bookings/reserve", {
+      headers: {
+        "x-forwarded-for": "203.0.113.7, 10.0.0.1",
+        "x-real-ip": "203.0.113.7",
+      },
+    })
+
+    expect(rateLimitKey(request)).toBe("ip:203.0.113.7")
+    const line = String(info.mock.calls[0]?.[0])
+    expect(line).not.toContain("203.0.113.7")
+    expect(JSON.parse(line)).toMatchObject({
+      event: "rate_limit.ip_source",
+      path: "/bookings/reserve",
+      forwardedHops: 2,
+      matchesRealIp: true,
+      matchesVercelForwarded: null,
+    })
+  })
+
+  it("stays silent unless the flag is set", () => {
+    const info = vi.spyOn(console, "info").mockImplementation(() => {})
+    rateLimitKey(new Request("https://api.eleva.care/x"))
+    expect(info).not.toHaveBeenCalled()
+  })
 })
 
 describe("isLocalPublicRateLimitExempt", () => {

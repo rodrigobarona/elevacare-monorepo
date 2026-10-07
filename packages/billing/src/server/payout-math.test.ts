@@ -15,6 +15,8 @@ import {
   stripePayoutOutcomeTransition,
   transferBlockReason,
   isInFlightIdempotencyConflict,
+  requiresDualControlApproval,
+  ADMIN_DUAL_CONTROL_REFUND_CENTS,
 } from "./payout-math"
 
 describe("stripePayoutOutcomeTransition", () => {
@@ -601,5 +603,41 @@ describe("isInFlightIdempotencyConflict", () => {
       })
     ).toBe(false)
     expect(isInFlightIdempotencyConflict(new Error("boom"))).toBe(false)
+  })
+})
+
+describe("requiresDualControlApproval", () => {
+  const staff = { actingOrgId: "platform", actorUserId: "staff-1" }
+
+  it("gates staff platform refunds above the threshold", () => {
+    expect(
+      requiresDualControlApproval({
+        ...staff,
+        amountCents: ADMIN_DUAL_CONTROL_REFUND_CENTS + 1,
+      })
+    ).toBe(true)
+    expect(
+      requiresDualControlApproval({
+        ...staff,
+        amountCents: ADMIN_DUAL_CONTROL_REFUND_CENTS,
+      })
+    ).toBe(false)
+  })
+
+  it("does not gate the cancellation sweep or expert refunds", () => {
+    expect(
+      requiresDualControlApproval({
+        actingOrgId: "platform",
+        actorUserId: null,
+        amountCents: ADMIN_DUAL_CONTROL_REFUND_CENTS * 5,
+      })
+    ).toBe(false)
+    expect(
+      requiresDualControlApproval({
+        actingOrgId: "org-1",
+        actorUserId: "expert-1",
+        amountCents: ADMIN_DUAL_CONTROL_REFUND_CENTS * 5,
+      })
+    ).toBe(false)
   })
 })
