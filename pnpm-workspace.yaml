@@ -48,6 +48,7 @@ catalog:
   vitest: ^4.1.6
   "@vitest/coverage-v8": ^4.1.6
   "@playwright/test": ^1.56.1
+  "@axe-core/playwright": ^4.13.0
 
   # Auth (Better Auth 1.7.3 — spike 02.0)
   better-auth: 1.7.3

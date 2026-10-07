@@ -23,7 +23,11 @@ export default async function NotFound() {
           description={t("description")}
           action={
             <div className="flex flex-wrap justify-center gap-3">
-              <Link href="/experts" className={buttonVariants()}>
+              <Link
+                href="/experts"
+                className={buttonVariants()}
+                data-testid="not-found-find-expert"
+              >
                 {t("findExpert")}
               </Link>
               <Link href="/" className={buttonVariants({ variant: "outline" })}>

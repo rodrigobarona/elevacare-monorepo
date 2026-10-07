@@ -68,6 +68,7 @@
     "eslint": "catalog:",
     "@types/node": "catalog:",
     "@neondatabase/serverless": "catalog:",
+    "@axe-core/playwright": "catalog:",
     "@playwright/test": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "husky": "^9.1.7",
