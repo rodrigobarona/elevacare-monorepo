@@ -6,6 +6,7 @@ import { Logo, LogoMark } from "@eleva/ui/components/brand"
 import { Link } from "@/i18n/navigation"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
+import { MobileNavMenu } from "./mobile-nav-menu"
 import { SignedOutButtons } from "./signed-out-buttons"
 import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
 
@@ -37,15 +38,24 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
           <Logo className="hidden h-6 sm:block" />
         </Link>
         <div className="flex min-w-0 items-center gap-2 sm:gap-4">
-          {nav.map((item, index) => (
+          {nav.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className={`${index === 0 ? "inline-flex" : "hidden md:inline-flex"} text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground`}
+              className="hidden text-sm whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground md:inline-flex"
             >
               {t(item.labelKey)}
             </Link>
           ))}
+          {nav.length > 0 ? (
+            <MobileNavMenu
+              label={t("more")}
+              items={nav.map((item) => ({
+                href: item.href,
+                label: t(item.labelKey),
+              }))}
+            />
+          ) : null}
           <LanguageSwitcher />
           <Suspense
             fallback={
