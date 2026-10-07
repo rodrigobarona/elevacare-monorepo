@@ -167,11 +167,22 @@ export function getCapabilities(
 export type UserOrganization = UserOrganizationItem
 
 /**
- * Fetch all organizations the current user belongs to.
+ * Organizations for the signed-in user.
+ *
+ * Returns null when Better Auth has no user. Does not require a
+ * resolvable active organization — the org picker must still list
+ * memberships when `activeOrganizationId` is unset or stale.
+ * `getSession()` returns null in that case and must not be used here.
  */
-export async function getUserOrganizations(): Promise<UserOrganization[]> {
-  const session = await requireSession()
-  return listAuthOrganizations(session.user.id, session.orgId)
+export async function getUserOrganizations(): Promise<
+  UserOrganization[] | null
+> {
+  const payload = await loadBetterAuthPayload()
+  if (!payload?.user) return null
+  return listAuthOrganizations(
+    payload.user.id,
+    payload.session?.activeOrganizationId ?? null
+  )
 }
 
 export { buildApiSessionHeaders } from "./server/api-session-headers"

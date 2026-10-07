@@ -1,3 +1,4 @@
+import { redirectToGatewayLogin } from "@eleva/auth/guards"
 import { getUserOrganizations } from "@eleva/auth/server"
 import { getTranslations } from "next-intl/server"
 import {
@@ -16,6 +17,8 @@ export async function OrgPickerPage() {
     getUserOrganizations(),
     getTranslations("picker"),
   ])
+
+  if (!organizations) redirectToGatewayLogin()
 
   return (
     <main className="flex min-h-screen items-center justify-center p-6">
