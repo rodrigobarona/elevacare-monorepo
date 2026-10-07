@@ -31,6 +31,7 @@ export type ElevaCallLabels = {
   notesTitle: string
   notesPlaceholder: string
   you: string
+  remote: string
   connecting: string
   errors: Record<ElevaCallErrorCode, string>
 }

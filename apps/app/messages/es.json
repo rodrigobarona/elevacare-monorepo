@@ -68,6 +68,7 @@
       "notesTitle": "Notas de la sesión",
       "notesPlaceholder": "Las notas estarán aquí en una versión posterior.",
       "you": "Tú",
+      "remote": "Especialista",
       "connecting": "Conectando…",
       "errors": {
         "SESSION_NOT_OPEN": "Esta sesión aún no está abierta. Vuelve 15 minutos antes del inicio.",

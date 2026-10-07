@@ -44,6 +44,7 @@
       "notesTitle": "Session notes",
       "notesPlaceholder": "Notes will live here in a later release.",
       "you": "You",
+      "remote": "Member",
       "connecting": "Connecting…",
       "errors": {
         "SESSION_NOT_OPEN": "This session is not open to join yet. Come back from 15 minutes before the start.",

@@ -30,6 +30,21 @@ describe("buildCspHeader", () => {
     }
   })
 
+  it("strips a path from DAILY_DOMAIN so Permissions-Policy origins stay valid", () => {
+    const prev = process.env.DAILY_DOMAIN
+    process.env.DAILY_DOMAIN = "https://eleva.daily.co/unused"
+    try {
+      const header = buildCspHeader()
+      expect(header).toMatch(
+        /connect-src[^;]*https:\/\/eleva\.daily\.co(?:\s|;|$)/
+      )
+      expect(header).not.toMatch(/eleva\.daily\.co\//)
+    } finally {
+      if (prev === undefined) delete process.env.DAILY_DOMAIN
+      else process.env.DAILY_DOMAIN = prev
+    }
+  })
+
   it("includes sentry ingest domains in connect-src", () => {
     const header = buildCspHeader()
     expect(header).toMatch(/connect-src[^;]*sentry\.io/)

@@ -376,7 +376,7 @@ function ChatPanel({
           messages.map((msg) => (
             <p key={msg.id} className="py-0.5">
               <span className="font-medium">
-                {msg.fromLocal ? labels.you : labels.chat}:
+                {msg.fromLocal ? labels.you : labels.remote}:
               </span>{" "}
               {msg.text}
             </p>

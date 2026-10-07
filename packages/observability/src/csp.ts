@@ -185,11 +185,17 @@ export function dailyHttpsOrigins(): string[] {
 }
 
 function brandedDailyHttpsOrigin(): string | null {
-  const raw = process.env.DAILY_DOMAIN
+  const raw = process.env.DAILY_DOMAIN?.trim()
   if (!raw) return null
-  const host = raw.replace(/^https?:\/\//, "")
-  const fqdn = host.includes(".") ? host : `${host}.daily.co`
-  return `https://${fqdn}`
+  try {
+    const url = raw.includes("://") ? new URL(raw) : new URL(`https://${raw}`)
+    const host = url.hostname
+    if (!host) return null
+    const fqdn = host.includes(".") ? host : `${host}.daily.co`
+    return `https://${fqdn}`
+  } catch {
+    return null
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -44,6 +44,7 @@ export function JoinClient({
       notesTitle: t("notesTitle"),
       notesPlaceholder: t("notesPlaceholder"),
       you: t("you"),
+      remote: t("remote"),
       connecting: t("connecting"),
       errors: {
         SESSION_NOT_OPEN: t("errors.SESSION_NOT_OPEN"),
