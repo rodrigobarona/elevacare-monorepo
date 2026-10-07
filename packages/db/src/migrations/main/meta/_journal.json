@@ -351,6 +351,13 @@
       "when": 1780000000000,
       "tag": "0049_notification_webhook_receipts",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1780100000000,
+      "tag": "0050_release_cancelled_reservations",
+      "breakpoints": true
     }
   ]
 }
