@@ -27,11 +27,13 @@ WHERE sr."status" = 'converted'
 --> statement-breakpoint
 
 -- Fail before moving anything if the moved ranges would overlap each other or
--- another live reservation; those rows need manual reconciliation.
+-- another live reservation; those rows need manual reconciliation. The lock
+-- keeps concurrent reserveSlot inserts out between the check and the move.
 DO $$
 DECLARE
   conflicts text;
 BEGIN
+  LOCK TABLE "slot_reservations" IN SHARE ROW EXCLUSIVE MODE;
   WITH final AS (
     SELECT sr."id", sr."expert_user_id",
       CASE WHEN b."id" IS NULL THEN sr."starts_at" ELSE b."starts_at" END AS "starts_at",
@@ -57,13 +59,12 @@ BEGIN
   IF conflicts IS NOT NULL THEN
     RAISE EXCEPTION '0050: rescheduled reservations conflict after the move (%); reconcile them before migrating', conflicts;
   END IF;
-END $$;
---> statement-breakpoint
 
-UPDATE "slot_reservations" AS sr
-SET "starts_at" = b."starts_at", "ends_at" = b."ends_at"
-FROM "bookings" AS b
-WHERE b."reservation_id" = sr."id"
-  AND sr."status" = 'converted'
-  AND b."status" = 'rescheduled'
-  AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at");
+  UPDATE "slot_reservations" AS sr
+  SET "starts_at" = b."starts_at", "ends_at" = b."ends_at"
+  FROM "bookings" AS b
+  WHERE b."reservation_id" = sr."id"
+    AND sr."status" = 'converted'
+    AND b."status" = 'rescheduled'
+    AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at");
+END $$;
