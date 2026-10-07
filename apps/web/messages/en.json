@@ -13,7 +13,8 @@
     "dashboard": "Dashboard",
     "signout": "Sign out",
     "becomeExpert": "Become an expert",
-    "forClinics": "For clinics"
+    "forClinics": "For clinics",
+    "more": "More"
   },
   "home": {
     "eyebrow": "Women's health, elevated",
@@ -269,6 +270,7 @@
     }
   },
   "footer": {
+    "about": "About",
     "rights": "© {year} Eleva.care. All rights reserved.",
     "legal": "Legal",
     "terms": "Terms",

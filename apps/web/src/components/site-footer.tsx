@@ -40,6 +40,12 @@ export async function SiteFooter() {
           className="flex flex-wrap justify-center gap-x-4 gap-y-2"
         >
           <Link
+            href="/about"
+            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+          >
+            {t("about")}
+          </Link>
+          <Link
             href="/become-expert"
             className="text-sm text-muted-foreground transition-colors hover:text-foreground"
           >

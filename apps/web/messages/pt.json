@@ -13,7 +13,8 @@
     "dashboard": "Painel",
     "signout": "Sair",
     "becomeExpert": "Tornar-se especialista",
-    "forClinics": "Para clínicas"
+    "forClinics": "Para clínicas",
+    "more": "Mais"
   },
   "home": {
     "eyebrow": "Saúde da mulher, elevada",
@@ -269,6 +270,7 @@
     }
   },
   "footer": {
+    "about": "Sobre",
     "rights": "© {year} Eleva.care. Todos os direitos reservados.",
     "legal": "Legal",
     "terms": "Termos",

@@ -6,6 +6,10 @@ import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
 import { isReserved } from "@eleva/config/reserved-usernames"
 import { VerifiedBadge } from "@eleva/ui/components/brand"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
+import {
+  displayLanguage,
+  displayRegion,
+} from "@eleva/ui/lib/booking/display-names"
 import { ExpertAvatar } from "@/components/expert-avatar"
 import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
@@ -112,8 +116,12 @@ export default async function ExpertProfilePage({ params }: Props) {
             ) : null}
             <p className="mt-3 text-sm text-muted-foreground">
               {[
-                expert.languages.join(", "),
-                expert.serviceCountries.join(", "),
+                expert.languages
+                  .map((code) => displayLanguage(code, locale))
+                  .join(", "),
+                expert.serviceCountries
+                  .map((code) => displayRegion(code, locale))
+                  .join(", "),
                 expert.categorySlugs.join(", "),
               ]
                 .filter(Boolean)
@@ -167,8 +175,10 @@ export default async function ExpertProfilePage({ params }: Props) {
                     {t("offerMeta", {
                       duration: String(eventType.durationMinutes),
                       price: formatEur(minPrice, locale),
-                      modes: eventType.modes
-                        .map((mode) => t(`modes.${mode.mode}`))
+                      modes: [
+                        ...new Set(eventType.modes.map((mode) => mode.mode)),
+                      ]
+                        .map((mode) => t(`modes.${mode}`))
                         .join(", "),
                     })}
                   </p>

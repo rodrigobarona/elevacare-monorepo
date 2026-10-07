@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server"
 import { NextIntlClientProvider } from "next-intl"
 import { getMessages } from "next-intl/server"
 import { notFound } from "next/navigation"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { routing } from "@/i18n/routing"
 import type { Metadata } from "next"
 
@@ -12,6 +13,7 @@ type Props = {
 }
 
 export const metadata: Metadata = {
+  metadataBase: new URL(resolveGatewayUrl()),
   title: "Eleva.care — Women's Health, Elevated",
   description:
     "Connect with verified women's health experts for personalised, evidence-based care — 100% online.",
