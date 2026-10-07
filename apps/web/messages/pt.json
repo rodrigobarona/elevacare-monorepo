@@ -100,7 +100,8 @@
       "relevance": "Relevância",
       "price": "Preço",
       "rating": "Avaliação"
-    }
+    },
+    "verified": "Perfil verificado"
   },
   "profile": {
     "title": "{name} — Eleva.care",
@@ -368,7 +369,26 @@
     "draftBanner": "Rascunho de pré-lançamento. Comissão, prazos de payout e termos jurídicos não são finais. A área financeira e o DPO voltam a assinar antes do go-live.",
     "heading": "Exercer na Eleva.care",
     "body": "A Eleva.care é uma plataforma digital de saúde que permite a prestação de serviços de saúde remotos (teleconsultas / telemedicina) por profissionais independentes e licenciados. Os especialistas mantêm autonomia clínica. A Eleva opera a tecnologia de agenda, reserva e pagamento. Os membros marcam sessões consigo — esta página não inventa percentagens de payout nem liquidação semanal.",
-    "cta": "Criar a sua conta"
+    "cta": "Criar a sua conta",
+    "stepsHeading": "Como funciona",
+    "steps": [
+      {
+        "title": "Crie a sua conta",
+        "body": "Registe-se e abra uma área de trabalho de Especialista a partir da sua conta. Começa no plano comunidade e pode mudar de plano mais tarde."
+      },
+      {
+        "title": "Configure a sua prática",
+        "body": "Adicione o seu perfil, idiomas, locais e disponibilidade semanal. Ligue os seus calendários para que os horários ocupados fiquem bloqueados automaticamente."
+      },
+      {
+        "title": "Publique os seus serviços",
+        "body": "Ofereça sessões online, presenciais ou por telefone, com preço e uma política de cancelamento Flexível, Moderada ou Rigorosa por serviço. Antes de publicar, verifique a sua identidade e ligue os pagamentos com a Stripe."
+      },
+      {
+        "title": "Receba marcações de membros",
+        "body": "Os membros marcam e pagam online. Você e o membro recebem confirmações e lembretes por email."
+      }
+    ]
   },
   "forClinics": {
     "title": "Para clínicas — Eleva.care",
@@ -401,5 +421,11 @@
         "body": "Esta página descreverá a posição da Eleva junto da ERS Portugal só depois de a Fase 13 anexar evidência. Não afirma licença, registo ou revisão concluída."
       }
     }
+  },
+  "notFound": {
+    "title": "Não encontrámos esta página",
+    "description": "A ligação pode estar desatualizada ou o perfil pode já não estar disponível. Explore especialistas verificados ou volte à página inicial.",
+    "findExpert": "Encontrar especialista",
+    "home": "Ir para o início"
   }
 }

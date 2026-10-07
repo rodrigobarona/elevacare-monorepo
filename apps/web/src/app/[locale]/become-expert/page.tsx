@@ -34,6 +34,8 @@ export default async function BecomeExpertPage({ params }: Props) {
       body={t("body")}
       ctaHref="/signup"
       ctaLabel={t("cta")}
+      stepsHeading={t("stepsHeading")}
+      steps={t.raw("steps") as { title: string; body: string }[]}
     />
   )
 }

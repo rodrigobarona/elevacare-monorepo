@@ -1,5 +1,9 @@
 import { getTranslations } from "next-intl/server"
 import { ApiClientError } from "@eleva/api-client"
+import { VerifiedBadge } from "@eleva/ui/components/brand"
+import { buttonVariants } from "@eleva/ui/components/button-variants"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { ExpertAvatar } from "@/components/expert-avatar"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Link } from "@/i18n/navigation"
@@ -78,7 +82,7 @@ export async function Explorer({
         <p className="mb-3 text-sm font-medium tracking-widest text-primary uppercase">
           {t("eyebrow")}
         </p>
-        <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
+        <h1 className="font-heading text-3xl tracking-tight sm:text-4xl">
           {category
             ? t("categoryHeading", { category: t(`categories.${category}`) })
             : t("heading")}
@@ -122,27 +126,52 @@ export async function Explorer({
           </label>
           <button
             type="submit"
-            className="rounded-md border px-3 py-2 text-sm font-medium"
+            className={buttonVariants({ variant: "outline" })}
           >
             {t("filters.apply")}
           </button>
         </form>
 
         {loadError ? (
-          <p className="mt-10 text-sm text-destructive">{t("loadError")}</p>
+          <EmptyState
+            variant="error"
+            className="mt-10"
+            title={t("loadError")}
+          />
         ) : null}
 
         {filterError ? (
-          <p className="mt-10 text-sm text-muted-foreground">
-            {t("filterError")}{" "}
-            <Link href={basePath} className="font-medium text-primary">
-              {t("resetFilters")}
-            </Link>
-          </p>
+          <EmptyState
+            variant="no-results"
+            className="mt-10"
+            title={t("filterError")}
+            action={
+              <Link
+                href={basePath}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                {t("resetFilters")}
+              </Link>
+            }
+          />
         ) : null}
 
         {!loadError && !filterError && experts.length === 0 ? (
-          <p className="mt-10 text-sm text-muted-foreground">{t("empty")}</p>
+          <EmptyState
+            variant="no-results"
+            className="mt-10"
+            title={t("empty")}
+            action={
+              language || sort ? (
+                <Link
+                  href={basePath}
+                  className={buttonVariants({ variant: "outline", size: "sm" })}
+                >
+                  {t("resetFilters")}
+                </Link>
+              ) : undefined
+            }
+          />
         ) : null}
 
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
@@ -154,23 +183,17 @@ export async function Explorer({
                 data-username={expert.username}
                 className="flex h-full gap-4 rounded-xl border p-5 transition-colors hover:bg-muted/40"
               >
-                <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted text-lg font-semibold">
-                  {expert.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={expert.avatarUrl}
-                      alt=""
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    expert.displayName.slice(0, 1)
-                  )}
-                </div>
+                <ExpertAvatar
+                  displayName={expert.displayName}
+                  username={expert.username}
+                  avatarUrl={expert.avatarUrl}
+                />
                 <div className="min-w-0">
-                  <p className="font-semibold tracking-tight">
+                  <p className="flex items-center gap-1.5 font-semibold tracking-tight">
                     {expert.displayName}
+                    <VerifiedBadge title={t("verified")} />
                     {expert.topExpertActive ? (
-                      <span className="ml-2 text-xs font-medium text-primary">
+                      <span className="text-xs font-medium text-primary">
                         {t("topExpert")}
                       </span>
                     ) : null}
