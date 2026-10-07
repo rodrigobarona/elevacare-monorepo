@@ -269,6 +269,7 @@
     }
   },
   "footer": {
+    "about": "Sobre",
     "rights": "© {year} Eleva.care. Todos os direitos reservados.",
     "legal": "Legal",
     "terms": "Termos",
