@@ -28,14 +28,18 @@ or D-07 is unsigned.
 
 ## Decision
 
-1. **Daily.co only.** Online sessions use `@eleva/video` (`packages/video`) talking to a
-   HIPAA-enabled Daily domain (`elevacare.daily.co`) branded as `sessions.eleva.care`. Google
-   Meet, Zoom and Microsoft Teams are not created, stored or linked. Google/Microsoft calendars
-   remain busy-time and destination sync only (ADR-004 as amended by ADR-017).
-2. **Room contract.** Private rooms, random names (HIPAA mode rejects custom names), `nbf`/`exp`
-   around the booking window, `max_participants` derived from the booking. Meeting tokens are
-   minted at join time per participant (expert `is_owner`); they are never stored, logged or
-   placed in URLs.
+1. **Daily.co only.** Online sessions use `@eleva/video` (`packages/video`) talking to
+   Daily. Until D-07 is signed the domain is **standard (not HIPAA)** — typically
+   `{subdomain}.daily.co`. A HIPAA-enabled domain and branded `sessions.eleva.care`
+   wait for D-07. Google Meet, Zoom and Microsoft Teams are not created, stored or
+   linked. Google/Microsoft calendars remain busy-time and destination sync only
+   (ADR-004 as amended by ADR-017).
+2. **Room contract.** Private rooms. Until D-07: deterministic names
+   (`eleva-{bookingId}`), `nbf`/`exp` around the booking window,
+   `max_participants` derived from the booking, recording off. After D-07:
+   random names (HIPAA mode rejects custom names) and the fingerprint
+   reconciler. Meeting tokens are minted at join time per participant
+   (expert `is_owner`); they are never stored, logged or placed in URLs.
 3. **Authorization.** `session_participants` is the Eleva-side allow-list. Revoke is two-phase:
    set `revoked_at` (deny), then Daily `eject`, with a retry job if eject fails.
 4. **Webhooks.** `meeting.started` / `meeting.ended` (and participant join/leave for history)
