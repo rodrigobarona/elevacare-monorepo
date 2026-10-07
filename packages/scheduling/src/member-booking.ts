@@ -19,6 +19,7 @@ import { canReschedule } from "./booking-rules"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { isExclusionViolation } from "./pg-errors"
 import { resolveOffer } from "./resolve-offer"
+import { expireOverlappingHolds } from "./stale-holds"
 
 const MUTABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 
@@ -284,6 +285,13 @@ async function moveMemberBooking(
       }
 
       if (row.reservationId) {
+        await expireOverlappingHolds(
+          tx,
+          sql`(select "expert_user_id" from "slot_reservations" where "id" = ${row.reservationId})`,
+          input.startsAt,
+          input.endsAt,
+          now
+        )
         // Keep the overlap exclusion on the new time and free the old one.
         await tx
           .update(main.slotReservations)

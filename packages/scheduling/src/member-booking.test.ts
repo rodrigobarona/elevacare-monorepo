@@ -51,6 +51,12 @@ vi.mock("./assert-slot-available", () => ({
     assertRequestedSlotAvailable(...args),
 }))
 
+const expireOverlappingHolds = vi.fn()
+vi.mock("./stale-holds", () => ({
+  expireOverlappingHolds: (...args: unknown[]) =>
+    expireOverlappingHolds(...args),
+}))
+
 vi.mock("./emit-domain-event", () => ({
   emitBookingNotificationEvent: (...args: unknown[]) =>
     emitBookingNotificationEvent(...args),
@@ -385,6 +391,13 @@ describe("rescheduleMemberBooking", () => {
       endsAt: newEnd,
       now,
     })
+    expect(expireOverlappingHolds).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      newStart,
+      newEnd,
+      now
+    )
     expect(captured.reservationSets).toEqual([
       { startsAt: newStart, endsAt: newEnd },
     ])

@@ -41,7 +41,7 @@ describe("migration journal helpers", () => {
     expect(last?.tag).toBe("0050_release_cancelled_reservations")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements).toHaveLength(2)
+    expect(last?.statements).toHaveLength(4)
     expect(last?.statements.join("\n")).toContain("slot_reservations")
     expect(
       migrations
