@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify } from "jose"
+import { z } from "zod"
 
 export type MintMeetingTokenInput = {
   roomName: string
@@ -10,15 +11,17 @@ export type MintMeetingTokenInput = {
   apiKey: string
 }
 
-export type MeetingTokenClaims = {
-  r: string
-  d: string
-  o: boolean
-  u: string
-  user_name: string
-  enable_recording: false
-  eject_at_token_exp: true
-}
+export const meetingTokenClaimsSchema = z.object({
+  r: z.string().min(1),
+  d: z.string().min(1),
+  o: z.boolean(),
+  u: z.string().min(1),
+  user_name: z.string(),
+  enable_recording: z.literal(false),
+  eject_at_token_exp: z.literal(true),
+})
+
+export type MeetingTokenClaims = z.infer<typeof meetingTokenClaimsSchema>
 
 function encoder() {
   return new TextEncoder()
@@ -69,8 +72,9 @@ export async function readMeetingTokenClaims(
   const { payload } = await jwtVerify(token, encoder().encode(apiKey), {
     algorithms: ["HS256"],
   })
-  if (typeof payload.r !== "string" || !payload.r) {
-    throw new Error("meeting token missing room_name")
+  const parsed = meetingTokenClaimsSchema.safeParse(payload)
+  if (!parsed.success) {
+    throw new Error("meeting token claims are malformed")
   }
-  return payload as unknown as MeetingTokenClaims
+  return parsed.data
 }

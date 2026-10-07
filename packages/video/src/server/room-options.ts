@@ -40,7 +40,7 @@ export function roomNameForBooking(bookingId: string): string {
   if (!BOOKING_ID_RE.test(bookingId)) {
     throw new Error("bookingId must be a UUID")
   }
-  return `${ROOM_NAME_PREFIX}${bookingId}`
+  return `${ROOM_NAME_PREFIX}${bookingId.toLowerCase()}`
 }
 
 export function isElevaRoomName(name: string): boolean {
@@ -108,6 +108,7 @@ export function roomMatchesContract(
       max_participants?: number
       enable_recording?: unknown
       enable_recording_ui?: boolean
+      eject_at_room_exp?: boolean
     }
   },
   expected: SessionRoomProperties
@@ -117,7 +118,8 @@ export function roomMatchesContract(
   if (!config) return false
   if (config.nbf !== expected.nbf) return false
   if (config.exp !== expected.exp) return false
-  if ((config.max_participants ?? 0) < expected.max_participants) return false
+  if (config.max_participants !== expected.max_participants) return false
+  if (config.eject_at_room_exp !== true) return false
   if (config.enable_recording) return false
   if (config.enable_recording_ui) return false
   return true

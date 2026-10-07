@@ -1,3 +1,4 @@
+import { SignJWT } from "jose"
 import { describe, expect, it } from "vitest"
 import { mintMeetingToken, readMeetingTokenClaims } from "./meeting-token"
 
@@ -39,6 +40,26 @@ describe("mintMeetingToken", () => {
         apiKey: API_KEY,
       })
     ).rejects.toThrow(/room_name/)
+  })
+
+  it("rejects verified tokens whose claims do not match the contract", async () => {
+    const token = await new SignJWT({
+      r: "eleva-x",
+      d: DOMAIN_ID,
+      o: "yes",
+      u: "user_1",
+      user_name: "Ana",
+      enable_recording: false,
+      eject_at_token_exp: true,
+    })
+      .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+      .setIssuedAt()
+      .setExpirationTime(Math.floor(Date.now() / 1000) + 60)
+      .sign(new TextEncoder().encode(API_KEY))
+
+    await expect(readMeetingTokenClaims(token, API_KEY)).rejects.toThrow(
+      /malformed/
+    )
   })
 
   it("refuses a token without a domain id", async () => {

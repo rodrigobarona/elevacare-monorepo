@@ -43,8 +43,9 @@ tax or legal gates.
 - `issueInvoice()` stays closed. Do not Comunicar TEST or issue fictitious documents
   for the accountant demo.
 - Legal/trust pages stay draft-bannered for the lawyer review.
-- The member session "Join" button stays disabled until a Daily room exists
-  for that booking. Copy must say **standard Daily, not HIPAA**.
+- **09.2 acceptance:** the member session "Join" button stays disabled until a
+  Daily room exists for that booking, then enables from room availability.
+  Copy must say **standard Daily, not HIPAA**.
 
 ## Stakeholder leftovers (TODO, not blockers)
 

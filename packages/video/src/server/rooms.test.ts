@@ -6,15 +6,22 @@ const BOOKING_ID = "11111111-1111-4111-8111-111111111111"
 
 describe("createDailyClient", () => {
   it("GET-or-creates a named room and rewrites the product URL", async () => {
+    const input = {
+      bookingId: BOOKING_ID,
+      startAt: new Date("2026-10-07T10:00:00.000Z"),
+      endAt: new Date("2026-10-07T11:00:00.000Z"),
+    }
+    const expected = buildSessionRoomBody(input)
     const fetchImpl = vi.fn(
-      async (input: RequestInfo | URL, init?: RequestInit) => {
-        const url = String(input)
+      async (inputUrl: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(inputUrl)
         if (url.endsWith("/rooms") && init?.method === "POST") {
           return new Response(
             JSON.stringify({
               name: `eleva-${BOOKING_ID}`,
               url: "https://wrong.daily.co/eleva-x",
               privacy: "private",
+              config: expected.properties,
             }),
             { status: 200 }
           )
@@ -29,11 +36,7 @@ describe("createDailyClient", () => {
       fetch: fetchImpl as unknown as typeof fetch,
     })
 
-    const room = await client.createSessionRoom({
-      bookingId: BOOKING_ID,
-      startAt: new Date("2026-10-07T10:00:00.000Z"),
-      endAt: new Date("2026-10-07T11:00:00.000Z"),
-    })
+    const room = await client.createSessionRoom(input)
 
     expect(room.name).toBe(`eleva-${BOOKING_ID}`)
     expect(room.url).toBe(`https://eleva.daily.co/eleva-${BOOKING_ID}`)
@@ -164,6 +167,40 @@ describe("createDailyClient", () => {
       if (prevDomain === undefined) delete process.env.DAILY_DOMAIN
       else process.env.DAILY_DOMAIN = prevDomain
     }
+  })
+
+  it("rejects a created room that does not match the session contract", async () => {
+    const fetchImpl = vi.fn(
+      async (input: RequestInfo | URL, init?: RequestInit) => {
+        const url = String(input)
+        if (url.endsWith("/rooms") && init?.method === "POST") {
+          return new Response(
+            JSON.stringify({
+              name: `eleva-${BOOKING_ID}`,
+              url: "https://eleva.daily.co/eleva-x",
+              privacy: "private",
+              config: { enable_recording: "cloud" },
+            }),
+            { status: 200 }
+          )
+        }
+        throw new Error(`unexpected ${url}`)
+      }
+    )
+
+    const client = createDailyClient({
+      apiKey: "key",
+      domain: "eleva.daily.co",
+      fetch: fetchImpl as unknown as typeof fetch,
+    })
+
+    await expect(
+      client.createSessionRoom({
+        bookingId: BOOKING_ID,
+        startAt: new Date("2026-10-07T10:00:00.000Z"),
+        endAt: new Date("2026-10-07T11:00:00.000Z"),
+      })
+    ).rejects.toThrow(/session contract/)
   })
 
   it("reads domain id from GET / when env is empty", async () => {

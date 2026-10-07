@@ -18,6 +18,7 @@ export type DailyRoom = {
     max_participants?: number
     enable_recording?: unknown
     enable_recording_ui?: boolean
+    eject_at_room_exp?: boolean
   }
 }
 
@@ -101,7 +102,11 @@ export function createDailyClient(options: DailyClientOptions) {
     if (!res.ok) {
       throw new DailyHttpError(res.status, await res.text())
     }
-    return withProductUrl((await res.json()) as DailyRoom)
+    const created = (await res.json()) as DailyRoom
+    if (!roomMatchesContract(created, body.properties)) {
+      throw new Error("Daily room does not match the session contract")
+    }
+    return withProductUrl(created)
   }
 
   async function updateSessionRoom(

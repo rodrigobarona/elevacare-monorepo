@@ -24,6 +24,12 @@ describe("roomNameForBooking", () => {
   it("rejects a non-UUID so we never mint a room for an arbitrary string", () => {
     expect(() => roomNameForBooking("not-a-uuid")).toThrow(/UUID/)
   })
+
+  it("lowercases the UUID so case variants share one room name", () => {
+    expect(roomNameForBooking(BOOKING_ID.toUpperCase())).toBe(
+      `${ROOM_NAME_PREFIX}${BOOKING_ID}`
+    )
+  })
 })
 
 describe("isElevaRoomName", () => {
@@ -143,6 +149,7 @@ describe("roomMatchesContract", () => {
             max_participants: expected.max_participants,
             enable_recording: false,
             enable_recording_ui: false,
+            eject_at_room_exp: true,
           },
         },
         expected
@@ -170,6 +177,36 @@ describe("roomMatchesContract", () => {
           config: {
             ...expected,
             nbf: expected.nbf - 60,
+          },
+        },
+        expected
+      )
+    ).toBe(false)
+  })
+
+  it("rejects a room whose participant cap is above the requested limit", () => {
+    expect(
+      roomMatchesContract(
+        {
+          privacy: "private",
+          config: {
+            ...expected,
+            max_participants: expected.max_participants + 3,
+          },
+        },
+        expected
+      )
+    ).toBe(false)
+  })
+
+  it("rejects a room that does not eject at expiry", () => {
+    expect(
+      roomMatchesContract(
+        {
+          privacy: "private",
+          config: {
+            ...expected,
+            eject_at_room_exp: false,
           },
         },
         expected
