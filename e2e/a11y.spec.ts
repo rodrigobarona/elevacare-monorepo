@@ -17,19 +17,23 @@ async function expectNoBlockingViolations(page: Page) {
 }
 
 const PUBLIC_PAGES = [
-  "/",
-  "/pt",
-  "/experts",
-  "/become-expert",
-  "/for-clinics",
-  "/contact",
+  { path: "/", needsData: false },
+  { path: "/pt", needsData: false },
+  { path: "/experts", needsData: true },
+  { path: "/become-expert", needsData: false },
+  { path: "/for-clinics", needsData: false },
+  { path: "/contact", needsData: false },
 ]
 
 test.describe("a11y: public marketplace", () => {
-  for (const path of PUBLIC_PAGES) {
+  for (const { path, needsData } of PUBLIC_PAGES) {
     test(`${path} has no serious or critical WCAG AA violations`, async ({
       page,
     }) => {
+      test.skip(
+        needsData && process.env.CI === "true" && !process.env.DATABASE_URL,
+        "e2e-smoke has no DATABASE_URL"
+      )
       const res = await page.goto(path)
       expect(res?.status()).toBe(200)
       await expectNoBlockingViolations(page)
