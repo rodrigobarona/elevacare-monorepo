@@ -4,6 +4,7 @@
   },
   "dashboard": {
     "welcome": "Consola del operador Eleva",
-    "subtitle": "Aprobaciones, pagos y auditoría."
+    "subtitle": "Aprobaciones, pagos y auditoría.",
+    "signedInAs": "Sesión iniciada como {email}"
   }
 }

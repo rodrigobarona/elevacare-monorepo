@@ -1,4 +1,5 @@
 import { getTranslations } from "next-intl/server"
+import { EmptyState } from "@eleva/ui/components/empty-state"
 import { PageHeader } from "@eleva/ui/components/page-header"
 
 export default async function AcademyHomePage({
@@ -10,11 +11,12 @@ export default async function AcademyHomePage({
   const t = await getTranslations("academy")
 
   return (
-    <>
+    <div className="space-y-8">
       <PageHeader title={t("title")} description={t("subtitle")} />
-      <p className="text-sm text-muted-foreground">
-        {t("comingSoon", { orgSlug })}
-      </p>
-    </>
+      <EmptyState
+        title={t("courses.empty")}
+        description={t("comingSoon", { orgSlug })}
+      />
+    </div>
   )
 }
