@@ -12,6 +12,7 @@ const RECEIPT_CONCURRENCY = 5
 export async function listMemberPaymentsWithReceipts(input: {
   userId: string
   cursor?: string
+  bookingId?: string
   limit?: number
 }): Promise<MemberListResult<MemberPaymentListItem>> {
   const listed = await listMemberPayments(input)
