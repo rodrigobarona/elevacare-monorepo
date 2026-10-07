@@ -141,6 +141,8 @@ Out: TOConline invoices (Phase 7), clinic SaaS billing (Phase 11), admin UI (Pha
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** `e2e:phase06` 4 and the cancellation smoke 3 (€60/€30/€0) passed on loopback. Staging pay → transfer → payout and the AUD-001 staging re-run are still required. AUD-007 waived. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 > **Closeout status (2026-09-24):** Engineering for Phase 06 is on main.
 > `e2e/phase-06.spec.ts` (`pnpm e2e:phase06`) asserts OpenAPI path coverage,
 > anonymous 401s on payout/refund/finance mutations, unsigned Stripe webhook

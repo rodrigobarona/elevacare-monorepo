@@ -148,6 +148,8 @@ Out: push (Expo) — post-launch; Novu (retired).
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** AUD-004 quiet hours (#133), AUD-005 ICS (#132) and AUD-015 Resend dedupe (#130, migration `0049`) are merged; unit/loopback only. Twilio IE1 still required. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 > **Closeout status (2026-09-25):** Lane 1 + Resend webhooks + Lane 2 stub are on
 > main. **Exit-gate items still BLOCKED / deferred:** do not add
 > `invoice.issued` / `invoice.failed` to `NOTIFICATION_KINDS` while

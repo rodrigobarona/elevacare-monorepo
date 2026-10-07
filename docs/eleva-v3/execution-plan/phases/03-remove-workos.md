@@ -88,6 +88,8 @@ Out: records/PHI features (Phase 10); MVP record re-encryption (Phase 14).
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** No changes in the production pass. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 - [ ] Exit-gate grep returns nothing; `pnpm install` has no `@workos-inc` in `pnpm-lock.yaml`.
 - [ ] `encryptForOrg`/`decryptForOrg` round trip; tampered tag fails; `rotateKek` re-wraps DEKs and
       old ciphertext still decrypts; `shredOrgKeys` makes ciphertext unrecoverable (test).

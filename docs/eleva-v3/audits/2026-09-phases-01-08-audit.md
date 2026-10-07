@@ -262,3 +262,38 @@ Production pass. "Merged" means the fix is on `main` with unit or loopback tests
 | AUD-024 | Merged                        | #139            | Live Google/Microsoft proof is staging evidence (unproven)                                                                                                                                                                                                                                                  |
 
 Human gates are unchanged: D-06 (Strict legal review), D-07 (Daily), D-12, FT POST / Comunicação / `invoice.issued`, and Twilio IE1. The Phase 04B waiver stays waived/unproven.
+
+## Production pass closeout (2026-10-07)
+
+### New finding fixed during evidence runs
+
+| ID      | Sev | Finding                                                                                                                                                                                                                                                                               | Status                                    | PR   |
+| ------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- | ---- |
+| AUD-025 | P1  | Cancel released only `active` reservations, so a paid booking's `converted` reservation kept the slot under `slot_reservations_no_overlap` after cancellation. Reschedule left it on the old time. Members saw `SLOT_TAKEN` on a slot nobody held. Account deletion had the same gap. | Merged; loopback PASS (member e2e, below) | #154 |
+
+#154 also expires stale-but-unswept holds that overlap a reschedule target, and maps an exclusion race on reschedule to `SLOT_TAKEN`. Migration `0050_release_cancelled_reservations` backfills existing rows. It fails (does not skip) if moved reservations would overlap, so an operator reconciles those rows by hand.
+
+### Operator: migrations not yet on staging or production
+
+`0049` (AUD-015, Resend svix-id dedupe) and `0050` (AUD-025) are applied to the loopback database only. Run `pnpm db:migrate` against staging, then production, before the next deploy of `apps/api`. If `0050` raises `rescheduled reservations conflict after the move`, reconcile the listed reservation ids, then re-run.
+
+### Evidence (loopback, never Production)
+
+| Suite                                       | Result (2026-10-07)                    | Notes                                                                             |
+| ------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
+| `e2e:auth` + admin                          | 8 + 1 passed                           | —                                                                                 |
+| `e2e:member`                                | 3 passed                               | Test fixed: cancel now runs from the session detail, not `/payments`              |
+| `e2e:member:stripe` (fisiomota/first-visit) | 2 passed                               | Pay → cancel → re-book the same slot (proves AUD-025 fix)                         |
+| Cancellation smoke                          | 3 passed                               | Flexible / Moderate / Strict refunds €60 / €30 / €0                               |
+| `e2e:phase06`                               | 4 passed                               | OpenAPI / auth / webhook-signature surfaces only; no live pay → transfer → payout |
+| `e2e:phase04:stripe`                        | 8 passed, 3 skipped                    | The 3 builder fixtures need an expert session. 04B stays **waived/unproven**      |
+| `e2e/a11y.spec.ts` (axe, WCAG 2.1 AA)       | 10 passed                              | Public pages, not-found, account login/signup, dark `/login`                      |
+| Lighthouse (prod build, mobile)             | `/` 91, `/experts` 92, `/fisiomota` 92 | Accessibility, best practices and SEO 100 on all. Desktop performance 99–100      |
+| Screenshots                                 | 36 + header checks                     | Light/dark at 375 and 1280 px for web, booking, profile, not-found, login, signup |
+
+### Not proven (still open)
+
+- **Staging W3:** none of the staging smokes ran in this pass. AUD-001 paid-then-cancelled, AUD-017 BotID runbook, AUD-021 `PASSKEY_ORIGIN`, AUD-024 live calendar sync and the AUD-025 re-book need a staging deploy with `0049`/`0050` applied.
+- **Live money:** pay → transfer → payout in Stripe test mode on staging is still the Phase 06 closeout evidence.
+- **AUD-006** deferred and **AUD-007** waived until `issueInvoice()` opens.
+- **Phase 04B** human evidence: waived, unproven.

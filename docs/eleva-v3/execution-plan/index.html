@@ -1248,6 +1248,9 @@ scripts.</li>
 <li><code>.env.example</code>, <code>turbo.json</code> updated.</li>
 </ol>
 <h2 id="01-rebaseline-adrs-ci--acceptance-criteria"><a class="anchor" href="#01-rebaseline-adrs-ci--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Production pass (2026-10-07):</strong> CI hygiene AUD-019/020 (#134) and the OpenAPI coverage test AUD-018 (#135) are merged. No staging evidence needed for this phase. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> <code>rg -n &quot;WorkOS&quot; docs/eleva-v3 --glob &#39;!**/decision-log.md&#39; --glob &#39;!**/adrs/**&#39; --glob &#39;!**/execution-plan/**&#39;</code>
 returns only historical mentions explicitly marked &quot;(removed, see ADR-017)&quot;. The execution
@@ -1671,6 +1674,9 @@ membership/onboarding routes, OpenAPI merge.</li>
 <code>MICROSOFT_OAUTH_CLIENT_ID/SECRET</code>, <code>PASSKEY_RP_ID</code>, <code>PASSKEY_ORIGIN</code>.</li>
 </ol>
 <h2 id="02-better-auth-foundation--acceptance-criteria"><a class="anchor" href="#02-better-auth-foundation--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Production pass (2026-10-07):</strong> AUD-021 passkey origin (#127) is merged; <code>PASSKEY_ORIGIN</code> still needs a staging check. <code>e2e:auth</code> 8 + admin 1 passed on loopback. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> PR 02.0 spike report committed under <code>docs/eleva-v3/spikes/02-better-auth.md</code>; every one of
 the twelve contract checks is marked proven or has a plan change recorded next to it.</li>
@@ -2087,6 +2093,9 @@ sections from Phase 2 stay) — see &quot;Docs to update&quot;.</li>
 <li>Env/docs updates.</li>
 </ol>
 <h2 id="03-remove-workos--acceptance-criteria"><a class="anchor" href="#03-remove-workos--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Production pass (2026-10-07):</strong> No changes in the production pass. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Exit-gate grep returns nothing; <code>pnpm install</code> has no <code>@workos-inc</code> in <code>pnpm-lock.yaml</code>.</li>
 <li><input disabled="" type="checkbox"> <code>encryptForOrg</code>/<code>decryptForOrg</code> round trip; tampered tag fails; <code>rotateKek</code> re-wraps DEKs and
@@ -2647,6 +2656,9 @@ declaration) and two staging synthetic checks (<code>/public/experts/.../slots</
 <code>POST /payments/intent</code>) alerting to the on-call channel.</li>
 </ol>
 <h2 id="04-public-marketplace-booking--acceptance-criteria"><a class="anchor" href="#04-public-marketplace-booking--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Production pass (2026-10-07):</strong> AUD-002 external busy (#119) and AUD-025 slot release on cancel/reschedule (#154, migration <code>0050</code>) are merged. AUD-017 BotID is staged with production <code>off</code>. axe and Lighthouse (≥ 90 mobile) pass on <code>apps/web</code>, which is light-only. Staging W3 not run. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
 <ul>
 <li><input disabled="" type="checkbox"> Explorer lists seeded experts with working filters and pagination; profile renders in
 <code>pt/en/es</code>.</li>
@@ -3239,6 +3251,9 @@ multi-calendar, destination overrides), <code>design-system-spec.md</code> (edit
 </ol>
 <h2 id="04b-expert-offer-builder--acceptance-criteria"><a class="anchor" href="#04b-expert-offer-builder--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
+<p><strong>Production pass (2026-10-07):</strong> Still <strong>waived/unproven</strong>. In <code>e2e:phase04:stripe</code> the 3 builder fixtures skip because they need an expert session. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
+<blockquote>
 <p><strong>Closeout status (2026-09-25):</strong> Phase 4B engineering is on main (builder
 path, modes, calendar UI, ICS, AI assist, i18n draft gate). Member live money
 path on loopback is evidenced via Phase 05 <code>e2e:member:stripe</code> (<strong>PASS through
@@ -3739,6 +3754,9 @@ it); this phase adds the <code>marketing</code> kind, the member view/withdraw A
 </ol>
 <h2 id="05-member-app--acceptance-criteria"><a class="anchor" href="#05-member-app--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
+<p><strong>Production pass (2026-10-07):</strong> <code>e2e:member</code> 3 and <code>e2e:member:stripe</code> 2 passed on loopback (pay → cancel → re-book the same slot). Migrations <code>0049</code>/<code>0050</code> are not yet on staging or production. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
+<blockquote>
 <p><strong>Closeout status (2026-09-25, post-#112):</strong> Product surfaces for Phase 05 are
 on main. <code>e2e/member.spec.ts</code> exists (<code>pnpm e2e:member</code> /
 <code>e2e:member:stripe</code>) and is loopback-gated.</p>
@@ -4120,6 +4138,9 @@ scripts and root scripts (<code>qstash:setup:payouts</code>).</li>
 <li><code>infra/stripe/setup-webhooks.ts</code> event list updated and applied to staging.</li>
 </ol>
 <h2 id="06-payments-payouts--acceptance-criteria"><a class="anchor" href="#06-payments-payouts--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
+<blockquote>
+<p><strong>Production pass (2026-10-07):</strong> <code>e2e:phase06</code> 4 and the cancellation smoke 3 (€60/€30/€0) passed on loopback. Staging pay → transfer → payout and the AUD-001 staging re-run are still required. AUD-007 waived. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
 <blockquote>
 <p><strong>Closeout status (2026-09-24):</strong> Engineering for Phase 06 is on main.
 <code>e2e/phase-06.spec.ts</code> (<code>pnpm e2e:phase06</code>) asserts OpenAPI path coverage,
@@ -4637,6 +4658,9 @@ audit unions (<code>invoice: issued|failed|credited|manual_marked</code>; <code>
 </ol>
 <h2 id="07-invoicing-toconline--acceptance-criteria"><a class="anchor" href="#07-invoicing-toconline--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
+<p><strong>Production pass (2026-10-07):</strong> Exit gate unchanged: BLOCKED. AUD-011 (#129) and AUD-012 (#131) are merged; AUD-006 is deferred to the PR that opens issuance. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
+<blockquote>
 <p><strong>Closeout status (2026-09-24):</strong> Closed-gate engineering for Phase 07 is on
 main. <strong>Exit gate remains BLOCKED:</strong> do not open live FT POST, do not
 Comunicar TEST, do not call <code>issueInvoice()</code> / finalize fictitious documents,
@@ -4994,7 +5018,7 @@ operator tasks still pending (series, credentials, remaining fiscal-parameter co
 </tr>
 <tr>
 <td>Exit gate</td>
-<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences (quiet hours deferred to Phase 13, AUD-004), idempotently. <code>invoice.issued</code> / <code>invoice.failed</code> stay deferred while <code>issueInvoice()</code> is closed</td>
+<td>Booking confirmation, 24h and 1h reminders, cancellation, payment failed, receipt, and payout paid are delivered by email (Resend), SMS (Twilio EU, opt-in) and in-app inbox, respecting preferences (quiet hours silence non-urgent SMS, AUD-004), idempotently. <code>invoice.issued</code> / <code>invoice.failed</code> stay deferred while <code>issueInvoice()</code> is closed</td>
 </tr>
 </tbody></table>
 <h2 id="08-notifications-lane1--why-this-phase-exists"><a class="anchor" href="#08-notifications-lane1--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
@@ -5019,7 +5043,7 @@ rows) — where
 mode exists for recipients who have no account yet (<code>auth.org_invitation</code> to a new address,
 guest booking confirmations before activation) and is <strong>email-only</strong>: no preferences lookup,
 no SMS, no in-app row, suppression list still applied; the <code>{ userId }</code> mode resolves
-preferences + locale (quiet hours: Phase 13, AUD-004) and fans out to email / SMS / in-app. Renders the
+preferences + locale (quiet hours silence non-urgent SMS) and fans out to email / SMS / in-app. Renders the
 <code>@eleva/email</code> template (React Email) / SMS text / in-app payload -&gt; delivers -&gt; writes
 <code>notification_deliveries</code> (idempotent on key + recipient + channel, where the recipient column
 is <code>user_id</code> or, for e-mail mode, <code>recipient_email</code>). The delivery row is <strong>claimed before the
@@ -5131,6 +5155,9 @@ status; suppress future sends on hard bounce.</li>
 </ol>
 <h2 id="08-notifications-lane1--acceptance-criteria"><a class="anchor" href="#08-notifications-lane1--acceptance-criteria" aria-label="Link to section">#</a>Acceptance criteria</h2>
 <blockquote>
+<p><strong>Production pass (2026-10-07):</strong> AUD-004 quiet hours (#133), AUD-005 ICS (#132) and AUD-015 Resend dedupe (#130, migration <code>0049</code>) are merged; unit/loopback only. Twilio IE1 still required. See the <a href="#2026-09-phases-01-08-audit--production-pass-closeout-2026-10-07">production pass closeout</a>.</p>
+</blockquote>
+<blockquote>
 <p><strong>Closeout status (2026-09-25):</strong> Lane 1 + Resend webhooks + Lane 2 stub are on
 main. <strong>Exit-gate items still BLOCKED / deferred:</strong> do not add
 <code>invoice.issued</code> / <code>invoice.failed</code> to <code>NOTIFICATION_KINDS</code> while
@@ -5181,10 +5208,10 @@ ICS because calendar files sync to third-party providers).</li>
 &quot;new booking&quot;; in-app rows created for both.</li>
 <li><input disabled="" type="checkbox"> Reminders fire at T-24h and T-1h (verify with a booking 25h ahead and QStash <code>notBefore</code>
 or a shortened test schedule); cancelled booking -&gt; reminders skipped.</li>
-<li><input disabled="" type="checkbox"> <del>Quiet hours defer non-urgent kinds to the next allowed window; urgent kinds
-(<code>booking.reminder_1h</code>) bypass.</del> Not a Phase 08 requirement.
-<strong>Deferred to Phase 13</strong> (audit AUD-004, founder-approved 2026-09-25):
-preferences store quiet hours but <code>sendNotification</code> does not read them.</li>
+<li><input disabled="" type="checkbox"> Quiet hours: non-urgent kinds skip SMS inside the member&#39;s window (member TZ);
+email and in-app still deliver; urgent kinds (<code>booking.reminder_1h</code>,
+<code>payment.failed</code>) bypass. Unit-tested only (AUD-004, decision-log 2026-10-06).
+Deferring the skipped SMS to the end of the window is still a follow-up.</li>
 <li><input disabled="" type="checkbox"> Same <code>idempotencyKey</code> twice for the same recipient -&gt; one delivery per channel; the same
 <code>idempotencyKey</code> for member and expert (booking.confirmed) -&gt; both delivered (test both).</li>
 <li><input disabled="" type="checkbox"> SMS sent only with verified phone + opt-in; Twilio EU region used.</li>
@@ -5292,7 +5319,7 @@ PHASE 8 TASK — Implement Lane 1 transactional notifications and reminder workf
    NOTIFICATION_KINDS[kind].scope is &quot;org&quot; | &quot;user&quot; and orgId is required (overloaded signature +
    Zod refine, error ORG_CONTEXT_REQUIRED, checked before any write) for every org-scoped kind.
    userId mode -&gt; load user locale, preferences (Phase 5
-   table), suppression list (quiet-hours deferral is Phase 13 — AUD-004 — do not implement it here) -&gt;
+   table), suppression list, quiet hours (skip non-urgent SMS — AUD-004; deferral is a follow-up) -&gt;
    render via @eleva/email (React Email) for email, short template for SMS, payload for in-app -&gt;
    CLAIM the notification_deliveries row FIRST (INSERT status queued WITH lease_owner = runId
    and claimed_at = now() — both NOT NULL, the insert is the first claim; on unique conflict

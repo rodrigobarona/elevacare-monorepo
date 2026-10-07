@@ -147,6 +147,8 @@ identity tables/columns** (Phase 3).
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** AUD-021 passkey origin (#127) is merged; `PASSKEY_ORIGIN` still needs a staging check. `e2e:auth` 8 + admin 1 passed on loopback. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 - [ ] PR 02.0 spike report committed under `docs/eleva-v3/spikes/02-better-auth.md`; every one of
       the twelve contract checks is marked proven or has a plan change recorded next to it.
 - [ ] `rg -n 'better-auth' -g '!packages/auth/**' -g '!pnpm-lock.yaml' -g '!docs/**' -g '!pnpm-workspace.yaml'`

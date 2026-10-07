@@ -87,6 +87,8 @@ Out: video join (Phase 9), reports/records (Phase 10), notifications sending (Ph
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** `e2e:member` 3 and `e2e:member:stripe` 2 passed on loopback (pay → cancel → re-book the same slot). Migrations `0049`/`0050` are not yet on staging or production. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 > **Closeout status (2026-09-25, post-#112):** Product surfaces for Phase 05 are
 > on main. `e2e/member.spec.ts` exists (`pnpm e2e:member` /
 > `e2e:member:stripe`) and is loopback-gated.

@@ -116,6 +116,8 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** Still **waived/unproven**. In `e2e:phase04:stripe` the 3 builder fixtures skip because they need an expert session. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 > **Closeout status (2026-09-25):** Phase 4B engineering is on main (builder
 > path, modes, calendar UI, ICS, AI assist, i18n draft gate). Member live money
 > path on loopback is evidenced via Phase 05 `e2e:member:stripe` (**PASS through

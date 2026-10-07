@@ -155,6 +155,8 @@ connected|disconnected`).
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** Exit gate unchanged: BLOCKED. AUD-011 (#129) and AUD-012 (#131) are merged; AUD-006 is deferred to the PR that opens issuance. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 > **Closeout status (2026-09-24):** Closed-gate engineering for Phase 07 is on
 > main. **Exit gate remains BLOCKED:** do not open live FT POST, do not
 > Comunicar TEST, do not call `issueInvoice()` / finalize fictitious documents,
