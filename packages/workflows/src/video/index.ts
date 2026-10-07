@@ -20,15 +20,18 @@ export {
 } from "./join"
 export {
   addSessionParticipant,
+  countActiveDelegates,
   removeSessionParticipant,
   retryPendingEjects,
   SessionParticipantError,
+  type AddSessionParticipantResult,
   type SessionParticipantErrorCode,
   type SessionParticipantRole,
 } from "./participants"
 export {
   dailyWebhookHeaders,
   handleDailyWebhook,
+  webhookAuditAction,
   DailyWebhookAuthError,
   type DailyWebhookResult,
 } from "./daily-webhook"

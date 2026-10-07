@@ -3067,6 +3067,15 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
                 },
               },
             },
+            "202": {
+              description:
+                "Delegate added; Daily room capacity is not yet synced",
+              content: {
+                "application/json": {
+                  schema: AddSessionParticipantResponseSchema,
+                },
+              },
+            },
             "403": {
               description: "Caller is not the assigned expert",
               content: { "application/json": { schema: ErrorSchema } },
@@ -4152,7 +4161,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         operationId: "retryPendingSessionEjects",
         summary: "Retry Daily ejects for revoked delegates",
         description:
-          "Ejects and bans revoked session participants that still have no ejected_at.",
+          "Ejects and bans revoked session participants that still have no ejected_at, then re-syncs Daily room capacity for scheduled and live rooms.",
       }),
       "/health": {
         get: {

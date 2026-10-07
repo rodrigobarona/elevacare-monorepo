@@ -556,6 +556,7 @@ export const AddSessionParticipantResponseSchema = z.object({
     userId: z.string().uuid(),
     role: z.enum(["delegate", "supervisor"]),
   }),
+  capacityPending: z.literal(true).optional(),
 })
 
 export const RemoveSessionParticipantResponseSchema = z.object({

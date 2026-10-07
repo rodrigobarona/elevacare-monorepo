@@ -156,8 +156,20 @@ export async function joinSession(
   return withPlatformAudit(
     { orgId: row.session.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
+      const [lockedSession] = await tx
+        .select({ status: main.sessions.status })
+        .from(main.sessions)
+        .where(eq(main.sessions.bookingId, input.bookingId))
+        .for("update")
+        .limit(1)
+      const lockedStatus = lockedSession
+        ? classifyJoinStatus(lockedSession.status)
+        : { error: "SESSION_NOT_ACTIVE" as const }
+      if ("error" in lockedStatus)
+        throw new SessionJoinError(lockedStatus.error)
+
       if (caller.role === "delegate") {
-        const [locked] = await tx
+        const [lockedDelegate] = await tx
           .select({
             revokedAt: main.sessionParticipants.revokedAt,
           })
@@ -171,19 +183,7 @@ export async function joinSession(
           )
           .for("update")
           .limit(1)
-        if (!locked) throw new SessionJoinError("NOT_A_PARTICIPANT")
-      } else {
-        const [locked] = await tx
-          .select({ status: main.sessions.status })
-          .from(main.sessions)
-          .where(eq(main.sessions.bookingId, input.bookingId))
-          .for("update")
-          .limit(1)
-        const lockedStatus = locked
-          ? classifyJoinStatus(locked.status)
-          : { error: "SESSION_NOT_ACTIVE" as const }
-        if ("error" in lockedStatus)
-          throw new SessionJoinError(lockedStatus.error)
+        if (!lockedDelegate) throw new SessionJoinError("NOT_A_PARTICIPANT")
       }
 
       const token = await mint({

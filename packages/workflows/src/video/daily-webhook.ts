@@ -14,10 +14,23 @@ import {
   type SessionParticipantHistory,
 } from "./attendance"
 
+const SUPPORTED_WEBHOOK_TYPES = new Set([
+  "meeting.started",
+  "meeting.ended",
+  "participant.joined",
+  "participant.left",
+])
+
 export type DailyWebhookResult =
   | { status: "duplicate" }
   | { status: "ignored"; reason: string }
   | { status: "processed"; type: string }
+
+export function webhookAuditAction(type: string): "started" | "ended" | null {
+  if (type === "meeting.started") return "started"
+  if (type === "meeting.ended") return "ended"
+  return null
+}
 
 export class DailyWebhookAuthError extends Error {
   override readonly name = "DailyWebhookAuthError"
@@ -81,6 +94,9 @@ export async function handleDailyWebhook(input: {
   if (parsed.type === "error") {
     return { status: "ignored", reason: "error_event" }
   }
+  if (!SUPPORTED_WEBHOOK_TYPES.has(parsed.type)) {
+    return { status: "ignored", reason: "unsupported_type" }
+  }
 
   const claimed = await withPlatformAdminContext(async (tx) => {
     const inserted = await tx
@@ -139,112 +155,211 @@ export async function handleDailyWebhook(input: {
   const incoming = eventTimeFromDaily(parsed.event_ts, now)
   const applyStatus = shouldApplyEvent(session.lastEventAt, incoming)
 
-  await withPlatformAudit(
-    { orgId: session.orgId, actorUserId: null },
-    async (tx, ctx) => {
-      const [locked] = await tx
-        .select({
-          status: main.sessions.status,
-          lastEventAt: main.sessions.lastEventAt,
-          participants: main.sessions.participants,
-          startedAt: main.sessions.startedAt,
-          endedAt: main.sessions.endedAt,
-        })
-        .from(main.sessions)
-        .where(eq(main.sessions.bookingId, session.bookingId))
-        .for("update")
-        .limit(1)
-      if (!locked) {
-        await ctx.emit({
-          entity: "session",
-          action: "joined",
-          entityId: session.bookingId,
-          payload: { type: parsed.type, roomName, ignored: true },
-        })
-        return
-      }
-
-      let status = locked.status
-      let participants = locked.participants
-      let startedAt = locked.startedAt
-      let endedAt = locked.endedAt
-      let lastEventAt = locked.lastEventAt
-      const action =
-        parsed.type === "meeting.started"
-          ? ("started" as const)
-          : parsed.type === "meeting.ended"
-            ? ("ended" as const)
-            : ("joined" as const)
-
-      if (
-        parsed.type === "participant.joined" ||
-        parsed.type === "participant.left"
-      ) {
-        const userId = userIdFromPayload(parsed.payload)
-        participants = appendParticipantHistory(participants, {
-          role: participantRole({
-            userId,
-            owner: ownerFromPayload(parsed.payload),
-            expertUserId: session.expertUserId,
-            memberUserId: session.memberUserId,
-          }),
-          userId,
-          at: incoming,
-          kind: parsed.type === "participant.joined" ? "joined" : "left",
-        })
-        if (status === "ended" || status === "no_show") {
-          const attendance = deriveAttendance(participants)
-          const next = statusAfterAttendance(attendance)
-          if (status === "no_show" && next === "ended") {
-            status = "ended"
-          }
-        }
-      }
-
-      if (applyStatus && parsed.type === "meeting.started") {
-        if (status === "scheduled" || status === "room_unresolved") {
-          status = "live"
-          startedAt = incoming
-        }
-      }
-
-      if (applyStatus && parsed.type === "meeting.ended") {
-        if (status === "scheduled" || status === "live") {
-          status = statusAfterAttendance(deriveAttendance(participants))
-          endedAt = incoming
-        }
-      }
-
-      if (applyStatus) lastEventAt = incoming
-
-      await tx
-        .update(main.sessions)
-        .set({
-          status,
-          participants,
-          startedAt,
-          endedAt,
-          lastEventAt,
-          ...(status === "ended" || status === "no_show"
-            ? { attendance: deriveAttendance(participants) }
-            : {}),
-        })
-        .where(eq(main.sessions.bookingId, session.bookingId))
-
-      await ctx.emit({
-        entity: "session",
-        action,
-        entityId: session.bookingId,
-        payload: {
-          type: parsed.type,
-          roomName,
-        },
+  const auditAction = webhookAuditAction(parsed.type)
+  const applied = auditAction
+    ? await applyLifecycleWebhook({
+        bookingId: session.bookingId,
+        orgId: session.orgId,
+        roomName,
+        type: parsed.type,
+        action: auditAction,
+        incoming,
+        applyStatus,
       })
-    }
-  )
+    : await applyParticipantWebhook({
+        bookingId: session.bookingId,
+        orgId: session.orgId,
+        roomName,
+        type: parsed.type,
+        incoming,
+        applyStatus,
+        payload: parsed.payload,
+        expertUserId: session.expertUserId,
+        memberUserId: session.memberUserId,
+      })
+
+  if (!applied) {
+    await markProcessed(parsed.id)
+    return { status: "ignored", reason: "session_gone" }
+  }
 
   await markProcessed(parsed.id)
   return { status: "processed", type: parsed.type }
+}
+
+class WebhookSessionGone extends Error {
+  override readonly name = "WebhookSessionGone"
+}
+
+async function applyLifecycleWebhook(input: {
+  bookingId: string
+  orgId: string
+  roomName: string
+  type: string
+  action: "started" | "ended"
+  incoming: Date
+  applyStatus: boolean
+}): Promise<boolean> {
+  try {
+    await withPlatformAudit(
+      { orgId: input.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [locked] = await tx
+          .select({
+            status: main.sessions.status,
+            lastEventAt: main.sessions.lastEventAt,
+            participants: main.sessions.participants,
+            startedAt: main.sessions.startedAt,
+            endedAt: main.sessions.endedAt,
+          })
+          .from(main.sessions)
+          .where(eq(main.sessions.bookingId, input.bookingId))
+          .for("update")
+          .limit(1)
+        if (!locked) throw new WebhookSessionGone()
+
+        let status = locked.status
+        let startedAt = locked.startedAt
+        let endedAt = locked.endedAt
+        let lastEventAt = locked.lastEventAt
+
+        if (input.applyStatus && input.type === "meeting.started") {
+          if (status === "scheduled" || status === "room_unresolved") {
+            status = "live"
+            startedAt = input.incoming
+          }
+        }
+
+        if (input.applyStatus && input.type === "meeting.ended") {
+          if (status === "scheduled" || status === "live") {
+            status = statusAfterAttendance(
+              deriveAttendance(locked.participants)
+            )
+            endedAt = input.incoming
+          }
+        }
+
+        if (input.applyStatus) lastEventAt = input.incoming
+
+        await tx
+          .update(main.sessions)
+          .set({
+            status,
+            startedAt,
+            endedAt,
+            lastEventAt,
+            ...(status === "ended" || status === "no_show"
+              ? { attendance: deriveAttendance(locked.participants) }
+              : {}),
+          })
+          .where(eq(main.sessions.bookingId, input.bookingId))
+
+        await ctx.emit({
+          entity: "session",
+          action: input.action,
+          entityId: input.bookingId,
+          payload: { type: input.type, roomName: input.roomName },
+        })
+      }
+    )
+    return true
+  } catch (err) {
+    if (err instanceof WebhookSessionGone) return false
+    throw err
+  }
+}
+
+type SessionStatus = (typeof main.sessions.$inferSelect)["status"]
+
+function nextParticipantState(input: {
+  status: SessionStatus
+  participants: SessionParticipantHistory[]
+  payload: Record<string, unknown> | undefined
+  incoming: Date
+  type: string
+  applyStatus: boolean
+  expertUserId: string | null
+  memberUserId: string | null
+}) {
+  const userId = userIdFromPayload(input.payload)
+  const participants = appendParticipantHistory(input.participants, {
+    role: participantRole({
+      userId,
+      owner: ownerFromPayload(input.payload),
+      expertUserId: input.expertUserId,
+      memberUserId: input.memberUserId,
+    }),
+    userId,
+    at: input.incoming,
+    kind: input.type === "participant.joined" ? "joined" : "left",
+  })
+  let status = input.status
+  if (status === "no_show") {
+    const next = statusAfterAttendance(deriveAttendance(participants))
+    if (next === "ended") status = "ended"
+  }
+  return {
+    status,
+    participants,
+    corrected: input.status === "no_show" && status === "ended",
+  }
+}
+
+async function applyParticipantWebhook(input: {
+  bookingId: string
+  orgId: string
+  roomName: string
+  type: string
+  incoming: Date
+  applyStatus: boolean
+  payload: Record<string, unknown> | undefined
+  expertUserId: string | null
+  memberUserId: string | null
+}): Promise<boolean> {
+  try {
+    await withPlatformAudit(
+      { orgId: input.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [locked] = await tx
+          .select({
+            status: main.sessions.status,
+            lastEventAt: main.sessions.lastEventAt,
+            participants: main.sessions.participants,
+          })
+          .from(main.sessions)
+          .where(eq(main.sessions.bookingId, input.bookingId))
+          .for("update")
+          .limit(1)
+        if (!locked) throw new WebhookSessionGone()
+        const next = nextParticipantState({
+          ...input,
+          status: locked.status,
+          participants: locked.participants,
+        })
+        await tx
+          .update(main.sessions)
+          .set({
+            status: next.status,
+            participants: next.participants,
+            ...(input.applyStatus ? { lastEventAt: input.incoming } : {}),
+            ...(next.status === "ended" || next.status === "no_show"
+              ? { attendance: deriveAttendance(next.participants) }
+              : {}),
+          })
+          .where(eq(main.sessions.bookingId, input.bookingId))
+        await ctx.emit({
+          entity: "session",
+          action: next.corrected ? "attendance_corrected" : "history_recorded",
+          entityId: input.bookingId,
+          payload: { type: input.type, roomName: input.roomName },
+        })
+      }
+    )
+    return true
+  } catch (err) {
+    if (err instanceof WebhookSessionGone) return false
+    throw err
+  }
 }
 
 async function markProcessed(eventId: string) {

@@ -131,6 +131,9 @@ export type AuditAction =
   | "ended"
   | "participant_added"
   | "participant_removed"
+  | "attendance_corrected"
+  | "history_recorded"
+  | "ejected"
   | "note_drafted"
 
 export interface AuditContext {

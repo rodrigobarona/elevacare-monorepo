@@ -68,12 +68,14 @@ export async function POST(
       userId: parsed.data.userId,
       role: parsed.data.role,
     })
+    const { capacityPending, ...row } = participant
     return secureJson(
       AddSessionParticipantResponseSchema.parse({
         ok: true,
-        participant,
+        participant: row,
+        ...(capacityPending ? { capacityPending: true } : {}),
       }),
-      { status: 200, headers }
+      { status: capacityPending ? 202 : 200, headers }
     )
   } catch (err) {
     if (err instanceof SessionParticipantError) {

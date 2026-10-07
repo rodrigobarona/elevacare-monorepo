@@ -15,5 +15,5 @@ export const VIDEO_EJECT_RETRY_SCHEDULE = {
   retries: 3,
   requireBearer: true,
   description:
-    "Complete Daily eject+ban for revoked session participants that still have no ejected_at",
+    "Complete Daily eject+ban for revoked session participants and repair stale room capacity",
 } as const

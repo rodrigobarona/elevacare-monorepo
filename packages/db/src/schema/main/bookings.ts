@@ -437,6 +437,10 @@ export const sessions = pgTable(
       withTimezone: true,
       mode: "date",
     }),
+    capacityPendingAt: timestamp("capacity_pending_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
     roomAttemptSeq: integer("room_attempt_seq").notNull().default(0),
     roomFingerprintExp: timestamp("room_fingerprint_exp", {
       withTimezone: true,
@@ -481,6 +485,9 @@ export const sessions = pgTable(
     fingerprintIdx: uniqueIndex("sessions_room_fingerprint_exp_uidx")
       .on(t.roomFingerprintExp)
       .where(sql`room_fingerprint_exp IS NOT NULL`),
+    capacityPendingIdx: index("sessions_capacity_pending_idx")
+      .on(t.capacityPendingAt)
+      .where(sql`capacity_pending_at IS NOT NULL`),
     expertIdx: index("sessions_expert_idx").on(t.expertProfileId),
     memberIdx: index("sessions_member_idx").on(t.memberUserId),
     timeIdx: index("sessions_time_idx").on(t.startsAt),

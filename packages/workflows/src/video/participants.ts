@@ -1,4 +1,13 @@
-import { and, eq, isNotNull, isNull, sql } from "drizzle-orm"
+import {
+  and,
+  eq,
+  inArray,
+  isNotNull,
+  isNull,
+  lte,
+  notInArray,
+  sql,
+} from "drizzle-orm"
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import {
@@ -70,7 +79,7 @@ async function loadAssignedSession(bookingId: string, actorUserId: string) {
   })
 }
 
-async function activeDelegateCount(bookingId: string) {
+export async function countActiveDelegates(bookingId: string) {
   return withPlatformAdminContext(async (tx) => {
     const [row] = await tx
       .select({
@@ -115,6 +124,13 @@ async function syncRoomCapacity(
   await daily(deps).updateSessionRoom(session.dailyRoomName, body.properties)
 }
 
+export type AddSessionParticipantResult = {
+  id: string
+  userId: string
+  role: SessionParticipantRole
+  capacityPending?: true
+}
+
 export async function addSessionParticipant(
   input: {
     bookingId: string
@@ -123,7 +139,7 @@ export async function addSessionParticipant(
     role: SessionParticipantRole
   },
   deps: SessionParticipantDeps = {}
-) {
+): Promise<AddSessionParticipantResult> {
   const session = await loadAssignedSession(input.bookingId, input.actorUserId)
   if (!session) throw new SessionParticipantError("NOT_FOUND")
 
@@ -176,6 +192,7 @@ export async function addSessionParticipant(
               userId: main.sessionParticipants.userId,
               role: main.sessionParticipants.role,
             })
+      if (!row) throw new SessionParticipantError("NOT_FOUND")
       await ctx.emit({
         entity: "session",
         action: "participant_added",
@@ -186,12 +203,20 @@ export async function addSessionParticipant(
     }
   )
 
-  const extra = await activeDelegateCount(input.bookingId)
-  await syncRoomCapacity(
-    { ...session, bookingId: input.bookingId },
-    extra,
-    deps
-  )
+  const extra = await countActiveDelegates(input.bookingId)
+  const syncStartedAt = new Date()
+  try {
+    await syncRoomCapacity(
+      { ...session, bookingId: input.bookingId },
+      extra,
+      deps
+    )
+    await clearCapacityPending(input.bookingId, syncStartedAt)
+  } catch (err) {
+    if (!(err instanceof DailyHttpError) || err.status < 500) throw err
+    await markCapacityPending(input.bookingId)
+    return { ...participant, capacityPending: true }
+  }
   return participant
 }
 
@@ -232,15 +257,17 @@ export async function removeSessionParticipant(
   )
   if (!revoked) throw new SessionParticipantError("NOT_FOUND")
 
-  const extra = await activeDelegateCount(input.bookingId)
+  const extra = await countActiveDelegates(input.bookingId)
+  const syncStartedAt = new Date()
   try {
     await syncRoomCapacity(
       { ...session, bookingId: input.bookingId },
       extra,
       deps
     )
+    await clearCapacityPending(input.bookingId, syncStartedAt)
   } catch {
-    // Capacity repair is best-effort; revoke already denies new tokens.
+    await markCapacityPending(input.bookingId)
   }
 
   if (session.dailyRoomName && isElevaRoomName(session.dailyRoomName)) {
@@ -252,18 +279,111 @@ export async function removeSessionParticipant(
     }
   }
 
+  await withPlatformAudit(
+    { orgId: session.orgId, actorUserId: input.actorUserId },
+    async (tx, ctx) => {
+      await tx
+        .update(main.sessionParticipants)
+        .set({ ejectedAt: new Date() })
+        .where(
+          and(
+            eq(main.sessionParticipants.bookingId, input.bookingId),
+            eq(main.sessionParticipants.userId, input.userId)
+          )
+        )
+      await ctx.emit({
+        entity: "session",
+        action: "ejected",
+        entityId: input.bookingId,
+        payload: { userId: input.userId },
+      })
+    }
+  )
+  return { ok: true }
+}
+
+async function markCapacityPending(bookingId: string) {
   await withPlatformAdminContext(async (tx) => {
     await tx
-      .update(main.sessionParticipants)
-      .set({ ejectedAt: new Date() })
+      .update(main.sessions)
+      .set({ capacityPendingAt: new Date() })
+      .where(eq(main.sessions.bookingId, bookingId))
+  })
+}
+
+async function clearCapacityPending(bookingId: string, notAfter?: Date) {
+  await withPlatformAdminContext(async (tx) => {
+    await tx
+      .update(main.sessions)
+      .set({ capacityPendingAt: null })
       .where(
         and(
-          eq(main.sessionParticipants.bookingId, input.bookingId),
-          eq(main.sessionParticipants.userId, input.userId)
+          eq(main.sessions.bookingId, bookingId),
+          notAfter ? lte(main.sessions.capacityPendingAt, notAfter) : undefined
         )
       )
   })
-  return { ok: true }
+}
+
+async function retryStaleRoomCapacities(
+  deps: SessionParticipantDeps,
+  limit: number
+) {
+  await withPlatformAdminContext(async (tx) => {
+    await tx
+      .update(main.sessions)
+      .set({ capacityPendingAt: null })
+      .where(
+        and(
+          isNotNull(main.sessions.capacityPendingAt),
+          notInArray(main.sessions.status, ["scheduled", "live"])
+        )
+      )
+  })
+
+  const rooms = await withPlatformAdminContext(async (tx) => {
+    return tx
+      .select({
+        bookingId: main.sessions.bookingId,
+        startsAt: main.sessions.startsAt,
+        endsAt: main.sessions.endsAt,
+        dailyRoomName: main.sessions.dailyRoomName,
+        language: main.bookings.language,
+      })
+      .from(main.sessions)
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
+      .where(
+        and(
+          isNotNull(main.sessions.capacityPendingAt),
+          inArray(main.sessions.status, ["scheduled", "live"])
+        )
+      )
+      .orderBy(main.sessions.capacityPendingAt)
+      .limit(limit)
+  })
+
+  let repaired = 0
+  let pending = 0
+  for (const session of rooms) {
+    if (!session.dailyRoomName) {
+      await clearCapacityPending(session.bookingId)
+      continue
+    }
+    const extra = await countActiveDelegates(session.bookingId)
+    const syncStartedAt = new Date()
+    try {
+      await syncRoomCapacity(session, extra, deps)
+      await clearCapacityPending(session.bookingId, syncStartedAt)
+      repaired += 1
+    } catch (err) {
+      if (err instanceof DailyHttpError && err.status === 404) {
+        await clearCapacityPending(session.bookingId)
+        continue
+      }
+      pending += 1
+    }
+  }
+  return { scanned: rooms.length, repaired, pending }
 }
 
 export async function retryPendingEjects(
@@ -317,13 +437,19 @@ export async function retryPendingEjects(
           )
         await ctx.emit({
           entity: "session",
-          action: "participant_removed",
+          action: "ejected",
           entityId: row.bookingId,
-          payload: { userId: row.userId, ejected: true },
+          payload: { userId: row.userId },
         })
       }
     )
     ejected += 1
   }
-  return { scanned: pending.length, ejected, pending: pendingCount }
+  const capacity = await retryStaleRoomCapacities(deps, limit)
+  return {
+    scanned: pending.length,
+    ejected,
+    pending: pendingCount,
+    capacity,
+  }
 }

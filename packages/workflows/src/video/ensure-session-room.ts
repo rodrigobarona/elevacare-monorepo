@@ -22,6 +22,7 @@ import {
   type SessionRoomProperties,
 } from "@eleva/video"
 import { ensureSessionRow } from "@eleva/scheduling"
+import { countActiveDelegates } from "./participants"
 
 const ROOM_LEASE_MS = 60_000
 const SWEEP_AHEAD_MS = 2 * 60 * 60 * 1000
@@ -192,10 +193,12 @@ export async function ensureSessionRoom(
   if ("skip" in leased) return { skipped: leased.skip }
 
   const client = daily(deps)
+  const extraParticipants = await countActiveDelegates(bookingId)
   const roomInput = {
     bookingId,
     startAt: booking.startsAt,
     endAt: booking.endsAt,
+    extraParticipants,
     lang: eligibility.lang,
   }
 
