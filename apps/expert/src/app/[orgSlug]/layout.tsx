@@ -6,6 +6,7 @@ import { getExpertProfileForOrg } from "@eleva/db"
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
+import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
 import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
@@ -24,8 +25,9 @@ export default async function ExpertLayout({
   const session = await getSessionForOrg(orgSlug)
 
   if (!session) {
+    const workspace = resolveExpertWorkspaceBase(orgSlug)
     redirect(
-      `${GATEWAY_URL}${LOGIN_PATH}?returnTo=${encodeURIComponent(`/${orgSlug}`)}`
+      `${GATEWAY_URL}${LOGIN_PATH}?returnTo=${encodeURIComponent(workspace)}`
     )
   }
 

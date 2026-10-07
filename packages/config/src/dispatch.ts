@@ -63,6 +63,8 @@ const localeSet = new Set<string>(locales)
  *  9. Public marketplace (Phase 04):
  *       /:username            without session -> marketing (public profile)
  *       /:username/:eventSlug                 -> marketing (booking funnel)
+ *       Signed-in bare /:username for expert orgs is forced back to
+ *       marketing in the gateway proxy (public profile; dashboards use /team).
  * 10. Deeper /:slug with valid shape:
  *       hasSession -> app zone (member app handles org check)
  *       !hasSession -> unauth-slug (caller redirects to /login)

@@ -252,20 +252,50 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("redirects authenticated expert org slug to expert app in development", async () => {
-    vi.stubEnv("NODE_ENV", "development")
+  it("keeps a signed-in /:username on the public profile, not the expert app", async () => {
+    const intl = vi.fn(marketingIntl)
     const proxy = createGatewayProxy({
       origins: testOrigins,
-      intlMiddleware: marketingIntl,
+      intlMiddleware: intl,
     })
     const res = await proxy(
       makeRequest("/barona-expert", {
         cookieNames: ["better-auth.session_token"],
       })
     )
+    expect(res.status).toBe(200)
+    expect(intl).toHaveBeenCalledOnce()
+  })
+
+  it("keeps an unknown public handle on marketing even with a session cookie", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(
+      makeRequest("/patimota", {
+        cookieNames: ["better-auth.session_token"],
+      })
+    )
+    expect(res.status).toBe(200)
+    expect(intl).toHaveBeenCalledOnce()
+  })
+
+  it("rewrites authenticated expert /:slug/team to the expert app", async () => {
+    vi.stubEnv("NODE_ENV", "development")
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: marketingIntl,
+    })
+    const res = await proxy(
+      makeRequest("/barona-expert/team", {
+        cookieNames: ["better-auth.session_token"],
+      })
+    )
     expect(res.status).toBe(307)
     expect(res.headers.get("location")).toBe(
-      "http://localhost:3003/barona-expert"
+      "http://localhost:3003/barona-expert/team"
     )
   })
 
