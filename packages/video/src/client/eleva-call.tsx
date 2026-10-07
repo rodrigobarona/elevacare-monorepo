@@ -112,14 +112,18 @@ function CallShell({
     }
   }, [daily])
 
+  const joined = meetingState === "joined-meeting"
+  const joining = meetingState === "joining-meeting"
+  const left = meetingState === "left-meeting"
+
   const handleLeft = useCallback(() => {
     onLeft?.()
   }, [onLeft])
   useDailyEvent("left-meeting", handleLeft)
 
-  const joined = meetingState === "joined-meeting"
-  const joining = meetingState === "joining-meeting"
-  const left = meetingState === "left-meeting"
+  useEffect(() => {
+    if (left) handleLeft()
+  }, [left, handleLeft])
 
   async function handleJoin() {
     if (!daily) return
@@ -147,7 +151,6 @@ function CallShell({
   }
 
   if (left) {
-    if (onLeft) return null
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-12 text-center">
         <h1 className="text-xl font-medium">{labels.leftTitle}</h1>
