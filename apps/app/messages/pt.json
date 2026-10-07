@@ -40,7 +40,7 @@
     "price": "Preço",
     "addToCalendar": "Adicionar ao calendário",
     "join": "Entrar na sessão",
-    "joinSoon": "A entrada por vídeo chega numa fase posterior.",
+    "joinSoon": "O vídeo usa Daily standard (não é HIPAA). Entrar activa-se quando a sala estiver pronta. A gravação está desligada.",
     "icsFailed": "Não foi possível descarregar o ficheiro de calendário.",
     "cancel": "Cancelar sessão",
     "reschedule": "Reagendar",

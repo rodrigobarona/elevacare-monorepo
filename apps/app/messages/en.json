@@ -40,7 +40,7 @@
     "price": "Price",
     "addToCalendar": "Add to calendar",
     "join": "Join session",
-    "joinSoon": "Video join arrives in a later release.",
+    "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on when the room is ready. Recording is off.",
     "icsFailed": "Could not download the calendar file.",
     "cancel": "Cancel session",
     "reschedule": "Reschedule",

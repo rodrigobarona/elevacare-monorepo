@@ -77,6 +77,9 @@ catalog:
   # Database
   drizzle-orm: ^0.45.2
 
+  # JWT (Better Auth verify + Daily self-signed meeting tokens)
+  jose: ^6.1.0
+
   # UI
   sonner: ^2.0.7
   zod: ^4.4.3

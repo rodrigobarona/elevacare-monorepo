@@ -132,6 +132,11 @@ const s2Schema = z.object({
 
   BLOB_READ_WRITE_TOKEN: stringOptional,
   BLOB_PRIVATE_READ_WRITE_TOKEN: stringOptional,
+
+  DAILY_API_KEY: stringOptional,
+  DAILY_DOMAIN: stringOptional,
+  DAILY_DOMAIN_ID: stringOptional,
+  DAILY_WEBHOOK_SECRET: stringOptional,
 })
 
 const calendarOAuthSchema = z.object({
@@ -364,6 +369,37 @@ export function requireToconlineEnv(): RequiredToconlineEnv {
     TOCONLINE_API_URL: apiUrl!,
     TOCONLINE_URI_REDIRECT: redirect!,
     TOCONLINE_SERIES_PREFIX: seriesPrefix!,
+  }
+}
+
+export interface RequiredDailyEnv {
+  DAILY_API_KEY: string
+  DAILY_DOMAIN: string
+  DAILY_DOMAIN_ID?: string
+  DAILY_WEBHOOK_SECRET: string
+}
+
+/**
+ * Asserts Daily is configured for a live room or webhook. Standard
+ * domain only until D-07. Domain id is optional when GET /v1 can
+ * resolve it.
+ */
+export function requireDailyEnv(): RequiredDailyEnv {
+  const e = env()
+  const missing: string[] = []
+  if (!e.DAILY_API_KEY) missing.push("DAILY_API_KEY")
+  if (!e.DAILY_DOMAIN) missing.push("DAILY_DOMAIN")
+  if (!e.DAILY_WEBHOOK_SECRET) missing.push("DAILY_WEBHOOK_SECRET")
+  if (missing.length > 0) {
+    throw new Error(
+      `@eleva/video boot: missing env vars: ${missing.join(", ")}`
+    )
+  }
+  return {
+    DAILY_API_KEY: e.DAILY_API_KEY!,
+    DAILY_DOMAIN: e.DAILY_DOMAIN!,
+    DAILY_DOMAIN_ID: e.DAILY_DOMAIN_ID || undefined,
+    DAILY_WEBHOOK_SECRET: e.DAILY_WEBHOOK_SECRET!,
   }
 }
 

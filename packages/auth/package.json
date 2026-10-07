@@ -42,7 +42,7 @@
     "@eleva/observability": "workspace:*",
     "@upstash/redis": "catalog:",
     "better-auth": "catalog:",
-    "jose": "^6.1.0",
+    "jose": "catalog:",
     "drizzle-orm": "catalog:",
     "iron-session": "^8.0.4"
   },

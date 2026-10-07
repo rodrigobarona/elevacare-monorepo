@@ -4,6 +4,7 @@ import {
   resetEnvCache,
   requireAuthEnv,
   requireCronSecret,
+  requireDailyEnv,
   requireDbEnv,
   requireToconlineEnv,
   resolveMicrosoftOAuth,
@@ -111,6 +112,38 @@ describe("requireCronSecret", () => {
   it("returns the secret when present", () => {
     process.env.CRON_SECRET = "shhhh"
     expect(requireCronSecret().CRON_SECRET).toBe("shhhh")
+  })
+})
+
+describe("requireDailyEnv", () => {
+  beforeEach(() => {
+    process.env = { ...ORIGINAL }
+    resetEnvCache()
+  })
+
+  afterEach(() => {
+    process.env = ORIGINAL
+    resetEnvCache()
+  })
+
+  it("lists every missing Daily key at once", () => {
+    delete process.env.DAILY_API_KEY
+    delete process.env.DAILY_DOMAIN
+    delete process.env.DAILY_WEBHOOK_SECRET
+    expect(() => requireDailyEnv()).toThrow(
+      /DAILY_API_KEY.*DAILY_DOMAIN.*DAILY_WEBHOOK_SECRET/
+    )
+  })
+
+  it("returns keys when present and keeps domain id optional", () => {
+    process.env.DAILY_API_KEY = "key"
+    process.env.DAILY_DOMAIN = "eleva"
+    process.env.DAILY_WEBHOOK_SECRET = "secret"
+    delete process.env.DAILY_DOMAIN_ID
+    const daily = requireDailyEnv()
+    expect(daily.DAILY_API_KEY).toBe("key")
+    expect(daily.DAILY_DOMAIN).toBe("eleva")
+    expect(daily.DAILY_DOMAIN_ID).toBeUndefined()
   })
 })
 

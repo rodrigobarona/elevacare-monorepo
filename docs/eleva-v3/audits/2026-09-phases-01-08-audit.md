@@ -7,7 +7,7 @@ Hard limits still in force: no production mutation; `issueInvoice()` stays close
 
 ## Executive summary
 
-Phases 01–08 are **engineering-mostly-on-main**, not **production-ready**. The pipeline on GitHub main is green. The code is not safe to take live money or to treat as closed for Phase 09.
+Phases 01–08 are **engineering-mostly-on-main**, not **production-ready**. The pipeline on GitHub main is green. The code is not safe to take live money. Phase 09 video engineering is **open** on standard Daily (D-07 deferred). Leftovers below are **TODOs for evidence and humans**, not engineering blockers.
 
 The single production blocker (code fixed; loopback proof partial):
 
@@ -43,17 +43,17 @@ Treat these as **local-contention flakes until re-run in isolation**. If they fa
 
 ## Phase closeout (honest stamps)
 
-| Phase             | Engineering              | Evidence                                                                   | Stamp                                                        |
-| ----------------- | ------------------------ | -------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| 01 Rebaseline     | On main                  | CI jobs exist; audit migrations exist                                      | Engineering closed                                           |
-| 02 Better Auth    | On main                  | Auth e2e present; D-13 working pre-launch                                  | Engineering closed; cookie/CSRF not a prod security sign-off |
-| 03 WorkOS removal | On main with leftovers   | Calendar OAuth/busy still unproven (04B waiver)                            | Engineering closed with hygiene leftovers                    |
-| 04 Public booking | On main                  | Funnel e2e mostly mocked; live Stripe opt-in                               | Engineering closed; **busy + hold-sweep incomplete**         |
-| 04B Offer builder | On main                  | Founder waived all human evidence 2026-09-25                               | **Waived / unproven** (not a Phase 09 blocker)               |
-| 05 Member app     | On main                  | Loopback e2e opt-in                                                        | Engineering closed **except money leg depends on AUD-001**   |
-| 06 Payments       | Machinery on main        | Live pay→transfer→payout **unproven**; acceptance boxes unticked           | **Gated / evidence-incomplete**; P0 refund gap               |
-| 07 Invoicing      | Closed-gate code on main | Live FT / Comunicação / `invoice.issued` blocked                           | **Gated** (correct)                                          |
-| 08 Notifications  | Lane 1 on main           | Twilio US1 trial proven; IE1 residency unproven; quiet hours + ICS missing | Engineering **partial**                                      |
+| Phase             | Engineering              | Evidence                                                                      | Stamp                                                        |
+| ----------------- | ------------------------ | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| 01 Rebaseline     | On main                  | CI jobs exist; audit migrations exist                                         | Engineering closed                                           |
+| 02 Better Auth    | On main                  | Auth e2e present; D-13 working pre-launch                                     | Engineering closed; cookie/CSRF not a prod security sign-off |
+| 03 WorkOS removal | On main with leftovers   | Calendar OAuth/busy still unproven (04B waiver)                               | Engineering closed with hygiene leftovers                    |
+| 04 Public booking | On main                  | Funnel e2e mostly mocked; live Stripe opt-in                                  | Engineering closed; **busy + hold-sweep incomplete**         |
+| 04B Offer builder | On main                  | Founder waived all human evidence 2026-09-25                                  | **Waived / unproven** (not a Phase 09 blocker)               |
+| 05 Member app     | On main                  | Loopback e2e opt-in                                                           | Engineering closed **except money leg depends on AUD-001**   |
+| 06 Payments       | Machinery on main        | Live pay→transfer→payout **unproven**; acceptance boxes unticked              | **Gated / evidence-incomplete**; P0 refund gap               |
+| 07 Invoicing      | Closed-gate code on main | Live FT / Comunicação / `invoice.issued` blocked                              | **Gated** (correct)                                          |
+| 08 Notifications  | Lane 1 on main           | Twilio US1 trial proven; IE1 residency unproven; quiet hours + ICS **merged** | Engineering closed; EU SMS claim still TODO                  |
 
 ## Findings register
 

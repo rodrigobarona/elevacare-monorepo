@@ -107,6 +107,16 @@ export const boundariesConfig = [
               message:
                 "Import the Vercel AI SDK only through @eleva/ai (boundary lint).",
             },
+            {
+              name: "@daily-co/daily-js",
+              message:
+                "Import Daily only through @eleva/video (ADR-018 boundary lint).",
+            },
+            {
+              name: "@daily-co/daily-react",
+              message:
+                "Import Daily React only through @eleva/video/client (ADR-018 boundary lint).",
+            },
           ],
           patterns: [
             {
@@ -128,6 +138,11 @@ export const boundariesConfig = [
               ],
               message:
                 "Import icons from @eleva/icons (or @eleva/icons/client); only packages/icons wraps the vendor set.",
+            },
+            {
+              group: ["@daily-co", "@daily-co/**"],
+              message:
+                "Import Daily only through @eleva/video (ADR-018 boundary lint).",
             },
             {
               group: ["platejs/*", "platejs/**"],

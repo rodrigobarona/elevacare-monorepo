@@ -52,6 +52,19 @@ Each entry should include:
   [`audits/2026-10-phase-09-readiness.md`](./audits/2026-10-phase-09-readiness.md),
   [ADR-018](./adrs/ADR-018-daily-video-only.md)
 
+### 2026-10-07: Leftovers stay TODOs, not demo or Phase 09 blockers
+
+- Decision: the founder will show the running product to accounting, legal
+  and other stakeholders with honest notes. Staging W3, live pay→transfer→payout,
+  D-06/D-12, tax issuance, Twilio IE1, the Daily account probe, and waived 04B
+  UX are **TODOs**. They do **not** block Phase 09 engineering or a demo.
+- Still closed by design (not TODOs to “just finish”): `issueInvoice()`,
+  FT POST / Comunicação / `invoice.issued`, production PHI-video without D-07,
+  expert cancel / no-show / custom policies.
+- Owner: founder. Status: `active`.
+- Reference: [`audits/2026-10-phase-09-readiness.md`](./audits/2026-10-phase-09-readiness.md)
+  “Stakeholder leftovers”.
+
 ### 2026-10-07: Phases 01–08 production pass closeout
 
 - Decision: the production pass (audit fixes, brand v2, UX inventory, evidence) is closed on

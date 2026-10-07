@@ -59,6 +59,7 @@ export default {
         "crm",
         "compliance",
         "observability",
+        "video",
         "config",
         "eslint-config",
         "typescript-config",

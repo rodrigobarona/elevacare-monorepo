@@ -8,6 +8,18 @@
 | Touches    | `packages/video/**` (new), `packages/db/src/schema/main/sessions.ts`, `packages/workflows/src/video/**`, `apps/api/src/app/{sessions,webhooks/daily,workflows}/**`, `apps/app/**` + `apps/expert/**` join pages, `packages/observability` (CSP), `packages/eslint-config/boundaries.js`, `apps/web/vercel.json` or gateway rewrites for `sessions.eleva.care`                                                                                                                                                           |
 | Exit gate  | Expert and member join the same private Daily room via per-participant meeting tokens from their apps; unauthorized token rejected; room expires automatically; `meeting.started/ended` webhooks update the session; no PHI in logs                                                                                                                                                                                                                                                                                     |
 
+## Progress (stakeholder demo)
+
+| Slice                      | State       | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                        |
+| -------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| 09.1 `@eleva/video` server | **This PR** | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe; join API; `daily-react` call UI |
+| 09.2 join pages + call UI  | Not started | Member session Join stays disabled until a room exists                                                                                                           | Expert + member join routes                       |
+| 09.3 webhooks + workflows  | Not started | —                                                                                                                                                                | Session status machine, orphan sweep              |
+| Daily account probe        | PENDING     | Spike written                                                                                                                                                    | First live room                                   |
+| D-07 HIPAA / BAA           | Deferred    | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                         |
+
+Leftovers from phases 01–08 (staging W3, live pay→transfer, tax issuance, Twilio IE1, D-06/D-12, waived 04B UX) are **TODOs, not Phase 09 blockers**. See [`audits/2026-10-phase-09-readiness.md`](../../audits/2026-10-phase-09-readiness.md) “Stakeholder leftovers”.
+
 ## Why this phase exists
 
 ADR-018: Daily.co is the only video provider. Until D-07 is signed the domain is
@@ -153,7 +165,7 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
    OpenAPI + client; tests: delegate can join, removed delegate gets 403, third participant fits
    the room capacity.
 4. Join pages in `apps/app` and `apps/expert` with `pt/en/es` messages.
-5. CSP update + boundary lint + env (`DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET`).
+5. CSP update + boundary lint + env (`DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_DOMAIN_ID`, `DAILY_WEBHOOK_SECRET`).
 6. Playwright `e2e/video-join.spec.ts` (mocks Daily JS or uses a fake media device profile).
 
 ## Acceptance criteria
@@ -363,7 +375,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    accordingly; Permissions-Policy camera=(self), microphone=(self), display-capture=(self) only
    on join routes (per-route header via proxy.ts helper). Boundary lint: @daily-co/* only in
    packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co` until
-   D-07), DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator
+   D-07), DAILY_DOMAIN_ID (domain UUID for the meeting-token `d` claim; optional if GET /v1
+   returns it), DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator
    tasks doc operator-tasks/daily-setup.md: create a **standard** Daily domain with recording
    off, create the webhook pointing to https://api.dev.eleva.care/webhooks/daily (staging;
    Phase 15 repeats it for https://api.eleva.care/webhooks/daily) with the secret. Do not
