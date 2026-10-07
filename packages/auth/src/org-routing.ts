@@ -57,12 +57,15 @@ export function orgSlugNeedingTypeLookup(pathname: string): string | null {
   return first
 }
 
-/** Expert workspace base path: lean for expert orgs, /team for clinic experts. */
+/**
+ * Expert workspace base path. Always `/:slug/team` so `/:slug` stays the
+ * public marketplace profile (guest + signed-in + anonymous).
+ */
 export function resolveExpertWorkspaceBase(
   orgSlug: string,
-  orgType: OrgType | string | null | undefined
+  _orgType?: OrgType | string | null
 ): string {
-  return orgType === "team" ? `/${orgSlug}/team` : `/${orgSlug}`
+  return `/${orgSlug}/team`
 }
 
 /** Clinic manager/staff workspace base path. */

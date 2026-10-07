@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { getSession, getSessionForOrg } from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
+import { resolveProductHomeUrl } from "@eleva/dashboard/resolve-product-home-url"
 import {
   LAST_ACTIVE_ORG_COOKIE,
   RESERVED_SLUGS,
@@ -47,9 +48,10 @@ export async function GET(request: NextRequest) {
     request.headers.get("x-forwarded-host") ?? request.headers.get("host")
   )
 
+  const home = new URL(resolveProductHomeUrl(session))
   const destination = returnTo
     ? new URL(returnTo, gateway)
-    : new URL(`/${slug}`, gateway)
+    : new URL(`${home.pathname}${home.search}`, gateway)
 
   const response = NextResponse.redirect(destination)
   if (lastSlug !== slug) {
