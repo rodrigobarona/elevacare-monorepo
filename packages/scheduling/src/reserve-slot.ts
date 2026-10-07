@@ -11,6 +11,7 @@ import {
 } from "@eleva/db/schema"
 import type { ReserveSlotInput, ReserveSlotResult } from "./types"
 import { assertMemberCanBook } from "./assert-member-can-book"
+import { isExclusionViolation } from "./pg-errors"
 
 const DEFAULT_TTL_SECONDS = 300
 
@@ -374,13 +375,4 @@ export class LinkClaimError extends Error {
     super("link_unusable")
     this.name = "LinkClaimError"
   }
-}
-
-function isExclusionViolation(err: unknown): boolean {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    "code" in err &&
-    err.code === "23P01"
-  )
 }

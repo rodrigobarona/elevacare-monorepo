@@ -115,6 +115,7 @@ describe("scheduleAccountDeletion", () => {
     const paymentSets: unknown[] = []
     const userSets: unknown[] = []
     const bookingSets: unknown[] = []
+    const reservationSets: unknown[] = []
     let selectCalls = 0
 
     withPlatformAudit.mockImplementation(
@@ -155,6 +156,7 @@ describe("scheduleAccountDeletion", () => {
                     where: async () => [
                       {
                         id: "confirmed-1",
+                        reservationId: "res-2",
                         paymentId: "pay-1",
                         paymentStatus: "succeeded",
                       },
@@ -181,6 +183,7 @@ describe("scheduleAccountDeletion", () => {
               if (table.id === "user.id") userSets.push(values)
               if (table.id === "bookings.id") bookingSets.push(values)
               if (table.id === "payments.id") paymentSets.push(values)
+              if (table.id === "slots.id") reservationSets.push(values)
               return {
                 where: () => ({
                   returning: async () => [],
@@ -208,6 +211,11 @@ describe("scheduleAccountDeletion", () => {
     expect(userSets[0]).toMatchObject({ deletionScheduledAt: expect.any(Date) })
     expect(bookingSets.length).toBeGreaterThan(0)
     expect(paymentSets).toContainEqual({ status: "refund_pending" })
+    // Pending and paid (converted) reservations are both released.
+    expect(reservationSets).toEqual([
+      { status: "released" },
+      { status: "released" },
+    ])
   })
 
   it("maps a concurrent pending-user unique violation to AccountDeletionConflictError", async () => {
