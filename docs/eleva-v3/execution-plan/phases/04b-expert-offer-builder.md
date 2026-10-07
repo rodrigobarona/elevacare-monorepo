@@ -140,11 +140,9 @@ builder and template library (Phase 10 / Phase 16), payments and identity onboar
 > | Clinical worldwide / language subset publish refusals next to fields                      | Partial (invariants API)             | **Waived** by founder 2026-09-25 (UX sentence-next-to-field not human-proven) |
 > | Private link book-while-closed + revoke 404                                               | API + builder tab                    | **Waived** by founder 2026-09-25                                              |
 >
-> **Phase 09 remains blocked** on hard tax/issuance gates (live FT POST,
-> Comunicação, `issueInvoice()` / `invoice.issued`) **and** on D-07 (Daily
-> HIPAA/BAA/DPA founder+DPO sign-off) — **not** waived by this 04B
-> human-evidence waiver. Do **not** start Phase 09. Do not start FT POST /
-> `invoice.issued`.
+> **Phase 09 video engineering opened 2026-10-07** on standard Daily (D-07
+> deferred, not HIPAA). This 04B waiver still does **not** open FT POST /
+> Comunicação / `invoice.issued`. `issueInvoice()` stays closed.
 >
 > **2026-09-24 i18n draft slice:** `pnpm i18n:draft` + `translateMessages` +
 > 14-day draft age gate in `check:i18n-parity` (**done**, `#109`).
@@ -472,11 +470,10 @@ or private-link live UX. Report must still name those flows as **unproven / waiv
 not as operator-proven. Seeded funnel + `E2E_EXPERT_OFFER=1` affordances, AI
 fail-closed, `pnpm i18n:draft` / `check:i18n-parity`, and shipped APIs remain the
 engineering bar. Clinical field-level refusal UI stays incomplete engineering
-(backlog; not a Phase 09 blocker). **Do not start Phase 09** — still blocked on
-Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`; open them or a
-separate founder waiver that explicitly names all three) **and** D-07 (Daily
-HIPAA/BAA/DPA founder+DPO sign-off). Neither is waived by the 04B human-evidence
-waiver.
+(backlog; not a Phase 09 blocker). Phase 09 video engineering opened
+2026-10-07 on standard Daily (D-07 deferred). Phase 07 hard gates (FT POST /
+Comunicação / `invoice.issued`) stay closed unless a founder waiver names
+all three. The 04B human-evidence waiver covers neither tax nor HIPAA.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).

@@ -200,7 +200,7 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 </tr>
 <tr>
 <td>ADR-018</td>
-<td><strong>Video = Daily.co only</strong> (HIPAA-enabled domain <code>elevacare.daily.co</code>, branded <code>sessions.eleva.care</code>). Google/Microsoft calendars remain for busy-time + destination sync only.</td>
+<td><strong>Video = Daily.co only.</strong> Until D-07: <strong>standard</strong> (not HIPAA) domain, named rooms, recording off. HIPAA domain <code>elevacare.daily.co</code> / branded <code>sessions.eleva.care</code> wait for a later D-07. Google/Microsoft calendars remain busy-time + destination sync only.</td>
 <td>Google Meet links</td>
 </tr>
 <tr>
@@ -431,9 +431,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-07</td>
-<td>Daily HIPAA domain + BAA/DPA, EU processing position</td>
+<td>Daily HIPAA domain + BAA/DPA, EU processing position. <strong>Deferred 2026-10-07</strong> (no BAA, no HIPAA claim). Phase 09 uses standard Daily.</td>
 <td>founder + DPO</td>
-<td>Phase 9</td>
+<td>HIPAA / PHI-video production claim only — not Phase 09 engineering</td>
 </tr>
 <tr>
 <td>D-08</td>
@@ -3308,11 +3308,9 @@ engineering-proven). This does <strong>not</strong> waive FT POST / Comunicaçã
 <td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 </tbody></table>
-<p><strong>Phase 09 remains blocked</strong> on hard tax/issuance gates (live FT POST,
-Comunicação, <code>issueInvoice()</code> / <code>invoice.issued</code>) <strong>and</strong> on D-07 (Daily
-HIPAA/BAA/DPA founder+DPO sign-off) — <strong>not</strong> waived by this 04B
-human-evidence waiver. Do <strong>not</strong> start Phase 09. Do not start FT POST /
-<code>invoice.issued</code>.</p>
+<p><strong>Phase 09 video engineering opened 2026-10-07</strong> on standard Daily (D-07
+deferred, not HIPAA). This 04B waiver still does <strong>not</strong> open FT POST /
+Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</p>
 <p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
 14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>, <code>#109</code>).</p>
 </blockquote>
@@ -3638,11 +3636,10 @@ or private-link live UX. Report must still name those flows as **unproven / waiv
 not as operator-proven. Seeded funnel + `E2E_EXPERT_OFFER=1` affordances, AI
 fail-closed, `pnpm i18n:draft` / `check:i18n-parity`, and shipped APIs remain the
 engineering bar. Clinical field-level refusal UI stays incomplete engineering
-(backlog; not a Phase 09 blocker). **Do not start Phase 09** — still blocked on
-Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`; open them or a
-separate founder waiver that explicitly names all three) **and** D-07 (Daily
-HIPAA/BAA/DPA founder+DPO sign-off). Neither is waived by the 04B human-evidence
-waiver.
+(backlog; not a Phase 09 blocker). Phase 09 video engineering opened
+2026-10-07 on standard Daily (D-07 deferred). Phase 07 hard gates (FT POST /
+Comunicação / `invoice.issued`) stay closed unless a founder waiver names
+all three. The 04B human-evidence waiver covers neither tax nor HIPAA.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).</code></pre></div>
@@ -4692,7 +4689,7 @@ be met; production issuance / Comunicação acceptance is explicitly deferred.</
 </tr>
 <tr>
 <td>Phase 09 start</td>
-<td><strong>Blocked</strong> on these hard tax/issuance gates <strong>and</strong> D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do <strong>not</strong> start Phase 09 until the audit fix pack (AUD-001/002/003/008/009/013) is merged, FT POST / Comunicação / <code>invoice.issued</code> open or a separate founder waiver explicitly names all three gates, <strong>and</strong> D-07 is signed. Only exception: the docs/evidence-only 09.0 spike may start while D-07 is in motion (decision log 2026-09-25)</td>
+<td><strong>Open for video engineering</strong> (founder 2026-10-07: D-07 deferred, standard Daily, not HIPAA). Tax/issuance gates in the rows above stay <strong>blocked</strong> — the 2026-10-07 waiver does <strong>not</strong> name FT POST / Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</td>
 </tr>
 </tbody></table>
 </blockquote>
@@ -5437,7 +5434,7 @@ tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>phase-09.0/spike-daily-account</code>, docs + evidence only) must be merged before 09 opens: Daily HIPAA domain enabled and BAA/DPA executed with Daily (owner: founder + DPO; record in <code>decision-log.md</code> as D-07 with the Daily plan tier), EU data-processing position documented (Daily media servers are region-routed; TURN/media residency stated as Daily documents it — no stronger claim on <code>/trust</code>), custom domain <code>sessions.eleva.care</code> verified, webhook secret issued, meeting-token claims verified against the current API in staging, and the recording feature confirmed <strong>off</strong> for the domain (recording moves to Phase 16.8, not Phase 10). Evidence in <code>docs/eleva-v3/spikes/09-daily-account.md</code>.</td>
+<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>docs/eleva-v3/spikes/09-daily-account.md</code>) records the Daily <strong>account mode</strong>. Founder 2026-10-07 deferred D-07 (no BAA, no HIPAA): Phase 09 implements against a <strong>standard Daily domain</strong>, recording off, deterministic room names <code>eleva-{bookingId}</code>. Do <strong>not</strong> claim HIPAA or an executed BAA. HIPAA-mode constraints (no custom names, fingerprint <code>nbf</code>/<code>exp</code>) apply only after D-07 is signed. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker.</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5453,7 +5450,8 @@ tasks pending.</code></pre></div>
 </tr>
 </tbody></table>
 <h2 id="09-video-daily--why-this-phase-exists"><a class="anchor" href="#09-video-daily--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
-<p>ADR-018: Daily.co is the only video provider (HIPAA-enabled domain). Every confirmed <strong>online</strong>
+<p>ADR-018: Daily.co is the only video provider. Until D-07 is signed the domain is
+<strong>standard (not HIPAA)</strong>. Every confirmed <strong>online</strong>
 booking (snapshotted <code>mode = online</code>; phone and in-person bookings never get a room) needs a room
 created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
 drive session status and notifications (recording and transcripts: Phase 16.8 only).</p>
@@ -5622,7 +5620,8 @@ expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; deleg
 <li><input disabled="" type="checkbox"> CSP allows the call to run without console violations.</li>
 <li><input disabled="" type="checkbox"> Payment failure / refund before <code>startAt</code> cancels the session and deletes the room; refund
 after the session leaves the session record intact (state-machine tests).</li>
-<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists and D-07 (Daily HIPAA + BAA) is recorded before this PR opens.</li>
+<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
+standard Daily, recording off, <strong>not HIPAA</strong>. Do not claim BAA executed.</li>
 <li><input disabled="" type="checkbox"> Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
 over fixtures + <code>check-no-phi-logs</code> extension).</li>
 </ul>
@@ -5654,11 +5653,11 @@ constraints, custom domains), <code>@daily-co/daily-react</code> <code>/daily-co
 </ul>
 <h2 id="09-video-daily--risks"><a class="anchor" href="#09-video-daily--risks" aria-label="Link to section">#</a>Risks</h2>
 <ul>
-<li>HIPAA mode restrictions (no custom room names, no live streaming, limited recording types):
-designed in from the start; the account state is verified <strong>before</strong> the phase starts (PR
-09.0), not discovered during implementation.</li>
-<li>Daily BAA/DPA or plan tier not in place: 09.0 blocks the phase; the fallback is to ship phone
-and in-person modes first (they need no room) and keep online bookings unpublishable.</li>
+<li>HIPAA mode restrictions (no custom room names, no live streaming) apply only after D-07.
+Until then use standard Daily and named rooms. Do not discover HIPAA constraints mid-build.</li>
+<li>Daily BAA/DPA deferred by founder 2026-10-07: Phase 09 proceeds on standard Daily.
+Fallback if Daily is unavailable: ship phone and in-person modes first (they need no room)
+and keep online join disabled. Never claim HIPAA while D-07 is unsigned.</li>
 <li>Browser permissions on iOS Safari: test on device before Phase 15.</li>
 </ul>
 <h2 id="09-video-daily--copy-paste-prompt"><a class="anchor" href="#09-video-daily--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>

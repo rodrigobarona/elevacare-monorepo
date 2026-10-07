@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended 2026-10-07: standard Daily until D-07)
 
 ## Date
 
@@ -44,8 +44,22 @@ or D-07 is unsigned.
 5. **Vendor boundary.** Only `packages/video` imports `@daily-co/*`. `apps/api` mounts
    `/webhooks/daily`. Frontends call `@eleva/api-client` to mint a token and then load Daily's
    client SDK on the join page.
-6. **Fallback.** If D-07 is unsigned or Daily is unavailable, Phase 9 still ships join pages
-   for phone and in-person modes; online mode stays unpublished.
+6. **Fallback.** If Daily is unavailable, Phase 9 still ships join pages
+   for phone and in-person modes; online join stays disabled.
+
+## Amendment (2026-10-07)
+
+Founder deferred D-07 (no Daily BAA, no HIPAA programme) so accounting and legal
+can review the running product. Phase 09 implements against a **standard Daily
+domain**:
+
+- Deterministic private room names (`eleva-{bookingId}`).
+- Recording off. Tokens still minted at join time, never stored or logged.
+- Do **not** claim HIPAA, an executed BAA/DPA, or Eleva-controlled EU media
+  residency beyond what Daily documents.
+- The HIPAA-mode room contract in Decision §2 (random names, no custom `name`)
+  applies only after D-07 is signed. Until then, skip the fingerprint
+  reconciler.
 
 ## Alternatives Considered
 

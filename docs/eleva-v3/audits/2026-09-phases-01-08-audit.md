@@ -13,7 +13,9 @@ The single production blocker (code fixed; loopback proof partial):
 
 - **AUD-001 (P0).** Was: member cancel set `refund_pending` with no Stripe refund and transfers ignored booking status. **Fix merged** (`processPendingCancellationRefunds` + transfer gate). **Loopback smoke 3 PASS 2026-09-26** for Flexible / Moderate / Strict refunds (see W3). Staging re-run still required before production money.
 
-Phase 09 implementation needs all of: the founder-approved fix pack (AUD-001, 002, 003, 008, 009, 013) merged; FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three; and D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver covers none of these. Only the docs/evidence 09.0 spike may start earlier (see Phase 09 readiness).
+Phase 09 video engineering opened 2026-10-07 on standard Daily (D-07 deferred,
+not HIPAA). FT POST / Comunicação / `invoice.issued` stay closed. See
+[`2026-10-phase-09-readiness.md`](./2026-10-phase-09-readiness.md).
 
 ## W0 — Baseline pipeline
 
@@ -210,11 +212,11 @@ Approved pack, recorded in [`decision-log.md`](../decision-log.md) ("Phases 01�
 
 ## Phase 09 readiness
 
-- **Phase 09.0** (Daily account spike, docs and evidence only) may start as soon as D-07 is in motion. This carve-out does not change any other Phase 09 gate.
-- **Phase 09 implementation** needs all of the following. The Phase 07 gate row still applies unchanged.
-  - AUD-001, 002, 003, 008, 009 and 013 merged, and a paid-then-cancelled booking proven on staging (refund issued, payout not transferred).
-  - FT POST / Comunicação / `invoice.issued` open, or a separate founder waiver naming all three. They stay closed today.
-  - D-07 (Daily HIPAA/BAA/DPA) signed by founder + DPO. The 04B human-evidence waiver does not cover it.
+- **Phase 09.0** is written: [`spikes/09-daily-account.md`](../spikes/09-daily-account.md).
+  Standard Daily, recording off, **not HIPAA**.
+- **Phase 09 video engineering** opened 2026-10-07 (founder deferred D-07).
+  Tax/issuance stays closed — the waiver did not name FT POST / Comunicação /
+  `invoice.issued`. See [`2026-10-phase-09-readiness.md`](./2026-10-phase-09-readiness.md).
 
 ## Follow-up (2026-09-26): cancellation policies
 

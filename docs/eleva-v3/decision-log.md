@@ -32,10 +32,32 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-07: Founder defers D-07 BAA/HIPAA; Phase 09 opens on standard Daily
+
+- Decision: the founder will show the running product to accounting and legal and does
+  **not** want a Daily BAA or a HIPAA programme for now. Phase 09 engineering may
+  proceed on a **standard (non-HIPAA) Daily** domain with recording off. D-07 is
+  **deferred**, not signed. Stamp **not HIPAA**. Never claim BAA/DPA executed or
+  that D-07 closed.
+- This waiver unblocks Phase 09 **video engineering only**. It does **not** name
+  FT POST, Comunicação, or `invoice.issued`. Those stay closed.
+  `issueInvoice()` stays unconditionally closed. D-06, D-12 and Twilio IE1 stay
+  open. Legal and trust pages stay draft-bannered.
+- Production go-live that claims HIPAA or processes PHI on Daily still needs
+  D-07 (founder + DPO, executed BAA/DPA, HIPAA domain) later. Until then,
+  rooms use deterministic names (`eleva-{bookingId}`), not the HIPAA random-name
+  fingerprint path.
+- Owner: founder. Status: `active`.
+- Reference: [`spikes/09-daily-account.md`](./spikes/09-daily-account.md),
+  [`audits/2026-10-phase-09-readiness.md`](./audits/2026-10-phase-09-readiness.md),
+  [ADR-018](./adrs/ADR-018-daily-video-only.md)
+
 ### 2026-10-07: Phases 01–08 production pass closeout
 
 - Decision: the production pass (audit fixes, brand v2, UX inventory, evidence) is closed on
-  `main`. Phase 09 does **not** open. D-07, FT POST / Comunicação / `invoice.issued`, D-06,
+  `main`. Phase 09 video engineering later opened the same day under the
+  standard-Daily waiver above; tax/issuance gates stayed closed. D-07 remains
+  deferred (not signed). FT POST / Comunicação / `invoice.issued`, D-06,
   D-12 and Twilio IE1 stay open; the Phase 04B waiver stays waived/unproven.
 - Evidence is loopback only (never Production): auth, member, member:stripe, cancellation
   smoke, phase06, axe a11y and Lighthouse pass. Staging W3 smokes and staging Stripe
@@ -1546,12 +1568,15 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 ### D-07 (2026-09-07): Daily HIPAA domain, BAA/DPA and EU processing position
 
 - Owner: founder + DPO
-- Status: proposed (evidence from PR 09.0; sign before Phase 9 opens)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Status: **deferred** (founder 2026-10-07 — BAA and HIPAA not pursued now)
+- Review date: when the founder wants a HIPAA / PHI-video production claim
 - Summary: the Daily plan tier with HIPAA enabled, the executed BAA/DPA, the documented EU
   media-processing position (stated only as Daily documents it — no stronger claim on `/trust`),
-  `sessions.eleva.care` verified, recording confirmed off for the domain. Blocks: Phase 9.
-- Reference: [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md) (PR 09.0), `docs/eleva-v3/spikes/09-daily-account.md`
+  `sessions.eleva.care` verified, recording confirmed off for the domain. **Does not
+  block Phase 09 engineering.** Blocks a later HIPAA / PHI-video production claim
+  only. Phase 09 uses standard Daily until this is signed.
+- Reference: [`spikes/09-daily-account.md`](./spikes/09-daily-account.md),
+  [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md)
 
 ### D-08 (2026-09-07): Session-recording storage — S3 EU landing zone, private Blob system of record
 
