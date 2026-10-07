@@ -80,6 +80,10 @@ catalog:
   # JWT (Better Auth verify + Daily self-signed meeting tokens)
   jose: ^6.1.0
 
+  # Video (Daily.co — ADR-018)
+  "@daily-co/daily-js": ^0.93.0
+  "@daily-co/daily-react": ^0.26.0
+
   # UI
   sonner: ^2.0.7
   zod: ^4.4.3

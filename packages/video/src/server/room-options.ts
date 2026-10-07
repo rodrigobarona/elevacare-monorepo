@@ -1,6 +1,7 @@
+import { JOIN_LEAD_MS, JOIN_TRAIL_MS } from "../join-window"
+
 export const ROOM_NAME_PREFIX = "eleva-"
-export const JOIN_LEAD_MS = 15 * 60 * 1000
-export const JOIN_TRAIL_MS = 30 * 60 * 1000
+export { JOIN_LEAD_MS, JOIN_TRAIL_MS }
 
 export type DailyLang = "en" | "pt" | "es"
 

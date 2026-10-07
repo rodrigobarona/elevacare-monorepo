@@ -5463,19 +5463,25 @@ tasks pending.</code></pre></div>
 <td>09.1 <code>@eleva/video</code> server</td>
 <td>on main</td>
 <td>Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, <code>requireDailyEnv</code>, member Join copy says <strong>standard Daily, not HIPAA</strong></td>
-<td>Live Daily probe; join API; <code>daily-react</code> call UI</td>
+<td>Live Daily probe</td>
 </tr>
 <tr>
 <td>09.2 session rooms</td>
 <td>on main</td>
 <td>Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.</td>
-<td>Join API, tokens, webhooks, call UI</td>
+<td>—</td>
 </tr>
 <tr>
 <td>09.3 join + webhooks</td>
+<td>on main</td>
+<td>Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.</td>
+<td><code>end_at+15m</code> attendance fallback (09.6)</td>
+</tr>
+<tr>
+<td>09.4 ElevaCall + join pages</td>
 <td><strong>This PR</strong></td>
-<td>Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Join pages still disabled until 09.4</td>
-<td>ElevaCall UI, CSP, staging two-browser</td>
+<td>Member and expert join pages mount <code>&lt;ElevaCall&gt;</code>; in-window Join CTAs; CSP includes <code>wss://*.daily.co</code> and <code>DAILY_DOMAIN</code></td>
+<td>Email deep links (09.5); e2e + probe (09.6)</td>
 </tr>
 <tr>
 <td>Daily account probe</td>
@@ -5500,7 +5506,7 @@ drive session status and notifications (recording and transcripts: Phase 16.8 on
 <h2 id="09-video-daily--scope"><a class="anchor" href="#09-video-daily--scope" aria-label="Link to section">#</a>Scope</h2>
 <p>In:</p>
 <ul>
-<li><p><code>packages/video</code> (<code>@eleva/video</code>, sole <code>@daily-co/*</code> importer; server = REST via <code>fetch</code> with
+<li><code>packages/video</code> (<code>@eleva/video</code>, sole <code>@daily-co/*</code> importer; server = REST via <code>fetch</code> with
 <code>DAILY_API_KEY</code>, client = <code>@daily-co/daily-react</code> + <code>@daily-co/daily-js</code>):
 <code>createSessionRoom({ bookingId, startAt, endAt })</code> — called <strong>only for bookings whose
 snapshotted <code>mode = online</code></strong> (<code>event_type_modes</code>, Phase 4); <code>phone</code> bookings get no room (the
@@ -5514,9 +5520,8 @@ private room, name <code>eleva-{bookingId}</code> (standard Daily; HIPAA random 
 when a delegate is added, so every authorised participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
 <code>enable_screenshare: true</code>, <code>enable_recording: false</code> (recording is Phase 16.8, gated on D-07/D-08),
 <code>eject_at_room_exp: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
-<code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</p>
-</li>
-<li><p><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
+<code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
+<li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
 the API types and the state machine), <code>attendance</code> nullable (<code>both|expert_only|member_only|nobody</code>,
 derived from the full ordered participant history by <code>finalizeAttendance</code> after
@@ -5538,8 +5543,15 @@ flip <code>no_show</code> -&gt; <code>ended</code> (never the reverse; emits <co
 any no-show side effect that has not executed yet); both transitions are in the state-machine
 table and tested, including the out-of-order sequence <code>participant.joined</code> (t=10:02) delivered
 after <code>meeting.ended</code> (t=10:31) -&gt; final status <code>ended</code>, not <code>no_show</code>
-(join/leave history only — never used for authorization), RLS for expert org + buyer org.</p>
-</li>
+(join/leave history only — never used for authorization), RLS for expert org + buyer org.</li>
+</ul>
+<p><strong>Attendance SSOT (2026-10-07):</strong> this Scope still describes QStash
+<code>finalizeAttendance</code> at <code>ended + 2 min</code>. The decision-log is the source of
+truth: 09.3 writes attendance on <code>meeting.ended</code>, with late participant
+events able to flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>).
+The delayed finalize job and the <code>end_at + 15 min</code> fallback when Daily
+sent nothing land in 09.6.</p>
+<ul>
 <li><p><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
 <code>booking_id</code>, <code>user_id</code>, <code>role</code> (<code>delegate|supervisor</code>), <code>added_by</code>, <code>added_at</code>, <code>revoked_at</code>,
 <code>ejected_at</code>, unique (<code>booking_id</code>, <code>user_id</code>); RLS expert org + the participant&#39;s own row;

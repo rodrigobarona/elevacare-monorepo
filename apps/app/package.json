@@ -27,6 +27,7 @@
     "@eleva/observability": "workspace:^",
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
+    "@eleva/video": "workspace:*",
     "@stripe/stripe-js": "catalog:",
     "@tanstack/react-query": "^5.100.10",
     "@eleva/icons": "workspace:*",

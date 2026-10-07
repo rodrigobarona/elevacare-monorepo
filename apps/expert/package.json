@@ -24,6 +24,7 @@
     "@eleva/observability": "workspace:^",
     "@eleva/storage": "workspace:^",
     "@eleva/ui": "workspace:*",
+    "@eleva/video": "workspace:*",
     "@stripe/stripe-js": "catalog:",
     "@eleva/icons": "workspace:*",
     "next": "catalog:",

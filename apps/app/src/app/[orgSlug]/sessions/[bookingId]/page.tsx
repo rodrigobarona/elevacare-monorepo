@@ -3,9 +3,11 @@ import { getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { Badge } from "@eleva/ui/components/badge"
-import { Button, LinkButton } from "@eleva/ui/components/button"
+import { LinkButton } from "@eleva/ui/components/button"
+import { findMemberBooking } from "@/lib/find-member-booking"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { eventTitle, formatDateTime, formatMoney } from "@/lib/member-format"
+import { JoinCta } from "@eleva/video/join-cta"
 import { SessionActions } from "../../_components/session-actions"
 import { IcsDownloadButton } from "./ics-download-button"
 
@@ -48,28 +50,6 @@ function invoiceStatusKey(status: ExpertInvoiceStatus) {
   }
 }
 
-async function findBooking(
-  api: Awaited<ReturnType<typeof getAuthedApiClient>>,
-  bookingId: string
-) {
-  for (const range of ["upcoming", "past"] as const) {
-    let cursor: string | undefined
-    const seenCursors = new Set<string>()
-    while (true) {
-      if (cursor) {
-        if (seenCursors.has(cursor)) break
-        seenCursors.add(cursor)
-      }
-      const result = await api.me.listBookings({ range, cursor })
-      const found = result.bookings.find((booking) => booking.id === bookingId)
-      if (found) return found
-      if (!result.nextCursor) break
-      cursor = result.nextCursor
-    }
-  }
-  return null
-}
-
 export default async function SessionDetailPage({
   params,
 }: {
@@ -82,7 +62,7 @@ export default async function SessionDetailPage({
     getLocale(),
     getAuthedApiClient(),
   ])
-  const booking = await findBooking(api, bookingId)
+  const booking = await findMemberBooking(api, bookingId)
   if (!booking) notFound()
 
   const [payments, quote] = await Promise.all([
@@ -167,9 +147,15 @@ export default async function SessionDetailPage({
       </dl>
 
       <div className="flex flex-wrap gap-2">
-        <Button isDisabled aria-label={t("joinSoon")}>
-          {t("join")}
-        </Button>
+        <JoinCta
+          href={`/${orgSlug}/sessions/${bookingId}/join`}
+          sessionMode={booking.sessionMode}
+          status={booking.status}
+          startsAt={booking.startsAt}
+          endsAt={booking.endsAt}
+          joinLabel={t("join")}
+          joinSoonLabel={t("joinSoon")}
+        />
         <IcsDownloadButton
           booking={booking}
           memberName={memberName}

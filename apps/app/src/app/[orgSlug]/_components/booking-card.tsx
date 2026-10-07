@@ -9,6 +9,7 @@ import {
 } from "@eleva/icons"
 import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
+import { JoinCta } from "@eleva/video/join-cta"
 import {
   Card,
   CardContent,
@@ -116,10 +117,16 @@ export function BookingCard({
       </CardContent>
       <CardFooter className="flex flex-wrap gap-2">
         {showJoin ? (
-          <Button isDisabled aria-label={t("joinSoon")}>
-            <VideoCameraIcon className="size-4" />
-            {t("join")}
-          </Button>
+          <JoinCta
+            href={`/${orgSlug}/sessions/${booking.id}/join`}
+            sessionMode={booking.sessionMode}
+            status={booking.status}
+            startsAt={booking.startsAt}
+            endsAt={booking.endsAt}
+            joinLabel={t("join")}
+            joinSoonLabel={t("joinSoon")}
+            icon={<VideoCameraIcon className="size-4" />}
+          />
         ) : null}
         <Button variant="outline" onPress={handleIcs}>
           <CalendarCheckIcon className="size-4" />

@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
+import { JoinCta } from "@eleva/video/join-cta"
 import { listCalendarBookingsAction } from "./actions"
 
 export type CalendarBooking = {
@@ -26,6 +27,7 @@ type Props = {
   initialFrom: string
   initialTo: string
   initialBookings: CalendarBooking[]
+  orgSlug: string
 }
 
 const HOUR_START = 7
@@ -69,7 +71,12 @@ function minutesFromMidnight(date: Date): number {
   return date.getHours() * 60 + date.getMinutes()
 }
 
-export function WeekView({ initialFrom, initialTo, initialBookings }: Props) {
+export function WeekView({
+  initialFrom,
+  initialTo,
+  initialBookings,
+  orgSlug,
+}: Props) {
   const t = useTranslations("calendar")
   const locale = useLocale()
   const [weekStart, setWeekStart] = React.useState(() =>
@@ -295,6 +302,17 @@ export function WeekView({ initialFrom, initialTo, initialBookings }: Props) {
               </dd>
             </div>
           </dl>
+          <JoinCta
+            className="mt-4"
+            href={`/${orgSlug}/sessions/${selected.id}/join`}
+            sessionMode={selected.sessionMode}
+            status={selected.status}
+            startsAt={selected.startsAt}
+            endsAt={selected.endsAt}
+            joinLabel={t("join")}
+            joinSoonLabel={t("joinSoon")}
+            pending="hint"
+          />
         </div>
       ) : null}
 

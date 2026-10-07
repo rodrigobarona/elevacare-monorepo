@@ -10,13 +10,14 @@
 
 ## Progress (stakeholder demo)
 
-| Slice                      | State       | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                        |
-| -------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
-| 09.1 `@eleva/video` server | on main     | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe; join API; `daily-react` call UI |
-| 09.2 session rooms         | on main     | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | Join API, tokens, webhooks, call UI               |
-| 09.3 join + webhooks       | **This PR** | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Join pages still disabled until 09.4                  | ElevaCall UI, CSP, staging two-browser            |
-| Daily account probe        | PENDING     | Spike written                                                                                                                                                    | First live room                                   |
-| D-07 HIPAA / BAA           | Deferred    | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                         |
+| Slice                       | State       | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                  |
+| --------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| 09.1 `@eleva/video` server  | on main     | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe                            |
+| 09.2 session rooms          | on main     | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | —                                           |
+| 09.3 join + webhooks        | on main     | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.                                                       | `end_at+15m` attendance fallback (09.6)     |
+| 09.4 ElevaCall + join pages | **This PR** | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                        | Email deep links (09.5); e2e + probe (09.6) |
+| Daily account probe         | PENDING     | Spike written                                                                                                                                                    | First live room                             |
+| D-07 HIPAA / BAA            | Deferred    | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                   |
 
 Leftovers from phases 01–08 (staging W3, live pay→transfer, tax issuance, Twilio IE1, D-06/D-12, waived 04B UX) are **TODOs, not Phase 09 blockers**. See [`audits/2026-10-phase-09-readiness.md`](../../audits/2026-10-phase-09-readiness.md) “Stakeholder leftovers”.
 
@@ -71,6 +72,14 @@ In:
   table and tested, including the out-of-order sequence `participant.joined` (t=10:02) delivered
   after `meeting.ended` (t=10:31) -> final status `ended`, not `no_show`
   (join/leave history only — never used for authorization), RLS for expert org + buyer org.
+
+**Attendance SSOT (2026-10-07):** this Scope still describes QStash
+`finalizeAttendance` at `ended + 2 min`. The decision-log is the source of
+truth: 09.3 writes attendance on `meeting.ended`, with late participant
+events able to flip `no_show → ended` (`session.attendance_corrected`).
+The delayed finalize job and the `end_at + 15 min` fallback when Daily
+sent nothing land in 09.6.
+
 - `session_participants` table (the **authorization** contract for delegated participants):
   `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,
   `ejected_at`, unique (`booking_id`, `user_id`); RLS expert org + the participant's own row;

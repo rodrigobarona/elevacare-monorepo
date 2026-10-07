@@ -1,7 +1,11 @@
 export {
-  ROOM_NAME_PREFIX,
   JOIN_LEAD_MS,
   JOIN_TRAIL_MS,
+  isJoinCtaEnabled,
+  isJoinWindowOpen,
+} from "./join-window"
+export {
+  ROOM_NAME_PREFIX,
   buildSessionRoomBody,
   isElevaRoomName,
   roomMatchesContract,

@@ -7,7 +7,11 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./webhooks": "./src/webhooks.ts"
+    "./client": "./src/client.ts",
+    "./join-window": "./src/join-window.ts",
+    "./join-cta": "./src/join-cta.tsx",
+    "./webhooks": "./src/webhooks.ts",
+    "./sources.css": "./sources.css"
   },
   "scripts": {
     "lint": "eslint .",
@@ -15,14 +19,35 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@daily-co/daily-js": "catalog:",
+    "@daily-co/daily-react": "catalog:",
+    "@eleva/icons": "workspace:*",
+    "@eleva/ui": "workspace:*",
     "jose": "catalog:",
+    "jotai": "^2.20.3",
     "zod": "catalog:"
+  },
+  "peerDependencies": {
+    "react": "19.x",
+    "react-dom": "19.x"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
     "eslint": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
