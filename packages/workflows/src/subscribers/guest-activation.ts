@@ -5,6 +5,7 @@ import { requestMagicLinkSignIn } from "@eleva/auth/server/auth"
 import { withAudit } from "@eleva/audit"
 import { auth, db, main, withOrgContext } from "@eleva/db"
 import type { GuestActivationPayload } from "../domain-events"
+import { ensureSessionRoom } from "../video/ensure-session-room"
 
 export type GuestActivationInput = GuestActivationPayload & { orgId: string }
 
@@ -86,6 +87,11 @@ export async function activateGuestBooking(
   )
 
   await deliverActivationLink(booking.orgId, booking.id, email, deps)
+  try {
+    await ensureSessionRoom(payload.bookingId)
+  } catch (err) {
+    console.error("[guest-activation] ensureSessionRoom failed", err)
+  }
 }
 
 class ActivationClaimSkip extends Error {

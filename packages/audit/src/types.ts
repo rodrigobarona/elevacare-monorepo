@@ -123,6 +123,15 @@ export type AuditAction =
   | "manual_marked"
   | "sent"
   | "suppressed"
+  | "room_created"
+  | "room_deleted"
+  | "room_unresolved"
+  | "joined"
+  | "started"
+  | "ended"
+  | "participant_added"
+  | "participant_removed"
+  | "note_drafted"
 
 export interface AuditContext {
   /** UUID v4 \u2014 row ID in audit_outbox and audit_events (idempotent key). */

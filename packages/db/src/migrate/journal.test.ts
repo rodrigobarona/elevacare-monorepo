@@ -38,11 +38,17 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0050_release_cancelled_reservations")
+    expect(last?.tag).toBe("0051_phase09_session_rooms")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements).toHaveLength(3)
-    expect(last?.statements.join("\n")).toContain("slot_reservations")
+    expect(last?.statements.join("\n")).toContain("session_participants")
+    expect(last?.statements.join("\n")).toContain("daily_webhook_events")
+    expect(last?.statements.join("\n")).toContain('auth"."organization')
+    const cancelledHolds = migrations.find(
+      (m) => m.tag === "0050_release_cancelled_reservations"
+    )
+    expect(cancelledHolds?.statements).toHaveLength(3)
+    expect(cancelledHolds?.statements.join("\n")).toContain("slot_reservations")
     expect(
       migrations
         .find((m) => m.tag === "0044_booking_schedule_revision")

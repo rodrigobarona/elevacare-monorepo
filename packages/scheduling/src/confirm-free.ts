@@ -9,6 +9,7 @@ import {
   type ConfirmBookingPaymentResult,
 } from "./confirm-booking"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { ensureSessionRow } from "./ensure-session-row"
 
 const BOOKING_LINK_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -109,6 +110,16 @@ export async function confirmFreeReservation(input: {
           orgId: reservation.orgId,
           bookingId,
           reservationId: reservation.id,
+        })
+        await ensureSessionRow(tx, {
+          id: bookingId,
+          orgId: reservation.orgId,
+          eventTypeId: reservation.eventTypeId,
+          expertProfileId: reservation.expertProfileId,
+          memberUserId: reservation.userId,
+          startsAt: reservation.startsAt,
+          endsAt: reservation.endsAt,
+          sessionMode: funnel.sessionMode,
         })
         await emitBookingNotificationEvent(tx, {
           orgId: reservation.orgId,

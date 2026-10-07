@@ -45,6 +45,7 @@ export const TENANT_TABLES = [
   "clinic_saas_invoices",
   "consents",
   "sessions",
+  "session_note_drafts",
   "expert_practice_locations",
   "event_locations",
   "billing_customers",
@@ -55,6 +56,20 @@ export const TENANT_TABLES = [
 ] as const
 
 export type TenantTable = (typeof TENANT_TABLES)[number]
+
+/**
+ * Delegated join rows. Expert org can write; the participant can read
+ * their own row. Must not go through TENANT_TABLES — that rebuild drops
+ * the user_id SELECT path.
+ */
+export const DELEGATE_VISIBLE_TABLES = ["session_participants"] as const
+
+export type DelegateVisibleTable = (typeof DELEGATE_VISIBLE_TABLES)[number]
+
+/** Staff-only webhook inbox. No tenant rows. */
+export const STAFF_ONLY_TABLES = ["daily_webhook_events"] as const
+
+export type StaffOnlyTable = (typeof STAFF_ONLY_TABLES)[number]
 
 /**
  * Main-DB tables keyed by `user_id = eleva.user_id` (owner-user-visible).
@@ -181,6 +196,27 @@ export function buildMainRlsStatements(): string[] {
           `USING (counterparty_org_id::text = current_setting('eleva.org_id', true));`
       )
     }
+  }
+  for (const table of DELEGATE_VISIBLE_TABLES) {
+    const using = `org_id::text = current_setting('eleva.org_id', true) OR user_id::text = current_setting('eleva.user_id', true)`
+    const check = `org_id::text = current_setting('eleva.org_id', true)`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_tenant_isolation ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_tenant_isolation ON ${table} ` +
+        `USING (${using}) WITH CHECK (${check});`
+    )
+  }
+  for (const table of STAFF_ONLY_TABLES) {
+    const pred = `current_setting('eleva.platform_admin', true) = 'true'`
+    out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
+    out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    out.push(`DROP POLICY IF EXISTS ${table}_staff_only ON ${table};`)
+    out.push(
+      `CREATE POLICY ${table}_staff_only ON ${table} ` +
+        `USING (${pred}) WITH CHECK (${pred});`
+    )
   }
   for (const table of OWNER_USER_TABLES) {
     const pred = `user_id::text = current_setting('eleva.user_id', true)`

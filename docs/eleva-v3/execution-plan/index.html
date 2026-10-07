@@ -5461,21 +5461,21 @@ tasks pending.</code></pre></div>
 </thead>
 <tbody><tr>
 <td>09.1 <code>@eleva/video</code> server</td>
-<td><strong>This PR</strong></td>
+<td>on main</td>
 <td>Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, <code>requireDailyEnv</code>, member Join copy says <strong>standard Daily, not HIPAA</strong></td>
 <td>Live Daily probe; join API; <code>daily-react</code> call UI</td>
 </tr>
 <tr>
-<td>09.2 join pages + call UI</td>
+<td>09.2 session rooms</td>
+<td><strong>This PR</strong></td>
+<td>Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.</td>
+<td>Join API, tokens, webhooks, call UI</td>
+</tr>
+<tr>
+<td>09.3 join + webhooks</td>
 <td>Not started</td>
 <td>Member session Join stays disabled until a room exists</td>
 <td>Expert + member join routes</td>
-</tr>
-<tr>
-<td>09.3 webhooks + workflows</td>
-<td>Not started</td>
-<td>—</td>
-<td>Session status machine, orphan sweep</td>
 </tr>
 <tr>
 <td>Daily account probe</td>

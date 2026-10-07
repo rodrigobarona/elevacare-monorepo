@@ -12,6 +12,8 @@ import {
 } from "../rls/classes"
 import {
   TENANT_TABLES,
+  DELEGATE_VISIBLE_TABLES,
+  STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
   INBOX_TABLES,
   SERVICE_ONLY_TABLES,
@@ -382,6 +384,8 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
       try {
         const managed = new Set<string>([
           ...TENANT_TABLES,
+          ...DELEGATE_VISIBLE_TABLES,
+          ...STAFF_ONLY_TABLES,
           ...OWNER_USER_TABLES,
           ...INBOX_TABLES,
           ...SERVICE_ONLY_TABLES,

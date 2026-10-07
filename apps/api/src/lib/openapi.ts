@@ -3971,6 +3971,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           "Compares Stripe booking payments with expert invoices for a Lisbon month (default: previous month). Never posts to TOConline.",
         requestSchema: ReconciliationWorkflowRequestSchema,
       }),
+      "/workflows/video-room-sweep": internalWorkflow({
+        operationId: "sweepMissingSessionRooms",
+        summary: "Create missing Daily session rooms",
+        description:
+          "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Standard Daily, recording off, not HIPAA.",
+      }),
       "/health": {
         get: {
           operationId: "healthCheck",
