@@ -32,6 +32,49 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-06: BotID rollout is staged, production stays off (AUD-017)
+
+- Decision: BotID is installed but gated by `BOTID_MODE` (`off` by default,
+  then `monitor`, then `enforce`). Enforcement applies only to the booking
+  funnel routes (reserve, confirm, payment intent); other routes that call
+  `checkBot()` are also called server-to-server and stay monitor-only. In
+  enforce mode a failed check counts as a bot.
+- `extraAllowedHosts` alone cannot fix the cross-origin funnel: the BotID
+  client (1.5.11) never signs cross-origin requests. The funnel therefore
+  moves to a flagged same-origin `/api/*` rewrite on the gateway.
+- Promotion gate (founder, 2026-10-06): staging must show two networks give
+  two different rate-limit keys, the key matches Vercel's forwarded client IP,
+  and BotID blocks a scripted request while real bookings pass. Runbook:
+  `operator-tasks/botid-staging-validation.md`. Production stays `off` until
+  then.
+- Owner: engineering (code), operator (staging evidence). Status: `active`.
+
+### 2026-10-06: Staff refunds above the dual-control threshold fail closed (AUD-022)
+
+- Decision: a human staff refund acting for the platform above
+  `ADMIN_DUAL_CONTROL_REFUND_CENTS` (200 EUR) returns `409 DUAL_CONTROL_REQUIRED`.
+  The second-approver flow (`admin_action_requests`) is Phase 12, so until it ships
+  there is no way to approve these refunds in-product. The automated cancellation
+  refund sweep (no actor) and expert refunds in their own org are not gated.
+- Members now see their expert invoice status (and number once issued) on the session
+  detail. `issueInvoice()` stays closed, so rows read "Being prepared" until issuance
+  opens.
+- The AUD-022 "team app has no notifications page" item was stale: `/[orgSlug]/admin/notifications`
+  shipped in #89. The Moloni adapter stays a disabled stub (backlog).
+- Owner: engineering. Status: `active`. Revisit when Phase 12 dual control lands.
+
+### 2026-10-06: Brand v2 evolution board approved
+
+- Decision: the founder approved `brand-book/v2/README.md` as proposed. Teal
+  `#006D77` (teal-700) and coral `#E29578` (coral-400) stay exact and anchor
+  11-step OKLCH scales. `--secondary` becomes soft coral (coral-100 fill,
+  coral-800 text). Product-app page titles (h1) use Lora; all other UI uses
+  DM Sans, with IBM Plex Mono for data.
+- Brand evolution, not a rebrand: logo, wordmark and name are unchanged. The
+  only logo change is vectorising the PNG mark.
+- Next: the kit PR maps these tokens into `@eleva/ui/globals.css`.
+- Owner: founder (approval), engineering (kit). Status: `active`.
+
 ### 2026-10-06: Quiet hours silence non-urgent SMS (AUD-004)
 
 - Decision: `sendNotification` reads the member's stored quiet hours and

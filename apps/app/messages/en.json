@@ -56,6 +56,15 @@
     "rescheduled": "Session rescheduled.",
     "policyTooLate": "This session can no longer be cancelled or rescheduled here.",
     "receipt": "Receipt",
+    "invoice": "Invoice",
+    "invoiceNumber": "No. {number}",
+    "invoiceStatus": {
+      "pending": "Being prepared",
+      "issued": "Issued",
+      "failed": "Delayed, we're on it",
+      "manual_pending": "Being prepared by your expert",
+      "manual_issued": "Issued by your expert"
+    },
     "modes": {
       "online": "Online",
       "in_person": "In person",

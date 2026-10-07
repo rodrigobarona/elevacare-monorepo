@@ -99,12 +99,16 @@ export function Stat({ label, value, hint, className }: StatProps) {
       )}
     >
       <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="mt-1 text-2xl font-semibold tracking-tight tabular-nums">
-        {value}
+      <dd className="mt-1">
+        <span className="block text-2xl font-semibold tracking-tight tabular-nums">
+          {value}
+        </span>
+        {hint ? (
+          <span className="mt-1 block text-xs text-muted-foreground">
+            {hint}
+          </span>
+        ) : null}
       </dd>
-      {hint ? (
-        <dd className="mt-1 text-xs text-muted-foreground">{hint}</dd>
-      ) : null}
     </div>
   )
 }
