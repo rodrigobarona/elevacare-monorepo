@@ -5,6 +5,7 @@ describe("display names", () => {
   it("localizes language codes", () => {
     expect(displayLanguage("fr", "en")).toBe("French")
     expect(displayLanguage("pt", "pt")).toBe("português")
+    expect(displayLanguage("fr", "pt")).toBe("francês")
   })
 
   it("localizes region codes case-insensitively", () => {

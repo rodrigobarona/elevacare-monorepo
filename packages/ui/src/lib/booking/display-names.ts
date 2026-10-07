@@ -1,10 +1,27 @@
-function displayName(
-  type: "language" | "region",
-  code: string,
+type DisplayType = "language" | "region"
+
+const formatters = new Map<string, Intl.DisplayNames | null>()
+
+function formatter(
+  type: DisplayType,
   locale: string
-): string {
+): Intl.DisplayNames | null {
+  const key = `${type}:${locale}`
+  if (!formatters.has(key)) {
+    let names: Intl.DisplayNames | null = null
+    try {
+      names = new Intl.DisplayNames([locale], { type })
+    } catch {
+      names = null
+    }
+    formatters.set(key, names)
+  }
+  return formatters.get(key) ?? null
+}
+
+function displayName(type: DisplayType, code: string, locale: string): string {
   try {
-    return new Intl.DisplayNames([locale], { type }).of(code) ?? code
+    return formatter(type, locale)?.of(code) ?? code
   } catch {
     return code
   }
