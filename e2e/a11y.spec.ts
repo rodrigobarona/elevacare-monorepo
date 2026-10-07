@@ -47,7 +47,7 @@ test.describe("a11y: public marketplace", () => {
     const res = await page.goto("/blog")
     expect(res?.status()).toBe(404)
     await expect(
-      page.getByRole("main").getByRole("link", { name: /find an expert/i })
+      page.getByRole("main").getByTestId("not-found-find-expert")
     ).toBeVisible()
     await expectNoBlockingViolations(page)
   })
