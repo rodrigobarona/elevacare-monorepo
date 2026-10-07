@@ -98,6 +98,11 @@ import {
   EditorAssistRequestSchema,
   DsarExportWorkflowRequestSchema,
   ReconciliationWorkflowRequestSchema,
+  JoinSessionResponseSchema,
+  AddSessionParticipantRequestSchema,
+  AddSessionParticipantResponseSchema,
+  RemoveSessionParticipantResponseSchema,
+  DailyWebhookResponseSchema,
 } from "@eleva/api-client"
 
 const ErrorSchema = z.object({
@@ -3002,6 +3007,181 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
         },
       },
+      "/sessions/{bookingId}/join": {
+        post: {
+          operationId: "joinSession",
+          summary: "Mint a Daily meeting token for a session",
+          description:
+            "Assigned expert, booking member, or an active delegate can join. Window is [start-15m, end+30m]. Token exp is min(now+2h, end+30m). Audit payload carries userId and roomName only.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          responses: {
+            "200": {
+              description: "Meeting token minted",
+              content: {
+                "application/json": { schema: JoinSessionResponseSchema },
+              },
+            },
+            "403": {
+              description: "Not a participant or session window closed",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "Daily room is not ready",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "410": {
+              description: "Session is cancelled, ended, or no-show",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/sessions/{bookingId}/participants": {
+        post: {
+          operationId: "addSessionParticipant",
+          summary: "Delegate another user onto a session",
+          description:
+            "Assigned expert only. Raises Daily max_participants. Revoked rows can be re-activated.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({ bookingId: z.string().uuid() }),
+          },
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: AddSessionParticipantRequestSchema,
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Delegate added",
+              content: {
+                "application/json": {
+                  schema: AddSessionParticipantResponseSchema,
+                },
+              },
+            },
+            "202": {
+              description:
+                "Delegate added; Daily room capacity is not yet synced",
+              content: {
+                "application/json": {
+                  schema: AddSessionParticipantResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "409": {
+              description: "User is already an active participant",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "410": {
+              description: "Session is not active",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/sessions/{bookingId}/participants/{userId}": {
+        delete: {
+          operationId: "removeSessionParticipant",
+          summary: "Revoke a delegated participant",
+          description:
+            "Two-phase revoke: set revoked_at (join 403), then Daily eject+ban. Returns 202 when eject is pending retry.",
+          tags: ["Sessions"],
+          requestParams: {
+            path: z.object({
+              bookingId: z.string().uuid(),
+              userId: z.string().uuid(),
+            }),
+          },
+          responses: {
+            "200": {
+              description: "Revoked and ejected",
+              content: {
+                "application/json": {
+                  schema: RemoveSessionParticipantResponseSchema,
+                },
+              },
+            },
+            "202": {
+              description: "Revoked; Daily eject will retry",
+              content: {
+                "application/json": {
+                  schema: RemoveSessionParticipantResponseSchema,
+                },
+              },
+            },
+            "403": {
+              description: "Caller is not the assigned expert",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "410": {
+              description: "Session is not active",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            ...stdWithNotFound,
+          },
+        },
+      },
+      "/webhooks/daily": {
+        post: {
+          operationId: "dailyWebhook",
+          summary: "Daily webhook receiver",
+          description:
+            "HMAC of timestamp.body. Idempotent by event id and ordered by event_ts. Applies meeting.started/ended and participant.joined/left. Standard Daily, recording off, not HIPAA.",
+          tags: ["Webhooks"],
+          security: [],
+          parameters: [
+            {
+              name: "x-webhook-timestamp",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+            {
+              name: "x-webhook-signature",
+              in: "header",
+              required: true,
+              schema: { type: "string" },
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: z.object({}).passthrough(),
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Event accepted (processed, duplicate, or ignored)",
+              content: {
+                "application/json": { schema: DailyWebhookResponseSchema },
+              },
+            },
+            "401": {
+              description: "Missing or invalid HMAC",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "500": {
+              description: "Retryable handler failure",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+          },
+        },
+      },
       "/me/notification-preferences": {
         put: {
           operationId: "putMeNotificationPreferences",
@@ -3976,6 +4156,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         summary: "Create missing Daily session rooms",
         description:
           "Creates Daily rooms for confirmed or rescheduled online bookings that start within 2 hours and still have no room. Phone and in-person bookings are never included. Standard Daily, recording off, not HIPAA.",
+      }),
+      "/workflows/video-eject-retry": internalWorkflow({
+        operationId: "retryPendingSessionEjects",
+        summary: "Retry Daily ejects for revoked delegates",
+        description:
+          "Ejects and bans revoked session participants that still have no ejected_at, then re-syncs Daily room capacity for scheduled and live rooms.",
       }),
       "/health": {
         get: {

@@ -365,6 +365,13 @@
       "when": 1780200000000,
       "tag": "0051_phase09_session_rooms",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1780210000000,
+      "tag": "0052_phase09_capacity_pending",
+      "breakpoints": true
     }
   ]
 }

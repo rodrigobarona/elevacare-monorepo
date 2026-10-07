@@ -218,4 +218,27 @@ describe("createDailyClient", () => {
 
     await expect(client.getDomainId()).resolves.toBe("dom_1")
   })
+
+  it("ejects and bans participants by user id", async () => {
+    const fetchImpl = vi.fn(
+      async (inputUrl: RequestInfo | URL, init?: RequestInit) => {
+        expect(String(inputUrl)).toMatch(/\/rooms\/eleva-room\/eject$/)
+        expect(init?.method).toBe("POST")
+        expect(JSON.parse(String(init?.body))).toEqual({
+          user_ids: ["user-1"],
+          ban: true,
+        })
+        return new Response(JSON.stringify({ ejectedIds: [] }), { status: 200 })
+      }
+    )
+
+    const client = createDailyClient({
+      apiKey: "key",
+      domain: "eleva",
+      fetch: fetchImpl as unknown as typeof fetch,
+    })
+
+    await client.ejectParticipants("eleva-room", ["user-1"])
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
 })

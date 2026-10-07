@@ -5467,15 +5467,15 @@ tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>09.2 session rooms</td>
-<td><strong>This PR</strong></td>
+<td>on main</td>
 <td>Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.</td>
 <td>Join API, tokens, webhooks, call UI</td>
 </tr>
 <tr>
 <td>09.3 join + webhooks</td>
-<td>Not started</td>
-<td>Member session Join stays disabled until a room exists</td>
-<td>Expert + member join routes</td>
+<td><strong>This PR</strong></td>
+<td>Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Join pages still disabled until 09.4</td>
+<td>ElevaCall UI, CSP, staging two-browser</td>
 </tr>
 <tr>
 <td>Daily account probe</td>

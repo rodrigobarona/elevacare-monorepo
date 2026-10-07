@@ -23,6 +23,7 @@ const EXPECTED_PATHS = [
   "/workflows/invoicing-retry",
   "/workflows/stripe-toconline-reconciliation",
   "/workflows/video-room-sweep",
+  "/workflows/video-eject-retry",
 ] as const
 
 function isExpectedDestination(destination: string, path: string): boolean {
