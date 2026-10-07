@@ -174,6 +174,8 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
       after the session leaves the session record intact (state-machine tests).
 - [ ] PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
       standard Daily, recording off, **not HIPAA**. Do not claim BAA executed.
+      First live room / exit gate also needs a completed account probe
+      (`DAILY_API_KEY`, recording off, staging webhook) — file existence is not enough.
 - [ ] Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
       over fixtures + `check-no-phi-logs` extension).
 
@@ -225,7 +227,11 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under "Local references" and docs/eleva-v3/spikes/09-daily-account.md.
    If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
-   do not stop for an unsigned BAA. Pull Daily REST API (rooms, meeting tokens,
+   do not stop for an unsigned BAA. The spike may still mark the Daily account
+   pre-check PENDING — that does not block writing @eleva/video, but the first
+   live room and the Phase 09 exit gate require a completed probe (standard
+   DAILY_API_KEY / DAILY_DOMAIN, recording off, staging webhook secret). Pull
+   Daily REST API (rooms, meeting tokens,
    webhooks), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
@@ -271,11 +277,13 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    is_owner, exp, eject_at_token_exp: true, enable_recording: false } }; deleteRoom(name);
    getRoom(name). ensureSessionRoom (named-room GET-or-create + repair): target name is
    always eleva-{bookingId}; expected nbf/exp = startAt-15m / endAt+30m. GET the stored
-   name or GET /rooms/{name}. 200 with matching nbf/exp -> persist and return. 200 with
-   stale window (reschedule) -> POST /rooms/{name} update properties nbf/exp (keep the
-   name), persist. 404 / expired / gone -> POST createSessionRoom with the same name
-   (409 -> GET again and adopt or update). Never adopt a room whose window does not
-   match the current booking. Two concurrent calls must not create two rooms (lease on
+   name or GET /rooms/{name}. 200 -> also verify privacy=private, enable_recording
+   false, enable_recording_ui false, max_participants >= expected; if window or those
+   settings are stale, POST /rooms/{name} update properties (keep the name) and
+   persist; if the room cannot be repaired, do not adopt it (status room_unresolved).
+   404 / expired / gone -> POST createSessionRoom with the same name (409 -> GET again
+   and adopt or update). Never adopt a room whose window or security settings do not
+   match. Two concurrent calls must not create two rooms (lease on
    sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
    <ElevaCall roomUrl token onLeft /> on DailyProvider + daily-react: prejoin, waiting,
    controls (mic, camera, screenshare, chat, leave), post-call; expert notes slot (Phase
@@ -283,8 +291,9 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    participant.joined/left. Tests: named-room option builder, token always has room_name,
    GET-or-create idempotency, 409 adopt, stale nbf/exp after reschedule updates in
    place, 404 on a stored name recreates the same name, lease blocks a second POST,
-   deleteRoom 404 = success. Orphan sweep: private rooms older than 10 min whose name is not in
-   sessions.daily_room_name and whose exp is in the future are deleted.
+   deleteRoom 404 = success. Orphan sweep: only rooms named eleva-* (Eleva
+   namespace), older than 10 min, not in sessions.daily_room_name, exp in the
+   future — never delete operator/test rooms outside that prefix.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
    attendance both|expert_only|member_only|nobody nullable (derived by finalizeAttendance from

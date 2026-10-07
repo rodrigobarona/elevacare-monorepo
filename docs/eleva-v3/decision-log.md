@@ -1569,12 +1569,13 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 
 - Owner: founder + DPO
 - Status: **deferred** (founder 2026-10-07 — BAA and HIPAA not pursued now)
-- Review date: when the founder wants a HIPAA / PHI-video production claim
+- Review date: when the founder wants production PHI-video (clinical sessions on Daily)
 - Summary: the Daily plan tier with HIPAA enabled, the executed BAA/DPA, the documented EU
   media-processing position (stated only as Daily documents it — no stronger claim on `/trust`),
   `sessions.eleva.care` verified, recording confirmed off for the domain. **Does not
-  block Phase 09 engineering.** Blocks a later HIPAA / PHI-video production claim
-  only. Phase 09 uses standard Daily until this is signed.
+  block Phase 09 engineering or accountant/legal demo on standard Daily.** Blocks
+  **production PHI-video processing** (clinical sessions on Daily), not only a HIPAA
+  marketing claim. Phase 09 uses standard Daily until this is signed.
 - Reference: [`spikes/09-daily-account.md`](./spikes/09-daily-account.md),
   [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md)
 
