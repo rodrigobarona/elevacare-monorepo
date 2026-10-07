@@ -9,8 +9,9 @@ alwaysApply: false
 # Daily.co video (ADR-018)
 
 - Only `packages/video` imports `@daily-co/*`. Routes in `apps/api` call `@eleva/video`.
-- Rooms: private, **random names** (HIPAA mode rejects custom names), `nbf`/`exp` around
-  the booking, `max_participants` from the booking.
+- Rooms: private. Until D-07: deterministic names `eleva-{bookingId}` on a **standard**
+  (not HIPAA) Daily domain, `nbf`/`exp` around the booking, recording off. After D-07:
+  random names + fingerprint reconciler. `max_participants` from the booking.
 - Meeting tokens are minted at join time per participant (expert `is_owner`). Never store,
   log or put tokens in URLs.
 - Verify webhook signatures (`DAILY_WEBHOOK_SECRET`). Process events in event-time order

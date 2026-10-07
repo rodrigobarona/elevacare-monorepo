@@ -200,7 +200,7 @@ fiscal software (Tier 2: TOConline, Moloni, or manual export).</p>
 </tr>
 <tr>
 <td>ADR-018</td>
-<td><strong>Video = Daily.co only</strong> (HIPAA-enabled domain <code>elevacare.daily.co</code>, branded <code>sessions.eleva.care</code>). Google/Microsoft calendars remain for busy-time + destination sync only.</td>
+<td><strong>Video = Daily.co only.</strong> Until D-07: <strong>standard</strong> (not HIPAA) domain, named rooms, recording off. HIPAA domain <code>elevacare.daily.co</code> / branded <code>sessions.eleva.care</code> wait for a later D-07. Google/Microsoft calendars remain busy-time + destination sync only.</td>
 <td>Google Meet links</td>
 </tr>
 <tr>
@@ -431,9 +431,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-07</td>
-<td>Daily HIPAA domain + BAA/DPA, EU processing position</td>
+<td>Daily HIPAA domain + BAA/DPA, EU processing position. <strong>Deferred 2026-10-07</strong> (no BAA, no HIPAA claim). Phase 09 engineering uses standard Daily.</td>
 <td>founder + DPO</td>
-<td>Phase 9</td>
+<td>Production PHI-video processing (clinical sessions on Daily) — not Phase 09 engineering or accountant/legal demo</td>
 </tr>
 <tr>
 <td>D-08</td>
@@ -852,7 +852,7 @@ Plan: docs/eleva-v3/execution-plan/phases/NN-&lt;slug&gt;.md
 </tr>
 <tr>
 <td>Daily HIPAA mode disables features (custom room names, live streaming)</td>
-<td>Random room names + meeting tokens from day one</td>
+<td>Until D-07: named rooms <code>eleva-{bookingId}</code> on standard Daily. After D-07: random names + fingerprint. Tokens from day one.</td>
 <td>9</td>
 </tr>
 <tr>
@@ -3308,11 +3308,9 @@ engineering-proven). This does <strong>not</strong> waive FT POST / Comunicaçã
 <td><strong>Waived</strong> by founder 2026-09-25</td>
 </tr>
 </tbody></table>
-<p><strong>Phase 09 remains blocked</strong> on hard tax/issuance gates (live FT POST,
-Comunicação, <code>issueInvoice()</code> / <code>invoice.issued</code>) <strong>and</strong> on D-07 (Daily
-HIPAA/BAA/DPA founder+DPO sign-off) — <strong>not</strong> waived by this 04B
-human-evidence waiver. Do <strong>not</strong> start Phase 09. Do not start FT POST /
-<code>invoice.issued</code>.</p>
+<p><strong>Phase 09 video engineering opened 2026-10-07</strong> on standard Daily (D-07
+deferred, not HIPAA). This 04B waiver still does <strong>not</strong> open FT POST /
+Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</p>
 <p><strong>2026-09-24 i18n draft slice:</strong> <code>pnpm i18n:draft</code> + <code>translateMessages</code> +
 14-day draft age gate in <code>check:i18n-parity</code> (<strong>done</strong>, <code>#109</code>).</p>
 </blockquote>
@@ -3638,11 +3636,10 @@ or private-link live UX. Report must still name those flows as **unproven / waiv
 not as operator-proven. Seeded funnel + `E2E_EXPERT_OFFER=1` affordances, AI
 fail-closed, `pnpm i18n:draft` / `check:i18n-parity`, and shipped APIs remain the
 engineering bar. Clinical field-level refusal UI stays incomplete engineering
-(backlog; not a Phase 09 blocker). **Do not start Phase 09** — still blocked on
-Phase 07 hard gates (FT POST / Comunicação / `invoice.issued`; open them or a
-separate founder waiver that explicitly names all three) **and** D-07 (Daily
-HIPAA/BAA/DPA founder+DPO sign-off). Neither is waived by the 04B human-evidence
-waiver.
+(backlog; not a Phase 09 blocker). Phase 09 video engineering opened
+2026-10-07 on standard Daily (D-07 deferred). Phase 07 hard gates (FT POST /
+Comunicação / `invoice.issued`) stay closed unless a founder waiver names
+all three. The 04B human-evidence waiver covers neither tax nor HIPAA.
 
 Report: endpoints, migrations, packages added (with catalog entries), tests, CodeRabbit CLI
 counts, PR URLs, deferred items, and the founder waiver record (date + phrase intent).</code></pre></div>
@@ -4692,7 +4689,7 @@ be met; production issuance / Comunicação acceptance is explicitly deferred.</
 </tr>
 <tr>
 <td>Phase 09 start</td>
-<td><strong>Blocked</strong> on these hard tax/issuance gates <strong>and</strong> D-07 (Daily HIPAA/BAA/DPA founder+DPO sign-off) — 04B human evidence was founder-waived 2026-09-25; do <strong>not</strong> start Phase 09 until the audit fix pack (AUD-001/002/003/008/009/013) is merged, FT POST / Comunicação / <code>invoice.issued</code> open or a separate founder waiver explicitly names all three gates, <strong>and</strong> D-07 is signed. Only exception: the docs/evidence-only 09.0 spike may start while D-07 is in motion (decision log 2026-09-25)</td>
+<td><strong>Open for video engineering</strong> (founder 2026-10-07: D-07 deferred, standard Daily, not HIPAA). Tax/issuance gates in the rows above stay <strong>blocked</strong> — the 2026-10-07 waiver does <strong>not</strong> name FT POST / Comunicação / <code>invoice.issued</code>. <code>issueInvoice()</code> stays closed.</td>
 </tr>
 </tbody></table>
 </blockquote>
@@ -5437,7 +5434,7 @@ tasks pending.</code></pre></div>
 </tr>
 <tr>
 <td>Depends on</td>
-<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>phase-09.0/spike-daily-account</code>, docs + evidence only) must be merged before 09 opens: Daily HIPAA domain enabled and BAA/DPA executed with Daily (owner: founder + DPO; record in <code>decision-log.md</code> as D-07 with the Daily plan tier), EU data-processing position documented (Daily media servers are region-routed; TURN/media residency stated as Daily documents it — no stronger claim on <code>/trust</code>), custom domain <code>sessions.eleva.care</code> verified, webhook secret issued, meeting-token claims verified against the current API in staging, and the recording feature confirmed <strong>off</strong> for the domain (recording moves to Phase 16.8, not Phase 10). Evidence in <code>docs/eleva-v3/spikes/09-daily-account.md</code>.</td>
+<td>Phases 5, 8. <strong>Pre-check PR 09.0</strong> (<code>docs/eleva-v3/spikes/09-daily-account.md</code>) records the Daily <strong>account mode</strong>. Founder 2026-10-07 deferred D-07 (no BAA, no HIPAA): Phase 09 implements against a <strong>standard Daily domain</strong>, recording off, deterministic room names <code>eleva-{bookingId}</code>. Do <strong>not</strong> claim HIPAA or an executed BAA. HIPAA-mode constraints (no custom names, fingerprint <code>nbf</code>/<code>exp</code>) apply only after D-07 is signed. Tax/issuance gates stay closed and are not a Phase 09 engineering blocker.</td>
 </tr>
 <tr>
 <td>Effort</td>
@@ -5453,7 +5450,8 @@ tasks pending.</code></pre></div>
 </tr>
 </tbody></table>
 <h2 id="09-video-daily--why-this-phase-exists"><a class="anchor" href="#09-video-daily--why-this-phase-exists" aria-label="Link to section">#</a>Why this phase exists</h2>
-<p>ADR-018: Daily.co is the only video provider (HIPAA-enabled domain). Every confirmed <strong>online</strong>
+<p>ADR-018: Daily.co is the only video provider. Until D-07 is signed the domain is
+<strong>standard (not HIPAA)</strong>. Every confirmed <strong>online</strong>
 booking (snapshotted <code>mode = online</code>; phone and in-person bookings never get a room) needs a room
 created ahead of time, tokens minted per participant at join time, and lifecycle webhooks to
 drive session status and notifications (recording and transcripts: Phase 16.8 only).</p>
@@ -5468,8 +5466,8 @@ session page shows the member&#39;s masked number to the expert and &quot;your e
 the member) and <code>in_person</code> bookings show the location card instead of a join button; both
 <code>ensureSessionRoom</code> and the no-room sweep below filter on the snapshotted <code>mode = &#39;online&#39;</code>
 before creating or scheduling anything, so phone and in-person bookings never reach Daily -&gt;
-private room, random name (HIPAA mode
-forbids custom names), <code>nbf = startAt - 15 min</code>, <code>exp = endAt + 30 min</code>,
+private room, name <code>eleva-{bookingId}</code> (standard Daily; HIPAA random names only after D-07),
+<code>nbf = startAt - 15 min</code>, <code>exp = endAt + 30 min</code>,
 <code>max_participants</code> = 2 + number of delegated participants (recomputed via Daily room update
 when a delegate is added, so every authorised participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
 <code>enable_screenshare: true</code>, <code>enable_recording: false</code> (recording is Phase 16.8, gated on D-07/D-08),
@@ -5482,16 +5480,9 @@ the API types and the state machine), <code>attendance</code> nullable (<code>bo
 derived from the full ordered participant history by <code>finalizeAttendance</code> after
 <code>meeting.ended</code> and re-derived by later correction runs when late participant events arrive —
 see the state machine below), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
-<code>room_fingerprint_exp</code> (Daily gives us <strong>no</strong> idempotency handle: HIPAA mode replaces any custom
-room name with a random string and rejects a <code>name</code> in the request, and room properties are a
-closed set with no <code>meta</code>. The only booking-specific values a room carries are <code>nbf</code> and <code>exp</code>,
-so each attempt sets <code>exp = endAt + 30 min + &lt;offset of 0–599 s&gt;</code> stored in
-<code>room_fingerprint_exp</code>, which carries a <strong>global UNIQUE index</strong> — the offset is allocated in
-Eleva-owned state so no two sessions ever share an <code>exp</code> second, and the pair
-(<code>nbf</code>, <code>exp</code>) therefore identifies exactly one booking; a lost response is reconciled by
-listing rooms created inside the attempt window whose <code>config.nbf</code>/<code>config.exp</code> equal the
-stored pair, and anything other than exactly one match is <code>room_unresolved</code>, never an
-adoption — details in the prompt; verified in PR 09.0), <code>last_event_at</code>,
+<code>room_fingerprint_exp</code> (nullable UNIQUE; <strong>unused until D-07</strong>. Standard Daily uses
+<code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
+nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
 <strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
 <code>ended + 2 min</code> (QStash, idempotent); it recomputes attendance from the full ordered
@@ -5564,11 +5555,11 @@ prejoin device check, waiting room (&quot;Your expert will join shortly&quot;), 
 screenshare, chat, leave), expert-only side panel placeholder for notes (Phase 10), post-call
 screen (feedback CTA). Custom UI (no Daily Prebuilt) to keep branding and CSP control.</p>
 </li>
-<li><p>Branding: <code>sessions.eleva.care</code> CNAME to Daily per their custom-domain docs (operator task) —
-room URLs use the branded domain when configured (<code>DAILY_DOMAIN</code>).</p>
+<li><p>Branding: room URLs use <code>DAILY_DOMAIN</code> (standard <code>{subdomain}.daily.co</code> until D-07).
+<code>sessions.eleva.care</code> CNAME waits for D-07.</p>
 </li>
 <li><p>CSP in <code>@eleva/observability</code> security headers: <code>connect-src</code>/<code>frame-src</code>/<code>media-src</code> for
-<code>*.daily.co</code>, <code>wss://*.daily.co</code>, <code>sessions.eleva.care</code>; permissions policy for camera/mic
+<code>*.daily.co</code>, <code>wss://*.daily.co</code>, plus <code>DAILY_DOMAIN</code> when set; permissions policy for camera/mic
 on join routes only.</p>
 </li>
 <li><p>Boundary lint: <code>@daily-co/*</code> only in <code>packages/video</code>.</p>
@@ -5583,9 +5574,8 @@ session leaves <code>sessions</code> untouched (history) — the state machine i
 single participant (or none) for the whole window marks <code>sessions.attendance = expert_only | member_only | nobody</code> (both present -&gt; <code>both</code>) and the status <code>no_show</code> (see the schema bullet); the no-show <strong>policy</strong> (refund/keep/partial) is a Phase 6 refund-policy
 input decided by finance, this phase only records attendance.</p>
 </li>
-<li><p><strong>Session-token hygiene</strong>: meeting tokens are minted at join time only, <code>exp = min(now + 2h, endAt + 30 min)</code> — the Eleva join-window end, <strong>never the room <code>exp</code></strong>, which carries the
-fingerprint offset and may be up to 599 s later (boundary test: a token minted at
-<code>endAt + 29 min 59 s</code> expires at exactly <code>endAt + 30 min</code>, not at room <code>exp</code>) — never stored, never logged, never placed in a URL the browser can bookmark (the
+<li><p><strong>Session-token hygiene</strong>: meeting tokens are minted at join time only, <code>exp = min(now + 2h, endAt + 30 min)</code> — the Eleva join-window end (room <code>exp</code> matches that window in standard
+mode). Never stored, never logged, never placed in a URL the browser can bookmark (the
 join page fetches it via <code>POST /sessions/[bookingId]/join</code> and hands it to <code>daily-js</code> in
 memory); <code>session.joined</code> audit rows carry <code>userId</code> and <code>roomName</code> only.</p>
 </li>
@@ -5611,7 +5601,8 @@ the room capacity.</li>
 <ul>
 <li><input disabled="" type="checkbox"> Confirmed online booking has a room within seconds (workflow) and the sweep catches missing
 rooms; phone and in-person bookings never get one (both paths tested).</li>
-<li><input disabled="" type="checkbox"> Expert token is <code>is_owner: true</code>; member token is not; token <code>exp</code> &lt;= <code>endAt + 30 min</code> (&lt; room <code>exp</code> whenever the fingerprint offset is &gt; 0) — boundary test included.</li>
+<li><input disabled="" type="checkbox"> Expert token is <code>is_owner: true</code>; member token is not; token <code>exp</code> &lt;= <code>endAt + 30 min</code> —
+boundary test: minted at <code>endAt + 29 min 59 s</code> expires at exactly <code>endAt + 30 min</code>.</li>
 <li><input disabled="" type="checkbox"> Join outside the window -&gt; 403 <code>SESSION_NOT_OPEN</code>; non-participant (including another
 expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; delegated participant -&gt; 200.</li>
 <li><input disabled="" type="checkbox"> Two browsers (expert, member) in staging join and see each other; leaving/ending updates
@@ -5622,7 +5613,10 @@ expert of the same organization) -&gt; 403 <code>NOT_A_PARTICIPANT</code>; deleg
 <li><input disabled="" type="checkbox"> CSP allows the call to run without console violations.</li>
 <li><input disabled="" type="checkbox"> Payment failure / refund before <code>startAt</code> cancels the session and deletes the room; refund
 after the session leaves the session record intact (state-machine tests).</li>
-<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists and D-07 (Daily HIPAA + BAA) is recorded before this PR opens.</li>
+<li><input disabled="" type="checkbox"> PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
+standard Daily, recording off, <strong>not HIPAA</strong>. Do not claim BAA executed.
+First live room / exit gate also needs a completed account probe
+(<code>DAILY_API_KEY</code>, recording off, staging webhook) — file existence is not enough.</li>
 <li><input disabled="" type="checkbox"> Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
 over fixtures + <code>check-no-phi-logs</code> extension).</li>
 </ul>
@@ -5635,8 +5629,8 @@ parser + signature, idempotency.</li>
 <h2 id="09-video-daily--docs-to-update"><a class="anchor" href="#09-video-daily--docs-to-update" aria-label="Link to section">#</a>Docs to update</h2>
 <ul>
 <li><code>scheduling-booking-spec.md</code> (sessions), <code>security-hardening-checklist.md</code> (CSP),
-<code>environment-matrix.md</code> (<code>sessions.eleva.care</code>), <code>integration-runbooks.md</code> (Daily outage),
-<code>operator-tasks/daily-setup.md</code> (HIPAA domain, webhook, custom domain), <code>decision-log.md</code>.</li>
+<code>environment-matrix.md</code> (standard <code>DAILY_DOMAIN</code>), <code>integration-runbooks.md</code> (Daily outage),
+<code>operator-tasks/daily-setup.md</code> (standard domain, recording off, webhook), <code>decision-log.md</code>.</li>
 </ul>
 <h2 id="09-video-daily--local-references"><a class="anchor" href="#09-video-daily--local-references" aria-label="Link to section">#</a>Local references</h2>
 <ul>
@@ -5654,11 +5648,11 @@ constraints, custom domains), <code>@daily-co/daily-react</code> <code>/daily-co
 </ul>
 <h2 id="09-video-daily--risks"><a class="anchor" href="#09-video-daily--risks" aria-label="Link to section">#</a>Risks</h2>
 <ul>
-<li>HIPAA mode restrictions (no custom room names, no live streaming, limited recording types):
-designed in from the start; the account state is verified <strong>before</strong> the phase starts (PR
-09.0), not discovered during implementation.</li>
-<li>Daily BAA/DPA or plan tier not in place: 09.0 blocks the phase; the fallback is to ship phone
-and in-person modes first (they need no room) and keep online bookings unpublishable.</li>
+<li>HIPAA mode restrictions (no custom room names, no live streaming) apply only after D-07.
+Until then use standard Daily and named rooms. Do not discover HIPAA constraints mid-build.</li>
+<li>Daily BAA/DPA deferred by founder 2026-10-07: Phase 09 proceeds on standard Daily.
+Fallback if Daily is unavailable: ship phone and in-person modes first (they need no room)
+and keep online join disabled. Never claim HIPAA while D-07 is unsigned.</li>
 <li>Browser permissions on iOS Safari: test on device before Phase 15.</li>
 </ul>
 <h2 id="09-video-daily--copy-paste-prompt"><a class="anchor" href="#09-video-daily--copy-paste-prompt" aria-label="Link to section">#</a>Copy-paste prompt</h2>
@@ -5670,10 +5664,14 @@ Before writing code:
    and .cursor/skills/{api-first-agentic,audit-wiring,coderabbit-review}/SKILL.md.
 2. Read docs/eleva-v3/execution-plan/README.md sections 2, 4, 6 and
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
-3. Read every file under &quot;Local references&quot; and docs/eleva-v3/spikes/09-daily-account.md (PR
-   09.0 evidence: if it is missing or D-07 is not in decision-log.md, stop and report — this
-   phase must not start). Pull Daily REST API (rooms, meeting tokens,
-   webhooks, HIPAA, custom domain), daily-react and Next.js CSP docs through Context7
+3. Read every file under &quot;Local references&quot; and docs/eleva-v3/spikes/09-daily-account.md.
+   If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
+   do not stop for an unsigned BAA. The spike may still mark the Daily account
+   pre-check PENDING — that does not block writing @eleva/video, but the first
+   live room and the Phase 09 exit gate require a completed probe (standard
+   DAILY_API_KEY / DAILY_DOMAIN, recording off, staging webhook secret). Pull
+   Daily REST API (rooms, meeting tokens,
+   webhooks), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
 
 Workflow (mandatory) — this is the outer loop; the &quot;PHASE 9 TASK&quot; section further down is
@@ -5704,86 +5702,40 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
 
 1. Create packages/video (@eleva/video): package.json with exports &quot;.&quot; (server), &quot;./client&quot;,
    &quot;./webhooks&quot;; catalog entries for @daily-co/daily-js and @daily-co/daily-react. Server (fetch
-   against https://api.daily.co/v1 with DAILY_API_KEY, never log the key): createSessionRoom({
-   bookingId, startAt, endAt, fingerprintExp }) -&gt; POST /rooms { privacy: &quot;private&quot; (NO name —
-   HIPAA mode rejects it), properties: { nbf: startAt-15m,
-   exp: fingerprintExp (= endAt+30m + 0..599 s, see ensureSessionRoom), max_participants: 2 + delegated participant count (updateRoom when a delegate
-   is added), enable_prejoin_ui: true, enable_chat: true,
-   enable_screenshare: true, enable_recording: false, eject_at_room_exp: true, enable_knocking:
-   false, lang: from booking locale } } (no custom name: HIPAA), returns { name, url } with url
-   rewritten to https://${DAILY_DOMAIN}/${name} when DAILY_DOMAIN is a custom domain;
-   mintMeetingToken({ roomName, userId, userName, isOwner, exp }) -&gt; POST /meeting-tokens
-   { properties: { room_name, user_id, user_name, is_owner, exp, eject_at_token_exp: true,
-   enable_recording: false } }; deleteRoom(name); getRoom(name). webhooks.ts: verifyDailyWebhook
-   (request, DAILY_WEBHOOK_SECRET) per Daily docs (HMAC over timestamp + body), typed parser for
-   meeting.started, meeting.ended, participant.joined, participant.left, error. Client:
-   &lt;ElevaCall roomUrl token onLeft /&gt; built on DailyProvider + daily-react hooks: prejoin device
-   selection + preview, waiting state until the other participant joins, controls (mic, camera,
-   screenshare, chat panel, leave), network quality indicator, post-call screen; expert variant
-   with a right-side panel slot for notes (Phase 10). Tests for option builders, token claims,
-   webhook verification. Room creation has no client idempotency key at Daily, HIPAA mode
-   REJECTS a custom room name (Daily assigns a random one — persist the returned name, never
-   send one) and room properties accept no custom metadata (schema is additionalProperties:
-   false — never send properties.meta), so ensureSessionRoom must reconcile from Eleva-owned
-   state plus the only booking-specific room values Daily keeps, nbf and exp: (a) inside a
-   short transaction it takes an in-progress LEASE — UPDATE sessions SET room_attempt_seq =
-   room_attempt_seq + 1, room_create_attempt_at = now(), room_create_lease_until = now() + 60 s,
-   room_fingerprint_exp = endAt + 30 min + offset WHERE booking_id = $id AND daily_room_name IS
-   NULL AND (room_create_lease_until IS NULL OR room_create_lease_until &lt; now()) RETURNING * —
-   zero rows means another worker holds the lease (or the room already exists): return
-   in_progress without calling Daily (the caller&#39;s workflow retries after the lease expires), so
-   only ONE POST can be in flight per booking; offset = 0..599 s is ALLOCATED, not derived:
-   sessions.room_fingerprint_exp has a global UNIQUE index and the lease UPDATE picks the offset
-   in the same statement — room_fingerprint_exp = (SELECT $endAt + interval &#39;30 min&#39; + n *
-   interval &#39;1 s&#39; FROM generate_series(0, 599) n WHERE NOT EXISTS (SELECT 1 FROM sessions s2
-   WHERE s2.room_fingerprint_exp = $endAt + interval &#39;30 min&#39; + n * interval &#39;1 s&#39;) ORDER BY n
-   LIMIT 1) — so a single statement normally commits; the unique index is the guarantee for the
-   race where two workers pick the same free second concurrently: that raises 23505, which
-   ABORTS the lease transaction (PostgreSQL leaves no usable transaction after an error), so the
-   caller re-runs the WHOLE lease transaction as a new transaction (never a statement retry
-   inside the aborted one; no savepoint games), at most 3 times, then status = room_unresolved
-   before any vendor call; the subselect returning NULL (all 600 taken) is caught by a CHECK /
-   NOT NULL on the RETURNING row and is the same room_unresolved path. The lease transaction
-   COMMITS before Daily is called (the row is the record of intent) and the vendor result is
-   persisted afterwards in a separate compare-and-set transaction (WHERE room_attempt_seq = $seq
-   AND daily_room_name IS NULL) — README rule 9. Tests: a collision test creates two bookings
-   with identical startAt/endAt and asserts distinct exp values; a saturation test fills the 600
-   offsets and asserts room_unresolved with zero POSTs; a forced-23505 test (mocked unique
-   violation on the first run) asserts one re-run, one commit, one POST,
-   so the pair (nbf, exp) is unique across ALL sessions — the fingerprint proves booking identity
-   because Eleva allocated it uniquely, not because Daily made it unique (persisted BEFORE the
-   vendor call; the row is the record of intent — the extra seconds are invisible to users
-   because the join window ends at endAt+30m in our authorization, not at room exp; a new
-   attempt (seq + 1) allocates a fresh unique exp and the old one is released only when the
-   session leaves room_unresolved or is cancelled); the lease is cleared when the room is persisted or the
-   attempt lands in room_unresolved, and an expired lease with no room is the signal for the
-   reconciliation path in (c), never for a blind new POST; (b) POST /rooms { privacy: &quot;private&quot;, properties: {
-   nbf: startAt - 15 min, exp: room_fingerprint_exp, ... } } with a bounded timeout (10 s) and no
-   automatic retry; on 200 persist daily_room_name/url from the response; (c) on
-   timeout/5xx/network error it reconciles: GET /rooms?limit=100 followed through every page
-   with ending_before/starting_after until created_at &lt; room_create_attempt_at - 60 s (Daily
-   lists newest first), and collects rooms whose config.nbf and config.exp equal the stored
-   pair exactly (second resolution — the fingerprint) and whose created_at is within
-   [room_create_attempt_at - 60 s, now]; exactly one match -&gt; adopt it (persist name/url);
-   zero -&gt; wait 30 s and list once more (visibility lag), still zero -&gt; a NEW attempt (seq + 1,
-   new fingerprint) and one retry of the POST; more than one match, or the retry also fails to
-   resolve -&gt; status = room_unresolved, emit session.room_unresolved and alert — the sweep never
-   re-creates blindly and admins resolve from Phase 12 (the resolver shows the candidate rooms
-   with their created_at/nbf/exp and lets staff adopt one and delete the rest). Orphan sweep
-   (hourly): any private room older than 10 min whose name is not in sessions.daily_room_name
-   and whose exp is in the future is deleted (rooms are unreachable without a token we mint, so
-   an orphan is a cost, not a risk). deleteRoom on cancel is DELETE /rooms/{daily_room_name}
-   (404 = already gone = success). Tests with a mocked Daily client: lost response then one
-   fingerprint match on the second page -&gt; adopted, zero extra POSTs; lost response, no match
-   twice -&gt; exactly one more POST with seq 2; two matches -&gt; room_unresolved, no POST; two
-   concurrent ensureSessionRoom calls -&gt; one POST (the second sees the lease and returns
-   in_progress); a worker that dies mid-call -&gt; the lease expires, the next call reconciles by
-   fingerprint before any POST;
-   cancel with DELETE 404 -&gt; success; orphan sweep deletes an unreferenced room and never a
-   referenced one.
-   Tests: lost response after Daily created the room -&gt; reconciliation adopts it -&gt; exactly one
-   room; delayed visibility (room appears only after the second POST) -&gt; the late room is
-   adopted or deleted, exactly one room remains.
+   against https://api.daily.co/v1 with DAILY_API_KEY, never log the key). STANDARD Daily
+   (founder 2026-10-07, D-07 deferred — not HIPAA): createSessionRoom({ bookingId, startAt,
+   endAt }) -&gt; POST /rooms { name: &quot;eleva-&quot; + bookingId, privacy: &quot;private&quot;, properties: {
+   nbf: startAt-15m, exp: endAt+30m, max_participants: 2 + delegated participant count
+   (updateRoom when a delegate is added), enable_prejoin_ui: true, enable_chat: true,
+   enable_screenshare: true, enable_recording: false, enable_recording_ui: false,
+   eject_at_room_exp: true, enable_knocking: false, lang: from booking locale } }. Do NOT
+   omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
+   Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
+   DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
+   a **local HS256 JWT** signed with the Daily API key (room_name ALWAYS set, user_id,
+   user_name, is_owner, exp, eject_at_token_exp, enable_recording false). No REST
+   POST /meeting-tokens at join time — README rule 9: the join transaction may sign
+   locally while holding session_participants FOR UPDATE; vendor POSTs stay outside
+   transactions. deleteRoom(name);
+   getRoom(name). ensureSessionRoom (named-room GET-or-create + repair): target name is
+   always eleva-{bookingId}; expected nbf/exp = startAt-15m / endAt+30m. GET the stored
+   name or GET /rooms/{name}. 200 -&gt; also verify privacy=private, enable_recording
+   false, enable_recording_ui false, max_participants &gt;= expected; if window or those
+   settings are stale, POST /rooms/{name} update properties (keep the name) and
+   persist; if the room cannot be repaired, do not adopt it (status room_unresolved).
+   404 / expired / gone -&gt; POST createSessionRoom with the same name (409 -&gt; GET again
+   and adopt or update). Never adopt a room whose window or security settings do not
+   match. Two concurrent calls must not create two rooms (lease on
+   sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
+   &lt;ElevaCall roomUrl token onLeft /&gt; on DailyProvider + daily-react: prejoin, waiting,
+   controls (mic, camera, screenshare, chat, leave), post-call; expert notes slot (Phase
+   10). webhooks.ts: verifyDailyWebhook HMAC, typed meeting.started/ended,
+   participant.joined/left. Tests: named-room option builder, token always has room_name,
+   GET-or-create idempotency, 409 adopt, stale nbf/exp after reschedule updates in
+   place, 404 on a stored name recreates the same name, lease blocks a second POST,
+   deleteRoom 404 = success. Orphan sweep: only rooms named eleva-* (Eleva
+   namespace), older than 10 min, not in sessions.daily_room_name, exp in the
+   future — never delete operator/test rooms outside that prefix.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
    attendance both|expert_only|member_only|nobody nullable (derived by finalizeAttendance from
@@ -5792,7 +5744,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    end_at + 15 min if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
    room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
-   (global — the allocation described in item 1 depends on it),
+   (reserved for HIPAA after D-07; leave unused now),
    last_event_at, started_at,
    ended_at, participants jsonb [{ role, joined_at, left_at }] (history only, never
    authorization), created_at, updated_at) and session_participants (booking_id FK, user_id FK,
@@ -5823,9 +5775,10 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.status IN (&#39;scheduled&#39;,&#39;live&#39;) else 410 SESSION_NOT_ACTIVE (checked BEFORE the window
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -&gt; join 410, the room-cleanup retry later succeeds); window
-   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
-   endAt+30m) — NEVER roomExp, which includes the fingerprint offset (boundary test: mint at
-   endAt+29m59s -&gt; token exp = endAt+30m exactly); audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
+   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; after the FOR UPDATE auth
+   check, signs the meeting token **locally** (no Daily HTTP) with exp = min(now+2h,
+   endAt+30m) (boundary test: mint at endAt+29m59s -&gt; token exp = endAt+30m exactly);
+   audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify)
    signature -&gt; 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
    guard: apply only when payload event time &gt; sessions.last_event_at, status transitions are
    monotonic scheduled -&gt; live -&gt; ended; test the sequence meeting.ended then a delayed
@@ -5845,15 +5798,15 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    window) on the Phase 5 session pages and the expert sessions list; update the confirmation and
    1h-reminder templates to deep-link to the join page. Messages pt/en/es.
 6. Security: extend the CSP builder in @eleva/observability (and apps/api security headers):
-   connect-src https://*.daily.co wss://*.daily.co https://sessions.eleva.care; frame-src/media-src
+   connect-src https://*.daily.co wss://*.daily.co plus DAILY_DOMAIN; frame-src/media-src
    accordingly; Permissions-Policy camera=(self), microphone=(self), display-capture=(self) only
    on join routes (per-route header via proxy.ts helper). Boundary lint: @daily-co/* only in
-   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (elevacare.daily.co or sessions.eleva.care),
-   DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator tasks doc
-   operator-tasks/daily-setup.md: enable HIPAA on the Daily domain, create the webhook pointing to
-   https://api.dev.eleva.care/webhooks/daily (staging; Phase 15 repeats it for
-   https://api.eleva.care/webhooks/daily) with the secret, configure the custom domain
-   sessions.eleva.care (CNAME) and the corresponding Vercel DNS record.
+   packages/video. Env: DAILY_API_KEY, DAILY_DOMAIN (standard `{subdomain}.daily.co` until
+   D-07), DAILY_WEBHOOK_SECRET in .env.example, turbo.json, environment-matrix.md. Operator
+   tasks doc operator-tasks/daily-setup.md: create a **standard** Daily domain with recording
+   off, create the webhook pointing to https://api.dev.eleva.care/webhooks/daily (staging;
+   Phase 15 repeats it for https://api.eleva.care/webhooks/daily) with the secret. Do not
+   enable HIPAA or `sessions.eleva.care` until D-07 is signed.
 7. Tests: unit as above; e2e/video-join.spec.ts loads the join page with
    --use-fake-device-for-media-stream and reaches the prejoin UI. Manual staging test with two
    browsers; paste screenshots in the PR.

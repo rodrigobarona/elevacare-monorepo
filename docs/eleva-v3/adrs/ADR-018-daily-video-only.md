@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Accepted (amended 2026-10-07: standard Daily until D-07)
 
 ## Date
 
@@ -28,14 +28,18 @@ or D-07 is unsigned.
 
 ## Decision
 
-1. **Daily.co only.** Online sessions use `@eleva/video` (`packages/video`) talking to a
-   HIPAA-enabled Daily domain (`elevacare.daily.co`) branded as `sessions.eleva.care`. Google
-   Meet, Zoom and Microsoft Teams are not created, stored or linked. Google/Microsoft calendars
-   remain busy-time and destination sync only (ADR-004 as amended by ADR-017).
-2. **Room contract.** Private rooms, random names (HIPAA mode rejects custom names), `nbf`/`exp`
-   around the booking window, `max_participants` derived from the booking. Meeting tokens are
-   minted at join time per participant (expert `is_owner`); they are never stored, logged or
-   placed in URLs.
+1. **Daily.co only.** Online sessions use `@eleva/video` (`packages/video`) talking to
+   Daily. Until D-07 is signed the domain is **standard (not HIPAA)** — typically
+   `{subdomain}.daily.co`. A HIPAA-enabled domain and branded `sessions.eleva.care`
+   wait for D-07. Google Meet, Zoom and Microsoft Teams are not created, stored or
+   linked. Google/Microsoft calendars remain busy-time and destination sync only
+   (ADR-004 as amended by ADR-017).
+2. **Room contract.** Private rooms. Until D-07: deterministic names
+   (`eleva-{bookingId}`), `nbf`/`exp` around the booking window,
+   `max_participants` derived from the booking, recording off. After D-07:
+   random names (HIPAA mode rejects custom names) and the fingerprint
+   reconciler. Meeting tokens are minted at join time per participant
+   (expert `is_owner`); they are never stored, logged or placed in URLs.
 3. **Authorization.** `session_participants` is the Eleva-side allow-list. Revoke is two-phase:
    set `revoked_at` (deny), then Daily `eject`, with a retry job if eject fails.
 4. **Webhooks.** `meeting.started` / `meeting.ended` (and participant join/leave for history)
@@ -44,8 +48,22 @@ or D-07 is unsigned.
 5. **Vendor boundary.** Only `packages/video` imports `@daily-co/*`. `apps/api` mounts
    `/webhooks/daily`. Frontends call `@eleva/api-client` to mint a token and then load Daily's
    client SDK on the join page.
-6. **Fallback.** If D-07 is unsigned or Daily is unavailable, Phase 9 still ships join pages
-   for phone and in-person modes; online mode stays unpublished.
+6. **Fallback.** If Daily is unavailable, Phase 9 still ships join pages
+   for phone and in-person modes; online join stays disabled.
+
+## Amendment (2026-10-07)
+
+Founder deferred D-07 (no Daily BAA, no HIPAA programme) so accounting and legal
+can review the running product. Phase 09 implements against a **standard Daily
+domain**:
+
+- Deterministic private room names (`eleva-{bookingId}`).
+- Recording off. Tokens still minted at join time, never stored or logged.
+- Do **not** claim HIPAA, an executed BAA/DPA, or Eleva-controlled EU media
+  residency beyond what Daily documents.
+- The HIPAA-mode room contract in Decision §2 (random names, no custom `name`)
+  applies only after D-07 is signed. Until then, skip the fingerprint
+  reconciler.
 
 ## Alternatives Considered
 
@@ -68,12 +86,14 @@ or D-07 is unsigned.
 
 ## Consequences
 
-- Positive: one video vendor, one BAA, one webhook, one join UX; calendars stay calendars.
+- Positive: one video vendor, one webhook, one join UX; calendars stay calendars. A Daily
+  BAA is **future D-07 work**, not a Phase 09 consequence.
 - Tradeoff: Eleva operates room lifecycle and token minting; Daily account pre-check is a
-  spike (PR 09.0) before Phase 9 implementation.
-- Operational: `DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET` required; DNS CNAME
-  `sessions.eleva.care` → Daily (Phase 15 C.0). Recording storage is explicitly **not** decided
-  here — see D-08 / 16.8.
+  spike (PR 09.0). The written 09.0 position exists; the live-account probe is still
+  required before the first live room.
+- Operational: `DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET` required for
+  standard Daily. DNS CNAME `sessions.eleva.care` → Daily waits for D-07 / Phase 15 C.0.
+  Recording storage is explicitly **not** decided here — see D-08 / 16.8.
 - Supersedes in part: ADR-004 (Google Meet as the online session destination).
 
 ## Related
