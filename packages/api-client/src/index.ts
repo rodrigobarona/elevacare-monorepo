@@ -538,6 +538,37 @@ export const CancelDeletionResponseSchema = z.object({
   requestId: z.string().uuid(),
 })
 
+export const JoinSessionResponseSchema = z.object({
+  roomUrl: z.string().url(),
+  token: z.string().min(1),
+  expiresAt: z.string().datetime(),
+})
+
+export const AddSessionParticipantRequestSchema = z.object({
+  userId: z.string().uuid(),
+  role: z.enum(["delegate", "supervisor"]),
+})
+
+export const AddSessionParticipantResponseSchema = z.object({
+  ok: z.literal(true),
+  participant: z.object({
+    id: z.string().uuid(),
+    userId: z.string().uuid(),
+    role: z.enum(["delegate", "supervisor"]),
+  }),
+})
+
+export const RemoveSessionParticipantResponseSchema = z.object({
+  ok: z.literal(true),
+  ejectionPending: z.literal(true).optional(),
+})
+
+export const DailyWebhookResponseSchema = z.object({
+  status: z.enum(["processed", "duplicate", "ignored"]),
+  type: z.string().optional(),
+  reason: z.string().optional(),
+})
+
 export type MeProfile = z.infer<typeof MeProfileSchema>
 export type PatchMeRequest = z.infer<typeof PatchMeRequestSchema>
 export type PutNotificationPreferencesRequest = z.infer<
@@ -578,6 +609,17 @@ export type DeleteAccountResponse = z.infer<typeof DeleteAccountResponseSchema>
 export type CancelDeletionResponse = z.infer<
   typeof CancelDeletionResponseSchema
 >
+export type JoinSessionResponse = z.infer<typeof JoinSessionResponseSchema>
+export type AddSessionParticipantRequest = z.infer<
+  typeof AddSessionParticipantRequestSchema
+>
+export type AddSessionParticipantResponse = z.infer<
+  typeof AddSessionParticipantResponseSchema
+>
+export type RemoveSessionParticipantResponse = z.infer<
+  typeof RemoveSessionParticipantResponseSchema
+>
+export type DailyWebhookResponse = z.infer<typeof DailyWebhookResponseSchema>
 
 // ── Expert Profile ──────────────────────────────────────────────────
 
@@ -2796,6 +2838,34 @@ export function createApiClient(options: ApiClientOptions) {
       async markReadAll() {
         const raw = await request<unknown>("POST", "/notifications/read-all")
         return MarkInboxReadAllResponseSchema.parse(raw)
+      },
+    },
+
+    sessions: {
+      async join(bookingId: string) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/join`
+        )
+        return JoinSessionResponseSchema.parse(raw)
+      },
+      async addParticipant(
+        bookingId: string,
+        data: AddSessionParticipantRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/participants`,
+          data
+        )
+        return AddSessionParticipantResponseSchema.parse(raw)
+      },
+      async removeParticipant(bookingId: string, userId: string) {
+        const raw = await request<unknown>(
+          "DELETE",
+          `/sessions/${encodeURIComponent(bookingId)}/participants/${encodeURIComponent(userId)}`
+        )
+        return RemoveSessionParticipantResponseSchema.parse(raw)
       },
     },
 

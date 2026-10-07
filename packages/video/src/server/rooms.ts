@@ -137,6 +137,22 @@ export function createDailyClient(options: DailyClientOptions) {
     throw new DailyHttpError(res.status, await res.text())
   }
 
+  async function ejectParticipants(
+    roomName: string,
+    userIds: string[]
+  ): Promise<void> {
+    if (userIds.length === 0) return
+    const res = await dailyFetch(
+      `/rooms/${encodeURIComponent(roomName)}/eject`,
+      {
+        method: "POST",
+        body: JSON.stringify({ user_ids: userIds, ban: true }),
+      }
+    )
+    if (res.status === 404 || res.ok) return
+    throw new DailyHttpError(res.status, await res.text())
+  }
+
   function withProductUrl(room: DailyRoom): DailyRoom {
     return {
       ...room,
@@ -150,6 +166,7 @@ export function createDailyClient(options: DailyClientOptions) {
     createSessionRoom,
     updateSessionRoom,
     deleteRoom,
+    ejectParticipants,
     roomMatchesContract,
     DailyHttpError,
   }
