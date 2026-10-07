@@ -7,6 +7,7 @@
  * `LinkButton` renders a native `<a>`; `apps/web` does not mount a React Aria
  * `RouterProvider`, so no client-side routing is attempted.
  */
+import { UserIcon } from "@eleva/icons"
 import { LinkButton } from "@eleva/ui/components/button"
 
 interface SignedOutButtonsProps {
@@ -24,9 +25,10 @@ export function SignedOutButtons({
         variant="ghost"
         size="sm"
         href="/login"
-        className="hidden sm:inline-flex"
+        className="px-2 sm:px-3"
       >
-        {loginLabel}
+        <UserIcon aria-hidden className="size-5 sm:hidden" />
+        <span className="sr-only sm:not-sr-only">{loginLabel}</span>
       </LinkButton>
       <LinkButton size="sm" href="/signup">
         {getStartedLabel}
