@@ -81,6 +81,7 @@ export {
   authorizeConfirmAccess,
   isUniqueViolation,
 } from "./confirm-booking"
+export { confirmFreeReservation } from "./confirm-free"
 export type {
   ConfirmBookingPaymentInput,
   ConfirmBookingPaymentResult,

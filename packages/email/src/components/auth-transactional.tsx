@@ -1,16 +1,8 @@
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Preview,
-  Section,
-  Tailwind,
-  Text,
-} from "react-email"
-import { elevaTailwindConfig } from "../theme"
+import { Section, Text } from "react-email"
+import { EmailLayout } from "./layout"
+import { EmailButton } from "./email-button"
+import { EmailBodyText, EmailHeading } from "./email-heading"
+import { EmailCard } from "./email-card"
 import type { EmailLocale } from "../i18n"
 
 export type AuthEmailKind =
@@ -37,20 +29,20 @@ const COPY: Record<
 > = {
   "verify-email": {
     en: {
-      title: "We're almost there",
-      body: "Thank you for signing up for Eleva.care. Confirm this address to finish creating your account.",
+      title: "Confirm your email",
+      body: "Thank you for creating an Eleva Care account. Confirm this address to finish signing up.",
       action: "Confirm email",
       ignore: "If you didn't create an account, you can ignore this email.",
     },
     pt: {
-      title: "Estamos quase",
-      body: "Obrigado por criar conta na Eleva.care. Confirme este endereço para concluir o registo.",
+      title: "Confirme o seu email",
+      body: "Obrigado por criar conta na Eleva Care. Confirme este endereço para concluir o registo.",
       action: "Confirmar email",
       ignore: "Se não criou uma conta, pode ignorar este email.",
     },
     es: {
-      title: "Ya casi estamos",
-      body: "Gracias por registrarte en Eleva.care. Confirma esta dirección para terminar de crear tu cuenta.",
+      title: "Confirma tu correo",
+      body: "Gracias por crear una cuenta en Eleva Care. Confirma esta dirección para terminar el registro.",
       action: "Verificar correo",
       ignore: "Si no creaste una cuenta, puedes ignorar este correo.",
     },
@@ -58,38 +50,38 @@ const COPY: Record<
   "reset-password": {
     en: {
       title: "Reset your password",
-      body: "Use the button below if you asked to reset your Eleva.care password.",
+      body: "Use the button below if you asked to reset your Eleva Care password.",
       action: "Reset password",
       ignore: "If you didn't request this, you can ignore this email.",
     },
     pt: {
       title: "Redefinir palavra-passe",
-      body: "Use o botão abaixo se pediu para redefinir a palavra-passe Eleva.care.",
+      body: "Use o botão abaixo se pediu para redefinir a palavra-passe Eleva Care.",
       action: "Redefinir",
       ignore: "Se não pediu isto, pode ignorar este email.",
     },
     es: {
       title: "Restablecer contraseña",
-      body: "Usa el botón si pediste restablecer tu contraseña de Eleva.care.",
+      body: "Usa el botón si pediste restablecer tu contraseña de Eleva Care.",
       action: "Restablecer",
       ignore: "Si no pediste esto, puedes ignorar este correo.",
     },
   },
   "magic-link": {
     en: {
-      title: "Sign in to Eleva.care",
+      title: "Sign in to Eleva Care",
       body: "This one-time link signs you in. It expires soon.",
       action: "Sign in",
       ignore: "If you didn't request this, you can ignore this email.",
     },
     pt: {
-      title: "Entrar na Eleva.care",
+      title: "Entrar na Eleva Care",
       body: "Esta ligação de uso único inicia a sessão. Expira em breve.",
       action: "Entrar",
       ignore: "Se não pediu isto, pode ignorar este email.",
     },
     es: {
-      title: "Entrar en Eleva.care",
+      title: "Entrar en Eleva Care",
       body: "Este enlace de un solo uso inicia tu sesión. Caduca pronto.",
       action: "Entrar",
       ignore: "Si no pediste esto, puedes ignorar este correo.",
@@ -98,19 +90,19 @@ const COPY: Record<
   "organization-invitation": {
     en: {
       title: "You are invited",
-      body: "You were invited to join an Eleva.care organization.",
+      body: "You were invited to join an Eleva Care organization.",
       action: "Accept invitation",
       ignore: "If you weren't expecting this, you can ignore this email.",
     },
     pt: {
       title: "Foi convidado",
-      body: "Foi convidado para uma organização Eleva.care.",
+      body: "Foi convidado para uma organização Eleva Care.",
       action: "Aceitar convite",
       ignore: "Se não esperava este email, pode ignorá-lo.",
     },
     es: {
       title: "Te invitaron",
-      body: "Te invitaron a una organización Eleva.care.",
+      body: "Te invitaron a una organización Eleva Care.",
       action: "Aceptar invitación",
       ignore: "Si no esperabas este correo, puedes ignorarlo.",
     },
@@ -119,19 +111,19 @@ const COPY: Record<
     en: {
       title: "Your verification code",
       body: "Use this code to finish signing in. Do not share it.",
-      action: "Open Eleva.care",
+      action: "Open Eleva Care",
       ignore: "If you didn't request this, you can ignore this email.",
     },
     pt: {
       title: "O seu código",
       body: "Use este código para concluir o início de sessão. Não o partilhe.",
-      action: "Abrir Eleva.care",
+      action: "Abrir Eleva Care",
       ignore: "Se não pediu isto, pode ignorar este email.",
     },
     es: {
       title: "Tu código",
       body: "Usa este código para terminar de entrar. No lo compartas.",
-      action: "Abrir Eleva.care",
+      action: "Abrir Eleva Care",
       ignore: "Si no pediste esto, puedes ignorar este correo.",
     },
   },
@@ -142,29 +134,29 @@ export const AUTH_EMAIL_SUBJECT: Record<
   Record<EmailLocale, string>
 > = {
   "verify-email": {
-    en: "Verify your Eleva.care email",
-    pt: "Confirme o seu email Eleva.care",
-    es: "Verifica tu correo de Eleva.care",
+    en: "Verify your Eleva Care email",
+    pt: "Confirme o seu email Eleva Care",
+    es: "Verifica tu correo de Eleva Care",
   },
   "reset-password": {
-    en: "Reset your Eleva.care password",
-    pt: "Redefina a sua palavra-passe Eleva.care",
-    es: "Restablece tu contraseña de Eleva.care",
+    en: "Reset your Eleva Care password",
+    pt: "Redefina a sua palavra-passe Eleva Care",
+    es: "Restablece tu contraseña de Eleva Care",
   },
   "magic-link": {
-    en: "Your Eleva.care sign-in link",
-    pt: "A sua ligação de início de sessão Eleva.care",
-    es: "Tu enlace de acceso a Eleva.care",
+    en: "Your Eleva Care sign-in link",
+    pt: "A sua ligação de início de sessão Eleva Care",
+    es: "Tu enlace de acceso a Eleva Care",
   },
   "organization-invitation": {
-    en: "You are invited to an Eleva.care organization",
-    pt: "Foi convidado para uma organização Eleva.care",
-    es: "Te invitaron a una organización Eleva.care",
+    en: "You are invited to an Eleva Care organization",
+    pt: "Foi convidado para uma organização Eleva Care",
+    es: "Te invitaron a una organización Eleva Care",
   },
   "two-factor-otp": {
-    en: "Your Eleva.care verification code",
-    pt: "O seu código de verificação Eleva.care",
-    es: "Tu código de verificación de Eleva.care",
+    en: "Your Eleva Care verification code",
+    pt: "O seu código de verificação Eleva Care",
+    es: "Tu código de verificación de Eleva Care",
   },
 }
 
@@ -176,7 +168,6 @@ export function authEmailText(
   return { title: copy.title, body: copy.body }
 }
 
-/** Barebone-style activation layout (official React Email demo), Eleva tokens. */
 export function AuthTransactionalEmail({
   kind,
   url,
@@ -188,62 +179,28 @@ export function AuthTransactionalEmail({
   const isOtp = kind === "two-factor-otp"
 
   return (
-    <Tailwind config={elevaTailwindConfig}>
-      <Html lang={locale}>
-        <Head />
-        <Body className="bg-canvas m-0 text-center font-sans">
-          <Preview>{copy.title}</Preview>
-          <Container className="mx-auto mt-8 w-full max-w-[640px]">
-            <Section className="bg-bg px-6 py-4">
-              <Text className="text-brand m-0 text-left text-[16px] font-semibold tracking-tight">
-                Eleva Care
-              </Text>
-            </Section>
+    <EmailLayout preview={copy.title} locale={locale}>
+      <EmailHeading>{copy.title}</EmailHeading>
+      {name ? <EmailBodyText className="mb-[8px]">{name}</EmailBodyText> : null}
+      <EmailBodyText className="mb-[24px]">{copy.body}</EmailBodyText>
 
-            <Section className="bg-bg-2 rounded-[8px] px-[40px] py-[64px] text-center">
-              <Heading
-                as="h1"
-                className="text-fg m-0 mb-4 text-[28px] leading-tight font-semibold"
-              >
-                {copy.title}
-              </Heading>
-              {name ? (
-                <Text className="text-fg-2 m-0 mb-3 text-[16px]">{name}</Text>
-              ) : null}
-              <Text className="text-fg-2 mx-auto mt-0 mb-8 max-w-[380px] text-[16px] leading-relaxed">
-                {copy.body}
-              </Text>
+      {isOtp && code ? (
+        <EmailCard>
+          <Text className="text-brand m-0 text-center text-[28px] leading-[36px] font-semibold">
+            {code}
+          </Text>
+        </EmailCard>
+      ) : null}
 
-              {isOtp && code ? (
-                <Text className="text-fg m-0 mb-8 text-[32px] font-semibold tracking-[0.2em]">
-                  {code}
-                </Text>
-              ) : null}
+      {!isOtp && url ? (
+        <Section className="mb-[24px]">
+          <EmailButton href={url}>{copy.action}</EmailButton>
+        </Section>
+      ) : null}
 
-              {!isOtp && url ? (
-                <Section className="mb-6 text-center">
-                  <Button
-                    href={url}
-                    className="bg-brand text-fg-inverted inline-block rounded-lg px-8 py-4 text-center text-[16px] leading-6 font-semibold"
-                  >
-                    {copy.action}
-                  </Button>
-                </Section>
-              ) : null}
-
-              <Text className="text-fg-3 mx-auto mt-8 mb-0 max-w-[400px] text-[13px] leading-relaxed">
-                {copy.ignore}
-              </Text>
-            </Section>
-
-            <Section className="bg-bg px-6 py-10">
-              <Text className="text-fg-3 m-0 text-[12px] leading-5">
-                Eleva Care · Lisbon, Portugal
-              </Text>
-            </Section>
-          </Container>
-        </Body>
-      </Html>
-    </Tailwind>
+      <Text className="text-fg-3 m-0 mt-[24px] text-[13px] leading-[20px]">
+        {copy.ignore}
+      </Text>
+    </EmailLayout>
   )
 }

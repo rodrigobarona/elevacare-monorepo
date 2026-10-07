@@ -1,5 +1,15 @@
 import { SignupForm } from "./signup-form"
 
-export default function SignupPage() {
-  return <SignupForm />
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ name?: string; email?: string }>
+}) {
+  const params = await searchParams
+  return (
+    <SignupForm
+      initialName={params.name?.trim() ?? ""}
+      initialEmail={params.email?.trim() ?? ""}
+    />
+  )
 }

@@ -3,7 +3,6 @@ import {
   Container,
   Head,
   Html,
-  Img,
   Preview,
   Section,
   Tailwind,
@@ -12,9 +11,6 @@ import {
 import type { ReactNode } from "react"
 import { elevaTailwindConfig } from "../theme"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
-
-/** Served by apps/web from `public/brand/`; email clients need an absolute PNG. */
-const LOGO_URL = "https://eleva.care/brand/eleva-logo-color.png"
 
 interface LayoutProps {
   preview: string
@@ -34,6 +30,8 @@ export function EmailLayout({
   return (
     <Html lang={locale}>
       <Head>
+        <meta name="color-scheme" content="light" />
+        <meta name="supported-color-schemes" content="light" />
         {jsonLd ? (
           <script
             type="application/ld+json"
@@ -47,20 +45,27 @@ export function EmailLayout({
         ) : null}
       </Head>
       <Tailwind config={elevaTailwindConfig}>
-        <Body className="bg-canvas font-sans">
+        <Body className="bg-canvas m-0 font-sans">
           <Preview>{preview}</Preview>
-          <Container className="mx-auto max-w-[560px] px-4 py-10">
-            <Section className="mb-6">
-              <Img src={LOGO_URL} alt="Eleva Care" width="141" height="28" />
-            </Section>
-            {children}
-            <Section className="border-stroke mt-10 border-t pt-6">
-              <Text className="text-fg-3 text-[12px] leading-5">
-                Eleva Care · Lisbon, Portugal
-              </Text>
-              <Text className="text-fg-3 text-[12px] leading-5">
-                {t.layout.footer}
-              </Text>
+          <Container className="mx-auto w-full max-w-[600px] px-[16px] py-[32px]">
+            <Section className="border-stroke bg-bg overflow-hidden rounded-[12px] border border-solid">
+              <Section className="bg-brand px-[28px] py-[24px]">
+                <Text className="text-fg-inverted m-0 text-[20px] leading-[24px] font-semibold">
+                  Eleva Care
+                </Text>
+                <Text className="text-fg-inverted m-0 mt-[4px] text-[12px] leading-[16px]">
+                  {t.layout.tagline}
+                </Text>
+              </Section>
+              <Section className="px-[28px] py-[32px]">{children}</Section>
+              <Section className="border-stroke bg-canvas border-t border-none border-solid px-[28px] py-[24px]">
+                <Text className="text-fg-3 m-0 text-[12px] leading-[18px]">
+                  {t.layout.location}
+                </Text>
+                <Text className="text-fg-3 m-0 mt-[8px] text-[12px] leading-[18px]">
+                  {t.layout.footer}
+                </Text>
+              </Section>
             </Section>
           </Container>
         </Body>

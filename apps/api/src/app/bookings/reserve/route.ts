@@ -142,6 +142,7 @@ export async function POST(request: Request) {
       phone: body.phone,
       consents: body.consents,
       cancellationPolicy: body.cancellationPolicy,
+      promoCode: body.promoCode,
       busyTimeProvider: holdCalendarBusyTimeProvider,
     })
   } catch (err) {

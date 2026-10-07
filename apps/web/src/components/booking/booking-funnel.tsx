@@ -49,6 +49,7 @@ import { displayLanguage } from "@eleva/ui/lib/booking/display-names"
 import { maskPhone, toE164 } from "@eleva/ui/lib/booking/e164"
 import { addMonths, startOfMonth } from "@eleva/ui/lib/booking/slot-groups"
 import { createPublicApiClient } from "@/lib/public-api"
+import { CheckCircleIcon } from "@eleva/icons"
 import { downloadBookingIcs } from "@eleva/calendar/ics-download"
 import type { FunnelConsentDoc } from "@/lib/booking-consents"
 import {
@@ -151,6 +152,8 @@ export function BookingFunnel({
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
+  const [taxId, setTaxId] = useState("")
+  const [promoCode, setPromoCode] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
@@ -377,6 +380,12 @@ export function BookingFunnel({
       setFormError("consentsRequired")
       return
     }
+    const normalizedTaxId = taxId.replace(/[\s.-]/g, "").toUpperCase()
+    if (normalizedTaxId && !/^[A-Z0-9]{8,32}$/.test(normalizedTaxId)) {
+      setFormError("taxIdInvalid")
+      return
+    }
+    const normalizedPromo = promoCode.trim().toUpperCase()
 
     setIsSubmitting(true)
     setFormError(null)
@@ -402,8 +411,12 @@ export function BookingFunnel({
             email,
             name,
             ...(e164 ? { phone: e164 } : {}),
+            ...(normalizedTaxId ? { taxId: normalizedTaxId } : {}),
           },
           ...(e164 ? { phone: e164 } : {}),
+          ...(normalizedPromo.length >= 2
+            ? { promoCode: normalizedPromo }
+            : {}),
           consents: consents.map((doc) => ({
             kind: doc.kind,
             version: doc.version,
@@ -411,6 +424,21 @@ export function BookingFunnel({
           cancellationPolicy,
         }))
       if (!activeHold) setReservation(reserved)
+      if (priceCents === 0) {
+        const confirmed = await api.bookings.confirm({
+          reservationId: reserved.reservationId,
+          reservationToken: reserved.reservationToken,
+        })
+        setPayment({
+          clientSecret: "",
+          paymentIntentId: "",
+          bookingId: confirmed.bookingId,
+          publishableKey: "",
+        })
+        setConfirmState("confirmed")
+        setStep("done")
+        return
+      }
       const intent = await api.payments.intent({
         reservationId: reserved.reservationId,
         reservationToken: reserved.reservationToken,
@@ -678,6 +706,33 @@ export function BookingFunnel({
                 {t("details.phoneHint")}
               </p>
             </Field>
+            <Field>
+              <FieldLabel>{t("details.taxId")}</FieldLabel>
+              <Input
+                data-testid="booking-guest-tax-id"
+                value={taxId}
+                onChange={(event) => setTaxId(event.target.value)}
+                autoComplete="off"
+                inputMode="text"
+              />
+              <p className="text-sm text-muted-foreground">
+                {t("details.taxIdHint")}
+              </p>
+            </Field>
+            {priceCents > 0 ? (
+              <Field>
+                <FieldLabel>{t("details.promo")}</FieldLabel>
+                <Input
+                  data-testid="booking-promo"
+                  value={promoCode}
+                  onChange={(event) => setPromoCode(event.target.value)}
+                  autoComplete="off"
+                />
+                <p className="text-sm text-muted-foreground">
+                  {t("details.promoHint")}
+                </p>
+              </Field>
+            ) : null}
             <CancellationPolicySummary
               heading={t("policy.heading")}
               name={policyCopy.name}
@@ -720,7 +775,11 @@ export function BookingFunnel({
                 }
                 onPress={() => void holdAndPay()}
               >
-                {isSubmitting ? t("details.holding") : t("details.hold")}
+                {isSubmitting
+                  ? t("details.holding")
+                  : priceCents === 0
+                    ? t("details.confirmFree")
+                    : t("details.hold")}
               </Button>
             </div>
           </div>
@@ -778,10 +837,13 @@ export function BookingFunnel({
         ) : null}
 
         {step === "done" && slot && selectedMode ? (
-          <div className="mt-8 space-y-6">
-            <header className="space-y-2">
+          <div className="mt-8 space-y-8">
+            <header className="space-y-3">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <CheckCircleIcon className="size-8" weight="fill" />
+              </div>
               <h1
-                className="font-heading text-3xl font-semibold tracking-tight"
+                className="font-heading text-3xl font-semibold"
                 data-testid="booking-done-heading"
                 data-state={confirmState}
               >
@@ -789,7 +851,7 @@ export function BookingFunnel({
                   ? t("done.heading")
                   : t("done.pending")}
               </h1>
-              <p className="text-muted-foreground">
+              <p className="max-w-md text-muted-foreground">
                 {confirmState === "confirmed"
                   ? t("done.sub")
                   : t("done.pendingSub")}
@@ -807,19 +869,43 @@ export function BookingFunnel({
                 ) : null}
               </div>
             ) : null}
-            <p>
-              {selectedMode.mode === "phone"
-                ? t("done.phone", {
-                    phone: maskPhone(toE164(phone, country) ?? phone),
-                  })
-                : selectedMode.mode === "in_person" && selectedMode.location
-                  ? t("done.inPerson", {
-                      location: `${selectedMode.location.name}, ${selectedMode.location.city}`,
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <p className="text-sm text-muted-foreground">{expertName}</p>
+              <p className="font-heading text-lg font-semibold">{offerTitle}</p>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t("summary.when")}</dt>
+                  <dd className="text-right font-medium">{whenLabel}</dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{t("summary.mode")}</dt>
+                  <dd className="text-right font-medium">
+                    {locationCopy ?? t(`modes.${selectedMode.mode}.title`)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">
+                    {t("summary.price")}
+                  </dt>
+                  <dd className="text-right font-medium">
+                    {formatBookingPrice(priceCents, locale)}
+                  </dd>
+                </div>
+              </dl>
+              <p className="mt-4 text-sm text-muted-foreground">
+                {selectedMode.mode === "phone"
+                  ? t("done.phone", {
+                      phone: maskPhone(toE164(phone, country) ?? phone),
                     })
-                  : t("done.video")}
-            </p>
+                  : selectedMode.mode === "in_person" && selectedMode.location
+                    ? t("done.inPerson", {
+                        location: `${selectedMode.location.name}, ${selectedMode.location.city}`,
+                      })
+                    : t("done.video")}
+              </p>
+            </div>
             {confirmState === "confirmed" ? (
-              <>
+              <div className="space-y-3">
                 <div className="flex flex-wrap gap-3">
                   <Button
                     variant="outline"
@@ -863,12 +949,20 @@ export function BookingFunnel({
                   >
                     {t("done.ics")}
                   </Button>
-                  <LinkButton href="/signup">{t("done.activate")}</LinkButton>
+                  <LinkButton
+                    href={`/signup?${new URLSearchParams({
+                      name,
+                      email,
+                      ...(phone ? { phone } : {}),
+                    }).toString()}`}
+                  >
+                    {t("done.activate")}
+                  </LinkButton>
                 </div>
                 <p className="text-sm text-muted-foreground">
                   {t("done.activateHint")}
                 </p>
-              </>
+              </div>
             ) : null}
           </div>
         ) : null}

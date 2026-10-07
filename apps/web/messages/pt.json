@@ -203,8 +203,13 @@
       "email": "Email",
       "phone": "Telemóvel",
       "phoneHint": "Necessário para uma sessão por telefone. Pode incluir o indicativo do país.",
+      "taxId": "NIF / IVA (opcional)",
+      "taxIdHint": "NIF português ou IVA da UE, para faturação quando a emissão abrir.",
+      "promo": "Código promocional (opcional)",
+      "promoHint": "Guardamos o código nesta marcação. Os descontos automáticos ainda não são aplicados.",
       "consentsIntro": "Para marcar uma sessão de saúde nesta plataforma digital de saúde, confirme:",
       "hold": "Continuar para pagamento",
+      "confirmFree": "Confirmar marcação",
       "holding": "A reservar o horário…",
       "consents": {
         "terms": {
@@ -233,7 +238,7 @@
       "pendingError": "O pagamento ainda está pendente. Aguarde um momento e tente novamente."
     },
     "done": {
-      "heading": "Sessão marcada",
+      "heading": "A sua reserva está confirmada",
       "sub": "Guardámos a sua sessão. O email de confirmação está a caminho.",
       "pending": "Pagamento recebido",
       "pendingSub": "Estamos a confirmar a sessão. Recebe um email assim que estiver pronta. A Eleva.care é uma plataforma digital de saúde — quem acompanha continua responsável pelo seu cuidado.",
@@ -259,6 +264,7 @@
       "guestRequired": "Indique o nome e o email para continuar.",
       "consentOutdated": "Reveja os avisos mais recentes e tente novamente.",
       "consentsRequired": "Confirme os três avisos para continuar.",
+      "taxIdInvalid": "Indique um NIF ou IVA válido (só letras e números, 8–32 caracteres).",
       "confirmFailed": "O pagamento passou, mas ainda não confirmámos a sessão. Tente novamente.",
       "confirmMismatch": "Este pagamento não corresponde ao horário reservado. Se foi cobrado, contacte o suporte.",
       "generic": "Não foi possível reservar esse horário. Tente novamente.",

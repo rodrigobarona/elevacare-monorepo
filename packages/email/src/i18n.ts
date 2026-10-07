@@ -3,9 +3,10 @@ export type EmailLocale = "en" | "pt" | "es"
 const translations = {
   en: {
     booking: {
-      confirmedTitle: "New Booking Confirmed",
+      greeting: (name: string) => `Hello ${name},`,
+      confirmedTitle: "Booking confirmed",
       confirmedSubtitle:
-        "A new session has been booked. The calendar invite is attached.",
+        "Your session is booked. The calendar invite is attached.",
       rescheduledTitle: "Booking Rescheduled",
       rescheduledSubtitle:
         "A session has been rescheduled. The updated calendar invite is attached.",
@@ -91,16 +92,24 @@ const translations = {
       payoutPaid: "Payout sent",
       payoutApprovalRequired: "Payout needs approval",
     },
+    modes: {
+      online: "Video",
+      in_person: "In person",
+      phone: "Phone",
+    },
     layout: {
+      tagline: "Care, clearly organized",
+      location: "Eleva Care · Lisbon, Portugal",
       footer:
         "You received this email because you have an active account on Eleva Care.",
     },
   },
   pt: {
     booking: {
-      confirmedTitle: "Nova Marcação Confirmada",
+      greeting: (name: string) => `Olá ${name},`,
+      confirmedTitle: "Marcação confirmada",
       confirmedSubtitle:
-        "Uma nova sessão foi marcada. O convite de calendário está em anexo.",
+        "A sua sessão está marcada. O convite de calendário está em anexo.",
       rescheduledTitle: "Marcação Reagendada",
       rescheduledSubtitle:
         "Uma sessão foi reagendada. O convite de calendário atualizado está em anexo.",
@@ -189,15 +198,23 @@ const translations = {
       payoutPaid: "Pagamento enviado",
       payoutApprovalRequired: "Payout precisa de aprovação",
     },
+    modes: {
+      online: "Vídeo",
+      in_person: "Presencial",
+      phone: "Telefone",
+    },
     layout: {
+      tagline: "Cuidado, organizado com clareza",
+      location: "Eleva Care · Lisboa, Portugal",
       footer: "Recebeu este email porque tem uma conta ativa na Eleva Care.",
     },
   },
   es: {
     booking: {
-      confirmedTitle: "Nueva Reserva Confirmada",
+      greeting: (name: string) => `Hola ${name},`,
+      confirmedTitle: "Reserva confirmada",
       confirmedSubtitle:
-        "Se ha reservado una nueva sesión. La invitación de calendario está adjunta.",
+        "Tu sesión está reservada. La invitación de calendario está adjunta.",
       rescheduledTitle: "Reserva Reprogramada",
       rescheduledSubtitle:
         "Una sesión ha sido reprogramada. La invitación de calendario actualizada está adjunta.",
@@ -287,7 +304,14 @@ const translations = {
       payoutPaid: "Pago enviado",
       payoutApprovalRequired: "El payout necesita aprobación",
     },
+    modes: {
+      online: "Vídeo",
+      in_person: "Presencial",
+      phone: "Teléfono",
+    },
     layout: {
+      tagline: "Cuidado, organizado con claridad",
+      location: "Eleva Care · Lisboa, Portugal",
       footer:
         "Has recibido este correo porque tienes una cuenta activa en Eleva Care.",
     },
@@ -296,6 +320,7 @@ const translations = {
 
 export interface EmailTranslations {
   booking: {
+    greeting: (name: string) => string
     confirmedTitle: string
     confirmedSubtitle: string
     rescheduledTitle: string
@@ -368,7 +393,14 @@ export interface EmailTranslations {
     payoutPaid: string
     payoutApprovalRequired: string
   }
+  modes: {
+    online: string
+    in_person: string
+    phone: string
+  }
   layout: {
+    tagline: string
+    location: string
     footer: string
   }
 }

@@ -1,6 +1,7 @@
-import { Section, Text } from "react-email"
 import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
+import { EmailCard } from "../components/email-card"
+import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import {
   getEmailTranslations,
   type EmailLocale,
@@ -87,32 +88,26 @@ export function InvoiceClosedGateEmail({
 
   return (
     <EmailLayout preview={copy.subject} locale={locale}>
-      <Section className="border-stroke bg-bg rounded-xl border p-8">
-        <Text className="text-fg m-0 mb-1 text-[22px] leading-tight font-semibold tracking-tight">
-          {copy.title}
-        </Text>
-        {name ? (
-          <Text className="text-fg-3 m-0 mb-4 text-[14px] leading-relaxed">
-            {t.invoice.greeting(name)}
-          </Text>
-        ) : null}
-        <Text className="text-fg-3 m-0 mb-6 text-[14px] leading-relaxed">
-          {copy.subtitle}
-        </Text>
+      <EmailHeading>{copy.title}</EmailHeading>
+      {name ? (
+        <EmailBodyText className="mb-[8px]">
+          {t.invoice.greeting(name)}
+        </EmailBodyText>
+      ) : null}
+      <EmailBodyText className="mb-[24px]">{copy.subtitle}</EmailBodyText>
 
-        <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow
-            label={t.labels.status}
-            value={STATUS_LABEL[status][locale]}
-            bold
-          />
-          <DetailRow label={t.labels.reference} value={invoiceId} />
-          <DetailRow
-            label={t.labels.reason}
-            value={reasonForError(t, status, error)}
-          />
-        </Section>
-      </Section>
+      <EmailCard>
+        <DetailRow
+          label={t.labels.status}
+          value={STATUS_LABEL[status][locale]}
+          bold
+        />
+        <DetailRow label={t.labels.reference} value={invoiceId} />
+        <DetailRow
+          label={t.labels.reason}
+          value={reasonForError(t, status, error)}
+        />
+      </EmailCard>
     </EmailLayout>
   )
 }

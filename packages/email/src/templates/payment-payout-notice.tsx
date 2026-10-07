@@ -1,6 +1,7 @@
-import { Section, Text } from "react-email"
 import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
+import { EmailCard } from "../components/email-card"
+import { EmailBodyText, EmailHeading } from "../components/email-heading"
 import {
   getEmailTranslations,
   type EmailLocale,
@@ -70,23 +71,15 @@ export function PaymentPayoutNoticeEmail({
 
   return (
     <EmailLayout preview={copy.subject} locale={locale}>
-      <Section className="border-stroke bg-bg rounded-xl border p-8">
-        <Text className="text-fg m-0 mb-1 text-[22px] leading-tight font-semibold tracking-tight">
-          {copy.title}
-        </Text>
-        {greeting ? (
-          <Text className="text-fg-3 m-0 mb-2 text-[14px] leading-relaxed">
-            {greeting}
-          </Text>
-        ) : null}
-        <Text className="text-fg-3 m-0 mb-6 text-[14px] leading-relaxed">
-          {copy.subtitle}
-        </Text>
-        <Section className="bg-bg-2 rounded-lg p-5">
-          <DetailRow label={t.labels.amount} value={amountFormatted} bold />
-          <DetailRow label={t.labels.reference} value={reference} />
-        </Section>
-      </Section>
+      <EmailHeading>{copy.title}</EmailHeading>
+      {greeting ? (
+        <EmailBodyText className="mb-[8px]">{greeting}</EmailBodyText>
+      ) : null}
+      <EmailBodyText className="mb-[24px]">{copy.subtitle}</EmailBodyText>
+      <EmailCard>
+        <DetailRow label={t.labels.amount} value={amountFormatted} bold />
+        <DetailRow label={t.labels.reference} value={reference} />
+      </EmailCard>
     </EmailLayout>
   )
 }

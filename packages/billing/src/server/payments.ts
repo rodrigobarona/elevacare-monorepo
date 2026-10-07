@@ -43,8 +43,10 @@ const funnelSnapshotSchema = z.object({
       email: z.string().email(),
       name: z.string().min(1),
       phone: z.string().optional(),
+      taxId: z.string().min(8).max(32).optional(),
     })
     .optional(),
+  promoCode: z.string().min(2).max(32).optional(),
 })
 
 export function parseReservationFunnel(value: unknown) {
@@ -571,6 +573,7 @@ async function insertPendingBooking(
     guestEmail: funnel.guest?.email,
     guestName: funnel.guest?.name,
     guestPhone: funnel.guest?.phone,
+    buyerTaxId: funnel.guest?.taxId,
     eventTypeModeId: reservation.eventTypeModeId,
     language: funnel.language,
     memberCountry: funnel.memberCountry,
