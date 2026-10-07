@@ -3,7 +3,13 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { ArrowRightIcon } from "@eleva/icons"
 import { Button } from "@eleva/ui/components/button"
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@eleva/ui/components/progress"
 import {
   SettingsFieldset,
   SettingsFieldsetActions,
@@ -81,10 +87,24 @@ export function OnboardingWizard({
   const showNext =
     completedSteps.includes(activeStep) &&
     steps.indexOf(activeStep) < steps.length - 1
+  const doneCount = steps.filter((step) => completedSteps.includes(step)).length
+  const progressText = t("progress.value", {
+    done: doneCount,
+    total: steps.length,
+  })
 
   return (
     <div className="space-y-6">
-      <nav aria-label="Onboarding steps" className="flex flex-wrap gap-2">
+      <Progress
+        value={doneCount}
+        maxValue={steps.length}
+        valueLabel={progressText}
+        className="gap-2"
+      >
+        <ProgressLabel>{t("progress.label")}</ProgressLabel>
+        <ProgressValue>{() => progressText}</ProgressValue>
+      </Progress>
+      <nav aria-label={t("progress.nav")} className="flex flex-wrap gap-2">
         {steps.map((step, i) => {
           const done = completedSteps.includes(step)
           const isActive = step === activeStep
@@ -94,7 +114,10 @@ export function OnboardingWizard({
               key={step}
               type="button"
               onClick={() => setActiveStep(step)}
-              aria-label={`Step ${i + 1}: ${label}${done ? " (complete)" : ""}`}
+              aria-label={t(done ? "progress.stepDone" : "progress.step", {
+                number: i + 1,
+                label,
+              })}
               aria-current={isActive ? "step" : undefined}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
@@ -166,8 +189,9 @@ export function OnboardingWizard({
         {showNext && (
           <SettingsFieldsetFooter>
             <SettingsFieldsetActions className="ml-auto">
-              <Button variant="outline" size="sm" onClick={handleStepDone}>
-                Next step &rarr;
+              <Button variant="outline" size="sm" onPress={handleStepDone}>
+                {t("progress.next")}
+                <ArrowRightIcon data-icon="inline-end" />
               </Button>
             </SettingsFieldsetActions>
           </SettingsFieldsetFooter>

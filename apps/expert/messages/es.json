@@ -549,6 +549,14 @@
       "tos": "Acepta los términos de servicio de Stripe.",
       "business": "Añade algunos datos de tu consulta.",
       "other": "Completa el resto de datos de Pagos que Stripe está pidiendo."
+    },
+    "progress": {
+      "label": "Progreso de la configuración",
+      "value": "{done} de {total} pasos completados",
+      "nav": "Pasos de la configuración",
+      "step": "Paso {number}: {label}",
+      "stepDone": "Paso {number}: {label} (completado)",
+      "next": "Siguiente paso"
     }
   }
 }

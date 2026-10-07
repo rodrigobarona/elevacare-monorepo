@@ -549,6 +549,14 @@
       "tos": "Accept Stripe's terms of service.",
       "business": "Add a few details about your practice.",
       "other": "Complete the remaining Payments details Stripe is asking for."
+    },
+    "progress": {
+      "label": "Setup progress",
+      "value": "{done} of {total} steps complete",
+      "nav": "Onboarding steps",
+      "step": "Step {number}: {label}",
+      "stepDone": "Step {number}: {label} (complete)",
+      "next": "Next step"
     }
   }
 }
