@@ -31,8 +31,8 @@ test.describe("a11y: public marketplace", () => {
       page,
     }) => {
       test.skip(
-        needsData && process.env.CI === "true" && !process.env.DATABASE_URL,
-        "e2e-smoke has no DATABASE_URL"
+        needsData && !process.env.DATABASE_URL,
+        "needs DATABASE_URL (seeded marketplace)"
       )
       const res = await page.goto(path)
       expect(res?.status()).toBe(200)
