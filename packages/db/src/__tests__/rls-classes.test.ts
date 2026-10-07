@@ -12,6 +12,8 @@ import {
 } from "../rls/classes"
 import {
   TENANT_TABLES,
+  DELEGATE_VISIBLE_TABLES,
+  STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
   INBOX_TABLES,
   SERVICE_ONLY_TABLES,
@@ -382,6 +384,8 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
       try {
         const managed = new Set<string>([
           ...TENANT_TABLES,
+          ...DELEGATE_VISIBLE_TABLES,
+          ...STAFF_ONLY_TABLES,
           ...OWNER_USER_TABLES,
           ...INBOX_TABLES,
           ...SERVICE_ONLY_TABLES,
@@ -438,7 +442,18 @@ describe.skipIf(!enabled || !databaseUrl)("rls-classes", () => {
           const serviceOnlyTables = new Set<string>(SERVICE_ONLY_TABLES)
           const deliveryTables = new Set<string>(DELIVERY_TABLES)
           const complianceTables = new Set<string>(COMPLIANCE_WORKFLOW_TABLES)
-          if (ownerUserTables.has(row.table)) {
+          const staffOnlyTables = new Set<string>(STAFF_ONLY_TABLES)
+          const delegateVisibleTables = new Set<string>(DELEGATE_VISIBLE_TABLES)
+          if (staffOnlyTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.platform_admin")
+            expect(combined, row.table).not.toContain("eleva.org_id")
+            expect(combined, row.table).not.toContain("eleva.user_id")
+          } else if (delegateVisibleTables.has(row.table)) {
+            expect(combined, row.table).toContain("eleva.org_id")
+            expect(combined, row.table).toContain("eleva.user_id")
+            expect(combined, row.table).toContain("org_id")
+            expect(combined, row.table).toContain("user_id")
+          } else if (ownerUserTables.has(row.table)) {
             expect(combined, row.table).toContain("eleva.user_id")
             expect(combined, row.table).toContain("user_id")
             expect(combined, row.table).not.toContain("eleva.org_id")

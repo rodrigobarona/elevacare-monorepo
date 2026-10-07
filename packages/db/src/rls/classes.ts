@@ -103,6 +103,11 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
     insertClass: "owner-user-visible",
   },
   { table: "sessions", class: "participant-visible" },
+  // Writes stay tenant-owned. Delegates get a SELECT-only user_id branch
+  // via session_participants_participant_read — not a new handbook class.
+  { table: "session_participants", class: "tenant-owned" },
+  { table: "session_note_drafts", class: "tenant-owned" },
+  { table: "daily_webhook_events", class: "staff-only" },
   { table: "billing_customers", class: "tenant-owned" },
   { table: "billing_subscriptions", class: "tenant-owned" },
   { table: "org_data_keys", class: "tenant-owned" },
@@ -127,7 +132,8 @@ export type RlsClassFixture = {
 /**
  * One fixture per class. Classes with a current un-split table use that
  * table. Split-predicate tables (`public_handles`, `audit_events`) cannot
- * prove a single class, so `staff-only` stays on `_rls_fixture_staff_only`.
+ * prove a single class. `daily_webhook_events` is the un-split staff-only
+ * table.
  * FK-heavy tables (`bookings`, `sessions`, `expert_listings`) still get a
  * real-table existence check; their predicate is proven on a same-shape
  * synthetic table so the suite does not have to seed the full booking graph.
@@ -141,7 +147,7 @@ export const RLS_CLASS_FIXTURES: readonly RlsClassFixture[] = [
     synthetic: false,
   },
   { class: "participant-visible", table: "sessions", synthetic: false },
-  { class: "staff-only", table: "_rls_fixture_staff_only", synthetic: true },
+  { class: "staff-only", table: "daily_webhook_events", synthetic: false },
   { class: "public-read", table: "expert_listings", synthetic: false },
   { class: "service-only", table: "audit_outbox", synthetic: false },
 ]

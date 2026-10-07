@@ -14,7 +14,8 @@
     "./subscribers": "./src/subscribers/index.ts",
     "./payments": "./src/payments/index.ts",
     "./invoicing": "./src/invoicing/index.ts",
-    "./notifications": "./src/notifications/index.ts"
+    "./notifications": "./src/notifications/index.ts",
+    "./video": "./src/video/index.ts"
   },
   "scripts": {
     "lint": "eslint .",
@@ -32,6 +33,7 @@
     "@eleva/email": "workspace:*",
     "@eleva/notifications": "workspace:*",
     "@eleva/scheduling": "workspace:*",
+    "@eleva/video": "workspace:*",
     "@eleva/observability": "workspace:*",
     "@upstash/qstash": "^2.11.0",
     "drizzle-orm": "catalog:",

@@ -4,6 +4,8 @@ import {
   buildAuditRlsStatements,
   buildMainRlsStatements,
   TENANT_TABLES,
+  DELEGATE_VISIBLE_TABLES,
+  STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
   INBOX_TABLES,
   SERVICE_ONLY_TABLES,
@@ -53,6 +55,43 @@ describe("buildMainRlsStatements", () => {
     expect(read).toContain(
       "counterparty_org_id::text = current_setting('eleva.org_id', true)"
     )
+  })
+
+  it("lets delegates read their own session_participants row", () => {
+    for (const table of DELEGATE_VISIBLE_TABLES) {
+      expect(stmts).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    }
+    const write = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_participants_tenant_isolation")
+    )
+    const read = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_participants_participant_read")
+    )
+    expect(write).toContain(
+      "USING (org_id::text = current_setting('eleva.org_id', true))"
+    )
+    expect(write).toContain(
+      "WITH CHECK (org_id::text = current_setting('eleva.org_id', true))"
+    )
+    expect(write).not.toContain("eleva.user_id")
+    expect(read).toContain("FOR SELECT")
+    expect(read).toContain(
+      "user_id::text = current_setting('eleva.user_id', true)"
+    )
+    expect(read).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
+    )
+  })
+
+  it("keeps daily_webhook_events staff-only", () => {
+    for (const table of STAFF_ONLY_TABLES) {
+      expect(stmts).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
+    }
+    const policy = stmts.find((s) =>
+      s.startsWith("CREATE POLICY daily_webhook_events_staff_only")
+    )
+    expect(policy).toContain("eleva.platform_admin")
+    expect(policy).not.toContain("eleva.org_id")
   })
 
   it("omits the counterparty predicate for non-dual tables", () => {

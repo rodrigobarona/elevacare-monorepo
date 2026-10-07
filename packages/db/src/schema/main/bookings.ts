@@ -83,9 +83,24 @@ export const consentKindEnum = pgEnum("consent_kind", [
 export const sessionStatusEnum = pgEnum("session_status", [
   "scheduled",
   "in_progress",
+  "live",
   "completed",
+  "ended",
   "cancelled",
   "no_show",
+  "room_unresolved",
+])
+
+export const sessionAttendanceEnum = pgEnum("session_attendance", [
+  "both",
+  "expert_only",
+  "member_only",
+  "nobody",
+])
+
+export const sessionParticipantRoleEnum = pgEnum("session_participant_role", [
+  "delegate",
+  "supervisor",
 ])
 
 /** Guest PII is copied onto bookings then scrubbed from this snapshot. */
@@ -357,6 +372,13 @@ export const bookings = pgTable(
   })
 )
 
+export type SessionParticipantHistory = {
+  role: "expert" | "member" | "delegate" | "supervisor"
+  userId?: string
+  joinedAt: string
+  leftAt?: string
+}
+
 /**
  * Operational meeting record. Grows after the booking is made with
  * session-specific data (Daily room, transcript, notes, reports).
@@ -398,6 +420,40 @@ export const sessions = pgTable(
     /** Daily.co room details (populated on booking confirmation). */
     dailyRoomUrl: text("daily_room_url"),
     dailyRoomName: varchar("daily_room_name", { length: 255 }),
+    attendance: sessionAttendanceEnum("attendance"),
+    participants: jsonb("participants")
+      .$type<SessionParticipantHistory[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
+    roomCreatedAt: timestamp("room_created_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    roomCreateAttemptAt: timestamp("room_create_attempt_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    roomCreateLeaseUntil: timestamp("room_create_lease_until", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    roomAttemptSeq: integer("room_attempt_seq").notNull().default(0),
+    roomFingerprintExp: timestamp("room_fingerprint_exp", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    lastEventAt: timestamp("last_event_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    startedAt: timestamp("started_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
+    endedAt: timestamp("ended_at", {
+      withTimezone: true,
+      mode: "date",
+    }),
 
     /** External calendar event ID for the destination calendar write. */
     calendarEventId: varchar("calendar_event_id", { length: 255 }),
@@ -418,7 +474,13 @@ export const sessions = pgTable(
   },
   (t) => ({
     orgIdx: index("sessions_org_idx").on(t.orgId),
-    bookingIdx: index("sessions_booking_idx").on(t.bookingId),
+    bookingIdx: uniqueIndex("sessions_booking_uidx").on(t.bookingId),
+    roomNameIdx: uniqueIndex("sessions_daily_room_name_uidx")
+      .on(t.dailyRoomName)
+      .where(sql`daily_room_name IS NOT NULL`),
+    fingerprintIdx: uniqueIndex("sessions_room_fingerprint_exp_uidx")
+      .on(t.roomFingerprintExp)
+      .where(sql`room_fingerprint_exp IS NOT NULL`),
     expertIdx: index("sessions_expert_idx").on(t.expertProfileId),
     memberIdx: index("sessions_member_idx").on(t.memberUserId),
     timeIdx: index("sessions_time_idx").on(t.startsAt),
@@ -585,3 +647,7 @@ export type BookingStatus = (typeof bookingStatusEnum.enumValues)[number]
 export type SlotReservationStatus =
   (typeof slotReservationStatusEnum.enumValues)[number]
 export type SessionStatus = (typeof sessionStatusEnum.enumValues)[number]
+export type SessionAttendance =
+  (typeof sessionAttendanceEnum.enumValues)[number]
+export type SessionParticipantRole =
+  (typeof sessionParticipantRoleEnum.enumValues)[number]

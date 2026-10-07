@@ -101,19 +101,48 @@ describe("RLS class taxonomy", () => {
     }
   })
 
-  it("keeps staff-only on a synthetic fixture because public_handles is split", () => {
+  it("keeps session_participants writes tenant-owned and SELECT user-visible", () => {
+    const row = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "session_participants"
+    )
+    expect(row).toEqual({
+      table: "session_participants",
+      class: "tenant-owned",
+    })
+    expect(classPredicateSql("tenant-owned", "session_participants")).toContain(
+      "org_id::text"
+    )
+    expect(
+      classPredicateSql("tenant-owned", "session_participants")
+    ).not.toContain("eleva.user_id")
+    expect(
+      classPredicateSql("owner-user-visible", "session_participants")
+    ).toContain("eleva.user_id")
+    expect(
+      classPredicateSql("owner-user-visible", "session_participants")
+    ).not.toContain("eleva.org_id")
+  })
+
+  it("uses daily_webhook_events as the un-split staff-only fixture", () => {
     const handles = RLS_TABLE_ASSIGNMENTS.find(
       (item) => item.table === "public_handles"
     )
     expect(handles?.class).toBe("staff-only")
     expect(handles?.selectClass).toBe("public-read")
+    const webhooks = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "daily_webhook_events"
+    )
+    expect(webhooks).toEqual({
+      table: "daily_webhook_events",
+      class: "staff-only",
+    })
     const fixture = RLS_CLASS_FIXTURES.find(
       (item) => item.class === "staff-only"
     )
     expect(fixture).toEqual({
       class: "staff-only",
-      table: "_rls_fixture_staff_only",
-      synthetic: true,
+      table: "daily_webhook_events",
+      synthetic: false,
     })
   })
 

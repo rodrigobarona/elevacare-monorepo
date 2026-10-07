@@ -2,6 +2,10 @@ import type { DomainEventSubscriber } from "../domain-events"
 import { handleCalendarSync } from "./calendar-sync"
 import { activateGuestBooking } from "./guest-activation"
 import { handleSendNotification } from "./send-notification"
+import {
+  deleteSessionRoom,
+  ensureSessionRoom,
+} from "../video/ensure-session-room"
 
 function requiredString(value: unknown, field: string): string {
   if (typeof value !== "string" || value.length === 0) {
@@ -43,6 +47,22 @@ export function defaultDomainEventSubscribers(): Record<
         await handleCalendarSync(event)
       } catch (err) {
         console.error("[calendar-sync] subscriber failed", event.id, err)
+        throw err
+      }
+    },
+    "ensure-session-room": async (event) => {
+      const bookingId = event.payload.bookingId
+      if (typeof bookingId !== "string" || bookingId.length === 0) {
+        throw new Error("ensure-session-room: missing payload field bookingId")
+      }
+      try {
+        if (event.type === "booking.cancelled") {
+          await deleteSessionRoom(bookingId)
+          return
+        }
+        await ensureSessionRoom(bookingId)
+      } catch (err) {
+        console.error("[ensure-session-room] subscriber failed", event.id, err)
         throw err
       }
     },

@@ -93,6 +93,7 @@ export {
   bookingNotificationIdempotencyKey,
   emitBookingNotificationEvent,
 } from "./emit-domain-event"
+export { ensureSessionRow } from "./ensure-session-row"
 export type {
   BookingNotificationEventType,
   BookingNotificationPayload,

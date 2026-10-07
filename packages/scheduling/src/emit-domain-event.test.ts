@@ -58,6 +58,11 @@ describe("booking notification events", () => {
         status: "pending",
         eventId: "evt-1",
       }),
+      expect.objectContaining({
+        subscriberId: "ensure-session-room",
+        status: "pending",
+        eventId: "evt-1",
+      }),
     ])
   })
 

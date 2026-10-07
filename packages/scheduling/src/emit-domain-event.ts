@@ -12,6 +12,7 @@ export type BookingNotificationEventType =
 
 export const SEND_NOTIFICATION_SUBSCRIBER = "send-notification" as const
 export const CALENDAR_SYNC_SUBSCRIBER = "calendar-sync" as const
+export const ENSURE_SESSION_ROOM_SUBSCRIBER = "ensure-session-room" as const
 
 export type BookingNotificationPayload = {
   bookingId: string
@@ -143,14 +144,16 @@ export async function emitBookingNotificationEvent(
   await tx
     .insert(main.domainEventDeliveries)
     .values(
-      [SEND_NOTIFICATION_SUBSCRIBER, CALENDAR_SYNC_SUBSCRIBER].map(
-        (subscriberId) => ({
-          orgId: input.orgId,
-          eventId,
-          subscriberId,
-          status: "pending" as const,
-        })
-      )
+      [
+        SEND_NOTIFICATION_SUBSCRIBER,
+        CALENDAR_SYNC_SUBSCRIBER,
+        ENSURE_SESSION_ROOM_SUBSCRIBER,
+      ].map((subscriberId) => ({
+        orgId: input.orgId,
+        eventId,
+        subscriberId,
+        status: "pending" as const,
+      }))
     )
     .onConflictDoNothing()
 

@@ -7,6 +7,7 @@ import {
   type Tx,
 } from "@eleva/db"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { ensureSessionRow } from "./ensure-session-row"
 import { emitPaymentFailedEvent } from "./emit-payment-event"
 import { hashReservationToken } from "./reservation-token"
 import { timingSafeEqual } from "node:crypto"
@@ -238,6 +239,16 @@ export async function confirmBookingPayment(
           orgId: reservation.orgId,
           bookingId: booking.id,
           reservationId: reservation.id,
+        })
+        await ensureSessionRow(tx, {
+          id: booking.id,
+          orgId: reservation.orgId,
+          eventTypeId: booking.eventTypeId,
+          expertProfileId: booking.expertProfileId,
+          memberUserId: memberId,
+          startsAt: booking.startsAt,
+          endsAt: booking.endsAt,
+          sessionMode: booking.sessionMode,
         })
         await emitBookingNotificationEvent(tx, {
           orgId: reservation.orgId,

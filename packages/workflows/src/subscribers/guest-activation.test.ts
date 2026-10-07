@@ -18,6 +18,10 @@ const {
   innerJoinLimit: vi.fn(),
 }))
 
+vi.mock("../video/ensure-session-room", () => ({
+  ensureSessionRoom: vi.fn(),
+}))
+
 vi.mock("@eleva/db", () => ({
   auth: {
     user: { id: "id", name: "name", email: "email" },
@@ -70,6 +74,7 @@ vi.mock("@eleva/compliance", () => ({
 }))
 
 import { activateGuestBooking } from "./guest-activation"
+import { ensureSessionRoom } from "../video/ensure-session-room"
 
 describe("activateGuestBooking consent re-key", () => {
   beforeEach(() => {
@@ -164,5 +169,6 @@ describe("activateGuestBooking consent re-key", () => {
       id: "user-1",
       name: "Ada",
     })
+    expect(ensureSessionRoom).toHaveBeenCalledWith("booking-1")
   })
 })
