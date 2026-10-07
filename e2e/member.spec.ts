@@ -205,11 +205,13 @@ test.describe("member Space journey", () => {
       // load through the gateway guarantees /sessions/[id] hits the app.
       const detailHref = await detail.getAttribute("href")
       expect(detailHref).toMatch(/\/sessions\/[a-f0-9-]+/)
-      await page.goto(
-        detailHref!.startsWith("http") ? detailHref! : `${webUrl}${detailHref}`
-      )
+      const detailUrl = detailHref!.startsWith("http")
+        ? detailHref!
+        : `${webUrl}${detailHref}`
+      await page.goto(detailUrl)
       await assertHealthConsentBlockedWhileBooked(page, request)
       await assertPaymentsListShowsBooking(page, request, spaceSlug, bookingId!)
+      await page.goto(detailUrl)
       const cancel = page.getByTestId("member-cancel-session")
       await expect(cancel).toBeVisible({ timeout: 20_000 })
       await expect(cancel).toBeEnabled()

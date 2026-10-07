@@ -62,10 +62,17 @@ test.describe("expert offer — public funnel modes", () => {
     expect(response?.status()).toBe(200)
 
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
-    await expect(page.getByTestId("booking-mode-cards")).toBeVisible()
-    expect(
-      await page.getByTestId("booking-mode-option").count()
-    ).toBeGreaterThan(0)
+    // A single bookable mode skips the meet step straight to the time picker.
+    const modeCards = page.getByTestId("booking-mode-cards")
+    const whenHeading = page.getByTestId("booking-when-heading")
+    await expect(modeCards.or(whenHeading)).toBeVisible()
+    if (await modeCards.isVisible()) {
+      expect(
+        await page.getByTestId("booking-mode-option").count()
+      ).toBeGreaterThan(0)
+    } else {
+      expect(seeded.modes.filter((m) => m.active !== false)).toHaveLength(1)
+    }
   })
 
   test("seeded fisiomota / follow-up exposes multiple in-person modes", async ({
