@@ -21,17 +21,18 @@ the running product can be shown to accounting and legal. This file is the
 
 ## Position (show this to legal)
 
-| Claim                                      | Stamp                                      |
-| ------------------------------------------ | ------------------------------------------ |
-| Daily is the only video vendor (ADR-018)   | Active                                     |
-| HIPAA-enabled Daily domain                 | **Not used**                               |
-| Daily BAA / DPA executed                   | **No**                                     |
-| Product is HIPAA compliant                 | **No — do not say this**                   |
-| Recording / transcripts                    | **Off** (Phase 16.8 + D-08 still required) |
-| EU media residency as Eleva-controlled     | **No stronger claim than Daily's docs**    |
-| `/trust` and legal pages                   | Stay draft-bannered until D-12             |
-| Online rooms for confirmed `mode = online` | Phase 09 engineering may proceed           |
-| Phone / in-person bookings reach Daily     | Never                                      |
+| Claim                                      | Stamp                                           |
+| ------------------------------------------ | ----------------------------------------------- |
+| Daily is the only video vendor (ADR-018)   | Active                                          |
+| HIPAA-enabled Daily domain                 | **Not used**                                    |
+| Daily BAA / DPA executed                   | **No**                                          |
+| Product is HIPAA compliant                 | **No — do not say this**                        |
+| Recording / transcripts                    | **Off** (Phase 16.8 + D-08 still required)      |
+| EU media residency as Eleva-controlled     | **No stronger claim than Daily's docs**         |
+| `/trust` and legal pages                   | Stay draft-bannered until D-12                  |
+| Online rooms for confirmed `mode = online` | Phase 09 engineering may proceed                |
+| Production PHI-video on Daily              | **Blocked** until D-07 (not only a HIPAA claim) |
+| Phone / in-person bookings reach Daily     | Never                                           |
 
 ## Account mode for Phase 09
 

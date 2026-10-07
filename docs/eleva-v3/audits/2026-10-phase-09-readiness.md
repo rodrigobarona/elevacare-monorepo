@@ -11,14 +11,14 @@ tax or legal gates.
 
 ## Human gates (founder / DPO / legal / accountant)
 
-| Gate                                     | Owner                | State        | What closes it                                                                                                                          |
-| ---------------------------------------- | -------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| D-07 Daily HIPAA domain + BAA/DPA        | Founder + DPO        | **Deferred** | Executed BAA/DPA + HIPAA domain, if the founder later wants a HIPAA / PHI-video claim. Not required to build Phase 09.                  |
-| FT POST / Comunicação / `invoice.issued` | Founder + accountant | **Open**     | Tax and issuance gates open, or a founder waiver that **names** FT POST, Comunicação and `invoice.issued`. **Not named** on 2026-10-07. |
-| D-06 Strict policy legal review (PT)     | Legal                | **Open**     | Legal sign-off on the Strict tier; expert cancel and no-show stay out of scope until then                                               |
-| D-12 legal / trust pages                 | Legal + DPO          | **Open**     | Final copy; pages stay draft-bannered until then                                                                                        |
-| Twilio IE1 Auth Token                    | Founder              | **Open**     | IE1 credentials before any EU SMS residency claim (US1 Trial smoke passed 2026-09-25)                                                   |
-| Phase 04B human evidence                 | Founder              | Waived       | Waived 2026-09-25. Stamp as waived/unproven, never as proven                                                                            |
+| Gate                                     | Owner                | State        | What closes it                                                                                                                                                                                                |
+| ---------------------------------------- | -------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D-07 Daily HIPAA domain + BAA/DPA        | Founder + DPO        | **Deferred** | Executed BAA/DPA + HIPAA domain before **production PHI-video processing** (clinical sessions on Daily), not only a HIPAA claim. Not required to build Phase 09 or to demo standard Daily with recording off. |
+| FT POST / Comunicação / `invoice.issued` | Founder + accountant | **Open**     | Tax and issuance gates open, or a founder waiver that **names** FT POST, Comunicação and `invoice.issued`. **Not named** on 2026-10-07.                                                                       |
+| D-06 Strict policy legal review (PT)     | Legal                | **Open**     | Legal sign-off on the Strict tier; expert cancel and no-show stay out of scope until then                                                                                                                     |
+| D-12 legal / trust pages                 | Legal + DPO          | **Open**     | Final copy; pages stay draft-bannered until then                                                                                                                                                              |
+| Twilio IE1 Auth Token                    | Founder              | **Open**     | IE1 credentials before any EU SMS residency claim (US1 Trial smoke passed 2026-09-25)                                                                                                                         |
+| Phase 04B human evidence                 | Founder              | Waived       | Waived 2026-09-25. Stamp as waived/unproven, never as proven                                                                                                                                                  |
 
 ## Engineering prerequisites
 

@@ -269,16 +269,21 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) ->
    POST /meeting-tokens { properties: { room_name (ALWAYS set), user_id, user_name,
    is_owner, exp, eject_at_token_exp: true, enable_recording: false } }; deleteRoom(name);
-   getRoom(name). ensureSessionRoom: if sessions.daily_room_name is set, GET that room and
-   return; else GET /rooms/eleva-{bookingId} — 200 adopt it; 404 POST createSessionRoom;
-   409/already-exists GET again and adopt. Two concurrent calls must not create two rooms
-   (lease on sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
+   getRoom(name). ensureSessionRoom (named-room GET-or-create + repair): target name is
+   always eleva-{bookingId}; expected nbf/exp = startAt-15m / endAt+30m. GET the stored
+   name or GET /rooms/{name}. 200 with matching nbf/exp -> persist and return. 200 with
+   stale window (reschedule) -> POST /rooms/{name} update properties nbf/exp (keep the
+   name), persist. 404 / expired / gone -> POST createSessionRoom with the same name
+   (409 -> GET again and adopt or update). Never adopt a room whose window does not
+   match the current booking. Two concurrent calls must not create two rooms (lease on
+   sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
    <ElevaCall roomUrl token onLeft /> on DailyProvider + daily-react: prejoin, waiting,
    controls (mic, camera, screenshare, chat, leave), post-call; expert notes slot (Phase
    10). webhooks.ts: verifyDailyWebhook HMAC, typed meeting.started/ended,
    participant.joined/left. Tests: named-room option builder, token always has room_name,
-   GET-or-create idempotency, 409 adopt, lease blocks a second POST, deleteRoom 404 =
-   success. Orphan sweep: private rooms older than 10 min whose name is not in
+   GET-or-create idempotency, 409 adopt, stale nbf/exp after reschedule updates in
+   place, 404 on a stored name recreates the same name, lease blocks a second POST,
+   deleteRoom 404 = success. Orphan sweep: private rooms older than 10 min whose name is not in
    sessions.daily_room_name and whose exp is in the future are deleted.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,

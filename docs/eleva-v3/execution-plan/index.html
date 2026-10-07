@@ -431,9 +431,9 @@ that does not depend on it, then stops at the gated PR and reports the missing e
 </tr>
 <tr>
 <td>D-07</td>
-<td>Daily HIPAA domain + BAA/DPA, EU processing position. <strong>Deferred 2026-10-07</strong> (no BAA, no HIPAA claim). Phase 09 uses standard Daily.</td>
+<td>Daily HIPAA domain + BAA/DPA, EU processing position. <strong>Deferred 2026-10-07</strong> (no BAA, no HIPAA claim). Phase 09 engineering uses standard Daily.</td>
 <td>founder + DPO</td>
-<td>HIPAA / PHI-video production claim only — not Phase 09 engineering</td>
+<td>Production PHI-video processing (clinical sessions on Daily) — not Phase 09 engineering or accountant/legal demo</td>
 </tr>
 <tr>
 <td>D-08</td>
@@ -5479,7 +5479,7 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 the API types and the state machine), <code>attendance</code> nullable (<code>both|expert_only|member_only|nobody</code>,
 derived from the full ordered participant history by <code>finalizeAttendance</code> after
 <code>meeting.ended</code> and re-derived by later correction runs when late participant events arrive —
-see the state machine below),   <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
+see the state machine below), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
 <code>room_fingerprint_exp</code> (nullable UNIQUE; <strong>unused until D-07</strong>. Standard Daily uses
 <code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
 nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), <code>last_event_at</code>,
@@ -5708,16 +5708,21 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) -&gt;
    POST /meeting-tokens { properties: { room_name (ALWAYS set), user_id, user_name,
    is_owner, exp, eject_at_token_exp: true, enable_recording: false } }; deleteRoom(name);
-   getRoom(name). ensureSessionRoom: if sessions.daily_room_name is set, GET that room and
-   return; else GET /rooms/eleva-{bookingId} — 200 adopt it; 404 POST createSessionRoom;
-   409/already-exists GET again and adopt. Two concurrent calls must not create two rooms
-   (lease on sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
+   getRoom(name). ensureSessionRoom (named-room GET-or-create + repair): target name is
+   always eleva-{bookingId}; expected nbf/exp = startAt-15m / endAt+30m. GET the stored
+   name or GET /rooms/{name}. 200 with matching nbf/exp -&gt; persist and return. 200 with
+   stale window (reschedule) -&gt; POST /rooms/{name} update properties nbf/exp (keep the
+   name), persist. 404 / expired / gone -&gt; POST createSessionRoom with the same name
+   (409 -&gt; GET again and adopt or update). Never adopt a room whose window does not
+   match the current booking. Two concurrent calls must not create two rooms (lease on
+   sessions.room_create_lease_until, 60 s). Never send properties.meta. Client:
    &lt;ElevaCall roomUrl token onLeft /&gt; on DailyProvider + daily-react: prejoin, waiting,
    controls (mic, camera, screenshare, chat, leave), post-call; expert notes slot (Phase
    10). webhooks.ts: verifyDailyWebhook HMAC, typed meeting.started/ended,
    participant.joined/left. Tests: named-room option builder, token always has room_name,
-   GET-or-create idempotency, 409 adopt, lease blocks a second POST, deleteRoom 404 =
-   success. Orphan sweep: private rooms older than 10 min whose name is not in
+   GET-or-create idempotency, 409 adopt, stale nbf/exp after reschedule updates in
+   place, 404 on a stored name recreates the same name, lease blocks a second POST,
+   deleteRoom 404 = success. Orphan sweep: private rooms older than 10 min whose name is not in
    sessions.daily_room_name and whose exp is in the future are deleted.
 2. packages/db: sessions (id, booking_id unique FK, expert_org_id, buyer_org_id, daily_room_name
    unique, daily_room_url, status scheduled|live|ended|no_show|cancelled|room_unresolved,
