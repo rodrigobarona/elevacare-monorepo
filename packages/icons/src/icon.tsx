@@ -5,6 +5,7 @@ import type {
   IconProps as PhosphorIconProps,
   Icon,
 } from "@phosphor-icons/react/lib"
+import { DUOTONE_SECONDARY_COLOR } from "./presets"
 
 export type ElevaIconWeight = PhosphorIconProps["weight"]
 
@@ -13,8 +14,6 @@ export interface ElevaIconProps extends Omit<PhosphorIconProps, "ref"> {
   /** Secondary duotone layer — applied via CSS (Phosphor has no duotoneColor prop). */
   duotoneColor?: string
 }
-
-const DEFAULT_DUOTONE_SECONDARY = "var(--color-teal-300)"
 
 /** Phosphor duotone secondary paths use opacity 0.2; restyle without invalid DOM attrs. */
 const DUOTONE_SECONDARY_CLASS =
@@ -31,7 +30,7 @@ function cn(...classes: (string | false | undefined)[]) {
 export function ElevaIcon({
   icon: IconComponent,
   weight = "regular",
-  duotoneColor = DEFAULT_DUOTONE_SECONDARY,
+  duotoneColor = DUOTONE_SECONDARY_COLOR,
   className,
   style,
   ...props

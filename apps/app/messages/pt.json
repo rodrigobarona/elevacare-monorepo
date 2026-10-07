@@ -56,6 +56,15 @@
     "rescheduled": "Sessão reagendada.",
     "policyTooLate": "Esta sessão já não pode ser cancelada nem reagendada aqui.",
     "receipt": "Recibo",
+    "invoice": "Fatura",
+    "invoiceNumber": "N.º {number}",
+    "invoiceStatus": {
+      "pending": "Em preparação",
+      "issued": "Emitida",
+      "failed": "Atrasada, estamos a tratar disso",
+      "manual_pending": "Em preparação pelo seu especialista",
+      "manual_issued": "Emitida pelo seu especialista"
+    },
     "modes": {
       "online": "Online",
       "in_person": "Presencial",
