@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from "next-intl/server"
-import { PageHeader } from "@eleva/ui/components/page-header"
-import { resolveGatewayUrl } from "@eleva/config/env"
 import { LinkButton } from "@eleva/ui/components/button"
+import { EmptyState } from "@eleva/ui/components/empty-state"
+import { PageHeader, Section } from "@eleva/ui/components/page-header"
+import { marketplaceExpertsUrl } from "@/lib/experts-url"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { BookingCard, FindExpertButton } from "./_components/booking-card"
 
@@ -23,7 +24,7 @@ export default async function OrgHomePage({
     api.me.listBookings({ range: "upcoming" }),
     api.me.listBookings({ range: "past" }),
   ])
-  const expertsUrl = `${resolveGatewayUrl()}/${locale === "en" ? "experts" : `${locale}/experts`}`
+  const expertsUrl = marketplaceExpertsUrl(locale)
   const memberName = session.user.displayName ?? session.user.email
   const ts = await getTranslations("sessions")
 
@@ -35,15 +36,19 @@ export default async function OrgHomePage({
         actions={<FindExpertButton href={expertsUrl} />}
       />
 
-      <section className="space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="font-medium">{t("upcomingTitle")}</h2>
+      <Section
+        title={t("upcomingTitle")}
+        actions={
           <LinkButton variant="ghost" size="sm" href={`/${orgSlug}/sessions`}>
             {t("viewAll")}
           </LinkButton>
-        </div>
+        }
+      >
         {upcoming.bookings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("upcomingEmpty")}</p>
+          <EmptyState
+            title={t("upcomingEmpty")}
+            action={<FindExpertButton href={expertsUrl} />}
+          />
         ) : (
           <div className="grid gap-4">
             {upcoming.bookings.map((booking) => (
@@ -58,12 +63,11 @@ export default async function OrgHomePage({
           </div>
         )}
         <p className="text-xs text-muted-foreground">{ts("joinSoon")}</p>
-      </section>
+      </Section>
 
-      <section className="space-y-4">
-        <h2 className="font-medium">{t("pastTitle")}</h2>
+      <Section title={t("pastTitle")}>
         {past.bookings.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t("pastEmpty")}</p>
+          <EmptyState title={t("pastEmpty")} />
         ) : (
           <div className="grid gap-4">
             {past.bookings.slice(0, 5).map((booking) => (
@@ -78,7 +82,7 @@ export default async function OrgHomePage({
             ))}
           </div>
         )}
-      </section>
+      </Section>
     </div>
   )
 }
