@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 
 export default async function AcademyHomePage({
   params,
@@ -11,7 +11,7 @@ export default async function AcademyHomePage({
 
   return (
     <>
-      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <p className="text-sm text-muted-foreground">
         {t("comingSoon", { orgSlug })}
       </p>

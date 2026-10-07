@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
   SettingsFieldset,
@@ -14,7 +14,7 @@ export default async function OrganizationsPage() {
 
   return (
     <>
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
       <SettingsFieldset>
         <SettingsFieldsetContent>
           <SettingsFieldsetTitle>{t("title")}</SettingsFieldsetTitle>

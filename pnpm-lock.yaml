@@ -1566,6 +1566,9 @@ importers:
 
   packages/email:
     dependencies:
+      '@eleva/config':
+        specifier: workspace:*
+        version: link:../config
       react:
         specifier: 'catalog:'
         version: 19.2.6

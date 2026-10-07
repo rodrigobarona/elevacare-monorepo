@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
 
 export const dynamic = "force-dynamic"
@@ -15,7 +15,7 @@ export default async function ExpertDashboardPage({
 
   const t = await getTranslations()
   return (
-    <AccountPageHeader
+    <PageHeader
       title={t("dashboard.expert.welcome", {
         name: session.user.displayName ?? session.user.email,
       })}

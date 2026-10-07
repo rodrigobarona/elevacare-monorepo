@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation"
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { guardSessionForOrg } from "@eleva/auth"
 import { getConnectOnboardingState } from "@eleva/billing/server"
 import { getFlag } from "@eleva/flags"
@@ -75,7 +75,7 @@ export default async function OnboardingPage({
 
   return (
     <div className="mx-auto max-w-2xl">
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
 
       <OnboardingWizard
         orgSlug={orgSlug}

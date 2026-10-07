@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { getLocale, getTranslations } from "next-intl/server"
 import { ApiClientError, type ExpertInvoiceStatus } from "@eleva/api-client"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
@@ -98,7 +98,7 @@ export default async function SessionDetailPage({
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader title={title} description={t("detailTitle")} />
+      <PageHeader title={title} description={t("detailTitle")} />
 
       <dl className="grid gap-4 sm:grid-cols-2">
         <div>

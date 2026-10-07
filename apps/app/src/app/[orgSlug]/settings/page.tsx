@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getAuthenticatedLocale } from "@eleva/auth/server"
 import { getServerThemePreference } from "@eleva/dashboard/server-theme"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
@@ -25,7 +25,7 @@ export default async function SettingsPage({
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <SettingsForm
         orgSlug={orgSlug}
         profile={profile}

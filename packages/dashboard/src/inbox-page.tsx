@@ -4,7 +4,7 @@ import { useMemo } from "react"
 import { useTranslations } from "next-intl"
 import useSWR, { useSWRConfig } from "swr"
 import { createApiClient, type ListInboxResponse } from "@eleva/api-client"
-import { AccountPageHeader } from "./account-page-header"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { revalidateInboxCaches } from "./inbox-swr"
 
@@ -41,7 +41,7 @@ export function InboxPage({ apiBaseUrl, orgSlug }: InboxPageProps) {
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader
+      <PageHeader
         title={t("title")}
         description={t("description")}
         actions={

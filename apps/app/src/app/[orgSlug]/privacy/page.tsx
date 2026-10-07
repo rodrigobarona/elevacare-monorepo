@@ -1,6 +1,6 @@
 import { getTranslations } from "next-intl/server"
 import { getPendingAccountDeletion } from "@eleva/compliance"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
 import { PrivacyPanel } from "../_components/privacy-panel"
 
@@ -23,7 +23,7 @@ export default async function PrivacyPage({
 
   return (
     <div className="space-y-8">
-      <AccountPageHeader title={t("title")} description={t("subtitle")} />
+      <PageHeader title={t("title")} description={t("subtitle")} />
       <PrivacyPanel
         orgSlug={orgSlug}
         consents={consents}

@@ -1,4 +1,5 @@
 import "./styles.css"
+import { fontClassName } from "@eleva/ui/fonts"
 
 export const metadata = {
   title: "Eleva.care — Docs",
@@ -11,8 +12,10 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">{children}</body>
+    <html lang="en" className={fontClassName} suppressHydrationWarning>
+      <body className="antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   )
 }

@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server"
-import { AccountPageHeader } from "@eleva/dashboard"
+import { PageHeader } from "@eleva/ui/components/page-header"
 import {
   SettingsFieldset,
   SettingsFieldsetContent,
@@ -16,7 +16,7 @@ export default async function BillingPage() {
 
   return (
     <>
-      <AccountPageHeader title={t("title")} description={t("description")} />
+      <PageHeader title={t("title")} description={t("description")} />
       <SettingsFieldset>
         <SettingsFieldsetContent>
           <SettingsFieldsetTitle>

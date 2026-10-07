@@ -1,5 +1,6 @@
 import "./styles.css"
 import { getLocale } from "next-intl/server"
+import { fontClassName } from "@eleva/ui/fonts"
 
 export default async function RootLayout({
   children,
@@ -9,7 +10,7 @@ export default async function RootLayout({
   const locale = await getLocale()
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} className={fontClassName} suppressHydrationWarning>
       <body className="min-h-dvh antialiased" suppressHydrationWarning>
         {children}
       </body>
