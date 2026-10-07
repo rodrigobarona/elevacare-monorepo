@@ -7,6 +7,7 @@ export {
   requireAuditDbEnv,
   requireStripeEnv,
   requireToconlineEnv,
+  requireDailyEnv,
   requireBlobEnv,
   requireCronSecret,
   resolveMicrosoftOAuth,
@@ -14,6 +15,7 @@ export {
   type Env,
   type RequiredStripeEnv,
   type RequiredToconlineEnv,
+  type RequiredDailyEnv,
 } from "./env"
 export {
   i18nConfig,

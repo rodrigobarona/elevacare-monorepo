@@ -43,5 +43,28 @@ tax or legal gates.
 - `issueInvoice()` stays closed. Do not Comunicar TEST or issue fictitious documents
   for the accountant demo.
 - Legal/trust pages stay draft-bannered for the lawyer review.
-- The member session "Join" button stays disabled until the first Phase 09
-  implementation PR ships join pages.
+- The member session "Join" button stays disabled until a Daily room exists
+  for that booking. Copy must say **standard Daily, not HIPAA**.
+
+## Stakeholder leftovers (TODO, not blockers)
+
+Founder 2026-10-07: show the running product with honest notes. Nothing
+below blocks Phase 09 engineering or a demo. Do not stamp any of these
+closed until the evidence column is real.
+
+| Leftover                                | Who it is for        | State                   | TODO (not a blocker)                                                                                                                                                     |
+| --------------------------------------- | -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Live money / production go-live         | Accountant + founder | Not safe for live money | Staging pay → transfer → payout, then production money. Still **not** a Phase 09 engineering gate.                                                                       |
+| Staging W3 smokes                       | Ops                  | Not run                 | After `0049`/`0050` on staging: auth, funnel, Connect, transfer/refund/dispute, reminders, DSAR, TOConline OAuth (no Comunicação). Loopback cancel refunds already PASS. |
+| Phase 06 evidence                       | Accountant           | Machinery on main       | Live Stripe test-mode pay → transfer → payout on staging.                                                                                                                |
+| Phase 07 issuance                       | Accountant           | Closed by design        | FT POST / Comunicação / `invoice.issued` stay operator-gated. `issueInvoice()` closed.                                                                                   |
+| Phase 08 Twilio EU                      | Legal                | US1 trial PASS          | IE1 Auth Token before any EU SMS residency claim. Quiet hours + ICS **are on main**.                                                                                     |
+| Phase 04B human UX                      | Founder              | Waived / unproven       | Design/OAuth/calendar live proof waived 2026-09-25. Do not call it proven.                                                                                               |
+| AUD-006 fee reconciliation              | Accountant           | Deferred                | Lands when issuance opens.                                                                                                                                               |
+| AUD-007 payout waits for fee invoice    | Accountant           | Waived                  | Flip when `issueInvoice()` opens.                                                                                                                                        |
+| D-07 Daily BAA / HIPAA                  | Lawyer + DPO         | Deferred                | Needed only for production PHI-video. Demo uses standard Daily, recording off.                                                                                           |
+| D-06 Strict PT legal                    | Lawyer               | Open                    | Expert cancel / no-show stay out of scope.                                                                                                                               |
+| D-12 legal / trust copy                 | Lawyer + DPO         | Open                    | Pages stay draft-bannered.                                                                                                                                               |
+| Migrations `0049` / `0050`              | Operator             | Loopback only           | `pnpm db:migrate` on staging then production.                                                                                                                            |
+| Daily account probe                     | Engineering          | PENDING                 | `DAILY_API_KEY` + recording off + webhook before the first live room. `@eleva/video` 09.1 ships the server primitives without a live key.                                |
+| Expert cancel, no-show, custom policies | Product              | Out of scope            | Flexible / Moderate / Strict only.                                                                                                                                       |

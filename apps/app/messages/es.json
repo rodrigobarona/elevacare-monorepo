@@ -40,7 +40,7 @@
     "price": "Precio",
     "addToCalendar": "Añadir al calendario",
     "join": "Unirse a la sesión",
-    "joinSoon": "La videollamada llegará en una fase posterior.",
+    "joinSoon": "El vídeo usa Daily estándar (no es HIPAA). Unirse se activa cuando la sala esté lista. La grabación está desactivada.",
     "icsFailed": "No se pudo descargar el archivo de calendario.",
     "cancel": "Cancelar sesión",
     "reschedule": "Reprogramar",
