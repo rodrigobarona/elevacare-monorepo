@@ -312,6 +312,8 @@ Out: payouts/transfers (Phase 6), emails beyond stubs (Phase 8), video (Phase 9)
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** AUD-002 external busy (#119) and AUD-025 slot release on cancel/reschedule (#154, migration `0050`) are merged. AUD-017 BotID is staged with production `off`. axe and Lighthouse (≥ 90 mobile) pass on `apps/web`, which is light-only. Staging W3 not run. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 - [ ] Explorer lists seeded experts with working filters and pagination; profile renders in
       `pt/en/es`.
 - [ ] Slot picker shows correct slots for an expert in `Europe/Lisbon` viewed from

@@ -98,6 +98,8 @@ Out: any runtime code change (Phase 2+), deleting WorkOS packages (Phase 3).
 
 ## Acceptance criteria
 
+> **Production pass (2026-10-07):** CI hygiene AUD-019/020 (#134) and the OpenAPI coverage test AUD-018 (#135) are merged. No staging evidence needed for this phase. See the [production pass closeout](../../audits/2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).
+
 - [ ] `rg -n "WorkOS" docs/eleva-v3 --glob '!**/decision-log.md' --glob '!**/adrs/**' --glob '!**/execution-plan/**'`
       returns only historical mentions explicitly marked "(removed, see ADR-017)". The execution
       plan is excluded on purpose: its blast-radius section and Phase 3 describe the removal.

@@ -74,7 +74,27 @@ not passed. Severity: **P1** blocks a credible launch, **P2** visibly hurts qual
 Wordmark SVG, verified-expert icon, OG image layout, email header/footer components and voice
 samples. Copy them into `@eleva/ui` / `@eleva/email` in WP2; never import from `_context/`.
 
-## Pending verification (WP5)
+## Status (2026-10-07)
 
-Screenshots per app (light and dark, 375 px and 1280 px), axe checks on every e2e page, and Lighthouse
-on `apps/web` (target ≥ 90). None of these are claimed here.
+| ID     | Status   | PR         | Notes                                                                                                       |
+| ------ | -------- | ---------- | ----------------------------------------------------------------------------------------------------------- |
+| UX-001 | Fixed    | #146       | Shared `loading` / `error` / `not-found` / `global-error` in every app                                      |
+| UX-002 | Fixed    | #143       | Chart tokens use the brand scales                                                                           |
+| UX-003 | Fixed    | #153       | Web and docs root layouts apply the brand fonts                                                             |
+| UX-004 | Fixed    | #148, #149 | Empty and skeleton states on marketplace, member and academy surfaces                                       |
+| UX-005 | Fixed    | #147       | Schedule editor saves with a toast                                                                          |
+| UX-006 | Fixed    | #148       | Avatars use the kit `Avatar`; raw `<img>` and lint suppressions removed                                     |
+| UX-007 | Fixed    | #146–#150  | No hard-coded palette classes left in `apps/expert` or `@eleva/dashboard`                                   |
+| UX-008 | Fixed    | #147       | Native PT/ES workspace copy                                                                                 |
+| UX-009 | **Open** | —          | Settings and expert forms still report errors by toast only. Inline, announced field errors are a follow-up |
+
+Found during WP5 and fixed in #155:
+
+- The header overflowed at 375 px in PT and ES. Below `md` it now shows the brand mark, a "More" menu with the nav links, an icon login and the primary CTA.
+- Profile languages and countries showed raw codes (`pt, en, es`); they now use localized names. The funnel no longer shows raw codes like `fr`.
+- Mode labels repeated once per location (`presencial, presencial, presencial`).
+- Canonical and hreflang URLs were relative (no `metadataBase`). Lighthouse SEO went from 83 to 100 on `/experts` and profiles.
+
+**Follow-up — dark mode on `apps/web`:** the marketing site and booking funnel are light-only. The old "dark home" a11y check passed without testing dark, so it was replaced with a real dark check on account `/login`. Dark mode for `apps/web` is not built. Product apps follow `ELEVA_THEME`.
+
+Evidence (axe, Lighthouse, screenshots) is recorded in [`2026-09-phases-01-08-audit.md`](./2026-09-phases-01-08-audit.md#production-pass-closeout-2026-10-07).

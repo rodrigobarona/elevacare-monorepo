@@ -32,6 +32,24 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-07: Phases 01–08 production pass closeout
+
+- Decision: the production pass (audit fixes, brand v2, UX inventory, evidence) is closed on
+  `main`. Phase 09 does **not** open. D-07, FT POST / Comunicação / `invoice.issued`, D-06,
+  D-12 and Twilio IE1 stay open; the Phase 04B waiver stays waived/unproven.
+- Evidence is loopback only (never Production): auth, member, member:stripe, cancellation
+  smoke, phase06, axe a11y and Lighthouse pass. Staging W3 smokes and staging Stripe
+  test-mode payouts were not run.
+- AUD-025 (cancel/reschedule never freed paid slots) was found during the member e2e run
+  and fixed in #154 with migration `0050`. Operator: run migrations `0049` and `0050` on
+  staging, then production, before the next `apps/api` deploy.
+- Follow-ups recorded, not shipped: dark mode on `apps/web` (light-only today), UX-009
+  inline field errors, the 3 Phase 04B builder fixtures that need an expert session.
+- Owner: engineering (code), operator (migrations, staging evidence). Status: `active`.
+- Reference: [`audits/2026-10-phase-09-readiness.md`](./audits/2026-10-phase-09-readiness.md),
+  [`audits/2026-09-phases-01-08-audit.md`](./audits/2026-09-phases-01-08-audit.md),
+  [`audits/2026-10-ux-inventory.md`](./audits/2026-10-ux-inventory.md)
+
 ### 2026-10-06: BotID rollout is staged, production stays off (AUD-017)
 
 - Decision: BotID is installed but gated by `BOTID_MODE` (`off` by default,
