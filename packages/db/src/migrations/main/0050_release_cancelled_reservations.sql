@@ -26,35 +26,44 @@ WHERE sr."status" = 'converted'
     && tstzrange(b."starts_at", b."ends_at", '[)');
 --> statement-breakpoint
 
+-- Fail before moving anything if the moved ranges would overlap each other or
+-- another live reservation; those rows need manual reconciliation.
+DO $$
+DECLARE
+  conflicts text;
+BEGIN
+  WITH final AS (
+    SELECT sr."id", sr."expert_user_id",
+      CASE WHEN b."id" IS NULL THEN sr."starts_at" ELSE b."starts_at" END AS "starts_at",
+      CASE WHEN b."id" IS NULL THEN sr."ends_at" ELSE b."ends_at" END AS "ends_at",
+      b."id" IS NOT NULL AS "moving"
+    FROM "slot_reservations" AS sr
+    LEFT JOIN "bookings" AS b
+      ON b."reservation_id" = sr."id"
+      AND sr."status" = 'converted'
+      AND b."status" = 'rescheduled'
+      AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at")
+    WHERE sr."status" IN ('active', 'converted')
+  )
+  SELECT string_agg(a."id"::text || '<>' || o."id"::text, ', ') INTO conflicts
+  FROM final AS a
+  JOIN final AS o
+    ON o."expert_user_id" = a."expert_user_id"
+    AND o."id" <> a."id"
+    AND (o."moving" = false OR o."id"::text > a."id"::text)
+    AND tstzrange(o."starts_at", o."ends_at", '[)')
+      && tstzrange(a."starts_at", a."ends_at", '[)')
+  WHERE a."moving";
+  IF conflicts IS NOT NULL THEN
+    RAISE EXCEPTION '0050: rescheduled reservations conflict after the move (%); reconcile them before migrating', conflicts;
+  END IF;
+END $$;
+--> statement-breakpoint
+
 UPDATE "slot_reservations" AS sr
 SET "starts_at" = b."starts_at", "ends_at" = b."ends_at"
 FROM "bookings" AS b
 WHERE b."reservation_id" = sr."id"
   AND sr."status" = 'converted'
   AND b."status" = 'rescheduled'
-  AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at")
-  AND NOT EXISTS (
-    SELECT 1
-    FROM "slot_reservations" AS other
-    WHERE other."id" <> sr."id"
-      AND other."expert_user_id" = sr."expert_user_id"
-      AND other."status" IN ('active', 'converted')
-      AND tstzrange(other."starts_at", other."ends_at", '[)')
-        && tstzrange(b."starts_at", b."ends_at", '[)')
-  );
---> statement-breakpoint
-
-DO $$
-DECLARE
-  stuck integer;
-BEGIN
-  SELECT count(*) INTO stuck
-  FROM "slot_reservations" AS sr
-  JOIN "bookings" AS b ON b."reservation_id" = sr."id"
-  WHERE sr."status" = 'converted'
-    AND b."status" = 'rescheduled'
-    AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at");
-  IF stuck > 0 THEN
-    RAISE NOTICE '0050: % rescheduled reservation(s) overlap another live reservation and were left in place', stuck;
-  END IF;
-END $$;
+  AND (sr."starts_at" <> b."starts_at" OR sr."ends_at" <> b."ends_at");
