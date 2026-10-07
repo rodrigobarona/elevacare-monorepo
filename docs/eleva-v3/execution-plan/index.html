@@ -5711,9 +5711,12 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    eject_at_room_exp: true, enable_knocking: false, lang: from booking locale } }. Do NOT
    omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
    Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
-   DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) -&gt;
-   POST /meeting-tokens { properties: { room_name (ALWAYS set), user_id, user_name,
-   is_owner, exp, eject_at_token_exp: true, enable_recording: false } }; deleteRoom(name);
+   DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
+   a **local HS256 JWT** signed with the Daily API key (room_name ALWAYS set, user_id,
+   user_name, is_owner, exp, eject_at_token_exp, enable_recording false). No REST
+   POST /meeting-tokens at join time — README rule 9: the join transaction may sign
+   locally while holding session_participants FOR UPDATE; vendor POSTs stay outside
+   transactions. deleteRoom(name);
    getRoom(name). ensureSessionRoom (named-room GET-or-create + repair): target name is
    always eleva-{bookingId}; expected nbf/exp = startAt-15m / endAt+30m. GET the stored
    name or GET /rooms/{name}. 200 -&gt; also verify privacy=private, enable_recording
@@ -5772,9 +5775,10 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    sessions.status IN (&#39;scheduled&#39;,&#39;live&#39;) else 410 SESSION_NOT_ACTIVE (checked BEFORE the window
    and before any Daily call — a cancelled session never mints even when deleteRoom failed; test:
    cancel with deleteRoom mocked to fail -&gt; join 410, the room-cleanup retry later succeeds); window
-   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; mints token with exp = min(now+2h,
+   [startAt-15m, endAt+30m] else 403 SESSION_NOT_OPEN; after the FOR UPDATE auth
+   check, signs the meeting token **locally** (no Daily HTTP) with exp = min(now+2h,
    endAt+30m) (boundary test: mint at endAt+29m59s -&gt; token exp = endAt+30m exactly);
-   audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify
+   audited session.joined; rate limit 10/min/user) and POST /webhooks/daily (verify)
    signature -&gt; 401 on failure; idempotency table daily_webhook_events keyed by event id; stale
    guard: apply only when payload event time &gt; sessions.last_event_at, status transitions are
    monotonic scheduled -&gt; live -&gt; ended; test the sequence meeting.ended then a delayed

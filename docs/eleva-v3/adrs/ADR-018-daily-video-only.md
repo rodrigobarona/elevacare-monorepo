@@ -86,12 +86,14 @@ domain**:
 
 ## Consequences
 
-- Positive: one video vendor, one BAA, one webhook, one join UX; calendars stay calendars.
+- Positive: one video vendor, one webhook, one join UX; calendars stay calendars. A Daily
+  BAA is **future D-07 work**, not a Phase 09 consequence.
 - Tradeoff: Eleva operates room lifecycle and token minting; Daily account pre-check is a
-  spike (PR 09.0) before Phase 9 implementation.
-- Operational: `DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET` required; DNS CNAME
-  `sessions.eleva.care` → Daily (Phase 15 C.0). Recording storage is explicitly **not** decided
-  here — see D-08 / 16.8.
+  spike (PR 09.0). The written 09.0 position exists; the live-account probe is still
+  required before the first live room.
+- Operational: `DAILY_API_KEY`, `DAILY_DOMAIN`, `DAILY_WEBHOOK_SECRET` required for
+  standard Daily. DNS CNAME `sessions.eleva.care` → Daily waits for D-07 / Phase 15 C.0.
+  Recording storage is explicitly **not** decided here — see D-08 / 16.8.
 - Supersedes in part: ADR-004 (Google Meet as the online session destination).
 
 ## Related
