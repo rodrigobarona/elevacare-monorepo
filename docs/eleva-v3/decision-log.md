@@ -32,6 +32,19 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-07: Session attendance finalizes on meeting.ended, then corrects
+
+- Decision: Phase 09.3 writes `attendance` and `ended|no_show` on
+  `meeting.ended` instead of scheduling `finalizeAttendance` at `ended + 2 min`.
+  Late `participant.joined` / `participant.left` events still append history and
+  may flip `no_show → ended` (`session.attendance_corrected`). They never flip
+  `ended` back to `no_show`. No-show **policy** (refund/keep) stays out of
+  Phase 09. The deferred 2-minute finalize job is a follow-up if Daily's
+  out-of-order window proves wider than the correction path.
+- Owner: engineering. Status: `active`.
+- Reference: [`execution-plan/phases/09-video-daily.md`](./execution-plan/phases/09-video-daily.md),
+  [ADR-018](./adrs/ADR-018-daily-video-only.md)
+
 ### 2026-10-07: Founder defers D-07 BAA/HIPAA; Phase 09 opens on standard Daily
 
 - Decision: the founder will show the running product to accounting and legal and does

@@ -67,6 +67,12 @@ describe("shouldApplyEvent", () => {
         new Date("2026-10-07T10:31:00.000Z")
       )
     ).toBe(true)
+    expect(
+      shouldApplyEvent(
+        new Date("2026-10-07T10:31:00.000Z"),
+        new Date("2026-10-07T10:31:00.000Z")
+      )
+    ).toBe(false)
   })
 })
 

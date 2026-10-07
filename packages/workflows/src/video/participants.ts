@@ -48,6 +48,18 @@ function daily(deps?: SessionParticipantDeps): SessionParticipantDaily {
   return deps?.daily ?? dailyClientFromEnv()
 }
 
+export function isSelfDelegate(
+  userId: string,
+  expertUserId: string | null,
+  memberUserId: string | null
+) {
+  return userId === expertUserId || userId === memberUserId
+}
+
+export function isRetryableDailyFailure(err: unknown) {
+  return err instanceof DailyHttpError && err.status >= 500
+}
+
 async function loadAssignedSession(bookingId: string, actorUserId: string) {
   return withPlatformAdminContext(async (tx) => {
     const [row] = await tx
@@ -58,6 +70,7 @@ async function loadAssignedSession(bookingId: string, actorUserId: string) {
         endsAt: main.sessions.endsAt,
         dailyRoomName: main.sessions.dailyRoomName,
         expertUserId: main.expertProfiles.userId,
+        memberUserId: main.sessions.memberUserId,
         language: main.bookings.language,
       })
       .from(main.sessions)
@@ -142,6 +155,11 @@ export async function addSessionParticipant(
 ): Promise<AddSessionParticipantResult> {
   const session = await loadAssignedSession(input.bookingId, input.actorUserId)
   if (!session) throw new SessionParticipantError("NOT_FOUND")
+  if (
+    isSelfDelegate(input.userId, session.expertUserId, session.memberUserId)
+  ) {
+    throw new SessionParticipantError("ALREADY_PARTICIPANT")
+  }
 
   const participant = await withAudit(
     { orgId: session.orgId, actorUserId: input.actorUserId },
@@ -213,7 +231,7 @@ export async function addSessionParticipant(
     )
     await clearCapacityPending(input.bookingId, syncStartedAt)
   } catch (err) {
-    if (!(err instanceof DailyHttpError) || err.status < 500) throw err
+    if (!isRetryableDailyFailure(err)) throw err
     await markCapacityPending(input.bookingId)
     return { ...participant, capacityPending: true }
   }
@@ -266,7 +284,8 @@ export async function removeSessionParticipant(
       deps
     )
     await clearCapacityPending(input.bookingId, syncStartedAt)
-  } catch {
+  } catch (err) {
+    if (!isRetryableDailyFailure(err)) throw err
     await markCapacityPending(input.bookingId)
   }
 
@@ -274,7 +293,7 @@ export async function removeSessionParticipant(
     try {
       await daily(deps).ejectParticipants(session.dailyRoomName, [input.userId])
     } catch (err) {
-      if (!(err instanceof DailyHttpError) || err.status < 500) throw err
+      if (!isRetryableDailyFailure(err)) throw err
       return { ejectionPending: true }
     }
   }
@@ -288,7 +307,8 @@ export async function removeSessionParticipant(
         .where(
           and(
             eq(main.sessionParticipants.bookingId, input.bookingId),
-            eq(main.sessionParticipants.userId, input.userId)
+            eq(main.sessionParticipants.userId, input.userId),
+            isNotNull(main.sessionParticipants.revokedAt)
           )
         )
       await ctx.emit({
@@ -415,6 +435,22 @@ export async function retryPendingEjects(
   let ejected = 0
   let pendingCount = 0
   for (const row of pending) {
+    const stillRevoked = await withPlatformAdminContext(async (tx) => {
+      const [current] = await tx
+        .select({ revokedAt: main.sessionParticipants.revokedAt })
+        .from(main.sessionParticipants)
+        .where(
+          and(
+            eq(main.sessionParticipants.bookingId, row.bookingId),
+            eq(main.sessionParticipants.userId, row.userId),
+            isNotNull(main.sessionParticipants.revokedAt),
+            isNull(main.sessionParticipants.ejectedAt)
+          )
+        )
+        .limit(1)
+      return Boolean(current)
+    })
+    if (!stillRevoked) continue
     if (row.dailyRoomName && isElevaRoomName(row.dailyRoomName)) {
       try {
         await daily(deps).ejectParticipants(row.dailyRoomName, [row.userId])
@@ -432,7 +468,8 @@ export async function retryPendingEjects(
           .where(
             and(
               eq(main.sessionParticipants.bookingId, row.bookingId),
-              eq(main.sessionParticipants.userId, row.userId)
+              eq(main.sessionParticipants.userId, row.userId),
+              isNotNull(main.sessionParticipants.revokedAt)
             )
           )
         await ctx.emit({

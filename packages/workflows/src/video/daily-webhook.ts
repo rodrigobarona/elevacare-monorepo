@@ -61,7 +61,7 @@ function participantRole(input: {
 }): SessionParticipantHistory["role"] {
   if (input.userId && input.userId === input.expertUserId) return "expert"
   if (input.userId && input.userId === input.memberUserId) return "member"
-  if (input.owner) return "expert"
+  if (input.owner && input.userId) return "expert"
   return "delegate"
 }
 
@@ -222,15 +222,16 @@ async function applyLifecycleWebhook(input: {
         let startedAt = locked.startedAt
         let endedAt = locked.endedAt
         let lastEventAt = locked.lastEventAt
+        const applyStatus = shouldApplyEvent(locked.lastEventAt, input.incoming)
 
-        if (input.applyStatus && input.type === "meeting.started") {
+        if (applyStatus && input.type === "meeting.started") {
           if (status === "scheduled" || status === "room_unresolved") {
             status = "live"
             startedAt = input.incoming
           }
         }
 
-        if (input.applyStatus && input.type === "meeting.ended") {
+        if (applyStatus && input.type === "meeting.ended") {
           if (status === "scheduled" || status === "live") {
             status = statusAfterAttendance(
               deriveAttendance(locked.participants)
@@ -239,7 +240,7 @@ async function applyLifecycleWebhook(input: {
           }
         }
 
-        if (input.applyStatus) lastEventAt = input.incoming
+        if (applyStatus) lastEventAt = input.incoming
 
         await tx
           .update(main.sessions)
@@ -341,7 +342,9 @@ async function applyParticipantWebhook(input: {
           .set({
             status: next.status,
             participants: next.participants,
-            ...(input.applyStatus ? { lastEventAt: input.incoming } : {}),
+            ...(shouldApplyEvent(locked.lastEventAt, input.incoming)
+              ? { lastEventAt: input.incoming }
+              : {}),
             ...(next.status === "ended" || next.status === "no_show"
               ? { attendance: deriveAttendance(next.participants) }
               : {}),

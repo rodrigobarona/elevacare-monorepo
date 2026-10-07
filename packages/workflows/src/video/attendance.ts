@@ -74,5 +74,5 @@ export function shouldApplyEvent(
   incoming: Date
 ): boolean {
   if (!lastEventAt) return true
-  return incoming.getTime() >= lastEventAt.getTime()
+  return incoming.getTime() > lastEventAt.getTime()
 }
