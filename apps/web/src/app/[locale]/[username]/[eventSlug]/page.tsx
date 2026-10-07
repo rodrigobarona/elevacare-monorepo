@@ -81,7 +81,7 @@ export default async function PublicBookingPage({ params }: Props) {
   }
 
   return (
-    <BookingLayout backHref={`/${username}`} backLabelKey="expert">
+    <BookingLayout>
       <BookingFunnel
         locale={locale}
         expertName={expert.displayName}

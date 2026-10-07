@@ -86,12 +86,7 @@ export default async function ExpertProfilePage({ params }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/experts", labelKey: "experts" },
-        ]}
-      />
+      <SiteHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-12">
         <div className="flex gap-5">
           <ExpertAvatar

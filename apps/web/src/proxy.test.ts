@@ -51,7 +51,7 @@ function makeRequest(
     )
     vi.spyOn(req.cookies, "get").mockImplementation((name) => {
       const key = String(name)
-      const value = values[key]
+      const value = values[key] ?? (names.includes(key) ? "1" : undefined)
       return value !== undefined ? { name: key, value } : undefined
     })
   }
@@ -337,10 +337,11 @@ describe("createGatewayProxy integration", () => {
     )
   })
 
-  it("redirects bare / with session on document navigation", async () => {
+  it("keeps bare / on marketing even when a session cookie is present", async () => {
+    const intl = vi.fn(marketingIntl)
     const proxy = createGatewayProxy({
       origins: testOrigins,
-      intlMiddleware: marketingIntl,
+      intlMiddleware: intl,
     })
     const res = await proxy(
       makeRequest("/", {
@@ -355,10 +356,28 @@ describe("createGatewayProxy integration", () => {
         },
       })
     )
-    expect(res.status).toBe(307)
-    expect(res.headers.get("location")).toBe(
-      "http://localhost:3000/clinica-mota"
+    expect(intl).toHaveBeenCalledOnce()
+    expect(await res.json()).toEqual({ zone: "marketing" })
+  })
+
+  it("does not treat an empty session cookie as signed-in on /", async () => {
+    const intl = vi.fn(marketingIntl)
+    const proxy = createGatewayProxy({
+      origins: testOrigins,
+      intlMiddleware: intl,
+    })
+    const res = await proxy(
+      makeRequest("/", {
+        cookieNames: ["better-auth.session_token"],
+        cookieValues: { "better-auth.session_token": "" },
+        headers: {
+          "Sec-Fetch-Mode": "navigate",
+          "Sec-Fetch-Dest": "document",
+        },
+      })
     )
+    expect(intl).toHaveBeenCalledOnce()
+    expect(await res.json()).toEqual({ zone: "marketing" })
   })
 
   it("does not redirect bare / for RSC fetches (uses intl instead)", async () => {

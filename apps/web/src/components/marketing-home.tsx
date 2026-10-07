@@ -8,14 +8,7 @@ import { SiteHeader } from "@/components/site-header"
 export function MarketingHome() {
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/experts", labelKey: "experts" },
-          { href: "/about", labelKey: "about" },
-          { href: "/become-expert", labelKey: "becomeExpert" },
-          { href: "/for-clinics", labelKey: "forClinics" },
-        ]}
-      />
+      <SiteHeader />
       <MarketingContent />
       <SiteFooter />
     </div>

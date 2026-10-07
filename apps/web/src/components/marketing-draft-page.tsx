@@ -27,14 +27,7 @@ export function MarketingDraftPage({
 }: Props) {
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/experts", labelKey: "experts" },
-          { href: "/become-expert", labelKey: "becomeExpert" },
-          { href: "/for-clinics", labelKey: "forClinics" },
-        ]}
-      />
+      <SiteHeader />
       <main className="flex-1 px-6 py-16">
         <article className="mx-auto max-w-3xl">
           <p

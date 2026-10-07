@@ -71,13 +71,7 @@ export async function Explorer({
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/about", labelKey: "about" },
-          { href: "/experts", labelKey: "experts" },
-        ]}
-      />
+      <SiteHeader />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
         <p className="mb-3 text-sm font-medium tracking-widest text-primary uppercase">
           {t("eyebrow")}

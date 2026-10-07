@@ -10,12 +10,7 @@ export default async function NotFound() {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/experts", labelKey: "experts" },
-        ]}
-      />
+      <SiteHeader />
       <main className="mx-auto flex w-full max-w-2xl flex-1 items-center px-6 py-16">
         <EmptyState
           variant="no-results"

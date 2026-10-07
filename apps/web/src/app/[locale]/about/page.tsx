@@ -39,12 +39,7 @@ export default async function AboutPage({ params }: Props) {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <SiteHeader
-        nav={[
-          { href: "/", labelKey: "home" },
-          { href: "/experts", labelKey: "experts" },
-        ]}
-      />
+      <SiteHeader />
       <AboutContent />
       <SiteFooter />
     </div>

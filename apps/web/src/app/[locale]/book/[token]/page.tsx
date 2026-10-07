@@ -56,7 +56,7 @@ export default async function PrivateBookingPage({ params }: Props) {
   const geo = await geoPromise
 
   return (
-    <BookingLayout backHref="/experts">
+    <BookingLayout>
       <BookingFunnel
         locale={locale}
         expertName={link.expertDisplayName}

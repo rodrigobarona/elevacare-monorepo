@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { LOGIN_PATH } from "@eleva/auth"
+import { applyExpiredSessionCookies } from "@eleva/auth/proxy"
 import { getSession, getSessionForOrg } from "@eleva/auth/server"
 import { sanitizeReturnTo } from "@eleva/auth/return-to"
 import { resolveGatewayUrl } from "@eleva/config/env"
@@ -31,7 +33,14 @@ export async function GET(request: NextRequest) {
     ? await getSessionForOrg(preferredSlug)
     : await getSession()
 
-  if (!session || !session.orgSlug) {
+  if (!session) {
+    const response = NextResponse.redirect(new URL(LOGIN_PATH, request.url))
+    applyExpiredSessionCookies(response)
+    if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
+    return response
+  }
+
+  if (!session.orgSlug) {
     const response = NextResponse.redirect(new URL("/onboarding", request.url))
     if (lastSlug) response.cookies.delete(LAST_ACTIVE_ORG_COOKIE)
     return response

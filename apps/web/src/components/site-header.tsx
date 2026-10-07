@@ -1,34 +1,27 @@
 import { Suspense } from "react"
 import { cookies } from "next/headers"
 import { getTranslations } from "next-intl/server"
-import { SESSION_COOKIE_NAMES } from "@eleva/auth/credentials"
+import { requestHasSessionCookie } from "@eleva/auth/credentials"
 import { Logo, LogoMark } from "@eleva/ui/components/brand"
 import { Link } from "@/i18n/navigation"
+import { PUBLIC_SITE_NAV } from "@/lib/public-site-nav"
 import { AuthHeaderPlaceholder } from "./auth-header-placeholder"
 import { LanguageSwitcher } from "./language-switcher"
 import { MobileNavMenu } from "./mobile-nav-menu"
 import { SignedOutButtons } from "./signed-out-buttons"
 import { SiteHeaderAuthSlot } from "./site-header-auth-slot"
 
-type NavItem = {
-  href: string
-  labelKey: string
-}
-
-interface SiteHeaderProps {
-  nav?: NavItem[]
-}
-
 /**
- * Marketing site header. The auth slot streams in behind Suspense; the
- * fallback is chosen from the session cookie so logged-in visitors see
- * an avatar placeholder instead of login buttons that swap out a moment
+ * Shared public-site header. The auth slot streams in behind Suspense; the
+ * fallback is chosen from a non-empty session cookie so logged-in visitors
+ * see an avatar placeholder instead of login buttons that swap out a moment
  * later.
  */
-export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
+export async function SiteHeader() {
   const t = await getTranslations("nav")
   const jar = await cookies()
-  const hasSessionCookie = SESSION_COOKIE_NAMES.some((name) => jar.has(name))
+  const hasSessionCookie = requestHasSessionCookie(jar)
+  const nav = PUBLIC_SITE_NAV
 
   return (
     <header className="border-b px-4 py-4 sm:px-6">
@@ -47,15 +40,13 @@ export async function SiteHeader({ nav = [] }: SiteHeaderProps) {
               {t(item.labelKey)}
             </Link>
           ))}
-          {nav.length > 0 ? (
-            <MobileNavMenu
-              label={t("more")}
-              items={nav.map((item) => ({
-                href: item.href,
-                label: t(item.labelKey),
-              }))}
-            />
-          ) : null}
+          <MobileNavMenu
+            label={t("more")}
+            items={nav.map((item) => ({
+              href: item.href,
+              label: t(item.labelKey),
+            }))}
+          />
           <LanguageSwitcher />
           <Suspense
             fallback={
