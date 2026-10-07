@@ -1,10 +1,11 @@
 import type { CSSProperties } from "react"
 
+/** Both stops keep white initials at >= 4.5:1 (WCAG AA). */
 const AVATAR_GRADIENTS = [
-  ["var(--color-teal-700)", "var(--color-teal-300)"],
-  ["var(--color-coral-400)", "var(--color-coral-100)"],
-  ["var(--color-highlight-purple)", "var(--color-teal-300)"],
-  ["var(--color-teal-700)", "var(--color-teal-50)"],
+  ["var(--color-teal-800)", "var(--color-teal-700)"],
+  ["var(--color-coral-700)", "var(--color-coral-600)"],
+  ["var(--color-highlight-purple)", "var(--color-teal-800)"],
+  ["var(--color-info-700)", "var(--color-teal-700)"],
 ] as const
 
 function hashString(value: string): number {
