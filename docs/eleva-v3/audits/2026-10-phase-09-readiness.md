@@ -2,7 +2,7 @@
 
 Status: **Not ready to open Phase 09.** Engineering for phases 01–08 is on `main`. The human gates below are open, and nothing here closes them.
 
-Phase 09 (video with Daily) may open only when every **human gate** is closed, or a founder waiver names it explicitly. The 2026-09-25 Phase 04B waiver closes none of them.
+Phase 09 (video with Daily) may open only when both hold: (1) the tax and issuance gates open, or a separate founder waiver explicitly names FT POST, Comunicação and `invoice.issued`; and (2) D-07 is signed by the founder and the DPO (Daily BAA/DPA executed). D-07 cannot be waived. The 2026-09-25 Phase 04B waiver closes none of these.
 
 ## Human gates (founder / DPO / legal / accountant)
 
@@ -29,8 +29,9 @@ Phase 09 (video with Daily) may open only when every **human gate** is closed, o
 | UX-009 inline field errors                                   | Open follow-up       | Not a Phase 09 blocker                                                                               |
 | Dark mode on `apps/web`                                      | Not built            | Follow-up; not a Phase 09 blocker                                                                    |
 
-## Phase 09 engineering entry (once the human gates close)
+## Phase 09 engineering entry
 
-- PR 09.0 (`phase-09.0/spike-daily-account`, docs and evidence only) merges first: Daily HIPAA domain, BAA/DPA, `sessions.eleva.care`, webhook secret, token claims verified on staging, recording off.
+- PR 09.0 (`phase-09.0/spike-daily-account`, docs and evidence only) may proceed now, while D-07 is in progress, because it gathers the D-07 evidence. It merges before any other Phase 09 work: Daily HIPAA domain, BAA/DPA, `sessions.eleva.care`, webhook secret, token claims verified on staging, recording off.
+- All other Phase 09 work waits for the opening rule above.
 - Only bookings with snapshotted `mode = online` get a room. Phone and in-person bookings never reach Daily.
 - The member session "Join" button stays disabled until 09 ships.
