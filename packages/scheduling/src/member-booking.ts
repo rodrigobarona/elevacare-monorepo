@@ -1,4 +1,4 @@
-import { and, eq, ne, sql } from "drizzle-orm"
+import { and, eq, inArray, ne, sql } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import {
   cancellationRefundCents,
@@ -17,7 +17,9 @@ import {
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { canReschedule } from "./booking-rules"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
+import { isExclusionViolation } from "./pg-errors"
 import { resolveOffer } from "./resolve-offer"
+import { expireOverlappingHolds } from "./stale-holds"
 
 const MUTABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 
@@ -159,13 +161,15 @@ export async function cancelMemberBooking(input: {
       }
 
       if (row.reservationId) {
+        // A paid booking's reservation is `converted`, which the overlap
+        // exclusion still enforces; release it so the slot is bookable again.
         await tx
           .update(main.slotReservations)
           .set({ status: "released" })
           .where(
             and(
               eq(main.slotReservations.id, row.reservationId),
-              eq(main.slotReservations.status, "active")
+              inArray(main.slotReservations.status, ["active", "converted"])
             )
           )
       }
@@ -228,6 +232,21 @@ export async function rescheduleMemberBooking(input: {
 
   await assertDestinationAvailable(row, input.startsAt, input.endsAt, now)
 
+  try {
+    await moveMemberBooking(row, input, now)
+  } catch (err) {
+    if (isExclusionViolation(err)) {
+      throw new MemberBookingPolicyError("SLOT_TAKEN")
+    }
+    throw err
+  }
+}
+
+async function moveMemberBooking(
+  row: MemberBookingPolicyRow,
+  input: { userId: string; startsAt: Date; endsAt: Date },
+  now: Date
+): Promise<void> {
   await withAudit(
     { orgId: row.orgId, actorUserId: input.userId },
     async (tx, ctx) => {
@@ -263,6 +282,26 @@ export async function rescheduleMemberBooking(input: {
         })
       if (!updated) {
         throw new MemberBookingPolicyError("INVALID_STATUS")
+      }
+
+      if (row.reservationId) {
+        await expireOverlappingHolds(
+          tx,
+          sql`(select "expert_user_id" from "slot_reservations" where "id" = ${row.reservationId})`,
+          input.startsAt,
+          input.endsAt,
+          now
+        )
+        // Keep the overlap exclusion on the new time and free the old one.
+        await tx
+          .update(main.slotReservations)
+          .set({ startsAt: input.startsAt, endsAt: input.endsAt })
+          .where(
+            and(
+              eq(main.slotReservations.id, row.reservationId),
+              eq(main.slotReservations.status, "converted")
+            )
+          )
       }
 
       await emitBookingNotificationEvent(tx, {

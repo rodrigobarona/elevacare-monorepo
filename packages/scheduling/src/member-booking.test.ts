@@ -51,6 +51,12 @@ vi.mock("./assert-slot-available", () => ({
     assertRequestedSlotAvailable(...args),
 }))
 
+const expireOverlappingHolds = vi.fn()
+vi.mock("./stale-holds", () => ({
+  expireOverlappingHolds: (...args: unknown[]) =>
+    expireOverlappingHolds(...args),
+}))
+
 vi.mock("./emit-domain-event", () => ({
   emitBookingNotificationEvent: (...args: unknown[]) =>
     emitBookingNotificationEvent(...args),
@@ -86,10 +92,18 @@ function hoursFromNow(hours: number): Date {
   return new Date(now.getTime() + hours * HOUR)
 }
 
-type Captured = { paymentSets: unknown[]; audits: unknown[] }
+type Captured = {
+  paymentSets: unknown[]
+  reservationSets: unknown[]
+  audits: unknown[]
+}
 
-function captureTx(): Captured {
-  const captured: Captured = { paymentSets: [], audits: [] }
+function captureTx(options: { reservationError?: unknown } = {}): Captured {
+  const captured: Captured = {
+    paymentSets: [],
+    reservationSets: [],
+    audits: [],
+  }
   withAudit.mockImplementation(
     async (
       _opts: unknown,
@@ -97,13 +111,23 @@ function captureTx(): Captured {
     ) =>
       fn(
         {
+          select: () => ({
+            from: () => ({ where: () => ({ limit: async () => [] }) }),
+          }),
           update: (table: { id: string }) => ({
             set: (values: unknown) => {
               if (table.id === "payments.id") captured.paymentSets.push(values)
+              if (table.id === "slots.id") {
+                if (options.reservationError) throw options.reservationError
+                captured.reservationSets.push(values)
+              }
               return {
-                where: () => ({
-                  returning: async () => [{ id: "booking-1" }],
-                }),
+                where: () =>
+                  Object.assign(Promise.resolve(), {
+                    returning: async () => [
+                      { id: "booking-1", scheduleRevision: 2 },
+                    ],
+                  }),
               }
             },
           }),
@@ -163,6 +187,7 @@ describe("cancelMemberBooking", () => {
     expect(captured.paymentSets).toEqual([
       { refundDueCents: 6000, status: "refund_pending" },
     ])
+    expect(captured.reservationSets).toEqual([{ status: "released" }])
     expect(emitBookingNotificationEvent).toHaveBeenCalledWith(
       expect.anything(),
       {
@@ -330,9 +355,72 @@ describe("quoteMemberCancellation", () => {
 })
 
 describe("rescheduleMemberBooking", () => {
+  const newStart = new Date("2026-09-20T10:00:00.000Z")
+  const newEnd = new Date("2026-09-20T10:50:00.000Z")
+
   beforeEach(() => {
     getMemberBookingForPolicy.mockReset()
     withAudit.mockReset()
+    resolveOffer.mockResolvedValue({ ok: true, offer: {} })
+    getExpertScheduleForBooking.mockResolvedValue({
+      schedule: { timezone: "Europe/Lisbon" },
+      rules: [],
+      overrides: [],
+    })
+    listExpertBusyBookings.mockResolvedValue([])
+    assertRequestedSlotAvailable.mockReturnValue({ ok: true })
+    emitBookingNotificationEvent.mockResolvedValue({
+      eventId: "evt-1",
+      created: true,
+    })
+  })
+
+  it("moves the converted reservation with the booking", async () => {
+    const captured = captureTx()
+    getMemberBookingForPolicy.mockResolvedValue(
+      booking({
+        startsAt: hoursFromNow(72),
+        endsAt: hoursFromNow(72 + 50 / 60),
+      })
+    )
+    await rescheduleMemberBooking({
+      userId: "user-1",
+      orgId: "space-1",
+      bookingId: "booking-1",
+      startsAt: newStart,
+      endsAt: newEnd,
+      now,
+    })
+    expect(expireOverlappingHolds).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      newStart,
+      newEnd,
+      now
+    )
+    expect(captured.reservationSets).toEqual([
+      { startsAt: newStart, endsAt: newEnd },
+    ])
+  })
+
+  it("maps an overlap exclusion race to SLOT_TAKEN", async () => {
+    captureTx({ reservationError: { code: "23P01" } })
+    getMemberBookingForPolicy.mockResolvedValue(
+      booking({
+        startsAt: hoursFromNow(72),
+        endsAt: hoursFromNow(72 + 50 / 60),
+      })
+    )
+    await expect(
+      rescheduleMemberBooking({
+        userId: "user-1",
+        orgId: "space-1",
+        bookingId: "booking-1",
+        startsAt: newStart,
+        endsAt: newEnd,
+        now,
+      })
+    ).rejects.toMatchObject({ code: "SLOT_TAKEN" })
   })
 
   it("rejects once cancelling would no longer refund in full", async () => {

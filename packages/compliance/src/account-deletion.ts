@@ -43,6 +43,26 @@ export type ScheduleAccountDeletionResult = {
   paymentIntentIds: string[]
 }
 
+/** Paid bookings hold a `converted` reservation the overlap exclusion still enforces. */
+async function releaseReservations(
+  tx: Tx,
+  rows: ReadonlyArray<{ reservationId: string | null }>
+): Promise<void> {
+  const reservationIds = rows
+    .map((row) => row.reservationId)
+    .filter((id): id is string => Boolean(id))
+  if (reservationIds.length === 0) return
+  await tx
+    .update(main.slotReservations)
+    .set({ status: "released" })
+    .where(
+      and(
+        inArray(main.slotReservations.id, reservationIds),
+        inArray(main.slotReservations.status, ["active", "converted"])
+      )
+    )
+}
+
 async function lockAccountDeletionUser(tx: Tx, userId: string): Promise<void> {
   await tx.execute(
     sql`SELECT pg_advisory_xact_lock(hashtext(${`account-deletion:${userId}`}))`
@@ -178,6 +198,7 @@ async function cancelFutureBookingsInTx(
   const confirmed = await tx
     .select({
       id: main.bookings.id,
+      reservationId: main.bookings.reservationId,
       paymentId: main.bookingPayments.id,
       paymentStatus: main.bookingPayments.status,
     })
@@ -206,21 +227,7 @@ async function cancelFutureBookingsInTx(
         updatedAt: now,
       })
       .where(inArray(main.bookings.id, pendingIds))
-
-    const reservationIds = pending
-      .map((row) => row.reservationId)
-      .filter((id): id is string => Boolean(id))
-    if (reservationIds.length > 0) {
-      await tx
-        .update(main.slotReservations)
-        .set({ status: "released" })
-        .where(
-          and(
-            inArray(main.slotReservations.id, reservationIds),
-            eq(main.slotReservations.status, "active")
-          )
-        )
-    }
+    await releaseReservations(tx, pending)
   }
 
   const confirmedIds = confirmed.map((row) => row.id)
@@ -234,6 +241,7 @@ async function cancelFutureBookingsInTx(
         updatedAt: now,
       })
       .where(inArray(main.bookings.id, confirmedIds))
+    await releaseReservations(tx, confirmed)
 
     const refundPaymentIds = confirmed
       .filter(
