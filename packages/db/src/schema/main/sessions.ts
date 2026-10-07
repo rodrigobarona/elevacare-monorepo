@@ -62,9 +62,13 @@ export const sessionParticipants = pgTable(
     ),
     orgIdx: index("session_participants_org_idx").on(t.orgId),
     tenantPolicy: pgPolicy("session_participants_tenant_isolation", {
+      using: sql`org_id::text = current_setting('eleva.org_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
+    }),
+    participantReadPolicy: pgPolicy("session_participants_participant_read", {
+      for: "select",
       using: sql`org_id::text = current_setting('eleva.org_id', true)
         OR user_id::text = current_setting('eleva.user_id', true)`,
-      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)`,
     }),
   })
 )

@@ -91,13 +91,19 @@ ALTER TABLE "session_participants" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
 DROP POLICY IF EXISTS "session_participants_tenant_isolation" ON "session_participants";
 --> statement-breakpoint
+DROP POLICY IF EXISTS "session_participants_participant_read" ON "session_participants";
+--> statement-breakpoint
 CREATE POLICY "session_participants_tenant_isolation" ON "session_participants"
   AS PERMISSIVE FOR ALL TO public
+  USING (org_id::text = current_setting('eleva.org_id', true))
+  WITH CHECK (org_id::text = current_setting('eleva.org_id', true));
+--> statement-breakpoint
+CREATE POLICY "session_participants_participant_read" ON "session_participants"
+  AS PERMISSIVE FOR SELECT TO public
   USING (
     org_id::text = current_setting('eleva.org_id', true)
     OR user_id::text = current_setting('eleva.user_id', true)
-  )
-  WITH CHECK (org_id::text = current_setting('eleva.org_id', true));
+  );
 --> statement-breakpoint
 
 CREATE TABLE IF NOT EXISTS "session_note_drafts" (

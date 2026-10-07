@@ -103,6 +103,8 @@ export const RLS_TABLE_ASSIGNMENTS: readonly RlsTableAssignment[] = [
     insertClass: "owner-user-visible",
   },
   { table: "sessions", class: "participant-visible" },
+  // Writes stay tenant-owned. Delegates get a SELECT-only user_id branch
+  // via session_participants_participant_read — not a new handbook class.
   { table: "session_participants", class: "tenant-owned" },
   { table: "session_note_drafts", class: "tenant-owned" },
   { table: "daily_webhook_events", class: "staff-only" },

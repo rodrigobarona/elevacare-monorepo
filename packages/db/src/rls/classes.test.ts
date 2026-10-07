@@ -101,6 +101,28 @@ describe("RLS class taxonomy", () => {
     }
   })
 
+  it("keeps session_participants writes tenant-owned and SELECT user-visible", () => {
+    const row = RLS_TABLE_ASSIGNMENTS.find(
+      (item) => item.table === "session_participants"
+    )
+    expect(row).toEqual({
+      table: "session_participants",
+      class: "tenant-owned",
+    })
+    expect(classPredicateSql("tenant-owned", "session_participants")).toContain(
+      "org_id::text"
+    )
+    expect(
+      classPredicateSql("tenant-owned", "session_participants")
+    ).not.toContain("eleva.user_id")
+    expect(
+      classPredicateSql("owner-user-visible", "session_participants")
+    ).toContain("eleva.user_id")
+    expect(
+      classPredicateSql("owner-user-visible", "session_participants")
+    ).not.toContain("eleva.org_id")
+  })
+
   it("uses daily_webhook_events as the un-split staff-only fixture", () => {
     const handles = RLS_TABLE_ASSIGNMENTS.find(
       (item) => item.table === "public_handles"

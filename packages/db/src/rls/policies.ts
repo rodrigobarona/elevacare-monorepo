@@ -198,14 +198,19 @@ export function buildMainRlsStatements(): string[] {
     }
   }
   for (const table of DELEGATE_VISIBLE_TABLES) {
-    const using = `org_id::text = current_setting('eleva.org_id', true) OR user_id::text = current_setting('eleva.user_id', true)`
-    const check = `org_id::text = current_setting('eleva.org_id', true)`
+    const org = `org_id::text = current_setting('eleva.org_id', true)`
+    const participant = `user_id::text = current_setting('eleva.user_id', true)`
     out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
     out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
     out.push(`DROP POLICY IF EXISTS ${table}_tenant_isolation ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_participant_read ON ${table};`)
     out.push(
       `CREATE POLICY ${table}_tenant_isolation ON ${table} ` +
-        `USING (${using}) WITH CHECK (${check});`
+        `USING (${org}) WITH CHECK (${org});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_participant_read ON ${table} FOR SELECT ` +
+        `USING (${org} OR ${participant});`
     )
   }
   for (const table of STAFF_ONLY_TABLES) {

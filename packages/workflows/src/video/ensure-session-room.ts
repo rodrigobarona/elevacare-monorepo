@@ -9,7 +9,7 @@ import {
   or,
   sql,
 } from "drizzle-orm"
-import { withAudit } from "@eleva/audit"
+import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import {
   DailyHttpError,
@@ -138,7 +138,7 @@ export async function ensureSessionRoom(
 
   type LeaseOutcome =
     | { skip: "no_member" | "leased" }
-    | { ready: string }
+    | { ready: string; status: string }
     | { lease: true }
 
   const leased = await withPlatformAdminContext(
@@ -154,6 +154,7 @@ export async function ensureSessionRoom(
       const [session] = await tx
         .select({
           id: main.sessions.id,
+          status: main.sessions.status,
           dailyRoomName: main.sessions.dailyRoomName,
           roomCreateLeaseUntil: main.sessions.roomCreateLeaseUntil,
         })
@@ -162,7 +163,9 @@ export async function ensureSessionRoom(
         .limit(1)
       if (!session) return { skip: "no_member" as const }
       const lease = classifyRoomLease(session)
-      if ("ready" in lease) return lease
+      if ("ready" in lease) {
+        return { ...lease, status: session.status }
+      }
       if ("skip" in lease) return lease
       const now = new Date()
       const claimed = await tx
@@ -197,9 +200,20 @@ export async function ensureSessionRoom(
   }
 
   if ("ready" in leased) {
+    const writable =
+      leased.status === "scheduled" || leased.status === "room_unresolved"
+    if (!writable) {
+      return { ok: true, roomName: leased.ready, created: false }
+    }
     const body = buildSessionRoomBody(roomInput)
-    await client.updateSessionRoom(leased.ready, body.properties)
-    return { ok: true, roomName: leased.ready, created: false }
+    try {
+      await client.updateSessionRoom(leased.ready, body.properties)
+      return { ok: true, roomName: leased.ready, created: false }
+    } catch (err) {
+      if (!(err instanceof DailyHttpError) || err.status !== 404) {
+        throw err
+      }
+    }
   }
 
   let room: DailyRoom
@@ -208,21 +222,38 @@ export async function ensureSessionRoom(
   } catch (err) {
     await clearRoomLease(bookingId)
     if (err instanceof DailyHttpError && err.status >= 500) {
-      await withAudit(
-        { orgId: booking.orgId, actorUserId: null },
-        async (tx, ctx) => {
-          await tx
-            .update(main.sessions)
-            .set({ status: "room_unresolved", roomCreateLeaseUntil: null })
-            .where(eq(main.sessions.bookingId, bookingId))
-          await ctx.emit({
-            entity: "session",
-            action: "room_unresolved",
-            entityId: bookingId,
-            payload: { bookingId },
-          })
+      try {
+        await withPlatformAudit(
+          { orgId: booking.orgId, actorUserId: null },
+          async (tx, ctx) => {
+            const marked = await tx
+              .update(main.sessions)
+              .set({ status: "room_unresolved", roomCreateLeaseUntil: null })
+              .where(
+                and(
+                  eq(main.sessions.bookingId, bookingId),
+                  inArray(main.sessions.status, [
+                    "scheduled",
+                    "room_unresolved",
+                  ])
+                )
+              )
+              .returning({ id: main.sessions.id })
+            if (marked.length === 0) throw new SessionNoLongerWritable()
+            await ctx.emit({
+              entity: "session",
+              action: "room_unresolved",
+              entityId: bookingId,
+              payload: { bookingId },
+            })
+          }
+        )
+      } catch (markErr) {
+        if (markErr instanceof SessionNoLongerWritable) {
+          return { skipped: "not_confirmed" }
         }
-      )
+        throw markErr
+      }
       return { unresolved: true }
     }
     throw err
@@ -294,36 +325,36 @@ export async function deleteSessionRoom(
   }
 
   if (session.status !== "cancelled") {
-    await withAudit(
-      { orgId: session.orgId, actorUserId: null },
-      async (tx, ctx) => {
-        await tx
-          .update(main.sessions)
-          .set({ status: "cancelled" })
-          .where(eq(main.sessions.bookingId, bookingId))
-        await ctx.emit({
-          entity: "session",
-          action: "room_deleted",
-          entityId: bookingId,
-          payload: { roomName: session.dailyRoomName },
-        })
-      }
-    )
+    await withPlatformAdminContext(async (tx) => {
+      await tx
+        .update(main.sessions)
+        .set({ status: "cancelled" })
+        .where(eq(main.sessions.bookingId, bookingId))
+    })
   }
 
   if (session.dailyRoomName && isElevaRoomName(session.dailyRoomName)) {
     await daily(deps).deleteRoom(session.dailyRoomName)
   }
 
-  await withPlatformAdminContext(async (tx) => {
-    await tx
-      .update(main.sessions)
-      .set({
-        dailyRoomName: null,
-        dailyRoomUrl: null,
+  await withAudit(
+    { orgId: session.orgId, actorUserId: null },
+    async (tx, ctx) => {
+      await tx
+        .update(main.sessions)
+        .set({
+          dailyRoomName: null,
+          dailyRoomUrl: null,
+        })
+        .where(eq(main.sessions.bookingId, bookingId))
+      await ctx.emit({
+        entity: "session",
+        action: "room_deleted",
+        entityId: bookingId,
+        payload: { roomName: session.dailyRoomName },
       })
-      .where(eq(main.sessions.bookingId, bookingId))
-  })
+    }
+  )
 }
 
 export async function sweepMissingSessionRooms(

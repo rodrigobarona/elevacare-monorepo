@@ -245,7 +245,7 @@ export async function confirmBookingPayment(
           orgId: reservation.orgId,
           eventTypeId: booking.eventTypeId,
           expertProfileId: booking.expertProfileId,
-          memberUserId: booking.memberUserId,
+          memberUserId: memberId,
           startsAt: booking.startsAt,
           endsAt: booking.endsAt,
           sessionMode: booking.sessionMode,

@@ -61,14 +61,25 @@ describe("buildMainRlsStatements", () => {
     for (const table of DELEGATE_VISIBLE_TABLES) {
       expect(stmts).toContain(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
     }
-    const policy = stmts.find((s) =>
+    const write = stmts.find((s) =>
       s.startsWith("CREATE POLICY session_participants_tenant_isolation")
     )
-    expect(policy).toContain(
+    const read = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_participants_participant_read")
+    )
+    expect(write).toContain(
+      "USING (org_id::text = current_setting('eleva.org_id', true))"
+    )
+    expect(write).toContain(
+      "WITH CHECK (org_id::text = current_setting('eleva.org_id', true))"
+    )
+    expect(write).not.toContain("eleva.user_id")
+    expect(read).toContain("FOR SELECT")
+    expect(read).toContain(
       "user_id::text = current_setting('eleva.user_id', true)"
     )
-    expect(policy).toContain(
-      "WITH CHECK (org_id::text = current_setting('eleva.org_id', true))"
+    expect(read).toContain(
+      "org_id::text = current_setting('eleva.org_id', true)"
     )
   })
 
