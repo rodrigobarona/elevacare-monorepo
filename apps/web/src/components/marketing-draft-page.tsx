@@ -35,7 +35,7 @@ export function MarketingDraftPage({
         <article className="mx-auto max-w-3xl">
           <p
             data-testid="legal-draft-banner"
-            className="mb-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-50"
+            className="mb-4 rounded-md border border-warning/30 bg-warning-subtle px-3 py-2 text-sm text-warning"
           >
             {draftBanner}
           </p>

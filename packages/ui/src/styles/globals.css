@@ -5,90 +5,201 @@
 @custom-variant dark (&:is(.dark *));
 @source "../**/*.{ts,tsx}";
 
-:root {
-  /* Eleva brand tokens — source of truth:
-     * docs/eleva-v3/brand-book/assets/palette/eleva-css-variables-snippet.css
-     * Values are "R G B" for use with rgb(var(--eleva-*) / <alpha>).
-     */
-  --eleva-primary: 0 109 119;
-  --eleva-primary-light: 131 197 190;
-  --eleva-secondary: 226 149 120;
-  --eleva-secondary-light: 255 221 210;
-  --eleva-accent: 224 251 252;
-  --eleva-neutral-50: 252 253 253;
-  --eleva-neutral-100: 247 249 249;
-  --eleva-neutral-200: 209 209 209;
-  --eleva-neutral-900: 51 51 51;
-  --eleva-highlight-red: 238 66 102;
-  --eleva-highlight-purple: 84 13 110;
-  --eleva-highlight-yellow: 255 210 63;
+/*
+ * Eleva brand v2 scales. Source of truth: docs/eleva-v3/brand-book/v2/tokens.json
+ * (founder-approved 2026-10-06). Components use the semantic tokens below; use a
+ * raw scale step only when no semantic token fits.
+ */
+@theme static {
+  /* teal */
+  --color-teal-50: oklch(0.977 0.014 205.9);
+  --color-teal-100: oklch(0.948 0.03 205.9);
+  --color-teal-200: oklch(0.895 0.054 205.9);
+  --color-teal-300: oklch(0.825 0.082 205.9);
+  --color-teal-400: oklch(0.735 0.106 205.9);
+  --color-teal-500: oklch(0.65 0.111 206.9);
+  --color-teal-600: oklch(0.564 0.097 208.3);
+  --color-teal-700: oklch(0.488 0.084 205.9);
+  --color-teal-800: oklch(0.404 0.07 209.3);
+  --color-teal-900: oklch(0.324 0.056 210.2);
+  --color-teal-950: oklch(0.244 0.042 211.6);
+  /* coral */
+  --color-coral-50: oklch(0.974 0.014 47.3);
+  --color-coral-100: oklch(0.944 0.03 45.3);
+  --color-coral-200: oklch(0.892 0.06 42.7);
+  --color-coral-300: oklch(0.825 0.095 41.4);
+  --color-coral-400: oklch(0.74 0.102 41.4);
+  --color-coral-500: oklch(0.645 0.14 41.4);
+  --color-coral-600: oklch(0.555 0.14 41.4);
+  --color-coral-700: oklch(0.475 0.133 41.4);
+  --color-coral-800: oklch(0.395 0.119 41.4);
+  --color-coral-900: oklch(0.315 0.1 39.6);
+  --color-coral-950: oklch(0.236 0.081 35.6);
+  /* neutral */
+  --color-neutral-50: oklch(0.977 0.002 215);
+  --color-neutral-100: oklch(0.948 0.004 215);
+  --color-neutral-200: oklch(0.895 0.006 215);
+  --color-neutral-300: oklch(0.825 0.01 215);
+  --color-neutral-400: oklch(0.735 0.012 215);
+  --color-neutral-500: oklch(0.645 0.014 215);
+  --color-neutral-600: oklch(0.555 0.014 215);
+  --color-neutral-700: oklch(0.475 0.013 215);
+  --color-neutral-800: oklch(0.395 0.012 215);
+  --color-neutral-900: oklch(0.315 0.01 215);
+  --color-neutral-950: oklch(0.235 0.008 215);
+  /* success */
+  --color-success-50: oklch(0.977 0.018 152);
+  --color-success-100: oklch(0.948 0.037 152);
+  --color-success-200: oklch(0.895 0.068 152);
+  --color-success-300: oklch(0.825 0.102 152);
+  --color-success-400: oklch(0.735 0.132 152);
+  --color-success-500: oklch(0.645 0.15 152);
+  --color-success-600: oklch(0.556 0.148 151.5);
+  --color-success-700: oklch(0.48 0.134 149.4);
+  --color-success-800: oklch(0.402 0.116 148);
+  --color-success-900: oklch(0.323 0.096 146.9);
+  --color-success-950: oklch(0.243 0.077 144.9);
+  /* warning */
+  --color-warning-50: oklch(0.976 0.019 74.4);
+  --color-warning-100: oklch(0.948 0.04 72.2);
+  --color-warning-200: oklch(0.895 0.072 72);
+  --color-warning-300: oklch(0.825 0.109 72);
+  --color-warning-400: oklch(0.735 0.141 72);
+  --color-warning-500: oklch(0.647 0.143 66.9);
+  --color-warning-600: oklch(0.557 0.124 66);
+  --color-warning-700: oklch(0.477 0.107 65.1);
+  --color-warning-800: oklch(0.397 0.09 63.8);
+  --color-warning-900: oklch(0.317 0.073 61.8);
+  --color-warning-950: oklch(0.237 0.056 58.6);
+  /* danger */
+  --color-danger-50: oklch(0.97 0.015 29.6);
+  --color-danger-100: oklch(0.936 0.032 28.2);
+  --color-danger-200: oklch(0.882 0.062 26.3);
+  --color-danger-300: oklch(0.811 0.107 25.4);
+  --color-danger-400: oklch(0.726 0.169 25);
+  --color-danger-500: oklch(0.645 0.2 25);
+  --color-danger-600: oklch(0.555 0.2 25);
+  --color-danger-700: oklch(0.475 0.19 25);
+  --color-danger-800: oklch(0.401 0.163 26.7);
+  --color-danger-900: oklch(0.326 0.133 28.4);
+  --color-danger-950: oklch(0.248 0.102 29.2);
+  /* info */
+  --color-info-50: oklch(0.976 0.014 230.2);
+  --color-info-100: oklch(0.946 0.031 233.6);
+  --color-info-200: oklch(0.892 0.06 238.4);
+  --color-info-300: oklch(0.823 0.097 242.5);
+  --color-info-400: oklch(0.735 0.132 245);
+  --color-info-500: oklch(0.645 0.15 245);
+  --color-info-600: oklch(0.558 0.146 246.9);
+  --color-info-700: oklch(0.481 0.135 249.5);
+  --color-info-800: oklch(0.403 0.118 251.3);
+  --color-info-900: oklch(0.323 0.099 252.7);
+  --color-info-950: oklch(0.243 0.08 255.1);
 
+  /* Marketing illustration only, never UI state */
+  --color-highlight-red: oklch(0.639 0.207 13.5);
+  --color-highlight-purple: oklch(0.341 0.155 314.2);
+  --color-highlight-yellow: oklch(0.879 0.162 90.9);
+
+  --shadow-1:
+    0 1px 2px 0 oklch(0.244 0.042 211.6 / 6%),
+    0 1px 3px 0 oklch(0.244 0.042 211.6 / 8%);
+  --shadow-2:
+    0 4px 12px -2px oklch(0.244 0.042 211.6 / 10%),
+    0 2px 4px -2px oklch(0.244 0.042 211.6 / 6%);
+  --shadow-3:
+    0 16px 40px -8px oklch(0.244 0.042 211.6 / 18%),
+    0 4px 12px -4px oklch(0.244 0.042 211.6 / 8%);
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+}
+
+:root {
   --background: oklch(1 0 0);
-  --foreground: oklch(0.148 0.004 228.8);
+  --foreground: var(--color-neutral-950);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.148 0.004 228.8);
+  --card-foreground: var(--color-neutral-950);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.148 0.004 228.8);
-  --primary: oklch(0.511 0.096 186.391);
-  --primary-foreground: oklch(0.984 0.014 180.72);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.963 0.002 197.1);
-  --muted-foreground: oklch(0.56 0.021 213.5);
-  --accent: oklch(0.963 0.002 197.1);
-  --accent-foreground: oklch(0.218 0.008 223.9);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.925 0.005 214.3);
-  --input: oklch(0.925 0.005 214.3);
-  --ring: oklch(0.723 0.014 214.4);
-  --chart-1: oklch(0.897 0.196 126.665);
-  --chart-2: oklch(0.768 0.233 130.85);
-  --chart-3: oklch(0.648 0.2 131.684);
-  --chart-4: oklch(0.532 0.157 131.589);
-  --chart-5: oklch(0.453 0.124 130.933);
+  --popover-foreground: var(--color-neutral-950);
+  --primary: var(--color-teal-700);
+  --primary-foreground: var(--color-teal-50);
+  --secondary: var(--color-coral-100);
+  --secondary-foreground: var(--color-coral-800);
+  --muted: var(--color-neutral-100);
+  --muted-foreground: var(--color-neutral-700);
+  --accent: var(--color-teal-50);
+  --accent-foreground: var(--color-teal-800);
+  --destructive: var(--color-danger-600);
+  --destructive-subtle: var(--color-danger-50);
+  --success: var(--color-success-700);
+  --success-subtle: var(--color-success-50);
+  --warning: var(--color-warning-700);
+  --warning-subtle: var(--color-warning-50);
+  --info: var(--color-info-700);
+  --info-subtle: var(--color-info-50);
+  --status-foreground: oklch(1 0 0);
+  --border: var(--color-neutral-200);
+  --input: var(--color-neutral-200);
+  --ring: var(--color-teal-500);
+  --chart-1: var(--color-teal-700);
+  --chart-2: var(--color-coral-500);
+  --chart-3: var(--color-teal-300);
+  --chart-4: var(--color-coral-300);
+  --chart-5: var(--color-neutral-500);
   --radius: 0.625rem;
-  --sidebar: oklch(0.987 0.002 197.1);
-  --sidebar-foreground: oklch(0.148 0.004 228.8);
-  --sidebar-primary: oklch(0.6 0.118 184.704);
-  --sidebar-primary-foreground: oklch(0.984 0.014 180.72);
-  --sidebar-accent: oklch(0.963 0.002 197.1);
-  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
-  --sidebar-border: oklch(0.925 0.005 214.3);
-  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --sidebar: var(--color-neutral-50);
+  --sidebar-foreground: var(--color-neutral-950);
+  --sidebar-primary: var(--color-teal-700);
+  --sidebar-primary-foreground: var(--color-teal-50);
+  --sidebar-accent: var(--color-teal-50);
+  --sidebar-accent-foreground: var(--color-teal-800);
+  --sidebar-border: var(--color-neutral-200);
+  --sidebar-ring: var(--color-teal-500);
 }
 
 .dark {
-  --background: oklch(0.148 0.004 228.8);
-  --foreground: oklch(0.987 0.002 197.1);
-  --card: oklch(0.218 0.008 223.9);
-  --card-foreground: oklch(0.987 0.002 197.1);
-  --popover: oklch(0.218 0.008 223.9);
-  --popover-foreground: oklch(0.987 0.002 197.1);
-  --primary: oklch(0.437 0.078 188.216);
-  --primary-foreground: oklch(0.984 0.014 180.72);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.275 0.011 216.9);
-  --muted-foreground: oklch(0.723 0.014 214.4);
-  --accent: oklch(0.275 0.011 216.9);
-  --accent-foreground: oklch(0.987 0.002 197.1);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.56 0.021 213.5);
-  --chart-1: oklch(0.897 0.196 126.665);
-  --chart-2: oklch(0.768 0.233 130.85);
-  --chart-3: oklch(0.648 0.2 131.684);
-  --chart-4: oklch(0.532 0.157 131.589);
-  --chart-5: oklch(0.453 0.124 130.933);
-  --sidebar: oklch(0.218 0.008 223.9);
-  --sidebar-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-primary: oklch(0.704 0.14 182.503);
-  --sidebar-primary-foreground: oklch(0.277 0.046 192.524);
-  --sidebar-accent: oklch(0.275 0.011 216.9);
-  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --background: var(--color-neutral-950);
+  --foreground: var(--color-neutral-50);
+  --card: var(--color-neutral-900);
+  --card-foreground: var(--color-neutral-50);
+  --popover: var(--color-neutral-900);
+  --popover-foreground: var(--color-neutral-50);
+  --primary: var(--color-teal-400);
+  --primary-foreground: var(--color-teal-950);
+  --secondary: var(--color-coral-900);
+  --secondary-foreground: var(--color-coral-100);
+  --muted: var(--color-neutral-900);
+  --muted-foreground: var(--color-neutral-400);
+  --accent: var(--color-teal-900);
+  --accent-foreground: var(--color-teal-100);
+  --destructive: var(--color-danger-400);
+  --destructive-subtle: var(--color-danger-950);
+  --success: var(--color-success-400);
+  --success-subtle: var(--color-success-950);
+  --warning: var(--color-warning-400);
+  --warning-subtle: var(--color-warning-950);
+  --info: var(--color-info-400);
+  --info-subtle: var(--color-info-950);
+  --status-foreground: var(--color-neutral-950);
+  --border: var(--color-neutral-800);
+  --input: var(--color-neutral-800);
+  --ring: var(--color-teal-400);
+  --chart-1: var(--color-teal-400);
+  --chart-2: var(--color-coral-400);
+  --chart-3: var(--color-teal-200);
+  --chart-4: var(--color-coral-200);
+  --chart-5: var(--color-neutral-400);
+  --sidebar: var(--color-neutral-900);
+  --sidebar-foreground: var(--color-neutral-50);
+  --sidebar-primary: var(--color-teal-400);
+  --sidebar-primary-foreground: var(--color-teal-950);
+  --sidebar-accent: var(--color-teal-900);
+  --sidebar-accent-foreground: var(--color-teal-100);
+  --sidebar-border: var(--color-neutral-800);
+  --sidebar-ring: var(--color-teal-400);
 }
 
 @theme inline {
@@ -107,6 +218,14 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-status-foreground: var(--status-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -135,20 +254,6 @@
   --font-heading: var(--font-lora), ui-serif, Georgia, serif;
   --font-mono:
     var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
-
-  /* Eleva brand colors exposed as Tailwind utilities (bg-eleva-primary, text-eleva-coral, etc.) */
-  --color-eleva-primary: rgb(var(--eleva-primary));
-  --color-eleva-primary-light: rgb(var(--eleva-primary-light));
-  --color-eleva-secondary: rgb(var(--eleva-secondary));
-  --color-eleva-secondary-light: rgb(var(--eleva-secondary-light));
-  --color-eleva-accent: rgb(var(--eleva-accent));
-  --color-eleva-neutral-50: rgb(var(--eleva-neutral-50));
-  --color-eleva-neutral-100: rgb(var(--eleva-neutral-100));
-  --color-eleva-neutral-200: rgb(var(--eleva-neutral-200));
-  --color-eleva-neutral-900: rgb(var(--eleva-neutral-900));
-  --color-eleva-highlight-red: rgb(var(--eleva-highlight-red));
-  --color-eleva-highlight-purple: rgb(var(--eleva-highlight-purple));
-  --color-eleva-highlight-yellow: rgb(var(--eleva-highlight-yellow));
 }
 
 @layer base {

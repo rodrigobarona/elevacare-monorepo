@@ -74,23 +74,14 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
                 <ElevaIcon
                   icon={icon}
                   weight={isSelected ? "fill" : "duotone"}
-                  className={cn(
-                    "size-20",
-                    isSelected ? "text-eleva-primary" : "text-eleva-primary"
-                  )}
-                  duotoneColor={
-                    isSelected ? undefined : "rgb(var(--eleva-primary-light))"
-                  }
+                  className="size-20 text-primary"
                 />
               ) : (
                 <span className="inline-flex size-10 items-center justify-center rounded-xl bg-muted">
                   <ElevaIcon
                     icon={icon}
                     weight={isSelected ? "fill" : "duotone"}
-                    className="size-6 text-eleva-primary"
-                    duotoneColor={
-                      isSelected ? undefined : "rgb(var(--eleva-primary-light))"
-                    }
+                    className="size-6 text-primary"
                   />
                 </span>
               )}

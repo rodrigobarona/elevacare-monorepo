@@ -126,7 +126,10 @@ export function StepInvoicing({
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-green-500 text-green-700">
+          <Badge
+            variant="outline"
+            className="border-success/40 bg-success-subtle text-success"
+          >
             {profile.invoicingProvider === "manual"
               ? t("acknowledged")
               : t("connected")}

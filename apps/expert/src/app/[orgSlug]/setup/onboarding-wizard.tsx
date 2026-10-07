@@ -98,9 +98,9 @@ export function OnboardingWizard({
               aria-current={isActive ? "step" : undefined}
               className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 isActive
-                  ? "border-eleva-primary bg-eleva-primary text-white"
+                  ? "border-primary bg-primary text-primary-foreground"
                   : done
-                    ? "border-eleva-primary-light/50 bg-eleva-primary-light/10 text-eleva-primary"
+                    ? "border-primary/30 bg-accent text-accent-foreground"
                     : "border-border text-muted-foreground"
               }`}
             >

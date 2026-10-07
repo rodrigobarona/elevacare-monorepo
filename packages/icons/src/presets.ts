@@ -18,4 +18,4 @@ export const CHROME_ICON_WEIGHT: ElevaIconWeight = "regular"
 /** Marketing / empty-state illustrations. */
 export const ILLUSTRATION_ICON_WEIGHT: ElevaIconWeight = "duotone"
 
-export const DUOTONE_SECONDARY_COLOR = "rgb(var(--eleva-primary-light))"
+export const DUOTONE_SECONDARY_COLOR = "var(--color-teal-300)"

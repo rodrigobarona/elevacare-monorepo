@@ -35,10 +35,10 @@ export default async function OnboardingPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-8">
         <header className="space-y-2 text-center">
-          <h1 className="font-serif text-3xl tracking-tight text-eleva-primary">
+          <h1 className="font-serif text-3xl tracking-tight text-primary">
             {t("title")}
           </h1>
-          <p className="text-sm leading-6 text-eleva-neutral-900/70">
+          <p className="text-sm leading-6 text-muted-foreground">
             {t("subtitle", { name: displayName })}
           </p>
         </header>

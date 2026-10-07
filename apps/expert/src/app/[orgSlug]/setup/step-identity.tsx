@@ -54,7 +54,10 @@ export function StepIdentity({ profile, apiBaseUrl, onDone }: Props) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-green-500 text-green-700">
+          <Badge
+            variant="outline"
+            className="border-success/40 bg-success-subtle text-success"
+          >
             Verified
           </Badge>
           <span className="text-sm text-muted-foreground">
