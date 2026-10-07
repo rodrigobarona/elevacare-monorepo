@@ -342,9 +342,6 @@ async function applyParticipantWebhook(input: {
           .set({
             status: next.status,
             participants: next.participants,
-            ...(shouldApplyEvent(locked.lastEventAt, input.incoming)
-              ? { lastEventAt: input.incoming }
-              : {}),
             ...(next.status === "ended" || next.status === "no_show"
               ? { attendance: deriveAttendance(next.participants) }
               : {}),

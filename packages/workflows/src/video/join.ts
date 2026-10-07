@@ -24,8 +24,9 @@ export class SessionJoinError extends Error {
 
 export function classifyJoinStatus(
   status: string
-): { ok: true } | { error: "SESSION_NOT_ACTIVE" } {
+): { ok: true } | { error: "SESSION_NOT_ACTIVE" | "ROOM_NOT_READY" } {
   if (status === "scheduled" || status === "live") return { ok: true }
+  if (status === "room_unresolved") return { error: "ROOM_NOT_READY" }
   return { error: "SESSION_NOT_ACTIVE" }
 }
 

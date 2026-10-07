@@ -24,6 +24,9 @@ describe("classifyJoinStatus", () => {
     expect(classifyJoinStatus("no_show")).toEqual({
       error: "SESSION_NOT_ACTIVE",
     })
+    expect(classifyJoinStatus("room_unresolved")).toEqual({
+      error: "ROOM_NOT_READY",
+    })
   })
 })
 
