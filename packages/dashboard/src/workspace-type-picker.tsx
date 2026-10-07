@@ -75,9 +75,6 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
                   icon={icon}
                   weight={isSelected ? "fill" : "duotone"}
                   className="size-20 text-primary"
-                  duotoneColor={
-                    isSelected ? undefined : "var(--color-teal-300)"
-                  }
                 />
               ) : (
                 <span className="inline-flex size-10 items-center justify-center rounded-xl bg-muted">
@@ -85,9 +82,6 @@ export function WorkspaceTypePicker({ mode }: WorkspaceTypePickerProps) {
                     icon={icon}
                     weight={isSelected ? "fill" : "duotone"}
                     className="size-6 text-primary"
-                    duotoneColor={
-                      isSelected ? undefined : "var(--color-teal-300)"
-                    }
                   />
                 </span>
               )}
