@@ -22,10 +22,12 @@ describe("mintMeetingToken", () => {
     expect(claims.r).toBe("eleva-11111111-1111-4111-8111-111111111111")
     expect(claims.d).toBe(DOMAIN_ID)
     expect(claims.o).toBe(true)
-    expect(claims.u).toBe("user_1")
-    expect(claims.user_name).toBe("Ana")
-    expect(claims.enable_recording).toBe(false)
-    expect(claims.eject_at_token_exp).toBe(true)
+    expect(claims.ud).toBe("user_1")
+    expect(claims.u).toBe("Ana")
+    expect(claims.ejt).toBe(true)
+    expect(claims.erui).toBe(false)
+    expect(claims).not.toHaveProperty("er")
+    expect(claims).not.toHaveProperty("sr")
   })
 
   it("refuses a token without a room name", async () => {
@@ -47,10 +49,10 @@ describe("mintMeetingToken", () => {
       r: "eleva-x",
       d: DOMAIN_ID,
       o: "yes",
-      u: "user_1",
-      user_name: "Ana",
-      enable_recording: false,
-      eject_at_token_exp: true,
+      ud: "user_1",
+      u: "Ana",
+      ejt: true,
+      erui: false,
     })
       .setProtectedHeader({ alg: "HS256", typ: "JWT" })
       .setIssuedAt()

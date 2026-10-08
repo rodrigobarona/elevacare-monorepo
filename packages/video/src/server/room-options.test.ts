@@ -52,9 +52,9 @@ describe("buildSessionRoomBody", () => {
 
     expect(body.name).toBe(`eleva-${BOOKING_ID}`)
     expect(body.privacy).toBe("private")
-    expect(body.properties.enable_recording).toBe(false)
-    expect(body.properties.enable_recording_ui).toBe(false)
-    expect(body.properties.start_cloud_recording).toBe(false)
+    expect(body.properties).not.toHaveProperty("enable_recording")
+    expect(body.properties).not.toHaveProperty("enable_recording_ui")
+    expect(body.properties).not.toHaveProperty("start_cloud_recording")
     expect(body.properties.eject_at_room_exp).toBe(true)
     expect(body.properties.max_participants).toBe(2)
     expect(body.properties.nbf).toBe(
@@ -147,8 +147,7 @@ describe("roomMatchesContract", () => {
             nbf: expected.nbf,
             exp: expected.exp,
             max_participants: expected.max_participants,
-            enable_recording: false,
-            enable_recording_ui: false,
+            enable_recording: "",
             eject_at_room_exp: true,
           },
         },

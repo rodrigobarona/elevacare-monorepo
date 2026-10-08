@@ -11,14 +11,20 @@ export type MintMeetingTokenInput = {
   apiKey: string
 }
 
+/**
+ * Self-signed Daily JWT claims use the abbreviations in
+ * https://docs.daily.co/docs/guides/privacy-and-security/self-signing-tokens
+ * (`ud` = user_id, `u` = user_name, `ejt` = eject_at_token_exp,
+ * `erui` = enable_recording_ui). Omit `er` / `sr` so recording stays off.
+ */
 export const meetingTokenClaimsSchema = z.object({
   r: z.string().min(1),
   d: z.string().min(1),
   o: z.boolean(),
-  u: z.string().min(1),
-  user_name: z.string(),
-  enable_recording: z.literal(false),
-  eject_at_token_exp: z.literal(true),
+  ud: z.string().min(1),
+  u: z.string(),
+  ejt: z.literal(true),
+  erui: z.literal(false),
 })
 
 export type MeetingTokenClaims = z.infer<typeof meetingTokenClaimsSchema>
@@ -54,10 +60,10 @@ export async function mintMeetingToken(
     r: input.roomName,
     d: input.domainId,
     o: input.isOwner,
-    u: input.userId,
-    user_name: input.userName,
-    enable_recording: false,
-    eject_at_token_exp: true,
+    ud: input.userId,
+    u: input.userName,
+    ejt: true,
+    erui: false,
   } satisfies MeetingTokenClaims)
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .setIssuedAt(now)

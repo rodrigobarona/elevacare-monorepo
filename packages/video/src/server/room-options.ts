@@ -20,9 +20,6 @@ export type SessionRoomProperties = {
   enable_prejoin_ui: true
   enable_chat: true
   enable_screenshare: true
-  enable_recording: false
-  enable_recording_ui: false
-  start_cloud_recording: false
   eject_at_room_exp: true
   enable_knocking: false
   lang: DailyLang
@@ -79,9 +76,6 @@ export function buildSessionRoomBody(
       enable_prejoin_ui: true,
       enable_chat: true,
       enable_screenshare: true,
-      enable_recording: false,
-      enable_recording_ui: false,
-      start_cloud_recording: false,
       eject_at_room_exp: true,
       enable_knocking: false,
       lang: input.lang ?? "pt",
@@ -121,7 +115,13 @@ export function roomMatchesContract(
   if (config.exp !== expected.exp) return false
   if (config.max_participants !== expected.max_participants) return false
   if (config.eject_at_room_exp !== true) return false
-  if (config.enable_recording) return false
+  // Daily enable_recording is "cloud" | "local" | "cloud-audio-only" | "raw-tracks".
+  // Omit it on create (default off). "" / false / missing means off.
+  if (isRecordingEnabled(config.enable_recording)) return false
   if (config.enable_recording_ui) return false
   return true
+}
+
+function isRecordingEnabled(value: unknown): boolean {
+  return typeof value === "string" ? value.length > 0 : Boolean(value)
 }
