@@ -36,6 +36,7 @@ export {
   dailyWebhookHeaders,
   handleDailyWebhook,
   webhookAuditAction,
+  webhookEventWriteGate,
   DailyWebhookAuthError,
   type DailyWebhookResult,
 } from "./daily-webhook"
