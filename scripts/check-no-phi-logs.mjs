@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * CI guard: Daily meeting-token JWTs must not appear in source as literals,
- * in audit emit payloads, or in join URLs. Complements Sentry/BetterStack
- * JWT redaction in @eleva/observability.
+ * in ctx.emit payloads, or in join URLs. Complements Sentry/BetterStack
+ * JWT redaction in @eleva/observability. Does not scan other audit writers.
  */
 import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
@@ -31,7 +31,7 @@ const GENERIC_TOKEN_FIELD_RE = /\btoken(?:\s*:|\s*[,}])/
 const JOIN_URL_TOKEN_RE =
   /sessions\/[^"'`\s]+\/join[^"'`\s]*[?&#](?:token|t|meetingToken|meeting_token)=/
 const LOG_TOKEN_RE =
-  /(?:console|logger|log)\.(?:log|debug|info|warn|error|trace|fatal|table)\([^)]{0,240}\b(?:meetingToken|meeting_token|meeting token)\b/i
+  /(?:console|logger|log)\.(?:log|debug|info|warn|error|trace|fatal|table)\([\s\S]{0,240}?\b(?:meetingToken|meeting_token|meeting token)\b/i
 
 function objectEnd(content, brace) {
   let depth = 0
@@ -49,6 +49,18 @@ function objectEnd(content, brace) {
         continue
       }
       if (ch === quote) quote = null
+      continue
+    }
+    if (ch === "/" && content[i + 1] === "/") {
+      const nl = content.indexOf("\n", i)
+      if (nl === -1) break
+      i = nl
+      continue
+    }
+    if (ch === "/" && content[i + 1] === "*") {
+      const endC = content.indexOf("*/", i + 2)
+      if (endC === -1) break
+      i = endC + 1
       continue
     }
     if (ch === '"' || ch === "'" || ch === "`") {
@@ -151,7 +163,7 @@ for (const file of files) {
         MEETING_TOKEN_FIELD_RE.test(span) || GENERIC_TOKEN_FIELD_RE.test(span)
     )
   ) {
-    violations.push(`${rel}: audit payload includes a meeting token field`)
+    violations.push(`${rel}: ctx.emit payload includes a token field`)
   }
   if (JOIN_URL_TOKEN_RE.test(content)) {
     violations.push(`${rel}: join URL carries a meeting token query param`)

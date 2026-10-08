@@ -27,9 +27,10 @@ closes (`endsAt + 30m`) finalizes `attendance` from participant history
 decided here.
 
 Never log `DAILY_API_KEY` or meeting tokens. CI runs `pnpm check:no-phi-logs`
-as a best-effort grep (compact JWT literals, audit `token` fields, join-URL
-query params, log calls that mention a meeting token). Observability already
-redacts JWTs. Do not treat the grep as the only control.
+as a best-effort grep (compact JWT literals, `token` fields on `ctx.emit`
+payloads, join-URL query params, log calls that mention a meeting token).
+Observability already redacts JWTs. The grep does not cover other
+audit-writing paths. Do not treat it as the only control.
 
 Phase 09 engineering is on main against **standard Daily**. The 09.0 live
 probe and staging two-browser call are still PENDING operator leftovers.

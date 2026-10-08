@@ -86,7 +86,7 @@ Use this:
 - [x] Product CSP `connect-src` includes `https://*.daily.co` and `wss://*.daily.co` plus `DAILY_DOMAIN`; `frame-src` / `media-src` allow Daily. Permissions-Policy camera/mic only on join routes.
 - [x] Join emails and CTAs deep-link to Eleva join pages, never a raw Daily room URL or meeting token.
 - [ ] Dependency updates and vulnerability review are part of the operating process.
-- [x] CI `pnpm check:no-phi-logs` plus observability JWT redaction cover compact meeting-token JWTs in source, audit `token` fields, and join-URL query params. This is a grep guard, not an AST lint.
+- [x] CI `pnpm check:no-phi-logs` plus observability JWT redaction cover compact meeting-token JWTs in source, `token` fields on `ctx.emit` payloads, and join-URL query params. This is a grep guard, not an AST lint, and it does not cover other audit-writing paths.
 - [ ] Production/staging logs are not proven PHI-free. Staging two-browser and the 09.0 Daily probe remain unproven.
 
 ## Launch Readiness
