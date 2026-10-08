@@ -99,6 +99,24 @@ async function loadAssignedSession(bookingId: string, actorUserId: string) {
   })
 }
 
+export async function countPendingEjects(bookingId: string) {
+  return withPlatformAdminContext(async (tx) => {
+    const [row] = await tx
+      .select({
+        count: sql<number>`count(*)::int`,
+      })
+      .from(main.sessionParticipants)
+      .where(
+        and(
+          eq(main.sessionParticipants.bookingId, bookingId),
+          isNotNull(main.sessionParticipants.revokedAt),
+          isNull(main.sessionParticipants.ejectedAt)
+        )
+      )
+    return row?.count ?? 0
+  })
+}
+
 export async function countActiveDelegates(bookingId: string) {
   return withPlatformAdminContext(async (tx) => {
     const [row] = await tx
@@ -161,6 +179,7 @@ export async function runRevokedParticipantDailyCleanup(
     language: string | null
     userId: string
     extraParticipants: number
+    otherPendingEjects?: number
   },
   deps?: SessionParticipantDeps
 ): Promise<RevokedParticipantDailyResult> {
@@ -171,6 +190,12 @@ export async function runRevokedParticipantDailyCleanup(
       if (!isRetryableDailyFailure(err)) throw err
       return { status: "ejectionPending" }
     }
+  }
+  const others =
+    input.otherPendingEjects ??
+    Math.max(0, (await countPendingEjects(input.bookingId)) - 1)
+  if (!shouldRepairRoomCapacity(others)) {
+    return { status: "ok", capacityPending: true }
   }
   try {
     await syncRoomCapacity(input, input.extraParticipants, deps)
