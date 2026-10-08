@@ -28,7 +28,6 @@ const JWT_RE = /eyJ[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}/
 const MEETING_TOKEN_FIELD_RE =
   /\b(?:meetingToken|meeting_token)(?:\s*:|\s*[,}])/
 const GENERIC_TOKEN_FIELD_RE = /\btoken(?:\s*:|\s*[,}])/
-const ROOM_HINT_RE = /\b(?:roomName|roomUrl|dailyRoomName|dailyRoomUrl)\b/
 const JOIN_URL_TOKEN_RE =
   /sessions\/[^"'`\s]+\/join[^"'`\s]*[?&#](?:token|t|meetingToken|meeting_token)=/
 const LOG_TOKEN_RE =
@@ -137,8 +136,7 @@ for (const file of files) {
   if (
     payloads.spans.some(
       (span) =>
-        MEETING_TOKEN_FIELD_RE.test(span) ||
-        (GENERIC_TOKEN_FIELD_RE.test(span) && ROOM_HINT_RE.test(span))
+        MEETING_TOKEN_FIELD_RE.test(span) || GENERIC_TOKEN_FIELD_RE.test(span)
     )
   ) {
     violations.push(`${rel}: audit payload includes a meeting token field`)
