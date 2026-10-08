@@ -10,6 +10,8 @@ vi.mock("@eleva/video/join-grant", () => ({
   mintJoinGrant: vi.fn(async ({ role }: { role: string }) => `grant-${role}`),
   sessionJoinPath: (bookingId: string, grant: string) =>
     `/join/${bookingId}?g=${grant}`,
+  joinGrantExpUnix: (endsAt: Date) =>
+    Math.floor((endsAt.getTime() + 30 * 60 * 1000) / 1000),
 }))
 vi.mock("./send-notification", () => ({
   sendNotification: vi.fn(),
@@ -25,7 +27,9 @@ import { sendBookingNotification } from "./send-booking-notification"
  */
 const SERVICE = "SentinelConditionTherapy"
 const SURNAME = "Sentinelsurname"
-const STARTS_AT = "2026-09-22T10:00:00.000Z"
+const STARTS_AT_DATE = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+STARTS_AT_DATE.setUTCSeconds(0, 0)
+const STARTS_AT = STARTS_AT_DATE.toISOString()
 
 const KINDS = [
   { kind: "booking.confirmed", status: "confirmed" },
@@ -47,7 +51,7 @@ function booking(
     orgSlug: "acme",
     status,
     startsAt: new Date(STARTS_AT),
-    endsAt: new Date("2026-09-22T10:50:00.000Z"),
+    endsAt: new Date(STARTS_AT_DATE.getTime() + 50 * 60 * 1000),
     timezone: "Europe/Lisbon",
     sessionMode: "online",
     bookedLocale: locale,
@@ -80,7 +84,9 @@ describe("notification PHI guard", () => {
               bookingId: "00000000-0000-4000-8000-000000000002",
               startsAt: STARTS_AT,
               occurredAt: "2026-09-21T15:00:00.000Z",
-              previousStartsAt: "2026-09-20T10:00:00.000Z",
+              previousStartsAt: new Date(
+                STARTS_AT_DATE.getTime() - 2 * 24 * 60 * 60 * 1000
+              ).toISOString(),
               scheduleRevision: 1,
             },
           },

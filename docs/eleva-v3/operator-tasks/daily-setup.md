@@ -52,7 +52,8 @@ email/ICS (`/join/{bookingId}?g=`). Never Daily `?t=`.
 ## Join URLs
 
 Confirmation and 1h-reminder emails (and ICS `URL`/`LOCATION`) deep-link to
-`/join/{bookingId}?g=` with a signed Eleva grant. In-app CTAs stay
+`/join/{bookingId}?g=` with a signed Eleva grant. Guests without an
+account join Daily as `guest:{bookingId}`. In-app CTAs stay
 session-based at `/{orgSlug}/sessions/{bookingId}/join`. Never paste a
 raw Daily room URL or meeting token into member or expert copy.
 

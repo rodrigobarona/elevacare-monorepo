@@ -39,7 +39,11 @@ Each entry should include:
   grant at `/join/{bookingId}?g=`. The grant is HS256 (HKDF from
   `BETTER_AUTH_SECRET`), purpose `session-join`, role-bound
   (`member`|`expert`), exp = `endsAt + 30m`. Possession of a valid grant
-  joins that role and ignores any session cookie. Daily meeting tokens
+  joins that role and ignores any session cookie. Guest bookings with no
+  `memberUserId` mint Daily as `guest:{bookingId}` (audit actor null);
+  never map `guestEmail` onto an existing account. A leaked grant can
+  evict the real participant (`enforce_unique_user_ids`, last-join-wins);
+  grants are bearer secrets. Daily meeting tokens
   stay in the POST JSON body only — never in URLs. In-app session CTAs
   stay cookie-based. Public grant POST uses BotID + `RATE_LIMITS.public`.
   Gateway first-segment `join` is reserved. Out of scope: overtime UI,

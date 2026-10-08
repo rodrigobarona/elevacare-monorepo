@@ -20,4 +20,17 @@ describe("generateIcsRequest", () => {
     expect(unfolded).toContain(`LOCATION:${joinHref}`)
     expect(ics).not.toContain("t=")
   })
+
+  it("omits URL when the value is not a valid URI", () => {
+    const ics = generateIcsRequest({
+      uid: "11111111-1111-4111-8111-111111111111",
+      summary: "Eleva session with Ana",
+      startTime: new Date("2026-10-08T10:00:00.000Z"),
+      endTime: new Date("2026-10-08T10:50:00.000Z"),
+      timezone: "Europe/Lisbon",
+      url: "not a url",
+      organizer: { name: "Ana", email: "ana@example.test" },
+    })
+    expect(ics).not.toContain("URL:")
+  })
 })

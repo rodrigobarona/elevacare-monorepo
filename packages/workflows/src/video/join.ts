@@ -70,6 +70,8 @@ export type JoinSessionInput = {
   now?: Date
   /** When set, skip session-cookie participant checks (grant is role-bound). */
   grantRole?: JoinGrantRole
+  /** Audit actor; defaults to userId. Null for guest grants with no account. */
+  actorUserId?: string | null
 }
 
 export type JoinSessionResult = {
@@ -109,6 +111,7 @@ export async function joinSessionFromGrant(
       userName: identity.userName,
       now: input.now,
       grantRole: claims.role,
+      actorUserId: identity.actorUserId,
     },
     deps
   )
@@ -118,13 +121,16 @@ async function resolveGrantJoinIdentity(
   bookingId: string,
   role: JoinGrantRole,
   scheduleRevision: number
-): Promise<{ userId: string; userName: string }> {
+): Promise<{
+  userId: string
+  userName: string
+  actorUserId?: string | null
+}> {
   const identity = await withPlatformAdminContext(async (tx) => {
     const [session] = await tx
       .select({
         memberUserId: main.sessions.memberUserId,
         expertUserId: main.expertProfiles.userId,
-        guestEmail: main.bookings.guestEmail,
         guestName: main.bookings.guestName,
         scheduleRevision: main.bookings.scheduleRevision,
       })
@@ -149,7 +155,11 @@ async function resolveGrantJoinIdentity(
           .where(eq(auth.user.id, session.expertUserId))
           .limit(1)
         return expert
-          ? { userId: expert.id, userName: expert.name?.trim() || "Expert" }
+          ? {
+              userId: expert.id,
+              userName: expert.name?.trim() || "Expert",
+              actorUserId: expert.id,
+            }
           : null
       }
       case "member": {
@@ -159,24 +169,17 @@ async function resolveGrantJoinIdentity(
             .from(auth.user)
             .where(eq(auth.user.id, session.memberUserId))
             .limit(1)
-          if (member) {
-            return {
-              userId: member.id,
-              userName: member.name?.trim() || "Member",
-            }
+          if (!member) return null
+          return {
+            userId: member.id,
+            userName: member.name?.trim() || "Member",
+            actorUserId: member.id,
           }
         }
-        const email = session.guestEmail?.trim().toLowerCase()
-        if (!email) return null
-        const [guest] = await tx
-          .select({ id: auth.user.id, name: auth.user.name })
-          .from(auth.user)
-          .where(eq(auth.user.email, email))
-          .limit(1)
-        if (!guest) return null
         return {
-          userId: guest.id,
-          userName: guest.name?.trim() || session.guestName?.trim() || "Member",
+          userId: `guest:${bookingId}`,
+          userName: session.guestName?.trim() || "Member",
+          actorUserId: null,
         }
       }
       default: {
@@ -265,8 +268,10 @@ export async function joinSession(
   const mint = deps.mint ?? mintMeetingToken
   const exp = tokenExpUnix(now, row.session.endsAt)
 
+  const actorUserId =
+    input.actorUserId === undefined ? input.userId : input.actorUserId
   return withPlatformAudit(
-    { orgId: row.session.orgId, actorUserId: input.userId },
+    { orgId: row.session.orgId, actorUserId },
     async (tx, ctx) => {
       const [lockedSession] = await tx
         .select({ status: main.sessions.status })

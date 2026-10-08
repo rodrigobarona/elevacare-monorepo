@@ -12,6 +12,7 @@ import {
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
+  joinGrantExpUnix,
   mintJoinGrant as mintJoinGrantDefault,
   sessionJoinPath,
   type JoinGrantRole,
@@ -512,6 +513,9 @@ export async function sessionJoinHref(
     return undefined
   }
   if (booking.sessionMode !== "online") return undefined
+  if (joinGrantExpUnix(booking.endsAt) <= Math.floor(Date.now() / 1000)) {
+    return undefined
+  }
   const grant = await mint({
     bookingId: booking.id,
     role,

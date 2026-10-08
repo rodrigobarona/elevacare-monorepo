@@ -276,7 +276,8 @@ room. The room sweep does not recreate a room for a cancelled session.
 Join is via Eleva pages. Signed-in in-app CTAs use
 `/{orgSlug}/sessions/{bookingId}/join`. Email and calendar invites use a
 signed Eleva grant at `/join/{bookingId}?g=` (role-bound, expires at
-`endsAt+30m`). Never a raw Daily URL or Daily `?t=` token. The join window
+`endsAt+30m`). Guests without an account join Daily as `guest:{bookingId}`.
+Never a raw Daily URL or Daily `?t=` token. The join window
 is `[startAt-15m, endAt+30m]`. Meeting tokens are minted on `POST .../join`,
 held in memory by `<ElevaCall>`, and must not appear in URLs, logs, audit
 payloads, or columns (`pnpm check:no-phi-logs`). Standard Daily, recording

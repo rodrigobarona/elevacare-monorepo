@@ -31,11 +31,20 @@ export function JoinClient({
     window.history.replaceState(window.history.state, "", next)
   }, [])
 
+  const api = useMemo(
+    () =>
+      createApiClient({
+        baseUrl: apiBaseUrl,
+        credentials: "omit",
+      }),
+    [apiBaseUrl]
+  )
+
   const join = useCallback(() => {
-    return createApiClient({ baseUrl: apiBaseUrl }).sessions.join(bookingId, {
+    return api.sessions.join(bookingId, {
       grant,
     })
-  }, [apiBaseUrl, bookingId, grant])
+  }, [api, bookingId, grant])
 
   return (
     <JoinSession

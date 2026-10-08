@@ -54,6 +54,8 @@ vi.mock("@eleva/video/join-grant", () => ({
   mintJoinGrant: vi.fn(async ({ role }: { role: string }) => `grant-${role}`),
   sessionJoinPath: (bookingId: string, grant: string) =>
     `/join/${bookingId}?g=${grant}`,
+  joinGrantExpUnix: (endsAt: Date) =>
+    Math.floor((endsAt.getTime() + 30 * 60 * 1000) / 1000),
 }))
 vi.mock("./send-notification", () => ({
   sendNotification: vi.fn(),
@@ -65,8 +67,15 @@ const ORG_ID = "00000000-0000-4000-8000-000000000001"
 const BOOKING_ID = "00000000-0000-4000-8000-000000000002"
 const MEMBER_ID = "00000000-0000-4000-8000-000000000003"
 const EXPERT_ID = "00000000-0000-4000-8000-000000000004"
-const STARTS_AT = "2026-09-22T10:00:00.000Z"
-const OCCURRED_AT = "2026-09-21T15:00:00.000Z"
+const STARTS_AT_DATE = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+STARTS_AT_DATE.setUTCSeconds(0, 0)
+const STARTS_AT = STARTS_AT_DATE.toISOString()
+const ENDS_AT = new Date(STARTS_AT_DATE.getTime() + 50 * 60 * 1000)
+const PREVIOUS_STARTS_AT = new Date(
+  STARTS_AT_DATE.getTime() - 2 * 24 * 60 * 60 * 1000
+).toISOString()
+const DTSTART = STARTS_AT.replace(/[-:]/g, "").replace(/\.\d{3}/, "")
+const OCCURRED_AT = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
 
 function unfoldIcs(content: string): string {
   return content.replace(/\r\n /g, "")
@@ -89,8 +98,8 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     orgId: ORG_ID,
     orgSlug: "acme",
     status: "confirmed",
-    startsAt: new Date("2026-09-22T10:00:00.000Z"),
-    endsAt: new Date("2026-09-22T10:50:00.000Z"),
+    startsAt: new Date(STARTS_AT),
+    endsAt: ENDS_AT,
     timezone: "Europe/Lisbon",
     sessionMode: "online",
     bookedLocale: "en",
@@ -279,7 +288,7 @@ describe("sendBookingNotification", () => {
     })
     expect(memberIcs.content).toContain("METHOD:REQUEST")
     expect(memberIcs.content).toContain(`UID:${BOOKING_ID}@eleva.care`)
-    expect(memberIcs.content).toContain("DTSTART:20260922T100000Z")
+    expect(memberIcs.content).toContain(`DTSTART:${DTSTART}`)
     expect(memberIcs.content).toContain("SEQUENCE:0")
     expect(memberIcs.content).toContain("SUMMARY:Eleva session with Ana")
     expect(memberIcs.content).toContain("mailto:ada@example.com")
@@ -346,7 +355,7 @@ describe("sendBookingNotification", () => {
       kind: "booking.rescheduled",
       deliveries: [],
     })
-    const previousStartsAt = "2026-09-20T10:00:00.000Z"
+    const previousStartsAt = PREVIOUS_STARTS_AT
     await sendBookingNotification(
       {
         id: "evt-reschedule",
@@ -562,7 +571,7 @@ describe("sendBookingNotification", () => {
         type: "booking.rescheduled",
         orgId: ORG_ID,
         payload: eventPayload({
-          previousStartsAt: "2026-09-20T10:00:00.000Z",
+          previousStartsAt: PREVIOUS_STARTS_AT,
           scheduleRevision: 1,
         }),
       },
@@ -576,5 +585,29 @@ describe("sendBookingNotification", () => {
       }
     )
     expect(send).not.toHaveBeenCalled()
+  })
+
+  it("omits join links when the grant window has already closed", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-late-join",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({ endsAt: new Date("2020-01-01T00:00:00.000Z") }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({ joinHref: undefined })
+    )
+    const [memberIcs] = send.mock.calls[0]?.[0].ctx.attachments ?? []
+    expect(unfoldIcs(memberIcs.content)).not.toContain("URL:")
   })
 })

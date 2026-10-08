@@ -81,5 +81,5 @@ export async function verifyJoinGrant(
 
 export function sessionJoinPath(bookingId: string, grant: string): string {
   const params = new URLSearchParams({ g: grant })
-  return `/join/${bookingId}?${params.toString()}`
+  return `/join/${encodeURIComponent(bookingId)}?${params.toString()}`
 }

@@ -1964,11 +1964,15 @@ export interface ApiClientOptions {
   fetch?: typeof globalThis.fetch
   /** Optional abort signal applied to every request. */
   signal?: AbortSignal
+  /** Override fetch credentials. Defaults to omit with a bearer token, else include. */
+  credentials?: RequestCredentials
 }
 
 export function createApiClient(options: ApiClientOptions) {
   const { baseUrl, bearerToken } = options
   const fetchFn = options.fetch ?? globalThis.fetch
+  const credentials: RequestCredentials =
+    options.credentials ?? (bearerToken ? "omit" : "include")
 
   async function request<T>(
     method: string,
@@ -1988,7 +1992,7 @@ export function createApiClient(options: ApiClientOptions) {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: bearerToken ? "omit" : "include",
+      credentials,
       signal: options.signal,
     })
 
@@ -2027,7 +2031,7 @@ export function createApiClient(options: ApiClientOptions) {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: bearerToken ? "omit" : "include",
+      credentials,
       signal: options.signal,
     })
 

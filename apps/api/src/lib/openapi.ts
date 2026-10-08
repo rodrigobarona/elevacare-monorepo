@@ -3015,7 +3015,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           description:
             "Assigned expert, booking member, or an active delegate can join with a session cookie or bearer token. A signed Eleva join grant (`grant`) joins as that role without a cookie or bearer token and ignores any session. Window is [start-15m, end+30m]. Token exp is min(now+2h, end+30m). Audit payload carries userId and roomName only. Never put a Daily meeting token in a URL.",
           tags: ["Sessions"],
-          security: [],
+          security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
           },

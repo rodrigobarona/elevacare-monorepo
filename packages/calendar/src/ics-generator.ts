@@ -115,7 +115,11 @@ function generateIcs(
   }
 
   if (event.url) {
-    lines.push(`URL:${escapeText(event.url)}`)
+    try {
+      lines.push(`URL:${new URL(event.url).href}`)
+    } catch {
+      // Invalid URL: omit the property instead of failing the invite.
+    }
   }
 
   if (event.location) {
