@@ -56,6 +56,7 @@ describe("buildSessionRoomBody", () => {
     expect(body.properties).not.toHaveProperty("enable_recording_ui")
     expect(body.properties).not.toHaveProperty("start_cloud_recording")
     expect(body.properties.eject_at_room_exp).toBe(true)
+    expect(body.properties.enforce_unique_user_ids).toBe(true)
     expect(body.properties.max_participants).toBe(2)
     expect(body.properties.nbf).toBe(
       unixSeconds(new Date(startAt.getTime() - JOIN_LEAD_MS))
@@ -149,6 +150,7 @@ describe("roomMatchesContract", () => {
             max_participants: expected.max_participants,
             enable_recording: "",
             eject_at_room_exp: true,
+            enforce_unique_user_ids: true,
           },
         },
         expected
@@ -191,6 +193,21 @@ describe("roomMatchesContract", () => {
           config: {
             ...expected,
             max_participants: expected.max_participants + 3,
+          },
+        },
+        expected
+      )
+    ).toBe(false)
+  })
+
+  it("rejects a room that allows the same user_id twice", () => {
+    expect(
+      roomMatchesContract(
+        {
+          privacy: "private",
+          config: {
+            ...expected,
+            enforce_unique_user_ids: false,
           },
         },
         expected

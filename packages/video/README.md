@@ -17,6 +17,9 @@ Confirmation and 1h-reminder emails deep-link to Eleva join pages
 (`/{orgSlug}/sessions/{bookingId}/join`, `/expert/sessions/{bookingId}/join`).
 Never put a Daily room URL or meeting token in email.
 
+Rooms set `enforce_unique_user_ids`: a second join with the same token
+`user_id` ejects the earlier copy (Daily last-join-wins).
+
 `payment.failed` and a **full** `refund.succeeded` before `startAt` cancel
 the session and delete the room. Partial refunds and the same events after
 `startAt` leave the session row intact.

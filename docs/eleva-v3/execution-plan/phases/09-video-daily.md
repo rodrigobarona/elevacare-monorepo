@@ -46,7 +46,7 @@ In:
   `max_participants` = 2 + number of delegated participants (recomputed via Daily room update
   when a delegate is added, so every authorised participant can join), `enable_prejoin_ui: true`, `enable_chat: true`,
   `enable_screenshare: true`, `enable_recording: false` (recording is Phase 16.8, gated on D-07/D-08),
-  `eject_at_room_exp: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
+  `eject_at_room_exp: true`, `enforce_unique_user_ids: true`; `mintMeetingToken({ roomName, userId, userName, isOwner, exp })`;
   `deleteRoom(roomName)`; `verifyWebhookSignature(req)`; typed webhook event parser.
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
@@ -290,7 +290,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    nbf: startAt-15m, exp: endAt+30m, max_participants: 2 + delegated participant count
    (updateRoom when a delegate is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, enable_recording_ui: false,
-   eject_at_room_exp: true, enable_knocking: false, lang: from booking locale } }. Do NOT
+   eject_at_room_exp: true, enable_knocking: false, enforce_unique_user_ids: true,
+   lang: from booking locale } }. Do NOT
    omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
    Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
