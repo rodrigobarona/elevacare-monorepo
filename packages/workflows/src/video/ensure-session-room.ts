@@ -331,11 +331,28 @@ export function shouldCancelUnstartedSession(
   return true
 }
 
+/** True when a missing or live session row must become cancelled so the sweep cannot mint a room. */
+export function needsCancelledSessionPlaceholder(
+  sessionStatus: string | null,
+  startsAt: Date,
+  occurredAt: Date
+): boolean {
+  if (sessionStatus === null) {
+    return startsAt.getTime() > occurredAt.getTime()
+  }
+  return shouldCancelUnstartedSession(
+    { status: sessionStatus, startsAt },
+    occurredAt
+  )
+}
+
 /**
  * payment.failed / refund.succeeded before startAt: cancel the session and
  * delete the Daily room even when the booking is still confirmed.
- * `occurredAt` is the financial event time so a delayed delivery after
- * startAt still cancels a pre-start failure.
+ * Inserts a cancelled session row when none exists so the room sweep
+ * cannot create a Daily room later. `occurredAt` is the financial event
+ * time so a delayed delivery after startAt still cancels a pre-start
+ * failure.
  */
 export async function cancelUnstartedSessionRoom(
   bookingId: string,
@@ -345,27 +362,51 @@ export async function cancelUnstartedSessionRoom(
   const row = await withPlatformAdminContext(async (tx) => {
     const [found] = await tx
       .select({
-        orgId: main.sessions.orgId,
-        status: main.sessions.status,
+        orgId: main.bookings.orgId,
+        eventTypeId: main.bookings.eventTypeId,
+        expertProfileId: main.bookings.expertProfileId,
+        memberUserId: main.bookings.memberUserId,
         startsAt: main.bookings.startsAt,
+        endsAt: main.bookings.endsAt,
+        sessionMode: main.bookings.sessionMode,
+        sessionStatus: main.sessions.status,
       })
-      .from(main.sessions)
-      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
-      .where(eq(main.sessions.bookingId, bookingId))
+      .from(main.bookings)
+      .leftJoin(main.sessions, eq(main.sessions.bookingId, main.bookings.id))
+      .where(eq(main.bookings.id, bookingId))
       .limit(1)
     return found ?? null
   })
   if (!row) return
-  if (row.status === "cancelled") {
+  if (row.sessionMode !== "online" || !row.memberUserId) return
+  if (row.sessionStatus === "cancelled") {
     if (row.startsAt.getTime() > occurredAt.getTime()) {
       await deleteSessionRoom(bookingId, deps)
     }
     return
   }
-  if (!shouldCancelUnstartedSession(row, occurredAt)) return
+  if (
+    !needsCancelledSessionPlaceholder(
+      row.sessionStatus,
+      row.startsAt,
+      occurredAt
+    )
+  ) {
+    return
+  }
 
   let cancelled = false
   await withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
+    await ensureSessionRow(tx, {
+      id: bookingId,
+      orgId: row.orgId,
+      eventTypeId: row.eventTypeId,
+      expertProfileId: row.expertProfileId,
+      memberUserId: row.memberUserId,
+      startsAt: row.startsAt,
+      endsAt: row.endsAt,
+      sessionMode: row.sessionMode,
+    })
     const updated = await tx
       .update(main.sessions)
       .set({ status: "cancelled" })
@@ -433,7 +474,9 @@ export async function deleteSessionRoom(
     })
   }
 
-  if (session.dailyRoomName && isElevaRoomName(session.dailyRoomName)) {
+  if (!session.dailyRoomName) return
+
+  if (isElevaRoomName(session.dailyRoomName)) {
     await daily(deps).deleteRoom(session.dailyRoomName)
   }
 
