@@ -16,6 +16,7 @@ import { isDryRun, registerSchedule } from "./register-schedule"
 import { DOMAIN_EVENTS_PUBLISHER_SCHEDULE } from "./domain-events-schedule"
 import { PAYOUT_SCHEDULES } from "./payout-schedules"
 import {
+  VIDEO_ATTENDANCE_SWEEP_SCHEDULE,
   VIDEO_EJECT_RETRY_SCHEDULE,
   VIDEO_ROOM_SWEEP_SCHEDULE,
 } from "./video-schedules"
@@ -111,6 +112,7 @@ async function main() {
 
   await registerSchedule(VIDEO_ROOM_SWEEP_SCHEDULE, { dryRun })
   await registerSchedule(VIDEO_EJECT_RETRY_SCHEDULE, { dryRun })
+  await registerSchedule(VIDEO_ATTENDANCE_SWEEP_SCHEDULE, { dryRun })
 
   for (const spec of PAYOUT_SCHEDULES) {
     await registerSchedule(spec, { dryRun })

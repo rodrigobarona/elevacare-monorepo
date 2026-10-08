@@ -25,6 +25,7 @@ tying our deploy automation to the layout of any single app.
 | `/workflows/stripe-toconline-reconciliation` | `0 4 1 * *` (04:00 UTC = 04:00 WET / 05:00 WEST) | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/accounting` |
 | `/workflows/video-room-sweep`                | `*/15 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
 | `/workflows/video-eject-retry`               | `* * * * *`                                      | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
+| `/workflows/video-attendance-sweep`          | `*/15 * * * *`                                   | bearer `WORKFLOWS_DRAIN_SECRET` | `@eleva/video`      |
 
 When you add a new schedule:
 
@@ -74,7 +75,7 @@ Read from `.env.local` (or the active env when running in CI):
 | `pnpm qstash:setup:stripe-stuck`  | (Re)register the Stripe stuck-event detector          |
 | `pnpm qstash:setup:payouts`       | (Re)register payout engine schedules                  |
 | `pnpm qstash:setup:invoicing`     | (Re)register invoicing retry + monthly reconciliation |
-| `pnpm qstash:setup:video`         | (Re)register Daily room sweep + eject retry           |
+| `pnpm qstash:setup:video`         | (Re)register Daily room, eject, and attendance sweeps |
 | `pnpm qstash:setup:all`           | Run every setup command in sequence                   |
 
 All setup commands accept `-- --dry-run` to preview without writing.

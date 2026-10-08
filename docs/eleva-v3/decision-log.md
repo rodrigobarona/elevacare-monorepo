@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Attendance fallback after the join window closes when Daily is silent
+
+- Decision: Phase 09.6.1 adds QStash `POST /workflows/video-attendance-sweep`
+  (`*/15 * * * *`). Sessions still `scheduled`/`live`/`room_unresolved` with
+  null `attendance` whose Eleva join window has closed (`endsAt + 30m`,
+  `JOIN_TRAIL_MS`) are finalized from participant history (empty history →
+  `nobody` / `no_show`). The phase prompt said `end_at + 15 min`; that would
+  410 a still-open join. Fallback waits for the same trail as join/token
+  `exp`. `meeting.ended` remains the happy path (09.3). Late participant
+  events may still flip `no_show → ended`. Never flip `ended` back to
+  `no_show`. No-show policy (refund/keep) stays out of Phase 09. The delayed
+  `ended + 2 min` `finalizeAttendance` job is still not this slice.
+- Owner: engineering
+- Status: `active`
+- Related: 2026-10-07 attendance SSOT, ADR-018, Phase 09.6
+- Next review: if Daily webhooks prove reliable enough to drop the sweep.
+
 ### 2026-10-08: Payment-fail and full refund before startAt cancel the session
 
 - Decision: Phase 09.5 cancels `sessions.status` and deletes the Daily room
