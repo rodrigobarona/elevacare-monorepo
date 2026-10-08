@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, lte } from "drizzle-orm"
+import { and, asc, eq, inArray, isNull, lte, notInArray } from "drizzle-orm"
 import { withAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext } from "@eleva/db"
 import { JOIN_TRAIL_MS } from "@eleva/video"
@@ -115,6 +115,8 @@ export async function sweepEndedSessionsWithoutAttendance(now = new Date()) {
   const due = new Date(now.getTime() - JOIN_TRAIL_MS)
   let scanned = 0
   let finalized = 0
+  const failed: unknown[] = []
+  const attempted: string[] = []
   for (let batch = 0; batch < SWEEP_MAX_BATCHES; batch += 1) {
     const rows = await withPlatformAdminContext(async (tx) => {
       return tx
@@ -124,18 +126,33 @@ export async function sweepEndedSessionsWithoutAttendance(now = new Date()) {
           and(
             inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
             isNull(main.sessions.attendance),
-            lte(main.sessions.endsAt, due)
+            lte(main.sessions.endsAt, due),
+            attempted.length > 0
+              ? notInArray(main.sessions.bookingId, attempted)
+              : undefined
           )
         )
+        .orderBy(asc(main.sessions.endsAt))
         .limit(SWEEP_BATCH)
     })
     if (rows.length === 0) break
     scanned += rows.length
     for (const row of rows) {
-      const result = await finalizeAttendanceFromHistory(row.bookingId, now)
-      if (result === "finalized") finalized += 1
+      attempted.push(row.bookingId)
+      try {
+        const result = await finalizeAttendanceFromHistory(row.bookingId, now)
+        if (result === "finalized") finalized += 1
+      } catch (err) {
+        failed.push(err)
+      }
     }
     if (rows.length < SWEEP_BATCH) break
+  }
+  if (failed.length > 0) {
+    throw new AggregateError(
+      failed,
+      `video attendance sweep failed for ${failed.length} session(s)`
+    )
   }
   return { scanned, finalized }
 }
