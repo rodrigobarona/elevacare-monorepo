@@ -274,7 +274,10 @@ function Prejoin({
   onJoin: () => void
 }) {
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]">
+    <div
+      className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_18rem]"
+      data-testid="eleva-call-prejoin"
+    >
       <div className="overflow-hidden rounded-3xl bg-muted">
         {localId ? (
           <DailyVideo
