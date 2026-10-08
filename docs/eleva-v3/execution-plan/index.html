@@ -5463,7 +5463,7 @@ tasks pending.</code></pre></div>
 <td>09.1 <code>@eleva/video</code> server</td>
 <td>on main</td>
 <td>Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, <code>requireDailyEnv</code>, member Join copy says <strong>standard Daily, not HIPAA</strong></td>
-<td>Live Daily probe</td>
+<td>—</td>
 </tr>
 <tr>
 <td>09.2 session rooms</td>
@@ -5474,20 +5474,20 @@ tasks pending.</code></pre></div>
 <tr>
 <td>09.3 join + webhooks</td>
 <td>on main</td>
-<td>Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.</td>
-<td><code>end_at+15m</code> attendance fallback (09.6)</td>
+<td>Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Attendance fallback is <code>endsAt + 30m</code> (09.6.1).</td>
+<td>—</td>
 </tr>
 <tr>
 <td>09.4 ElevaCall + join pages</td>
-<td><strong>This PR</strong></td>
+<td>on main</td>
 <td>Member and expert join pages mount <code>&lt;ElevaCall&gt;</code>; in-window Join CTAs; CSP includes <code>wss://*.daily.co</code> and <code>DAILY_DOMAIN</code></td>
-<td>Email deep links (09.5); e2e + probe (09.6)</td>
+<td>Eleva two-browser leftover</td>
 </tr>
 <tr>
 <td>Daily account probe</td>
-<td>PENDING</td>
-<td>Spike written</td>
-<td>First live room</td>
+<td><strong>PASS</strong></td>
+<td>Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off; <strong>not HIPAA</strong></td>
+<td>Eleva join pages + Daily webhook subscribe</td>
 </tr>
 <tr>
 <td>D-07 HIPAA / BAA</td>
@@ -5519,7 +5519,7 @@ private room, name <code>eleva-{bookingId}</code> (standard Daily; HIPAA random 
 <code>max_participants</code> = 2 + number of delegated participants (recomputed via Daily room update
 when a delegate is added, so every authorised participant can join), <code>enable_prejoin_ui: true</code>, <code>enable_chat: true</code>,
 <code>enable_screenshare: true</code>, <code>enable_recording: false</code> (recording is Phase 16.8, gated on D-07/D-08),
-<code>eject_at_room_exp: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
+<code>eject_at_room_exp: true</code>, <code>enforce_unique_user_ids: true</code>; <code>mintMeetingToken({ roomName, userId, userName, isOwner, exp })</code>;
 <code>deleteRoom(roomName)</code>; <code>verifyWebhookSignature(req)</code>; typed webhook event parser.</li>
 <li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
@@ -5531,7 +5531,7 @@ see the state machine below), <code>room_create_attempt_at</code>, <code>room_at
 <code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
 nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
-<strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>end_at + 15 min</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
+<strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>endsAt + 30m</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
 <code>ended + 2 min</code> (QStash, idempotent); it recomputes attendance from the full ordered
 <code>participants</code> history (an empty history — Daily sent nothing — yields <code>nobody</code>, so the sweep
 path always persists a non-NULL attendance before the status transition; every
@@ -5549,8 +5549,9 @@ after <code>meeting.ended</code> (t=10:31) -&gt; final status <code>ended</code>
 <code>finalizeAttendance</code> at <code>ended + 2 min</code>. The decision-log is the source of
 truth: 09.3 writes attendance on <code>meeting.ended</code>, with late participant
 events able to flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>).
-The delayed finalize job and the <code>end_at + 15 min</code> fallback when Daily
-sent nothing land in 09.6.</p>
+The delayed finalize job was never built. The fallback when Daily sent
+nothing is the 09.6.1 sweep at <code>endsAt + 30m</code> (join window close), on
+main.</p>
 <ul>
 <li><p><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
 <code>booking_id</code>, <code>user_id</code>, <code>role</code> (<code>delegate|supervisor</code>), <code>added_by</code>, <code>added_at</code>, <code>revoked_at</code>,
@@ -5670,7 +5671,8 @@ after the session leaves the session record intact (state-machine tests).</li>
 <li><input disabled="" type="checkbox"> PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
 standard Daily, recording off, <strong>not HIPAA</strong>. Do not claim BAA executed.
 First live room / exit gate also needs a completed account probe
-(<code>DAILY_API_KEY</code>, recording off, staging webhook) — file existence is not enough.</li>
+(<code>DAILY_API_KEY</code>, recording off). Prebuilt probe PASS 2026-10-08; staging
+webhook + Eleva two-browser join remain leftover.</li>
 <li><input disabled="" type="checkbox"> Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
 over fixtures + <code>check-no-phi-logs</code> extension).</li>
 </ul>
@@ -5720,10 +5722,10 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under &quot;Local references&quot; and docs/eleva-v3/spikes/09-daily-account.md.
    If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
-   do not stop for an unsigned BAA. The spike may still mark the Daily account
-   pre-check PENDING — that does not block writing @eleva/video, but the first
-   live room and the Phase 09 exit gate require a completed probe (standard
-   DAILY_API_KEY / DAILY_DOMAIN, recording off, staging webhook secret). Pull
+   do not stop for an unsigned BAA. The 09.0 Prebuilt probe is PASS 2026-10-08;
+   the Phase 09 exit gate still needs Eleva join-page two-browser evidence
+   and a Daily webhook subscription after `elevacare-api` is redeployed
+   (`DAILY_WEBHOOK_SECRET` is already on Vercel). Pull
    Daily REST API (rooms, meeting tokens,
    webhooks), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.
@@ -5762,7 +5764,8 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    nbf: startAt-15m, exp: endAt+30m, max_participants: 2 + delegated participant count
    (updateRoom when a delegate is added), enable_prejoin_ui: true, enable_chat: true,
    enable_screenshare: true, enable_recording: false, enable_recording_ui: false,
-   eject_at_room_exp: true, enable_knocking: false, lang: from booking locale } }. Do NOT
+   eject_at_room_exp: true, enable_knocking: false, enforce_unique_user_ids: true,
+   lang: from booking locale } }. Do NOT
    omit the name. Do NOT implement the HIPAA fingerprint / nbf+exp offset reconciler.
    Returns { name, url } with url rewritten to https://${DAILY_DOMAIN}/${name} when
    DAILY_DOMAIN is set. mintMeetingToken({ roomName, userId, userName, isOwner, exp }) is
@@ -5795,7 +5798,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    attendance both|expert_only|member_only|nobody nullable (derived by finalizeAttendance from
    the full participant history after meeting.ended, re-derived by correction runs when late
    participant events arrive; status -&gt; no_show when attendance &lt;&gt; both, else ended; sweep at
-   end_at + 15 min if no webhook),
+   endsAt + 30m if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
    room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
    (reserved for HIPAA after D-07; leave unused now),

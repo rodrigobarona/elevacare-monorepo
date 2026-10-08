@@ -12,9 +12,9 @@
 
 | Slice                       | State    | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                 |
 | --------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
-| 09.1 `@eleva/video` server  | on main  | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe                           |
+| 09.1 `@eleva/video` server  | on main  | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | —                                          |
 | 09.2 session rooms          | on main  | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | —                                          |
-| 09.3 join + webhooks        | on main  | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.                                                       | `end_at+15m` attendance fallback (09.6)    |
+| 09.3 join + webhooks        | on main  | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status. Attendance fallback is `endsAt + 30m` (09.6.1).       | —                                          |
 | 09.4 ElevaCall + join pages | on main  | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                        | Eleva two-browser leftover                 |
 | Daily account probe         | **PASS** | Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off; **not HIPAA**                                                                  | Eleva join pages + Daily webhook subscribe |
 | D-07 HIPAA / BAA            | Deferred | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                  |
@@ -58,8 +58,8 @@ In:
   `name: eleva-{bookingId}` as the idempotency handle — GET-or-create. Do not allocate
   nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
-  **derived, never written from a single event**: on `meeting.ended` (or the sweep at `end_at +
-15 min` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
+  **derived, never written from a single event**: on `meeting.ended` (or the sweep at `endsAt +
+30m` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
   `ended + 2 min` (QStash, idempotent); it recomputes attendance from the full ordered
   `participants` history (an empty history — Daily sent nothing — yields `nobody`, so the sweep
   path always persists a non-NULL attendance before the status transition; every
@@ -77,8 +77,9 @@ In:
 `finalizeAttendance` at `ended + 2 min`. The decision-log is the source of
 truth: 09.3 writes attendance on `meeting.ended`, with late participant
 events able to flip `no_show → ended` (`session.attendance_corrected`).
-The delayed finalize job and the `end_at + 15 min` fallback when Daily
-sent nothing land in 09.6.
+The delayed finalize job was never built. The fallback when Daily sent
+nothing is the 09.6.1 sweep at `endsAt + 30m` (join window close), on
+main.
 
 - `session_participants` table (the **authorization** contract for delegated participants):
   `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,
@@ -325,7 +326,7 @@ PHASE 9 TASK — Daily.co video sessions (ADR-018).
    attendance both|expert_only|member_only|nobody nullable (derived by finalizeAttendance from
    the full participant history after meeting.ended, re-derived by correction runs when late
    participant events arrive; status -> no_show when attendance <> both, else ended; sweep at
-   end_at + 15 min if no webhook),
+   endsAt + 30m if no webhook),
    room_created_at, room_create_attempt_at, room_create_lease_until timestamptz nullable,
    room_attempt_seq int NOT NULL DEFAULT 0, room_fingerprint_exp timestamptz nullable UNIQUE
    (reserved for HIPAA after D-07; leave unused now),
