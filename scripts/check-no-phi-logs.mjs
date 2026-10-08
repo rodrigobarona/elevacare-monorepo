@@ -8,7 +8,7 @@ import { readdir, readFile } from "node:fs/promises"
 import path from "node:path"
 
 const ROOT = path.resolve(import.meta.dirname, "..")
-const ROOTS = ["apps", "packages", "e2e"]
+const ROOTS = ["apps", "packages", "e2e", "scripts"]
 const SKIP_DIRS = new Set([
   "node_modules",
   ".next",
@@ -20,17 +20,50 @@ const SKIP_FILES = new Set([
   "packages/observability/src/redaction.ts",
   "packages/observability/src/redaction.test.ts",
   "packages/video/src/server/meeting-token.test.ts",
+  "scripts/check-no-phi-logs.mjs",
 ])
 const FILE_RE = /\.(?:ts|tsx|js|mjs)$/
 
 const JWT_RE = /eyJ[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}/
-const MEETING_TOKEN_FIELD_RE = /\b(?:meetingToken|meeting_token)\s*:/
-const GENERIC_TOKEN_FIELD_RE = /\btoken\s*:/
+const MEETING_TOKEN_FIELD_RE =
+  /\b(?:meetingToken|meeting_token)(?:\s*:|\s*[,}])/
+const GENERIC_TOKEN_FIELD_RE = /\btoken(?:\s*:|\s*[,}])/
 const ROOM_HINT_RE = /\b(?:roomName|roomUrl|dailyRoomName|dailyRoomUrl)\b/
 const JOIN_URL_TOKEN_RE =
   /sessions\/[^"'`\s]+\/join[^"'`\s]*[?&#](?:token|t|meetingToken|meeting_token)=/
 const LOG_TOKEN_RE =
   /(?:console|logger|log)\.(?:log|debug|info|warn|error|trace|fatal|table)\([^)]{0,240}\b(?:meetingToken|meeting_token|meeting token)\b/i
+
+function objectEnd(content, brace) {
+  let depth = 0
+  let quote = null
+  let escape = false
+  for (let i = brace; i < content.length; i++) {
+    const ch = content[i]
+    if (quote) {
+      if (escape) {
+        escape = false
+        continue
+      }
+      if (ch === "\\") {
+        escape = true
+        continue
+      }
+      if (ch === quote) quote = null
+      continue
+    }
+    if (ch === '"' || ch === "'" || ch === "`") {
+      quote = ch
+      continue
+    }
+    if (ch === "{") depth++
+    else if (ch === "}") {
+      depth--
+      if (depth === 0) return i
+    }
+  }
+  return -1
+}
 
 function auditPayloadObjects(content) {
   const spans = []
@@ -44,19 +77,7 @@ function auditPayloadObjects(content) {
       from = at + 8
       continue
     }
-    let depth = 0
-    let end = -1
-    for (let i = brace; i < content.length; i++) {
-      const ch = content[i]
-      if (ch === "{") depth++
-      else if (ch === "}") {
-        depth--
-        if (depth === 0) {
-          end = i
-          break
-        }
-      }
-    }
+    const end = objectEnd(content, brace)
     if (end === -1) {
       unclosed = true
       break
