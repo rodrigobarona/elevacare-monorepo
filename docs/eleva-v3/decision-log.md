@@ -32,7 +32,7 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-10-08: Attendance fallback 15 minutes after endsAt when Daily is silent
+### 2026-10-08: Attendance fallback after the join window closes when Daily is silent
 
 - Decision: Phase 09.6.1 adds QStash `POST /workflows/video-attendance-sweep`
   (`*/15 * * * *`). Sessions still `scheduled`/`live`/`room_unresolved` with

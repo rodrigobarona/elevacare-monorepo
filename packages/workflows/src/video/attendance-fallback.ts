@@ -5,6 +5,11 @@ import { JOIN_TRAIL_MS } from "@eleva/video"
 import { deriveAttendance, statusAfterAttendance } from "./attendance"
 
 const SWEEP_BATCH = 25
+const SWEEP_MAX_BATCHES = 8
+
+class AttendanceAlreadyFinalized extends Error {
+  override readonly name = "AttendanceAlreadyFinalized"
+}
 
 const OPEN_SESSION_STATUSES = ["scheduled", "live", "room_unresolved"] as const
 
@@ -52,85 +57,85 @@ export async function finalizeAttendanceFromHistory(
   })
   if (!row || !shouldFinalizeAttendanceFallback(row, now)) return "skipped"
 
-  let outcome: "finalized" | "skipped" = "skipped"
-  await withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
-    const [locked] = await tx
-      .select({
-        status: main.sessions.status,
-        attendance: main.sessions.attendance,
-        endsAt: main.sessions.endsAt,
-        endedAt: main.sessions.endedAt,
-        participants: main.sessions.participants,
-      })
-      .from(main.sessions)
-      .where(eq(main.sessions.bookingId, bookingId))
-      .for("update")
-      .limit(1)
-    if (!locked || !shouldFinalizeAttendanceFallback(locked, now)) {
-      await ctx.emit({
-        entity: "session",
-        action: "ended",
-        entityId: bookingId,
-        payload: { skipped: true, source: "end_at_fallback" },
-      })
-      return
-    }
-    const attendance = deriveAttendance(locked.participants)
-    const status = statusAfterAttendance(attendance)
-    const updated = await tx
-      .update(main.sessions)
-      .set({
-        status,
-        attendance,
-        endedAt: locked.endedAt ?? now,
-      })
-      .where(
-        and(
-          eq(main.sessions.bookingId, bookingId),
-          inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
-          isNull(main.sessions.attendance)
-        )
-      )
-      .returning({ id: main.sessions.id })
-    if (updated.length === 0) {
-      await ctx.emit({
-        entity: "session",
-        action: "ended",
-        entityId: bookingId,
-        payload: { skipped: true, source: "end_at_fallback" },
-      })
-      return
-    }
-    outcome = "finalized"
-    await ctx.emit({
-      entity: "session",
-      action: "ended",
-      entityId: bookingId,
-      payload: { source: "end_at_fallback", attendance },
-    })
-  })
-  return outcome
+  try {
+    await withAudit(
+      { orgId: row.orgId, actorUserId: null },
+      async (tx, ctx) => {
+        const [locked] = await tx
+          .select({
+            status: main.sessions.status,
+            attendance: main.sessions.attendance,
+            endsAt: main.sessions.endsAt,
+            endedAt: main.sessions.endedAt,
+            participants: main.sessions.participants,
+          })
+          .from(main.sessions)
+          .where(eq(main.sessions.bookingId, bookingId))
+          .for("update")
+          .limit(1)
+        if (!locked || !shouldFinalizeAttendanceFallback(locked, now)) {
+          throw new AttendanceAlreadyFinalized()
+        }
+        const attendance = deriveAttendance(locked.participants)
+        const status = statusAfterAttendance(attendance)
+        const updated = await tx
+          .update(main.sessions)
+          .set({
+            status,
+            attendance,
+            endedAt: locked.endedAt ?? now,
+          })
+          .where(
+            and(
+              eq(main.sessions.bookingId, bookingId),
+              inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
+              isNull(main.sessions.attendance)
+            )
+          )
+          .returning({ id: main.sessions.id })
+        if (updated.length === 0) {
+          throw new AttendanceAlreadyFinalized()
+        }
+        await ctx.emit({
+          entity: "session",
+          action: "ended",
+          entityId: bookingId,
+          payload: { source: "end_at_fallback", attendance },
+        })
+      }
+    )
+    return "finalized"
+  } catch (err) {
+    if (err instanceof AttendanceAlreadyFinalized) return "skipped"
+    throw err
+  }
 }
 
 export async function sweepEndedSessionsWithoutAttendance(now = new Date()) {
   const due = new Date(now.getTime() - JOIN_TRAIL_MS)
-  const rows = await withPlatformAdminContext(async (tx) => {
-    return tx
-      .select({ bookingId: main.sessions.bookingId })
-      .from(main.sessions)
-      .where(
-        and(
-          inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
-          isNull(main.sessions.attendance),
-          lte(main.sessions.endsAt, due)
-        )
-      )
-      .limit(SWEEP_BATCH)
-  })
+  let scanned = 0
   let finalized = 0
-  for (const row of rows) {
-    const result = await finalizeAttendanceFromHistory(row.bookingId, now)
-    if (result === "finalized") finalized += 1
+  for (let batch = 0; batch < SWEEP_MAX_BATCHES; batch += 1) {
+    const rows = await withPlatformAdminContext(async (tx) => {
+      return tx
+        .select({ bookingId: main.sessions.bookingId })
+        .from(main.sessions)
+        .where(
+          and(
+            inArray(main.sessions.status, [...OPEN_SESSION_STATUSES]),
+            isNull(main.sessions.attendance),
+            lte(main.sessions.endsAt, due)
+          )
+        )
+        .limit(SWEEP_BATCH)
+    })
+    if (rows.length === 0) break
+    scanned += rows.length
+    for (const row of rows) {
+      const result = await finalizeAttendanceFromHistory(row.bookingId, now)
+      if (result === "finalized") finalized += 1
+    }
+    if (rows.length < SWEEP_BATCH) break
   }
-  return { scanned: rows.length, finalized }
+  return { scanned, finalized }
 }
