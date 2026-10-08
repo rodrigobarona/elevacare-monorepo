@@ -32,14 +32,35 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: 09.0 standard Daily live probe PASS; Eleva join leftover
+
+- Decision: The 09.0 account probe is **PASS** on standard Daily
+  (`elevacare.daily.co`, recording off, **not HIPAA**). Evidence: REST
+  `POST /rooms` for `eleva-97fc22a0-583d-424a-9dc7-c7742167192f`, paid
+  quota 100k rooms, two browsers on the Daily Prebuilt mint URL, Daily
+  session analytics Ended (2 participants, 8 min). Room contract now
+  includes `enforce_unique_user_ids`. `DAILY_WEBHOOK_SECRET` is on Vercel
+  `elevacare-api` (2026-10-08); Daily `GET /webhooks` is still empty until
+  `elevacare-api` is redeployed and the staging webhook is created. Do
+  **not** stamp the Phase 09 exit gate: Eleva join pages
+  (`/expert/sessions/{id}/join` + `/{org}/sessions/{id}/join`) remain
+  leftover. Do not
+  delete the probe until the founder says so. Overtime / “coming to the
+  end” warning is agreed, not built. D-07 stays deferred.
+- Owner: engineering
+- Status: `active`
+- Related: ADR-018, spike `09-daily-account.md`, Phase 09
+- Next review: after staging webhook + Eleva two-browser join.
+
 ### 2026-10-08: Phase 09 engineering closed on standard Daily, exit gate unproven
 
 - Decision: Phase 09 slices 09.1–09.6.3 are on main (PRs #163–#170 plus this
   exit-gate stamp). Product is **standard Daily, recording off, not HIPAA**.
   Join Permissions-Policy is on `/sessions/.../join`. Meeting-token JWTs are
   redacted in observability and blocked by `pnpm check:no-phi-logs`. Do **not**
-  stamp the phase exit gate as proven: the 09.0 Daily account probe is still
-  PENDING, staging two-browser join is still an operator leftover, and the
+  stamp the phase exit gate as proven: the 09.0 Daily Prebuilt probe is
+  PASS (see the 2026-10-08 addendum), Eleva two-browser join is still an
+  operator leftover, and the
   delayed `ended + 2 min` `finalizeAttendance` job was never built (attendance
   SSOT remains `meeting.ended` plus the join-window sweep). D-07 stays
   deferred.

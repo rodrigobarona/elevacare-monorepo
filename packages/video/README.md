@@ -35,6 +35,8 @@ payloads, join-URL query params, log calls that mention a meeting token).
 Observability already redacts JWTs. The grep does not cover other
 audit-writing paths. Do not treat it as the only control.
 
-Phase 09 engineering is on main against **standard Daily**. The 09.0 live
-probe and staging two-browser call are still PENDING operator leftovers.
+Phase 09 engineering is on main against **standard Daily**. The 09.0
+Prebuilt probe PASS 2026-10-08 (recording off, **not HIPAA**). Staging
+Eleva join-page two-browser and Daily webhook subscription (secret is
+on Vercel; subscribe after `elevacare-api` redeploy) are still leftover.
 Do not claim HIPAA or an executed BAA.

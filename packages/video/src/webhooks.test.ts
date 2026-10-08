@@ -2,6 +2,7 @@ import { createHmac } from "node:crypto"
 import { describe, expect, it } from "vitest"
 import {
   WEBHOOK_MAX_SKEW_MS,
+  isDailyWebhookHandshake,
   parseDailyWebhookEvent,
   verifyDailyWebhook,
 } from "./webhooks"
@@ -64,6 +65,16 @@ describe("verifyDailyWebhook", () => {
         secret: SECRET,
       })
     ).toBe(false)
+  })
+})
+
+describe("isDailyWebhookHandshake", () => {
+  it("accepts Daily's create-webhook probe body", () => {
+    expect(isDailyWebhookHandshake('{"test":"test"}')).toBe(true)
+  })
+
+  it("rejects a lifecycle event", () => {
+    expect(isDailyWebhookHandshake('{"type":"meeting.started"}')).toBe(false)
   })
 })
 
