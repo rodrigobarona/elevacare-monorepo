@@ -159,7 +159,6 @@ export async function handleDailyWebhook(input: {
 
   const now = new Date()
   const incoming = eventTimeFromDaily(parsed.event_ts, now)
-  const applyStatus = shouldApplyEvent(session.lastEventAt, incoming)
 
   const auditAction = webhookAuditAction(parsed.type)
   const applied = auditAction
@@ -179,7 +178,6 @@ export async function handleDailyWebhook(input: {
         roomName,
         type: parsed.type,
         incoming,
-        applyStatus,
         payload: parsed.payload,
         expertUserId: session.expertUserId,
         memberUserId: session.memberUserId,
@@ -312,7 +310,6 @@ function nextParticipantState(input: {
   payload: Record<string, unknown> | undefined
   incoming: Date
   type: string
-  applyStatus: boolean
   expertUserId: string | null
   memberUserId: string | null
 }) {
@@ -347,7 +344,6 @@ async function applyParticipantWebhook(input: {
   roomName: string
   type: string
   incoming: Date
-  applyStatus: boolean
   payload: Record<string, unknown> | undefined
   expertUserId: string | null
   memberUserId: string | null
