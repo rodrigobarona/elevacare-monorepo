@@ -32,6 +32,21 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Daily webhook processed_at commits with the session write
+
+- Decision: Phase 09.6.3b locks `daily_webhook_events` `FOR UPDATE` inside the
+  same `withPlatformAudit` transaction as the session status/history write and
+  stamps `processed_at` there. Insert-on-conflict still claims the event id so
+  Daily retries can resume after a crash; a second apply that finds
+  `processed_at` already set returns `{ status: "duplicate" }` without a second
+  `ctx.emit`. Ignore paths (missing room, unknown room, session gone) still
+  mark processed outside the session write because they do not mutate
+  `sessions`.
+- Owner: engineering
+- Status: `active`
+- Related: ADR-018, 2026-10-07 attendance SSOT, Phase 09.6
+- Next review: if Daily delivers concurrent retries faster than the lock wait.
+
 ### 2026-10-08: Eject a revoked participant before shrinking Daily room capacity
 
 - Decision: Phase 09.6.3a ejects+bans the revoked user, then updates

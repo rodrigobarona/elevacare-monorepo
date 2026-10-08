@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   parseDailyWebhookEvent,
   verifyDailyWebhook,
@@ -25,6 +25,12 @@ export type DailyWebhookResult =
   | { status: "duplicate" }
   | { status: "ignored"; reason: string }
   | { status: "processed"; type: string }
+
+export function webhookEventWriteGate(
+  processedAt: Date | null | undefined
+): "duplicate" | "proceed" {
+  return processedAt ? "duplicate" : "proceed"
+}
 
 export function webhookAuditAction(type: string): "started" | "ended" | null {
   if (type === "meeting.started") return "started"
@@ -158,15 +164,16 @@ export async function handleDailyWebhook(input: {
   const auditAction = webhookAuditAction(parsed.type)
   const applied = auditAction
     ? await applyLifecycleWebhook({
+        eventId: parsed.id,
         bookingId: session.bookingId,
         orgId: session.orgId,
         roomName,
         type: parsed.type,
         action: auditAction,
         incoming,
-        applyStatus,
       })
     : await applyParticipantWebhook({
+        eventId: parsed.id,
         bookingId: session.bookingId,
         orgId: session.orgId,
         roomName,
@@ -178,12 +185,12 @@ export async function handleDailyWebhook(input: {
         memberUserId: session.memberUserId,
       })
 
+  if (applied === "duplicate") return { status: "duplicate" }
   if (!applied) {
     await markProcessed(parsed.id)
     return { status: "ignored", reason: "session_gone" }
   }
 
-  await markProcessed(parsed.id)
   return { status: "processed", type: parsed.type }
 }
 
@@ -191,19 +198,44 @@ class WebhookSessionGone extends Error {
   override readonly name = "WebhookSessionGone"
 }
 
+class WebhookEventDuplicate extends Error {
+  override readonly name = "WebhookEventDuplicate"
+}
+
+async function lockWebhookEventForWrite(tx: Tx, eventId: string) {
+  const [event] = await tx
+    .select({ processedAt: main.dailyWebhookEvents.processedAt })
+    .from(main.dailyWebhookEvents)
+    .where(eq(main.dailyWebhookEvents.eventId, eventId))
+    .for("update")
+    .limit(1)
+  if (!event) throw new Error("webhook_event_missing")
+  if (webhookEventWriteGate(event.processedAt) === "duplicate") {
+    throw new WebhookEventDuplicate()
+  }
+}
+
+async function markProcessedInTx(tx: Tx, eventId: string) {
+  await tx
+    .update(main.dailyWebhookEvents)
+    .set({ processedAt: new Date() })
+    .where(eq(main.dailyWebhookEvents.eventId, eventId))
+}
+
 async function applyLifecycleWebhook(input: {
+  eventId: string
   bookingId: string
   orgId: string
   roomName: string
   type: string
   action: "started" | "ended"
   incoming: Date
-  applyStatus: boolean
-}): Promise<boolean> {
+}): Promise<boolean | "duplicate"> {
   try {
     await withPlatformAudit(
       { orgId: input.orgId, actorUserId: null },
       async (tx, ctx) => {
+        await lockWebhookEventForWrite(tx, input.eventId)
         const [locked] = await tx
           .select({
             status: main.sessions.status,
@@ -255,6 +287,7 @@ async function applyLifecycleWebhook(input: {
           })
           .where(eq(main.sessions.bookingId, input.bookingId))
 
+        await markProcessedInTx(tx, input.eventId)
         await ctx.emit({
           entity: "session",
           action: input.action,
@@ -265,6 +298,7 @@ async function applyLifecycleWebhook(input: {
     )
     return true
   } catch (err) {
+    if (err instanceof WebhookEventDuplicate) return "duplicate"
     if (err instanceof WebhookSessionGone) return false
     throw err
   }
@@ -307,6 +341,7 @@ function nextParticipantState(input: {
 }
 
 async function applyParticipantWebhook(input: {
+  eventId: string
   bookingId: string
   orgId: string
   roomName: string
@@ -316,11 +351,12 @@ async function applyParticipantWebhook(input: {
   payload: Record<string, unknown> | undefined
   expertUserId: string | null
   memberUserId: string | null
-}): Promise<boolean> {
+}): Promise<boolean | "duplicate"> {
   try {
     await withPlatformAudit(
       { orgId: input.orgId, actorUserId: null },
       async (tx, ctx) => {
+        await lockWebhookEventForWrite(tx, input.eventId)
         const [locked] = await tx
           .select({
             status: main.sessions.status,
@@ -347,6 +383,7 @@ async function applyParticipantWebhook(input: {
               : {}),
           })
           .where(eq(main.sessions.bookingId, input.bookingId))
+        await markProcessedInTx(tx, input.eventId)
         await ctx.emit({
           entity: "session",
           action: next.corrected ? "attendance_corrected" : "history_recorded",
@@ -357,6 +394,7 @@ async function applyParticipantWebhook(input: {
     )
     return true
   } catch (err) {
+    if (err instanceof WebhookEventDuplicate) return "duplicate"
     if (err instanceof WebhookSessionGone) return false
     throw err
   }
