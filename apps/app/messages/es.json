@@ -42,6 +42,7 @@
     "join": "Unirse a la sesión",
     "joinSoon": "El vídeo usa Daily estándar (no es HIPAA). Unirse se activa cuando la sala esté lista. La grabación está desactivada.",
     "joinNotOnline": "Esta sesión no es una videollamada. Tu especialista te atenderá como estaba previsto.",
+    "joinMissingGrant": "Este enlace de entrada no incluye la invitación. Ábrelo desde el correo o la invitación de calendario.",
     "call": {
       "notHipaa": "Esta llamada usa Daily estándar. No es HIPAA. La grabación está desactivada.",
       "prejoinTitle": "Comprueba la cámara y el micrófono",
@@ -75,6 +76,7 @@
         "SESSION_NOT_ACTIVE": "Esta sesión ya no está activa.",
         "NOT_A_PARTICIPANT": "No eres participante de esta sesión.",
         "ROOM_NOT_READY": "La sala de vídeo aún no está lista. Prueba en un momento.",
+        "INVALID_GRANT": "Este enlace de entrada no es válido o ha caducado. Abre el correo o la invitación de calendario más reciente.",
         "internal": "Algo ha fallado. Inténtalo de nuevo."
       }
     },

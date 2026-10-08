@@ -538,6 +538,10 @@ export const CancelDeletionResponseSchema = z.object({
   requestId: z.string().uuid(),
 })
 
+export const JoinSessionRequestSchema = z.object({
+  grant: z.string().min(1).max(4096).optional(),
+})
+
 export const JoinSessionResponseSchema = z.object({
   roomUrl: z.string().url(),
   token: z.string().min(1),
@@ -610,6 +614,7 @@ export type DeleteAccountResponse = z.infer<typeof DeleteAccountResponseSchema>
 export type CancelDeletionResponse = z.infer<
   typeof CancelDeletionResponseSchema
 >
+export type JoinSessionRequest = z.infer<typeof JoinSessionRequestSchema>
 export type JoinSessionResponse = z.infer<typeof JoinSessionResponseSchema>
 export type AddSessionParticipantRequest = z.infer<
   typeof AddSessionParticipantRequestSchema
@@ -2843,10 +2848,11 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     sessions: {
-      async join(bookingId: string) {
+      async join(bookingId: string, body?: JoinSessionRequest) {
         const raw = await request<unknown>(
           "POST",
-          `/sessions/${encodeURIComponent(bookingId)}/join`
+          `/sessions/${encodeURIComponent(bookingId)}/join`,
+          body
         )
         return JoinSessionResponseSchema.parse(raw)
       },

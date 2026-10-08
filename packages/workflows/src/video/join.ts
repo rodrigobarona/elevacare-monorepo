@@ -1,12 +1,14 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
-import { main, withPlatformAdminContext } from "@eleva/db"
+import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
   JOIN_LEAD_MS,
   JOIN_TRAIL_MS,
   dailyClientFromEnv,
   mintMeetingToken,
   tokenExpUnix,
+  verifyJoinGrant,
+  type JoinGrantRole,
 } from "@eleva/video"
 
 export type SessionJoinErrorCode =
@@ -14,6 +16,7 @@ export type SessionJoinErrorCode =
   | "SESSION_NOT_ACTIVE"
   | "SESSION_NOT_OPEN"
   | "ROOM_NOT_READY"
+  | "INVALID_GRANT"
 
 export class SessionJoinError extends Error {
   override readonly name = "SessionJoinError"
@@ -65,6 +68,8 @@ export type JoinSessionInput = {
   userId: string
   userName: string
   now?: Date
+  /** When set, skip session-cookie participant checks (grant is role-bound). */
+  grantRole?: JoinGrantRole
 }
 
 export type JoinSessionResult = {
@@ -78,6 +83,110 @@ export type JoinSessionDeps = {
   getDomainId?: () => Promise<string>
   apiKey?: string
   domainId?: string
+}
+
+export async function joinSessionFromGrant(
+  input: {
+    bookingId: string
+    grant: string
+    now?: Date
+  },
+  deps: JoinSessionDeps = {}
+): Promise<JoinSessionResult> {
+  const claims = await verifyJoinGrant(input.grant, { now: input.now })
+  if (!claims || claims.bookingId !== input.bookingId) {
+    throw new SessionJoinError("INVALID_GRANT")
+  }
+  const identity = await resolveGrantJoinIdentity(
+    input.bookingId,
+    claims.role,
+    claims.scheduleRevision
+  )
+  return joinSession(
+    {
+      bookingId: input.bookingId,
+      userId: identity.userId,
+      userName: identity.userName,
+      now: input.now,
+      grantRole: claims.role,
+    },
+    deps
+  )
+}
+
+async function resolveGrantJoinIdentity(
+  bookingId: string,
+  role: JoinGrantRole,
+  scheduleRevision: number
+): Promise<{ userId: string; userName: string }> {
+  const identity = await withPlatformAdminContext(async (tx) => {
+    const [session] = await tx
+      .select({
+        memberUserId: main.sessions.memberUserId,
+        expertUserId: main.expertProfiles.userId,
+        guestEmail: main.bookings.guestEmail,
+        guestName: main.bookings.guestName,
+        scheduleRevision: main.bookings.scheduleRevision,
+      })
+      .from(main.sessions)
+      .innerJoin(
+        main.expertProfiles,
+        eq(main.expertProfiles.id, main.sessions.expertProfileId)
+      )
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
+      .where(eq(main.sessions.bookingId, bookingId))
+      .limit(1)
+    if (!session) return null
+    if (session.scheduleRevision !== scheduleRevision) {
+      throw new SessionJoinError("INVALID_GRANT")
+    }
+
+    switch (role) {
+      case "expert": {
+        const [expert] = await tx
+          .select({ id: auth.user.id, name: auth.user.name })
+          .from(auth.user)
+          .where(eq(auth.user.id, session.expertUserId))
+          .limit(1)
+        return expert
+          ? { userId: expert.id, userName: expert.name?.trim() || "Expert" }
+          : null
+      }
+      case "member": {
+        if (session.memberUserId) {
+          const [member] = await tx
+            .select({ id: auth.user.id, name: auth.user.name })
+            .from(auth.user)
+            .where(eq(auth.user.id, session.memberUserId))
+            .limit(1)
+          if (member) {
+            return {
+              userId: member.id,
+              userName: member.name?.trim() || "Member",
+            }
+          }
+        }
+        const email = session.guestEmail?.trim().toLowerCase()
+        if (!email) return null
+        const [guest] = await tx
+          .select({ id: auth.user.id, name: auth.user.name })
+          .from(auth.user)
+          .where(eq(auth.user.email, email))
+          .limit(1)
+        if (!guest) return null
+        return {
+          userId: guest.id,
+          userName: guest.name?.trim() || session.guestName?.trim() || "Member",
+        }
+      }
+      default: {
+        const _exhaustive: never = role
+        return _exhaustive
+      }
+    }
+  })
+  if (!identity) throw new SessionJoinError("NOT_A_PARTICIPANT")
+  return identity
 }
 
 export async function joinSession(
@@ -123,12 +232,14 @@ export async function joinSession(
 
   if (!row) throw new SessionJoinError("NOT_A_PARTICIPANT")
 
-  const caller = classifyJoinCaller({
-    userId: input.userId,
-    expertUserId: row.session.expertUserId,
-    memberUserId: row.session.memberUserId,
-    hasActiveDelegate: Boolean(row.delegate && !row.delegate.revokedAt),
-  })
+  const caller = input.grantRole
+    ? { role: input.grantRole }
+    : classifyJoinCaller({
+        userId: input.userId,
+        expertUserId: row.session.expertUserId,
+        memberUserId: row.session.memberUserId,
+        hasActiveDelegate: Boolean(row.delegate && !row.delegate.revokedAt),
+      })
   if ("error" in caller) throw new SessionJoinError(caller.error)
 
   const status = classifyJoinStatus(row.session.status)

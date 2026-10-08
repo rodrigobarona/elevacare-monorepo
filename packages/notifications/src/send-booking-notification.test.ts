@@ -50,6 +50,11 @@ vi.mock("@eleva/db", () => ({
 vi.mock("@eleva/config/env", () => ({
   resolveGatewayUrl: () => "https://eleva.care",
 }))
+vi.mock("@eleva/video/join-grant", () => ({
+  mintJoinGrant: vi.fn(async ({ role }: { role: string }) => `grant-${role}`),
+  sessionJoinPath: (bookingId: string, grant: string) =>
+    `/join/${bookingId}?g=${grant}`,
+}))
 vi.mock("./send-notification", () => ({
   sendNotification: vi.fn(),
 }))
@@ -62,6 +67,10 @@ const MEMBER_ID = "00000000-0000-4000-8000-000000000003"
 const EXPERT_ID = "00000000-0000-4000-8000-000000000004"
 const STARTS_AT = "2026-09-22T10:00:00.000Z"
 const OCCURRED_AT = "2026-09-21T15:00:00.000Z"
+
+function unfoldIcs(content: string): string {
+  return content.replace(/\r\n /g, "")
+}
 
 function eventPayload(
   overrides: Record<string, unknown> = {}
@@ -174,13 +183,13 @@ describe("sendBookingNotification", () => {
     expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({
-        joinHref: `https://eleva.care/acme/sessions/${BOOKING_ID}/join`,
+        joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-member`,
       })
     )
     expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        joinHref: `https://eleva.care/expert/sessions/${BOOKING_ID}/join`,
+        joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-expert`,
       })
     )
   })
@@ -238,13 +247,13 @@ describe("sendBookingNotification", () => {
       1,
       expect.objectContaining({
         window: "1h",
-        joinHref: `https://eleva.care/acme/sessions/${BOOKING_ID}/join`,
+        joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-member`,
       })
     )
     expect(renderBookingReminder).toHaveBeenNthCalledWith(
       2,
       expect.objectContaining({
-        joinHref: `https://eleva.care/expert/sessions/${BOOKING_ID}/join`,
+        joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-expert`,
       })
     )
   })
@@ -274,10 +283,20 @@ describe("sendBookingNotification", () => {
     expect(memberIcs.content).toContain("SEQUENCE:0")
     expect(memberIcs.content).toContain("SUMMARY:Eleva session with Ana")
     expect(memberIcs.content).toContain("mailto:ada@example.com")
+    expect(unfoldIcs(memberIcs.content)).toContain(
+      `URL:https://eleva.care/join/${BOOKING_ID}?g=grant-member`
+    )
+    expect(unfoldIcs(memberIcs.content)).toContain(
+      `LOCATION:https://eleva.care/join/${BOOKING_ID}?g=grant-member`
+    )
     expect(expertIcs.content).toContain("SUMMARY:Eleva session with Ada")
+    expect(unfoldIcs(expertIcs.content)).toContain(
+      `URL:https://eleva.care/join/${BOOKING_ID}?g=grant-expert`
+    )
     for (const ics of [memberIcs.content, expertIcs.content]) {
       expect(ics).not.toContain("First visit")
       expect(ics).not.toContain("Lovelace")
+      expect(ics).not.toContain("t=")
     }
   })
 
@@ -303,6 +322,7 @@ describe("sendBookingNotification", () => {
     expect(ics.content).toContain("METHOD:CANCEL")
     expect(ics.content).toContain("STATUS:CANCELLED")
     expect(ics.content).toContain("SEQUENCE:3")
+    expect(ics.content).not.toContain("URL:")
   })
 
   it("does not attach calendar files to reminders", async () => {
@@ -343,6 +363,16 @@ describe("sendBookingNotification", () => {
     expect(send.mock.calls[0]?.[0].idempotencyKey).toBe(
       `booking:${BOOKING_ID}:rescheduled:${previousStartsAt}:${STARTS_AT}:1`
     )
+    expect(renderBookingRescheduled).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-member`,
+      })
+    )
+    const memberIcs = unfoldIcs(
+      send.mock.calls[0]?.[0].ctx.attachments?.[0].content ?? ""
+    )
+    expect(memberIcs).toContain(`g=grant-member`)
   })
 
   it("uses identical guest copy whether or not an account exists", async () => {

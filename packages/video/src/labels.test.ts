@@ -9,6 +9,9 @@ describe("joinErrorCode", () => {
     expect(joinErrorCode({ body: { error: "NOT_A_PARTICIPANT" } })).toBe(
       "NOT_A_PARTICIPANT"
     )
+    expect(joinErrorCode({ body: { error: "INVALID_GRANT" } })).toBe(
+      "INVALID_GRANT"
+    )
     expect(joinErrorCode({ body: { error: "mystery" } })).toBe("internal")
     expect(joinErrorCode(new Error("nope"))).toBe("internal")
   })

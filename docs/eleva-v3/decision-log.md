@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Guest join via signed Eleva grant in email and ICS
+
+- Decision: Members can book without an account, so confirmation and
+  1h-reminder emails (and ICS `URL`/`LOCATION`) mint a signed Eleva join
+  grant at `/join/{bookingId}?g=`. The grant is HS256 (HKDF from
+  `BETTER_AUTH_SECRET`), purpose `session-join`, role-bound
+  (`member`|`expert`), exp = `endsAt + 30m`. Possession of a valid grant
+  joins that role and ignores any session cookie. Daily meeting tokens
+  stay in the POST JSON body only — never in URLs. In-app session CTAs
+  stay cookie-based. Public grant POST uses BotID + `RATE_LIMITS.public`.
+  Gateway first-segment `join` is reserved. Out of scope: overtime UI,
+  Phase 10 notes, recording/transcripts, `sessions.eleva.care` CNAME.
+- Owner: engineering
+- Status: `active`
+- Related: Phase 09, scheduling-booking-spec sessions section
+- Next review: after local two-browser grant join.
+
 ### 2026-10-08: 09.0 standard Daily live probe PASS; Eleva join leftover
 
 - Decision: The 09.0 account probe is **PASS** on standard Daily

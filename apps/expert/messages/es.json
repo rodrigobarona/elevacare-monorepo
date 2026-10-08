@@ -51,6 +51,7 @@
         "SESSION_NOT_ACTIVE": "Esta sesión ya no está activa.",
         "NOT_A_PARTICIPANT": "No eres participante de esta sesión.",
         "ROOM_NOT_READY": "La sala de vídeo aún no está lista. Prueba en un momento.",
+        "INVALID_GRANT": "Este enlace de entrada no es válido o ha caducado. Abre el correo o la invitación de calendario más reciente.",
         "internal": "Algo ha fallado. Inténtalo de nuevo."
       }
     }

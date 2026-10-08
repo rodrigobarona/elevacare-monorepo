@@ -12,6 +12,12 @@ import {
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
+  mintJoinGrant as mintJoinGrantDefault,
+  sessionJoinPath,
+  type JoinGrantRole,
+  type MintJoinGrantInput,
+} from "@eleva/video/join-grant"
+import {
   getEmailTranslations,
   renderBookingCancelled,
   renderBookingConfirmed,
@@ -101,6 +107,7 @@ export function isBookingSendKind(type: string): type is BookingSendKind {
 type BookingSendDeps = {
   loadBooking?: typeof loadBookingForNotification
   send?: typeof sendNotification
+  mintJoinGrant?: (input: MintJoinGrantInput) => Promise<string>
 }
 
 export type LoadedBooking = {
@@ -139,6 +146,7 @@ export async function sendBookingNotification(
   const parsed = parseBookingNotificationPayload(event.type, event.payload)
   const loadBooking = deps.loadBooking ?? loadBookingForNotification
   const send = deps.send ?? sendNotification
+  const mint = deps.mintJoinGrant ?? mintJoinGrantDefault
   const booking = await loadBooking(parsed.bookingId)
   if (!booking || booking.orgId !== event.orgId) {
     throw new Error("send-notification: booking not found for event org")
@@ -167,8 +175,11 @@ export async function sendBookingNotification(
         locale
       )
     : formattedDate
-  const memberJoinHref = sessionJoinHref(event.type, booking, "member")
-  const expertJoinHref = sessionJoinHref(event.type, booking, "expert")
+  const gateway = resolveGatewayUrl()
+  const [memberJoinHref, expertJoinHref] = await Promise.all([
+    sessionJoinHref(event.type, booking, "member", gateway, mint),
+    sessionJoinHref(event.type, booking, "expert", gateway, mint),
+  ])
   const htmlInput = {
     kind: event.type,
     memberName: memberFirst,
@@ -227,12 +238,14 @@ export async function sendBookingNotification(
   const memberAttachments = calendarAttachments(
     event.type,
     booking,
-    icsSummary(locale, expertFirst)
+    icsSummary(locale, expertFirst),
+    memberJoinHref
   )
   const expertAttachments = calendarAttachments(
     event.type,
     booking,
-    icsSummary(locale, memberFirst)
+    icsSummary(locale, memberFirst),
+    expertJoinHref
   )
   const results = await Promise.allSettled([
     send({
@@ -331,7 +344,8 @@ function deliveryIdempotencyKey(
 export function calendarAttachments(
   kind: BookingSendKind,
   booking: LoadedBooking,
-  summary: string
+  summary: string,
+  joinHref?: string
 ): EmailAttachment[] | undefined {
   const attendeeEmail = booking.memberEmail ?? booking.guestEmail
   const event: IcsEventInput = {
@@ -340,6 +354,8 @@ export function calendarAttachments(
     startTime: booking.startsAt,
     endTime: booking.endsAt,
     timezone: booking.timezone,
+    url: joinHref,
+    location: joinHref,
     organizer: { name: booking.expertName, email: booking.expertEmail },
     attendees: attendeeEmail
       ? [
@@ -478,22 +494,32 @@ function subjectForKind(
   }
 }
 
-export function sessionJoinHref(
+export async function sessionJoinHref(
   kind: BookingSendKind,
-  booking: Pick<LoadedBooking, "id" | "orgSlug" | "sessionMode">,
-  role: "member" | "expert",
-  gateway = resolveGatewayUrl()
-): string | undefined {
-  if (kind !== "booking.confirmed" && kind !== "booking.reminder_1h") {
+  booking: Pick<
+    LoadedBooking,
+    "id" | "sessionMode" | "endsAt" | "scheduleRevision"
+  >,
+  role: JoinGrantRole,
+  gateway = resolveGatewayUrl(),
+  mint: (input: MintJoinGrantInput) => Promise<string> = mintJoinGrantDefault
+): Promise<string | undefined> {
+  if (
+    kind !== "booking.confirmed" &&
+    kind !== "booking.reminder_1h" &&
+    kind !== "booking.rescheduled"
+  ) {
     return undefined
   }
   if (booking.sessionMode !== "online") return undefined
+  const grant = await mint({
+    bookingId: booking.id,
+    role,
+    endsAt: booking.endsAt,
+    scheduleRevision: booking.scheduleRevision,
+  })
   const base = gateway.replace(/\/$/, "")
-  if (role === "expert") {
-    return `${base}/expert/sessions/${booking.id}/join`
-  }
-  if (!booking.orgSlug) return undefined
-  return `${base}/${booking.orgSlug}/sessions/${booking.id}/join`
+  return `${base}${sessionJoinPath(booking.id, grant)}`
 }
 
 async function renderBookingHtml(input: {
@@ -535,6 +561,7 @@ async function renderBookingHtml(input: {
         newDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
+        joinHref: input.joinHref,
       })
     case "booking.reminder_24h":
       return renderBookingReminder({

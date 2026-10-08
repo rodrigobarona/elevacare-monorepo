@@ -51,6 +51,7 @@
         "SESSION_NOT_ACTIVE": "This session is no longer active.",
         "NOT_A_PARTICIPANT": "You are not a participant in this session.",
         "ROOM_NOT_READY": "The video room is not ready yet. Try again in a moment.",
+        "INVALID_GRANT": "This join link is invalid or has expired. Open the latest email or calendar invite.",
         "internal": "Something went wrong. Try again."
       }
     }

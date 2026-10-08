@@ -1,15 +1,23 @@
-import { JoinSessionResponseSchema } from "@eleva/api-client"
-import { joinSession, SessionJoinError } from "@eleva/workflows/video"
+import {
+  JoinSessionRequestSchema,
+  JoinSessionResponseSchema,
+} from "@eleva/api-client"
+import {
+  joinSession,
+  joinSessionFromGrant,
+  SessionJoinError,
+} from "@eleva/workflows/video"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { checkBot } from "@/lib/bot-protection"
 import { corsHeaders } from "@/lib/cors"
 import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
 import type { RoutePolicy } from "@/lib/route-policy"
 import { secureJson } from "@/lib/security-headers"
 
 export const ROUTE_POLICY = {
-  auth: "session",
+  auth: "public",
   rateLimit: true,
-  botId: false,
+  botId: true,
 } as const satisfies RoutePolicy
 
 export const dynamic = "force-dynamic"
@@ -20,6 +28,7 @@ const JOIN_STATUS: Record<SessionJoinError["code"], number> = {
   SESSION_NOT_OPEN: 403,
   SESSION_NOT_ACTIVE: 410,
   ROOM_NOT_READY: 409,
+  INVALID_GRANT: 401,
 }
 
 export async function POST(
@@ -28,6 +37,17 @@ export async function POST(
 ) {
   const headers = corsHeaders(request, "POST, OPTIONS")
   const { bookingId } = await params
+
+  const parsed = JoinSessionRequestSchema.safeParse(
+    await request.json().catch(() => ({}))
+  )
+  if (!parsed.success) {
+    return secureJson({ error: "invalid_body" }, { status: 422, headers })
+  }
+
+  if (parsed.data.grant) {
+    return joinWithGrant(request, headers, bookingId, parsed.data.grant)
+  }
 
   let session
   try {
@@ -45,12 +65,54 @@ export async function POST(
   )
   if (rateLimited) return rateLimited
 
+  return mintJoinResponse(
+    () =>
+      joinSession({
+        bookingId,
+        userId: session.user.id,
+        userName: session.user.displayName?.trim() || "Member",
+      }),
+    headers
+  )
+}
+
+async function joinWithGrant(
+  request: Request,
+  headers: Record<string, string>,
+  bookingId: string,
+  grant: string
+) {
+  const botVerdict = await checkBot({
+    checkLevel: "deepAnalysis",
+    enforceable: true,
+  })
+  if (botVerdict?.isBot) {
+    return secureJson({ error: "blocked" }, { status: 403, headers })
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request),
+    RATE_LIMITS.public,
+    headers
+  )
+  if (rateLimited) return rateLimited
+
+  return mintJoinResponse(
+    () =>
+      joinSessionFromGrant({
+        bookingId,
+        grant,
+      }),
+    headers
+  )
+}
+
+async function mintJoinResponse(
+  mint: () => Promise<unknown>,
+  headers: Record<string, string>
+) {
   try {
-    const result = await joinSession({
-      bookingId,
-      userId: session.user.id,
-      userName: session.user.displayName?.trim() || "Member",
-    })
+    const result = await mint()
     return secureJson(JoinSessionResponseSchema.parse(result), {
       status: 200,
       headers,

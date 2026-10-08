@@ -5,6 +5,17 @@ export {
   isJoinWindowOpen,
 } from "./join-window"
 export {
+  joinGrantClaimsSchema,
+  joinGrantExpUnix,
+  joinGrantRoleSchema,
+  mintJoinGrant,
+  sessionJoinPath,
+  verifyJoinGrant,
+  type JoinGrantClaims,
+  type JoinGrantRole,
+  type MintJoinGrantInput,
+} from "./join-grant"
+export {
   ROOM_NAME_PREFIX,
   buildSessionRoomBody,
   isElevaRoomName,

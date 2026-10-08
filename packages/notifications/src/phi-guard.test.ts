@@ -6,6 +6,11 @@ vi.mock("@eleva/db", () => ({
   main: { bookings: {}, eventTypes: {} },
   withPlatformAdminContext: vi.fn(),
 }))
+vi.mock("@eleva/video/join-grant", () => ({
+  mintJoinGrant: vi.fn(async ({ role }: { role: string }) => `grant-${role}`),
+  sessionJoinPath: (bookingId: string, grant: string) =>
+    `/join/${bookingId}?g=${grant}`,
+}))
 vi.mock("./send-notification", () => ({
   sendNotification: vi.fn(),
 }))
