@@ -7,7 +7,6 @@ import {
   DailyVideo,
   useAppMessage,
   useDaily,
-  useDailyEvent,
   useLocalSessionId,
   useMeetingState,
   useParticipantIds,
@@ -104,6 +103,8 @@ function CallShell({
 
   useEffect(() => {
     if (!daily) return
+    // Prejoin preview needs local tracks before Join. The permission prompt
+    // on mount is the intended Daily prejoin UX, not a silent capture.
     void daily.startCamera().catch(() => {
       /* device errors surface in the prejoin UI */
     })
@@ -119,7 +120,6 @@ function CallShell({
   const handleLeft = useCallback(() => {
     onLeft?.()
   }, [onLeft])
-  useDailyEvent("left-meeting", handleLeft)
 
   useEffect(() => {
     if (left) handleLeft()

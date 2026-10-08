@@ -4,6 +4,7 @@ import { getExpertBookingById } from "@eleva/db"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { loadExpertWorkspace } from "@/lib/expert-workspace"
+import { getApiBaseUrl } from "@/lib/server-api"
 import { JoinClient } from "./join-client"
 
 export const dynamic = "force-dynamic"
@@ -22,7 +23,7 @@ export default async function ExpertJoinPage({
   if (!booking) notFound()
 
   const backHref = `/${orgSlug}/calendar`
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+  const apiBaseUrl = getApiBaseUrl()
 
   if (booking.sessionMode !== "online") {
     return (

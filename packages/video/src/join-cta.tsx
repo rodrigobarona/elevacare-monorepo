@@ -1,19 +1,20 @@
 "use client"
 
 import { useEffect, useState, type ReactNode } from "react"
-import { Button, LinkButton } from "@eleva/ui/components/button"
+import { Button, buttonVariants } from "@eleva/ui/components/button"
 import { cn } from "@eleva/ui/lib/utils"
 import { isJoinCtaEnabled } from "./join-window"
 
 const JOIN_CTA_TICK_MS = 30_000
 
-export function useJoinCtaClock(intervalMs = JOIN_CTA_TICK_MS): Date {
-  const [now, setNow] = useState(() => Date.now())
+export function useJoinCtaClock(intervalMs = JOIN_CTA_TICK_MS): Date | null {
+  const [now, setNow] = useState<number | null>(null)
   useEffect(() => {
+    setNow(Date.now())
     const id = setInterval(() => setNow(Date.now()), intervalMs)
     return () => clearInterval(id)
   }, [intervalMs])
-  return new Date(now)
+  return now === null ? null : new Date(now)
 }
 
 export type JoinCtaProps = {
@@ -43,20 +44,26 @@ export function JoinCta({
   icon,
 }: JoinCtaProps) {
   const now = useJoinCtaClock()
-  const enabled = isJoinCtaEnabled({
-    sessionMode,
-    status,
-    startsAt,
-    endsAt,
-    now,
-  })
+  const enabled =
+    now !== null &&
+    isJoinCtaEnabled({
+      sessionMode,
+      status,
+      startsAt,
+      endsAt,
+      now,
+    })
 
   if (enabled) {
     return (
-      <LinkButton href={href} className={className}>
+      <a
+        href={href}
+        className={cn(buttonVariants(), className)}
+        data-join-cta="document"
+      >
         {icon}
         {joinLabel}
-      </LinkButton>
+      </a>
     )
   }
 

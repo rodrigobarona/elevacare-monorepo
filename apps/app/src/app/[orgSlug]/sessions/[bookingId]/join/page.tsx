@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server"
 import { PageHeader } from "@eleva/ui/components/page-header"
 import { LinkButton } from "@eleva/ui/components/button"
 import { findMemberBooking } from "@/lib/find-member-booking"
-import { getAuthedApiClient, requireMemberOrg } from "@/lib/member-api"
+import {
+  getApiBaseUrl,
+  getAuthedApiClient,
+  requireMemberOrg,
+} from "@/lib/member-api"
 import { JoinClient } from "./join-client"
 
 export const dynamic = "force-dynamic"
@@ -23,7 +27,7 @@ export default async function MemberJoinPage({
   if (!booking) notFound()
 
   const backHref = `/${orgSlug}/sessions/${bookingId}`
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3002"
+  const apiBaseUrl = getApiBaseUrl()
 
   if (booking.sessionMode !== "online") {
     return (
