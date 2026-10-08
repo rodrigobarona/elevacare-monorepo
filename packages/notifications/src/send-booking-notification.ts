@@ -9,6 +9,7 @@ import {
   describeCancellationPolicy,
   type CancellationPolicy,
 } from "@eleva/config/cancellation-policy"
+import { resolveGatewayUrl } from "@eleva/config/env"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
   getEmailTranslations,
@@ -105,6 +106,7 @@ type BookingSendDeps = {
 export type LoadedBooking = {
   id: string
   orgId: string
+  orgSlug: string
   status: string
   startsAt: Date
   endsAt: Date
@@ -165,7 +167,9 @@ export async function sendBookingNotification(
         locale
       )
     : formattedDate
-  const html = await renderBookingHtml({
+  const memberJoinHref = sessionJoinHref(event.type, booking, "member")
+  const expertJoinHref = sessionJoinHref(event.type, booking, "expert")
+  const htmlInput = {
     kind: event.type,
     memberName: memberFirst,
     eventTypeName,
@@ -181,7 +185,18 @@ export async function sendBookingNotification(
       parsed.refundCents === undefined
         ? undefined
         : formatMoney(parsed.refundCents, booking.currency, locale),
+  }
+  const memberHtml = await renderBookingHtml({
+    ...htmlInput,
+    joinHref: memberJoinHref,
   })
+  const expertHtml =
+    expertJoinHref === memberJoinHref
+      ? memberHtml
+      : await renderBookingHtml({
+          ...htmlInput,
+          joinHref: expertJoinHref,
+        })
   const title = titleForKind(event.type, t.booking)
   const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
   const expertSubject = subjectForKind(
@@ -228,7 +243,7 @@ export async function sendBookingNotification(
         title,
         body: memberBody,
         subject: memberSubject,
-        html,
+        html: memberHtml,
         attachments: memberAttachments,
       },
       idempotencyKey,
@@ -241,7 +256,7 @@ export async function sendBookingNotification(
         title,
         body: expertBody,
         subject: expertSubject,
-        html,
+        html: expertHtml,
         attachments: expertAttachments,
       },
       idempotencyKey,
@@ -463,6 +478,24 @@ function subjectForKind(
   }
 }
 
+export function sessionJoinHref(
+  kind: BookingSendKind,
+  booking: Pick<LoadedBooking, "id" | "orgSlug" | "sessionMode">,
+  role: "member" | "expert",
+  gateway = resolveGatewayUrl()
+): string | undefined {
+  if (kind !== "booking.confirmed" && kind !== "booking.reminder_1h") {
+    return undefined
+  }
+  if (booking.sessionMode !== "online") return undefined
+  const base = gateway.replace(/\/$/, "")
+  if (role === "expert") {
+    return `${base}/expert/sessions/${booking.id}/join`
+  }
+  if (!booking.orgSlug) return undefined
+  return `${base}/${booking.orgSlug}/sessions/${booking.id}/join`
+}
+
 async function renderBookingHtml(input: {
   kind: BookingSendKind
   memberName: string
@@ -473,6 +506,7 @@ async function renderBookingHtml(input: {
   locale: EmailLocale
   cancellationPolicyName: string
   refundAmount?: string
+  joinHref?: string
 }): Promise<string> {
   switch (input.kind) {
     case "booking.confirmed":
@@ -482,6 +516,7 @@ async function renderBookingHtml(input: {
         formattedDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
+        joinHref: input.joinHref,
       })
     case "booking.cancelled":
       return renderBookingCancelled({
@@ -509,6 +544,7 @@ async function renderBookingHtml(input: {
         formattedDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
+        joinHref: input.joinHref,
       })
     case "booking.reminder_1h":
       return renderBookingReminder({
@@ -518,6 +554,7 @@ async function renderBookingHtml(input: {
         formattedDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
+        joinHref: input.joinHref,
       })
     default: {
       const _exhaustive: never = input.kind
@@ -577,6 +614,7 @@ export async function loadBookingForNotification(
       .select({
         id: main.bookings.id,
         orgId: main.bookings.orgId,
+        orgSlug: auth.organization.slug,
         status: main.bookings.status,
         startsAt: main.bookings.startsAt,
         endsAt: main.bookings.endsAt,
@@ -596,6 +634,10 @@ export async function loadBookingForNotification(
       .innerJoin(
         main.eventTypes,
         eq(main.eventTypes.id, main.bookings.eventTypeId)
+      )
+      .innerJoin(
+        auth.organization,
+        eq(auth.organization.id, main.bookings.orgId)
       )
       .where(eq(main.bookings.id, bookingId))
       .limit(1)

@@ -59,6 +59,10 @@ describe("closed-gate invoice domain events", () => {
     expect(DEFAULT_SUBSCRIBERS["payout.approval_required"]).toEqual([
       "send-notification",
     ])
+    expect(DOMAIN_EVENT_TYPES).toContain("refund.succeeded")
+    expect(DEFAULT_SUBSCRIBERS["refund.succeeded"]).toEqual([
+      "ensure-session-room",
+    ])
   })
 
   it("defers only logger and unregistered send-notification at claim time", () => {

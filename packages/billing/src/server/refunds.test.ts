@@ -132,6 +132,10 @@ vi.mock("./payouts", () => ({
   clearHold: vi.fn(),
 }))
 
+vi.mock("@eleva/scheduling", () => ({
+  emitRefundSucceededEvent: vi.fn(),
+}))
+
 const { retryFailedTransferReversals } = await import("./refunds")
 
 describe("retryFailedTransferReversals", () => {

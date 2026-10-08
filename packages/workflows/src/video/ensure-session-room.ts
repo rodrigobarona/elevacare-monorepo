@@ -6,6 +6,7 @@ import {
   isNotNull,
   isNull,
   lte,
+  notInArray,
   or,
   sql,
 } from "drizzle-orm"
@@ -27,9 +28,22 @@ import { countActiveDelegates } from "./participants"
 const ROOM_LEASE_MS = 60_000
 const SWEEP_AHEAD_MS = 2 * 60 * 60 * 1000
 const SWEEP_BATCH = 25
+const TERMINAL_SESSION_STATUSES = new Set([
+  "cancelled",
+  "ended",
+  "completed",
+  "no_show",
+])
 
 export type EnsureSessionRoomResult =
-  | { skipped: "not_online" | "not_confirmed" | "no_member" | "leased" }
+  | {
+      skipped:
+        | "not_online"
+        | "not_confirmed"
+        | "no_member"
+        | "leased"
+        | "session_cancelled"
+    }
   | { ok: true; roomName: string; created: boolean }
   | { unresolved: true }
 
@@ -138,7 +152,7 @@ export async function ensureSessionRoom(
   if ("skipped" in eligibility) return eligibility
 
   type LeaseOutcome =
-    | { skip: "no_member" | "leased" }
+    | { skip: "no_member" | "leased" | "session_cancelled" }
     | { ready: string; status: string }
     | { lease: true }
 
@@ -163,6 +177,9 @@ export async function ensureSessionRoom(
         .where(eq(main.sessions.bookingId, bookingId))
         .limit(1)
       if (!session) return { skip: "no_member" as const }
+      if (TERMINAL_SESSION_STATUSES.has(session.status)) {
+        return { skip: "session_cancelled" as const }
+      }
       const lease = classifyRoomLease(session)
       if ("ready" in lease) {
         return { ...lease, status: session.status }
@@ -304,6 +321,74 @@ export async function ensureSessionRoom(
   }
 }
 
+export function shouldCancelUnstartedSession(
+  row: { status: string; startsAt: Date } | null,
+  now = new Date()
+): boolean {
+  if (!row) return false
+  if (row.startsAt.getTime() <= now.getTime()) return false
+  if (TERMINAL_SESSION_STATUSES.has(row.status)) return false
+  return true
+}
+
+/**
+ * payment.failed / refund.succeeded before startAt: cancel the session and
+ * delete the Daily room even when the booking is still confirmed.
+ * `occurredAt` is the financial event time so a delayed delivery after
+ * startAt still cancels a pre-start failure.
+ */
+export async function cancelUnstartedSessionRoom(
+  bookingId: string,
+  deps: SessionRoomDeps = {},
+  occurredAt = new Date()
+): Promise<void> {
+  const row = await withPlatformAdminContext(async (tx) => {
+    const [found] = await tx
+      .select({
+        orgId: main.sessions.orgId,
+        status: main.sessions.status,
+        startsAt: main.bookings.startsAt,
+      })
+      .from(main.sessions)
+      .innerJoin(main.bookings, eq(main.bookings.id, main.sessions.bookingId))
+      .where(eq(main.sessions.bookingId, bookingId))
+      .limit(1)
+    return found ?? null
+  })
+  if (!row) return
+  if (row.status === "cancelled") {
+    if (row.startsAt.getTime() > occurredAt.getTime()) {
+      await deleteSessionRoom(bookingId, deps)
+    }
+    return
+  }
+  if (!shouldCancelUnstartedSession(row, occurredAt)) return
+
+  await withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
+    await tx
+      .update(main.sessions)
+      .set({ status: "cancelled" })
+      .where(
+        and(
+          eq(main.sessions.bookingId, bookingId),
+          inArray(main.sessions.status, [
+            "scheduled",
+            "in_progress",
+            "live",
+            "room_unresolved",
+          ])
+        )
+      )
+    await ctx.emit({
+      entity: "session",
+      action: "canceled",
+      entityId: bookingId,
+      payload: { reason: "payment_or_refund_before_start" },
+    })
+  })
+  await deleteSessionRoom(bookingId, deps)
+}
+
 export async function deleteSessionRoom(
   bookingId: string,
   deps: SessionRoomDeps = {}
@@ -378,6 +463,15 @@ export async function sweepMissingSessionRooms(
           gte(main.bookings.endsAt, now),
           lte(main.bookings.startsAt, horizon),
           isNull(main.sessions.dailyRoomName),
+          or(
+            isNull(main.sessions.id),
+            notInArray(main.sessions.status, [
+              "cancelled",
+              "ended",
+              "completed",
+              "no_show",
+            ])
+          ),
           or(
             isNull(main.sessions.roomCreateLeaseUntil),
             lte(main.sessions.roomCreateLeaseUntil, now)

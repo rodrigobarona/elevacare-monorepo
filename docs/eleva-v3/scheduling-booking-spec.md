@@ -266,6 +266,17 @@ The booking and session may be tightly linked, but the distinction is useful bec
 - session data grows after the booking is made
 - transcripts, notes, and reports belong more naturally to the session
 
+Online session rooms are created only for confirmed (or rescheduled) online
+bookings. `payment.failed` and a **full** `refund.succeeded` **before**
+`startAt` set `sessions.status` to `cancelled` and delete the Daily room.
+Partial refunds and the same events **after** `startAt` leave the session row
+intact. Member cancel still emits `booking.cancelled`, which also deletes the
+room. The room sweep does not recreate a room for a cancelled session.
+
+Join is via Eleva pages (`/{orgSlug}/sessions/{bookingId}/join` and
+`/expert/sessions/{bookingId}/join`), never a raw Daily URL. The join window
+is `[startAt-15m, endAt+30m]`. Standard Daily, recording off, **not HIPAA**.
+
 ## Initial MVP Scheduling Scope
 
 The first build should support:
@@ -308,10 +319,13 @@ Uses Daily for video sessions.
 
 Should support:
 
-- room creation
-- participant access controls
-- transcript pipeline
-- reminder and join links
+- room creation (`eleva-{bookingId}` on a standard Daily domain)
+- participant access controls (assigned expert, booking member, or active delegate)
+- confirmation and 1h-reminder emails with Eleva join deep links (not Daily URLs)
+- reminder and in-app Join CTAs in the `[startAt-15m, endAt+30m]` window
+
+Transcript pipeline, Notes, and History are Phase 10 / 16.8. Recording stays off
+until D-07.
 
 ### In Person
 

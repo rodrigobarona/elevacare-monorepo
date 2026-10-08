@@ -3,6 +3,7 @@ import {
   classifyRoomLease,
   classifySessionRoomBooking,
   expectedRoomName,
+  shouldCancelUnstartedSession,
 } from "./ensure-session-room"
 
 const booking = {
@@ -95,5 +96,39 @@ describe("expectedRoomName", () => {
   it("uses the deterministic eleva-{bookingId} name", () => {
     const bookingId = "22222222-2222-4222-8222-222222222222"
     expect(expectedRoomName(bookingId)).toBe(`eleva-${bookingId.toLowerCase()}`)
+  })
+})
+
+describe("shouldCancelUnstartedSession", () => {
+  const now = new Date("2026-10-08T12:00:00.000Z")
+  const future = new Date("2026-10-08T13:00:00.000Z")
+  const past = new Date("2026-10-08T11:00:00.000Z")
+
+  it("cancels scheduled sessions before startAt", () => {
+    expect(
+      shouldCancelUnstartedSession(
+        { status: "scheduled", startsAt: future },
+        now
+      )
+    ).toBe(true)
+  })
+
+  it("still cancels when the financial event was before startAt", () => {
+    expect(
+      shouldCancelUnstartedSession(
+        { status: "scheduled", startsAt: past },
+        new Date("2026-10-08T10:00:00.000Z")
+      )
+    ).toBe(true)
+  })
+
+  it("leaves sessions after startAt and terminal statuses alone", () => {
+    expect(
+      shouldCancelUnstartedSession({ status: "scheduled", startsAt: past }, now)
+    ).toBe(false)
+    expect(
+      shouldCancelUnstartedSession({ status: "ended", startsAt: future }, now)
+    ).toBe(false)
+    expect(shouldCancelUnstartedSession(null, now)).toBe(false)
   })
 })

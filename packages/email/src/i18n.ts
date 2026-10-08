@@ -23,6 +23,9 @@ const translations = {
         "Open the attached .ics file to update the event in your calendar.",
       icsHintRemove:
         "Open the attached .ics file to remove this event from your calendar.",
+      joinCta: "Join session",
+      joinHint:
+        "Join from Eleva 15 minutes before the start. This is a standard Daily call, not HIPAA.",
     },
     invoice: {
       blockedTitle: "Platform-fee invoice recorded",
@@ -126,6 +129,9 @@ const translations = {
         "Abra o ficheiro .ics em anexo para atualizar o evento no seu calendário.",
       icsHintRemove:
         "Abra o ficheiro .ics em anexo para remover este evento do seu calendário.",
+      joinCta: "Entrar na sessão",
+      joinHint:
+        "Entre a partir da Eleva 15 minutos antes do início. Esta é uma chamada Daily standard, não HIPAA.",
     },
     invoice: {
       blockedTitle: "Taxa de plataforma registada",
@@ -231,6 +237,9 @@ const translations = {
         "Abra el archivo .ics adjunto para actualizar el evento en su calendario.",
       icsHintRemove:
         "Abra el archivo .ics adjunto para eliminar este evento de su calendario.",
+      joinCta: "Unirse a la sesión",
+      joinHint:
+        "Únase desde Eleva 15 minutos antes del inicio. Esta es una llamada Daily estándar, no HIPAA.",
     },
     invoice: {
       blockedTitle: "Tasa de plataforma registrada",
@@ -334,6 +343,8 @@ export interface EmailTranslations {
     icsHintAdd: string
     icsHintUpdate: string
     icsHintRemove: string
+    joinCta: string
+    joinHint: string
   }
   invoice: {
     blockedTitle: string

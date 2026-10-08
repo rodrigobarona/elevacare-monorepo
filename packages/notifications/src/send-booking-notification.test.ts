@@ -43,9 +43,12 @@ vi.mock("@eleva/email", () => ({
   getEmailTranslations,
 }))
 vi.mock("@eleva/db", () => ({
-  auth: { user: {} },
+  auth: { user: {}, organization: {} },
   main: { bookings: {}, eventTypes: {} },
   withPlatformAdminContext: vi.fn(),
+}))
+vi.mock("@eleva/config/env", () => ({
+  resolveGatewayUrl: () => "https://eleva.care",
 }))
 vi.mock("./send-notification", () => ({
   sendNotification: vi.fn(),
@@ -75,6 +78,7 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
   return {
     id: BOOKING_ID,
     orgId: ORG_ID,
+    orgSlug: "acme",
     status: "confirmed",
     startsAt: new Date("2026-09-22T10:00:00.000Z"),
     endsAt: new Date("2026-09-22T10:50:00.000Z"),
@@ -167,6 +171,82 @@ describe("sendBookingNotification", () => {
     expect(send.mock.calls[1]?.[0].ctx.subject).toMatch(/^New booking: Ada /)
     expect(send.mock.calls[0]?.[0].ctx.html).toBe("<p>confirmed</p>")
     expect(send.mock.calls[1]?.[0].ctx.html).toBe("<p>confirmed</p>")
+    expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        joinHref: `https://eleva.care/acme/sessions/${BOOKING_ID}/join`,
+      })
+    )
+    expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        joinHref: `https://eleva.care/expert/sessions/${BOOKING_ID}/join`,
+      })
+    )
+  })
+
+  it("omits join links for in-person sessions and 24h reminders", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-in-person",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ sessionMode: "in_person" }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({ joinHref: undefined })
+    )
+
+    renderBookingReminder.mockClear()
+    send.mockResolvedValue({ kind: "booking.reminder_24h", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-24h",
+        type: "booking.reminder_24h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    expect(renderBookingReminder).toHaveBeenCalledWith(
+      expect.objectContaining({ window: "24h", joinHref: undefined })
+    )
+  })
+
+  it("puts an Eleva join deep link on the 1h reminder", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.reminder_1h", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-1h",
+        type: "booking.reminder_1h",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      { loadBooking: async () => booking(), send }
+    )
+    expect(renderBookingReminder).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        window: "1h",
+        joinHref: `https://eleva.care/acme/sessions/${BOOKING_ID}/join`,
+      })
+    )
+    expect(renderBookingReminder).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        joinHref: `https://eleva.care/expert/sessions/${BOOKING_ID}/join`,
+      })
+    )
   })
 
   it("attaches a PHI-free calendar invite to both confirmation emails", async () => {

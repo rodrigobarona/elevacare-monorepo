@@ -1,9 +1,11 @@
 export {
   classifyRoomLease,
   classifySessionRoomBooking,
+  cancelUnstartedSessionRoom,
   deleteSessionRoom,
   ensureSessionRoom,
   expectedRoomName,
+  shouldCancelUnstartedSession,
   sweepMissingSessionRooms,
   type EnsureSessionRoomResult,
   type SessionRoomDaily,

@@ -39,6 +39,7 @@ function booking(
   return {
     id: "00000000-0000-4000-8000-000000000002",
     orgId: "00000000-0000-4000-8000-000000000001",
+    orgSlug: "acme",
     status,
     startsAt: new Date(STARTS_AT),
     endsAt: new Date("2026-09-22T10:50:00.000Z"),

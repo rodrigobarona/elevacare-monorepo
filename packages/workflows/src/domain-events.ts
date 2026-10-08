@@ -13,14 +13,17 @@ import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
   BOOKING_NOTIFICATION_EVENT_TYPES,
   PAYMENT_FAILED_EVENT_TYPE,
+  REFUND_SUCCEEDED_EVENT_TYPE,
   type BookingNotificationPayload,
   type PaymentFailedPayload,
+  type RefundSucceededPayload,
 } from "@eleva/scheduling"
 
 export const DOMAIN_EVENT_TYPES = [
   "booking.guest_activation_required",
   ...BOOKING_NOTIFICATION_EVENT_TYPES,
   PAYMENT_FAILED_EVENT_TYPE,
+  REFUND_SUCCEEDED_EVENT_TYPE,
   ...PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES,
   ...CLOSED_GATE_INVOICE_EVENT_TYPES,
 ] as const
@@ -52,6 +55,12 @@ export type DomainEvent =
       payload: PaymentFailedPayload
     }
   | {
+      type: typeof REFUND_SUCCEEDED_EVENT_TYPE
+      orgId: string
+      idempotencyKey: string
+      payload: RefundSucceededPayload
+    }
+  | {
       type: (typeof PAYMENT_PAYOUT_NOTIFICATION_EVENT_TYPES)[number]
       orgId: string
       idempotencyKey: string
@@ -81,6 +90,7 @@ export const DEFAULT_SUBSCRIBERS: Record<DomainEventType, readonly string[]> = {
   "booking.guest_activation_required": ["guest-activation"],
   ...BOOKING_NOTIFICATION_SUBSCRIBERS,
   ...PAYMENT_PAYOUT_NOTIFICATION_SUBSCRIBERS,
+  "refund.succeeded": ["ensure-session-room"],
   "invoice.blocked": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.skipped": CLOSED_GATE_INVOICE_SUBSCRIBERS,
   "invoice.pending": CLOSED_GATE_INVOICE_SUBSCRIBERS,

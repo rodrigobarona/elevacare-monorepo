@@ -6,6 +6,7 @@ import {
 import { withAudit, withPlatformAudit } from "@eleva/audit"
 import { main, withOrgContext, withPlatformAdminContext } from "@eleva/db"
 import { captureException } from "@eleva/observability"
+import { emitRefundSucceededEvent } from "@eleva/scheduling"
 import { stripe } from "./client"
 import { creditNoteAllocation } from "./commission"
 import {
@@ -1202,6 +1203,18 @@ export async function confirmRefundFromCharge(input: {
         action: "succeeded",
         entityId: matchedRefundId ?? input.refundRowId ?? payment.id,
         payload: { amountRefunded: input.amountRefunded },
+      })
+      await emitRefundSucceededEvent(tx, {
+        orgId: payment.orgId,
+        refundId:
+          matchedRefundId ??
+          input.stripeRefundId ??
+          `${payment.id}:${input.amountRefunded}`,
+        bookingId: payment.bookingId,
+        paymentId: payment.id,
+        amountCents: input.amountRefunded,
+        cancelsSession:
+          input.amountRefunded >= (fresh?.amountCents ?? payment.amountCents),
       })
       return matchedRefundId
     }
