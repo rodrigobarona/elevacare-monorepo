@@ -11,7 +11,7 @@ function isLocalHttpApiUrl(parsed: URL): boolean {
   return parsed.protocol === "http:" && LOCAL_API_HOSTS.has(parsed.hostname)
 }
 
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
   if (!url) {
     throw new Error(

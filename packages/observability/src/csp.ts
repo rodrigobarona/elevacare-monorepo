@@ -32,7 +32,7 @@ const VENDORS: Record<string, VendorEntry> = {
     formAction: ["https://connect-js.stripe.com"],
   },
   daily: {
-    connectSrc: ["https://*.daily.co"],
+    connectSrc: ["https://*.daily.co", "wss://*.daily.co"],
     frameSrc: ["https://*.daily.co"],
     mediaSrc: ["https://*.daily.co"],
   },
@@ -156,7 +156,46 @@ function resolveAllowlist(): Record<string, string[]> {
     merged.connectSrc?.push("http://127.0.0.1:*")
   }
 
+  const branded = dailyDomainAllowlist()
+  for (const [directive, origins] of Object.entries(branded)) {
+    merged[directive] ??= []
+    merged[directive].push(...origins)
+  }
+
   return merged
+}
+
+function dailyDomainAllowlist(): Record<string, string[]> {
+  const https = brandedDailyHttpsOrigin()
+  if (!https) return {}
+  const wss = https.replace(/^https:/, "wss:")
+  return {
+    connectSrc: [https, wss],
+    frameSrc: [https],
+    mediaSrc: [https],
+  }
+}
+
+/** HTTPS Daily origins allowed for camera/mic on join routes. */
+export function dailyHttpsOrigins(): string[] {
+  const origins = ["https://*.daily.co"]
+  const branded = brandedDailyHttpsOrigin()
+  if (branded && !origins.includes(branded)) origins.push(branded)
+  return origins
+}
+
+function brandedDailyHttpsOrigin(): string | null {
+  const raw = process.env.DAILY_DOMAIN?.trim()
+  if (!raw) return null
+  try {
+    const url = raw.includes("://") ? new URL(raw) : new URL(`https://${raw}`)
+    const host = url.hostname
+    if (!host) return null
+    const fqdn = host.includes(".") ? host : `${host}.daily.co`
+    return `https://${fqdn}`
+  } catch {
+    return null
+  }
 }
 
 // ---------------------------------------------------------------------------

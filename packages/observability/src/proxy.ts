@@ -3,7 +3,7 @@ import {
   type NextFetchEvent,
   type NextRequest,
 } from "next/server"
-import { buildCspHeader } from "./csp"
+import { buildCspHeader, dailyHttpsOrigins } from "./csp"
 import {
   correlationIdHeader,
   generateCorrelationId,
@@ -92,13 +92,25 @@ export function matchesPath(
 
 const HSTS = "max-age=63072000; includeSubDomains; preload"
 
+const DEFAULT_PERMISSIONS_POLICY =
+  'camera=(), microphone=(), display-capture=(), geolocation=(), payment=(self "https://js.stripe.com")'
+
+export function joinPermissionsPolicy(): string {
+  const daily = dailyHttpsOrigins()
+    .map((origin) => `"${origin}"`)
+    .join(" ")
+  return `camera=(self ${daily}), microphone=(self ${daily}), display-capture=(self), geolocation=(), payment=(self "https://js.stripe.com")`
+}
+
+export function isVideoJoinPath(pathname: string): boolean {
+  return /\/sessions\/[^/]+\/join\/?$/.test(pathname)
+}
+
 const DEFAULT_HEADERS: Record<string, string> = {
   "Strict-Transport-Security": HSTS,
   "X-Frame-Options": "DENY",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
-  "Permissions-Policy":
-    'camera=(self "https://*.daily.co"), microphone=(self "https://*.daily.co"), geolocation=(), payment=(self "https://js.stripe.com")',
 }
 
 export interface WithHeadersOptions {
@@ -132,6 +144,12 @@ export function withHeaders(
     for (const [k, v] of Object.entries(DEFAULT_HEADERS)) {
       nextRes.headers.set(k, v)
     }
+    nextRes.headers.set(
+      "Permissions-Policy",
+      isVideoJoinPath(req.nextUrl.pathname)
+        ? joinPermissionsPolicy()
+        : DEFAULT_PERMISSIONS_POLICY
+    )
     const skipCsp = process.env.NODE_ENV === "development"
     if (options.emitCsp !== false && !skipCsp) {
       nextRes.headers.set("Content-Security-Policy", cspValue)

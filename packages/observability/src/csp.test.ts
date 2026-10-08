@@ -13,6 +13,36 @@ describe("buildCspHeader", () => {
     const header = buildCspHeader()
     expect(header).toMatch(/connect-src[^;]*api\.stripe\.com/)
     expect(header).toMatch(/frame-src[^;]*daily\.co/)
+    expect(header).toMatch(/connect-src[^;]*wss:\/\/\*\.daily\.co/)
+  })
+
+  it("adds the branded Daily domain when DAILY_DOMAIN is set", () => {
+    const prev = process.env.DAILY_DOMAIN
+    process.env.DAILY_DOMAIN = "eleva"
+    try {
+      const header = buildCspHeader()
+      expect(header).toMatch(/connect-src[^;]*https:\/\/eleva\.daily\.co/)
+      expect(header).toMatch(/connect-src[^;]*wss:\/\/eleva\.daily\.co/)
+      expect(header).toMatch(/frame-src[^;]*https:\/\/eleva\.daily\.co/)
+    } finally {
+      if (prev === undefined) delete process.env.DAILY_DOMAIN
+      else process.env.DAILY_DOMAIN = prev
+    }
+  })
+
+  it("strips a path from DAILY_DOMAIN so Permissions-Policy origins stay valid", () => {
+    const prev = process.env.DAILY_DOMAIN
+    process.env.DAILY_DOMAIN = "https://eleva.daily.co/unused"
+    try {
+      const header = buildCspHeader()
+      expect(header).toMatch(
+        /connect-src[^;]*https:\/\/eleva\.daily\.co(?:\s|;|$)/
+      )
+      expect(header).not.toMatch(/eleva\.daily\.co\//)
+    } finally {
+      if (prev === undefined) delete process.env.DAILY_DOMAIN
+      else process.env.DAILY_DOMAIN = prev
+    }
   })
 
   it("includes sentry ingest domains in connect-src", () => {

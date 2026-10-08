@@ -14,6 +14,47 @@
       "subtitle": "Your schedule, bookings, and reports live here."
     }
   },
+  "sessions": {
+    "join": "Join session",
+    "joinNotOnline": "This session is not a video call.",
+    "detailTitle": "Back to calendar",
+    "call": {
+      "notHipaa": "This call uses standard Daily. It is not HIPAA. Recording is off.",
+      "prejoinTitle": "Check your camera and microphone",
+      "prejoinHint": "Join when you are ready. Your member may already be waiting.",
+      "join": "Join session",
+      "joining": "Joining…",
+      "waiting": "Your member will join shortly",
+      "waitingHint": "Stay on this page. The call starts when they arrive.",
+      "mute": "Mute microphone",
+      "unmute": "Unmute microphone",
+      "cameraOff": "Turn camera off",
+      "cameraOn": "Turn camera on",
+      "shareScreen": "Share screen",
+      "stopShare": "Stop sharing",
+      "chat": "Chat",
+      "chatPlaceholder": "Write a message",
+      "send": "Send",
+      "leave": "Leave",
+      "leftTitle": "You left the session",
+      "leftBody": "Thanks for joining. You can close this page.",
+      "back": "Back to calendar",
+      "errorTitle": "Could not join",
+      "retry": "Try again",
+      "notesTitle": "Session notes",
+      "notesPlaceholder": "Notes will live here in a later release.",
+      "you": "You",
+      "remote": "Member",
+      "connecting": "Connecting…",
+      "errors": {
+        "SESSION_NOT_OPEN": "This session is not open to join yet. Come back from 15 minutes before the start.",
+        "SESSION_NOT_ACTIVE": "This session is no longer active.",
+        "NOT_A_PARTICIPANT": "You are not a participant in this session.",
+        "ROOM_NOT_READY": "The video room is not ready yet. Try again in a moment.",
+        "internal": "Something went wrong. Try again."
+      }
+    }
+  },
   "eventTypes": {
     "title": "Event Types",
     "description": "Define the bookable services you offer.",
@@ -289,6 +330,8 @@
     "locationOnline": "Online",
     "locationPhone": "Phone",
     "locationUnknown": "—",
+    "join": "Join session",
+    "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on 15 minutes before the start.",
     "ics": {
       "title": "ICS feed",
       "description": "Subscribe in Apple Calendar, Google Calendar, or Outlook with a private read-only link.",

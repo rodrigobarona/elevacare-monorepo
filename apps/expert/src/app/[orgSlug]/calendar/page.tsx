@@ -46,6 +46,7 @@ export default async function CalendarPage({
       <div className="space-y-6">
         <PageHeader title={t("title")} description={t("description")} />
         <WeekView
+          orgSlug={orgSlug}
           initialFrom={fromIso}
           initialTo={toIso}
           initialBookings={bookings.map((b) => ({

@@ -145,6 +145,7 @@ export {
 export {
   listExpertBookings,
   listExpertBookingsForFeed,
+  getExpertBookingById,
   type ExpertBookingListItem,
 } from "./queries/expert-bookings"
 export type { CalendarFeedToken } from "./schema/main/offer-model"

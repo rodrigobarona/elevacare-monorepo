@@ -1,9 +1,47 @@
 import { readFileSync, readdirSync } from "node:fs"
 import { join, resolve } from "node:path"
 import { describe, expect, it } from "vitest"
-import { PASSTHROUGH_APP_MATCHER, STANDARD_APP_MATCHER } from "./proxy"
+import {
+  isVideoJoinPath,
+  joinPermissionsPolicy,
+  PASSTHROUGH_APP_MATCHER,
+  STANDARD_APP_MATCHER,
+} from "./proxy"
 
 const CANONICAL_LITERAL = '["/((?!api|_next|_vercel|.*\\\\..*).*)"]'
+
+describe("isVideoJoinPath", () => {
+  it("matches member and expert session join routes only", () => {
+    expect(
+      isVideoJoinPath(
+        "/acme/sessions/11111111-1111-4111-8111-111111111111/join"
+      )
+    ).toBe(true)
+    expect(
+      isVideoJoinPath("/acme/sessions/11111111-1111-4111-8111-111111111111")
+    ).toBe(false)
+    expect(isVideoJoinPath("/acme/calendar")).toBe(false)
+  })
+})
+
+describe("joinPermissionsPolicy", () => {
+  it("allows camera and mic on Daily plus a branded DAILY_DOMAIN", () => {
+    const prev = process.env.DAILY_DOMAIN
+    process.env.DAILY_DOMAIN = "sessions.eleva.care"
+    try {
+      const policy = joinPermissionsPolicy()
+      expect(policy).toContain(
+        'camera=(self "https://*.daily.co" "https://sessions.eleva.care")'
+      )
+      expect(policy).toContain(
+        'microphone=(self "https://*.daily.co" "https://sessions.eleva.care")'
+      )
+    } finally {
+      if (prev === undefined) delete process.env.DAILY_DOMAIN
+      else process.env.DAILY_DOMAIN = prev
+    }
+  })
+})
 
 describe("STANDARD_APP_MATCHER / PASSTHROUGH_APP_MATCHER", () => {
   it("exports the canonical regex", () => {

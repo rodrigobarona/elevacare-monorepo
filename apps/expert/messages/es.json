@@ -14,6 +14,47 @@
       "subtitle": "Tu horario, reservas e informes están aquí."
     }
   },
+  "sessions": {
+    "join": "Unirse a la sesión",
+    "joinNotOnline": "Esta sesión no es una videollamada.",
+    "detailTitle": "Volver al calendario",
+    "call": {
+      "notHipaa": "Esta llamada usa Daily estándar. No es HIPAA. La grabación está desactivada.",
+      "prejoinTitle": "Comprueba la cámara y el micrófono",
+      "prejoinHint": "Entra cuando estés listo. Tu miembro puede estar ya esperando.",
+      "join": "Unirse a la sesión",
+      "joining": "Entrando…",
+      "waiting": "Tu miembro se unirá en breve",
+      "waitingHint": "Quédate en esta página. La llamada empieza cuando llegue.",
+      "mute": "Silenciar micrófono",
+      "unmute": "Activar micrófono",
+      "cameraOff": "Apagar cámara",
+      "cameraOn": "Encender cámara",
+      "shareScreen": "Compartir pantalla",
+      "stopShare": "Dejar de compartir",
+      "chat": "Chat",
+      "chatPlaceholder": "Escribe un mensaje",
+      "send": "Enviar",
+      "leave": "Salir",
+      "leftTitle": "Has salido de la sesión",
+      "leftBody": "Gracias por participar. Puedes cerrar esta página.",
+      "back": "Volver al calendario",
+      "errorTitle": "No se pudo entrar",
+      "retry": "Intentar de nuevo",
+      "notesTitle": "Notas de la sesión",
+      "notesPlaceholder": "Las notas estarán aquí en una versión posterior.",
+      "you": "Tú",
+      "remote": "Miembro",
+      "connecting": "Conectando…",
+      "errors": {
+        "SESSION_NOT_OPEN": "Esta sesión aún no está abierta. Vuelve 15 minutos antes del inicio.",
+        "SESSION_NOT_ACTIVE": "Esta sesión ya no está activa.",
+        "NOT_A_PARTICIPANT": "No eres participante de esta sesión.",
+        "ROOM_NOT_READY": "La sala de vídeo aún no está lista. Prueba en un momento.",
+        "internal": "Algo ha fallado. Inténtalo de nuevo."
+      }
+    }
+  },
   "eventTypes": {
     "title": "Tipos de evento",
     "description": "Define los servicios que los miembros pueden reservar.",
@@ -289,6 +330,8 @@
     "locationOnline": "En línea",
     "locationPhone": "Teléfono",
     "locationUnknown": "—",
+    "join": "Unirse a la sesión",
+    "joinSoon": "El vídeo usa Daily estándar (no es HIPAA). Unirse se activa 15 minutos antes del inicio.",
     "ics": {
       "title": "Feed ICS",
       "description": "Suscríbete en Apple Calendar, Google Calendar u Outlook con un enlace privado de solo lectura.",

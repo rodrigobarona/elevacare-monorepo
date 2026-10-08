@@ -2,7 +2,7 @@ import { headers } from "next/headers"
 import { createApiClient } from "@eleva/api-client"
 import { buildApiSessionHeaders, requireSession } from "@eleva/auth/server"
 
-function getApiBaseUrl(): string {
+export function getApiBaseUrl(): string {
   const url = process.env.NEXT_PUBLIC_API_URL
   if (!url) {
     throw new Error(

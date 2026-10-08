@@ -120,6 +120,35 @@ export async function listExpertBookings(
   )
 }
 
+export async function getExpertBookingById(
+  orgId: string,
+  expertProfileId: string,
+  bookingId: string
+): Promise<{
+  id: string
+  sessionMode: SessionMode
+  status: string
+} | null> {
+  return withOrgContext(orgId, async (tx: Tx) => {
+    const [row] = await tx
+      .select({
+        id: bookings.id,
+        sessionMode: bookings.sessionMode,
+        status: bookings.status,
+      })
+      .from(bookings)
+      .where(
+        and(
+          eq(bookings.id, bookingId),
+          eq(bookings.orgId, orgId),
+          eq(bookings.expertProfileId, expertProfileId)
+        )
+      )
+      .limit(1)
+    return row ?? null
+  })
+}
+
 /**
  * Public ICS feed window (±90d / +365d). Platform-admin because the feed
  * token is the only auth signal — no org session.
