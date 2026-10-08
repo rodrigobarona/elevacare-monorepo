@@ -69,3 +69,22 @@ closed until the evidence column is real.
 | Migrations `0049` / `0050`              | Operator             | Loopback only           | `pnpm db:migrate` on staging then production.                                                                                                                            |
 | Daily account probe                     | Engineering          | PENDING                 | `DAILY_API_KEY` + recording off + webhook before the first live room. `@eleva/video` 09.1 ships the server primitives without a live key.                                |
 | Expert cancel, no-show, custom policies | Product              | Out of scope            | Flexible / Moderate / Strict only.                                                                                                                                       |
+
+## Phase 09 engineering closeout (2026-10-08)
+
+Engineering slices **09.1–09.6.3** are on main. This is **not** a proven
+exit gate and **not HIPAA**.
+
+| Item                                                              | State         | Evidence                                           |
+| ----------------------------------------------------------------- | ------------- | -------------------------------------------------- |
+| 09.1–09.5 server, rooms, join, ElevaCall, emails, pay-fail cancel | on main       | PRs #163–#166                                      |
+| 09.6.1 attendance fallback (`endsAt + 30m`)                       | on main       | #167                                               |
+| 09.6.2 Playwright fake-device join                                | on main       | #168 (`E2E_VIDEO_JOIN=1` leftover)                 |
+| 09.6.3a eject-before-capacity                                     | on main       | #169                                               |
+| 09.6.3b webhook `processed_at` in session tx                      | on main       | #170                                               |
+| Join Permissions-Policy camera/mic                                | on main       | `@eleva/observability` `joinPermissionsPolicy()`   |
+| Meeting-token JWT redaction + `check-no-phi-logs`                 | on main       | `redaction.ts` + `pnpm check:no-phi-logs`          |
+| 09.0 live Daily probe                                             | **PENDING**   | Spike records the founder position, not a live key |
+| Staging two-browser call                                          | leftover      | Operator; not a merge gate                         |
+| `ended + 2 min` `finalizeAttendance`                              | **not built** | Decision-log attendance SSOT                       |
+| D-07 HIPAA / BAA                                                  | Deferred      | Never claim BAA or HIPAA                           |
