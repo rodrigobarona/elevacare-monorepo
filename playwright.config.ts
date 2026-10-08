@@ -75,6 +75,21 @@ export default defineConfig({
     {
       name: "chromium",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: /video-join\.spec\.ts/,
+    },
+    {
+      name: "chromium-video",
+      testMatch: "**/video-join.spec.ts",
+      use: {
+        ...devices["Desktop Chrome"],
+        launchOptions: {
+          args: [
+            "--use-fake-device-for-media-stream",
+            "--use-fake-ui-for-media-stream",
+          ],
+        },
+        permissions: ["camera", "microphone"],
+      },
     },
   ],
   webServer: skipWebServer
