@@ -83,8 +83,10 @@ Use this:
 - [ ] Environments are clearly separated.
 - [ ] Secrets management is centralized and not copied casually into app code or local docs.
 - [ ] Security headers are configured for public/product surfaces.
+- [x] Product CSP `connect-src` includes `https://*.daily.co` and `wss://*.daily.co` plus `DAILY_DOMAIN`; `frame-src` / `media-src` allow Daily. Permissions-Policy camera/mic only on join routes.
+- [ ] Join emails and CTAs deep-link to Eleva join pages, never a raw Daily room URL or meeting token.
 - [ ] Dependency updates and vulnerability review are part of the operating process.
-- [ ] Operational logs use structured, redacted metadata.
+- [ ] Operational logs use structured, redacted metadata. Meeting tokens never appear in URLs, logs, audit payloads, or columns.
 
 ## Launch Readiness
 

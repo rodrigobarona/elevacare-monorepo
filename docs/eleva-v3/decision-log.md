@@ -32,6 +32,20 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Payment-fail and full refund before startAt cancel the session
+
+- Decision: Phase 09.5 cancels `sessions.status` and deletes the Daily room
+  when `payment.failed` or a **full** `refund.succeeded` occurs **before**
+  `startAt` (compared using the Stripe event time, not delivery time). Partial
+  refunds and the same events after `startAt` leave the session intact. The
+  room sweep does not recreate a room for a cancelled session. Booking
+  `cancelled` still deletes the room.
+- Owner: engineering
+- Status: `active`
+- Related: ADR-018, `scheduling-booking-spec.md`, Phase 09.5
+- Next review: when D-07 HIPAA Daily is signed (room-name and recording rules
+  change); this payment↔session rule stays.
+
 ### 2026-10-07: Session attendance finalizes on meeting.ended, then corrects
 
 - Decision: Phase 09.3 writes `attendance` and `ended|no_show` on

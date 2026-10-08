@@ -94,6 +94,28 @@ Should cover:
 - transcript not appearing
 - transcript available but downstream workflow failed
 
+Standard Daily only until D-07. Recording off. Not HIPAA.
+
+#### Daily outage
+
+Symptoms: join page loads but the call never connects; Daily REST 5xx on
+room create; webhook backlog.
+
+1. Confirm `sessions.daily_room_name` and `sessions.status` for the booking.
+   Join still requires `sessions.status IN ('scheduled','live')` and the
+   `[startAt-15m, endAt+30m]` window — a cancelled session never mints.
+2. If Daily REST is down, do **not** paste a raw Daily URL into email or
+   chat. Members already have the Eleva join deep link; it will work when
+   Daily recovers if the session is still in window.
+3. Operator path: reschedule the booking (emits `booking.rescheduled`,
+   recreates the room) and notify both parties. Do not invent a second
+   video vendor.
+4. `payment.failed` or a **full** refund **before** `startAt` already
+   cancels the session and deletes the room. Partial refunds and refunds
+   after the session leave the session row intact.
+5. Escalate to Daily status + Sentry. Stamp **not HIPAA** in any customer
+   reply.
+
 ### Resend runbook
 
 Should cover:

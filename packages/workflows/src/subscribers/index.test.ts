@@ -13,6 +13,7 @@ vi.mock("./calendar-sync", () => ({
 }))
 
 vi.mock("../video/ensure-session-room", () => ({
+  cancelUnstartedSessionRoom: vi.fn(),
   deleteSessionRoom: vi.fn(),
   ensureSessionRoom: vi.fn(),
 }))
@@ -20,6 +21,7 @@ vi.mock("../video/ensure-session-room", () => ({
 import { defaultDomainEventSubscribers } from "./index"
 import { handleSendNotification } from "./send-notification"
 import {
+  cancelUnstartedSessionRoom,
   deleteSessionRoom,
   ensureSessionRoom,
 } from "../video/ensure-session-room"
@@ -61,5 +63,60 @@ describe("defaultDomainEventSubscribers", () => {
       payload: { bookingId: "bk-1" },
     })
     expect(deleteSessionRoom).toHaveBeenCalledWith("bk-1")
+  })
+
+  it("cancels an unstarted room on payment.failed and refund.succeeded", async () => {
+    vi.mocked(ensureSessionRoom).mockClear()
+    vi.mocked(deleteSessionRoom).mockClear()
+    vi.mocked(cancelUnstartedSessionRoom).mockClear()
+    const subscribers = defaultDomainEventSubscribers()
+    await subscribers["ensure-session-room"]?.({
+      id: "evt-4",
+      type: "payment.failed",
+      orgId: "org-1",
+      payload: { bookingId: "bk-2", occurredAt: "2026-10-08T10:00:00.000Z" },
+    })
+    expect(cancelUnstartedSessionRoom).toHaveBeenCalledWith(
+      "bk-2",
+      {},
+      new Date("2026-10-08T10:00:00.000Z")
+    )
+    expect(ensureSessionRoom).not.toHaveBeenCalled()
+
+    await subscribers["ensure-session-room"]?.({
+      id: "evt-5",
+      type: "refund.succeeded",
+      orgId: "org-1",
+      payload: {
+        bookingId: "bk-2",
+        occurredAt: "2026-10-08T10:00:00.000Z",
+        cancelsSession: true,
+      },
+    })
+    expect(cancelUnstartedSessionRoom).toHaveBeenCalledTimes(2)
+
+    await subscribers["ensure-session-room"]?.({
+      id: "evt-6",
+      type: "refund.succeeded",
+      orgId: "org-1",
+      payload: {
+        bookingId: "bk-2",
+        occurredAt: "2026-10-08T10:00:00.000Z",
+        cancelsSession: false,
+      },
+    })
+    expect(cancelUnstartedSessionRoom).toHaveBeenCalledTimes(2)
+  })
+
+  it("fails when payment.failed is missing occurredAt", async () => {
+    const subscribers = defaultDomainEventSubscribers()
+    await expect(
+      subscribers["ensure-session-room"]?.({
+        id: "evt-7",
+        type: "payment.failed",
+        orgId: "org-1",
+        payload: { bookingId: "bk-2" },
+      })
+    ).rejects.toThrow(/occurredAt/)
   })
 })

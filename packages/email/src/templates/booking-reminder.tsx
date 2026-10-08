@@ -2,6 +2,7 @@ import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
 import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
+import { JoinSessionCta } from "../components/join-session-cta"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -15,6 +16,8 @@ export interface BookingReminderProps {
   sessionMode: string
   locale?: EmailLocale
   jsonLd?: Record<string, unknown>
+  /** Eleva join page on the 1h reminder. Never a raw Daily room URL. */
+  joinHref?: string
 }
 
 export function BookingReminderEmail({
@@ -25,6 +28,7 @@ export function BookingReminderEmail({
   sessionMode,
   locale = "en",
   jsonLd,
+  joinHref,
 }: BookingReminderProps) {
   const t = getEmailTranslations(locale)
   const title =
@@ -55,6 +59,8 @@ export function BookingReminderEmail({
           value={formatSessionMode(sessionMode, locale)}
         />
       </EmailCard>
+
+      {joinHref ? <JoinSessionCta href={joinHref} locale={locale} /> : null}
     </EmailLayout>
   )
 }

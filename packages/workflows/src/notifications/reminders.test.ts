@@ -321,6 +321,7 @@ describe("deliverBookingReminder", () => {
   const activeBooking = {
     id: BOOKING_ID,
     orgId: ORG_ID,
+    orgSlug: "acme",
     status: "confirmed",
     startsAt: STARTS_AT,
     endsAt: new Date("2026-09-22T15:50:00.000Z"),

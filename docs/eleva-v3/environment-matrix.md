@@ -412,3 +412,4 @@ Neon branch-per-PR (Phase 1.2 CI) needs GitHub secret `NEON_API_KEY` and secret 
 - [`launch-readiness-checklist.md`](./launch-readiness-checklist.md)
 - [`ops-observability-spec.md`](./ops-observability-spec.md)
 - [`implementation-sprints.md`](./implementation-sprints.md)
+- [`operator-tasks/daily-setup.md`](./operator-tasks/daily-setup.md)

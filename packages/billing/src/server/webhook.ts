@@ -76,6 +76,48 @@ const ERROR_TRUNCATE_LENGTH = 2000
  */
 const STALE_PROCESSING_MS = 10 * 60 * 1000 // 10 minutes
 
+function stripeOccurredAt(unixSeconds: number): Date {
+  return new Date(unixSeconds * 1000)
+}
+
+/**
+ * Pair a cumulative Stripe `amount_refunded` with the time that total
+ * was reached. This refund's succeeded-at is `event.created` (pending
+ * refunds keep an earlier `refund.created`). Other succeeded refunds
+ * on the charge keep their `created`. Walk in time order so a delayed
+ * partial event still timestamps the later refund that completed the
+ * total.
+ */
+function occurredAtWhenRefundTotalReached(input: {
+  charge: Stripe.Charge | null
+  refund: Pick<Stripe.Refund, "id" | "amount"> | null
+  eventCreated: number
+  amountRefunded: number
+}): Date {
+  const points: { at: number; amount: number }[] = []
+  const seen = new Set<string>()
+  if (input.refund) {
+    points.push({ at: input.eventCreated, amount: input.refund.amount })
+    seen.add(input.refund.id)
+  }
+  for (const r of input.charge?.refunds?.data ?? []) {
+    if (r.status !== "succeeded" || seen.has(r.id)) continue
+    points.push({ at: r.created, amount: r.amount })
+  }
+  if (points.length === 0) {
+    return stripeOccurredAt(input.eventCreated)
+  }
+  points.sort((a, b) => a.at - b.at)
+  let running = 0
+  let reachedAt = points[0]!.at
+  for (const p of points) {
+    running += p.amount
+    reachedAt = p.at
+    if (running >= input.amountRefunded) break
+  }
+  return stripeOccurredAt(reachedAt)
+}
+
 /**
  * F2 enhancement: marker class for unrecoverable handler errors. When a
  * handler throws a `TerminalError`, the processor records the event as
@@ -1415,6 +1457,7 @@ async function handlePaymentIntentEvent(
     const marked = await markBookingPaymentFailed({
       paymentIntentId: intent.id,
       reservationId,
+      occurredAt: stripeOccurredAt(event.created),
     })
     if (!marked.ok) {
       throw new Error(
@@ -1561,6 +1604,7 @@ async function handleChargeRefunded(
       amountRefunded: charge.amount_refunded,
       stripeRefundId: null,
       refundRowId: null,
+      occurredAt: stripeOccurredAt(event.created),
     })
   }
   await withAudit({ orgId, actorUserId: null }, async (_tx, ctx) => {
@@ -1766,12 +1810,21 @@ async function handleRefundUpdated(
       typeof refund.charge === "string"
         ? refund.charge
         : (refund.charge?.id ?? null)
-    const charge = chargeId ? await stripe().charges.retrieve(chargeId) : null
+    const charge = chargeId
+      ? await stripe().charges.retrieve(chargeId, { expand: ["refunds"] })
+      : null
+    const amountRefunded = charge?.amount_refunded ?? refund.amount
     await confirmRefundFromCharge({
       paymentIntentId,
-      amountRefunded: charge?.amount_refunded ?? refund.amount,
+      amountRefunded,
       stripeRefundId: refund.id,
       refundRowId,
+      occurredAt: occurredAtWhenRefundTotalReached({
+        charge,
+        refund,
+        eventCreated: event.created,
+        amountRefunded,
+      }),
     })
   } else if (refund.status === "failed" || refund.status === "canceled") {
     await markRefundFailedFromStripe({
