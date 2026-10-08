@@ -32,6 +32,18 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Eject a revoked participant before shrinking Daily room capacity
+
+- Decision: Phase 09.6.3a ejects+bans the revoked user, then updates
+  `max_participants`. Shrinking the room first can leave a still-present
+  revoked participant occupying the last slot. A retryable Daily eject
+  failure does not shrink the room; `video-eject-retry` finishes eject
+  then repairs capacity.
+- Owner: engineering
+- Status: `active`
+- Related: ADR-018, two-phase revoke in Phase 09 Scope
+- Next review: if Daily exposes a single eject+update room API.
+
 ### 2026-10-08: Attendance fallback after the join window closes when Daily is silent
 
 - Decision: Phase 09.6.1 adds QStash `POST /workflows/video-attendance-sweep`

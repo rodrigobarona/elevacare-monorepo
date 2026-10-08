@@ -1,10 +1,12 @@
 import {
   and,
   eq,
+  exists,
   inArray,
   isNotNull,
   isNull,
   lte,
+  not,
   notInArray,
   sql,
 } from "drizzle-orm"
@@ -58,6 +60,11 @@ export function isSelfDelegate(
 
 export function isRetryableDailyFailure(err: unknown) {
   return err instanceof DailyHttpError && err.status >= 500
+}
+
+/** Do not shrink a room while a revoked participant is still waiting to eject. */
+export function shouldRepairRoomCapacity(pendingEjectCount: number) {
+  return pendingEjectCount === 0
 }
 
 async function loadAssignedSession(bookingId: string, actorUserId: string) {
@@ -135,6 +142,43 @@ async function syncRoomCapacity(
     lang,
   })
   await daily(deps).updateSessionRoom(session.dailyRoomName, body.properties)
+}
+
+export type RevokedParticipantDailyResult =
+  | { status: "ejectionPending" }
+  | { status: "ok"; capacityPending?: true }
+
+/**
+ * Eject+ban the revoked user before shrinking max_participants. Shrinking
+ * first can leave them occupying the last slot in a live room.
+ */
+export async function runRevokedParticipantDailyCleanup(
+  input: {
+    bookingId: string
+    dailyRoomName: string | null
+    startsAt: Date
+    endsAt: Date
+    language: string | null
+    userId: string
+    extraParticipants: number
+  },
+  deps?: SessionParticipantDeps
+): Promise<RevokedParticipantDailyResult> {
+  if (input.dailyRoomName && isElevaRoomName(input.dailyRoomName)) {
+    try {
+      await daily(deps).ejectParticipants(input.dailyRoomName, [input.userId])
+    } catch (err) {
+      if (!isRetryableDailyFailure(err)) throw err
+      return { status: "ejectionPending" }
+    }
+  }
+  try {
+    await syncRoomCapacity(input, input.extraParticipants, deps)
+  } catch (err) {
+    if (!isRetryableDailyFailure(err)) throw err
+    return { status: "ok", capacityPending: true }
+  }
+  return { status: "ok" }
 }
 
 export type AddSessionParticipantResult = {
@@ -276,26 +320,22 @@ export async function removeSessionParticipant(
   if (!revoked) throw new SessionParticipantError("NOT_FOUND")
 
   const extra = await countActiveDelegates(input.bookingId)
-  const syncStartedAt = new Date()
-  try {
-    await syncRoomCapacity(
-      { ...session, bookingId: input.bookingId },
-      extra,
-      deps
-    )
-    await clearCapacityPending(input.bookingId, syncStartedAt)
-  } catch (err) {
-    if (!isRetryableDailyFailure(err)) throw err
+  const cleanupStartedAt = new Date()
+  const dailyResult = await runRevokedParticipantDailyCleanup(
+    {
+      bookingId: input.bookingId,
+      dailyRoomName: session.dailyRoomName,
+      startsAt: session.startsAt,
+      endsAt: session.endsAt,
+      language: session.language,
+      userId: input.userId,
+      extraParticipants: extra,
+    },
+    deps
+  )
+  if (dailyResult.status === "ejectionPending") {
     await markCapacityPending(input.bookingId)
-  }
-
-  if (session.dailyRoomName && isElevaRoomName(session.dailyRoomName)) {
-    try {
-      await daily(deps).ejectParticipants(session.dailyRoomName, [input.userId])
-    } catch (err) {
-      if (!isRetryableDailyFailure(err)) throw err
-      return { ejectionPending: true }
-    }
+    return { ejectionPending: true }
   }
 
   await withPlatformAudit(
@@ -319,6 +359,11 @@ export async function removeSessionParticipant(
       })
     }
   )
+  if (dailyResult.capacityPending) {
+    await markCapacityPending(input.bookingId)
+  } else {
+    await clearCapacityPending(input.bookingId, cleanupStartedAt)
+  }
   return { ok: true }
 }
 
@@ -375,7 +420,25 @@ async function retryStaleRoomCapacities(
       .where(
         and(
           isNotNull(main.sessions.capacityPendingAt),
-          inArray(main.sessions.status, ["scheduled", "live"])
+          inArray(main.sessions.status, ["scheduled", "live"]),
+          // Keep the eject-before-capacity rule: shouldRepairRoomCapacity(0).
+          not(
+            exists(
+              tx
+                .select({ id: main.sessionParticipants.id })
+                .from(main.sessionParticipants)
+                .where(
+                  and(
+                    eq(
+                      main.sessionParticipants.bookingId,
+                      main.sessions.bookingId
+                    ),
+                    isNotNull(main.sessionParticipants.revokedAt),
+                    isNull(main.sessionParticipants.ejectedAt)
+                  )
+                )
+            )
+          )
         )
       )
       .orderBy(main.sessions.capacityPendingAt)
