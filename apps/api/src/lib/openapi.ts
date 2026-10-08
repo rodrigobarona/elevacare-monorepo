@@ -4163,6 +4163,12 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
         description:
           "Ejects and bans revoked session participants that still have no ejected_at, then re-syncs Daily room capacity for scheduled and live rooms.",
       }),
+      "/workflows/video-attendance-sweep": internalWorkflow({
+        operationId: "sweepEndedSessionsWithoutAttendance",
+        summary: "Finalize attendance when Daily sent no meeting.ended",
+        description:
+          "Sessions still scheduled, live, or room_unresolved with null attendance whose Eleva join window (endsAt + 30m) has closed are finalized from participant history (empty history is nobody / no_show). Attendance only — no refund decision. Standard Daily, not HIPAA.",
+      }),
       "/health": {
         get: {
           operationId: "healthCheck",

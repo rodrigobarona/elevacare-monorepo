@@ -17,3 +17,13 @@ export const VIDEO_EJECT_RETRY_SCHEDULE = {
   description:
     "Complete Daily eject+ban for revoked session participants and repair stale room capacity",
 } as const
+
+export const VIDEO_ATTENDANCE_SWEEP_SCHEDULE = {
+  name: "Video attendance fallback",
+  path: "/workflows/video-attendance-sweep",
+  cron: "*/15 * * * *",
+  retries: 3,
+  requireBearer: true,
+  description:
+    "Finalize attendance from participant history after the Eleva join window (endsAt+30m) when Daily sent no meeting.ended",
+} as const

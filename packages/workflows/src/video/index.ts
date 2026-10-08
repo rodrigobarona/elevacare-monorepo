@@ -40,3 +40,9 @@ export {
   type DailyWebhookResult,
 } from "./daily-webhook"
 export { deriveAttendance, statusAfterAttendance } from "./attendance"
+export {
+  attendanceFallbackDueAt,
+  finalizeAttendanceFromHistory,
+  shouldFinalizeAttendanceFallback,
+  sweepEndedSessionsWithoutAttendance,
+} from "./attendance-fallback"

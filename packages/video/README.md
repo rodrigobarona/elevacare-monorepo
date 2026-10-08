@@ -21,4 +21,9 @@ Never put a Daily room URL or meeting token in email.
 the session and delete the room. Partial refunds and the same events after
 `startAt` leave the session row intact.
 
+If Daily never sends `meeting.ended`, a sweep after the join window
+closes (`endsAt + 30m`) finalizes `attendance` from participant history
+(empty → `nobody` / `no_show`). No-show policy (refund/keep) is not
+decided here.
+
 Never log `DAILY_API_KEY` or meeting tokens.

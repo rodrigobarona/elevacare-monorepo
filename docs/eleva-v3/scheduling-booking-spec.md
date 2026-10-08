@@ -276,6 +276,9 @@ room. The room sweep does not recreate a room for a cancelled session.
 Join is via Eleva pages (`/{orgSlug}/sessions/{bookingId}/join` and
 `/expert/sessions/{bookingId}/join`), never a raw Daily URL. The join window
 is `[startAt-15m, endAt+30m]`. Standard Daily, recording off, **not HIPAA**.
+If Daily never sends `meeting.ended`, a sweep after the join window
+closes (`endsAt + 30m`) finalizes `attendance` from participant history
+(empty → `nobody` / `no_show`).
 
 ## Initial MVP Scheduling Scope
 
