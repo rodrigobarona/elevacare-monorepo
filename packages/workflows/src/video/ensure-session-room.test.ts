@@ -123,9 +123,12 @@ describe("shouldCancelUnstartedSession", () => {
     ).toBe(true)
   })
 
-  it("leaves sessions after startAt and terminal statuses alone", () => {
+  it("leaves sessions after startAt, live calls, and terminal statuses alone", () => {
     expect(
       shouldCancelUnstartedSession({ status: "scheduled", startsAt: past }, now)
+    ).toBe(false)
+    expect(
+      shouldCancelUnstartedSession({ status: "live", startsAt: future }, now)
     ).toBe(false)
     expect(
       shouldCancelUnstartedSession({ status: "ended", startsAt: future }, now)

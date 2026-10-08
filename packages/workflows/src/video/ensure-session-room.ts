@@ -35,6 +35,8 @@ const TERMINAL_SESSION_STATUSES = new Set([
   "no_show",
 ])
 
+const PRE_START_CANCELLABLE_STATUSES = ["scheduled", "room_unresolved"] as const
+
 export type EnsureSessionRoomResult =
   | {
       skipped:
@@ -328,7 +330,9 @@ export function shouldCancelUnstartedSession(
   if (!row) return false
   if (row.startsAt.getTime() <= now.getTime()) return false
   if (TERMINAL_SESSION_STATUSES.has(row.status)) return false
-  return true
+  return (PRE_START_CANCELLABLE_STATUSES as readonly string[]).includes(
+    row.status
+  )
 }
 
 /** True when a missing or live session row must become cancelled so the sweep cannot mint a room. */
@@ -413,12 +417,7 @@ export async function cancelUnstartedSessionRoom(
       .where(
         and(
           eq(main.sessions.bookingId, bookingId),
-          inArray(main.sessions.status, [
-            "scheduled",
-            "in_progress",
-            "live",
-            "room_unresolved",
-          ])
+          inArray(main.sessions.status, [...PRE_START_CANCELLABLE_STATUSES])
         )
       )
       .returning({ id: main.sessions.id })
