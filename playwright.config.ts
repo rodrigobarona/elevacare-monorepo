@@ -49,7 +49,8 @@ const apiUrl = process.env.E2E_API_URL ?? "http://localhost:3002"
 const accountUrl = process.env.E2E_ACCOUNT_URL ?? "http://localhost:3006"
 const skipWebServer = process.env.E2E_SKIP_WEBSERVER === "1"
 const runAuth = process.env.E2E_AUTH === "1"
-const runMember = process.env.E2E_MEMBER === "1"
+const runMember =
+  process.env.E2E_MEMBER === "1" || process.env.E2E_VIDEO_JOIN === "1"
 const appUrl = process.env.E2E_APP_URL ?? "http://localhost:3001"
 
 export default defineConfig({
