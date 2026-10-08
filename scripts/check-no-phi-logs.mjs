@@ -64,25 +64,37 @@ function objectEnd(content, brace) {
   return -1
 }
 
-function auditPayloadObjects(content) {
+function auditEmitPayloads(content) {
   const spans = []
   let unclosed = false
   let from = 0
   while (from < content.length) {
-    const at = content.indexOf("payload:", from)
-    if (at === -1) break
-    const brace = content.indexOf("{", at + 8)
-    if (brace === -1 || brace - at > 24) {
-      from = at + 8
+    const emitAt = content.indexOf(".emit(", from)
+    if (emitAt === -1) break
+    const open = content.indexOf("{", emitAt)
+    if (open === -1 || open - emitAt > 20) {
+      from = emitAt + 6
       continue
     }
-    const end = objectEnd(content, brace)
-    if (end === -1) {
+    const emitEnd = objectEnd(content, open)
+    if (emitEnd === -1) {
       unclosed = true
       break
     }
-    spans.push(content.slice(brace, end + 1))
-    from = end + 1
+    const emitObj = content.slice(open, emitEnd + 1)
+    const payAt = emitObj.indexOf("payload:")
+    if (payAt !== -1) {
+      const brace = emitObj.indexOf("{", payAt)
+      if (brace !== -1 && brace - payAt <= 24) {
+        const payEnd = objectEnd(emitObj, brace)
+        if (payEnd === -1) {
+          unclosed = true
+          break
+        }
+        spans.push(emitObj.slice(brace, payEnd + 1))
+      }
+    }
+    from = emitEnd + 1
   }
   return { spans, unclosed }
 }
@@ -129,7 +141,7 @@ for (const file of files) {
   if (JWT_RE.test(content)) {
     violations.push(`${rel}: compact JWT literal`)
   }
-  const payloads = auditPayloadObjects(content)
+  const payloads = auditEmitPayloads(content)
   if (payloads.unclosed) {
     violations.push(`${rel}: audit payload object did not close`)
   }
