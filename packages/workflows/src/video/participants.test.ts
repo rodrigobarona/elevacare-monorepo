@@ -140,6 +140,29 @@ describe("runRevokedParticipantDailyCleanup", () => {
     expect(result).toEqual({ status: "ok", capacityPending: true })
   })
 
+  it("returns ejectionPending when persist fails after a successful eject", async () => {
+    const order: string[] = []
+    const result = await runRevokedParticipantDailyCleanup(
+      input,
+      {
+        daily: {
+          updateSessionRoom: async () => {
+            order.push("capacity")
+          },
+          ejectParticipants: async () => {
+            order.push("eject")
+          },
+        },
+      },
+      async () => {
+        order.push("persist")
+        throw new Error("audit")
+      }
+    )
+    expect(order).toEqual(["eject", "persist"])
+    expect(result).toEqual({ status: "ejectionPending" })
+  })
+
   it("does not shrink capacity while another eject is still pending", async () => {
     const order: string[] = []
     const result = await runRevokedParticipantDailyCleanup(

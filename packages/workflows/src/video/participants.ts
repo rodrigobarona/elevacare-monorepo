@@ -192,7 +192,15 @@ export async function runRevokedParticipantDailyCleanup(
       return { status: "ejectionPending" }
     }
   }
-  if (persistEjected) await persistEjected()
+  if (persistEjected) {
+    try {
+      await persistEjected()
+    } catch {
+      // Daily already ejected. Leave ejectedAt unset so retryPendingEjects
+      // persists it, and mark capacity pending via ejectionPending.
+      return { status: "ejectionPending" }
+    }
+  }
   const others =
     input.otherPendingEjects ?? (await countPendingEjects(input.bookingId))
   if (!shouldRepairRoomCapacity(others)) {
