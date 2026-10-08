@@ -181,7 +181,8 @@ export async function runRevokedParticipantDailyCleanup(
     extraParticipants: number
     otherPendingEjects?: number
   },
-  deps?: SessionParticipantDeps
+  deps?: SessionParticipantDeps,
+  persistEjected?: () => Promise<void>
 ): Promise<RevokedParticipantDailyResult> {
   if (input.dailyRoomName && isElevaRoomName(input.dailyRoomName)) {
     try {
@@ -191,9 +192,9 @@ export async function runRevokedParticipantDailyCleanup(
       return { status: "ejectionPending" }
     }
   }
+  if (persistEjected) await persistEjected()
   const others =
-    input.otherPendingEjects ??
-    Math.max(0, (await countPendingEjects(input.bookingId)) - 1)
+    input.otherPendingEjects ?? (await countPendingEjects(input.bookingId))
   if (!shouldRepairRoomCapacity(others)) {
     return { status: "ok", capacityPending: true }
   }
@@ -356,34 +357,36 @@ export async function removeSessionParticipant(
       userId: input.userId,
       extraParticipants: extra,
     },
-    deps
+    deps,
+    async () => {
+      await withPlatformAudit(
+        { orgId: session.orgId, actorUserId: input.actorUserId },
+        async (tx, ctx) => {
+          await tx
+            .update(main.sessionParticipants)
+            .set({ ejectedAt: new Date() })
+            .where(
+              and(
+                eq(main.sessionParticipants.bookingId, input.bookingId),
+                eq(main.sessionParticipants.userId, input.userId),
+                isNotNull(main.sessionParticipants.revokedAt)
+              )
+            )
+          await ctx.emit({
+            entity: "session",
+            action: "ejected",
+            entityId: input.bookingId,
+            payload: { userId: input.userId },
+          })
+        }
+      )
+    }
   )
   if (dailyResult.status === "ejectionPending") {
     await markCapacityPending(input.bookingId)
     return { ejectionPending: true }
   }
 
-  await withPlatformAudit(
-    { orgId: session.orgId, actorUserId: input.actorUserId },
-    async (tx, ctx) => {
-      await tx
-        .update(main.sessionParticipants)
-        .set({ ejectedAt: new Date() })
-        .where(
-          and(
-            eq(main.sessionParticipants.bookingId, input.bookingId),
-            eq(main.sessionParticipants.userId, input.userId),
-            isNotNull(main.sessionParticipants.revokedAt)
-          )
-        )
-      await ctx.emit({
-        entity: "session",
-        action: "ejected",
-        entityId: input.bookingId,
-        payload: { userId: input.userId },
-      })
-    }
-  )
   if (dailyResult.capacityPending) {
     await markCapacityPending(input.bookingId)
   } else {

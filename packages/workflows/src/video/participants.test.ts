@@ -84,19 +84,25 @@ describe("runRevokedParticipantDailyCleanup", () => {
     otherPendingEjects: 0,
   }
 
-  it("ejects the revoked user before shrinking room capacity", async () => {
+  it("ejects the revoked user, persists ejectedAt, then shrinks capacity", async () => {
     const order: string[] = []
-    const result = await runRevokedParticipantDailyCleanup(input, {
-      daily: {
-        updateSessionRoom: async () => {
-          order.push("capacity")
-        },
-        ejectParticipants: async () => {
-          order.push("eject")
+    const result = await runRevokedParticipantDailyCleanup(
+      input,
+      {
+        daily: {
+          updateSessionRoom: async () => {
+            order.push("capacity")
+          },
+          ejectParticipants: async () => {
+            order.push("eject")
+          },
         },
       },
-    })
-    expect(order).toEqual(["eject", "capacity"])
+      async () => {
+        order.push("persist")
+      }
+    )
+    expect(order).toEqual(["eject", "persist", "capacity"])
     expect(result).toEqual({ status: "ok" })
   })
 
