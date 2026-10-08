@@ -51,35 +51,28 @@ In:
 - `sessions` table: `booking_id` unique, `daily_room_name`, `daily_room_url`, `status`
   (`scheduled|live|ended|no_show|cancelled|room_unresolved` — one union shared by the migration,
   the API types and the state machine), `attendance` nullable (`both|expert_only|member_only|nobody`,
-  derived from the full ordered participant history by `finalizeAttendance` after
-  `meeting.ended` and re-derived by later correction runs when late participant events arrive —
+  derived from the full ordered participant history on `meeting.ended` (or the
+  `endsAt + 30m` sweep) and re-derived by later correction runs when late participant events arrive —
   see the state machine below), `room_create_attempt_at`, `room_attempt_seq int`,
   `room_fingerprint_exp` (nullable UNIQUE; **unused until D-07**. Standard Daily uses
   `name: eleva-{bookingId}` as the idempotency handle — GET-or-create. Do not allocate
   nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), `last_event_at`,
   `started_at`, `ended_at`, `participants jsonb`. Transition to `no_show`: `attendance` is
-  **derived, never written from a single event**: on `meeting.ended` (or the sweep at `endsAt +
-30m` when Daily sent nothing) the handler schedules `finalizeAttendance(bookingId)` at
-  `ended + 2 min` (QStash, idempotent); it recomputes attendance from the full ordered
-  `participants` history (an empty history — Daily sent nothing — yields `nobody`, so the sweep
-  path always persists a non-NULL attendance before the status transition; every
-  `participant.joined`/`left` persisted by the webhook, including
-  those whose event time precedes `meeting.ended` but arrived after it) and only then sets the
-  status: `attendance <> 'both'` -> `no_show`, else `ended`; a participant event that arrives
-  after finalization with an event time inside the session window re-runs the recompute and may
-  flip `no_show` -> `ended` (never the reverse; emits `session.attendance_corrected` and undoes
-  any no-show side effect that has not executed yet); both transitions are in the state-machine
-  table and tested, including the out-of-order sequence `participant.joined` (t=10:02) delivered
-  after `meeting.ended` (t=10:31) -> final status `ended`, not `no_show`
-  (join/leave history only — never used for authorization), RLS for expert org + buyer org.
+  **derived, never written from a single event**. Built flow: `meeting.ended` writes
+  attendance from the ordered `participants` history; if Daily sent nothing, the 09.6.1
+  sweep at `endsAt + 30m` (join window close) finalizes the same way (empty history →
+  `nobody`). Status is then `attendance <> 'both'` → `no_show`, else `ended`. A
+  participant event that arrives after that write with an event time inside the session
+  window re-runs the recompute and may flip `no_show` → `ended` (never the reverse;
+  emits `session.attendance_corrected`). Out-of-order sequence `participant.joined`
+  (t=10:02) delivered after `meeting.ended` (t=10:31) → final status `ended`, not
+  `no_show`. Join/leave history is never used for authorization. RLS for expert org +
+  buyer org. The delayed QStash `finalizeAttendance` at `ended + 2 min` was never built.
 
-**Attendance SSOT (2026-10-07):** this Scope still describes QStash
-`finalizeAttendance` at `ended + 2 min`. The decision-log is the source of
-truth: 09.3 writes attendance on `meeting.ended`, with late participant
-events able to flip `no_show → ended` (`session.attendance_corrected`).
-The delayed finalize job was never built. The fallback when Daily sent
-nothing is the 09.6.1 sweep at `endsAt + 30m` (join window close), on
-main.
+**Attendance SSOT (2026-10-07):** 09.3 writes attendance on `meeting.ended`; late
+participant events can flip `no_show → ended` (`session.attendance_corrected`). The
+09.6.1 sweep at `endsAt + 30m` covers a missing `meeting.ended`. The delayed
+finalize job remains unbuilt.
 
 - `session_participants` table (the **authorization** contract for delegated participants):
   `booking_id`, `user_id`, `role` (`delegate|supervisor`), `added_by`, `added_at`, `revoked_at`,

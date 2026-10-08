@@ -5524,34 +5524,28 @@ when a delegate is added, so every authorised participant can join), <code>enabl
 <li><code>sessions</code> table: <code>booking_id</code> unique, <code>daily_room_name</code>, <code>daily_room_url</code>, <code>status</code>
 (<code>scheduled|live|ended|no_show|cancelled|room_unresolved</code> — one union shared by the migration,
 the API types and the state machine), <code>attendance</code> nullable (<code>both|expert_only|member_only|nobody</code>,
-derived from the full ordered participant history by <code>finalizeAttendance</code> after
-<code>meeting.ended</code> and re-derived by later correction runs when late participant events arrive —
+derived from the full ordered participant history on <code>meeting.ended</code> (or the
+<code>endsAt + 30m</code> sweep) and re-derived by later correction runs when late participant events arrive —
 see the state machine below), <code>room_create_attempt_at</code>, <code>room_attempt_seq int</code>,
 <code>room_fingerprint_exp</code> (nullable UNIQUE; <strong>unused until D-07</strong>. Standard Daily uses
 <code>name: eleva-{bookingId}</code> as the idempotency handle — GET-or-create. Do not allocate
 nbf/exp offsets or reconcile by fingerprint until HIPAA mode is on), <code>last_event_at</code>,
 <code>started_at</code>, <code>ended_at</code>, <code>participants jsonb</code>. Transition to <code>no_show</code>: <code>attendance</code> is
-<strong>derived, never written from a single event</strong>: on <code>meeting.ended</code> (or the sweep at <code>endsAt + 30m</code> when Daily sent nothing) the handler schedules <code>finalizeAttendance(bookingId)</code> at
-<code>ended + 2 min</code> (QStash, idempotent); it recomputes attendance from the full ordered
-<code>participants</code> history (an empty history — Daily sent nothing — yields <code>nobody</code>, so the sweep
-path always persists a non-NULL attendance before the status transition; every
-<code>participant.joined</code>/<code>left</code> persisted by the webhook, including
-those whose event time precedes <code>meeting.ended</code> but arrived after it) and only then sets the
-status: <code>attendance &lt;&gt; &#39;both&#39;</code> -&gt; <code>no_show</code>, else <code>ended</code>; a participant event that arrives
-after finalization with an event time inside the session window re-runs the recompute and may
-flip <code>no_show</code> -&gt; <code>ended</code> (never the reverse; emits <code>session.attendance_corrected</code> and undoes
-any no-show side effect that has not executed yet); both transitions are in the state-machine
-table and tested, including the out-of-order sequence <code>participant.joined</code> (t=10:02) delivered
-after <code>meeting.ended</code> (t=10:31) -&gt; final status <code>ended</code>, not <code>no_show</code>
-(join/leave history only — never used for authorization), RLS for expert org + buyer org.</li>
+<strong>derived, never written from a single event</strong>. Built flow: <code>meeting.ended</code> writes
+attendance from the ordered <code>participants</code> history; if Daily sent nothing, the 09.6.1
+sweep at <code>endsAt + 30m</code> (join window close) finalizes the same way (empty history →
+<code>nobody</code>). Status is then <code>attendance &lt;&gt; &#39;both&#39;</code> → <code>no_show</code>, else <code>ended</code>. A
+participant event that arrives after that write with an event time inside the session
+window re-runs the recompute and may flip <code>no_show</code> → <code>ended</code> (never the reverse;
+emits <code>session.attendance_corrected</code>). Out-of-order sequence <code>participant.joined</code>
+(t=10:02) delivered after <code>meeting.ended</code> (t=10:31) → final status <code>ended</code>, not
+<code>no_show</code>. Join/leave history is never used for authorization. RLS for expert org +
+buyer org. The delayed QStash <code>finalizeAttendance</code> at <code>ended + 2 min</code> was never built.</li>
 </ul>
-<p><strong>Attendance SSOT (2026-10-07):</strong> this Scope still describes QStash
-<code>finalizeAttendance</code> at <code>ended + 2 min</code>. The decision-log is the source of
-truth: 09.3 writes attendance on <code>meeting.ended</code>, with late participant
-events able to flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>).
-The delayed finalize job was never built. The fallback when Daily sent
-nothing is the 09.6.1 sweep at <code>endsAt + 30m</code> (join window close), on
-main.</p>
+<p><strong>Attendance SSOT (2026-10-07):</strong> 09.3 writes attendance on <code>meeting.ended</code>; late
+participant events can flip <code>no_show → ended</code> (<code>session.attendance_corrected</code>). The
+09.6.1 sweep at <code>endsAt + 30m</code> covers a missing <code>meeting.ended</code>. The delayed
+finalize job remains unbuilt.</p>
 <ul>
 <li><p><code>session_participants</code> table (the <strong>authorization</strong> contract for delegated participants):
 <code>booking_id</code>, <code>user_id</code>, <code>role</code> (<code>delegate|supervisor</code>), <code>added_by</code>, <code>added_at</code>, <code>revoked_at</code>,
