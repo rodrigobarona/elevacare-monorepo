@@ -1100,6 +1100,7 @@ export async function confirmRefundFromCharge(input: {
   amountRefunded: number
   stripeRefundId: string | null
   refundRowId?: string | null
+  occurredAt: Date
 }): Promise<string | null> {
   const [payment] = await withPlatformAdminContext(async (tx) =>
     tx
@@ -1213,6 +1214,7 @@ export async function confirmRefundFromCharge(input: {
         bookingId: payment.bookingId,
         paymentId: payment.id,
         amountCents: input.amountRefunded,
+        occurredAt: input.occurredAt,
         cancelsSession:
           input.amountRefunded >= (fresh?.amountCents ?? payment.amountCents),
       })

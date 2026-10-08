@@ -364,8 +364,9 @@ export async function cancelUnstartedSessionRoom(
   }
   if (!shouldCancelUnstartedSession(row, occurredAt)) return
 
+  let cancelled = false
   await withAudit({ orgId: row.orgId, actorUserId: null }, async (tx, ctx) => {
-    await tx
+    const updated = await tx
       .update(main.sessions)
       .set({ status: "cancelled" })
       .where(
@@ -379,6 +380,17 @@ export async function cancelUnstartedSessionRoom(
           ])
         )
       )
+      .returning({ id: main.sessions.id })
+    if (updated.length === 0) {
+      await ctx.emit({
+        entity: "session",
+        action: "canceled",
+        entityId: bookingId,
+        payload: { skipped: true, reason: "status_race" },
+      })
+      return
+    }
+    cancelled = true
     await ctx.emit({
       entity: "session",
       action: "canceled",
@@ -386,7 +398,7 @@ export async function cancelUnstartedSessionRoom(
       payload: { reason: "payment_or_refund_before_start" },
     })
   })
-  await deleteSessionRoom(bookingId, deps)
+  if (cancelled) await deleteSessionRoom(bookingId, deps)
 }
 
 export async function deleteSessionRoom(

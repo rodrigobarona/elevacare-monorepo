@@ -34,6 +34,7 @@ describe("payment.failed events", () => {
       bookingId: "00000000-0000-4000-8000-000000000011",
       amountCents: 6000,
       currency: "EUR",
+      occurredAt: new Date("2026-10-08T10:00:00.000Z"),
     })
     expect(inserts[0]).toEqual(
       expect.objectContaining({
@@ -79,6 +80,7 @@ describe("refund.succeeded events", () => {
       bookingId: "00000000-0000-4000-8000-000000000011",
       paymentId: "00000000-0000-4000-8000-000000000010",
       amountCents: 6000,
+      occurredAt: new Date("2026-10-08T10:00:00.000Z"),
       cancelsSession: true,
     })
     expect(inserts[0]).toEqual(

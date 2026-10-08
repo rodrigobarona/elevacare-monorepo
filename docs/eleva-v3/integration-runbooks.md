@@ -110,9 +110,9 @@ room create; webhook backlog.
 3. Operator path: reschedule the booking (emits `booking.rescheduled`,
    recreates the room) and notify both parties. Do not invent a second
    video vendor.
-4. Payment failure or refund **before** `startAt` already cancels the
-   session and deletes the room. Refund after the session leaves the
-   session row intact.
+4. `payment.failed` or a **full** refund **before** `startAt` already
+   cancels the session and deletes the room. Partial refunds and refunds
+   after the session leave the session row intact.
 5. Escalate to Daily status + Sentry. Stamp **not HIPAA** in any customer
    reply.
 

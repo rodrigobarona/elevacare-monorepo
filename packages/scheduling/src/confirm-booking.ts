@@ -301,6 +301,7 @@ export async function confirmBookingPayment(
 export async function markBookingPaymentFailed(input: {
   paymentIntentId: string
   reservationId?: string
+  occurredAt: Date
 }): Promise<{ ok: true; bookingId?: string } | { ok: false }> {
   try {
     const loaded = input.reservationId
@@ -384,6 +385,7 @@ export async function markBookingPaymentFailed(input: {
           bookingId: loaded.booking.id,
           amountCents: updated.amountCents,
           currency: booking.currency,
+          occurredAt: input.occurredAt,
         })
       }
     )

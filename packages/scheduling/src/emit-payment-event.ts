@@ -31,6 +31,7 @@ export async function emitPaymentFailedEvent(
     bookingId: string
     amountCents: number
     currency: string
+    occurredAt: Date
   }
 ): Promise<{ eventId: string; created: boolean }> {
   const idempotencyKey = paymentFailedIdempotencyKey(input.paymentId)
@@ -39,7 +40,7 @@ export async function emitPaymentFailedEvent(
     bookingId: input.bookingId,
     amountCents: input.amountCents,
     currency: input.currency,
-    occurredAt: new Date().toISOString(),
+    occurredAt: input.occurredAt.toISOString(),
   }
 
   const inserted = await tx
@@ -108,6 +109,7 @@ export async function emitRefundSucceededEvent(
     bookingId: string
     paymentId: string
     amountCents: number
+    occurredAt: Date
     cancelsSession: boolean
   }
 ): Promise<{ eventId: string; created: boolean }> {
@@ -117,7 +119,7 @@ export async function emitRefundSucceededEvent(
     bookingId: input.bookingId,
     paymentId: input.paymentId,
     amountCents: input.amountCents,
-    occurredAt: new Date().toISOString(),
+    occurredAt: input.occurredAt.toISOString(),
     cancelsSession: input.cancelsSession,
   }
 
