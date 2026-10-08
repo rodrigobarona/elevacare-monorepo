@@ -275,10 +275,14 @@ room. The room sweep does not recreate a room for a cancelled session.
 
 Join is via Eleva pages (`/{orgSlug}/sessions/{bookingId}/join` and
 `/expert/sessions/{bookingId}/join`), never a raw Daily URL. The join window
-is `[startAt-15m, endAt+30m]`. Standard Daily, recording off, **not HIPAA**.
-If Daily never sends `meeting.ended`, a sweep after the join window
-closes (`endsAt + 30m`) finalizes `attendance` from participant history
-(empty → `nobody` / `no_show`).
+is `[startAt-15m, endAt+30m]`. Meeting tokens are minted on `POST .../join`,
+held in memory by `<ElevaCall>`, and must not appear in URLs, logs, audit
+payloads, or columns (`pnpm check:no-phi-logs`). Standard Daily, recording
+off, **not HIPAA**. If Daily never sends `meeting.ended`, a sweep after the
+join window closes (`endsAt + 30m`) finalizes `attendance` from participant
+history (empty → `nobody` / `no_show`). The delayed `ended + 2 min`
+`finalizeAttendance` job is not built. The first live room still needs the
+09.0 Daily account probe (PENDING).
 
 ## Initial MVP Scheduling Scope
 

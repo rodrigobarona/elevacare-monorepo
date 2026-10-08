@@ -85,6 +85,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm check:api-first-actions
       - run: pnpm check:route-guards
+      - run: pnpm check:no-phi-logs
 
   typecheck:
     name: Typecheck

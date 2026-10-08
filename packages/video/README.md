@@ -26,4 +26,11 @@ closes (`endsAt + 30m`) finalizes `attendance` from participant history
 (empty → `nobody` / `no_show`). No-show policy (refund/keep) is not
 decided here.
 
-Never log `DAILY_API_KEY` or meeting tokens.
+Never log `DAILY_API_KEY` or meeting tokens. CI runs `pnpm check:no-phi-logs`
+as a best-effort grep (compact JWT literals, audit `token` fields, join-URL
+query params, log calls that mention a meeting token). Observability already
+redacts JWTs. Do not treat the grep as the only control.
+
+Phase 09 engineering is on main against **standard Daily**. The 09.0 live
+probe and staging two-browser call are still PENDING operator leftovers.
+Do not claim HIPAA or an executed BAA.
