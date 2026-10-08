@@ -47,6 +47,23 @@ export function verifyDailyWebhook(input: {
   return timingSafeEqual(a, b)
 }
 
+/**
+ * Daily POSTs `{ "test": "test" }` when creating a webhook. HMAC is still
+ * required; this only skips event parsing so create does not 400.
+ */
+export function isDailyWebhookHandshake(body: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(body)
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return false
+    }
+    const record = parsed as Record<string, unknown>
+    return Object.keys(record).length === 1 && record.test === "test"
+  } catch {
+    return false
+  }
+}
+
 export function parseDailyWebhookEvent(body: unknown): DailyWebhookEvent {
   return DailyWebhookEventSchema.parse(body)
 }

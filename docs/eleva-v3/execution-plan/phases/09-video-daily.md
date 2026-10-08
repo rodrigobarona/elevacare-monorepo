@@ -10,14 +10,14 @@
 
 ## Progress (stakeholder demo)
 
-| Slice                       | State       | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                  |
-| --------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| 09.1 `@eleva/video` server  | on main     | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe                            |
-| 09.2 session rooms          | on main     | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | —                                           |
-| 09.3 join + webhooks        | on main     | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.                                                       | `end_at+15m` attendance fallback (09.6)     |
-| 09.4 ElevaCall + join pages | **This PR** | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                        | Email deep links (09.5); e2e + probe (09.6) |
-| Daily account probe         | PENDING     | Spike written                                                                                                                                                    | First live room                             |
-| D-07 HIPAA / BAA            | Deferred    | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                   |
+| Slice                       | State    | What stakeholders can see                                                                                                                                        | Still TODO (not a blocker)                 |
+| --------------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| 09.1 `@eleva/video` server  | on main  | Room option builder, GET-or-create named rooms, local HS256 meeting tokens, webhook HMAC, `requireDailyEnv`, member Join copy says **standard Daily, not HIPAA** | Live Daily probe                           |
+| 09.2 session rooms          | on main  | Confirmed online bookings get a session row and a Daily room via domain events + 15-min sweep. Phone/in-person never get a room. Cancel deletes the room.        | —                                          |
+| 09.3 join + webhooks        | on main  | Join mints a per-caller Daily token; experts can add/revoke delegates; Daily webhooks move session status.                                                       | `end_at+15m` attendance fallback (09.6)    |
+| 09.4 ElevaCall + join pages | on main  | Member and expert join pages mount `<ElevaCall>`; in-window Join CTAs; CSP includes `wss://*.daily.co` and `DAILY_DOMAIN`                                        | Eleva two-browser leftover                 |
+| Daily account probe         | **PASS** | Standard Prebuilt two-browser call 2026-10-08; billing 100k rooms; recording off; **not HIPAA**                                                                  | Eleva join pages + Daily webhook subscribe |
+| D-07 HIPAA / BAA            | Deferred | Stamp **not HIPAA**                                                                                                                                              | Production PHI-video only                  |
 
 Leftovers from phases 01–08 (staging W3, live pay→transfer, tax issuance, Twilio IE1, D-06/D-12, waived 04B UX) are **TODOs, not Phase 09 blockers**. See [`audits/2026-10-phase-09-readiness.md`](../../audits/2026-10-phase-09-readiness.md) “Stakeholder leftovers”.
 
@@ -196,7 +196,8 @@ requires a customer-owned S3 landing zone, see 16.8)**, group sessions, dial-in.
 - [ ] PR 09.0 evidence file exists. D-07 is founder-deferred (2026-10-07):
       standard Daily, recording off, **not HIPAA**. Do not claim BAA executed.
       First live room / exit gate also needs a completed account probe
-      (`DAILY_API_KEY`, recording off, staging webhook) — file existence is not enough.
+      (`DAILY_API_KEY`, recording off). Prebuilt probe PASS 2026-10-08; staging
+      webhook + Eleva two-browser join remain leftover.
 - [ ] Meeting token never appears in a URL, log line, audit payload or persisted column (grep test
       over fixtures + `check-no-phi-logs` extension).
 
@@ -248,10 +249,10 @@ Before writing code:
    docs/eleva-v3/execution-plan/phases/09-video-daily.md in full.
 3. Read every file under "Local references" and docs/eleva-v3/spikes/09-daily-account.md.
    If that spike is missing, stop. D-07 is founder-deferred (standard Daily, not HIPAA) —
-   do not stop for an unsigned BAA. The spike may still mark the Daily account
-   pre-check PENDING — that does not block writing @eleva/video, but the first
-   live room and the Phase 09 exit gate require a completed probe (standard
-   DAILY_API_KEY / DAILY_DOMAIN, recording off, staging webhook secret). Pull
+   do not stop for an unsigned BAA. The 09.0 Prebuilt probe is PASS 2026-10-08;
+   the Phase 09 exit gate still needs Eleva join-page two-browser evidence
+   and a Daily webhook subscription after `elevacare-api` is redeployed
+   (`DAILY_WEBHOOK_SECRET` is already on Vercel). Pull
    Daily REST API (rooms, meeting tokens,
    webhooks), daily-react and Next.js CSP docs through Context7
    (resolve-library-id then query-docs); prefer those docs over memory.

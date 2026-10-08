@@ -87,7 +87,7 @@ Use this:
 - [x] Join emails and CTAs deep-link to Eleva join pages, never a raw Daily room URL or meeting token.
 - [ ] Dependency updates and vulnerability review are part of the operating process.
 - [x] CI `pnpm check:no-phi-logs` plus observability JWT redaction cover compact meeting-token JWTs in source, `token` fields on `ctx.emit` payloads, and join-URL query params. This is a grep guard, not an AST lint, and it does not cover other audit-writing paths.
-- [ ] Production/staging logs are not proven PHI-free. Staging two-browser and the 09.0 Daily probe remain unproven.
+- [ ] Production/staging logs are not proven PHI-free. Staging Eleva two-browser join remains leftover. `DAILY_WEBHOOK_SECRET` is on Vercel; Daily subscribe waits for an `elevacare-api` redeploy (Hobby quota). 09.0 Daily Prebuilt probe PASS 2026-10-08 (not HIPAA).
 
 ## Launch Readiness
 

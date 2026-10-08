@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm"
 import { withPlatformAudit } from "@eleva/audit"
 import { main, withPlatformAdminContext, type Tx } from "@eleva/db"
 import {
+  isDailyWebhookHandshake,
   parseDailyWebhookEvent,
   verifyDailyWebhook,
 } from "@eleva/video/webhooks"
@@ -88,6 +89,10 @@ export async function handleDailyWebhook(input: {
     })
   ) {
     throw new DailyWebhookAuthError()
+  }
+
+  if (isDailyWebhookHandshake(input.body)) {
+    return { status: "ignored", reason: "endpoint_check" }
   }
 
   let parsed: ReturnType<typeof parseDailyWebhookEvent>

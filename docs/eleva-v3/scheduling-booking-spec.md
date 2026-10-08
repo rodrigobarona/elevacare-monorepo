@@ -281,8 +281,10 @@ payloads, or columns (`pnpm check:no-phi-logs`). Standard Daily, recording
 off, **not HIPAA**. If Daily never sends `meeting.ended`, a sweep after the
 join window closes (`endsAt + 30m`) finalizes `attendance` from participant
 history (empty → `nobody` / `no_show`). The delayed `ended + 2 min`
-`finalizeAttendance` job is not built. The first live room still needs the
-09.0 Daily account probe (PENDING).
+`finalizeAttendance` job is not built. The 09.0 Daily Prebuilt probe is
+PASS 2026-10-08. Eleva join-page two-browser is leftover.
+`DAILY_WEBHOOK_SECRET` is on Vercel; Daily webhook subscribe waits for
+an `elevacare-api` redeploy.
 
 ## Initial MVP Scheduling Scope
 

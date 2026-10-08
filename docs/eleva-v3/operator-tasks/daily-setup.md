@@ -18,18 +18,36 @@ Daily account — not a HIPAA claim.
 
 ## Webhook
 
-Create a webhook in the Daily dashboard:
+Daily signs a `{ "test": "test" }` POST when creating a webhook. Our
+handler returns 200 `ignored` / `endpoint_check` only after HMAC
+verifies, so the secret must be on the deployed `elevacare-api` **before**
+`POST https://api.daily.co/v1/webhooks`.
+
+1. Generate a base64 HMAC secret (do not commit it). Store as
+   `DAILY_WEBHOOK_SECRET` on Vercel `elevacare-api` (preview + production
+   sensitive; development non-sensitive) and locally. **Done 2026-10-08.**
+2. Redeploy `elevacare-api` so `api.dev.eleva.care` has the secret.
+   **Pending** — Daily's create handshake 401s until that deploy.
+   A 2026-10-08 redeploy hit Hobby `api-deployments-free-per-day`
+   (try again after the quota window).
+3. Create the webhook with that same `hmac` and event types
+   `meeting.started`, `meeting.ended`, `participant.joined`,
+   `participant.left`. URL:
 
 | Environment | URL                                         |
 | ----------- | ------------------------------------------- |
 | Staging     | `https://api.dev.eleva.care/webhooks/daily` |
 | Production  | `https://api.eleva.care/webhooks/daily`     |
 
-Subscribe at least to `meeting.started` and `meeting.ended`. Store the
-signing secret as `DAILY_WEBHOOK_SECRET`. Signature failure returns 401.
+Signature failure returns 401. Phase 15 repeats production after staging
+evidence. Do not point production at a HIPAA domain until D-07.
 
-Phase 15 repeats this for production after staging evidence exists. Do not
-point production at a HIPAA domain until D-07.
+## Exit-gate leftover (Eleva join pages)
+
+The 09.0 probe used Daily Prebuilt (`elevacare.daily.co/…?t=`). The
+product proof is two browsers on Eleva pages: expert
+`/expert/sessions/{bookingId}/join` and member
+`/{orgSlug}/sessions/{bookingId}/join`. Emails already deep-link there.
 
 ## Join URLs
 

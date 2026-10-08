@@ -53,38 +53,38 @@ Founder 2026-10-07: show the running product with honest notes. Nothing
 below blocks Phase 09 engineering or a demo. Do not stamp any of these
 closed until the evidence column is real.
 
-| Leftover                                | Who it is for        | State                   | TODO (not a blocker)                                                                                                                                                     |
-| --------------------------------------- | -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Live money / production go-live         | Accountant + founder | Not safe for live money | Staging pay → transfer → payout, then production money. Still **not** a Phase 09 engineering gate.                                                                       |
-| Staging W3 smokes                       | Ops                  | Not run                 | After `0049`/`0050` on staging: auth, funnel, Connect, transfer/refund/dispute, reminders, DSAR, TOConline OAuth (no Comunicação). Loopback cancel refunds already PASS. |
-| Phase 06 evidence                       | Accountant           | Machinery on main       | Live Stripe test-mode pay → transfer → payout on staging.                                                                                                                |
-| Phase 07 issuance                       | Accountant           | Closed by design        | FT POST / Comunicação / `invoice.issued` stay operator-gated. `issueInvoice()` closed.                                                                                   |
-| Phase 08 Twilio EU                      | Legal                | US1 trial PASS          | IE1 Auth Token before any EU SMS residency claim. Quiet hours + ICS **are on main**.                                                                                     |
-| Phase 04B human UX                      | Founder              | Waived / unproven       | Design/OAuth/calendar live proof waived 2026-09-25. Do not call it proven.                                                                                               |
-| AUD-006 fee reconciliation              | Accountant           | Deferred                | Lands when issuance opens.                                                                                                                                               |
-| AUD-007 payout waits for fee invoice    | Accountant           | Waived                  | Flip when `issueInvoice()` opens.                                                                                                                                        |
-| D-07 Daily BAA / HIPAA                  | Lawyer + DPO         | Deferred                | Needed only for production PHI-video. Demo uses standard Daily, recording off.                                                                                           |
-| D-06 Strict PT legal                    | Lawyer               | Open                    | Expert cancel / no-show stay out of scope.                                                                                                                               |
-| D-12 legal / trust copy                 | Lawyer + DPO         | Open                    | Pages stay draft-bannered.                                                                                                                                               |
-| Migrations `0049` / `0050`              | Operator             | Loopback only           | `pnpm db:migrate` on staging then production.                                                                                                                            |
-| Daily account probe                     | Engineering          | PENDING                 | `DAILY_API_KEY` + recording off + webhook before the first live room. `@eleva/video` 09.1 ships the server primitives without a live key.                                |
-| Expert cancel, no-show, custom policies | Product              | Out of scope            | Flexible / Moderate / Strict only.                                                                                                                                       |
+| Leftover                                | Who it is for        | State                   | TODO (not a blocker)                                                                                                                                                                              |
+| --------------------------------------- | -------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live money / production go-live         | Accountant + founder | Not safe for live money | Staging pay → transfer → payout, then production money. Still **not** a Phase 09 engineering gate.                                                                                                |
+| Staging W3 smokes                       | Ops                  | Not run                 | After `0049`/`0050` on staging: auth, funnel, Connect, transfer/refund/dispute, reminders, DSAR, TOConline OAuth (no Comunicação). Loopback cancel refunds already PASS.                          |
+| Phase 06 evidence                       | Accountant           | Machinery on main       | Live Stripe test-mode pay → transfer → payout on staging.                                                                                                                                         |
+| Phase 07 issuance                       | Accountant           | Closed by design        | FT POST / Comunicação / `invoice.issued` stay operator-gated. `issueInvoice()` closed.                                                                                                            |
+| Phase 08 Twilio EU                      | Legal                | US1 trial PASS          | IE1 Auth Token before any EU SMS residency claim. Quiet hours + ICS **are on main**.                                                                                                              |
+| Phase 04B human UX                      | Founder              | Waived / unproven       | Design/OAuth/calendar live proof waived 2026-09-25. Do not call it proven.                                                                                                                        |
+| AUD-006 fee reconciliation              | Accountant           | Deferred                | Lands when issuance opens.                                                                                                                                                                        |
+| AUD-007 payout waits for fee invoice    | Accountant           | Waived                  | Flip when `issueInvoice()` opens.                                                                                                                                                                 |
+| D-07 Daily BAA / HIPAA                  | Lawyer + DPO         | Deferred                | Needed only for production PHI-video. Demo uses standard Daily, recording off.                                                                                                                    |
+| D-06 Strict PT legal                    | Lawyer               | Open                    | Expert cancel / no-show stay out of scope.                                                                                                                                                        |
+| D-12 legal / trust copy                 | Lawyer + DPO         | Open                    | Pages stay draft-bannered.                                                                                                                                                                        |
+| Migrations `0049` / `0050`              | Operator             | Loopback only           | `pnpm db:migrate` on staging then production.                                                                                                                                                     |
+| Daily account probe                     | Engineering          | **PASS (Prebuilt)**     | Live key + `elevacare.daily.co` + two-browser Prebuilt call 2026-10-08. `DAILY_WEBHOOK_SECRET` is on Vercel; Daily subscription waits for an `elevacare-api` redeploy. Eleva join pages leftover. |
+| Expert cancel, no-show, custom policies | Product              | Out of scope            | Flexible / Moderate / Strict only.                                                                                                                                                                |
 
 ## Phase 09 engineering closeout (2026-10-08)
 
 Engineering slices **09.1–09.6.3** are on main. This is **not** a proven
 exit gate and **not HIPAA**.
 
-| Item                                                              | State         | Evidence                                           |
-| ----------------------------------------------------------------- | ------------- | -------------------------------------------------- |
-| 09.1–09.5 server, rooms, join, ElevaCall, emails, pay-fail cancel | on main       | PRs #163–#166                                      |
-| 09.6.1 attendance fallback (`endsAt + 30m`)                       | on main       | #167                                               |
-| 09.6.2 Playwright fake-device join                                | on main       | #168 (`E2E_VIDEO_JOIN=1` leftover)                 |
-| 09.6.3a eject-before-capacity                                     | on main       | #169                                               |
-| 09.6.3b webhook `processed_at` in session tx                      | on main       | #170                                               |
-| Join Permissions-Policy camera/mic                                | on main       | `@eleva/observability` `joinPermissionsPolicy()`   |
-| Meeting-token JWT redaction + `check-no-phi-logs`                 | on main       | `redaction.ts` + `pnpm check:no-phi-logs`          |
-| 09.0 live Daily probe                                             | **PENDING**   | Spike records the founder position, not a live key |
-| Staging two-browser call                                          | leftover      | Operator; not a merge gate                         |
-| `ended + 2 min` `finalizeAttendance`                              | **not built** | Decision-log attendance SSOT                       |
-| D-07 HIPAA / BAA                                                  | Deferred      | Never claim BAA or HIPAA                           |
+| Item                                                              | State               | Evidence                                         |
+| ----------------------------------------------------------------- | ------------------- | ------------------------------------------------ |
+| 09.1–09.5 server, rooms, join, ElevaCall, emails, pay-fail cancel | on main             | PRs #163–#166                                    |
+| 09.6.1 attendance fallback (`endsAt + 30m`)                       | on main             | #167                                             |
+| 09.6.2 Playwright fake-device join                                | on main             | #168 (`E2E_VIDEO_JOIN=1` leftover)               |
+| 09.6.3a eject-before-capacity                                     | on main             | #169                                             |
+| 09.6.3b webhook `processed_at` in session tx                      | on main             | #170                                             |
+| Join Permissions-Policy camera/mic                                | on main             | `@eleva/observability` `joinPermissionsPolicy()` |
+| Meeting-token JWT redaction + `check-no-phi-logs`                 | on main             | `redaction.ts` + `pnpm check:no-phi-logs`        |
+| 09.0 live Daily probe                                             | **PASS (Prebuilt)** | Spike addendum 2026-10-08; not Eleva join pages  |
+| Staging two-browser call                                          | leftover            | Operator; not a merge gate                       |
+| `ended + 2 min` `finalizeAttendance`                              | **not built**       | Decision-log attendance SSOT                     |
+| D-07 HIPAA / BAA                                                  | Deferred            | Never claim BAA or HIPAA                         |
