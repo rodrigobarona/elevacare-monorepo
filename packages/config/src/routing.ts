@@ -25,7 +25,7 @@ export const ACCOUNT_REWRITE_PATHS = [
 ] as const
 
 /** First-level segments owned by the member app (org-slug routes use /[orgSlug]/*). */
-export const APP_FIXED_SEGMENTS = [] as const
+export const APP_FIXED_SEGMENTS = ["join"] as const
 
 /** Auth-related standalone paths (no session needed). */
 export const APP_STANDALONE_PATHS = [] as const

@@ -3,6 +3,7 @@ export type ElevaCallErrorCode =
   | "SESSION_NOT_ACTIVE"
   | "NOT_A_PARTICIPANT"
   | "ROOM_NOT_READY"
+  | "INVALID_GRANT"
   | "internal"
 
 export type ElevaCallLabels = {
@@ -70,8 +71,22 @@ export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
       SESSION_NOT_ACTIVE: t("errors.SESSION_NOT_ACTIVE"),
       NOT_A_PARTICIPANT: t("errors.NOT_A_PARTICIPANT"),
       ROOM_NOT_READY: t("errors.ROOM_NOT_READY"),
+      INVALID_GRANT: t("errors.INVALID_GRANT"),
       internal: t("errors.internal"),
     },
+  }
+}
+
+export function joinErrorWindow(err: unknown): {
+  startsAt?: string
+  opensAt?: string
+} {
+  if (!err || typeof err !== "object" || !("body" in err)) return {}
+  const body = (err as { body?: { startsAt?: unknown; opensAt?: unknown } })
+    .body
+  return {
+    startsAt: typeof body?.startsAt === "string" ? body.startsAt : undefined,
+    opensAt: typeof body?.opensAt === "string" ? body.opensAt : undefined,
   }
 }
 
@@ -82,7 +97,8 @@ export function joinErrorCode(err: unknown): ElevaCallErrorCode {
       code === "SESSION_NOT_OPEN" ||
       code === "SESSION_NOT_ACTIVE" ||
       code === "NOT_A_PARTICIPANT" ||
-      code === "ROOM_NOT_READY"
+      code === "ROOM_NOT_READY" ||
+      code === "INVALID_GRANT"
     ) {
       return code
     }

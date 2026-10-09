@@ -38,10 +38,17 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0052_phase09_capacity_pending")
+    expect(last?.tag).toBe("0053_better_auth_17_schema")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("capacity_pending_at")
+    expect(last?.statements.join("\n")).toContain("failed_verification_count")
+    expect(last?.statements.join("\n")).toContain("config_id")
+    const capacityPending = migrations.find(
+      (m) => m.tag === "0052_phase09_capacity_pending"
+    )
+    expect(capacityPending?.statements.join("\n")).toContain(
+      "capacity_pending_at"
+    )
     const sessionRooms = migrations.find(
       (m) => m.tag === "0051_phase09_session_rooms"
     )

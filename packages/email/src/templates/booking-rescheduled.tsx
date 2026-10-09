@@ -2,6 +2,7 @@ import { EmailLayout } from "../components/layout"
 import { DetailRow } from "../components/detail-row"
 import { EmailCard } from "../components/email-card"
 import { EmailBodyText, EmailHeading } from "../components/email-heading"
+import { JoinSessionCta } from "../components/join-session-cta"
 import { getEmailTranslations, type EmailLocale } from "../i18n"
 import { formatSessionMode } from "../session-mode"
 
@@ -13,6 +14,8 @@ export interface BookingRescheduledProps {
   sessionMode: string
   locale?: EmailLocale
   jsonLd?: Record<string, unknown>
+  /** Eleva join page. Never a raw Daily room URL. */
+  joinHref?: string
 }
 
 export function BookingRescheduledEmail({
@@ -23,6 +26,7 @@ export function BookingRescheduledEmail({
   sessionMode,
   locale = "en",
   jsonLd,
+  joinHref,
 }: BookingRescheduledProps) {
   const t = getEmailTranslations(locale)
 
@@ -59,6 +63,8 @@ export function BookingRescheduledEmail({
           value={formatSessionMode(sessionMode, locale)}
         />
       </EmailCard>
+
+      {joinHref ? <JoinSessionCta href={joinHref} locale={locale} /> : null}
 
       <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
         {t.booking.icsHintUpdate}

@@ -119,6 +119,20 @@ describe("resolveDispatch - admin redirect", () => {
   })
 })
 
+describe("resolveDispatch - public join grant path", () => {
+  it("rewrites /join/{bookingId} to the member app with or without a session", () => {
+    const path = "/join/23fb39a9-71db-41c2-900e-ae422fd1b458"
+    expect(resolveDispatch(path, false, origins)).toEqual({
+      kind: "rewrite",
+      origin: "http://app",
+    })
+    expect(resolveDispatch(path, true, origins)).toEqual({
+      kind: "rewrite",
+      origin: "http://app",
+    })
+  })
+})
+
 describe("resolveDispatch - org-scoped second segment", () => {
   it("dispatches /:slug/team to expert origin (clinic experts)", () => {
     expect(resolveDispatch("/clinica-mota/team", true, origins)).toEqual({

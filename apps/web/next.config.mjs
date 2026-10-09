@@ -45,6 +45,13 @@ function resolveSameOriginApiRewrites() {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   allowedDevOrigins: resolveAllowedDevOrigins(),
+  experimental: {
+    // Nested App Router pages ([username]/[eventSlug], legal/[slug], …)
+    // can boot missing from Turbopack's app-paths-manifest; a cached
+    // partial then 404s until a file touch. Dev-only; production build
+    // still uses the filesystem cache.
+    turbopackFileSystemCacheForDev: false,
+  },
   /**
    * The gateway owns trailing-slash policy for the entire domain.
    *

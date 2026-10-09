@@ -172,6 +172,9 @@ export const twoFactor = authSchema.table("twoFactor", {
   userId: uuid("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  verified: boolean("verified").default(true),
+  failedVerificationCount: integer("failed_verification_count").default(0),
+  lockedUntil: timestamptz("locked_until"),
 })
 
 export const passkey = authSchema.table(
@@ -212,9 +215,8 @@ export const apikey = authSchema.table(
     start: text("start"),
     prefix: text("prefix"),
     key: text("key").notNull(),
-    userId: uuid("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    configId: text("config_id").notNull().default("default"),
+    userId: uuid("user_id").references(() => user.id, { onDelete: "cascade" }),
     refillInterval: integer("refill_interval"),
     refillAmount: integer("refill_amount"),
     lastRefillAt: timestamptz("last_refill_at"),
@@ -235,6 +237,7 @@ export const apikey = authSchema.table(
   (table) => [
     index("auth_apikey_user_idx").on(table.userId),
     index("auth_apikey_reference_idx").on(table.referenceId),
+    index("auth_apikey_config_idx").on(table.configId),
   ]
 )
 

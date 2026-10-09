@@ -45,15 +45,17 @@ evidence. Do not point production at a HIPAA domain until D-07.
 ## Exit-gate leftover (Eleva join pages)
 
 The 09.0 probe used Daily Prebuilt (`elevacare.daily.co/…?t=`). The
-product proof is two browsers on Eleva pages: expert
-`/expert/sessions/{bookingId}/join` and member
-`/{orgSlug}/sessions/{bookingId}/join`. Emails already deep-link there.
+product proof is two browsers on Eleva pages: signed-in expert
+`/expert/sessions/{bookingId}/join` and the public member grant URL from
+email/ICS (`/join/{bookingId}?g=`). Never Daily `?t=`.
 
 ## Join URLs
 
-Confirmation and 1h-reminder emails deep-link to Eleva join pages
-(`/{orgSlug}/sessions/{bookingId}/join` and `/expert/sessions/{bookingId}/join`).
-Never paste a raw Daily room URL into member or expert copy.
+Confirmation and 1h-reminder emails (and ICS `URL`/`LOCATION`) deep-link to
+`/join/{bookingId}?g=` with a signed Eleva grant. Guests without an
+account join Daily as `guest:{bookingId}`. In-app CTAs stay
+session-based at `/{orgSlug}/sessions/{bookingId}/join`. Never paste a
+raw Daily room URL or meeting token into member or expert copy.
 
 ## Recording and transcripts
 

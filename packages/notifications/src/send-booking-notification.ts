@@ -12,6 +12,13 @@ import {
 import { resolveGatewayUrl } from "@eleva/config/env"
 import { auth, main, withPlatformAdminContext } from "@eleva/db"
 import {
+  joinGrantExpUnix,
+  mintJoinGrant as mintJoinGrantDefault,
+  sessionJoinPath,
+  type JoinGrantRole,
+  type MintJoinGrantInput,
+} from "@eleva/video/join-grant"
+import {
   getEmailTranslations,
   renderBookingCancelled,
   renderBookingConfirmed,
@@ -101,6 +108,7 @@ export function isBookingSendKind(type: string): type is BookingSendKind {
 type BookingSendDeps = {
   loadBooking?: typeof loadBookingForNotification
   send?: typeof sendNotification
+  mintJoinGrant?: (input: MintJoinGrantInput) => Promise<string>
 }
 
 export type LoadedBooking = {
@@ -116,8 +124,10 @@ export type LoadedBooking = {
   memberUserId: string | null
   memberEmail: string | null
   memberName: string | null
+  memberPhone: string | null
   guestEmail: string | null
   guestName: string | null
+  guestPhone: string | null
   expertUserId: string
   expertEmail: string
   expertName: string
@@ -125,6 +135,10 @@ export type LoadedBooking = {
   scheduleRevision: number
   cancellationPolicy: CancellationPolicy
   currency: string
+  priceCents: number
+  language: string | null
+  memberCountry: string | null
+  locationName: string | null
 }
 
 export async function sendBookingNotification(
@@ -139,6 +153,7 @@ export async function sendBookingNotification(
   const parsed = parseBookingNotificationPayload(event.type, event.payload)
   const loadBooking = deps.loadBooking ?? loadBookingForNotification
   const send = deps.send ?? sendNotification
+  const mint = deps.mintJoinGrant ?? mintJoinGrantDefault
   const booking = await loadBooking(parsed.bookingId)
   if (!booking || booking.orgId !== event.orgId) {
     throw new Error("send-notification: booking not found for event org")
@@ -167,8 +182,15 @@ export async function sendBookingNotification(
         locale
       )
     : formattedDate
-  const memberJoinHref = sessionJoinHref(event.type, booking, "member")
-  const expertJoinHref = sessionJoinHref(event.type, booking, "expert")
+  const gateway = resolveGatewayUrl()
+  const [memberJoinHref, expertJoinHref] = await Promise.all([
+    sessionJoinHref(event.type, booking, "member", gateway, mint),
+    sessionJoinHref(event.type, booking, "expert", gateway, mint),
+  ])
+  const cancellationPolicyName = describeCancellationPolicy(
+    booking.cancellationPolicy,
+    locale
+  ).name
   const htmlInput = {
     kind: event.type,
     memberName: memberFirst,
@@ -177,10 +199,7 @@ export async function sendBookingNotification(
     previousDate,
     sessionMode: booking.sessionMode,
     locale,
-    cancellationPolicyName: describeCancellationPolicy(
-      booking.cancellationPolicy,
-      locale
-    ).name,
+    cancellationPolicyName,
     refundAmount:
       parsed.refundCents === undefined
         ? undefined
@@ -189,14 +208,28 @@ export async function sendBookingNotification(
   const memberHtml = await renderBookingHtml({
     ...htmlInput,
     joinHref: memberJoinHref,
+    activateHref: memberActivateHref(event.type, booking, gateway),
   })
-  const expertHtml =
-    expertJoinHref === memberJoinHref
-      ? memberHtml
-      : await renderBookingHtml({
-          ...htmlInput,
-          joinHref: expertJoinHref,
-        })
+  const expertHtml = await renderBookingHtml({
+    ...htmlInput,
+    joinHref: expertJoinHref,
+    ...(event.type === "booking.confirmed"
+      ? {
+          audience: "expert" as const,
+          greetingName: expertFirst,
+          memberName: booking.memberName ?? booking.guestName ?? memberFirst,
+          memberEmail: booking.memberEmail ?? booking.guestEmail ?? undefined,
+          memberPhone: booking.guestPhone ?? booking.memberPhone ?? undefined,
+          duration: formatDuration(booking.startsAt, booking.endsAt, locale),
+          timezone: booking.timezone,
+          language: formatLanguage(booking.language, locale),
+          country: formatCountry(booking.memberCountry, locale),
+          price: formatMoney(booking.priceCents, booking.currency, locale),
+          location: booking.locationName ?? undefined,
+          calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
+        }
+      : {}),
+  })
   const title = titleForKind(event.type, t.booking)
   const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
   const expertSubject = subjectForKind(
@@ -227,12 +260,14 @@ export async function sendBookingNotification(
   const memberAttachments = calendarAttachments(
     event.type,
     booking,
-    icsSummary(locale, expertFirst)
+    icsSummary(locale, expertFirst),
+    memberJoinHref
   )
   const expertAttachments = calendarAttachments(
     event.type,
     booking,
-    icsSummary(locale, memberFirst)
+    icsSummary(locale, memberFirst),
+    expertJoinHref
   )
   const results = await Promise.allSettled([
     send({
@@ -331,7 +366,8 @@ function deliveryIdempotencyKey(
 export function calendarAttachments(
   kind: BookingSendKind,
   booking: LoadedBooking,
-  summary: string
+  summary: string,
+  joinHref?: string
 ): EmailAttachment[] | undefined {
   const attendeeEmail = booking.memberEmail ?? booking.guestEmail
   const event: IcsEventInput = {
@@ -340,6 +376,8 @@ export function calendarAttachments(
     startTime: booking.startsAt,
     endTime: booking.endsAt,
     timezone: booking.timezone,
+    url: joinHref,
+    location: joinHref,
     organizer: { name: booking.expertName, email: booking.expertEmail },
     attendees: attendeeEmail
       ? [
@@ -478,22 +516,35 @@ function subjectForKind(
   }
 }
 
-export function sessionJoinHref(
+export async function sessionJoinHref(
   kind: BookingSendKind,
-  booking: Pick<LoadedBooking, "id" | "orgSlug" | "sessionMode">,
-  role: "member" | "expert",
-  gateway = resolveGatewayUrl()
-): string | undefined {
-  if (kind !== "booking.confirmed" && kind !== "booking.reminder_1h") {
+  booking: Pick<
+    LoadedBooking,
+    "id" | "sessionMode" | "endsAt" | "scheduleRevision"
+  >,
+  role: JoinGrantRole,
+  gateway = resolveGatewayUrl(),
+  mint: (input: MintJoinGrantInput) => Promise<string> = mintJoinGrantDefault
+): Promise<string | undefined> {
+  if (
+    kind !== "booking.confirmed" &&
+    kind !== "booking.reminder_1h" &&
+    kind !== "booking.rescheduled"
+  ) {
     return undefined
   }
   if (booking.sessionMode !== "online") return undefined
-  const base = gateway.replace(/\/$/, "")
-  if (role === "expert") {
-    return `${base}/expert/sessions/${booking.id}/join`
+  if (joinGrantExpUnix(booking.endsAt) <= Math.floor(Date.now() / 1000)) {
+    return undefined
   }
-  if (!booking.orgSlug) return undefined
-  return `${base}/${booking.orgSlug}/sessions/${booking.id}/join`
+  const grant = await mint({
+    bookingId: booking.id,
+    role,
+    endsAt: booking.endsAt,
+    scheduleRevision: booking.scheduleRevision,
+  })
+  const base = gateway.replace(/\/$/, "")
+  return `${base}${sessionJoinPath(booking.id, grant)}`
 }
 
 async function renderBookingHtml(input: {
@@ -507,6 +558,18 @@ async function renderBookingHtml(input: {
   cancellationPolicyName: string
   refundAmount?: string
   joinHref?: string
+  audience?: "member" | "expert"
+  greetingName?: string
+  activateHref?: string
+  calendarHref?: string
+  memberEmail?: string
+  memberPhone?: string
+  duration?: string
+  timezone?: string
+  language?: string
+  country?: string
+  price?: string
+  location?: string
 }): Promise<string> {
   switch (input.kind) {
     case "booking.confirmed":
@@ -517,6 +580,19 @@ async function renderBookingHtml(input: {
         sessionMode: input.sessionMode,
         locale: input.locale,
         joinHref: input.joinHref,
+        audience: input.audience,
+        greetingName: input.greetingName,
+        activateHref: input.activateHref,
+        calendarHref: input.calendarHref,
+        memberEmail: input.memberEmail,
+        memberPhone: input.memberPhone,
+        duration: input.duration,
+        timezone: input.timezone,
+        language: input.language,
+        country: input.country,
+        price: input.price,
+        location: input.location,
+        cancellationPolicyName: input.cancellationPolicyName,
       })
     case "booking.cancelled":
       return renderBookingCancelled({
@@ -535,6 +611,7 @@ async function renderBookingHtml(input: {
         newDate: input.formattedDate,
         sessionMode: input.sessionMode,
         locale: input.locale,
+        joinHref: input.joinHref,
       })
     case "booking.reminder_24h":
       return renderBookingReminder({
@@ -606,6 +683,69 @@ function formatMoney(cents: number, currency: string, locale: EmailLocale) {
   }).format(cents / 100)
 }
 
+function formatDuration(
+  startsAt: Date,
+  endsAt: Date,
+  locale: EmailLocale
+): string {
+  const minutes = Math.max(
+    1,
+    Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000)
+  )
+  return new Intl.NumberFormat(LOCALE_MAP[locale], {
+    style: "unit",
+    unit: "minute",
+    unitDisplay: "long",
+  }).format(minutes)
+}
+
+function formatLanguage(
+  code: string | null,
+  locale: EmailLocale
+): string | undefined {
+  if (!code) return undefined
+  try {
+    return (
+      new Intl.DisplayNames([LOCALE_MAP[locale]], { type: "language" }).of(
+        code
+      ) ?? code
+    )
+  } catch {
+    return code
+  }
+}
+
+function formatCountry(
+  code: string | null,
+  locale: EmailLocale
+): string | undefined {
+  if (!code) return undefined
+  try {
+    return (
+      new Intl.DisplayNames([LOCALE_MAP[locale]], { type: "region" }).of(
+        code
+      ) ?? code
+    )
+  } catch {
+    return code
+  }
+}
+
+function memberActivateHref(
+  kind: BookingSendKind,
+  booking: LoadedBooking,
+  gateway: string
+): string | undefined {
+  if (kind !== "booking.confirmed") return undefined
+  if (booking.memberUserId || !booking.guestEmail) return undefined
+  const params = new URLSearchParams({
+    email: booking.guestEmail,
+    ...(booking.guestName ? { name: booking.guestName } : {}),
+    ...(booking.guestPhone ? { phone: booking.guestPhone } : {}),
+  })
+  return `${gateway.replace(/\/$/, "")}/signup?${params.toString()}`
+}
+
 export async function loadBookingForNotification(
   bookingId: string
 ): Promise<LoadedBooking | null> {
@@ -624,11 +764,16 @@ export async function loadBookingForNotification(
         memberUserId: main.bookings.memberUserId,
         guestEmail: main.bookings.guestEmail,
         guestName: main.bookings.guestName,
+        guestPhone: main.bookings.guestPhone,
         expertUserId: main.bookings.expertUserId,
         eventTypeName: main.eventTypes.title,
         scheduleRevision: main.bookings.scheduleRevision,
         cancellationPolicy: main.bookings.cancellationPolicy,
         currency: main.bookings.currency,
+        priceCents: main.bookings.priceCents,
+        language: main.bookings.language,
+        memberCountry: main.bookings.memberCountry,
+        locationName: main.expertPracticeLocations.name,
       })
       .from(main.bookings)
       .innerJoin(
@@ -638,6 +783,14 @@ export async function loadBookingForNotification(
       .innerJoin(
         auth.organization,
         eq(auth.organization.id, main.bookings.orgId)
+      )
+      .leftJoin(
+        main.eventTypeModes,
+        eq(main.eventTypeModes.id, main.bookings.eventTypeModeId)
+      )
+      .leftJoin(
+        main.expertPracticeLocations,
+        eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId)
       )
       .where(eq(main.bookings.id, bookingId))
       .limit(1)
@@ -655,23 +808,27 @@ export async function loadBookingForNotification(
 
     let memberEmail: string | null = null
     let memberName: string | null = null
+    let memberPhone: string | null = null
     if (row.memberUserId) {
       const [member] = await tx
         .select({
           email: auth.user.email,
           name: auth.user.name,
+          phoneE164: auth.user.phoneE164,
         })
         .from(auth.user)
         .where(eq(auth.user.id, row.memberUserId))
         .limit(1)
       memberEmail = member?.email ?? null
       memberName = member?.name ?? null
+      memberPhone = member?.phoneE164 ?? null
     }
 
     return {
       ...row,
       memberEmail,
       memberName,
+      memberPhone,
       expertEmail: expert.email,
       expertName: expert.name,
     }

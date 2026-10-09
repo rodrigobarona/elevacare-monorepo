@@ -98,7 +98,9 @@ import {
   EditorAssistRequestSchema,
   DsarExportWorkflowRequestSchema,
   ReconciliationWorkflowRequestSchema,
+  JoinSessionRequestSchema,
   JoinSessionResponseSchema,
+  JoinSessionErrorSchema,
   AddSessionParticipantRequestSchema,
   AddSessionParticipantResponseSchema,
   RemoveSessionParticipantResponseSchema,
@@ -3012,21 +3014,41 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "joinSession",
           summary: "Mint a Daily meeting token for a session",
           description:
-            "Assigned expert, booking member, or an active delegate can join. Window is [start-15m, end+30m]. Token exp is min(now+2h, end+30m). Audit payload carries userId and roomName only.",
+            "Assigned expert, booking member, or an active delegate can join with a session cookie or bearer token. A signed Eleva join grant (`grant`) joins as that role without a cookie or bearer token and ignores any session. Window is [start-15m, end+30m]. Token exp is min(now+2h, end+30m). Audit payload carries userId and roomName only. Never put a Daily meeting token in a URL.",
           tags: ["Sessions"],
+          security: [{}, { bearerAuth: [] }, { cookieAuth: [] }],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
           },
+          requestBody: {
+            required: false,
+            content: {
+              "application/json": { schema: JoinSessionRequestSchema },
+            },
+          },
           responses: {
+            ...stdWithNotFound,
             "200": {
               description: "Meeting token minted",
               content: {
                 "application/json": { schema: JoinSessionResponseSchema },
               },
             },
-            "403": {
-              description: "Not a participant or session window closed",
+            "401": {
+              description:
+                "Missing session, or join grant is invalid, expired, or for another schedule revision (INVALID_GRANT)",
               content: { "application/json": { schema: ErrorSchema } },
+            },
+            "422": {
+              description: "Request body failed validation (invalid_body)",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
+            "403": {
+              description:
+                "Not a participant, or the join window is closed. SESSION_NOT_OPEN includes startsAt and opensAt so the waiting room can name the session time.",
+              content: {
+                "application/json": { schema: JoinSessionErrorSchema },
+              },
             },
             "409": {
               description: "Daily room is not ready",
@@ -3036,7 +3058,6 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Session is cancelled, ended, or no-show",
               content: { "application/json": { schema: ErrorSchema } },
             },
-            ...stdWithNotFound,
           },
         },
       },

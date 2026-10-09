@@ -20,6 +20,8 @@ type Props = {
   params: Promise<{ locale: string; username: string; eventSlug: string }>
 }
 
+export const dynamicParams = true
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, username, eventSlug } = await params
   if (isReserved(username)) return {}

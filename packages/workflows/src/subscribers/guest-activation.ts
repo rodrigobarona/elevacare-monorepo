@@ -1,7 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm"
 import { hashGuestEmail } from "@eleva/compliance"
 import { provisionPersonalSpace } from "@eleva/auth"
-import { requestMagicLinkSignIn } from "@eleva/auth/server/auth"
 import { withAudit } from "@eleva/audit"
 import { auth, db, main, withOrgContext } from "@eleva/db"
 import type { GuestActivationPayload } from "../domain-events"
@@ -9,13 +8,8 @@ import { ensureSessionRoom } from "../video/ensure-session-room"
 
 export type GuestActivationInput = GuestActivationPayload & { orgId: string }
 
-export type GuestActivationDeps = {
-  sendMagicLink?: (email: string) => Promise<void>
-}
-
 export async function activateGuestBooking(
-  payload: GuestActivationInput,
-  deps: GuestActivationDeps = {}
+  payload: GuestActivationInput
 ): Promise<void> {
   const [booking] = await withOrgContext(payload.orgId, async (tx) =>
     tx
@@ -39,7 +33,7 @@ export async function activateGuestBooking(
   if (!email) return
   if (booking.guestActivationSentAt) return
   if (booking.memberUserId) {
-    await deliverActivationLink(booking.orgId, booking.id, email, deps)
+    await claimGuestActivationSent(booking.orgId, booking.id)
     return
   }
 
@@ -86,7 +80,7 @@ export async function activateGuestBooking(
     }
   )
 
-  await deliverActivationLink(booking.orgId, booking.id, email, deps)
+  await claimGuestActivationSent(booking.orgId, booking.id)
   try {
     await ensureSessionRoom(payload.bookingId)
   } catch (err) {
@@ -174,12 +168,7 @@ async function findPersonalSpace(userId: string) {
   return row ?? null
 }
 
-async function deliverActivationLink(
-  orgId: string,
-  bookingId: string,
-  email: string,
-  deps: GuestActivationDeps
-) {
+async function claimGuestActivationSent(orgId: string, bookingId: string) {
   const [latest] = await withOrgContext(orgId, async (tx) =>
     tx
       .select({
@@ -190,23 +179,5 @@ async function deliverActivationLink(
       .limit(1)
   )
   if (latest?.guestActivationSentAt) return
-
-  // Persist-before-send is owned by sendMagicLinkEmail. Claim after Better
-  // Auth accepts the request: signInMagicLink has no provider idempotency
-  // key, so a crash between send and claim can mint one extra link.
-  try {
-    if (deps.sendMagicLink) {
-      await deps.sendMagicLink(email)
-    } else {
-      await requestMagicLinkSignIn({
-        email,
-        callbackURL: "/account/activate",
-      })
-    }
-  } catch (err) {
-    console.error("[guest-activation] magic link send failed", err)
-    throw err
-  }
-
   await claimActivationSend(orgId, bookingId)
 }

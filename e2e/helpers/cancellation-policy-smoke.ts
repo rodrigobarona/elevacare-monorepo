@@ -4,6 +4,7 @@ import type { CancellationPolicy } from "@eleva/config/cancellation-policy"
 import {
   apiUrl,
   authHeaders,
+  requestMagicLinkSignIn,
   tokenFromAuthUrl,
   waitForE2eAuthUrl,
   uniqueEmail,
@@ -183,6 +184,8 @@ async function sessionFromMagicLink(
   request: APIRequestContext,
   email: string
 ): Promise<string> {
+  const requested = await requestMagicLinkSignIn(request, email)
+  expect(requested.status()).toBe(200)
   const magicUrl = await waitForE2eAuthUrl("magic-link", email, 45_000)
   expect(
     magicUrl,

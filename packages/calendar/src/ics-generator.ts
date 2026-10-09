@@ -17,6 +17,8 @@ export interface IcsEventInput {
   endTime: Date
   timezone: string
   location?: string
+  /** RFC 5545 URL — Eleva join grant link, never a Daily meeting token. */
+  url?: string
   organizer: { name: string; email: string }
   attendees?: { name: string; email: string }[]
   /** Increment on each reschedule to signal update to calendar clients. */
@@ -112,6 +114,21 @@ function generateIcs(
     lines.push(`DESCRIPTION:${escapeText(event.description)}`)
   }
 
+  let urlHref: string | undefined
+  if (event.url) {
+    try {
+      urlHref = new URL(event.url).href
+    } catch {
+      // Invalid URL: omit the property instead of failing the invite.
+    }
+  }
+
+  if (urlHref || event.location) {
+    lines.push("CLASS:PRIVATE")
+  }
+  if (urlHref) {
+    lines.push(`URL:${urlHref}`)
+  }
   if (event.location) {
     lines.push(`LOCATION:${escapeText(event.location)}`)
   }

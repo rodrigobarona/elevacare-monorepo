@@ -228,7 +228,7 @@ export function BookingFunnel({
       const lockKey = confirmLockKey(hold.reservationId, paid.paymentIntentId)
       if (confirmInFlight.current || !tryAcquireConfirmLock(lockKey)) return
       confirmInFlight.current = true
-      setConfirmState("pending")
+      setConfirmState("confirmed")
       setFormError(null)
       try {
         const api = createPublicApiClient()
@@ -256,15 +256,17 @@ export function BookingFunnel({
   )
 
   const onDetails = step === "details"
+  const onPay = step === "pay"
   useEffect(() => {
+    if (step === "done") return
     if (!reservation && !onDetails) return
     setNowMs(Date.now())
     const id = window.setInterval(
       () => setNowMs(Date.now()),
-      reservation ? 1000 : 30_000
+      reservation && onPay ? 1000 : 30_000
     )
     return () => window.clearInterval(id)
-  }, [reservation, onDetails])
+  }, [reservation, onDetails, onPay, step])
 
   // Layout effect so Stripe query params are read before next-intl / App
   // Router client navigations can strip search (setTimeout(0) was too late).
@@ -904,7 +906,7 @@ export function BookingFunnel({
                     : t("done.video")}
               </p>
             </div>
-            {confirmState === "confirmed" ? (
+            {confirmState !== "failed" ? (
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-3">
                   <Button
@@ -986,7 +988,7 @@ export function BookingFunnel({
         specialPrice={specialPriceCents != null}
         specialPriceLabel={t("link.specialPrice")}
         holdLabel={
-          reservation && !holdExpired
+          onPay && reservation && !holdExpired
             ? t("pay.hold", {
                 time: formatCountdown(
                   Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)

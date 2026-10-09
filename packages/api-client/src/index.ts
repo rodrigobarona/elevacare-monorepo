@@ -195,6 +195,8 @@ export const ApiErrorSchema = z.object({
   issues: z.array(z.unknown()).optional(),
   message: z.string().optional(),
   retryAfter: z.number().optional(),
+  startsAt: z.string().datetime().optional(),
+  opensAt: z.string().datetime().optional(),
 })
 
 export type CompleteOnboardingRequest = z.infer<
@@ -538,10 +540,20 @@ export const CancelDeletionResponseSchema = z.object({
   requestId: z.string().uuid(),
 })
 
+export const JoinSessionRequestSchema = z.object({
+  grant: z.string().min(1).max(4096).optional(),
+})
+
 export const JoinSessionResponseSchema = z.object({
   roomUrl: z.string().url(),
   token: z.string().min(1),
   expiresAt: z.string().datetime(),
+})
+
+export const JoinSessionErrorSchema = z.object({
+  error: z.string(),
+  startsAt: z.string().datetime().optional(),
+  opensAt: z.string().datetime().optional(),
 })
 
 export const AddSessionParticipantRequestSchema = z.object({
@@ -610,7 +622,9 @@ export type DeleteAccountResponse = z.infer<typeof DeleteAccountResponseSchema>
 export type CancelDeletionResponse = z.infer<
   typeof CancelDeletionResponseSchema
 >
+export type JoinSessionRequest = z.infer<typeof JoinSessionRequestSchema>
 export type JoinSessionResponse = z.infer<typeof JoinSessionResponseSchema>
+export type JoinSessionError = z.infer<typeof JoinSessionErrorSchema>
 export type AddSessionParticipantRequest = z.infer<
   typeof AddSessionParticipantRequestSchema
 >
@@ -1959,11 +1973,15 @@ export interface ApiClientOptions {
   fetch?: typeof globalThis.fetch
   /** Optional abort signal applied to every request. */
   signal?: AbortSignal
+  /** Override fetch credentials. Defaults to omit with a bearer token, else include. */
+  credentials?: RequestCredentials
 }
 
 export function createApiClient(options: ApiClientOptions) {
   const { baseUrl, bearerToken } = options
   const fetchFn = options.fetch ?? globalThis.fetch
+  const credentials: RequestCredentials =
+    options.credentials ?? (bearerToken ? "omit" : "include")
 
   async function request<T>(
     method: string,
@@ -1983,7 +2001,7 @@ export function createApiClient(options: ApiClientOptions) {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: bearerToken ? "omit" : "include",
+      credentials,
       signal: options.signal,
     })
 
@@ -2022,7 +2040,7 @@ export function createApiClient(options: ApiClientOptions) {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
-      credentials: bearerToken ? "omit" : "include",
+      credentials,
       signal: options.signal,
     })
 
@@ -2843,10 +2861,11 @@ export function createApiClient(options: ApiClientOptions) {
     },
 
     sessions: {
-      async join(bookingId: string) {
+      async join(bookingId: string, body?: JoinSessionRequest) {
         const raw = await request<unknown>(
           "POST",
-          `/sessions/${encodeURIComponent(bookingId)}/join`
+          `/sessions/${encodeURIComponent(bookingId)}/join`,
+          body
         )
         return JoinSessionResponseSchema.parse(raw)
       },

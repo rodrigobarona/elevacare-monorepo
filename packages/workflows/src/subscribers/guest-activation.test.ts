@@ -170,5 +170,6 @@ describe("activateGuestBooking consent re-key", () => {
       name: "Ada",
     })
     expect(ensureSessionRoom).toHaveBeenCalledWith("booking-1")
+    expect(requestMagicLinkSignIn).not.toHaveBeenCalled()
   })
 })
