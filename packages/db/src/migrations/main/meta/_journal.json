@@ -379,6 +379,13 @@
       "when": 1780300000000,
       "tag": "0053_better_auth_17_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1780400000000,
+      "tag": "0054_booking_checkout_session",
+      "breakpoints": true
     }
   ]
 }

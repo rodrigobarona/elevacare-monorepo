@@ -2482,9 +2482,9 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
       "/payments/intent": {
         post: {
           operationId: "createBookingPaymentIntent",
-          summary: "Create a PaymentIntent for a reserved slot",
+          summary: "Create a Checkout Session for a reserved slot",
           description:
-            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a platform PaymentIntent (no Stripe calls inside a DB transaction). Token or user mismatches return 404.",
+            "Authorizes the reservationToken, inserts a pending_payment booking, then creates a platform Checkout Session (ui_mode elements) with a Customer and transfer_group. Token or user mismatches return 404.",
           tags: ["Payments"],
           security: [],
           requestBody: {
@@ -2495,7 +2495,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           },
           responses: {
             "201": {
-              description: "PaymentIntent created",
+              description: "Checkout Session created",
               content: {
                 "application/json": {
                   schema: CreatePaymentIntentResponseSchema,

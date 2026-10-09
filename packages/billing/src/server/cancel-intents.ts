@@ -1,5 +1,10 @@
 import { stripe } from "./client"
 
+const CHECKOUT_EXPIRE_SKIP_CODES = new Set([
+  "checkout_session_expired",
+  "resource_missing",
+])
+
 const CANCELABLE_STATUSES = new Set([
   "requires_payment_method",
   "requires_confirmation",
@@ -62,12 +67,44 @@ export type ExpiredReservationIntentDecision =
  * Must run outside any database transaction. Throws on Stripe errors so
  * the sweep retries on its next run.
  */
+async function expireCheckoutSession(checkoutSessionId: string): Promise<void> {
+  try {
+    await stripe().checkout.sessions.expire(checkoutSessionId)
+  } catch (err) {
+    const code = stripeErrorCode(err)
+    if (code && CHECKOUT_EXPIRE_SKIP_CODES.has(code)) return
+    const message = err instanceof Error ? err.message : String(err)
+    if (/already (expired|complete)/i.test(message)) return
+    throw err
+  }
+}
+
 export async function settleExpiredReservationIntent(input: {
   reservationId: string
   paymentIntentId: string | null
+  checkoutSessionId?: string | null
   searchByReservation: boolean
   searchMissIsFinal: boolean
 }): Promise<ExpiredReservationIntentDecision> {
+  if (input.checkoutSessionId) {
+    const session = await stripe().checkout.sessions.retrieve(
+      input.checkoutSessionId
+    )
+    if (session.status === "complete" && session.payment_status === "paid") {
+      const paymentIntentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : (session.payment_intent?.id ?? input.paymentIntentId)
+      if (paymentIntentId) {
+        return {
+          action: "keep",
+          paymentIntentId,
+          reason: "checkout_paid",
+        }
+      }
+    }
+  }
+
   let intents: { id: string; status: string }[]
   if (input.paymentIntentId) {
     intents = [await stripe().paymentIntents.retrieve(input.paymentIntentId)]
@@ -109,6 +146,9 @@ export async function settleExpiredReservationIntent(input: {
       }
       throw err
     }
+  }
+  if (input.checkoutSessionId) {
+    await expireCheckoutSession(input.checkoutSessionId)
   }
   return { action: "release", cancelledIntentIds }
 }

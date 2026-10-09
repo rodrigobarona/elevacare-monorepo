@@ -85,7 +85,8 @@ async function mockFunnelApis(page: Page, username: string, slug: string) {
   await page.route("**/payments/intent", async (route) => {
     await route.fulfill({
       json: {
-        clientSecret: "pi_e2e_secret_test",
+        clientSecret: "cs_e2e_secret_test",
+        checkoutSessionId: "cs_e2e_session",
         paymentIntentId: "pi_e2e_intent",
         bookingId: "00000000-0000-4000-8000-000000000003",
         publishableKey: "pk_test_e2e",
@@ -182,7 +183,8 @@ test.describe("booking funnel", () => {
           expiresAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
         },
         payment: {
-          clientSecret: "pi_e2e_secret_test",
+          clientSecret: "cs_e2e_secret_test",
+          checkoutSessionId: "cs_e2e_session",
           paymentIntentId: "pi_e2e_intent",
           bookingId: "00000000-0000-4000-8000-000000000003",
           publishableKey: "pk_test_e2e",

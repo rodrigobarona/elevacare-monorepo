@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       reservationId: parsed.data.reservationId,
       reservationToken: parsed.data.reservationToken,
       sessionUserId,
+      returnUrl: parsed.data.returnUrl,
     })
   } catch (err) {
     if (err instanceof BookingError) {
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
   return secureJson(
     CreatePaymentIntentResponseSchema.parse({
       clientSecret: result.clientSecret,
+      checkoutSessionId: result.checkoutSessionId,
       paymentIntentId: result.paymentIntentId,
       bookingId: result.bookingId,
       publishableKey: result.publishableKey,

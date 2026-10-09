@@ -22,6 +22,10 @@ import {
 } from "./connect-status"
 import { retrieveBookingPaymentIntent } from "./payments"
 import {
+  bookingCheckoutSnapshotFromSession,
+  isBookingPaymentCheckoutSession,
+} from "./booking-checkout-session"
+import {
   createPayoutStateForPaidPayment,
   markPayoutFailedFromStripe,
   markPayoutPaidOut,
@@ -945,10 +949,114 @@ async function upsertSubscriptionMirror(
 // Checkout / invoice handlers
 // =============================================================================
 
+async function handleBookingCheckoutSessionCompleted(
+  session: Stripe.Checkout.Session
+): Promise<DispatchOutcome> {
+  const snapshot = bookingCheckoutSnapshotFromSession(session)
+  const orgId = snapshot.orgId
+  if (!orgId || !snapshot.bookingId) {
+    return {
+      kind: "ignored",
+      reason: "booking checkout session missing org or booking metadata",
+      resolvedOrgId: null,
+    }
+  }
+
+  const reservation = snapshot.reservationId
+    ? await withPlatformAdminContext(async (tx) => {
+        const [row] = await tx
+          .select({ status: main.slotReservations.status })
+          .from(main.slotReservations)
+          .where(eq(main.slotReservations.id, snapshot.reservationId as string))
+          .limit(1)
+        return row ?? null
+      })
+    : null
+
+  if (
+    reservation &&
+    reservation.status !== "active" &&
+    reservation.status !== "converted"
+  ) {
+    return {
+      kind: "ignored",
+      reason: "reservation no longer active",
+      resolvedOrgId: orgId,
+    }
+  }
+
+  const chargedEurCents =
+    snapshot.currency === "eur" && snapshot.amountTotal != null
+      ? snapshot.amountTotal
+      : null
+
+  await withAudit({ orgId, actorUserId: null }, async (tx, ctx) => {
+    const [updated] = await tx
+      .update(main.bookingPayments)
+      .set({
+        stripeCheckoutSessionId: snapshot.checkoutSessionId,
+        stripeCustomerId: snapshot.customerId ?? undefined,
+        stripePromotionCodeId: snapshot.promotionCodeId,
+        discountCents: snapshot.discountCents,
+        presentmentCurrency: snapshot.presentmentCurrency,
+        presentmentAmountCents: snapshot.presentmentAmountCents,
+        ...(snapshot.paymentIntentId
+          ? { stripePaymentIntentId: snapshot.paymentIntentId }
+          : {}),
+        ...(chargedEurCents != null ? { amountCents: chargedEurCents } : {}),
+      })
+      .where(eq(main.bookingPayments.bookingId, snapshot.bookingId as string))
+      .returning({ id: main.bookingPayments.id })
+
+    await tx
+      .update(main.bookings)
+      .set({
+        stripeCheckoutSessionId: snapshot.checkoutSessionId,
+        stripeCustomerId: snapshot.customerId ?? undefined,
+        buyerTaxId: snapshot.taxId ?? undefined,
+        buyerBusinessName: snapshot.businessName,
+        billingAddress: snapshot.billingAddress,
+        ...(snapshot.paymentIntentId
+          ? { stripePaymentIntentId: snapshot.paymentIntentId }
+          : {}),
+        ...(snapshot.individualName
+          ? { guestName: snapshot.individualName }
+          : {}),
+      })
+      .where(eq(main.bookings.id, snapshot.bookingId as string))
+
+    if (snapshot.paymentIntentId && snapshot.reservationId) {
+      await tx
+        .update(main.slotReservations)
+        .set({ stripePaymentIntentId: snapshot.paymentIntentId })
+        .where(eq(main.slotReservations.id, snapshot.reservationId))
+    }
+
+    await ctx.emit({
+      entity: "booking_payment",
+      action: "updated",
+      entityId: updated?.id ?? snapshot.checkoutSessionId,
+      payload: {
+        stripeCheckoutSessionId: snapshot.checkoutSessionId,
+        stripeCustomerId: snapshot.customerId,
+        stripePaymentIntentId: snapshot.paymentIntentId,
+        stripePromotionCodeId: snapshot.promotionCodeId,
+        discountCents: snapshot.discountCents,
+        amountTax: session.total_details?.amount_tax ?? 0,
+      },
+    })
+  })
+
+  return { kind: "handled", resolvedOrgId: orgId }
+}
+
 async function handleCheckoutSessionCompleted(
   event: Stripe.Event
 ): Promise<DispatchOutcome> {
   const session = event.data.object as Stripe.Checkout.Session
+  if (isBookingPaymentCheckoutSession(session)) {
+    return handleBookingCheckoutSessionCompleted(session)
+  }
   if (session.mode !== "subscription") {
     return {
       kind: "ignored",
@@ -1430,6 +1538,13 @@ async function handlePaymentIntentEvent(
       retrieveIntent: retrieveBookingPaymentIntent,
     })
     if (!confirmed.ok) {
+      if (confirmed.error === "hold_inactive") {
+        return {
+          kind: "ignored",
+          reason: "reservation no longer active",
+          resolvedOrgId: orgIdFromMetadata(intent.metadata),
+        }
+      }
       if (confirmed.error === "not_found") {
         await recordOrphanedPaidIntent({
           intent,

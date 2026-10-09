@@ -41,12 +41,14 @@ describe("expireStaleReservations", () => {
         id: "res-mbway",
         orgId: "org-1",
         stripePaymentIntentId: "pi_mbway",
+        stripeCheckoutSessionId: null,
         intentPendingSince: null,
       },
       {
         id: "res-idle",
         orgId: "org-1",
         stripePaymentIntentId: "pi_idle",
+        stripeCheckoutSessionId: null,
         intentPendingSince: null,
       },
     ])
@@ -99,12 +101,14 @@ describe("expireStaleReservations", () => {
         id: "res-fresh",
         orgId: "org-1",
         stripePaymentIntentId: null,
+        stripeCheckoutSessionId: null,
         intentPendingSince: new Date(now.getTime() - 2 * 60 * 1000),
       },
       {
         id: "res-stale",
         orgId: "org-1",
         stripePaymentIntentId: null,
+        stripeCheckoutSessionId: null,
         intentPendingSince: new Date(now.getTime() - 11 * 60 * 1000),
       },
     ])
@@ -125,6 +129,7 @@ describe("expireStaleReservations", () => {
     expect(settleExpiredReservationIntent).toHaveBeenCalledWith({
       reservationId: "res-fresh",
       paymentIntentId: null,
+      checkoutSessionId: null,
       searchByReservation: true,
       searchMissIsFinal: false,
     })
@@ -149,6 +154,7 @@ describe("expireStaleReservations", () => {
         id: "res-err",
         orgId: "org-1",
         stripePaymentIntentId: "pi_err",
+        stripeCheckoutSessionId: null,
         intentPendingSince: null,
       },
     ])

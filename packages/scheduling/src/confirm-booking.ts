@@ -45,7 +45,12 @@ export type ConfirmBookingPaymentResult =
   | { ok: true; alreadyConfirmed: boolean; bookingId: string; orgId: string }
   | {
       ok: false
-      error: "not_found" | "payment_mismatch" | "unavailable" | "db_error"
+      error:
+        | "not_found"
+        | "payment_mismatch"
+        | "unavailable"
+        | "db_error"
+        | "hold_inactive"
     }
 
 export function isUniqueViolation(err: unknown): boolean {
@@ -163,6 +168,14 @@ export async function confirmBookingPayment(
       }
     }
     return { ok: false, error: "payment_mismatch" }
+  }
+
+  if (
+    input.source === "webhook" &&
+    reservation.status !== "active" &&
+    reservation.status !== "converted"
+  ) {
+    return { ok: false, error: "hold_inactive" }
   }
 
   const metadataReservationId = intent.metadata.reservationId

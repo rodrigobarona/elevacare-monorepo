@@ -20,6 +20,7 @@ const snapshot: FunnelReturnSnapshot = {
   },
   payment: {
     clientSecret: "cs_test",
+    checkoutSessionId: "cs_test_session",
     paymentIntentId: "pi_test",
     bookingId: "",
     publishableKey: "pk_test",
@@ -88,6 +89,7 @@ describe("captureRedirectStatus", () => {
     expect(captureRedirect("")).toEqual({
       status: "succeeded",
       paymentIntentId: "pi_test",
+      checkoutSessionId: null,
     })
   })
 
@@ -101,6 +103,7 @@ describe("captureRedirectStatus", () => {
     expect(captureRedirect("?redirect_status=succeeded")).toEqual({
       status: "succeeded",
       paymentIntentId: null,
+      checkoutSessionId: null,
     })
   })
 })
@@ -182,6 +185,20 @@ describe("takeFunnelRestore", () => {
     })
     expect(takeFunnelRestore()).toBeNull()
   })
+
+  it("restores from a Checkout Session return when the PaymentIntent is not stored yet", () => {
+    stubSession({
+      "bookingFunnel:v1": JSON.stringify({
+        ...snapshot,
+        payment: { ...snapshot.payment, paymentIntentId: "" },
+      }),
+    })
+    const restored = takeFunnelRestore(
+      "?session_id=cs_test_session&payment_intent=pi_from_redirect"
+    )
+    expect(restored?.status).toBe("succeeded")
+    expect(restored?.snapshot.payment.paymentIntentId).toBe("pi_from_redirect")
+  })
 })
 
 describe("confirm lock", () => {
@@ -199,7 +216,7 @@ describe("bookingReturnUrl", () => {
   it("strips Stripe redirect query keys", () => {
     expect(
       bookingReturnUrl(
-        "https://eleva.care/en/ana/intake?redirect_status=succeeded&payment_intent=pi_1&payment_intent_client_secret=pi_1_secret_xxx&keep=1"
+        "https://eleva.care/en/ana/intake?redirect_status=succeeded&payment_intent=pi_1&payment_intent_client_secret=pi_1_secret_xxx&session_id=cs_1&keep=1"
       )
     ).toBe("https://eleva.care/en/ana/intake?keep=1")
   })

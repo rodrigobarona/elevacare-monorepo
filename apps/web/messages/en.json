@@ -232,6 +232,8 @@
       "hold": "Hold expires in {time}",
       "expired": "This hold has ended. Pick a new time to continue.",
       "restart": "Pick a new time",
+      "promo": "Promo code (optional)",
+      "promoHint": "Stripe applies a valid code to this payment. Leave it blank to pay the full price.",
       "pay": "Pay {price}",
       "processing": "Confirming payment…",
       "failed": "Payment could not be completed. Please try again.",

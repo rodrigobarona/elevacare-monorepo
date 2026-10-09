@@ -80,6 +80,7 @@ type Reservation = {
 
 type Payment = {
   clientSecret: string
+  checkoutSessionId: string
   paymentIntentId: string
   bookingId: string
   publishableKey: string
@@ -152,8 +153,6 @@ export function BookingFunnel({
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [phone, setPhone] = useState("")
-  const [taxId, setTaxId] = useState("")
-  const [promoCode, setPromoCode] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
@@ -382,13 +381,6 @@ export function BookingFunnel({
       setFormError("consentsRequired")
       return
     }
-    const normalizedTaxId = taxId.replace(/[\s.-]/g, "").toUpperCase()
-    if (normalizedTaxId && !/^[A-Z0-9]{8,32}$/.test(normalizedTaxId)) {
-      setFormError("taxIdInvalid")
-      return
-    }
-    const normalizedPromo = promoCode.trim().toUpperCase()
-
     setIsSubmitting(true)
     setFormError(null)
     setNowMs(Date.now())
@@ -413,12 +405,8 @@ export function BookingFunnel({
             email,
             name,
             ...(e164 ? { phone: e164 } : {}),
-            ...(normalizedTaxId ? { taxId: normalizedTaxId } : {}),
           },
           ...(e164 ? { phone: e164 } : {}),
-          ...(normalizedPromo.length >= 2
-            ? { promoCode: normalizedPromo }
-            : {}),
           consents: consents.map((doc) => ({
             kind: doc.kind,
             version: doc.version,
@@ -433,6 +421,7 @@ export function BookingFunnel({
         })
         setPayment({
           clientSecret: "",
+          checkoutSessionId: "",
           paymentIntentId: "",
           bookingId: confirmed.bookingId,
           publishableKey: "",
@@ -444,11 +433,18 @@ export function BookingFunnel({
       const intent = await api.payments.intent({
         reservationId: reserved.reservationId,
         reservationToken: reserved.reservationToken,
+        returnUrl: bookingReturnUrl(),
       })
-      setPayment(intent)
+      setPayment({
+        ...intent,
+        paymentIntentId: intent.paymentIntentId ?? "",
+      })
       saveFunnelReturn({
         reservation: reserved,
-        payment: intent,
+        payment: {
+          ...intent,
+          paymentIntentId: intent.paymentIntentId ?? "",
+        },
         slot,
         modeId: selectedMode.id,
         name,
@@ -708,33 +704,6 @@ export function BookingFunnel({
                 {t("details.phoneHint")}
               </p>
             </Field>
-            <Field>
-              <FieldLabel>{t("details.taxId")}</FieldLabel>
-              <Input
-                data-testid="booking-guest-tax-id"
-                value={taxId}
-                onChange={(event) => setTaxId(event.target.value)}
-                autoComplete="off"
-                inputMode="text"
-              />
-              <p className="text-sm text-muted-foreground">
-                {t("details.taxIdHint")}
-              </p>
-            </Field>
-            {priceCents > 0 ? (
-              <Field>
-                <FieldLabel>{t("details.promo")}</FieldLabel>
-                <Input
-                  data-testid="booking-promo"
-                  value={promoCode}
-                  onChange={(event) => setPromoCode(event.target.value)}
-                  autoComplete="off"
-                />
-                <p className="text-sm text-muted-foreground">
-                  {t("details.promoHint")}
-                </p>
-              </Field>
-            ) : null}
             <CancellationPolicySummary
               heading={t("policy.heading")}
               name={policyCopy.name}
@@ -813,21 +782,29 @@ export function BookingFunnel({
                 }
                 billingEmail={email}
                 billingName={name}
+                billingPhone={phone}
+                billingCountry={country}
                 submitLabel={t("pay.pay", {
                   price: formatBookingPrice(priceCents, locale),
                 })}
+                formatPayLabel={(price) => t("pay.pay", { price })}
                 processingLabel={t("pay.processing")}
                 failedLabel={t("pay.failed")}
                 pendingLabel={t("pay.pendingError")}
+                promoLabel={t("pay.promo")}
+                promoHint={t("pay.promoHint")}
                 onProcessingChange={setPaymentInFlight}
                 onPaid={(result) => {
                   setStep("done")
-                  if (result.status === "succeeded") {
-                    const paid = {
-                      ...payment,
-                      paymentIntentId: result.paymentIntentId,
-                    }
-                    setPayment(paid)
+                  const paid = {
+                    ...payment,
+                    paymentIntentId: result.paymentIntentId,
+                  }
+                  setPayment(paid)
+                  if (
+                    result.status === "succeeded" &&
+                    result.paymentIntentId.startsWith("pi_")
+                  ) {
                     void confirmPaidHold(reservation, paid)
                     return
                   }

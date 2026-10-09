@@ -25,8 +25,14 @@ import {
   isClinicSaaS,
   type VatTreatment,
 } from "./commission"
+import {
+  checkoutSessionIdempotencyKey,
+  createBookingCheckoutSession,
+  findOrCreateBookingCustomer,
+  stripeObjectId,
+} from "./booking-checkout-session"
 
-export { hashReservationToken }
+export { hashReservationToken, checkoutSessionIdempotencyKey }
 
 const funnelSnapshotSchema = z.object({
   timezone: z.string().min(1),
@@ -56,7 +62,7 @@ export function parseReservationFunnel(value: unknown) {
 const bookingLinkIdSchema = z.string().uuid()
 
 export function paymentIntentIdempotencyKey(reservationId: string): string {
-  return `pi:${reservationId}`
+  return checkoutSessionIdempotencyKey(reservationId)
 }
 
 /**
@@ -102,51 +108,38 @@ export function authorizeReservationAccess(input: {
 
 export type CreateBookingPaymentIntentInput = {
   amountCents: number
-  currency: string
+  serviceName: string
   bookingId: string
   reservationId: string
   expertOrgId: string
+  customerId: string
+  returnUrl: string
   idempotencyKey: string
 }
 
 export async function createBookingPaymentIntent(
   input: CreateBookingPaymentIntentInput
-): Promise<{ id: string; client_secret: string | null }> {
-  const pmc = env().STRIPE_PMC_BOOKING
-  if (!pmc) {
-    throw new Error("STRIPE_PMC_BOOKING is not configured")
-  }
-
-  return stripe().paymentIntents.create(
-    {
-      amount: input.amountCents,
-      currency: input.currency.toLowerCase(),
-      automatic_payment_methods: { enabled: true },
-      payment_method_configuration: pmc,
-      transfer_group: input.bookingId,
-      metadata: {
-        reservationId: input.reservationId,
-        bookingId: input.bookingId,
-        expertOrgId: input.expertOrgId,
-        eleva_org_id: input.expertOrgId,
-        eleva_booking_id: input.bookingId,
-      },
-    },
-    { idempotencyKey: input.idempotencyKey }
-  )
+): Promise<{
+  id: string
+  client_secret: string | null
+  payment_intent: string | null
+}> {
+  return createBookingCheckoutSession(input)
 }
 
 export type CreatePaymentIntentForReservationInput = {
   reservationId: string
   reservationToken: string
   sessionUserId?: string
+  returnUrl?: string
 }
 
 export type CreatePaymentIntentForReservationResult =
   | {
       ok: true
       clientSecret: string
-      paymentIntentId: string
+      checkoutSessionId: string
+      paymentIntentId: string | null
       bookingId: string
       publishableKey: string
     }
@@ -225,6 +218,9 @@ export async function createPaymentIntentForReservation(
   if (!funnel || priceCents == null || !currency) {
     return { ok: false, error: "unavailable" }
   }
+  if (currency.toUpperCase() !== "EUR") {
+    return { ok: false, error: "unavailable" }
+  }
 
   const { memberId, guestEmail } = reservationBookabilityTargets({
     reservationUserId: reservation.userId,
@@ -248,9 +244,9 @@ export async function createPaymentIntentForReservation(
     return { ok: false, error: "unavailable" }
   }
 
-  if (reservation.stripePaymentIntentId) {
-    return reuseExistingIntent(
-      reservation.stripePaymentIntentId,
+  if (reservation.stripeCheckoutSessionId) {
+    return reuseExistingCheckoutSession(
+      reservation.stripeCheckoutSessionId,
       publishableKey
     )
   }
@@ -277,7 +273,15 @@ export async function createPaymentIntentForReservation(
   }
   let bookingId = existing?.bookingId ?? randomUUID()
   let paymentId = existing?.paymentId ?? randomUUID()
-  const idempotencyKey = paymentIntentIdempotencyKey(reservation.id)
+  const idempotencyKey = checkoutSessionIdempotencyKey(reservation.id)
+  const returnUrl = input.returnUrl?.trim()
+  if (!returnUrl) {
+    return { ok: false, error: "unavailable" }
+  }
+  const guest = funnel.guest
+  if (!guest?.email || !guest.name) {
+    return { ok: false, error: "unavailable" }
+  }
   const buyerKind = isClinicSaaS({ entitlements }) ? "clinic" : "marketplace"
   const fee = computeApplicationFee({
     amountCents: priceCents,
@@ -342,14 +346,32 @@ export async function createPaymentIntentForReservation(
     }
   }
 
-  let intent
+  let customerId: string
+  let serviceName: string
   try {
-    intent = await createBookingPaymentIntent({
+    ;[customerId, serviceName] = await Promise.all([
+      findOrCreateBookingCustomer({
+        name: guest.name,
+        email: guest.email,
+        phone: guest.phone,
+      }),
+      loadEventTypeName(reservation.orgId, reservation.eventTypeId),
+    ])
+  } catch (err) {
+    console.error("[payments/intent] customer/offer load failed", err)
+    return { ok: false, error: "unavailable" }
+  }
+
+  let session
+  try {
+    session = await createBookingPaymentIntent({
       amountCents: priceCents,
-      currency,
+      serviceName,
       bookingId,
       reservationId: reservation.id,
       expertOrgId: reservation.orgId,
+      customerId,
+      returnUrl,
       idempotencyKey,
     })
   } catch (err) {
@@ -357,7 +379,7 @@ export async function createPaymentIntentForReservation(
     return { ok: false, error: "unavailable" }
   }
 
-  if (!intent.client_secret) {
+  if (!session.client_secret) {
     return { ok: false, error: "unavailable" }
   }
 
@@ -365,16 +387,22 @@ export async function createPaymentIntentForReservation(
     await withAudit(
       { orgId: reservation.orgId, actorUserId: input.sessionUserId ?? null },
       async (tx, ctx) => {
-        await bindPaymentIntent(tx, {
+        await bindCheckoutSession(tx, {
           reservationId: reservation.id,
           bookingId,
-          paymentIntentId: intent.id,
+          checkoutSessionId: session.id,
+          paymentIntentId: session.payment_intent,
+          customerId,
         })
         await ctx.emit({
           entity: "booking_payment",
           action: "updated",
           entityId: paymentId,
-          payload: { paymentIntentId: intent.id, status: "requires_payment" },
+          payload: {
+            checkoutSessionId: session.id,
+            paymentIntentId: session.payment_intent,
+            status: "requires_payment",
+          },
         })
       }
     )
@@ -385,32 +413,30 @@ export async function createPaymentIntentForReservation(
 
   return {
     ok: true,
-    clientSecret: intent.client_secret,
-    paymentIntentId: intent.id,
+    clientSecret: session.client_secret,
+    checkoutSessionId: session.id,
+    paymentIntentId: session.payment_intent,
     bookingId,
     publishableKey,
   }
 }
 
-async function reuseExistingIntent(
-  paymentIntentId: string,
+async function reuseExistingCheckoutSession(
+  checkoutSessionId: string,
   publishableKey: string
 ): Promise<CreatePaymentIntentForReservationResult> {
   try {
-    const intent = await stripe().paymentIntents.retrieve(paymentIntentId)
-    const bookingId = intent.metadata.bookingId
-    const reusable =
-      intent.status === "requires_payment_method" ||
-      intent.status === "requires_confirmation" ||
-      intent.status === "requires_action" ||
-      intent.status === "processing"
-    if (!intent.client_secret || !bookingId || !reusable) {
+    const session = await stripe().checkout.sessions.retrieve(checkoutSessionId)
+    const bookingId =
+      session.metadata?.bookingId ?? session.metadata?.eleva_booking_id
+    if (session.status !== "open" || !session.client_secret || !bookingId) {
       return { ok: false, error: "unavailable" }
     }
     return {
       ok: true,
-      clientSecret: intent.client_secret,
-      paymentIntentId: intent.id,
+      clientSecret: session.client_secret,
+      checkoutSessionId: session.id,
+      paymentIntentId: stripeObjectId(session.payment_intent),
       bookingId,
       publishableKey,
     }
@@ -606,32 +632,56 @@ async function insertPendingBooking(
   })
 }
 
-async function bindPaymentIntent(
+async function loadEventTypeName(orgId: string, eventTypeId: string) {
+  return withOrgContext(orgId, async (tx) => {
+    const [row] = await tx
+      .select({ title: main.eventTypes.title })
+      .from(main.eventTypes)
+      .where(eq(main.eventTypes.id, eventTypeId))
+      .limit(1)
+    return row?.title.en?.trim() || "Session"
+  })
+}
+
+async function bindCheckoutSession(
   tx: Tx,
   input: {
     reservationId: string
     bookingId: string
-    paymentIntentId: string
+    checkoutSessionId: string
+    paymentIntentId: string | null
+    customerId: string
   }
 ) {
   await tx
     .update(main.slotReservations)
     .set({
-      stripePaymentIntentId: input.paymentIntentId,
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      ...(input.paymentIntentId
+        ? { stripePaymentIntentId: input.paymentIntentId }
+        : {}),
       funnel: sql`"funnel" - 'guest'`,
     })
     .where(eq(main.slotReservations.id, input.reservationId))
   await tx
     .update(main.bookings)
     .set({
-      stripePaymentIntentId: input.paymentIntentId,
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      stripeCustomerId: input.customerId,
+      ...(input.paymentIntentId
+        ? { stripePaymentIntentId: input.paymentIntentId }
+        : {}),
       status: "pending_payment",
     })
     .where(eq(main.bookings.id, input.bookingId))
   await tx
     .update(main.bookingPayments)
     .set({
-      stripePaymentIntentId: input.paymentIntentId,
+      stripeCheckoutSessionId: input.checkoutSessionId,
+      stripeCustomerId: input.customerId,
+      ...(input.paymentIntentId
+        ? { stripePaymentIntentId: input.paymentIntentId }
+        : {}),
       status: "requires_payment",
     })
     .where(eq(main.bookingPayments.bookingId, input.bookingId))
