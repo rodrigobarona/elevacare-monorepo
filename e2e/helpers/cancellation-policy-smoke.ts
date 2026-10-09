@@ -153,26 +153,6 @@ function leadWindowSkipReason(
   return `flexible needs ≥25h lead (${slot.leadHours.toFixed(1)}h @ ${slot.startsAt})`
 }
 
-async function paymentIntentIdFromCheckoutSession(
-  checkoutSessionId: string
-): Promise<string | null> {
-  const key = requireStripeTestSecretKey()
-  const response = await fetch(
-    `https://api.stripe.com/v1/checkout/sessions/${checkoutSessionId}`,
-    { headers: { Authorization: `Bearer ${key}` } }
-  )
-  const body = (await response.json()) as {
-    payment_intent?: string | { id?: string } | null
-  }
-  if (!response.ok) {
-    throw new Error(
-      `Stripe session retrieve failed (${response.status}): ${JSON.stringify(body)}`
-    )
-  }
-  if (typeof body.payment_intent === "string") return body.payment_intent
-  return body.payment_intent?.id ?? null
-}
-
 async function confirmStripePaymentIntent(
   paymentIntentId: string
 ): Promise<void> {
@@ -323,28 +303,22 @@ export async function runPolicySmokeCase(
     data: {
       reservationId: reserved!.reservationId,
       reservationToken: reserved!.reservationToken,
-      returnUrl: "http://127.0.0.1:3000/booking/done",
     },
   })
   expect([200, 201]).toContain(intent.status())
   const intentBody = (await intent.json()) as {
-    paymentIntentId: string | null
-    checkoutSessionId: string
+    paymentIntentId: string
     bookingId: string
   }
-  const paymentIntentId =
-    intentBody.paymentIntentId ??
-    (await paymentIntentIdFromCheckoutSession(intentBody.checkoutSessionId))
-  expect(paymentIntentId).toBeTruthy()
 
-  await confirmStripePaymentIntent(paymentIntentId!)
+  await confirmStripePaymentIntent(intentBody.paymentIntentId)
 
   const confirm = await request.post(`${apiUrl}/bookings/confirm`, {
     headers: authHeaders(),
     data: {
       reservationId: reserved!.reservationId,
       reservationToken: reserved!.reservationToken,
-      paymentIntentId,
+      paymentIntentId: intentBody.paymentIntentId,
     },
   })
   expect(confirm.status(), await confirm.text()).toBe(201)

@@ -6,7 +6,6 @@ export type ExpiredReservationCandidate = {
   id: string
   orgId: string
   stripePaymentIntentId: string | null
-  stripeCheckoutSessionId: string | null
   /** Oldest `intent_pending` payment row, when tx B never bound an intent. */
   intentPendingSince: Date | null
 }
@@ -27,7 +26,6 @@ export async function listExpiredReservations(input: {
         id: main.slotReservations.id,
         orgId: main.slotReservations.orgId,
         stripePaymentIntentId: main.slotReservations.stripePaymentIntentId,
-        stripeCheckoutSessionId: main.slotReservations.stripeCheckoutSessionId,
         intentPendingSince: sql<Date | null>`(${tx
           .select({ since: min(main.bookingPayments.createdAt) })
           .from(main.bookingPayments)

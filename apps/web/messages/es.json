@@ -232,8 +232,6 @@
       "hold": "La reserva caduca en {time}",
       "expired": "Esta reserva ha terminado. Elige otra hora para continuar.",
       "restart": "Elegir otra hora",
-      "promo": "Código promocional (opcional)",
-      "promoHint": "Stripe aplica un código válido a este pago. Déjalo en blanco para pagar el precio completo.",
       "pay": "Pagar {price}",
       "processing": "Confirmando el pago…",
       "failed": "No se pudo completar el pago. Inténtalo de nuevo.",

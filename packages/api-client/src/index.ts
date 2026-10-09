@@ -1636,13 +1636,11 @@ export type PublicBookingLinkResponse = z.infer<
 export const CreatePaymentIntentRequestSchema = z.object({
   reservationId: z.string().uuid(),
   reservationToken: z.string().min(16).max(128),
-  returnUrl: z.string().url().optional(),
 })
 
 export const CreatePaymentIntentResponseSchema = z.object({
   clientSecret: z.string().min(1),
-  checkoutSessionId: z.string().min(1),
-  paymentIntentId: z.string().min(1).nullable(),
+  paymentIntentId: z.string().min(1),
   bookingId: z.string().uuid(),
   publishableKey: z.string().min(1),
 })

@@ -1,7 +1,26 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+const create = vi.fn()
+
+vi.mock("./client", () => ({
+  stripe: () => ({ paymentIntents: { create } }),
+}))
+
+const envState: {
+  STRIPE_PMC_BOOKING: string | undefined
+  STRIPE_PUBLISHABLE_KEY: string
+} = {
+  STRIPE_PMC_BOOKING: "pmc_test_booking",
+  STRIPE_PUBLISHABLE_KEY: "pk_test_booking",
+}
+
+vi.mock("@eleva/config/env", () => ({
+  env: () => envState,
+}))
 
 const {
   authorizeReservationAccess,
+  createBookingPaymentIntent,
   hashReservationToken,
   parseReservationFunnel,
   paymentIntentIdempotencyKey,
@@ -17,10 +36,10 @@ describe("hashReservationToken", () => {
 })
 
 describe("paymentIntentIdempotencyKey", () => {
-  it("is the Checkout Session key per reservation id", () => {
+  it("is stable per reservation id", () => {
     expect(
       paymentIntentIdempotencyKey("22222222-2222-4222-8222-222222222222")
-    ).toBe("cs:22222222-2222-4222-8222-222222222222")
+    ).toBe("pi:22222222-2222-4222-8222-222222222222")
   })
 })
 
@@ -144,5 +163,76 @@ describe("parseReservationFunnel", () => {
     }
     const incomplete = { ...snapshot, timezone: undefined }
     expect(parseReservationFunnel(incomplete).success).toBe(false)
+  })
+})
+
+describe("createBookingPaymentIntent", () => {
+  beforeEach(() => {
+    create.mockReset()
+  })
+
+  it("creates a platform charge with PMC and no transfer_data", async () => {
+    create.mockResolvedValue({ id: "pi_1", client_secret: "secret" })
+    await createBookingPaymentIntent({
+      amountCents: 4500,
+      currency: "EUR",
+      bookingId: "11111111-1111-4111-8111-111111111111",
+      reservationId: "22222222-2222-4222-8222-222222222222",
+      expertOrgId: "33333333-3333-4333-8333-333333333333",
+      idempotencyKey: "pi:22222222-2222-4222-8222-222222222222",
+    })
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 4500,
+        currency: "eur",
+        automatic_payment_methods: { enabled: true },
+        payment_method_configuration: "pmc_test_booking",
+        transfer_group: "11111111-1111-4111-8111-111111111111",
+        metadata: expect.objectContaining({
+          bookingId: "11111111-1111-4111-8111-111111111111",
+          reservationId: "22222222-2222-4222-8222-222222222222",
+          expertOrgId: "33333333-3333-4333-8333-333333333333",
+        }),
+      }),
+      { idempotencyKey: "pi:22222222-2222-4222-8222-222222222222" }
+    )
+    const body = create.mock.calls[0]?.[0] as Record<string, unknown>
+    expect(body).not.toHaveProperty("payment_method_types")
+    expect(body).not.toHaveProperty("transfer_data")
+    expect(body).not.toHaveProperty("application_fee_amount")
+  })
+
+  it("refuses to create when STRIPE_PMC_BOOKING is missing", async () => {
+    envState.STRIPE_PMC_BOOKING = undefined
+    try {
+      await expect(
+        createBookingPaymentIntent({
+          amountCents: 4500,
+          currency: "EUR",
+          bookingId: "11111111-1111-4111-8111-111111111111",
+          reservationId: "22222222-2222-4222-8222-222222222222",
+          expertOrgId: "33333333-3333-4333-8333-333333333333",
+          idempotencyKey: "pi:22222222-2222-4222-8222-222222222222",
+        })
+      ).rejects.toThrow("STRIPE_PMC_BOOKING is not configured")
+    } finally {
+      envState.STRIPE_PMC_BOOKING = "pmc_test_booking"
+    }
+  })
+
+  it("passes the snapshot currency through and does not hardcode EUR", async () => {
+    create.mockResolvedValue({ id: "pi_2", client_secret: "secret" })
+    await createBookingPaymentIntent({
+      amountCents: 4500,
+      currency: "CHF",
+      bookingId: "11111111-1111-4111-8111-111111111111",
+      reservationId: "22222222-2222-4222-8222-222222222222",
+      expertOrgId: "33333333-3333-4333-8333-333333333333",
+      idempotencyKey: "pi:22222222-2222-4222-8222-222222222222",
+    })
+    expect(create).toHaveBeenCalledWith(
+      expect.objectContaining({ currency: "chf" }),
+      expect.anything()
+    )
   })
 })

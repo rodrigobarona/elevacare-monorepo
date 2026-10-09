@@ -232,8 +232,6 @@
       "hold": "A reserva expira em {time}",
       "expired": "Esta reserva terminou. Escolha um novo horário para continuar.",
       "restart": "Escolher outro horário",
-      "promo": "Código promocional (opcional)",
-      "promoHint": "O Stripe aplica um código válido a este pagamento. Deixe em branco para pagar o preço completo.",
       "pay": "Pagar {price}",
       "processing": "A confirmar o pagamento…",
       "failed": "Não foi possível concluir o pagamento. Tente novamente.",

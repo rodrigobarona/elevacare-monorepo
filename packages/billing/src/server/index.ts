@@ -50,10 +50,6 @@ export type {
 } from "./provisioning"
 export { processStripeEvent, TerminalError } from "./webhook"
 export {
-  checkoutSessionIdempotencyKey,
-  isBookingPaymentCheckoutSession,
-} from "./booking-checkout-session"
-export {
   createPaymentIntentForReservation,
   retrieveBookingPaymentIntent,
 } from "./payments"

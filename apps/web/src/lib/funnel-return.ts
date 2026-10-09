@@ -9,7 +9,6 @@ export type FunnelReturnSnapshot = {
   }
   payment: {
     clientSecret: string
-    checkoutSessionId: string
     paymentIntentId: string
     bookingId: string
     publishableKey: string
@@ -34,13 +33,11 @@ export type FunnelRedirectStatus = "succeeded" | "processing" | "failed"
 export type FunnelRedirect = {
   status: FunnelRedirectStatus
   paymentIntentId: string | null
-  checkoutSessionId: string | null
 }
 
 type RestoreMemo = {
   status: FunnelRedirectStatus
   paymentIntentId: string
-  checkoutSessionId: string | null
   snapshot: FunnelReturnSnapshot
 }
 
@@ -60,16 +57,12 @@ function parseRedirectStatusValue(
 export function parseRedirect(search: string): FunnelRedirect | null {
   const query = search.startsWith("?") ? search.slice(1) : search
   const params = new URLSearchParams(query)
-  const checkoutSessionId = params.get("session_id")
-  const status =
-    parseRedirectStatusValue(params.get("redirect_status")) ??
-    (checkoutSessionId ? "succeeded" : null)
+  const status = parseRedirectStatusValue(params.get("redirect_status"))
   if (!status) return null
   const paymentIntentId = params.get("payment_intent")
   return {
     status,
     paymentIntentId: paymentIntentId ? paymentIntentId : null,
-    checkoutSessionId: checkoutSessionId ? checkoutSessionId : null,
   }
 }
 
@@ -85,11 +78,7 @@ function readStoredRedirect(): FunnelRedirect | null {
     if (!stored) return null
     const storedStatus = parseRedirectStatusValue(stored)
     if (storedStatus) {
-      return {
-        status: storedStatus,
-        paymentIntentId: null,
-        checkoutSessionId: null,
-      }
+      return { status: storedStatus, paymentIntentId: null }
     }
     const parsed = JSON.parse(stored) as Partial<FunnelRedirect>
     const status = parseRedirectStatusValue(parsed.status ?? null)
@@ -97,7 +86,6 @@ function readStoredRedirect(): FunnelRedirect | null {
     return {
       status,
       paymentIntentId: parsed.paymentIntentId ?? null,
-      checkoutSessionId: parsed.checkoutSessionId ?? null,
     }
   } catch {
     return null
@@ -151,26 +139,13 @@ export function releaseConfirmLock(key: string): void {
   confirmLocks.delete(key)
 }
 
-function snapshotMatchesRedirect(
+function snapshotMatchesIntent(
   snapshot: FunnelReturnSnapshot,
-  redirect: Pick<FunnelRedirect, "paymentIntentId" | "checkoutSessionId">
-): boolean {
-  if (
-    redirect.checkoutSessionId &&
-    snapshot.payment.checkoutSessionId === redirect.checkoutSessionId
-  ) {
-    return true
-  }
-  if (
-    redirect.paymentIntentId &&
-    snapshot.payment.paymentIntentId === redirect.paymentIntentId
-  ) {
-    return true
-  }
-  return Boolean(
-    redirect.paymentIntentId &&
-    !snapshot.payment.paymentIntentId &&
-    snapshot.payment.checkoutSessionId
+  paymentIntentId: string | null
+): paymentIntentId is string {
+  return (
+    Boolean(paymentIntentId) &&
+    snapshot.payment.paymentIntentId === paymentIntentId
   )
 }
 
@@ -184,31 +159,15 @@ export function takeFunnelRestore(
   const redirect = captureRedirect(search)
   const source = redirect ?? restoreMemo
   if (!source) return null
-  const { status, paymentIntentId, checkoutSessionId } = source
-  const loaded =
+  const { status, paymentIntentId } = source
+  const snapshot =
     loadFunnelReturn({
       allowExpired: status === "succeeded" || status === "processing",
     }) ?? restoreMemo?.snapshot
-  if (
-    !loaded ||
-    !snapshotMatchesRedirect(loaded, { paymentIntentId, checkoutSessionId })
-  ) {
+  if (!snapshot || !snapshotMatchesIntent(snapshot, paymentIntentId)) {
     return null
   }
-  const snapshot =
-    paymentIntentId && !loaded.payment.paymentIntentId
-      ? {
-          ...loaded,
-          payment: { ...loaded.payment, paymentIntentId },
-        }
-      : loaded
-  restoreMemo = {
-    status,
-    paymentIntentId: paymentIntentId ?? snapshot.payment.paymentIntentId,
-    checkoutSessionId:
-      checkoutSessionId ?? snapshot.payment.checkoutSessionId ?? null,
-    snapshot,
-  }
+  restoreMemo = { status, paymentIntentId, snapshot }
   return restoreMemo
 }
 
@@ -281,6 +240,5 @@ export function bookingReturnUrl(href = window.location.href): string {
   url.searchParams.delete("payment_intent")
   url.searchParams.delete("payment_intent_client_secret")
   url.searchParams.delete("redirect_status")
-  url.searchParams.delete("session_id")
   return url.toString()
 }

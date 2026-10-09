@@ -1,15 +1,11 @@
 import type { Appearance } from "@stripe/stripe-js"
 
 export function elevaPaymentElementAppearance(
-  theme: "light" | "dark" = "light",
-  options: { disableAnimations?: boolean } = {}
+  theme: "light" | "dark" = "light"
 ): Appearance {
   const dark = theme === "dark"
   return {
     theme: dark ? "night" : "stripe",
-    labels: "above",
-    inputs: "spaced",
-    disableAnimations: options.disableAnimations,
     variables: {
       fontFamily: '"DM Sans", system-ui, -apple-system, sans-serif',
       fontSizeBase: "16px",

@@ -32,26 +32,6 @@ Each entry should include:
 
 ## Current Entries
 
-### 2026-10-09: Member booking pay uses Checkout Sessions Elements
-
-- Decision: Paid member bookings create a Checkout Session
-  (`mode: payment`, `ui_mode: elements`), not a PaymentIntent. Stripe Tax,
-  promotion codes, billing address, tax ID, Adaptive Pricing, and the
-  receipt stay on the session. EUR remains the settlement currency (D-02);
-  presentment is recorded separately. Separate charges and transfers stay
-  (`payment_intent_data.transfer_group` = booking id; no `transfer_data` /
-  `application_fee_amount`). The details form still collects name, email,
-  phone, and consents so free sessions never open Stripe. Pay-step confirm
-  is `checkout.confirm()`. `checkout.session.completed` stores Customer,
-  tax ID, billing address, and discount; booking confirm stays on
-  `payment_intent.succeeded` while the reservation is active. Hold expiry
-  expires the Checkout Session. New bookings only.
-- Owner: engineering
-- Status: `active`
-- Related: Phase 06 payments, D-02 EUR, booking funnel
-- Next review: after a paid booking with promo + tax ID + non-EUR
-  presentment on the grant/pay path.
-
 ### 2026-10-08: Guest confirm sends one booking mail; magic-link only on sign-in
 
 - Decision: After a guest books, `guest-activation` still provisions an

@@ -3,15 +3,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest"
 const retrieve = vi.fn()
 const cancel = vi.fn()
 const search = vi.fn()
-const retrieveSession = vi.fn()
-const expireSession = vi.fn()
 
 vi.mock("./client", () => ({
   stripe: () => ({
     paymentIntents: { retrieve, cancel, search },
-    checkout: {
-      sessions: { retrieve: retrieveSession, expire: expireSession },
-    },
   }),
 }))
 
@@ -85,8 +80,6 @@ describe("settleExpiredReservationIntent", () => {
     retrieve.mockReset()
     cancel.mockReset()
     search.mockReset()
-    retrieveSession.mockReset()
-    expireSession.mockReset()
   })
 
   it("keeps an MB WAY hold whose intent is processing", async () => {
@@ -181,58 +174,6 @@ describe("settleExpiredReservationIntent", () => {
     ).resolves.toEqual({ action: "release", cancelledIntentIds: [] })
     expect(retrieve).not.toHaveBeenCalled()
     expect(search).not.toHaveBeenCalled()
-  })
-
-  it("keeps a paid Checkout Session instead of expiring it", async () => {
-    retrieveSession.mockResolvedValue({
-      id: "cs_paid",
-      status: "complete",
-      payment_status: "paid",
-      payment_intent: "pi_from_cs",
-    })
-
-    await expect(
-      settleExpiredReservationIntent({
-        reservationId,
-        paymentIntentId: null,
-        checkoutSessionId: "cs_paid",
-        searchByReservation: false,
-        searchMissIsFinal: true,
-      })
-    ).resolves.toEqual({
-      action: "keep",
-      paymentIntentId: "pi_from_cs",
-      reason: "checkout_paid",
-    })
-    expect(expireSession).not.toHaveBeenCalled()
-    expect(cancel).not.toHaveBeenCalled()
-  })
-
-  it("expires an open Checkout Session after cancelling the idle intent", async () => {
-    retrieveSession.mockResolvedValue({
-      id: "cs_open",
-      status: "open",
-      payment_status: "unpaid",
-      payment_intent: "pi_idle",
-    })
-    retrieve.mockResolvedValue({
-      id: "pi_idle",
-      status: "requires_payment_method",
-    })
-    cancel.mockResolvedValue({ status: "canceled" })
-    expireSession.mockResolvedValue({ status: "expired" })
-
-    await expect(
-      settleExpiredReservationIntent({
-        reservationId,
-        paymentIntentId: "pi_idle",
-        checkoutSessionId: "cs_open",
-        searchByReservation: false,
-        searchMissIsFinal: true,
-      })
-    ).resolves.toEqual({ action: "release", cancelledIntentIds: ["pi_idle"] })
-    expect(cancel).toHaveBeenCalledWith("pi_idle")
-    expect(expireSession).toHaveBeenCalledWith("cs_open")
   })
 
   it("keeps the hold when the intent moved on before cancel", async () => {
