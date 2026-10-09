@@ -114,14 +114,21 @@ function generateIcs(
     lines.push(`DESCRIPTION:${escapeText(event.description)}`)
   }
 
+  let urlHref: string | undefined
   if (event.url) {
     try {
-      lines.push(`URL:${new URL(event.url).href}`)
+      urlHref = new URL(event.url).href
     } catch {
       // Invalid URL: omit the property instead of failing the invite.
     }
   }
 
+  if (urlHref || event.location) {
+    lines.push("CLASS:PRIVATE")
+  }
+  if (urlHref) {
+    lines.push(`URL:${urlHref}`)
+  }
   if (event.location) {
     lines.push(`LOCATION:${escapeText(event.location)}`)
   }

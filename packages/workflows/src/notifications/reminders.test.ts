@@ -333,6 +333,8 @@ describe("deliverBookingReminder", () => {
     memberName: "Ada",
     guestEmail: null,
     guestName: null,
+    guestPhone: null,
+    memberPhone: null,
     expertUserId: "00000000-0000-4000-8000-000000000004",
     expertEmail: "ana@example.com",
     expertName: "Ana",
@@ -340,6 +342,10 @@ describe("deliverBookingReminder", () => {
     scheduleRevision: 0,
     cancellationPolicy: "flexible" as const,
     currency: "EUR",
+    priceCents: 6000,
+    language: "en",
+    memberCountry: "PT",
+    locationName: null,
   }
 
   it("sends through sendBookingNotification when still confirmed", async () => {

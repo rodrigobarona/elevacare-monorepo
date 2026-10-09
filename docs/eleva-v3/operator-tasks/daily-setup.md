@@ -45,8 +45,8 @@ evidence. Do not point production at a HIPAA domain until D-07.
 ## Exit-gate leftover (Eleva join pages)
 
 The 09.0 probe used Daily Prebuilt (`elevacare.daily.co/…?t=`). The
-product proof is two browsers on Eleva pages: signed-in
-`/{orgSlug}/sessions/{bookingId}/join` and the public grant URL from
+product proof is two browsers on Eleva pages: signed-in expert
+`/expert/sessions/{bookingId}/join` and the public member grant URL from
 email/ICS (`/join/{bookingId}?g=`). Never Daily `?t=`.
 
 ## Join URLs

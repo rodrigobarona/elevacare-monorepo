@@ -43,6 +43,7 @@
     "joinSoon": "O vídeo usa Daily standard (não é HIPAA). Entrar activa-se quando a sala estiver pronta. A gravação está desligada.",
     "joinNotOnline": "Esta sessão não é uma videochamada. O seu especialista encontra-o como combinado.",
     "joinMissingGrant": "Este link de entrada não tem o convite. Abra o link do email ou do convite de calendário.",
+    "joinInvalidGrant": "Este link de entrada não é válido. Abra o link do email ou do convite de calendário.",
     "call": {
       "notHipaa": "Esta chamada usa Daily standard. Não é HIPAA. A gravação está desligada.",
       "prejoinTitle": "Confirme a câmara e o microfone",

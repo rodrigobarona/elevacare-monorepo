@@ -16,9 +16,22 @@ describe("generateIcsRequest", () => {
       organizer: { name: "Ana", email: "ana@example.test" },
     })
     const unfolded = ics.replace(/\r\n /g, "")
+    expect(unfolded).toContain("CLASS:PRIVATE")
     expect(unfolded).toContain(`URL:${joinHref}`)
     expect(unfolded).toContain(`LOCATION:${joinHref}`)
     expect(ics).not.toContain("t=")
+  })
+
+  it("omits CLASS:PRIVATE when the event has no join grant metadata", () => {
+    const ics = generateIcsRequest({
+      uid: "11111111-1111-4111-8111-111111111111",
+      summary: "Eleva session with Ana",
+      startTime: new Date("2026-10-08T10:00:00.000Z"),
+      endTime: new Date("2026-10-08T10:50:00.000Z"),
+      timezone: "Europe/Lisbon",
+      organizer: { name: "Ana", email: "ana@example.test" },
+    })
+    expect(ics).not.toContain("CLASS:")
   })
 
   it("omits URL when the value is not a valid URI", () => {
@@ -32,5 +45,6 @@ describe("generateIcsRequest", () => {
       organizer: { name: "Ana", email: "ana@example.test" },
     })
     expect(ics).not.toContain("URL:")
+    expect(ics).not.toContain("CLASS:")
   })
 })

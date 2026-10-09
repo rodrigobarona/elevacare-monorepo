@@ -43,6 +43,7 @@
     "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on when the room is ready. Recording is off.",
     "joinNotOnline": "This session is not a video call. Your expert will meet you as planned.",
     "joinMissingGrant": "This join link is missing its invite. Open the link from your email or calendar invite.",
+    "joinInvalidGrant": "This join link is not valid. Open the link from your email or calendar invite.",
     "call": {
       "notHipaa": "This call uses standard Daily. It is not HIPAA. Recording is off.",
       "prejoinTitle": "Check your camera and microphone",
