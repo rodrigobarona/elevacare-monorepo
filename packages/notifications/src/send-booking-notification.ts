@@ -124,8 +124,10 @@ export type LoadedBooking = {
   memberUserId: string | null
   memberEmail: string | null
   memberName: string | null
+  memberPhone: string | null
   guestEmail: string | null
   guestName: string | null
+  guestPhone: string | null
   expertUserId: string
   expertEmail: string
   expertName: string
@@ -133,6 +135,10 @@ export type LoadedBooking = {
   scheduleRevision: number
   cancellationPolicy: CancellationPolicy
   currency: string
+  priceCents: number
+  language: string | null
+  memberCountry: string | null
+  locationName: string | null
 }
 
 export async function sendBookingNotification(
@@ -181,6 +187,10 @@ export async function sendBookingNotification(
     sessionJoinHref(event.type, booking, "member", gateway, mint),
     sessionJoinHref(event.type, booking, "expert", gateway, mint),
   ])
+  const cancellationPolicyName = describeCancellationPolicy(
+    booking.cancellationPolicy,
+    locale
+  ).name
   const htmlInput = {
     kind: event.type,
     memberName: memberFirst,
@@ -189,10 +199,7 @@ export async function sendBookingNotification(
     previousDate,
     sessionMode: booking.sessionMode,
     locale,
-    cancellationPolicyName: describeCancellationPolicy(
-      booking.cancellationPolicy,
-      locale
-    ).name,
+    cancellationPolicyName,
     refundAmount:
       parsed.refundCents === undefined
         ? undefined
@@ -201,14 +208,28 @@ export async function sendBookingNotification(
   const memberHtml = await renderBookingHtml({
     ...htmlInput,
     joinHref: memberJoinHref,
+    activateHref: memberActivateHref(event.type, booking, gateway),
   })
-  const expertHtml =
-    expertJoinHref === memberJoinHref
-      ? memberHtml
-      : await renderBookingHtml({
-          ...htmlInput,
-          joinHref: expertJoinHref,
-        })
+  const expertHtml = await renderBookingHtml({
+    ...htmlInput,
+    joinHref: expertJoinHref,
+    ...(event.type === "booking.confirmed"
+      ? {
+          audience: "expert" as const,
+          greetingName: expertFirst,
+          memberName: booking.memberName ?? booking.guestName ?? memberFirst,
+          memberEmail: booking.memberEmail ?? booking.guestEmail ?? undefined,
+          memberPhone: booking.guestPhone ?? booking.memberPhone ?? undefined,
+          duration: formatDuration(booking.startsAt, booking.endsAt, locale),
+          timezone: booking.timezone,
+          language: formatLanguage(booking.language, locale),
+          country: formatCountry(booking.memberCountry, locale),
+          price: formatMoney(booking.priceCents, booking.currency, locale),
+          location: booking.locationName ?? undefined,
+          calendarHref: `${gateway.replace(/\/$/, "")}/${booking.orgSlug}/team/calendar`,
+        }
+      : {}),
+  })
   const title = titleForKind(event.type, t.booking)
   const memberBody = memberSessionBody(locale, expertFirst, formattedDate)
   const expertSubject = subjectForKind(
@@ -537,6 +558,18 @@ async function renderBookingHtml(input: {
   cancellationPolicyName: string
   refundAmount?: string
   joinHref?: string
+  audience?: "member" | "expert"
+  greetingName?: string
+  activateHref?: string
+  calendarHref?: string
+  memberEmail?: string
+  memberPhone?: string
+  duration?: string
+  timezone?: string
+  language?: string
+  country?: string
+  price?: string
+  location?: string
 }): Promise<string> {
   switch (input.kind) {
     case "booking.confirmed":
@@ -547,6 +580,19 @@ async function renderBookingHtml(input: {
         sessionMode: input.sessionMode,
         locale: input.locale,
         joinHref: input.joinHref,
+        audience: input.audience,
+        greetingName: input.greetingName,
+        activateHref: input.activateHref,
+        calendarHref: input.calendarHref,
+        memberEmail: input.memberEmail,
+        memberPhone: input.memberPhone,
+        duration: input.duration,
+        timezone: input.timezone,
+        language: input.language,
+        country: input.country,
+        price: input.price,
+        location: input.location,
+        cancellationPolicyName: input.cancellationPolicyName,
       })
     case "booking.cancelled":
       return renderBookingCancelled({
@@ -637,6 +683,69 @@ function formatMoney(cents: number, currency: string, locale: EmailLocale) {
   }).format(cents / 100)
 }
 
+function formatDuration(
+  startsAt: Date,
+  endsAt: Date,
+  locale: EmailLocale
+): string {
+  const minutes = Math.max(
+    1,
+    Math.round((endsAt.getTime() - startsAt.getTime()) / 60_000)
+  )
+  return new Intl.NumberFormat(LOCALE_MAP[locale], {
+    style: "unit",
+    unit: "minute",
+    unitDisplay: "long",
+  }).format(minutes)
+}
+
+function formatLanguage(
+  code: string | null,
+  locale: EmailLocale
+): string | undefined {
+  if (!code) return undefined
+  try {
+    return (
+      new Intl.DisplayNames([LOCALE_MAP[locale]], { type: "language" }).of(
+        code
+      ) ?? code
+    )
+  } catch {
+    return code
+  }
+}
+
+function formatCountry(
+  code: string | null,
+  locale: EmailLocale
+): string | undefined {
+  if (!code) return undefined
+  try {
+    return (
+      new Intl.DisplayNames([LOCALE_MAP[locale]], { type: "region" }).of(
+        code
+      ) ?? code
+    )
+  } catch {
+    return code
+  }
+}
+
+function memberActivateHref(
+  kind: BookingSendKind,
+  booking: LoadedBooking,
+  gateway: string
+): string | undefined {
+  if (kind !== "booking.confirmed") return undefined
+  if (booking.memberUserId || !booking.guestEmail) return undefined
+  const params = new URLSearchParams({
+    email: booking.guestEmail,
+    ...(booking.guestName ? { name: booking.guestName } : {}),
+    ...(booking.guestPhone ? { phone: booking.guestPhone } : {}),
+  })
+  return `${gateway.replace(/\/$/, "")}/signup?${params.toString()}`
+}
+
 export async function loadBookingForNotification(
   bookingId: string
 ): Promise<LoadedBooking | null> {
@@ -655,11 +764,16 @@ export async function loadBookingForNotification(
         memberUserId: main.bookings.memberUserId,
         guestEmail: main.bookings.guestEmail,
         guestName: main.bookings.guestName,
+        guestPhone: main.bookings.guestPhone,
         expertUserId: main.bookings.expertUserId,
         eventTypeName: main.eventTypes.title,
         scheduleRevision: main.bookings.scheduleRevision,
         cancellationPolicy: main.bookings.cancellationPolicy,
         currency: main.bookings.currency,
+        priceCents: main.bookings.priceCents,
+        language: main.bookings.language,
+        memberCountry: main.bookings.memberCountry,
+        locationName: main.expertPracticeLocations.name,
       })
       .from(main.bookings)
       .innerJoin(
@@ -669,6 +783,14 @@ export async function loadBookingForNotification(
       .innerJoin(
         auth.organization,
         eq(auth.organization.id, main.bookings.orgId)
+      )
+      .leftJoin(
+        main.eventTypeModes,
+        eq(main.eventTypeModes.id, main.bookings.eventTypeModeId)
+      )
+      .leftJoin(
+        main.expertPracticeLocations,
+        eq(main.expertPracticeLocations.id, main.eventTypeModes.locationId)
       )
       .where(eq(main.bookings.id, bookingId))
       .limit(1)
@@ -686,23 +808,27 @@ export async function loadBookingForNotification(
 
     let memberEmail: string | null = null
     let memberName: string | null = null
+    let memberPhone: string | null = null
     if (row.memberUserId) {
       const [member] = await tx
         .select({
           email: auth.user.email,
           name: auth.user.name,
+          phoneE164: auth.user.phoneE164,
         })
         .from(auth.user)
         .where(eq(auth.user.id, row.memberUserId))
         .limit(1)
       memberEmail = member?.email ?? null
       memberName = member?.name ?? null
+      memberPhone = member?.phoneE164 ?? null
     }
 
     return {
       ...row,
       memberEmail,
       memberName,
+      memberPhone,
       expertEmail: expert.email,
       expertName: expert.name,
     }

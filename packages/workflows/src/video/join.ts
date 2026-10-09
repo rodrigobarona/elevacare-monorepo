@@ -20,7 +20,10 @@ export type SessionJoinErrorCode =
 
 export class SessionJoinError extends Error {
   override readonly name = "SessionJoinError"
-  constructor(readonly code: SessionJoinErrorCode) {
+  constructor(
+    readonly code: SessionJoinErrorCode,
+    readonly details?: { startsAt?: string; opensAt?: string }
+  ) {
     super(code)
   }
 }
@@ -253,7 +256,14 @@ export async function joinSession(
     row.session.startsAt,
     row.session.endsAt
   )
-  if ("error" in window) throw new SessionJoinError(window.error)
+  if ("error" in window) {
+    throw new SessionJoinError("SESSION_NOT_OPEN", {
+      startsAt: row.session.startsAt.toISOString(),
+      opensAt: new Date(
+        row.session.startsAt.getTime() - JOIN_LEAD_MS
+      ).toISOString(),
+    })
+  }
 
   if (!row.session.dailyRoomName || !row.session.dailyRoomUrl) {
     throw new SessionJoinError("ROOM_NOT_READY")

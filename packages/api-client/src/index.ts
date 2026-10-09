@@ -195,6 +195,8 @@ export const ApiErrorSchema = z.object({
   issues: z.array(z.unknown()).optional(),
   message: z.string().optional(),
   retryAfter: z.number().optional(),
+  startsAt: z.string().datetime().optional(),
+  opensAt: z.string().datetime().optional(),
 })
 
 export type CompleteOnboardingRequest = z.infer<
@@ -548,6 +550,12 @@ export const JoinSessionResponseSchema = z.object({
   expiresAt: z.string().datetime(),
 })
 
+export const JoinSessionErrorSchema = z.object({
+  error: z.string(),
+  startsAt: z.string().datetime().optional(),
+  opensAt: z.string().datetime().optional(),
+})
+
 export const AddSessionParticipantRequestSchema = z.object({
   userId: z.string().uuid(),
   role: z.enum(["delegate", "supervisor"]),
@@ -616,6 +624,7 @@ export type CancelDeletionResponse = z.infer<
 >
 export type JoinSessionRequest = z.infer<typeof JoinSessionRequestSchema>
 export type JoinSessionResponse = z.infer<typeof JoinSessionResponseSchema>
+export type JoinSessionError = z.infer<typeof JoinSessionErrorSchema>
 export type AddSessionParticipantRequest = z.infer<
   typeof AddSessionParticipantRequestSchema
 >

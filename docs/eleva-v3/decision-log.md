@@ -32,6 +32,22 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Guest confirm sends one booking mail; magic-link only on sign-in
+
+- Decision: After a guest books, `guest-activation` still provisions an
+  unverified Better Auth user, a personal Space, `memberUserId`, and
+  re-keys consents. It does **not** send Better Auth's "Sign in to Eleva
+  Care" magic-link email. Join stays on the confirmation mail (grant +
+  `.ics`). Optional account creation is a durable `{GATEWAY}/signup?name=&email=`
+  CTA on member/guest `booking.confirmed` only — never a magic token in
+  that mail (tokens expire in minutes; people keep confirmation emails
+  for weeks). Magic-link is sent only when the member asks to sign in
+  (`/login`, `/signup`, or `POST /auth/sign-in/magic-link`).
+- Owner: engineering
+- Status: `active`
+- Related: Phase 09 guest join grant, thank-you UX
+- Next review: after guest book → inbox (one mail) + thank-you CTA check.
+
 ### 2026-10-08: Guest join via signed Eleva grant in email and ICS
 
 - Decision: Members can book without an account, so confirmation and

@@ -72,7 +72,7 @@
       "remote": "Especialista",
       "connecting": "Conectando…",
       "errors": {
-        "SESSION_NOT_OPEN": "Esta sesión aún no está abierta. Vuelve 15 minutos antes del inicio.",
+        "SESSION_NOT_OPEN": "Esta sesión aún no está abierta. Puedes unirte 15 minutos antes del inicio.",
         "SESSION_NOT_ACTIVE": "Esta sesión ya no está activa.",
         "NOT_A_PARTICIPANT": "No eres participante de esta sesión.",
         "ROOM_NOT_READY": "La sala de vídeo aún no está lista. Prueba en un momento.",

@@ -120,7 +120,10 @@ async function mintJoinResponse(
   } catch (err) {
     if (err instanceof SessionJoinError) {
       return secureJson(
-        { error: err.code },
+        {
+          error: err.code,
+          ...(err.code === "SESSION_NOT_OPEN" ? err.details : {}),
+        },
         { status: JOIN_STATUS[err.code], headers }
       )
     }

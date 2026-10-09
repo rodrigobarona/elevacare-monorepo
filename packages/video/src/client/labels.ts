@@ -77,6 +77,19 @@ export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
   }
 }
 
+export function joinErrorWindow(err: unknown): {
+  startsAt?: string
+  opensAt?: string
+} {
+  if (!err || typeof err !== "object" || !("body" in err)) return {}
+  const body = (err as { body?: { startsAt?: unknown; opensAt?: unknown } })
+    .body
+  return {
+    startsAt: typeof body?.startsAt === "string" ? body.startsAt : undefined,
+    opensAt: typeof body?.opensAt === "string" ? body.opensAt : undefined,
+  }
+}
+
 export function joinErrorCode(err: unknown): ElevaCallErrorCode {
   if (err && typeof err === "object" && "body" in err) {
     const code = (err as { body?: { error?: string } }).body?.error

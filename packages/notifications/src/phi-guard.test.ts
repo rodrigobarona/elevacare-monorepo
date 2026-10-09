@@ -67,6 +67,12 @@ function booking(
     scheduleRevision: 1,
     cancellationPolicy: "moderate",
     currency: "EUR",
+    priceCents: 6000,
+    guestPhone: null,
+    memberPhone: null,
+    language: locale,
+    memberCountry: "PT",
+    locationName: null,
   }
 }
 

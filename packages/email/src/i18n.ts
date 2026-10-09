@@ -26,6 +26,13 @@ const translations = {
       joinCta: "Join session",
       joinHint:
         "Join from Eleva 15 minutes before the start. This is a standard Daily call, not HIPAA.",
+      expertConfirmedTitle: "New booking",
+      expertConfirmedSubtitle:
+        "A member booked a session with you. The calendar invite is attached.",
+      activateHint:
+        "Want to save this session to your Space? Create your Eleva account.",
+      activateCta: "Create account",
+      calendarCta: "Open calendar",
     },
     invoice: {
       blockedTitle: "Platform-fee invoice recorded",
@@ -75,6 +82,13 @@ const translations = {
       amount: "Amount",
       cancellationPolicy: "Cancellation policy",
       refund: "Refund",
+      email: "Email",
+      phone: "Phone",
+      duration: "Duration",
+      timezone: "Timezone",
+      language: "Language",
+      country: "Country",
+      price: "Price",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -132,6 +146,13 @@ const translations = {
       joinCta: "Entrar na sessão",
       joinHint:
         "Entre a partir da Eleva 15 minutos antes do início. Esta é uma chamada Daily standard, não HIPAA.",
+      expertConfirmedTitle: "Nova marcação",
+      expertConfirmedSubtitle:
+        "Um membro marcou uma sessão consigo. O convite de calendário está em anexo.",
+      activateHint:
+        "Quer guardar esta sessão no seu Space? Crie a sua conta Eleva.",
+      activateCta: "Criar conta",
+      calendarCta: "Abrir calendário",
     },
     invoice: {
       blockedTitle: "Taxa de plataforma registada",
@@ -183,6 +204,13 @@ const translations = {
       amount: "Montante",
       cancellationPolicy: "Política de cancelamento",
       refund: "Reembolso",
+      email: "Email",
+      phone: "Telefone",
+      duration: "Duração",
+      timezone: "Fuso horário",
+      language: "Idioma",
+      country: "País",
+      price: "Preço",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -240,6 +268,13 @@ const translations = {
       joinCta: "Unirse a la sesión",
       joinHint:
         "Únase desde Eleva 15 minutos antes del inicio. Esta es una llamada Daily estándar, no HIPAA.",
+      expertConfirmedTitle: "Nueva reserva",
+      expertConfirmedSubtitle:
+        "Un miembro reservó una sesión contigo. La invitación de calendario está adjunta.",
+      activateHint:
+        "¿Quieres guardar esta sesión en tu Space? Crea tu cuenta Eleva.",
+      activateCta: "Crear cuenta",
+      calendarCta: "Abrir calendario",
     },
     invoice: {
       blockedTitle: "Tasa de plataforma registrada",
@@ -291,6 +326,13 @@ const translations = {
       amount: "Importe",
       cancellationPolicy: "Política de cancelación",
       refund: "Reembolso",
+      email: "Email",
+      phone: "Teléfono",
+      duration: "Duración",
+      timezone: "Zona horaria",
+      language: "Idioma",
+      country: "País",
+      price: "Precio",
     },
     subject: {
       newBooking: (member: string, date: string) =>
@@ -345,6 +387,11 @@ export interface EmailTranslations {
     icsHintRemove: string
     joinCta: string
     joinHint: string
+    expertConfirmedTitle: string
+    expertConfirmedSubtitle: string
+    activateHint: string
+    activateCta: string
+    calendarCta: string
   }
   invoice: {
     blockedTitle: string
@@ -389,6 +436,13 @@ export interface EmailTranslations {
     amount: string
     cancellationPolicy: string
     refund: string
+    email: string
+    phone: string
+    duration: string
+    timezone: string
+    language: string
+    country: string
+    price: string
   }
   subject: {
     newBooking: (member: string, date: string) => string

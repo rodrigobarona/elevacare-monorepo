@@ -115,6 +115,12 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     scheduleRevision: 0,
     cancellationPolicy: "moderate",
     currency: "EUR",
+    priceCents: 6000,
+    guestPhone: null,
+    memberPhone: null,
+    language: "en",
+    memberCountry: "PT",
+    locationName: null,
     ...overrides,
   }
 }
@@ -199,6 +205,51 @@ describe("sendBookingNotification", () => {
       2,
       expect.objectContaining({
         joinHref: `https://eleva.care/join/${BOOKING_ID}?g=grant-expert`,
+        audience: "expert",
+        greetingName: "Ana",
+        memberName: "Ada Lovelace",
+        calendarHref: "https://eleva.care/acme/team/calendar",
+      })
+    )
+  })
+
+  it("puts a durable signup CTA on guest confirmation mail only", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-guest-activate",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            memberUserId: null,
+            guestEmail: "ada@example.com",
+            guestName: "Ada Lovelace",
+            guestPhone: "+351910000000",
+          }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        activateHref:
+          "https://eleva.care/signup?email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
+        audience: undefined,
+      })
+    )
+    expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        audience: "expert",
+        activateHref: undefined,
+        memberEmail: "ada@example.com",
+        memberPhone: "+351910000000",
       })
     )
   })

@@ -47,7 +47,7 @@
       "remote": "Membro",
       "connecting": "A ligar…",
       "errors": {
-        "SESSION_NOT_OPEN": "Esta sessão ainda não está aberta. Volte 15 minutos antes do início.",
+        "SESSION_NOT_OPEN": "Esta sessão ainda não está aberta. Pode entrar 15 minutos antes do início.",
         "SESSION_NOT_ACTIVE": "Esta sessão já não está activa.",
         "NOT_A_PARTICIPANT": "Não é participante desta sessão.",
         "ROOM_NOT_READY": "A sala de vídeo ainda não está pronta. Tente daqui a pouco.",

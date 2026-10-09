@@ -100,6 +100,7 @@ import {
   ReconciliationWorkflowRequestSchema,
   JoinSessionRequestSchema,
   JoinSessionResponseSchema,
+  JoinSessionErrorSchema,
   AddSessionParticipantRequestSchema,
   AddSessionParticipantResponseSchema,
   RemoveSessionParticipantResponseSchema,
@@ -3043,8 +3044,11 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               content: { "application/json": { schema: ErrorSchema } },
             },
             "403": {
-              description: "Not a participant or session window closed",
-              content: { "application/json": { schema: ErrorSchema } },
+              description:
+                "Not a participant, or the join window is closed. SESSION_NOT_OPEN includes startsAt and opensAt so the waiting room can name the session time.",
+              content: {
+                "application/json": { schema: JoinSessionErrorSchema },
+              },
             },
             "409": {
               description: "Daily room is not ready",

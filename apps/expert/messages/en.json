@@ -47,7 +47,7 @@
       "remote": "Member",
       "connecting": "Connecting…",
       "errors": {
-        "SESSION_NOT_OPEN": "This session is not open to join yet. Come back from 15 minutes before the start.",
+        "SESSION_NOT_OPEN": "This session is not open to join yet. You can join from 15 minutes before the start.",
         "SESSION_NOT_ACTIVE": "This session is no longer active.",
         "NOT_A_PARTICIPANT": "You are not a participant in this session.",
         "ROOM_NOT_READY": "The video room is not ready yet. Try again in a moment.",

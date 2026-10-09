@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { joinErrorCode } from "./client/labels"
+import { joinErrorCode, joinErrorWindow } from "./client/labels"
 
 describe("joinErrorCode", () => {
   it("maps known API error codes and falls back to internal", () => {
@@ -14,5 +14,21 @@ describe("joinErrorCode", () => {
     )
     expect(joinErrorCode({ body: { error: "mystery" } })).toBe("internal")
     expect(joinErrorCode(new Error("nope"))).toBe("internal")
+  })
+
+  it("reads join-window timestamps from SESSION_NOT_OPEN bodies", () => {
+    expect(
+      joinErrorWindow({
+        body: {
+          error: "SESSION_NOT_OPEN",
+          startsAt: "2026-10-23T10:00:00.000Z",
+          opensAt: "2026-10-23T09:45:00.000Z",
+        },
+      })
+    ).toEqual({
+      startsAt: "2026-10-23T10:00:00.000Z",
+      opensAt: "2026-10-23T09:45:00.000Z",
+    })
+    expect(joinErrorWindow(new Error("nope"))).toEqual({})
   })
 })
