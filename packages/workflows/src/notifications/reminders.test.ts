@@ -331,6 +331,7 @@ describe("deliverBookingReminder", () => {
     memberUserId: "00000000-0000-4000-8000-000000000003",
     memberEmail: "ada@example.com",
     memberName: "Ada",
+    memberEmailVerified: true,
     guestEmail: null,
     guestName: null,
     guestPhone: null,
