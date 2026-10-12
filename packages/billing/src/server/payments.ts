@@ -47,6 +47,7 @@ const funnelSnapshotSchema = z.object({
     })
     .optional(),
   promoCode: z.string().min(2).max(32).optional(),
+  intakeNotesEncrypted: z.string().min(1).optional(),
   intakeNotes: z.string().max(8000).optional(),
 })
 

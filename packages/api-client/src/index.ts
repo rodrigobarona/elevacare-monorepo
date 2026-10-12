@@ -603,10 +603,20 @@ export const ListSessionRecordsResponseSchema = z.object({
   records: z.array(BookingRecordSchema),
 })
 
-export const UpsertSessionRecordRequestSchema = z.object({
-  kind: z.enum(["note", "transcript", "internal_report"]),
-  body: z.string().max(100_000),
-})
+export const UpsertSessionRecordRequestSchema = z.discriminatedUnion("kind", [
+  z.object({
+    kind: z.literal("transcript"),
+    body: z.string().max(500_000),
+  }),
+  z.object({
+    kind: z.literal("note"),
+    body: z.string().max(100_000),
+  }),
+  z.object({
+    kind: z.literal("internal_report"),
+    body: z.string().max(100_000),
+  }),
+])
 
 export const UpsertSessionRecordResponseSchema = BookingRecordSchema
 

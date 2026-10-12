@@ -370,6 +370,8 @@ export async function upsertSessionRecord(input: {
   if (input.actorUserId !== booking.expertUserId) {
     throw new SessionRecordError("FORBIDDEN")
   }
+  // withAudit(actorUserId) uses withOrgAndUserContext, which sets
+  // eleva.user_id for records_author_write WITH CHECK.
   return withAudit(
     { orgId: booking.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) =>
