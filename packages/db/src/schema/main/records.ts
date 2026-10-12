@@ -89,14 +89,16 @@ export const records = pgTable(
     clinicSharedReadPolicy: pgPolicy("records_clinic_shared_read", {
       for: "select",
       using: sql`org_id::text = current_setting('eleva.org_id', true)
+        AND kind <> 'internal_report'
+        AND member_user_id IS NOT NULL
         AND EXISTS (
           SELECT 1 FROM auth.organization o
           WHERE o.id = records.org_id AND o.clinic_shared_records = true
         )
         AND EXISTS (
-          SELECT 1 FROM auth.member m
-          WHERE m.organization_id = records.org_id
-            AND m.user_id::text = current_setting('eleva.user_id', true)
+          SELECT 1 FROM expert_profiles ep
+          WHERE ep.org_id = records.org_id
+            AND ep.user_id::text = current_setting('eleva.user_id', true)
         )
         AND NOT EXISTS (
           SELECT 1 FROM record_access_optouts opt
