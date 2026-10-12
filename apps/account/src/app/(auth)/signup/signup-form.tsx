@@ -17,12 +17,18 @@ import { CheckboxField } from "@eleva/ui/components/checkbox-field"
 import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 
+function sameEmail(a: string, b: string): boolean {
+  return a.trim().toLowerCase() === b.trim().toLowerCase()
+}
+
 export function SignupForm({
   initialName = "",
   initialEmail = "",
+  claimGuest = false,
 }: {
   initialName?: string
   initialEmail?: string
+  claimGuest?: boolean
 }) {
   const t = useTranslations("auth")
   const [name, setName] = useState(initialName)
@@ -32,6 +38,21 @@ export function SignupForm({
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
   const [sent, setSent] = useState(false)
+  const [magicSent, setMagicSent] = useState(false)
+  const claimingGuest =
+    claimGuest && initialEmail.length > 0 && sameEmail(email, initialEmail)
+
+  async function sendMagicLink() {
+    const { error: magicError } = await authClient.signIn.magicLink({
+      email,
+      callbackURL: "/dashboard",
+    })
+    if (magicError) {
+      setError(magicError.message ?? t("errorGeneric"))
+      return
+    }
+    setMagicSent(true)
+  }
 
   async function submitSignup() {
     if (!consent) {
@@ -40,23 +61,46 @@ export function SignupForm({
     }
     setPending(true)
     setError(null)
-    const { error: result } = await authClient.signUp.email({
-      email,
-      password,
-      name,
-      callbackURL: "/verify-email",
-    })
-    setPending(false)
-    if (result) {
-      setError(result.message ?? t("errorGeneric"))
-      return
+    try {
+      // Guest-activation already provisioned this address. signUp.email can
+      // return a synthetic success under requireEmailVerification and would
+      // not store the typed password, so the confirmation CTA claims the
+      // account with a magic link. Password signup stays for a different
+      // address the visitor types themselves.
+      if (claimingGuest) {
+        await sendMagicLink()
+        return
+      }
+      const { error: result } = await authClient.signUp.email({
+        email,
+        password,
+        name,
+        callbackURL: "/verify-email",
+      })
+      if (result) {
+        setError(result.message ?? t("errorGeneric"))
+        return
+      }
+      setSent(true)
+    } finally {
+      setPending(false)
     }
-    setSent(true)
   }
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
     void submitSignup()
+  }
+
+  if (magicSent) {
+    return (
+      <Card data-testid="signup-magic-sent">
+        <CardHeader>
+          <CardTitle>{t("signupTitle")}</CardTitle>
+          <CardDescription>{t("magicSent")}</CardDescription>
+        </CardHeader>
+      </Card>
+    )
   }
 
   if (sent) {
@@ -107,19 +151,21 @@ export function SignupForm({
               required
             />
           </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="password">{t("password")}</Label>
-            <Input
-              id="password"
-              type="password"
-              name="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="new-password"
-              data-testid="signup-password"
-              required
-            />
-          </div>
+          {claimingGuest ? null : (
+            <div className="space-y-1.5">
+              <Label htmlFor="password">{t("password")}</Label>
+              <Input
+                id="password"
+                type="password"
+                name="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
+                data-testid="signup-password"
+                required
+              />
+            </div>
+          )}
           <CheckboxField
             isSelected={consent}
             onChange={setConsent}
@@ -152,7 +198,7 @@ export function SignupForm({
             disabled={pending}
             data-testid="signup-submit"
           >
-            {t("createAccount")}
+            {claimingGuest ? t("magicLink") : t("createAccount")}
           </button>
           <p className="text-center text-sm text-muted-foreground">
             {t("hasAccount")}{" "}

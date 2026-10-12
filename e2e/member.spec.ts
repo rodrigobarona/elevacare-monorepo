@@ -10,6 +10,7 @@ import {
   accountUrl,
   apiUrl,
   authHeaders,
+  requestMagicLinkSignIn,
   uniqueEmail,
   verifyEmail,
   waitForE2eAuthUrl,
@@ -175,6 +176,8 @@ test.describe("member Space journey", () => {
     )
 
     try {
+      const requested = await requestMagicLinkSignIn(request, email)
+      expect(requested.status()).toBe(200)
       const magicUrl = await waitForE2eAuthUrl("magic-link", email, 20_000)
       if (!magicUrl) {
         throw new Error(

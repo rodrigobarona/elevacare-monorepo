@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack --port 3000",
+    "dev": "TURBO_TASKS_FORCE_WATCH_MODE=nonrecursive next dev --turbopack --port 3000",
     "build": "next build",
     "start": "next start --port 3000",
     "lint": "eslint",

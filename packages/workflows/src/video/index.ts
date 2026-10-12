@@ -16,6 +16,7 @@ export {
   classifyJoinStatus,
   classifyJoinWindow,
   joinSession,
+  joinSessionFromGrant,
   SessionJoinError,
   type JoinSessionResult,
   type SessionJoinErrorCode,

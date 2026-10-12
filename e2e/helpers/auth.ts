@@ -93,6 +93,17 @@ async function redisGet(key: string): Promise<string | null> {
     : null
 }
 
+export async function requestMagicLinkSignIn(
+  request: APIRequestContext,
+  email: string,
+  callbackURL = `${ACCOUNT_ORIGIN}/dashboard`
+): Promise<APIResponse> {
+  return request.post(`${apiUrl}/auth/sign-in/magic-link`, {
+    headers: authHeaders(),
+    data: { email, callbackURL },
+  })
+}
+
 export async function waitForE2eAuthUrl(
   kind: E2eAuthLinkKind,
   email: string,

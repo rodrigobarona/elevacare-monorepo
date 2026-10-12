@@ -7,9 +7,11 @@ import { BookingLayout } from "@/components/booking/booking-layout"
 import { PublicRateLimited } from "@/components/public-rate-limited"
 import { funnelConsentDocs } from "@/lib/booking-consents"
 import { readBookingGeo } from "@/lib/booking-geo"
+import { parseBookingSelection } from "@/lib/booking-selection"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
 import { isSupportedLocale, pickLocalizedText } from "@/lib/localized-text"
 import {
+  findPublicSlot,
   getPublicEventType,
   getPublicExpert,
   isNotFoundApiError,
@@ -18,7 +20,10 @@ import {
 
 type Props = {
   params: Promise<{ locale: string; username: string; eventSlug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
+
+export const dynamicParams = true
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, username, eventSlug } = await params
@@ -47,14 +52,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function PublicBookingPage({ params }: Props) {
-  const { locale, username, eventSlug } = await params
+export default async function PublicBookingPage({
+  params,
+  searchParams,
+}: Props) {
+  const [{ locale, username, eventSlug }, query] = await Promise.all([
+    params,
+    searchParams,
+  ])
   if (!isSupportedLocale(locale) || isReserved(username)) {
     notFound()
   }
   setRequestLocale(locale)
 
   const geoPromise = readBookingGeo()
+  const selection = parseBookingSelection(query)
 
   let eventType
   let expert
@@ -80,6 +92,20 @@ export default async function PublicBookingPage({ params }: Props) {
     notFound()
   }
 
+  const selectedMode = selection
+    ? (eventType.modes.find((mode) => mode.id === selection.modeId) ?? null)
+    : null
+  const initialSlot =
+    selectedMode && selection
+      ? await findPublicSlot({
+          username: expert.username,
+          eventSlug: eventType.slug,
+          modeId: selectedMode.id,
+          start: selection.start,
+          timeZone: geo.timeZone,
+        })
+      : null
+
   return (
     <BookingLayout>
       <BookingFunnel
@@ -93,6 +119,8 @@ export default async function PublicBookingPage({ params }: Props) {
         geoCountry={geo.country}
         geoTimeZone={geo.timeZone}
         consents={funnelConsentDocs(locale)}
+        initialModeId={selectedMode?.id ?? null}
+        initialSlot={initialSlot}
       />
     </BookingLayout>
   )

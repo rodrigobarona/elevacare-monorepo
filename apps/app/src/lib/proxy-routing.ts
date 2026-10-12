@@ -25,6 +25,7 @@ export const MEMBER_APP_UNAUTHENTICATED_PATHS = [
   "/home",
   "/about",
   "/legal/:path*",
+  "/join/:path*",
   ...AUTH_FLOW_PATHS,
 ] as const
 

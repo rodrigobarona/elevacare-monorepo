@@ -113,6 +113,7 @@
     "offers": "Offers",
     "offerMeta": "{duration} min · from {price} · {modes}",
     "book": "Choose a time",
+    "bookSlot": "Book {offer} at {when}",
     "modes": {
       "online": "video",
       "in_person": "in person",

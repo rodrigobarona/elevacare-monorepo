@@ -9,6 +9,7 @@
     ".": "./src/index.ts",
     "./client": "./src/client.ts",
     "./join-window": "./src/join-window.ts",
+    "./join-grant": "./src/join-grant.ts",
     "./join-cta": "./src/join-cta.tsx",
     "./webhooks": "./src/webhooks.ts",
     "./sources.css": "./sources.css"

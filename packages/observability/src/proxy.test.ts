@@ -21,6 +21,10 @@ describe("isVideoJoinPath", () => {
       isVideoJoinPath("/acme/sessions/11111111-1111-4111-8111-111111111111")
     ).toBe(false)
     expect(isVideoJoinPath("/acme/calendar")).toBe(false)
+    expect(isVideoJoinPath("/join/11111111-1111-4111-8111-111111111111")).toBe(
+      true
+    )
+    expect(isVideoJoinPath("/join")).toBe(false)
   })
 })
 

@@ -372,6 +372,13 @@
       "when": 1780210000000,
       "tag": "0052_phase09_capacity_pending",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1780300000000,
+      "tag": "0053_better_auth_17_schema",
+      "breakpoints": true
     }
   ]
 }

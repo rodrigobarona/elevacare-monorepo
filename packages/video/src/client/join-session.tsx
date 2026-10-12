@@ -5,6 +5,7 @@ import { Button, LinkButton } from "@eleva/ui/components/button"
 import { ElevaCall } from "./eleva-call"
 import {
   joinErrorCode,
+  joinErrorWindow,
   type ElevaCallErrorCode,
   type ElevaCallLabels,
 } from "./labels"
@@ -27,6 +28,7 @@ export function JoinSession({
     token: string
   } | null>(null)
   const [error, setError] = useState<ElevaCallErrorCode | null>(null)
+  const [windowHint, setWindowHint] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [left, setLeft] = useState(false)
   const reqId = useRef(0)
@@ -35,6 +37,7 @@ export function JoinSession({
     const id = ++reqId.current
     setLoading(true)
     setError(null)
+    setWindowHint(null)
     setCreds(null)
     void join()
       .then((result) => {
@@ -44,7 +47,14 @@ export function JoinSession({
       })
       .catch((err: unknown) => {
         if (id !== reqId.current) return
-        setError(joinErrorCode(err))
+        const code = joinErrorCode(err)
+        setError(code)
+        if (code === "SESSION_NOT_OPEN") {
+          const { startsAt } = joinErrorWindow(err)
+          if (startsAt) {
+            setWindowHint(formatJoinStart(startsAt))
+          }
+        }
         setLoading(false)
       })
   }, [join])
@@ -82,8 +92,11 @@ export function JoinSession({
     return (
       <div className="mx-auto flex max-w-lg flex-col gap-4 py-12">
         <h1 className="text-xl font-medium">{labels.errorTitle}</h1>
-        <p className="text-sm text-muted-foreground">
-          {labels.errors[error ?? "internal"]}
+        <p className="text-sm text-muted-foreground" suppressHydrationWarning>
+          {sessionNotOpenCopy(
+            labels.errors[error ?? "internal"],
+            error === "SESSION_NOT_OPEN" ? windowHint : null
+          )}
         </p>
         <p className="text-xs text-muted-foreground">{labels.notHipaa}</p>
         <div className="flex flex-wrap gap-2">
@@ -106,4 +119,21 @@ export function JoinSession({
       onLeft={() => setLeft(true)}
     />
   )
+}
+
+function sessionNotOpenCopy(template: string, start: string | null): string {
+  if (!start) return template
+  if (template.includes("{start}")) return template.replace("{start}", start)
+  return `${template.replace(/\.$/, "")}: ${start}.`
+}
+
+function formatJoinStart(iso: string): string {
+  try {
+    return new Date(iso).toLocaleString(undefined, {
+      dateStyle: "full",
+      timeStyle: "short",
+    })
+  } catch {
+    return iso
+  }
 }

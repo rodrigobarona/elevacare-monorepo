@@ -110,6 +110,7 @@ export const RESERVED_USERNAMES: ReadonlySet<string> = new Set([
   "mail",
   "status",
   "sessions",
+  "join",
   "email",
   "api",
   "app",

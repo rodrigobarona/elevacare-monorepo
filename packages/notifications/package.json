@@ -20,6 +20,7 @@
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
     "@eleva/email": "workspace:*",
+    "@eleva/video": "workspace:*",
     "drizzle-orm": "catalog:",
     "resend": "catalog:",
     "twilio": "catalog:",

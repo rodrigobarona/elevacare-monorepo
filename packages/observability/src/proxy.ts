@@ -103,7 +103,10 @@ export function joinPermissionsPolicy(): string {
 }
 
 export function isVideoJoinPath(pathname: string): boolean {
-  return /\/sessions\/[^/]+\/join\/?$/.test(pathname)
+  return (
+    /\/sessions\/[^/]+\/join\/?$/.test(pathname) ||
+    /^\/join\/[^/]+\/?$/.test(pathname)
+  )
 }
 
 const DEFAULT_HEADERS: Record<string, string> = {
@@ -144,12 +147,14 @@ export function withHeaders(
     for (const [k, v] of Object.entries(DEFAULT_HEADERS)) {
       nextRes.headers.set(k, v)
     }
+    const isJoin = isVideoJoinPath(req.nextUrl.pathname)
     nextRes.headers.set(
       "Permissions-Policy",
-      isVideoJoinPath(req.nextUrl.pathname)
-        ? joinPermissionsPolicy()
-        : DEFAULT_PERMISSIONS_POLICY
+      isJoin ? joinPermissionsPolicy() : DEFAULT_PERMISSIONS_POLICY
     )
+    if (isJoin) {
+      nextRes.headers.set("Referrer-Policy", "no-referrer")
+    }
     const skipCsp = process.env.NODE_ENV === "development"
     if (options.emitCsp !== false && !skipCsp) {
       nextRes.headers.set("Content-Security-Policy", cspValue)

@@ -100,6 +100,8 @@ export function BookingFunnel({
   linkNote,
   specialPriceCents,
   pinnedModeId,
+  initialModeId,
+  initialSlot,
 }: {
   locale: Locale
   expertName: string
@@ -115,6 +117,8 @@ export function BookingFunnel({
   linkNote?: string | null
   specialPriceCents?: number | null
   pinnedModeId?: string | null
+  initialModeId?: string | null
+  initialSlot?: PublicSlot | null
 }) {
   const t = useTranslations("booking")
   const offerTitle = pickLocalizedText(title, locale)
@@ -140,14 +144,18 @@ export function BookingFunnel({
     )
   )
   const [timeZone, setTimeZone] = useState(() => resolvedTimeZone(geoTimeZone))
-  const [modeId, setModeId] = useState<string | null>(pinnedModeId ?? null)
-  const [slot, setSlot] = useState<PublicSlot | null>(null)
+  const [modeId, setModeId] = useState<string | null>(
+    pinnedModeId ?? initialModeId ?? null
+  )
+  const [slot, setSlot] = useState<PublicSlot | null>(initialSlot ?? null)
   const [slots, setSlots] = useState<PublicSlot[]>([])
   const [slotsRequest, setSlotsRequest] = useState<{
     key: string
     error: boolean
   }>({ key: "", error: false })
-  const [month, setMonth] = useState(() => startOfMonth(new Date()))
+  const [month, setMonth] = useState(() =>
+    startOfMonth(initialSlot ? new Date(initialSlot.start) : new Date())
+  )
   const [view, setView] = useState<"month" | "week">("month")
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
@@ -170,11 +178,17 @@ export function BookingFunnel({
     memberCountry: country,
     language,
   })
-  const skipToWhen =
+  const skipMeet =
     Boolean(pinnedModeId) ||
     shouldSkipMeetStep(modes, { memberCountry: country, language }) != null
+  const skipToDetails = Boolean(initialSlot && (pinnedModeId ?? initialModeId))
+  const backInput = { pinnedModeId, skipToWhen: skipMeet }
   const [step, setStep] = useState<FunnelStep>(() =>
-    initialFunnelStep({ pinnedModeId, skipToWhen })
+    initialFunnelStep({
+      pinnedModeId,
+      skipToWhen: skipMeet || Boolean(initialModeId),
+      skipToDetails,
+    })
   )
 
   const inferredMode = shouldSkipMeetStep(modes, {
@@ -256,15 +270,17 @@ export function BookingFunnel({
   )
 
   const onDetails = step === "details"
+  const onPay = step === "pay"
   useEffect(() => {
+    if (step === "done") return
     if (!reservation && !onDetails) return
     setNowMs(Date.now())
     const id = window.setInterval(
       () => setNowMs(Date.now()),
-      reservation ? 1000 : 30_000
+      reservation && onPay ? 1000 : 30_000
     )
     return () => window.clearInterval(id)
-  }, [reservation, onDetails])
+  }, [reservation, onDetails, onPay, step])
 
   // Layout effect so Stripe query params are read before next-intl / App
   // Router client navigations can strip search (setTimeout(0) was too late).
@@ -364,7 +380,7 @@ export function BookingFunnel({
     : undefined
 
   function goBack() {
-    const previous = previousFunnelStep(step, { pinnedModeId, skipToWhen })
+    const previous = previousFunnelStep(step, backInput)
     if (previous) setStep(previous)
   }
 
@@ -476,7 +492,12 @@ export function BookingFunnel({
     setPaymentInFlight(false)
     setConfirmState("idle")
     confirmInFlight.current = false
-    setStep(initialFunnelStep({ pinnedModeId, skipToWhen }))
+    setStep(
+      initialFunnelStep({
+        pinnedModeId,
+        skipToWhen: skipMeet || Boolean(modeId ?? initialModeId),
+      })
+    )
   }
 
   const progress =
@@ -651,7 +672,7 @@ export function BookingFunnel({
               }}
             />
             <div className="flex gap-3">
-              {previousFunnelStep(step, { pinnedModeId, skipToWhen }) ? (
+              {previousFunnelStep(step, backInput) ? (
                 <Button variant="ghost" onPress={goBack}>
                   {t("back")}
                 </Button>
@@ -670,7 +691,10 @@ export function BookingFunnel({
         {step === "details" ? (
           <div className="mt-8 space-y-6">
             <header className="space-y-2">
-              <h1 className="font-heading text-3xl font-semibold tracking-tight">
+              <h1
+                data-testid="booking-details-heading"
+                className="font-heading text-3xl font-semibold tracking-tight"
+              >
                 {t("details.heading")}
               </h1>
               <p className="text-muted-foreground">{t("details.sub")}</p>
@@ -986,7 +1010,7 @@ export function BookingFunnel({
         specialPrice={specialPriceCents != null}
         specialPriceLabel={t("link.specialPrice")}
         holdLabel={
-          reservation && !holdExpired
+          onPay && reservation && !holdExpired
             ? t("pay.hold", {
                 time: formatCountdown(
                   Math.max(0, new Date(reservation.expiresAt).getTime() - nowMs)

@@ -32,6 +32,44 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-08: Guest confirm sends one booking mail; magic-link only on sign-in
+
+- Decision: After a guest books, `guest-activation` still provisions an
+  unverified Better Auth user, a personal Space, `memberUserId`, and
+  re-keys consents. It does **not** send Better Auth's "Sign in to Eleva
+  Care" magic-link email. Join stays on the confirmation mail (grant +
+  `.ics`). Optional account creation is a durable
+  `{GATEWAY}/signup?claim=1&name=&email=`
+  CTA on member/guest `booking.confirmed` only — never a magic token in
+  that mail (tokens expire in minutes; people keep confirmation emails
+  for weeks). Magic-link is sent only when the member asks to sign in
+  (`/login`, `/signup`, or `POST /auth/sign-in/magic-link`).
+- Owner: engineering
+- Status: `active`
+- Related: Phase 09 guest join grant, thank-you UX
+- Next review: after guest book → inbox (one mail) + thank-you CTA check.
+
+### 2026-10-08: Guest join via signed Eleva grant in email and ICS
+
+- Decision: Members can book without an account, so confirmation and
+  1h-reminder emails (and ICS `URL`/`LOCATION`) mint a signed Eleva join
+  grant at `/join/{bookingId}?g=`. The grant is HS256 (HKDF from
+  `BETTER_AUTH_SECRET`), purpose `session-join`, role-bound
+  (`member`|`expert`), exp = `endsAt + 30m`. Possession of a valid grant
+  joins that role and ignores any session cookie. Guest bookings with no
+  `memberUserId` mint Daily as `guest:{bookingId}` (audit actor null);
+  never map `guestEmail` onto an existing account. A leaked grant can
+  evict the real participant (`enforce_unique_user_ids`, last-join-wins);
+  grants are bearer secrets. Daily meeting tokens
+  stay in the POST JSON body only — never in URLs. In-app session CTAs
+  stay cookie-based. Public grant POST uses BotID + `RATE_LIMITS.public`.
+  Gateway first-segment `join` is reserved. Out of scope: overtime UI,
+  Phase 10 notes, recording/transcripts, `sessions.eleva.care` CNAME.
+- Owner: engineering
+- Status: `active`
+- Related: Phase 09, scheduling-booking-spec sessions section
+- Next review: after local two-browser grant join.
+
 ### 2026-10-08: 09.0 standard Daily live probe PASS; Eleva join leftover
 
 - Decision: The 09.0 account probe is **PASS** on standard Daily
@@ -1131,7 +1169,11 @@ série`) — that would register them as official Portuguese document series.
 ### 2026-09-09: Domain-events outbox for booking guest activation
 
 - Owner: engineering
-- Status: accepted
+- Status: superseded — magic-link on activation was replaced by the
+  2026-10-08 "Guest confirm sends one booking mail; magic-link only on
+  sign-in" entry. Outbox + `booking.guest_activation_required` still
+  stand; the mail is confirmation + durable `/signup` CTA, not Better Auth
+  "Sign in".
 - Summary: Phase 04.2d adds `domain_events_outbox` + `domain_event_deliveries`
   (service-only, org-scoped writes plus `eleva.platform_admin` /
   `eleva.service = 'domain_events_publisher'`). Confirm and the Stripe
@@ -1140,9 +1182,9 @@ série`) — that would register them as official Portuguese document series.
   deliveries (`processing` + stale reclaim), runs subscribers outside the
   claim transaction, and never stores guest email/name in the durable
   payload. Guest activation reads contact fields from `bookings` under
-  `withOrgContext` and sends a Better Auth magic link once
-  (`guest_activation_sent_at`). Cancel/reschedule and refund execution
-  stay out of this slice.
+  `withOrgContext`. It used to send a Better Auth magic link once
+  (`guest_activation_sent_at`); that send is gone — see 2026-10-08.
+  Cancel/reschedule and refund execution stay out of this slice.
 - Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md),
   [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 

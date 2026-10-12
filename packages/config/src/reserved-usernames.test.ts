@@ -48,6 +48,7 @@ describe("reserved usernames", () => {
       "mail",
       "status",
       "sessions",
+      "join",
       "email",
     ]) {
       expect(isReserved(slug)).toBe(true)
