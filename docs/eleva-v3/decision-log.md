@@ -1168,7 +1168,11 @@ série`) — that would register them as official Portuguese document series.
 ### 2026-09-09: Domain-events outbox for booking guest activation
 
 - Owner: engineering
-- Status: accepted
+- Status: superseded — magic-link on activation was replaced by the
+  2026-10-08 "Guest confirm sends one booking mail; magic-link only on
+  sign-in" entry. Outbox + `booking.guest_activation_required` still
+  stand; the mail is confirmation + durable `/signup` CTA, not Better Auth
+  "Sign in".
 - Summary: Phase 04.2d adds `domain_events_outbox` + `domain_event_deliveries`
   (service-only, org-scoped writes plus `eleva.platform_admin` /
   `eleva.service = 'domain_events_publisher'`). Confirm and the Stripe
@@ -1177,9 +1181,9 @@ série`) — that would register them as official Portuguese document series.
   deliveries (`processing` + stale reclaim), runs subscribers outside the
   claim transaction, and never stores guest email/name in the durable
   payload. Guest activation reads contact fields from `bookings` under
-  `withOrgContext` and sends a Better Auth magic link once
-  (`guest_activation_sent_at`). Cancel/reschedule and refund execution
-  stay out of this slice.
+  `withOrgContext`. It used to send a Better Auth magic link once
+  (`guest_activation_sent_at`); that send is gone — see 2026-10-08.
+  Cancel/reschedule and refund execution stay out of this slice.
 - Reference: [`execution-plan/phases/04-public-marketplace-booking.md`](./execution-plan/phases/04-public-marketplace-booking.md),
   [`schema-and-migration-rules.md`](./schema-and-migration-rules.md)
 

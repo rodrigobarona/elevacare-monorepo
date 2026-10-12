@@ -106,6 +106,7 @@ function booking(overrides: Partial<LoadedBooking> = {}): LoadedBooking {
     memberUserId: MEMBER_ID,
     memberEmail: "ada@example.com",
     memberName: "Ada Lovelace",
+    memberEmailVerified: true,
     guestEmail: null,
     guestName: null,
     expertUserId: EXPERT_ID,
@@ -213,6 +214,37 @@ describe("sendBookingNotification", () => {
     )
   })
 
+  it("keeps the signup CTA after guest-activation sets memberUserId", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-guest-activate-claimed",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () =>
+          booking({
+            memberUserId: MEMBER_ID,
+            memberEmailVerified: false,
+            guestEmail: "ada@example.com",
+            guestName: "Ada Lovelace",
+          }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        activateHref:
+          "https://eleva.care/signup?email=ada%40example.com&name=Ada+Lovelace",
+      })
+    )
+  })
+
   it("puts a durable signup CTA on guest confirmation mail only", async () => {
     const send = vi
       .fn()
@@ -228,6 +260,7 @@ describe("sendBookingNotification", () => {
         loadBooking: async () =>
           booking({
             memberUserId: null,
+            memberEmailVerified: false,
             guestEmail: "ada@example.com",
             guestName: "Ada Lovelace",
             guestPhone: "+351910000000",
@@ -443,6 +476,7 @@ describe("sendBookingNotification", () => {
       memberUserId: null,
       memberEmail: null,
       memberName: null,
+      memberEmailVerified: false,
       guestEmail: "guest@example.com",
       guestName: "Ada Lovelace",
     })

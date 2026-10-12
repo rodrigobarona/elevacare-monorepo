@@ -125,6 +125,7 @@ export type LoadedBooking = {
   memberEmail: string | null
   memberName: string | null
   memberPhone: string | null
+  memberEmailVerified: boolean
   guestEmail: string | null
   guestName: string | null
   guestPhone: string | null
@@ -737,7 +738,8 @@ function memberActivateHref(
   gateway: string
 ): string | undefined {
   if (kind !== "booking.confirmed") return undefined
-  if (booking.memberUserId || !booking.guestEmail) return undefined
+  if (!booking.guestEmail) return undefined
+  if (booking.memberEmailVerified) return undefined
   const params = new URLSearchParams({
     email: booking.guestEmail,
     ...(booking.guestName ? { name: booking.guestName } : {}),
@@ -809,12 +811,14 @@ export async function loadBookingForNotification(
     let memberEmail: string | null = null
     let memberName: string | null = null
     let memberPhone: string | null = null
+    let memberEmailVerified = false
     if (row.memberUserId) {
       const [member] = await tx
         .select({
           email: auth.user.email,
           name: auth.user.name,
           phoneE164: auth.user.phoneE164,
+          emailVerified: auth.user.emailVerified,
         })
         .from(auth.user)
         .where(eq(auth.user.id, row.memberUserId))
@@ -822,6 +826,7 @@ export async function loadBookingForNotification(
       memberEmail = member?.email ?? null
       memberName = member?.name ?? null
       memberPhone = member?.phoneE164 ?? null
+      memberEmailVerified = member?.emailVerified ?? false
     }
 
     return {
@@ -829,6 +834,7 @@ export async function loadBookingForNotification(
       memberEmail,
       memberName,
       memberPhone,
+      memberEmailVerified,
       expertEmail: expert.email,
       expertName: expert.name,
     }

@@ -228,7 +228,7 @@ export function BookingFunnel({
       const lockKey = confirmLockKey(hold.reservationId, paid.paymentIntentId)
       if (confirmInFlight.current || !tryAcquireConfirmLock(lockKey)) return
       confirmInFlight.current = true
-      setConfirmState("confirmed")
+      setConfirmState("pending")
       setFormError(null)
       try {
         const api = createPublicApiClient()

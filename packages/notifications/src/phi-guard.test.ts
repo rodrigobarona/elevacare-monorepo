@@ -58,6 +58,7 @@ function booking(
     memberUserId: "00000000-0000-4000-8000-000000000003",
     memberEmail: "member@example.com",
     memberName: `Ada ${SURNAME}`,
+    memberEmailVerified: true,
     guestEmail: null,
     guestName: null,
     expertUserId: "00000000-0000-4000-8000-000000000004",
