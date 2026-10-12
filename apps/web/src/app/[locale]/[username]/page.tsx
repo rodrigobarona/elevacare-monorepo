@@ -2,8 +2,10 @@ import { Suspense } from "react"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { notFound } from "next/navigation"
 import type { Metadata } from "next"
+import type { PublicEventType } from "@eleva/api-client"
 import { describeCancellationPolicy } from "@eleva/config/cancellation-policy"
 import { isReserved } from "@eleva/config/reserved-usernames"
+import { CaretRightIcon } from "@eleva/icons"
 import { VerifiedBadge } from "@eleva/ui/components/brand"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import {
@@ -15,6 +17,8 @@ import { PublicRateLimited } from "@/components/public-rate-limited"
 import { SiteFooter } from "@/components/site-footer"
 import { SiteHeader } from "@/components/site-header"
 import { Link } from "@/i18n/navigation"
+import { readBookingGeo } from "@/lib/booking-geo"
+import { bookingSelectionHref } from "@/lib/booking-selection"
 import { formatEur } from "@/lib/format-eur"
 import { formatSlotDateTime } from "@/lib/format-slot-time"
 import { hreflangLanguages, localePath } from "@/lib/hreflang"
@@ -25,6 +29,18 @@ import {
   isNotFoundApiError,
   isRateLimitedApiError,
 } from "@/lib/public-api"
+import {
+  pickUpcomingSlotRows,
+  type UpcomingModeSlots,
+} from "@/lib/upcoming-slots"
+
+function publicPlaceLabel(
+  location: { name: string; city: string } | null
+): string | null {
+  if (!location) return null
+  if (location.name === location.city) return location.city
+  return `${location.name}, ${location.city}`
+}
 
 type Props = {
   params: Promise<{ locale: string; username: string }>
@@ -61,6 +77,7 @@ export default async function ExpertProfilePage({ params }: Props) {
     notFound()
   }
 
+  const geoPromise = readBookingGeo()
   const [t, tExperts] = await Promise.all([
     getTranslations("profile"),
     getTranslations("experts"),
@@ -79,10 +96,10 @@ export default async function ExpertProfilePage({ params }: Props) {
     throw error
   }
 
-  const firstEvent = expert.eventTypes.find(
+  const geo = await geoPromise
+  const bookableEvents = expert.eventTypes.filter(
     (eventType) => eventType.modes.length > 0
   )
-  const firstMode = firstEvent?.modes[0]
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -131,7 +148,7 @@ export default async function ExpertProfilePage({ params }: Props) {
 
         <section className="mt-10">
           <h2 className="font-heading text-xl">{t("upcoming")}</h2>
-          {firstEvent && firstMode ? (
+          {bookableEvents.length > 0 ? (
             <Suspense
               fallback={
                 <div className="mt-3 h-10 animate-pulse rounded-md bg-muted" />
@@ -140,9 +157,8 @@ export default async function ExpertProfilePage({ params }: Props) {
               <UpcomingSlots
                 locale={locale}
                 username={expert.username}
-                eventSlug={firstEvent.slug}
-                eventTitle={pickLocalizedText(firstEvent.title, locale)}
-                modeId={firstMode.id}
+                eventTypes={bookableEvents}
+                timeZone={geo.timeZone}
               />
             </Suspense>
           ) : (
@@ -210,35 +226,45 @@ export default async function ExpertProfilePage({ params }: Props) {
 async function UpcomingSlots({
   locale,
   username,
-  eventSlug,
-  eventTitle,
-  modeId,
+  eventTypes,
+  timeZone,
 }: {
   locale: string
   username: string
-  eventSlug: string
-  eventTitle: string
-  modeId: string
+  eventTypes: PublicEventType[]
+  timeZone: string
 }) {
   const t = await getTranslations("profile")
   const from = new Date()
   const to = new Date(from.getTime() + 14 * 24 * 60 * 60 * 1000)
-  let upcoming: { start: string }[] = []
-  try {
-    const slots = await createPublicApiClient().public.getSlots(
-      username,
-      eventSlug,
-      {
-        modeId,
-        from: from.toISOString(),
-        to: to.toISOString(),
-        tz: "Europe/Lisbon",
+  const api = createPublicApiClient()
+  const modeQueries = eventTypes.flatMap((eventType) =>
+    eventType.modes.map((mode) => ({
+      eventSlug: eventType.slug,
+      eventTitle: pickLocalizedText(eventType.title, locale),
+      modeId: mode.id,
+      mode: mode.mode,
+      locationLabel: publicPlaceLabel(mode.location),
+    }))
+  )
+
+  const modeSlots: UpcomingModeSlots[] = await Promise.all(
+    modeQueries.map(async (query) => {
+      try {
+        const slots = await api.public.getSlots(username, query.eventSlug, {
+          modeId: query.modeId,
+          from: from.toISOString(),
+          to: to.toISOString(),
+          tz: timeZone,
+        })
+        return { ...query, starts: slots.slots.map((slot) => slot.start) }
+      } catch {
+        return { ...query, starts: [] }
       }
-    )
-    upcoming = slots.slots.slice(0, 3).map((slot) => ({ start: slot.start }))
-  } catch {
-    // Slots are optional on the profile; keep the page up if the API fails.
-  }
+    })
+  )
+
+  const upcoming = pickUpcomingSlotRows(modeSlots)
 
   if (upcoming.length === 0) {
     return <p className="mt-3 text-sm text-muted-foreground">{t("noSlots")}</p>
@@ -246,15 +272,32 @@ async function UpcomingSlots({
 
   return (
     <ul className="mt-3 space-y-2">
-      {upcoming.map((slot) => (
-        <li
-          key={`${eventTitle}-${slot.start}`}
-          className="rounded-md border px-3 py-2 text-sm"
-        >
-          {eventTitle} ·{" "}
-          {formatSlotDateTime(slot.start, locale, "Europe/Lisbon")}
-        </li>
-      ))}
+      {upcoming.map((slot) => {
+        const when = formatSlotDateTime(slot.start, locale, timeZone)
+        const modeLabel = t(`modes.${slot.mode}`)
+        const place = slot.locationLabel
+          ? `${modeLabel} · ${slot.locationLabel}`
+          : modeLabel
+        return (
+          <li key={`${slot.eventSlug}-${slot.modeId}-${slot.start}`}>
+            <Link
+              href={bookingSelectionHref(username, slot.eventSlug, {
+                modeId: slot.modeId,
+                start: slot.start,
+              })}
+              data-testid="profile-upcoming-slot"
+              data-event-slug={slot.eventSlug}
+              aria-label={t("bookSlot", { offer: slot.eventTitle, when })}
+              className="flex items-center justify-between gap-3 rounded-md border px-3 py-2 text-sm transition-colors hover:bg-muted/60"
+            >
+              <span>
+                {slot.eventTitle} · {place} · {when}
+              </span>
+              <CaretRightIcon className="size-4 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        )
+      })}
     </ul>
   )
 }

@@ -55,6 +55,34 @@ test.describe("phase 04 shipped surfaces", () => {
       timeout: 15_000,
     })
   })
+
+  test("upcoming slot on the profile opens the booking form with that time", async ({
+    page,
+  }) => {
+    test.skip(
+      process.env.CI === "true" && !process.env.DATABASE_URL,
+      "e2e-smoke has no DATABASE_URL"
+    )
+    const profile = await page.goto("/fisiomota")
+    expect(profile?.status()).toBe(200)
+    const slot = page.getByTestId("profile-upcoming-slot").first()
+    const hasSlot = await slot
+      .waitFor({ state: "visible", timeout: 15_000 })
+      .then(() => true)
+      .catch(() => false)
+    test.skip(!hasSlot, "needs upcoming slots on seeded fisiomota")
+    await slot.click()
+    await expect(page).toHaveURL(
+      /\/fisiomota\/(?:first-visit|follow-up)\?.*mode=.*start=/,
+      {
+        timeout: 15_000,
+      }
+    )
+    await expect(page.getByTestId("booking-details-heading")).toBeVisible({
+      timeout: 20_000,
+    })
+    await expect(page.getByTestId("booking-guest-name")).toBeVisible()
+  })
 })
 
 test.describe("phase 04 live Stripe booking", () => {

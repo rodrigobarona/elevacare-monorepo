@@ -5,9 +5,11 @@ export type FunnelStep = (typeof FUNNEL_STEPS)[number]
 export type FunnelStartInput = {
   pinnedModeId?: string | null
   skipToWhen: boolean
+  skipToDetails?: boolean
 }
 
 export function initialFunnelStep(input: FunnelStartInput): FunnelStep {
+  if (input.skipToDetails) return "details"
   if (input.pinnedModeId || input.skipToWhen) return "when"
   return "meet"
 }

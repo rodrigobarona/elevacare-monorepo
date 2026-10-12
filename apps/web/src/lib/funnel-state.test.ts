@@ -21,6 +21,15 @@ describe("initialFunnelStep", () => {
   it("skips meet when only one mode is bookable", () => {
     expect(initialFunnelStep({ skipToWhen: true })).toBe("when")
   })
+
+  it("opens the details form when a slot is already selected", () => {
+    expect(
+      initialFunnelStep({
+        skipToWhen: true,
+        skipToDetails: true,
+      })
+    ).toBe("details")
+  })
 })
 
 describe("previousFunnelStep", () => {

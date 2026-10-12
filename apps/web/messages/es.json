@@ -113,6 +113,7 @@
     "offers": "Ofertas",
     "offerMeta": "{duration} min · desde {price} · {modes}",
     "book": "Elegir hora",
+    "bookSlot": "Reservar {offer} el {when}",
     "modes": {
       "online": "vídeo",
       "in_person": "presencial",

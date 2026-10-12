@@ -1626,6 +1626,7 @@ export type ListPublicExpertsResponse = z.infer<
 >
 export type PublicExpertProfile = z.infer<typeof PublicExpertProfileSchema>
 export type PublicEventTypeMode = z.infer<typeof PublicEventTypeModeSchema>
+export type PublicEventType = z.infer<typeof PublicEventTypeSchema>
 export type PublicEventTypeDetail = z.infer<typeof PublicEventTypeDetailSchema>
 export type PublicSlotsQuery = z.infer<typeof PublicSlotsQuerySchema>
 export type PublicSlot = z.infer<typeof PublicSlotSchema>
