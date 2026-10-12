@@ -27,6 +27,7 @@
     "@eleva/flags": "workspace:^",
     "@eleva/notifications": "workspace:*",
     "@eleva/observability": "workspace:*",
+    "@eleva/records": "workspace:*",
     "@eleva/scheduling": "workspace:*",
     "@eleva/storage": "workspace:*",
     "@eleva/ui": "workspace:*",

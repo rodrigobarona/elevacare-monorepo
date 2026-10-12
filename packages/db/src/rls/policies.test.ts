@@ -5,6 +5,8 @@ import {
   buildMainRlsStatements,
   TENANT_TABLES,
   DELEGATE_VISIBLE_TABLES,
+  CLINICAL_RECORDS_TABLES,
+  RECORD_OPTOUT_TABLES,
   STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
   INBOX_TABLES,
@@ -247,6 +249,34 @@ describe("owner-user-visible RLS", () => {
     expect(read).not.toContain("eleva.platform_admin")
     expect(writes).toContain("eleva.platform_admin")
     expect(writes).toContain("domain_events_publisher")
+  })
+})
+
+describe("clinical records RLS", () => {
+  const stmts = buildMainRlsStatements()
+
+  it("keeps author writes and member published reads off TENANT_TABLES", () => {
+    expect(TENANT_TABLES).not.toContain("records")
+    expect(CLINICAL_RECORDS_TABLES).toContain("records")
+    expect(RECORD_OPTOUT_TABLES).toContain("record_access_optouts")
+    const write = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_write")
+    )
+    const clinicRead = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_clinic_shared_read")
+    )
+    const published = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_member_published_read")
+    )
+    expect(write).toContain("eleva.org_id")
+    expect(write).toContain("eleva.user_id")
+    expect(write).toContain("WITH CHECK")
+    expect(write).not.toContain("clinic_shared_records")
+    expect(clinicRead).toContain("FOR SELECT")
+    expect(clinicRead).toContain("clinic_shared_records")
+    expect(clinicRead).toContain("auth.member")
+    expect(published).toContain("FOR SELECT")
+    expect(published).toContain("published_at IS NOT NULL")
   })
 })
 

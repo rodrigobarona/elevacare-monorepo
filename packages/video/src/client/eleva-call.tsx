@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useId, useState } from "react"
+import { useCallback, useEffect, useId, useRef, useState } from "react"
 import {
   DailyAudio,
   DailyProvider,
@@ -25,9 +25,34 @@ import {
 } from "@eleva/icons"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
+import { Textarea } from "@eleva/ui/components/textarea"
 import type { ElevaCallLabels } from "./labels"
+import {
+  EMPTY_INTERNAL_REPORT,
+  serializeInternalReport,
+  type InternalReportDraft,
+} from "./internal-report"
+import {
+  appendTranscriptLine,
+  parseTranscriptionMessage,
+} from "./transcription-message"
 
 export type { ElevaCallLabels, ElevaCallErrorCode } from "./labels"
+
+export type SessionRecordBundle = {
+  intake: string
+  note: string
+  transcript: string
+  internalReport: InternalReportDraft
+}
+
+export type ElevaCallRecords = {
+  load: () => Promise<SessionRecordBundle>
+  save: (
+    kind: "note" | "transcript" | "internal_report",
+    body: string
+  ) => Promise<void>
+}
 
 export type ElevaCallProps = {
   roomUrl: string
@@ -35,6 +60,7 @@ export type ElevaCallProps = {
   labels: ElevaCallLabels
   onLeft?: () => void
   showNotesSlot?: boolean
+  records?: ElevaCallRecords
   backHref: string
 }
 
@@ -50,6 +76,7 @@ export function ElevaCall({
   labels,
   onLeft,
   showNotesSlot = false,
+  records,
   backHref,
 }: ElevaCallProps) {
   return (
@@ -58,6 +85,7 @@ export function ElevaCall({
         labels={labels}
         onLeft={onLeft}
         showNotesSlot={showNotesSlot}
+        records={records}
         backHref={backHref}
       />
     </DailyProvider>
@@ -68,6 +96,7 @@ function CallShell({
   labels,
   onLeft,
   showNotesSlot,
+  records,
   backHref,
 }: Omit<ElevaCallProps, "roomUrl" | "token">) {
   const daily = useDaily()
@@ -83,6 +112,28 @@ function CallShell({
   const [chatDraft, setChatDraft] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [joinFailed, setJoinFailed] = useState(false)
+  const [intake, setIntake] = useState("")
+  const [note, setNote] = useState("")
+  const [transcript, setTranscript] = useState("")
+  const [internalReport, setInternalReport] = useState<InternalReportDraft>(
+    EMPTY_INTERNAL_REPORT
+  )
+  const [notesDirty, setNotesDirty] = useState(false)
+  const [reportDirty, setReportDirty] = useState(false)
+  const [saveFailed, setSaveFailed] = useState(false)
+  const noteRef = useRef(note)
+  const transcriptRef = useRef(transcript)
+  const reportRef = useRef(internalReport)
+  const notesDirtyRef = useRef(false)
+  const reportDirtyRef = useRef(false)
+  const recordsLoadedRef = useRef(false)
+  const lastSavedTranscriptRef = useRef("")
+  const [recordsReady, setRecordsReady] = useState(false)
+  noteRef.current = note
+  transcriptRef.current = transcript
+  reportRef.current = internalReport
+  notesDirtyRef.current = notesDirty
+  reportDirtyRef.current = reportDirty
 
   const sendAppMessage = useAppMessage({
     onAppMessage: useCallback((ev: { data?: unknown }) => {
@@ -102,6 +153,98 @@ function CallShell({
   })
 
   useEffect(() => {
+    if (!showNotesSlot || !records) return
+    const recordsApi = records
+    let cancelled = false
+    let attempt = 0
+    let retryTimer: number | undefined
+    function load() {
+      void recordsApi
+        .load()
+        .then((bundle) => {
+          if (cancelled) return
+          recordsLoadedRef.current = true
+          lastSavedTranscriptRef.current = bundle.transcript
+          setIntake(bundle.intake)
+          setTranscript((curr) => {
+            const live = curr.trim()
+            const stored = bundle.transcript.trim()
+            if (!live) return bundle.transcript
+            if (!stored) return curr
+            if (live.startsWith(stored)) return curr
+            return `${stored}\n${live}`
+          })
+          if (!notesDirtyRef.current) setNote(bundle.note)
+          if (!reportDirtyRef.current) {
+            setInternalReport(bundle.internalReport)
+          }
+          setRecordsReady(true)
+          setSaveFailed(false)
+        })
+        .catch(() => {
+          if (cancelled) return
+          setSaveFailed(true)
+          if (attempt >= 8) return
+          attempt += 1
+          retryTimer = window.setTimeout(load, 1500)
+        })
+    }
+    load()
+    return () => {
+      cancelled = true
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer)
+    }
+  }, [showNotesSlot, records])
+
+  useEffect(() => {
+    if (!showNotesSlot || !records || !notesDirty || !recordsReady) return
+    const timer = window.setTimeout(() => {
+      const body = noteRef.current
+      void records
+        .save("note", body)
+        .then(() => {
+          if (noteRef.current === body) setNotesDirty(false)
+          setSaveFailed(false)
+        })
+        .catch(() => setSaveFailed(true))
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [note, notesDirty, records, recordsReady, showNotesSlot])
+
+  useEffect(() => {
+    if (!showNotesSlot || !records || !reportDirty || !recordsReady) return
+    const timer = window.setTimeout(() => {
+      const body = serializeInternalReport(reportRef.current)
+      void records
+        .save("internal_report", body)
+        .then(() => {
+          if (serializeInternalReport(reportRef.current) === body) {
+            setReportDirty(false)
+          }
+          setSaveFailed(false)
+        })
+        .catch(() => setSaveFailed(true))
+    }, 800)
+    return () => window.clearTimeout(timer)
+  }, [internalReport, reportDirty, records, recordsReady, showNotesSlot])
+
+  useEffect(() => {
+    if (!showNotesSlot || !records || !transcript || !recordsReady) return
+    if (transcript === lastSavedTranscriptRef.current) return
+    const timer = window.setTimeout(() => {
+      const body = transcriptRef.current
+      void records
+        .save("transcript", body)
+        .then(() => {
+          lastSavedTranscriptRef.current = body
+          setSaveFailed(false)
+        })
+        .catch(() => setSaveFailed(true))
+    }, 2000)
+    return () => window.clearTimeout(timer)
+  }, [transcript, records, recordsReady, showNotesSlot])
+
+  useEffect(() => {
     if (!daily) return
     // Prejoin preview needs local tracks before Join. The permission prompt
     // on mount is the intended Daily prejoin UX, not a silent capture.
@@ -116,6 +259,35 @@ function CallShell({
   const joined = meetingState === "joined-meeting"
   const joining = meetingState === "joining-meeting"
   const left = meetingState === "left-meeting"
+
+  useEffect(() => {
+    if (!showNotesSlot || !joined || !daily) return
+    const call = daily as unknown as {
+      startTranscription?: () => Promise<unknown>
+      stopTranscription?: () => Promise<unknown>
+      on: (event: string, handler: (ev: unknown) => void) => void
+      off: (event: string, handler: (ev: unknown) => void) => void
+    }
+    if (typeof call.startTranscription === "function") {
+      void call.startTranscription().catch(() => {
+        /* live transcript is best-effort; notes still persist */
+      })
+    }
+    const onMessage = (event: unknown) => {
+      const line = parseTranscriptionMessage(event)
+      if (!line?.isFinal) return
+      setTranscript((curr) => appendTranscriptLine(curr, line))
+    }
+    call.on("transcription-message", onMessage)
+    return () => {
+      call.off("transcription-message", onMessage)
+      if (typeof call.stopTranscription === "function") {
+        void call.stopTranscription().catch(() => {
+          /* room teardown */
+        })
+      }
+    }
+  }, [daily, joined, showNotesSlot])
 
   const handleLeft = useCallback(() => {
     onLeft?.()
@@ -136,6 +308,29 @@ function CallShell({
   }
 
   async function handleLeave() {
+    if (records && showNotesSlot && recordsLoadedRef.current) {
+      const saves: Promise<void>[] = []
+      if (notesDirtyRef.current) {
+        saves.push(records.save("note", noteRef.current))
+      }
+      if (reportDirtyRef.current) {
+        saves.push(
+          records.save(
+            "internal_report",
+            serializeInternalReport(reportRef.current)
+          )
+        )
+      }
+      if (
+        transcriptRef.current.trim() &&
+        transcriptRef.current !== lastSavedTranscriptRef.current
+      ) {
+        saves.push(records.save("transcript", transcriptRef.current))
+      }
+      if (saves.length > 0) {
+        await Promise.allSettled(saves)
+      }
+    }
     await daily?.leave()
   }
 
@@ -251,10 +446,22 @@ function CallShell({
       ) : null}
 
       {showNotesSlot ? (
-        <aside className="rounded-3xl border border-dashed p-4 text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">{labels.notesTitle}</p>
-          <p className="mt-1">{labels.notesPlaceholder}</p>
-        </aside>
+        <SessionNotesPanel
+          labels={labels}
+          intake={intake}
+          note={note}
+          transcript={transcript}
+          internalReport={internalReport}
+          saveFailed={saveFailed}
+          onNoteChange={(value) => {
+            setNote(value)
+            setNotesDirty(true)
+          }}
+          onReportChange={(patch) => {
+            setInternalReport((curr) => ({ ...curr, ...patch }))
+            setReportDirty(true)
+          }}
+        />
       ) : null}
     </div>
   )
@@ -406,5 +613,94 @@ function ChatPanel({
         <Button type="submit">{labels.send}</Button>
       </form>
     </div>
+  )
+}
+
+function SessionNotesPanel({
+  labels,
+  intake,
+  note,
+  transcript,
+  internalReport,
+  saveFailed,
+  onNoteChange,
+  onReportChange,
+}: {
+  labels: ElevaCallLabels
+  intake: string
+  note: string
+  transcript: string
+  internalReport: InternalReportDraft
+  saveFailed: boolean
+  onNoteChange: (value: string) => void
+  onReportChange: (patch: Partial<InternalReportDraft>) => void
+}) {
+  return (
+    <aside className="grid gap-4 rounded-3xl border p-4 text-sm">
+      {intake ? (
+        <div>
+          <p className="font-medium text-foreground">{labels.intakeTitle}</p>
+          <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+            {intake}
+          </p>
+        </div>
+      ) : null}
+      <div>
+        <p className="font-medium text-foreground">{labels.notesTitle}</p>
+        <Textarea
+          className="mt-2 min-h-32"
+          value={note}
+          onChange={(event) => onNoteChange(event.target.value)}
+          placeholder={labels.notesPlaceholder}
+          aria-label={labels.notesTitle}
+        />
+        <p className="mt-1 text-xs text-muted-foreground">
+          {saveFailed ? labels.notesSaveFailed : labels.notesSaved}
+        </p>
+      </div>
+      <div className="grid gap-3">
+        <div>
+          <p className="font-medium text-foreground">{labels.reportTitle}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {labels.reportHint}
+          </p>
+        </div>
+        <Textarea
+          className="min-h-24"
+          value={internalReport.notes}
+          onChange={(event) => onReportChange({ notes: event.target.value })}
+          placeholder={labels.reportNotesPlaceholder}
+          aria-label={labels.reportNotes}
+        />
+        <Textarea
+          className="min-h-24"
+          value={internalReport.suggestions}
+          onChange={(event) =>
+            onReportChange({ suggestions: event.target.value })
+          }
+          placeholder={labels.reportSuggestionsPlaceholder}
+          aria-label={labels.reportSuggestions}
+        />
+        <Textarea
+          className="min-h-24"
+          value={internalReport.recommendations}
+          onChange={(event) =>
+            onReportChange({ recommendations: event.target.value })
+          }
+          placeholder={labels.reportRecommendationsPlaceholder}
+          aria-label={labels.reportRecommendations}
+        />
+      </div>
+      <div>
+        <p className="font-medium text-foreground">{labels.transcriptTitle}</p>
+        {transcript ? (
+          <pre className="mt-2 max-h-48 overflow-y-auto rounded-2xl bg-muted p-3 text-xs whitespace-pre-wrap">
+            {transcript}
+          </pre>
+        ) : (
+          <p className="mt-1 text-muted-foreground">{labels.transcriptEmpty}</p>
+        )}
+      </div>
+    </aside>
   )
 }

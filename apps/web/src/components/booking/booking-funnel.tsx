@@ -25,6 +25,7 @@ import { BookingPaymentElement } from "@eleva/billing/client"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { Field, FieldError, FieldLabel } from "@eleva/ui/components/field"
 import { Input } from "@eleva/ui/components/input"
+import { Textarea } from "@eleva/ui/components/textarea"
 import { BookingSummary } from "@eleva/ui/components/booking/booking-summary"
 import { CancellationPolicySummary } from "@eleva/ui/components/booking/cancellation-policy-summary"
 import { ConsentCheckbox } from "@eleva/ui/components/booking/consent-checkbox"
@@ -162,6 +163,7 @@ export function BookingFunnel({
   const [phone, setPhone] = useState("")
   const [taxId, setTaxId] = useState("")
   const [promoCode, setPromoCode] = useState("")
+  const [intakeNotes, setIntakeNotes] = useState("")
   const [granted, setGranted] = useState<Record<string, boolean>>({})
   const [reservation, setReservation] = useState<Reservation | null>(null)
   const [payment, setPayment] = useState<Payment | null>(null)
@@ -433,6 +435,7 @@ export function BookingFunnel({
           ...(normalizedPromo.length >= 2
             ? { promoCode: normalizedPromo }
             : {}),
+          ...(intakeNotes.trim() ? { intakeNotes: intakeNotes.trim() } : {}),
           consents: consents.map((doc) => ({
             kind: doc.kind,
             version: doc.version,
@@ -741,6 +744,18 @@ export function BookingFunnel({
               />
               <p className="text-sm text-muted-foreground">
                 {t("details.taxIdHint")}
+              </p>
+            </Field>
+            <Field>
+              <FieldLabel>{t("details.intakeNotes")}</FieldLabel>
+              <Textarea
+                data-testid="booking-intake-notes"
+                value={intakeNotes}
+                onChange={(event) => setIntakeNotes(event.target.value)}
+                maxLength={8000}
+              />
+              <p className="text-sm text-muted-foreground">
+                {t("details.intakeNotesHint")}
               </p>
             </Field>
             {priceCents > 0 ? (

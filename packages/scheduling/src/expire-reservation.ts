@@ -89,7 +89,10 @@ export async function finalizeExpiredReservation(input: {
       if (current) {
         await tx
           .update(main.slotReservations)
-          .set({ status: "expired", funnel: sql`"funnel" - 'guest'` })
+          .set({
+            status: "expired",
+            funnel: sql`"funnel" - 'guest' - 'intakeNotes' - 'intakeNotesEncrypted'`,
+          })
           .where(eq(main.slotReservations.id, input.reservationId))
         result.expired = true
 

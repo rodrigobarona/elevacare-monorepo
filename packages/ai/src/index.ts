@@ -6,6 +6,7 @@ export {
   AiModelZeroRetentionRequiredError,
   assertApprovedModel,
   requireZeroRetentionModel,
+  firstZeroRetentionModel,
   type ApprovedModel,
 } from "./approved-models"
 

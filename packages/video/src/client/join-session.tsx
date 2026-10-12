@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import { Button, LinkButton } from "@eleva/ui/components/button"
-import { ElevaCall } from "./eleva-call"
+import { ElevaCall, type ElevaCallRecords } from "./eleva-call"
 import {
   joinErrorCode,
   joinErrorWindow,
@@ -15,6 +15,7 @@ export type JoinSessionProps = {
   labels: ElevaCallLabels
   backHref: string
   showNotesSlot?: boolean
+  records?: ElevaCallRecords
 }
 
 export function JoinSession({
@@ -22,6 +23,7 @@ export function JoinSession({
   labels,
   backHref,
   showNotesSlot = false,
+  records,
 }: JoinSessionProps) {
   const [creds, setCreds] = useState<{
     roomUrl: string
@@ -115,6 +117,7 @@ export function JoinSession({
       token={creds.token}
       labels={labels}
       showNotesSlot={showNotesSlot}
+      records={records}
       backHref={backHref}
       onLeft={() => setLeft(true)}
     />

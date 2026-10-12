@@ -10,6 +10,7 @@ import {
 } from "./confirm-booking"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
+import { persistIntakeAfterConfirm } from "./persist-booking-intake"
 
 const BOOKING_LINK_ID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -49,6 +50,7 @@ export async function confirmFreeReservation(input: {
   }
 
   if (booking?.status === "confirmed" && payment?.status === "succeeded") {
+    await persistIntakeAfterConfirm(booking.id)
     return {
       ok: true,
       alreadyConfirmed: true,
@@ -144,6 +146,7 @@ export async function confirmFreeReservation(input: {
     if (isUniqueViolation(err)) {
       const raced = await loadFreeConfirmTarget(input.reservationId)
       if (raced?.booking?.status === "confirmed") {
+        await persistIntakeAfterConfirm(raced.booking.id)
         return {
           ok: true,
           alreadyConfirmed: true,
@@ -156,6 +159,7 @@ export async function confirmFreeReservation(input: {
     return { ok: false, error: "db_error" }
   }
 
+  await persistIntakeAfterConfirm(bookingId)
   return {
     ok: true,
     alreadyConfirmed,

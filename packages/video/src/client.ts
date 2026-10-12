@@ -5,7 +5,15 @@ export {
   type ElevaCallLabels,
   type ElevaCallErrorCode,
   type ElevaCallProps,
+  type ElevaCallRecords,
+  type SessionRecordBundle,
 } from "./client/eleva-call"
+export {
+  EMPTY_INTERNAL_REPORT,
+  parseInternalReport,
+  serializeInternalReport,
+  type InternalReportDraft,
+} from "./client/internal-report"
 export {
   elevaCallLabels,
   joinErrorCode,

@@ -206,6 +206,8 @@
       "phoneHint": "Needed for a phone session. You can include the country code.",
       "taxId": "NIF / VAT (optional)",
       "taxIdHint": "Portuguese NIF or EU VAT, for invoices when issuance opens.",
+      "intakeNotes": "Anything you want the expert to know (optional)",
+      "intakeNotesHint": "A short pre-agenda. The expert sees this with the session record.",
       "promo": "Promo code (optional)",
       "promoHint": "We'll save this with your booking. Automatic discounts are not applied yet.",
       "consentsIntro": "To book a health session on this digital health platform, please confirm:",

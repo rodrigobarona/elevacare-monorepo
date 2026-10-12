@@ -18,6 +18,7 @@
     "@eleva/compliance": "workspace:*",
     "@eleva/config": "workspace:*",
     "@eleva/db": "workspace:*",
+    "@eleva/records": "workspace:*",
     "@upstash/redis": "catalog:",
     "drizzle-orm": "catalog:"
   },

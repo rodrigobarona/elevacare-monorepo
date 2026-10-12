@@ -14,7 +14,8 @@ import {
   listExpertBusyBookings,
 } from "@eleva/db"
 import type { Tx } from "@eleva/db/context"
-import { bookingLinks, consents } from "@eleva/db/schema"
+import { bookingLinks, consents, slotReservations } from "@eleva/db/schema"
+import { encryptHoldIntake } from "@eleva/records"
 import { assertRequestedSlotAvailable } from "./assert-slot-available"
 import { assertModeBookable } from "./mode-bookable"
 import { emptyBusyTimeProvider, type BusyTimeProvider } from "./offer-slots"
@@ -58,6 +59,8 @@ export type ReserveBookingInput = {
   /** Policy the member was shown; a mismatch means the expert changed it. */
   cancellationPolicy?: CancellationPolicy
   promoCode?: string
+  /** Member pre-agenda observations from the booking form. */
+  intakeNotes?: string
   busyTimeProvider?: BusyTimeProvider
 }
 
@@ -343,6 +346,25 @@ export async function reserveBooking(
           userId: input.session?.userId,
           guestEmail: input.session ? undefined : memberEmail,
         })
+        const intakeNotes = input.intakeNotes?.trim()
+        if (!intakeNotes) return
+        const intakeNotesEncrypted = await encryptHoldIntake(
+          expert.orgId,
+          intakeNotes,
+          reservationId
+        )
+        const [current] = await tx
+          .select({ funnel: slotReservations.funnel })
+          .from(slotReservations)
+          .where(eq(slotReservations.id, reservationId))
+          .limit(1)
+        if (!current?.funnel) return
+        await tx
+          .update(slotReservations)
+          .set({
+            funnel: { ...current.funnel, intakeNotesEncrypted },
+          })
+          .where(eq(slotReservations.id, reservationId))
       },
     })
   } catch (err) {

@@ -112,6 +112,10 @@ export type ReservationFunnelSnapshot = {
   sessionMode: "online" | "in_person" | "phone"
   guest?: { email: string; name: string; phone?: string; taxId?: string }
   promoCode?: string
+  /** Encrypted member pre-agenda. Copied into records.intake at confirm then cleared. */
+  intakeNotesEncrypted?: string
+  /** Legacy plaintext leftover; hydrate then strip. Never write new values. */
+  intakeNotes?: string
 }
 
 /**

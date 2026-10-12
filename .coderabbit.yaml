@@ -64,7 +64,9 @@ reviews:
       instructions: >-
         Only @daily-co importer (ADR-018). Random room names; meeting
         tokens minted at join, never stored or logged. Verify webhook
-        signatures. No PHI in logs. Recording/transcription is 16.8 only.
+        signatures. No PHI in logs. Cloud recording stays 16.8/D-08.
+        Live Daily transcription (startTranscription /
+        transcription-message, enable_recording false) is Phase 10.1.
     - path: packages/encryption/**
       instructions: >-
         Envelope AES-256-GCM only (ADR-020). Never log KEK/DEK/plaintext.

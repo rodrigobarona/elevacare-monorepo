@@ -74,8 +74,8 @@ export const sessionParticipants = pgTable(
 )
 
 /**
- * Expert-only in-call note draft. Phase 10 migrates this into encrypted
- * records.kind = note. Not member-visible.
+ * Unused Phase 09 holding tank. Phase 10.1 writes encrypted
+ * `records.kind = note`. Do not dual-write.
  */
 export const sessionNoteDrafts = pgTable(
   "session_note_drafts",

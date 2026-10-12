@@ -120,6 +120,10 @@ export const organization = authSchema.table(
     createdAt: timestamptz("created_at").notNull().defaultNow(),
     metadata: text("metadata"),
     type: text("type").notNull().default("personal"),
+    /** Phase 11 clinic share toggle. Default off; D-11 author-only until then. */
+    clinicSharedRecords: boolean("clinic_shared_records")
+      .notNull()
+      .default(false),
   },
   (table) => [uniqueIndex("auth_organization_slug_uidx").on(table.slug)]
 )

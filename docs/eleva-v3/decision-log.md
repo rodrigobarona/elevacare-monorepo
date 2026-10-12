@@ -32,6 +32,41 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-12: HIPAA is not an EU launch priority; session records open on standard Daily
+
+- Decision: Eleva is **EU-first**. Founder: HIPAA/BAA is nice-to-have, not a
+  launch blocker. **D-07 stays deferred.** Product stays **standard Daily,
+  recording off, not HIPAA** — no BAA claim, no `sessions.eleva.care`
+  CNAME. Phase **10.1** may store encrypted session artifacts on the
+  member record for that booking: (1) member intake / pre-agenda from the
+  booking form, (2) expert in-call notes that must not be lost on
+  refresh or leave, (3) a **live** Daily transcript (raw) and later an AI
+  summary draft, (4) an unpublished **internal report** the expert writes
+  for themselves (notes, suggestions, recommendations) — never member-
+  visible; distinct from Phase 10.2 published `report`. This is **not** Phase 16.8 cloud recording or the D-08
+  S3 landing zone. Live transcript uses Daily `startTranscription` /
+  `transcription-message` (Deepgram), with `enable_recording: false`.
+  D-11 is a **working pre-launch** decision (author-only reads now;
+  clinic share stays Phase 11). DPO/legal re-sign before production PHI.
+  AI summary stays fail-closed until a zero-retention model is on
+  `PHI_APPROVED_MODELS` (ADR-009).
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: D-07, D-08, D-11, ADR-009, Phase 10.1, 16.8
+- Next review: DPO re-sign before production clinical records.
+
+### 2026-10-12: Local Eleva two-browser join PASS
+
+- Decision: Local Eleva join is **PASS** (Chrome signed-in expert +
+  Safari unsigned guest `/join/{id}?g=`, same private room, live chat).
+  That is **not** the Phase 09 staging exit gate. Staging Daily webhook
+  subscribe (`meeting.started`/`ended` → `sessions.status`) remains
+  leftover. Not HIPAA.
+- Owner: engineering
+- Status: `active`
+- Related: Phase 09.7, spike `09-daily-account.md`
+- Next review: staging webhook + staging two-browser.
+
 ### 2026-10-08: Guest confirm sends one booking mail; magic-link only on sign-in
 
 - Decision: After a guest books, `guest-activation` still provisions an
@@ -1805,13 +1840,14 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 ### D-11 (2026-09-07): Clinical access model
 
 - Owner: DPO + product
-- Status: proposed (sign before PR 10.1)
-- Review date: 2026-09-21 (two weeks; re-review every two weeks while `proposed`, and the blocked PR cannot open without sign-off regardless of this date)
+- Status: active — **working pre-launch** (founder 2026-10-12 opened Phase 10.1).
+  Author-only reads now. Clinic share stays Phase 11. Not a DPO production sign-off.
+- Review date: DPO + product re-sign before production clinical records
 - Summary: expert-authored records are readable by the authoring expert; by other experts of the
   same clinic organization only when the clinic admin enabled `clinic_shared_records` (default
   off, reason required, audited) and the member has not opted out (`record_access_optouts`);
   by Eleva staff never in plaintext (metadata only; break-glass decrypt is a Phase 12 dual-control
-  action). Phase 10 enforces it in RLS; Phase 11 only adds the toggle. Blocks: Phase 10 PR 10.1.
+  action). Phase 10 enforces author-only RLS now; Phase 11 only adds the toggle. Unblocks: Phase 10 PR 10.1.
 - Reference: [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`execution-plan/phases/11-team-clinics.md`](./execution-plan/phases/11-team-clinics.md)
 
 ### D-12 (2026-09-07): Account deletion vs legal retention of clinical records

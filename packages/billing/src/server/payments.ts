@@ -47,6 +47,7 @@ const funnelSnapshotSchema = z.object({
     })
     .optional(),
   promoCode: z.string().min(2).max(32).optional(),
+  intakeNotes: z.string().max(8000).optional(),
 })
 
 export function parseReservationFunnel(value: unknown) {

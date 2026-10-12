@@ -16,7 +16,10 @@ export async function expireOverlappingHolds(
 ): Promise<void> {
   await tx
     .update(slotReservations)
-    .set({ status: "expired", funnel: sql`"funnel" - 'guest'` })
+    .set({
+      status: "expired",
+      funnel: sql`"funnel" - 'guest' - 'intakeNotes' - 'intakeNotesEncrypted'`,
+    })
     .where(
       and(
         eq(slotReservations.expertUserId, expertUserId),
