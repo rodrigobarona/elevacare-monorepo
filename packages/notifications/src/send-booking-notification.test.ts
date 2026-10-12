@@ -245,6 +245,33 @@ describe("sendBookingNotification", () => {
     )
   })
 
+  it("sends confirmation mail without join links when grant mint fails", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.confirmed", deliveries: [] })
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    await sendBookingNotification(
+      {
+        id: "evt-grant-mint-fail",
+        type: "booking.confirmed",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking(),
+        mintJoinGrant: async () => {
+          throw new Error("BETTER_AUTH_SECRET is required for join grants")
+        },
+        send,
+      }
+    )
+    errorSpy.mockRestore()
+    expect(send).toHaveBeenCalled()
+    expect(renderBookingConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({ joinHref: undefined })
+    )
+  })
+
   it("puts a durable signup CTA on guest confirmation mail only", async () => {
     const send = vi
       .fn()

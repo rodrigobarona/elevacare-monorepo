@@ -7,9 +7,8 @@ import {
   dailyClientFromEnv,
   mintMeetingToken,
   tokenExpUnix,
-  verifyJoinGrant,
-  type JoinGrantRole,
 } from "@eleva/video"
+import { verifyJoinGrant, type JoinGrantRole } from "@eleva/video/join-grant"
 
 export type SessionJoinErrorCode =
   | "NOT_A_PARTICIPANT"

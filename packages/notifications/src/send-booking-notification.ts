@@ -538,14 +538,23 @@ export async function sessionJoinHref(
   if (joinGrantExpUnix(booking.endsAt) <= Math.floor(Date.now() / 1000)) {
     return undefined
   }
-  const grant = await mint({
-    bookingId: booking.id,
-    role,
-    endsAt: booking.endsAt,
-    scheduleRevision: booking.scheduleRevision,
-  })
-  const base = gateway.replace(/\/$/, "")
-  return `${base}${sessionJoinPath(booking.id, grant)}`
+  try {
+    const grant = await mint({
+      bookingId: booking.id,
+      role,
+      endsAt: booking.endsAt,
+      scheduleRevision: booking.scheduleRevision,
+    })
+    const base = gateway.replace(/\/$/, "")
+    return `${base}${sessionJoinPath(booking.id, grant)}`
+  } catch {
+    console.error("[booking-notification] join grant mint failed", {
+      bookingId: booking.id,
+      role,
+      kind,
+    })
+    return undefined
+  }
 }
 
 async function renderBookingHtml(input: {
