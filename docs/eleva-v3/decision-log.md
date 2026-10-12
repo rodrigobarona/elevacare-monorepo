@@ -38,7 +38,8 @@ Each entry should include:
   unverified Better Auth user, a personal Space, `memberUserId`, and
   re-keys consents. It does **not** send Better Auth's "Sign in to Eleva
   Care" magic-link email. Join stays on the confirmation mail (grant +
-  `.ics`). Optional account creation is a durable `{GATEWAY}/signup?name=&email=`
+  `.ics`). Optional account creation is a durable
+  `{GATEWAY}/signup?claim=1&name=&email=`
   CTA on member/guest `booking.confirmed` only — never a magic token in
   that mail (tokens expire in minutes; people keep confirmation emails
   for weeks). Magic-link is sent only when the member asks to sign in
