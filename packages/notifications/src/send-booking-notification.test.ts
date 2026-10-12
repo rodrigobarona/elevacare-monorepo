@@ -240,7 +240,7 @@ describe("sendBookingNotification", () => {
       1,
       expect.objectContaining({
         activateHref:
-          "https://eleva.care/signup?email=ada%40example.com&name=Ada+Lovelace",
+          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace",
       })
     )
   })
@@ -299,7 +299,7 @@ describe("sendBookingNotification", () => {
       1,
       expect.objectContaining({
         activateHref:
-          "https://eleva.care/signup?email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
+          "https://eleva.care/signup?claim=1&email=ada%40example.com&name=Ada+Lovelace&phone=%2B351910000000",
         audience: undefined,
       })
     )

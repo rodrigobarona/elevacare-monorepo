@@ -750,6 +750,7 @@ function memberActivateHref(
   if (!booking.guestEmail) return undefined
   if (booking.memberEmailVerified) return undefined
   const params = new URLSearchParams({
+    claim: "1",
     email: booking.guestEmail,
     ...(booking.guestName ? { name: booking.guestName } : {}),
     ...(booking.guestPhone ? { phone: booking.guestPhone } : {}),

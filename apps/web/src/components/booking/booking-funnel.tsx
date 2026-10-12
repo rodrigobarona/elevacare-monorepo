@@ -906,7 +906,7 @@ export function BookingFunnel({
                     : t("done.video")}
               </p>
             </div>
-            {confirmState !== "failed" ? (
+            {confirmState === "confirmed" ? (
               <div className="space-y-3">
                 <div className="flex flex-wrap gap-3">
                   <Button

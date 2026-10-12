@@ -24,9 +24,11 @@ function sameEmail(a: string, b: string): boolean {
 export function SignupForm({
   initialName = "",
   initialEmail = "",
+  claimGuest = false,
 }: {
   initialName?: string
   initialEmail?: string
+  claimGuest?: boolean
 }) {
   const t = useTranslations("auth")
   const [name, setName] = useState(initialName)
@@ -38,7 +40,7 @@ export function SignupForm({
   const [sent, setSent] = useState(false)
   const [magicSent, setMagicSent] = useState(false)
   const claimingGuest =
-    initialEmail.length > 0 && sameEmail(email, initialEmail)
+    claimGuest && initialEmail.length > 0 && sameEmail(email, initialEmail)
 
   async function sendMagicLink() {
     const { error: magicError } = await authClient.signIn.magicLink({
