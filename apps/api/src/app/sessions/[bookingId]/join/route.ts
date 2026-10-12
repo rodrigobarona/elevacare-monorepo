@@ -38,6 +38,13 @@ export async function POST(
   const headers = corsHeaders(request, "POST, OPTIONS")
   const { bookingId } = await params
 
+  const publicLimited = await applyRateLimit(
+    rateLimitKey(request),
+    RATE_LIMITS.public,
+    headers
+  )
+  if (publicLimited) return publicLimited
+
   const parsed = JoinSessionRequestSchema.safeParse(
     await request.json().catch(() => ({}))
   )
@@ -89,13 +96,6 @@ async function joinWithGrant(
   if (botVerdict?.isBot) {
     return secureJson({ error: "blocked" }, { status: 403, headers })
   }
-
-  const rateLimited = await applyRateLimit(
-    rateLimitKey(request),
-    RATE_LIMITS.public,
-    headers
-  )
-  if (rateLimited) return rateLimited
 
   return mintJoinResponse(
     () =>
