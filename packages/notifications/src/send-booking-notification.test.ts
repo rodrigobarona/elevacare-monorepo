@@ -180,7 +180,48 @@ describe("sendBookingNotification", () => {
       expect.objectContaining({
         cancellationPolicyName: "Moderate",
         refundAmount: "€30.00",
+        showIcsHint: true,
       })
+    )
+  })
+
+  it("hides the .ics hint when a request email has no calendar attachment", async () => {
+    const send = vi
+      .fn()
+      .mockResolvedValue({ kind: "booking.requested", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-requested",
+        type: "booking.requested",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ status: "awaiting_confirmation" }),
+        send,
+      }
+    )
+    expect(renderBookingConfirmed).toHaveBeenCalledWith(
+      expect.objectContaining({ showIcsHint: false })
+    )
+    expect(send.mock.calls[0]?.[0].ctx.attachments).toBeUndefined()
+
+    renderBookingCancelled.mockClear()
+    send.mockResolvedValue({ kind: "booking.request_declined", deliveries: [] })
+    await sendBookingNotification(
+      {
+        id: "evt-declined",
+        type: "booking.request_declined",
+        orgId: ORG_ID,
+        payload: eventPayload(),
+      },
+      {
+        loadBooking: async () => booking({ status: "cancelled" }),
+        send,
+      }
+    )
+    expect(renderBookingCancelled).toHaveBeenCalledWith(
+      expect.objectContaining({ showIcsHint: false })
     )
   })
 

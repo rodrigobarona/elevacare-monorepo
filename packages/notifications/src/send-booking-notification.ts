@@ -734,6 +734,7 @@ async function renderBookingHtml(input: {
         heading: copy.heading,
         subheading: copy.subheading,
         preview: copy.preview(input.memberName, input.formattedDate),
+        showIcsHint: input.kind !== "booking.requested",
       })
     case "booking.cancelled":
     case "booking.request_declined":
@@ -748,6 +749,7 @@ async function renderBookingHtml(input: {
         heading: copy.heading,
         subheading: copy.subheading,
         preview: copy.preview(input.memberName, input.formattedDate),
+        showIcsHint: input.kind === "booking.cancelled",
       })
     case "booking.rescheduled":
       return renderBookingRescheduled({

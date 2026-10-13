@@ -16,6 +16,8 @@ export interface BookingCancelledProps {
   heading?: string
   subheading?: string
   preview?: string
+  /** Hide when this send has no .ics attachment (request declined/expired). */
+  showIcsHint?: boolean
 }
 
 export function BookingCancelledEmail({
@@ -29,6 +31,7 @@ export function BookingCancelledEmail({
   heading,
   subheading,
   preview,
+  showIcsHint = true,
 }: BookingCancelledProps) {
   const t = getEmailTranslations(locale)
 
@@ -65,9 +68,11 @@ export function BookingCancelledEmail({
         ) : null}
       </EmailCard>
 
-      <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
-        {t.booking.icsHintRemove}
-      </EmailBodyText>
+      {showIcsHint ? (
+        <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
+          {t.booking.icsHintRemove}
+        </EmailBodyText>
+      ) : null}
     </EmailLayout>
   )
 }

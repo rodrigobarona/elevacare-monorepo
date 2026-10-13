@@ -33,6 +33,8 @@ export interface BookingConfirmedProps {
   heading?: string
   subheading?: string
   preview?: string
+  /** Hide when this send has no .ics attachment (request pending). */
+  showIcsHint?: boolean
 }
 
 export function BookingConfirmedEmail({
@@ -59,6 +61,7 @@ export function BookingConfirmedEmail({
   heading,
   subheading,
   preview,
+  showIcsHint = true,
 }: BookingConfirmedProps) {
   const t = getEmailTranslations(locale)
   const isExpert = audience === "expert"
@@ -142,9 +145,11 @@ export function BookingConfirmedEmail({
         </Section>
       ) : null}
 
-      <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
-        {t.booking.icsHintAdd}
-      </EmailBodyText>
+      {showIcsHint ? (
+        <EmailBodyText className="mt-[24px] text-[13px] leading-[20px]">
+          {t.booking.icsHintAdd}
+        </EmailBodyText>
+      ) : null}
     </EmailLayout>
   )
 }
