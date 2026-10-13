@@ -420,6 +420,7 @@ export async function markSessionDocumentDeleted(input: {
             and(
               eq(sessionDocuments.id, input.documentId),
               eq(sessionDocuments.orgId, booking.orgId),
+              eq(sessionDocuments.bookingId, booking.id),
               eq(sessionDocuments.uploadedBy, input.actorUserId),
               isNull(sessionDocuments.deletedAt)
             )

@@ -19,8 +19,14 @@ function grantSecret(secret?: string): string {
   return value
 }
 
-function sign(payload: string, secret?: string): string {
+function signingKey(secret?: string): Buffer {
   return createHmac("sha256", grantSecret(secret))
+    .update("session-document-grant")
+    .digest()
+}
+
+function sign(payload: string, secret?: string): string {
+  return createHmac("sha256", signingKey(secret))
     .update(payload)
     .digest("base64url")
 }

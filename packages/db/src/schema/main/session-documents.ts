@@ -91,6 +91,7 @@ export const sessionDocuments = pgTable(
     clinicSharedReadPolicy: pgPolicy("session_documents_clinic_shared_read", {
       for: "select",
       using: sql`deleted_at IS NULL
+        AND scope = 'shared'
         AND org_id::text = current_setting('eleva.org_id', true)
         AND member_user_id IS NOT NULL
         AND EXISTS (

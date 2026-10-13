@@ -322,6 +322,7 @@ describe("clinical records RLS", () => {
     expect(insert).toContain("uploaded_by")
     expect(insert).not.toContain("expert_user_id")
     expect(clinicRead).toContain("clinic_shared_records")
+    expect(clinicRead).toContain("scope = 'shared'")
     expect(clinicRead).not.toContain("internal_report")
     expect(memberRead).toContain("scope = 'shared'")
     expect(memberRead).toContain("deleted_at IS NULL")

@@ -73,6 +73,7 @@ export async function GET(
         "Content-Type": doc.mime,
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Cache-Control": "private, no-store",
+        "X-Content-Type-Options": "nosniff",
       },
     })
   } catch (err) {

@@ -23,14 +23,6 @@ export const runtime = "nodejs"
 
 const IdSchema = z.string().uuid()
 
-function isBlobMissing(err: unknown): boolean {
-  if (!err || typeof err !== "object") return false
-  const status = "status" in err ? (err as { status: unknown }).status : null
-  const message =
-    "message" in err && typeof err.message === "string" ? err.message : ""
-  return status === 404 || /not found|404/i.test(message)
-}
-
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ bookingId: string; documentId: string }> }
@@ -68,10 +60,8 @@ export async function DELETE(
     try {
       await deletePrivateDocument(blobUrl)
     } catch (err) {
-      if (!isBlobMissing(err)) {
-        console.error("[sessions/documents] blob delete failed", err)
-        return secureJson({ error: "internal" }, { status: 500, headers })
-      }
+      console.error("[sessions/documents] blob delete failed", err)
+      return secureJson({ error: "internal" }, { status: 500, headers })
     }
     await markSessionDocumentDeleted({
       bookingId: bookingId.data,

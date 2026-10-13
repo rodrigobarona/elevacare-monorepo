@@ -204,7 +204,12 @@ export async function deletePrivateDocument(url: string): Promise<void> {
     return
   }
   const { BLOB_PRIVATE_READ_WRITE_TOKEN } = requirePrivateBlobEnv()
-  await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
+  try {
+    await del(url, { token: BLOB_PRIVATE_READ_WRITE_TOKEN })
+  } catch (err) {
+    if (err instanceof BlobNotFoundError) return
+    throw err
+  }
 }
 
 export type PrivateDocumentResult = {

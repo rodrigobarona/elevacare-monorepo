@@ -1,6 +1,6 @@
 -- Phase 10.1 session documents: private Blob objects on the member
 -- history for a booking. D-07 stays deferred; recording off; not HIPAA.
--- Pathname prefix records/<expertOrgId>/<memberUserId>/.
+-- Pathname prefix records/<expertOrgId>/<memberUserId>/<actorUserId>/.
 
 DO $$ BEGIN
   CREATE TYPE "session_document_scope" AS ENUM ('expert_only', 'shared');
@@ -96,6 +96,7 @@ CREATE POLICY "session_documents_clinic_shared_read" ON "session_documents"
   AS PERMISSIVE FOR SELECT TO public
   USING (
     deleted_at IS NULL
+    AND scope = 'shared'
     AND org_id::text = current_setting('eleva.org_id', true)
     AND member_user_id IS NOT NULL
     AND EXISTS (

@@ -333,6 +333,7 @@ export function buildMainRlsStatements(): string[] {
       `CREATE POLICY ${table}_clinic_shared_read ON ${table} FOR SELECT ` +
         `USING (` +
         `deleted_at IS NULL ` +
+        `AND scope = 'shared' ` +
         `AND org_id::text = current_setting('eleva.org_id', true) ` +
         `AND member_user_id IS NOT NULL ` +
         `AND EXISTS (` +
