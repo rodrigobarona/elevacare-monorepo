@@ -1,3 +1,5 @@
+import { resolveGatewayUrl } from "@eleva/config/env"
+
 /**
  * Shared `returnTo` sanitizer for the Better Auth login flow.
  *
@@ -25,6 +27,21 @@ const ABSOLUTE_RETURN_TO_HOSTS = new Set<string>([
   "www.eleva.care",
   "localhost",
 ])
+
+const GATEWAY_AUTH_PATHS = [
+  "/dashboard",
+  "/verify-email",
+  "/callback",
+  "/two-factor",
+  "/login",
+  "/signup",
+] as const
+
+function isGatewayAuthPath(path: string): boolean {
+  return GATEWAY_AUTH_PATHS.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}?`)
+  )
+}
 
 export function sanitizeReturnTo(
   raw: string | null | undefined
@@ -60,4 +77,52 @@ export function sanitizeReturnTo(
   } catch {
     return undefined
   }
+}
+
+/**
+ * Absolute gateway URL for Better Auth `callbackURL`.
+ *
+ * Relative paths resolve against the auth server (`localhost:3002` /
+ * `api.eleva.care`) and 404. Product destinations go through
+ * `/dashboard?returnTo=` so the account zone can repair cookies and
+ * bounce onto the gateway origin.
+ */
+export function toGatewayCallbackURL(
+  returnTo?: string | null,
+  gateway = resolveGatewayUrl()
+): string {
+  const path = sanitizeReturnTo(returnTo) ?? "/dashboard"
+  const base = gateway.replace(/\/$/, "")
+  if (isGatewayAuthPath(path)) return `${base}${path}`
+  return `${base}/dashboard?returnTo=${encodeURIComponent(path)}`
+}
+
+const MAGIC_LINK_CALLBACK_KEYS = [
+  "callbackURL",
+  "newUserCallbackURL",
+  "errorCallbackURL",
+] as const
+
+/**
+ * Better Auth puts `callbackURL` on the API verify URL as-is. Relative
+ * product paths then 404 on `localhost:3002` / `api.eleva.care` after
+ * the session is minted. Rewrite those query params to gateway URLs
+ * before the email is sent.
+ */
+export function rewriteMagicLinkVerifyUrl(
+  url: string,
+  gateway = resolveGatewayUrl()
+): string {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return url
+  }
+  for (const key of MAGIC_LINK_CALLBACK_KEYS) {
+    const raw = parsed.searchParams.get(key)
+    if (!raw) continue
+    parsed.searchParams.set(key, toGatewayCallbackURL(raw, gateway))
+  }
+  return parsed.toString()
 }

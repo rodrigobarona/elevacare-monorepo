@@ -79,6 +79,11 @@ export {
   markCalendarIntegrationExpired,
   syncExpertCalendarAccounts,
 } from "./calendar-accounts"
-export { LOGIN_PATH, guardSession, guardSessionForOrg } from "./guards"
+export {
+  LOGIN_PATH,
+  guardSession,
+  guardSessionForOrg,
+  redirectToGatewayLogin,
+} from "./guards"
 export { PermissionGate, usePermission, type ClientSessionShape } from "./react"
 export { SESSION_COOKIE_NAMES } from "./server/credentials"

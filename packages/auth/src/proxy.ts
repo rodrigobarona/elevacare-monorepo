@@ -33,6 +33,9 @@ export const DEFAULT_UNAUTHENTICATED_PATHS = [
   "/two-factor",
 ] as const
 
+/** Request header so org layouts can preserve the current path on login. */
+export const ELEVA_PATHNAME_HEADER = "x-eleva-pathname"
+
 export type RedirectStrategy = { kind: "gateway"; baseUrl: string }
 export type OptimisticSessionState = "signed-in" | "signed-out" | "ambiguous"
 
@@ -57,10 +60,15 @@ export function applyExpiredSessionCookies(response: NextResponse): void {
   }
 }
 
+function requestPathname(req: NextRequest): string {
+  return `${req.nextUrl.pathname}${req.nextUrl.search}`
+}
+
 function buildAuthFlowResponse(req: NextRequest): NextResponse {
   const locale = resolveLocaleForRequest(req)
   const requestHeaders = new Headers(req.headers)
   requestHeaders.set("x-eleva-locale", locale)
+  requestHeaders.set(ELEVA_PATHNAME_HEADER, requestPathname(req))
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   persistLocaleCookie(req, response, locale)
   return response
@@ -102,6 +110,7 @@ export function createAuthProxy(options: AuthProxyOptions = {}): ProxyHandler {
     const locale = resolveLocaleForRequest(req)
     const requestHeaders = new Headers(req.headers)
     requestHeaders.set("x-eleva-locale", locale)
+    requestHeaders.set(ELEVA_PATHNAME_HEADER, requestPathname(req))
     const response = NextResponse.next({ request: { headers: requestHeaders } })
     persistLocaleCookie(req, response, locale)
 

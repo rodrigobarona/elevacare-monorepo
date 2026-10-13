@@ -20,7 +20,8 @@
   "scripts": {
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "seed:join-probe": "tsx --env-file=../../.env.local scripts/seed-join-probe.ts"
   },
   "dependencies": {
     "@eleva/audit": "workspace:*",
@@ -43,6 +44,7 @@
     "@eleva/eslint-config": "workspace:*",
     "@eleva/typescript-config": "workspace:*",
     "eslint": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest"
-import { sanitizeReturnTo } from "./return-to"
+import {
+  rewriteMagicLinkVerifyUrl,
+  sanitizeReturnTo,
+  toGatewayCallbackURL,
+} from "./return-to"
 
 describe("sanitizeReturnTo", () => {
   describe("null/empty input", () => {
@@ -89,6 +93,74 @@ describe("sanitizeReturnTo", () => {
     it("rejects javascript: and data: schemes (parsed as opaque URL)", () => {
       expect(sanitizeReturnTo("javascript:alert(1)")).toBeUndefined()
       expect(sanitizeReturnTo("data:text/html,<script>")).toBeUndefined()
+    })
+  })
+
+  describe("toGatewayCallbackURL", () => {
+    const gateway = "http://localhost:3000"
+
+    it("sends product paths through gateway /dashboard?returnTo=", () => {
+      expect(
+        toGatewayCallbackURL(
+          "/rbarona/team/sessions/92cbc729-aa25-478b-99a2-c94a37d145ce/join",
+          gateway
+        )
+      ).toBe(
+        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2F92cbc729-aa25-478b-99a2-c94a37d145ce%2Fjoin"
+      )
+    })
+
+    it("extracts the path from a local expert-zone URL", () => {
+      expect(
+        toGatewayCallbackURL(
+          "http://localhost:3003/rbarona/team/sessions/abc/join",
+          gateway
+        )
+      ).toBe(
+        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin"
+      )
+    })
+
+    it("keeps account-native destinations on the gateway origin", () => {
+      expect(toGatewayCallbackURL("/dashboard", gateway)).toBe(
+        "http://localhost:3000/dashboard"
+      )
+      expect(toGatewayCallbackURL("/verify-email", gateway)).toBe(
+        "http://localhost:3000/verify-email"
+      )
+    })
+
+    it("falls back to gateway /dashboard when returnTo is invalid", () => {
+      expect(toGatewayCallbackURL("https://evil.com/foo", gateway)).toBe(
+        "http://localhost:3000/dashboard"
+      )
+      expect(toGatewayCallbackURL(null, gateway)).toBe(
+        "http://localhost:3000/dashboard"
+      )
+    })
+  })
+
+  describe("rewriteMagicLinkVerifyUrl", () => {
+    const gateway = "http://localhost:3000"
+    const verify =
+      "http://localhost:3002/auth/magic-link/verify?token=test-token"
+
+    it("rewrites a relative join callback onto the gateway dashboard", () => {
+      const input = `${verify}&callbackURL=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin`
+      const rewritten = rewriteMagicLinkVerifyUrl(input, gateway)
+      const callback = new URL(rewritten).searchParams.get("callbackURL")
+      expect(callback).toBe(
+        "http://localhost:3000/dashboard?returnTo=%2Frbarona%2Fteam%2Fsessions%2Fabc%2Fjoin"
+      )
+    })
+
+    it("keeps an already-gateway callbackURL stable", () => {
+      const gatewayCallback = "http://localhost:3000/dashboard"
+      const input = `${verify}&callbackURL=${encodeURIComponent(gatewayCallback)}`
+      const rewritten = rewriteMagicLinkVerifyUrl(input, gateway)
+      expect(new URL(rewritten).searchParams.get("callbackURL")).toBe(
+        gatewayCallback
+      )
     })
   })
 
