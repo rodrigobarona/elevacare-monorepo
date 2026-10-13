@@ -34,10 +34,6 @@ export const BOOKING_NOTIFICATION_KINDS = [
   "booking.confirmed",
   "booking.cancelled",
   "booking.rescheduled",
-  "booking.requested",
-  "booking.request_accepted",
-  "booking.request_declined",
-  "booking.request_expired",
 ] as const
 
 export const BOOKING_REMINDER_KINDS = [
@@ -218,9 +214,7 @@ export async function sendBookingNotification(
   const expertHtml = await renderBookingHtml({
     ...htmlInput,
     joinHref: expertJoinHref,
-    ...(event.type === "booking.confirmed" ||
-    event.type === "booking.requested" ||
-    event.type === "booking.request_accepted"
+    ...(event.type === "booking.confirmed"
       ? {
           audience: "expert" as const,
           greetingName: expertFirst,
@@ -322,13 +316,8 @@ function eventMatchesBooking(
 ): boolean {
   switch (kind) {
     case "booking.confirmed":
-    case "booking.request_accepted":
       return booking.status === "confirmed"
-    case "booking.requested":
-      return booking.status === "awaiting_confirmation"
     case "booking.cancelled":
-    case "booking.request_declined":
-    case "booking.request_expired":
       return booking.status === "cancelled"
     case "booking.reminder_24h":
     case "booking.reminder_1h":
@@ -403,13 +392,8 @@ export function calendarAttachments(
   }
   switch (kind) {
     case "booking.confirmed":
-    case "booking.request_accepted":
     case "booking.rescheduled":
       return [icsAttachment("REQUEST", generateIcsRequest(event))]
-    case "booking.requested":
-    case "booking.request_declined":
-    case "booking.request_expired":
-      return undefined
     case "booking.cancelled":
       return [
         icsAttachment(
@@ -479,10 +463,6 @@ function titleForKind(
   kind: BookingSendKind,
   booking: {
     confirmedTitle: string
-    requestedTitle: string
-    requestAcceptedTitle: string
-    requestDeclinedTitle: string
-    requestExpiredTitle: string
     rescheduledTitle: string
     cancelledTitle: string
     reminder24hTitle: string
@@ -492,14 +472,6 @@ function titleForKind(
   switch (kind) {
     case "booking.confirmed":
       return booking.confirmedTitle
-    case "booking.requested":
-      return booking.requestedTitle
-    case "booking.request_accepted":
-      return booking.requestAcceptedTitle
-    case "booking.request_declined":
-      return booking.requestDeclinedTitle
-    case "booking.request_expired":
-      return booking.requestExpiredTitle
     case "booking.cancelled":
       return booking.cancelledTitle
     case "booking.rescheduled":
@@ -515,97 +487,10 @@ function titleForKind(
   }
 }
 
-function emailCopyForKind(
-  kind: BookingSendKind,
-  t: ReturnType<typeof getEmailTranslations>,
-  isExpert: boolean
-): {
-  heading: string
-  subheading: string
-  preview: (member: string, date: string) => string
-} {
-  switch (kind) {
-    case "booking.requested":
-      return {
-        heading: isExpert
-          ? t.booking.expertRequestedTitle
-          : t.booking.requestedTitle,
-        subheading: isExpert
-          ? t.booking.expertRequestedSubtitle
-          : t.booking.requestedSubtitle,
-        preview: t.subject.requested,
-      }
-    case "booking.request_accepted":
-      return {
-        heading: isExpert
-          ? t.booking.expertConfirmedTitle
-          : t.booking.requestAcceptedTitle,
-        subheading: isExpert
-          ? t.booking.expertConfirmedSubtitle
-          : t.booking.requestAcceptedSubtitle,
-        preview: t.subject.requestAccepted,
-      }
-    case "booking.request_declined":
-      return {
-        heading: t.booking.requestDeclinedTitle,
-        subheading: t.booking.requestDeclinedSubtitle,
-        preview: t.subject.requestDeclined,
-      }
-    case "booking.request_expired":
-      return {
-        heading: t.booking.requestExpiredTitle,
-        subheading: t.booking.requestExpiredSubtitle,
-        preview: t.subject.requestExpired,
-      }
-    case "booking.confirmed":
-      return {
-        heading: isExpert
-          ? t.booking.expertConfirmedTitle
-          : t.booking.confirmedTitle,
-        subheading: isExpert
-          ? t.booking.expertConfirmedSubtitle
-          : t.booking.confirmedSubtitle,
-        preview: t.subject.newBooking,
-      }
-    case "booking.cancelled":
-      return {
-        heading: t.booking.cancelledTitle,
-        subheading: t.booking.cancelledSubtitle,
-        preview: t.subject.cancelled,
-      }
-    case "booking.rescheduled":
-      return {
-        heading: t.booking.rescheduledTitle,
-        subheading: t.booking.rescheduledSubtitle,
-        preview: t.subject.rescheduled,
-      }
-    case "booking.reminder_24h":
-      return {
-        heading: t.booking.reminder24hTitle,
-        subheading: t.booking.reminder24hSubtitle,
-        preview: t.subject.reminder24h,
-      }
-    case "booking.reminder_1h":
-      return {
-        heading: t.booking.reminder1hTitle,
-        subheading: t.booking.reminder1hSubtitle,
-        preview: t.subject.reminder1h,
-      }
-    default: {
-      const _exhaustive: never = kind
-      return _exhaustive
-    }
-  }
-}
-
 function subjectForKind(
   kind: BookingSendKind,
   subject: {
     newBooking: (member: string, date: string) => string
-    requested: (member: string, date: string) => string
-    requestAccepted: (member: string, date: string) => string
-    requestDeclined: (member: string, date: string) => string
-    requestExpired: (member: string, date: string) => string
     rescheduled: (member: string, date: string) => string
     cancelled: (member: string, date: string) => string
     reminder24h: (member: string, date: string) => string
@@ -617,14 +502,6 @@ function subjectForKind(
   switch (kind) {
     case "booking.confirmed":
       return subject.newBooking(memberFirst, formattedDate)
-    case "booking.requested":
-      return subject.requested(memberFirst, formattedDate)
-    case "booking.request_accepted":
-      return subject.requestAccepted(memberFirst, formattedDate)
-    case "booking.request_declined":
-      return subject.requestDeclined(memberFirst, formattedDate)
-    case "booking.request_expired":
-      return subject.requestExpired(memberFirst, formattedDate)
     case "booking.cancelled":
       return subject.cancelled(memberFirst, formattedDate)
     case "booking.rescheduled":
@@ -652,7 +529,6 @@ export async function sessionJoinHref(
 ): Promise<string | undefined> {
   if (
     kind !== "booking.confirmed" &&
-    kind !== "booking.request_accepted" &&
     kind !== "booking.reminder_1h" &&
     kind !== "booking.rescheduled"
   ) {
@@ -705,12 +581,8 @@ async function renderBookingHtml(input: {
   price?: string
   location?: string
 }): Promise<string> {
-  const t = getEmailTranslations(input.locale)
-  const copy = emailCopyForKind(input.kind, t, input.audience === "expert")
   switch (input.kind) {
     case "booking.confirmed":
-    case "booking.requested":
-    case "booking.request_accepted":
       return renderBookingConfirmed({
         memberName: input.memberName,
         eventTypeName: input.eventTypeName,
@@ -731,13 +603,8 @@ async function renderBookingHtml(input: {
         price: input.price,
         location: input.location,
         cancellationPolicyName: input.cancellationPolicyName,
-        heading: copy.heading,
-        subheading: copy.subheading,
-        preview: copy.preview(input.memberName, input.formattedDate),
       })
     case "booking.cancelled":
-    case "booking.request_declined":
-    case "booking.request_expired":
       return renderBookingCancelled({
         memberName: input.memberName,
         eventTypeName: input.eventTypeName,
@@ -745,9 +612,6 @@ async function renderBookingHtml(input: {
         cancellationPolicyName: input.cancellationPolicyName,
         refundAmount: input.refundAmount,
         locale: input.locale,
-        heading: copy.heading,
-        subheading: copy.subheading,
-        preview: copy.preview(input.memberName, input.formattedDate),
       })
     case "booking.rescheduled":
       return renderBookingRescheduled({
@@ -882,9 +746,7 @@ function memberActivateHref(
   booking: LoadedBooking,
   gateway: string
 ): string | undefined {
-  if (kind !== "booking.confirmed" && kind !== "booking.request_accepted") {
-    return undefined
-  }
+  if (kind !== "booking.confirmed") return undefined
   if (!booking.guestEmail) return undefined
   if (booking.memberEmailVerified) return undefined
   const params = new URLSearchParams({

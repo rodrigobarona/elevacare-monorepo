@@ -45,7 +45,6 @@ vi.mock("@eleva/notifications", () => ({
     type === "invoice.pending",
   isBookingNotificationKind: (type: string) =>
     type === "booking.confirmed" ||
-    type === "booking.request_accepted" ||
     type === "booking.cancelled" ||
     type === "booking.rescheduled",
   isPaymentPayoutNotificationKind: (type: string) =>

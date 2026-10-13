@@ -333,7 +333,6 @@ export async function reserveBooking(
         ...(intakeNotesEncrypted ? { intakeNotesEncrypted } : {}),
       },
       cancellationPolicy: offer.cancellationPolicy,
-      requiresApproval: offer.requiresApproval,
       audit: {
         actorUserId: input.session?.userId ?? null,
         payload: {

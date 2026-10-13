@@ -57,9 +57,6 @@ export default async function CalendarPage({
             timezone: b.timezone,
             sessionMode: b.sessionMode,
             memberFirstName: b.memberFirstName,
-            approvalDeadlineAt: b.approvalDeadlineAt
-              ? b.approvalDeadlineAt.toISOString()
-              : null,
             eventTypeTitle: b.eventTypeTitle,
             eventTypeSlug: b.eventTypeSlug,
             modeLabel: b.modeLabel,

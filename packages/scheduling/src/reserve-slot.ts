@@ -82,7 +82,6 @@ export async function reserveSlot(
     audit,
     funnel,
     cancellationPolicy,
-    requiresApproval,
   } = input
 
   if (userId) {
@@ -136,7 +135,6 @@ export async function reserveSlot(
           currency: price?.currency,
           funnel,
           cancellationPolicy,
-          requiresApproval: requiresApproval === true,
           startsAt,
           endsAt,
           expiresAt: new Date(Date.now() + ttlSeconds * 1000),

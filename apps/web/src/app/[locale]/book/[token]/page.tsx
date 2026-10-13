@@ -65,7 +65,6 @@ export default async function PrivateBookingPage({ params }: Props) {
         title={link.eventTitle}
         modes={link.modes}
         cancellationPolicy={link.cancellationPolicy}
-        requiresApproval={link.requiresApproval}
         geoCountry={geo.country}
         geoTimeZone={geo.timeZone}
         consents={funnelConsentDocs(locale)}

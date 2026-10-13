@@ -4,13 +4,6 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import {
-  BOOKING_SETTING_VALUES,
-  bookingSettingFromRequiresApproval,
-  describeBookingSetting,
-  isBookingSetting,
-  type BookingSettingLocale,
-} from "@eleva/config/booking-settings"
-import {
   CANCELLATION_POLICY_VALUES,
   DEFAULT_CANCELLATION_POLICY,
   describeCancellationPolicy,
@@ -31,7 +24,6 @@ import {
   SelectValue,
 } from "@eleva/ui/components/select"
 import { CheckboxField } from "@eleva/ui/components/checkbox-field"
-import { BookingSettingCards } from "@eleva/ui/components/booking/booking-setting-cards"
 import { CancellationPolicyCards } from "@eleva/ui/components/booking/cancellation-policy-cards"
 import { Alert, AlertDescription } from "@eleva/ui/components/alert"
 import {
@@ -93,10 +85,6 @@ export function EventTypeForm({
   const policyCards = CANCELLATION_POLICY_VALUES.map((id) => ({
     id,
     ...describeCancellationPolicy(id, policyLocale),
-  }))
-  const bookingSettingCards = BOOKING_SETTING_VALUES.map((id) => ({
-    id,
-    ...describeBookingSetting(id, policyLocale as BookingSettingLocale),
   }))
   const [pending, setPending] = React.useState(false)
   const [assistPending, setAssistPending] = React.useState(false)
@@ -584,25 +572,13 @@ export function EventTypeForm({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-medium">{t("bookingSetting.label")}</p>
-              <p className="text-sm text-muted-foreground">
-                {t("bookingSetting.help")}
-              </p>
-              <BookingSettingCards
-                label={t("bookingSetting.label")}
-                settings={bookingSettingCards}
-                selectedKey={bookingSettingFromRequiresApproval(
-                  requiresApproval
-                )}
-                onSelectionChange={(id) => {
-                  if (isBookingSetting(id))
-                    setRequiresApproval(id === "request")
-                }}
-              />
-            </div>
-
             <div className="space-y-3">
+              <CheckboxField
+                id="event-type-requires-approval"
+                label="Require manual approval for bookings"
+                isSelected={requiresApproval}
+                onChange={setRequiresApproval}
+              />
               <CheckboxField
                 id="event-type-worldwide-mode"
                 label="Worldwide mode (bypass country-license validation)"

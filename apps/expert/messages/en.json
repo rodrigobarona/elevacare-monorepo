@@ -292,10 +292,6 @@
     "cancellationPolicy": {
       "label": "Cancellation policy",
       "help": "Members see this policy before they pay. It applies to bookings made after you change it; existing bookings keep the policy they were booked under. If you cancel, the member always gets a full refund."
-    },
-    "bookingSetting": {
-      "label": "How members book",
-      "help": "Instant Book confirms as soon as they pay. Request to book holds the slot and the payment until you accept."
     }
   },
   "schedule": {
@@ -354,14 +350,6 @@
     "locationUnknown": "—",
     "join": "Join session",
     "joinSoon": "Video uses standard Daily (not HIPAA). Join turns on 15 minutes before the start.",
-    "requestPending": "Booking request",
-    "accept": "Accept",
-    "decline": "Decline",
-    "declineNote": "Optional note (max 180)",
-    "accepted": "Request accepted.",
-    "declined": "Request declined. The member is refunded in full.",
-    "requestFailed": "Could not update this request. Try again.",
-    "requestExpired": "The response window has ended.",
     "ics": {
       "title": "ICS feed",
       "description": "Subscribe in Apple Calendar, Google Calendar, or Outlook with a private read-only link.",

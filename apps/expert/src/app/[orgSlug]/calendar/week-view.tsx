@@ -5,7 +5,6 @@ import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
 import { JoinCta } from "@eleva/video/join-cta"
 import { listCalendarBookingsAction } from "./actions"
-import { RequestActions } from "./request-actions"
 
 export type CalendarBooking = {
   id: string
@@ -15,7 +14,6 @@ export type CalendarBooking = {
   timezone: string
   sessionMode: "online" | "in_person" | "phone"
   memberFirstName: string | null
-  approvalDeadlineAt: string | null
   eventTypeTitle: { en: string; pt?: string; es?: string }
   eventTypeSlug: string
   modeLabel: { en: string; pt?: string; es?: string } | null
@@ -111,12 +109,7 @@ export function WeekView({
       if (cancelled) return
       setLoading(false)
       if (result.ok) {
-        setBookings(
-          result.data.bookings.map((booking) => ({
-            ...booking,
-            approvalDeadlineAt: booking.approvalDeadlineAt ?? null,
-          }))
-        )
+        setBookings(result.data.bookings)
       }
     })
     return () => {
@@ -222,7 +215,7 @@ export function WeekView({
                         <button
                           key={b.id}
                           type="button"
-                          className={`absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[10px] leading-tight ${MODE_CLASS[b.sessionMode]}${b.status === "awaiting_confirmation" ? "ring-dashed ring-2 ring-background/70" : ""}`}
+                          className={`absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[10px] leading-tight ${MODE_CLASS[b.sessionMode]}`}
                           style={{
                             top: `${topPct}%`,
                             height: `${Math.max(heightPct, 18)}%`,
@@ -232,11 +225,7 @@ export function WeekView({
                           <span className="font-medium">
                             {pickTitle(b.eventTypeTitle, locale)}
                           </span>
-                          {b.status === "awaiting_confirmation" ? (
-                            <span className="block opacity-90">
-                              {t("requestPending")}
-                            </span>
-                          ) : b.memberFirstName ? (
+                          {b.memberFirstName ? (
                             <span className="block opacity-90">
                               {b.memberFirstName}
                             </span>
@@ -294,20 +283,6 @@ export function WeekView({
                 )}
               </dd>
             </div>
-            {selected.status === "awaiting_confirmation" &&
-            selected.approvalDeadlineAt ? (
-              <div className="sm:col-span-2">
-                <dt className="text-xs text-muted-foreground">
-                  {t("requestPending")}
-                </dt>
-                <dd>
-                  {new Intl.DateTimeFormat(locale, {
-                    dateStyle: "medium",
-                    timeStyle: "short",
-                  }).format(new Date(selected.approvalDeadlineAt))}
-                </dd>
-              </div>
-            ) : null}
             <div className="sm:col-span-2">
               <dt className="text-xs text-muted-foreground">{t("location")}</dt>
               <dd>
@@ -327,35 +302,17 @@ export function WeekView({
               </dd>
             </div>
           </dl>
-          {selected.status === "awaiting_confirmation" ? (
-            <RequestActions
-              bookingId={selected.id}
-              onSettled={(status) => {
-                if (status === "confirmed") {
-                  setBookings((curr) =>
-                    curr.map((b) =>
-                      b.id === selected.id ? { ...b, status: "confirmed" } : b
-                    )
-                  )
-                  return
-                }
-                setBookings((curr) => curr.filter((b) => b.id !== selected.id))
-                setSelectedId(null)
-              }}
-            />
-          ) : (
-            <JoinCta
-              className="mt-4"
-              href={`/${orgSlug}/team/sessions/${selected.id}/join`}
-              sessionMode={selected.sessionMode}
-              status={selected.status}
-              startsAt={selected.startsAt}
-              endsAt={selected.endsAt}
-              joinLabel={t("join")}
-              joinSoonLabel={t("joinSoon")}
-              pending="hint"
-            />
-          )}
+          <JoinCta
+            className="mt-4"
+            href={`/${orgSlug}/team/sessions/${selected.id}/join`}
+            sessionMode={selected.sessionMode}
+            status={selected.status}
+            startsAt={selected.startsAt}
+            endsAt={selected.endsAt}
+            joinLabel={t("join")}
+            joinSoonLabel={t("joinSoon")}
+            pending="hint"
+          />
         </div>
       ) : null}
 

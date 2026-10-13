@@ -80,15 +80,7 @@ export {
   markBookingPaymentFailed,
   authorizeConfirmAccess,
   isUniqueViolation,
-  emitGuestActivationRequired,
 } from "./confirm-booking"
-export {
-  acceptBookingRequest,
-  declineBookingRequest,
-  expireBookingRequests,
-  BookingRequestError,
-} from "./booking-request"
-export type { BookingRequestErrorCode } from "./booking-request"
 export { confirmFreeReservation } from "./confirm-free"
 export type {
   ConfirmBookingPaymentInput,

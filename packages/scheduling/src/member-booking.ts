@@ -21,12 +21,7 @@ import { isExclusionViolation } from "./pg-errors"
 import { resolveOffer } from "./resolve-offer"
 import { expireOverlappingHolds } from "./stale-holds"
 
-const CANCELABLE_STATUSES = new Set([
-  "confirmed",
-  "rescheduled",
-  "awaiting_confirmation",
-])
-const RESCHEDULABLE_STATUSES = new Set(["confirmed", "rescheduled"])
+const MUTABLE_STATUSES = new Set(["confirmed", "rescheduled"])
 
 export type MemberBookingPolicyErrorCode =
   | "not_found"
@@ -54,21 +49,6 @@ function quoteFor(
   row: MemberBookingPolicyRow,
   now: Date
 ): MemberCancellationQuote {
-  if (row.status === "awaiting_confirmation") {
-    const refundable =
-      row.paymentStatus === "succeeded" && row.paymentAmountCents !== null
-        ? row.paymentAmountCents - (row.paymentRefundedCents ?? 0)
-        : 0
-    return {
-      policy: row.cancellationPolicy,
-      refundPercent: 100,
-      reason: "pending_request",
-      fullRefundUntil: row.startsAt,
-      nextChangeAt: null,
-      refundCents: refundable,
-      currency: row.currency,
-    }
-  }
   const quote = resolveCancellationRefund({
     policy: row.cancellationPolicy,
     bookedAt: row.bookedAt,
@@ -86,22 +66,19 @@ function quoteFor(
   }
 }
 
-async function loadBookingInStatuses(
-  input: {
-    userId: string
-    orgId: string
-    bookingId: string
-    now: Date
-  },
-  statuses: Set<string>
-): Promise<MemberBookingPolicyRow> {
+async function loadMutableBooking(input: {
+  userId: string
+  orgId: string
+  bookingId: string
+  now: Date
+}): Promise<MemberBookingPolicyRow> {
   const row = await getMemberBookingForPolicy({
     userId: input.userId,
     bookingId: input.bookingId,
     orgId: input.orgId,
   })
   if (!row) throw new MemberBookingPolicyError("not_found")
-  if (!statuses.has(row.status)) {
+  if (!MUTABLE_STATUSES.has(row.status)) {
     throw new MemberBookingPolicyError("INVALID_STATUS")
   }
   if (row.startsAt.getTime() <= input.now.getTime()) {
@@ -118,10 +95,7 @@ export async function quoteMemberCancellation(input: {
   now?: Date
 }): Promise<MemberCancellationQuote> {
   const now = input.now ?? new Date()
-  const row = await loadBookingInStatuses(
-    { ...input, now },
-    CANCELABLE_STATUSES
-  )
+  const row = await loadMutableBooking({ ...input, now })
   return quoteFor(row, now)
 }
 
@@ -132,10 +106,7 @@ export async function cancelMemberBooking(input: {
   now?: Date
 }): Promise<{ refund: MemberCancellationQuote }> {
   const now = input.now ?? new Date()
-  const row = await loadBookingInStatuses(
-    { ...input, now },
-    CANCELABLE_STATUSES
-  )
+  const row = await loadMutableBooking({ ...input, now })
   const refund = quoteFor(row, now)
 
   await withAudit(
@@ -241,10 +212,7 @@ export async function rescheduleMemberBooking(input: {
   now?: Date
 }): Promise<void> {
   const now = input.now ?? new Date()
-  const row = await loadBookingInStatuses(
-    { ...input, now },
-    RESCHEDULABLE_STATUSES
-  )
+  const row = await loadMutableBooking({ ...input, now })
   // Moving a session out of its penalty window would dodge the policy, so
   // members can only reschedule while cancelling would still refund in full.
   if (

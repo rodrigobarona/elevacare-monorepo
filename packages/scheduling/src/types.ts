@@ -62,8 +62,6 @@ export interface ReserveSlotInput {
   funnel?: ReservationFunnelSnapshot
   /** Policy shown to the member; snapshotted onto the booking. */
   cancellationPolicy?: CancellationPolicy
-  /** Instant Book vs Request to book; snapshotted onto the hold. */
-  requiresApproval?: boolean
   afterInsert?: (tx: Tx, reservationId: string) => Promise<void>
   audit?: {
     actorUserId?: string | null

@@ -591,7 +591,6 @@ async function insertPendingBooking(
     bookedLocale: funnel.language,
     cancellationPolicy,
     cancellationPolicyVersion: CANCELLATION_POLICY_VERSION,
-    requiresApproval: reservation.requiresApproval,
   })
   await tx.insert(main.bookingPayments).values({
     id: input.paymentId,

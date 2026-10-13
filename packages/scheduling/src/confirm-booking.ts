@@ -6,7 +6,6 @@ import {
   withPlatformAdminContext,
   type Tx,
 } from "@eleva/db"
-import { resolveApprovalDeadline } from "@eleva/config"
 import { emitBookingNotificationEvent } from "./emit-domain-event"
 import { ensureSessionRow } from "./ensure-session-row"
 import { emitPaymentFailedEvent } from "./emit-payment-event"
@@ -44,14 +43,7 @@ export type ConfirmBookingPaymentInput = {
 }
 
 export type ConfirmBookingPaymentResult =
-  | {
-      ok: true
-      alreadyConfirmed: boolean
-      bookingId: string
-      orgId: string
-      status: "confirmed" | "awaiting_confirmation"
-      approvalDeadlineAt?: string
-    }
+  | { ok: true; alreadyConfirmed: boolean; bookingId: string; orgId: string }
   | {
       ok: false
       error: "not_found" | "payment_mismatch" | "unavailable" | "db_error"
@@ -159,26 +151,18 @@ export async function confirmBookingPayment(
     return { ok: false, error: "unavailable" }
   }
 
-  if (
-    (booking.status === "confirmed" ||
-      booking.status === "awaiting_confirmation") &&
-    payment.status === "succeeded"
-  ) {
+  if (booking.status === "confirmed" && payment.status === "succeeded") {
     const sameIntent =
       payment.stripePaymentIntentId === input.paymentIntentId ||
       reservation.stripePaymentIntentId === input.paymentIntentId
     if (sameIntent) {
       await persistIntakeAfterConfirm(booking.id)
-      return paidConfirmResult({
+      return {
+        ok: true,
+        alreadyConfirmed: true,
         bookingId: booking.id,
         orgId: reservation.orgId,
-        alreadyConfirmed: true,
-        status:
-          booking.status === "awaiting_confirmation"
-            ? "awaiting_confirmation"
-            : "confirmed",
-        approvalDeadlineAt: booking.approvalDeadlineAt,
-      })
+      }
     }
     return { ok: false, error: "payment_mismatch" }
   }
@@ -229,17 +213,12 @@ export async function confirmBookingPayment(
         if (memberId) {
           await lockMemberHealthConsentInvariant(tx, memberId)
         }
-        const requestApproval =
-          booking.requiresApproval === true ||
-          reservation.requiresApproval === true
-        const flip = await flipPaidBooking(tx, {
+        const flip = await flipConfirmed(tx, {
           reservationId: reservation.id,
           bookingId: booking.id,
           paymentId: payment.id,
           paymentIntentId: input.paymentIntentId,
           paymentMethodType: intent.paymentMethodType ?? null,
-          requiresApproval: requestApproval,
-          startsAt: booking.startsAt,
         })
         if (flip === "payment_mismatch") {
           throw new Error("PAYMENT_MISMATCH")
@@ -248,32 +227,12 @@ export async function confirmBookingPayment(
           alreadyConfirmed = true
           await ctx.emit({
             entity: "booking",
-            action: requestApproval ? "submitted" : "confirmed",
+            action: "confirmed",
             entityId: booking.id,
             payload: {
               reservationId: reservation.id,
               paymentIntentId: input.paymentIntentId,
               idempotentReplay: true,
-            },
-          })
-          return
-        }
-        if (requestApproval) {
-          await emitBookingNotificationEvent(tx, {
-            orgId: reservation.orgId,
-            type: "booking.requested",
-            bookingId: booking.id,
-            startsAt: booking.startsAt,
-            occurredAt: new Date(),
-          })
-          await ctx.emit({
-            entity: "booking",
-            action: "submitted",
-            entityId: booking.id,
-            payload: {
-              reservationId: reservation.id,
-              paymentIntentId: input.paymentIntentId,
-              status: "awaiting_confirmation",
             },
           })
           return
@@ -317,21 +276,14 @@ export async function confirmBookingPayment(
         input.reservationId,
         input.paymentIntentId
       )
-      if (
-        raced?.booking.status === "confirmed" ||
-        raced?.booking.status === "awaiting_confirmation"
-      ) {
+      if (raced?.booking.status === "confirmed") {
         await persistIntakeAfterConfirm(raced.booking.id)
-        return paidConfirmResult({
+        return {
+          ok: true,
+          alreadyConfirmed: true,
           bookingId: raced.booking.id,
           orgId: raced.reservation.orgId,
-          alreadyConfirmed: true,
-          status:
-            raced.booking.status === "awaiting_confirmation"
-              ? "awaiting_confirmation"
-              : "confirmed",
-          approvalDeadlineAt: raced.booking.approvalDeadlineAt,
-        })
+        }
       }
     }
     if (err instanceof Error && err.message === "PAYMENT_MISMATCH") {
@@ -342,39 +294,11 @@ export async function confirmBookingPayment(
   }
 
   await persistIntakeAfterConfirm(booking.id)
-  const requestApproval =
-    booking.requiresApproval === true || reservation.requiresApproval === true
-  return paidConfirmResult({
-    bookingId: booking.id,
-    orgId: reservation.orgId,
-    alreadyConfirmed,
-    status: requestApproval ? "awaiting_confirmation" : "confirmed",
-    approvalDeadlineAt: requestApproval
-      ? (booking.approvalDeadlineAt ??
-        resolveApprovalDeadline({
-          startsAt: booking.startsAt,
-          now: new Date(),
-        }))
-      : booking.approvalDeadlineAt,
-  })
-}
-
-function paidConfirmResult(input: {
-  bookingId: string
-  orgId: string
-  alreadyConfirmed: boolean
-  status: "confirmed" | "awaiting_confirmation"
-  approvalDeadlineAt?: Date | null
-}): Extract<ConfirmBookingPaymentResult, { ok: true }> {
   return {
     ok: true,
-    alreadyConfirmed: input.alreadyConfirmed,
-    bookingId: input.bookingId,
-    orgId: input.orgId,
-    status: input.status,
-    ...(input.approvalDeadlineAt
-      ? { approvalDeadlineAt: input.approvalDeadlineAt.toISOString() }
-      : {}),
+    alreadyConfirmed,
+    bookingId: booking.id,
+    orgId: reservation.orgId,
   }
 }
 
@@ -387,11 +311,7 @@ export async function markBookingPaymentFailed(input: {
     const loaded = input.reservationId
       ? await loadConfirmTarget(input.reservationId, input.paymentIntentId)
       : await loadByPaymentIntent(input.paymentIntentId)
-    if (
-      !loaded ||
-      loaded.booking.status === "confirmed" ||
-      loaded.booking.status === "awaiting_confirmation"
-    ) {
+    if (!loaded || loaded.booking.status === "confirmed") {
       return { ok: true, bookingId: loaded?.booking.id }
     }
     await withAudit(
@@ -406,11 +326,7 @@ export async function markBookingPaymentFailed(input: {
           .where(eq(main.bookings.id, loaded.booking.id))
           .for("update")
           .limit(1)
-        if (
-          !booking ||
-          booking.status === "confirmed" ||
-          booking.status === "awaiting_confirmation"
-        ) {
+        if (!booking || booking.status === "confirmed") {
           await ctx.emit({
             entity: "booking_payment",
             action: "failed",
@@ -484,7 +400,7 @@ export async function markBookingPaymentFailed(input: {
   }
 }
 
-export async function emitGuestActivationRequired(
+async function emitGuestActivationRequired(
   tx: Tx,
   input: {
     orgId: string
@@ -536,7 +452,7 @@ export async function emitGuestActivationRequired(
     .onConflictDoNothing()
 }
 
-async function flipPaidBooking(
+async function flipConfirmed(
   tx: Tx,
   input: {
     reservationId: string
@@ -544,8 +460,6 @@ async function flipPaidBooking(
     paymentId: string
     paymentIntentId: string
     paymentMethodType: string | null
-    requiresApproval: boolean
-    startsAt: Date
   }
 ): Promise<"confirmed" | "already_confirmed" | "payment_mismatch"> {
   const now = new Date()
@@ -559,7 +473,7 @@ async function flipPaidBooking(
     .for("update")
     .limit(1)
   if (!booking) {
-    throw new Error("flipPaidBooking: booking not found")
+    throw new Error("flipConfirmed: booking not found")
   }
   const [payment] = await tx
     .select({
@@ -571,28 +485,20 @@ async function flipPaidBooking(
     .for("update")
     .limit(1)
   if (!payment) {
-    throw new Error("flipPaidBooking: payment not found")
+    throw new Error("flipConfirmed: payment not found")
   }
-  if (
-    booking.status === "confirmed" ||
-    booking.status === "awaiting_confirmation"
-  ) {
+  if (booking.status === "confirmed") {
     const sameIntent =
       booking.stripePaymentIntentId === input.paymentIntentId ||
       payment.stripePaymentIntentId === input.paymentIntentId
     return sameIntent ? "already_confirmed" : "payment_mismatch"
   }
-  const approvalDeadlineAt = input.requiresApproval
-    ? resolveApprovalDeadline({ startsAt: input.startsAt, now })
-    : undefined
   await tx
     .update(main.bookings)
     .set({
-      status: input.requiresApproval ? "awaiting_confirmation" : "confirmed",
-      confirmedAt: input.requiresApproval ? null : now,
+      status: "confirmed",
+      confirmedAt: now,
       stripePaymentIntentId: input.paymentIntentId,
-      requiresApproval: input.requiresApproval,
-      ...(approvalDeadlineAt ? { approvalDeadlineAt } : {}),
     })
     .where(eq(main.bookings.id, input.bookingId))
   await tx

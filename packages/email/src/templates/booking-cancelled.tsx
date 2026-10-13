@@ -13,9 +13,6 @@ export interface BookingCancelledProps {
   refundAmount?: string
   locale?: EmailLocale
   jsonLd?: Record<string, unknown>
-  heading?: string
-  subheading?: string
-  preview?: string
 }
 
 export function BookingCancelledEmail({
@@ -26,24 +23,21 @@ export function BookingCancelledEmail({
   refundAmount,
   locale = "en",
   jsonLd,
-  heading,
-  subheading,
-  preview,
 }: BookingCancelledProps) {
   const t = getEmailTranslations(locale)
 
   return (
     <EmailLayout
-      preview={preview ?? t.subject.cancelled(memberName, formattedDate)}
+      preview={t.subject.cancelled(memberName, formattedDate)}
       locale={locale}
       jsonLd={jsonLd}
     >
-      <EmailHeading>{heading ?? t.booking.cancelledTitle}</EmailHeading>
+      <EmailHeading>{t.booking.cancelledTitle}</EmailHeading>
       <EmailBodyText className="mb-[8px]">
         {t.booking.greeting(memberName)}
       </EmailBodyText>
       <EmailBodyText className="mb-[24px]">
-        {subheading ?? t.booking.cancelledSubtitle}
+        {t.booking.cancelledSubtitle}
       </EmailBodyText>
 
       <EmailCard variant="muted">

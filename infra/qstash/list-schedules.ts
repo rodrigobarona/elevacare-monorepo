@@ -17,7 +17,6 @@ const EXPECTED_PATHS = [
   "/workflows/account-deletion-sweep",
   "/workflows/domain-events-publisher",
   "/workflows/slot-reservation-expiry",
-  "/workflows/booking-request-expiry",
   "/workflows/process-expert-transfers",
   "/workflows/process-pending-payouts",
   "/workflows/check-upcoming-payouts",

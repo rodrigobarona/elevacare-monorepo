@@ -235,7 +235,6 @@
       "hold": "Hold expires in {time}",
       "expired": "This hold has ended. Pick a new time to continue.",
       "restart": "Pick a new time",
-      "requestHint": "You pay now. The expert accepts or declines within 24 hours, or before the session if that is sooner. A decline refunds 100%.",
       "pay": "Pay {price}",
       "processing": "Confirming payment…",
       "failed": "Payment could not be completed. Please try again.",
@@ -244,9 +243,6 @@
     "done": {
       "heading": "Your reservation is confirmed",
       "sub": "We've saved your session. A confirmation email is on its way.",
-      "requestHeading": "Request sent",
-      "requestSub": "The expert has 24 hours, or until the session if sooner, to accept. You will not get a join link until they accept. A decline or timeout refunds 100%.",
-      "requestNoJoin": "Join details arrive only after the expert accepts.",
       "pending": "Payment received",
       "pendingSub": "We're confirming your session. You'll get an email as soon as it's ready. Eleva.care is a digital health platform — the expert remains responsible for your care.",
       "video": "Your video link arrives before the session.",

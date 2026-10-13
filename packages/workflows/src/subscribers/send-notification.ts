@@ -23,7 +23,6 @@ export const handleSendNotification: DomainEventSubscriber = async (event) => {
   if (isBookingNotificationKind(event.type)) {
     if (
       event.type === "booking.confirmed" ||
-      event.type === "booking.request_accepted" ||
       event.type === "booking.rescheduled"
     ) {
       const parsed = parseBookingNotificationPayload(event.type, event.payload)

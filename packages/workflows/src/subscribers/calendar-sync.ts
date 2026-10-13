@@ -50,14 +50,9 @@ export const handleCalendarSync: DomainEventSubscriber = async (event) => {
 
   switch (event.type) {
     case "booking.confirmed":
-    case "booking.request_accepted":
       if (active && !session.calendarEventId) {
         await calendarEventCreate({ ...ids, bookingId })
       }
-      return
-    case "booking.requested":
-    case "booking.request_declined":
-    case "booking.request_expired":
       return
     case "booking.rescheduled":
       if (!active) return

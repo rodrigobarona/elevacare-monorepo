@@ -91,9 +91,6 @@ export async function GET(request: Request) {
         locationCity: b.locationCity,
         locationCountry: b.locationCountry,
         locationAddress: b.locationAddress,
-        approvalDeadlineAt: b.approvalDeadlineAt
-          ? b.approvalDeadlineAt.toISOString()
-          : null,
       })),
     },
     { status: 200, headers }

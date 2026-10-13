@@ -292,10 +292,6 @@
     "cancellationPolicy": {
       "label": "Política de cancelamento",
       "help": "Os membros veem esta política antes de pagar. Aplica-se às marcações feitas depois de a alterar; as marcações existentes mantêm a política com que foram feitas. Se for você a cancelar, o membro recebe sempre o reembolso total."
-    },
-    "bookingSetting": {
-      "label": "Como os membros marcam",
-      "help": "A reserva imediata confirma assim que pagam. O pedido de reserva segura o horário e o pagamento até aceitar."
     }
   },
   "schedule": {
@@ -354,14 +350,6 @@
     "locationUnknown": "—",
     "join": "Entrar na sessão",
     "joinSoon": "O vídeo usa Daily standard (não é HIPAA). Entrar activa-se 15 minutos antes do início.",
-    "requestPending": "Pedido de reserva",
-    "accept": "Aceitar",
-    "decline": "Recusar",
-    "declineNote": "Nota opcional (máx. 180)",
-    "accepted": "Pedido aceite.",
-    "declined": "Pedido recusado. O membro recebe o reembolso total.",
-    "requestFailed": "Não foi possível atualizar este pedido. Tente novamente.",
-    "requestExpired": "O prazo de resposta terminou.",
     "ics": {
       "title": "Feed ICS",
       "description": "Subscreva no Apple Calendar, Google Calendar ou Outlook com um link privado só de leitura.",

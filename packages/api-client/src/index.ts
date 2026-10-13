@@ -495,7 +495,7 @@ export const CancellationQuoteSchema = z.object({
   refundPercent: z.number().int().min(0).max(100),
   refundCents: z.number().int().nonnegative(),
   currency: z.string().length(3),
-  reason: z.enum(["grace_period", "policy_tier", "pending_request"]),
+  reason: z.enum(["grace_period", "policy_tier"]),
   fullRefundUntil: z.string().datetime().nullable(),
   nextChangeAt: z.string().datetime().nullable(),
 })
@@ -1504,7 +1504,6 @@ export const ExpertBookingSchema = z.object({
   timezone: z.string(),
   sessionMode: z.enum(["online", "in_person", "phone"]),
   memberFirstName: z.string().nullable(),
-  approvalDeadlineAt: z.string().datetime().nullable().optional(),
   eventTypeTitle: z.object({
     en: z.string(),
     pt: z.string().optional(),
@@ -1525,33 +1524,6 @@ export const ExpertBookingSchema = z.object({
 })
 
 export type ExpertBooking = z.infer<typeof ExpertBookingSchema>
-
-export const AcceptExpertBookingResponseSchema = z.object({
-  bookingId: z.string().uuid(),
-  status: z.literal("confirmed"),
-})
-
-export type AcceptExpertBookingResponse = z.infer<
-  typeof AcceptExpertBookingResponseSchema
->
-
-export const DeclineExpertBookingRequestSchema = z.object({
-  note: z.string().trim().max(180).optional(),
-})
-
-export type DeclineExpertBookingRequest = z.infer<
-  typeof DeclineExpertBookingRequestSchema
->
-
-export const DeclineExpertBookingResponseSchema = z.object({
-  bookingId: z.string().uuid(),
-  status: z.literal("cancelled"),
-  refundCents: z.number().int().nonnegative(),
-})
-
-export type DeclineExpertBookingResponse = z.infer<
-  typeof DeclineExpertBookingResponseSchema
->
 
 export const ListExpertBookingsResponseSchema = z.object({
   bookings: z.array(ExpertBookingSchema),
@@ -1637,7 +1609,6 @@ export const PublicEventTypeSchema = z.object({
   languages: z.array(z.string()),
   sessionMode: z.enum(["online", "in_person", "phone"]),
   cancellationPolicy: CancellationPolicySchema,
-  requiresApproval: z.boolean(),
   modes: z.array(PublicEventTypeModeSchema),
 })
 
@@ -1690,7 +1661,6 @@ export const PublicBookingLinkResponseSchema = z.object({
   expertDisplayName: z.string().min(1).max(200),
   eventTitle: PublicLocalizedTextSchema,
   cancellationPolicy: CancellationPolicySchema,
-  requiresApproval: z.boolean(),
   modes: z.array(PublicEventTypeModeSchema).min(1),
 })
 
@@ -1856,8 +1826,6 @@ export const ConfirmBookingRequestSchema = z.object({
 export const ConfirmBookingResponseSchema = z.object({
   bookingId: z.string().uuid(),
   alreadyConfirmed: z.boolean(),
-  status: z.enum(["confirmed", "awaiting_confirmation"]),
-  approvalDeadlineAt: z.string().datetime().optional(),
 })
 
 export const BookingReminderKindSchema = z.enum([
@@ -2641,19 +2609,6 @@ export function createApiClient(options: ApiClientOptions) {
             "GET",
             `/expert/bookings?${qs.toString()}`
           ).then((raw) => ListExpertBookingsResponseSchema.parse(raw))
-        },
-        accept(bookingId: string) {
-          return request<AcceptExpertBookingResponse>(
-            "POST",
-            `/expert/bookings/${encodeURIComponent(bookingId)}/accept`
-          ).then((raw) => AcceptExpertBookingResponseSchema.parse(raw))
-        },
-        decline(bookingId: string, data: DeclineExpertBookingRequest = {}) {
-          return request<DeclineExpertBookingResponse>(
-            "POST",
-            `/expert/bookings/${encodeURIComponent(bookingId)}/decline`,
-            data
-          ).then((raw) => DeclineExpertBookingResponseSchema.parse(raw))
         },
       },
       calendar: {
