@@ -221,7 +221,11 @@ async function settleDeclinedRequest(
           .where(
             and(
               eq(main.bookingPayments.id, row.paymentId),
-              eq(main.bookingPayments.status, "succeeded")
+              eq(main.bookingPayments.status, "succeeded"),
+              eq(
+                main.bookingPayments.refundedCents,
+                row.paymentRefundedCents ?? 0
+              )
             )
           )
           .returning({ id: main.bookingPayments.id })

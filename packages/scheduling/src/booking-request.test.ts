@@ -20,7 +20,11 @@ vi.mock("@eleva/db", () => ({
     listExpiredBookingRequests(...args),
   main: {
     bookings: { id: "bookings.id", status: "bookings.status" },
-    bookingPayments: { id: "payments.id", status: "payments.status" },
+    bookingPayments: {
+      id: "payments.id",
+      status: "payments.status",
+      refundedCents: "payments.refunded_cents",
+    },
     slotReservations: { id: "slots.id", status: "slots.status" },
   },
 }))

@@ -21,6 +21,7 @@ const offerBody = {
   languages: ["pt", "en"],
   sessionMode: "online",
   cancellationPolicy: "flexible",
+  requiresApproval: false,
   modes: [
     {
       id: MODE_ID,
