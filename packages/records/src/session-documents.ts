@@ -55,6 +55,18 @@ function isAllowedMime(value: string): value is SessionDocumentMime {
 
 const MAX_BYTES = 10 * 1024 * 1024
 
+function isUniqueViolation(err: unknown): boolean {
+  let current: unknown = err
+  for (let i = 0; i < 4; i++) {
+    if (!current || typeof current !== "object") return false
+    if ("code" in current && (current as { code: unknown }).code === "23505") {
+      return true
+    }
+    current = "cause" in current ? (current as { cause: unknown }).cause : null
+  }
+  return false
+}
+
 function isScope(value: string): value is SessionDocumentScope {
   return (SESSION_DOCUMENT_SCOPES as readonly string[]).includes(value)
 }
@@ -234,37 +246,42 @@ export async function completeSessionDocument(input: {
     throw new Error("session document encryption failed")
   }
 
-  return withAudit(
-    { orgId: booking.orgId, actorUserId: input.actorUserId },
-    async (tx, ctx) => {
-      const inserted = (
-        await tx
-          .insert(sessionDocuments)
-          .values({
-            id,
-            orgId: booking.orgId,
-            memberUserId: booking.memberUserId,
-            bookingId: booking.id,
-            blobPathname: input.pathname,
-            blobUrl: input.url,
-            mime,
-            sizeBytes: input.sizeBytes,
-            metadataEncrypted,
-            scope,
-            uploadedBy: input.actorUserId,
-          })
-          .returning()
-      )[0]
-      if (!inserted) throw new SessionDocumentError("NOT_FOUND")
-      await ctx.emit({
-        entity: "session_document",
-        action: "uploaded",
-        entityId: id,
-        payload: { bookingId: booking.id, scope },
-      })
-      return toView(inserted, originalName)
-    }
-  )
+  try {
+    return await withAudit(
+      { orgId: booking.orgId, actorUserId: input.actorUserId },
+      async (tx, ctx) => {
+        const inserted = (
+          await tx
+            .insert(sessionDocuments)
+            .values({
+              id,
+              orgId: booking.orgId,
+              memberUserId: booking.memberUserId,
+              bookingId: booking.id,
+              blobPathname: input.pathname,
+              blobUrl: input.url,
+              mime,
+              sizeBytes: input.sizeBytes,
+              metadataEncrypted,
+              scope,
+              uploadedBy: input.actorUserId,
+            })
+            .returning()
+        )[0]
+        if (!inserted) throw new SessionDocumentError("NOT_FOUND")
+        await ctx.emit({
+          entity: "session_document",
+          action: "uploaded",
+          entityId: id,
+          payload: { bookingId: booking.id, scope },
+        })
+        return toView(inserted, originalName)
+      }
+    )
+  } catch (err) {
+    if (isUniqueViolation(err)) throw new SessionDocumentError("CONFLICT")
+    throw err
+  }
 }
 
 export async function mintSessionDocumentUrl(input: {

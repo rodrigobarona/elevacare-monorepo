@@ -6,4 +6,5 @@ export const DOCUMENT_STATUS: Record<SessionDocumentError["code"], number> = {
   INVALID_PATHNAME: 422,
   SCOPE_FORBIDDEN: 403,
   GRANT_EXPIRED: 410,
+  CONFLICT: 409,
 }

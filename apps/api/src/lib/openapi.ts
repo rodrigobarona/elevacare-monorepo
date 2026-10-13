@@ -3321,6 +3321,10 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
               description: "Caller cannot upload, or member set expert_only",
               content: { "application/json": { schema: ErrorSchema } },
             },
+            "409": {
+              description: "A document already exists at this pathname",
+              content: { "application/json": { schema: ErrorSchema } },
+            },
             "422": {
               description: "Pathname, MIME, or size failed validation",
               content: { "application/json": { schema: ErrorSchema } },

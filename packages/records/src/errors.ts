@@ -10,6 +10,7 @@ export type SessionDocumentErrorCode =
   | "INVALID_PATHNAME"
   | "SCOPE_FORBIDDEN"
   | "GRANT_EXPIRED"
+  | "CONFLICT"
 
 export class SessionDocumentError extends Error {
   override readonly name = "SessionDocumentError"
