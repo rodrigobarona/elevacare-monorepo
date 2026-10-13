@@ -76,6 +76,14 @@ vi.mock("@eleva/db", () => ({
     withPlatformAdminContext(...args),
 }))
 
+vi.mock("./session-document-lifecycle", () => ({
+  eraseMemberSessionDocuments: vi.fn(async () => ({
+    deleted: 0,
+    retainedExpertOnly: 0,
+    blobFailures: 0,
+  })),
+}))
+
 vi.mock("./retention", async () => {
   const actual =
     await vi.importActual<typeof import("./retention")>("./retention")

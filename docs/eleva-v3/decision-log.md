@@ -60,7 +60,13 @@ Each entry should include:
   `POST /sessions/{bookingId}/documents/upload-token`; metadata is
   committed with JSON `POST .../documents` (not form-data). Download is
   a 15-minute Eleva grant, audited, streamed by the API — never a raw
-  private Blob URL. D-11 author-only; member reads `scope=shared` only.
+  private Blob URL. D-11: uploader-only writes/deletes (expert or
+  member; member uploads are always `scope=shared`); author and
+  assigned-expert reads; member reads `scope=shared` only. Clinic-shared
+  read is compiled but inactive (`clinic_shared_records` default off,
+  member opt-out honoured, `scope=shared` only). Member-account erasure
+  deletes member-uploaded and shared documents (Blob then row) and
+  clears `member_user_id` on remaining expert-only files (D-12).
   Cloud recording/S3 stays 16.8. Not HIPAA.
 - Owner: engineering
 - Status: `active`

@@ -5,6 +5,7 @@ import {
   ACCOUNT_DELETION_GRACE_DAYS,
   pseudonymiseBookingConsents,
 } from "./retention"
+import { eraseMemberSessionDocuments } from "./session-document-lifecycle"
 
 export { ACCOUNT_DELETION_GRACE_DAYS }
 
@@ -491,6 +492,7 @@ export async function sweepAccountDeletions(
           await tx
             .delete(main.notificationPreferences)
             .where(eq(main.notificationPreferences.userId, userId))
+          await eraseMemberSessionDocuments(tx, userId)
           await eraseAccountRecord(tx, userId, now)
           if (ids.length === 0) {
             const [completed] = await tx
