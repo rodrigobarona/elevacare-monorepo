@@ -87,6 +87,7 @@ export async function POST(
     orgId: booking.orgId,
     memberUserId: booking.memberUserId,
     id: booking.id,
+    actorUserId: session.user.id,
   })
 
   try {

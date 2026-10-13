@@ -61,8 +61,7 @@ export const sessionDocuments = pgTable(
     ),
     authorSelectPolicy: pgPolicy("session_documents_author_select", {
       for: "select",
-      using: sql`deleted_at IS NULL
-        AND org_id::text = current_setting('eleva.org_id', true)
+      using: sql`org_id::text = current_setting('eleva.org_id', true)
         AND (
           uploaded_by::text = current_setting('eleva.user_id', true)
           OR EXISTS (

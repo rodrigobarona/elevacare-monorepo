@@ -6,6 +6,7 @@ import {
   uploadPrivateBlob,
   getPrivateDocument,
   deletePrivateDocument,
+  headPrivateDocument,
 } from "./index"
 
 describe("upload validation constants", () => {
@@ -61,6 +62,14 @@ describe("e2e private blob mock", () => {
     expect(got?.stream).toBeInstanceOf(ReadableStream)
     const byPath = await getPrivateDocument(uploaded.pathname)
     expect(byPath?.stream).toBeInstanceOf(ReadableStream)
+    const meta = await headPrivateDocument(uploaded.pathname)
+    expect(meta).toEqual({
+      url: uploaded.url,
+      pathname: uploaded.pathname,
+      contentType: "application/zip",
+      size: 2,
+    })
+    expect(await headPrivateDocument("dsar/missing.zip")).toBeNull()
     await deletePrivateDocument(uploaded.url)
     expect(await getPrivateDocument(uploaded.url)).toBeNull()
     expect(await getPrivateDocument(uploaded.pathname)).toBeNull()

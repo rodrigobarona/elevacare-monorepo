@@ -37,8 +37,8 @@ Each entry should include:
 - Decision: Booking documents persist in `session_documents` with
   envelope-encrypted filename metadata and bytes in the **private**
   Vercel Blob store (`BLOB_PRIVATE_READ_WRITE_TOKEN`). Pathname prefix
-  is `records/<expertOrgId>/<memberUserId>/` (guest bookings use
-  `guest-<bookingId>`). Client upload mints a token via
+  is `records/<expertOrgId>/<memberUserId>/<actorUserId>/` (guest
+  bookings use `guest-<bookingId>`). Client upload mints a token via
   `POST /sessions/{bookingId}/documents/upload-token`; metadata is
   committed with JSON `POST .../documents` (not form-data). Download is
   a 15-minute Eleva grant, audited, streamed by the API — never a raw

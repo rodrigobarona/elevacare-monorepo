@@ -318,7 +318,7 @@ describe("clinical records RLS", () => {
     )
     expect(select).toContain("uploaded_by")
     expect(select).toContain("expert_user_id")
-    expect(select).toContain("deleted_at IS NULL")
+    expect(select).not.toContain("deleted_at IS NULL")
     expect(insert).toContain("uploaded_by")
     expect(insert).not.toContain("expert_user_id")
     expect(clinicRead).toContain("clinic_shared_records")

@@ -56,8 +56,7 @@ DROP POLICY IF EXISTS "session_documents_member_shared_read" ON "session_documen
 CREATE POLICY "session_documents_author_select" ON "session_documents"
   AS PERMISSIVE FOR SELECT TO public
   USING (
-    deleted_at IS NULL
-    AND org_id::text = current_setting('eleva.org_id', true)
+    org_id::text = current_setting('eleva.org_id', true)
     AND (
       uploaded_by::text = current_setting('eleva.user_id', true)
       OR EXISTS (

@@ -3294,7 +3294,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "completeSessionDocument",
           summary: "Persist metadata after a private Blob upload",
           description:
-            "Assigned expert or booking member. Pathname must start with records/<expertOrgId>/<memberUserId>/. Members always persist scope=shared. Audit payload is bookingId + scope (no filename).",
+            "Assigned expert or booking member. Pathname must start with records/<expertOrgId>/<memberUserId>/<actorUserId>/. The API looks up the private Blob by pathname and stores the store's url, MIME, and size — not client-supplied values. Members always persist scope=shared. Audit payload is bookingId + scope (no filename).",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3333,7 +3333,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "mintSessionDocumentUploadToken",
           summary: "Mint a private Blob client-upload token",
           description:
-            "Vercel Blob handleUpload protocol. Token is bound to the private store and pathname prefix records/<expertOrgId>/<memberUserId>/. Not form-data.",
+            "Vercel Blob handleUpload protocol. Token is bound to the private store and pathname prefix records/<expertOrgId>/<memberUserId>/<actorUserId>/. Not form-data.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),
@@ -3398,7 +3398,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "deleteSessionDocument",
           summary: "Delete a session document",
           description:
-            "Uploader/assigned expert. Deletes the private Blob object first, then the row. A store 404 counts as deleted.",
+            "Uploader only (D-11). Soft-deletes the row after deleting the private Blob object. A store 404 counts as deleted.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({

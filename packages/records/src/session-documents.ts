@@ -128,11 +128,13 @@ export function documentUploadPrefix(booking: {
   orgId: string
   memberUserId: string | null
   id: string
+  actorUserId: string
 }): string {
   return sessionDocumentPrefix({
     orgId: booking.orgId,
     memberUserId: booking.memberUserId,
     bookingId: booking.id,
+    actorUserId: booking.actorUserId,
   })
 }
 
@@ -210,8 +212,12 @@ export async function completeSessionDocument(input: {
     orgId: booking.orgId,
     memberUserId: booking.memberUserId,
     id: booking.id,
+    actorUserId: input.actorUserId,
   })
-  if (!isSessionDocumentPathname(input.pathname, prefix)) {
+  if (
+    !isSessionDocumentPathname(input.pathname, prefix) ||
+    !input.url.includes(input.pathname)
+  ) {
     throw new SessionDocumentError("INVALID_PATHNAME")
   }
   const originalName = input.originalName.trim().slice(0, 200)
@@ -370,9 +376,7 @@ export async function deleteSessionDocument(input: {
 }): Promise<{ blobUrl: string }> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
-    throw new SessionDocumentError("FORBIDDEN")
-  }
+  actorRole(booking, input.actorUserId)
   const [row] = await withOrgAndUserContext(
     booking.orgId,
     input.actorUserId,
@@ -404,9 +408,7 @@ export async function markSessionDocumentDeleted(input: {
 }): Promise<void> {
   const booking = await loadBooking(input.bookingId)
   if (!booking) throw new SessionDocumentError("NOT_FOUND")
-  if (input.actorUserId !== booking.expertUserId) {
-    throw new SessionDocumentError("FORBIDDEN")
-  }
+  actorRole(booking, input.actorUserId)
   await withAudit(
     { orgId: booking.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) => {

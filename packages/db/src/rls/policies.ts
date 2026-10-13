@@ -304,8 +304,7 @@ export function buildMainRlsStatements(): string[] {
     out.push(
       `CREATE POLICY ${table}_author_select ON ${table} FOR SELECT ` +
         `USING (` +
-        `deleted_at IS NULL ` +
-        `AND org_id::text = current_setting('eleva.org_id', true) ` +
+        `org_id::text = current_setting('eleva.org_id', true) ` +
         `AND (` +
         `uploaded_by::text = current_setting('eleva.user_id', true) ` +
         `OR EXISTS (` +

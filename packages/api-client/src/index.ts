@@ -641,13 +641,6 @@ export const ListSessionDocumentsResponseSchema = z.object({
 
 export const CompleteSessionDocumentRequestSchema = z.object({
   pathname: z.string().min(1).max(500),
-  url: z.string().url().max(2000),
-  mime: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
-  sizeBytes: z
-    .number()
-    .int()
-    .positive()
-    .max(10 * 1024 * 1024),
   scope: SessionDocumentScopeSchema,
   originalName: z.string().trim().min(1).max(200),
 })

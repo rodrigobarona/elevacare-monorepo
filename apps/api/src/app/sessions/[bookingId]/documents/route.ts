@@ -5,9 +5,13 @@ import {
 } from "@eleva/api-client"
 import {
   completeSessionDocument,
+  documentUploadPrefix,
+  isSessionDocumentPathname,
   listSessionDocuments,
+  requireDocumentUploader,
   SessionDocumentError,
 } from "@eleva/records"
+import { headPrivateDocument } from "@eleva/storage"
 import { z } from "zod"
 import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
 import { corsHeaders } from "@/lib/cors"
@@ -118,13 +122,28 @@ export async function POST(
   }
 
   try {
+    const booking = await requireDocumentUploader({
+      bookingId: bookingId.data,
+      actorUserId: session.user.id,
+    })
+    const prefix = documentUploadPrefix({
+      ...booking,
+      actorUserId: session.user.id,
+    })
+    if (!isSessionDocumentPathname(parsed.data.pathname, prefix)) {
+      return secureJson({ error: "INVALID_PATHNAME" }, { status: 422, headers })
+    }
+    const blob = await headPrivateDocument(parsed.data.pathname)
+    if (!blob || blob.pathname !== parsed.data.pathname) {
+      return secureJson({ error: "INVALID_PATHNAME" }, { status: 422, headers })
+    }
     const document = await completeSessionDocument({
       bookingId: bookingId.data,
       actorUserId: session.user.id,
-      pathname: parsed.data.pathname,
-      url: parsed.data.url,
-      mime: parsed.data.mime,
-      sizeBytes: parsed.data.sizeBytes,
+      pathname: blob.pathname,
+      url: blob.url,
+      mime: blob.contentType.split(";")[0]?.trim() ?? blob.contentType,
+      sizeBytes: blob.size,
       scope: parsed.data.scope,
       originalName: parsed.data.originalName,
     })
