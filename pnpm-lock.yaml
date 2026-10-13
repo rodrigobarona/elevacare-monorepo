@@ -2144,6 +2144,9 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.4.0(jiti@2.6.1)
+      tsx:
+        specifier: 'catalog:'
+        version: 4.22.0
       typescript:
         specifier: 'catalog:'
         version: 6.0.3

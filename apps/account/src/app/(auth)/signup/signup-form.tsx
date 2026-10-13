@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react"
 import { useTranslations } from "next-intl"
 import { authClient } from "@eleva/auth/client"
+import { toGatewayCallbackURL } from "@eleva/auth/return-to"
 import { LinkButton } from "@eleva/ui/components/button"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { cn } from "@eleva/ui/lib/utils"
@@ -45,7 +46,7 @@ export function SignupForm({
   async function sendMagicLink() {
     const { error: magicError } = await authClient.signIn.magicLink({
       email,
-      callbackURL: "/dashboard",
+      callbackURL: toGatewayCallbackURL("/dashboard"),
     })
     if (magicError) {
       setError(magicError.message ?? t("errorGeneric"))
@@ -75,7 +76,7 @@ export function SignupForm({
         email,
         password,
         name,
-        callbackURL: "/verify-email",
+        callbackURL: toGatewayCallbackURL("/verify-email"),
       })
       if (result) {
         setError(result.message ?? t("errorGeneric"))

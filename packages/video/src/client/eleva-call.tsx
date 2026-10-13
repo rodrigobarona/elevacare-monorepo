@@ -7,9 +7,11 @@ import {
   DailyVideo,
   useAppMessage,
   useDaily,
+  useDailyEvent,
   useLocalSessionId,
   useMeetingState,
   useParticipantIds,
+  useParticipantProperty,
   useScreenShare,
   useVideoTrack,
   useAudioTrack,
@@ -23,15 +25,21 @@ import {
   VideoCameraIcon,
   VideoCameraSlashIcon,
 } from "@eleva/icons"
+import { Badge } from "@eleva/ui/components/badge"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { Input } from "@eleva/ui/components/input"
 import { Textarea } from "@eleva/ui/components/textarea"
+import { callDisplayName, localCallDisplayName } from "./call-display-name"
 import type { ElevaCallLabels } from "./labels"
 import {
   EMPTY_INTERNAL_REPORT,
   serializeInternalReport,
   type InternalReportDraft,
 } from "./internal-report"
+import {
+  isScreenShareCancelLog,
+  isScreenShareCanceled,
+} from "./screen-share-errors"
 import {
   appendTranscriptLine,
   parseTranscriptionMessage,
@@ -67,6 +75,7 @@ export type ElevaCallProps = {
 type ChatMessage = {
   id: string
   fromLocal: boolean
+  fromName: string
   text: string
 }
 
@@ -110,12 +119,27 @@ function CallShell({
   const meetingState = useMeetingState()
   const localId = useLocalSessionId()
   const remoteIds = useParticipantIds({ filter: "remote" })
+  const [shareFailed, setShareFailed] = useState(false)
+  const handleShareError = useCallback((ev: { errorMsg: string }) => {
+    if (isScreenShareCanceled(ev) || isScreenShareCanceled(ev.errorMsg)) {
+      return
+    }
+    setShareFailed(true)
+  }, [])
+  const handleShareStarted = useCallback(() => {
+    setShareFailed(false)
+  }, [])
   const { isSharingScreen, startScreenShare, stopScreenShare, screens } =
-    useScreenShare()
+    useScreenShare({
+      onError: handleShareError,
+      onLocalScreenShareStarted: handleShareStarted,
+    })
   const cam = useVideoTrack(localId)
   const mic = useAudioTrack(localId)
 
   const [chatOpen, setChatOpen] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const chatOpenRef = useRef(false)
   const [chatDraft, setChatDraft] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [joinFailed, setJoinFailed] = useState(false)
@@ -146,23 +170,56 @@ function CallShell({
   reportRef.current = internalReport
   notesDirtyRef.current = notesDirty
   reportDirtyRef.current = reportDirty
+  const localUserName = useParticipantProperty(localId, "user_name")
+  const localName = localCallDisplayName(
+    localUserName,
+    labels.you,
+    labels.youNamed
+  )
 
+  const remoteFallback = labels.remote
   const sendAppMessage = useAppMessage({
-    onAppMessage: useCallback((ev: { data?: unknown }) => {
-      const text =
-        ev.data &&
-        typeof ev.data === "object" &&
-        "text" in ev.data &&
-        typeof (ev.data as { text: unknown }).text === "string"
-          ? (ev.data as { text: string }).text
-          : null
-      if (!text) return
-      setMessages((curr) => [
-        ...curr,
-        { id: crypto.randomUUID(), fromLocal: false, text },
-      ])
-    }, []),
+    onAppMessage: useCallback(
+      (ev: { data?: unknown; fromId?: string }) => {
+        const text =
+          ev.data &&
+          typeof ev.data === "object" &&
+          "text" in ev.data &&
+          typeof (ev.data as { text: unknown }).text === "string"
+            ? (ev.data as { text: string }).text
+            : null
+        if (!text) return
+        const fromId = typeof ev.fromId === "string" ? ev.fromId : ""
+        const senderName = fromId
+          ? daily?.participants()?.[fromId]?.user_name
+          : undefined
+        setMessages((curr) => [
+          ...curr,
+          {
+            id: crypto.randomUUID(),
+            fromLocal: false,
+            fromName: callDisplayName(senderName, remoteFallback),
+            text,
+          },
+        ])
+        if (!chatOpenRef.current) {
+          setUnreadCount((count) => count + 1)
+        }
+      },
+      [daily, remoteFallback]
+    ),
   })
+
+  function toggleChat() {
+    if (chatOpen) {
+      chatOpenRef.current = false
+      setChatOpen(false)
+      return
+    }
+    chatOpenRef.current = true
+    setUnreadCount(0)
+    setChatOpen(true)
+  }
 
   useEffect(() => {
     if (!showNotesSlot || !records) return
@@ -295,6 +352,33 @@ function CallShell({
     }
   }, [daily])
 
+  const handleShareCanceled = useCallback(() => {
+    setShareFailed(false)
+  }, [])
+  useDailyEvent("local-screen-share-canceled", handleShareCanceled)
+
+  useEffect(() => {
+    const original = console.error
+    const filtered: typeof console.error = (...args) => {
+      if (isScreenShareCancelLog(args)) return
+      original.apply(console, args)
+    }
+    console.error = filtered
+    return () => {
+      if (console.error === filtered) console.error = original
+    }
+  }, [])
+
+  function handleShareScreen() {
+    if (isSharingScreen) {
+      stopScreenShare()
+      setShareFailed(false)
+      return
+    }
+    setShareFailed(false)
+    startScreenShare()
+  }
+
   const joined = meetingState === "joined-meeting"
   const joining = meetingState === "joining-meeting"
   const left = meetingState === "left-meeting"
@@ -380,7 +464,7 @@ function CallShell({
     sendAppMessage({ text })
     setMessages((curr) => [
       ...curr,
-      { id: crypto.randomUUID(), fromLocal: true, text },
+      { id: crypto.randomUUID(), fromLocal: true, fromName: localName, text },
     ])
     setChatDraft("")
   }
@@ -451,21 +535,35 @@ function CallShell({
                 aria-label={
                   isSharingScreen ? labels.stopShare : labels.shareScreen
                 }
-                onPress={() =>
-                  isSharingScreen ? stopScreenShare() : startScreenShare()
-                }
+                onPress={handleShareScreen}
               >
                 <MonitorIcon className="size-4" />
                 {isSharingScreen ? labels.stopShare : labels.shareScreen}
               </Button>
               <Button
-                variant="secondary"
-                aria-label={labels.chat}
-                onPress={() => setChatOpen((open) => !open)}
+                variant={unreadCount > 0 ? "default" : "secondary"}
+                aria-label={
+                  unreadCount > 0 ? labels.chatUnread(unreadCount) : labels.chat
+                }
+                aria-pressed={chatOpen}
+                onPress={toggleChat}
+                className="relative"
               >
                 <ChatCircleIcon className="size-4" />
                 {labels.chat}
+                {unreadCount > 0 ? (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-1.5 -right-1.5 h-5 min-w-5 border-2 border-background bg-destructive px-1 text-white"
+                    data-testid="chat-unread-badge"
+                  >
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </Badge>
+                ) : null}
               </Button>
+              <div className="sr-only" aria-live="polite" aria-atomic="true">
+                {unreadCount > 0 ? labels.chatUnread(unreadCount) : ""}
+              </div>
               <Button variant="destructive" onPress={() => void handleLeave()}>
                 <PhoneDisconnectIcon className="size-4" />
                 {labels.leave}
@@ -473,6 +571,11 @@ function CallShell({
             </>
           ) : null}
         </div>
+      ) : null}
+      {joined && shareFailed ? (
+        <p className="text-sm text-muted-foreground" role="status">
+          {labels.shareFailed}
+        </p>
       ) : null}
 
       {joined && chatOpen ? (
@@ -527,11 +630,11 @@ function Prejoin({
     >
       <div className="overflow-hidden rounded-3xl bg-muted">
         {localId ? (
-          <DailyVideo
+          <ParticipantTile
             sessionId={localId}
-            automirror
-            fit="cover"
-            className="aspect-video h-full w-full bg-black object-cover"
+            local
+            labels={labels}
+            className="h-full"
           />
         ) : (
           <div className="flex aspect-video items-center justify-center text-sm text-muted-foreground">
@@ -577,31 +680,65 @@ function InCall({
       ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         {remoteIds.map((id) => (
-          <DailyVideo
-            key={id}
-            sessionId={id}
-            fit="cover"
-            className="aspect-video w-full rounded-3xl bg-black object-cover"
-          />
+          <ParticipantTile key={id} sessionId={id} labels={labels} />
         ))}
         {localId ? (
-          <DailyVideo
-            sessionId={localId}
-            automirror
-            fit="cover"
-            className="aspect-video w-full rounded-3xl bg-black object-cover"
-          />
+          <ParticipantTile sessionId={localId} local labels={labels} />
         ) : null}
       </div>
       {screens.map((screen) => (
-        <DailyVideo
+        <ParticipantTile
           key={`screen-${screen.session_id}`}
           sessionId={screen.session_id}
-          type="screenVideo"
-          fit="contain"
-          className="aspect-video w-full rounded-3xl bg-black object-contain"
+          screen
+          labels={labels}
         />
       ))}
+    </div>
+  )
+}
+
+function ParticipantTile({
+  sessionId,
+  local = false,
+  screen = false,
+  labels,
+  className,
+}: {
+  sessionId: string
+  local?: boolean
+  screen?: boolean
+  labels: ElevaCallLabels
+  className?: string
+}) {
+  const userName = useParticipantProperty(sessionId, "user_name")
+  const base = callDisplayName(userName, local ? labels.you : labels.remote)
+  const caption = screen
+    ? labels.screenShareOf(base)
+    : local
+      ? localCallDisplayName(userName, labels.you, labels.youNamed)
+      : base
+
+  return (
+    <div
+      className={["relative overflow-hidden rounded-3xl bg-black", className]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      <DailyVideo
+        sessionId={sessionId}
+        automirror={local && !screen}
+        type={screen ? "screenVideo" : "video"}
+        fit={screen ? "contain" : "cover"}
+        className={
+          screen
+            ? "aspect-video w-full bg-black object-contain"
+            : "aspect-video h-full w-full bg-black object-cover"
+        }
+      />
+      <p className="pointer-events-none absolute bottom-2 left-2 max-w-[calc(100%-1rem)] truncate rounded-full bg-black/70 px-3 py-1 text-xs font-medium text-white">
+        {caption}
+      </p>
     </div>
   )
 }
@@ -620,18 +757,22 @@ function ChatPanel({
   onSend: () => void
 }) {
   const inputId = useId()
+  const listRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const node = listRef.current
+    if (node) node.scrollTop = node.scrollHeight
+  }, [messages])
+
   return (
     <div className="flex max-h-64 flex-col rounded-3xl border">
-      <div className="overflow-y-auto p-3 text-sm">
+      <div ref={listRef} className="overflow-y-auto p-3 text-sm">
         {messages.length === 0 ? (
           <p className="text-muted-foreground">{labels.chatPlaceholder}</p>
         ) : (
           messages.map((msg) => (
             <p key={msg.id} className="py-0.5">
-              <span className="font-medium">
-                {msg.fromLocal ? labels.you : labels.remote}:
-              </span>{" "}
-              {msg.text}
+              <span className="font-medium">{msg.fromName}:</span> {msg.text}
             </p>
           ))
         )}

@@ -4,7 +4,11 @@ import { useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
-import { sanitizeReturnTo } from "@eleva/auth/return-to"
+import {
+  isTrustedReturnTo,
+  sanitizeReturnTo,
+  toGatewayCallbackURL,
+} from "@eleva/auth/return-to"
 import { Button } from "@eleva/ui/components/button"
 import {
   Card,
@@ -44,10 +48,10 @@ export function TwoFactorForm() {
       setError(result.error.message ?? t("errorGeneric"))
       return
     }
-    const next =
-      sanitizeReturnTo(searchParams.get("returnTo")) ??
-      readStoredReturnTo() ??
-      "/dashboard"
+    const query = searchParams.get("returnTo")
+    const next = toGatewayCallbackURL(
+      isTrustedReturnTo(query) ? query : readStoredReturnTo()
+    )
     window.location.assign(next)
   }
 

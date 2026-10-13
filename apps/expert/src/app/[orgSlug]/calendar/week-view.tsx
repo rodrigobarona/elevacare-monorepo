@@ -304,7 +304,7 @@ export function WeekView({
           </dl>
           <JoinCta
             className="mt-4"
-            href={`/${orgSlug}/sessions/${selected.id}/join`}
+            href={`/${orgSlug}/team/sessions/${selected.id}/join`}
             sessionMode={selected.sessionMode}
             status={selected.status}
             startsAt={selected.startsAt}

@@ -1,9 +1,10 @@
+import { headers } from "next/headers"
 import { redirect, notFound } from "next/navigation"
 import { getTranslations } from "next-intl/server"
 import { getSessionForOrg } from "@eleva/auth/server"
-import { LOGIN_PATH } from "@eleva/auth"
+import { redirectToGatewayLogin } from "@eleva/auth"
+import { ELEVA_PATHNAME_HEADER } from "@eleva/auth/proxy"
 import { getExpertProfileForOrg } from "@eleva/db"
-import { resolveGatewayUrl } from "@eleva/config/env"
 import { DashboardShell } from "@eleva/dashboard/dashboard-shell"
 import { buildDashboardConfig } from "@eleva/dashboard/config-helpers"
 import { resolveExpertWorkspaceBase } from "@eleva/auth/org-routing"
@@ -11,8 +12,6 @@ import { expertWorkspaceBase } from "@/lib/workspace-paths"
 import { ExpertConnectShell } from "./expert-connect-shell"
 
 export const dynamic = "force-dynamic"
-
-const GATEWAY_URL = resolveGatewayUrl()
 
 export default async function ExpertLayout({
   children,
@@ -25,10 +24,8 @@ export default async function ExpertLayout({
   const session = await getSessionForOrg(orgSlug)
 
   if (!session) {
-    const workspace = resolveExpertWorkspaceBase(orgSlug)
-    redirect(
-      `${GATEWAY_URL}${LOGIN_PATH}?returnTo=${encodeURIComponent(workspace)}`
-    )
+    const pathname = (await headers()).get(ELEVA_PATHNAME_HEADER)
+    redirectToGatewayLogin(pathname ?? resolveExpertWorkspaceBase(orgSlug))
   }
 
   if (session.orgSlug !== orgSlug) {

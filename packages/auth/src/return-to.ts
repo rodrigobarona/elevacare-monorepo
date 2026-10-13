@@ -1,3 +1,5 @@
+import { resolveGatewayUrl } from "@eleva/config/env"
+
 /**
  * Shared `returnTo` sanitizer for the Better Auth login flow.
  *
@@ -26,10 +28,45 @@ const ABSOLUTE_RETURN_TO_HOSTS = new Set<string>([
   "localhost",
 ])
 
+const GATEWAY_AUTH_PATHS = [
+  "/dashboard",
+  "/verify-email",
+  "/callback",
+  "/two-factor",
+  "/login",
+  "/signup",
+] as const
+
+function isGatewayAuthPath(path: string): boolean {
+  return GATEWAY_AUTH_PATHS.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}?`)
+  )
+}
+
+function relativeFromAbsoluteUrl(url: URL): string | undefined {
+  if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
+  const relative = `${url.pathname}${url.search}${url.hash}`
+  if (
+    !relative ||
+    !relative.startsWith("/") ||
+    relative.startsWith("//") ||
+    relative.includes("://")
+  ) {
+    return "/"
+  }
+  return relative
+}
+
 export function sanitizeReturnTo(
   raw: string | null | undefined
 ): string | undefined {
   if (!raw) return undefined
+
+  try {
+    return relativeFromAbsoluteUrl(new URL(raw))
+  } catch {
+    // Percent-encoded relative paths still need a decode pass.
+  }
 
   let decoded: string
   try {
@@ -45,19 +82,80 @@ export function sanitizeReturnTo(
   }
 
   try {
-    const url = new URL(decoded)
-    if (!ABSOLUTE_RETURN_TO_HOSTS.has(url.hostname)) return undefined
-    const relative = `${url.pathname}${url.search}${url.hash}`
-    if (
-      !relative ||
-      !relative.startsWith("/") ||
-      relative.startsWith("//") ||
-      relative.includes("://")
-    ) {
-      return "/"
-    }
-    return relative
+    return relativeFromAbsoluteUrl(new URL(decoded))
   } catch {
     return undefined
   }
+}
+
+/** True when `raw` is a relative path we would keep, or an absolute URL on the gateway origin. */
+export function isTrustedReturnTo(
+  raw: string | null | undefined,
+  gateway = resolveGatewayUrl()
+): boolean {
+  if (!raw) return false
+  try {
+    if (new URL(raw).origin === new URL(gateway).origin) return true
+  } catch {
+    // Relative or invalid — fall through to the path sanitizer.
+  }
+  return sanitizeReturnTo(raw) !== undefined
+}
+
+/**
+ * Absolute gateway URL for Better Auth `callbackURL`.
+ *
+ * Relative paths resolve against the auth server (`localhost:3002` /
+ * `api.eleva.care`) and 404. Product destinations go through
+ * `/dashboard?returnTo=` so the account zone can repair cookies and
+ * bounce onto the gateway origin.
+ */
+export function toGatewayCallbackURL(
+  returnTo?: string | null,
+  gateway = resolveGatewayUrl()
+): string {
+  const base = gateway.replace(/\/$/, "")
+  if (returnTo) {
+    try {
+      const candidate = new URL(returnTo)
+      if (candidate.origin === new URL(base).origin) {
+        return candidate.toString()
+      }
+    } catch {
+      // Relative or invalid — sanitize below.
+    }
+  }
+  const path = sanitizeReturnTo(returnTo) ?? "/dashboard"
+  if (isGatewayAuthPath(path)) return `${base}${path}`
+  return `${base}/dashboard?returnTo=${encodeURIComponent(path)}`
+}
+
+const MAGIC_LINK_CALLBACK_KEYS = [
+  "callbackURL",
+  "newUserCallbackURL",
+  "errorCallbackURL",
+] as const
+
+/**
+ * Better Auth puts `callbackURL` on the API verify URL as-is. Relative
+ * product paths then 404 on `localhost:3002` / `api.eleva.care` after
+ * the session is minted. Rewrite those query params to gateway URLs
+ * before the email is sent.
+ */
+export function rewriteMagicLinkVerifyUrl(
+  url: string,
+  gateway = resolveGatewayUrl()
+): string {
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return url
+  }
+  for (const key of MAGIC_LINK_CALLBACK_KEYS) {
+    const raw = parsed.searchParams.get(key)
+    if (!raw) continue
+    parsed.searchParams.set(key, toGatewayCallbackURL(raw, gateway))
+  }
+  return parsed.toString()
 }

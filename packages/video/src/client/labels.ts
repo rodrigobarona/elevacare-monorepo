@@ -20,7 +20,9 @@ export type ElevaCallLabels = {
   cameraOn: string
   shareScreen: string
   stopShare: string
+  shareFailed: string
   chat: string
+  chatUnread: (count: number) => string
   chatPlaceholder: string
   send: string
   leave: string
@@ -45,12 +47,16 @@ export type ElevaCallLabels = {
   reportRecommendations: string
   reportRecommendationsPlaceholder: string
   you: string
+  youNamed: (name: string) => string
   remote: string
+  screenShareOf: (name: string) => string
   connecting: string
   errors: Record<ElevaCallErrorCode, string>
 }
 
-export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
+export function elevaCallLabels(
+  t: (key: string, values?: Record<string, string | number>) => string
+): ElevaCallLabels {
   return {
     notHipaa: t("notHipaa"),
     prejoinTitle: t("prejoinTitle"),
@@ -65,7 +71,9 @@ export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
     cameraOn: t("cameraOn"),
     shareScreen: t("shareScreen"),
     stopShare: t("stopShare"),
+    shareFailed: t("shareFailed"),
     chat: t("chat"),
+    chatUnread: (count) => t("chatUnread", { count }),
     chatPlaceholder: t("chatPlaceholder"),
     send: t("send"),
     leave: t("leave"),
@@ -90,7 +98,9 @@ export function elevaCallLabels(t: (key: string) => string): ElevaCallLabels {
     reportRecommendations: t("reportRecommendations"),
     reportRecommendationsPlaceholder: t("reportRecommendationsPlaceholder"),
     you: t("you"),
+    youNamed: (name) => t("youNamed", { name }),
     remote: t("remote"),
+    screenShareOf: (name) => t("screenShareOf", { name }),
     connecting: t("connecting"),
     errors: {
       SESSION_NOT_OPEN: t("errors.SESSION_NOT_OPEN"),

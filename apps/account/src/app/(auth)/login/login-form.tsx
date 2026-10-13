@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { authClient, MFA_RETURN_TO_STORAGE_KEY } from "@eleva/auth/client"
-import { sanitizeReturnTo } from "@eleva/auth/return-to"
+import { toGatewayCallbackURL } from "@eleva/auth/return-to"
 import { Button, LinkButton } from "@eleva/ui/components/button"
 import { buttonVariants } from "@eleva/ui/components/button-variants"
 import { cn } from "@eleva/ui/lib/utils"
@@ -19,7 +19,7 @@ import { Input } from "@eleva/ui/components/input"
 import { Label } from "@eleva/ui/components/label"
 
 function callbackUrl(returnTo: string | null): string {
-  return sanitizeReturnTo(returnTo) ?? "/dashboard"
+  return toGatewayCallbackURL(returnTo)
 }
 
 export function LoginForm() {

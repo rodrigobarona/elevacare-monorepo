@@ -614,11 +614,43 @@ Other line types: `Product`, `TaxDescriptor`, description-only (no value).
 
 ### AT Communication (`/api/send_document_at_webservice`)
 
-Report documents to Autoridade Tributaria.
+Official:
+https://api-docs.toconline.pt/apis/vendas/comunicacao-de-documentos-a-at.md
+(`sales_document` | `shipment_document` | `purchases_shipment_document`).
+How to query GitBook: `_context/TOConline-api/toconline-docs.md`.
+
+`entity_username` / `entity_password` are **Portal das Finanças** (sujeito
+passivo), not the TOConline website login and not Dados API OAuth.
+`entity_password` is the Finanças password **base64-encoded**.
+
+The GitBook page is inconsistent: prose/curl say `POST`, the method badge
+is `PATCH`. Live ELEVA/16 (2026-10-12): **`PATCH` reaches AT**; `POST`
+returns 404 `FORBIDDEN_BY_GATEKEEPER`. Omit credentials and TOC uses the
+company-stored Finanças password — that copy was invalid
+(`A palavra-chave do sujeito passivo não é válida`) and left
+`communication_status=error` on id 225.
 
 | Method  | Path                               | Description           |
 | ------- | ---------------------------------- | --------------------- |
 | `PATCH` | `/api/send_document_at_webservice` | Submit document to AT |
+
+Request (official payload):
+
+```json
+{
+  "data": {
+    "type": "send_document_at_webservice",
+    "id": 225,
+    "attributes": {
+      "document_type": "sales_document",
+      "entity_username": "<Portal das Finanças user>",
+      "entity_password": "<Finanças password, base64>"
+    }
+  }
+}
+```
+
+Response:
 
 ```json
 {

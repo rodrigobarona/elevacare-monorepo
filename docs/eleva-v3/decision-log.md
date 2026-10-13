@@ -67,6 +67,194 @@ Each entry should include:
 - Related: Phase 09.7, spike `09-daily-account.md`
 - Next review: staging webhook + staging two-browser.
 
+### 2026-10-12: ELEVA/16 AT Comunicação failed — Finanças password invalid
+
+- Decision: Founder asked to Comunicar FT ELEVA/16. Proven method is
+  `PATCH /api/send_document_at_webservice` with
+  `document_type: sales_document` (POST is 404). Omitting Finanças
+  credentials uses TOC’s stored sujeito-passivo password. AT rejected it:
+  `A palavra-chave do sujeito passivo não é válida`. Document 225 is
+  `communication_status=error` (`communication_code_source=webservice`).
+  FT stays issued and emailed; it is **not** communicated. Retry only
+  after the Portal das Finanças password is updated in TOC or supplied as
+  gitignored `TOCONLINE_AT_USERNAME` / `TOCONLINE_AT_PASSWORD` (API wants
+  password base64). Do not invent the password. `issueInvoice()` stays
+  closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `needs-review`
+- Related: FT ELEVA/16, issuance-flow SSOT
+- Next review: retry PATCH after password refresh.
+
+### 2026-10-12: v3 TOC issuer = previous API, no review, AT then email
+
+- Decision: Live path for Eleva v3 Tier 1 FTs is the **previous
+  JSON:API**, not v1 auto-finalize. Product does **not** queue rascunhos
+  for founder review. One workflow: header (`status: 0` internal only) →
+  line → immediately `PATCH status: 1` → Comunicar AT → email.
+  Operator ELEVA/16 paused for learning; that pause is not UX. Series
+  prefix **`ELEVA`** (`FT ELEVA/{n}`). AT API still unproven (needs
+  encrypted Portal das Finanças credentials). `issueInvoice()` stays
+  closed until remaining fiscal params + those credentials. SSOT:
+  `docs/eleva-v3/toconline-platform-fee-issuance-flow.md`.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: ADR-013, phase 07, `.cursor/rules/toconline-integration.mdc`
+- Next review: first automated previous-API issue after the gate opens.
+
+### 2026-10-12: FT ELEVA/16 finalized and emailed to Patricia
+
+- Decision: After founder review of draft 225, previous-API
+  `PATCH status: 1` finalized it as **FT ELEVA/16** (date 2026-03-06,
+  €10,50, cliente 17, worksheet charge id on file). Internal rascunho
+  notes were cleared so they do not print. Email
+  `PATCH /api/email/document/225` returned `success: true` to the
+  cliente-17 mailbox. AT `communication_status` is still
+  **unsent** — API Comunicação needs Portal das Finanças credentials
+  (not in env; operator-gated). Comunicar in TOC UI. Do not re-issue.
+  `issueInvoice()` stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: 2026 commission worksheet card for this session
+- Next review: founder confirms inbox + AT communication in TOC.
+
+### 2026-10-12: Next Patricia FT saved as TOConline draft 225
+
+- Decision: Chronological next Stripe charge is Raquel
+  (worksheet charge id on file) — skipped, no NIF/cliente. Next ready
+  Patricia charge is the 2026-02-27 payment (paid 2026-02-27,
+  session **2026-03-06**, commission €10,50). Created as previous-API
+  draft only: `POST /api/commercial_sales_documents` id **225**,
+  `status: 0`, `document_no` null (ELEVA number not consumed),
+  `communication_status=unsent`, not emailed. Cliente 17, tax NOR 23%
+  id 1, service item 5, VAT-inclusive 8,54 + 1,96. Do **not** POST v1
+  (auto-finalizes). **Superseded the same day:** founder approved;
+  finalized as FT ELEVA/16 and emailed.
+- Owner: founder (Rodrigo Barona)
+- Status: `superseded`
+- Related: 2026 commission worksheet card for this session
+- Next review: n/a — see FT ELEVA/16 entry.
+
+### 2026-10-12: TOConline invoice email is related email_addresses, not attributes.email
+
+- Decision: Cliente **17** (Patricia) and **18** (the Bee company)
+  have empty `customers.attributes.email`. The mailbox
+  is on JSON:API `relationships.main_email_address` /
+  `email_addresses` (Patricia id 62 primary; Bee id 63 primary).
+  GET with `include=email_addresses,main_email_address`.
+  `PATCH /api/email/document` `to_email` should use those addresses.
+  Do not treat a null attribute as “no email on the cliente”.
+  `issueInvoice()` stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: TOConline “Clientes, Morada e E-mail”, worksheet fiscal cards
+- Next review: first remaining FT email send using these mailboxes.
+
+### 2026-10-12: Remaining ELEVA FT date = session day
+
+- Decision: For unissued commission FTs, TOConline `date` (data de
+  emissão) is the **session day** (meeting start, Lisbon calendar date),
+  not the day the operator types the FT and not the Stripe `created`
+  timestamp. That keeps the ELEVA series in session order (Airbnb-style
+  invoice date = reservation day). Pack purchases use the pack-acquired
+  day. FT ELEVA/1–15 already issued on 2026-02-23 stay locked — do not
+  re-issue to backdate. IVA period follows document date; confirm with
+  the accountant if a closed period would be hit. `issueInvoice()` stays
+  closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: D-03, worksheet invoice-date field, payments-payouts-spec
+  line item `date`
+- Next review: first remaining Patricia FT (session 2026-02-27) if typed
+  with that date.
+
+### 2026-10-12: Existing ELEVA FTs mapped to 2026 Stripe charges
+
+- Decision: GET-only `filter[customer_id]` on sales documents. Patricia
+  (cliente 17) already has **FT ELEVA/1–13** (issued 2026-02-23,
+  €10,50 each, AT `communication_status=success`). All 13 map to 2026
+  destination charges via the PaymentIntent stem in the line;
+  ELEVA/5 had a placeholder PI id and was
+  matched by session 2026-01-29 15:00 UTC + amount. Bee (cliente 18)
+  has **FT ELEVA/14–15** for **2025** sessions (€13,50 / €11,25) — not
+  among Julio’s four 2026 worksheet charges. Do not re-issue any of
+  these 15. `issueInvoice()` stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: worksheet
+  `~/Documents/eleva-2026-commission-report.html`,
+  `~/Documents/eleva-2026-toconline-ft-map.json`
+- Next review: remaining 66 Patricia + 4 Julio 2026 FTs still unissued.
+
+### 2026-10-12: TOConline Clientes ids for 2026 ELEVA-FEE worksheets
+
+- Decision: Live `GET /api/customers` on Eleva’s TOConline company
+  (no FT POST) found the two clientes already created for commission
+  FTs. Reuse these ids; do not create a second customer per expert.
+  - Patrícia / personal NIF on file → TOConline `customer_id` **17**,
+    business name shorter than the Identity legal name. Stripe Connect
+    account id is in `internal_observations`.
+  - Julio’s company / company NIF on file → TOConline `customer_id` **18**,
+    company business name, contact name Julio. Stripe Connect
+    account id is in `internal_observations`.
+    Raquel, Jessica, and Madalena are not in Clientes yet. `issueInvoice()`
+    stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: D-03, worksheet
+  `~/Documents/eleva-2026-commission-report.html`, sidecar
+  `~/Documents/eleva-2026-toconline-customers.json`
+- Next review: when remaining expert NIFs exist and those clientes are
+  created; snapshot `customer_id` onto `platform_fee_invoices` in 07.3.
+
+### 2026-10-12: Commission FT description is platform service fee + member, not Stripe id
+
+- Decision: The Eleva commission line is a **platform service fee**
+  (same role as Airbnb’s “taxas pela utilização da plataforma online”),
+  not the clinical session itself. Experts do not know Stripe
+  `ch_` / `py_` ids; they know the member. Manual 2026 ELEVA-FEE
+  worksheets (and future `issuePlatformFeeInvoice`) use Portuguese
+  copy with **minimised PII**: first given name in full, later name
+  tokens as `{initial}***` (particles `da`/`de`/`do` kept), email
+  local-part truncated to 2 characters + `***@domain`. Example:
+  `Taxa de serviço da plataforma Eleva relativa à sessão com Inês G*** S*** (in***@hotmail.com) efetuada no dia 2026-01-21`
+  (packs: pack / adquirido). Source remains charge
+  `metadata.meeting`; the FT must not reprint the full name or
+  mailbox. Stripe payment id stays `external_reference` only.
+  Airbnb’s sample 0% reverse-charge IVA is **not** Eleva’s D-03 23%
+  working example. `issueInvoice()` stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: D-03, `payments-payouts-spec.md` line item,
+  `07-invoicing-toconline.md` Tier 1 description
+- Next review: when live FT POST opens; confirm TOConline line-length
+  and whether accountant prefers dropping email entirely.
+
+### 2026-10-12: Platform commission FT customer is invoicing entity, not Identity
+
+- Decision: Stripe Identity / Connect KYC identifies the **natural
+  person**. The TOConline customer on Eleva commission FTs
+  (`customer_business_name`, `customer_tax_registration_number`,
+  address) is the **invoicing entity** the expert taxes under — either
+  a personal NIF (ENI / natural person, typically 1–3…) or a company
+  denomination + NIF (Unipessoal Lda and similar, typically 5…). An
+  expert can have **both** on file; only one is the default FT
+  customer. Julio is the Identity person;
+  commission invoices go to **the Bee company** /
+  company NIF and registered address on file — not his personal NIF.
+  v3 still has a single
+  `expert_profiles.nif` and does **not** yet store personal vs company
+  identities (unbuilt). Manual 2026 ELEVA-FEE worksheets follow this
+  split; `issueInvoice()` stays closed.
+- Owner: founder (Rodrigo Barona)
+- Status: `active`
+- Related: D-03, `payments-payouts-spec.md` recipient
+  (“professional legal name or denomination”), ADR-013,
+  `expert_profiles.nif`,
+  [`execution-plan/phases/07-invoicing-toconline.md`](./execution-plan/phases/07-invoicing-toconline.md)
+  PR 07.3
+- Next review: when PR 07.3 (expert billing profile + invoice mailbox)
+  ships; do not treat the single `expert_profiles.nif` as this model.
+
 ### 2026-10-08: Guest confirm sends one booking mail; magic-link only on sign-in
 
 - Decision: After a guest books, `guest-activation` still provisions an

@@ -1,4 +1,5 @@
 import { Redis } from "@upstash/redis"
+import { rewriteMagicLinkVerifyUrl } from "./return-to"
 import { getAuthTransactionalMailer, type AuthMailerUser } from "./auth-mailer"
 import {
   e2eAuthUrlKey,
@@ -50,8 +51,9 @@ export async function sendMagicLinkEmail(input: {
   email: string
   url: string
 }): Promise<void> {
-  await persistE2eAuthUrl("magic-link", input.email, input.url)
-  await getAuthTransactionalMailer().sendMagicLink(input)
+  const url = rewriteMagicLinkVerifyUrl(input.url)
+  await persistE2eAuthUrl("magic-link", input.email, url)
+  await getAuthTransactionalMailer().sendMagicLink({ ...input, url })
 }
 
 export async function sendTwoFactorOtpEmail(input: {
