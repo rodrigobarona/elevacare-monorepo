@@ -3,7 +3,6 @@
 import * as React from "react"
 import { useLocale, useTranslations } from "next-intl"
 import { Button } from "@eleva/ui/components/button"
-import { cn } from "@eleva/ui/lib/utils"
 import { JoinCta } from "@eleva/video/join-cta"
 import { listCalendarBookingsAction } from "./actions"
 import { RequestActions } from "./request-actions"
@@ -223,12 +222,7 @@ export function WeekView({
                         <button
                           key={b.id}
                           type="button"
-                          className={cn(
-                            "absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[10px] leading-tight",
-                            MODE_CLASS[b.sessionMode],
-                            b.status === "awaiting_confirmation" &&
-                              "ring-dashed ring-2 ring-background/70"
-                          )}
+                          className={`absolute inset-x-0.5 overflow-hidden rounded px-1 py-0.5 text-left text-[10px] leading-tight ${MODE_CLASS[b.sessionMode]}${b.status === "awaiting_confirmation" ? "ring-dashed ring-2 ring-background/70" : ""}`}
                           style={{
                             top: `${topPct}%`,
                             height: `${Math.max(heightPct, 18)}%`,
