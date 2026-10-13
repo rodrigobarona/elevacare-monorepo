@@ -24,7 +24,7 @@ function isMisroutedProductPath(pathname: string): boolean {
   const second = segments[1]
   return (
     segments.length >= 2 &&
-    Boolean(first) &&
+    typeof first === "string" &&
     isOrgSlugShape(first) &&
     second === "team"
   )
