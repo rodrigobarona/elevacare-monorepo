@@ -1,4 +1,4 @@
-import { and, asc, eq, lte } from "drizzle-orm"
+import { and, asc, eq, lte, sql } from "drizzle-orm"
 import { withOrgContext, withPlatformAdminContext, type Tx } from "../context"
 import { bookingPayments, bookings } from "../schema/main"
 
@@ -66,7 +66,10 @@ export async function listExpiredBookingRequests(input: {
       .where(
         and(
           eq(bookings.status, "awaiting_confirmation"),
-          lte(bookings.approvalDeadlineAt, input.now)
+          lte(
+            sql`coalesce(${bookings.approvalDeadlineAt}, ${bookings.startsAt})`,
+            input.now
+          )
         )
       )
       .orderBy(asc(bookings.approvalDeadlineAt), asc(bookings.id))

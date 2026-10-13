@@ -584,7 +584,7 @@ async function flipPaidBooking(
   }
   const approvalDeadlineAt = input.requiresApproval
     ? resolveApprovalDeadline({ startsAt: input.startsAt, now })
-    : undefined
+    : null
   await tx
     .update(main.bookings)
     .set({
@@ -592,7 +592,7 @@ async function flipPaidBooking(
       confirmedAt: input.requiresApproval ? null : now,
       stripePaymentIntentId: input.paymentIntentId,
       requiresApproval: input.requiresApproval,
-      ...(approvalDeadlineAt ? { approvalDeadlineAt } : {}),
+      approvalDeadlineAt,
     })
     .where(eq(main.bookings.id, input.bookingId))
   await tx
