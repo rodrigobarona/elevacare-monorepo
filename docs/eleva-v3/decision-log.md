@@ -49,7 +49,7 @@ Each entry should include:
   D-11 is a **working pre-launch** decision (author-only reads now;
   clinic share stays Phase 11). DPO/legal re-sign before production PHI.
   AI summary stays fail-closed until a zero-retention model is on
-  `PHI_APPROVED_MODELS` (ADR-009).
+  `APPROVED_MODELS` (ADR-009).
 - Owner: founder (Rodrigo Barona)
 - Status: `active`
 - Related: D-07, D-08, D-11, ADR-009, Phase 10.1, 16.8
@@ -1841,13 +1841,16 @@ capabilities.transfers = active`. Stripe Identity stays implemented behind
 
 - Owner: DPO + product
 - Status: active — **working pre-launch** (founder 2026-10-12 opened Phase 10.1).
-  Author-only reads now. Clinic share stays Phase 11. Not a DPO production sign-off.
+  Author-only writes now. Clinic-shared SELECT exists in 10.1 RLS but stays inactive
+  (`clinic_shared_records` default false, no setter until Phase 11). Not a DPO production sign-off.
 - Review date: DPO + product re-sign before production clinical records
 - Summary: expert-authored records are readable by the authoring expert; by other experts of the
   same clinic organization only when the clinic admin enabled `clinic_shared_records` (default
   off, reason required, audited) and the member has not opted out (`record_access_optouts`);
   by Eleva staff never in plaintext (metadata only; break-glass decrypt is a Phase 12 dual-control
-  action). Phase 10 enforces author-only RLS now; Phase 11 only adds the toggle. Unblocks: Phase 10 PR 10.1.
+  action). Phase 10 enforces author-only INSERT/UPDATE/DELETE (`created_by = eleva.user_id`) and
+  author/assigned-expert SELECT; clinic_shared_read is compiled but inactive. Phase 11 only adds
+  the toggle. Unblocks: Phase 10 PR 10.1.
 - Reference: [`execution-plan/phases/10-records-crm-ai.md`](./execution-plan/phases/10-records-crm-ai.md), [`execution-plan/phases/11-team-clinics.md`](./execution-plan/phases/11-team-clinics.md)
 
 ### D-12 (2026-09-07): Account deletion vs legal retention of clinical records

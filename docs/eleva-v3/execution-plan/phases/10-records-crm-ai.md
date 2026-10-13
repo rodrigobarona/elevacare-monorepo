@@ -21,7 +21,8 @@ In:
 - **Records** (`records`: id, expert_org_id, member_user_id, booking_id nullable, kind
   `intake|note|transcript|ai_draft|internal_report|report|document_ref` (live `transcript`
   and unpublished expert `internal_report` pulled into 10.1 on founder 2026-10-12 — not 16.8
-  cloud recording and not the 10.2 member-published `report`; one shared `RECORD_KINDS` const in
+  cloud recording and not the 10.2 member-published `report`; clinic-shared SELECT excludes
+  `internal_report`; one shared `RECORD_KINDS` const in
   `packages/db/src/schema/main/records.ts`, reused by the migration enum, API Zod schemas,
   `@eleva/audit` unions and tests), `title_encrypted` + `body_encrypted` (envelope,
   `encryptForOrg(expertOrgId)`; naming convention `<field>_encrypted` everywhere),
@@ -107,7 +108,7 @@ record_access_optouts(member_user_id, expert_org_id)))` — the two objects this
   versioned prompt contracts (`packages/ai/prompts/session-report.v1.ts`) and Zod-validated
   structured output -> `records.kind = ai_draft` (never auto-published) -> expert reviews, edits,
   publishes. PHI stays inside the request to the gateway with **zero data retention verified per
-  model** (the `PHI_APPROVED_MODELS` allow-list below), prompts logged without content, model
+  model** (the `APPROVED_MODELS` allow-list below), prompts logged without content, model
   pinned via config. **Cloud recording is not in this phase**: Daily's HIPAA
   recording requires a customer-owned S3 landing zone and its own consent kind; the whole
   recording -> S3 landing -> draft pipeline (including the `syncRoomRecording` fencing design

@@ -326,6 +326,8 @@ export function BookingFunnel({
     reservation != null &&
     !paymentInFlight &&
     isExpired(reservation.expiresAt, nowMs)
+  const holdActive =
+    reservation != null && !isExpired(reservation.expiresAt, nowMs)
   const priceCents =
     specialPriceCents ?? selectedMode?.priceCents ?? modes[0]?.priceCents ?? 0
   const extraCountries = useMemo(
@@ -751,8 +753,15 @@ export function BookingFunnel({
               <Textarea
                 data-testid="booking-intake-notes"
                 value={intakeNotes}
-                onChange={(event) => setIntakeNotes(event.target.value)}
+                onChange={(event) => {
+                  if (holdActive) return
+                  setIntakeNotes(event.target.value)
+                }}
                 maxLength={8000}
+                readOnly={holdActive}
+                className={
+                  holdActive ? "cursor-not-allowed opacity-50" : undefined
+                }
               />
               <p className="text-sm text-muted-foreground">
                 {t("details.intakeNotesHint")}

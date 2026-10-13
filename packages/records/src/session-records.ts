@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, ne } from "drizzle-orm"
+import { and, eq, isNotNull, ne, sql } from "drizzle-orm"
 import { withAudit, type AuditCtx } from "@eleva/audit"
 import {
   withOrgAndUserContext,
@@ -159,7 +159,12 @@ async function persistKind(
           version: existing.version + 1,
           updatedAt: new Date(),
         })
-        .where(eq(records.id, existing.id))
+        .where(
+          and(
+            eq(records.id, existing.id),
+            eq(records.createdBy, input.actorUserId)
+          )
+        )
         .returning()
     )[0]
     if (!updated) throw new SessionRecordError("NOT_FOUND")
@@ -237,7 +242,12 @@ async function persistKind(
           version: raced.version + 1,
           updatedAt: new Date(),
         })
-        .where(eq(records.id, raced.id))
+        .where(
+          and(
+            eq(records.id, raced.id),
+            eq(records.createdBy, input.actorUserId)
+          )
+        )
         .returning()
     )[0]
     if (!updated) throw new SessionRecordError("NOT_FOUND")
@@ -266,7 +276,8 @@ async function persistKind(
 async function hydrateIntake(
   booking: BookingRow,
   actorUserId: string,
-  existing: SessionRecordView[]
+  existing: SessionRecordView[],
+  options?: { relist?: boolean }
 ): Promise<SessionRecordView[]> {
   if (existing.some((row) => row.kind === "intake")) return existing
   const [reservation] = await withPlatformAdminContext((tx) =>
@@ -281,9 +292,20 @@ async function hydrateIntake(
   )
   if (!reservation) return existing
   const encrypted = reservation.funnel?.intakeNotesEncrypted
-  const notes = encrypted
-    ? (await decryptHoldIntake(booking.orgId, encrypted, reservation.id)).trim()
-    : (reservation.funnel?.intakeNotes?.trim() ?? "")
+  let notes = ""
+  try {
+    notes = encrypted
+      ? (
+          await decryptHoldIntake(booking.orgId, encrypted, reservation.id)
+        ).trim()
+      : (reservation.funnel?.intakeNotes?.trim() ?? "")
+  } catch {
+    console.error("[records] intake decrypt failed", {
+      bookingId: booking.id,
+      status: "decrypt_failed",
+    })
+    return existing
+  }
   if (!notes) return existing
   await withAudit({ orgId: booking.orgId, actorUserId }, async (tx, ctx) => {
     await persistKind(tx, ctx, {
@@ -292,15 +314,14 @@ async function hydrateIntake(
       kind: "intake",
       body: notes,
     })
-    if (!reservation?.funnel) return
-    const funnelWithoutIntake = { ...reservation.funnel }
-    delete funnelWithoutIntake.intakeNotes
-    delete funnelWithoutIntake.intakeNotesEncrypted
     await tx
       .update(slotReservations)
-      .set({ funnel: funnelWithoutIntake })
+      .set({
+        funnel: sql`"funnel" - 'intakeNotes' - 'intakeNotesEncrypted'`,
+      })
       .where(eq(slotReservations.bookingId, booking.id))
   })
+  if (options?.relist === false) return existing
   return withOrgAndUserContext(booking.orgId, actorUserId, (tx) =>
     listDecrypted(tx, booking)
   )
@@ -309,7 +330,7 @@ async function hydrateIntake(
 export async function persistBookingIntake(bookingId: string): Promise<void> {
   const booking = await loadBooking(bookingId)
   if (!booking) return
-  await hydrateIntake(booking, booking.expertUserId, [])
+  await hydrateIntake(booking, booking.expertUserId, [], { relist: false })
 }
 
 export async function requireAssignedExpert(input: {
@@ -371,7 +392,7 @@ export async function upsertSessionRecord(input: {
     throw new SessionRecordError("FORBIDDEN")
   }
   // withAudit(actorUserId) uses withOrgAndUserContext, which sets
-  // eleva.user_id for records_author_write WITH CHECK.
+  // eleva.user_id for records_author_insert / records_author_update WITH CHECK.
   return withAudit(
     { orgId: booking.orgId, actorUserId: input.actorUserId },
     async (tx, ctx) =>

@@ -13,6 +13,7 @@ const listExpertBusyBookings = vi.fn()
 const resolveOffer = vi.fn()
 const reserveSlot = vi.fn()
 const assertGuestEmailCanBook = vi.fn()
+const encryptHoldIntake = vi.fn()
 
 vi.mock("@eleva/db", () => ({
   findExpertByUsername: (...args: unknown[]) => findExpertByUsername(...args),
@@ -49,6 +50,10 @@ vi.mock("./reserve-slot", async () => {
     reserveSlot: (...args: unknown[]) => reserveSlot(...args),
   }
 })
+
+vi.mock("@eleva/records", () => ({
+  encryptHoldIntake: (...args: unknown[]) => encryptHoldIntake(...args),
+}))
 
 const redis = {} as Redis
 
@@ -370,6 +375,35 @@ describe("reserveBooking", () => {
         }),
       })
     )
+  })
+
+  it("encrypts hold intake before locking the slot", async () => {
+    encryptHoldIntake.mockResolvedValue("sealed")
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      intakeNotes: "knee pain",
+    })
+    expect(result.ok).toBe(true)
+    expect(encryptHoldIntake).toHaveBeenCalled()
+    const slotArg = reserveSlot.mock.calls[0]?.[1] as {
+      id: string
+      funnel: { intakeNotesEncrypted: string }
+    }
+    expect(slotArg.id).toEqual(expect.any(String))
+    expect(slotArg.funnel.intakeNotesEncrypted).toBe("sealed")
+    expect(encryptHoldIntake.mock.calls[0]?.[2]).toBe(slotArg.id)
+  })
+
+  it("does not lock the slot when hold intake encryption fails", async () => {
+    encryptHoldIntake.mockRejectedValueOnce(new Error("dek"))
+    const { reserveBooking } = await import("./reserve-booking")
+    const result = await reserveBooking(redis, {
+      ...baseInput,
+      intakeNotes: "knee pain",
+    })
+    expect(result).toEqual({ ok: false, error: "db_error" })
+    expect(reserveSlot).not.toHaveBeenCalled()
   })
 })
 

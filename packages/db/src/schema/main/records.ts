@@ -73,7 +73,8 @@ export const records = pgTable(
     bookingKindUidx: uniqueIndex("records_booking_kind_uidx")
       .on(t.bookingId, t.kind)
       .where(sql`${t.bookingId} IS NOT NULL`),
-    authorWritePolicy: pgPolicy("records_author_write", {
+    authorSelectPolicy: pgPolicy("records_author_select", {
+      for: "select",
       using: sql`org_id::text = current_setting('eleva.org_id', true)
         AND (
           created_by::text = current_setting('eleva.user_id', true)
@@ -83,7 +84,22 @@ export const records = pgTable(
               AND b.expert_user_id::text = current_setting('eleva.user_id', true)
           )
         )`,
+    }),
+    authorInsertPolicy: pgPolicy("records_author_insert", {
+      for: "insert",
       withCheck: sql`org_id::text = current_setting('eleva.org_id', true)
+        AND created_by::text = current_setting('eleva.user_id', true)`,
+    }),
+    authorUpdatePolicy: pgPolicy("records_author_update", {
+      for: "update",
+      using: sql`org_id::text = current_setting('eleva.org_id', true)
+        AND created_by::text = current_setting('eleva.user_id', true)`,
+      withCheck: sql`org_id::text = current_setting('eleva.org_id', true)
+        AND created_by::text = current_setting('eleva.user_id', true)`,
+    }),
+    authorDeletePolicy: pgPolicy("records_author_delete", {
+      for: "delete",
+      using: sql`org_id::text = current_setting('eleva.org_id', true)
         AND created_by::text = current_setting('eleva.user_id', true)`,
     }),
     clinicSharedReadPolicy: pgPolicy("records_clinic_shared_read", {

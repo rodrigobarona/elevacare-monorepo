@@ -82,7 +82,7 @@ storage and Cloudflare R2 are **not** accepted destinations, so the compliant de
    grant it (join-page banner; withdrawable at any time); the consent boolean drives Daily's
    recording mode through the fenced sync below, never a raw flag.
 4. **AI draft from transcript** — `draftSessionReport` (Phase 10, typed-notes input) gains a
-   `transcriptRecordId` input behind `ff.session_recording`; same `PHI_APPROVED_MODELS` rule.
+   `transcriptRecordId` input behind `ff.session_recording`; same `APPROVED_MODELS` rule.
 
 ### Room recording sync — fencing design (verbatim from the original Phase 10 text)
 

@@ -218,12 +218,16 @@ export function buildMainRlsStatements(): string[] {
     out.push(`ALTER TABLE ${table} ENABLE ROW LEVEL SECURITY;`)
     out.push(`ALTER TABLE ${table} FORCE ROW LEVEL SECURITY;`)
     out.push(`DROP POLICY IF EXISTS ${table}_author_write ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_select ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_insert ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_update ON ${table};`)
+    out.push(`DROP POLICY IF EXISTS ${table}_author_delete ON ${table};`)
     out.push(`DROP POLICY IF EXISTS ${table}_clinic_shared_read ON ${table};`)
     out.push(
       `DROP POLICY IF EXISTS ${table}_member_published_read ON ${table};`
     )
     out.push(
-      `CREATE POLICY ${table}_author_write ON ${table} ` +
+      `CREATE POLICY ${table}_author_select ON ${table} FOR SELECT ` +
         `USING (` +
         `org_id::text = current_setting('eleva.org_id', true) ` +
         `AND (` +
@@ -233,10 +237,22 @@ export function buildMainRlsStatements(): string[] {
         `AND b.expert_user_id::text = current_setting('eleva.user_id', true)` +
         `)` +
         `)` +
-        `) WITH CHECK (` +
-        `org_id::text = current_setting('eleva.org_id', true) ` +
-        `AND created_by::text = current_setting('eleva.user_id', true)` +
         `);`
+    )
+    const authorRow =
+      `org_id::text = current_setting('eleva.org_id', true) ` +
+      `AND created_by::text = current_setting('eleva.user_id', true)`
+    out.push(
+      `CREATE POLICY ${table}_author_insert ON ${table} FOR INSERT ` +
+        `WITH CHECK (${authorRow});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_author_update ON ${table} FOR UPDATE ` +
+        `USING (${authorRow}) WITH CHECK (${authorRow});`
+    )
+    out.push(
+      `CREATE POLICY ${table}_author_delete ON ${table} FOR DELETE ` +
+        `USING (${authorRow});`
     )
     out.push(
       `CREATE POLICY ${table}_clinic_shared_read ON ${table} FOR SELECT ` +

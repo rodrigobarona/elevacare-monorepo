@@ -255,12 +255,21 @@ describe("owner-user-visible RLS", () => {
 describe("clinical records RLS", () => {
   const stmts = buildMainRlsStatements()
 
-  it("keeps author writes and member published reads off TENANT_TABLES", () => {
+  it("splits author select from author mutations and member published reads", () => {
     expect(TENANT_TABLES).not.toContain("records")
     expect(CLINICAL_RECORDS_TABLES).toContain("records")
     expect(RECORD_OPTOUT_TABLES).toContain("record_access_optouts")
-    const write = stmts.find((s) =>
-      s.startsWith("CREATE POLICY records_author_write")
+    const select = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_select")
+    )
+    const insert = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_insert")
+    )
+    const update = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_update")
+    )
+    const del = stmts.find((s) =>
+      s.startsWith("CREATE POLICY records_author_delete")
     )
     const clinicRead = stmts.find((s) =>
       s.startsWith("CREATE POLICY records_clinic_shared_read")
@@ -268,10 +277,19 @@ describe("clinical records RLS", () => {
     const published = stmts.find((s) =>
       s.startsWith("CREATE POLICY records_member_published_read")
     )
-    expect(write).toContain("eleva.org_id")
-    expect(write).toContain("eleva.user_id")
-    expect(write).toContain("WITH CHECK")
-    expect(write).not.toContain("clinic_shared_records")
+    expect(
+      stmts.find((s) => s.startsWith("CREATE POLICY records_author_write"))
+    ).toBeUndefined()
+    expect(select).toContain("FOR SELECT")
+    expect(select).toContain("expert_user_id")
+    expect(insert).toContain("FOR INSERT")
+    expect(insert).toContain("WITH CHECK")
+    expect(insert).not.toContain("expert_user_id")
+    expect(update).toContain("FOR UPDATE")
+    expect(update).toContain("WITH CHECK")
+    expect(update).not.toContain("expert_user_id")
+    expect(del).toContain("FOR DELETE")
+    expect(del).not.toContain("expert_user_id")
     expect(clinicRead).toContain("FOR SELECT")
     expect(clinicRead).toContain("clinic_shared_records")
     expect(clinicRead).toContain("expert_profiles")

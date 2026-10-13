@@ -80,12 +80,20 @@ ALTER TABLE "records" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
 DROP POLICY IF EXISTS "records_author_write" ON "records";
 --> statement-breakpoint
+DROP POLICY IF EXISTS "records_author_select" ON "records";
+--> statement-breakpoint
+DROP POLICY IF EXISTS "records_author_insert" ON "records";
+--> statement-breakpoint
+DROP POLICY IF EXISTS "records_author_update" ON "records";
+--> statement-breakpoint
+DROP POLICY IF EXISTS "records_author_delete" ON "records";
+--> statement-breakpoint
 DROP POLICY IF EXISTS "records_clinic_shared_read" ON "records";
 --> statement-breakpoint
 DROP POLICY IF EXISTS "records_member_published_read" ON "records";
 --> statement-breakpoint
-CREATE POLICY "records_author_write" ON "records"
-  AS PERMISSIVE FOR ALL TO public
+CREATE POLICY "records_author_select" ON "records"
+  AS PERMISSIVE FOR SELECT TO public
   USING (
     org_id::text = current_setting('eleva.org_id', true)
     AND (
@@ -96,8 +104,29 @@ CREATE POLICY "records_author_write" ON "records"
           AND b.expert_user_id::text = current_setting('eleva.user_id', true)
       )
     )
+  );
+--> statement-breakpoint
+CREATE POLICY "records_author_insert" ON "records"
+  AS PERMISSIVE FOR INSERT TO public
+  WITH CHECK (
+    org_id::text = current_setting('eleva.org_id', true)
+    AND created_by::text = current_setting('eleva.user_id', true)
+  );
+--> statement-breakpoint
+CREATE POLICY "records_author_update" ON "records"
+  AS PERMISSIVE FOR UPDATE TO public
+  USING (
+    org_id::text = current_setting('eleva.org_id', true)
+    AND created_by::text = current_setting('eleva.user_id', true)
   )
   WITH CHECK (
+    org_id::text = current_setting('eleva.org_id', true)
+    AND created_by::text = current_setting('eleva.user_id', true)
+  );
+--> statement-breakpoint
+CREATE POLICY "records_author_delete" ON "records"
+  AS PERMISSIVE FOR DELETE TO public
+  USING (
     org_id::text = current_setting('eleva.org_id', true)
     AND created_by::text = current_setting('eleva.user_id', true)
   );

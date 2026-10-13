@@ -46,6 +46,8 @@ export interface GetAvailableSlotsInput {
 }
 
 export interface ReserveSlotInput {
+  /** Pre-generated id so hold intake can be encrypted before the Redis lock. */
+  id?: string
   eventTypeId: string
   expertProfileId: string
   expertUserId: string

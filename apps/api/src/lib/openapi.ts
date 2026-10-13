@@ -3232,7 +3232,7 @@ export function generateOpenApiSpec(): ReturnType<typeof createDocument> {
           operationId: "summarizeSessionRecords",
           summary: "Draft an AI summary of session notes and transcript",
           description:
-            "Fail closed until a zero-retention model is on PHI_APPROVED_MODELS (ADR-009). Returns 409 AI_MODEL_ZERO_RETENTION_REQUIRED.",
+            "Fail closed until a zero-retention model is on APPROVED_MODELS (ADR-009). Returns 409 AI_MODEL_ZERO_RETENTION_REQUIRED.",
           tags: ["Sessions"],
           requestParams: {
             path: z.object({ bookingId: z.string().uuid() }),

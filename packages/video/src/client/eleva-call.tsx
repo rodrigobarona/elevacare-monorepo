@@ -70,6 +70,13 @@ type ChatMessage = {
   text: string
 }
 
+type DailyTranscriptionCall = {
+  startTranscription?: () => Promise<unknown>
+  stopTranscription?: () => Promise<unknown>
+  on: (event: string, handler: (ev: unknown) => void) => void
+  off: (event: string, handler: (ev: unknown) => void) => void
+}
+
 export function ElevaCall({
   roomUrl,
   token,
@@ -128,6 +135,11 @@ function CallShell({
   const reportDirtyRef = useRef(false)
   const recordsLoadedRef = useRef(false)
   const lastSavedTranscriptRef = useRef("")
+  const transcriptSaveInFlightRef = useRef(false)
+  const transcriptSaveQueuedRef = useRef(false)
+  const transcriptSavePromiseRef = useRef<Promise<void> | null>(null)
+  const recordsRef = useRef(records)
+  recordsRef.current = records
   const [recordsReady, setRecordsReady] = useState(false)
   noteRef.current = note
   transcriptRef.current = transcript
@@ -228,21 +240,48 @@ function CallShell({
     return () => window.clearTimeout(timer)
   }, [internalReport, reportDirty, records, recordsReady, showNotesSlot])
 
+  const saveTranscriptLatest = useCallback(async () => {
+    const api = recordsRef.current
+    if (!api || !recordsLoadedRef.current) return
+    if (transcriptSaveInFlightRef.current) {
+      transcriptSaveQueuedRef.current = true
+      if (transcriptSavePromiseRef.current) {
+        await transcriptSavePromiseRef.current
+      }
+      return
+    }
+    const body = transcriptRef.current
+    if (body === lastSavedTranscriptRef.current) return
+    transcriptSaveInFlightRef.current = true
+    const run = (async () => {
+      try {
+        await api.save("transcript", body)
+        if (transcriptRef.current === body) {
+          lastSavedTranscriptRef.current = body
+        }
+        setSaveFailed(false)
+      } catch {
+        setSaveFailed(true)
+      } finally {
+        transcriptSaveInFlightRef.current = false
+        if (transcriptSaveQueuedRef.current) {
+          transcriptSaveQueuedRef.current = false
+          await saveTranscriptLatest()
+        }
+      }
+    })()
+    transcriptSavePromiseRef.current = run
+    await run
+  }, [])
+
   useEffect(() => {
     if (!showNotesSlot || !records || !transcript || !recordsReady) return
     if (transcript === lastSavedTranscriptRef.current) return
     const timer = window.setTimeout(() => {
-      const body = transcriptRef.current
-      void records
-        .save("transcript", body)
-        .then(() => {
-          lastSavedTranscriptRef.current = body
-          setSaveFailed(false)
-        })
-        .catch(() => setSaveFailed(true))
+      void saveTranscriptLatest()
     }, 2000)
     return () => window.clearTimeout(timer)
-  }, [transcript, records, recordsReady, showNotesSlot])
+  }, [transcript, records, recordsReady, showNotesSlot, saveTranscriptLatest])
 
   useEffect(() => {
     if (!daily) return
@@ -262,12 +301,7 @@ function CallShell({
 
   useEffect(() => {
     if (!showNotesSlot || !joined || !daily) return
-    const call = daily as unknown as {
-      startTranscription?: () => Promise<unknown>
-      stopTranscription?: () => Promise<unknown>
-      on: (event: string, handler: (ev: unknown) => void) => void
-      off: (event: string, handler: (ev: unknown) => void) => void
-    }
+    const call = daily as unknown as DailyTranscriptionCall
     if (typeof call.startTranscription === "function") {
       void call.startTranscription().catch(() => {
         /* live transcript is best-effort; notes still persist */
@@ -281,11 +315,6 @@ function CallShell({
     call.on("transcription-message", onMessage)
     return () => {
       call.off("transcription-message", onMessage)
-      if (typeof call.stopTranscription === "function") {
-        void call.stopTranscription().catch(() => {
-          /* room teardown */
-        })
-      }
     }
   }, [daily, joined, showNotesSlot])
 
@@ -308,7 +337,18 @@ function CallShell({
   }
 
   async function handleLeave() {
+    if (daily) {
+      const call = daily as unknown as DailyTranscriptionCall
+      if (typeof call.stopTranscription === "function") {
+        await call.stopTranscription().catch(() => {
+          /* room teardown */
+        })
+      }
+    }
     if (records && showNotesSlot && recordsLoadedRef.current) {
+      if (transcriptSavePromiseRef.current) {
+        await transcriptSavePromiseRef.current
+      }
       const saves: Promise<void>[] = []
       if (notesDirtyRef.current) {
         saves.push(records.save("note", noteRef.current))
@@ -325,7 +365,7 @@ function CallShell({
         transcriptRef.current.trim() &&
         transcriptRef.current !== lastSavedTranscriptRef.current
       ) {
-        saves.push(records.save("transcript", transcriptRef.current))
+        saves.push(saveTranscriptLatest())
       }
       if (saves.length > 0) {
         await Promise.allSettled(saves)

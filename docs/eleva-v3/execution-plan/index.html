@@ -5923,7 +5923,8 @@ differentiator and must ship behind a flag with strict PHI boundaries (ADR-009).
 <li><strong>Records</strong> (<code>records</code>: id, expert_org_id, member_user_id, booking_id nullable, kind
 <code>intake|note|transcript|ai_draft|internal_report|report|document_ref</code> (live <code>transcript</code>
 and unpublished expert <code>internal_report</code> pulled into 10.1 on founder 2026-10-12 — not 16.8
-cloud recording and not the 10.2 member-published <code>report</code>; one shared <code>RECORD_KINDS</code> const in
+cloud recording and not the 10.2 member-published <code>report</code>; clinic-shared SELECT excludes
+<code>internal_report</code>; one shared <code>RECORD_KINDS</code> const in
 <code>packages/db/src/schema/main/records.ts</code>, reused by the migration enum, API Zod schemas,
 <code>@eleva/audit</code> unions and tests), <code>title_encrypted</code> + <code>body_encrypted</code> (envelope,
 <code>encryptForOrg(expertOrgId)</code>; naming convention <code>&lt;field&gt;_encrypted</code> everywhere),
@@ -6007,7 +6008,7 @@ notes (and, optionally, the intake answers the member typed at booking) as the o
 versioned prompt contracts (<code>packages/ai/prompts/session-report.v1.ts</code>) and Zod-validated
 structured output -&gt; <code>records.kind = ai_draft</code> (never auto-published) -&gt; expert reviews, edits,
 publishes. PHI stays inside the request to the gateway with <strong>zero data retention verified per
-model</strong> (the <code>PHI_APPROVED_MODELS</code> allow-list below), prompts logged without content, model
+model</strong> (the <code>APPROVED_MODELS</code> allow-list below), prompts logged without content, model
 pinned via config. <strong>Cloud recording is not in this phase</strong>: Daily&#39;s HIPAA
 recording requires a customer-owned S3 landing zone and its own consent kind; the whole
 recording -&gt; S3 landing -&gt; draft pipeline (including the <code>syncRoomRecording</code> fencing design
@@ -8353,7 +8354,7 @@ Retention: transcripts 2 y (<code>data-retention-export-matrix.md</code>).</li>
 grant it (join-page banner; withdrawable at any time); the consent boolean drives Daily&#39;s
 recording mode through the fenced sync below, never a raw flag.</li>
 <li><strong>AI draft from transcript</strong> — <code>draftSessionReport</code> (Phase 10, typed-notes input) gains a
-<code>transcriptRecordId</code> input behind <code>ff.session_recording</code>; same <code>PHI_APPROVED_MODELS</code> rule.</li>
+<code>transcriptRecordId</code> input behind <code>ff.session_recording</code>; same <code>APPROVED_MODELS</code> rule.</li>
 </ol>
 <h3 id="16-post-launch-backlog--room-recording-sync-fencing-design-verbatim-from-the-original-phase-10-text"><a class="anchor" href="#16-post-launch-backlog--room-recording-sync-fencing-design-verbatim-from-the-original-phase-10-text" aria-label="Link to section">#</a>Room recording sync — fencing design (verbatim from the original Phase 10 text)</h3>
 <p>Phase 9 creates the room at booking confirmation with <code>enable_recording: false</code>, and consent is
