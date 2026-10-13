@@ -1,0 +1,151 @@
+import {
+  CompleteSessionDocumentRequestSchema,
+  CompleteSessionDocumentResponseSchema,
+  ListSessionDocumentsResponseSchema,
+} from "@eleva/api-client"
+import {
+  completeSessionDocument,
+  listSessionDocuments,
+  SessionDocumentError,
+} from "@eleva/records"
+import { z } from "zod"
+import { apiAuthFailure, requireApiAuth } from "@/lib/auth"
+import { corsHeaders } from "@/lib/cors"
+import { applyRateLimit, rateLimitKey, RATE_LIMITS } from "@/lib/rate-limit"
+import type { RoutePolicy } from "@/lib/route-policy"
+import { secureJson } from "@/lib/security-headers"
+import { DOCUMENT_STATUS } from "./status"
+
+export const ROUTE_POLICY = {
+  auth: "session",
+  rateLimit: true,
+  botId: false,
+} as const satisfies RoutePolicy
+
+export const dynamic = "force-dynamic"
+export const runtime = "nodejs"
+
+const BookingIdSchema = z.string().uuid()
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ bookingId: string }> }
+) {
+  const headers = corsHeaders(request, "GET, POST, OPTIONS")
+  const { bookingId: rawBookingId } = await params
+  const bookingId = BookingIdSchema.safeParse(rawBookingId)
+  if (!bookingId.success) {
+    return secureJson(
+      { error: "invalid_body", issues: bookingId.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated,
+    headers
+  )
+  if (rateLimited) return rateLimited
+
+  try {
+    const documents = await listSessionDocuments({
+      bookingId: bookingId.data,
+      actorUserId: session.user.id,
+    })
+    return secureJson(ListSessionDocumentsResponseSchema.parse({ documents }), {
+      headers,
+    })
+  } catch (err) {
+    if (err instanceof SessionDocumentError) {
+      return secureJson(
+        { error: err.code },
+        { status: DOCUMENT_STATUS[err.code], headers }
+      )
+    }
+    console.error("[sessions/documents] list failed", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ bookingId: string }> }
+) {
+  const headers = corsHeaders(request, "GET, POST, OPTIONS")
+  const { bookingId: rawBookingId } = await params
+  const bookingId = BookingIdSchema.safeParse(rawBookingId)
+  if (!bookingId.success) {
+    return secureJson(
+      { error: "invalid_body", issues: bookingId.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  let session
+  try {
+    session = await requireApiAuth(request)
+  } catch (err) {
+    const failure = apiAuthFailure(err, headers)
+    if (failure) return failure
+    throw err
+  }
+
+  const rateLimited = await applyRateLimit(
+    rateLimitKey(request, session.user.id),
+    RATE_LIMITS.authenticated,
+    headers
+  )
+  if (rateLimited) return rateLimited
+
+  const parsed = CompleteSessionDocumentRequestSchema.safeParse(
+    await request.json().catch(() => null)
+  )
+  if (!parsed.success) {
+    return secureJson(
+      { error: "invalid_body", issues: parsed.error.issues },
+      { status: 422, headers }
+    )
+  }
+
+  try {
+    const document = await completeSessionDocument({
+      bookingId: bookingId.data,
+      actorUserId: session.user.id,
+      pathname: parsed.data.pathname,
+      url: parsed.data.url,
+      mime: parsed.data.mime,
+      sizeBytes: parsed.data.sizeBytes,
+      scope: parsed.data.scope,
+      originalName: parsed.data.originalName,
+    })
+    return secureJson(CompleteSessionDocumentResponseSchema.parse(document), {
+      headers,
+    })
+  } catch (err) {
+    if (err instanceof SessionDocumentError) {
+      return secureJson(
+        { error: err.code },
+        { status: DOCUMENT_STATUS[err.code], headers }
+      )
+    }
+    console.error("[sessions/documents] complete failed", err)
+    return secureJson({ error: "internal" }, { status: 500, headers })
+  }
+}
+
+export async function OPTIONS(request: Request) {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders(request, "GET, POST, OPTIONS"),
+  })
+}

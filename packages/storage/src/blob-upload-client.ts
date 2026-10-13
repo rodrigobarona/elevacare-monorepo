@@ -49,6 +49,11 @@ export interface UploadBlobClientInput {
    * JSON-stringify any structured data first.
    */
   clientPayload?: string
+  /**
+   * Public store for avatars. Private store for session documents / PHI.
+   * Must match the API route's `handleBlobUpload({ store })`.
+   */
+  access?: "public" | "private"
 }
 
 export interface UploadedBlobClient {
@@ -82,7 +87,7 @@ export async function uploadBlobClient(
   const pathname = `${prefix}/${kind}/${safeName}`
 
   const result: BlobUploadResult = await blobUpload(pathname, file, {
-    access: "public",
+    access: input.access ?? "public",
     handleUploadUrl: input.handleUploadUrl,
     headers: input.headers,
     contentType: file.type || undefined,

@@ -6,6 +6,7 @@ import {
   TENANT_TABLES,
   DELEGATE_VISIBLE_TABLES,
   CLINICAL_RECORDS_TABLES,
+  SESSION_DOCUMENTS_TABLES,
   RECORD_OPTOUT_TABLES,
   STAFF_ONLY_TABLES,
   OWNER_USER_TABLES,
@@ -297,6 +298,34 @@ describe("clinical records RLS", () => {
     expect(clinicRead).not.toContain("auth.member")
     expect(published).toContain("FOR SELECT")
     expect(published).toContain("published_at IS NOT NULL")
+  })
+
+  it("splits session document author writes from member shared reads", () => {
+    expect(TENANT_TABLES).not.toContain("session_documents")
+    expect(CLINICAL_RECORDS_TABLES).not.toContain("session_documents")
+    expect(SESSION_DOCUMENTS_TABLES).toContain("session_documents")
+    const select = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_documents_author_select")
+    )
+    const insert = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_documents_author_insert")
+    )
+    const clinicRead = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_documents_clinic_shared_read")
+    )
+    const memberRead = stmts.find((s) =>
+      s.startsWith("CREATE POLICY session_documents_member_shared_read")
+    )
+    expect(select).toContain("uploaded_by")
+    expect(select).toContain("expert_user_id")
+    expect(select).toContain("deleted_at IS NULL")
+    expect(insert).toContain("uploaded_by")
+    expect(insert).not.toContain("expert_user_id")
+    expect(clinicRead).toContain("clinic_shared_records")
+    expect(clinicRead).not.toContain("internal_report")
+    expect(memberRead).toContain("scope = 'shared'")
+    expect(memberRead).toContain("deleted_at IS NULL")
+    expect(memberRead).not.toContain("published_at")
   })
 })
 

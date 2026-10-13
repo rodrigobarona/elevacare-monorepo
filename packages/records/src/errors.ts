@@ -4,6 +4,21 @@ export type SessionRecordErrorCode =
   | "INTAKE_READONLY"
   | "AI_MODEL_ZERO_RETENTION_REQUIRED"
 
+export type SessionDocumentErrorCode =
+  | "NOT_FOUND"
+  | "FORBIDDEN"
+  | "INVALID_PATHNAME"
+  | "SCOPE_FORBIDDEN"
+  | "GRANT_EXPIRED"
+
+export class SessionDocumentError extends Error {
+  override readonly name = "SessionDocumentError"
+
+  constructor(readonly code: SessionDocumentErrorCode) {
+    super(code)
+  }
+}
+
 export class SessionRecordError extends Error {
   override readonly name = "SessionRecordError"
 

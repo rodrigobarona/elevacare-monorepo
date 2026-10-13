@@ -624,6 +624,41 @@ export const SummarizeSessionRecordsResponseSchema = z.object({
   record: BookingRecordSchema,
 })
 
+export const SessionDocumentScopeSchema = z.enum(["expert_only", "shared"])
+
+export const SessionDocumentSchema = z.object({
+  id: z.string().uuid(),
+  scope: SessionDocumentScopeSchema,
+  mime: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
+  sizeBytes: z.number().int().positive(),
+  originalName: z.string(),
+  uploadedAt: z.string().datetime(),
+})
+
+export const ListSessionDocumentsResponseSchema = z.object({
+  documents: z.array(SessionDocumentSchema),
+})
+
+export const CompleteSessionDocumentRequestSchema = z.object({
+  pathname: z.string().min(1).max(500),
+  url: z.string().url().max(2000),
+  mime: z.enum(["application/pdf", "image/jpeg", "image/png", "image/webp"]),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(10 * 1024 * 1024),
+  scope: SessionDocumentScopeSchema,
+  originalName: z.string().trim().min(1).max(200),
+})
+
+export const CompleteSessionDocumentResponseSchema = SessionDocumentSchema
+
+export const SessionDocumentUrlResponseSchema = z.object({
+  url: z.string().url(),
+  expiresAt: z.string().datetime(),
+})
+
 export type MeProfile = z.infer<typeof MeProfileSchema>
 export type PatchMeRequest = z.infer<typeof PatchMeRequestSchema>
 export type PutNotificationPreferencesRequest = z.infer<
@@ -687,6 +722,20 @@ export type UpsertSessionRecordRequest = z.infer<
 >
 export type UpsertSessionRecordResponse = z.infer<
   typeof UpsertSessionRecordResponseSchema
+>
+export type SessionDocumentScope = z.infer<typeof SessionDocumentScopeSchema>
+export type SessionDocument = z.infer<typeof SessionDocumentSchema>
+export type ListSessionDocumentsResponse = z.infer<
+  typeof ListSessionDocumentsResponseSchema
+>
+export type CompleteSessionDocumentRequest = z.infer<
+  typeof CompleteSessionDocumentRequestSchema
+>
+export type CompleteSessionDocumentResponse = z.infer<
+  typeof CompleteSessionDocumentResponseSchema
+>
+export type SessionDocumentUrlResponse = z.infer<
+  typeof SessionDocumentUrlResponseSchema
 >
 
 // ── Expert Profile ──────────────────────────────────────────────────
@@ -2963,6 +3012,37 @@ export function createApiClient(options: ApiClientOptions) {
           `/sessions/${encodeURIComponent(bookingId)}/records/summarize`
         )
         return SummarizeSessionRecordsResponseSchema.parse(raw)
+      },
+      async listDocuments(bookingId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/sessions/${encodeURIComponent(bookingId)}/documents`
+        )
+        return ListSessionDocumentsResponseSchema.parse(raw)
+      },
+      async completeDocument(
+        bookingId: string,
+        data: CompleteSessionDocumentRequest
+      ) {
+        const raw = await request<unknown>(
+          "POST",
+          `/sessions/${encodeURIComponent(bookingId)}/documents`,
+          data
+        )
+        return CompleteSessionDocumentResponseSchema.parse(raw)
+      },
+      async documentUrl(bookingId: string, documentId: string) {
+        const raw = await request<unknown>(
+          "GET",
+          `/sessions/${encodeURIComponent(bookingId)}/documents/${encodeURIComponent(documentId)}/url`
+        )
+        return SessionDocumentUrlResponseSchema.parse(raw)
+      },
+      async deleteDocument(bookingId: string, documentId: string) {
+        await request<unknown>(
+          "DELETE",
+          `/sessions/${encodeURIComponent(bookingId)}/documents/${encodeURIComponent(documentId)}`
+        )
       },
     },
 

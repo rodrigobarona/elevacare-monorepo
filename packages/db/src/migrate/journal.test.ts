@@ -38,10 +38,14 @@ describe("migration journal helpers", () => {
     const folder = resolve(import.meta.dirname, "../migrations/main")
     const migrations = readPreparedMigrations(folder)
     const last = migrations.at(-1)
-    expect(last?.tag).toBe("0055_phase10_internal_report")
+    expect(last?.tag).toBe("0056_phase10_session_documents")
     expect(last?.statements.length).toBeGreaterThan(0)
     expect(last?.hash).toHaveLength(64)
-    expect(last?.statements.join("\n")).toContain("internal_report")
+    expect(last?.statements.join("\n")).toContain("session_documents")
+    const internalReport = migrations.find(
+      (m) => m.tag === "0055_phase10_internal_report"
+    )
+    expect(internalReport?.statements.join("\n")).toContain("internal_report")
     const sessionRecords = migrations.find(
       (m) => m.tag === "0054_phase10_session_records"
     )

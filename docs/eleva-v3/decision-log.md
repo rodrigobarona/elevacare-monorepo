@@ -32,6 +32,23 @@ Each entry should include:
 
 ## Current Entries
 
+### 2026-10-13: Session documents use the private Blob store (10.1)
+
+- Decision: Booking documents persist in `session_documents` with
+  envelope-encrypted filename metadata and bytes in the **private**
+  Vercel Blob store (`BLOB_PRIVATE_READ_WRITE_TOKEN`). Pathname prefix
+  is `records/<expertOrgId>/<memberUserId>/` (guest bookings use
+  `guest-<bookingId>`). Client upload mints a token via
+  `POST /sessions/{bookingId}/documents/upload-token`; metadata is
+  committed with JSON `POST .../documents` (not form-data). Download is
+  a 15-minute Eleva grant, audited, streamed by the API — never a raw
+  private Blob URL. D-11 author-only; member reads `scope=shared` only.
+  Cloud recording/S3 stays 16.8. Not HIPAA.
+- Owner: engineering
+- Status: `active`
+- Related: Phase 10.1, D-07, D-11, ADR-009
+- Next review: DPO re-sign before production clinical records.
+
 ### 2026-10-12: HIPAA is not an EU launch priority; session records open on standard Daily
 
 - Decision: Eleva is **EU-first**. Founder: HIPAA/BAA is nice-to-have, not a

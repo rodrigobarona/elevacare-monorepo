@@ -26,7 +26,7 @@
  */
 
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client"
-import { requireBlobEnv } from "@eleva/config/env"
+import { requireBlobEnv, requirePrivateBlobEnv } from "@eleva/config/env"
 
 // ── Defaults ────────────────────────────────────────────────────────
 
@@ -99,6 +99,12 @@ export interface HandleBlobUploadInput {
    * when the route runs on a different origin than the web app).
    */
   responseHeaders?: Record<string, string>
+
+  /**
+   * Public store for avatars/marketing. Private store for session
+   * documents and other PHI. Defaults to public.
+   */
+  store?: "public" | "private"
 }
 
 // ── Handler ─────────────────────────────────────────────────────────
@@ -110,7 +116,11 @@ export interface HandleBlobUploadInput {
 export async function handleBlobUpload(
   input: HandleBlobUploadInput
 ): Promise<Response> {
-  const { BLOB_READ_WRITE_TOKEN } = requireBlobEnv()
+  const store = input.store ?? "public"
+  const token =
+    store === "private"
+      ? requirePrivateBlobEnv().BLOB_PRIVATE_READ_WRITE_TOKEN
+      : requireBlobEnv().BLOB_READ_WRITE_TOKEN
   const body = (await input.request.json()) as HandleUploadBody
 
   const fallbackContentTypes = input.allowedContentTypes
@@ -121,7 +131,7 @@ export async function handleBlobUpload(
   const json = await handleUpload({
     body,
     request: input.request,
-    token: BLOB_READ_WRITE_TOKEN,
+    token,
     onBeforeGenerateToken: async (pathname, clientPayload) => {
       const decision = await input.authorize(pathname, clientPayload)
 
@@ -134,6 +144,7 @@ export async function handleBlobUpload(
         allowedContentTypes: contentTypes,
         addRandomSuffix: true,
         maximumSizeInBytes: maxSize,
+        ...(store === "private" ? { access: "private" as const } : {}),
         tokenPayload: JSON.stringify({
           userId: decision.userId,
           kind: decision.kind,
