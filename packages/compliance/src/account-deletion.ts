@@ -479,6 +479,8 @@ export async function sweepAccountDeletions(
         }
 
         const ids = await cancelFutureBookingsInTx(tx, userId, now)
+        let docsFailed = false
+        let blobFailures = 0
         if (due) {
           await tx
             .delete(main.consents)
@@ -492,38 +494,46 @@ export async function sweepAccountDeletions(
           await tx
             .delete(main.notificationPreferences)
             .where(eq(main.notificationPreferences.userId, userId))
-          await eraseMemberSessionDocuments(tx, userId)
-          await eraseAccountRecord(tx, userId, now)
-          if (ids.length === 0) {
-            const [completed] = await tx
-              .update(main.accountDeletionRequests)
-              .set({ status: "completed" })
-              .where(
-                and(
-                  eq(main.accountDeletionRequests.id, row.id),
-                  eq(main.accountDeletionRequests.status, "pending")
+          const docs = await eraseMemberSessionDocuments(tx, userId)
+          blobFailures = docs.blobFailures
+          docsFailed = blobFailures > 0
+          if (!docsFailed) {
+            await eraseAccountRecord(tx, userId, now)
+            if (ids.length === 0) {
+              const [completed] = await tx
+                .update(main.accountDeletionRequests)
+                .set({ status: "completed" })
+                .where(
+                  and(
+                    eq(main.accountDeletionRequests.id, row.id),
+                    eq(main.accountDeletionRequests.status, "pending")
+                  )
                 )
-              )
-              .returning({ id: main.accountDeletionRequests.id })
-            if (!completed) {
-              return {
-                ids: [] as string[],
-                completed: false,
-                awaitingCompletion: false,
+                .returning({ id: main.accountDeletionRequests.id })
+              if (!completed) {
+                return {
+                  ids: [] as string[],
+                  completed: false,
+                  awaitingCompletion: false,
+                }
               }
             }
           }
         }
+        const finished = due && ids.length === 0 && !docsFailed
         await ctx.emit({
           entity: "account_deletion_request",
-          action: due && ids.length === 0 ? "status_changed" : "updated",
+          action: finished ? "status_changed" : "updated",
           entityId: row.id,
           payload: due
             ? {
-                status: ids.length === 0 ? "completed" : "pending",
-                accountAnonymised: true,
-                awaitingPaymentCancel: ids.length > 0,
+                status: finished ? "completed" : "pending",
+                accountAnonymised: !docsFailed,
+                awaitingPaymentCancel: ids.length > 0 && !docsFailed,
                 raceCatch: true,
+                ...(docsFailed
+                  ? { sessionDocumentBlobFailures: blobFailures }
+                  : {}),
               }
             : {
                 raceCatch: true,
@@ -532,8 +542,8 @@ export async function sweepAccountDeletions(
         })
         return {
           ids,
-          completed: due && ids.length === 0,
-          awaitingCompletion: due && ids.length > 0,
+          completed: finished,
+          awaitingCompletion: due && ids.length > 0 && !docsFailed,
         }
       }
     )

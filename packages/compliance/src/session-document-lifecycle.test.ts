@@ -38,7 +38,7 @@ afterEach(() => {
 })
 
 describe("eraseMemberSessionDocuments", () => {
-  it("deletes the Blob then the row, and skips a store failure", async () => {
+  it("deletes the Blob then the row, skips a store failure, and tombstones expert_only only", async () => {
     const deletedIds: string[] = []
     const tx = {
       select: () => ({

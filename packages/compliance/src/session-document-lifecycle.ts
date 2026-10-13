@@ -58,7 +58,12 @@ export async function eraseMemberSessionDocuments(
   const retained = await tx
     .update(main.sessionDocuments)
     .set({ memberUserId: null })
-    .where(eq(main.sessionDocuments.memberUserId, userId))
+    .where(
+      and(
+        eq(main.sessionDocuments.memberUserId, userId),
+        eq(main.sessionDocuments.scope, "expert_only")
+      )
+    )
     .returning({ id: main.sessionDocuments.id })
 
   return {
